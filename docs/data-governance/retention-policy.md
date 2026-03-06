@@ -398,8 +398,8 @@ years.
 
 **Reviewed and Approved**:
 
-- Data Protection Officer: ********\_******** Date: ****\_****
-- Legal Counsel: ********\_******** Date: ****\_****
-- Chief Technology Officer: ********\_******** Date: ****\_****
+- Data Protection Officer: **\*\*\*\***\_**\*\*\*\*** Date: \***\*\_\*\***
+- Legal Counsel: **\*\*\*\***\_**\*\*\*\*** Date: \***\*\_\*\***
+- Chief Technology Officer: **\*\*\*\***\_**\*\*\*\*** Date: \***\*\_\*\***
 
 **Next Scheduled Review**: 2026-12-29

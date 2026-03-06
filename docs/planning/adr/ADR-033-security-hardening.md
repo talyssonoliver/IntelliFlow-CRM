@@ -6,14 +6,18 @@
 
 **Deciders:** Architecture Team (retroactive documentation)
 
-**Technical Story:** IFC-073, IFC-077, IFC-113, IFC-114, IFC-121, IFC-125, IFC-143, IFC-169
+**Technical Story:** IFC-073, IFC-077, IFC-113, IFC-114, IFC-121, IFC-125,
+IFC-143, IFC-169
 
-> **Note**: This ADR was retroactively created to document architectural decisions
-> made during implementation. The decisions described here are already in production.
+> **Note**: This ADR was retroactively created to document architectural
+> decisions made during implementation. The decisions described here are already
+> in production.
 
 ## Context and Problem Statement
 
-IntelliFlow CRM handles sensitive customer data requiring comprehensive security: GDPR compliance, API protection, secrets management, prompt injection prevention, and threat modeling.
+IntelliFlow CRM handles sensitive customer data requiring comprehensive
+security: GDPR compliance, API protection, secrets management, prompt injection
+prevention, and threat modeling.
 
 ## Decision Drivers
 
@@ -33,7 +37,10 @@ IntelliFlow CRM handles sensitive customer data requiring comprehensive security
 
 ## Decision Outcome
 
-Chosen: Multi-layered security approach — Upstash rate limiting at API layer, secrets management with automated rotation, dual-guard prompt injection prevention (input sanitize + output validate), OWASP threat modeling, and GDPR-compliant cookie consent.
+Chosen: Multi-layered security approach — Upstash rate limiting at API layer,
+secrets management with automated rotation, dual-guard prompt injection
+prevention (input sanitize + output validate), OWASP threat modeling, and
+GDPR-compliant cookie consent.
 
 ### Positive Consequences
 
@@ -61,5 +68,5 @@ All related tasks are completed. See attestation files at
 
 ### Rollback Plan
 
-N/A — decisions are already in production. Future changes should create a new ADR
-that supersedes this one.
+N/A — decisions are already in production. Future changes should create a new
+ADR that supersedes this one.

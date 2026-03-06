@@ -8,12 +8,15 @@
 
 **Technical Story:** ENV-014-AI, ENV-015-AI
 
-> **Note**: This ADR was retroactively created to document architectural decisions
-> made during implementation. The decisions described here are already in production.
+> **Note**: This ADR was retroactively created to document architectural
+> decisions made during implementation. The decisions described here are already
+> in production.
 
 ## Context and Problem Statement
 
-IntelliFlow CRM needs runtime feature flags for gradual rollout and A/B testing, plus a performance optimization strategy to meet SLA targets (<200ms API, Lighthouse >90).
+IntelliFlow CRM needs runtime feature flags for gradual rollout and A/B testing,
+plus a performance optimization strategy to meet SLA targets (<200ms API,
+Lighthouse >90).
 
 ## Decision Drivers
 
@@ -31,7 +34,9 @@ IntelliFlow CRM needs runtime feature flags for gradual rollout and A/B testing,
 
 ## Decision Outcome
 
-Chosen: Edge Config for feature flags, React Query for client caching, Prisma optimized queries, and Next.js ISR/PPR for hybrid rendering. This combination targets <200ms API and >90 Lighthouse.
+Chosen: Edge Config for feature flags, React Query for client caching, Prisma
+optimized queries, and Next.js ISR/PPR for hybrid rendering. This combination
+targets <200ms API and >90 Lighthouse.
 
 ### Positive Consequences
 
@@ -57,5 +62,5 @@ All related tasks are completed. See attestation files at
 
 ### Rollback Plan
 
-N/A — decisions are already in production. Future changes should create a new ADR
-that supersedes this one.
+N/A — decisions are already in production. Future changes should create a new
+ADR that supersedes this one.

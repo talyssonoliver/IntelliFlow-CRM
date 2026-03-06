@@ -3,8 +3,8 @@
 **Version:** 1.0  
 **Date:** 2026-02-02  
 **Owners:** AI Lead, QA Lead  
-**Related Tasks:** IFC-023, IFC-024, IFC-025, IFC-039, IFC-085, IFC-086, IFC-095, IFC-174, IFC-181
-**Decision Records:** ADR-022-ai-features-quality.md
+**Related Tasks:** IFC-023, IFC-024, IFC-025, IFC-039, IFC-085, IFC-086,
+IFC-095, IFC-174, IFC-181 **Decision Records:** ADR-022-ai-features-quality.md
 
 ## Summary
 

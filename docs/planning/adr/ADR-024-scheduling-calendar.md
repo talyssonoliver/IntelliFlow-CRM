@@ -50,3 +50,13 @@ More infra for reconciliation and retries.
 ## Links
 
 - ADR-005 Workflow, ADR-017 Workflow Reliability, ADR-015 Security.
+
+---
+
+## Addendum: UI Library Decision (2026-02-28)
+
+The calendar UI rendering has been migrated from hand-rolled HTML tables to
+**Schedule-X** (see ADR-040-calendar-ui-library.md). This decision is purely
+presentational — all sync, conflict detection, buffer, and recurrence decisions
+in this ADR remain unaffected. The appointment data model, tRPC procedures, and
+conflict resolution logic are unchanged.

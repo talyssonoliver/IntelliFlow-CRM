@@ -35,74 +35,82 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 | Category        | Count |
 | --------------- | ----- |
-| Total Pages     | 107   |
-| Public Pages    | 25    |
-| Developer Pages | 9     |
-| Protected Pages | 73    |
+| Total Pages     | 119   |
+| Public Pages    | 27    |
+| Developer Pages | 14    |
+| Protected Pages | 78    |
 | API Routes      | 19    |
-| Layouts         | 35    |
+| Layouts         | 36    |
 
-> Total Pages counts distinct `page.tsx` files. Query-parameter variants (e.g., `/leads?view=my`) are views within the same page and are excluded from the total.
+> Total Pages counts distinct `page.tsx` files. Query-parameter variants (e.g.,
+> `/leads?view=my`) are views within the same page and are excluded from the
+> total.
 
 ---
 
 ## Page Map by Category
 
-### 1. Public Pages (25 — No Authentication Required)
+### 1. Public Pages (27 — No Authentication Required)
 
 Located in `(public)` route group. Accessible without login.
 
-| Route                     | Page                    | Description                                                               |
-| ------------------------- | ----------------------- | ------------------------------------------------------------------------- |
-| `/`                       | Home                    | Landing page (shows PublicHomePage or AuthenticatedHomePage based on auth) |
-| `/login`                  | Login                   | Email/password + OAuth login                                              |
-| `/signup`                 | Sign Up                 | New account registration                                                  |
-| `/signup/success`         | Sign Up Success         | Registration confirmation                                                 |
-| `/forgot-password`        | Forgot Password         | Password reset request                                                    |
-| `/reset-password/[token]` | Reset Password          | Password reset with token                                                 |
-| `/reset-password/callback`| Reset Password Callback | Supabase password reset redirect handler                                  |
-| `/logout`                 | Logout                  | Session termination                                                       |
-| `/auth/callback`          | OAuth Callback          | Handles OAuth provider redirects (Google, etc.)                           |
-| `/sso`                    | Enterprise SSO          | SSO email lookup form for enterprise SAML/OAuth providers (PG-124)        |
-| `/mfa/verify`             | MFA Verification        | Two-factor authentication input                                           |
-| `/verify-email/[token]`   | Email Verification      | Email confirmation with token                                             |
-| `/verify-email/callback`  | Email Verify Callback   | Supabase email verification redirect handler                              |
-| `/about`                  | About                   | Company information                                                       |
-| `/features`               | Features                | Product features showcase                                                 |
-| `/pricing`                | Pricing                 | Subscription plans                                                        |
-| `/security`               | Security                | Security practices                                                        |
-| `/contact`                | Contact                 | Contact form                                                              |
-| `/partners`               | Partners                | Partner program                                                           |
-| `/press`                  | Press                   | Press releases                                                            |
-| `/status`                 | Status                  | System status page                                                        |
-| `/blog`                   | Blog                    | Blog listing                                                              |
-| `/blog/[slug]`            | Blog Post               | Individual blog article                                                   |
-| `/careers`                | Careers                 | Job listings                                                              |
-| `/careers/[id]`           | Job Detail              | Individual job posting                                                    |
-| `/lp/[slug]`              | Landing Page            | Dynamic marketing landing pages                                           |
+| Route                      | Page                    | Description                                                                                                                                          |
+| -------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                        | Home                    | Landing page (shows PublicHomePage or AuthenticatedHomePage based on auth). Lighthouse audit: PG-166 (Performance >=90, Accessibility >=90, TTI <1s) |
+| `/login`                   | Login                   | Email/password + OAuth login                                                                                                                         |
+| `/signup`                  | Sign Up                 | New account registration                                                                                                                             |
+| `/signup/success`          | Sign Up Success         | Registration confirmation                                                                                                                            |
+| `/forgot-password`         | Forgot Password         | Password reset request                                                                                                                               |
+| `/reset-password/[token]`  | Reset Password          | Password reset with token                                                                                                                            |
+| `/reset-password/callback` | Reset Password Callback | Supabase password reset redirect handler                                                                                                             |
+| `/logout`                  | Logout                  | Session termination                                                                                                                                  |
+| `/auth/callback`           | OAuth Callback          | Handles OAuth provider redirects (Google, etc.)                                                                                                      |
+| `/sso`                     | Enterprise SSO          | SSO email lookup form for enterprise SAML/OAuth providers (PG-124)                                                                                   |
+| `/mfa/verify`              | MFA Verification        | Two-factor authentication input                                                                                                                      |
+| `/verify-email/[token]`    | Email Verification      | Email confirmation with token                                                                                                                        |
+| `/verify-email/callback`   | Email Verify Callback   | Supabase email verification redirect handler                                                                                                         |
+| `/about`                   | About                   | Company information                                                                                                                                  |
+| `/features`                | Features                | Product features showcase                                                                                                                            |
+| `/pricing`                 | Pricing                 | Subscription plans                                                                                                                                   |
+| `/security`                | Security                | Security practices                                                                                                                                   |
+| `/contact`                 | Contact                 | Contact form                                                                                                                                         |
+| `/partners`                | Partners                | Partner program                                                                                                                                      |
+| `/press`                   | Press                   | Press releases                                                                                                                                       |
+| `/press/[id]`              | Press Release Detail    | Individual press release with full body, quotes, boilerplate                                                                                         |
+| `/status`                  | Status                  | System status page                                                                                                                                   |
+| `/blog`                    | Blog                    | Blog listing                                                                                                                                         |
+| `/blog/[slug]`             | Blog Post               | Individual blog article                                                                                                                              |
+| `/careers`                 | Careers                 | Job listings                                                                                                                                         |
+| `/careers/[id]`            | Job Detail              | Individual job posting                                                                                                                               |
+| `/lp/[slug]`               | Landing Page            | Dynamic marketing landing pages                                                                                                                      |
 
 ---
 
-### 2. Developer Portal (9 pages)
+### 2. Developer Portal (14 pages)
 
-Located in `(developer)` route group. Sidebar-gated via `roles: ['SUPER_ADMIN']` in `settings.ts:85`. Uses `developerSidebarConfig` from `configs/developer.ts`.
+Located in `(developer)` route group. Sidebar-gated via `roles: ['SUPER_ADMIN']`
+in `settings.ts:85`. Uses `developerSidebarConfig` from `configs/developer.ts`.
 
-The `(developer)` route group has its own `layout.tsx` that renders the developer sidebar. These pages are accessible through the Settings sidebar "More" section (SUPER_ADMIN only).
+The `(developer)` route group has its own `layout.tsx` that renders the
+developer sidebar. These pages are accessible through the Settings sidebar
+"More" section (SUPER_ADMIN only).
 
-| Route                | Page              | Description                                      |
-| -------------------- | ----------------- | ------------------------------------------------ |
-| `/developers/apps`      | App Registry      | Developer app management, API keys, webhooks     |
-| `/developers/apps/new`  | Create New App    | Developer app creation with OAuth credentials    |
-| `/developers/apps/[id]` | App Detail        | Individual app dashboard, metrics, logs          |
-| `/developers/apps/[id]/edit` | App Edit     | Edit app settings, scopes, webhook configuration |
-| `/docs`                 | Dev Docs Home     | Documentation overview with category cards       |
-| `/docs/api`          | API Reference     | Interactive OpenAPI/tRPC reference               |
-| `/docs/changelog`    | Changelog         | Release history, version notes, feature updates  |
-| `/docs/integrations` | Integration Guides| Third-party integration documentation            |
-| `/docs/webhooks`     | Webhook Docs      | Webhook configuration, events, and tester        |
-| `/docs/sdk`          | SDK Guides        | Client libraries, install guides, quickstart     |
-| `/docs/cli`          | CLI Reference     | Monorepo CLI commands for development            |
-| `/docs/auth`         | Auth Guides       | OAuth 2.0, JWT, MFA, sessions, and API keys      |
+| Route                        | Page               | Description                                      |
+| ---------------------------- | ------------------ | ------------------------------------------------ |
+| `/developers/apps`           | App Registry       | Developer app management, API keys, webhooks     |
+| `/developers/apps/new`       | Create New App     | Developer app creation with OAuth credentials    |
+| `/developers/apps/[id]`      | App Detail         | Individual app dashboard, metrics, logs          |
+| `/developers/apps/[id]/edit` | App Edit           | Edit app settings, scopes, webhook configuration |
+| `/docs`                      | Dev Docs Home      | Documentation overview with category cards       |
+| `/docs/api`                  | API Reference      | Interactive OpenAPI/tRPC reference               |
+| `/docs/changelog`            | Changelog          | Release history, version notes, feature updates  |
+| `/docs/integrations`         | Integration Guides | Third-party integration documentation            |
+| `/docs/webhooks`             | Webhook Docs       | Webhook configuration, events, and tester        |
+| `/docs/sdk`                  | SDK Guides         | Client libraries, install guides, quickstart     |
+| `/docs/cli`                  | CLI Reference      | Monorepo CLI commands for development            |
+| `/docs/auth`                 | Auth Guides        | OAuth 2.0, JWT, MFA, sessions, and API keys      |
+| `/docs/architecture`         | Architecture Docs  | ADR list, DDD context map, search and filter     |
+| `/docs/guides`               | Developer Guides   | Guide categories linking to Docusaurus docs      |
 
 ---
 
@@ -116,7 +124,7 @@ The `(developer)` route group has its own `layout.tsx` that renders the develope
 
 ---
 
-### 4. CRM Core — Leads (3 pages)
+### 4. CRM Core — Leads (4 pages)
 
 | Route                     | Page            | Description                       | Sidebar Section |
 | ------------------------- | --------------- | --------------------------------- | --------------- |
@@ -129,25 +137,27 @@ The `(developer)` route group has its own `layout.tsx` that renders the develope
 | `/leads?segment=followup` | Needs Follow-up | Leads requiring action            | Segments        |
 | `/leads/new`              | New Lead        | Create lead form                  | -               |
 | `/leads/[id]`             | Lead Detail     | Lead 360° view with activities    | -               |
+| `/leads/[id]/edit`        | Edit Lead       | Edit lead fields and metadata     | -               |
 
 ---
 
-### 5. CRM Core — Contacts (3 pages)
+### 5. CRM Core — Contacts (4 pages)
 
-| Route            | Page           | Description                 |
-| ---------------- | -------------- | --------------------------- |
-| `/contacts`      | Contacts List  | All contacts with filters   |
-| `/contacts/new`  | New Contact    | Create contact form         |
-| `/contacts/[id]` | Contact Detail | Contact profile and history |
+| Route                 | Page           | Description                 |
+| --------------------- | -------------- | --------------------------- |
+| `/contacts`           | Contacts List  | All contacts with filters   |
+| `/contacts/new`       | New Contact    | Create contact form         |
+| `/contacts/[id]`      | Contact Detail | Contact profile and history |
+| `/contacts/[id]/edit` | Edit Contact   | Edit contact fields         |
 
 ---
 
 ### 6. CRM Core — Accounts (2 pages)
 
-| Route            | Page           | Description                      |
-| ---------------- | -------------- | -------------------------------- |
+| Route            | Page           | Description                                 |
+| ---------------- | -------------- | ------------------------------------------- |
 | `/accounts`      | Accounts List  | Company/account list with filters and stats |
-| `/accounts/[id]` | Account Detail | Account 360° view                |
+| `/accounts/[id]` | Account Detail | Account 360° view                           |
 
 ---
 
@@ -164,29 +174,29 @@ The `(developer)` route group has its own `layout.tsx` that renders the develope
 
 ### 8. CRM Core — Tasks (2 pages)
 
-| Route        | Page        | Description                                            |
-| ------------ | ----------- | ------------------------------------------------------ |
-| `/tasks`     | Task List   | Task queue with list/calendar toggle, filters, priority|
-| `/tasks/[id]`| Task Detail | Task view with assignee and status                     |
+| Route         | Page        | Description                                             |
+| ------------- | ----------- | ------------------------------------------------------- |
+| `/tasks`      | Task List   | Task queue with list/calendar toggle, filters, priority |
+| `/tasks/[id]` | Task Detail | Task view with assignee and status                      |
 
 ---
 
 ### 9. CRM Core — Calendar/Appointments (3 pages)
 
-| Route           | Page               | Description                              |
-| --------------- | ------------------ | ---------------------------------------- |
-| `/calendar`     | Calendar View      | Appointment calendar (month/week/day views) |
-| `/calendar/new` | New Appointment    | Create appointment form                  |
-| `/calendar/[id]`| Appointment Detail | Appointment detail and edit              |
+| Route            | Page               | Description                                 |
+| ---------------- | ------------------ | ------------------------------------------- |
+| `/calendar`      | Calendar View      | Appointment calendar (month/week/day views) |
+| `/calendar/new`  | New Appointment    | Create appointment form                     |
+| `/calendar/[id]` | Appointment Detail | Appointment detail and edit                 |
 
 ---
 
 ### 10. CRM Core — Email (2 pages)
 
-| Route        | Page         | Description        |
-| ------------ | ------------ | ------------------ |
-| `/email`     | Email Inbox  | Email list and compose |
-| `/email/[id]`| Email Detail | Email thread view  |
+| Route         | Page         | Description            |
+| ------------- | ------------ | ---------------------- |
+| `/email`      | Email Inbox  | Email list and compose |
+| `/email/[id]` | Email Detail | Email thread view      |
 
 ---
 
@@ -212,35 +222,37 @@ The `(developer)` route group has its own `layout.tsx` that renders the develope
 
 ### 13. Cases (4 pages)
 
-| Route             | Page          | Description                        |
-| ----------------- | ------------- | ---------------------------------- |
+| Route             | Page          | Description                                     |
+| ----------------- | ------------- | ----------------------------------------------- |
 | `/cases`          | Cases List    | Legal/service case queue with stats and filters |
-| `/cases/new`      | New Case      | Case creation form                 |
-| `/cases/[id]`     | Case Detail   | Case detail with documents         |
-| `/cases/timeline` | Case Timeline | Case history and deadline engine   |
+| `/cases/new`      | New Case      | Case creation form                              |
+| `/cases/[id]`     | Case Detail   | Case detail with documents                      |
+| `/cases/timeline` | Case Timeline | Case history and deadline engine                |
 
 ---
 
-### 14. AI & Agent Actions (14 pages)
+### 14. AI & Agent Actions (15 pages)
 
-| Route                            | Page               | Task         |
-| -------------------------------- | ------------------ | ------------ |
-| `/agent-approvals`               | Approval Queue     | IFC-029/IFC-149 |
-| `/agent-approvals/agents`        | Active Agents      | PG-151       |
-| `/agent-approvals/ai-review`     | AI Review Queue    | IFC-181      |
-| `/agent-approvals/ai-review/[id]`| Review Detail      | IFC-181      |
-| `/agent-approvals/ai-search`     | AI Search (RAG)    | PG-144       |
-| `/agent-approvals/churn-risk`    | Churn Risk         | PG-143       |
-| `/agent-approvals/drift`         | Drift Detection    | PG-146       |
-| `/agent-approvals/experiments`   | Experiments        | PG-149       |
-| `/agent-approvals/history`       | Review History     | PG-150       |
-| `/agent-approvals/latency`       | Latency Monitor    | PG-153       |
-| `/agent-approvals/lead-scoring`  | Lead Scoring       | PG-148       |
-| `/agent-approvals/logs`          | Agent Logs         | PG-152       |
-| `/agent-approvals/preview`       | Preview Mode       | —            |
-| `/agent-approvals/sentiment`     | Sentiment Analysis | PG-142       |
+| Route                             | Page               | Task            |
+| --------------------------------- | ------------------ | --------------- |
+| `/agent-approvals`                | Approval Queue     | IFC-029/IFC-149 |
+| `/agent-approvals/agents`         | Active Agents      | PG-151          |
+| `/agent-approvals/ai-review`      | AI Review Queue    | IFC-181         |
+| `/agent-approvals/ai-review/[id]` | Review Detail      | IFC-181         |
+| `/agent-approvals/ai-search`      | AI Search (RAG)    | PG-144          |
+| `/agent-approvals/churn-risk`     | Churn Risk         | PG-143          |
+| `/agent-approvals/drift`          | Drift Detection    | PG-146          |
+| `/agent-approvals/experiments`    | Experiments        | PG-149          |
+| `/agent-approvals/history`        | Review History     | PG-150          |
+| `/agent-approvals/latency`        | Latency Monitor    | PG-153          |
+| `/agent-approvals/lead-scoring`   | Lead Scoring       | PG-148          |
+| `/agent-approvals/logs`           | Agent Logs         | PG-152          |
+| `/agent-approvals/preview`        | Preview Mode       | —               |
+| `/agent-approvals/sentiment`      | Sentiment Analysis | PG-142          |
+| `/insights`                       | AI Insights        | PG-160          |
 
 **Sidebar groupings** (from `agent-approvals.ts`):
+
 - **Intelligence**: Sentiment, Churn Risk, Lead Scoring
 - **AI Tools**: AI Search, Experiments
 - **AI Review**: AI Review Queue
@@ -251,10 +263,10 @@ The `(developer)` route group has its own `layout.tsx` that renders the develope
 
 ### 15. Analytics & Reports (2 pages)
 
-| Route                | Page               | Description                                    |
-| -------------------- | ------------------ | ---------------------------------------------- |
-| `/analytics`         | Analytics Dashboard| Charts, metrics, and KPIs                      |
-| `/analytics/feedback`| Feedback Analytics | NPS/CSAT/CES metrics, trend charts             |
+| Route                 | Page                | Description                        |
+| --------------------- | ------------------- | ---------------------------------- |
+| `/analytics`          | Analytics Dashboard | Charts, metrics, and KPIs          |
+| `/analytics/feedback` | Feedback Analytics  | NPS/CSAT/CES metrics, trend charts |
 
 ---
 
@@ -298,7 +310,7 @@ The `(developer)` route group has its own `layout.tsx` that renders the develope
 | `/billing`                 | Billing Overview | Subscription summary             |
 | `/billing/checkout`        | Checkout         | Payment processing               |
 | `/billing/subscriptions`   | Subscriptions    | Manage subscription plans        |
-| `/billing/payment-methods` | Payment Methods  | Credit cards and payment options  |
+| `/billing/payment-methods` | Payment Methods  | Credit cards and payment options |
 | `/billing/invoices`        | Invoices         | Invoice history                  |
 | `/billing/invoices/[id]`   | Invoice Detail   | Individual invoice view          |
 | `/billing/receipts`        | Receipts         | Payment receipts                 |
@@ -315,6 +327,18 @@ The `(developer)` route group has its own `layout.tsx` that renders the develope
 | `/governance/policies`                   | Policies            | Policy management             |
 | `/governance/quality-reports`            | Quality Reports     | Quality assessment reports    |
 | `/governance/quality-reports/[reportId]` | Report Detail       | Individual quality report     |
+
+### 21. Support Portal (1 page)
+
+| Route              | Page                  | Description                                              |
+| ------------------ | --------------------- | -------------------------------------------------------- |
+| `/support/tickets` | Support Tickets Queue | SLA-first agent ticket queue (excludes ARCHIVED, 3 bulk) |
+
+### 22. Support / Help Center (1 page)
+
+| Route          | Page              | Description                                       |
+| -------------- | ----------------- | ------------------------------------------------- |
+| `/help-center` | Help Center Index | Searchable category grid for self-service support |
 
 ---
 
@@ -417,7 +441,8 @@ The `(developer)` route group has its own `layout.tsx` that renders the develope
 
 ### Main Navigation Bar (Header) — Dynamic Module-Gated
 
-Visible to authenticated users only. Header items are dynamically rendered via `useEnabledModules()` + `ModuleRoutes.ts`.
+Visible to authenticated users only. Header items are dynamically rendered via
+`useEnabledModules()` + `ModuleRoutes.ts`.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -427,15 +452,16 @@ Visible to authenticated users only. Header items are dynamically rendered via `
 └─────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-| Module          | Nav Items                                                                      |
-| --------------- | ------------------------------------------------------------------------------ |
+| Module          | Nav Items                                                                     |
+| --------------- | ----------------------------------------------------------------------------- |
 | CORE_CRM        | Dashboard, Leads, Contacts, Accounts, Deals, Tasks, Calendar, Email (8 items) |
-| LEGAL           | Cases (1 item)                                                                 |
-| SUPPORT         | Tickets (1 item)                                                               |
-| AI_INTELLIGENCE | AI & Agents (1 item)                                                           |
-| ANALYTICS       | Reports (1 item)                                                               |
+| LEGAL           | Cases (1 item)                                                                |
+| SUPPORT         | Tickets (1 item)                                                              |
+| AI_INTELLIGENCE | AI & Agents, AI Insights (2 items)                                            |
+| ANALYTICS       | Reports (1 item)                                                              |
 
-> Header items dynamically rendered via `useEnabledModules()` + `ModuleRoutes.ts`. Each module is enabled/disabled per tenant.
+> Header items dynamically rendered via `useEnabledModules()` +
+> `ModuleRoutes.ts`. Each module is enabled/disabled per tenant.
 
 ### Context Sidebars
 
@@ -899,28 +925,30 @@ app/
 
 ### `_layout-shell.tsx` Pattern
 
-Seven modules use an RSC + Client component split pattern where `layout.tsx` exports metadata (React Server Component) and delegates sidebar/provider logic to a `_layout-shell.tsx` (`'use client'`):
+Seven modules use an RSC + Client component split pattern where `layout.tsx`
+exports metadata (React Server Component) and delegates sidebar/provider logic
+to a `_layout-shell.tsx` (`'use client'`):
 
-| Module          | Shell File                                          |
-| --------------- | --------------------------------------------------- |
-| Agent Approvals | `agent-approvals/_layout-shell.tsx`                 |
-| Billing         | `billing/_layout-shell.tsx`                         |
-| Calendar        | `calendar/_layout-shell.tsx`                        |
-| Email           | `email/_layout-shell.tsx`                           |
-| Governance      | `governance/_layout-shell.tsx`                      |
-| Notifications   | `notifications/_layout-shell.tsx`                   |
-| Settings        | `settings/_layout-shell.tsx`                        |
+| Module          | Shell File                          |
+| --------------- | ----------------------------------- |
+| Agent Approvals | `agent-approvals/_layout-shell.tsx` |
+| Billing         | `billing/_layout-shell.tsx`         |
+| Calendar        | `calendar/_layout-shell.tsx`        |
+| Email           | `email/_layout-shell.tsx`           |
+| Governance      | `governance/_layout-shell.tsx`      |
+| Notifications   | `notifications/_layout-shell.tsx`   |
+| Settings        | `settings/_layout-shell.tsx`        |
 
 ### Route Group Purposes
 
-| Group         | Purpose                               |
-| ------------- | ------------------------------------- |
-| `(public)`    | Marketing pages, no auth required     |
+| Group         | Purpose                                           |
+| ------------- | ------------------------------------------------- |
+| `(public)`    | Marketing pages, no auth required                 |
 | `(developer)` | Developer portal pages, SUPER_ADMIN sidebar-gated |
-| `(list)`      | List views with sidebar navigation    |
-| `[id]`        | Dynamic detail pages                  |
-| `[slug]`      | Dynamic content pages (blog, careers) |
-| `[token]`     | Token-based verification pages        |
+| `(list)`      | List views with sidebar navigation                |
+| `[id]`        | Dynamic detail pages                              |
+| `[slug]`      | Dynamic content pages (blog, careers)             |
+| `[token]`     | Token-based verification pages                    |
 
 ---
 
@@ -928,27 +956,27 @@ Seven modules use an RSC + Client component split pattern where `layout.tsx` exp
 
 ### Internal API Endpoints
 
-| Route                                   | Method   | Description                 |
-| --------------------------------------- | -------- | --------------------------- |
-| `/api/trpc/[trpc]`                      | ALL      | tRPC API handler            |
-| `/api/adr`                              | GET      | List ADRs                   |
-| `/api/adr/create`                       | POST     | Create new ADR              |
-| `/api/adr/status`                       | GET/POST | ADR status management       |
-| `/api/adr/validate`                     | POST     | Validate ADR                |
-| `/api/adr/index`                        | GET      | ADR index                   |
-| `/api/compliance/[standardId]`          | GET      | Compliance standard details |
-| `/api/compliance/risks`                 | GET      | Compliance risks            |
-| `/api/compliance/timeline`              | GET      | Compliance timeline         |
-| `/api/quality-reports`                  | GET      | Quality reports list        |
-| `/api/quality-reports/generate`         | POST     | Generate report             |
-| `/api/quality-reports/status`           | GET      | Report status               |
-| `/api/quality-reports/view`             | GET      | View report                 |
-| `/api/quality-reports/test-run`         | POST     | Trigger test run            |
-| `/api/quality-reports/test-run/[runId]` | GET      | Test run status             |
-| `/api/quality-reports/test-run/events`  | GET      | SSE events                  |
+| Route                                   | Method   | Description                         |
+| --------------------------------------- | -------- | ----------------------------------- |
+| `/api/trpc/[trpc]`                      | ALL      | tRPC API handler                    |
+| `/api/adr`                              | GET      | List ADRs                           |
+| `/api/adr/create`                       | POST     | Create new ADR                      |
+| `/api/adr/status`                       | GET/POST | ADR status management               |
+| `/api/adr/validate`                     | POST     | Validate ADR                        |
+| `/api/adr/index`                        | GET      | ADR index                           |
+| `/api/compliance/[standardId]`          | GET      | Compliance standard details         |
+| `/api/compliance/risks`                 | GET      | Compliance risks                    |
+| `/api/compliance/timeline`              | GET      | Compliance timeline                 |
+| `/api/quality-reports`                  | GET      | Quality reports list                |
+| `/api/quality-reports/generate`         | POST     | Generate report                     |
+| `/api/quality-reports/status`           | GET      | Report status                       |
+| `/api/quality-reports/view`             | GET      | View report                         |
+| `/api/quality-reports/test-run`         | POST     | Trigger test run                    |
+| `/api/quality-reports/test-run/[runId]` | GET      | Test run status                     |
+| `/api/quality-reports/test-run/events`  | GET      | SSE events                          |
 | `/api/avatar-proxy`                     | GET      | Avatar image proxy with CORS bypass |
-| `/api/openapi`                          | GET      | OpenAPI JSON spec endpoint  |
-| `/api/developer/webhook-test`           | POST     | Webhook delivery test tool  |
+| `/api/openapi`                          | GET      | OpenAPI JSON spec endpoint          |
+| `/api/developer/webhook-test`           | POST     | Webhook delivery test tool          |
 
 ---
 
@@ -958,32 +986,32 @@ Seven modules use an RSC + Client component split pattern where `layout.tsx` exp
 
 | Page                     | Integration Status | Required APIs                                                                                               |
 | ------------------------ | ------------------ | ----------------------------------------------------------------------------------------------------------- |
-| `/` (Authenticated Home) | Hardcoded       | `dashboard.getWelcomeSummary`, `feed.getItems`, `ai.getDailyInsights`, `goals.getTodayFocus`, `pins.getAll` |
-| `/dashboard`             | Partial         | `dashboard.getMetrics`, `dashboard.getWidgets`                                                              |
-| `/leads`                 | Integrated      | `leads.list`, `leads.getById`                                                                               |
-| `/leads/[id]`            | Partial         | `leads.getById`, `activities.getByLead`                                                                     |
-| `/contacts`              | Integrated      | `contacts.list`, `contacts.getById`                                                                         |
-| `/deals`                 | Integrated      | `deals.list`, `deals.getById`                                                                               |
-| `/deals/[id]/forecast`   | Hardcoded       | `ai.getDealForecast`                                                                                        |
-| `/tickets`               | Integrated      | `tickets.list`, `tickets.getById`                                                                           |
-| `/analytics`             | Partial         | `analytics.getMetrics`                                                                                      |
-| `/agent-approvals`       | Partial         | `agentActions.getPending`                                                                                   |
-| `/billing`               | Hardcoded       | Stripe integration                                                                                          |
-| `/governance/*`          | Integrated      | Local file system APIs                                                                                      |
+| `/` (Authenticated Home) | Hardcoded          | `dashboard.getWelcomeSummary`, `feed.getItems`, `ai.getDailyInsights`, `goals.getTodayFocus`, `pins.getAll` |
+| `/dashboard`             | Partial            | `dashboard.getMetrics`, `dashboard.getWidgets`                                                              |
+| `/leads`                 | Integrated         | `leads.list`, `leads.getById`                                                                               |
+| `/leads/[id]`            | Partial            | `leads.getById`, `activities.getByLead`                                                                     |
+| `/contacts`              | Integrated         | `contacts.list`, `contacts.getById`                                                                         |
+| `/deals`                 | Integrated         | `deals.list`, `deals.getById`                                                                               |
+| `/deals/[id]/forecast`   | Hardcoded          | `ai.getDealForecast`                                                                                        |
+| `/tickets`               | Integrated         | `tickets.list`, `tickets.getById`                                                                           |
+| `/analytics`             | Partial            | `analytics.getMetrics`                                                                                      |
+| `/agent-approvals`       | Partial            | `agentActions.getPending`                                                                                   |
+| `/billing`               | Hardcoded          | Stripe integration                                                                                          |
+| `/governance/*`          | Integrated         | Local file system APIs                                                                                      |
 
 ### Unassessed Pages (Pending Assessment)
 
-| Page                  | Status             | Notes                              |
-| --------------------- | ------------------ | ---------------------------------- |
-| `/accounts`           | Pending Assessment | Account list/detail — API TBD      |
-| `/tasks`              | Pending Assessment | Task list/detail — API TBD         |
-| `/calendar`           | Pending Assessment | Calendar/appointment — API TBD     |
-| `/email`              | Pending Assessment | Email inbox/thread — API TBD       |
+| Page                  | Status             | Notes                                |
+| --------------------- | ------------------ | ------------------------------------ |
+| `/accounts`           | Pending Assessment | Account list/detail — API TBD        |
+| `/tasks`              | Pending Assessment | Task list/detail — API TBD           |
+| `/calendar`           | Pending Assessment | Calendar/appointment — API TBD       |
+| `/email`              | Pending Assessment | Email inbox/thread — API TBD         |
 | `/cases`              | Pending Assessment | Cases list/detail/timeline — API TBD |
-| `/developers/apps`    | Pending Assessment | Developer app registry — API TBD   |
-| `/docs/webhooks`      | Pending Assessment | Webhook docs/tester — API TBD      |
-| `/analytics/feedback` | Pending Assessment | Feedback metrics — API TBD         |
-| `/settings/routing`   | Pending Assessment | Lead routing rules — API TBD       |
+| `/developers/apps`    | Pending Assessment | Developer app registry — API TBD     |
+| `/docs/webhooks`      | Pending Assessment | Webhook docs/tester — API TBD        |
+| `/analytics/feedback` | Pending Assessment | Feedback metrics — API TBD           |
+| `/settings/routing`   | Pending Assessment | Lead routing rules — API TBD         |
 
 ### Legend
 
@@ -1045,13 +1073,13 @@ Seven modules use an RSC + Client component split pattern where `layout.tsx` exp
 
 ### Route-to-Flow Mappings (New Modules)
 
-| Route       | Flow     | Description              |
-| ----------- | -------- | ------------------------ |
-| `/calendar` | FLOW-019 | Appointment scheduling   |
-| `/email`    | FLOW-016 | Email with tracking      |
-| `/cases`    | FLOW-041 | Case RAG retrieval       |
-| `/tasks`    | —        | No flow defined yet      |
-| `/accounts` | —        | No flow defined yet      |
+| Route       | Flow     | Description            |
+| ----------- | -------- | ---------------------- |
+| `/calendar` | FLOW-019 | Appointment scheduling |
+| `/email`    | FLOW-016 | Email with tracking    |
+| `/cases`    | FLOW-041 | Case RAG retrieval     |
+| `/tasks`    | —        | No flow defined yet    |
+| `/accounts` | —        | No flow defined yet    |
 
 ### File Locations
 
@@ -1080,8 +1108,8 @@ apps/project-tracker/docs/metrics/_global/flows/
 
 ## Document History
 
-| Version | Date       | Author      | Changes                                        |
-| ------- | ---------- | ----------- | ---------------------------------------------- |
-| 1.0     | 2026-02-02 | Claude Code | Initial documentation                          |
-| 1.1     | 2026-02-02 | Claude Code | Added reference to existing flow documentation |
+| Version | Date       | Author      | Changes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------- | ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1.0     | 2026-02-02 | Claude Code | Initial documentation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 1.1     | 2026-02-02 | Claude Code | Added reference to existing flow documentation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | 2.0     | 2026-02-24 | Claude Code | DOC-003: Updated 68→103 pages; added Developer Portal (5), Accounts (2), Tasks (2), Calendar (3), Email (2) sections; expanded Agent Approvals (1→14), Cases (1→4); corrected auth paths (`/mfa/verify`, `/verify-email/[token]`); added `/reset-password/callback`, `/verify-email/callback`; updated nav structure (static→dynamic module-gated); added `_layout-shell.tsx` pattern (7 modules); updated sidebar configs (11→17); updated API routes (16→19); expanded integration checklist with assessed/unassessed split; added route-to-flow mappings for calendar/email/cases |

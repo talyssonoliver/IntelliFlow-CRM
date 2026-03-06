@@ -259,8 +259,12 @@ contrast.
 
 ```css
 @theme inline {
-  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  --font-sans:
+    'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
 }
 ```
 
@@ -448,7 +452,8 @@ When adding a new color from brand tokens:
 1. Add brand token to `docs/company/brand/palette.tokens.json`
 2. Convert HEX to HSL
 3. Add CSS variable to `apps/web/src/app/globals.css` (both `:root` and `.dark`)
-4. Add Tailwind utility to `apps/web/src/app/globals.css` (inside `@theme inline { ... }`)
+4. Add Tailwind utility to `apps/web/src/app/globals.css` (inside
+   `@theme inline { ... }`)
 5. Document mapping in this file
 6. Update component if needed
 

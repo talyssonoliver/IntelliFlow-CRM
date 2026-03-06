@@ -8,12 +8,15 @@
 
 **Technical Story:** IFC-176, IFC-177, IFC-178, IFC-179, IFC-180, IFC-181
 
-> **Note**: This ADR was retroactively created to document architectural decisions
-> made during implementation. The decisions described here are already in production.
+> **Note**: This ADR was retroactively created to document architectural
+> decisions made during implementation. The decisions described here are already
+> in production.
 
 ## Context and Problem Statement
 
-AI-generated outputs (lead scores, content suggestions, risk assessments) need human review before application. A full-stack review layer was needed spanning validators, use cases, database, adapters, API router, and frontend UI.
+AI-generated outputs (lead scores, content suggestions, risk assessments) need
+human review before application. A full-stack review layer was needed spanning
+validators, use cases, database, adapters, API router, and frontend UI.
 
 ## Decision Drivers
 
@@ -24,14 +27,17 @@ AI-generated outputs (lead scores, content suggestions, risk assessments) need h
 
 ## Considered Options
 
-- Hexagonal architecture: Domain → Validators → Application → DB → Adapters → Router → UI
+- Hexagonal architecture: Domain → Validators → Application → DB → Adapters →
+  Router → UI
 - Zod validators for review request/response schemas
 - Prisma model for review records with status workflow
 - tRPC router with role-based access for reviewers
 
 ## Decision Outcome
 
-Chosen: Full hexagonal stack following project conventions — Zod validators, application use cases with ports, Prisma model, repository adapters, tRPC router, and React review UI.
+Chosen: Full hexagonal stack following project conventions — Zod validators,
+application use cases with ports, Prisma model, repository adapters, tRPC
+router, and React review UI.
 
 ### Positive Consequences
 
@@ -58,5 +64,5 @@ All related tasks are completed. See attestation files at
 
 ### Rollback Plan
 
-N/A — decisions are already in production. Future changes should create a new ADR
-that supersedes this one.
+N/A — decisions are already in production. Future changes should create a new
+ADR that supersedes this one.

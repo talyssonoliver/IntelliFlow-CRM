@@ -2,8 +2,8 @@
 
 > **Location**: `docs/design/ui-flow-mapping.md` **Last Updated**: 2026-02-24
 > **Purpose**: Cross-reference document linking Flows, Sitemap Routes, Style
-> Guide Components **Total Pages**: 104 implemented **Total Flows**: 42 **API
-> Routers**: 39 (366 procedures)
+> Guide Components **Total Pages**: 118 implemented **Total Flows**: 42 **API
+> Routers**: 41 (366 procedures)
 
 This document provides a comprehensive mapping between user flows, UI routes,
 and design system components to ensure consistent implementation across the
@@ -59,20 +59,20 @@ application.
 
 ## Quick Links
 
-| Document                | Location                                                        | Purpose                                       |
-| ----------------------- | --------------------------------------------------------------- | --------------------------------------------- |
-| Flow Index              | `apps/project-tracker/docs/metrics/_global/flows/flow-index.md` | Master flow catalog (42 flows)                |
-| Individual Flows        | `apps/project-tracker/docs/metrics/_global/flows/FLOW-*.md`     | Detailed flow specs                           |
-| Sitemap                 | `docs/design/sitemap.md`                                        | Route structure (103 pages)                   |
-| Page Map & Flows        | `docs/design/PAGE_MAP_AND_FLOWS.md`                             | Visual flow diagrams                          |
-| **Integration Backlog** | `docs/design/integration-backlog.md`                            | **Page specs + API requirements (23 tasks)**  |
-| tRPC API Routes         | `docs/api/trpc-routes.md`                                       | API inventory (366 procedures)                |
-| Style Guide             | `docs/company/brand/style-guide.md`                             | Component patterns                            |
-| Visual Identity         | `docs/company/brand/visual-identity.md`                         | Design tokens                                 |
-| Accessibility           | `docs/company/brand/accessibility-patterns.md`                  | ARIA patterns                                 |
-| Do's and Don'ts         | `docs/company/brand/dos-and-donts.md`                           | Best practices                                |
-| Page Registry           | `docs/design/page-registry.md`                                  | Detailed page specs                           |
-| Sprint Plan             | `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`     | Task tracking (316 tasks)                     |
+| Document                | Location                                                        | Purpose                                      |
+| ----------------------- | --------------------------------------------------------------- | -------------------------------------------- |
+| Flow Index              | `apps/project-tracker/docs/metrics/_global/flows/flow-index.md` | Master flow catalog (42 flows)               |
+| Individual Flows        | `apps/project-tracker/docs/metrics/_global/flows/FLOW-*.md`     | Detailed flow specs                          |
+| Sitemap                 | `docs/design/sitemap.md`                                        | Route structure (103 pages)                  |
+| Page Map & Flows        | `docs/design/PAGE_MAP_AND_FLOWS.md`                             | Visual flow diagrams                         |
+| **Integration Backlog** | `docs/design/integration-backlog.md`                            | **Page specs + API requirements (23 tasks)** |
+| tRPC API Routes         | `docs/api/trpc-routes.md`                                       | API inventory (366 procedures)               |
+| Style Guide             | `docs/company/brand/style-guide.md`                             | Component patterns                           |
+| Visual Identity         | `docs/company/brand/visual-identity.md`                         | Design tokens                                |
+| Accessibility           | `docs/company/brand/accessibility-patterns.md`                  | ARIA patterns                                |
+| Do's and Don'ts         | `docs/company/brand/dos-and-donts.md`                           | Best practices                               |
+| Page Registry           | `docs/design/page-registry.md`                                  | Detailed page specs                          |
+| Sprint Plan             | `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`     | Task tracking (316 tasks)                    |
 
 ---
 
@@ -90,19 +90,19 @@ application.
 
 ### Authentication Section
 
-| Route                        | Task ID | Sprint | Status | Primary Flow | Components Required                     | API Router |
-| ---------------------------- | ------- | ------ | ------ | ------------ | --------------------------------------- | ---------- |
-| `/login`                     | PG-015  | 13     | ✅     | FLOW-001     | card, input, btn-primary, input-error   | `auth.*`   |
-| `/signup`                    | PG-016  | 13     | ✅     | FLOW-001     | card, input, btn-primary, badge-success | `auth.*`   |
-| `/signup/success`            | PG-017  | 13     | ✅     | FLOW-001     | card, empty-state                       | -          |
-| `/forgot-password`           | PG-018  | 13     | ✅     | FLOW-003     | card, input, btn-primary                | `auth.*`   |
-| `/reset-password/[token]`    | PG-019  | 13     | ✅     | FLOW-003     | card, input, btn-primary                | `auth.*`   |
-| `/reset-password/callback`   | -       | 14     | ✅     | FLOW-003     | card, loading-spinner                   | `auth.*`   |
-| `/logout`                    | -       | -      | ✅     | -            | loading-spinner                         | `auth.*`   |
-| `/auth/callback`             | -       | 13     | ✅     | FLOW-001     | loading-spinner                         | `auth.*`   |
-| `/mfa/verify`                | PG-020  | 13     | ✅     | FLOW-001     | card, input, btn-primary                | `auth.*`   |
-| `/verify-email/[token]`      | -       | 13     | ✅     | FLOW-001     | card, loading-spinner                   | `auth.*`   |
-| `/verify-email/callback`     | -       | 14     | ✅     | FLOW-001     | card, loading-spinner                   | `auth.*`   |
+| Route                      | Task ID | Sprint | Status | Primary Flow | Components Required                     | API Router |
+| -------------------------- | ------- | ------ | ------ | ------------ | --------------------------------------- | ---------- |
+| `/login`                   | PG-015  | 13     | ✅     | FLOW-001     | card, input, btn-primary, input-error   | `auth.*`   |
+| `/signup`                  | PG-016  | 13     | ✅     | FLOW-001     | card, input, btn-primary, badge-success | `auth.*`   |
+| `/signup/success`          | PG-017  | 13     | ✅     | FLOW-001     | card, empty-state                       | -          |
+| `/forgot-password`         | PG-018  | 13     | ✅     | FLOW-003     | card, input, btn-primary                | `auth.*`   |
+| `/reset-password/[token]`  | PG-019  | 13     | ✅     | FLOW-003     | card, input, btn-primary                | `auth.*`   |
+| `/reset-password/callback` | -       | 14     | ✅     | FLOW-003     | card, loading-spinner                   | `auth.*`   |
+| `/logout`                  | -       | -      | ✅     | -            | loading-spinner                         | `auth.*`   |
+| `/auth/callback`           | -       | 13     | ✅     | FLOW-001     | loading-spinner                         | `auth.*`   |
+| `/mfa/verify`              | PG-020  | 13     | ✅     | FLOW-001     | card, input, btn-primary                | `auth.*`   |
+| `/verify-email/[token]`    | -       | 13     | ✅     | FLOW-001     | card, loading-spinner                   | `auth.*`   |
+| `/verify-email/callback`   | -       | 14     | ✅     | FLOW-001     | card, loading-spinner                   | `auth.*`   |
 
 **Note**: FLOW-002 is "Gestão de Usuários e Permissões" (User Management), used
 in `/admin/users` and `/admin/roles`.
@@ -122,24 +122,25 @@ in `/admin/users` and `/admin/roles`.
 
 ### Public / Marketing Section
 
-| Route            | Task ID | Sprint | Status | Primary Flow | Components Required                        | API Router |
-| ---------------- | ------- | ------ | ------ | ------------ | ------------------------------------------ | ---------- |
-| `/`              | -       | 14     | ✅     | -            | hero, card-grid, btn-primary, testimonials | -          |
-| `/about`         | -       | 14     | ✅     | -            | card, team-grid                            | -          |
-| `/blog`          | -       | 14     | ✅     | -            | card-grid, search-input                    | -          |
-| `/blog/[slug]`   | -       | 14     | ✅     | -            | article-content, breadcrumb                | -          |
-| `/careers`       | -       | 14     | ✅     | -            | card-grid, badge                           | -          |
-| `/careers/[id]`  | -       | 14     | ✅     | -            | card, btn-primary                          | -          |
-| `/contact`       | -       | 14     | ✅     | -            | input, textarea, btn-primary               | -          |
-| `/features`      | -       | 14     | ✅     | -            | card-grid, hero                            | -          |
-| `/lp/[slug]`     | -       | 14     | ✅     | -            | hero, card, btn-primary                    | -          |
-| `/partners`      | -       | 14     | ✅     | -            | card-grid, logo-grid                       | -          |
-| `/press`         | -       | 14     | ✅     | -            | card-grid, date-badge                      | -          |
-| `/pricing`       | -       | 14     | ✅     | FLOW-010     | pricing-card, toggle-switch, btn-primary   | -          |
-| `/security`      | -       | 14     | ✅     | -            | card, badge                                | -          |
-| `/status`        | -       | 14     | ✅     | -            | metric-card, badge                         | -          |
+| Route           | Task ID | Sprint | Status | Primary Flow | Components Required                        | API Router |
+| --------------- | ------- | ------ | ------ | ------------ | ------------------------------------------ | ---------- |
+| `/`             | -       | 14     | ✅     | -            | hero, card-grid, btn-primary, testimonials | -          |
+| `/about`        | -       | 14     | ✅     | -            | card, team-grid                            | -          |
+| `/blog`         | -       | 14     | ✅     | -            | card-grid, search-input                    | -          |
+| `/blog/[slug]`  | -       | 14     | ✅     | -            | article-content, breadcrumb                | -          |
+| `/careers`      | -       | 14     | ✅     | -            | card-grid, badge                           | -          |
+| `/careers/[id]` | -       | 14     | ✅     | -            | card, btn-primary                          | -          |
+| `/contact`      | -       | 14     | ✅     | -            | input, textarea, btn-primary               | -          |
+| `/features`     | -       | 14     | ✅     | -            | card-grid, hero                            | -          |
+| `/lp/[slug]`    | -       | 14     | ✅     | -            | hero, card, btn-primary                    | -          |
+| `/partners`     | -       | 14     | ✅     | -            | card-grid, logo-grid                       | -          |
+| `/press`        | -       | 14     | ✅     | -            | card-grid, date-badge                      | -          |
+| `/pricing`      | -       | 14     | ✅     | FLOW-010     | pricing-card, toggle-switch, btn-primary   | -          |
+| `/security`     | -       | 14     | ✅     | -            | card, badge                                | -          |
+| `/status`       | -       | 14     | ✅     | -            | metric-card, badge                         | -          |
 
-**Note**: All public marketing pages are static content. No tRPC backend required.
+**Note**: All public marketing pages are static content. No tRPC backend
+required.
 
 ---
 
@@ -328,8 +329,8 @@ in `/admin/users` and `/admin/roles`.
 - Queries: `list`, `getById`, `getByDate`, `getByContact`, `getByCase`,
   `getAvailability`, `getRecurring`
 - Mutations: `create`, `update`, `delete`, `cancel`, `reschedule`, `confirm`,
-  `addAttendee`, `removeAttendee`, `addNote`, `setReminder`,
-  `createRecurring`, `updateRecurring`
+  `addAttendee`, `removeAttendee`, `addNote`, `setReminder`, `createRecurring`,
+  `updateRecurring`
 
 ---
 
@@ -444,25 +445,25 @@ in `/admin/users` and `/admin/roles`.
 
 ### AI / Agent Approvals Section
 
-| Route                                | Task ID | Sprint | Status | Primary Flow | Components Required                           | API Router       |
-| ------------------------------------ | ------- | ------ | ------ | ------------ | --------------------------------------------- | ---------------- |
-| `/agent-approvals`                   | IFC-149 | -      | ✅     | -            | card, data-table, btn-primary, badge          | `agent.*`        |
-| `/agent-approvals/agents`            | -       | 14     | ✅     | -            | data-table, badge, card                       | `agent.*`        |
-| `/agent-approvals/ai-review`         | -       | 14     | ✅     | -            | data-table, badge, card                       | `aiReview.*`     |
-| `/agent-approvals/ai-review/[id]`    | -       | 14     | ✅     | -            | card, diff-viewer, btn-primary, badge         | `aiReview.*`     |
-| `/agent-approvals/ai-search`         | -       | 14     | ✅     | -            | search-input, card, data-table                | `intelligence.*` |
-| `/agent-approvals/churn-risk`        | -       | 14     | ✅     | -            | metric-card, chart-widgets, data-table        | `intelligence.*` |
-| `/agent-approvals/drift`             | -       | 14     | ✅     | -            | chart-widgets, metric-card, badge             | `aiMonitoring.*` |
-| `/agent-approvals/experiments`       | -       | 14     | ✅     | -            | data-table, badge, chart-widgets, btn-primary | `experiment.*`   |
-| `/agent-approvals/history`           | -       | 14     | ✅     | -            | data-table, timeline, badge                   | `agent.*`        |
-| `/agent-approvals/latency`           | -       | 14     | ✅     | -            | chart-widgets, metric-card                    | `aiMonitoring.*` |
-| `/agent-approvals/lead-scoring`      | -       | 14     | ✅     | -            | metric-card, chart-widgets, data-table        | `intelligence.*` |
-| `/agent-approvals/logs`              | -       | 14     | ✅     | -            | log-viewer, filter-controls, data-table       | `aiMonitoring.*` |
-| `/agent-approvals/preview`           | -       | 14     | ✅     | -            | card, diff-viewer, btn-primary                | `aiReview.*`     |
-| `/agent-approvals/sentiment`         | -       | 14     | ✅     | -            | chart-widgets, metric-card, badge             | `intelligence.*` |
-| `/ai/insights`                       | IFC-095 | 8      | ⏳     | FLOW-025     | metric-card, card, chart-widgets              | `intelligence.*` |
-| `/ai/explainability`                 | IFC-023 | -      | ⏳     | FLOW-024     | card, progress-bar, badge                     | `intelligence.*` |
-| `/ai/feedback`                       | IFC-025 | -      | ⏳     | FLOW-026     | rating-component, textarea, btn-primary       | `feedback.*`     |
+| Route                             | Task ID | Sprint | Status | Primary Flow | Components Required                           | API Router       |
+| --------------------------------- | ------- | ------ | ------ | ------------ | --------------------------------------------- | ---------------- |
+| `/agent-approvals`                | IFC-149 | -      | ✅     | -            | card, data-table, btn-primary, badge          | `agent.*`        |
+| `/agent-approvals/agents`         | -       | 14     | ✅     | -            | data-table, badge, card                       | `agent.*`        |
+| `/agent-approvals/ai-review`      | -       | 14     | ✅     | -            | data-table, badge, card                       | `aiReview.*`     |
+| `/agent-approvals/ai-review/[id]` | -       | 14     | ✅     | -            | card, diff-viewer, btn-primary, badge         | `aiReview.*`     |
+| `/agent-approvals/ai-search`      | -       | 14     | ✅     | -            | search-input, card, data-table                | `intelligence.*` |
+| `/agent-approvals/churn-risk`     | -       | 14     | ✅     | -            | metric-card, chart-widgets, data-table        | `intelligence.*` |
+| `/agent-approvals/drift`          | -       | 14     | ✅     | -            | chart-widgets, metric-card, badge             | `aiMonitoring.*` |
+| `/agent-approvals/experiments`    | -       | 14     | ✅     | -            | data-table, badge, chart-widgets, btn-primary | `experiment.*`   |
+| `/agent-approvals/history`        | -       | 14     | ✅     | -            | data-table, timeline, badge                   | `agent.*`        |
+| `/agent-approvals/latency`        | -       | 14     | ✅     | -            | chart-widgets, metric-card                    | `aiMonitoring.*` |
+| `/agent-approvals/lead-scoring`   | -       | 14     | ✅     | -            | metric-card, chart-widgets, data-table        | `intelligence.*` |
+| `/agent-approvals/logs`           | -       | 14     | ✅     | -            | log-viewer, filter-controls, data-table       | `aiMonitoring.*` |
+| `/agent-approvals/preview`        | -       | 14     | ✅     | -            | card, diff-viewer, btn-primary                | `aiReview.*`     |
+| `/agent-approvals/sentiment`      | -       | 14     | ✅     | -            | chart-widgets, metric-card, badge             | `intelligence.*` |
+| `/ai/insights`                    | IFC-095 | 8      | ⏳     | FLOW-025     | metric-card, card, chart-widgets              | `intelligence.*` |
+| `/ai/explainability`              | IFC-023 | -      | ⏳     | FLOW-024     | card, progress-bar, badge                     | `intelligence.*` |
+| `/ai/feedback`                    | IFC-025 | -      | ⏳     | FLOW-026     | rating-component, textarea, btn-primary       | `feedback.*`     |
 
 **Agent Router Procedures** (8 total):
 
@@ -483,21 +484,21 @@ in `/admin/users` and `/admin/roles`.
 **Experiment Router Procedures** (15 total):
 
 - Queries: `list`, `getById`, `getResults`, `getMetrics`, `getActive`
-- Mutations: `create`, `update`, `start`, `stop`, `archive`,
-  `setTrafficSplit`, `addVariant`, `removeVariant`, `updateVariant`,
-  `analyzeResults`
+- Mutations: `create`, `update`, `start`, `stop`, `archive`, `setTrafficSplit`,
+  `addVariant`, `removeVariant`, `updateVariant`, `analyzeResults`
 
 **Chain Version Router Procedures** (14 total):
 
 - Queries: `list`, `getById`, `getActive`, `getExperiments`, `getMetrics`,
   `compareVersions`, `getHistory`, `getConfig`
-- Mutations: `create`, `activate`, `deactivate`, `rollback`,
-  `createExperiment`, `updateConfig`
+- Mutations: `create`, `activate`, `deactivate`, `rollback`, `createExperiment`,
+  `updateConfig`
 
 **Intelligence Router Procedures** (10 total):
 
 - Queries: `getLeadScore`, `getChurnRisk`, `getDealForecast`,
-  `getSentimentAnalysis`, `getSearchResults`, `getInsights`, `getRecommendations`
+  `getSentimentAnalysis`, `getSearchResults`, `getInsights`,
+  `getRecommendations`
 - Mutations: `refreshScore`, `provideFeedback`, `runAnalysis`
 
 **Note**: FLOW-023 is "Construtor de Relatórios", not AI explainability
@@ -506,14 +507,14 @@ in `/admin/users` and `/admin/roles`.
 
 ### Developer Portal Section
 
-| Route                | Task ID | Sprint | Status | Primary Flow | Components Required                       | API Router   |
-| -------------------- | ------- | ------ | ------ | ------------ | ----------------------------------------- | ------------ |
-| `/developers/apps`   | -       | 14     | ✅     | -            | data-table, card, btn-primary, badge      | -            |
-| `/docs`              | -       | 14     | ✅     | -            | sidebar-nav, article-content, breadcrumb  | -            |
-| `/docs/api`          | -       | 14     | ✅     | -            | api-reference, code-block, tab-nav        | -            |
-| `/docs/changelog`    | PG-035  | 15     | ✅     | -            | article-content, badge, timeline          | -            |
-| `/docs/integrations` | -       | 14     | ✅     | -            | card-grid, article-content, code-block    | -            |
-| `/docs/webhooks`     | -       | 14     | ✅     | -            | article-content, code-block, data-table   | `webhooks.*` |
+| Route                | Task ID | Sprint | Status | Primary Flow | Components Required                      | API Router   |
+| -------------------- | ------- | ------ | ------ | ------------ | ---------------------------------------- | ------------ |
+| `/developers/apps`   | -       | 14     | ✅     | -            | data-table, card, btn-primary, badge     | -            |
+| `/docs`              | -       | 14     | ✅     | -            | sidebar-nav, article-content, breadcrumb | -            |
+| `/docs/api`          | -       | 14     | ✅     | -            | api-reference, code-block, tab-nav       | -            |
+| `/docs/changelog`    | PG-035  | 15     | ✅     | -            | article-content, badge, timeline         | -            |
+| `/docs/integrations` | -       | 14     | ✅     | -            | card-grid, article-content, code-block   | -            |
+| `/docs/webhooks`     | -       | 14     | ✅     | -            | article-content, code-block, data-table  | `webhooks.*` |
 
 **Webhooks Router Procedures** (9 total):
 
@@ -618,8 +619,7 @@ in `/admin/users` and `/admin/roles`.
   `getPricingPlans`, `getReceipts`, `getBillingHistory`
 - Mutations: `createCheckoutSession`, `updateSubscription`,
   `cancelSubscription`, `addPaymentMethod`, `removePaymentMethod`,
-  `setDefaultPaymentMethod`, `downloadInvoice`, `retryPayment`,
-  `applyPromoCode`
+  `setDefaultPaymentMethod`, `downloadInvoice`, `retryPayment`, `applyPromoCode`
 
 **Integration Note**: Stripe integration pending - currently using hardcoded
 data
@@ -641,10 +641,10 @@ data
 
 ### Notifications Section
 
-| Route                     | Task ID | Sprint | Status | Primary Flow | Components Required   | API Router         |
-| ------------------------- | ------- | ------ | ------ | ------------ | --------------------- | ------------------ |
-| `/notifications`          | -       | -      | ✅     | FLOW-022     | data-table, badge     | `notifications.*`  |
-| `/notifications/settings` | -       | -      | ✅     | FLOW-021     | toggle-switch, select | `notifications.*`  |
+| Route                     | Task ID | Sprint | Status | Primary Flow | Components Required   | API Router        |
+| ------------------------- | ------- | ------ | ------ | ------------ | --------------------- | ----------------- |
+| `/notifications`          | -       | -      | ✅     | FLOW-022     | data-table, badge     | `notifications.*` |
+| `/notifications/settings` | -       | -      | ✅     | FLOW-021     | toggle-switch, select | `notifications.*` |
 
 **Notifications Router Procedures** (8 total):
 
@@ -675,17 +675,17 @@ data
 
 ## Flow Category Summary
 
-| Category                 | Flow Range                   | Route Patterns                                        | Key Components                     | API Routers                                                                             |
-| ------------------------ | ---------------------------- | ----------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------- |
-| Acesso e Identidade      | FLOW-001 to FLOW-004         | `/login`, `/admin/users`, `/settings/devices`         | card, input, btn-primary           | `auth` (18)                                                                             |
-| Comercial Core           | FLOW-005 to FLOW-010         | `/leads/*`, `/deals/*`, `/tasks/*`                    | pipeline-kanban, data-table, badge | `lead` (18), `opportunity` (12), `billing` (16), `task` (12)                            |
-| Relacionamento e Suporte | FLOW-011 to FLOW-015         | `/tickets/*`, `/cases/*`, `/analytics/feedback`       | sla-countdown, timeline            | `ticket` (15), `contact` (17), `cases` (12), `feedbackSurvey` (4)                      |
-| Comunicação              | FLOW-016 to FLOW-022         | `/contacts/[id]/*`, `/email/*`, `/calendar/*`         | email-composer, timeline           | `email` (12), `timeline` (8), `appointments` (19), `notifications` (8)                  |
-| Analytics e Insights     | FLOW-023 to FLOW-028         | `/analytics/*`, `/reports/*`                          | metric-card, chart-widgets         | `analytics` (13)                                                                        |
-| Segurança e Compliance   | FLOW-029 to FLOW-033         | `/admin/*`, `/governance/*`                           | permission-matrix, audit-log       | `audit` (5)                                                                             |
-| Qualidade e Testes       | FLOW-034 to FLOW-038         | `/settings/*`, `/ops/*`                               | onboarding-wizard, monitoring      | Local APIs                                                                              |
-| Search & AI              | FLOW-039, FLOW-041, FLOW-045 | `/settings/ai`, `/agent-approvals/*`                  | data-table, badge                  | `agent` (8), `chainVersion` (14), `intelligence` (10), `aiMonitoring` (8), `aiReview` (7), `experiment` (15) |
-| Developer                | -                            | `/developers/*`, `/docs/*`                            | api-reference, code-block          | `webhooks` (9)                                                                          |
+| Category                 | Flow Range                   | Route Patterns                                  | Key Components                     | API Routers                                                                                                  |
+| ------------------------ | ---------------------------- | ----------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Acesso e Identidade      | FLOW-001 to FLOW-004         | `/login`, `/admin/users`, `/settings/devices`   | card, input, btn-primary           | `auth` (18)                                                                                                  |
+| Comercial Core           | FLOW-005 to FLOW-010         | `/leads/*`, `/deals/*`, `/tasks/*`              | pipeline-kanban, data-table, badge | `lead` (18), `opportunity` (12), `billing` (16), `task` (12)                                                 |
+| Relacionamento e Suporte | FLOW-011 to FLOW-015         | `/tickets/*`, `/cases/*`, `/analytics/feedback` | sla-countdown, timeline            | `ticket` (15), `contact` (17), `cases` (12), `feedbackSurvey` (4)                                            |
+| Comunicação              | FLOW-016 to FLOW-022         | `/contacts/[id]/*`, `/email/*`, `/calendar/*`   | email-composer, timeline           | `email` (12), `timeline` (8), `appointments` (19), `notifications` (8)                                       |
+| Analytics e Insights     | FLOW-023 to FLOW-028         | `/analytics/*`, `/reports/*`                    | metric-card, chart-widgets         | `analytics` (13)                                                                                             |
+| Segurança e Compliance   | FLOW-029 to FLOW-033         | `/admin/*`, `/governance/*`                     | permission-matrix, audit-log       | `audit` (5)                                                                                                  |
+| Qualidade e Testes       | FLOW-034 to FLOW-038         | `/settings/*`, `/ops/*`                         | onboarding-wizard, monitoring      | Local APIs                                                                                                   |
+| Search & AI              | FLOW-039, FLOW-041, FLOW-045 | `/settings/ai`, `/agent-approvals/*`            | data-table, badge                  | `agent` (8), `chainVersion` (14), `intelligence` (10), `aiMonitoring` (8), `aiReview` (7), `experiment` (15) |
+| Developer                | -                            | `/developers/*`, `/docs/*`                      | api-reference, code-block          | `webhooks` (9)                                                                                               |
 
 ---
 
@@ -740,7 +740,7 @@ data
 
 | Status            | Count | Description                            |
 | ----------------- | ----- | -------------------------------------- |
-| ✅ Implemented    | 104   | Pages live in codebase                 |
+| ✅ Implemented    | 112   | Pages live in codebase                 |
 | ⏳ Planned        | 50    | Routes defined but not yet implemented |
 | ★ Mockup Required | 3     | Need design before implementation      |
 
@@ -759,65 +759,65 @@ hardcoded/mock data.
 
 ### Integration Status by Route
 
-| Route                                | Integration   | Required APIs                                                                                               |
-| ------------------------------------ | ------------- | ----------------------------------------------------------------------------------------------------------- |
-| `/` (Landing)                        | 🔴 Static     | Marketing landing page — no API required                                                                    |
-| `/login`, `/signup`, auth routes     | 🟢 Integrated | `auth.*` (18 procedures)                                                                                    |
-| Public marketing pages               | 🔴 Static     | Static content pages — no API required                                                                      |
-| `/dashboard`                         | 🟡 Partial    | `dashboard.getMetrics`, `dashboard.getWidgets`                                                              |
-| `/dashboard/new`                     | 🟡 Partial    | `dashboard.createDashboard`                                                                                 |
-| `/dashboard/customize`               | 🟡 Partial    | `dashboard.updateLayout`                                                                                    |
-| `/leads/*`                           | 🟢 Integrated | `lead.*` (18 procedures)                                                                                    |
-| `/contacts/*`                        | 🟢 Integrated | `contact.*` (17 procedures)                                                                                 |
-| `/deals`                             | 🟢 Integrated | `opportunity.*` (12 procedures)                                                                             |
-| `/deals/[id]`                        | 🟢 Integrated | `opportunity.getById`                                                                                       |
-| `/deals/[id]/forecast`               | 🔴 Hardcoded  | `intelligence.getDealForecast`                                                                              |
-| `/deals/forecast`                    | 🟡 Partial    | `intelligence.getSalesForecast`                                                                             |
-| `/tasks/*`                           | 🟢 Integrated | `task.*` (12 procedures)                                                                                    |
-| `/cases`, `/cases/new`, `/cases/[id]`| 🟢 Integrated | `cases.*` (12 procedures)                                                                                   |
-| `/cases/timeline`                    | 🟢 Integrated | `timeline.*` (8 procedures)                                                                                 |
-| `/calendar/*`                        | 🟢 Integrated | `appointments.*` (19 procedures)                                                                            |
-| `/tickets/*`                         | 🟢 Integrated | `ticket.*` (15 procedures)                                                                                  |
-| `/accounts`                          | 🟢 Integrated | `account.*` (12 procedures)                                                                                 |
-| `/accounts/[id]`                     | 🔴 Hardcoded  | `account.getById` — page exists but no direct tRPC usage                                                    |
-| `/documents/*`                       | 🟢 Integrated | `documents.*` (18 procedures)                                                                               |
-| `/email/*`                           | 🔴 Hardcoded  | `email.*` — pages exist but no direct tRPC usage yet                                                        |
-| `/analytics`                         | 🟡 Partial    | `analytics.*` (13 procedures)                                                                               |
-| `/analytics/feedback`                | 🔴 Hardcoded  | `feedbackSurvey.*` — page exists but no direct tRPC usage yet                                               |
-| `/agent-approvals`                   | 🟢 Integrated | `agent.*` (8 procedures)                                                                                    |
-| `/agent-approvals/ai-review/[id]`    | 🟢 Integrated | `aiReview.*` (7 procedures)                                                                                 |
-| `/agent-approvals/*` (other 12)      | 🔴 Hardcoded  | Various AI routers — pages exist but no direct tRPC usage yet                                               |
-| `/developers/*`, `/docs/*`           | 🔴 Static     | Developer portal — static documentation content                                                             |
-| `/settings/ai`                       | 🟢 Integrated | `chainVersion.*` (14 procedures)                                                                            |
-| `/settings/account`                  | 🟢 Integrated | `auth.*`                                                                                                    |
-| `/settings/team`                     | 🟢 Integrated | `auth.*`                                                                                                    |
-| `/settings/integrations`             | 🟡 Partial    | `integrations.*` (6 procedures)                                                                             |
-| `/settings/pipeline`                 | 🟢 Integrated | `pipelineConfig.*` (5 procedures)                                                                           |
-| `/settings/routing`                  | 🔴 Hardcoded  | `routing.*` — page exists but no direct tRPC usage yet                                                      |
-| `/settings/notifications`            | 🔴 Hardcoded  | Notification preferences API needed                                                                         |
-| `/settings/security/mfa`             | 🟢 Integrated | `auth.*`                                                                                                    |
-| `/billing/*`                         | 🔴 Hardcoded  | `billing.*` - Stripe integration pending                                                                    |
-| `/governance/*`                      | 🟢 Integrated | Local API routes (`/api/adr/*`, `/api/compliance/*`, `/api/quality-reports/*`)                              |
-| `/notifications`                     | 🟢 Integrated | `notifications.*` (8 procedures)                                                                            |
-| `/notifications/settings`            | 🟢 Integrated | `notifications.*`                                                                                           |
-| `/profile`                           | 🟢 Integrated | `auth.getUser`, `auth.updateProfile`                                                                        |
+| Route                                 | Integration   | Required APIs                                                                  |
+| ------------------------------------- | ------------- | ------------------------------------------------------------------------------ |
+| `/` (Landing)                         | 🔴 Static     | Marketing landing page — no API required                                       |
+| `/login`, `/signup`, auth routes      | 🟢 Integrated | `auth.*` (18 procedures)                                                       |
+| Public marketing pages                | 🔴 Static     | Static content pages — no API required                                         |
+| `/dashboard`                          | 🟡 Partial    | `dashboard.getMetrics`, `dashboard.getWidgets`                                 |
+| `/dashboard/new`                      | 🟡 Partial    | `dashboard.createDashboard`                                                    |
+| `/dashboard/customize`                | 🟡 Partial    | `dashboard.updateLayout`                                                       |
+| `/leads/*`                            | 🟢 Integrated | `lead.*` (18 procedures)                                                       |
+| `/contacts/*`                         | 🟢 Integrated | `contact.*` (17 procedures)                                                    |
+| `/deals`                              | 🟢 Integrated | `opportunity.*` (12 procedures)                                                |
+| `/deals/[id]`                         | 🟢 Integrated | `opportunity.getById`                                                          |
+| `/deals/[id]/forecast`                | 🔴 Hardcoded  | `intelligence.getDealForecast`                                                 |
+| `/deals/forecast`                     | 🟡 Partial    | `intelligence.getSalesForecast`                                                |
+| `/tasks/*`                            | 🟢 Integrated | `task.*` (12 procedures)                                                       |
+| `/cases`, `/cases/new`, `/cases/[id]` | 🟢 Integrated | `cases.*` (12 procedures)                                                      |
+| `/cases/timeline`                     | 🟢 Integrated | `timeline.*` (8 procedures)                                                    |
+| `/calendar/*`                         | 🟢 Integrated | `appointments.*` (19 procedures)                                               |
+| `/tickets/*`                          | 🟢 Integrated | `ticket.*` (15 procedures)                                                     |
+| `/accounts`                           | 🟢 Integrated | `account.*` (12 procedures)                                                    |
+| `/accounts/[id]`                      | 🔴 Hardcoded  | `account.getById` — page exists but no direct tRPC usage                       |
+| `/documents/*`                        | 🟢 Integrated | `documents.*` (18 procedures)                                                  |
+| `/email/*`                            | 🔴 Hardcoded  | `email.*` — pages exist but no direct tRPC usage yet                           |
+| `/analytics`                          | 🟡 Partial    | `analytics.*` (13 procedures)                                                  |
+| `/analytics/feedback`                 | 🔴 Hardcoded  | `feedbackSurvey.*` — page exists but no direct tRPC usage yet                  |
+| `/agent-approvals`                    | 🟢 Integrated | `agent.*` (8 procedures)                                                       |
+| `/agent-approvals/ai-review/[id]`     | 🟢 Integrated | `aiReview.*` (7 procedures)                                                    |
+| `/agent-approvals/*` (other 12)       | 🔴 Hardcoded  | Various AI routers — pages exist but no direct tRPC usage yet                  |
+| `/developers/*`, `/docs/*`            | 🔴 Static     | Developer portal — static documentation content                                |
+| `/settings/ai`                        | 🟢 Integrated | `chainVersion.*` (14 procedures)                                               |
+| `/settings/account`                   | 🟢 Integrated | `auth.*`                                                                       |
+| `/settings/team`                      | 🟢 Integrated | `auth.*`                                                                       |
+| `/settings/integrations`              | 🟡 Partial    | `integrations.*` (6 procedures)                                                |
+| `/settings/pipeline`                  | 🟢 Integrated | `pipelineConfig.*` (5 procedures)                                              |
+| `/settings/routing`                   | 🔴 Hardcoded  | `routing.*` — page exists but no direct tRPC usage yet                         |
+| `/settings/notifications`             | 🔴 Hardcoded  | Notification preferences API needed                                            |
+| `/settings/security/mfa`              | 🟢 Integrated | `auth.*`                                                                       |
+| `/billing/*`                          | 🔴 Hardcoded  | `billing.*` - Stripe integration pending                                       |
+| `/governance/*`                       | 🟢 Integrated | Local API routes (`/api/adr/*`, `/api/compliance/*`, `/api/quality-reports/*`) |
+| `/notifications`                      | 🟢 Integrated | `notifications.*` (8 procedures)                                               |
+| `/notifications/settings`             | 🟢 Integrated | `notifications.*`                                                              |
+| `/profile`                            | 🟢 Integrated | `auth.getUser`, `auth.updateProfile`                                           |
 
 ### Priority Integration Tasks
 
-| Route                           | Current Status | Required Work                                                                          |
-| ------------------------------- | -------------- | -------------------------------------------------------------------------------------- |
-| `/email/*`                      | 🔴             | Wire `email.*` router to email inbox/detail pages                                      |
-| `/accounts/[id]`                | 🔴             | Connect to `account.getById`                                                           |
-| `/analytics/feedback`           | 🔴             | Connect to `feedbackSurvey.*` router                                                   |
-| `/settings/routing`             | 🔴             | Connect to `routing.*` router                                                          |
-| `/agent-approvals/*` sub-pages  | 🔴             | Wire AI monitoring, review, experiment routers                                         |
-| `/billing/*`                    | 🔴             | Stripe integration + connect to `billing.*` router                                     |
-| `/deals/[id]/forecast`          | 🔴             | Connect to `intelligence.getDealForecast`                                              |
-| `/settings/notifications`       | 🔴             | Create notification preferences API                                                    |
-| `/admin/*`                      | ⏳             | Full implementation needed                                                             |
-| `/automation/*`                 | ⏳             | Full implementation needed                                                             |
-| `/support/*`                    | ⏳             | Full implementation needed                                                             |
-| `/ops/*`                        | ⏳             | Full implementation needed                                                             |
+| Route                          | Current Status | Required Work                                      |
+| ------------------------------ | -------------- | -------------------------------------------------- |
+| `/email/*`                     | 🔴             | Wire `email.*` router to email inbox/detail pages  |
+| `/accounts/[id]`               | 🔴             | Connect to `account.getById`                       |
+| `/analytics/feedback`          | 🔴             | Connect to `feedbackSurvey.*` router               |
+| `/settings/routing`            | 🔴             | Connect to `routing.*` router                      |
+| `/agent-approvals/*` sub-pages | 🔴             | Wire AI monitoring, review, experiment routers     |
+| `/billing/*`                   | 🔴             | Stripe integration + connect to `billing.*` router |
+| `/deals/[id]/forecast`         | 🔴             | Connect to `intelligence.getDealForecast`          |
+| `/settings/notifications`      | 🔴             | Create notification preferences API                |
+| `/admin/*`                     | ⏳             | Full implementation needed                         |
+| `/automation/*`                | ⏳             | Full implementation needed                         |
+| `/support/*`                   | ⏳             | Full implementation needed                         |
+| `/ops/*`                       | ⏳             | Full implementation needed                         |
 
 ---
 
@@ -858,8 +858,8 @@ When implementing any route, verify:
 
 ## Version History
 
-| Date       | Version | Changes                                                                                                                                                                                                                                     |
-| ---------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2025-12-27 | 1.0.0   | Initial cross-reference document                                                                                                                                                                                                            |
-| 2026-02-02 | 2.0.0   | Added Status column (✅/⏳), API Router column, procedure counts. Updated to 68 implemented pages, 42 flows, 232 API procedures. Preserved all Task IDs, Sprint numbers, and notes. Added implementation status summary and priority tasks. |
+| Date       | Version | Changes                                                                                                                                                                                                                                                                                                                                                                     |
+| ---------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2025-12-27 | 1.0.0   | Initial cross-reference document                                                                                                                                                                                                                                                                                                                                            |
+| 2026-02-02 | 2.0.0   | Added Status column (✅/⏳), API Router column, procedure counts. Updated to 68 implemented pages, 42 flows, 232 API procedures. Preserved all Task IDs, Sprint numbers, and notes. Added implementation status summary and priority tasks.                                                                                                                                 |
 | 2026-02-24 | 3.0.0   | Major update: 68→103 implemented pages, 25→39 API routers, 232→366 procedures. Added 5 new sections (Public/Marketing, Tasks, Calendar, Email, Developer Portal). Expanded Cases (1→4 routes), AI/Agent Approvals (2→14 routes). Updated status markers (accounts, tickets/new ⏳→✅). Added auth callback routes. Updated all procedure counts from codebase verification. |

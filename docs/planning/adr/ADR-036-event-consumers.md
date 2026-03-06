@@ -8,12 +8,15 @@
 
 **Technical Story:** IFC-151, IFC-168
 
-> **Note**: This ADR was retroactively created to document architectural decisions
-> made during implementation. The decisions described here are already in production.
+> **Note**: This ADR was retroactively created to document architectural
+> decisions made during implementation. The decisions described here are already
+> in production.
 
 ## Context and Problem Statement
 
-IntelliFlow CRM's domain events system needs reliable consumers with retry logic, dead-letter queues, and backoff strategies. The AI worker also needed migration from ad-hoc processing to BullMQ-based job queue.
+IntelliFlow CRM's domain events system needs reliable consumers with retry
+logic, dead-letter queues, and backoff strategies. The AI worker also needed
+migration from ad-hoc processing to BullMQ-based job queue.
 
 ## Decision Drivers
 
@@ -30,7 +33,9 @@ IntelliFlow CRM's domain events system needs reliable consumers with retry logic
 
 ## Decision Outcome
 
-Chosen: BullMQ-based event consumers with configurable retry (exponential backoff, max 3 attempts), dead-letter queue for investigation, and standardized worker base class.
+Chosen: BullMQ-based event consumers with configurable retry (exponential
+backoff, max 3 attempts), dead-letter queue for investigation, and standardized
+worker base class.
 
 ### Positive Consequences
 
@@ -56,5 +61,5 @@ All related tasks are completed. See attestation files at
 
 ### Rollback Plan
 
-N/A — decisions are already in production. Future changes should create a new ADR
-that supersedes this one.
+N/A — decisions are already in production. Future changes should create a new
+ADR that supersedes this one.

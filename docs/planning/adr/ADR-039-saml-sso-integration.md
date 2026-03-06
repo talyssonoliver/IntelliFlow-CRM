@@ -10,11 +10,11 @@
 
 ## Context and Problem Statement
 
-IntelliFlow CRM currently supports OAuth 2.0/OIDC social login (Google, Microsoft)
-via Supabase Auth PKCE flow. Enterprise customers require SAML 2.0 SSO integration
-with their corporate identity providers (Okta, Azure AD, OneLogin, etc.) for
-centralized access management. How should we implement SAML SSO while maintaining
-the existing OAuth infrastructure?
+IntelliFlow CRM currently supports OAuth 2.0/OIDC social login (Google,
+Microsoft) via Supabase Auth PKCE flow. Enterprise customers require SAML 2.0
+SSO integration with their corporate identity providers (Okta, Azure AD,
+OneLogin, etc.) for centralized access management. How should we implement SAML
+SSO while maintaining the existing OAuth infrastructure?
 
 ## Decision Drivers
 

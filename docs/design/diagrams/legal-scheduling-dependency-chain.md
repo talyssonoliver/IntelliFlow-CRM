@@ -262,14 +262,14 @@ _IFC-147 creates timeline UI but no formal PG-_ task exists
 
 ## Orphan Status Summary
 
-| Feature         | Backend Complete? | Frontend Task?  | Action Required  |
-| --------------- | ----------------- | --------------- | ---------------- |
-| Case Management | YES               | YES ✅          | PG-138 COMPLETED |
+| Feature         | Backend Complete? | Frontend Task?  | Action Required                    |
+| --------------- | ----------------- | --------------- | ---------------------------------- |
+| Case Management | YES               | YES ✅          | PG-138 COMPLETED                   |
 | Appointments    | YES               | YES ✅          | PG-139 COMPLETED, PG-154 COMPLETED |
-| Documents       | YES               | YES ✅          | PG-140 COMPLETED |
-| Timeline        | YES               | YES (IFC-147)\* | None             |
-| Calendar Sync   | YES               | N/A (settings)  | None             |
-| Email           | YES               | YES ✅          | PG-141 COMPLETED |
+| Documents       | YES               | YES ✅          | PG-140 COMPLETED                   |
+| Timeline        | YES               | YES (IFC-147)\* | None                               |
+| Calendar Sync   | YES               | N/A (settings)  | None                               |
+| Email           | YES               | YES ✅          | PG-141 COMPLETED                   |
 
 _IFC-147 creates timeline UI but should formalize as PG-_ for consistency
 

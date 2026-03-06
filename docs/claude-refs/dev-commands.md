@@ -59,8 +59,8 @@ pnpm run lighthouse:ci          # Filesystem output for CI pipelines
 npx lhci autorun --collect.url=http://localhost:3000/email --collect.numberOfRuns=1  # Single URL
 ```
 
-Config: `lighthouserc.js` — 27 URLs, desktop preset, >=90% thresholds.
-Reports: `artifacts/lighthouse/`
+Config: `lighthouserc.js` — 27 URLs, desktop preset, >=90% thresholds. Reports:
+`artifacts/lighthouse/`
 
 ## AI Development
 

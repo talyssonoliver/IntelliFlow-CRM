@@ -46,9 +46,7 @@ const sidebars = {
       type: 'category',
       label: 'Implementation',
       collapsed: true,
-      items: [
-        'implementation/ENV-007-AI-tRPC-API-Setup',
-      ],
+      items: ['implementation/ENV-007-AI-tRPC-API-Setup'],
     },
   ],
 
@@ -80,21 +78,13 @@ const sidebars = {
       type: 'category',
       label: 'Authentication',
       collapsed: true,
-      items: [
-        'api/auth/overview',
-        'api/auth/supabase',
-        'api/auth/api-keys',
-      ],
+      items: ['api/auth/overview', 'api/auth/supabase', 'api/auth/api-keys'],
     },
     {
       type: 'category',
       label: 'AI Services',
       collapsed: true,
-      items: [
-        'api/ai/scoring',
-        'api/ai/qualification',
-        'api/ai/recommendations',
-      ],
+      items: ['api/ai/scoring', 'api/ai/qualification', 'api/ai/recommendations'],
     },
   ],
 
@@ -142,23 +132,13 @@ const sidebars = {
       type: 'category',
       label: 'Deployment',
       collapsed: true,
-      items: [
-        'guides/deployment',
-        'guides/docker',
-        'guides/railway',
-        'guides/vercel',
-      ],
+      items: ['guides/deployment', 'guides/docker', 'guides/railway', 'guides/vercel'],
     },
     {
       type: 'category',
       label: 'Best Practices',
       collapsed: true,
-      items: [
-        'guides/code-style',
-        'guides/git-workflow',
-        'guides/security',
-        'guides/performance',
-      ],
+      items: ['guides/code-style', 'guides/git-workflow', 'guides/security', 'guides/performance'],
     },
     {
       type: 'doc',
@@ -226,12 +206,11 @@ const sidebars = {
       link: {
         type: 'generated-index',
         title: 'Architecture Decision Records',
-        description: 'A collection of Architecture Decision Records (ADRs) documenting key architectural decisions in the IntelliFlow CRM project.',
+        description:
+          'A collection of Architecture Decision Records (ADRs) documenting key architectural decisions in the IntelliFlow CRM project.',
         slug: '/architecture/adr',
       },
-      items: [
-        'planning/adr/template',
-      ],
+      items: ['planning/adr/template'],
     },
     {
       type: 'category',
@@ -263,18 +242,13 @@ const sidebars = {
       type: 'category',
       label: 'Planning',
       collapsed: false,
-      items: [
-        'planning/roadmap',
-        'planning/sprint-overview',
-      ],
+      items: ['planning/roadmap', 'planning/sprint-overview'],
     },
     {
       type: 'category',
       label: 'Architecture Decision Records',
       collapsed: false,
-      items: [
-        'planning/adr/template',
-      ],
+      items: ['planning/adr/template'],
     },
   ],
 };

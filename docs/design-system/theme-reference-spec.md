@@ -701,7 +701,8 @@ export function StatusBadge({
 **Solution:**
 
 1. Ensure `.dark` class is on `<html>` or `<body>` element
-2. Check `apps/web/src/app/globals.css` has `@custom-variant dark (&:where(.dark, .dark *));`
+2. Check `apps/web/src/app/globals.css` has
+   `@custom-variant dark (&:where(.dark, .dark *));`
 3. Verify CSS variables exist in both `:root` and `.dark` selectors
 
 ### Issue: Colors look wrong in dark mode

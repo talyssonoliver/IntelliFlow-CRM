@@ -388,8 +388,11 @@ Dependency Chain:
 
 Dependency Chain:
   IFC-188 (Domain) ✅ ──┬──► ticket.ts (Validators) ✅ ──► (Services) ✅ ──► (Adapters) ✅ ──► IFC-189 (API) ✅ ──► PG-137 (UI) ✅
-                     │
+                     │                                                                                           └──► PG-046 (Support Portal) ✅
                      └──► IFC-017 (Database) ─────────────────────────────────────────────────────────────────────────┘
+
+Support Portal Chain:
+  PG-046: /support/tickets → SupportTicketList → TicketList → useTicketFilters → api.ticket.list → TicketService (container.ts:247)
 ```
 
 ---
@@ -654,7 +657,7 @@ Dependency Chain:
     ┌──────────────────┐          ┌──────────────────┐          ┌──────────────────┐
     │    IFC-149       │          │    IFC-030       │          │    IFC-031       │
     │  Action Preview  │          │  Lead Routing    │          │  Workflow Builder│
-    │      ✅          │          │      ⬜          │          │      ⬜          │
+    │      ✅          │          │      ✅          │          │      ⬜          │
     └──────────────────┘          └────────┬─────────┘          └──────────────────┘
                                            │
                                            ▼
@@ -666,7 +669,7 @@ Dependency Chain:
 
 Dependency Chain:
   IFC-028 (Workflow) ✅ ──► IFC-029 (Auto-Response) ✅ ──┬──► IFC-149 (Preview UI) ✅
-                                                         ├──► IFC-030 (Routing) ⬜ ──► PG-132 (UI) ✅
+                                                         ├──► IFC-030 (Routing) ✅ ──► PG-132 (UI) ✅
                                                          └──► IFC-031 (Builder) ⬜
 ```
 
@@ -916,6 +919,12 @@ Dependency Chain:
                          └──► notifications.ts (Val) ✅ ─────────────────────────────────────────┴──► PG-130 (Inbox) ✅
 
 ⚠️ IFC-183 complete. PG-116 (Notification Prefs) still pending.
+
+Runtime Wiring (IFC-222):
+  NotificationsWorker.deliverSMS() ──► SMSChannel.deliver() ──► Twilio REST API
+  NotificationsWorker.onStart()    ──► createSMSChannel() ──► SMSChannel.initialize()
+  NotificationsWorker.onStop()     ──► SMSChannel.close()
+  getDependencyHealth()            ──► SMSChannel.getStats() (circuit state)
 ```
 
 ---
@@ -979,25 +988,30 @@ Frontend (next): IFC-037 ⬜ ──► IFC-038 ⬜ (wires IFC-190 to UI)
                                     │       ✅         │
                                     └────────┬─────────┘
                                              │
-                                             ▼
-                                    ┌──────────────────┐
-                                    │    PG-129        │
-                                    │  Home Page       │
-                                    │      ⏳ 60%      │
-                                    └───┬──────────────┘
-                                        │
-                                        ▼
-                                    ┌──────────────────┐
-                                    │    PG-157        │
-                                    │  PinButton       │
-                                    │      ✅          │
-                                    └──────────────────┘
-                                    Consumed by: deals/[id], contacts/[id],
-                                    leads/[id], TicketDetail, AccountDetail
-                                    Uses: useEntityPin → home tRPC routes
+                                     ┌───────┴────────┐
+                                     ▼                ▼
+                            ┌──────────────────┐  ┌──────────────────┐
+                            │    IFC-195       │  │    PG-129        │
+                            │  Daily Goals     │  │  Home Page       │
+                            │      ✅          │  │      ✅          │
+                            └──────────────────┘  └───┬──────────────┘
+                                     │                │
+                                     ▼                ▼
+                            ┌──────────────────┐  ┌──────────────────┐
+                            │    PG-156        │  │    PG-157        │
+                            │  Goal Settings   │  │  PinButton       │
+                            │      ✅          │  │      ✅          │
+                            └──────────────────┘  └──────────────────┘
+                                                  Consumed by: deals/[id], contacts/[id],
+                                                  leads/[id], TicketDetail, AccountDetail
+                                                  Uses: useEntityPin → home tRPC routes
 
 Dependency Chain:
-  IFC-182 (Router) ✅ ──► PG-129 (UI) ⏳60% ──► PG-157 (PinButton) ✅
+  IFC-182 (Router) ✅ ──► IFC-195 (Daily Goals) ✅ ──► PG-156 (Goal Settings) ✅
+                    ──► PG-129 (UI) ✅ ──► PG-157 (PinButton) ✅
+                                         ──► PG-158 (DnD Reorder) ⏳
+                                         ──► PG-166 (Lighthouse Audit) ✅
+  PG-158 uses: @dnd-kit/sortable, DraggablePinnedItem.tsx → home.reorderPinnedItems
 ```
 
 ---
@@ -1573,7 +1587,7 @@ Dependency Chain:
     ┌──────────────────┐                                         ┌──────────────────┐
     │    IFC-024       │                                         │    IFC-030       │
     │  Human-in-Loop   │                                         │  Smart Routing   │
-    │  Feedback        │                                         │      ⬜          │
+    │  Feedback        │                                         │      ✅          │
     │      ⬜          │                                         └────────┬─────────┘
     └────────┬─────────┘                                                  │
              │                                                             │
@@ -1589,7 +1603,7 @@ Dependency Chain:
 Dependency Chain:
   IFC-004 (Capture) ✅ ──► IFC-005 (Scoring) ✅ ──┬──► IFC-024 (Feedback) ⬜ ──► PG-132 (Routing UI) ✅
                                                   │
-                                                  └──► IFC-030 (Routing) ⬜ ──────────────────────────┘
+                                                  └──► IFC-030 (Routing) ✅ ──────────────────────────┘
 ```
 
 ---
@@ -1601,7 +1615,7 @@ Dependency Chain:
                                     │    IFC-030       │
                                     │  Smart Lead      │
                                     │  Routing         │
-                                    │      ⬜          │
+                                    │      ✅          │
                                     └────────┬─────────┘
                                              │
               ┌──────────────────────────────┼──────────────────────────────┐
@@ -1632,7 +1646,7 @@ Dependency Chain:
               └──────────────────┘              └──────────────────┘
 
 Dependency Chain:
-  IFC-030 (Routing) ⬜ ──┬──► routing-rules.ts (Val) ⬜ ──► routing.router ⬜ ──┬──► PG-132 (Config UI) ✅
+  IFC-030 (Routing) ⏳ ──┬──► routing-rules.ts (Val) ⬜ ──► routing.router ⬜ ──┬──► PG-132 (Config UI) ✅
                         ├──► Load Balancer ⬜ ────────────────────────────────┴──► SLA Dashboard ⬜
                         └──► IFC-017 (Database) ⬜ ─────────────────────────────────────────────────┘
 ```
@@ -1703,9 +1717,12 @@ Dependency Chain:
                                  └──────────────────┘
 ```
 
-**Dependency Chain:** IFC-017 (Prisma+Supabase, DONE) → **IFC-070** (Delta Sync ETL, Reconciliation, Target Validation) → PG-121 (Import/Export UI)
+**Dependency Chain:** IFC-017 (Prisma+Supabase, DONE) → **IFC-070** (Delta Sync
+ETL, Reconciliation, Target Validation) → PG-121 (Import/Export UI)
 
-**Key Artifacts:** `delta-sync.ts`, `reconciliation.ts`, `validate-target.ts`, `data-validation-report.csv`, `migration-log.txt`, `rollback-procedure.md`, `gdpr-migration-attestation.md`
+**Key Artifacts:** `delta-sync.ts`, `reconciliation.ts`, `validate-target.ts`,
+`data-validation-report.csv`, `migration-log.txt`, `rollback-procedure.md`,
+`gdpr-migration-attestation.md`
 
 ---
 
@@ -1786,7 +1803,7 @@ Dependency Chain:
 | **PLATFORM INFRASTRUCTURE (10)** |
 | 21                               | Platform    | Notifications          | ⬜ Router Blocking                                                         |
 | 22                               | Platform    | Analytics              | ⬜ Router Missing                                                          |
-| 23                               | Platform    | Home Page              | ⏳ In Progress                                                             |
+| 23                               | Platform    | Home Page              | ✅ Core Complete (PG-158 DnD pending)                                      |
 | 24                               | Platform    | RBAC/Audit             | ⬜ UI Missing                                                              |
 | 25                               | Platform    | Domain Events          | ⬜ All New                                                                 |
 | 26                               | Platform    | Workflow Engine        | ⬜ Mostly New                                                              |
@@ -1819,7 +1836,9 @@ AI Review:     IFC-128 ✅ ──► IFC-176 ✅ ──► IFC-177 ✅ ──►
 ## Chains In Progress - 1 Total
 
 ```
-Home Page:     IFC-182 ✅ ──► IFC-191 ✅ ──► PG-129 ⏳60%
+Home Page:     IFC-182 ✅ ──► IFC-195 ✅ ──► PG-156 ✅ ──► IFC-191 ✅ ──► PG-129 ✅ ──► PG-157 ✅ ──► PG-158 (DnD Reorder) ⏳
+                                                                                         ──► PG-160 (AI Insights) ✅
+                                                                                         ──► PG-166 (Lighthouse Audit) ✅
 ```
 
 ## Chains Missing UI Only (Router Exists) - 11 Total
@@ -1868,8 +1887,8 @@ Observability:    ENV-008-AI ✅ ──► IFC-116 ⬜ ──► IFC-142 ⬜ ─
 ## Business Workflow Chains - 4 Total
 
 ```
-Lead Qualification:   IFC-004 ✅ ──► IFC-005 ✅ ──► IFC-024 ⬜ ──► IFC-030 ⬜ ──► PG-132 ✅
-Smart Routing:        IFC-030 ⬜ ──► routing-rules.ts ⬜ ──► routing.router ⬜ ──► PG-132 ✅
+Lead Qualification:   IFC-004 ✅ ──► IFC-005 ✅ ──► IFC-024 ⬜ ──► IFC-030 ⏳ ──► PG-132 ✅
+Smart Routing:        IFC-030 ⏳ ──► routing-rules.ts ⬜ ──► routing.router ⬜ ──► PG-132 ✅
 DSAR:                 IFC-140 ✅ ──► IFC-058 ⬜ ──► dsar.router ⬜ ──► PG-122/123 ⬜
 Legal Case Workflows: IFC-136 ✅ ──► IFC-147 ✅ ──► IFC-141 ⬜ ──► Status Transitions ⬜ ──► PG-138 ✅
 ```
@@ -1898,14 +1917,20 @@ IFC-198 (Billing Domain Core) ──┐
                                 └──→ PG-026 (Checkout) ✅
 ```
 
-- **PG-030**: Subscription management page with plan comparison, cancel/reactivation, proration estimates, reason selector
+- **PG-030**: Subscription management page with plan comparison,
+  cancel/reactivation, proration estimates, reason selector
 - Dependencies: PG-025 (tRPC billing router), IFC-198 (Billing domain aggregate)
-- **PG-027**: Invoice list page with paginated table, PDF download/view, status badges, accessibility fixes
+- **PG-027**: Invoice list page with paginated table, PDF download/view, status
+  badges, accessibility fixes
 - Dependencies: PG-025 (tRPC billing router), IFC-198 (Invoice domain aggregate)
-- **PG-028**: Invoice detail page — single-invoice fetch via `billing.getInvoice`, pay via `billing.payInvoice`, tax breakdown, invoice number, totals fix, link from invoice list
-- Dependencies: PG-027 (Invoice list navigation), IFC-198 (StripeInvoice type + StripeInvoiceLineItem)
+- **PG-028**: Invoice detail page — single-invoice fetch via
+  `billing.getInvoice`, pay via `billing.payInvoice`, tax breakdown, invoice
+  number, totals fix, link from invoice list
+- Dependencies: PG-027 (Invoice list navigation), IFC-198 (StripeInvoice type +
+  StripeInvoiceLineItem)
 - Procedures: `billing.getInvoice` (query), `billing.payInvoice` (mutation)
-- Adapter path: StripeInvoice → StripeInvoiceLineItem → mapToInvoice() → billing.router → invoice-detail.tsx
+- Adapter path: StripeInvoice → StripeInvoiceLineItem → mapToInvoice() →
+  billing.router → invoice-detail.tsx
 
 ## Feedback Analytics Chain (Sprint 14)
 
@@ -1926,8 +1951,10 @@ IFC-068 Layer Stack:
   → Export: csv.ts (exportFeedbackSurveysToCSV) + pdf.ts (exportFeedbackReportToPDF)
 ```
 
-- **IFC-068**: Full-stack feedback analytics dashboard with NPS gauge, trend charts, sentiment distribution, period/type filters, CSV/PDF export
-- Dependencies: IFC-090 (FeedbackSurvey Prisma model), IFC-096 (Analytics sidebar + export infrastructure)
+- **IFC-068**: Full-stack feedback analytics dashboard with NPS gauge, trend
+  charts, sentiment distribution, period/type filters, CSV/PDF export
+- Dependencies: IFC-090 (FeedbackSurvey Prisma model), IFC-096 (Analytics
+  sidebar + export infrastructure)
 
 ## Project Tracker Internal Dependencies
 
@@ -1952,6 +1979,8 @@ PG-032 (Docs Index) ✅ ──► PG-034 (Webhooks Docs) ✅
                      └──► PG-036 (SDK Guides) ✅
                      └──► PG-037 (CLI Docs) ✅
                      └──► PG-038 (Auth Guides) ✅
+                     └──► PG-169 (Developer Guides) ✅
+                     └──► PG-170 (Architecture Docs) ✅
 
 PG-039 (Dev Apps) ✅ ──► PG-040 (New Dev App) ✅
                    └──► PG-041 (App Detail) ✅ ──► PG-042 (App Edit) ✅
@@ -1959,7 +1988,18 @@ PG-039 (Dev Apps) ✅ ──► PG-040 (New Dev App) ✅
 
 ---
 
-## Accessibility Compliance Chain (Sprint 14)
+## 13. Support / Help Center
+
+### Help Center Chain
+
+```
+PG-043 (Help Center Index) ✅ ──► PG-044 (Category Detail) ⬜
+                             └──► PG-045 (Article Detail) ⬜
+```
+
+---
+
+## Accessibility Compliance Chain (Sprint 15)
 
 ```
 DOC-007 (Gap Assessment) ─── COMPLETE
@@ -1976,6 +2016,13 @@ DOC-007 (Gap Assessment) ─── COMPLETE
           audit-matrix.yml (lighthouse-ci: tier 2, required)
           .github/workflows/pr-checks.yml (4 public URLs, configPath)
           apps/web/eslint.config.mjs (6 jsx-a11y rules: warn→error)
+        └── DOC-012 (Quarterly Review Cadence) ─── COMPLETE
+              Artifacts:
+                docs/compliance/quarterly-a11y-review-template.md
+              Consumers:
+                A11Y-REVIEW-001 (Sprint 20) — first quarterly review instance
+              Downstream:
+                DOC-013 (ADR-038 Documentation Maintenance section) — COMPLETE
 ```
 
 ---
@@ -2001,4 +2048,5 @@ DOC-002 (Sitemap Update) ─── COMPLETE
 ## Critical Blockers
 
 1. **IFC-183 (Notifications Router)** - Blocking PG-116 and PG-130
-2. ~~**IFC-190 (Analytics Router)** - Blocking Analytics Dashboard~~ ✅ RESOLVED — Router complete, IFC-037 (Design) → IFC-038 (UI) next
+2. ~~**IFC-190 (Analytics Router)** - Blocking Analytics Dashboard~~ ✅ RESOLVED
+   — Router complete, IFC-037 (Design) → IFC-038 (UI) next

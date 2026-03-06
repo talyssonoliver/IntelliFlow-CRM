@@ -8,12 +8,15 @@
 
 **Technical Story:** ENV-011-AI, IFC-005, IFC-015, IFC-020, IFC-021
 
-> **Note**: This ADR was retroactively created to document architectural decisions
-> made during implementation. The decisions described here are already in production.
+> **Note**: This ADR was retroactively created to document architectural
+> decisions made during implementation. The decisions described here are already
+> in production.
 
 ## Context and Problem Statement
 
-IntelliFlow CRM requires an AI pipeline for lead scoring, content generation, and multi-agent task orchestration. Decisions needed for the LLM framework, multi-agent system, and async job processing.
+IntelliFlow CRM requires an AI pipeline for lead scoring, content generation,
+and multi-agent task orchestration. Decisions needed for the LLM framework,
+multi-agent system, and async job processing.
 
 ## Decision Drivers
 
@@ -32,7 +35,9 @@ IntelliFlow CRM requires an AI pipeline for lead scoring, content generation, an
 
 ## Decision Outcome
 
-Chosen: LangChain + CrewAI + BullMQ as complementary layers. LangChain handles individual chains with structured output, CrewAI manages multi-agent orchestration, and BullMQ provides reliable async job processing with retry/DLQ.
+Chosen: LangChain + CrewAI + BullMQ as complementary layers. LangChain handles
+individual chains with structured output, CrewAI manages multi-agent
+orchestration, and BullMQ provides reliable async job processing with retry/DLQ.
 
 ### Positive Consequences
 
@@ -60,5 +65,5 @@ All related tasks are completed. See attestation files at
 
 ### Rollback Plan
 
-N/A — decisions are already in production. Future changes should create a new ADR
-that supersedes this one.
+N/A — decisions are already in production. Future changes should create a new
+ADR that supersedes this one.

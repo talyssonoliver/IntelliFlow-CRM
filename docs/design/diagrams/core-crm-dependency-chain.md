@@ -226,40 +226,43 @@ and frontend layers.
 
 ### Frontend Pages (Missing)
 
-| New Task ID | Entity  | Description                    | Dependencies | Sprint |
-| ----------- | ------- | ------------------------------ | ------------ | ------ |
-| PG-133      | Contact | Contact List & Detail Pages    | IFC-184      | 5      |
-| PG-134      | Account | Account List & Detail Pages    | IFC-185      | 5      |
-| PG-135      | Deal    | Deal List Page (pipeline view) | IFC-186      | 6      |
-| IFC-064     | Deal    | Kanban Drag-Drop Persistence — moveStage mutation, optimistic updates with rollback, CLOSED_LOST reason modal, success/error toasts | IFC-091, IFC-063 | 14 |
-| PG-136      | Task    | Task Management UI             | IFC-187      | 6      |
-| PG-137      | Ticket  | Ticket Management UI           | IFC-189      | 6      |
+| New Task ID | Entity  | Description                                                                                                                         | Dependencies     | Sprint |
+| ----------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------ |
+| PG-133      | Contact | Contact List & Detail Pages                                                                                                         | IFC-184          | 5      |
+| PG-134      | Account | Account List & Detail Pages                                                                                                         | IFC-185          | 5      |
+| PG-135      | Deal    | Deal List Page (pipeline view)                                                                                                      | IFC-186          | 6      |
+| IFC-064     | Deal    | Kanban Drag-Drop Persistence — moveStage mutation, optimistic updates with rollback, CLOSED_LOST reason modal, success/error toasts | IFC-091, IFC-063 | 14     |
+| PG-136      | Task    | Task Management UI                                                                                                                  | IFC-187          | 6      |
+| PG-137      | Ticket  | Ticket Management UI                                                                                                                | IFC-189          | 6      |
 
 ---
 
 ## Orphan Status Summary
 
-| Entity      | Backend Orphan?     | Frontend Orphan? | Action Required                                      |
-| ----------- | ------------------- | ---------------- | ---------------------------------------------------- |
-| Lead        | No                  | No               | None - Complete                                      |
-| Contact     | No (domain exists)  | YES              | Create IFC-184, PG-133                               |
-| Account     | No (router done ✅) | No (PG-134 ✅)   | Complete                                             |
+| Entity      | Backend Orphan?     | Frontend Orphan? | Action Required                                                                    |
+| ----------- | ------------------- | ---------------- | ---------------------------------------------------------------------------------- |
+| Lead        | No                  | No               | None - Complete                                                                    |
+| Contact     | No (domain exists)  | YES              | Create IFC-184, PG-133                                                             |
+| Account     | No (router done ✅) | No (PG-134 ✅)   | Complete                                                                           |
 | Opportunity | No (router done ✅) | No (PG-135 ✅)   | Complete — 6 components, 72 tests, DnD pipeline + IFC-064 ✅ drag-drop persistence |
-| Task        | No (router done ✅) | No (PG-136 ✅)   | Complete — 9 components, 104 tests, tRPC integration |
-| Ticket      | No (router done ✅) | No (PG-137 ✅)   | Complete — 7 components, 79 tests, tRPC integration  |
+| Task        | No (router done ✅) | No (PG-136 ✅)   | Complete — 9 components, 104 tests, tRPC integration                               |
+| Ticket      | No (router done ✅) | No (PG-137 ✅)   | Complete — 7 components, 79 tests, tRPC integration                                |
 
 **Total New Tasks Required: 10** (IFC-189 completed 2026-02-07)
 
 ## Cross-Cutting: PinButton (PG-157)
 
-PinButton component (`apps/web/src/components/home/PinButton.tsx`) adds visible pin/unpin toggle to all 5 entity detail page headers:
+PinButton component (`apps/web/src/components/home/PinButton.tsx`) adds visible
+pin/unpin toggle to all 5 entity detail page headers:
+
 - `deals/[id]/page.tsx` → PinButton (entityType: opportunity)
 - `contacts/[id]/page.tsx` → PinButton (entityType: contact)
 - `leads/[id]/page.tsx` → PinButton (entityType: lead)
 - `TicketDetail.tsx` → PinButton (entityType: ticket)
 - `AccountDetail.tsx` → PinButton (entityType: account)
 
-Dependency: PinButton → useEntityPin hook → home tRPC routes (getPinnedItems, pinItem, unpinItem)
+Dependency: PinButton → useEntityPin hook → home tRPC routes (getPinnedItems,
+pinItem, unpinItem)
 
 - 5 Backend (IFC-184 to IFC-188, IFC-189 ✅)
 - 5 Frontend (PG-133 to PG-137)

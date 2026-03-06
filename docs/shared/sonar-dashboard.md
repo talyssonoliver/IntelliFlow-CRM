@@ -284,11 +284,14 @@ cat .env.local | grep SONAR
 **Coverage report not found**
 
 ```bash
-# Run tests with coverage first
-pnpm run test -- --coverage
+# Run full merged coverage pipeline (writes to artifacts/coverage/)
+pnpm run test:coverage
 
-# Verify report exists
+# Verify merged report exists
 ls -la artifacts/coverage/lcov.info
+
+# Note: ad-hoc "pnpm test -- --coverage" writes to artifacts/coverage-vitest/
+# which is separate from the SonarQube merged data.
 ```
 
 **Quality gate check fails**

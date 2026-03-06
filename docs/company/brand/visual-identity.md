@@ -263,7 +263,7 @@ Use this CSS-first configuration in `globals.css` to match our design system:
 
 ```css
 /* apps/web/src/app/globals.css */
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @custom-variant dark (&:where(.dark, .dark *));
 

@@ -2,25 +2,30 @@
 
 ## Overview
 
-| Field             | Value                                                  |
-| ----------------- | ------------------------------------------------------ |
-| **Feature Name**  | Support Help Center                                    |
-| **Owner**         | Support Engineering                                    |
-| **Status**        | Draft                                                  |
-| **Target Sprint** | 16                                                     |
-| **Created Date**  | 2026-02-28                                             |
-| **Last Updated**  | 2026-02-28                                             |
-| **Related Tasks** | PG-043, PG-044, PG-045                                 |
+| Field             | Value                                          |
+| ----------------- | ---------------------------------------------- |
+| **Feature Name**  | Support Help Center & Support Tickets          |
+| **Owner**         | Support Engineering                            |
+| **Status**        | In Progress                                    |
+| **Target Sprint** | 16                                             |
+| **Created Date**  | 2026-02-28                                     |
+| **Last Updated**  | 2026-03-02                                     |
+| **Related Tasks** | PG-043, PG-044, PG-045, PG-046, PG-047, PG-048 |
 
 ## Problem Statement
 
 ### Background
 
-IntelliFlow CRM users need a centralized self-service help center to find answers to common questions, browse help articles by category, and search for specific topics. Currently, there is no in-app help resource — users must contact support directly for any question.
+IntelliFlow CRM users need a centralized self-service help center to find
+answers to common questions, browse help articles by category, and search for
+specific topics. Currently, there is no in-app help resource — users must
+contact support directly for any question.
 
 ### Problem Description
 
-Without a help center, all user questions funnel through support tickets, increasing support load and slowing resolution times. Users have no way to self-serve answers to common CRM workflow questions.
+Without a help center, all user questions funnel through support tickets,
+increasing support load and slowing resolution times. Users have no way to
+self-serve answers to common CRM workflow questions.
 
 ### Impact
 
@@ -45,11 +50,14 @@ Without a help center, all user questions funnel through support tickets, increa
 
 ### Primary User Story
 
-**As a** CRM user **I want to** browse a categorized help center index **So that** I can quickly find articles relevant to my question without filing a support ticket.
+**As a** CRM user **I want to** browse a categorized help center index **So
+that** I can quickly find articles relevant to my question without filing a
+support ticket.
 
 **Acceptance Criteria:**
 
-- [ ] Help center index page loads at `/help-center/` with categories displayed in a responsive grid
+- [ ] Help center index page loads at `/help-center/` with categories displayed
+      in a responsive grid
 - [ ] Each category shows title, description, icon, and article count
 - [ ] Categories link to their respective article listing pages
 - [ ] Page includes a search bar that filters categories by keyword in real-time
@@ -59,7 +67,8 @@ Without a help center, all user questions funnel through support tickets, increa
 
 #### Story 2
 
-**As a** CRM user **I want to** search help topics from the index page **So that** I can find relevant categories without browsing every section.
+**As a** CRM user **I want to** search help topics from the index page **So
+that** I can find relevant categories without browsing every section.
 
 **Acceptance Criteria:**
 
@@ -70,11 +79,13 @@ Without a help center, all user questions funnel through support tickets, increa
 
 #### Story 3
 
-**As a** new user **I want to** see popular/featured categories highlighted **So that** I can quickly access the most commonly needed help topics.
+**As a** new user **I want to** see popular/featured categories highlighted **So
+that** I can quickly access the most commonly needed help topics.
 
 **Acceptance Criteria:**
 
-- [ ] Popular categories are visually distinguished (e.g., badge or highlighted border)
+- [ ] Popular categories are visually distinguished (e.g., badge or highlighted
+      border)
 - [ ] Categories are ordered with popular items first
 
 ## Acceptance Criteria Checklist
@@ -108,17 +119,22 @@ Without a help center, all user questions funnel through support tickets, increa
 
 **New Components:**
 
-- `HelpCategories` (`apps/web/src/components/support/help-categories.tsx`) — Category grid with icon, title, description, article count
-- `HelpSearch` (`apps/web/src/components/support/help-search.tsx`) — Debounced search input that filters categories client-side
+- `HelpCategories` (`apps/web/src/components/support/help-categories.tsx`) —
+  Category grid with icon, title, description, article count
+- `HelpSearch` (`apps/web/src/components/support/help-search.tsx`) — Debounced
+  search input that filters categories client-side
 
 **Pages:**
 
-- `/help-center` (`apps/web/src/app/help-center/page.tsx`) — Index page, "use client", uses PageHeader + HelpCategories + HelpSearch
-- Layout: `apps/web/src/app/help-center/layout.tsx` (metadata) + `(list)/layout.tsx` (sidebar shell with ModuleGate)
+- `/help-center` (`apps/web/src/app/help-center/page.tsx`) — Index page, "use
+  client", uses PageHeader + HelpCategories + HelpSearch
+- Layout: `apps/web/src/app/help-center/layout.tsx` (metadata) +
+  `(list)/layout.tsx` (sidebar shell with ModuleGate)
 
 ### State Management
 
-- Server State: N/A (categories are static/hardcoded for MVP; future: tRPC query)
+- Server State: N/A (categories are static/hardcoded for MVP; future: tRPC
+  query)
 - Form State: Local state for search input (useState + debounce)
 - Cache Strategy: N/A for MVP
 
@@ -142,18 +158,50 @@ Without a help center, all user questions funnel through support tickets, increa
 
 ### Technical Prerequisites
 
-- [x] shadcn/ui components available (Card, Badge, Input, Skeleton, Button, SearchInput)
-- [x] Sidebar infrastructure established (SidebarConfig, AppSidebar, SidebarProvider)
+- [x] shadcn/ui components available (Card, Badge, Input, Skeleton, Button,
+      SearchInput)
+- [x] Sidebar infrastructure established (SidebarConfig, AppSidebar,
+      SidebarProvider)
 - [x] PageHeader shared component available
 - [x] SUPPORT module defined in ModuleRoutes.ts
 
 ## Risks and Mitigations
 
-| Risk | Likelihood | Impact | Mitigation |
-| ---- | ---------- | ------ | ---------- |
-| Route naming inconsistency across docs | High | Medium | Standardize on `/help-center/` per CSV source of truth |
-| Help center content not defined | Medium | Low | Use placeholder categories for MVP; content comes later |
-| Downstream tasks (PG-044, PG-045) path expectations | Medium | Medium | Ensure page.tsx is at the path both downstream tasks reference |
+| Risk                                                | Likelihood | Impact | Mitigation                                                     |
+| --------------------------------------------------- | ---------- | ------ | -------------------------------------------------------------- |
+| Route naming inconsistency across docs              | High       | Medium | Standardize on `/help-center/` per CSV source of truth         |
+| Help center content not defined                     | Medium     | Low    | Use placeholder categories for MVP; content comes later        |
+| Downstream tasks (PG-044, PG-045) path expectations | Medium     | Medium | Ensure page.tsx is at the path both downstream tasks reference |
+
+#### Story 4 — Support Tickets Queue (PG-046)
+
+**As a** support agent **I want to** view a support-focused ticket listing at
+`/support/tickets` **So that** I can work an SLA-prioritized queue without
+admin/lifecycle clutter.
+
+**Acceptance Criteria:**
+
+- [ ] Support tickets page loads at `/support/tickets/` with tickets listed from
+      `ticket.list` tRPC endpoint
+- [ ] Default sort is `slaResolutionDue ASC` (most urgent SLA deadline first)
+- [ ] Default filter excludes ARCHIVED tickets
+- [ ] SLA display component shows dual-track SLA metrics (response + resolution)
+- [ ] Filters (status, priority, SLA status, search) work with 400ms debounced
+      search
+- [ ] Page is reachable from sidebar navigation (support section)
+- [ ] Row click navigates to `/support/tickets/[id]` (PG-048)
+- [ ] Bulk actions available: Assign, Update Status, Resolve (no Delete/Archive)
+
+#### Story 5 — Support New Ticket (PG-047)
+
+**As a** support agent **I want to** create a new ticket from the support
+section **So that** I can log customer issues without leaving the support
+workflow.
+
+#### Story 6 — Support Ticket Detail (PG-048)
+
+**As a** support agent **I want to** view ticket details from the support
+section **So that** I can respond to and manage individual tickets in context.
 
 ## Out of Scope
 
@@ -167,12 +215,12 @@ Without a help center, all user questions funnel through support tickets, increa
 
 ## Timeline
 
-| Milestone            | Date       | Owner             | Status  |
-| -------------------- | ---------- | ----------------- | ------- |
-| PRD Draft            | 2026-02-28 | Support Eng       | Complete |
-| Spec Session         | 2026-02-28 | Support Eng       | In Progress |
-| Implementation Start | TBD        | Support Eng       | Pending |
-| Feature Complete     | TBD        | Support Eng       | Pending |
+| Milestone            | Date       | Owner       | Status      |
+| -------------------- | ---------- | ----------- | ----------- |
+| PRD Draft            | 2026-02-28 | Support Eng | Complete    |
+| Spec Session         | 2026-02-28 | Support Eng | In Progress |
+| Implementation Start | TBD        | Support Eng | Pending     |
+| Feature Complete     | TBD        | Support Eng | Pending     |
 
 ## References
 

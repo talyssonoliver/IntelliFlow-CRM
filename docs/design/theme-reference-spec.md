@@ -67,7 +67,8 @@ intelliFlow-CRM/
 **Tier 3: Tailwind Utilities (Usage)**
 
 - Format: Semantic class names
-- Location: `apps/web/src/app/globals.css` (`@theme inline { ... }`) + components
+- Location: `apps/web/src/app/globals.css` (`@theme inline { ... }`) +
+  components
 - Purpose: Developer-friendly classes for components
 - Example: `className="bg-primary text-primary-foreground"`
 

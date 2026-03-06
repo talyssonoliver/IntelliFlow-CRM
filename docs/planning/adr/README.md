@@ -47,9 +47,9 @@ These ADRs cover advanced topics for later sprints:
 
 ### Auth & Security ADRs
 
-| ADR                                                        | Title                                | Status       | Date       | Sprint | Technical Story |
-| ---------------------------------------------------------- | ------------------------------------ | ------------ | ---------- | ------ | --------------- |
-| [ADR-039](./ADR-039-saml-sso-integration.md)               | SAML SSO Integration for Enterprise  | ⏳ Proposed  | 2026-02-25 | 15     | PG-124          |
+| ADR                                          | Title                               | Status      | Date       | Sprint | Technical Story |
+| -------------------------------------------- | ----------------------------------- | ----------- | ---------- | ------ | --------------- |
+| [ADR-039](./ADR-039-saml-sso-integration.md) | SAML SSO Integration for Enterprise | ⏳ Proposed | 2026-02-25 | 15     | PG-124          |
 
 ## ADR Relationships
 
@@ -196,24 +196,23 @@ New ADRs should follow the
 - **Stakeholder Approval**: ✅ Accepted
 - **IFC-002 Links**: ✅ All ADRs reference domain model design
 
-
 ### Retroactive ADRs (Backfilled 2026-02-22)
 
-| ADR | Title | Status | Date | Technical Story |
-| --- | ----- | ------ | ---- | --------------- |
-| [ADR-030](./ADR-030-environment-setup.md) | Environment & Infrastructure Setup | ✅ Accepted | 2026-02-22 | ENV-001-AI, ENV-003-AI, ENV-004-AI, ENV-005-AI, ENV-009-AI |
-| [ADR-031](./ADR-031-ai-pipeline-design.md) | AI Pipeline Architecture | ✅ Accepted | 2026-02-22 | ENV-011-AI, IFC-005, IFC-015, IFC-020, IFC-021 |
-| [ADR-032](./ADR-032-feature-flags-performance.md) | Feature Flags & Performance | ✅ Accepted | 2026-02-22 | ENV-014-AI, ENV-015-AI |
-| [ADR-033](./ADR-033-security-hardening.md) | Security Hardening | ✅ Accepted | 2026-02-22 | IFC-073, IFC-077, IFC-113, IFC-114, IFC-121, IFC-125, IFC-143 |
-| [ADR-034](./ADR-034-infrastructure-platform.md) | Infrastructure & Platform | ✅ Accepted | 2026-02-22 | IFC-075, IFC-078, IFC-111, IFC-112, IFC-116, IFC-163, IFC-167 |
-| [ADR-035](./ADR-035-case-document-pipeline.md) | Case Document Pipeline | ✅ Accepted | 2026-02-22 | IFC-152–IFC-156 |
-| [ADR-036](./ADR-036-event-consumers.md) | Event Consumer Framework | ✅ Accepted | 2026-02-22 | IFC-151, IFC-168 |
-| [ADR-037](./ADR-037-ai-output-review.md) | AI Output Review Layer | ✅ Accepted | 2026-02-22 | IFC-176–IFC-181 |
+| ADR                                               | Title                              | Status      | Date       | Technical Story                                               |
+| ------------------------------------------------- | ---------------------------------- | ----------- | ---------- | ------------------------------------------------------------- |
+| [ADR-030](./ADR-030-environment-setup.md)         | Environment & Infrastructure Setup | ✅ Accepted | 2026-02-22 | ENV-001-AI, ENV-003-AI, ENV-004-AI, ENV-005-AI, ENV-009-AI    |
+| [ADR-031](./ADR-031-ai-pipeline-design.md)        | AI Pipeline Architecture           | ✅ Accepted | 2026-02-22 | ENV-011-AI, IFC-005, IFC-015, IFC-020, IFC-021                |
+| [ADR-032](./ADR-032-feature-flags-performance.md) | Feature Flags & Performance        | ✅ Accepted | 2026-02-22 | ENV-014-AI, ENV-015-AI                                        |
+| [ADR-033](./ADR-033-security-hardening.md)        | Security Hardening                 | ✅ Accepted | 2026-02-22 | IFC-073, IFC-077, IFC-113, IFC-114, IFC-121, IFC-125, IFC-143 |
+| [ADR-034](./ADR-034-infrastructure-platform.md)   | Infrastructure & Platform          | ✅ Accepted | 2026-02-22 | IFC-075, IFC-078, IFC-111, IFC-112, IFC-116, IFC-163, IFC-167 |
+| [ADR-035](./ADR-035-case-document-pipeline.md)    | Case Document Pipeline             | ✅ Accepted | 2026-02-22 | IFC-152–IFC-156                                               |
+| [ADR-036](./ADR-036-event-consumers.md)           | Event Consumer Framework           | ✅ Accepted | 2026-02-22 | IFC-151, IFC-168                                              |
+| [ADR-037](./ADR-037-ai-output-review.md)          | AI Output Review Layer             | ✅ Accepted | 2026-02-22 | IFC-176–IFC-181                                               |
 
 ### Sprint 14 ADRs (Accessibility & Documentation)
 
-| ADR | Title | Status | Date | Technical Story |
-| --- | ----- | ------ | ---- | --------------- |
+| ADR                                                | Title                      | Status      | Date       | Technical Story  |
+| -------------------------------------------------- | -------------------------- | ----------- | ---------- | ---------------- |
 | [ADR-038](./ADR-038-accessibility-architecture.md) | Accessibility Architecture | ✅ Accepted | 2026-02-23 | DOC-007, DOC-008 |
 
 ## Next Steps
@@ -222,7 +221,6 @@ Future ADRs will use IDs **039+** to avoid collisions with existing records.
 
 ADRs 025-029 were created during sprints 1-14. ADRs 030-037 were retroactively
 backfilled on 2026-02-22 to document decisions made during early implementation.
-
 
 ## Resources
 

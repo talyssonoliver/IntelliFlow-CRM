@@ -11,17 +11,17 @@ The **Auth & Public Pages** domain covers authentication flows, public marketing
 pages, and onboarding. Most auth infrastructure is complete but some flows need
 verification.
 
-| Feature            | Backend | Frontend   | Status   |
-| ------------------ | ------- | ---------- | -------- |
-| Sign In            | IFC-006 | PG-015     | COMPLETE |
-| Sign Up            | IFC-006 | PG-016     | COMPLETE |
-| Sign Up Success    | IFC-006 | PG-017     | COMPLETE |
-| Password Reset     | IFC-006 | PG-018-021 | COMPLETE |
-| MFA/2FA            | IFC-098 | PG-021-022 | COMPLETE |
-| Email Verification | IFC-006 | PG-023     | COMPLETE |
+| Feature             | Backend | Frontend   | Status   |
+| ------------------- | ------- | ---------- | -------- |
+| Sign In             | IFC-006 | PG-015     | COMPLETE |
+| Sign Up             | IFC-006 | PG-016     | COMPLETE |
+| Sign Up Success     | IFC-006 | PG-017     | COMPLETE |
+| Password Reset      | IFC-006 | PG-018-021 | COMPLETE |
+| MFA/2FA             | IFC-098 | PG-021-022 | COMPLETE |
+| Email Verification  | IFC-006 | PG-023     | COMPLETE |
 | SSO/OAuth Providers | IFC-006 | PG-124     | COMPLETE |
-| Public Pages       | N/A     | PG-001-014 | COMPLETE |
-| Onboarding         | IFC-076 | PG-126     | BACKLOG  |
+| Public Pages        | N/A     | PG-001-014 | COMPLETE |
+| Onboarding          | IFC-076 | PG-126     | BACKLOG  |
 
 ---
 
@@ -138,7 +138,15 @@ verification.
     │             │  │             │  │             │
     │ /partners   │  │ /press      │  │ /security   │
     │ COMPLETED ✅│  │ COMPLETED ✅│  │ COMPLETED ✅│
-    └─────────────┘  └─────────────┘  └─────────────┘
+    └─────────────┘  └──────┬──────┘  └─────────────┘
+                            │
+                     ┌──────▼──────┐
+                     │   PG-179    │
+                     │ Press Detail│
+                     │             │
+                     │ /press/[id] │
+                     │ COMPLETED ✅│
+                     └─────────────┘
 
     ┌─────────────────────────────────────────────────────────────────────────────────────────┐
     │  CONTENT PAGES (PG-009 to PG-014)                                                        │

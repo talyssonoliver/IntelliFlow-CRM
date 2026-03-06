@@ -274,12 +274,12 @@ IFC-136 (Case) ✅ ──┬──► IFC-147 (Deadlines) ✅ ──► Case Sta
 
 ### Overview
 
-| Layer       | Task ID | Status | Description                      |
-| ----------- | ------- | ------ | -------------------------------- |
-| Domain      | IFC-104 | ✅     | Opportunity entity + events      |
-| Application | IFC-065 | ✅     | CloseDealWonUseCase              |
-| API         | IFC-186 | ✅     | opportunity.router moveStage     |
-| UI          | PG-135  | ✅     | Pipeline Kanban (DnD)            |
+| Layer       | Task ID | Status | Description                  |
+| ----------- | ------- | ------ | ---------------------------- |
+| Domain      | IFC-104 | ✅     | Opportunity entity + events  |
+| Application | IFC-065 | ✅     | CloseDealWonUseCase          |
+| API         | IFC-186 | ✅     | opportunity.router moveStage |
+| UI          | PG-135  | ✅     | Pipeline Kanban (DnD)        |
 
 ### Dependency Chain
 
@@ -298,10 +298,14 @@ Orchestration Flow:
 
 ### Key Design Decisions
 
-- **Use Case Delegation**: CloseDealWonUseCase delegates domain transition to OpportunityService.markAsWon() (DRY)
-- **Event-Driven Metrics**: No direct AnalyticsAggregationService call; DealWonEnrichedEvent carries all data for downstream consumers
-- **Fire-and-Forget**: Both enriched event publishing and notification dispatch are non-blocking
-- **3 Constructor Dependencies**: OpportunityService, EventBusPort, NotificationServicePort
+- **Use Case Delegation**: CloseDealWonUseCase delegates domain transition to
+  OpportunityService.markAsWon() (DRY)
+- **Event-Driven Metrics**: No direct AnalyticsAggregationService call;
+  DealWonEnrichedEvent carries all data for downstream consumers
+- **Fire-and-Forget**: Both enriched event publishing and notification dispatch
+  are non-blocking
+- **3 Constructor Dependencies**: OpportunityService, EventBusPort,
+  NotificationServicePort
 
 ---
 

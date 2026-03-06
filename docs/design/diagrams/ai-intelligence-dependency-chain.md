@@ -12,17 +12,17 @@ Risk, RAG/Search, Auto-Response, AI Output Review, and AI Monitoring features.
 All chains now have UI tasks assigned via the unified **AI & Agents** sidebar at
 `/agent-approvals/*`.
 
-| Feature            | AI Chain | Router     | Frontend UI                    | Route                                        | Status                              |
-| ------------------ | -------- | ---------- | ------------------------------ | -------------------------------------------- | ----------------------------------- |
-| Lead Scoring       | IFC-005  | IFC-013    | IFC-023 + PG-148 ✅            | `/agent-approvals/lead-scoring`              | ✅ COMPLETE                         |
-| Sentiment Analysis | IFC-039  | Partial    | PG-142 ✅                      | `/agent-approvals/sentiment`                 | ✅ COMPLETE                         |
-| Churn Risk         | IFC-095  | Partial    | PG-143 ✅                      | `/agent-approvals/churn-risk`                | ✅ COMPLETE                         |
-| RAG/Search         | IFC-039  | IFC-156    | PG-144 ✅                      | `/agent-approvals/ai-search`                 | ✅ COMPLETE                         |
-| Auto-Response      | IFC-029  | IFC-029    | IFC-149 ✅                     | `/agent-approvals`                           | ✅ COMPLETE                         |
-| AI Output Review   | IFC-128  | IFC-180 ✅ | IFC-181 ✅ + PG-150 ✅         | `/agent-approvals/ai-review`                 | ✅ COMPLETE                         |
-| AI Monitoring      | IFC-117  | IFC-197 ✅ | PG-146 ✅/152 ✅/153 ✅        | `/agent-approvals/drift,agents,logs,latency` | 3/4 UI COMPLETE (PG-151 backlog)    |
-| Ticket Routing     | IFC-067  | IFC-067    | (admin dashboard TBD)          | N/A (backend API only)                       | ✅ COMPLETE                         |
-| Experiments        | IFC-025  | IFC-025    | PG-149 (Plan Complete 50%)     | `/agent-approvals/experiments`               | PLAN COMPLETE (50%)                 |
+| Feature            | AI Chain | Router     | Frontend UI                | Route                                        | Status                           |
+| ------------------ | -------- | ---------- | -------------------------- | -------------------------------------------- | -------------------------------- |
+| Lead Scoring       | IFC-005  | IFC-013    | IFC-023 + PG-148 ✅        | `/agent-approvals/lead-scoring`              | ✅ COMPLETE                      |
+| Sentiment Analysis | IFC-039  | Partial    | PG-142 ✅                  | `/agent-approvals/sentiment`                 | ✅ COMPLETE                      |
+| Churn Risk         | IFC-095  | Partial    | PG-143 ✅                  | `/agent-approvals/churn-risk`                | ✅ COMPLETE                      |
+| RAG/Search         | IFC-039  | IFC-156    | PG-144 ✅                  | `/agent-approvals/ai-search`                 | ✅ COMPLETE                      |
+| Auto-Response      | IFC-029  | IFC-029    | IFC-149 ✅                 | `/agent-approvals`                           | ✅ COMPLETE                      |
+| AI Output Review   | IFC-128  | IFC-180 ✅ | IFC-181 ✅ + PG-150 ✅     | `/agent-approvals/ai-review`                 | ✅ COMPLETE                      |
+| AI Monitoring      | IFC-117  | IFC-197 ✅ | PG-146 ✅/152 ✅/153 ✅    | `/agent-approvals/drift,agents,logs,latency` | 3/4 UI COMPLETE (PG-151 backlog) |
+| Ticket Routing     | IFC-067  | IFC-067    | (admin dashboard TBD)      | N/A (backend API only)                       | ✅ COMPLETE                      |
+| Experiments        | IFC-025  | IFC-025    | PG-149 (Plan Complete 50%) | `/agent-approvals/experiments`               | PLAN COMPLETE (50%)              |
 
 ---
 
@@ -472,25 +472,25 @@ All chains now have UI tasks assigned via the unified **AI & Agents** sidebar at
 
 ### Backend Infrastructure Tasks
 
-| Task ID | Feature                   | Status      | Notes                                               |
-| ------- | ------------------------- | ----------- | --------------------------------------------------- |
+| Task ID | Feature                   | Status       | Notes                                               |
+| ------- | ------------------------- | ------------ | --------------------------------------------------- |
 | IFC-197 | AI Monitoring tRPC Router | COMPLETED ✅ | 7 endpoints operational, 22 tests, all gates passed |
 
 ---
 
 ## Orphan Status Summary (Updated 2026-02-18)
 
-| Feature       | AI Chain   | Router     | Frontend                           | Status                         |
-| ------------- | ---------- | ---------- | ---------------------------------- | ------------------------------ |
-| Lead Scoring  | IFC-005 ✅ | IFC-013 ✅ | IFC-023 ✅ + PG-148 ✅             | ✅ COMPLETE                    |
-| Sentiment     | IFC-039 ✅ | Partial ⚠️ | PG-142 ✅                          | ✅ COMPLETE                    |
-| Churn Risk    | IFC-095 ✅ | Partial ⚠️ | PG-143 ✅                          | ✅ COMPLETE                    |
-| RAG/Search    | IFC-039 ✅ | IFC-156 ✅ | PG-144 ✅                          | ✅ COMPLETE                    |
-| Auto-Response | IFC-029 ✅ | IFC-029 ✅ | IFC-149 ✅                         | ✅ COMPLETE                    |
-| AI Review     | IFC-128 ✅ | IFC-180 ✅ | IFC-181 ✅ + PG-150 ✅             | ✅ COMPLETE                    |
-| Versioning    | IFC-086 ✅ | IFC-086 ✅ | PG-128 ✅                          | ✅ COMPLETE                    |
-| AI Monitoring | IFC-117 ✅ | IFC-197 ✅ | PG-146 ✅/152 ✅/153 ✅ (PG-151 ⏳) | 3/4 UI COMPLETE                |
-| Experiments   | IFC-025 ✅ | IFC-025 ✅ | PG-149 (Plan Complete 50%)         | PLAN COMPLETE                  |
+| Feature       | AI Chain   | Router     | Frontend                            | Status          |
+| ------------- | ---------- | ---------- | ----------------------------------- | --------------- |
+| Lead Scoring  | IFC-005 ✅ | IFC-013 ✅ | IFC-023 ✅ + PG-148 ✅              | ✅ COMPLETE     |
+| Sentiment     | IFC-039 ✅ | Partial ⚠️ | PG-142 ✅                           | ✅ COMPLETE     |
+| Churn Risk    | IFC-095 ✅ | Partial ⚠️ | PG-143 ✅                           | ✅ COMPLETE     |
+| RAG/Search    | IFC-039 ✅ | IFC-156 ✅ | PG-144 ✅                           | ✅ COMPLETE     |
+| Auto-Response | IFC-029 ✅ | IFC-029 ✅ | IFC-149 ✅                          | ✅ COMPLETE     |
+| AI Review     | IFC-128 ✅ | IFC-180 ✅ | IFC-181 ✅ + PG-150 ✅              | ✅ COMPLETE     |
+| Versioning    | IFC-086 ✅ | IFC-086 ✅ | PG-128 ✅                           | ✅ COMPLETE     |
+| AI Monitoring | IFC-117 ✅ | IFC-197 ✅ | PG-146 ✅/152 ✅/153 ✅ (PG-151 ⏳) | 3/4 UI COMPLETE |
+| Experiments   | IFC-025 ✅ | IFC-025 ✅ | PG-149 (Plan Complete 50%)          | PLAN COMPLETE   |
 
 **All orphans resolved.** Every AI feature now has a UI task assigned.
 

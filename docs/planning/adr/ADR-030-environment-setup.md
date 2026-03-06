@@ -8,12 +8,15 @@
 
 **Technical Story:** ENV-001-AI, ENV-003-AI, ENV-004-AI, ENV-005-AI, ENV-009-AI
 
-> **Note**: This ADR was retroactively created to document architectural decisions
-> made during implementation. The decisions described here are already in production.
+> **Note**: This ADR was retroactively created to document architectural
+> decisions made during implementation. The decisions described here are already
+> in production.
 
 ## Context and Problem Statement
 
-IntelliFlow CRM needed foundational infrastructure decisions for the monorepo structure, containerization strategy, database integration, CI/CD pipeline, and frontend framework configuration.
+IntelliFlow CRM needed foundational infrastructure decisions for the monorepo
+structure, containerization strategy, database integration, CI/CD pipeline, and
+frontend framework configuration.
 
 ## Decision Drivers
 
@@ -33,7 +36,10 @@ IntelliFlow CRM needed foundational infrastructure decisions for the monorepo st
 
 ## Decision Outcome
 
-Chosen: All options above as a cohesive stack. Turborepo provides build orchestration, Docker Compose ensures environment parity, Supabase gives managed PostgreSQL with pgvector for AI embeddings, GitHub Actions automates quality gates, and Next.js 16 enables modern React patterns.
+Chosen: All options above as a cohesive stack. Turborepo provides build
+orchestration, Docker Compose ensures environment parity, Supabase gives managed
+PostgreSQL with pgvector for AI embeddings, GitHub Actions automates quality
+gates, and Next.js 16 enables modern React patterns.
 
 ### Positive Consequences
 
@@ -61,5 +67,5 @@ All related tasks are completed. See attestation files at
 
 ### Rollback Plan
 
-N/A — decisions are already in production. Future changes should create a new ADR
-that supersedes this one.
+N/A — decisions are already in production. Future changes should create a new
+ADR that supersedes this one.

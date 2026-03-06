@@ -2,15 +2,15 @@
 
 ## Overview
 
-| Field             | Value                                     |
-| ----------------- | ----------------------------------------- |
-| **Feature Name**  | Home Page (Public & Authenticated)        |
-| **Owner**         | Growth Lead, CRM FE Lead                  |
-| **Status**        | In Progress                               |
-| **Target Sprint** | 13-14                                     |
-| **Created Date**  | 2026-02-03                                |
-| **Last Updated**  | 2026-02-28                                |
-| **Related Tasks** | IFC-182, PG-001, PG-129, IFC-069, IFC-183, PG-165, IFC-195, PG-156, PG-157 |
+| Field             | Value                                                                                                       |
+| ----------------- | ----------------------------------------------------------------------------------------------------------- |
+| **Feature Name**  | Home Page (Public & Authenticated)                                                                          |
+| **Owner**         | Growth Lead, CRM FE Lead                                                                                    |
+| **Status**        | In Progress                                                                                                 |
+| **Target Sprint** | 13-14                                                                                                       |
+| **Created Date**  | 2026-02-03                                                                                                  |
+| **Last Updated**  | 2026-02-28                                                                                                  |
+| **Related Tasks** | IFC-182, PG-001, PG-129, IFC-069, IFC-183, PG-165, IFC-195, IFC-211, PG-156, PG-157, PG-158, PG-159, PG-166 |
 
 ## Problem Statement
 
@@ -93,7 +93,8 @@ trial.
 - [x] Feature highlights explain key differentiators (AI, governance,
       accessibility)
 - [x] CTAs are prominent and lead to signup/contact forms
-- [ ] Page loads fast (<2s LCP) and scores >90 on Lighthouse <!-- Deferred: Performance testing (backlog) — needs Lighthouse CI measurement -->
+- [ ] Page loads fast (<2s LCP) and scores >90 on Lighthouse
+      <!-- Deferred: Performance testing (backlog) — needs Lighthouse CI measurement -->
 
 #### Story 3: Goal Tracking
 
@@ -104,7 +105,8 @@ that** I know how much more I need to close today.
 
 - [x] Circular progress indicator shows percentage toward goal
 - [x] Remaining amount is clearly displayed
-- [ ] Goal updates in real-time as deals close <!-- Deferred: PG-156 — real-time goal subscription not yet implemented -->
+- [ ] Goal updates in real-time as deals close
+      <!-- Deferred: PG-156 — real-time goal subscription not yet implemented -->
 
 #### Story 4: Quick Access
 
@@ -136,38 +138,49 @@ page.
 
 ### Non-Functional Requirements
 
-- [ ] Public page Lighthouse score ≥90 <!-- Deferred: Performance testing (backlog) — needs production build measurement -->
-- [ ] Public page LCP <2s, FID <100ms, CLS <0.1 <!-- Deferred: Performance testing (backlog) — needs Core Web Vitals measurement -->
-- [ ] Authenticated page loads <500ms <!-- Deferred: Performance testing (backlog) — skeleton loaders support perceived <500ms but not measured -->
+- [ ] Public page Lighthouse score ≥90
+      <!-- Deferred: Performance testing (backlog) — needs production build measurement -->
+- [ ] Public page LCP <2s, FID <100ms, CLS <0.1
+      <!-- Deferred: Performance testing (backlog) — needs Core Web Vitals measurement -->
+- [ ] Authenticated page loads <500ms
+      <!-- Deferred: Performance testing (backlog) — skeleton loaders support perceived <500ms but not measured -->
 - [x] All tRPC endpoints respond <200ms
-- [ ] WCAG 2.1 AA accessibility compliance <!-- Deferred: Accessibility audit (backlog) — aria-labels present, no formal audit -->
+- [ ] WCAG 2.1 AA accessibility compliance
+      <!-- Deferred: Accessibility audit (backlog) — aria-labels present, no formal audit -->
 - [x] Responsive design: 1 col mobile → 4 cols desktop
-- [ ] Dark mode fully supported <!-- Deferred: Dark mode pass (backlog) — auth dashboard not verified -->
+- [ ] Dark mode fully supported
+      <!-- Deferred: Dark mode pass (backlog) — auth dashboard not verified -->
 - [x] SEO meta tags and OG tags configured
 
 ### Quality Gates
 
 - [x] Test coverage ≥90% for home.router.ts
-- [ ] Test coverage ≥95% for home.ts validators <!-- Deferred: PG-163 — integration test suite will measure -->
+- [ ] Test coverage ≥95% for home.ts validators
+      <!-- Deferred: PG-163 — integration test suite will measure -->
 - [x] All unit tests passing
 - [x] All integration tests passing
-- [ ] E2E tests for critical flows passing <!-- Deferred: PG-164 — 5 Playwright E2E scenarios planned -->
+- [ ] E2E tests for critical flows passing
+      <!-- Deferred: PG-164 — 5 Playwright E2E scenarios planned -->
 - [x] No critical or high severity bugs
 - [x] Code review completed and approved
-- [ ] SonarQube issues resolved <!-- Deferred: SonarQube run (backlog) — not yet executed for home module -->
+- [ ] SonarQube issues resolved
+      <!-- Deferred: SonarQube run (backlog) — not yet executed for home module -->
 
 ### Documentation
 
 - [x] Spec document created (`docs/specs/HOME-PAGE-SPEC.md`)
 - [x] API documentation in tRPC router comments
-- [ ] Component JSDoc comments <!-- Deferred: Documentation pass (backlog) — not systematically added -->
-- [ ] This PRD approved <!-- Deferred: PG-165 (this task) — approval follows this update -->
+- [ ] Component JSDoc comments
+      <!-- Deferred: Documentation pass (backlog) — not systematically added -->
+- [ ] This PRD approved
+      <!-- Deferred: PG-165 (this task) — approval follows this update -->
 
 ### Deployment
 
 - [x] No feature flag required (always enabled)
 - [x] No database migrations required
-- [ ] Monitoring configured (endpoint latency) <!-- Deferred: Observability setup (backlog) — home-specific monitoring not configured -->
+- [ ] Monitoring configured (endpoint latency)
+      <!-- Deferred: Observability setup (backlog) — home-specific monitoring not configured -->
 - [x] Error tracking via Sentry
 
 ## Technical Requirements
@@ -350,7 +363,7 @@ export const homeRouter = createTRPCRouter({
 | API Response Time (p95)   | <150ms | OpenTelemetry traces |
 | API Response Time (p99)   | <200ms | OpenTelemetry traces |
 | Page Load Time (FCP)      | <1s    | Lighthouse           |
-| Time to Interactive (TTI) | <2s    | Lighthouse           |
+| Time to Interactive (TTI) | <1s    | Lighthouse (PG-166)  |
 | Public Page LCP           | <2s    | Core Web Vitals      |
 | Public Page CLS           | <0.1   | Core Web Vitals      |
 
@@ -361,7 +374,7 @@ export const homeRouter = createTRPCRouter({
 | Test Coverage (home.router) | ≥90%   | Vitest coverage report |
 | Test Coverage (validators)  | ≥95%   | Vitest coverage report |
 | Lighthouse Score (Public)   | ≥90    | Lighthouse CI          |
-| Lighthouse Score (Auth)     | ≥85    | Lighthouse CI          |
+| Lighthouse Score (Auth)     | ≥90    | Lighthouse CI (PG-166) |
 | Accessibility Score         | ≥95    | axe DevTools           |
 
 ### Business Metrics
@@ -405,7 +418,8 @@ From `Sprint_plan.csv` Dependencies column:
 
 - [x] UI component design approved (using existing shadcn/ui)
 - [x] API contracts defined (Zod schemas)
-- [ ] Analytics tracking plan defined <!-- Deferred: Analytics setup (backlog) — tracking plan not yet defined -->
+- [ ] Analytics tracking plan defined
+      <!-- Deferred: Analytics setup (backlog) — tracking plan not yet defined -->
 
 ## Risks and Mitigations
 
@@ -436,6 +450,8 @@ From `Sprint_plan.csv` Dependencies column:
 - ML-based insights with LangChain - Target: Sprint 16 (PG-162)
 - ~~Customizable goals in user settings~~ — Implemented: IFC-195 (Sprint 15)
 - Drag-and-drop reorder for pinned items (PG-158)
+- ~~View All AI Insights page~~ — Delivered by PG-160 (Sprint 15): `/insights`
+  route with `getAllInsights` endpoint, pagination, and type filtering
 
 ## Timeline
 
@@ -470,7 +486,8 @@ From `Sprint_plan.csv` Dependencies column:
 
 ## Revision History
 
-| Version | Date       | Author | Changes       |
-| ------- | ---------- | ------ | ------------- |
-| 1.0     | 2026-02-03 | Claude | Initial draft |
-| 2.0     | 2026-02-23 | Claude | PG-165: Checkbox audit — 38/51 marked complete, 13 deferred with task references |
+| Version | Date       | Author | Changes                                                                                                                     |
+| ------- | ---------- | ------ | --------------------------------------------------------------------------------------------------------------------------- |
+| 1.0     | 2026-02-03 | Claude | Initial draft                                                                                                               |
+| 2.0     | 2026-02-23 | Claude | PG-165: Checkbox audit — 38/51 marked complete, 13 deferred with task references                                            |
+| 2.1     | 2026-03-02 | Claude | PG-166: Lighthouse audit — TTI target tightened to <1s, auth Lighthouse score raised to >=90, added PG-166 to Related Tasks |

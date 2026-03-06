@@ -11,16 +11,16 @@ The **Security & Platform** domain covers RBAC, Audit Logging, Encryption,
 Notifications, Events, and Analytics. Backend infrastructure is **mostly
 complete**, but several critical routers are **missing or incomplete**.
 
-| Feature       | Domain        | Application | Adapter     | Router      | Frontend       | Status          |
-| ------------- | ------------- | ----------- | ----------- | ----------- | -------------- | --------------- |
-| RBAC          | IFC-098       | IFC-098     | IFC-098     | Partial     | PG-108-111     | PARTIAL         |
-| Audit Log     | IFC-124       | IFC-124     | IFC-124     | Complete    | PG-112         | PARTIAL         |
-| Encryption    | IFC-113       | IFC-113     | IFC-113     | N/A         | PG-120         | PARTIAL         |
-| Notifications | IFC-157       | IFC-157     | IFC-170/171 | IFC-183     | PG-116, PG-130 | PG-130 COMPLETE |
-| Events        | IFC-150       | IFC-151     | IFC-150     | Complete    | N/A            | COMPLETE        |
-| Home Page     | IFC-182       | IFC-182     | IFC-182     | Complete    | PG-129         | ROUTER COMPLETE |
-| Analytics     | ANALYTICS-001 | IFC-37      | IFC-38      | IFC-200     | Dashboard      | COMPLETE        |
-| Security Dash | EXC-SEC-001   | route.ts    | N/A         | /api/tracking/security | TRACK-005 | COMPLETE |
+| Feature       | Domain        | Application | Adapter     | Router                 | Frontend       | Status          |
+| ------------- | ------------- | ----------- | ----------- | ---------------------- | -------------- | --------------- |
+| RBAC          | IFC-098       | IFC-098     | IFC-098     | Partial                | PG-108-111     | PARTIAL         |
+| Audit Log     | IFC-124       | IFC-124     | IFC-124     | Complete               | PG-112         | PARTIAL         |
+| Encryption    | IFC-113       | IFC-113     | IFC-113     | N/A                    | PG-120         | PARTIAL         |
+| Notifications | IFC-157       | IFC-157     | IFC-170/171 | IFC-183                | PG-116, PG-130 | PG-130 COMPLETE |
+| Events        | IFC-150       | IFC-151     | IFC-150     | Complete               | N/A            | COMPLETE        |
+| Home Page     | IFC-182       | IFC-182     | IFC-182     | Complete               | PG-129         | ROUTER COMPLETE |
+| Analytics     | ANALYTICS-001 | IFC-37      | IFC-38      | IFC-200                | Dashboard      | COMPLETE        |
+| Security Dash | EXC-SEC-001   | route.ts    | N/A         | /api/tracking/security | TRACK-005      | COMPLETE        |
 
 ---
 
@@ -333,15 +333,15 @@ complete**, but several critical routers are **missing or incomplete**.
 
 ## Orphan Status Summary
 
-| Feature          | Backend Complete? | Router Complete? | Frontend Task? | Action Required                 |
-| ---------------- | ----------------- | ---------------- | -------------- | ------------------------------- |
-| RBAC             | YES               | YES              | YES (Backlog)  | None                            |
-| Audit Log        | YES               | YES              | YES (Backlog)  | None                            |
-| Encryption       | YES               | N/A              | YES (Backlog)  | None                            |
-| Tenant Isolation | YES               | YES              | N/A            | None                            |
-| Domain Events    | YES               | YES              | N/A            | None                            |
-| Notifications    | YES               | **NO**           | YES (Blocked)  | **Create IFC-183**              |
-| Home Page        | YES               | 100%             | YES (60%)      | IFC-182 DONE — PG-129 unblocked |
+| Feature          | Backend Complete? | Router Complete? | Frontend Task? | Action Required                    |
+| ---------------- | ----------------- | ---------------- | -------------- | ---------------------------------- |
+| RBAC             | YES               | YES              | YES (Backlog)  | None                               |
+| Audit Log        | YES               | YES              | YES (Backlog)  | None                               |
+| Encryption       | YES               | N/A              | YES (Backlog)  | None                               |
+| Tenant Isolation | YES               | YES              | N/A            | None                               |
+| Domain Events    | YES               | YES              | N/A            | None                               |
+| Notifications    | YES               | **NO**           | YES (Blocked)  | **Create IFC-183**                 |
+| Home Page        | YES               | 100%             | YES (60%)      | IFC-182 DONE — PG-129 unblocked    |
 | Analytics        | YES               | YES (IFC-200)    | YES (Backlog)  | IFC-200 DONE — Dashboard unblocked |
 
 **Total New Tasks Required: 2**

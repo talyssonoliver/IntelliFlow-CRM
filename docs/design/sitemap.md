@@ -1,7 +1,7 @@
 # IntelliFlow CRM - Sitemap
 
-> **Location**: `docs/design/sitemap.md` **Last Updated**: 2026-02-25 **Total
-> Pages**: 107 **Total Flows**: 42 (linked) **Layouts**: 35 **API Routers**: 25
+> **Location**: `docs/design/sitemap.md` **Last Updated**: 2026-03-01 **Total
+> Pages**: 119 **Total Flows**: 42 (linked) **Layouts**: 37 **API Routers**: 25
 > (232 procedures)
 
 ---
@@ -36,7 +36,7 @@
 ```
 intelliflow.com
 │
-├── PUBLIC PAGES (25 pages) ──────────────── Route Group: (public)
+├── PUBLIC PAGES (27 pages) ──────────────── Route Group: (public)
 │   │
 │   ├── / (Home)                          [PG-001] → Conditional render:
 │   │                                       • Unauth: PublicHomePage
@@ -47,6 +47,7 @@ intelliflow.com
 │   ├── /contact                          [PG-005]
 │   ├── /partners                         [PG-006]
 │   ├── /press                            [PG-007]
+│   │   └── /press/[id]                   [PG-179] Press release detail
 │   ├── /security                         [PG-008]
 │   ├── /status                           [PG-014]
 │   │
@@ -65,21 +66,26 @@ intelliflow.com
 │   ├── /reset-password/[token]           → FLOW-003
 │   ├── /reset-password/callback          → FLOW-003 (callback handler)
 │   ├── /logout                           Session termination
+│   ├── /sso                              Enterprise SSO entry form (PG-124)
 │   │
 │   ├── /auth/callback                    → FLOW-001 (OAuth redirect)
 │   ├── /mfa/verify                       → FLOW-001 (2FA input)
 │   ├── /verify-email/[token]             → FLOW-001 (email confirmation)
 │   └── /verify-email/callback            → FLOW-001 (email verify callback)
 │
-├── DEVELOPER PORTAL (9 pages) ──────────── Route Group: (developer)
+├── DEVELOPER PORTAL (14 pages) ──────────── Route Group: (developer)
 │   │
 │   ├── /developers/apps                  Developer applications registry
+│   ├── /developers/apps/new             Developer app creation
 │   ├── /developers/apps/[id]             Developer app detail dashboard
 │   ├── /developers/apps/[id]/edit       Developer app edit settings
 │   ├── /docs                             Documentation home
 │   ├── /docs/api                         API reference
+│   ├── /docs/architecture               Architecture docs — ADR list, DDD context map (PG-169)
 │   ├── /docs/auth                        Authentication guides (PG-038)
 │   ├── /docs/changelog                   Changelog — release history and version notes (PG-035)
+│   ├── /docs/cli                         CLI reference — monorepo CLI commands
+│   ├── /docs/guides                      Developer guides (PG-169)
 │   ├── /docs/integrations                Integration guides
 │   ├── /docs/sdk                         SDK guides
 │   └── /docs/webhooks                    Webhook documentation
@@ -100,13 +106,15 @@ intelliflow.com
 │   │   ├── ?segment=hot                  Score >80
 │   │   └── ?segment=followup             Needs follow-up
 │   ├── /leads/new                        → FLOW-005 (create form)
-│   └── /leads/[id]                       → FLOW-006 (360° view, NO sidebar)
+│   ├── /leads/[id]                       → FLOW-006 (360° view, NO sidebar)
+│   └── /leads/[id]/edit                  Edit lead fields and metadata
 │
 ├── CRM CORE: CONTACTS ───────────────────── Layout: contacts/(list)
 │   │
 │   ├── /contacts                         → FLOW-016 (list + search)
 │   ├── /contacts/new                     → FLOW-016 (create form)
-│   └── /contacts/[id]                    → FLOW-020 (profile, NO sidebar)
+│   ├── /contacts/[id]                    → FLOW-020 (profile, NO sidebar)
+│   └── /contacts/[id]/edit              Edit contact fields
 │
 ├── CRM CORE: ACCOUNTS ──────────────────── Layout: accounts/(list)
 │   │
@@ -172,6 +180,10 @@ intelliflow.com
 │   ├── /agent-approvals/preview          Preview AI actions
 │   └── /agent-approvals/sentiment        Sentiment analysis
 │
+├── AI INSIGHTS ──────────────────────────── Layout: insights
+│   │
+│   └── /insights                          [PG-160] All AI insights (paginated, filtered)
+│
 ├── ANALYTICS ────────────────────────────── Layout: analytics/(list)
 │   │
 │   ├── /analytics                        → FLOW-023 (charts + KPIs)
@@ -213,38 +225,49 @@ intelliflow.com
 │   ├── /notifications                    All notifications
 │   └── /notifications/settings           Notification preferences
 │
-└── PROFILE ──────────────────────────────── Route: /profile
+├── PROFILE ──────────────────────────────── Route: /profile
+│   │
+│   └── /profile                          User account details
+│
+├── SUPPORT PORTAL ──────────────────────── Layout: support/tickets/(list)
+│   │
+│   └── /support/tickets                  → Support-agent ticket queue (SLA-first)
+│
+└── SUPPORT / HELP CENTER ───────────────── Route: /help-center
     │
-    └── /profile                          User account details
+    └── /help-center                      Self-service help center
 ```
 
 ---
 
 ## Page Count by Section
 
-| Section             | Pages   | Status                                        |
-| ------------------- | ------- | --------------------------------------------- |
-| Public Pages        | 25      | Marketing, auth, blog, careers, callbacks     |
-| Developer Portal    | 9       | Docs home, API, auth, changelog, integrations, webhooks, SDK, CLI, apps |
-| Dashboard           | 3       | Main, new, customize                          |
-| CRM Core: Leads     | 3       | List, new, detail                             |
-| CRM Core: Contacts  | 3       | List, new, detail                             |
-| CRM Core: Accounts  | 2       | List, detail                                  |
-| CRM Core: Deals     | 4       | List, detail, forecast (2)                    |
-| CRM Core: Tickets   | 3       | List, new, detail                             |
-| CRM Core: Documents | 3       | List, new, detail                             |
-| CRM Core: Cases     | 4       | List, new, detail, timeline                   |
-| Tasks               | 2       | List, detail                                  |
-| Calendar            | 3       | List, new, detail                             |
-| Email               | 2       | Inbox, detail                                 |
-| AI & Automation     | 14      | Queue + 13 sub-pages                          |
-| Analytics           | 2       | Dashboard, feedback                           |
-| Settings            | 9       | Account, team, AI, integrations, routing, etc.|
-| Billing             | 7       | Overview, checkout, subscriptions, etc.       |
-| Governance          | 6       | ADR, compliance, policies, reports            |
-| Notifications       | 2       | List, settings                                |
-| Profile             | 1       | User profile                                  |
-| **Total**           | **107** |                                               |
+| Section               | Pages   | Status                                         |
+| --------------------- | ------- | ---------------------------------------------- |
+| Public Pages          | 27      | Marketing, auth, blog, careers, callbacks, SSO |
+| Developer Portal      | 14      | Docs (10), apps (3), apps/new (1)              |
+| Dashboard             | 3       | Main, new, customize                           |
+| CRM Core: Leads       | 4       | List, new, detail, edit                        |
+| CRM Core: Contacts    | 4       | List, new, detail, edit                        |
+| CRM Core: Accounts    | 2       | List, detail                                   |
+| CRM Core: Deals       | 4       | List, detail, forecast (2)                     |
+| CRM Core: Tickets     | 3       | List, new, detail                              |
+| CRM Core: Documents   | 3       | List, new, detail                              |
+| CRM Core: Cases       | 4       | List, new, detail, timeline                    |
+| Tasks                 | 2       | List, detail                                   |
+| Calendar              | 3       | List, new, detail                              |
+| Email                 | 2       | Inbox, detail                                  |
+| AI & Automation       | 14      | Queue + 13 sub-pages                           |
+| AI Insights           | 1       | All insights (paginated, filtered)             |
+| Analytics             | 2       | Dashboard, feedback                            |
+| Settings              | 9       | Account, team, AI, integrations, routing, etc. |
+| Billing               | 7       | Overview, checkout, subscriptions, etc.        |
+| Governance            | 6       | ADR, compliance, policies, reports             |
+| Notifications         | 2       | List, settings                                 |
+| Profile               | 1       | User profile                                   |
+| Support Portal        | 1       | Support-agent ticket queue                     |
+| Support / Help Center | 1       | Self-service help center                       |
+| **Total**             | **119** |                                                |
 
 ---
 
@@ -252,29 +275,31 @@ intelliflow.com
 
 ### `apps/web/src/app/sitemap.ts`
 
-Next.js auto-serves this at `/sitemap.xml`. Contains **public marketing pages only** — no authenticated routes.
+Next.js auto-serves this at `/sitemap.xml`. Contains **public marketing pages
+only** — no authenticated routes.
 
 **Included routes (15):**
 
-| Route | Priority | Change Frequency |
-|-------|----------|-----------------|
-| `/` | 1.0 | weekly |
-| `/features` | 0.9 | monthly |
-| `/pricing` | 0.9 | monthly |
-| `/signup` | 0.8 | monthly |
-| `/about` | 0.8 | monthly |
-| `/contact` | 0.8 | monthly |
-| `/blog` | 0.8 | monthly |
-| `/careers` | 0.8 | monthly |
-| `/login` | 0.7 | monthly |
-| `/partners` | 0.6 | monthly |
-| `/press` | 0.6 | monthly |
-| `/security` | 0.6 | monthly |
-| `/status` | 0.4 | hourly |
-| `/blog/ai-lead-scoring-best-practices` | 0.6 | monthly |
-| `/blog/governance-ready-automation` | 0.6 | monthly |
+| Route                                  | Priority | Change Frequency |
+| -------------------------------------- | -------- | ---------------- |
+| `/`                                    | 1.0      | weekly           |
+| `/features`                            | 0.9      | monthly          |
+| `/pricing`                             | 0.9      | monthly          |
+| `/signup`                              | 0.8      | monthly          |
+| `/about`                               | 0.8      | monthly          |
+| `/contact`                             | 0.8      | monthly          |
+| `/blog`                                | 0.8      | monthly          |
+| `/careers`                             | 0.8      | monthly          |
+| `/login`                               | 0.7      | monthly          |
+| `/partners`                            | 0.6      | monthly          |
+| `/press`                               | 0.6      | monthly          |
+| `/security`                            | 0.6      | monthly          |
+| `/status`                              | 0.4      | hourly           |
+| `/blog/ai-lead-scoring-best-practices` | 0.6      | monthly          |
+| `/blog/governance-ready-automation`    | 0.6      | monthly          |
 
-**Excluded:** All 78 authenticated routes, auth flow pages, dynamic `[id]`/`[token]` routes, API routes, redirect-only paths.
+**Excluded:** All 78 authenticated routes, auth flow pages, dynamic
+`[id]`/`[token]` routes, API routes, redirect-only paths.
 
 ### `apps/web/src/app/robots.ts`
 
@@ -288,67 +313,68 @@ Next.js auto-serves this at `/robots.txt`. Configures crawl rules:
 
 ## Planned Pages (Sprint 16+)
 
-28 ghost links identified in `docs/design/navigation-reachability-audit.md` that resolve to sidebar/navigation links but have no `page.tsx` yet:
+28 ghost links identified in `docs/design/navigation-reachability-audit.md` that
+resolve to sidebar/navigation links but have no `page.tsx` yet:
 
-| Route | Section | Sprint |
-|-------|---------|--------|
-| `/billing/usage` | Billing | 16 |
-| `/billing/plans` | Billing | 16 |
-| `/billing/upgrade` | Billing | 16 |
-| `/billing/cancel` | Billing | 16 |
-| `/billing/settings` | Billing | 16 |
-| `/tickets/sla-policies` | Tickets Config | 16 |
-| `/tickets/types` | Tickets Config | 16 |
-| `/tickets/automations` | Tickets Config | 16 |
-| `/notifications/channels` | Notifications Config | 16 |
-| `/notifications/quiet-hours` | Notifications Config | 16 |
-| `/deals/trash` | Deals | 16 |
-| `/governance/quality-reports/lighthouse` | Governance | 16 |
-| `/governance/quality-reports/coverage` | Governance | 16 |
-| `/governance/quality-reports/performance` | Governance | 16 |
-| `/analytics/saved/weekly` | Analytics | 16 |
-| `/analytics/saved/monthly` | Analytics | 16 |
-| `/analytics/saved/quarterly` | Analytics | 16 |
-| `/settings/leads` | Module Settings | 16 |
-| `/settings/contacts` | Module Settings | 16 |
-| `/settings/accounts` | Module Settings | 16 |
-| `/settings/deals` | Module Settings | 16 |
-| `/settings/tickets` | Module Settings | 16 |
-| `/settings/documents` | Module Settings | 16 |
-| `/settings/reports` | Module Settings | 16 |
-| `/settings/billing` | Module Settings | 16 |
-| `/settings/appointments` | Module Settings | 16 |
-| `/settings/cases` | Module Settings | 16 |
-| `/settings/tasks` | Module Settings | 16 |
+| Route                                     | Section              | Sprint |
+| ----------------------------------------- | -------------------- | ------ |
+| `/billing/usage`                          | Billing              | 16     |
+| `/billing/plans`                          | Billing              | 16     |
+| `/billing/upgrade`                        | Billing              | 16     |
+| `/billing/cancel`                         | Billing              | 16     |
+| `/billing/settings`                       | Billing              | 16     |
+| `/tickets/sla-policies`                   | Tickets Config       | 16     |
+| `/tickets/types`                          | Tickets Config       | 16     |
+| `/tickets/automations`                    | Tickets Config       | 16     |
+| `/notifications/channels`                 | Notifications Config | 16     |
+| `/notifications/quiet-hours`              | Notifications Config | 16     |
+| `/deals/trash`                            | Deals                | 16     |
+| `/governance/quality-reports/lighthouse`  | Governance           | 16     |
+| `/governance/quality-reports/coverage`    | Governance           | 16     |
+| `/governance/quality-reports/performance` | Governance           | 16     |
+| `/analytics/saved/weekly`                 | Analytics            | 16     |
+| `/analytics/saved/monthly`                | Analytics            | 16     |
+| `/analytics/saved/quarterly`              | Analytics            | 16     |
+| `/settings/leads`                         | Module Settings      | 16     |
+| `/settings/contacts`                      | Module Settings      | 16     |
+| `/settings/accounts`                      | Module Settings      | 16     |
+| `/settings/deals`                         | Module Settings      | 16     |
+| `/settings/tickets`                       | Module Settings      | 16     |
+| `/settings/documents`                     | Module Settings      | 16     |
+| `/settings/reports`                       | Module Settings      | 16     |
+| `/settings/billing`                       | Module Settings      | 16     |
+| `/settings/appointments`                  | Module Settings      | 16     |
+| `/settings/cases`                         | Module Settings      | 16     |
+| `/settings/tasks`                         | Module Settings      | 16     |
 
 ---
 
 ## Implementation Status
 
-### Implemented Pages (105 total)
+### Implemented Pages (118 total)
 
-| Category    | Route                                             | Status         | Flow               |
-| ----------- | ------------------------------------------------- | -------------- | ------------------ |
-| Public      | `/`, `/login`, `/signup`, etc.                    | Implemented | FLOW-001           |
-| Developer   | `/docs`, `/docs/api`, `/docs/auth`, `/docs/changelog`, `/docs/integrations`, `/docs/sdk`, `/docs/webhooks`, `/developers/apps`, `/developers/apps/[id]` | Implemented | - |
-| Dashboard   | `/dashboard`, `/dashboard/new`                    | Implemented | FLOW-025           |
-| Leads       | `/leads`, `/leads/new`, `/leads/[id]`             | Implemented | FLOW-005, FLOW-006 |
-| Contacts    | `/contacts`, `/contacts/new`, `/contacts/[id]`    | Implemented | FLOW-016           |
-| Accounts    | `/accounts`, `/accounts/[id]`                     | Implemented | -                  |
-| Deals       | `/deals`, `/deals/[id]`, `/deals/[id]/forecast`   | Implemented | FLOW-007, FLOW-008 |
-| Tickets     | `/tickets`, `/tickets/new`, `/tickets/[id]`       | Implemented | FLOW-011, FLOW-012 |
-| Documents   | `/documents`, `/documents/new`, `/documents/[id]` | Implemented | -                  |
-| Cases       | `/cases`, `/cases/new`, `/cases/[id]`, `/cases/timeline` | Implemented | FLOW-020 |
-| Tasks       | `/tasks`, `/tasks/[id]`                           | Implemented | -                  |
-| Calendar    | `/calendar`, `/calendar/new`, `/calendar/[id]`    | Implemented | -                  |
-| Email       | `/email`, `/email/[id]`                           | Implemented | -                  |
-| AI          | `/agent-approvals` + 13 sub-pages                 | Implemented | IFC-149            |
-| Analytics   | `/analytics`, `/analytics/feedback`               | Implemented | FLOW-023           |
-| Settings    | `/settings/*` (9 pages)                           | Implemented | FLOW-035, FLOW-045 |
-| Billing     | `/billing/*` (7 pages)                            | Implemented | FLOW-010           |
-| Governance  | `/governance/*` (6 pages)                         | Implemented | FLOW-032           |
-| Notifications | `/notifications`, `/notifications/settings`     | Implemented | -                  |
-| Profile     | `/profile`                                        | Implemented | -                  |
+| Category      | Route                                                                                                                                                                                                                                                            | Status      | Flow               |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ------------------ |
+| Public        | `/`, `/login`, `/signup`, `/sso`, etc. (27 pages)                                                                                                                                                                                                                | Implemented | FLOW-001           |
+| Developer     | `/docs`, `/docs/api`, `/docs/auth`, `/docs/changelog`, `/docs/guides`, `/docs/integrations`, `/docs/sdk`, `/docs/webhooks`, `/docs/architecture`, `/docs/cli`, `/developers/apps`, `/developers/apps/new`, `/developers/apps/[id]`, `/developers/apps/[id]/edit` | Implemented | -                  |
+| Dashboard     | `/dashboard`, `/dashboard/new`                                                                                                                                                                                                                                   | Implemented | FLOW-025           |
+| Leads         | `/leads`, `/leads/new`, `/leads/[id]`, `/leads/[id]/edit`                                                                                                                                                                                                        | Implemented | FLOW-005, FLOW-006 |
+| Contacts      | `/contacts`, `/contacts/new`, `/contacts/[id]`, `/contacts/[id]/edit`                                                                                                                                                                                            | Implemented | FLOW-016           |
+| Accounts      | `/accounts`, `/accounts/[id]`                                                                                                                                                                                                                                    | Implemented | -                  |
+| Deals         | `/deals`, `/deals/[id]`, `/deals/[id]/forecast`                                                                                                                                                                                                                  | Implemented | FLOW-007, FLOW-008 |
+| Tickets       | `/tickets`, `/tickets/new`, `/tickets/[id]`                                                                                                                                                                                                                      | Implemented | FLOW-011, FLOW-012 |
+| Documents     | `/documents`, `/documents/new`, `/documents/[id]`                                                                                                                                                                                                                | Implemented | -                  |
+| Cases         | `/cases`, `/cases/new`, `/cases/[id]`, `/cases/timeline`                                                                                                                                                                                                         | Implemented | FLOW-020           |
+| Tasks         | `/tasks`, `/tasks/[id]`                                                                                                                                                                                                                                          | Implemented | -                  |
+| Calendar      | `/calendar`, `/calendar/new`, `/calendar/[id]`                                                                                                                                                                                                                   | Implemented | -                  |
+| Email         | `/email`, `/email/[id]`                                                                                                                                                                                                                                          | Implemented | -                  |
+| AI            | `/agent-approvals` + 13 sub-pages                                                                                                                                                                                                                                | Implemented | IFC-149            |
+| Analytics     | `/analytics`, `/analytics/feedback`                                                                                                                                                                                                                              | Implemented | FLOW-023           |
+| Settings      | `/settings/*` (9 pages)                                                                                                                                                                                                                                          | Implemented | FLOW-035, FLOW-045 |
+| Billing       | `/billing/*` (7 pages)                                                                                                                                                                                                                                           | Implemented | FLOW-010           |
+| Governance    | `/governance/*` (6 pages)                                                                                                                                                                                                                                        | Implemented | FLOW-032           |
+| Notifications | `/notifications`, `/notifications/settings`                                                                                                                                                                                                                      | Implemented | -                  |
+| Profile       | `/profile`                                                                                                                                                                                                                                                       | Implemented | -                  |
 
 ### Mockup References
 
@@ -361,18 +387,18 @@ Next.js auto-serves this at `/robots.txt`. Configures crawl rules:
 
 ### Backend Integration Status
 
-| Route                  | Integration   | Required APIs                                                         |
-| ---------------------- | ------------- | --------------------------------------------------------------------- |
-| `/` (Auth Home)        | Hardcoded  | `dashboard.getWelcomeSummary`, `feed.getItems`, `ai.getDailyInsights` |
-| `/dashboard`           | Partial    | `dashboard.getMetrics`, `dashboard.getWidgets`                        |
-| `/leads/*`             | Integrated | `lead.*` (16 procedures)                                              |
-| `/contacts/*`          | Integrated | `contact.*` (14 procedures)                                           |
-| `/deals/*`             | Integrated | `opportunity.*` (7 procedures)                                        |
-| `/deals/[id]/forecast` | Hardcoded  | `intelligence.getDealForecast`                                        |
-| `/tickets/*`           | Integrated | `ticket.*` (10 procedures)                                            |
-| `/analytics`           | Partial    | `analytics.*` (5 procedures)                                          |
-| `/billing/*`           | Hardcoded  | `billing.*` (11 procedures) - Stripe integration pending              |
-| `/governance/*`        | Integrated | Local API routes                                                      |
+| Route                  | Integration | Required APIs                                                         |
+| ---------------------- | ----------- | --------------------------------------------------------------------- |
+| `/` (Auth Home)        | Hardcoded   | `dashboard.getWelcomeSummary`, `feed.getItems`, `ai.getDailyInsights` |
+| `/dashboard`           | Partial     | `dashboard.getMetrics`, `dashboard.getWidgets`                        |
+| `/leads/*`             | Integrated  | `lead.*` (16 procedures)                                              |
+| `/contacts/*`          | Integrated  | `contact.*` (14 procedures)                                           |
+| `/deals/*`             | Integrated  | `opportunity.*` (7 procedures)                                        |
+| `/deals/[id]/forecast` | Hardcoded   | `intelligence.getDealForecast`                                        |
+| `/tickets/*`           | Integrated  | `ticket.*` (10 procedures)                                            |
+| `/analytics`           | Partial     | `analytics.*` (5 procedures)                                          |
+| `/billing/*`           | Hardcoded   | `billing.*` (11 procedures) - Stripe integration pending              |
+| `/governance/*`        | Integrated  | Local API routes                                                      |
 
 ---
 
@@ -475,7 +501,7 @@ All pages follow Next.js 16 App Router convention:
 apps/web/src/app/
 ├── layout.tsx                    # Root layout (Providers, Navigation)
 │
-├── (public)/                     # PUBLIC ROUTE GROUP (25 pages)
+├── (public)/                     # PUBLIC ROUTE GROUP (27 pages)
 │   ├── layout.tsx                # Public layout (minimal)
 │   ├── page.tsx                  # / (Home - conditional render)
 │   ├── login/page.tsx            # /login
@@ -487,6 +513,7 @@ apps/web/src/app/
 │   │   ├── [token]/page.tsx      # /reset-password/[token]
 │   │   └── callback/page.tsx     # /reset-password/callback
 │   ├── logout/page.tsx           # /logout
+│   ├── sso/page.tsx              # /sso (Enterprise SSO)
 │   ├── auth/callback/page.tsx    # /auth/callback (OAuth)
 │   ├── mfa/verify/page.tsx       # /mfa/verify (2FA input)
 │   ├── verify-email/
@@ -497,7 +524,9 @@ apps/web/src/app/
 │   ├── pricing/page.tsx          # /pricing
 │   ├── contact/page.tsx          # /contact
 │   ├── partners/page.tsx         # /partners
-│   ├── press/page.tsx            # /press
+│   ├── press/
+│   │   ├── page.tsx              # /press
+│   │   └── [id]/page.tsx         # /press/[id]
 │   ├── security/page.tsx         # /security
 │   ├── status/page.tsx           # /status
 │   ├── blog/
@@ -508,15 +537,19 @@ apps/web/src/app/
 │   │   └── [id]/page.tsx         # /careers/[id]
 │   └── lp/[slug]/page.tsx        # /lp/[slug]
 │
-├── (developer)/                  # DEVELOPER PORTAL (10 pages)
+├── (developer)/                  # DEVELOPER PORTAL (14 pages)
 │   ├── developers/apps/page.tsx  # /developers/apps
+│   ├── developers/apps/new/page.tsx  # /developers/apps/new
 │   ├── developers/apps/[id]/page.tsx  # /developers/apps/[id]
 │   ├── developers/apps/[id]/edit/page.tsx  # /developers/apps/[id]/edit
 │   └── docs/
 │       ├── page.tsx              # /docs
 │       ├── api/page.tsx          # /docs/api
+│       ├── architecture/page.tsx # /docs/architecture (PG-169)
 │       ├── auth/page.tsx         # /docs/auth (PG-038)
 │       ├── changelog/page.tsx    # /docs/changelog (PG-035)
+│       ├── cli/page.tsx          # /docs/cli
+│       ├── guides/page.tsx       # /docs/guides (PG-169)
 │       ├── integrations/page.tsx # /docs/integrations
 │       ├── sdk/page.tsx          # /docs/sdk (PG-036)
 │       └── webhooks/page.tsx     # /docs/webhooks
@@ -526,19 +559,23 @@ apps/web/src/app/
 │   ├── new/page.tsx              # /dashboard/new
 │   └── customize/page.tsx        # /dashboard/customize
 │
-├── leads/                        # LEADS (3 pages)
+├── leads/                        # LEADS (4 pages)
 │   ├── (list)/
 │   │   ├── layout.tsx            # Leads sidebar layout
 │   │   ├── page.tsx              # /leads
 │   │   └── new/page.tsx          # /leads/new
-│   └── [id]/page.tsx             # /leads/[id] (NO sidebar)
+│   └── [id]/
+│       ├── page.tsx              # /leads/[id] (NO sidebar)
+│       └── edit/page.tsx         # /leads/[id]/edit
 │
-├── contacts/                     # CONTACTS (3 pages)
+├── contacts/                     # CONTACTS (4 pages)
 │   ├── (list)/
 │   │   ├── layout.tsx            # Contacts sidebar layout
 │   │   ├── page.tsx              # /contacts
 │   │   └── new/page.tsx          # /contacts/new
-│   └── [id]/page.tsx             # /contacts/[id] (NO sidebar)
+│   └── [id]/
+│       ├── page.tsx              # /contacts/[id] (NO sidebar)
+│       └── edit/page.tsx         # /contacts/[id]/edit
 │
 ├── accounts/                     # ACCOUNTS (2 pages)
 │   ├── (list)/
@@ -744,13 +781,13 @@ This pattern ensures:
 
 ### Primary Documentation
 
-| Document             | Location                                                        | Description                                         |
-| -------------------- | --------------------------------------------------------------- | --------------------------------------------------- |
-| **Page Map & Flows** | `docs/design/PAGE_MAP_AND_FLOWS.md`                             | Visual flow diagrams, integration checklist         |
-| **tRPC API Routes**  | `docs/api/trpc-routes.md`                                       | Complete API inventory (25 routers, 232 procedures) |
-| **Flow Index**       | `apps/project-tracker/docs/metrics/_global/flows/flow-index.md` | Master catalog of 42 flows                          |
-| **Sprint Plan**      | `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`     | Task tracking (316 tasks)                           |
-| **Reachability Audit** | `docs/design/navigation-reachability-audit.md`                | Full route inventory with reachability status        |
+| Document               | Location                                                        | Description                                         |
+| ---------------------- | --------------------------------------------------------------- | --------------------------------------------------- |
+| **Page Map & Flows**   | `docs/design/PAGE_MAP_AND_FLOWS.md`                             | Visual flow diagrams, integration checklist         |
+| **tRPC API Routes**    | `docs/api/trpc-routes.md`                                       | Complete API inventory (25 routers, 232 procedures) |
+| **Flow Index**         | `apps/project-tracker/docs/metrics/_global/flows/flow-index.md` | Master catalog of 42 flows                          |
+| **Sprint Plan**        | `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`     | Task tracking (316 tasks)                           |
+| **Reachability Audit** | `docs/design/navigation-reachability-audit.md`                  | Full route inventory with reachability status       |
 
 ### Design System
 
@@ -774,8 +811,8 @@ This pattern ensures:
 
 ## Document History
 
-| Version | Date       | Changes                                                                                                                       |
-| ------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| 1.0     | 2025-12-27 | Initial sitemap                                                                                                               |
-| 2.0     | 2026-02-02 | Updated to 68 pages, 42 flows, 15 layouts. Added accurate route mapping, backend integration status, and file path structure. |
+| Version | Date       | Changes                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.0     | 2025-12-27 | Initial sitemap                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 2.0     | 2026-02-02 | Updated to 68 pages, 42 flows, 15 layouts. Added accurate route mapping, backend integration status, and file path structure.                                                                                                                                                                                                                                                                                                                                   |
 | 3.0     | 2026-02-23 | Updated to 102 pages. Added 34 missing pages across 12 sections. Path corrections for `/mfa/verify` and `/verify-email/[token]`. Added accounts, tasks, calendar, email, developer portal sections. Expanded AI & Automation from 1 to 14 pages, cases from 1 to 4. Added XML Sitemap Coverage section (sitemap.ts, robots.ts). Added Planned Pages (Sprint 16) section with 28 ghost links. Dissolved "Auth Callbacks" into Public Pages with corrected paths. |

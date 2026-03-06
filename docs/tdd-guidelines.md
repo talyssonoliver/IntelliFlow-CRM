@@ -105,15 +105,29 @@ Coverage thresholds are enforced by CI and will fail builds if not met.
 ### Viewing Coverage Reports
 
 ```bash
-# Generate coverage report
+# Quick TDD coverage (writes to artifacts/coverage-vitest/)
 pnpm run test:unit -- --coverage
 
-# View HTML report
-open artifacts/coverage/index.html
+# View TDD HTML report
+open artifacts/coverage-vitest/index.html
 
-# View summary in terminal
+# Full merged coverage for SonarQube (writes to artifacts/coverage/)
 pnpm run test:coverage
+
+# View merged HTML report
+open artifacts/coverage/index.html
 ```
+
+### Coverage Directories
+
+| Directory                             | Written by                              | Purpose                             |
+| ------------------------------------- | --------------------------------------- | ----------------------------------- |
+| `artifacts/coverage-vitest/`          | TDD watch-mode / ad-hoc `--coverage`    | Quick feedback during development   |
+| `artifacts/coverage-parts/<project>/` | `scripts/run-coverage.js` (per-project) | Intermediate per-project data       |
+| `artifacts/coverage/`                 | `scripts/run-coverage.js` (merged)      | Canonical merged data for SonarQube |
+
+The split prevents TDD watch processes from overwriting the merged SonarQube
+data. The `COVERAGE_RUN=1` env var controls which directory Vitest targets.
 
 ### Coverage Configuration
 
@@ -123,12 +137,14 @@ Coverage is configured in `vitest.config.ts`:
 export default defineConfig({
   test: {
     coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html', 'lcov'],
-      lines: 90,
-      functions: 90,
-      branches: 90,
-      statements: 90,
+      provider: 'istanbul',
+      reporter: ['text', 'json', 'json-summary', 'lcov', 'html'],
+      reportOnFailure: true,
+      // TDD writes to coverage-vitest/; merged pipeline writes to coverage/
+      reportsDirectory:
+        process.env.COVERAGE_RUN === '1'
+          ? 'artifacts/coverage'
+          : 'artifacts/coverage-vitest',
       exclude: [
         'node_modules/',
         'dist/',

@@ -51,9 +51,21 @@ bidirectional calendar sync (Google/Microsoft) with reconciliation.
 - E2E tests for conflicts, ICS round-trip, sync reconciliation.
 - Sync logs and fixture ICS files attached.
 
+## UI Component Requirements (added 2026-02-28)
+
+- Calendar rendering uses **Schedule-X** library, lazy-loaded via
+  `next/dynamic({ ssr: false })`.
+- Custom event chips rendered via Schedule-X `customComponents` API, preserving
+  existing type/status colors and conflict indicators.
+- CSS variable bridge maps Schedule-X `--sx-*` tokens to IntelliFlow design
+  system tokens in `globals.css`.
+- Props interfaces (`AppointmentCalendarProps`, `TaskCalendarProps`,
+  `CalendarTask`) are unchanged — no consumer page modifications required.
+- See ADR-040-calendar-ui-library.md for library evaluation and decision.
+
 ## Dependencies
 
-- ADR-005, ADR-017, ADR-024.
+- ADR-005, ADR-017, ADR-024, ADR-040.
 
 ## Risks / Mitigations
 
