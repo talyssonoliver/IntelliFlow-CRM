@@ -175,56 +175,151 @@ export class IngestionWorker extends BaseWorker<IngestionJobData, IngestionJobRe
   }
 
   private async processOCR(job: Job<IngestionJobData>): Promise<IngestionJobResult> {
-    // In production, integrate with apps/ai-worker/src/workers/ocr-worker.ts
-    // const { OCRWorker } = await import('@intelliflow/ai-worker');
-    // const ocrWorker = new OCRWorker();
-    // const result = await ocrWorker.processDocument(job.data);
-
+    const startTime = Date.now();
     this.logger.info({ jobId: job.id }, 'Processing OCR job');
     this.processedByType['ocr']++;
 
-    // Placeholder - delegate to OCRWorker in production
-    return {
-      documentId: job.data.documentId,
-      text: '[OCR processing placeholder]',
-      normalizedText: '[OCR processing placeholder]',
-      wordCount: 0,
-      characterCount: 0,
-      processingTimeMs: 0,
-      metadata: {
-        format: 'image',
-        language: 'en',
-        extractedAt: new Date().toISOString(),
-      },
-      chunks: [],
-      status: 'success',
-    };
+    try {
+      const { OCRWorker } = await import('@intelliflow/ai-worker');
+      const ocrWorker = new OCRWorker();
+      const input = job.data as TextExtractionInput;
+
+      // Map ingestion format to OCR supported format (default to pdf for unrecognized types)
+      const supportedFormats = ['pdf', 'png', 'jpg', 'jpeg', 'tiff', 'webp'] as const;
+      type SupportedFormat = (typeof supportedFormats)[number];
+      const ocrFormat: SupportedFormat = supportedFormats.includes(input.format as SupportedFormat)
+        ? (input.format as SupportedFormat)
+        : 'pdf';
+
+      const ocrResult = await ocrWorker.processDocument({
+        jobId: job.id ?? `ocr-${Date.now()}`,
+        documentId: input.documentId,
+        sourceUrl: input.sourceUrl,
+        format: ocrFormat,
+        language: input.language,
+      });
+
+      const normalizedText = ocrWorker.normalizeText(ocrResult.extractedText);
+      const chunks = ocrWorker.createSearchableChunks(normalizedText);
+
+      return {
+        documentId: input.documentId,
+        text: ocrResult.extractedText,
+        normalizedText,
+        wordCount: normalizedText.split(/\s+/).filter((w: string) => w.length > 0).length,
+        characterCount: normalizedText.length,
+        processingTimeMs: Date.now() - startTime,
+        metadata: {
+          format: input.format,
+          language: input.language,
+          pages: ocrResult.pageCount,
+          extractedAt: new Date().toISOString(),
+        },
+        chunks,
+        status: ocrResult.status === 'failed' ? 'failed' : 'success',
+        error: ocrResult.error,
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error({ jobId: job.id, error: errorMessage }, 'OCR processing failed');
+      return {
+        documentId: job.data.documentId,
+        text: '',
+        normalizedText: '',
+        wordCount: 0,
+        characterCount: 0,
+        processingTimeMs: Date.now() - startTime,
+        metadata: {
+          format: 'image',
+          language: 'en',
+          extractedAt: new Date().toISOString(),
+        },
+        chunks: [],
+        status: 'failed' as const,
+        error: errorMessage,
+      };
+    }
   }
 
   private async processEmbedding(job: Job<IngestionJobData>): Promise<IngestionJobResult> {
-    // In production, integrate with embedding service
-    // const { embeddingChain } = await import('@intelliflow/ai-worker');
-    // const embeddings = await embeddingChain.embedText(job.data.text);
-
+    const startTime = Date.now();
     this.logger.info({ jobId: job.id }, 'Processing embedding job');
     this.processedByType['embedding']++;
 
-    // Placeholder
-    return {
-      documentId: job.data.documentId,
-      text: '',
-      normalizedText: '',
-      wordCount: 0,
-      characterCount: 0,
-      processingTimeMs: 0,
-      metadata: {
-        format: 'embedding',
-        language: 'en',
-        extractedAt: new Date().toISOString(),
-      },
-      chunks: [],
-      status: 'success',
-    };
+    const input = job.data as TextExtractionInput;
+
+    try {
+      // Delegate to the AI worker's reindex queue via BullMQ so DocumentIndexer
+      // (which owns the Prisma client and EmbeddingChain) handles the embedding.
+      const { Queue } = await import('bullmq');
+      const REINDEX_QUEUE_NAME = 'intelliflow-document-reindex';
+
+      const redisHost = process.env.REDIS_HOST || 'localhost';
+      const redisPort = parseInt(process.env.REDIS_PORT || '6379', 10);
+      const redisPassword = process.env.REDIS_PASSWORD;
+
+      const reindexQueue = new Queue(REINDEX_QUEUE_NAME, {
+        connection: { host: redisHost, port: redisPort, password: redisPassword },
+      });
+
+      await reindexQueue.add(
+        'index-document',
+        {
+          documentIds: [input.documentId],
+          indexType: 'documents',
+          tenantId: undefined,
+          reason: `ingestion-worker: embedding job ${job.id ?? ''}`,
+        },
+        { removeOnComplete: true, removeOnFail: 1000 }
+      );
+
+      await reindexQueue.close();
+
+      const processingTimeMs = Date.now() - startTime;
+      this.logger.info(
+        { jobId: job.id, documentId: input.documentId, processingTimeMs },
+        'Embedding job queued to reindex worker'
+      );
+
+      return {
+        documentId: input.documentId,
+        text: '',
+        normalizedText: '',
+        wordCount: 0,
+        characterCount: 0,
+        processingTimeMs,
+        metadata: {
+          format: 'embedding',
+          language: input.language,
+          extractedAt: new Date().toISOString(),
+        },
+        chunks: [],
+        status: 'success',
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        { jobId: job.id, documentId: input.documentId, error: errorMessage },
+        'Failed to queue embedding job'
+      );
+
+      return {
+        documentId: input.documentId,
+        text: '',
+        normalizedText: '',
+        wordCount: 0,
+        characterCount: 0,
+        processingTimeMs: Date.now() - startTime,
+        metadata: {
+          format: 'embedding',
+          language: input.language,
+          extractedAt: new Date().toISOString(),
+        },
+        chunks: [],
+        status: 'failed' as const,
+        error: `Failed to queue embedding: ${errorMessage}`,
+      };
+    }
   }
 }
 

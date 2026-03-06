@@ -74,15 +74,20 @@ class PDFExtractor implements TextExtractor {
   }
 
   async extract(buffer: Buffer): Promise<{ text: string; metadata?: Record<string, unknown> }> {
-    // In production, use pdf-parse or pdfjs-dist
-    // const pdfParse = await import('pdf-parse');
-    // const data = await pdfParse(buffer);
-    // return { text: data.text, metadata: { pages: data.numpages, info: data.info } };
-
-    // Placeholder for now
+    const { PDFParse } = await import('pdf-parse');
+    const parser = new PDFParse({ data: buffer });
+    const textResult = await parser.getText();
+    let pageCount: number | undefined;
+    try {
+      const infoResult = await parser.getInfo();
+      // InfoResult.total is the total page count
+      pageCount = infoResult.total;
+    } catch {
+      // getInfo is best-effort; proceed without it
+    }
     return {
-      text: '[PDF text extraction placeholder - integrate pdf-parse for production]',
-      metadata: { pages: 1 },
+      text: textResult.text,
+      metadata: { pages: pageCount },
     };
   }
 }
@@ -93,15 +98,9 @@ class DOCXExtractor implements TextExtractor {
   }
 
   async extract(buffer: Buffer): Promise<{ text: string; metadata?: Record<string, unknown> }> {
-    // In production, use mammoth
-    // const mammoth = await import('mammoth');
-    // const result = await mammoth.extractRawText({ buffer });
-    // return { text: result.value };
-
-    // Placeholder for now
-    return {
-      text: '[DOCX text extraction placeholder - integrate mammoth for production]',
-    };
+    const mammoth = await import('mammoth');
+    const result = await mammoth.extractRawText({ buffer });
+    return { text: result.value };
   }
 }
 

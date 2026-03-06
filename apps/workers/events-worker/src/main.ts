@@ -13,6 +13,7 @@ import { Job } from 'bullmq';
 import pino from 'pino';
 import { BaseWorker, type ComponentHealth } from '@intelliflow/worker-shared';
 import { PrismaClient, disconnectPrisma } from '@intelliflow/db';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { OutboxPoller, InMemoryOutboxRepository, type OutboxRepository } from './outbox/pollOutbox';
 import { EventDispatcher, DOMAIN_EVENT_TYPES, type OutboxEvent } from './outbox/event-dispatcher';
 import { loadEventsWorkerConfig, type EventsWorkerConfig as EnvEventsWorkerConfig } from './config';
@@ -504,7 +505,9 @@ const envConfig = loadEventsWorkerConfig();
 
 // Backward compatibility: keep legacy USE_DATABASE_OUTBOX while transitioning to EVENTS_WORKER_USE_DATABASE
 const useDatabase = envConfig.useDatabase || process.env.USE_DATABASE_OUTBOX === 'true';
-const prismaClient = useDatabase ? new PrismaClient() : undefined;
+const prismaClient = useDatabase
+  ? new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) })
+  : undefined;
 
 const worker = new EventsWorker({
   useDatabase,

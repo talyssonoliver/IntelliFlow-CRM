@@ -156,8 +156,10 @@ export class NotificationsWorker extends BaseWorker<NotificationJob, Notificatio
       this.logger.info('Email channel initialized');
     }
 
-    // SMS and Webhook channels can be initialized here when implemented
-    // For now, they are placeholder implementations
+    // SMS and Webhook channels can be initialized here when their providers are configured.
+    // SMS requires TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN (or SMS_PROVIDER=messagebird).
+    // Webhook delivery is fully implemented and fires HTTP POST to recipient URLs.
+    // Push notifications require FCM/APNs credentials (ENABLE_PUSH=true).
 
     this.logger.info('Notifications worker initialized');
   }
@@ -364,7 +366,6 @@ export class NotificationsWorker extends BaseWorker<NotificationJob, Notificatio
     notification: NotificationJob,
     startTime: number
   ): Promise<NotificationResult> {
-    // Placeholder - integrate with SMS provider (Twilio, etc.)
     this.logger.info(
       {
         notificationId: notification.notificationId,
@@ -385,17 +386,14 @@ export class NotificationsWorker extends BaseWorker<NotificationJob, Notificatio
       };
     }
 
-    // In production: integrate with Twilio, MessageBird, or similar
-    // const twilioClient = await import('./providers/twilio');
-    // const result = await twilioClient.sendSMS(notification.recipient.phone, notification.content.body);
-
-    this.sentByChannel.sms++;
+    // SMS provider not yet configured
+    this.failedByChannel.sms++;
     return {
       notificationId: notification.notificationId,
       channel: 'SMS',
-      success: true,
-      deliveredAt: new Date().toISOString(),
-      providerResponse: { placeholder: true },
+      success: false,
+      failedAt: new Date().toISOString(),
+      error: 'SMS provider not configured (Twilio/MessageBird)',
       deliveryTimeMs: Date.now() - startTime,
     };
   }
@@ -404,7 +402,6 @@ export class NotificationsWorker extends BaseWorker<NotificationJob, Notificatio
     notification: NotificationJob,
     startTime: number
   ): Promise<NotificationResult> {
-    // Placeholder - implement webhook delivery
     this.logger.info(
       {
         notificationId: notification.notificationId,
@@ -425,29 +422,64 @@ export class NotificationsWorker extends BaseWorker<NotificationJob, Notificatio
       };
     }
 
-    // In production: make HTTP POST request to webhook URL
-    // const response = await fetch(notification.recipient.webhookUrl, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ ...notification.content, metadata: notification.metadata }),
-    // });
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10_000);
 
-    this.sentByChannel.webhook++;
-    return {
-      notificationId: notification.notificationId,
-      channel: 'WEBHOOK',
-      success: true,
-      deliveredAt: new Date().toISOString(),
-      providerResponse: { placeholder: true },
-      deliveryTimeMs: Date.now() - startTime,
-    };
+      const response = await fetch(notification.recipient.webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          notificationId: notification.notificationId,
+          tenantId: notification.tenantId,
+          ...notification.content,
+          metadata: notification.metadata,
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        this.failedByChannel.webhook++;
+        return {
+          notificationId: notification.notificationId,
+          channel: 'WEBHOOK',
+          success: false,
+          failedAt: new Date().toISOString(),
+          error: `Webhook returned HTTP ${response.status}`,
+          providerResponse: { status: response.status, statusText: response.statusText },
+          deliveryTimeMs: Date.now() - startTime,
+        };
+      }
+
+      this.sentByChannel.webhook++;
+      return {
+        notificationId: notification.notificationId,
+        channel: 'WEBHOOK',
+        success: true,
+        deliveredAt: new Date().toISOString(),
+        providerResponse: { status: response.status },
+        deliveryTimeMs: Date.now() - startTime,
+      };
+    } catch (error) {
+      this.failedByChannel.webhook++;
+      const message = error instanceof Error ? error.message : 'Unknown webhook error';
+      return {
+        notificationId: notification.notificationId,
+        channel: 'WEBHOOK',
+        success: false,
+        failedAt: new Date().toISOString(),
+        error: `Webhook delivery failed: ${message}`,
+        deliveryTimeMs: Date.now() - startTime,
+      };
+    }
   }
 
   private async deliverPush(
     notification: NotificationJob,
     startTime: number
   ): Promise<NotificationResult> {
-    // Placeholder - integrate with push notification service
     this.logger.info(
       {
         notificationId: notification.notificationId,
@@ -468,17 +500,14 @@ export class NotificationsWorker extends BaseWorker<NotificationJob, Notificatio
       };
     }
 
-    // In production: integrate with FCM, APNs, or similar
-    // const fcm = await import('./providers/fcm');
-    // const result = await fcm.send(notification.recipient.deviceToken, notification.content);
-
-    this.sentByChannel.push++;
+    // Push provider not yet configured
+    this.failedByChannel.push++;
     return {
       notificationId: notification.notificationId,
       channel: 'PUSH',
-      success: true,
-      deliveredAt: new Date().toISOString(),
-      providerResponse: { placeholder: true },
+      success: false,
+      failedAt: new Date().toISOString(),
+      error: 'Push provider not configured (FCM/APNs)',
       deliveryTimeMs: Date.now() - startTime,
     };
   }

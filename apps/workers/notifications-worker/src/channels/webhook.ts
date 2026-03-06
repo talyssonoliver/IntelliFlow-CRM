@@ -235,8 +235,8 @@ export class WebhookChannel {
         lastError = error instanceof Error ? error : new Error(String(error));
 
         // Extract status code if available
-        if ('statusCode' in (error as unknown as Record<string, unknown>)) {
-          lastStatusCode = (error as unknown as Record<string, number>).statusCode;
+        if (error !== null && typeof error === 'object' && 'statusCode' in error) {
+          lastStatusCode = (error as { statusCode: number }).statusCode;
         }
 
         // Check if we should retry based on status code

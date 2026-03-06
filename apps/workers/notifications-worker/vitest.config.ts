@@ -18,7 +18,7 @@ export default defineConfig({
     pool: 'forks',
     isolate: true,
     cache: false,
-    forceExit: true,
+    forceExit: process.env['COVERAGE_RUN'] !== '1',
 
     // Memory management
     execArgv: ['--max-old-space-size=4096', '--expose-gc'],

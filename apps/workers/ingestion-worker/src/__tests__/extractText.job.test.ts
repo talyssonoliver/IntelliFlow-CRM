@@ -17,7 +17,7 @@ import {
 
 // Mock fetch for document fetching
 const mockFetch = vi.fn();
-globalThis.fetch = mockFetch as unknown as typeof fetch;
+globalThis.fetch = mockFetch as any; // mock for fetch in node environment
 
 describe('TextExtractionProcessor', () => {
   let processor: TextExtractionProcessor;
@@ -38,7 +38,7 @@ describe('TextExtractionProcessor', () => {
       data,
       queueName: 'intelliflow-text-extraction',
       updateProgress: vi.fn(),
-    }) as unknown as Job<TextExtractionInput>;
+    }) as any; // partial mock of BullMQ Job
 
   const createValidInput = (overrides?: Partial<TextExtractionInput>): TextExtractionInput => ({
     documentId: '550e8400-e29b-41d4-a716-446655440000',
@@ -287,7 +287,7 @@ describe('createTextExtractionJob', () => {
       },
       queueName: 'intelliflow-text-extraction',
       updateProgress: vi.fn(),
-    } as unknown as Job<TextExtractionInput>;
+    } as any; // partial mock of BullMQ Job<TextExtractionInput>
 
     const result = await jobFn(mockJob);
     expect(result.status).toBe('success');

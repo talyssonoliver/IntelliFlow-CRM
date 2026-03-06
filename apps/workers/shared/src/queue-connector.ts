@@ -107,7 +107,8 @@ export class QueueConnector {
     if (!this.connection) {
       throw new Error('Not connected to Redis. Call connect() first.');
     }
-    return this.connection.duplicate() as unknown as ConnectionOptions;
+    // BullMQ accepts Redis instances as ConnectionOptions
+    return this.connection.duplicate() as ConnectionOptions;
   }
 
   /**

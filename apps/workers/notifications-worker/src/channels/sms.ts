@@ -337,22 +337,59 @@ export class SMSChannel {
   private async sendViaMessageBird(
     payload: SMSPayload
   ): Promise<Omit<SMSDeliveryResult, 'deliveryTimeMs'>> {
-    // In production, use MessageBird SDK:
-    // const messagebird = require('messagebird')(this.config.authToken);
-    // const message = await messagebird.messages.create({
-    //   originator: payload.from || this.config.from,
-    //   recipients: [payload.to],
-    //   body: payload.body,
-    // });
+    const apiKey = process.env.SMS_MESSAGEBIRD_KEY || this.config.authToken;
+    if (!apiKey) {
+      throw new Error(
+        'MessageBird API key not configured. Set SMS_MESSAGEBIRD_KEY environment variable.'
+      );
+    }
 
-    // Placeholder response
-    return {
-      success: true,
-      messageId: `mb${Date.now()}`,
-      status: 'sent',
-      deliveredAt: new Date().toISOString(),
-      segmentCount: Math.ceil(payload.body.length / 160),
-    };
+    // MessageBird SDK uses a callback-based API; wrap in a Promise
+    const { initClient } = await import('messagebird');
+    const client = initClient(apiKey);
+
+    return new Promise((resolve, reject) => {
+      client.messages.create(
+        {
+          originator: payload.from || this.config.from,
+          recipients: [payload.to],
+          body: payload.body,
+          reportUrl: this.config.statusCallbackUrl,
+        },
+        (err: Error | null, response: import('messagebird').Message | null) => {
+          if (err) {
+            this.logger.error({ messagebirdError: err.message }, 'MessageBird API error');
+            reject(new Error(err.message || 'MessageBird API error'));
+            return;
+          }
+
+          if (!response) {
+            reject(new Error('MessageBird returned no response'));
+            return;
+          }
+
+          // Map MessageBird recipient status to our status type
+          const firstRecipient = response.recipients?.items?.[0];
+          const mbStatus = firstRecipient?.status ?? 'sent';
+          const statusMap: Record<string, SMSDeliveryResult['status']> = {
+            scheduled: 'queued',
+            sent: 'sent',
+            buffered: 'queued',
+            delivered: 'delivered',
+            expired: 'failed',
+            delivery_failed: 'failed',
+          };
+
+          resolve({
+            success: mbStatus !== 'delivery_failed' && mbStatus !== 'expired',
+            messageId: response.id,
+            status: statusMap[mbStatus] ?? 'sent',
+            deliveredAt: new Date().toISOString(),
+            segmentCount: Math.ceil(payload.body.length / 160),
+          });
+        }
+      );
+    });
   }
 
   /**
