@@ -2,21 +2,41 @@
 
 ## Prisma Version
 
-**Prisma 5.22.0** is used here (root has Prisma 7.3.0 — don't confuse them). Always run Prisma commands from `packages/db/` directory (has `.env` file).
+**Prisma 7.4.2** with `engineType = "client"` (client engine, no binary engine).
+Connection uses `@prisma/adapter-pg` — all `PrismaClient()` constructors MUST
+pass an `adapter` parameter.
+
+Generated client lives at `packages/db/generated/prisma/` (git-ignored,
+regenerated on `pnpm install` via postinstall). All packages import Prisma types
+from `@intelliflow/db`, NOT from `@prisma/client` directly.
+
+Config: `prisma.config.ts` at package root (Prisma 7 CLI config for connection
+URLs).
 
 ## Critical Rules
 
-### NEVER use `--no-engine` flag
-It sets `copyEngine: false` in generated client, forcing Data Proxy engine which requires `prisma://` URLs. This breaks the web app's server-side Prisma usage with `postgresql://` URLs.
+### PrismaClient requires adapter
 
-### DLL Lock on Windows
-Many node processes run concurrently — DLL lock is common. Fix: stop dev server first, then `npx prisma generate` (without --no-engine).
+Every `new PrismaClient()` MUST include
+`{ adapter: new PrismaPg({ connectionString: ... }) }`. Constructing without
+adapter will throw at runtime.
+
+### Import from @intelliflow/db, NOT @prisma/client
+
+All external packages MUST use `import { ... } from '@intelliflow/db'`. The only
+files that import from `../generated/prisma/client` are inside
+`packages/db/src/`.
 
 ### tenantId Rule
-Almost all models need `tenantId` for multi-tenancy. Always check for it when adding new models.
+
+Almost all models need `tenantId` for multi-tenancy. Always check for it when
+adding new models.
 
 ### Schema vs Migration
-**CRITICAL**: Always compare schema models against actual DB migration SQL before assuming schema is correct. Historical mismatches are documented in `memory/db-schema-history.md`.
+
+**CRITICAL**: Always compare schema models against actual DB migration SQL
+before assuming schema is correct. Historical mismatches are documented in
+`memory/db-schema-history.md`.
 
 ## Commands
 
@@ -28,20 +48,28 @@ pnpm run db:reset             # Reset database (destructive)
 pnpm run db:studio            # Open Prisma Studio
 ```
 
-## Type Generation Notes
+## Build Architecture
 
-- Prisma 5.22.0 only generates enum types when they're referenced by at least one model
-- `--no-engine` generates full types (179K lines) only when schemas reference models; empty `.d.ts` means enums aren't used by any model
-- Domain `CHURN_RISK_LEVELS` must match Prisma `ChurnRisk` enum
+- Generated client at `packages/db/generated/prisma/` (outside `src/`)
+- Both `src/` and `dist/` resolve `../generated/prisma/client` to the same
+  location
+- `tsup.config.ts` externalizes `generated/prisma` via regex to prevent bundling
+- `tsconfig.json` rootDir is `.` (not `./src`) to include generated types in DTS
+  output
 
 ## Testing
 
-- When Prisma mock types don't support `include`/`select` relations, cast mock data with `as any`
-- Use `Record<string, any>` for mock repositories to avoid TS2348 "not callable" on vi.fn()
+- When Prisma mock types don't support `include`/`select` relations, cast mock
+  data with `as any`
+- Use `Record<string, any>` for mock repositories to avoid TS2348 "not callable"
+  on vi.fn()
+- Test files creating `PrismaClient` must provide `PrismaPg` adapter
 
 ## Key Relations
 
 - Lead: `aiScores AIScore[]` (scoring) AND `aiInsight LeadAIInsight?` (insights)
 - Contact: `aiInsight ContactAIInsight?`
-- Lead 360 fields: `location`, `website`, `avatarUrl`, `lastContactedAt`, `estimatedValue`, `tags`
-- Lead relations: `activities` (LeadActivity), `notes` (LeadNote), `files` (LeadFile)
+- Lead 360 fields: `location`, `website`, `avatarUrl`, `lastContactedAt`,
+  `estimatedValue`, `tags`
+- Lead relations: `activities` (LeadActivity), `notes` (LeadNote), `files`
+  (LeadFile)

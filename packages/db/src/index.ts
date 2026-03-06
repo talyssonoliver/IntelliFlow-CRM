@@ -2,10 +2,14 @@
 // Re-exports Prisma client and types with pgvector support
 
 export * from './client';
-export * from '@prisma/client';
+
+// Prisma 7 generated client splits exports across files.
+// client.ts uses .js extensions in imports that webpack can't resolve,
+// so we import enums from the self-contained enums.ts instead.
+export * from '../generated/prisma/enums';
 
 // Decimal export for currency/numeric precision
-export { Decimal } from '@prisma/client/runtime/library';
+export { Decimal } from '@prisma/client/runtime/client';
 
 // Type helpers for domain layer
 export type {
@@ -17,30 +21,18 @@ export type {
   Task,
   Ticket,
   AIScore,
+  AIOutputReview,
   AuditLogEntry,
+  AutoResponseDraft,
+  ChainVersion,
+  ChainVersionAudit,
   DomainEvent,
   Appointment,
   AppointmentAttendee,
   AppointmentCase,
+  Calendar,
   SecurityEvent,
-} from '@prisma/client';
-
-// Enum exports
-export {
-  UserRole,
-  LeadSource,
-  LeadStatus,
-  OpportunityStage,
-  TaskPriority,
-  TaskStatus,
-  TicketStatus,
-  TicketPriority,
-  SLAStatus,
-  EventStatus,
-  AppointmentType,
-  AppointmentStatus,
-  SecuritySeverity,
-} from '@prisma/client';
+} from '../generated/prisma/client';
 
 // Re-export performance tracking utilities
 export {

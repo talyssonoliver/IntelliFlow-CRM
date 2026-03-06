@@ -18,9 +18,11 @@ import {
   LeadSource,
   UserRole,
   Prisma,
-} from '@prisma/client';
+} from '../src/generated/prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const prisma = new PrismaClient({ adapter });
 
 async function seedHomePageData() {
   console.log('🏠 Seeding home page data with recent dates...');

@@ -2,14 +2,14 @@
 // This schema is AI-optimized with pgvector for embeddings
 
 generator client {
-  provider        = "prisma-client-js"
+  provider        = "prisma-client"
+  output          = "../generated/prisma"
+  engineType      = "client"
   previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
   provider   = "postgresql"
-  url        = env("DATABASE_URL")
-  directUrl  = env("DIRECT_URL")
   extensions = [vector]
 }
 
@@ -131,6 +131,9 @@ model Tenant {
   caseDocumentACLs     CaseDocumentACL[]
   caseDocumentAudits   CaseDocumentAudit[]
 
+  // Custom calendars
+  calendars            Calendar[]
+
   @@index([slug])
   @@index([status])
   @@map("tenants")
@@ -209,6 +212,9 @@ model User {
   casesAssigned       Case[]              @relation("CaseAssignee")
   caseTasksAssigned   CaseTask[]          @relation("CaseTaskAssignee")
 
+  // Custom calendars owned by this user
+  calendars           Calendar[]
+
   @@index([email])
   @@index([role])
   @@index([tenantId])
@@ -274,6 +280,8 @@ model Lead {
   @@index([ownerId])
   @@index([tenantId])
   @@index([createdAt])
+  @@index([tenantId, status, score(sort: Desc)]) // IFC-030: Lead routing queries
+  @@index([tenantId, ownerId, status]) // IFC-030: Assigned lead lookups
   @@map("leads")
 }
 
@@ -822,6 +830,8 @@ model Task {
   contact       Contact?    @relation(fields: [contactId], references: [id])
   opportunityId String?
   opportunity   Opportunity? @relation(fields: [opportunityId], references: [id])
+  calendarId    String?
+  calendar      Calendar?    @relation(fields: [calendarId], references: [id], onDelete: SetNull)
 
   @@index([status])
   @@index([ownerId])
@@ -831,6 +841,7 @@ model Task {
   @@index([contactId, createdAt(sort: Desc)])
   // DBA-122: Missing FK index for opportunity queries
   @@index([opportunityId])
+  @@index([calendarId])
   @@map("tasks")
 }
 
@@ -1133,6 +1144,8 @@ model Appointment {
 
   // Relations
   organizerId         String
+  calendarId          String?
+  calendar            Calendar?           @relation(fields: [calendarId], references: [id], onDelete: SetNull)
   attendees           AppointmentAttendee[]
   linkedCases         AppointmentCase[]
 
@@ -1144,6 +1157,7 @@ model Appointment {
   @@index([appointmentType])
   @@index([startTime, endTime])
   @@index([externalCalendarId])
+  @@index([calendarId])
   @@map("appointments")
 }
 
@@ -1935,6 +1949,7 @@ model LeadAIInsight {
   recommendations       Json?     // Array of recommendation strings
   sentimentTrend        String?   // 'improving', 'stable', 'declining'
   lastEngagementDays    Int       @default(0)
+  icpMatch              String?   // 'Strong Match', 'Good Match', 'Partial Match', 'Weak Match'
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
@@ -2890,6 +2905,7 @@ model AgentSkill {
   @@index([skillName])
   @@index([proficiency])
   @@index([tenantId])
+  @@index([tenantId, skillName]) // IFC-030: Composite for skill-based routing queries
   @@map("agent_skills")
 }
 
@@ -2941,6 +2957,7 @@ model RoutingRule {
   @@index([isActive])
   @@index([priority])
   @@index([tenantId])
+  @@index([tenantId, isActive, priority]) // IFC-030: Active rules by priority for routing
   // DBA-014: Tenant-scoped name uniqueness
   @@unique([tenantId, name])
   @@map("routing_rules")
@@ -4122,6 +4139,10 @@ enum ConversationStatus {
   SUCCESS
   ERROR
   CANCELLED
+  PAUSED
+  ENDED
+  ARCHIVED
+  DELETED
 }
 
 /// DBA-024: Tool call status enum (was String)
@@ -4131,6 +4152,8 @@ enum ToolCallStatus {
   SUCCESS
   ERROR
   CANCELLED
+  TIMEOUT
+  FAILED
 }
 
 /// DBA-024: Approval status enum (was String)
@@ -4251,4 +4274,32 @@ model ExperimentResult {
 
   @@index([experimentId])
   @@map("experiment_results")
+}
+
+// ============================================
+// CUSTOM CALENDARS
+// ============================================
+
+model Calendar {
+  id        String   @id @default(cuid())
+  name      String
+  color     String   @db.VarChar(7)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Multi-tenancy
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Owner
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id])
+
+  // Relations
+  appointments Appointment[]
+  tasks        Task[]
+
+  @@index([tenantId])
+  @@index([ownerId])
+  @@map("calendars")
 }

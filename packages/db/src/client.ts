@@ -1,4 +1,5 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma } from '../generated/prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 // Global instance for development hot-reload
 declare global {
@@ -78,9 +79,15 @@ export const queryPerformanceTracker = new QueryPerformanceTracker(
 
 /**
  * Creates a Prisma client with performance logging and type-safe configuration
+ * Prisma 7 requires a driver adapter for database connections
  */
 const createPrismaClient = () => {
+  const adapter = new PrismaPg({
+    connectionString: process.env.DATABASE_URL!,
+  });
+
   const client = new PrismaClient({
+    adapter,
     log:
       process.env.NODE_ENV === 'development'
         ? [
@@ -190,7 +197,7 @@ export async function disconnectPrisma(): Promise<void> {
   await prisma.$disconnect();
 }
 
-// Re-export Prisma types and client
+// Re-export Prisma types and client from generated path
 export { PrismaClient, Prisma };
 
 // Type exports for pgvector operations

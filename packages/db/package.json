@@ -24,10 +24,10 @@
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts src/client.ts src/seed-ids.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts src/client.ts src/seed-ids.ts --format cjs,esm --dts --watch",
+    "build": "tsup && node scripts/postbuild-esm.mjs",
+    "dev": "tsup --watch",
     "clean": "rm -rf dist .turbo",
-    "db:generate": "prisma generate",
+    "db:generate": "prisma generate && node scripts/fix-prisma-esm.mjs",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
@@ -50,13 +50,14 @@
   },
   "dependencies": {
     "@intelliflow/domain": "workspace:*",
-    "@prisma/client": "^5.10.0"
+    "@prisma/adapter-pg": "^7.4.2",
+    "@prisma/client": "^7.4.2"
   },
   "devDependencies": {
     "@intelliflow/typescript-config": "workspace:*",
-    "@supabase/supabase-js": "^2.45.0",
-    "@types/node": "^22.0.0",
-    "prisma": "^5.10.0",
+    "@supabase/supabase-js": "^2.98.0",
+    "@types/node": "^25.3.2",
+    "prisma": "^7.4.2",
     "tsup": "^8.0.0",
     "tsx": "^4.7.0",
     "typescript": "^5.3.0",

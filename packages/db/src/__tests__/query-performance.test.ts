@@ -113,7 +113,7 @@ describe('Embedding Validation', () => {
   });
 
   it('should reject non-array embeddings', () => {
-    expect(validateEmbedding('not an array' as unknown as number[])).toBe(false);
+    expect(validateEmbedding('not an array' as any)).toBe(false);
   });
 
   it('should accept different dimension counts when specified', () => {

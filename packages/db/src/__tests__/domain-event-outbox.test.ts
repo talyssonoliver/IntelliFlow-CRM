@@ -8,7 +8,8 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
-import { PrismaClient, EventStatus } from '@prisma/client';
+import { PrismaClient, EventStatus } from '../../generated/prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 // Skip integration tests when no database is available
 // Check both URL format AND that the DB is expected to be running
@@ -46,7 +47,8 @@ const TEST_TENANT_ID = 'test-tenant-ifc-150';
 // Create the test tenant before all tests
 beforeAll(async () => {
   if (!hasDatabase) return;
-  prisma = new PrismaClient();
+  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+  prisma = new PrismaClient({ adapter });
 
   // Clean up any existing test tenant first
   await prisma.tenant

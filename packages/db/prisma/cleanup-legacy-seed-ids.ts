@@ -12,10 +12,12 @@
  * IMPORTANT: This is a destructive operation. Make sure you have a backup!
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../src/generated/prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { LEGACY_STRING_IDS } from '../src/seed-ids';
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const prisma = new PrismaClient({ adapter });
 
 /**
  * Legacy string ID patterns for each entity type

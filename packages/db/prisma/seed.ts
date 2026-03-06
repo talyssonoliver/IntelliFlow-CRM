@@ -61,13 +61,15 @@ import {
   // Appointment enums (IFC-182)
   AppointmentStatus,
   AppointmentType,
-} from '@prisma/client';
+} from '../src/generated/prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 // Import SEED_IDS from the single source of truth
 import { SEED_IDS, LEGACY_STRING_IDS } from '../src/seed-ids';
 import { createClient } from '@supabase/supabase-js';
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const prisma = new PrismaClient({ adapter });
 
 // =============================================================================
 // Supabase Auth User Seeding
@@ -1400,7 +1402,408 @@ async function seedLeadActivities(tenantId: string) {
     });
   }
 
-  console.log(`✅ Created ${activities.length} lead activities`);
+  // Additional activities for other leads (Lead 360 wiring)
+  const additionalActivities = [
+    // Sarah Miller
+    {
+      id: SEED_IDS.leadActivities.sarahMillerWebForm,
+      type: LeadActivityType.WEB_FORM,
+      title: 'Web Form Submission',
+      description: 'Contacted via website pricing page',
+      timestamp: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
+      userName: 'System',
+      sentiment: Sentiment.POSITIVE,
+      metadata: {
+        source: 'Pricing Page',
+        message: 'Interested in enterprise pricing for our 50-person team.',
+      },
+      leadId: SEED_IDS.leads.sarahMiller,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.leadActivities.sarahMillerCall,
+      type: LeadActivityType.CALL,
+      title: 'Discovery Call',
+      description: 'Initial discovery call completed',
+      timestamp: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+      userId: SEED_IDS.users.sarahJohnson,
+      userName: 'Sarah Johnson',
+      sentiment: Sentiment.POSITIVE,
+      metadata: { duration: '22 min', outcome: 'connected' },
+      leadId: SEED_IDS.leads.sarahMiller,
+      tenantId,
+    },
+    // David Chen
+    {
+      id: SEED_IDS.leadActivities.davidChenEmail,
+      type: LeadActivityType.EMAIL,
+      title: 'Follow-up Email Sent',
+      description: 'Sent product comparison document',
+      timestamp: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
+      userId: SEED_IDS.users.mikeDavis,
+      userName: 'Mike Davis',
+      metadata: {
+        subject: 'IntelliFlow vs Competitors',
+        preview: 'Hi David, here is the comparison you requested...',
+        opened: true,
+        openCount: 3,
+      },
+      leadId: SEED_IDS.leads.davidChen,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.leadActivities.davidChenMeeting,
+      type: LeadActivityType.MEETING,
+      title: 'Product Demo',
+      description: 'Conducted full platform demo',
+      timestamp: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000),
+      userId: SEED_IDS.users.mikeDavis,
+      userName: 'Mike Davis',
+      metadata: {
+        attendees: ['David Chen', 'Mike Davis'],
+        location: 'Google Meet',
+        duration: '45 min',
+      },
+      leadId: SEED_IDS.leads.davidChen,
+      tenantId,
+    },
+    // Amanda Smith
+    {
+      id: SEED_IDS.leadActivities.amandaSmithCall,
+      type: LeadActivityType.CALL,
+      title: 'Follow-up Call',
+      description: 'Discussed implementation timeline',
+      timestamp: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000),
+      userId: SEED_IDS.users.sarahJohnson,
+      userName: 'Sarah Johnson',
+      sentiment: Sentiment.NEUTRAL,
+      metadata: { duration: '15 min', outcome: 'connected' },
+      leadId: SEED_IDS.leads.amandaSmith,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.leadActivities.amandaSmithNote,
+      type: LeadActivityType.NOTE,
+      title: 'Note Added',
+      description: 'Budget cycle ends Q2, decision expected by March',
+      timestamp: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000),
+      userId: SEED_IDS.users.sarahJohnson,
+      userName: 'Sarah Johnson',
+      leadId: SEED_IDS.leads.amandaSmith,
+      tenantId,
+    },
+    // James Wilson
+    {
+      id: SEED_IDS.leadActivities.jamesWilsonEmail,
+      type: LeadActivityType.EMAIL,
+      title: 'Outreach Email',
+      description: 'Initial cold outreach',
+      timestamp: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+      userId: SEED_IDS.users.mikeDavis,
+      userName: 'Mike Davis',
+      metadata: {
+        subject: 'IntelliFlow CRM for Growing Teams',
+        preview: 'Hi James, I noticed your company is expanding...',
+        opened: false,
+      },
+      leadId: SEED_IDS.leads.jamesWilson,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.leadActivities.jamesWilsonScoreUpdate,
+      type: LeadActivityType.SCORE_UPDATE,
+      title: 'Score Updated',
+      description: 'AI recalculation after website visit',
+      timestamp: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000),
+      userName: 'System',
+      metadata: { oldScore: 35, newScore: 52 },
+      leadId: SEED_IDS.leads.jamesWilson,
+      tenantId,
+    },
+    // Elena Rodriguez
+    {
+      id: SEED_IDS.leadActivities.elenaRodriguezWebForm,
+      type: LeadActivityType.WEB_FORM,
+      title: 'Demo Request',
+      description: 'Submitted demo request form',
+      timestamp: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+      userName: 'System',
+      sentiment: Sentiment.POSITIVE,
+      metadata: {
+        source: 'Request Demo',
+        message: 'We need a CRM that integrates with Salesforce. Can you help?',
+      },
+      leadId: SEED_IDS.leads.elenaRodriguez,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.leadActivities.elenaRodriguezCall,
+      type: LeadActivityType.CALL,
+      title: 'Qualification Call',
+      description: 'Qualified as strong prospect',
+      timestamp: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
+      userId: SEED_IDS.users.alexMorgan,
+      userName: 'Alex Morgan',
+      sentiment: Sentiment.POSITIVE,
+      metadata: { duration: '30 min', outcome: 'connected' },
+      leadId: SEED_IDS.leads.elenaRodriguez,
+      tenantId,
+    },
+    // Kevin Taylor
+    {
+      id: SEED_IDS.leadActivities.kevinTaylorEmail,
+      type: LeadActivityType.EMAIL,
+      title: 'Nurture Email Sent',
+      description: 'Added to nurture sequence',
+      timestamp: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000),
+      userName: 'System',
+      metadata: {
+        subject: 'Tips for Growing Your Sales Pipeline',
+        preview: 'Hi Kevin, here are 5 tips...',
+        opened: true,
+        openCount: 1,
+      },
+      leadId: SEED_IDS.leads.kevinTaylor,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.leadActivities.kevinTaylorStatusChange,
+      type: LeadActivityType.STATUS_CHANGE,
+      title: 'Status Changed',
+      description: 'Moved from NEW to CONTACTED',
+      timestamp: new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000),
+      userName: 'System',
+      metadata: { oldStatus: 'NEW', newStatus: 'CONTACTED' },
+      leadId: SEED_IDS.leads.kevinTaylor,
+      tenantId,
+    },
+    // Rachel Green
+    {
+      id: SEED_IDS.leadActivities.rachelGreenMeeting,
+      type: LeadActivityType.MEETING,
+      title: 'Strategy Meeting',
+      description: 'Discussed CRM needs for Q3 planning',
+      timestamp: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
+      userId: SEED_IDS.users.sarahJohnson,
+      userName: 'Sarah Johnson',
+      metadata: {
+        attendees: ['Rachel Green', 'Sarah Johnson', 'Team Lead'],
+        location: 'Zoom',
+        duration: '60 min',
+      },
+      leadId: SEED_IDS.leads.rachelGreen,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.leadActivities.rachelGreenNote,
+      type: LeadActivityType.NOTE,
+      title: 'Meeting Notes',
+      description: 'Rachel needs multi-language support and GDPR compliance features',
+      timestamp: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000),
+      userId: SEED_IDS.users.sarahJohnson,
+      userName: 'Sarah Johnson',
+      leadId: SEED_IDS.leads.rachelGreen,
+      tenantId,
+    },
+    // Tom Brown
+    {
+      id: SEED_IDS.leadActivities.tomBrownCall,
+      type: LeadActivityType.CALL,
+      title: 'Cold Call',
+      description: 'Reached voicemail, left message',
+      timestamp: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000),
+      userId: SEED_IDS.users.mikeDavis,
+      userName: 'Mike Davis',
+      metadata: { duration: '2 min', outcome: 'voicemail' },
+      leadId: SEED_IDS.leads.tomBrown,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.leadActivities.tomBrownEmail,
+      type: LeadActivityType.EMAIL,
+      title: 'Follow-up Email',
+      description: 'Sent after voicemail',
+      timestamp: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000),
+      userId: SEED_IDS.users.mikeDavis,
+      userName: 'Mike Davis',
+      metadata: {
+        subject: 'Quick question about your CRM needs',
+        preview: 'Hi Tom, I tried reaching you by phone...',
+        opened: false,
+      },
+      leadId: SEED_IDS.leads.tomBrown,
+      tenantId,
+    },
+    // Lisa Park
+    {
+      id: SEED_IDS.leadActivities.lisaParkWebForm,
+      type: LeadActivityType.WEB_FORM,
+      title: 'Whitepaper Download',
+      description: 'Downloaded "AI in CRM" whitepaper',
+      timestamp: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000),
+      userName: 'System',
+      metadata: { source: 'Whitepaper Download', message: 'Downloaded AI in CRM guide' },
+      leadId: SEED_IDS.leads.lisaPark,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.leadActivities.lisaParkScoreUpdate,
+      type: LeadActivityType.SCORE_UPDATE,
+      title: 'Score Updated',
+      description: 'Increased after content engagement',
+      timestamp: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000),
+      userName: 'System',
+      metadata: { oldScore: 28, newScore: 45 },
+      leadId: SEED_IDS.leads.lisaPark,
+      tenantId,
+    },
+    // Carlos Rivera
+    {
+      id: SEED_IDS.leadActivities.carlosRiveraCall,
+      type: LeadActivityType.CALL,
+      title: 'Technical Call',
+      description: 'Discussed API integration requirements',
+      timestamp: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000),
+      userId: SEED_IDS.users.jamesWilson,
+      userName: 'James Wilson',
+      sentiment: Sentiment.POSITIVE,
+      metadata: { duration: '35 min', outcome: 'connected' },
+      leadId: SEED_IDS.leads.carlosRivera,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.leadActivities.carlosRiveraMeeting,
+      type: LeadActivityType.MEETING,
+      title: 'Technical Demo',
+      description: 'API and integration demo',
+      timestamp: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+      userId: SEED_IDS.users.jamesWilson,
+      userName: 'James Wilson',
+      metadata: {
+        attendees: ['Carlos Rivera', 'James Wilson', 'Dev Team'],
+        location: 'Microsoft Teams',
+        duration: '50 min',
+      },
+      leadId: SEED_IDS.leads.carlosRivera,
+      tenantId,
+    },
+    // Nina Patel
+    {
+      id: SEED_IDS.leadActivities.ninaPatelEmail,
+      type: LeadActivityType.EMAIL,
+      title: 'Pricing Inquiry Response',
+      description: 'Responded to pricing questions',
+      timestamp: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
+      userId: SEED_IDS.users.alexMorgan,
+      userName: 'Alex Morgan',
+      sentiment: Sentiment.POSITIVE,
+      metadata: {
+        subject: 'Custom Enterprise Pricing for DataVault',
+        preview: 'Hi Nina, based on your team size of 200+...',
+        opened: true,
+        openCount: 4,
+      },
+      leadId: SEED_IDS.leads.ninaPatel,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.leadActivities.ninaPatelCall,
+      type: LeadActivityType.CALL,
+      title: 'Executive Call',
+      description: 'Call with VP of Sales',
+      timestamp: new Date(now.getTime() - 12 * 60 * 60 * 1000),
+      userId: SEED_IDS.users.alexMorgan,
+      userName: 'Alex Morgan',
+      sentiment: Sentiment.POSITIVE,
+      metadata: { duration: '28 min', outcome: 'connected' },
+      leadId: SEED_IDS.leads.ninaPatel,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.leadActivities.ninaPatelWebForm,
+      type: LeadActivityType.WEB_FORM,
+      title: 'Enterprise Demo Request',
+      description: 'Submitted enterprise demo request',
+      timestamp: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
+      userName: 'System',
+      sentiment: Sentiment.POSITIVE,
+      metadata: {
+        source: 'Enterprise Demo',
+        message: 'DataVault Inc needs CRM for 200+ sales reps with AI scoring.',
+      },
+      leadId: SEED_IDS.leads.ninaPatel,
+      tenantId,
+    },
+    // Ryan Murphy
+    {
+      id: SEED_IDS.leadActivities.ryanMurphyNote,
+      type: LeadActivityType.NOTE,
+      title: 'Research Note',
+      description: 'Ryan is CTO at a series B startup, strong technical buyer',
+      timestamp: new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000),
+      userId: SEED_IDS.users.mikeDavis,
+      userName: 'Mike Davis',
+      leadId: SEED_IDS.leads.ryanMurphy,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.leadActivities.ryanMurphyEmail,
+      type: LeadActivityType.EMAIL,
+      title: 'Technical Spec Email',
+      description: 'Sent API documentation and integration guide',
+      timestamp: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+      userId: SEED_IDS.users.mikeDavis,
+      userName: 'Mike Davis',
+      metadata: {
+        subject: 'IntelliFlow API Documentation',
+        preview: 'Hi Ryan, here is our full API docs...',
+        opened: true,
+        openCount: 5,
+      },
+      leadId: SEED_IDS.leads.ryanMurphy,
+      tenantId,
+    },
+    // Diana Hall
+    {
+      id: SEED_IDS.leadActivities.dianaHallCall,
+      type: LeadActivityType.CALL,
+      title: 'Introduction Call',
+      description: 'Brief intro and qualification',
+      timestamp: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000),
+      userId: SEED_IDS.users.sarahJohnson,
+      userName: 'Sarah Johnson',
+      sentiment: Sentiment.NEUTRAL,
+      metadata: { duration: '12 min', outcome: 'connected' },
+      leadId: SEED_IDS.leads.dianaHall,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.leadActivities.dianaHallMeeting,
+      type: LeadActivityType.MEETING,
+      title: 'Needs Assessment',
+      description: 'Full needs assessment meeting',
+      timestamp: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000),
+      userId: SEED_IDS.users.sarahJohnson,
+      userName: 'Sarah Johnson',
+      metadata: {
+        attendees: ['Diana Hall', 'Sarah Johnson'],
+        location: 'In-person',
+        duration: '40 min',
+      },
+      leadId: SEED_IDS.leads.dianaHall,
+      tenantId,
+    },
+  ];
+
+  for (const activity of additionalActivities) {
+    await prisma.leadActivity.upsert({
+      where: { id: activity.id },
+      update: activity,
+      create: activity,
+    });
+  }
+
+  console.log(`✅ Created ${activities.length + additionalActivities.length} lead activities`);
 }
 
 async function seedLeadNotes(tenantId: string) {
@@ -1437,7 +1840,64 @@ async function seedLeadNotes(tenantId: string) {
     });
   }
 
-  console.log(`✅ Created ${notes.length} lead notes`);
+  // Additional notes for other leads (Lead 360 wiring)
+  const additionalNotes = [
+    {
+      id: SEED_IDS.leadNotes.sarahMillerNote,
+      content:
+        'Sarah is evaluating 3 CRM solutions. Decision expected by end of Q1. Key requirements: workflow automation, email integration.',
+      author: 'Sarah Johnson',
+      leadId: SEED_IDS.leads.sarahMiller,
+      tenantId,
+      createdAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+    },
+    {
+      id: SEED_IDS.leadNotes.davidChenNote,
+      content:
+        'David needs API-first CRM. Currently using Pipedrive but unhappy with limited customization. Strong technical buyer.',
+      author: 'Mike Davis',
+      leadId: SEED_IDS.leads.davidChen,
+      tenantId,
+      createdAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
+    },
+    {
+      id: SEED_IDS.leadNotes.ninaPatelNote,
+      content:
+        'Nina manages a 200+ person sales org at DataVault. Looking for AI-powered lead scoring and pipeline forecasting. Enterprise budget approved.',
+      author: 'Alex Morgan',
+      leadId: SEED_IDS.leads.ninaPatel,
+      tenantId,
+      createdAt: new Date(now.getTime() - 12 * 60 * 60 * 1000),
+    },
+    {
+      id: SEED_IDS.leadNotes.elenaRodriguezNote,
+      content:
+        'Elena needs Salesforce migration path. Has 5 years of data to migrate. Compliance (SOX) is a requirement.',
+      author: 'Alex Morgan',
+      leadId: SEED_IDS.leads.elenaRodriguez,
+      tenantId,
+      createdAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
+    },
+    {
+      id: SEED_IDS.leadNotes.rachelGreenNote,
+      content:
+        'Rachel needs multi-language support (EN, ES, FR) and GDPR compliance. EU-based team of 80.',
+      author: 'Sarah Johnson',
+      leadId: SEED_IDS.leads.rachelGreen,
+      tenantId,
+      createdAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
+    },
+  ];
+
+  for (const note of additionalNotes) {
+    await prisma.leadNote.upsert({
+      where: { id: note.id },
+      update: note,
+      create: note,
+    });
+  }
+
+  console.log(`✅ Created ${notes.length + additionalNotes.length} lead notes`);
 }
 
 async function seedLeadFiles(tenantId: string) {
@@ -1478,7 +1938,63 @@ async function seedLeadFiles(tenantId: string) {
     });
   }
 
-  console.log(`✅ Created ${files.length} lead files`);
+  // Additional files for other leads (Lead 360 wiring)
+  const additionalFiles = [
+    {
+      id: SEED_IDS.leadFiles.sarahMillerProposal,
+      name: 'TechCorp_Proposal_v2.pdf',
+      size: '1.8 MB',
+      sizeBytes: 1887436,
+      fileType: FileType.PDF,
+      leadId: SEED_IDS.leads.sarahMiller,
+      tenantId,
+      uploadedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+      uploadedById: SEED_IDS.users.sarahJohnson,
+    },
+    {
+      id: SEED_IDS.leadFiles.davidChenSpec,
+      name: 'API_Integration_Requirements.docx',
+      size: '845 KB',
+      sizeBytes: 865280,
+      fileType: FileType.OTHER,
+      leadId: SEED_IDS.leads.davidChen,
+      tenantId,
+      uploadedAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
+      uploadedById: null,
+    },
+    {
+      id: SEED_IDS.leadFiles.ninaPatelRfp,
+      name: 'DataVault_RFP_Response.pdf',
+      size: '3.2 MB',
+      sizeBytes: 3355443,
+      fileType: FileType.PDF,
+      leadId: SEED_IDS.leads.ninaPatel,
+      tenantId,
+      uploadedAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
+      uploadedById: SEED_IDS.users.alexMorgan,
+    },
+    {
+      id: SEED_IDS.leadFiles.elenaRodriguezContract,
+      name: 'Migration_Assessment_Report.pdf',
+      size: '2.1 MB',
+      sizeBytes: 2202009,
+      fileType: FileType.PDF,
+      leadId: SEED_IDS.leads.elenaRodriguez,
+      tenantId,
+      uploadedAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
+      uploadedById: SEED_IDS.users.alexMorgan,
+    },
+  ];
+
+  for (const file of additionalFiles) {
+    await prisma.leadFile.upsert({
+      where: { id: file.id },
+      update: file,
+      create: file,
+    });
+  }
+
+  console.log(`✅ Created ${files.length + additionalFiles.length} lead files`);
 }
 
 async function seedLeadAIInsights(tenantId: string) {
@@ -1490,18 +2006,256 @@ async function seedLeadAIInsights(tenantId: string) {
       leadId: SEED_IDS.leads.marcusReed,
       tenantId,
       conversionProbability: 72,
-      estimatedValue: 85000,
-      churnRisk: ChurnRisk.LOW,
-      engagementScore: 85,
-      sentiment: 'Positive',
-      sentimentTrend: 'improving',
-      lastEngagementDays: 1,
+      estimatedValue: 8500000, // $85,000 in cents
+      churnRisk: ChurnRisk.MINIMAL,
+      engagementScore: 90,
+      sentiment: Sentiment.POSITIVE,
+      sentimentTrend: 'stable',
+      lastEngagementDays: 0,
       nextBestAction: 'Schedule a discovery call to discuss multi-warehouse requirements',
       recommendations: [
-        'Lead shows high engagement - optimal time for a demo call',
-        'Company size matches ICP - consider enterprise pricing',
-        'Multi-warehouse interest aligns with our core feature set',
+        'High-value prospect — prioritize personal outreach and executive sponsorship',
+        'Decision-maker title — prepare ROI-focused business case',
+        'New lead — respond within 24 hours for optimal conversion',
       ],
+      icpMatch: 'Strong Match',
+    },
+    {
+      id: SEED_IDS.leadAIInsights.sarahMiller,
+      leadId: SEED_IDS.leads.sarahMiller,
+      tenantId,
+      conversionProbability: 85,
+      estimatedValue: 8500000,
+      churnRisk: ChurnRisk.MINIMAL,
+      engagementScore: 95,
+      sentiment: Sentiment.POSITIVE,
+      sentimentTrend: 'improving',
+      lastEngagementDays: 2,
+      nextBestAction: 'Send a tailored proposal addressing key pain points',
+      recommendations: [
+        'High-value prospect — prioritize personal outreach and executive sponsorship',
+        'Decision-maker title — prepare ROI-focused business case',
+      ],
+      icpMatch: 'Strong Match',
+    },
+    {
+      id: SEED_IDS.leadAIInsights.davidChen,
+      leadId: SEED_IDS.leads.davidChen,
+      tenantId,
+      conversionProbability: 42,
+      estimatedValue: 4200000,
+      churnRisk: ChurnRisk.MEDIUM,
+      engagementScore: 88,
+      sentiment: Sentiment.NEUTRAL,
+      sentimentTrend: 'stable',
+      lastEngagementDays: 5,
+      nextBestAction: 'Add to nurture campaign with educational content',
+      recommendations: [
+        'Needs nurturing — enroll in drip campaign with educational resources',
+        'Referral source — leverage mutual connection for warm introduction',
+        'New lead — respond within 24 hours for optimal conversion',
+      ],
+      icpMatch: 'Partial Match',
+    },
+    {
+      id: SEED_IDS.leadAIInsights.amandaSmith,
+      leadId: SEED_IDS.leads.amandaSmith,
+      tenantId,
+      conversionProbability: 15,
+      estimatedValue: 1500000,
+      churnRisk: ChurnRisk.CRITICAL,
+      engagementScore: 50,
+      sentiment: Sentiment.NEGATIVE,
+      sentimentTrend: 'declining',
+      lastEngagementDays: 14,
+      nextBestAction: 'Monitor for engagement signals before direct outreach',
+      recommendations: ['Low engagement — continue passive monitoring and brand awareness efforts'],
+      icpMatch: 'Weak Match',
+    },
+    {
+      id: SEED_IDS.leadAIInsights.jamesWilson,
+      leadId: SEED_IDS.leads.jamesWilson,
+      tenantId,
+      conversionProbability: 92,
+      estimatedValue: 9200000,
+      churnRisk: ChurnRisk.MINIMAL,
+      engagementScore: 87,
+      sentiment: Sentiment.POSITIVE,
+      sentimentTrend: 'improving',
+      lastEngagementDays: 1,
+      nextBestAction: 'Schedule a discovery call to qualify needs and timeline',
+      recommendations: [
+        'High-value prospect — prioritize personal outreach and executive sponsorship',
+        'Event lead — reference the specific event in follow-up messaging',
+        'Decision-maker title — prepare ROI-focused business case',
+      ],
+      icpMatch: 'Strong Match',
+    },
+    {
+      id: SEED_IDS.leadAIInsights.elenaRodriguez,
+      leadId: SEED_IDS.leads.elenaRodriguez,
+      tenantId,
+      conversionProbability: 55,
+      estimatedValue: 5500000,
+      churnRisk: ChurnRisk.LOW,
+      engagementScore: 72,
+      sentiment: Sentiment.NEUTRAL,
+      sentimentTrend: 'improving',
+      lastEngagementDays: 4,
+      nextBestAction: 'Follow up with relevant case studies and ROI analysis',
+      recommendations: ['Warm lead with potential — send targeted content and schedule a demo'],
+      icpMatch: 'Good Match',
+    },
+    {
+      id: SEED_IDS.leadAIInsights.kevinTaylor,
+      leadId: SEED_IDS.leads.kevinTaylor,
+      tenantId,
+      conversionProbability: 82,
+      estimatedValue: 9500000,
+      churnRisk: ChurnRisk.MINIMAL,
+      engagementScore: 95,
+      sentiment: Sentiment.POSITIVE,
+      sentimentTrend: 'stable',
+      lastEngagementDays: 0,
+      nextBestAction: 'Schedule a discovery call to qualify needs and timeline',
+      recommendations: [
+        'High-value prospect — prioritize personal outreach and executive sponsorship',
+        'Decision-maker title — prepare ROI-focused business case',
+        'New lead — respond within 24 hours for optimal conversion',
+      ],
+      icpMatch: 'Strong Match',
+    },
+    {
+      id: SEED_IDS.leadAIInsights.rachelGreen,
+      leadId: SEED_IDS.leads.rachelGreen,
+      tenantId,
+      conversionProbability: 75,
+      estimatedValue: 4500000,
+      churnRisk: ChurnRisk.MINIMAL,
+      engagementScore: 88,
+      sentiment: Sentiment.POSITIVE,
+      sentimentTrend: 'stable',
+      lastEngagementDays: 1,
+      nextBestAction: 'Follow up with relevant case studies and ROI analysis',
+      recommendations: [
+        'Warm lead with potential — send targeted content and schedule a demo',
+        'Referral source — leverage mutual connection for warm introduction',
+        'New lead — respond within 24 hours for optimal conversion',
+      ],
+      icpMatch: 'Good Match',
+    },
+    {
+      id: SEED_IDS.leadAIInsights.tomBrown,
+      leadId: SEED_IDS.leads.tomBrown,
+      tenantId,
+      conversionProbability: 88,
+      estimatedValue: 12000000,
+      churnRisk: ChurnRisk.MINIMAL,
+      engagementScore: 85,
+      sentiment: Sentiment.POSITIVE,
+      sentimentTrend: 'stable',
+      lastEngagementDays: 0,
+      nextBestAction: 'Schedule a discovery call to qualify needs and timeline',
+      recommendations: [
+        'High-value prospect — prioritize personal outreach and executive sponsorship',
+        'Event lead — reference the specific event in follow-up messaging',
+        'Decision-maker title — prepare ROI-focused business case',
+        'New lead — respond within 24 hours for optimal conversion',
+      ],
+      icpMatch: 'Strong Match',
+    },
+    {
+      id: SEED_IDS.leadAIInsights.lisaPark,
+      leadId: SEED_IDS.leads.lisaPark,
+      tenantId,
+      conversionProbability: 68,
+      estimatedValue: 3800000,
+      churnRisk: ChurnRisk.LOW,
+      engagementScore: 90,
+      sentiment: Sentiment.POSITIVE,
+      sentimentTrend: 'stable',
+      lastEngagementDays: 2,
+      nextBestAction: 'Follow up with relevant case studies and ROI analysis',
+      recommendations: [
+        'Warm lead with potential — send targeted content and schedule a demo',
+        'Decision-maker title — prepare ROI-focused business case',
+        'New lead — respond within 24 hours for optimal conversion',
+      ],
+      icpMatch: 'Good Match',
+    },
+    {
+      id: SEED_IDS.leadAIInsights.carlosRivera,
+      leadId: SEED_IDS.leads.carlosRivera,
+      tenantId,
+      conversionProbability: 71,
+      estimatedValue: 6200000,
+      churnRisk: ChurnRisk.LOW,
+      engagementScore: 85,
+      sentiment: Sentiment.POSITIVE,
+      sentimentTrend: 'stable',
+      lastEngagementDays: 3,
+      nextBestAction: 'Follow up with relevant case studies and ROI analysis',
+      recommendations: [
+        'Warm lead with potential — send targeted content and schedule a demo',
+        'Referral source — leverage mutual connection for warm introduction',
+        'New lead — respond within 24 hours for optimal conversion',
+      ],
+      icpMatch: 'Good Match',
+    },
+    {
+      id: SEED_IDS.leadAIInsights.ninaPatel,
+      leadId: SEED_IDS.leads.ninaPatel,
+      tenantId,
+      conversionProbability: 85,
+      estimatedValue: 8800000,
+      churnRisk: ChurnRisk.MINIMAL,
+      engagementScore: 95,
+      sentiment: Sentiment.POSITIVE,
+      sentimentTrend: 'stable',
+      lastEngagementDays: 1,
+      nextBestAction: 'Schedule a discovery call to qualify needs and timeline',
+      recommendations: [
+        'High-value prospect — prioritize personal outreach and executive sponsorship',
+        'Decision-maker title — prepare ROI-focused business case',
+        'New lead — respond within 24 hours for optimal conversion',
+      ],
+      icpMatch: 'Strong Match',
+    },
+    {
+      id: SEED_IDS.leadAIInsights.ryanMurphy,
+      leadId: SEED_IDS.leads.ryanMurphy,
+      tenantId,
+      conversionProbability: 62,
+      estimatedValue: 4100000,
+      churnRisk: ChurnRisk.LOW,
+      engagementScore: 60,
+      sentiment: Sentiment.NEUTRAL,
+      sentimentTrend: 'stable',
+      lastEngagementDays: 7,
+      nextBestAction: 'Follow up with relevant case studies and ROI analysis',
+      recommendations: [
+        'Warm lead with potential — send targeted content and schedule a demo',
+        'New lead — respond within 24 hours for optimal conversion',
+      ],
+      icpMatch: 'Good Match',
+    },
+    {
+      id: SEED_IDS.leadAIInsights.dianaHall,
+      leadId: SEED_IDS.leads.dianaHall,
+      tenantId,
+      conversionProbability: 79,
+      estimatedValue: 5500000,
+      churnRisk: ChurnRisk.MINIMAL,
+      engagementScore: 70,
+      sentiment: Sentiment.POSITIVE,
+      sentimentTrend: 'stable',
+      lastEngagementDays: 3,
+      nextBestAction: 'Follow up with relevant case studies and ROI analysis',
+      recommendations: [
+        'Warm lead with potential — send targeted content and schedule a demo',
+        'New lead — respond within 24 hours for optimal conversion',
+      ],
+      icpMatch: 'Good Match',
     },
   ];
 
@@ -1792,20 +2546,38 @@ async function seedConversationRecords(tenantId: string) {
 
   // Helper to build conversation records concisely
   function conv(
-    id: string, sessionSuffix: string, agentName: string, agentModel: string,
-    title: string, contextName: string, contextType: string,
-    status: string, startedAt: Date, lastMessageAt: Date,
-    msgCount: number, toolCount: number,
-    opts: Record<string, unknown> = {},
+    id: string,
+    sessionSuffix: string,
+    agentName: string,
+    agentModel: string,
+    title: string,
+    contextName: string,
+    contextType: string,
+    status: string,
+    startedAt: Date,
+    lastMessageAt: Date,
+    msgCount: number,
+    toolCount: number,
+    opts: Record<string, unknown> = {}
   ) {
     return {
-      id, sessionId: `session-${sessionSuffix}-${Date.now()}`,
-      title, contextName, contextType,
-      agentId: `crewai-${agentName}-v1`, agentName, agentModel,
-      userName: 'System', channel: 'automation',
-      messageCount: msgCount, toolCallCount: toolCount,
-      status, startedAt, lastMessageAt,
-      tenantId, userId: SEED_IDS.users.admin,
+      id,
+      sessionId: `session-${sessionSuffix}-${Date.now()}`,
+      title,
+      contextName,
+      contextType,
+      agentId: `crewai-${agentName}-v1`,
+      agentName,
+      agentModel,
+      userName: 'System',
+      channel: 'automation',
+      messageCount: msgCount,
+      toolCallCount: toolCount,
+      status,
+      startedAt,
+      lastMessageAt,
+      tenantId,
+      userId: SEED_IDS.users.admin,
       ...opts,
     };
   }
@@ -1813,79 +2585,243 @@ async function seedConversationRecords(tenantId: string) {
   const IDS = SEED_IDS.conversationRecords;
   const conversations = [
     // ── ACTIVE agents (8) ──────────────────────────────────────────────
-    conv(IDS.qualificationAgent, 'qual-1', 'qualification', 'gpt-4o-mini',
-      'Lead Qualification: Marcus Reed', 'Qualifying lead Marcus Reed', 'lead_qualification',
-      'ACTIVE', tenMinAgo, fiveMinAgo, 8, 3,
-      { contextId: SEED_IDS.leads.marcusReed, tokenCountInput: 2450, tokenCountOutput: 890 }),
+    conv(
+      IDS.qualificationAgent,
+      'qual-1',
+      'qualification',
+      'gpt-4o-mini',
+      'Lead Qualification: Marcus Reed',
+      'Qualifying lead Marcus Reed',
+      'lead_qualification',
+      'ACTIVE',
+      tenMinAgo,
+      fiveMinAgo,
+      8,
+      3,
+      { contextId: SEED_IDS.leads.marcusReed, tokenCountInput: 2450, tokenCountOutput: 890 }
+    ),
 
-    conv(IDS.emailAgent, 'email-2', 'email', 'gpt-4o',
-      'Email Draft: Follow-up with Sarah Miller', 'Drafting email for Sarah Miller', 'email_generation',
-      'ACTIVE', thirtyMinAgo, fiveMinAgo, 12, 5,
-      { contextId: SEED_IDS.leads.sarahMiller, userId: SEED_IDS.users.sarahJohnson, tokenCountInput: 4200, tokenCountOutput: 1650 }),
+    conv(
+      IDS.emailAgent,
+      'email-2',
+      'email',
+      'gpt-4o',
+      'Email Draft: Follow-up with Sarah Miller',
+      'Drafting email for Sarah Miller',
+      'email_generation',
+      'ACTIVE',
+      thirtyMinAgo,
+      fiveMinAgo,
+      12,
+      5,
+      {
+        contextId: SEED_IDS.leads.sarahMiller,
+        userId: SEED_IDS.users.sarahJohnson,
+        tokenCountInput: 4200,
+        tokenCountOutput: 1650,
+      }
+    ),
 
-    conv(IDS.followupAgent, 'followup-3', 'followup', 'gpt-4o-mini',
-      'Follow-up Check: 14 Overdue Tasks', 'Checking overdue follow-ups', 'followup_management',
-      'ACTIVE', fiveMinAgo, oneMinAgo, 6, 2,
-      { tokenCountInput: 1800, tokenCountOutput: 520 }),
+    conv(
+      IDS.followupAgent,
+      'followup-3',
+      'followup',
+      'gpt-4o-mini',
+      'Follow-up Check: 14 Overdue Tasks',
+      'Checking overdue follow-ups',
+      'followup_management',
+      'ACTIVE',
+      fiveMinAgo,
+      oneMinAgo,
+      6,
+      2,
+      { tokenCountInput: 1800, tokenCountOutput: 520 }
+    ),
 
-    conv(IDS.nbaAgent, 'nba-4', 'nba', 'gpt-4o',
-      'Next Best Action: Pipeline Analysis', 'Analyzing 23 deals for NBA', 'next_best_action',
-      'ACTIVE', oneHourAgo, tenMinAgo, 15, 7,
-      { tokenCountInput: 6100, tokenCountOutput: 2340 }),
+    conv(
+      IDS.nbaAgent,
+      'nba-4',
+      'nba',
+      'gpt-4o',
+      'Next Best Action: Pipeline Analysis',
+      'Analyzing 23 deals for NBA',
+      'next_best_action',
+      'ACTIVE',
+      oneHourAgo,
+      tenMinAgo,
+      15,
+      7,
+      { tokenCountInput: 6100, tokenCountOutput: 2340 }
+    ),
 
-    conv(IDS.sentimentAgent, 'sentiment-7', 'sentiment', 'gpt-4o-mini',
-      'Sentiment Analysis: 12 New Tickets', 'Analyzing ticket sentiment batch', 'sentiment_analysis',
-      'ACTIVE', twentyMinAgo, fiveMinAgo, 14, 0,
-      { tokenCountInput: 3600, tokenCountOutput: 1100 }),
+    conv(
+      IDS.sentimentAgent,
+      'sentiment-7',
+      'sentiment',
+      'gpt-4o-mini',
+      'Sentiment Analysis: 12 New Tickets',
+      'Analyzing ticket sentiment batch',
+      'sentiment_analysis',
+      'ACTIVE',
+      twentyMinAgo,
+      fiveMinAgo,
+      14,
+      0,
+      { tokenCountInput: 3600, tokenCountOutput: 1100 }
+    ),
 
-    conv(IDS.autoresponseAgent, 'autoresponse-8', 'autoresponse', 'gpt-4o-mini',
-      'Auto-Response: 3 Pending Emails', 'Generating auto-responses', 'auto_response',
-      'ACTIVE', fifteenMinAgo, fiveMinAgo, 9, 2,
-      { tokenCountInput: 2800, tokenCountOutput: 960 }),
+    conv(
+      IDS.autoresponseAgent,
+      'autoresponse-8',
+      'autoresponse',
+      'gpt-4o-mini',
+      'Auto-Response: 3 Pending Emails',
+      'Generating auto-responses',
+      'auto_response',
+      'ACTIVE',
+      fifteenMinAgo,
+      fiveMinAgo,
+      9,
+      2,
+      { tokenCountInput: 2800, tokenCountOutput: 960 }
+    ),
 
-    conv(IDS.ragAgent, 'rag-9', 'rag', 'text-embedding-3-small',
-      'RAG Context: Deal Research for TechCorp', 'Retrieving context for deal analysis', 'rag_context',
-      'ACTIVE', tenMinAgo, fiveMinAgo, 4, 3,
-      { tokenCountInput: 1200, tokenCountOutput: 450 }),
+    conv(
+      IDS.ragAgent,
+      'rag-9',
+      'rag',
+      'text-embedding-3-small',
+      'RAG Context: Deal Research for TechCorp',
+      'Retrieving context for deal analysis',
+      'rag_context',
+      'ACTIVE',
+      tenMinAgo,
+      fiveMinAgo,
+      4,
+      3,
+      { tokenCountInput: 1200, tokenCountOutput: 450 }
+    ),
 
-    conv(IDS.crewAgent, 'crew-11', 'crew', 'gpt-4o',
-      'Crew: Full Lead Processing Pipeline', 'Orchestrating qualification → email → followup', 'crew_orchestration',
-      'ACTIVE', fortyFiveMinAgo, tenMinAgo, 32, 14,
-      { tokenCountInput: 12000, tokenCountOutput: 4800 }),
+    conv(
+      IDS.crewAgent,
+      'crew-11',
+      'crew',
+      'gpt-4o',
+      'Crew: Full Lead Processing Pipeline',
+      'Orchestrating qualification → email → followup',
+      'crew_orchestration',
+      'ACTIVE',
+      fortyFiveMinAgo,
+      tenMinAgo,
+      32,
+      14,
+      { tokenCountInput: 12000, tokenCountOutput: 4800 }
+    ),
 
     // ── IDLE agents (3) ────────────────────────────────────────────────
-    conv(IDS.scoringAgent, 'scoring-5', 'scoring', 'gpt-4o-mini',
-      'Lead Scoring: Awaiting Next Batch', 'Waiting for lead batch', 'lead_scoring',
-      'IDLE', twoHoursAgo, oneHourAgo, 24, 12,
-      { tokenCountInput: 8900, tokenCountOutput: 3200 }),
+    conv(
+      IDS.scoringAgent,
+      'scoring-5',
+      'scoring',
+      'gpt-4o-mini',
+      'Lead Scoring: Awaiting Next Batch',
+      'Waiting for lead batch',
+      'lead_scoring',
+      'IDLE',
+      twoHoursAgo,
+      oneHourAgo,
+      24,
+      12,
+      { tokenCountInput: 8900, tokenCountOutput: 3200 }
+    ),
 
-    conv(IDS.embeddingAgent, 'embedding-10', 'embedding', 'text-embedding-3-small',
-      'Embedding: Batch Complete', 'Waiting for new documents', 'embedding_generation',
-      'IDLE', threeHoursAgo, twoHoursAgo, 48, 0,
-      { tokenCountInput: 15000, tokenCountOutput: 0 }),
+    conv(
+      IDS.embeddingAgent,
+      'embedding-10',
+      'embedding',
+      'text-embedding-3-small',
+      'Embedding: Batch Complete',
+      'Waiting for new documents',
+      'embedding_generation',
+      'IDLE',
+      threeHoursAgo,
+      twoHoursAgo,
+      48,
+      0,
+      { tokenCountInput: 15000, tokenCountOutput: 0 }
+    ),
 
-    conv(IDS.indexerAgent, 'indexer-13', 'indexer', 'text-embedding-3-small',
-      'Document Indexer: 156 Documents Indexed', 'Indexing complete — awaiting new uploads', 'document_indexing',
-      'IDLE', threeHoursAgo, oneHourAgo, 156, 156,
-      { tokenCountInput: 48000, tokenCountOutput: 0 }),
+    conv(
+      IDS.indexerAgent,
+      'indexer-13',
+      'indexer',
+      'text-embedding-3-small',
+      'Document Indexer: 156 Documents Indexed',
+      'Indexing complete — awaiting new uploads',
+      'document_indexing',
+      'IDLE',
+      threeHoursAgo,
+      oneHourAgo,
+      156,
+      156,
+      { tokenCountInput: 48000, tokenCountOutput: 0 }
+    ),
 
     // ── ERROR agents (2) ───────────────────────────────────────────────
-    conv(IDS.churnAgent, 'churn-6', 'churn', 'gpt-4o',
-      'Churn Prediction: API Timeout', 'Churn analysis failed — model timeout', 'churn_prediction',
-      'ERROR', thirtyMinAgo, twentyMinAgo, 3, 1,
-      { wasEscalated: true, escalatedTo: SEED_IDS.users.manager, escalatedAt: twentyMinAgo,
-        tokenCountInput: 800, tokenCountOutput: 0 }),
+    conv(
+      IDS.churnAgent,
+      'churn-6',
+      'churn',
+      'gpt-4o',
+      'Churn Prediction: API Timeout',
+      'Churn analysis failed — model timeout',
+      'churn_prediction',
+      'ERROR',
+      thirtyMinAgo,
+      twentyMinAgo,
+      3,
+      1,
+      {
+        wasEscalated: true,
+        escalatedTo: SEED_IDS.users.manager,
+        escalatedAt: twentyMinAgo,
+        tokenCountInput: 800,
+        tokenCountOutput: 0,
+      }
+    ),
 
-    conv(IDS.ocrAgent, 'ocr-14', 'ocr', 'tesseract-v5',
-      'OCR: Corrupted PDF Processing Error', 'Failed to process invoice-2026-Q1.pdf', 'ocr_processing',
-      'ERROR', fortyFiveMinAgo, fortyFiveMinAgo, 2, 1,
-      { wasEscalated: true, escalatedTo: SEED_IDS.users.manager, escalatedAt: fortyFiveMinAgo }),
+    conv(
+      IDS.ocrAgent,
+      'ocr-14',
+      'ocr',
+      'tesseract-v5',
+      'OCR: Corrupted PDF Processing Error',
+      'Failed to process invoice-2026-Q1.pdf',
+      'ocr_processing',
+      'ERROR',
+      fortyFiveMinAgo,
+      fortyFiveMinAgo,
+      2,
+      1,
+      { wasEscalated: true, escalatedTo: SEED_IDS.users.manager, escalatedAt: fortyFiveMinAgo }
+    ),
 
     // ── Additional: Hallucination checker (ACTIVE — always running) ───
-    conv(IDS.hallucinationAgent, 'hallucination-12', 'hallucination', 'gpt-4o-mini',
-      'Hallucination Check: Continuous Monitoring', 'Monitoring AI output quality', 'hallucination_detection',
-      'ACTIVE', threeHoursAgo, oneMinAgo, 89, 0,
-      { tokenCountInput: 22000, tokenCountOutput: 5600 }),
+    conv(
+      IDS.hallucinationAgent,
+      'hallucination-12',
+      'hallucination',
+      'gpt-4o-mini',
+      'Hallucination Check: Continuous Monitoring',
+      'Monitoring AI output quality',
+      'hallucination_detection',
+      'ACTIVE',
+      threeHoursAgo,
+      oneMinAgo,
+      89,
+      0,
+      { tokenCountInput: 22000, tokenCountOutput: 5600 }
+    ),
   ];
 
   for (const c of conversations) {
@@ -1898,18 +2834,60 @@ async function seedConversationRecords(tenantId: string) {
 
   // Sample messages for qualification + email agents
   const messages = [
-    { id: SEED_IDS.conversationMessages.msg1, conversationId: IDS.qualificationAgent, role: 'system',
-      content: 'You are a lead qualification agent. Analyze the provided lead data and determine qualification score.', createdAt: tenMinAgo, tenantId },
-    { id: SEED_IDS.conversationMessages.msg2, conversationId: IDS.qualificationAgent, role: 'assistant',
-      content: 'Analyzing lead Marcus Reed from Summit Systems. Checking engagement history, company size, and intent signals.', createdAt: new Date(tenMinAgo.getTime() + 30_000), tenantId },
-    { id: SEED_IDS.conversationMessages.msg3, conversationId: IDS.qualificationAgent, role: 'assistant',
-      content: 'Lead scored at 87/100. High engagement (5 pricing page visits in 24h), mid-market company (250 employees), strong buying signals.', createdAt: fiveMinAgo, tenantId },
-    { id: SEED_IDS.conversationMessages.msg4, conversationId: IDS.emailAgent, role: 'system',
-      content: 'Draft a personalized follow-up email for the lead based on their recent interactions.', createdAt: thirtyMinAgo, tenantId },
-    { id: SEED_IDS.conversationMessages.msg5, conversationId: IDS.emailAgent, role: 'assistant',
-      content: 'Reviewing Sarah Miller interaction history: 3 calls, 2 demos, proposal viewed 4 times. Current stage: Negotiation.', createdAt: new Date(thirtyMinAgo.getTime() + 120_000), tenantId },
-    { id: SEED_IDS.conversationMessages.msg6, conversationId: IDS.emailAgent, role: 'assistant',
-      content: 'Email draft ready. Subject: "Next steps for your IntelliFlow implementation". Confidence: 0.92. Awaiting approval.', createdAt: fiveMinAgo, tenantId },
+    {
+      id: SEED_IDS.conversationMessages.msg1,
+      conversationId: IDS.qualificationAgent,
+      role: 'system',
+      content:
+        'You are a lead qualification agent. Analyze the provided lead data and determine qualification score.',
+      createdAt: tenMinAgo,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.conversationMessages.msg2,
+      conversationId: IDS.qualificationAgent,
+      role: 'assistant',
+      content:
+        'Analyzing lead Marcus Reed from Summit Systems. Checking engagement history, company size, and intent signals.',
+      createdAt: new Date(tenMinAgo.getTime() + 30_000),
+      tenantId,
+    },
+    {
+      id: SEED_IDS.conversationMessages.msg3,
+      conversationId: IDS.qualificationAgent,
+      role: 'assistant',
+      content:
+        'Lead scored at 87/100. High engagement (5 pricing page visits in 24h), mid-market company (250 employees), strong buying signals.',
+      createdAt: fiveMinAgo,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.conversationMessages.msg4,
+      conversationId: IDS.emailAgent,
+      role: 'system',
+      content:
+        'Draft a personalized follow-up email for the lead based on their recent interactions.',
+      createdAt: thirtyMinAgo,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.conversationMessages.msg5,
+      conversationId: IDS.emailAgent,
+      role: 'assistant',
+      content:
+        'Reviewing Sarah Miller interaction history: 3 calls, 2 demos, proposal viewed 4 times. Current stage: Negotiation.',
+      createdAt: new Date(thirtyMinAgo.getTime() + 120_000),
+      tenantId,
+    },
+    {
+      id: SEED_IDS.conversationMessages.msg6,
+      conversationId: IDS.emailAgent,
+      role: 'assistant',
+      content:
+        'Email draft ready. Subject: "Next steps for your IntelliFlow implementation". Confidence: 0.92. Awaiting approval.',
+      createdAt: fiveMinAgo,
+      tenantId,
+    },
   ];
 
   for (const msg of messages) {
@@ -1918,25 +2896,54 @@ async function seedConversationRecords(tenantId: string) {
 
   // Sample tool calls
   const toolCalls = [
-    { id: SEED_IDS.conversationToolCalls.tc1, conversationId: IDS.qualificationAgent, messageId: SEED_IDS.conversationMessages.msg2,
-      toolName: 'search_lead_history', toolInput: { leadId: SEED_IDS.leads.marcusReed, days: 30 },
-      toolOutput: { visits: 12, downloads: 2, emailOpens: 8 }, status: 'SUCCESS',
-      startedAt: new Date(tenMinAgo.getTime() + 10_000), completedAt: new Date(tenMinAgo.getTime() + 12_000), durationMs: 2000, tenantId },
-    { id: SEED_IDS.conversationToolCalls.tc2, conversationId: IDS.qualificationAgent, messageId: SEED_IDS.conversationMessages.msg2,
-      toolName: 'get_company_info', toolInput: { company: 'Summit Systems' },
-      toolOutput: { employees: 250, industry: 'Technology', revenue: '$45M' }, status: 'SUCCESS',
-      startedAt: new Date(tenMinAgo.getTime() + 13_000), completedAt: new Date(tenMinAgo.getTime() + 14_000), durationMs: 1000, tenantId },
-    { id: SEED_IDS.conversationToolCalls.tc3, conversationId: IDS.emailAgent, messageId: SEED_IDS.conversationMessages.msg5,
-      toolName: 'get_interaction_history', toolInput: { leadId: SEED_IDS.leads.sarahMiller, limit: 10 },
-      toolOutput: { interactions: 8, lastContact: '2026-02-15', sentiment: 'positive' }, status: 'SUCCESS',
-      startedAt: new Date(thirtyMinAgo.getTime() + 60_000), completedAt: new Date(thirtyMinAgo.getTime() + 62_000), durationMs: 2000, tenantId },
+    {
+      id: SEED_IDS.conversationToolCalls.tc1,
+      conversationId: IDS.qualificationAgent,
+      messageId: SEED_IDS.conversationMessages.msg2,
+      toolName: 'search_lead_history',
+      toolInput: { leadId: SEED_IDS.leads.marcusReed, days: 30 },
+      toolOutput: { visits: 12, downloads: 2, emailOpens: 8 },
+      status: 'SUCCESS',
+      startedAt: new Date(tenMinAgo.getTime() + 10_000),
+      completedAt: new Date(tenMinAgo.getTime() + 12_000),
+      durationMs: 2000,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.conversationToolCalls.tc2,
+      conversationId: IDS.qualificationAgent,
+      messageId: SEED_IDS.conversationMessages.msg2,
+      toolName: 'get_company_info',
+      toolInput: { company: 'Summit Systems' },
+      toolOutput: { employees: 250, industry: 'Technology', revenue: '$45M' },
+      status: 'SUCCESS',
+      startedAt: new Date(tenMinAgo.getTime() + 13_000),
+      completedAt: new Date(tenMinAgo.getTime() + 14_000),
+      durationMs: 1000,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.conversationToolCalls.tc3,
+      conversationId: IDS.emailAgent,
+      messageId: SEED_IDS.conversationMessages.msg5,
+      toolName: 'get_interaction_history',
+      toolInput: { leadId: SEED_IDS.leads.sarahMiller, limit: 10 },
+      toolOutput: { interactions: 8, lastContact: '2026-02-15', sentiment: 'positive' },
+      status: 'SUCCESS',
+      startedAt: new Date(thirtyMinAgo.getTime() + 60_000),
+      completedAt: new Date(thirtyMinAgo.getTime() + 62_000),
+      durationMs: 2000,
+      tenantId,
+    },
   ];
 
   for (const tc of toolCalls) {
     await prisma.toolCallRecord.upsert({ where: { id: tc.id }, update: tc, create: tc });
   }
 
-  console.log(`✅ Created ${conversations.length} AI conversation records, ${messages.length} messages, ${toolCalls.length} tool calls`);
+  console.log(
+    `✅ Created ${conversations.length} AI conversation records, ${messages.length} messages, ${toolCalls.length} tool calls`
+  );
 }
 
 async function seedContacts(tenantId: string) {
@@ -3302,7 +4309,9 @@ async function seedTicketActivities(tenantId: string) {
       id: SEED_IDS.ticketActivities.billingWaiting,
       type: TicketActivityType.SYSTEM_EVENT,
       content: 'Status changed to Waiting on Customer',
-      timestamp: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000 + 5 * 60 * 1000),
+      timestamp: new Date(
+        now.getTime() - 2 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000 + 5 * 60 * 1000
+      ),
       isInternal: true,
       authorName: 'System',
       authorRole: 'System',
@@ -3385,7 +4394,7 @@ async function seedTicketActivities(tenantId: string) {
       id: SEED_IDS.ticketActivities.dashCustomerMsg,
       type: TicketActivityType.CUSTOMER_MESSAGE,
       content:
-        "The analytics dashboard is taking 15-20 seconds to load. Charts are timing out and we see spinner indefinitely on the revenue breakdown widget. This has been getting progressively worse over the past week.\n\nBrowser: Chrome 120\nScreen: Analytics > Revenue Dashboard",
+        'The analytics dashboard is taking 15-20 seconds to load. Charts are timing out and we see spinner indefinitely on the revenue breakdown widget. This has been getting progressively worse over the past week.\n\nBrowser: Chrome 120\nScreen: Analytics > Revenue Dashboard',
       timestamp: new Date(now.getTime() - 7 * 60 * 60 * 1000 - 45 * 60 * 1000), // ~7h45m ago
       isInternal: false,
       authorName: 'Rachel Green',
@@ -8132,7 +9141,12 @@ async function seedNotifications(tenantId: string) {
       priority: 'HIGH' as const,
       subject: 'Deal won: Enterprise License',
       body: 'Acme Corp Enterprise License deal worth $125,000 has been closed-won',
-      metadata: { notificationType: 'deal_won', entityType: 'opportunity', entityId: SEED_IDS.opportunities.enterpriseLicenseAcme, actionUrl: `/deals/${SEED_IDS.opportunities.enterpriseLicenseAcme}` },
+      metadata: {
+        notificationType: 'deal_won',
+        entityType: 'opportunity',
+        entityId: SEED_IDS.opportunities.enterpriseLicenseAcme,
+        actionUrl: `/deals/${SEED_IDS.opportunities.enterpriseLicenseAcme}`,
+      },
       createdAt: oneHourAgo,
     },
     {
@@ -8142,7 +9156,12 @@ async function seedNotifications(tenantId: string) {
       priority: 'NORMAL' as const,
       subject: 'Deal stage changed',
       body: 'Enterprise License (Acme Corp) moved to Negotiation stage',
-      metadata: { notificationType: 'deal_stage_changed', entityType: 'opportunity', entityId: SEED_IDS.opportunities.enterpriseLicenseAcme, actionUrl: `/deals/${SEED_IDS.opportunities.enterpriseLicenseAcme}` },
+      metadata: {
+        notificationType: 'deal_stage_changed',
+        entityType: 'opportunity',
+        entityId: SEED_IDS.opportunities.enterpriseLicenseAcme,
+        actionUrl: `/deals/${SEED_IDS.opportunities.enterpriseLicenseAcme}`,
+      },
       createdAt: twoHoursAgo,
     },
     {
@@ -8152,7 +9171,12 @@ async function seedNotifications(tenantId: string) {
       priority: 'NORMAL' as const,
       subject: 'Lead scored by AI',
       body: 'Sarah Miller scored 85/100 (Hot tier) by AI scoring engine',
-      metadata: { notificationType: 'lead_scored', entityType: 'lead', entityId: SEED_IDS.leads.sarahMiller, actionUrl: `/leads/${SEED_IDS.leads.sarahMiller}` },
+      metadata: {
+        notificationType: 'lead_scored',
+        entityType: 'lead',
+        entityId: SEED_IDS.leads.sarahMiller,
+        actionUrl: `/leads/${SEED_IDS.leads.sarahMiller}`,
+      },
       createdAt: twoHoursAgo,
     },
     {
@@ -8162,7 +9186,12 @@ async function seedNotifications(tenantId: string) {
       priority: 'NORMAL' as const,
       subject: 'Lead converted to deal',
       body: 'David Chen has been converted to a deal',
-      metadata: { notificationType: 'lead_converted', entityType: 'lead', entityId: SEED_IDS.leads.davidChen, actionUrl: `/leads/${SEED_IDS.leads.davidChen}` },
+      metadata: {
+        notificationType: 'lead_converted',
+        entityType: 'lead',
+        entityId: SEED_IDS.leads.davidChen,
+        actionUrl: `/leads/${SEED_IDS.leads.davidChen}`,
+      },
       createdAt: oneDayAgo,
     },
     {
@@ -8222,7 +9251,11 @@ async function seedNotifications(tenantId: string) {
       priority: 'HIGH' as const,
       subject: 'Ticket assigned to you',
       body: 'Ticket "System Outage Report" has been assigned to you',
-      metadata: { notificationType: 'ticket_assigned', entityType: 'ticket', actionUrl: '/tickets' },
+      metadata: {
+        notificationType: 'ticket_assigned',
+        entityType: 'ticket',
+        actionUrl: '/tickets',
+      },
       createdAt: oneHourAgo,
     },
     {
@@ -8718,7 +9751,9 @@ async function main() {
     console.log('  FLOW-024: 3 AI insights (deal risk, churn risk, upsell)');
     console.log('  FLOW-031/032/033: 3 health checks, 2 alert incidents, 3 performance metrics');
     console.log('  FLOW-034: 3 webhook endpoints');
-    console.log('  PG-151: 14 AI conversation records (9 active, 3 idle, 2 error), 6 messages, 3 tool calls');
+    console.log(
+      '  PG-151: 14 AI conversation records (9 active, 3 idle, 2 error), 6 messages, 3 tool calls'
+    );
     console.log('  FLOW-035/036: 3 API keys, 2 API versions');
     console.log('');
     console.log(
