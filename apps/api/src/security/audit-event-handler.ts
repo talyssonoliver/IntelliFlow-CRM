@@ -16,7 +16,7 @@
  * - Data classification based on resource type
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@intelliflow/db';
 import { randomUUID } from 'crypto';
 import { AuditLogger, getAuditLogger } from './audit-logger';
 import { AuditAction, ActorType, DataClassification, ResourceType, ActionResult } from './types';

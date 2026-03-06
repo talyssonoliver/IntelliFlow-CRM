@@ -74,7 +74,7 @@ const DANGEROUS_PATTERNS = [
   /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE)\b.*\b(FROM|INTO|WHERE|TABLE)\b)/gi,
 
   // Command Injection
-  /(;|\||&|`|\$\(|\$\{|&&|\|\|)(.*)(rm|cat|chmod|wget|curl|bash|sh|python|node|eval)/gi,
+  /(;|\||&|`|\$\(|\$\{|&&|\|\|)[^\r\n]{0,200}(rm|cat|chmod|wget|curl|bash|sh|python|node|eval)/gi,
 
   // XSS Patterns
   /(<script|<iframe|javascript:|onerror=|onload=|eval\(|alert\()/gi,
@@ -331,4 +331,3 @@ export async function sanitizationPipeline(input: {
 
   return sanitized;
 }
-

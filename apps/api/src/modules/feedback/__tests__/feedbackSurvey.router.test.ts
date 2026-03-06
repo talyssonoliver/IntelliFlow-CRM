@@ -34,7 +34,7 @@ function createMockContext(overrides?: Partial<Context>) {
       feedbackSurvey: mockFeedbackSurveyService,
     },
     ...overrides,
-  } as unknown as Parameters<typeof feedbackSurveyRouter.createCaller>[0];
+  } as any;
 }
 
 describe('feedbackSurveyRouter', () => {
@@ -172,9 +172,7 @@ describe('feedbackSurveyRouter', () => {
     });
 
     it('all procedures use tenantProcedure (require tenant context)', async () => {
-      const callerNoUser = feedbackSurveyRouter.createCaller(
-        createMockContext({ user: null })
-      );
+      const callerNoUser = feedbackSurveyRouter.createCaller(createMockContext({ user: null }));
 
       // All procedures should fail without authentication
       await expect(callerNoUser.getDashboardStats({ granularity: 'month' })).rejects.toThrow();

@@ -22,7 +22,7 @@ import {
   DEFAULT_STAGE_PROBABILITIES,
 } from '@intelliflow/validators/opportunity';
 import { OPPORTUNITY_STAGES } from '@intelliflow/domain';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@intelliflow/db';
 
 // Mock pipeline stage config
 const createMockPipelineConfig = (stageKey: string, overrides: Record<string, unknown> = {}) => ({
@@ -323,7 +323,7 @@ describe('Pipeline Config Router', () => {
       ];
 
       vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue(
-        stageStats as unknown as Awaited<ReturnType<typeof prismaMock.opportunity.groupBy>>
+        stageStats as any // test-only mock data
       );
       prismaMock.pipelineStageConfig.findMany.mockResolvedValue(configs as any);
 

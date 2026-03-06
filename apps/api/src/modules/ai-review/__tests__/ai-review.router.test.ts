@@ -46,7 +46,7 @@ const mockPrisma = {
     count: vi.fn().mockResolvedValue(0),
     groupBy: vi.fn().mockResolvedValue([]),
   },
-} as unknown as PrismaClient;
+} as any; // test-only mock data
 
 // Mock context factory
 const createMockContext = (overrides: Record<string, unknown> = {}) => ({

@@ -74,7 +74,7 @@ try {
   } else {
     // Dynamic require to catch module not found errors
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { PrismaClient } = require('@prisma/client');
+    const { PrismaClient } = require('@prisma/client'); // NOSONAR
     testPrisma = new PrismaClient({
       datasources: {
         db: {
@@ -85,9 +85,9 @@ try {
 
     // Try to load adapters and application services
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const application = require('@intelliflow/application');
+    const application = require('@intelliflow/application'); // NOSONAR
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const adapters = require('@intelliflow/adapters');
+    const adapters = require('@intelliflow/adapters'); // NOSONAR
 
     // Services are imported at the top of the file
 

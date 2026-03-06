@@ -9,8 +9,8 @@
  */
 
 import { beforeEach, afterAll, vi } from 'vitest';
-import type { PrismaClient, Prisma as PrismaNamespace } from '@prisma/client';
-import { Prisma } from '@prisma/client';
+import type { PrismaClient, Prisma as PrismaNamespace } from '@intelliflow/db';
+import { Prisma } from '@intelliflow/db';
 import type { DeepMockProxy } from 'vitest-mock-extended';
 import { mockDeep, mockReset } from 'vitest-mock-extended';
 import type { BaseContext } from '../context';
@@ -79,7 +79,7 @@ export function delayedPrismaResult<T>(
     setTimeout(() => resolve(value), delayMs);
   });
   Object.defineProperty(promise, Symbol.toStringTag, { value: 'PrismaPromise' });
-  return promise as PrismaNamespace.PrismaPromise<T>;
+  return promise as PrismaNamespace.PrismaPromise<T>; // NOSONAR
 }
 
 /**
@@ -131,6 +131,7 @@ export const mockServices = {
   task: mockDeep<any>(),
   ticket: mockDeep<any>(),
   ticketRouting: mockDeep<any>(),
+  leadRouting: mockDeep<any>(),
   analytics: mockDeep<any>(),
   chainVersion: mockDeep<any>(),
   convertLeadToDeal: mockDeep<any>(),
@@ -199,7 +200,7 @@ export function createTestContext(overrides?: Partial<BaseContext>): BaseContext
   const tenantId = 'test-tenant-id';
 
   const defaultContext: BaseContext = {
-    prisma: prismaMock as unknown as PrismaClient,
+    prisma: prismaMock as PrismaClient, // NOSONAR
     container: mockDeep<any>(), // Mock container for testing
     services: mockServices,
     security: mockSecurityServices,
@@ -220,7 +221,7 @@ export function createTestContext(overrides?: Partial<BaseContext>): BaseContext
       canAccessAllTenantData: false,
     },
     // Prisma with tenant filter applied
-    prismaWithTenant: prismaMock as unknown as PrismaClient,
+    prismaWithTenant: prismaMock as PrismaClient, // NOSONAR
     req: undefined,
     res: undefined,
   };
@@ -406,6 +407,7 @@ export const mockTask = {
   contactId: null,
   opportunityId: null,
   ownerId: TEST_UUIDS.user1,
+  calendarId: null,
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
 };

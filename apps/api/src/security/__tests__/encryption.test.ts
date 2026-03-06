@@ -112,20 +112,67 @@ describe('Encryption Service - IFC-113', () => {
     });
 
     it('should generate DEK for key version', async () => {
-      const provider = new VaultKeyProvider();
-      const key = await provider.getKeyByVersion(1);
+      process.env.VAULT_LOCAL_DEK_SECRET = 'test-secret-for-dek-generation';
+      try {
+        const provider = new VaultKeyProvider();
+        const key = await provider.getKeyByVersion(1);
 
-      expect(key).toBeInstanceOf(Buffer);
-      expect(key.length).toBe(32);
+        expect(key).toBeInstanceOf(Buffer);
+        expect(key.length).toBe(32);
+      } finally {
+        delete process.env.VAULT_LOCAL_DEK_SECRET;
+      }
     });
 
     it('should cache generated DEKs', async () => {
+      process.env.VAULT_LOCAL_DEK_SECRET = 'test-secret-for-dek-generation';
+      try {
+        const provider = new VaultKeyProvider();
+
+        const key1 = await provider.getKeyByVersion(1);
+        const key2 = await provider.getKeyByVersion(1);
+
+        expect(key1).toBe(key2); // Same reference (cached)
+      } finally {
+        delete process.env.VAULT_LOCAL_DEK_SECRET;
+      }
+    });
+
+    it('should throw when no secret is configured', async () => {
+      delete process.env.VAULT_LOCAL_DEK_SECRET;
+      delete process.env.VAULT_TOKEN;
       const provider = new VaultKeyProvider();
 
-      const key1 = await provider.getKeyByVersion(1);
-      const key2 = await provider.getKeyByVersion(1);
+      await expect(provider.getKeyByVersion(1)).rejects.toThrow('Vault DEK secret not configured');
+    });
 
-      expect(key1).toBe(key2); // Same reference (cached)
+    it('should produce deterministic keys for same secret and version', async () => {
+      process.env.VAULT_LOCAL_DEK_SECRET = 'deterministic-test-secret';
+      try {
+        const provider1 = new VaultKeyProvider();
+        const provider2 = new VaultKeyProvider();
+
+        const key1 = await provider1.getKeyByVersion(1);
+        const key2 = await provider2.getKeyByVersion(1);
+
+        expect(key1).toEqual(key2); // Same secret + version = same key
+      } finally {
+        delete process.env.VAULT_LOCAL_DEK_SECRET;
+      }
+    });
+
+    it('should produce different keys for different versions', async () => {
+      process.env.VAULT_LOCAL_DEK_SECRET = 'deterministic-test-secret';
+      try {
+        const provider = new VaultKeyProvider();
+
+        const key1 = await provider.getKeyByVersion(1);
+        const key2 = await provider.getKeyByVersion(2);
+
+        expect(key1).not.toEqual(key2);
+      } finally {
+        delete process.env.VAULT_LOCAL_DEK_SECRET;
+      }
     });
   });
 
@@ -267,14 +314,12 @@ describe('Encryption Service - IFC-113', () => {
         getCurrentKey: vi.fn().mockResolvedValue(Buffer.alloc(32, 'a')),
         getKeyByVersion: vi.fn().mockResolvedValue(Buffer.alloc(32, 'a')),
         getCurrentKeyVersion: vi.fn().mockReturnValue(5),
-        getKeyMetadata: vi
-          .fn()
-          .mockResolvedValue({
-            version: 5,
-            createdAt: new Date(),
-            algorithm: 'aes-256-gcm',
-            keyId: 'custom-key',
-          }),
+        getKeyMetadata: vi.fn().mockResolvedValue({
+          version: 5,
+          createdAt: new Date(),
+          algorithm: 'aes-256-gcm',
+          keyId: 'custom-key',
+        }),
       };
 
       const service = new EncryptionService(mockKeyProvider);

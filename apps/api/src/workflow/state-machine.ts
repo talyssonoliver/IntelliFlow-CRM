@@ -42,7 +42,7 @@ export class WorkflowStateMachine implements IWorkflowEngine {
     }
     this.definitions.set(
       definition.name,
-      definition as unknown as WorkflowDefinition<Record<string, unknown>>
+      definition as WorkflowDefinition<Record<string, unknown>>
     );
   }
 
@@ -101,7 +101,7 @@ export class WorkflowStateMachine implements IWorkflowEngine {
     if (!state) {
       return {
         success: false,
-        state: null as unknown as WorkflowState<T>,
+        state: null,
         error: `Workflow ${workflowId} not found`,
         isComplete: false,
         awaitingHumanInput: false,
@@ -286,7 +286,7 @@ export class WorkflowStateMachine implements IWorkflowEngine {
     if (!state) {
       return {
         success: false,
-        state: null as unknown as WorkflowState<T>,
+        state: null,
         error: `Workflow ${decision.workflowId} not found`,
         isComplete: false,
         awaitingHumanInput: false,

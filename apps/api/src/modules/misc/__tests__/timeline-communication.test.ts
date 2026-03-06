@@ -763,20 +763,20 @@ describe('TimelineCommunicationService', () => {
       mockPrisma.caseDocument.findMany.mockResolvedValue([{ id: 'doc-1' }]);
       const mockAuditLog = {
         id: 'audit-1',
-        event_type: 'CREATED',
-        user_id: 'user-1',
-        created_at: new Date('2025-06-01T10:00:00Z'),
+        eventType: 'CREATED',
+        userId: 'user-1',
+        createdAt: new Date('2025-06-01T10:00:00Z'),
         changes: { title: 'Document title' },
-        ip_address: '192.168.1.1',
-        user_agent: 'Mozilla/5.0',
-        document_id: 'doc-1',
+        ipAddress: '192.168.1.1',
+        userAgent: 'Mozilla/5.0',
+        documentId: 'doc-1',
         document: {
           id: 'doc-1',
           title: 'Contract Agreement',
-          version_major: 1,
-          version_minor: 2,
-          version_patch: 0,
-          mime_type: 'application/pdf',
+          versionMajor: 1,
+          versionMinor: 2,
+          versionPatch: 0,
+          mimeType: 'application/pdf',
         },
       };
       mockPrisma.caseDocumentAudit.findMany.mockResolvedValue([mockAuditLog]);
@@ -798,20 +798,20 @@ describe('TimelineCommunicationService', () => {
       mockPrisma.caseDocument.findMany.mockResolvedValue([{ id: 'doc-1' }]);
       const mockAuditLog = {
         id: 'audit-1',
-        event_type: 'VERSION_CREATED',
-        user_id: 'user-1',
-        created_at: new Date(),
+        eventType: 'VERSION_CREATED',
+        userId: 'user-1',
+        createdAt: new Date(),
         changes: null,
-        ip_address: null,
-        user_agent: null,
-        document_id: 'doc-1',
+        ipAddress: null,
+        userAgent: null,
+        documentId: 'doc-1',
         document: {
           id: 'doc-1',
           title: 'Doc',
-          version_major: 2,
-          version_minor: 0,
-          version_patch: 0,
-          mime_type: 'text/plain',
+          versionMajor: 2,
+          versionMinor: 0,
+          versionPatch: 0,
+          mimeType: 'text/plain',
         },
       };
       mockPrisma.caseDocumentAudit.findMany.mockResolvedValue([mockAuditLog]);
@@ -825,19 +825,19 @@ describe('TimelineCommunicationService', () => {
       mockPrisma.caseDocument.findMany.mockResolvedValue([{ id: 'doc-1' }]);
       const mockAuditLog = {
         id: 'audit-1',
-        event_type: 'CONTENT_UPDATED',
-        user_id: 'user-1',
-        created_at: new Date(),
+        eventType: 'CONTENT_UPDATED',
+        userId: 'user-1',
+        createdAt: new Date(),
         changes: null,
-        ip_address: null,
-        user_agent: null,
+        ipAddress: null,
+        userAgent: null,
         document: {
           id: 'doc-1',
           title: 'Doc',
-          version_major: 1,
-          version_minor: 1,
-          version_patch: 0,
-          mime_type: 'application/pdf',
+          versionMajor: 1,
+          versionMinor: 1,
+          versionPatch: 0,
+          mimeType: 'application/pdf',
         },
       };
       mockPrisma.caseDocumentAudit.findMany.mockResolvedValue([mockAuditLog]);
@@ -874,7 +874,7 @@ describe('TimelineCommunicationService', () => {
       expect(mockPrisma.caseDocumentAudit.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            created_at: { gte: fromDate, lte: toDate },
+            createdAt: { gte: fromDate, lte: toDate },
           }),
         })
       );
@@ -884,12 +884,12 @@ describe('TimelineCommunicationService', () => {
       mockPrisma.caseDocument.findMany.mockResolvedValue([{ id: 'doc-1' }]);
       const mockAuditLog = {
         id: 'audit-1',
-        event_type: 'VIEWED',
-        user_id: 'user-123',
-        created_at: new Date(),
+        eventType: 'VIEWED',
+        userId: 'user-123',
+        createdAt: new Date(),
         changes: null,
-        ip_address: null,
-        user_agent: null,
+        ipAddress: null,
+        userAgent: null,
         document: null,
       };
       mockPrisma.caseDocumentAudit.findMany.mockResolvedValue([mockAuditLog]);
@@ -904,19 +904,19 @@ describe('TimelineCommunicationService', () => {
       mockPrisma.caseDocument.findMany.mockResolvedValue([{ id: 'doc-1' }]);
       const mockAuditLog = {
         id: 'audit-1',
-        event_type: 'DOWNLOADED',
-        user_id: 'user-1',
-        created_at: new Date(),
+        eventType: 'DOWNLOADED',
+        userId: 'user-1',
+        createdAt: new Date(),
         changes: { field: 'value' },
-        ip_address: '10.0.0.1',
-        user_agent: 'Chrome/120',
+        ipAddress: '10.0.0.1',
+        userAgent: 'Chrome/120',
         document: {
           id: 'doc-1',
           title: 'Doc',
-          version_major: 1,
-          version_minor: 0,
-          version_patch: 3,
-          mime_type: 'application/pdf',
+          versionMajor: 1,
+          versionMinor: 0,
+          versionPatch: 3,
+          mimeType: 'application/pdf',
         },
       };
       mockPrisma.caseDocumentAudit.findMany.mockResolvedValue([mockAuditLog]);
@@ -935,7 +935,7 @@ describe('TimelineCommunicationService', () => {
       expect(mockPrisma.caseDocument.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            deleted_at: null,
+            deletedAt: null,
           }),
         })
       );

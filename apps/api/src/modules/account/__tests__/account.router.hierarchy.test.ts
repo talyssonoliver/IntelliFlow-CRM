@@ -69,19 +69,11 @@ describe('account router hierarchy endpoints', () => {
       mockAccountService.getHierarchy.mockResolvedValue(hierarchyResult);
 
       const ctx = createMockContext();
-      const result = await mockAccountService.getHierarchy(
-        'acc-1',
-        ctx.tenant.tenantId,
-        3
-      );
+      const result = await mockAccountService.getHierarchy('acc-1', ctx.tenant.tenantId, 3);
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.current.id).toBe('acc-1');
-      expect(mockAccountService.getHierarchy).toHaveBeenCalledWith(
-        'acc-1',
-        'tenant-1',
-        3
-      );
+      expect(mockAccountService.getHierarchy).toHaveBeenCalledWith('acc-1', 'tenant-1', 3);
     });
 
     it('should handle not-found errors', async () => {
@@ -91,11 +83,7 @@ describe('account router hierarchy endpoints', () => {
         error: { message: 'Account not found', code: 'NOT_FOUND_ERROR' },
       });
 
-      const result = await mockAccountService.getHierarchy(
-        'acc-missing',
-        'tenant-1',
-        5
-      );
+      const result = await mockAccountService.getHierarchy('acc-missing', 'tenant-1', 5);
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toBe('Account not found');
@@ -110,11 +98,7 @@ describe('account router hierarchy endpoints', () => {
 
       await mockAccountService.getHierarchy('acc-1', 'tenant-1', 2);
 
-      expect(mockAccountService.getHierarchy).toHaveBeenCalledWith(
-        'acc-1',
-        'tenant-1',
-        2
-      );
+      expect(mockAccountService.getHierarchy).toHaveBeenCalledWith('acc-1', 'tenant-1', 2);
     });
   });
 
@@ -156,12 +140,7 @@ describe('account router hierarchy endpoints', () => {
         },
       });
 
-      const result = await mockAccountService.setParent(
-        'acc-child',
-        null,
-        'tenant-1',
-        'user-1'
-      );
+      const result = await mockAccountService.setParent('acc-child', null, 'tenant-1', 'user-1');
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.parentAccountId).toBeUndefined();
@@ -174,12 +153,7 @@ describe('account router hierarchy endpoints', () => {
         error: { message: 'Circular reference detected', code: 'INVALID_HIERARCHY' },
       });
 
-      const result = await mockAccountService.setParent(
-        'acc-1',
-        'acc-2',
-        'tenant-1',
-        'user-1'
-      );
+      const result = await mockAccountService.setParent('acc-1', 'acc-2', 'tenant-1', 'user-1');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Circular reference');
@@ -192,12 +166,7 @@ describe('account router hierarchy endpoints', () => {
         error: { message: 'Account cannot be its own parent', code: 'INVALID_HIERARCHY' },
       });
 
-      const result = await mockAccountService.setParent(
-        'acc-1',
-        'acc-1',
-        'tenant-1',
-        'user-1'
-      );
+      const result = await mockAccountService.setParent('acc-1', 'acc-1', 'tenant-1', 'user-1');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('cannot be its own parent');

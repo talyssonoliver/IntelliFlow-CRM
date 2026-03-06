@@ -12,10 +12,12 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
+  AgentAuthorizationService,
   agentAuthorizationService,
   buildAuthContext,
   authorizeAgentAction,
   resetSessionActionCount,
+  createAgentAuthorizationService,
 } from '../authorization';
 import { searchLeadsTool } from '../tools/search';
 import type { EntityType, AgentActionType } from '../types';
@@ -377,32 +379,53 @@ describe('Agent Authorization', () => {
       expect(result.authorized).toBe(true);
     });
 
-    it('should authorize UPDATE action for MANAGER with entity ID', async () => {
+    it('should authorize UPDATE action for MANAGER with entity ID (owned)', async () => {
+      // Create service with mock Prisma that returns entity owned by manager
+      const mockPrisma = {
+        case: {
+          findUnique: async () => ({ assignedTo: 'manager-1', createdBy: 'someone-else' }),
+        },
+      } as any;
+      const svc = createAgentAuthorizationService(mockPrisma);
+
       const user = { userId: 'manager-1', role: 'MANAGER' };
       const context = buildAuthContext(user, testSessionId);
       const input = { id: 'case-123', title: 'Updated Title' };
 
-      const result = await agentAuthorizationService.authorizeToolExecution(
-        updateCaseTool,
-        input,
-        context
-      );
-
+      const result = await svc.authorizeToolExecution(updateCaseTool, input, context);
       expect(result.authorized).toBe(true);
     });
 
-    it('should authorize UPDATE action for MANAGER without entity ID (new entity)', async () => {
+    it('should deny UPDATE action for MANAGER when not entity owner', async () => {
+      const mockPrisma = {
+        case: {
+          findUnique: async () => ({ assignedTo: 'other-user', createdBy: 'other-user' }),
+        },
+      } as any;
+      const svc = createAgentAuthorizationService(mockPrisma);
+
       const user = { userId: 'manager-1', role: 'MANAGER' };
       const context = buildAuthContext(user, testSessionId);
-      const input = { id: 'case-123', title: 'New Case Title' };
+      const input = { id: 'case-123', title: 'Updated Title' };
 
+      const result = await svc.authorizeToolExecution(updateCaseTool, input, context);
+      expect(result.authorized).toBe(false);
+    });
+
+    it('should deny UPDATE when Prisma is not available (fail-secure)', async () => {
+      const user = { userId: 'manager-1', role: 'MANAGER' };
+      const context = buildAuthContext(user, testSessionId);
+      const input = { id: 'case-123', title: 'Updated Title' };
+
+      // Singleton has no Prisma — should fail-secure
       const result = await agentAuthorizationService.authorizeToolExecution(
         updateCaseTool,
         input,
         context
       );
 
-      expect(result.authorized).toBe(true);
+      expect(result.authorized).toBe(false);
+      expect(result.reason).toContain('ownership verification unavailable');
     });
   });
 

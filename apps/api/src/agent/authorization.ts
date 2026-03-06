@@ -13,6 +13,7 @@
 
 import { AgentAuthContext, AgentActionType, EntityType, AgentToolDefinition } from './types';
 import { agentLogger } from './logger';
+import type { PrismaClient } from '@intelliflow/db';
 
 /**
  * Default permissions for different user roles
@@ -121,6 +122,8 @@ export interface UserInfo {
   customEntityTypes?: EntityType[];
   customActionTypes?: AgentActionType[];
   customMaxActions?: number;
+  tenantId?: string;
+  prisma?: PrismaClient;
 }
 
 /**
@@ -138,6 +141,8 @@ export function buildAuthContext(user: UserInfo, agentSessionId: string): AgentA
     allowedActionTypes: user.customActionTypes || rolePermissions.allowedActionTypes,
     maxActionsPerSession: user.customMaxActions || rolePermissions.maxActionsPerSession,
     actionCount: getSessionActionCount(agentSessionId),
+    tenantId: user.tenantId,
+    prisma: user.prisma,
   };
 }
 
@@ -153,6 +158,12 @@ export function buildAuthContext(user: UserInfo, agentSessionId: string): AgentA
  * 5. Entity-level ownership (where applicable)
  */
 export class AgentAuthorizationService {
+  private prisma: PrismaClient | null;
+
+  constructor(prisma?: PrismaClient) {
+    this.prisma = prisma ?? null;
+  }
+
   /**
    * Check if a tool action is authorized
    */
@@ -255,8 +266,6 @@ export class AgentAuthorizationService {
       return { authorized: true };
     }
 
-    // In a real implementation, this would query the database
-    // to verify the user owns or has access to the entity
     const inputObj = input as Record<string, unknown>;
     const entityId = inputObj.id as string;
 
@@ -264,9 +273,66 @@ export class AgentAuthorizationService {
       return { authorized: true }; // No ID means new entity, allow
     }
 
-    // Placeholder: In production, query the entity and check ownerId
-    // For now, we assume authorized if we have a valid user context
-    return { authorized: true };
+    // Fail-secure: if no Prisma client is available, deny access
+    if (!this.prisma) {
+      return {
+        authorized: false,
+        reason: 'Entity ownership verification unavailable — access denied',
+      };
+    }
+
+    // Map EntityType to Prisma model and ownership fields
+    const MODEL_MAP: Record<string, { model: string; ownerFields: string[] }> = {
+      LEAD: { model: 'lead', ownerFields: ['ownerId', 'assignedTo'] },
+      CONTACT: { model: 'contact', ownerFields: ['ownerId', 'assignedTo'] },
+      ACCOUNT: { model: 'account', ownerFields: ['ownerId'] },
+      OPPORTUNITY: { model: 'opportunity', ownerFields: ['ownerId'] },
+      CASE: { model: 'case', ownerFields: ['assignedTo', 'createdBy'] },
+      APPOINTMENT: { model: 'appointment', ownerFields: ['organizerId'] },
+      TASK: { model: 'task', ownerFields: ['assigneeId', 'createdBy'] },
+      MESSAGE: { model: 'message', ownerFields: ['senderId'] },
+    };
+
+    const mapping = MODEL_MAP[entityType];
+    if (!mapping) {
+      return { authorized: true }; // Unknown entity type — let the router handle it
+    }
+
+    try {
+      const prismaModel = (this.prisma as Record<string, any>)[mapping.model];
+      if (!prismaModel) {
+        return { authorized: true }; // Model not available — defer to router
+      }
+
+      const entity = await prismaModel.findUnique({ where: { id: entityId } });
+      if (!entity) {
+        // Entity not found — let the router return 404
+        return { authorized: true };
+      }
+
+      // Check if the current user is in any of the ownership fields
+      const isOwner = mapping.ownerFields.some((field) => entity[field] === context.userId);
+
+      if (!isOwner) {
+        await this.logAuthorizationFailure(
+          context,
+          `checkEntityOwnership:${entityType}`,
+          `User ${context.userId} does not own ${entityType} ${entityId}`
+        );
+        return {
+          authorized: false,
+          reason: `You do not have permission to modify this ${entityType.toLowerCase()}`,
+        };
+      }
+
+      return { authorized: true };
+    } catch (error) {
+      // DB errors should fail-secure
+      return {
+        authorized: false,
+        reason: 'Entity ownership verification failed — access denied',
+      };
+    }
   }
 
   /**
@@ -333,8 +399,15 @@ export class AgentAuthorizationService {
   }
 }
 
-// Export singleton instance
+// Export singleton instance (Prisma injected via createAgentAuthorizationService)
 export const agentAuthorizationService = new AgentAuthorizationService();
+
+/**
+ * Create an authorization service with Prisma client for real ownership checks
+ */
+export function createAgentAuthorizationService(prisma: PrismaClient): AgentAuthorizationService {
+  return new AgentAuthorizationService(prisma);
+}
 
 /**
  * Authorization middleware for tRPC procedures

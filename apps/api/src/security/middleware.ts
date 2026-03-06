@@ -370,7 +370,7 @@ export function requireOwnership(options: {
  * Helper functions
  */
 function generateRequestId(): string {
-  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`; // NOSONAR - non-security: internal request tracing ID for observability logs, not used for auth or tokens
 }
 
 function extractIpAddress(req?: Request): string | undefined {

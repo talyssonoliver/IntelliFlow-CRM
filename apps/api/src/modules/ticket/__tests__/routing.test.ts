@@ -27,7 +27,18 @@ import type { TicketRoutingInput, TicketRoutingResult } from '@intelliflow/valid
 
 const CATEGORY_KEYWORDS: Record<TicketCategory, string[]> = {
   BILLING: ['invoice', 'charge', 'refund', 'subscription', 'payment', 'billing', 'price', 'cost'],
-  TECHNICAL: ['crash', 'error', 'bug', 'performance', 'slow', 'broken', 'auth', 'login', 'password', 'api'],
+  TECHNICAL: [
+    'crash',
+    'error',
+    'bug',
+    'performance',
+    'slow',
+    'broken',
+    'auth',
+    'login',
+    'password',
+    'api',
+  ],
   SALES: ['pricing', 'demo', 'upgrade', 'plan', 'enterprise', 'discount', 'quote'],
   GENERAL: ['question', 'feedback', 'how-to', 'help', 'info', 'general'],
   FEATURE_REQUEST: ['wish', 'want', 'improve', 'feature', 'request', 'suggest', 'enhancement'],
@@ -182,9 +193,11 @@ function createMockPrisma() {
       updateMany: vi.fn().mockResolvedValue({ count: 1 }),
     },
     agentSkill: {
-      findMany: vi.fn().mockResolvedValue([
-        { userId: AGENT_1_UUID, skillName: 'billing', proficiency: 90, tenantId: TENANT_UUID },
-      ]),
+      findMany: vi
+        .fn()
+        .mockResolvedValue([
+          { userId: AGENT_1_UUID, skillName: 'billing', proficiency: 90, tenantId: TENANT_UUID },
+        ]),
     },
     ticket: {
       findFirst: vi.fn().mockResolvedValue({
@@ -230,21 +243,30 @@ describe('Section A: Routing Service Unit Tests', () => {
 
   // A1: Billing keywords → BILLING category
   it('A1: classifies billing keywords as BILLING category', () => {
-    const input = makeRoutingInput({ subject: 'Invoice not received', description: 'My billing charge is wrong' });
+    const input = makeRoutingInput({
+      subject: 'Invoice not received',
+      description: 'My billing charge is wrong',
+    });
     const result = generateFallbackResult(input, 10);
     expect(result.inferredCategory).toBe('BILLING');
   });
 
   // A2: Auth/login keywords → TECHNICAL category
   it('A2: classifies auth/login keywords as TECHNICAL', () => {
-    const input = makeRoutingInput({ subject: 'Login error', description: 'Cannot auth with password' });
+    const input = makeRoutingInput({
+      subject: 'Login error',
+      description: 'Cannot auth with password',
+    });
     const result = generateFallbackResult(input, 10);
     expect(result.inferredCategory).toBe('TECHNICAL');
   });
 
   // A3: Technical keywords → TECHNICAL category
   it('A3: classifies technical keywords as TECHNICAL', () => {
-    const input = makeRoutingInput({ subject: 'App crash on startup', description: 'Error in the API' });
+    const input = makeRoutingInput({
+      subject: 'App crash on startup',
+      description: 'Error in the API',
+    });
     const result = generateFallbackResult(input, 10);
     expect(result.inferredCategory).toBe('TECHNICAL');
   });
@@ -513,44 +535,138 @@ describe('Section A: Routing Service Unit Tests', () => {
 // =============================================================================
 
 describe('Section B: Accuracy + Non-Functional Tests', () => {
-
   // 22 labelled fixtures for accuracy testing
-  const labelledFixtures: Array<{ subject: string; description: string; expected: TicketCategory }> = [
+  const labelledFixtures: Array<{
+    subject: string;
+    description: string;
+    expected: TicketCategory;
+  }> = [
     // 5 BILLING
-    { subject: 'Invoice discrepancy', description: 'My invoice shows wrong charge', expected: 'BILLING' },
-    { subject: 'Unexpected charge on card', description: 'Saw a charge I did not authorize', expected: 'BILLING' },
-    { subject: 'Refund request', description: 'I need a refund for last payment', expected: 'BILLING' },
-    { subject: 'Subscription renewal issue', description: 'My subscription billing failed', expected: 'BILLING' },
-    { subject: 'Payment method update', description: 'Cannot update payment card', expected: 'BILLING' },
+    {
+      subject: 'Invoice discrepancy',
+      description: 'My invoice shows wrong charge',
+      expected: 'BILLING',
+    },
+    {
+      subject: 'Unexpected charge on card',
+      description: 'Saw a charge I did not authorize',
+      expected: 'BILLING',
+    },
+    {
+      subject: 'Refund request',
+      description: 'I need a refund for last payment',
+      expected: 'BILLING',
+    },
+    {
+      subject: 'Subscription renewal issue',
+      description: 'My subscription billing failed',
+      expected: 'BILLING',
+    },
+    {
+      subject: 'Payment method update',
+      description: 'Cannot update payment card',
+      expected: 'BILLING',
+    },
     // 4 TECHNICAL
-    { subject: 'Application crash on startup', description: 'The app crashes when I open it', expected: 'TECHNICAL' },
-    { subject: 'Error 500 on dashboard', description: 'Server error loading page', expected: 'TECHNICAL' },
-    { subject: 'Bug in report generation', description: 'Reports show wrong data, bug confirmed', expected: 'TECHNICAL' },
-    { subject: 'Slow performance loading contacts', description: 'Performance degradation on contact list', expected: 'TECHNICAL' },
+    {
+      subject: 'Application crash on startup',
+      description: 'The app crashes when I open it',
+      expected: 'TECHNICAL',
+    },
+    {
+      subject: 'Error 500 on dashboard',
+      description: 'Server error loading page',
+      expected: 'TECHNICAL',
+    },
+    {
+      subject: 'Bug in report generation',
+      description: 'Reports show wrong data, bug confirmed',
+      expected: 'TECHNICAL',
+    },
+    {
+      subject: 'Slow performance loading contacts',
+      description: 'Performance degradation on contact list',
+      expected: 'TECHNICAL',
+    },
     // 3 SALES
-    { subject: 'Enterprise pricing inquiry', description: 'What are pricing options for 500 users?', expected: 'SALES' },
-    { subject: 'Request demo session', description: 'We want a demo of the product', expected: 'SALES' },
-    { subject: 'Plan upgrade request', description: 'Want to upgrade from basic to enterprise', expected: 'SALES' },
+    {
+      subject: 'Enterprise pricing inquiry',
+      description: 'What are pricing options for 500 users?',
+      expected: 'SALES',
+    },
+    {
+      subject: 'Request demo session',
+      description: 'We want a demo of the product',
+      expected: 'SALES',
+    },
+    {
+      subject: 'Plan upgrade request',
+      description: 'Want to upgrade from basic to enterprise',
+      expected: 'SALES',
+    },
     // 3 GENERAL
-    { subject: 'General question about features', description: 'Just a question about how this works', expected: 'GENERAL' },
-    { subject: 'Product feedback', description: 'Some feedback on the user experience', expected: 'GENERAL' },
-    { subject: 'How-to guide for API', description: 'How to use the API integration', expected: 'GENERAL' },
+    {
+      subject: 'General question about features',
+      description: 'Just a question about how this works',
+      expected: 'GENERAL',
+    },
+    {
+      subject: 'Product feedback',
+      description: 'Some feedback on the user experience',
+      expected: 'GENERAL',
+    },
+    {
+      subject: 'How-to guide for API',
+      description: 'How to use the API integration',
+      expected: 'GENERAL',
+    },
     // 3 FEATURE_REQUEST
-    { subject: 'Wish we had dark mode', description: 'Would love a dark mode feature', expected: 'FEATURE_REQUEST' },
-    { subject: 'Want calendar integration', description: 'Feature request for calendar sync', expected: 'FEATURE_REQUEST' },
-    { subject: 'Improve search functionality', description: 'Search needs improvement and enhancement', expected: 'FEATURE_REQUEST' },
+    {
+      subject: 'Wish we had dark mode',
+      description: 'Would love a dark mode feature',
+      expected: 'FEATURE_REQUEST',
+    },
+    {
+      subject: 'Want calendar integration',
+      description: 'Feature request for calendar sync',
+      expected: 'FEATURE_REQUEST',
+    },
+    {
+      subject: 'Improve search functionality',
+      description: 'Search needs improvement and enhancement',
+      expected: 'FEATURE_REQUEST',
+    },
     // 4 BUG_REPORT
-    { subject: 'Button broken on settings page', description: 'The save button is broken and not working', expected: 'BUG_REPORT' },
-    { subject: 'Email not working after update', description: 'Emails stopped working, not working at all', expected: 'BUG_REPORT' },
-    { subject: 'Regression in contact import', description: 'Contact import has a regression from last release', expected: 'BUG_REPORT' },
-    { subject: 'Defect in PDF export', description: 'PDF export has a defect producing blank pages', expected: 'BUG_REPORT' },
+    {
+      subject: 'Button broken on settings page',
+      description: 'The save button is broken and not working',
+      expected: 'BUG_REPORT',
+    },
+    {
+      subject: 'Email not working after update',
+      description: 'Emails stopped working, not working at all',
+      expected: 'BUG_REPORT',
+    },
+    {
+      subject: 'Regression in contact import',
+      description: 'Contact import has a regression from last release',
+      expected: 'BUG_REPORT',
+    },
+    {
+      subject: 'Defect in PDF export',
+      description: 'PDF export has a defect producing blank pages',
+      expected: 'BUG_REPORT',
+    },
   ];
 
   // B1: Overall accuracy >= 85% across 22 labelled fixtures
   it('B1: achieves >= 85% accuracy across 22 labelled fixtures', () => {
     let correct = 0;
     for (const fixture of labelledFixtures) {
-      const input = makeRoutingInput({ subject: fixture.subject, description: fixture.description });
+      const input = makeRoutingInput({
+        subject: fixture.subject,
+        description: fixture.description,
+      });
       const result = generateFallbackResult(input, 10);
       if (result.inferredCategory === fixture.expected) {
         correct++;
@@ -565,7 +681,10 @@ describe('Section B: Accuracy + Non-Functional Tests', () => {
     const billingFixtures = labelledFixtures.filter((f) => f.expected === 'BILLING');
     let correct = 0;
     for (const fixture of billingFixtures) {
-      const input = makeRoutingInput({ subject: fixture.subject, description: fixture.description });
+      const input = makeRoutingInput({
+        subject: fixture.subject,
+        description: fixture.description,
+      });
       const result = generateFallbackResult(input, 10);
       if (result.inferredCategory === 'BILLING') correct++;
     }
@@ -577,7 +696,10 @@ describe('Section B: Accuracy + Non-Functional Tests', () => {
     const techFixtures = labelledFixtures.filter((f) => f.expected === 'TECHNICAL');
     let correct = 0;
     for (const fixture of techFixtures) {
-      const input = makeRoutingInput({ subject: fixture.subject, description: fixture.description });
+      const input = makeRoutingInput({
+        subject: fixture.subject,
+        description: fixture.description,
+      });
       const result = generateFallbackResult(input, 10);
       if (result.inferredCategory === 'TECHNICAL') correct++;
     }
@@ -594,7 +716,10 @@ describe('Section B: Accuracy + Non-Functional Tests', () => {
   // B5: Confidence always in [0, 1] range
   it('B5: confidence is always in [0, 1] range for all fixtures', () => {
     for (const fixture of labelledFixtures) {
-      const input = makeRoutingInput({ subject: fixture.subject, description: fixture.description });
+      const input = makeRoutingInput({
+        subject: fixture.subject,
+        description: fixture.description,
+      });
       const result = generateFallbackResult(input, 10);
       expect(result.confidence).toBeGreaterThanOrEqual(0);
       expect(result.confidence).toBeLessThanOrEqual(1);
@@ -731,7 +856,14 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
   it('D2: suggestAssignee caller returns candidates', async () => {
     const mockService = {
       suggestAssignees: vi.fn().mockResolvedValue([
-        { agentId: AGENT_1_UUID, name: 'Agent 1', skills: ['billing'], currentLoad: 3, maxCapacity: 10, status: 'ONLINE' },
+        {
+          agentId: AGENT_1_UUID,
+          name: 'Agent 1',
+          skills: ['billing'],
+          currentLoad: 3,
+          maxCapacity: 10,
+          status: 'ONLINE',
+        },
       ]),
       checkSlaEscalation: vi.fn(),
       findMatchingRule: vi.fn(),
@@ -745,7 +877,11 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
     } as any;
 
     const caller = routerModule.ticketRoutingRouter.createCaller(ctx);
-    const result = await caller.suggestAssignee({ ticketId: TICKET_UUID, category: 'BILLING', limit: 5 });
+    const result = await caller.suggestAssignee({
+      ticketId: TICKET_UUID,
+      category: 'BILLING',
+      limit: 5,
+    });
 
     expect(result.candidates).toHaveLength(1);
     expect(result.candidates[0].agentId).toBe(AGENT_1_UUID);
@@ -758,7 +894,14 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
       checkSlaEscalation: vi.fn().mockResolvedValue(false),
       findMatchingRule: vi.fn().mockResolvedValue(null),
       suggestAssignees: vi.fn().mockResolvedValue([
-        { agentId: AGENT_1_UUID, name: 'Agent 1', skills: ['billing'], currentLoad: 3, maxCapacity: 10, status: 'ONLINE' },
+        {
+          agentId: AGENT_1_UUID,
+          name: 'Agent 1',
+          skills: ['billing'],
+          currentLoad: 3,
+          maxCapacity: 10,
+          status: 'ONLINE',
+        },
       ]),
       routeTicket: vi.fn().mockResolvedValue({
         ticketId: TICKET_UUID,
@@ -813,7 +956,14 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
       checkSlaEscalation: vi.fn().mockResolvedValue(true),
       findMatchingRule: vi.fn().mockResolvedValue(null),
       suggestAssignees: vi.fn().mockResolvedValue([
-        { agentId: AGENT_2_UUID, name: 'Senior Agent', skills: ['billing'], currentLoad: 1, maxCapacity: 10, status: 'ONLINE' },
+        {
+          agentId: AGENT_2_UUID,
+          name: 'Senior Agent',
+          skills: ['billing'],
+          currentLoad: 1,
+          maxCapacity: 10,
+          status: 'ONLINE',
+        },
       ]),
       routeTicket: vi.fn().mockResolvedValue({
         ticketId: TICKET_UUID,
@@ -830,7 +980,14 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
     const ctx = {
       services: { ticketRouting: mockService },
       prisma: {
-        ticket: { findFirst: vi.fn().mockResolvedValue({ id: TICKET_UUID, tenantId: TENANT_UUID, priority: 'HIGH', slaStatus: 'BREACHED' }) },
+        ticket: {
+          findFirst: vi.fn().mockResolvedValue({
+            id: TICKET_UUID,
+            tenantId: TENANT_UUID,
+            priority: 'HIGH',
+            slaStatus: 'BREACHED',
+          }),
+        },
       },
       user: { userId: USER_UUID, email: 'test@test.com', role: 'ADMIN', tenantId: TENANT_UUID },
     } as any;
@@ -855,7 +1012,14 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
         ruleName: 'Billing Priority Rule',
       }),
       suggestAssignees: vi.fn().mockResolvedValue([
-        { agentId: AGENT_1_UUID, name: 'Agent 1', skills: ['billing'], currentLoad: 3, maxCapacity: 10, status: 'ONLINE' },
+        {
+          agentId: AGENT_1_UUID,
+          name: 'Agent 1',
+          skills: ['billing'],
+          currentLoad: 3,
+          maxCapacity: 10,
+          status: 'ONLINE',
+        },
       ]),
       routeTicket: vi.fn().mockResolvedValue({
         ticketId: TICKET_UUID,
@@ -872,7 +1036,11 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
     const ctx = {
       services: { ticketRouting: mockService },
       prisma: {
-        ticket: { findFirst: vi.fn().mockResolvedValue({ id: TICKET_UUID, tenantId: TENANT_UUID, priority: 'HIGH' }) },
+        ticket: {
+          findFirst: vi
+            .fn()
+            .mockResolvedValue({ id: TICKET_UUID, tenantId: TENANT_UUID, priority: 'HIGH' }),
+        },
       },
       user: { userId: USER_UUID, email: 'test@test.com', role: 'ADMIN', tenantId: TENANT_UUID },
     } as any;
@@ -898,13 +1066,19 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
     const ctx = {
       services: { ticketRouting: mockService },
       prisma: {
-        ticket: { findFirst: vi.fn().mockResolvedValue({ id: TICKET_UUID, tenantId: TENANT_UUID, priority: 'LOW' }) },
+        ticket: {
+          findFirst: vi
+            .fn()
+            .mockResolvedValue({ id: TICKET_UUID, tenantId: TENANT_UUID, priority: 'LOW' }),
+        },
       },
       user: { userId: USER_UUID, email: 'test@test.com', role: 'ADMIN', tenantId: TENANT_UUID },
     } as any;
 
     const caller = routerModule.ticketRoutingRouter.createCaller(ctx);
-    await expect(caller.autoRoute({ ticketId: TICKET_UUID })).rejects.toThrow('No eligible agents available');
+    await expect(caller.autoRoute({ ticketId: TICKET_UUID })).rejects.toThrow(
+      'No eligible agents available'
+    );
   });
 
   // D7: autoRoute throws NOT_FOUND for unknown ticket
@@ -956,7 +1130,9 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
       user: { userId: USER_UUID, email: 'test@test.com', role: 'ADMIN', tenantId: TENANT_UUID },
     } as any;
     const caller = routerModule.ticketRoutingRouter.createCaller(ctx);
-    await expect(caller.autoRoute({ ticketId: TICKET_UUID })).rejects.toThrow('Ticket routing service not available');
+    await expect(caller.autoRoute({ ticketId: TICKET_UUID })).rejects.toThrow(
+      'Ticket routing service not available'
+    );
   });
 
   // D11: suggestAssignee throws INTERNAL_SERVER_ERROR when service missing
@@ -967,7 +1143,9 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
       user: { userId: USER_UUID, email: 'test@test.com', role: 'ADMIN', tenantId: TENANT_UUID },
     } as any;
     const caller = routerModule.ticketRoutingRouter.createCaller(ctx);
-    await expect(caller.suggestAssignee({ ticketId: TICKET_UUID })).rejects.toThrow('Ticket routing service not available');
+    await expect(caller.suggestAssignee({ ticketId: TICKET_UUID })).rejects.toThrow(
+      'Ticket routing service not available'
+    );
   });
 
   // D12: routeTicket throws when ticket not found
@@ -1008,8 +1186,20 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
     const mockPr = createMockPrisma();
     // Return agents where one has proficiency and one doesn't (null)
     mockPr.agentAvailability.findMany.mockResolvedValue([
-      { userId: AGENT_1_UUID, currentCapacity: 2, maxCapacity: 10, status: 'ONLINE', user: { id: AGENT_1_UUID, name: 'Agent 1' } },
-      { userId: AGENT_2_UUID, currentCapacity: 1, maxCapacity: 10, status: 'ONLINE', user: { id: AGENT_2_UUID, name: 'Agent 2' } },
+      {
+        userId: AGENT_1_UUID,
+        currentCapacity: 2,
+        maxCapacity: 10,
+        status: 'ONLINE',
+        user: { id: AGENT_1_UUID, name: 'Agent 1' },
+      },
+      {
+        userId: AGENT_2_UUID,
+        currentCapacity: 1,
+        maxCapacity: 10,
+        status: 'ONLINE',
+        user: { id: AGENT_2_UUID, name: 'Agent 2' },
+      },
     ]);
     (mockPr as any).agentSkill.findMany.mockResolvedValue([
       { userId: AGENT_1_UUID, skillName: 'billing', proficiency: 90, tenantId: TENANT_UUID },

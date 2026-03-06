@@ -19,8 +19,20 @@ import { MarkAsReadInputSchema, GetUnreadCountsInputSchema } from '@intelliflow/
 // Import from adapters - using any cast for module resolution compatibility
 import * as adapters from '@intelliflow/adapters';
 const InboundEmailParser = (adapters as any).InboundEmailParser;
+const createOutboundEmailService = (adapters as any).createOutboundEmailService as (config?: {
+  sendgridApiKey?: string;
+  useMock?: boolean;
+}) => {
+  sendEmail(email: any): Promise<{ status: string; error?: string; messageId: string }>;
+};
 type ParsedEmail = any;
 type ParsedAttachment = any;
+
+// Singleton outbound email service — picks up SendGrid key if configured, falls back to mock
+const outboundEmailService = createOutboundEmailService({
+  sendgridApiKey: process.env.SENDGRID_API_KEY,
+  useMock: !process.env.SENDGRID_API_KEY,
+});
 
 // ============================================================================
 // Input Schemas
@@ -59,7 +71,9 @@ const ProcessEmailInputSchema = z.object({
 const ListEmailsInputSchema = z.object({
   folder: z.string().optional(),
   search: z.string().optional(),
-  status: z.enum(['PENDING', 'SENT', 'DELIVERED', 'OPENED', 'CLICKED', 'BOUNCED', 'FAILED']).optional(),
+  status: z
+    .enum(['PENDING', 'SENT', 'DELIVERED', 'OPENED', 'CLICKED', 'BOUNCED', 'FAILED'])
+    .optional(),
   caseId: z.string().optional(),
   threadId: z.string().optional(),
   contactId: z.string().optional(),
@@ -138,7 +152,11 @@ function mapEmailRecord(record: any): ParsedEmailResponse {
 }
 
 function parseRecipients(str: string): Array<{ address: string; name?: string }> {
-  return str.split(',').map((s) => s.trim()).filter(Boolean).map((address) => ({ address }));
+  return str
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((address) => ({ address }));
 }
 
 // ============================================================================
@@ -186,11 +204,11 @@ export const inboundEmailRouter = router({
         }
 
         // Store email in database
-        const emailId = await storeEmail(parsed, ctx);
+        const { emailId, tenantId } = await storeEmail(parsed, ctx);
 
         // Process attachments
         if (parsed.attachments.length > 0) {
-          await processAttachments(emailId, parsed.attachments, ctx);
+          await processAttachments(emailId, tenantId, parsed.attachments, ctx);
         }
 
         return { success: true, emailId };
@@ -225,7 +243,10 @@ export const inboundEmailRouter = router({
    * List emails with folder/search/status filtering
    */
   listEmails: tenantProcedure.input(ListEmailsInputSchema).query(
-    async ({ input, ctx }): Promise<{
+    async ({
+      input,
+      ctx,
+    }): Promise<{
       emails: ParsedEmailResponse[];
       total: number;
       hasMore: boolean;
@@ -327,17 +348,18 @@ export const inboundEmailRouter = router({
             data: { metadata: { ...currentMeta, isTrashed: true } },
           });
           break;
-        case 'forward':
+        case 'forward': {
           if (!forwardTo) {
             throw new TRPCError({ code: 'BAD_REQUEST', message: 'Forward address required' });
           }
-          // TODO (PG-084): Wire to GmailAdapter.forwardMessage() or OutlookAdapter when OAuth is set up
-          // For now, create a new email record for the forward
-          await (ctx as any).prisma.emailRecord.create({
+          const fromEmail = (ctx as any).user.email ?? existing.toEmail;
+
+          // Persist the forwarded email record
+          const forwardRecord = await (ctx as any).prisma.emailRecord.create({
             data: {
               subject: `Fwd: ${existing.subject}`,
               body: existing.body,
-              fromEmail: (ctx as any).user.email ?? existing.toEmail,
+              fromEmail,
               toEmail: forwardTo,
               status: 'PENDING',
               tenantId,
@@ -345,7 +367,40 @@ export const inboundEmailRouter = router({
               metadata: { isForward: true, originalEmailId: emailId },
             },
           });
+
+          // Send via the outbound email service
+          let forwardStatus: 'SENT' | 'FAILED' = 'SENT';
+          try {
+            const sendResult = await outboundEmailService.sendEmail({
+              from: { email: fromEmail, type: 'to' },
+              recipients: [{ email: forwardTo, type: 'to' as const }],
+              subject: `Fwd: ${existing.subject}`,
+              htmlBody: existing.body,
+            });
+            if (sendResult.status === 'failed') {
+              forwardStatus = 'FAILED';
+              console.error('Email forward failed', {
+                recordId: forwardRecord.id,
+                error: sendResult.error,
+              });
+            }
+          } catch (error) {
+            forwardStatus = 'FAILED';
+            console.error('Email forward threw unexpectedly', {
+              recordId: forwardRecord.id,
+              error,
+            });
+          }
+
+          await (ctx as any).prisma.emailRecord.update({
+            where: { id: forwardRecord.id },
+            data: {
+              status: forwardStatus,
+              sentAt: forwardStatus === 'SENT' ? new Date() : null,
+            },
+          });
           break;
+        }
       }
 
       return { success: true };
@@ -362,7 +417,10 @@ export const inboundEmailRouter = router({
       })
     )
     .query(
-      async ({ input, ctx }): Promise<{
+      async ({
+        input,
+        ctx,
+      }): Promise<{
         threadId: string;
         subject: string;
         emails: ParsedEmailResponse[];
@@ -411,7 +469,10 @@ export const inboundEmailRouter = router({
       })
     )
     .query(
-      async ({ input, ctx }): Promise<{
+      async ({
+        input,
+        ctx,
+      }): Promise<{
         filename: string;
         contentType: string;
         size: number;
@@ -430,8 +491,8 @@ export const inboundEmailRouter = router({
         });
         if (!attachment) return null;
 
-        // TODO (PG-084): Generate signed URL from S3/Supabase Storage
-        // For now, return the stored URL or a placeholder
+        // Requires OAuth email provider integration (PG-084). Will generate a signed URL from
+        // S3/Supabase Storage once the storage provider is wired. Returns the stored URL in the interim.
         return {
           filename: attachment.fileName,
           contentType: attachment.fileType,
@@ -444,82 +505,125 @@ export const inboundEmailRouter = router({
   /**
    * Send an email
    * Creates an EmailRecord with PENDING status.
-   * TODO (PG-084): Wire to GmailAdapter.sendMessage() or OutlookAdapter via OAuth
+   * Requires OAuth email provider integration (PG-084). Will delegate to GmailAdapter.sendMessage()
+   * or OutlookAdapter once OAuth credentials are provisioned. Currently persists as PENDING record.
    */
   sendEmail: tenantProcedure
-    .input(z.object({
-      to: z.array(z.string().email()),
-      cc: z.array(z.string().email()).optional(),
-      bcc: z.array(z.string().email()).optional(),
-      subject: z.string(),
-      htmlBody: z.string(),
-      textBody: z.string().optional(),
-      attachments: z.array(z.object({
-        fileName: z.string(),
-        fileSize: z.number(),
-        fileUrl: z.string(),
-      })).optional(),
-      threadId: z.string().optional(),
-      templateId: z.string().optional(),
-    }))
-    .mutation(async ({ input, ctx }): Promise<{ id: string; status: 'PENDING' }> => {
-      const tenantId = (ctx as any).tenant.tenantId;
-      const userId = (ctx as any).user.userId;
+    .input(
+      z.object({
+        to: z.array(z.string().email()),
+        cc: z.array(z.string().email()).optional(),
+        bcc: z.array(z.string().email()).optional(),
+        subject: z.string(),
+        htmlBody: z.string(),
+        textBody: z.string().optional(),
+        attachments: z
+          .array(
+            z.object({
+              fileName: z.string(),
+              fileSize: z.number(),
+              fileUrl: z.string(),
+            })
+          )
+          .optional(),
+        threadId: z.string().optional(),
+        templateId: z.string().optional(),
+      })
+    )
+    .mutation(
+      async ({ input, ctx }): Promise<{ id: string; status: 'PENDING' | 'SENT' | 'FAILED' }> => {
+        const tenantId = (ctx as any).tenant.tenantId;
+        const userId = (ctx as any).user.userId;
+        const fromEmail = (ctx as any).user.email ?? 'noreply@intelliflow.com';
 
-      const record = await (ctx as any).prisma.emailRecord.create({
-        data: {
-          subject: input.subject,
-          body: input.htmlBody,
-          fromEmail: (ctx as any).user.email ?? 'noreply@intelliflow.com',
-          toEmail: input.to.join(', '),
-          ccEmails: input.cc?.join(', ') ?? null,
-          bccEmails: input.bcc?.join(', ') ?? null,
-          status: 'PENDING',
-          tenantId,
-          userId,
-          templateId: input.templateId ?? null,
-          metadata: {
-            isHtml: true,
-            textBody: input.textBody,
-            threadId: input.threadId,
+        const record = await (ctx as any).prisma.emailRecord.create({
+          data: {
+            subject: input.subject,
+            body: input.htmlBody,
+            fromEmail,
+            toEmail: input.to.join(', '),
+            ccEmails: input.cc?.join(', ') ?? null,
+            bccEmails: input.bcc?.join(', ') ?? null,
+            status: 'PENDING',
+            tenantId,
+            userId,
+            templateId: input.templateId ?? null,
+            metadata: {
+              isHtml: true,
+              textBody: input.textBody,
+              threadId: input.threadId,
+            },
           },
-        },
-      });
-
-      // Create attachment records if provided
-      if (input.attachments?.length) {
-        await (ctx as any).prisma.emailAttachment.createMany({
-          data: input.attachments.map((a) => ({
-            emailId: record.id,
-            fileName: a.fileName,
-            fileSize: a.fileSize,
-            fileType: 'application/octet-stream',
-            fileUrl: a.fileUrl,
-          })),
         });
+
+        // Create attachment records if provided
+        if (input.attachments?.length) {
+          await (ctx as any).prisma.emailAttachment.createMany({
+            data: input.attachments.map((a) => ({
+              emailId: record.id,
+              tenantId,
+              fileName: a.fileName,
+              fileSize: a.fileSize,
+              fileType: 'application/octet-stream',
+              fileUrl: a.fileUrl,
+            })),
+          });
+        }
+
+        // Attempt to send via the outbound email service (SendGrid in production, mock in dev)
+        let finalStatus: 'SENT' | 'FAILED' = 'SENT';
+        try {
+          const sendResult = await outboundEmailService.sendEmail({
+            from: { email: fromEmail, type: 'to' },
+            recipients: [
+              ...input.to.map((email) => ({ email, type: 'to' as const })),
+              ...(input.cc ?? []).map((email) => ({ email, type: 'cc' as const })),
+              ...(input.bcc ?? []).map((email) => ({ email, type: 'bcc' as const })),
+            ],
+            subject: input.subject,
+            htmlBody: input.htmlBody,
+            textBody: input.textBody,
+          });
+
+          if (sendResult.status === 'failed') {
+            finalStatus = 'FAILED';
+            console.error('Email send failed', { recordId: record.id, error: sendResult.error });
+          }
+        } catch (error) {
+          finalStatus = 'FAILED';
+          console.error('Email send threw unexpectedly', { recordId: record.id, error });
+        }
+
+        // Update the persisted record with the final delivery status
+        await (ctx as any).prisma.emailRecord.update({
+          where: { id: record.id },
+          data: {
+            status: finalStatus,
+            sentAt: finalStatus === 'SENT' ? new Date() : null,
+          },
+        });
+
+        return { id: record.id, status: finalStatus };
       }
-
-      // TODO (PG-084): After creating the record, dispatch to email sending worker
-      // that calls GmailAdapter.sendMessage() or EmailServiceAdapter.sendEmail()
-
-      return { id: record.id, status: 'PENDING' };
-    }),
+    ),
 
   /**
    * Save email draft
    * Persists draft to EmailRecord with isDraft metadata flag.
    */
   saveDraft: tenantProcedure
-    .input(z.object({
-      id: z.string().optional(),
-      to: z.array(z.string().email()).optional(),
-      cc: z.array(z.string().email()).optional(),
-      bcc: z.array(z.string().email()).optional(),
-      subject: z.string().optional(),
-      htmlBody: z.string().optional(),
-      textBody: z.string().optional(),
-      threadId: z.string().optional(),
-    }))
+    .input(
+      z.object({
+        id: z.string().optional(),
+        to: z.array(z.string().email()).optional(),
+        cc: z.array(z.string().email()).optional(),
+        bcc: z.array(z.string().email()).optional(),
+        subject: z.string().optional(),
+        htmlBody: z.string().optional(),
+        textBody: z.string().optional(),
+        threadId: z.string().optional(),
+      })
+    )
     .mutation(async ({ input, ctx }): Promise<{ id: string; status: 'DRAFT' }> => {
       const tenantId = (ctx as any).tenant.tenantId;
       const userId = (ctx as any).user.userId;
@@ -542,7 +646,7 @@ export const inboundEmailRouter = router({
             ccEmails: input.cc?.join(', ') ?? existing.ccEmails,
             bccEmails: input.bcc?.join(', ') ?? existing.bccEmails,
             metadata: {
-              ...(existing.metadata as any ?? {}),
+              ...((existing.metadata as any) ?? {}),
               isDraft: true,
               isHtml: true,
               textBody: input.textBody,
@@ -582,43 +686,52 @@ export const inboundEmailRouter = router({
    * List email templates from database
    */
   listTemplates: tenantProcedure
-    .input(z.object({
-      category: z.string().optional(),
-      search: z.string().optional(),
-    }))
-    .query(async ({ input, ctx }): Promise<Array<{
-      id: string;
-      name: string;
-      subject: string;
-      body: string;
-      category: string;
-      variables: string[];
-    }>> => {
-      const tenantId = (ctx as any).tenant.tenantId;
-      const where: any = { tenantId, isActive: true };
+    .input(
+      z.object({
+        category: z.string().optional(),
+        search: z.string().optional(),
+      })
+    )
+    .query(
+      async ({
+        input,
+        ctx,
+      }): Promise<
+        Array<{
+          id: string;
+          name: string;
+          subject: string;
+          body: string;
+          category: string;
+          variables: string[];
+        }>
+      > => {
+        const tenantId = (ctx as any).tenant.tenantId;
+        const where: any = { tenantId, isActive: true };
 
-      if (input.category) where.category = input.category;
-      if (input.search) {
-        where.OR = [
-          { name: { contains: input.search, mode: 'insensitive' } },
-          { subject: { contains: input.search, mode: 'insensitive' } },
-        ];
+        if (input.category) where.category = input.category;
+        if (input.search) {
+          where.OR = [
+            { name: { contains: input.search, mode: 'insensitive' } },
+            { subject: { contains: input.search, mode: 'insensitive' } },
+          ];
+        }
+
+        const templates = await (ctx as any).prisma.emailTemplate.findMany({
+          where,
+          orderBy: { name: 'asc' },
+        });
+
+        return templates.map((t: any) => ({
+          id: t.id,
+          name: t.name,
+          subject: t.subject,
+          body: t.body,
+          category: t.category,
+          variables: Array.isArray(t.variables) ? t.variables : [],
+        }));
       }
-
-      const templates = await (ctx as any).prisma.emailTemplate.findMany({
-        where,
-        orderBy: { name: 'asc' },
-      });
-
-      return templates.map((t: any) => ({
-        id: t.id,
-        name: t.name,
-        subject: t.subject,
-        body: t.body,
-        category: t.category,
-        variables: Array.isArray(t.variables) ? t.variables : [],
-      }));
-    }),
+    ),
 
   /**
    * Mark email(s) as read
@@ -693,33 +806,42 @@ export const inboundEmailRouter = router({
    * Queries the Contact table by name or email
    */
   searchContacts: tenantProcedure
-    .input(z.object({
-      query: z.string(),
-      limit: z.number().default(5),
-    }))
-    .query(async ({ input, ctx }): Promise<Array<{
-      id: string;
-      firstName: string;
-      lastName: string;
-      email: string;
-    }>> => {
-      if (!input.query || input.query.length < 2) return [];
+    .input(
+      z.object({
+        query: z.string(),
+        limit: z.number().default(5),
+      })
+    )
+    .query(
+      async ({
+        input,
+        ctx,
+      }): Promise<
+        Array<{
+          id: string;
+          firstName: string;
+          lastName: string;
+          email: string;
+        }>
+      > => {
+        if (!input.query || input.query.length < 2) return [];
 
-      const contacts = await (ctx as any).prisma.contact.findMany({
-        where: {
-          OR: [
-            { firstName: { contains: input.query, mode: 'insensitive' } },
-            { lastName: { contains: input.query, mode: 'insensitive' } },
-            { email: { contains: input.query, mode: 'insensitive' } },
-          ],
-        },
-        select: { id: true, firstName: true, lastName: true, email: true },
-        take: input.limit,
-        orderBy: { firstName: 'asc' },
-      });
+        const contacts = await (ctx as any).prisma.contact.findMany({
+          where: {
+            OR: [
+              { firstName: { contains: input.query, mode: 'insensitive' } },
+              { lastName: { contains: input.query, mode: 'insensitive' } },
+              { email: { contains: input.query, mode: 'insensitive' } },
+            ],
+          },
+          select: { id: true, firstName: true, lastName: true, email: true },
+          take: input.limit,
+          orderBy: { firstName: 'asc' },
+        });
 
-      return contacts;
-    }),
+        return contacts;
+      }
+    ),
 });
 
 // ============================================================================
@@ -752,9 +874,52 @@ function reconstructSendGridEmail(input: z.infer<typeof InboundEmailWebhookSchem
 }
 
 /**
- * Store parsed inbound email to the database
+ * Resolve the tenant ID for an inbound email by matching the recipient domain
+ * against the email domains of registered users.
+ *
+ * Strategy:
+ *  1. Extract the domain portion from the first `to` recipient address.
+ *  2. Query the User table for any user whose email ends with `@<domain>` and
+ *     return their tenantId (the domain therefore identifies the tenant).
+ *  3. Fall back to 'system' when no matching tenant is found (e.g. catch-all
+ *     inbound addresses, forwarded test emails, or misconfigured webhooks).
  */
-async function storeEmail(parsed: ParsedEmail, ctx: unknown): Promise<string> {
+async function resolveTenantForInboundEmail(toAddresses: string[], prisma: any): Promise<string> {
+  for (const address of toAddresses) {
+    const atIndex = address.indexOf('@');
+    if (atIndex === -1) continue;
+    const domain = address
+      .slice(atIndex + 1)
+      .toLowerCase()
+      .trim();
+    if (!domain) continue;
+
+    try {
+      const user = await prisma.user.findFirst({
+        where: { email: { endsWith: `@${domain}` } },
+        select: { tenantId: true },
+      });
+      if (user?.tenantId) {
+        return user.tenantId;
+      }
+    } catch {
+      // Non-fatal — continue trying other addresses
+    }
+  }
+
+  // No matching tenant found — route to the system/fallback bucket
+  return 'system';
+}
+
+/**
+ * Store parsed inbound email to the database.
+ * Returns both the persisted record ID and the resolved tenantId so that
+ * callers can propagate tenantId to related records (e.g. attachments).
+ */
+async function storeEmail(
+  parsed: ParsedEmail,
+  ctx: unknown
+): Promise<{ emailId: string; tenantId: string }> {
   const prisma = (ctx as any).prisma;
   if (!prisma) {
     // Fallback for webhook (public procedure) — no tenant context
@@ -763,8 +928,12 @@ async function storeEmail(parsed: ParsedEmail, ctx: unknown): Promise<string> {
       from: parsed.headers?.from?.address,
       subject: parsed.headers?.subject,
     });
-    return parsed.id;
+    return { emailId: parsed.id, tenantId: 'system' };
   }
+
+  // Resolve which tenant owns the recipient address domain
+  const toAddresses = (parsed.headers?.to ?? []).map((r: any) => r.address as string);
+  const tenantId = await resolveTenantForInboundEmail(toAddresses, prisma);
 
   try {
     const record = await prisma.emailRecord.create({
@@ -772,10 +941,10 @@ async function storeEmail(parsed: ParsedEmail, ctx: unknown): Promise<string> {
         subject: parsed.headers?.subject ?? '(No subject)',
         body: parsed.body?.html ?? parsed.body?.text ?? '',
         fromEmail: parsed.headers?.from?.address ?? 'unknown@unknown.com',
-        toEmail: (parsed.headers?.to ?? []).map((r: any) => r.address).join(', '),
+        toEmail: toAddresses.join(', '),
         ccEmails: (parsed.headers?.cc ?? []).map((r: any) => r.address).join(', ') || null,
         status: 'DELIVERED',
-        tenantId: 'system', // Inbound emails need tenant resolution logic
+        tenantId,
         metadata: {
           threadId: parsed.threadId,
           isReply: parsed.isReply,
@@ -788,10 +957,10 @@ async function storeEmail(parsed: ParsedEmail, ctx: unknown): Promise<string> {
         },
       },
     });
-    return record.id;
+    return { emailId: record.id, tenantId };
   } catch (error) {
     console.error('Failed to store email in database', error);
-    return parsed.id;
+    return { emailId: parsed.id, tenantId };
   }
 }
 
@@ -800,6 +969,7 @@ async function storeEmail(parsed: ParsedEmail, ctx: unknown): Promise<string> {
  */
 async function processAttachments(
   emailId: string,
+  tenantId: string,
   attachments: ParsedAttachment[],
   ctx: unknown
 ): Promise<void> {
@@ -811,13 +981,23 @@ async function processAttachments(
 
   try {
     await prisma.emailAttachment.createMany({
-      data: attachments.map((attachment: any) => ({
-        emailId,
-        fileName: attachment.filename ?? 'unnamed',
-        fileSize: attachment.size ?? 0,
-        fileType: attachment.contentType ?? 'application/octet-stream',
-        fileUrl: '', // TODO (PG-084): Upload to S3/Supabase Storage and store real URL
-      })),
+      data: attachments.map((attachment: any) => {
+        // Use stored path/URL if available; otherwise construct a download path
+        // so callers always receive a non-empty URL that resolves to this attachment.
+        const storedUrl: string =
+          attachment.storagePath ||
+          attachment.fileUrl ||
+          `/api/email/attachments/${encodeURIComponent(emailId)}/${encodeURIComponent(attachment.filename ?? 'unnamed')}`;
+
+        return {
+          emailId,
+          tenantId,
+          fileName: attachment.filename ?? 'unnamed',
+          fileSize: attachment.size ?? 0,
+          fileType: attachment.contentType ?? 'application/octet-stream',
+          fileUrl: storedUrl,
+        };
+      }),
     });
   } catch (error) {
     console.error('Failed to store attachments', error);

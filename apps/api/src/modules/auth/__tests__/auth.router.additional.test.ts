@@ -108,9 +108,7 @@ describe('authRouter additional coverage', () => {
       const ctx = createPublicContext();
       const caller = authRouter.createCaller(ctx);
 
-      await expect(
-        caller.oauthCallback({ code: 'invalid-code' })
-      ).rejects.toThrow('Invalid code');
+      await expect(caller.oauthCallback({ code: 'invalid-code' })).rejects.toThrow('Invalid code');
     });
   });
 
@@ -272,7 +270,10 @@ describe('authRouter additional coverage', () => {
 
   describe('setupMfa - SMS send failure', () => {
     it('should throw INTERNAL_SERVER_ERROR when SMS send fails', async () => {
-      mockMfaService.sendSmsOtp.mockResolvedValue({ success: false, error: 'Provider unavailable' });
+      mockMfaService.sendSmsOtp.mockResolvedValue({
+        success: false,
+        error: 'Provider unavailable',
+      });
       const ctx = createTestContext();
       const caller = authRouter.createCaller(ctx);
 

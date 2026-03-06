@@ -546,7 +546,7 @@ describe('KeyRotationService - Comprehensive Tests', () => {
     it('should log successful rotation to audit logger', async () => {
       const mockAuditLogger = {
         log: vi.fn().mockResolvedValue(undefined),
-      } as unknown as AuditLogger;
+      } as any; // test-only mock data
 
       const store = new InMemoryKeyVersionStore();
       const service = new KeyRotationService(
@@ -573,7 +573,7 @@ describe('KeyRotationService - Comprehensive Tests', () => {
     it('should log failed rotation to audit logger', async () => {
       const mockAuditLogger = {
         log: vi.fn().mockResolvedValue(undefined),
-      } as unknown as AuditLogger;
+      } as any; // test-only mock data
 
       const badStore: KeyVersionStore = {
         getCurrentVersion: () => Promise.resolve(1),

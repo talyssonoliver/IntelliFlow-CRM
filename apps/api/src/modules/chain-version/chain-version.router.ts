@@ -293,4 +293,51 @@ export const chainVersionRouter = createTRPCRouter({
       const chainVersionService = getChainVersionService(ctx);
       return chainVersionService.compareVersions(input.versionIdA, input.versionIdB);
     }),
+
+  // ===========================================================================
+  // Zep Memory Budget
+  // ===========================================================================
+
+  /**
+   * Get Zep episode/memory budget for the current tenant
+   *
+   * Reads budget configuration from environment variables:
+   *   ZEP_EPISODE_BUDGET   — total episode capacity (default: 1000)
+   *   ZEP_EPISODE_USED     — used episodes (default: 0; override in staging/prod via metering)
+   *   ZEP_WARNING_THRESHOLD — warning threshold (default: 80% of total)
+   *   ZEP_LIMIT_THRESHOLD  — hard limit threshold (default: 95% of total)
+   *
+   * SECURITY: Uses protectedProcedure (user must be authenticated)
+   *
+   * @implements PG-128 (Zep Budget UI)
+   */
+  getZepBudget: protectedProcedure.query(async () => {
+    const total = parseInt(process.env.ZEP_EPISODE_BUDGET ?? '1000', 10);
+    const used = parseInt(process.env.ZEP_EPISODE_USED ?? '0', 10);
+    const remaining = Math.max(0, total - used);
+
+    const warningThreshold = parseInt(
+      process.env.ZEP_WARNING_THRESHOLD ?? String(Math.floor(total * 0.8)),
+      10
+    );
+    const limitThreshold = parseInt(
+      process.env.ZEP_LIMIT_THRESHOLD ?? String(Math.floor(total * 0.95)),
+      10
+    );
+
+    const isWarning = used >= warningThreshold;
+    const isLimited = used >= limitThreshold;
+
+    return {
+      used,
+      remaining,
+      total,
+      warningThreshold,
+      limitThreshold,
+      isWarning,
+      isLimited,
+      isPersisted: false,
+      lastSyncedAt: null as string | null,
+    };
+  }),
 });

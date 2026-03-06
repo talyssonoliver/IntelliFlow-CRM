@@ -89,6 +89,7 @@ const createAppointmentSchema = z.object({
   recurrence: recurrenceSchema,
   reminderMinutes: z.number().min(0).optional(),
   forceOverrideConflicts: z.boolean().optional().default(false),
+  calendarId: z.string().optional().nullable(),
 });
 
 const updateAppointmentSchema = z.object({
@@ -99,6 +100,7 @@ const updateAppointmentSchema = z.object({
   appointmentType: appointmentTypeSchema.optional(),
   notes: z.string().max(5000).optional(),
   reminderMinutes: z.number().min(0).optional(),
+  calendarId: z.string().optional().nullable(),
 });
 
 const rescheduleSchema = z.object({
@@ -142,6 +144,7 @@ const listAppointmentsSchema = z.object({
   startTimeFrom: z.coerce.date().optional(),
   startTimeTo: z.coerce.date().optional(),
   caseId: z.string().optional(),
+  calendarId: z.string().optional(),
   sortBy: z.enum(['startTime', 'createdAt', 'updatedAt']).optional().default('startTime'),
   sortOrder: z.enum(['asc', 'desc']).optional().default('asc'),
 });
@@ -418,6 +421,7 @@ export const appointmentsRouter = createTRPCRouter({
         bufferMinutesAfter: input.bufferMinutesAfter,
         recurrence: input.recurrence ? input.recurrence : undefined,
         reminderMinutes: input.reminderMinutes,
+        calendarId: input.calendarId || null,
         organizerId: ctx.user.userId,
         tenantId,
         attendees: {
@@ -437,7 +441,9 @@ export const appointmentsRouter = createTRPCRouter({
     console.log(`[appointments.create] Domain-validated and scheduled in ${duration.toFixed(2)}ms`);
 
     // IFC-158: Fire-and-forget ICS, reminders, audit trail
-    onAppointmentCreated(appointment, ctx.user.userId).catch(() => {});
+    onAppointmentCreated(appointment, ctx.user.userId).catch((err) =>
+      console.error('[appointments.router] Side-effect failed:', err)
+    );
 
     // Notify organizer of scheduled appointment
     createNotification(ctx.prisma, {
@@ -451,7 +457,7 @@ export const appointmentsRouter = createTRPCRouter({
       entityId: appointment.id,
       entityName: input.title,
       actionUrl: `/calendar/${appointment.id}`,
-    }).catch(() => {});
+    }).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
 
     return appointment;
   }),
@@ -490,6 +496,7 @@ export const appointmentsRouter = createTRPCRouter({
       startTimeFrom,
       startTimeTo,
       caseId,
+      calendarId,
       sortBy,
       sortOrder,
     } = input;
@@ -514,6 +521,10 @@ export const appointmentsRouter = createTRPCRouter({
 
     if (caseId) {
       where.linkedCases = { some: { caseId } };
+    }
+
+    if (calendarId !== undefined) {
+      where.calendarId = calendarId;
     }
 
     const [appointments, total] = await Promise.all([
@@ -730,7 +741,7 @@ export const appointmentsRouter = createTRPCRouter({
       existing.endTime,
       ctx.user.userId,
       input.reason
-    ).catch(() => {});
+    ).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
 
     // Notify organizer of rescheduled appointment
     createNotification(ctx.prisma, {
@@ -744,7 +755,7 @@ export const appointmentsRouter = createTRPCRouter({
       entityId: appointment.id,
       entityName: existing.title,
       actionUrl: `/calendar/${appointment.id}`,
-    }).catch(() => {});
+    }).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
 
     return {
       appointment,
@@ -883,7 +894,9 @@ export const appointmentsRouter = createTRPCRouter({
       });
 
       // IFC-158: Fire-and-forget ICS cancellation, cancel reminders, audit trail
-      onAppointmentCancelled(appointment, ctx.user.userId, input.reason).catch(() => {});
+      onAppointmentCancelled(appointment, ctx.user.userId, input.reason).catch((err) =>
+        console.error('[appointments.router] Side-effect failed:', err)
+      );
 
       return appointment;
     }),

@@ -248,20 +248,20 @@ describe('Timeline Router - Additional Coverage', () => {
         id: 'doc-1',
         title: 'Contract.pdf',
         description: 'Main contract document',
-        created_at: new Date('2025-01-10'),
-        updated_at: new Date('2025-01-11'),
-        created_by: TEST_UUIDS.user1,
-        updated_by: TEST_UUIDS.user1,
-        mime_type: 'application/pdf',
-        version_major: 1,
-        version_minor: 0,
-        version_patch: 0,
+        createdAt: new Date('2025-01-10'),
+        updatedAt: new Date('2025-01-11'),
+        createdBy: TEST_UUIDS.user1,
+        updatedBy: TEST_UUIDS.user1,
+        mimeType: 'application/pdf',
+        versionMajor: 1,
+        versionMinor: 0,
+        versionPatch: 0,
         classification: 'CONFIDENTIAL',
-        document_type: 'CONTRACT',
+        documentType: 'CONTRACT',
         status: 'ACTIVE',
-        deleted_at: null,
-        parent_version_id: null,
-        related_case_id: TEST_UUIDS.opportunity1,
+        deletedAt: null,
+        parentVersionId: null,
+        relatedCaseId: TEST_UUIDS.opportunity1,
       };
 
       prismaMock.task.findMany.mockResolvedValue([]);
@@ -295,20 +295,20 @@ describe('Timeline Router - Additional Coverage', () => {
         id: 'doc-v2',
         title: 'Contract.pdf',
         description: 'Updated contract',
-        created_at: new Date('2025-01-10'),
-        updated_at: new Date('2025-01-15'),
-        created_by: TEST_UUIDS.user1,
-        updated_by: TEST_UUIDS.user2,
-        mime_type: 'application/pdf',
-        version_major: 2,
-        version_minor: 0,
-        version_patch: 1,
+        createdAt: new Date('2025-01-10'),
+        updatedAt: new Date('2025-01-15'),
+        createdBy: TEST_UUIDS.user1,
+        updatedBy: TEST_UUIDS.user2,
+        mimeType: 'application/pdf',
+        versionMajor: 2,
+        versionMinor: 0,
+        versionPatch: 1,
         classification: 'CONFIDENTIAL',
-        document_type: 'CONTRACT',
+        documentType: 'CONTRACT',
         status: 'ACTIVE',
-        deleted_at: null,
-        parent_version_id: 'doc-1',
-        related_case_id: TEST_UUIDS.opportunity1,
+        deletedAt: null,
+        parentVersionId: 'doc-1',
+        relatedCaseId: TEST_UUIDS.opportunity1,
       };
 
       prismaMock.task.findMany.mockResolvedValue([]);
@@ -637,10 +637,14 @@ describe('Timeline Router - Additional Coverage', () => {
   // ===========================================================================
   describe('getStats - additional coverage', () => {
     it('should return stats with opportunityId including appointments and documents', async () => {
-      prismaMock.task.count
-        .mockResolvedValueOnce(5) // total
-        .mockResolvedValueOnce(2) // completed
-        .mockResolvedValueOnce(1); // overdue
+      // getStats calls task.count 3 times concurrently in Promise.all; distinguish by args
+      (prismaMock.task.count as any).mockImplementation(
+        (args?: { where?: { status?: unknown; dueDate?: unknown } }) => {
+          if (args?.where?.dueDate) return Promise.resolve(1); // overdue
+          if (args?.where?.status === 'COMPLETED') return Promise.resolve(2); // completed
+          return Promise.resolve(5); // total
+        }
+      );
       prismaMock.appointment.count.mockResolvedValue(3);
       prismaMock.domainEvent.count.mockResolvedValue(2);
       prismaMock.caseDocument.count.mockResolvedValue(10);

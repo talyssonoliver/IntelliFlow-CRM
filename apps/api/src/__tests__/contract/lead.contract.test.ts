@@ -417,7 +417,7 @@ describe('Lead Router Contract Tests', () => {
       const ctx = createTestContext();
       const callerWithService = leadRouter.createCaller(ctx);
 
-      ctx.services!.lead!.updateLeadContactInfo = vi.fn().mockResolvedValue({
+      ctx.services!.lead!.updateLead = vi.fn().mockResolvedValue({
         isSuccess: true,
         isFailure: false,
         value: mockDomainLead,
@@ -431,17 +431,21 @@ describe('Lead Router Contract Tests', () => {
       expect(result.firstName).toBe('Updated');
     });
 
-    it('should validate status transitions', async () => {
-      // Status transitions don't use LeadService, still use Prisma directly
-      prismaMock.lead.findUnique.mockResolvedValue(mockLead);
-      prismaMock.lead.update.mockResolvedValue({
-        ...mockLead,
-        status: 'QUALIFIED' as const,
+    it('should validate status transitions via qualify procedure', async () => {
+      // Status transitions use dedicated procedures (qualify, bulkUpdateStatus)
+      // not the general update procedure
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.qualifyLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: { ...mockLead, status: 'QUALIFIED' as const },
       });
 
-      const result = await caller.update({
-        id: TEST_UUIDS.lead1,
-        status: 'QUALIFIED',
+      const result = await callerWithService.qualify({
+        leadId: TEST_UUIDS.lead1,
+        reason: 'Met qualification criteria in demo call',
       });
 
       expect(result.status).toBe('QUALIFIED');

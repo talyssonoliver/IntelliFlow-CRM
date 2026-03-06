@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { TRPCError } from '@trpc/server';
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@intelliflow/db';
 import {
   createSecurityContextMiddleware,
   requirePermission,
@@ -90,7 +90,7 @@ describe('Security Middleware', () => {
             return null;
           }),
         },
-      } as unknown as Request,
+      } as any,
       res: undefined,
       services: {} as Context['services'],
       adapters: {} as Context['adapters'],
@@ -183,7 +183,7 @@ describe('Security Middleware', () => {
               return null;
             }),
           },
-        } as unknown as Request,
+        } as any,
       };
 
       await middleware({
@@ -230,7 +230,7 @@ describe('Security Middleware', () => {
         ...mockContext,
         req: {
           headers: {},
-        } as unknown as Request,
+        } as any,
       };
 
       await middleware({

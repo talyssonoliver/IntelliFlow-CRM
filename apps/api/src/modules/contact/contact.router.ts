@@ -62,6 +62,78 @@ function getContactService(ctx: Context) {
   return ctx.services.contact;
 }
 
+// ── Error-mapping helpers (reduce cognitive complexity in procedures) ──
+
+function throwContactCreateError(message: string): never {
+  if (message.includes('already exists')) {
+    throw new TRPCError({ code: 'CONFLICT', message });
+  }
+  if (message.includes('not found')) {
+    throw new TRPCError({ code: 'NOT_FOUND', message });
+  }
+  throw new TRPCError({ code: 'BAD_REQUEST', message });
+}
+
+function throwContactAssociationError(message: string): never {
+  if (message.includes('not found')) {
+    throw new TRPCError({ code: 'NOT_FOUND', message });
+  }
+  if (message.includes('already associated')) {
+    throw new TRPCError({ code: 'CONFLICT', message });
+  }
+  throw new TRPCError({ code: 'BAD_REQUEST', message });
+}
+
+function throwContactLinkLeadError(message: string): never {
+  if (message.includes('not found')) {
+    throw new TRPCError({ code: 'NOT_FOUND', message });
+  }
+  if (message.includes('already linked') || message.includes('Unique constraint')) {
+    throw new TRPCError({ code: 'CONFLICT', message });
+  }
+  if (message.includes('same tenant')) {
+    throw new TRPCError({ code: 'FORBIDDEN', message });
+  }
+  throw new TRPCError({ code: 'BAD_REQUEST', message });
+}
+
+/**
+ * Handle account disassociation (null accountId) in update
+ */
+async function handleDisassociateAccount(
+  contactService: ReturnType<typeof getContactService>,
+  id: string,
+  userId: string
+): Promise<void> {
+  const result = await contactService.disassociateFromAccount(id, userId);
+  if (result.isFailure && !result.error.message.includes('not associated')) {
+    const msg = result.error.message;
+    throw new TRPCError({
+      code: msg.includes('not found') ? 'NOT_FOUND' : 'BAD_REQUEST',
+      message: msg,
+    });
+  }
+}
+
+/**
+ * Handle account association (non-null accountId) in update
+ */
+async function handleAssociateAccount(
+  contactService: ReturnType<typeof getContactService>,
+  id: string,
+  accountId: string,
+  userId: string
+): Promise<void> {
+  const result = await contactService.associateWithAccount(id, accountId, userId);
+  if (result.isFailure) {
+    const msg = result.error.message;
+    throw new TRPCError({
+      code: msg.includes('not found') ? 'NOT_FOUND' : 'BAD_REQUEST',
+      message: msg,
+    });
+  }
+}
+
 export const contactRouter = createTRPCRouter({
   /**
    * Create a new contact using ContactService
@@ -77,23 +149,7 @@ export const contactRouter = createTRPCRouter({
     });
 
     if (result.isFailure) {
-      const errorMessage = result.error.message;
-      if (errorMessage.includes('already exists')) {
-        throw new TRPCError({
-          code: 'CONFLICT',
-          message: errorMessage,
-        });
-      }
-      if (errorMessage.includes('not found')) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: errorMessage,
-        });
-      }
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: errorMessage,
-      });
+      throwContactCreateError(result.error.message);
     }
 
     return mapContactToResponse(result.value);
@@ -326,25 +382,35 @@ export const contactRouter = createTRPCRouter({
     const { id, accountId, ...data } = input;
     const contactService = getContactService(ctx);
 
-    // Handle contact info updates via service
-    if (
-      data.firstName ||
-      data.lastName ||
-      data.title ||
-      data.phone ||
-      data.department ||
-      data.status
-    ) {
+    // Build info update payload (all non-account, non-email fields)
+    const infoUpdates: Record<string, unknown> = {};
+    const infoFields = [
+      'firstName',
+      'lastName',
+      'title',
+      'department',
+      'status',
+      'streetAddress',
+      'city',
+      'zipCode',
+      'company',
+      'linkedInUrl',
+      'contactType',
+      'tags',
+      'contactNotes',
+    ] as const;
+    for (const field of infoFields) {
+      if (data[field] !== undefined) infoUpdates[field] = data[field];
+    }
+    // Special handling for phone Value Object
+    if (data.phone !== undefined) {
+      infoUpdates.phone = typeof data.phone === 'string' ? data.phone : data.phone?.toValue?.();
+    }
+
+    if (Object.keys(infoUpdates).length > 0) {
       const result = await contactService.updateContactInfo(
         id,
-        {
-          firstName: data.firstName,
-          lastName: data.lastName,
-          title: data.title,
-          phone: data.phone?.toValue?.() ?? (data.phone as string | undefined),
-          department: data.department,
-          status: data.status,
-        },
+        infoUpdates as any,
         typedCtx.tenant.userId
       );
 
@@ -359,27 +425,9 @@ export const contactRouter = createTRPCRouter({
     // Handle account association changes via service
     if (accountId !== undefined) {
       if (accountId === null) {
-        // Disassociate from account
-        const result = await contactService.disassociateFromAccount(id, typedCtx.tenant.userId);
-        if (result.isFailure && !result.error.message.includes('not associated')) {
-          throw new TRPCError({
-            code: result.error.message.includes('not found') ? 'NOT_FOUND' : 'BAD_REQUEST',
-            message: result.error.message,
-          });
-        }
+        await handleDisassociateAccount(contactService, id, typedCtx.tenant.userId);
       } else {
-        // Associate with new account
-        const result = await contactService.associateWithAccount(
-          id,
-          accountId,
-          typedCtx.tenant.userId
-        );
-        if (result.isFailure) {
-          throw new TRPCError({
-            code: result.error.message.includes('not found') ? 'NOT_FOUND' : 'BAD_REQUEST',
-            message: result.error.message,
-          });
-        }
+        await handleAssociateAccount(contactService, id, accountId, typedCtx.tenant.userId);
       }
     }
 
@@ -462,23 +510,7 @@ export const contactRouter = createTRPCRouter({
       );
 
       if (result.isFailure) {
-        const errorMessage = result.error.message;
-        if (errorMessage.includes('not found')) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: errorMessage,
-          });
-        }
-        if (errorMessage.includes('already associated')) {
-          throw new TRPCError({
-            code: 'CONFLICT',
-            message: errorMessage,
-          });
-        }
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: errorMessage,
-        });
+        throwContactAssociationError(result.error.message);
       }
 
       return mapContactToResponse(result.value);
@@ -501,10 +533,7 @@ export const contactRouter = createTRPCRouter({
       if (result.isFailure) {
         const errorMessage = result.error.message;
         if (errorMessage.includes('not found')) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: errorMessage,
-          });
+          throw new TRPCError({ code: 'NOT_FOUND', message: errorMessage });
         }
         if (errorMessage.includes('not associated')) {
           throw new TRPCError({
@@ -512,10 +541,7 @@ export const contactRouter = createTRPCRouter({
             message: 'Contact is not linked to any account',
           });
         }
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: errorMessage,
-        });
+        throw new TRPCError({ code: 'BAD_REQUEST', message: errorMessage });
       }
 
       return mapContactToResponse(result.value);
@@ -525,7 +551,6 @@ export const contactRouter = createTRPCRouter({
    * Get contact statistics using ContactService
    */
   stats: tenantProcedure.query(async ({ ctx }) => {
-    const typedCtx = getTenantContext(ctx);
     const contactService = getContactService(ctx);
 
     const stats = await contactService.getContactStatistics(ctx.user?.userId);
@@ -665,7 +690,7 @@ export const contactRouter = createTRPCRouter({
       ]);
 
       // Get account names for display
-      const accountIds = accountCounts.map((a) => a.accountId).filter(Boolean) as string[];
+      const accountIds = (accountCounts ?? []).map((a) => a.accountId).filter(Boolean) as string[];
       const accounts =
         accountIds.length > 0
           ? await typedCtx.prismaWithTenant.account.findMany({
@@ -676,14 +701,14 @@ export const contactRouter = createTRPCRouter({
       const accountMap = new Map(accounts.map((a) => [a.id, a.name]));
 
       return {
-        departments: departmentCounts
+        departments: (departmentCounts ?? [])
           .filter((d) => d.department)
           .map((d) => ({
             value: d.department as string,
             label: d.department as string,
             count: d._count,
           })),
-        accounts: accountCounts
+        accounts: (accountCounts ?? [])
           .filter((a) => a.accountId)
           .map((a) => ({
             value: a.accountId as string,
@@ -828,29 +853,7 @@ export const contactRouter = createTRPCRouter({
     );
 
     if (result.isFailure) {
-      const errorMessage = result.error.message;
-      if (errorMessage.includes('not found')) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: errorMessage,
-        });
-      }
-      if (errorMessage.includes('already linked') || errorMessage.includes('Unique constraint')) {
-        throw new TRPCError({
-          code: 'CONFLICT',
-          message: errorMessage,
-        });
-      }
-      if (errorMessage.includes('same tenant')) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: errorMessage,
-        });
-      }
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: errorMessage,
-      });
+      throwContactLinkLeadError(result.error.message);
     }
 
     return mapContactToResponse(result.value);

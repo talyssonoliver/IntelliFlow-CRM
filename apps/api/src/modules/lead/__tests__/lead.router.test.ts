@@ -203,8 +203,7 @@ describe('Lead Router', () => {
   });
 
   describe('update', () => {
-    it('should update lead with valid data', async () => {
-      // Mock Lead domain entity for update response
+    it('should update lead with valid data via updateLead service', async () => {
       const mockDomainLead = {
         id: { value: TEST_UUIDS.lead1 },
         email: { value: 'lead@example.com' },
@@ -224,8 +223,7 @@ describe('Lead Router', () => {
       const ctx = createTestContext();
       const callerWithService = leadRouter.createCaller(ctx);
 
-      // Mock LeadService.updateLeadContactInfo for contact info updates
-      ctx.services!.lead!.updateLeadContactInfo = vi.fn().mockResolvedValue({
+      ctx.services!.lead!.updateLead = vi.fn().mockResolvedValue({
         isSuccess: true,
         isFailure: false,
         value: mockDomainLead,
@@ -237,17 +235,65 @@ describe('Lead Router', () => {
       });
 
       expect(result.firstName).toBe('Updated');
+      expect(ctx.services!.lead!.updateLead).toHaveBeenCalledWith(
+        TEST_UUIDS.lead1,
+        expect.objectContaining({ firstName: 'Updated' })
+      );
+    });
+
+    it('should forward mixed contact + Lead 360 fields to service', async () => {
+      const mockDomainLead = {
+        id: { value: TEST_UUIDS.lead1 },
+        email: { value: 'lead@example.com' },
+        firstName: 'Jane',
+        lastName: 'Doe',
+        company: 'ACME Corp',
+        title: null,
+        phone: null,
+        source: 'WEBSITE' as const,
+        status: 'NEW' as const,
+        score: { value: 75, confidence: 0.8, tier: 'warm' as const },
+        ownerId: TEST_UUIDS.user1,
+        location: 'New York',
+        website: 'https://acme.com',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.updateLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainLead,
+      });
+
+      await callerWithService.update({
+        id: TEST_UUIDS.lead1,
+        firstName: 'Jane',
+        location: 'New York',
+        website: 'https://acme.com',
+      });
+
+      expect(ctx.services!.lead!.updateLead).toHaveBeenCalledWith(
+        TEST_UUIDS.lead1,
+        expect.objectContaining({
+          firstName: 'Jane',
+          location: 'New York',
+          website: 'https://acme.com',
+        })
+      );
     });
 
     it('should throw NOT_FOUND when updating non-existent lead', async () => {
       const ctx = createTestContext();
       const callerWithService = leadRouter.createCaller(ctx);
 
-      // Mock LeadService.updateLeadContactInfo returning not found error
-      ctx.services!.lead!.updateLeadContactInfo = vi.fn().mockResolvedValue({
+      ctx.services!.lead!.updateLead = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
-        error: { message: 'Lead not found' },
+        error: { message: 'Lead not found: ' + TEST_UUIDS.nonExistent },
       });
 
       await expect(
@@ -257,6 +303,83 @@ describe('Lead Router', () => {
           code: 'NOT_FOUND',
         })
       );
+    });
+
+    it('should throw PRECONDITION_FAILED when updating converted lead', async () => {
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.updateLead = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { message: 'Cannot update a converted lead' },
+      });
+
+      await expect(
+        callerWithService.update({ id: TEST_UUIDS.lead1, firstName: 'Test' })
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: 'PRECONDITION_FAILED',
+        })
+      );
+    });
+
+    it('should reject status in input via Zod schema', async () => {
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      await expect(
+        callerWithService.update({ id: TEST_UUIDS.lead1, status: 'QUALIFIED' } as any)
+      ).rejects.toThrow();
+    });
+
+    it('should reject email in input via Zod schema', async () => {
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      await expect(
+        callerWithService.update({ id: TEST_UUIDS.lead1, email: 'new@example.com' } as any)
+      ).rejects.toThrow();
+    });
+
+    it('should return consistent mapLeadToResponse shape', async () => {
+      const mockDomainLead = {
+        id: { value: TEST_UUIDS.lead1 },
+        email: { value: 'lead@example.com' },
+        firstName: 'John',
+        lastName: 'Doe',
+        company: 'ACME Corp',
+        title: 'CTO',
+        phone: null,
+        source: 'WEBSITE' as const,
+        status: 'NEW' as const,
+        score: { value: 50, confidence: 0.5, tier: 'warm' as const },
+        ownerId: TEST_UUIDS.user1,
+        tenantId: TEST_UUIDS.tenant,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.updateLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainLead,
+      });
+
+      const result = await callerWithService.update({
+        id: TEST_UUIDS.lead1,
+        location: 'Boston',
+      });
+
+      // Should include mapped response fields, not raw Prisma
+      expect(result).toHaveProperty('id');
+      expect(result).toHaveProperty('email');
+      expect(result).toHaveProperty('source');
+      expect(result).toHaveProperty('status');
+      expect(result).toHaveProperty('score');
     });
   });
 
@@ -580,7 +703,7 @@ describe('Lead Router', () => {
           userId: TEST_UUIDS.user1,
           email: 'test@example.com',
           role: 'USER' as const,
-          tenantId: undefined as unknown as string,
+          tenantId: undefined as any,
         },
       };
       const callerWithoutTenant = leadRouter.createCaller(ctxWithoutTenant);
@@ -688,16 +811,22 @@ describe('Lead Router', () => {
 
   describe('filterOptions', () => {
     it('should return filter options with counts', async () => {
-      (prismaMock.lead.groupBy as any)
-        .mockResolvedValueOnce([
-          { status: 'NEW', _count: 10 },
-          { status: 'QUALIFIED', _count: 5 },
-        ])
-        .mockResolvedValueOnce([
-          { source: 'WEBSITE', _count: 8 },
-          { source: 'REFERRAL', _count: 7 },
-        ])
-        .mockResolvedValueOnce([{ ownerId: TEST_UUIDS.user1, _count: 15 }]);
+      // filterOptions calls 3 groupBy concurrently via Promise.all; use mockImplementation
+      (prismaMock.lead.groupBy as any).mockImplementation((args: { by: string[] }) => {
+        if (args.by?.includes('status'))
+          return Promise.resolve([
+            { status: 'NEW', _count: 10 },
+            { status: 'QUALIFIED', _count: 5 },
+          ]);
+        if (args.by?.includes('source'))
+          return Promise.resolve([
+            { source: 'WEBSITE', _count: 8 },
+            { source: 'REFERRAL', _count: 7 },
+          ]);
+        if (args.by?.includes('ownerId'))
+          return Promise.resolve([{ ownerId: TEST_UUIDS.user1, _count: 15 }]);
+        return Promise.resolve([]);
+      });
 
       prismaMock.user.findMany.mockResolvedValue([
         { id: TEST_UUIDS.user1, name: 'John Doe', email: 'john@example.com' },
@@ -715,10 +844,12 @@ describe('Lead Router', () => {
     });
 
     it('should return filter options with search filter applied', async () => {
-      (prismaMock.lead.groupBy as any)
-        .mockResolvedValueOnce([{ status: 'NEW', _count: 5 }])
-        .mockResolvedValueOnce([{ source: 'WEBSITE', _count: 5 }])
-        .mockResolvedValueOnce([]);
+      (prismaMock.lead.groupBy as any).mockImplementation((args: { by: string[] }) => {
+        if (args.by?.includes('status')) return Promise.resolve([{ status: 'NEW', _count: 5 }]);
+        if (args.by?.includes('source')) return Promise.resolve([{ source: 'WEBSITE', _count: 5 }]);
+        if (args.by?.includes('ownerId')) return Promise.resolve([]);
+        return Promise.resolve([]);
+      });
 
       prismaMock.user.findMany.mockResolvedValue([]);
 
@@ -733,10 +864,14 @@ describe('Lead Router', () => {
     });
 
     it('should return filter options with status and source filters', async () => {
-      (prismaMock.lead.groupBy as any)
-        .mockResolvedValueOnce([{ status: 'QUALIFIED', _count: 3 }])
-        .mockResolvedValueOnce([{ source: 'WEBSITE', _count: 3 }])
-        .mockResolvedValueOnce([{ ownerId: TEST_UUIDS.user1, _count: 3 }]);
+      (prismaMock.lead.groupBy as any).mockImplementation((args: { by: string[] }) => {
+        if (args.by?.includes('status'))
+          return Promise.resolve([{ status: 'QUALIFIED', _count: 3 }]);
+        if (args.by?.includes('source')) return Promise.resolve([{ source: 'WEBSITE', _count: 3 }]);
+        if (args.by?.includes('ownerId'))
+          return Promise.resolve([{ ownerId: TEST_UUIDS.user1, _count: 3 }]);
+        return Promise.resolve([]);
+      });
 
       prismaMock.user.findMany.mockResolvedValue([
         { id: TEST_UUIDS.user1, name: null, email: 'user@example.com' },
@@ -757,10 +892,14 @@ describe('Lead Router', () => {
     });
 
     it('should filter by ownerId', async () => {
-      (prismaMock.lead.groupBy as any)
-        .mockResolvedValueOnce([{ status: 'NEW', _count: 2 }])
-        .mockResolvedValueOnce([{ source: 'REFERRAL', _count: 2 }])
-        .mockResolvedValueOnce([{ ownerId: TEST_UUIDS.user1, _count: 2 }]);
+      (prismaMock.lead.groupBy as any).mockImplementation((args: { by: string[] }) => {
+        if (args.by?.includes('status')) return Promise.resolve([{ status: 'NEW', _count: 2 }]);
+        if (args.by?.includes('source'))
+          return Promise.resolve([{ source: 'REFERRAL', _count: 2 }]);
+        if (args.by?.includes('ownerId'))
+          return Promise.resolve([{ ownerId: TEST_UUIDS.user1, _count: 2 }]);
+        return Promise.resolve([]);
+      });
 
       prismaMock.user.findMany.mockResolvedValue([
         { id: TEST_UUIDS.user1, name: 'Test User', email: 'test@example.com' },
@@ -778,10 +917,12 @@ describe('Lead Router', () => {
     });
 
     it('should handle empty owner list', async () => {
-      (prismaMock.lead.groupBy as any)
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce([]);
+      (prismaMock.lead.groupBy as any).mockImplementation((args: { by: string[] }) => {
+        if (args.by?.includes('status')) return Promise.resolve([]);
+        if (args.by?.includes('source')) return Promise.resolve([]);
+        if (args.by?.includes('ownerId')) return Promise.resolve([]);
+        return Promise.resolve([]);
+      });
 
       prismaMock.user.findMany.mockResolvedValue([]);
 
@@ -796,13 +937,16 @@ describe('Lead Router', () => {
     });
 
     it('should filter null ownerIds', async () => {
-      (prismaMock.lead.groupBy as any)
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce([
-          { ownerId: TEST_UUIDS.user1, _count: 5 },
-          { ownerId: null, _count: 2 }, // null ownerId should be filtered out
-        ]);
+      (prismaMock.lead.groupBy as any).mockImplementation((args: { by: string[] }) => {
+        if (args.by?.includes('status')) return Promise.resolve([]);
+        if (args.by?.includes('source')) return Promise.resolve([]);
+        if (args.by?.includes('ownerId'))
+          return Promise.resolve([
+            { ownerId: TEST_UUIDS.user1, _count: 5 },
+            { ownerId: null, _count: 2 }, // null ownerId should be filtered out
+          ]);
+        return Promise.resolve([]);
+      });
 
       prismaMock.user.findMany.mockResolvedValue([
         { id: TEST_UUIDS.user1, name: 'User', email: 'user@example.com' },
@@ -846,7 +990,7 @@ describe('Lead Router', () => {
       const ctx = createTestContext();
       const callerWithService = leadRouter.createCaller(ctx);
 
-      ctx.services!.lead!.updateLeadContactInfo = vi.fn().mockResolvedValue({
+      ctx.services!.lead!.updateLead = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
         error: { message: 'Invalid phone number format' },
@@ -862,33 +1006,61 @@ describe('Lead Router', () => {
       );
     });
 
-    it('update should use Prisma directly for non-contact fields', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(mockLead);
-      prismaMock.lead.update.mockResolvedValue({
-        ...mockLead,
-        status: 'QUALIFIED',
-      } as any);
+    it('update should route Lead 360-only fields through service', async () => {
+      const mockDomainLead = {
+        id: { value: TEST_UUIDS.lead1 },
+        email: { value: 'lead@example.com' },
+        firstName: 'John',
+        lastName: 'Doe',
+        company: 'ACME Corp',
+        title: null,
+        phone: null,
+        source: 'WEBSITE' as const,
+        status: 'NEW' as const,
+        score: { value: 50, confidence: 0.5, tier: 'warm' as const },
+        ownerId: TEST_UUIDS.user1,
+        tenantId: TEST_UUIDS.tenant,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
       const ctx = createTestContext();
       const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.updateLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainLead,
+      });
 
       const result = await callerWithService.update({
         id: TEST_UUIDS.lead1,
-        status: 'QUALIFIED',
+        location: 'San Francisco',
+        estimatedValue: 10000,
       });
 
-      expect(result.status).toBe('QUALIFIED');
-      expect(prismaMock.lead.update).toHaveBeenCalled();
+      expect(ctx.services!.lead!.updateLead).toHaveBeenCalledWith(
+        TEST_UUIDS.lead1,
+        expect.objectContaining({
+          location: 'San Francisco',
+          estimatedValue: 10000,
+        })
+      );
+      expect(result).toHaveProperty('id');
     });
 
-    it('update should throw NOT_FOUND when lead does not exist for non-contact update', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(null);
-
+    it('update should handle NOT_FOUND from service for any field', async () => {
       const ctx = createTestContext();
       const callerWithService = leadRouter.createCaller(ctx);
 
+      ctx.services!.lead!.updateLead = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { message: 'Lead not found: ' + TEST_UUIDS.nonExistent },
+      });
+
       await expect(
-        callerWithService.update({ id: TEST_UUIDS.nonExistent, status: 'CONTACTED' })
+        callerWithService.update({ id: TEST_UUIDS.nonExistent, location: 'Boston' })
       ).rejects.toThrow(
         expect.objectContaining({
           code: 'NOT_FOUND',

@@ -25,6 +25,9 @@ vi.mock('@intelliflow/adapters', () => ({
       return mockParseFn(rawEmail);
     }
   },
+  createOutboundEmailService: () => ({
+    sendEmail: vi.fn().mockResolvedValue({ status: 'sent', messageId: 'mock-msg-id' }),
+  }),
 }));
 
 import { inboundEmailRouter } from '../inbound.router';
@@ -169,16 +172,12 @@ describe('Inbound Email Router b11 - uncovered branches', () => {
       // processAttachments should store attachments via createMany
       expect(prismaMock.emailAttachment.createMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.arrayContaining([
-            expect.objectContaining({ fileName: 'doc.pdf' }),
-          ]),
+          data: expect.arrayContaining([expect.objectContaining({ fileName: 'doc.pdf' })]),
         })
       );
       expect(prismaMock.emailAttachment.createMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.arrayContaining([
-            expect.objectContaining({ fileName: 'image.png' }),
-          ]),
+          data: expect.arrayContaining([expect.objectContaining({ fileName: 'image.png' })]),
         })
       );
     });
@@ -220,7 +219,6 @@ describe('Inbound Email Router b11 - uncovered branches', () => {
       (prismaMock.emailRecord.count as any).mockResolvedValue(0);
 
       const result = await protectedCaller.listEmails({
-
         caseId: 'case-123',
         limit: 20,
         offset: 0,
@@ -236,7 +234,6 @@ describe('Inbound Email Router b11 - uncovered branches', () => {
       (prismaMock.emailRecord.count as any).mockResolvedValue(0);
 
       const result = await protectedCaller.listEmails({
-
         threadId: 'thread-123',
         limit: 10,
         offset: 0,

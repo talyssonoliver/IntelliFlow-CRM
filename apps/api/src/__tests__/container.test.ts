@@ -94,6 +94,11 @@ vi.mock('@intelliflow/adapters', () => ({
       return { name: 'aiService' };
     }
   },
+  OllamaAIService: class {
+    constructor() {
+      return { name: 'ollamaAIService' };
+    }
+  },
   GuardrailsAIService: class {
     constructor() {
       return { name: 'guardrailsAIService' };
@@ -111,7 +116,12 @@ vi.mock('@intelliflow/adapters', () => ({
   },
   FeatureFlagAdapter: class {
     constructor() {
-      return { name: 'featureFlagAdapter', isEnabled: vi.fn(), getVariant: vi.fn(), getRolloutPercent: vi.fn() };
+      return {
+        name: 'featureFlagAdapter',
+        isEnabled: vi.fn(),
+        getVariant: vi.fn(),
+        getRolloutPercent: vi.fn(),
+      };
     }
   },
   PrismaCaseDocumentRepository: class {
@@ -131,17 +141,42 @@ vi.mock('@intelliflow/adapters', () => ({
   },
   MockNotificationServiceAdapter: class {
     constructor() {
-      return { name: 'notificationService', sendEmail: vi.fn(), schedule: vi.fn(), cancelScheduled: vi.fn() };
+      return {
+        name: 'notificationService',
+        sendEmail: vi.fn(),
+        schedule: vi.fn(),
+        cancelScheduled: vi.fn(),
+      };
     }
   },
   IcsGenerationService: class {
     constructor() {
-      return { name: 'icsGenerationService', generateInvitation: vi.fn(), generateUpdate: vi.fn(), generateCancellation: vi.fn() };
+      return {
+        name: 'icsGenerationService',
+        generateInvitation: vi.fn(),
+        generateUpdate: vi.fn(),
+        generateCancellation: vi.fn(),
+      };
     }
   },
   PrismaFeedbackSurveyRepository: class {
     constructor() {
       return { name: 'feedbackSurveyRepo' };
+    }
+  },
+  PrismaTenantModuleRepository: class {
+    constructor() {
+      return { name: 'tenantModuleRepo' };
+    }
+  },
+  PrismaNotificationRepository: class {
+    constructor() {
+      return { name: 'notificationRepo' };
+    }
+  },
+  PrismaNotificationPreferenceRepository: class {
+    constructor() {
+      return { name: 'notificationPreferenceRepo' };
     }
   },
 }));
@@ -208,12 +243,22 @@ vi.mock('@intelliflow/application', () => ({
   },
   AppointmentIcsEventHandler: class {
     constructor() {
-      return { name: 'appointmentIcsHandler', handleAppointmentCreated: vi.fn(), handleAppointmentRescheduled: vi.fn(), handleAppointmentCancelled: vi.fn() };
+      return {
+        name: 'appointmentIcsHandler',
+        handleAppointmentCreated: vi.fn(),
+        handleAppointmentRescheduled: vi.fn(),
+        handleAppointmentCancelled: vi.fn(),
+      };
     }
   },
   ReminderSchedulerService: class {
     constructor() {
-      return { name: 'reminderScheduler', handleAppointmentCreated: vi.fn(), handleAppointmentRescheduled: vi.fn(), handleAppointmentCancelled: vi.fn() };
+      return {
+        name: 'reminderScheduler',
+        handleAppointmentCreated: vi.fn(),
+        handleAppointmentRescheduled: vi.fn(),
+        handleAppointmentCancelled: vi.fn(),
+      };
     }
   },
   FeedbackSurveyAnalyticsService: class {
@@ -231,12 +276,25 @@ vi.mock('@intelliflow/application', () => ({
       return { name: 'closeDealWonUseCase' };
     }
   },
+  CloseDealLostUseCase: class {
+    constructor() {
+      return { name: 'closeDealLostUseCase' };
+    }
+  },
 }));
 
 vi.mock('../services/TicketService', () => ({
   TicketService: class {
     constructor() {
       return { name: 'ticketService' };
+    }
+  },
+}));
+
+vi.mock('../services/TicketRoutingService', () => ({
+  TicketRoutingService: class {
+    constructor() {
+      return { name: 'ticketRoutingService' };
     }
   },
 }));

@@ -14,6 +14,7 @@
  * - Audit logging for all mutations
  */
 
+import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure, adminProcedure } from '../../trpc';
@@ -137,7 +138,7 @@ export const conversationRouter = createTRPCRouter({
    */
   create: protectedProcedure.input(CreateConversationSchema).mutation(async ({ ctx, input }) => {
     const sessionId =
-      input.sessionId || `conv_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+      input.sessionId || `conv_${Date.now()}_${randomUUID().replace(/-/g, '').slice(0, 8)}`;
 
     // Extract IP address and user agent from request headers
     const ipAddress = ctx.req?.headers?.get('x-forwarded-for') || undefined;

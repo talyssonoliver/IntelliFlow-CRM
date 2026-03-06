@@ -85,6 +85,217 @@ export interface OpportunitySearchResult {
   createdAt: Date;
 }
 
+// ── Where-clause builders (extracted to reduce cognitive complexity) ──
+
+function buildLeadWhere(input: LeadSearchInput, tenantId?: string): Record<string, unknown> {
+  const where: Record<string, unknown> = {};
+
+  if (tenantId) where.tenantId = tenantId;
+  if (input.status && input.status.length > 0) where.status = { in: input.status };
+  if (input.source && input.source.length > 0) where.source = { in: input.source };
+  if (input.ownerId) where.ownerId = input.ownerId;
+
+  if (input.minScore !== undefined || input.maxScore !== undefined) {
+    const scoreFilter: Record<string, number> = {};
+    if (input.minScore !== undefined) scoreFilter.gte = input.minScore;
+    if (input.maxScore !== undefined) scoreFilter.lte = input.maxScore;
+    where.score = scoreFilter;
+  }
+
+  if (input.query) {
+    where.OR = [
+      { email: { contains: input.query, mode: 'insensitive' } },
+      { firstName: { contains: input.query, mode: 'insensitive' } },
+      { lastName: { contains: input.query, mode: 'insensitive' } },
+      { company: { contains: input.query, mode: 'insensitive' } },
+    ];
+  }
+
+  return where;
+}
+
+function buildContactWhere(input: ContactSearchInput, tenantId?: string): Record<string, unknown> {
+  const where: Record<string, unknown> = {};
+
+  if (tenantId) where.tenantId = tenantId;
+  if (input.accountId) where.accountId = input.accountId;
+  if (input.ownerId) where.ownerId = input.ownerId;
+
+  if (input.hasEmail !== undefined) where.email = input.hasEmail ? { not: null } : null;
+  if (input.hasPhone !== undefined) where.phone = input.hasPhone ? { not: null } : null;
+
+  if (input.query) {
+    where.OR = [
+      { email: { contains: input.query, mode: 'insensitive' } },
+      { firstName: { contains: input.query, mode: 'insensitive' } },
+      { lastName: { contains: input.query, mode: 'insensitive' } },
+    ];
+  }
+
+  return where;
+}
+
+function buildOpportunityWhere(
+  input: OpportunitySearchInput,
+  tenantId?: string
+): Record<string, unknown> {
+  const where: Record<string, unknown> = {};
+
+  if (tenantId) where.tenantId = tenantId;
+  if (input.stage && input.stage.length > 0) where.stage = { in: input.stage };
+  if (input.ownerId) where.ownerId = input.ownerId;
+  if (input.accountId) where.accountId = input.accountId;
+
+  if (input.minValue !== undefined || input.maxValue !== undefined) {
+    const valueFilter: Record<string, number> = {};
+    if (input.minValue !== undefined) valueFilter.gte = input.minValue;
+    if (input.maxValue !== undefined) valueFilter.lte = input.maxValue;
+    where.value = valueFilter;
+  }
+
+  if (input.closeDateFrom || input.closeDateTo) {
+    const closeFilter: Record<string, Date> = {};
+    if (input.closeDateFrom) closeFilter.gte = input.closeDateFrom;
+    if (input.closeDateTo) closeFilter.lte = input.closeDateTo;
+    where.expectedCloseDate = closeFilter;
+  }
+
+  if (input.query) {
+    where.OR = [
+      { name: { contains: input.query, mode: 'insensitive' } },
+      { description: { contains: input.query, mode: 'insensitive' } },
+    ];
+  }
+
+  return where;
+}
+
+// ── Prisma query helpers (extracted to reduce cognitive complexity) ──
+
+async function queryLeads(
+  prisma: NonNullable<AgentAuthContext['prisma']>,
+  input: LeadSearchInput,
+  tenantId?: string
+): Promise<LeadSearchResult[]> {
+  const where = buildLeadWhere(input, tenantId);
+  const rows = await prisma.lead.findMany({
+    where,
+    take: input.limit,
+    skip: input.offset,
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      company: true,
+      title: true,
+      status: true,
+      source: true,
+      score: true,
+      ownerId: true,
+      createdAt: true,
+    },
+  });
+
+  return rows.map((row) => ({
+    id: row.id,
+    email: row.email,
+    firstName: row.firstName ?? undefined,
+    lastName: row.lastName ?? undefined,
+    company: row.company ?? undefined,
+    title: row.title ?? undefined,
+    status: row.status,
+    source: row.source,
+    score: row.score,
+    ownerId: row.ownerId ?? '',
+    createdAt: row.createdAt,
+  }));
+}
+
+async function queryContacts(
+  prisma: NonNullable<AgentAuthContext['prisma']>,
+  input: ContactSearchInput,
+  tenantId?: string
+): Promise<ContactSearchResult[]> {
+  const where = buildContactWhere(input, tenantId);
+  const rows = await prisma.contact.findMany({
+    where,
+    take: input.limit,
+    skip: input.offset,
+    orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      title: true,
+      phone: true,
+      accountId: true,
+      ownerId: true,
+      createdAt: true,
+      account: {
+        select: { name: true },
+      },
+    },
+  });
+
+  return rows.map((row) => ({
+    id: row.id,
+    email: row.email,
+    firstName: row.firstName,
+    lastName: row.lastName,
+    title: row.title ?? undefined,
+    phone: row.phone ?? undefined,
+    accountId: row.accountId ?? undefined,
+    accountName: row.account?.name ?? undefined,
+    ownerId: row.ownerId,
+    createdAt: row.createdAt,
+  }));
+}
+
+async function queryOpportunities(
+  prisma: NonNullable<AgentAuthContext['prisma']>,
+  input: OpportunitySearchInput,
+  tenantId?: string
+): Promise<OpportunitySearchResult[]> {
+  const where = buildOpportunityWhere(input, tenantId);
+  const rows = await prisma.opportunity.findMany({
+    where,
+    take: input.limit,
+    skip: input.offset,
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      name: true,
+      stage: true,
+      value: true,
+      probability: true,
+      expectedCloseDate: true,
+      accountId: true,
+      ownerId: true,
+      createdAt: true,
+      account: {
+        select: { name: true },
+      },
+    },
+  });
+
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    stage: row.stage,
+    value: Number(row.value),
+    currency: 'USD', // Opportunity model does not store currency; defaulting to USD
+    probability: row.probability,
+    closeDate: row.expectedCloseDate ?? undefined,
+    accountId: row.accountId ?? undefined,
+    accountName: row.account?.name ?? undefined,
+    ownerId: row.ownerId ?? '',
+    createdAt: row.createdAt,
+  }));
+}
+
 /**
  * Search Leads Tool
  *
@@ -117,9 +328,10 @@ export const searchLeadsTool: AgentToolDefinition<LeadSearchInput, LeadSearchRes
         };
       }
 
-      // In a real implementation, this would call the LeadService.
-      // For now, we simulate the search response.
-      // The actual implementation would inject the LeadService via dependency injection.
+      // Query real lead data via Prisma when available, scoped to tenant
+      const results = context.prisma
+        ? await queryLeads(context.prisma, input, context.tenantId)
+        : [];
 
       // Log the search action
       await agentLogger.log({
@@ -133,9 +345,6 @@ export const searchLeadsTool: AgentToolDefinition<LeadSearchInput, LeadSearchRes
         durationMs: performance.now() - startTime,
         approvalRequired: false,
       });
-
-      // Placeholder response - in production this would query the database via LeadService
-      const results: LeadSearchResult[] = [];
 
       return {
         success: true,
@@ -220,6 +429,11 @@ export const searchContactsTool: AgentToolDefinition<ContactSearchInput, Contact
         };
       }
 
+      // Query real contact data via Prisma when available, scoped to tenant
+      const results = context.prisma
+        ? await queryContacts(context.prisma, input, context.tenantId)
+        : [];
+
       // Log the search action
       await agentLogger.log({
         userId: context.userId,
@@ -232,9 +446,6 @@ export const searchContactsTool: AgentToolDefinition<ContactSearchInput, Contact
         durationMs: performance.now() - startTime,
         approvalRequired: false,
       });
-
-      // Placeholder response - in production this would query the database via ContactService
-      const results: ContactSearchResult[] = [];
 
       return {
         success: true,
@@ -322,6 +533,11 @@ export const searchOpportunitiesTool: AgentToolDefinition<
         };
       }
 
+      // Query real opportunity data via Prisma when available, scoped to tenant
+      const results = context.prisma
+        ? await queryOpportunities(context.prisma, input, context.tenantId)
+        : [];
+
       // Log the search action
       await agentLogger.log({
         userId: context.userId,
@@ -334,9 +550,6 @@ export const searchOpportunitiesTool: AgentToolDefinition<
         durationMs: performance.now() - startTime,
         approvalRequired: false,
       });
-
-      // Placeholder response - in production this would query the database via OpportunityService
-      const results: OpportunitySearchResult[] = [];
 
       return {
         success: true,

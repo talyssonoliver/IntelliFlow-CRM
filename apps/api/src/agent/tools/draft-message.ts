@@ -45,6 +45,97 @@ export interface DraftedMessageResult {
 }
 
 /**
+ * Determine the estimated impact level based on message type.
+ */
+function messageImpactLevel(type: string): 'LOW' | 'MEDIUM' | 'HIGH' {
+  if (type === 'SMS') return 'HIGH'; // SMS is harder to "unsend" and has immediate visibility
+  if (type === 'NOTE') return 'LOW'; // Internal notes have lower external impact
+  return 'MEDIUM'; // Emails are trackable and reversible in perception
+}
+
+/**
+ * Build the changes list for the preview.
+ */
+function buildMessageChanges(input: DraftMessageInput): Array<{
+  field: string;
+  previousValue: null;
+  newValue: string;
+  changeType: 'ADD';
+}> {
+  const changes: Array<{
+    field: string;
+    previousValue: null;
+    newValue: string;
+    changeType: 'ADD';
+  }> = [];
+
+  changes.push({ field: 'type', previousValue: null, newValue: input.type, changeType: 'ADD' });
+  changes.push({
+    field: 'recipient',
+    previousValue: null,
+    newValue: `${input.recipientType}: ${input.recipientId}`,
+    changeType: 'ADD',
+  });
+  if (input.subject) {
+    changes.push({
+      field: 'subject',
+      previousValue: null,
+      newValue: input.subject,
+      changeType: 'ADD',
+    });
+  }
+  changes.push({ field: 'body', previousValue: null, newValue: input.body, changeType: 'ADD' });
+  if (input.scheduledFor) {
+    changes.push({
+      field: 'scheduledFor',
+      previousValue: null,
+      newValue: input.scheduledFor.toISOString(),
+      changeType: 'ADD',
+    });
+  }
+  if (input.templateId) {
+    changes.push({
+      field: 'templateId',
+      previousValue: null,
+      newValue: input.templateId,
+      changeType: 'ADD',
+    });
+  }
+
+  return changes;
+}
+
+/**
+ * Collect all warnings for the message preview into the warnings array.
+ */
+function collectMessageWarnings(input: DraftMessageInput, warnings: string[]): void {
+  if (input.type === 'SMS' && input.body.length > 160) {
+    warnings.push(
+      `SMS message is ${input.body.length} characters. Messages over 160 characters may be split into multiple SMS.`
+    );
+  }
+  if (input.type === 'EMAIL' && input.body.length > 5000) {
+    warnings.push('Email body is quite long. Consider splitting into multiple emails.');
+  }
+  if (input.scheduledFor) {
+    if (input.scheduledFor < new Date()) {
+      warnings.push('Warning: Scheduled time is in the past');
+    }
+    const hour = input.scheduledFor.getHours();
+    if (hour < 8 || hour > 18) {
+      warnings.push('Scheduled time is outside typical business hours (8am-6pm)');
+    }
+  }
+  const bodyLower = input.body.toLowerCase();
+  if (bodyLower.includes('confidential') || bodyLower.includes('private')) {
+    warnings.push('Message contains potentially confidential content - please review carefully');
+  }
+  if (input.type === 'EMAIL' && !bodyLower.includes('unsubscribe')) {
+    warnings.push('Consider adding an unsubscribe link for marketing emails (compliance)');
+  }
+}
+
+/**
  * Draft Message Tool
  *
  * Creates a draft message for a lead, contact, or account.
@@ -118,7 +209,7 @@ export const draftMessageTool: AgentToolDefinition<DraftMessageInput, DraftedMes
         toolName: 'draft_message',
         actionType: 'DRAFT',
         entityType: 'MESSAGE',
-        input: input as unknown as Record<string, unknown>,
+        input: { ...input },
         preview,
         status: 'PENDING',
         createdAt: now,
@@ -186,106 +277,11 @@ export const draftMessageTool: AgentToolDefinition<DraftMessageInput, DraftedMes
     _context: AgentAuthContext
   ): Promise<ActionPreview> {
     const warnings: string[] = [];
-    const changes = [];
+    const changes = buildMessageChanges(input);
 
-    // Add message type
-    changes.push({
-      field: 'type',
-      previousValue: null,
-      newValue: input.type,
-      changeType: 'ADD' as const,
-    });
+    collectMessageWarnings(input, warnings);
 
-    // Add recipient info
-    changes.push({
-      field: 'recipient',
-      previousValue: null,
-      newValue: `${input.recipientType}: ${input.recipientId}`,
-      changeType: 'ADD' as const,
-    });
-
-    // Add subject for emails
-    if (input.subject) {
-      changes.push({
-        field: 'subject',
-        previousValue: null,
-        newValue: input.subject,
-        changeType: 'ADD' as const,
-      });
-    }
-
-    // Add message body
-    changes.push({
-      field: 'body',
-      previousValue: null,
-      newValue: input.body,
-      changeType: 'ADD' as const,
-    });
-
-    // Check message length
-    if (input.type === 'SMS' && input.body.length > 160) {
-      warnings.push(
-        `SMS message is ${input.body.length} characters. Messages over 160 characters may be split into multiple SMS.`
-      );
-    }
-
-    if (input.type === 'EMAIL' && input.body.length > 5000) {
-      warnings.push('Email body is quite long. Consider splitting into multiple emails.');
-    }
-
-    // Check for scheduling
-    if (input.scheduledFor) {
-      changes.push({
-        field: 'scheduledFor',
-        previousValue: null,
-        newValue: input.scheduledFor.toISOString(),
-        changeType: 'ADD' as const,
-      });
-
-      if (input.scheduledFor < new Date()) {
-        warnings.push('Warning: Scheduled time is in the past');
-      }
-
-      // Check for outside business hours
-      const hour = input.scheduledFor.getHours();
-      if (hour < 8 || hour > 18) {
-        warnings.push('Scheduled time is outside typical business hours (8am-6pm)');
-      }
-    }
-
-    // Check for template usage
-    if (input.templateId) {
-      changes.push({
-        field: 'templateId',
-        previousValue: null,
-        newValue: input.templateId,
-        changeType: 'ADD' as const,
-      });
-    }
-
-    // Content warnings
-    const bodyLower = input.body.toLowerCase();
-
-    // Check for potential sensitive content
-    if (bodyLower.includes('confidential') || bodyLower.includes('private')) {
-      warnings.push('Message contains potentially confidential content - please review carefully');
-    }
-
-    // Check for unsubscribe link in marketing emails
-    if (input.type === 'EMAIL' && !bodyLower.includes('unsubscribe')) {
-      warnings.push('Consider adding an unsubscribe link for marketing emails (compliance)');
-    }
-
-    // Determine impact level
-    let estimatedImpact: 'LOW' | 'MEDIUM' | 'HIGH' = 'MEDIUM';
-
-    if (input.type === 'EMAIL') {
-      estimatedImpact = 'MEDIUM'; // Emails are trackable and reversible in perception
-    } else if (input.type === 'SMS') {
-      estimatedImpact = 'HIGH'; // SMS is harder to "unsend" and has immediate visibility
-    } else if (input.type === 'NOTE') {
-      estimatedImpact = 'LOW'; // Internal notes have lower external impact
-    }
+    const estimatedImpact = messageImpactLevel(input.type);
 
     const affectedEntities = [
       {

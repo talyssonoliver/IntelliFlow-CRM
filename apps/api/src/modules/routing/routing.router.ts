@@ -19,7 +19,26 @@ import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import {
   createRoutingRuleSchema,
   updateRoutingRuleSchema,
+  autoRouteLeadInputSchema,
+  suggestLeadAssigneeInputSchema,
 } from '@intelliflow/validators';
+import type { LeadRoutingService } from '../../services/LeadRoutingService';
+import type { Context } from '../../context';
+
+/**
+ * Helper — extracts LeadRoutingService from context.
+ * Mirrors ticket-routing.router.ts pattern.
+ */
+function getLeadRoutingService(ctx: Context): LeadRoutingService {
+  const service = ctx.services?.leadRouting;
+  if (!service) {
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'LeadRoutingService not configured',
+    });
+  }
+  return service as LeadRoutingService;
+}
 
 export const routingRouter = createTRPCRouter({
   /**
@@ -59,81 +78,73 @@ export const routingRouter = createTRPCRouter({
   /**
    * Get a single routing rule by ID
    */
-  get: tenantProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const rule = await ctx.prisma.routingRule.findFirst({
-        where: { id: input.id, tenantId: ctx.user!.tenantId },
-      });
-      return rule;
-    }),
+  get: tenantProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
+    const rule = await ctx.prisma.routingRule.findFirst({
+      where: { id: input.id, tenantId: ctx.user!.tenantId },
+    });
+    return rule;
+  }),
 
   /**
    * Create a new routing rule
    */
-  create: tenantProcedure
-    .input(createRoutingRuleSchema)
-    .mutation(async ({ ctx, input }) => {
-      return ctx.prisma.routingRule.create({
-        data: {
-          tenantId: ctx.user!.tenantId,
-          name: input.name,
-          description: input.description ?? null,
-          priority: input.priority,
-          isActive: input.isActive,
-          conditions: input.conditions as any,
-          actions: input.actions as any,
-          createdBy: ctx.user!.userId,
-        },
-      });
-    }),
+  create: tenantProcedure.input(createRoutingRuleSchema).mutation(async ({ ctx, input }) => {
+    return ctx.prisma.routingRule.create({
+      data: {
+        tenantId: ctx.user!.tenantId,
+        name: input.name,
+        description: input.description ?? null,
+        priority: input.priority,
+        isActive: input.isActive,
+        conditions: input.conditions as any,
+        actions: input.actions as any,
+        createdBy: ctx.user!.userId,
+      },
+    });
+  }),
 
   /**
    * Update an existing routing rule
    */
-  update: tenantProcedure
-    .input(updateRoutingRuleSchema)
-    .mutation(async ({ ctx, input }) => {
-      const { id, ...data } = input;
-      const tenantId = ctx.user!.tenantId;
+  update: tenantProcedure.input(updateRoutingRuleSchema).mutation(async ({ ctx, input }) => {
+    const { id, ...data } = input;
+    const tenantId = ctx.user!.tenantId;
 
-      // Verify rule exists and belongs to this tenant
-      const existing = await ctx.prisma.routingRule.findFirst({
-        where: { id, tenantId },
-      });
-      if (!existing) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Routing rule not found' });
-      }
+    // Verify rule exists and belongs to this tenant
+    const existing = await ctx.prisma.routingRule.findFirst({
+      where: { id, tenantId },
+    });
+    if (!existing) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Routing rule not found' });
+    }
 
-      const updateData: Record<string, unknown> = {};
-      if (data.name !== undefined) updateData.name = data.name;
-      if (data.description !== undefined) updateData.description = data.description;
-      if (data.priority !== undefined) updateData.priority = data.priority;
-      if (data.isActive !== undefined) updateData.isActive = data.isActive;
-      if (data.conditions !== undefined) updateData.conditions = data.conditions as any;
-      if (data.actions !== undefined) updateData.actions = data.actions as any;
+    const updateData: Record<string, unknown> = {};
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.priority !== undefined) updateData.priority = data.priority;
+    if (data.isActive !== undefined) updateData.isActive = data.isActive;
+    if (data.conditions !== undefined) updateData.conditions = data.conditions as any;
+    if (data.actions !== undefined) updateData.actions = data.actions as any;
 
-      return ctx.prisma.routingRule.update({
-        where: { id },
-        data: updateData,
-      });
-    }),
+    return ctx.prisma.routingRule.update({
+      where: { id },
+      data: updateData,
+    });
+  }),
 
   /**
    * Delete a routing rule
    */
-  delete: tenantProcedure
-    .input(z.object({ id: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.prisma.routingRule.findFirst({
-        where: { id: input.id, tenantId: ctx.user!.tenantId },
-      });
-      if (!existing) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Routing rule not found' });
-      }
+  delete: tenantProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
+    const existing = await ctx.prisma.routingRule.findFirst({
+      where: { id: input.id, tenantId: ctx.user!.tenantId },
+    });
+    if (!existing) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Routing rule not found' });
+    }
 
-      return ctx.prisma.routingRule.delete({ where: { id: input.id } });
-    }),
+    return ctx.prisma.routingRule.delete({ where: { id: input.id } });
+  }),
 
   /**
    * Batch reorder routing rules by updating priorities
@@ -341,5 +352,49 @@ export const routingRouter = createTRPCRouter({
 
         return audit;
       });
+    }),
+
+  // ── IFC-030: Automated Lead Routing ────────────────────
+
+  /**
+   * Auto-route a lead using the routing engine.
+   * Strategy: rule match → skill match → load balance.
+   * SCOPE BOUNDARY: Does NOT modify existing assignLead (D4).
+   */
+  autoRouteLead: tenantProcedure
+    .input(autoRouteLeadInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const service = getLeadRoutingService(ctx);
+      const tenantId = ctx.user!.tenantId;
+
+      const result = await service.routeLead({
+        leadId: input.leadId,
+        tenantId,
+        reason: input.reason,
+        forceReroute: input.forceReroute,
+      });
+
+      return {
+        leadId: result.leadId,
+        assignedUserId: result.assigneeId,
+        assignedUserName: result.assigneeName,
+        auditId: result.auditId,
+        reason: result.reason,
+        routingMethod: result.routingMethod,
+      };
+    }),
+
+  /**
+   * Suggest lead assignees — pure query, no side effects.
+   */
+  suggestLeadAssignee: tenantProcedure
+    .input(suggestLeadAssigneeInputSchema)
+    .query(async ({ ctx, input }) => {
+      const service = getLeadRoutingService(ctx);
+      const tenantId = ctx.user!.tenantId;
+
+      const candidates = await service.suggestAssignees(tenantId, input.scoreTier, input.limit);
+
+      return { candidates };
     }),
 });

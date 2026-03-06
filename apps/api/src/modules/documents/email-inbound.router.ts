@@ -134,7 +134,7 @@ function verifyWebhookSignature(payload: any, signature: string): boolean {
  * Example: case-123@tenant1.intelliflow.com → tenant1
  */
 function extractTenantId(email: string): string | null {
-  const match = email.match(/@([^.]+)\.intelliflow\.com$/);
+  const match = email.match(/@([^.]{1,63})\.intelliflow\.com$/);
   return match ? match[1] : null;
 }
 

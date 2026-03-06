@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@intelliflow/db';
 import { RBACService, getRBACService, resetRBACService, Permissions } from '../rbac';
 import { RoleName, ROLE_LEVELS } from '../types';
 
@@ -565,7 +565,7 @@ describe('RBACService - Database Operations', () => {
         findUnique: vi.fn().mockResolvedValue(null),
       },
     };
-    service = new RBACService(mockPrisma as unknown as PrismaClient);
+    service = new RBACService(mockPrisma as any); // test-only mock data
     resetRBACService();
   });
 
@@ -1078,7 +1078,7 @@ describe('RBACService - Database Operations', () => {
 
     it('should handle non-array value for in operator', () => {
       const result = service.evaluateConditions(
-        [{ field: 'role', operator: 'in', value: 'admin' as unknown as string[] }],
+        [{ field: 'role', operator: 'in', value: 'admin' as any }],
         { role: 'admin' }
       );
 

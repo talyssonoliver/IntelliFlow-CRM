@@ -11,6 +11,7 @@
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { PrismaClient } from '@intelliflow/db';
+import { PrismaPg } from '@prisma/adapter-pg';
 import crypto from 'crypto';
 
 // Use crypto.randomUUID() instead of uuid package
@@ -30,7 +31,8 @@ describe('Bulk Lead Operations', () => {
   let isDbAvailable = false;
 
   beforeAll(async () => {
-    prisma = new PrismaClient();
+    const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+    prisma = new PrismaClient({ adapter });
 
     try {
       await prisma.$connect();

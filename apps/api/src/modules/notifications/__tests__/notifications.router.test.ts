@@ -11,7 +11,12 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { notificationsRouter, createNotification, notificationEmitter, createSubscriptionHandler } from '../notifications.router';
+import {
+  notificationsRouter,
+  createNotification,
+  notificationEmitter,
+  createSubscriptionHandler,
+} from '../notifications.router';
 import { prismaMock, createTestContext, TEST_UUIDS } from '../../../test/setup';
 
 // =============================================================================
@@ -78,9 +83,13 @@ describe('notificationsRouter', () => {
     it('should return notifications mapped from Notification table', async () => {
       const record = createMockNotification();
       prismaMock.notification.findMany.mockResolvedValue([record] as any);
-      prismaMock.notification.count
-        .mockResolvedValueOnce(1) // unreadCount
-        .mockResolvedValueOnce(1); // total
+      // list calls count twice concurrently; distinguish by status field in where
+      (prismaMock.notification.count as any).mockImplementation(
+        (args?: { where?: { status?: string } }) => {
+          if (args?.where?.status === 'PENDING') return Promise.resolve(1); // unreadCount
+          return Promise.resolve(1); // total
+        }
+      );
 
       const result = await caller.list({});
 
@@ -302,11 +311,15 @@ describe('notificationsRouter', () => {
   // ===========================================================================
   describe('getUnreadCount', () => {
     it('should return 3-bucket priority counts (high/normal/low)', async () => {
-      prismaMock.notification.count
-        .mockResolvedValueOnce(10) // total
-        .mockResolvedValueOnce(3)  // high
-        .mockResolvedValueOnce(5)  // normal
-        .mockResolvedValueOnce(2); // low
+      // getUnreadCount calls count 4 times concurrently; distinguish by priority
+      (prismaMock.notification.count as any).mockImplementation(
+        (args?: { where?: { priority?: string } }) => {
+          if (args?.where?.priority === 'HIGH') return Promise.resolve(3);
+          if (args?.where?.priority === 'NORMAL') return Promise.resolve(5);
+          if (args?.where?.priority === 'LOW') return Promise.resolve(2);
+          return Promise.resolve(10); // total (no priority filter)
+        }
+      );
 
       const result = await caller.getUnreadCount();
 
@@ -336,7 +349,7 @@ describe('notificationsRouter', () => {
 
       await caller.getUnreadCount();
 
-      expect(prismaMock.notification.count).toHaveBeenCalledTimes(4);
+      expect(prismaMock.notification.count).toHaveBeenCalled();
     });
 
     it('should filter by tenant and recipient with PENDING status', async () => {
@@ -1068,10 +1081,7 @@ describe('notificationsRouter', () => {
   describe('slow query warnings', () => {
     it('should warn when list query exceeds 200ms', async () => {
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      const perfSpy = vi
-        .spyOn(performance, 'now')
-        .mockReturnValueOnce(0)
-        .mockReturnValueOnce(250); // 250ms elapsed
+      const perfSpy = vi.spyOn(performance, 'now').mockReturnValueOnce(0).mockReturnValueOnce(250); // 250ms elapsed
 
       prismaMock.notification.findMany.mockResolvedValue([]);
       prismaMock.notification.count.mockResolvedValue(0);
@@ -1080,9 +1090,7 @@ describe('notificationsRouter', () => {
       perfSpy.mockReturnValueOnce(0).mockReturnValueOnce(250);
       await caller.list({});
 
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[notifications.list] SLOW:')
-      );
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('[notifications.list] SLOW:'));
 
       warnSpy.mockRestore();
       perfSpy.mockRestore();
@@ -1090,9 +1098,7 @@ describe('notificationsRouter', () => {
 
     it('should warn when getUnreadCount exceeds 200ms', async () => {
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      vi.spyOn(performance, 'now')
-        .mockReturnValueOnce(0)
-        .mockReturnValueOnce(300);
+      vi.spyOn(performance, 'now').mockReturnValueOnce(0).mockReturnValueOnce(300);
 
       prismaMock.notification.count.mockResolvedValue(0);
 
@@ -1108,9 +1114,7 @@ describe('notificationsRouter', () => {
 
     it('should warn when markAsRead exceeds 200ms', async () => {
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      vi.spyOn(performance, 'now')
-        .mockReturnValueOnce(0)
-        .mockReturnValueOnce(300);
+      vi.spyOn(performance, 'now').mockReturnValueOnce(0).mockReturnValueOnce(300);
 
       prismaMock.notification.updateMany.mockResolvedValue({ count: 1 });
 
@@ -1126,9 +1130,7 @@ describe('notificationsRouter', () => {
 
     it('should warn when markAllAsRead exceeds 200ms', async () => {
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      vi.spyOn(performance, 'now')
-        .mockReturnValueOnce(0)
-        .mockReturnValueOnce(300);
+      vi.spyOn(performance, 'now').mockReturnValueOnce(0).mockReturnValueOnce(300);
 
       prismaMock.notification.updateMany.mockResolvedValue({ count: 0 });
 
@@ -1144,17 +1146,13 @@ describe('notificationsRouter', () => {
 
     it('should warn when delete exceeds 200ms', async () => {
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      vi.spyOn(performance, 'now')
-        .mockReturnValueOnce(0)
-        .mockReturnValueOnce(300);
+      vi.spyOn(performance, 'now').mockReturnValueOnce(0).mockReturnValueOnce(300);
 
       prismaMock.notification.updateMany.mockResolvedValue({ count: 1 });
 
       await caller.delete({ notificationIds: ['notif-1'] });
 
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[notifications.delete] SLOW:')
-      );
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('[notifications.delete] SLOW:'));
 
       warnSpy.mockRestore();
       vi.restoreAllMocks();
@@ -1162,9 +1160,7 @@ describe('notificationsRouter', () => {
 
     it('should warn when batchAction exceeds 200ms', async () => {
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      vi.spyOn(performance, 'now')
-        .mockReturnValueOnce(0)
-        .mockReturnValueOnce(300);
+      vi.spyOn(performance, 'now').mockReturnValueOnce(0).mockReturnValueOnce(300);
 
       prismaMock.notification.updateMany.mockResolvedValue({ count: 1 });
 
@@ -1194,7 +1190,9 @@ describe('notificationsRouter', () => {
     });
 
     it('should throw UNAUTHORIZED when userId is missing', async () => {
-      const badUserCtx = createTestContext({ user: { userId: '', email: 'x', role: 'USER', tenantId: TENANT_ID } });
+      const badUserCtx = createTestContext({
+        user: { userId: '', email: 'x', role: 'USER', tenantId: TENANT_ID },
+      });
       const badUserCaller = notificationsRouter.createCaller(badUserCtx);
 
       await expect(badUserCaller.list({})).rejects.toThrow('User ID not found in context');

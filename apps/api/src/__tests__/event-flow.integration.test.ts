@@ -13,7 +13,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { DomainEvent } from '@intelliflow/domain';
-import { EventStatus } from '@prisma/client';
+import { EventStatus } from '@intelliflow/db';
 
 // ---------------------------------------------------------------------------
 // Test event helpers
@@ -116,7 +116,9 @@ function createInMemoryOutbox() {
       return row;
     },
 
-    async findFirst(where: { metadata?: { path: string[]; equals: string } }): Promise<OutboxRow | null> {
+    async findFirst(where: {
+      metadata?: { path: string[]; equals: string };
+    }): Promise<OutboxRow | null> {
       if (where.metadata) {
         for (const row of store.values()) {
           const meta = row.metadata as Record<string, unknown>;
@@ -152,7 +154,12 @@ function createInMemoryOutbox() {
       row.processedAt = new Date();
     },
 
-    async scheduleRetry(eventId: string, retryCount: number, nextRetryAt: Date, error: string): Promise<void> {
+    async scheduleRetry(
+      eventId: string,
+      retryCount: number,
+      nextRetryAt: Date,
+      error: string
+    ): Promise<void> {
       const row = store.get(eventId);
       if (!row) throw new Error(`Event ${eventId} not found`);
       row.status = EventStatus.PENDING;
@@ -594,7 +601,10 @@ describe('Event Flow Integration', () => {
       const start = performance.now();
 
       for (let i = 0; i < 100; i++) {
-        await publishEvent(outbox, new TestLeadCreatedEvent(`lead-perf-${i}`, `${i}@perf.com`, 't'));
+        await publishEvent(
+          outbox,
+          new TestLeadCreatedEvent(`lead-perf-${i}`, `${i}@perf.com`, 't')
+        );
       }
 
       const publishTime = performance.now() - start;

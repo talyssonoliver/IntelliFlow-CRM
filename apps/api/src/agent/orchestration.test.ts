@@ -53,7 +53,8 @@ export const orchestrationResponseSchema = z.object({
   workflowId: z.string(),
   status: z.enum(['completed', 'pending_review', 'failed', 'timeout']),
   results: z.record(
-    z.string(), z.object({
+    z.string(),
+    z.object({
       agentName: z.string(),
       success: z.boolean(),
       output: z.unknown().optional(),

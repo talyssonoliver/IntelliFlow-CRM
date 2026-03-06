@@ -88,7 +88,7 @@ describe('Password Reset Procedures (IFC-120)', () => {
         'x-forwarded-for': '127.0.0.1',
         'user-agent': 'Mozilla/5.0 Test Agent',
       },
-    } as unknown as Request,
+    } as any,
     user: undefined,
   });
 
@@ -130,9 +130,7 @@ describe('Password Reset Procedures (IFC-120)', () => {
       await caller.requestPasswordReset({ email });
 
       // 4th should be rate limited
-      await expect(
-        caller.requestPasswordReset({ email })
-      ).rejects.toThrow(TRPCError);
+      await expect(caller.requestPasswordReset({ email })).rejects.toThrow(TRPCError);
 
       try {
         await caller.requestPasswordReset({ email });
@@ -155,10 +153,7 @@ describe('Password Reset Procedures (IFC-120)', () => {
       const result = await caller.resetPassword(validInput);
 
       expect(result).toEqual({ success: true });
-      expect(mockUpdateUserPassword).toHaveBeenCalledWith(
-        validInput.token,
-        validInput.password
-      );
+      expect(mockUpdateUserPassword).toHaveBeenCalledWith(validInput.token, validInput.password);
     });
 
     it('throws UNAUTHORIZED for expired/invalid token', async () => {

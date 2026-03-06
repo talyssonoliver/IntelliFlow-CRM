@@ -112,7 +112,7 @@ describe('TicketService', () => {
       },
     };
 
-    service = new TicketService(mockPrisma as unknown as PrismaClient);
+    service = new TicketService(mockPrisma as any); // test-only mock data
   });
 
   // ============================================
@@ -875,7 +875,7 @@ describe('TicketService', () => {
       const call = mockPrisma.ticketNextStep.createMany.mock.calls[0][0];
       expect(call.data).toHaveLength(4);
       expect(call.data[2].title).toBe('Escalate to senior support if unresolved');
-      expect(call.data[2].dueDate).toBe('Due in 1 hour');
+      expect(call.data[2].dueDateLabel).toBe('Due in 1 hour');
       expect(call.data[3].title).toBe('Update customer with resolution progress');
     });
 
@@ -884,7 +884,7 @@ describe('TicketService', () => {
 
       const call = mockPrisma.ticketNextStep.createMany.mock.calls[0][0];
       expect(call.data).toHaveLength(4);
-      expect(call.data[2].dueDate).toBe('Due Today');
+      expect(call.data[2].dueDateLabel).toBe('Due Today');
     });
 
     it('should create 3 next steps for LOW priority', async () => {
@@ -893,7 +893,7 @@ describe('TicketService', () => {
       const call = mockPrisma.ticketNextStep.createMany.mock.calls[0][0];
       expect(call.data).toHaveLength(3);
       expect(call.data[2].title).toBe('Investigate root cause and document findings');
-      expect(call.data[2].dueDate).toBe('Tomorrow');
+      expect(call.data[2].dueDateLabel).toBe('Tomorrow');
     });
   });
 

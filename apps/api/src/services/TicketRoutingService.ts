@@ -13,10 +13,7 @@
  */
 
 import type { PrismaClient } from '@intelliflow/db';
-import {
-  TICKET_CATEGORY_SKILL_MAP,
-  type TicketCategory,
-} from '@intelliflow/domain';
+import { TICKET_CATEGORY_SKILL_MAP, type TicketCategory } from '@intelliflow/domain';
 
 export interface EligibleAgent {
   agentId: string;
@@ -53,10 +50,7 @@ export class TicketRoutingService {
    * Get eligible agents for routing — filtered by tenant, status, capacity.
    * Optionally filters by required skill.
    */
-  async getEligibleAgents(
-    tenantId: string,
-    requiredSkill?: string
-  ): Promise<EligibleAgent[]> {
+  async getEligibleAgents(tenantId: string, requiredSkill?: string): Promise<EligibleAgent[]> {
     // Query agent availability (ONLINE or BUSY, under capacity)
     const availabilities = await (this.prisma as any).agentAvailability.findMany({
       where: {
@@ -71,9 +65,7 @@ export class TicketRoutingService {
     });
 
     // Filter agents under capacity
-    const underCapacity = availabilities.filter(
-      (a: any) => a.currentCapacity < a.maxCapacity
-    );
+    const underCapacity = availabilities.filter((a: any) => a.currentCapacity < a.maxCapacity);
 
     // If skill required, query AgentSkill for matching
     if (requiredSkill) {
@@ -102,9 +94,7 @@ export class TicketRoutingService {
           status: a.status,
           proficiency: skillMap.get(a.userId),
         }))
-        .sort((a: EligibleAgent, b: EligibleAgent) =>
-          (b.proficiency ?? 0) - (a.proficiency ?? 0)
-        );
+        .sort((a: EligibleAgent, b: EligibleAgent) => (b.proficiency ?? 0) - (a.proficiency ?? 0));
     }
 
     return underCapacity.map((a: any) => ({
@@ -248,10 +238,7 @@ export class TicketRoutingService {
   /**
    * Check if ticket has SLA breach requiring escalation.
    */
-  async checkSlaEscalation(
-    ticketId: string,
-    tenantId: string
-  ): Promise<boolean> {
+  async checkSlaEscalation(ticketId: string, tenantId: string): Promise<boolean> {
     const ticket = await this.prisma.ticket.findFirst({
       where: { id: ticketId, tenantId },
       select: { slaStatus: true },

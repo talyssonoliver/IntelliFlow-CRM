@@ -4,10 +4,10 @@
  * @see IFC-099: ERP/Payment/Email Connectors
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { inferProcedureInput } from '@trpc/server';
-import { appRouter, type AppRouter } from '../../../router';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { appRouter } from '../../../router';
 import type { Context } from '../../../context';
+import { setConnectorHealthProviderForTests } from '../integrations.router';
 
 // Mock user for protected procedures
 const mockUser = {
@@ -24,11 +24,42 @@ const createMockContext = (authenticated = true): Context =>
     req: {} as Context['req'],
     res: {} as Context['res'],
     db: {} as Context['db'],
-  }) as unknown as Context;
+  }) as any as Context;
+
+const HEALTH_CHECK_FIXTURES: Record<
+  string,
+  { status: 'healthy' | 'degraded' | 'unhealthy'; latencyMs: number; errorMessage?: string }
+> = {
+  'erp-sap': { status: 'unhealthy', latencyMs: 220, errorMessage: 'Connection timeout' },
+  'payment-stripe': { status: 'healthy', latencyMs: 84 },
+  'payment-paypal': { status: 'degraded', latencyMs: 162 },
+  'email-gmail': { status: 'healthy', latencyMs: 93 },
+  'email-outlook': { status: 'healthy', latencyMs: 111 },
+  'messaging-slack': { status: 'degraded', latencyMs: 155 },
+  'messaging-teams': { status: 'healthy', latencyMs: 120 },
+};
 
 describe('Integrations Router', () => {
   const caller = appRouter.createCaller(createMockContext(true));
   const unauthenticatedCaller = appRouter.createCaller(createMockContext(false));
+
+  beforeEach(() => {
+    setConnectorHealthProviderForTests(async (connectorId) => {
+      const fixture = HEALTH_CHECK_FIXTURES[connectorId];
+      return (
+        fixture ?? {
+          status: 'unknown',
+          latencyMs: null,
+          errorMessage: 'Missing test fixture',
+        }
+      );
+    });
+  });
+
+  afterEach(() => {
+    setConnectorHealthProviderForTests(null);
+    vi.clearAllMocks();
+  });
 
   describe('getConnectorHealth', () => {
     it('should return health status for a valid connector', async () => {
@@ -41,7 +72,7 @@ describe('Integrations Router', () => {
       expect(result).toHaveProperty('type', 'payment');
       expect(result).toHaveProperty('provider', 'stripe');
       expect(result).toHaveProperty('status');
-      expect(['healthy', 'degraded', 'unhealthy']).toContain(result.status);
+      expect(['healthy', 'degraded', 'unhealthy', 'unknown']).toContain(result.status);
       expect(result).toHaveProperty('latencyMs');
       expect(result).toHaveProperty('lastCheckedAt');
     });
@@ -75,11 +106,12 @@ describe('Integrations Router', () => {
       expect(result.summary).toHaveProperty('healthy');
       expect(result.summary).toHaveProperty('degraded');
       expect(result.summary).toHaveProperty('unhealthy');
+      expect(result.summary).toHaveProperty('unknown');
       expect(result).toHaveProperty('checkedAt');
 
       // Verify sum matches total
-      const { healthy, degraded, unhealthy } = result.summary;
-      expect(healthy + degraded + unhealthy).toBe(result.summary.total);
+      const { healthy, degraded, unhealthy, unknown } = result.summary;
+      expect(healthy + degraded + unhealthy + unknown).toBe(result.summary.total);
     });
 
     it('should return all connector types', async () => {
@@ -90,6 +122,29 @@ describe('Integrations Router', () => {
       expect(types).toContain('payment');
       expect(types).toContain('email');
       expect(types).toContain('messaging');
+    });
+
+    it('should count unknown statuses in summary', async () => {
+      setConnectorHealthProviderForTests(async (connectorId) => {
+        if (connectorId === 'messaging-teams') {
+          return {
+            status: 'unknown',
+            latencyMs: null,
+            errorMessage: 'Health check not configured: missing TEAMS_CLIENT_ID',
+          };
+        }
+
+        const fixture = HEALTH_CHECK_FIXTURES[connectorId];
+        return fixture ?? { status: 'unknown', latencyMs: null, errorMessage: 'Missing fixture' };
+      });
+
+      const result = await caller.integrations.getAllConnectorsHealth();
+      expect(result.summary.unknown).toBeGreaterThan(0);
+      expect(
+        result.connectors.some(
+          (connector) => connector.id === 'messaging-teams' && connector.status === 'unknown'
+        )
+      ).toBe(true);
     });
   });
 
@@ -203,21 +258,27 @@ describe('Integrations Router', () => {
     });
 
     it('should handle failed connections gracefully', async () => {
-      // Multiple attempts to possibly hit a failed connection
-      let foundFailed = false;
-      for (let i = 0; i < 20; i++) {
-        const result = await caller.integrations.testConnection({
-          connectorId: 'erp-sap',
-        });
+      const result = await caller.integrations.testConnection({
+        connectorId: 'erp-sap',
+      });
 
-        if (!result.success) {
-          foundFailed = true;
-          expect(result.message).toContain('Connection failed');
-          break;
-        }
-      }
-      // Note: This test may be flaky due to random health status
-      // In production, we'd mock the actual adapter behavior
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('Connection failed');
+    });
+
+    it('should report unknown health checks as unavailable', async () => {
+      setConnectorHealthProviderForTests(async () => ({
+        status: 'unknown',
+        latencyMs: null,
+        errorMessage: 'Health check not configured: missing token',
+      }));
+
+      const result = await caller.integrations.testConnection({
+        connectorId: 'payment-stripe',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('health check is not configured');
     });
 
     it('should require authentication', async () => {

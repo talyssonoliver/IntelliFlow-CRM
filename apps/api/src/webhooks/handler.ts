@@ -11,7 +11,7 @@
  */
 
 import { z } from 'zod';
-import { createHash, createHmac, timingSafeEqual } from 'crypto';
+import { createHash, createHmac, randomBytes, timingSafeEqual } from 'crypto';
 
 // Webhook event schema
 export const WebhookEventSchema = z.object({
@@ -278,10 +278,11 @@ export class WebhookEventRouter {
  * Main webhook handler
  */
 export class WebhookHandler {
-  private configs: Map<string, WebhookConfig> = new Map();
-  private router: WebhookEventRouter;
-  private eventLog: Map<string, { processedAt: Date; result: WebhookHandlerResult }> = new Map();
-  private eventLogMaxSize: number;
+  private readonly configs: Map<string, WebhookConfig> = new Map();
+  private readonly router: WebhookEventRouter;
+  private readonly eventLog: Map<string, { processedAt: Date; result: WebhookHandlerResult }> =
+    new Map();
+  private readonly eventLogMaxSize: number;
 
   constructor(options?: { eventLogMaxSize?: number }) {
     this.router = new WebhookEventRouter();
@@ -310,6 +311,81 @@ export class WebhookHandler {
   }
 
   /**
+   * Verify the request signature for a configured source.
+   * Returns a result object on failure, or null on success (with verified flag).
+   */
+  private verifySignature(
+    config: WebhookConfig,
+    rawBody: string,
+    normalizedHeaders: Record<string, string>
+  ):
+    | { result: WebhookHandlerResult; verified: false; signature: undefined }
+    | { result: null; verified: boolean; signature: string | undefined } {
+    const signatureHeader = config.signatureVerifier.getHeaderName();
+    const signature = normalizedHeaders[signatureHeader.toLowerCase()];
+
+    if (signature) {
+      const verified = config.signatureVerifier.verify(rawBody, signature, config.secret);
+      if (!verified) {
+        return {
+          result: {
+            success: false,
+            message: 'Invalid signature',
+            statusCode: 401,
+            retryable: false,
+          },
+          verified: false,
+          signature: undefined,
+        };
+      }
+      return { result: null, verified: true, signature };
+    }
+
+    if (config.secret) {
+      return {
+        result: { success: false, message: 'Missing signature', statusCode: 401, retryable: false },
+        verified: false,
+        signature: undefined,
+      };
+    }
+
+    return { result: null, verified: false, signature: undefined };
+  }
+
+  /**
+   * Parse raw body into a WebhookEvent. Returns the event or a failure result.
+   */
+  private parseEvent(
+    rawBody: string,
+    source: string,
+    requestId: string
+  ): { event: WebhookEvent; error: null } | { event: null; error: WebhookHandlerResult } {
+    try {
+      const parsed = JSON.parse(rawBody);
+      const event = WebhookEventSchema.parse({
+        id: parsed.id || parsed.event_id || requestId,
+        type: parsed.type || parsed.event_type || parsed.event || 'unknown',
+        timestamp: parsed.timestamp || parsed.created_at || new Date().toISOString(),
+        version: parsed.version || '1.0',
+        source,
+        payload: parsed.data || parsed.payload || parsed,
+        metadata: parsed.metadata,
+      });
+      return { event, error: null };
+    } catch (error) {
+      return {
+        event: null,
+        error: {
+          success: false,
+          message: `Invalid event payload: ${error instanceof Error ? error.message : 'Parse error'}`,
+          statusCode: 400,
+          retryable: false,
+        },
+      };
+    }
+  }
+
+  /**
    * Handle incoming webhook request
    */
   async handleRequest(
@@ -319,7 +395,7 @@ export class WebhookHandler {
   ): Promise<WebhookHandlerResult> {
     const startTime = Date.now();
     const requestId = createHash('sha256')
-      .update(`${source}:${Date.now()}:${Math.random()}`)
+      .update(`${source}:${Date.now()}:${randomBytes(16).toString('hex')}`)
       .digest('hex')
       .slice(0, 16);
 
@@ -351,50 +427,16 @@ export class WebhookHandler {
       }
 
       // Verify signature
-      const signatureHeader = config.signatureVerifier.getHeaderName();
-      const signature = normalizedHeaders[signatureHeader.toLowerCase()];
+      const signatureCheck = this.verifySignature(config, rawBody, normalizedHeaders);
+      if (signatureCheck.result) return signatureCheck.result;
 
-      let verified = false;
-      if (signature) {
-        verified = config.signatureVerifier.verify(rawBody, signature, config.secret);
-        if (!verified) {
-          return {
-            success: false,
-            message: 'Invalid signature',
-            statusCode: 401,
-            retryable: false,
-          };
-        }
-      } else if (config.secret) {
-        return {
-          success: false,
-          message: 'Missing signature',
-          statusCode: 401,
-          retryable: false,
-        };
-      }
+      const { verified, signature } = signatureCheck;
+      const signatureHeader = config.signatureVerifier.getHeaderName();
 
       // Parse event
-      let event: WebhookEvent;
-      try {
-        const parsed = JSON.parse(rawBody);
-        event = WebhookEventSchema.parse({
-          id: parsed.id || parsed.event_id || requestId,
-          type: parsed.type || parsed.event_type || parsed.event || 'unknown',
-          timestamp: parsed.timestamp || parsed.created_at || new Date().toISOString(),
-          version: parsed.version || '1.0',
-          source,
-          payload: parsed.data || parsed.payload || parsed,
-          metadata: parsed.metadata,
-        });
-      } catch (error) {
-        return {
-          success: false,
-          message: `Invalid event payload: ${error instanceof Error ? error.message : 'Parse error'}`,
-          statusCode: 400,
-          retryable: false,
-        };
-      }
+      const parseResult = this.parseEvent(rawBody, source, requestId);
+      if (parseResult.error) return parseResult.error;
+      const event = parseResult.event;
 
       // Check if event is allowed
       if (config.allowedEvents && !config.allowedEvents.includes(event.type)) {
@@ -410,7 +452,6 @@ export class WebhookHandler {
       // Check for duplicate (idempotency)
       const eventKey = `${source}:${event.id}`;
       if (this.eventLog.has(eventKey)) {
-        const previous = this.eventLog.get(eventKey)!;
         return {
           success: true,
           eventId: event.id,

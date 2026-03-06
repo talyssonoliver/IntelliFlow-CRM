@@ -539,15 +539,9 @@ describe('Audit Router', () => {
       const caller = auditRouter.createCaller(createAdminContext());
 
       prismaMock.auditLogEntry.count.mockResolvedValue(mockStats.total);
-      (
-        prismaMock.auditLogEntry.groupBy as unknown as ReturnType<typeof vi.fn>
-      ).mockResolvedValueOnce(mockStats.byAction);
-      (
-        prismaMock.auditLogEntry.groupBy as unknown as ReturnType<typeof vi.fn>
-      ).mockResolvedValueOnce(mockStats.byResource);
-      (
-        prismaMock.auditLogEntry.groupBy as unknown as ReturnType<typeof vi.fn>
-      ).mockResolvedValueOnce(mockStats.byUser);
+      (prismaMock.auditLogEntry.groupBy as any).mockResolvedValueOnce(mockStats.byAction);
+      (prismaMock.auditLogEntry.groupBy as any).mockResolvedValueOnce(mockStats.byResource);
+      (prismaMock.auditLogEntry.groupBy as any).mockResolvedValueOnce(mockStats.byUser);
 
       const result = await caller.getStats({});
 
@@ -583,9 +577,7 @@ describe('Audit Router', () => {
       const endDate = new Date('2025-01-31');
 
       prismaMock.auditLogEntry.count.mockResolvedValue(50);
-      (prismaMock.auditLogEntry.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
-        []
-      );
+      (prismaMock.auditLogEntry.groupBy as any).mockResolvedValue([]);
 
       await caller.getStats({ startDate, endDate });
 
@@ -603,9 +595,7 @@ describe('Audit Router', () => {
       const caller = auditRouter.createCaller(createAdminContext());
 
       prismaMock.auditLogEntry.count.mockResolvedValue(mockStats.total);
-      (prismaMock.auditLogEntry.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
-        []
-      );
+      (prismaMock.auditLogEntry.groupBy as any).mockResolvedValue([]);
 
       await caller.getStats({});
 

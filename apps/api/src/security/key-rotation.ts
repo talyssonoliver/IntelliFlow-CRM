@@ -180,9 +180,9 @@ export class InMemoryKeyVersionStore implements KeyVersionStore {
  * Vault-backed key version store
  */
 export class VaultKeyVersionStore implements KeyVersionStore {
-  private vaultAddress: string;
-  private vaultToken: string;
-  private keyName: string;
+  private readonly vaultAddress: string;
+  private readonly vaultToken: string;
+  private readonly keyName: string;
 
   constructor(options?: { address?: string; token?: string; keyName?: string }) {
     this.vaultAddress = options?.address || process.env.VAULT_ADDR || 'http://127.0.0.1:8200';
@@ -415,6 +415,52 @@ export class KeyRotationService {
   }
 
   /**
+   * Re-encrypt a single batch of records and return fulfilled/rejected counts
+   */
+  private async reEncryptBatch(
+    dataProvider: DataProvider,
+    version: number,
+    offset: number
+  ): Promise<{ fulfilled: number; rejected: number }> {
+    const records = await dataProvider.getRecordsByKeyVersion(
+      version,
+      this.config.reEncryptionBatchSize,
+      offset
+    );
+
+    const results = await Promise.allSettled(
+      records.map(async (record) => {
+        const reEncrypted = await this.encryptionService.reEncrypt(record.encryptedData);
+        await dataProvider.updateRecord(record.id, reEncrypted);
+      })
+    );
+
+    return {
+      fulfilled: results.filter((r) => r.status === 'fulfilled').length,
+      rejected: results.filter((r) => r.status === 'rejected').length,
+    };
+  }
+
+  /**
+   * Re-encrypt all records for a specific key version
+   */
+  private async reEncryptVersion(
+    dataProvider: DataProvider,
+    version: number,
+    counts: { processed: number; failed: number }
+  ): Promise<number> {
+    const count = await dataProvider.getRecordCount(version);
+    let offset = 0;
+    while (offset < count) {
+      const batch = await this.reEncryptBatch(dataProvider, version, offset);
+      counts.processed += batch.fulfilled;
+      counts.failed += batch.rejected;
+      offset += this.config.reEncryptionBatchSize;
+    }
+    return count;
+  }
+
+  /**
    * Re-encrypt all data with current key version
    */
   async reEncryptData(
@@ -427,8 +473,7 @@ export class KeyRotationService {
       : Array.from({ length: currentVersion - 1 }, (_, i) => i + 1);
 
     let totalRecords = 0;
-    let processedRecords = 0;
-    let failedRecords = 0;
+    const counts = { processed: 0, failed: 0 };
     const startedAt = new Date();
 
     this.recordLifecycleEvent({
@@ -440,43 +485,22 @@ export class KeyRotationService {
 
     try {
       for (const version of versionsToMigrate) {
-        const count = await dataProvider.getRecordCount(version);
-        totalRecords += count;
-
-        let offset = 0;
-        while (offset < count) {
-          const records = await dataProvider.getRecordsByKeyVersion(
-            version,
-            this.config.reEncryptionBatchSize,
-            offset
-          );
-
-          const results = await Promise.allSettled(
-            records.map(async (record) => {
-              const reEncrypted = await this.encryptionService.reEncrypt(record.encryptedData);
-              await dataProvider.updateRecord(record.id, reEncrypted);
-            })
-          );
-
-          processedRecords += results.filter((r) => r.status === 'fulfilled').length;
-          failedRecords += results.filter((r) => r.status === 'rejected').length;
-          offset += this.config.reEncryptionBatchSize;
-        }
+        totalRecords += await this.reEncryptVersion(dataProvider, version, counts);
       }
 
       this.recordLifecycleEvent({
         eventType: 'REENCRYPTION_COMPLETED',
         keyVersion: currentVersion,
         timestamp: new Date(),
-        details: { totalRecords, processedRecords, failedRecords },
+        details: { totalRecords, processedRecords: counts.processed, failedRecords: counts.failed },
       });
 
       return {
         totalRecords,
-        processedRecords,
-        failedRecords,
+        processedRecords: counts.processed,
+        failedRecords: counts.failed,
         startedAt,
-        status: failedRecords > 0 ? 'completed' : 'completed',
+        status: 'completed',
       };
     } catch (error) {
       this.recordLifecycleEvent({
@@ -488,8 +512,8 @@ export class KeyRotationService {
 
       return {
         totalRecords,
-        processedRecords,
-        failedRecords,
+        processedRecords: counts.processed,
+        failedRecords: counts.failed,
         startedAt,
         status: 'failed',
       };

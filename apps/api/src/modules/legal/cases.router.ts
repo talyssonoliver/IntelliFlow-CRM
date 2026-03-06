@@ -373,7 +373,7 @@ export const casesRouter = createTRPCRouter({
         entityId: caseData.id,
         entityName: input.title,
         actionUrl: `/cases/${caseData.id}`,
-      }).catch(() => {});
+      }).catch((err) => console.error('[cases.router] Notification failed:', err));
     }
 
     return caseData;
@@ -462,7 +462,7 @@ export const casesRouter = createTRPCRouter({
       entityId: caseData.id,
       entityName: existing.title,
       actionUrl: `/cases/${caseData.id}`,
-    }).catch(() => {});
+    }).catch((err) => console.error('[cases.router] Notification failed:', err));
 
     return caseData;
   }),
@@ -508,7 +508,7 @@ export const casesRouter = createTRPCRouter({
       entityId: caseData.id,
       entityName: existing.title,
       actionUrl: `/cases/${caseData.id}`,
-    }).catch(() => {});
+    }).catch((err) => console.error('[cases.router] Notification failed:', err));
 
     return caseData;
   }),

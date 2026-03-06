@@ -46,6 +46,64 @@ function getTaskService(ctx: Context) {
   return ctx.services.task;
 }
 
+/**
+ * Map task create/update service failure to TRPCError
+ */
+function throwCreateTaskError(errorCode: string, message: string): never {
+  if (errorCode === 'VALIDATION_ERROR') {
+    const isEntityNotFound =
+      message.includes('not found') ||
+      message.includes('Lead') ||
+      message.includes('Contact') ||
+      message.includes('Opportunity');
+    throw new TRPCError({
+      code: isEntityNotFound ? 'NOT_FOUND' : 'BAD_REQUEST',
+      message,
+    });
+  }
+  throw new TRPCError({ code: 'BAD_REQUEST', message });
+}
+
+/**
+ * Validate that entity references (lead/contact/opportunity) exist in the tenant scope.
+ * Throws NOT_FOUND TRPCError if any referenced entity is missing.
+ */
+async function validateEntityReferences(
+  typedCtx: TenantAwareContext,
+  refs: { leadId?: string | null; contactId?: string | null; opportunityId?: string | null }
+): Promise<void> {
+  if (refs.leadId !== undefined && refs.leadId !== null) {
+    const lead = await typedCtx.prismaWithTenant.lead.findUnique({ where: { id: refs.leadId } });
+    if (!lead) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: `Lead with ID ${refs.leadId} not found` });
+    }
+  }
+
+  if (refs.contactId !== undefined && refs.contactId !== null) {
+    const contact = await typedCtx.prismaWithTenant.contact.findUnique({
+      where: { id: refs.contactId },
+    });
+    if (!contact) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Contact with ID ${refs.contactId} not found`,
+      });
+    }
+  }
+
+  if (refs.opportunityId !== undefined && refs.opportunityId !== null) {
+    const opportunity = await typedCtx.prismaWithTenant.opportunity.findUnique({
+      where: { id: refs.opportunityId },
+    });
+    if (!opportunity) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Opportunity with ID ${refs.opportunityId} not found`,
+      });
+    }
+  }
+}
+
 export const taskRouter = createTRPCRouter({
   /**
    * Create a new task
@@ -53,41 +111,27 @@ export const taskRouter = createTRPCRouter({
   create: tenantProcedure.input(createTaskSchema).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
     const taskService = getTaskService(ctx);
+    const { calendarId, ...taskInput } = input;
 
     const result = await taskService.createTask({
-      ...input,
+      ...taskInput,
       ownerId: typedCtx.tenant.userId,
       tenantId: typedCtx.tenant.tenantId,
     });
 
     if (result.isFailure) {
-      const errorCode = result.error.code;
-      const message = result.error.message;
-      if (errorCode === 'VALIDATION_ERROR') {
-        // Check if it's an entity not found error
-        if (
-          message.includes('not found') ||
-          message.includes('Lead') ||
-          message.includes('Contact') ||
-          message.includes('Opportunity')
-        ) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message,
-          });
-        }
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message,
-        });
-      }
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message,
+      throwCreateTaskError(result.error.code, result.error.message);
+    }
+
+    // Set calendarId if provided (not part of domain model)
+    if (calendarId) {
+      await ctx.prisma.task.update({
+        where: { id: result.value.id.toString() },
+        data: { calendarId },
       });
     }
 
-    // Fire-and-forget notification on task creation
+    // Fire-and-forget: notification failure must not block the task creation response
     createNotification(ctx.prisma, {
       userId: typedCtx.tenant.userId,
       tenantId: typedCtx.tenant.tenantId,
@@ -99,7 +143,7 @@ export const taskRouter = createTRPCRouter({
       entityId: result.value.id.toString(),
       entityName: result.value.title,
       actionUrl: `/tasks/${result.value.id.toString()}`,
-    }).catch(() => {});
+    }).catch(() => {}); // Swallow notification errors — non-critical side-effect
 
     return mapTaskToResponse(result.value);
   }),
@@ -300,41 +344,7 @@ export const taskRouter = createTRPCRouter({
     }
 
     // For complex updates with entity assignments, validate then use Prisma (CQRS read-side)
-    if (leadId !== undefined && leadId !== null) {
-      const lead = await typedCtx.prismaWithTenant.lead.findUnique({
-        where: { id: leadId },
-      });
-      if (!lead) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: `Lead with ID ${leadId} not found`,
-        });
-      }
-    }
-
-    if (contactId !== undefined && contactId !== null) {
-      const contact = await typedCtx.prismaWithTenant.contact.findUnique({
-        where: { id: contactId },
-      });
-      if (!contact) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: `Contact with ID ${contactId} not found`,
-        });
-      }
-    }
-
-    if (opportunityId !== undefined && opportunityId !== null) {
-      const opportunity = await typedCtx.prismaWithTenant.opportunity.findUnique({
-        where: { id: opportunityId },
-      });
-      if (!opportunity) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: `Opportunity with ID ${opportunityId} not found`,
-        });
-      }
-    }
+    await validateEntityReferences(typedCtx, { leadId, contactId, opportunityId });
 
     // Complex update via Prisma
     const task = await typedCtx.prismaWithTenant.task.update({
@@ -356,7 +366,6 @@ export const taskRouter = createTRPCRouter({
    * Delete a task
    */
   delete: tenantProcedure.input(z.object({ id: idSchema })).mutation(async ({ ctx, input }) => {
-    const typedCtx = getTenantContext(ctx);
     const taskService = getTaskService(ctx);
 
     const result = await taskService.deleteTask(input.id);
@@ -456,7 +465,7 @@ export const taskRouter = createTRPCRouter({
       });
     }
 
-    // Notify on task completion
+    // Fire-and-forget: notification failure must not block the task completion response
     createNotification(ctx.prisma, {
       userId: typedCtx.tenant.userId,
       tenantId: typedCtx.tenant.tenantId,
@@ -468,7 +477,7 @@ export const taskRouter = createTRPCRouter({
       entityId: result.value.id.toString(),
       entityName: result.value.title,
       actionUrl: `/tasks/${result.value.id.toString()}`,
-    }).catch(() => {});
+    }).catch(() => {}); // Swallow notification errors — non-critical side-effect
 
     return mapTaskToResponse(result.value);
   }),
@@ -506,23 +515,23 @@ export const taskRouter = createTRPCRouter({
     ]);
 
     return {
-      total,
-      byStatus: byStatus.reduce(
+      total: total ?? 0,
+      byStatus: (byStatus ?? []).reduce(
         (acc, item) => {
           acc[item.status] = item._count;
           return acc;
         },
         {} as Record<string, number>
       ),
-      byPriority: byPriority.reduce(
+      byPriority: (byPriority ?? []).reduce(
         (acc, item) => {
           acc[item.priority] = item._count;
           return acc;
         },
         {} as Record<string, number>
       ),
-      overdue,
-      dueToday,
+      overdue: overdue ?? 0,
+      dueToday: dueToday ?? 0,
     };
   }),
 
@@ -566,7 +575,7 @@ export const taskRouter = createTRPCRouter({
       throw new TRPCError({ code: 'BAD_REQUEST', message });
     }
 
-    // Notify on entity assignment
+    // Fire-and-forget: notification failure must not block the task assignment response
     createNotification(ctx.prisma, {
       userId: typedCtx.tenant.userId,
       tenantId: typedCtx.tenant.tenantId,
@@ -578,7 +587,7 @@ export const taskRouter = createTRPCRouter({
       entityId: result.value.id.toString(),
       entityName: result.value.title,
       actionUrl: `/tasks/${result.value.id.toString()}`,
-    }).catch(() => {});
+    }).catch(() => {}); // Swallow notification errors — non-critical side-effect
 
     return mapTaskToResponse(result.value);
   }),

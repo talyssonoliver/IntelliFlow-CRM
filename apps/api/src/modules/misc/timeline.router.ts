@@ -245,6 +245,399 @@ const timelineEventSchema = z.object({
 export type TimelineEvent = z.infer<typeof timelineEventSchema>;
 
 // =============================================================================
+// Timeline Query Helpers
+// =============================================================================
+
+type TimelineQueryInput = z.infer<typeof timelineQuerySchema>;
+type PrismaContext = { prisma: any; user: { userId: string } };
+
+/** Returns true if the event type passes the include/exclude filters */
+function shouldIncludeType(
+  type: string,
+  eventTypes: TimelineQueryInput['eventTypes'],
+  excludeTypes: TimelineQueryInput['excludeTypes']
+): boolean {
+  if (excludeTypes?.includes(type as any)) return false;
+  if (eventTypes && eventTypes.length > 0) return eventTypes.includes(type as any);
+  return true;
+}
+
+/** Map a DB priority string to the timeline priority value */
+function mapPriority(priority: string | null | undefined): TimelinePriorityValue | null {
+  if (!priority) return null;
+  const mapping: Record<string, TimelinePriorityValue> = {
+    LOW: 'low',
+    MEDIUM: 'medium',
+    HIGH: 'high',
+    URGENT: 'urgent',
+  };
+  return mapping[priority.toUpperCase()] || 'medium';
+}
+
+/** Fetch task events and push them into `events` */
+async function fetchTaskEvents(
+  ctx: PrismaContext,
+  input: TimelineQueryInput,
+  effectiveOpportunityId: string | undefined,
+  dateFilter: { gte?: Date; lte?: Date },
+  now: Date,
+  events: TimelineEvent[]
+): Promise<void> {
+  const { contactId, sortOrder, includeCompleted, priorities, search, eventTypes, excludeTypes } =
+    input;
+  const shouldInclude = (t: string) => shouldIncludeType(t, eventTypes, excludeTypes);
+
+  if (!shouldInclude('task') && !shouldInclude('task_completed') && !shouldInclude('task_overdue'))
+    return;
+
+  const taskWhere: any = {};
+  if (effectiveOpportunityId) taskWhere.opportunityId = effectiveOpportunityId;
+  if (contactId) taskWhere.contactId = contactId;
+  if (Object.keys(dateFilter).length > 0) {
+    taskWhere.OR = [
+      { createdAt: dateFilter },
+      { dueDate: dateFilter },
+      { completedAt: dateFilter },
+    ];
+  }
+  if (search) {
+    taskWhere.OR = [
+      { title: { contains: search, mode: 'insensitive' } },
+      { description: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+  if (!includeCompleted) taskWhere.status = { notIn: ['COMPLETED', 'CANCELLED'] };
+  if (priorities && priorities.length > 0)
+    taskWhere.priority = { in: priorities.map((p) => p.toUpperCase()) };
+
+  const tasks = await ctx.prisma.task.findMany({
+    where: taskWhere,
+    include: { owner: { select: { id: true, name: true, email: true, avatarUrl: true } } },
+    orderBy: { createdAt: sortOrder },
+  });
+
+  for (const task of tasks) {
+    const isOverdue =
+      task.dueDate &&
+      task.dueDate < now &&
+      task.status !== 'COMPLETED' &&
+      task.status !== 'CANCELLED';
+    let eventType: TimelineEventTypeValue = 'task';
+    if (task.status === 'COMPLETED') eventType = 'task_completed';
+    else if (isOverdue) eventType = 'task_overdue';
+
+    if (shouldInclude(eventType)) {
+      events.push({
+        id: `task-${task.id}`,
+        type: eventType,
+        title: task.title,
+        description: task.description,
+        timestamp: task.completedAt || task.dueDate || task.createdAt,
+        priority: mapPriority(task.priority),
+        entityType: 'task',
+        entityId: task.id,
+        task: {
+          taskId: task.id,
+          status: task.status,
+          dueDate: task.dueDate,
+          completedAt: task.completedAt,
+        },
+        actor: task.owner
+          ? {
+              id: task.owner.id,
+              name: task.owner.name,
+              email: task.owner.email,
+              avatarUrl: task.owner.avatarUrl,
+              isAgent: false,
+            }
+          : null,
+        isOverdue: !!isOverdue,
+        agentAction: null,
+        document: null,
+        communication: null,
+        appointment: null,
+        metadata: null,
+      });
+    }
+  }
+}
+
+/** Fetch appointment events and push them into `events` */
+async function fetchAppointmentEvents(
+  ctx: PrismaContext,
+  input: TimelineQueryInput,
+  effectiveOpportunityId: string | undefined,
+  dateFilter: { gte?: Date; lte?: Date },
+  now: Date,
+  events: TimelineEvent[]
+): Promise<void> {
+  const { sortOrder, includeCompleted, eventTypes, excludeTypes } = input;
+  if (!shouldIncludeType('appointment', eventTypes, excludeTypes)) return;
+
+  const appointmentWhere: any = {
+    OR: [{ organizerId: ctx.user.userId }, { attendees: { some: { userId: ctx.user.userId } } }],
+  };
+  if (effectiveOpportunityId)
+    appointmentWhere.linkedCases = { some: { caseId: effectiveOpportunityId } };
+  if (Object.keys(dateFilter).length > 0) appointmentWhere.startTime = dateFilter;
+  if (!includeCompleted) appointmentWhere.status = { notIn: ['COMPLETED', 'CANCELLED', 'NO_SHOW'] };
+
+  const appointments = await ctx.prisma.appointment.findMany({
+    where: appointmentWhere,
+    orderBy: { startTime: sortOrder },
+  });
+
+  for (const apt of appointments) {
+    events.push({
+      id: `appointment-${apt.id}`,
+      type: 'appointment',
+      title: apt.title,
+      description: apt.description,
+      timestamp: apt.startTime,
+      priority: null,
+      entityType: 'appointment',
+      entityId: apt.id,
+      appointment: {
+        appointmentId: apt.id,
+        appointmentType: apt.appointmentType,
+        startTime: apt.startTime,
+        endTime: apt.endTime,
+        location: apt.location,
+        status: apt.status,
+      },
+      actor: null,
+      isOverdue: apt.endTime < now && apt.status === 'SCHEDULED',
+      agentAction: null,
+      document: null,
+      communication: null,
+      task: null,
+      metadata: null,
+    });
+  }
+}
+
+/** Fetch audit log events and push them into `events` */
+async function fetchAuditEvents(
+  ctx: PrismaContext,
+  input: TimelineQueryInput,
+  effectiveOpportunityId: string | undefined,
+  dateFilter: { gte?: Date; lte?: Date },
+  events: TimelineEvent[]
+): Promise<void> {
+  const { sortOrder, eventTypes, excludeTypes } = input;
+  const shouldInclude = (t: string) => shouldIncludeType(t, eventTypes, excludeTypes);
+  if (!shouldInclude('status_change') && !shouldInclude('stage_change') && !shouldInclude('audit'))
+    return;
+
+  const auditWhere: any = {};
+  if (effectiveOpportunityId) {
+    auditWhere.OR = [
+      { resourceType: 'Opportunity', resourceId: effectiveOpportunityId },
+      { resourceType: 'Deal', resourceId: effectiveOpportunityId },
+      { resourceType: 'Case', resourceId: effectiveOpportunityId },
+    ];
+  }
+  if (Object.keys(dateFilter).length > 0) auditWhere.timestamp = dateFilter;
+
+  const auditLogs = await ctx.prisma.auditLogEntry.findMany({
+    where: auditWhere,
+    orderBy: { timestamp: sortOrder },
+    take: 100,
+  });
+
+  for (const log of auditLogs) {
+    let eventType: TimelineEventTypeValue = 'audit';
+    if (log.eventType.toLowerCase().includes('stage')) eventType = 'stage_change';
+    else if (log.eventType.toLowerCase().includes('status')) eventType = 'status_change';
+
+    if (shouldInclude(eventType)) {
+      events.push({
+        id: `audit-${log.id}`,
+        type: eventType,
+        title: log.eventType,
+        description: log.actionReason,
+        timestamp: log.timestamp,
+        priority: null,
+        entityType: log.resourceType,
+        entityId: log.resourceId,
+        actor: log.actorId
+          ? {
+              id: log.actorId,
+              name: log.actorEmail ?? log.actorId,
+              email: log.actorEmail ?? null,
+              avatarUrl: null,
+              isAgent: log.actorType === 'AI_AGENT',
+            }
+          : null,
+        metadata: { oldValue: log.beforeState, newValue: log.afterState, ipAddress: log.ipAddress },
+        isOverdue: false,
+        agentAction: null,
+        document: null,
+        communication: null,
+        appointment: null,
+        task: null,
+      });
+    }
+  }
+}
+
+/** Fetch domain events (agent actions) and push them into `events` */
+async function fetchAgentActionEvents(
+  ctx: PrismaContext,
+  input: TimelineQueryInput,
+  effectiveOpportunityId: string | undefined,
+  dateFilter: { gte?: Date; lte?: Date },
+  events: TimelineEvent[]
+): Promise<void> {
+  const { sortOrder, agentActionStatus, eventTypes, excludeTypes } = input;
+  if (!shouldIncludeType('agent_action', eventTypes, excludeTypes)) return;
+
+  const domainEventWhere: any = { eventType: { startsWith: 'AgentAction' } };
+  if (effectiveOpportunityId) domainEventWhere.aggregateId = effectiveOpportunityId;
+  if (Object.keys(dateFilter).length > 0) domainEventWhere.occurredAt = dateFilter;
+  if (agentActionStatus && agentActionStatus.length > 0) {
+    domainEventWhere.payload = { path: ['status'], array_contains: agentActionStatus };
+  }
+
+  const domainEvents = await ctx.prisma.domainEvent.findMany({
+    where: domainEventWhere,
+    orderBy: { occurredAt: sortOrder },
+  });
+
+  const statusMap: Record<string, AgentActionStatusValue> = {
+    pending: 'pending_approval',
+    pending_approval: 'pending_approval',
+    approved: 'approved',
+    rejected: 'rejected',
+    rolled_back: 'rolled_back',
+    expired: 'expired',
+  };
+
+  for (const event of domainEvents) {
+    const payload = event.payload as any;
+    const status: AgentActionStatusValue = payload?.status
+      ? statusMap[payload.status.toLowerCase()] || 'pending_approval'
+      : 'pending_approval';
+
+    events.push({
+      id: `agent-${event.id}`,
+      type: 'agent_action',
+      title: payload?.actionName || `Agent Action: ${event.eventType}`,
+      description: payload?.description || null,
+      timestamp: event.occurredAt,
+      priority: payload?.priority ? mapPriority(payload.priority) : 'medium',
+      entityType: event.aggregateType,
+      entityId: event.aggregateId,
+      agentAction: {
+        actionId: event.id,
+        agentName: payload?.agentName || 'AI Assistant',
+        proposedChanges: payload?.proposedChanges || payload?.changes || null,
+        confidence: payload?.confidence || 0.85,
+        status,
+        expiresAt: payload?.expiresAt ? new Date(payload.expiresAt) : null,
+      },
+      actor: {
+        id: 'agent',
+        name: payload?.agentName || 'AI Assistant',
+        email: null,
+        avatarUrl: null,
+        isAgent: true,
+      },
+      isOverdue: false,
+      document: null,
+      communication: null,
+      appointment: null,
+      task: null,
+      metadata: event.metadata as Record<string, any> | null,
+    });
+  }
+}
+
+/** Fetch document events and push them into `events` */
+async function fetchDocumentEvents(
+  ctx: PrismaContext,
+  input: TimelineQueryInput,
+  effectiveOpportunityId: string | undefined,
+  dateFilter: { gte?: Date; lte?: Date },
+  events: TimelineEvent[]
+): Promise<void> {
+  const { sortOrder, eventTypes, excludeTypes } = input;
+  const shouldInclude = (t: string) => shouldIncludeType(t, eventTypes, excludeTypes);
+  if (!shouldInclude('document') && !shouldInclude('document_version')) return;
+
+  const documentWhere: any = { deletedAt: null };
+  if (effectiveOpportunityId) documentWhere.relatedCaseId = effectiveOpportunityId;
+  if (Object.keys(dateFilter).length > 0) documentWhere.createdAt = dateFilter;
+
+  const documents = await ctx.prisma.caseDocument.findMany({
+    where: documentWhere,
+    orderBy: { createdAt: sortOrder },
+    take: 50,
+  });
+
+  for (const doc of documents) {
+    if (shouldInclude('document')) {
+      events.push({
+        id: `document-${doc.id}`,
+        type: 'document',
+        title: doc.title,
+        description: doc.description,
+        timestamp: doc.createdAt,
+        priority: null,
+        entityType: 'document',
+        entityId: doc.id,
+        document: {
+          documentId: doc.id,
+          filename: doc.title,
+          version: doc.versionMajor,
+          mimeType: doc.mimeType,
+        },
+        actor: { id: doc.createdBy, name: null, email: null, avatarUrl: null, isAgent: false },
+        isOverdue: false,
+        agentAction: null,
+        communication: null,
+        appointment: null,
+        task: null,
+        metadata: {
+          classification: doc.classification,
+          documentType: doc.documentType,
+          status: doc.status,
+          version: `${doc.versionMajor}.${doc.versionMinor}.${doc.versionPatch}`,
+        },
+      });
+    }
+    if (shouldInclude('document_version') && doc.parentVersionId) {
+      events.push({
+        id: `document-version-${doc.id}`,
+        type: 'document_version',
+        title: `${doc.title} - Version ${doc.versionMajor}.${doc.versionMinor}.${doc.versionPatch}`,
+        description: 'New version created',
+        timestamp: doc.updatedAt,
+        priority: null,
+        entityType: 'document',
+        entityId: doc.id,
+        document: {
+          documentId: doc.id,
+          filename: doc.title,
+          version: doc.versionMajor,
+          mimeType: doc.mimeType,
+        },
+        actor: { id: doc.updatedBy, name: null, email: null, avatarUrl: null, isAgent: false },
+        isOverdue: false,
+        agentAction: null,
+        communication: null,
+        appointment: null,
+        task: null,
+        metadata: {
+          parentVersionId: doc.parentVersionId,
+          versionNumber: `${doc.versionMajor}.${doc.versionMinor}.${doc.versionPatch}`,
+        },
+      });
+    }
+  }
+}
+
+// =============================================================================
 // Router Implementation
 // =============================================================================
 
@@ -258,24 +651,7 @@ export const timelineRouter = createTRPCRouter({
   getEvents: protectedProcedure.input(timelineQuerySchema).query(async ({ ctx, input }) => {
     const startTime = performance.now();
 
-    const {
-      dealId,
-      caseId,
-      opportunityId,
-      contactId,
-      accountId,
-      eventTypes,
-      excludeTypes,
-      priorities,
-      agentActionStatus,
-      fromDate,
-      toDate,
-      page,
-      limit,
-      sortOrder,
-      includeCompleted,
-      search,
-    } = input;
+    const { dealId, caseId, opportunityId, fromDate, toDate, page, limit, sortOrder } = input;
 
     // Use dealId or caseId interchangeably (same entity concept)
     const effectiveOpportunityId = opportunityId || dealId || caseId;
@@ -288,454 +664,29 @@ export const timelineRouter = createTRPCRouter({
     if (fromDate) dateFilter.gte = fromDate;
     if (toDate) dateFilter.lte = toDate;
 
-    // Helper to check if event type should be included
-    const shouldIncludeType = (type: string): boolean => {
-      if (excludeTypes?.includes(type as any)) return false;
-      if (eventTypes && eventTypes.length > 0) {
-        return eventTypes.includes(type as any);
-      }
-      return true;
-    };
-
-    // Helper to map priority
-    const mapPriority = (priority: string | null | undefined): TimelinePriorityValue | null => {
-      if (!priority) return null;
-      const mapping: Record<string, TimelinePriorityValue> = {
-        LOW: 'low',
-        MEDIUM: 'medium',
-        HIGH: 'high',
-        URGENT: 'urgent',
-      };
-      return mapping[priority.toUpperCase()] || 'medium';
-    };
-
-    // =========================================================================
     // 1. Fetch Tasks
-    // =========================================================================
-    if (
-      shouldIncludeType('task') ||
-      shouldIncludeType('task_completed') ||
-      shouldIncludeType('task_overdue')
-    ) {
-      const taskWhere: any = {};
+    await fetchTaskEvents(ctx, input, effectiveOpportunityId, dateFilter, now, events);
 
-      if (effectiveOpportunityId) {
-        taskWhere.opportunityId = effectiveOpportunityId;
-      }
-      if (contactId) {
-        taskWhere.contactId = contactId;
-      }
-
-      if (Object.keys(dateFilter).length > 0) {
-        taskWhere.OR = [
-          { createdAt: dateFilter },
-          { dueDate: dateFilter },
-          { completedAt: dateFilter },
-        ];
-      }
-
-      if (search) {
-        taskWhere.OR = [
-          { title: { contains: search, mode: 'insensitive' } },
-          { description: { contains: search, mode: 'insensitive' } },
-        ];
-      }
-
-      if (!includeCompleted) {
-        taskWhere.status = { notIn: ['COMPLETED', 'CANCELLED'] };
-      }
-
-      if (priorities && priorities.length > 0) {
-        taskWhere.priority = {
-          in: priorities.map((p) => p.toUpperCase()),
-        };
-      }
-
-      const tasks = await ctx.prisma.task.findMany({
-        where: taskWhere,
-        include: {
-          owner: {
-            select: { id: true, name: true, email: true, avatarUrl: true },
-          },
-        },
-        orderBy: { createdAt: sortOrder },
-      });
-
-      for (const task of tasks) {
-        const isOverdue =
-          task.dueDate &&
-          task.dueDate < now &&
-          task.status !== 'COMPLETED' &&
-          task.status !== 'CANCELLED';
-
-        let eventType: TimelineEventTypeValue = 'task';
-        if (task.status === 'COMPLETED') {
-          eventType = 'task_completed';
-        } else if (isOverdue) {
-          eventType = 'task_overdue';
-        }
-
-        if (shouldIncludeType(eventType)) {
-          events.push({
-            id: `task-${task.id}`,
-            type: eventType,
-            title: task.title,
-            description: task.description,
-            timestamp: task.completedAt || task.dueDate || task.createdAt,
-            priority: mapPriority(task.priority),
-            entityType: 'task',
-            entityId: task.id,
-            task: {
-              taskId: task.id,
-              status: task.status,
-              dueDate: task.dueDate,
-              completedAt: task.completedAt,
-            },
-            actor: task.owner
-              ? {
-                  id: task.owner.id,
-                  name: task.owner.name,
-                  email: task.owner.email,
-                  avatarUrl: task.owner.avatarUrl,
-                  isAgent: false,
-                }
-              : null,
-            isOverdue: !!isOverdue,
-            agentAction: null,
-            document: null,
-            communication: null,
-            appointment: null,
-            metadata: null,
-          });
-        }
-      }
-    }
-
-    // =========================================================================
     // 2. Fetch Appointments
-    // =========================================================================
-    if (shouldIncludeType('appointment')) {
-      const appointmentWhere: any = {
-        OR: [
-          { organizerId: ctx.user.userId },
-          { attendees: { some: { userId: ctx.user.userId } } },
-        ],
-      };
+    await fetchAppointmentEvents(ctx, input, effectiveOpportunityId, dateFilter, now, events);
 
-      // Link appointments to cases/deals via linkedCases
-      if (effectiveOpportunityId) {
-        appointmentWhere.linkedCases = {
-          some: { caseId: effectiveOpportunityId },
-        };
-      }
+    // 3. Fetch Audit Log Entries (status/stage changes)
+    await fetchAuditEvents(ctx, input, effectiveOpportunityId, dateFilter, events);
 
-      if (Object.keys(dateFilter).length > 0) {
-        appointmentWhere.startTime = dateFilter;
-      }
+    // 4. Fetch Domain Events (agent actions)
+    await fetchAgentActionEvents(ctx, input, effectiveOpportunityId, dateFilter, events);
 
-      if (!includeCompleted) {
-        appointmentWhere.status = { notIn: ['COMPLETED', 'CANCELLED', 'NO_SHOW'] };
-      }
-
-      const appointments = await ctx.prisma.appointment.findMany({
-        where: appointmentWhere,
-        orderBy: { startTime: sortOrder },
-      });
-
-      for (const apt of appointments) {
-        events.push({
-          id: `appointment-${apt.id}`,
-          type: 'appointment',
-          title: apt.title,
-          description: apt.description,
-          timestamp: apt.startTime,
-          priority: null,
-          entityType: 'appointment',
-          entityId: apt.id,
-          appointment: {
-            appointmentId: apt.id,
-            appointmentType: apt.appointmentType,
-            startTime: apt.startTime,
-            endTime: apt.endTime,
-            location: apt.location,
-            status: apt.status,
-          },
-          actor: null,
-          isOverdue: apt.endTime < now && apt.status === 'SCHEDULED',
-          agentAction: null,
-          document: null,
-          communication: null,
-          task: null,
-          metadata: null,
-        });
-      }
-    }
-
-    // =========================================================================
-    // 3. Fetch Audit Log Entries (for status changes, stage changes, etc.)
-    // Using consolidated AuditLogEntry table per ADR-008
-    // =========================================================================
-    if (
-      shouldIncludeType('status_change') ||
-      shouldIncludeType('stage_change') ||
-      shouldIncludeType('audit')
-    ) {
-      const auditWhere: any = {};
-
-      if (effectiveOpportunityId) {
-        auditWhere.OR = [
-          { resourceType: 'Opportunity', resourceId: effectiveOpportunityId },
-          { resourceType: 'Deal', resourceId: effectiveOpportunityId },
-          { resourceType: 'Case', resourceId: effectiveOpportunityId },
-        ];
-      }
-
-      if (Object.keys(dateFilter).length > 0) {
-        auditWhere.timestamp = dateFilter;
-      }
-
-      const auditLogs = await ctx.prisma.auditLogEntry.findMany({
-        where: auditWhere,
-        orderBy: { timestamp: sortOrder },
-        take: 100, // Limit audit entries
-      });
-
-      for (const log of auditLogs) {
-        let eventType: TimelineEventTypeValue = 'audit';
-
-        // Determine specific event type based on eventType
-        if (log.eventType.toLowerCase().includes('stage')) {
-          eventType = 'stage_change';
-        } else if (log.eventType.toLowerCase().includes('status')) {
-          eventType = 'status_change';
-        }
-
-        if (shouldIncludeType(eventType)) {
-          events.push({
-            id: `audit-${log.id}`,
-            type: eventType,
-            title: log.eventType,
-            description: log.actionReason,
-            timestamp: log.timestamp,
-            priority: null,
-            entityType: log.resourceType,
-            entityId: log.resourceId,
-            actor: log.actorId
-              ? {
-                  id: log.actorId,
-                  name: log.actorEmail ?? log.actorId,
-                  email: log.actorEmail ?? null,
-                  avatarUrl: null,
-                  isAgent: log.actorType === 'AI_AGENT',
-                }
-              : null,
-            metadata: {
-              oldValue: log.beforeState,
-              newValue: log.afterState,
-              ipAddress: log.ipAddress,
-            },
-            isOverdue: false,
-            agentAction: null,
-            document: null,
-            communication: null,
-            appointment: null,
-            task: null,
-          });
-        }
-      }
-    }
-
-    // =========================================================================
-    // 4. Fetch Domain Events (for agent actions and other domain events)
-    // =========================================================================
-    if (shouldIncludeType('agent_action')) {
-      const domainEventWhere: any = {
-        eventType: { startsWith: 'AgentAction' },
-      };
-
-      if (effectiveOpportunityId) {
-        domainEventWhere.aggregateId = effectiveOpportunityId;
-      }
-
-      if (Object.keys(dateFilter).length > 0) {
-        domainEventWhere.occurredAt = dateFilter;
-      }
-
-      if (agentActionStatus && agentActionStatus.length > 0) {
-        // Filter by status in payload
-        domainEventWhere.payload = {
-          path: ['status'],
-          array_contains: agentActionStatus,
-        };
-      }
-
-      const domainEvents = await ctx.prisma.domainEvent.findMany({
-        where: domainEventWhere,
-        orderBy: { occurredAt: sortOrder },
-      });
-
-      for (const event of domainEvents) {
-        const payload = event.payload as any;
-
-        // Map status
-        let status: AgentActionStatusValue = 'pending_approval';
-        if (payload?.status) {
-          const statusMap: Record<string, AgentActionStatusValue> = {
-            pending: 'pending_approval',
-            pending_approval: 'pending_approval',
-            approved: 'approved',
-            rejected: 'rejected',
-            rolled_back: 'rolled_back',
-            expired: 'expired',
-          };
-          status = statusMap[payload.status.toLowerCase()] || 'pending_approval';
-        }
-
-        events.push({
-          id: `agent-${event.id}`,
-          type: 'agent_action',
-          title: payload?.actionName || `Agent Action: ${event.eventType}`,
-          description: payload?.description || null,
-          timestamp: event.occurredAt,
-          priority: payload?.priority ? mapPriority(payload.priority) : 'medium',
-          entityType: event.aggregateType,
-          entityId: event.aggregateId,
-          agentAction: {
-            actionId: event.id,
-            agentName: payload?.agentName || 'AI Assistant',
-            proposedChanges: payload?.proposedChanges || payload?.changes || null,
-            confidence: payload?.confidence || 0.85,
-            status,
-            expiresAt: payload?.expiresAt ? new Date(payload.expiresAt) : null,
-          },
-          actor: {
-            id: 'agent',
-            name: payload?.agentName || 'AI Assistant',
-            email: null,
-            avatarUrl: null,
-            isAgent: true,
-          },
-          isOverdue: false,
-          document: null,
-          communication: null,
-          appointment: null,
-          task: null,
-          metadata: event.metadata as Record<string, any> | null,
-        });
-      }
-    }
-
-    // =========================================================================
     // 5. Fetch Document Events
-    // =========================================================================
-    if (shouldIncludeType('document') || shouldIncludeType('document_version')) {
-      const documentWhere: any = {
-        deleted_at: null,
-      };
+    await fetchDocumentEvents(ctx, input, effectiveOpportunityId, dateFilter, events);
 
-      if (effectiveOpportunityId) {
-        documentWhere.related_case_id = effectiveOpportunityId;
-      }
-
-      if (Object.keys(dateFilter).length > 0) {
-        documentWhere.created_at = dateFilter;
-      }
-
-      const documents = await ctx.prisma.caseDocument.findMany({
-        where: documentWhere,
-        orderBy: { created_at: sortOrder },
-        take: 50, // Limit to prevent performance issues
-      });
-
-      for (const doc of documents) {
-        // Add document creation event
-        if (shouldIncludeType('document')) {
-          events.push({
-            id: `document-${doc.id}`,
-            type: 'document',
-            title: doc.title,
-            description: doc.description,
-            timestamp: doc.created_at,
-            priority: null,
-            entityType: 'document',
-            entityId: doc.id,
-            document: {
-              documentId: doc.id,
-              filename: doc.title,
-              version: doc.version_major,
-              mimeType: doc.mime_type,
-            },
-            actor: {
-              id: doc.created_by,
-              name: null,
-              email: null,
-              avatarUrl: null,
-              isAgent: false,
-            },
-            isOverdue: false,
-            agentAction: null,
-            communication: null,
-            appointment: null,
-            task: null,
-            metadata: {
-              classification: doc.classification,
-              documentType: doc.document_type,
-              status: doc.status,
-              version: `${doc.version_major}.${doc.version_minor}.${doc.version_patch}`,
-            },
-          });
-        }
-
-        // Add version event for documents with parent
-        if (shouldIncludeType('document_version') && doc.parent_version_id) {
-          events.push({
-            id: `document-version-${doc.id}`,
-            type: 'document_version',
-            title: `${doc.title} - Version ${doc.version_major}.${doc.version_minor}.${doc.version_patch}`,
-            description: 'New version created',
-            timestamp: doc.updated_at,
-            priority: null,
-            entityType: 'document',
-            entityId: doc.id,
-            document: {
-              documentId: doc.id,
-              filename: doc.title,
-              version: doc.version_major,
-              mimeType: doc.mime_type,
-            },
-            actor: {
-              id: doc.updated_by,
-              name: null,
-              email: null,
-              avatarUrl: null,
-              isAgent: false,
-            },
-            isOverdue: false,
-            agentAction: null,
-            communication: null,
-            appointment: null,
-            task: null,
-            metadata: {
-              parentVersionId: doc.parent_version_id,
-              versionNumber: `${doc.version_major}.${doc.version_minor}.${doc.version_patch}`,
-            },
-          });
-        }
-      }
-    }
-
-    // =========================================================================
     // 6. Sort all events chronologically
-    // =========================================================================
     events.sort((a, b) => {
       const timeA = a.timestamp.getTime();
       const timeB = b.timestamp.getTime();
       return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
     });
 
-    // =========================================================================
     // 7. Apply pagination
-    // =========================================================================
     const skip = (page - 1) * limit;
     const paginatedEvents = events.slice(skip, skip + limit);
     const total = events.length;
@@ -826,9 +777,9 @@ export const timelineRouter = createTRPCRouter({
         effectiveOpportunityId
           ? ctx.prisma.caseDocument.count({
               where: {
-                related_case_id: effectiveOpportunityId,
-                deleted_at: null,
-                is_latest_version: true,
+                relatedCaseId: effectiveOpportunityId,
+                deletedAt: null,
+                isLatestVersion: true,
               },
             })
           : Promise.resolve(0),

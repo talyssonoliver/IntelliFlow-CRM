@@ -18,6 +18,7 @@ import {
   opportunityQuerySchema,
   idSchema,
   moveStageSchema,
+  type MoveStageInput,
   opportunityHistoryQuerySchema,
   opportunityProductsQuerySchema,
   opportunityPipelineQuerySchema,
@@ -27,12 +28,9 @@ import {
 } from '@intelliflow/validators/opportunity';
 import { OPPORTUNITY_STAGES } from '@intelliflow/domain';
 import { mapOpportunityToResponse } from '../../shared/mappers';
+import { calculateForecastAccuracy } from '../../shared/forecast-algorithm';
 import { type Context } from '../../context';
-import {
-  getTenantContext,
-  createTenantWhereClause,
-  type TenantAwareContext,
-} from '../../security/tenant-context';
+import { getTenantContext, createTenantWhereClause } from '../../security/tenant-context';
 import { createNotification } from '../notifications/notifications.router';
 
 /**
@@ -46,6 +44,375 @@ function getOpportunityService(ctx: Context) {
     });
   }
   return ctx.services.opportunity;
+}
+
+// ── Error-mapping helpers (reduce cognitive complexity in procedures) ──
+
+function throwOpportunityCreateError(error: { code: string; message: string }): never {
+  if (error.code === 'VALIDATION_ERROR' || error.code === 'NOT_FOUND_ERROR') {
+    throw new TRPCError({ code: 'NOT_FOUND', message: error.message });
+  }
+  throw new TRPCError({ code: 'BAD_REQUEST', message: error.message });
+}
+
+function throwOpportunityUpdateError(error: { code: string; message: string }): never {
+  const codeMap: Record<string, 'NOT_FOUND' | 'BAD_REQUEST' | 'INTERNAL_SERVER_ERROR'> = {
+    NOT_FOUND_ERROR: 'NOT_FOUND',
+    VALIDATION_ERROR: 'BAD_REQUEST',
+  };
+  throw new TRPCError({
+    code: codeMap[error.code] ?? 'INTERNAL_SERVER_ERROR',
+    message: error.message,
+  });
+}
+
+function throwOpportunityDeleteError(error: { code: string; message: string }): never {
+  if (error.code === 'NOT_FOUND_ERROR') {
+    throw new TRPCError({ code: 'NOT_FOUND', message: error.message });
+  }
+  if (error.code === 'VALIDATION_ERROR') {
+    throw new TRPCError({ code: 'PRECONDITION_FAILED', message: error.message });
+  }
+  throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+}
+
+function throwMoveStageError(error: { code: string; message: string }): never {
+  if (error.code === 'NOT_FOUND_ERROR') {
+    throw new TRPCError({ code: 'NOT_FOUND', message: error.message });
+  }
+  throw new TRPCError({ code: 'BAD_REQUEST', message: error.message });
+}
+
+// ── Deal forecast helpers (extracted for cognitive complexity reduction) ──
+
+type RiskFactor = {
+  id: string;
+  factor: string;
+  severity: 'high' | 'medium' | 'low';
+  description: string;
+  impact: string;
+};
+type Recommendation = {
+  id: string;
+  action: string;
+  title: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
+};
+
+function deriveDealRiskFactors(
+  opportunity: {
+    probability: number;
+    stage: string;
+    expectedCloseDate: Date | null;
+    contact: unknown;
+  },
+  stageDefault: number,
+  daysSinceActivity: number,
+  lastActivity: { timestamp: Date } | null
+): RiskFactor[] {
+  const factors: RiskFactor[] = [];
+
+  if (opportunity.probability < stageDefault) {
+    const gap = stageDefault - opportunity.probability;
+    factors.push({
+      id: 'rf-prob-below-default',
+      factor: 'Probability below stage default',
+      severity: gap >= 20 ? 'high' : 'medium',
+      description: `Current ${opportunity.probability}% vs ${stageDefault}% ${opportunity.stage} default`,
+      impact: `${gap} points below expected`,
+    });
+  }
+  if (!opportunity.expectedCloseDate) {
+    factors.push({
+      id: 'rf-no-close-date',
+      factor: 'No expected close date',
+      severity: 'high',
+      description: 'Expected close date has not been set',
+      impact: 'Cannot forecast timeline or measure slippage',
+    });
+  }
+  if (daysSinceActivity > 14) {
+    factors.push({
+      id: 'rf-activity-gap',
+      factor: 'Activity gap',
+      severity: daysSinceActivity > 30 ? 'high' : 'medium',
+      description: lastActivity
+        ? `Last activity was ${daysSinceActivity} days ago`
+        : 'No activity recorded',
+      impact: 'No recent engagement',
+    });
+  }
+  if (!opportunity.contact) {
+    factors.push({
+      id: 'rf-no-contact',
+      factor: 'No contact associated',
+      severity: 'medium',
+      description: 'No primary contact linked to this opportunity',
+      impact: 'Missing decision-maker relationship',
+    });
+  }
+  if (opportunity.expectedCloseDate && new Date(opportunity.expectedCloseDate) < new Date()) {
+    const daysOverdue = Math.floor(
+      (Date.now() - new Date(opportunity.expectedCloseDate).getTime()) / (1000 * 60 * 60 * 24)
+    );
+    factors.push({
+      id: 'rf-close-date-slippage',
+      factor: 'Close date has passed',
+      severity: daysOverdue > 30 ? 'high' : 'medium',
+      description: `Expected close was ${daysOverdue} days ago`,
+      impact: 'Deal may be stalled or lost',
+    });
+  }
+
+  return factors;
+}
+
+function deriveDealRecommendations(
+  opportunity: {
+    probability: number;
+    stage: string;
+    expectedCloseDate: Date | null;
+    contact: unknown;
+  },
+  stageDefault: number,
+  daysSinceActivity: number
+): Recommendation[] {
+  const recs: Recommendation[] = [];
+
+  if (daysSinceActivity > 7) {
+    recs.push({
+      id: 'rec-followup',
+      action: 'SCHEDULE_CALL',
+      title: 'Schedule follow-up call',
+      description: 'Schedule follow-up call to qualify deal status',
+      priority: daysSinceActivity > 14 ? 'high' : 'medium',
+    });
+  }
+  if (!opportunity.contact) {
+    recs.push({
+      id: 'rec-add-contact',
+      action: 'ADD_CONTACT',
+      title: 'Add primary contact',
+      description: 'Link a decision-maker contact to improve deal tracking',
+      priority: 'high',
+    });
+  }
+  if (opportunity.probability < stageDefault && opportunity.probability > 0) {
+    recs.push({
+      id: 'rec-update-prob',
+      action: 'UPDATE_PROBABILITY',
+      title: 'Review deal probability',
+      description: `Current ${opportunity.probability}% is below ${opportunity.stage} default of ${stageDefault}%`,
+      priority: 'medium',
+    });
+  }
+  if (!opportunity.expectedCloseDate) {
+    recs.push({
+      id: 'rec-set-close-date',
+      action: 'SET_CLOSE_DATE',
+      title: 'Set expected close date',
+      description: 'Add a close date to enable timeline tracking and forecasting',
+      priority: 'high',
+    });
+  }
+
+  return recs;
+}
+
+function deriveProbabilityHistory(
+  activities: { type: string; stageTo: string | null; timestamp: Date }[],
+  stageDefaults: Record<string, number>
+): { date: string; probability: number; event?: string }[] {
+  const history: { date: string; probability: number; event?: string }[] = [];
+  for (const activity of activities) {
+    if (activity.type === 'STAGE_CHANGE' && activity.stageTo) {
+      const toStage = activity.stageTo;
+      history.push({
+        date: new Date(activity.timestamp).toISOString().split('T')[0],
+        probability: stageDefaults[toStage] ?? 50,
+        event: `Stage → ${toStage.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}`,
+      });
+    }
+  }
+  return history;
+}
+
+function computeConfidenceScore(
+  activityCount: number,
+  opportunity: { probability: number; contact: unknown; expectedCloseDate: Date | null },
+  stageDefault: number
+): number {
+  let score = 0;
+  let activityBonus: number;
+  if (activityCount >= 5) {
+    activityBonus = 0.25;
+  } else if (activityCount >= 2) {
+    activityBonus = 0.15;
+  } else if (activityCount >= 1) {
+    activityBonus = 0.1;
+  } else {
+    activityBonus = 0;
+  }
+  score += activityBonus;
+  score += opportunity.probability !== stageDefault ? 0.25 : 0.1;
+  score += opportunity.contact ? 0.25 : 0;
+  score += opportunity.expectedCloseDate ? 0.25 : 0;
+  return score;
+}
+
+function buildOpportunityWhereClause(input: {
+  search?: string;
+  stage?: string[];
+  ownerId?: string;
+  accountId?: string;
+  contactId?: string;
+  minValue?: number;
+  maxValue?: number;
+  minProbability?: number;
+  maxProbability?: number;
+  dateFrom?: Date;
+  dateTo?: Date;
+}): any {
+  const where: any = {};
+
+  if (input.search) {
+    where.OR = [
+      { name: { contains: input.search, mode: 'insensitive' } },
+      { description: { contains: input.search, mode: 'insensitive' } },
+    ];
+  }
+  if (input.stage && input.stage.length > 0) where.stage = { in: input.stage };
+  if (input.ownerId) where.ownerId = input.ownerId;
+  if (input.accountId) where.accountId = input.accountId;
+  if (input.contactId) where.contactId = input.contactId;
+
+  if (input.minValue !== undefined || input.maxValue !== undefined) {
+    where.value = {};
+    if (input.minValue !== undefined) where.value.gte = input.minValue;
+    if (input.maxValue !== undefined) where.value.lte = input.maxValue;
+  }
+  if (input.minProbability !== undefined || input.maxProbability !== undefined) {
+    where.probability = {};
+    if (input.minProbability !== undefined) where.probability.gte = input.minProbability;
+    if (input.maxProbability !== undefined) where.probability.lte = input.maxProbability;
+  }
+  if (input.dateFrom || input.dateTo) {
+    where.expectedCloseDate = {};
+    if (input.dateFrom) where.expectedCloseDate.gte = input.dateFrom;
+    if (input.dateTo) where.expectedCloseDate.lte = input.dateTo;
+  }
+
+  return where;
+}
+
+function resolveStageNotification(targetStage: string): {
+  type: 'deal_won' | 'deal_lost' | 'deal_stage_changed';
+  title: string;
+  priority: 'high' | 'normal';
+} {
+  if (targetStage === 'CLOSED_WON')
+    return { type: 'deal_won', title: 'Deal won!', priority: 'high' };
+  if (targetStage === 'CLOSED_LOST')
+    return { type: 'deal_lost', title: 'Deal lost', priority: 'normal' };
+  return { type: 'deal_stage_changed', title: `Deal moved to ${targetStage}`, priority: 'normal' };
+}
+
+function getRiskLevel(probability: number, value: number): 'low' | 'medium' | 'high' {
+  if (probability >= 60) return 'low';
+  if (probability >= 40 || value > 100000) return 'medium';
+  return 'high';
+}
+
+function buildStageBreakdown(
+  activeOpportunities: { stage: string; value: unknown; probability: number }[]
+): Record<string, { count: number; totalValue: number; weightedValue: number }> {
+  const breakdown: Record<string, { count: number; totalValue: number; weightedValue: number }> =
+    {};
+  for (const opp of activeOpportunities) {
+    if (!breakdown[opp.stage]) {
+      breakdown[opp.stage] = { count: 0, totalValue: 0, weightedValue: 0 };
+    }
+    breakdown[opp.stage].count += 1;
+    breakdown[opp.stage].totalValue += Number(opp.value);
+    breakdown[opp.stage].weightedValue += Number(opp.value) * (opp.probability / 100);
+  }
+  return breakdown;
+}
+
+function buildMonthlyRevenue(
+  wonDeals: { closedAt: Date | null; value: unknown }[]
+): Record<string, { actual: number; deals: number }> {
+  const monthlyRevenue: Record<string, { actual: number; deals: number }> = {};
+  for (const deal of wonDeals) {
+    const month = new Date(deal.closedAt!).toLocaleString('en-US', { month: 'short' });
+    if (!monthlyRevenue[month]) {
+      monthlyRevenue[month] = { actual: 0, deals: 0 };
+    }
+    monthlyRevenue[month].actual += Number(deal.value);
+    monthlyRevenue[month].deals += 1;
+  }
+  return monthlyRevenue;
+}
+
+function buildWinRateTrend(
+  closedDeals: { closedAt: Date | null; stage: string }[],
+  overallWinRate: number
+): { month: string; rate: number; isProjected: boolean }[] {
+  const months = ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
+  return months.map((month) => {
+    const monthDeals = closedDeals.filter(
+      (d) => new Date(d.closedAt!).toLocaleString('en-US', { month: 'short' }) === month
+    );
+    const monthWon = monthDeals.filter((d) => d.stage === 'CLOSED_WON').length;
+    const rate = monthDeals.length > 0 ? Math.round((monthWon / monthDeals.length) * 100) : 0;
+    return { month, rate: rate || overallWinRate, isProjected: monthDeals.length === 0 };
+  });
+}
+
+// ── moveStage helpers ──
+
+async function executeMoveStage(
+  ctx: Context,
+  input: Pick<MoveStageInput, 'id' | 'targetStage' | 'reason'>,
+  userId: string,
+  tenantId: string
+) {
+  if (input.targetStage === 'CLOSED_WON') {
+    // IFC-065: Route through CloseDealWonUseCase for enriched event + notification
+    const closeDealWonService = ctx.services?.closeDealWon;
+    if (!closeDealWonService) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'CloseDealWon service not available',
+      });
+    }
+    return closeDealWonService.execute({
+      opportunityId: input.id,
+      closedBy: userId,
+      tenantId,
+    });
+  }
+
+  if (input.targetStage === 'CLOSED_LOST') {
+    // IFC-066: Route through CloseDealLostUseCase for enriched event + notification
+    const closeDealLostService = ctx.services?.closeDealLost;
+    if (!closeDealLostService) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'CloseDealLost service not available',
+      });
+    }
+    return closeDealLostService.execute({
+      opportunityId: input.id,
+      reason: input.reason || '',
+      closedBy: userId,
+      tenantId,
+    });
+  }
+
+  const opportunityService = getOpportunityService(ctx);
+  return opportunityService.changeStage(input.id, input.targetStage, userId);
 }
 
 export const opportunityRouter = createTRPCRouter({
@@ -63,17 +430,7 @@ export const opportunityRouter = createTRPCRouter({
     });
 
     if (result.isFailure) {
-      const errorCode = result.error.code;
-      if (errorCode === 'VALIDATION_ERROR' || errorCode === 'NOT_FOUND_ERROR') {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: result.error.message,
-        });
-      }
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: result.error.message,
-      });
+      throwOpportunityCreateError(result.error);
     }
 
     // Fire-and-forget notification
@@ -88,7 +445,7 @@ export const opportunityRouter = createTRPCRouter({
       entityId: result.value.id.value,
       entityName: result.value.name,
       actionUrl: `/deals/${result.value.id.value}`,
-    }).catch(() => {});
+    }).catch((err) => console.error('[opportunity.router] Notification failed:', err));
 
     return mapOpportunityToResponse(result.value);
   }),
@@ -97,7 +454,6 @@ export const opportunityRouter = createTRPCRouter({
    * Get a single opportunity by ID
    */
   getById: tenantProcedure.input(z.object({ id: idSchema })).query(async ({ ctx, input }) => {
-    const typedCtx = getTenantContext(ctx);
     const opportunityService = getOpportunityService(ctx);
 
     const result = await opportunityService.getOpportunityById(input.id);
@@ -117,71 +473,10 @@ export const opportunityRouter = createTRPCRouter({
    */
   list: tenantProcedure.input(opportunityQuerySchema).query(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
-    const {
-      page = 1,
-      limit = 20,
-      search,
-      stage,
-      ownerId,
-      accountId,
-      contactId,
-      minValue,
-      maxValue,
-      minProbability,
-      maxProbability,
-      dateFrom,
-      dateTo,
-      sortBy = 'createdAt',
-      sortOrder = 'desc',
-    } = input;
+    const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'desc' } = input;
 
     const skip = (page - 1) * limit;
-
-    // Build where clause with tenant isolation
-    const baseWhere: any = {};
-
-    if (search) {
-      baseWhere.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-
-    if (stage && stage.length > 0) {
-      baseWhere.stage = { in: stage };
-    }
-
-    if (ownerId) {
-      baseWhere.ownerId = ownerId;
-    }
-
-    if (accountId) {
-      baseWhere.accountId = accountId;
-    }
-
-    if (contactId) {
-      baseWhere.contactId = contactId;
-    }
-
-    if (minValue !== undefined || maxValue !== undefined) {
-      baseWhere.value = {};
-      if (minValue !== undefined) baseWhere.value.gte = minValue;
-      if (maxValue !== undefined) baseWhere.value.lte = maxValue;
-    }
-
-    if (minProbability !== undefined || maxProbability !== undefined) {
-      baseWhere.probability = {};
-      if (minProbability !== undefined) baseWhere.probability.gte = minProbability;
-      if (maxProbability !== undefined) baseWhere.probability.lte = maxProbability;
-    }
-
-    if (dateFrom || dateTo) {
-      baseWhere.expectedCloseDate = {};
-      if (dateFrom) baseWhere.expectedCloseDate.gte = dateFrom;
-      if (dateTo) baseWhere.expectedCloseDate.lte = dateTo;
-    }
-
-    // Apply tenant filtering
+    const baseWhere = buildOpportunityWhereClause(input);
     const where = createTenantWhereClause(typedCtx.tenant, baseWhere);
 
     // Execute queries in parallel
@@ -248,23 +543,7 @@ export const opportunityRouter = createTRPCRouter({
     );
 
     if (result.isFailure) {
-      const errorCode = result.error.code;
-      if (errorCode === 'NOT_FOUND_ERROR') {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: result.error.message,
-        });
-      }
-      if (errorCode === 'VALIDATION_ERROR') {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: result.error.message,
-        });
-      }
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: result.error.message,
-      });
+      throwOpportunityUpdateError(result.error);
     }
 
     return mapOpportunityToResponse(result.value);
@@ -274,23 +553,12 @@ export const opportunityRouter = createTRPCRouter({
    * Delete an opportunity
    */
   delete: tenantProcedure.input(z.object({ id: idSchema })).mutation(async ({ ctx, input }) => {
-    const typedCtx = getTenantContext(ctx);
     const opportunityService = getOpportunityService(ctx);
 
     const result = await opportunityService.deleteOpportunity(input.id);
 
     if (result.isFailure) {
-      const errorCode = result.error.code;
-      if (errorCode === 'NOT_FOUND_ERROR' || errorCode === 'VALIDATION_ERROR') {
-        throw new TRPCError({
-          code: errorCode === 'NOT_FOUND_ERROR' ? 'NOT_FOUND' : 'PRECONDITION_FAILED',
-          message: result.error.message,
-        });
-      }
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: result.error.message,
-      });
+      throwOpportunityDeleteError(result.error);
     }
 
     return { success: true, id: input.id };
@@ -305,71 +573,31 @@ export const opportunityRouter = createTRPCRouter({
    */
   moveStage: tenantProcedure.input(moveStageSchema).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
-    const opportunityService = getOpportunityService(ctx);
 
-    let result;
-    if (input.targetStage === 'CLOSED_WON') {
-      // IFC-065: Route through CloseDealWonUseCase for enriched event + notification
-      const closeDealWonService = ctx.services?.closeDealWon;
-      if (!closeDealWonService) {
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'CloseDealWon service not available' });
-      }
-      result = await closeDealWonService.execute({
-        opportunityId: input.id,
-        closedBy: typedCtx.tenant.userId,
-        tenantId: typedCtx.tenant.tenantId,
-      });
-    } else if (input.targetStage === 'CLOSED_LOST') {
-      // IFC-066: Route through CloseDealLostUseCase for enriched event + notification
-      const closeDealLostService = ctx.services?.closeDealLost;
-      if (!closeDealLostService) {
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'CloseDealLost service not available' });
-      }
-      result = await closeDealLostService.execute({
-        opportunityId: input.id,
-        reason: input.reason || '',
-        closedBy: typedCtx.tenant.userId,
-        tenantId: typedCtx.tenant.tenantId,
-      });
-    } else {
-      result = await opportunityService.changeStage(
-        input.id,
-        input.targetStage,
-        typedCtx.tenant.userId
-      );
-    }
+    const result = await executeMoveStage(
+      ctx,
+      input,
+      typedCtx.tenant.userId,
+      typedCtx.tenant.tenantId
+    );
 
     if (result.isFailure) {
-      const errorCode = result.error.code;
-      if (errorCode === 'NOT_FOUND_ERROR') {
-        throw new TRPCError({ code: 'NOT_FOUND', message: result.error.message });
-      }
-      throw new TRPCError({ code: 'BAD_REQUEST', message: result.error.message });
+      throwMoveStageError(result.error);
     }
 
-    // Fire-and-forget stage change notification
-    const notifType = input.targetStage === 'CLOSED_WON'
-      ? 'deal_won' as const
-      : input.targetStage === 'CLOSED_LOST'
-        ? 'deal_lost' as const
-        : 'deal_stage_changed' as const;
-    const notifPriority = input.targetStage === 'CLOSED_WON' ? 'high' as const : 'normal' as const;
+    const notif = resolveStageNotification(input.targetStage);
     createNotification(ctx.prisma, {
       userId: typedCtx.tenant.userId,
       tenantId: typedCtx.tenant.tenantId,
-      type: notifType,
-      title: notifType === 'deal_won'
-        ? 'Deal won!'
-        : notifType === 'deal_lost'
-          ? 'Deal lost'
-          : `Deal moved to ${input.targetStage}`,
+      type: notif.type,
+      title: notif.title,
       body: `"${result.value.name}" moved to ${input.targetStage}`,
-      priority: notifPriority,
+      priority: notif.priority,
       entityType: 'opportunity',
       entityId: result.value.id.value,
       entityName: result.value.name,
       actionUrl: `/deals/${result.value.id.value}`,
-    }).catch(() => {});
+    }).catch((err) => console.error('[opportunity.router] Notification failed:', err));
 
     return mapOpportunityToResponse(result.value);
   }),
@@ -498,19 +726,19 @@ export const opportunityRouter = createTRPCRouter({
     ]);
 
     return {
-      total,
-      byStage: byStage.reduce(
+      total: total ?? 0,
+      byStage: (byStage ?? []).reduce(
         (acc, item) => {
           acc[item.stage] = {
             count: item._count,
-            totalValue: item._sum.value?.toString() || '0',
+            totalValue: item._sum?.value?.toString() || '0',
           };
           return acc;
         },
         {} as Record<string, { count: number; totalValue: string }>
       ),
-      totalValue: totalValue._sum.value?.toString() || '0',
-      averageProbability: avgProbability._avg.probability || 0,
+      totalValue: totalValue?._sum?.value?.toString() || '0',
+      averageProbability: avgProbability?._avg?.probability || 0,
     };
   }),
 
@@ -569,34 +797,22 @@ export const opportunityRouter = createTRPCRouter({
     });
 
     // Calculate weighted pipeline value
-    const weightedValue = activeOpportunities.reduce((sum, opp) => {
-      const value = Number(opp.value);
-      const probability = opp.probability / 100;
+    const weightedValue = (activeOpportunities ?? []).reduce((sum, opp) => {
+      const value = Number(opp.value) || 0;
+      const probability = (opp.probability ?? 0) / 100;
       return sum + value * probability;
     }, 0);
 
     // Calculate total pipeline value
-    const totalPipelineValue = activeOpportunities.reduce((sum, opp) => {
-      return sum + Number(opp.value);
+    const totalPipelineValue = (activeOpportunities ?? []).reduce((sum, opp) => {
+      return sum + (Number(opp.value) || 0);
     }, 0);
 
-    // Calculate stage breakdown
-    const stageBreakdown: Record<
-      string,
-      { count: number; totalValue: number; weightedValue: number }
-    > = {};
-    for (const opp of activeOpportunities) {
-      if (!stageBreakdown[opp.stage]) {
-        stageBreakdown[opp.stage] = { count: 0, totalValue: 0, weightedValue: 0 };
-      }
-      stageBreakdown[opp.stage].count += 1;
-      stageBreakdown[opp.stage].totalValue += Number(opp.value);
-      stageBreakdown[opp.stage].weightedValue += Number(opp.value) * (opp.probability / 100);
-    }
+    const stageBreakdown = buildStageBreakdown(activeOpportunities ?? []);
 
     // Calculate win rate
-    const wonDeals = closedDeals.filter((d) => d.stage === 'CLOSED_WON');
-    const lostDeals = closedDeals.filter((d) => d.stage === 'CLOSED_LOST');
+    const wonDeals = (closedDeals ?? []).filter((d) => d.stage === 'CLOSED_WON');
+    const lostDeals = (closedDeals ?? []).filter((d) => d.stage === 'CLOSED_LOST');
     const totalClosed = wonDeals.length + lostDeals.length;
     const winRate = totalClosed > 0 ? Math.round((wonDeals.length / totalClosed) * 100) : 0;
 
@@ -618,39 +834,12 @@ export const opportunityRouter = createTRPCRouter({
           )
         : 0;
 
-    // Group closed deals by month for historical data
-    const monthlyRevenue: Record<string, { actual: number; deals: number }> = {};
-    for (const deal of wonDeals) {
-      const month = new Date(deal.closedAt!).toLocaleString('en-US', { month: 'short' });
-      if (!monthlyRevenue[month]) {
-        monthlyRevenue[month] = { actual: 0, deals: 0 };
-      }
-      monthlyRevenue[month].actual += Number(deal.value);
-      monthlyRevenue[month].deals += 1;
-    }
+    const monthlyRevenue = buildMonthlyRevenue(wonDeals);
 
-    // Calculate win rate trend by month
-    const winRateTrend: { month: string; rate: number; isProjected: boolean }[] = [];
-    const months = ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
-    for (const month of months) {
-      const monthDeals = closedDeals.filter((d) => {
-        const dealMonth = new Date(d.closedAt!).toLocaleString('en-US', { month: 'short' });
-        return dealMonth === month;
-      });
-      const monthWon = monthDeals.filter((d) => d.stage === 'CLOSED_WON').length;
-      const rate = monthDeals.length > 0 ? Math.round((monthWon / monthDeals.length) * 100) : 0;
-      winRateTrend.push({ month, rate: rate || winRate, isProjected: monthDeals.length === 0 });
-    }
-
-    // Determine risk level based on probability and value
-    const getRiskLevel = (probability: number, value: number): 'low' | 'medium' | 'high' => {
-      if (probability >= 60) return 'low';
-      if (probability >= 40 || value > 100000) return 'medium';
-      return 'high';
-    };
+    const winRateTrend = buildWinRateTrend(closedDeals ?? [], winRate);
 
     // Map opportunities to forecast deals format
-    const forecastDeals = activeOpportunities.map((opp) => ({
+    const forecastDeals = (activeOpportunities ?? []).map((opp) => ({
       id: opp.id,
       name: opp.name,
       stage: opp.stage as
@@ -675,14 +864,8 @@ export const opportunityRouter = createTRPCRouter({
       accountName: opp.account?.name || null,
     }));
 
-    // Calculate forecast accuracy (simulated based on historical data)
-    // In production, this would compare past forecasts to actuals
-    const forecastAccuracy = {
-      accuracy: totalClosed > 5 ? Math.min(95, 75 + winRate * 0.2) : 82,
-      target: 85,
-      isAtRisk: false,
-    };
-    forecastAccuracy.isAtRisk = forecastAccuracy.accuracy < forecastAccuracy.target;
+    // Calculate forecast accuracy from real historical monthly data
+    const forecastAccuracy = calculateForecastAccuracy(monthlyRevenue, weightedValue, winRate);
 
     return {
       // Summary metrics
@@ -770,156 +953,26 @@ export const opportunityRouter = createTRPCRouter({
 
       const stageDefault = STAGE_DEFAULTS[opportunity.stage] ?? 50;
 
-      // ─── Derive Risk Factors (deterministic from domain signals) ───
-      const riskFactors: {
-        id: string;
-        factor: string;
-        severity: 'high' | 'medium' | 'low';
-        description: string;
-        impact: string;
-      }[] = [];
-
-      // RF-1: Probability below stage default
-      if (opportunity.probability < stageDefault) {
-        const gap = stageDefault - opportunity.probability;
-        riskFactors.push({
-          id: 'rf-prob-below-default',
-          factor: 'Probability below stage default',
-          severity: gap >= 20 ? 'high' : 'medium',
-          description: `Current ${opportunity.probability}% vs ${stageDefault}% ${opportunity.stage} default`,
-          impact: `${gap} points below expected`,
-        });
-      }
-
-      // RF-2: No close date set
-      if (!opportunity.expectedCloseDate) {
-        riskFactors.push({
-          id: 'rf-no-close-date',
-          factor: 'No expected close date',
-          severity: 'high',
-          description: 'Expected close date has not been set',
-          impact: 'Cannot forecast timeline or measure slippage',
-        });
-      }
-
-      // RF-3: Activity gap (last activity > 14 days ago)
       const lastActivity = activities.length > 0 ? activities[activities.length - 1] : null;
       const daysSinceActivity = lastActivity
-        ? Math.floor((Date.now() - new Date(lastActivity.timestamp).getTime()) / (1000 * 60 * 60 * 24))
+        ? Math.floor(
+            (Date.now() - new Date(lastActivity.timestamp).getTime()) / (1000 * 60 * 60 * 24)
+          )
         : 999;
 
-      if (daysSinceActivity > 14) {
-        riskFactors.push({
-          id: 'rf-activity-gap',
-          factor: 'Activity gap',
-          severity: daysSinceActivity > 30 ? 'high' : 'medium',
-          description: lastActivity
-            ? `Last activity was ${daysSinceActivity} days ago`
-            : 'No activity recorded',
-          impact: 'No recent engagement',
-        });
-      }
-
-      // RF-4: No contact associated
-      if (!opportunity.contact) {
-        riskFactors.push({
-          id: 'rf-no-contact',
-          factor: 'No contact associated',
-          severity: 'medium',
-          description: 'No primary contact linked to this opportunity',
-          impact: 'Missing decision-maker relationship',
-        });
-      }
-
-      // RF-5: Close date slippage (past due)
-      if (opportunity.expectedCloseDate && new Date(opportunity.expectedCloseDate) < new Date()) {
-        const daysOverdue = Math.floor(
-          (Date.now() - new Date(opportunity.expectedCloseDate).getTime()) / (1000 * 60 * 60 * 24)
-        );
-        riskFactors.push({
-          id: 'rf-close-date-slippage',
-          factor: 'Close date has passed',
-          severity: daysOverdue > 30 ? 'high' : 'medium',
-          description: `Expected close was ${daysOverdue} days ago`,
-          impact: 'Deal may be stalled or lost',
-        });
-      }
-
-      // ─── Derive Recommendations (business rules) ───
-      const recommendations: {
-        id: string;
-        action: string;
-        title: string;
-        description: string;
-        priority: 'high' | 'medium' | 'low';
-      }[] = [];
-
-      if (daysSinceActivity > 7) {
-        recommendations.push({
-          id: 'rec-followup',
-          action: 'SCHEDULE_CALL',
-          title: 'Schedule follow-up call',
-          description: 'Schedule follow-up call to qualify deal status',
-          priority: daysSinceActivity > 14 ? 'high' : 'medium',
-        });
-      }
-
-      if (!opportunity.contact) {
-        recommendations.push({
-          id: 'rec-add-contact',
-          action: 'ADD_CONTACT',
-          title: 'Add primary contact',
-          description: 'Link a decision-maker contact to improve deal tracking',
-          priority: 'high',
-        });
-      }
-
-      if (opportunity.probability < stageDefault && opportunity.probability > 0) {
-        recommendations.push({
-          id: 'rec-update-prob',
-          action: 'UPDATE_PROBABILITY',
-          title: 'Review deal probability',
-          description: `Current ${opportunity.probability}% is below ${opportunity.stage} default of ${stageDefault}%`,
-          priority: 'medium',
-        });
-      }
-
-      if (!opportunity.expectedCloseDate) {
-        recommendations.push({
-          id: 'rec-set-close-date',
-          action: 'SET_CLOSE_DATE',
-          title: 'Set expected close date',
-          description: 'Add a close date to enable timeline tracking and forecasting',
-          priority: 'high',
-        });
-      }
-
-      // ─── Derive Probability History from STAGE_CHANGE events ───
-      const history: { date: string; probability: number; event?: string; isProjected?: boolean }[] = [];
-
-      for (const activity of activities) {
-        if (activity.type === 'STAGE_CHANGE' && activity.stageTo) {
-          const toStage = activity.stageTo;
-          const prob = STAGE_DEFAULTS[toStage] ?? 50;
-          history.push({
-            date: new Date(activity.timestamp).toISOString().split('T')[0],
-            probability: prob,
-            event: `Stage → ${toStage.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}`,
-          });
-        }
-      }
-
-      // ─── Composite Confidence Score (4 data quality signals) ───
-      let confidenceScore = 0;
-      // Signal 1: Activity frequency (0-0.25)
-      const activityCount = activities.length;
-      confidenceScore += activityCount >= 5 ? 0.25 : activityCount >= 2 ? 0.15 : activityCount >= 1 ? 0.1 : 0;
-      // Signal 2: Manual probability update (0-0.25)
-      confidenceScore += opportunity.probability !== stageDefault ? 0.25 : 0.1;
-      // Signal 3: Contact engagement (0-0.25)
-      confidenceScore += opportunity.contact ? 0.25 : 0;
-      // Signal 4: Close date presence (0-0.25)
-      confidenceScore += opportunity.expectedCloseDate ? 0.25 : 0;
+      const riskFactors = deriveDealRiskFactors(
+        opportunity,
+        stageDefault,
+        daysSinceActivity,
+        lastActivity
+      );
+      const recommendations = deriveDealRecommendations(
+        opportunity,
+        stageDefault,
+        daysSinceActivity
+      );
+      const history = deriveProbabilityHistory(activities, STAGE_DEFAULTS);
+      const confidenceScore = computeConfidenceScore(activities.length, opportunity, stageDefault);
 
       const ownerName = opportunity.owner?.name || 'Unassigned';
       const ownerAvatar = ownerName
@@ -939,7 +992,10 @@ export const opportunityRouter = createTRPCRouter({
           owner: { name: ownerName, avatar: ownerAvatar },
           account: opportunity.account ? { name: opportunity.account.name } : null,
           contact: opportunity.contact
-            ? { name: `${opportunity.contact.firstName} ${opportunity.contact.lastName}`.trim(), title: opportunity.contact.title ?? '' }
+            ? {
+                name: `${opportunity.contact.firstName} ${opportunity.contact.lastName}`.trim(),
+                title: opportunity.contact.title ?? '',
+              }
             : null,
         },
         riskFactors,

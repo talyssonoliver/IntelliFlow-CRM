@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@intelliflow/db';
 import { AuditLogger, getAuditLogger, resetAuditLogger } from '../audit-logger';
 
 const TEST_TENANT_ID = 'test-tenant-123';
@@ -23,7 +23,7 @@ describe('AuditLogger', () => {
       securityEvent: {
         create: vi.fn().mockResolvedValue({ id: 'security-event-123' }),
       },
-    } as unknown as PrismaClient;
+    } as any as PrismaClient; // test-only mock
   }
 
   beforeEach(() => {
@@ -256,7 +256,7 @@ describe('AuditLogger', () => {
       const prismaWithoutSecurityEvent = {
         ...mockPrisma,
         securityEvent: undefined,
-      } as unknown as PrismaClient;
+      } as any as PrismaClient; // test-only mock
 
       const safeLogger = new AuditLogger(prismaWithoutSecurityEvent, { consoleLog: false });
 
@@ -600,7 +600,7 @@ describe('queryComprehensive', () => {
       securityEvent: {
         create: vi.fn().mockResolvedValue({ id: 'security-event-123' }),
       },
-    } as unknown as PrismaClient;
+    } as any as PrismaClient; // test-only mock
     logger = new AuditLogger(mockPrisma, { consoleLog: false });
   });
 
@@ -672,7 +672,7 @@ describe('getResourceAuditTrail', () => {
         findMany: vi.fn().mockResolvedValue([{ id: 'entry-1', resourceId: 'lead-123' }]),
         count: vi.fn().mockResolvedValue(1),
       },
-    } as unknown as PrismaClient;
+    } as any as PrismaClient; // test-only mock
     logger = new AuditLogger(mockPrisma, { consoleLog: false });
   });
 
@@ -726,7 +726,7 @@ describe('getActorAuditTrail', () => {
         ]),
         count: vi.fn().mockResolvedValue(2),
       },
-    } as unknown as PrismaClient;
+    } as any as PrismaClient; // test-only mock
     logger = new AuditLogger(mockPrisma, { consoleLog: false });
   });
 
@@ -784,7 +784,7 @@ describe('getPermissionAuditTrail', () => {
         findMany: vi.fn().mockResolvedValue([{ id: 'entry-1', permissionGranted: false }]),
         count: vi.fn().mockResolvedValue(1),
       },
-    } as unknown as PrismaClient;
+    } as any as PrismaClient; // test-only mock
     logger = new AuditLogger(mockPrisma, { consoleLog: false });
   });
 
@@ -880,7 +880,7 @@ describe('comprehensive entry writing', () => {
       securityEvent: {
         create: vi.fn().mockResolvedValue({ id: 'security-event-123' }),
       },
-    } as unknown as PrismaClient;
+    } as any as PrismaClient; // test-only mock
     logger = new AuditLogger(mockPrisma, { consoleLog: false });
   });
 
@@ -956,7 +956,7 @@ describe('getSeverityEmoji - all levels', () => {
       securityEvent: {
         create: vi.fn().mockResolvedValue({ id: 'security-event-123' }),
       },
-    } as unknown as PrismaClient;
+    } as any as PrismaClient; // test-only mock
     logger = new AuditLogger(mockPrisma, { consoleLog: true });
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
   });
@@ -1034,7 +1034,7 @@ describe('scheduleFlush - batch size trigger', () => {
       auditLogEntry: {
         create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
       },
-    } as unknown as PrismaClient;
+    } as any as PrismaClient; // test-only mock
   });
 
   afterEach(() => {
@@ -1094,7 +1094,7 @@ describe('calculateChangedFields - edge cases', () => {
       auditLogEntry: {
         create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
       },
-    } as unknown as PrismaClient;
+    } as any as PrismaClient; // test-only mock
     logger = new AuditLogger(mockPrisma, { consoleLog: false });
   });
 

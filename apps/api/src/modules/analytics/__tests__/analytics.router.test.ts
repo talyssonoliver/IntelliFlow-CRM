@@ -47,11 +47,11 @@ function makeCtx(overrides?: {
       email: 'test@example.com',
       role: 'USER',
       tenantId: overrides && 'tenantId' in overrides ? overrides.tenantId : 'tenant_123',
-    } as unknown as UserSession,
+    } as any, // test-only mock
     services: {
       analytics: overrides && 'analytics' in overrides ? overrides.analytics : mockAnalyticsService,
     },
-  } as unknown as Parameters<typeof analyticsRouter.createCaller>[0];
+  } as any; // test-only mock
 }
 
 describe('analyticsRouter', () => {
@@ -79,7 +79,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       await expect(caller.leadStats()).rejects.toThrow(TRPCError);
@@ -102,7 +102,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       await expect(caller.leadStats()).rejects.toThrow(TRPCError);
@@ -118,14 +118,14 @@ describe('analyticsRouter', () => {
           email: 'test@example.com',
           role: 'USER',
           tenantId: undefined,
-        } as unknown as UserSession,
+        } as any, // test-only mock
         services: {
           analytics: mockAnalyticsService,
         },
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       await expect(caller.leadStats()).rejects.toThrow(TRPCError);
@@ -145,7 +145,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       await expect(caller.leadStats()).rejects.toThrow(TRPCError);
@@ -183,7 +183,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       const result = await caller.dealsWonTrend({ months: 6 });
@@ -209,7 +209,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       await caller.dealsWonTrend({});
@@ -234,7 +234,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       // Test minimum value
@@ -278,7 +278,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       const result = await caller.growthTrends({ metric: 'revenue', months: 12 });
@@ -304,7 +304,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       await caller.growthTrends({ metric: 'leads', months: 6 });
@@ -329,7 +329,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       await caller.growthTrends({ metric: 'deals', months: 3 });
@@ -354,7 +354,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       await caller.growthTrends({ metric: 'contacts', months: 9 });
@@ -379,7 +379,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       await caller.growthTrends({ metric: 'revenue' });
@@ -417,7 +417,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       const result = await caller.trafficSources();
@@ -443,7 +443,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       const result = await caller.trafficSources();
@@ -485,7 +485,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       const result = await caller.recentActivity({ limit: 10 });
@@ -511,7 +511,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       await caller.recentActivity({});
@@ -536,7 +536,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       // Test minimum value
@@ -565,7 +565,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       const result = await caller.recentActivity({ limit: 10 });
@@ -603,7 +603,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       const result = await caller.leadStats();
@@ -636,7 +636,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       const result = await caller.leadStats();
@@ -672,7 +672,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       const result = await caller.exportMetrics({
@@ -707,7 +707,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       await expect(
@@ -729,14 +729,14 @@ describe('analyticsRouter', () => {
           email: 'test@example.com',
           role: 'USER',
           tenantId: undefined,
-        } as unknown as UserSession,
+        } as any, // test-only mock
         services: {
           analytics: mockAnalyticsService,
         },
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       await expect(
@@ -779,7 +779,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       const result = await caller.exportConversionFunnel({
@@ -819,7 +819,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       const result = await caller.exportConversionFunnel({
@@ -846,7 +846,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       await expect(
@@ -882,7 +882,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       await expect(caller.leadStats()).rejects.toThrow('Database connection failed');
@@ -910,7 +910,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as any // test-only mock
       );
 
       await expect(caller.trafficSources()).rejects.toMatchObject({
@@ -935,7 +935,14 @@ describe('analyticsRouter', () => {
         newContacts: 18,
         winRate: 65,
         recentActivity: [
-          { id: '1', action: 'CREATE', icon: 'add_circle', description: 'New lead', createdAt: new Date(), metadata: {} },
+          {
+            id: '1',
+            action: 'CREATE',
+            icon: 'add_circle',
+            description: 'New lead',
+            createdAt: new Date(),
+            metadata: {},
+          },
         ],
       };
       mockAnalyticsService.getOverview.mockResolvedValue(mockOverview);
@@ -994,8 +1001,14 @@ describe('analyticsRouter', () => {
 
     it('should pass explicit date range to service', async () => {
       mockAnalyticsService.getOverview.mockResolvedValue({
-        totalLeads: 10, leadDelta: 0, totalRevenue: 0, revenueDelta: 0,
-        openOpportunities: 0, newContacts: 0, winRate: 0, recentActivity: [],
+        totalLeads: 10,
+        leadDelta: 0,
+        totalRevenue: 0,
+        revenueDelta: 0,
+        openOpportunities: 0,
+        newContacts: 0,
+        winRate: 0,
+        recentActivity: [],
       });
 
       const caller = analyticsRouter.createCaller(makeCtx());
@@ -1050,8 +1063,13 @@ describe('analyticsRouter', () => {
 
     it('should pass date range to service', async () => {
       mockAnalyticsService.getSalesMetrics.mockResolvedValue({
-        pipelineValue: 0, winRate: 0, avgDealSize: 0, avgSalesCycleDays: null,
-        totalRevenue: 0, closedWonCount: 0, closedLostCount: 0,
+        pipelineValue: 0,
+        winRate: 0,
+        avgDealSize: 0,
+        avgSalesCycleDays: null,
+        totalRevenue: 0,
+        closedWonCount: 0,
+        closedLostCount: 0,
       });
 
       const caller = analyticsRouter.createCaller(makeCtx());
@@ -1066,8 +1084,13 @@ describe('analyticsRouter', () => {
 
     it('should pass optional ownerId to service', async () => {
       mockAnalyticsService.getSalesMetrics.mockResolvedValue({
-        pipelineValue: 0, winRate: 0, avgDealSize: 0, avgSalesCycleDays: null,
-        totalRevenue: 0, closedWonCount: 0, closedLostCount: 0,
+        pipelineValue: 0,
+        winRate: 0,
+        avgDealSize: 0,
+        avgSalesCycleDays: null,
+        totalRevenue: 0,
+        closedWonCount: 0,
+        closedLostCount: 0,
       });
 
       const caller = analyticsRouter.createCaller(makeCtx());
@@ -1082,8 +1105,13 @@ describe('analyticsRouter', () => {
 
     it('should return zero win rate when no closed deals (AC-009)', async () => {
       mockAnalyticsService.getSalesMetrics.mockResolvedValue({
-        pipelineValue: 500000, winRate: 0, avgDealSize: 0, avgSalesCycleDays: null,
-        totalRevenue: 0, closedWonCount: 0, closedLostCount: 0,
+        pipelineValue: 500000,
+        winRate: 0,
+        avgDealSize: 0,
+        avgSalesCycleDays: null,
+        totalRevenue: 0,
+        closedWonCount: 0,
+        closedLostCount: 0,
       });
 
       const caller = analyticsRouter.createCaller(makeCtx());
@@ -1095,8 +1123,13 @@ describe('analyticsRouter', () => {
 
     it('should return null avgSalesCycleDays when no closed deals', async () => {
       mockAnalyticsService.getSalesMetrics.mockResolvedValue({
-        pipelineValue: 0, winRate: 0, avgDealSize: 0, avgSalesCycleDays: null,
-        totalRevenue: 0, closedWonCount: 0, closedLostCount: 0,
+        pipelineValue: 0,
+        winRate: 0,
+        avgDealSize: 0,
+        avgSalesCycleDays: null,
+        totalRevenue: 0,
+        closedWonCount: 0,
+        closedLostCount: 0,
       });
 
       const caller = analyticsRouter.createCaller(makeCtx());
@@ -1163,7 +1196,10 @@ describe('analyticsRouter', () => {
 
     it('should return zeros and empty arrays when no leads (AC-009)', async () => {
       mockAnalyticsService.getLeadMetrics.mockResolvedValue({
-        total: 0, bySource: [], byStatus: [], conversionRate: 0,
+        total: 0,
+        bySource: [],
+        byStatus: [],
+        conversionRate: 0,
       });
 
       const caller = analyticsRouter.createCaller(makeCtx());
@@ -1176,7 +1212,10 @@ describe('analyticsRouter', () => {
 
     it('should compute correct conversion rate', async () => {
       mockAnalyticsService.getLeadMetrics.mockResolvedValue({
-        total: 100, bySource: [], byStatus: [], conversionRate: 25,
+        total: 100,
+        bySource: [],
+        byStatus: [],
+        conversionRate: 25,
       });
 
       const caller = analyticsRouter.createCaller(makeCtx());
@@ -1199,15 +1238,16 @@ describe('analyticsRouter', () => {
       const caller = analyticsRouter.createCaller(makeCtx());
       const result = await caller.getLeadMetrics(validInput);
 
-      const totalPercentage = result.bySource.reduce((sum: number, s: { percentage: number }) => sum + s.percentage, 0);
+      const totalPercentage = result.bySource.reduce(
+        (sum: number, s: { percentage: number }) => sum + s.percentage,
+        0
+      );
       expect(totalPercentage).toBe(100);
     });
 
     it('should reject missing required dates', async () => {
       const caller = analyticsRouter.createCaller(makeCtx());
-      await expect(
-        (caller as any).getLeadMetrics({})
-      ).rejects.toThrow();
+      await expect((caller as any).getLeadMetrics({})).rejects.toThrow();
     });
 
     it('should throw INTERNAL_SERVER_ERROR when service unavailable', async () => {
@@ -1238,13 +1278,55 @@ describe('analyticsRouter', () => {
     it('should return 7 stages with counts, values, and conversion rates', async () => {
       const mockFunnel = {
         stages: [
-          { stage: 'PROSPECTING', label: 'Prospecting', count: 100, value: 500000, conversionFromPrevious: null },
-          { stage: 'QUALIFICATION', label: 'Qualification', count: 80, value: 400000, conversionFromPrevious: 80 },
-          { stage: 'NEEDS_ANALYSIS', label: 'Needs Analysis', count: 60, value: 300000, conversionFromPrevious: 75 },
-          { stage: 'PROPOSAL', label: 'Proposal', count: 40, value: 200000, conversionFromPrevious: 66.7 },
-          { stage: 'NEGOTIATION', label: 'Negotiation', count: 30, value: 150000, conversionFromPrevious: 75 },
-          { stage: 'CLOSED_WON', label: 'Closed Won', count: 20, value: 100000, conversionFromPrevious: 66.7 },
-          { stage: 'CLOSED_LOST', label: 'Closed Lost', count: 10, value: 50000, conversionFromPrevious: 33.3 },
+          {
+            stage: 'PROSPECTING',
+            label: 'Prospecting',
+            count: 100,
+            value: 500000,
+            conversionFromPrevious: null,
+          },
+          {
+            stage: 'QUALIFICATION',
+            label: 'Qualification',
+            count: 80,
+            value: 400000,
+            conversionFromPrevious: 80,
+          },
+          {
+            stage: 'NEEDS_ANALYSIS',
+            label: 'Needs Analysis',
+            count: 60,
+            value: 300000,
+            conversionFromPrevious: 75,
+          },
+          {
+            stage: 'PROPOSAL',
+            label: 'Proposal',
+            count: 40,
+            value: 200000,
+            conversionFromPrevious: 66.7,
+          },
+          {
+            stage: 'NEGOTIATION',
+            label: 'Negotiation',
+            count: 30,
+            value: 150000,
+            conversionFromPrevious: 75,
+          },
+          {
+            stage: 'CLOSED_WON',
+            label: 'Closed Won',
+            count: 20,
+            value: 100000,
+            conversionFromPrevious: 66.7,
+          },
+          {
+            stage: 'CLOSED_LOST',
+            label: 'Closed Lost',
+            count: 10,
+            value: 50000,
+            conversionFromPrevious: 33.3,
+          },
         ],
         totalLeads: 200,
         overallConversionRate: 20,
@@ -1263,13 +1345,49 @@ describe('analyticsRouter', () => {
     it('should return zero-filled stages when no data', async () => {
       const mockFunnel = {
         stages: [
-          { stage: 'PROSPECTING', label: 'Prospecting', count: 0, value: 0, conversionFromPrevious: null },
-          { stage: 'QUALIFICATION', label: 'Qualification', count: 0, value: 0, conversionFromPrevious: 0 },
-          { stage: 'NEEDS_ANALYSIS', label: 'Needs Analysis', count: 0, value: 0, conversionFromPrevious: 0 },
+          {
+            stage: 'PROSPECTING',
+            label: 'Prospecting',
+            count: 0,
+            value: 0,
+            conversionFromPrevious: null,
+          },
+          {
+            stage: 'QUALIFICATION',
+            label: 'Qualification',
+            count: 0,
+            value: 0,
+            conversionFromPrevious: 0,
+          },
+          {
+            stage: 'NEEDS_ANALYSIS',
+            label: 'Needs Analysis',
+            count: 0,
+            value: 0,
+            conversionFromPrevious: 0,
+          },
           { stage: 'PROPOSAL', label: 'Proposal', count: 0, value: 0, conversionFromPrevious: 0 },
-          { stage: 'NEGOTIATION', label: 'Negotiation', count: 0, value: 0, conversionFromPrevious: 0 },
-          { stage: 'CLOSED_WON', label: 'Closed Won', count: 0, value: 0, conversionFromPrevious: 0 },
-          { stage: 'CLOSED_LOST', label: 'Closed Lost', count: 0, value: 0, conversionFromPrevious: 0 },
+          {
+            stage: 'NEGOTIATION',
+            label: 'Negotiation',
+            count: 0,
+            value: 0,
+            conversionFromPrevious: 0,
+          },
+          {
+            stage: 'CLOSED_WON',
+            label: 'Closed Won',
+            count: 0,
+            value: 0,
+            conversionFromPrevious: 0,
+          },
+          {
+            stage: 'CLOSED_LOST',
+            label: 'Closed Lost',
+            count: 0,
+            value: 0,
+            conversionFromPrevious: 0,
+          },
         ],
         totalLeads: 0,
         overallConversionRate: 0,
@@ -1286,7 +1404,13 @@ describe('analyticsRouter', () => {
     it('should have null conversionFromPrevious for first stage', async () => {
       mockAnalyticsService.getConversionFunnel.mockResolvedValue({
         stages: [
-          { stage: 'PROSPECTING', label: 'Prospecting', count: 50, value: 250000, conversionFromPrevious: null },
+          {
+            stage: 'PROSPECTING',
+            label: 'Prospecting',
+            count: 50,
+            value: 250000,
+            conversionFromPrevious: null,
+          },
         ],
         totalLeads: 100,
         overallConversionRate: 50,
@@ -1299,7 +1423,15 @@ describe('analyticsRouter', () => {
     });
 
     it('should validate funnel stage ordering', async () => {
-      const stages = ['PROSPECTING', 'QUALIFICATION', 'NEEDS_ANALYSIS', 'PROPOSAL', 'NEGOTIATION', 'CLOSED_WON', 'CLOSED_LOST'];
+      const stages = [
+        'PROSPECTING',
+        'QUALIFICATION',
+        'NEEDS_ANALYSIS',
+        'PROPOSAL',
+        'NEGOTIATION',
+        'CLOSED_WON',
+        'CLOSED_LOST',
+      ];
       const mockFunnel = {
         stages: stages.map((stage, i) => ({
           stage,
@@ -1321,7 +1453,9 @@ describe('analyticsRouter', () => {
 
     it('should include totalLeads when includeLeads is true', async () => {
       mockAnalyticsService.getConversionFunnel.mockResolvedValue({
-        stages: [], totalLeads: 200, overallConversionRate: 0,
+        stages: [],
+        totalLeads: 200,
+        overallConversionRate: 0,
       });
 
       const caller = analyticsRouter.createCaller(makeCtx());
@@ -1336,7 +1470,9 @@ describe('analyticsRouter', () => {
 
     it('should omit lead count when includeLeads is false', async () => {
       mockAnalyticsService.getConversionFunnel.mockResolvedValue({
-        stages: [], totalLeads: 0, overallConversionRate: 0,
+        stages: [],
+        totalLeads: 0,
+        overallConversionRate: 0,
       });
 
       const caller = analyticsRouter.createCaller(makeCtx());
@@ -1377,9 +1513,7 @@ describe('analyticsRouter', () => {
     };
 
     it('should return time series points for revenue metric', async () => {
-      const mockData = [
-        { period: '2026-01', periodLabel: 'Jan 2026', value: 50000 },
-      ];
+      const mockData = [{ period: '2026-01', periodLabel: 'Jan 2026', value: 50000 }];
       mockAnalyticsService.getTimeSeriesData.mockResolvedValue(mockData);
 
       const caller = analyticsRouter.createCaller(makeCtx());
@@ -1538,57 +1672,97 @@ describe('analyticsRouter', () => {
     });
 
     it('should delegate sales report type', async () => {
-      mockAnalyticsService.exportReport.mockResolvedValue({ format: 'json', data: {}, filename: 'f.json' });
+      mockAnalyticsService.exportReport.mockResolvedValue({
+        format: 'json',
+        data: {},
+        filename: 'f.json',
+      });
 
       const caller = analyticsRouter.createCaller(makeCtx());
       await caller.exportReport({ ...validInput, reportType: 'sales' });
 
       expect(mockAnalyticsService.exportReport).toHaveBeenCalledWith(
-        'tenant_123', 'sales', expect.any(Object), 'json', expect.any(Object)
+        'tenant_123',
+        'sales',
+        expect.any(Object),
+        'json',
+        expect.any(Object)
       );
     });
 
     it('should delegate leads report type', async () => {
-      mockAnalyticsService.exportReport.mockResolvedValue({ format: 'json', data: {}, filename: 'f.json' });
+      mockAnalyticsService.exportReport.mockResolvedValue({
+        format: 'json',
+        data: {},
+        filename: 'f.json',
+      });
 
       const caller = analyticsRouter.createCaller(makeCtx());
       await caller.exportReport({ ...validInput, reportType: 'leads' });
 
       expect(mockAnalyticsService.exportReport).toHaveBeenCalledWith(
-        'tenant_123', 'leads', expect.any(Object), 'json', expect.any(Object)
+        'tenant_123',
+        'leads',
+        expect.any(Object),
+        'json',
+        expect.any(Object)
       );
     });
 
     it('should delegate funnel report type', async () => {
-      mockAnalyticsService.exportReport.mockResolvedValue({ format: 'json', data: {}, filename: 'f.json' });
+      mockAnalyticsService.exportReport.mockResolvedValue({
+        format: 'json',
+        data: {},
+        filename: 'f.json',
+      });
 
       const caller = analyticsRouter.createCaller(makeCtx());
       await caller.exportReport({ ...validInput, reportType: 'funnel' });
 
       expect(mockAnalyticsService.exportReport).toHaveBeenCalledWith(
-        'tenant_123', 'funnel', expect.any(Object), 'json', expect.any(Object)
+        'tenant_123',
+        'funnel',
+        expect.any(Object),
+        'json',
+        expect.any(Object)
       );
     });
 
     it('should delegate timeseries report type', async () => {
-      mockAnalyticsService.exportReport.mockResolvedValue({ format: 'json', data: {}, filename: 'f.json' });
+      mockAnalyticsService.exportReport.mockResolvedValue({
+        format: 'json',
+        data: {},
+        filename: 'f.json',
+      });
 
       const caller = analyticsRouter.createCaller(makeCtx());
       await caller.exportReport({ ...validInput, reportType: 'timeseries' });
 
       expect(mockAnalyticsService.exportReport).toHaveBeenCalledWith(
-        'tenant_123', 'timeseries', expect.any(Object), 'json', expect.any(Object)
+        'tenant_123',
+        'timeseries',
+        expect.any(Object),
+        'json',
+        expect.any(Object)
       );
     });
 
     it('should delegate overview report type', async () => {
-      mockAnalyticsService.exportReport.mockResolvedValue({ format: 'json', data: {}, filename: 'f.json' });
+      mockAnalyticsService.exportReport.mockResolvedValue({
+        format: 'json',
+        data: {},
+        filename: 'f.json',
+      });
 
       const caller = analyticsRouter.createCaller(makeCtx());
       await caller.exportReport({ ...validInput, reportType: 'overview' });
 
       expect(mockAnalyticsService.exportReport).toHaveBeenCalledWith(
-        'tenant_123', 'overview', expect.any(Object), 'json', expect.any(Object)
+        'tenant_123',
+        'overview',
+        expect.any(Object),
+        'json',
+        expect.any(Object)
       );
     });
 
@@ -1603,12 +1777,14 @@ describe('analyticsRouter', () => {
       const result = await caller.exportReport({ ...validInput, format: 'csv' });
 
       expect(typeof result.data).toBe('string');
-      expect((result.data as string)).toContain('pipelineValue');
+      expect(result.data as string).toContain('pipelineValue');
     });
 
     it('should handle empty data gracefully', async () => {
       mockAnalyticsService.exportReport.mockResolvedValue({
-        format: 'json', data: {}, filename: 'empty.json',
+        format: 'json',
+        data: {},
+        filename: 'empty.json',
       });
 
       const caller = analyticsRouter.createCaller(makeCtx());

@@ -23,7 +23,7 @@
  * ```
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@intelliflow/db';
 import {
   RoleName,
   ROLE_LEVELS,
@@ -116,12 +116,30 @@ const OWNERSHIP_RESTRICTIONS: Record<RoleName, boolean> = {
 };
 
 /**
+ * Returns true when ownership restrictions are violated.
+ * Viewers reading their own records are never a violation (they can read all).
+ */
+function isOwnershipViolation(
+  userRole: RoleName,
+  userId: string,
+  resourceOwnerId: string | undefined,
+  action: PermissionAction
+): boolean {
+  if (!OWNERSHIP_RESTRICTIONS[userRole] || !resourceOwnerId) return false;
+  if (resourceOwnerId === userId) return false;
+  // VIEWER + read is allowed even for records they don't own
+  if (userRole === 'VIEWER' && action === 'read') return false;
+  return true;
+}
+
+/**
  * RBAC Service class
  */
 export class RBACService {
-  private prisma: PrismaClient;
-  private permissionCache: Map<string, { permissions: string[]; timestamp: number }> = new Map();
-  private cacheMaxAge = 60 * 1000; // 1 minute
+  private readonly prisma: PrismaClient;
+  private readonly permissionCache: Map<string, { permissions: string[]; timestamp: number }> =
+    new Map();
+  private readonly cacheMaxAge = 60 * 1000; // 1 minute
 
   constructor(prisma: PrismaClient) {
     this.prisma = prisma;
@@ -155,20 +173,13 @@ export class RBACService {
     }
 
     // Check ownership restrictions (ABAC)
-    if (OWNERSHIP_RESTRICTIONS[userRole] && resourceOwnerId) {
-      if (resourceOwnerId !== userId) {
-        // Check if the action is a read action (viewers can read all)
-        if (userRole === 'VIEWER' && action === 'read') {
-          // Viewers can read all records
-        } else {
-          return {
-            granted: false,
-            reason: `User ${userId} cannot ${action} ${resourceType} owned by ${resourceOwnerId}`,
-            checkedPermissions,
-            roleLevel,
-          };
-        }
-      }
+    if (isOwnershipViolation(userRole, userId, resourceOwnerId, action)) {
+      return {
+        granted: false,
+        reason: `User ${userId} cannot ${action} ${resourceType} owned by ${resourceOwnerId}`,
+        checkedPermissions,
+        roleLevel,
+      };
     }
 
     // Check for custom user-level permission overrides

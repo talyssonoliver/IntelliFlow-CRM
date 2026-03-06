@@ -8,6 +8,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { authRouter } from '../auth.router';
 import type { UserSession } from '../../../context';
+import { createTestContext, prismaMock } from '../../../test/setup';
 
 // Test UUIDs for valid input
 const TEST_UUIDS = {
@@ -100,7 +101,9 @@ vi.mock('../../../services/session.service', () => ({
 }));
 
 // IFC-120: Mock supabaseAdmin for new auth flows
-const mockVerifyOtp = vi.fn().mockResolvedValue({ data: { user: { email: 'test@example.com' } }, error: null });
+const mockVerifyOtp = vi
+  .fn()
+  .mockResolvedValue({ data: { user: { email: 'test@example.com' } }, error: null });
 const mockSupabaseSignUp = vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
 const mockSupabaseResend = vi.fn().mockResolvedValue({ data: {}, error: null });
 const mockResetPasswordForEmail = vi.fn().mockResolvedValue({ data: {}, error: null });
@@ -137,34 +140,24 @@ import {
 } from '../../../lib/supabase';
 
 describe('authRouter', () => {
-  // Create mock context
-  // Note: We cast the entire context to bypass strict type checking on the req property
-  // since we only need the headers for testing purposes, not the full Request interface
+  // Create mock context using createTestContext from test/setup (returns BaseContext)
   const createMockContext = (options: { authenticated?: boolean } = {}) => {
-    const baseContext = {
-      prisma: {} as unknown,
-      req: {
-        headers: {
-          'x-forwarded-for': '127.0.0.1',
-          'user-agent': 'Mozilla/5.0 Test Agent',
-        },
-      } as unknown as Request,
-      user: undefined as UserSession | undefined,
-    };
-
     if (options.authenticated) {
-      return {
-        ...baseContext,
+      return createTestContext({
+        prisma: prismaMock,
         user: {
           userId: TEST_UUIDS.user,
           email: 'test@example.com',
           role: 'USER',
           tenantId: TEST_UUIDS.tenant,
         } as UserSession,
-      };
+      });
     }
 
-    return baseContext;
+    return createTestContext({
+      prisma: prismaMock,
+      user: undefined,
+    });
   };
 
   // Helper to reset and setup all mocks with default values
@@ -255,9 +248,7 @@ describe('authRouter', () => {
   describe('login', () => {
     it('should successfully login with valid credentials', async () => {
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       const result = await caller.login({
         email: 'test@example.com',
@@ -277,9 +268,7 @@ describe('authRouter', () => {
     it('should return MFA challenge when MFA is enabled', async () => {
       mockMfaService.isUserMfaEnabled.mockResolvedValueOnce(true);
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       const result = await caller.login({
         email: 'test@example.com',
@@ -300,9 +289,7 @@ describe('authRouter', () => {
       });
 
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       await expect(
         caller.login({
@@ -328,9 +315,7 @@ describe('authRouter', () => {
       });
 
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       await expect(
         caller.login({
@@ -348,9 +333,7 @@ describe('authRouter', () => {
   describe('loginWithOAuth', () => {
     it('should initiate OAuth flow and return URL', async () => {
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       const result = await caller.loginWithOAuth({
         provider: 'google',
@@ -368,9 +351,7 @@ describe('authRouter', () => {
       });
 
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       await expect(
         caller.loginWithOAuth({
@@ -384,9 +365,7 @@ describe('authRouter', () => {
   describe('oauthCallback', () => {
     it('should exchange code for session', async () => {
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       const result = await caller.oauthCallback({
         code: 'auth_code_123',
@@ -402,9 +381,7 @@ describe('authRouter', () => {
 
     it('should handle OAuth error response', async () => {
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       // When error is provided, code can be a placeholder since error takes precedence
       await expect(
@@ -425,9 +402,7 @@ describe('authRouter', () => {
   describe('verifyMfa', () => {
     it('should verify MFA code and complete login', async () => {
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       const result = await caller.verifyMfa({
         challengeId: TEST_UUIDS.challenge,
@@ -448,9 +423,7 @@ describe('authRouter', () => {
       });
 
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       await expect(
         caller.verifyMfa({
@@ -465,9 +438,7 @@ describe('authRouter', () => {
       mockMfaService.getChallengeInfo.mockReturnValueOnce({ exists: false });
 
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       await expect(
         caller.verifyMfa({
@@ -482,9 +453,7 @@ describe('authRouter', () => {
   describe('resendMfaCode', () => {
     it('should resend SMS MFA code', async () => {
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       const result = await caller.resendMfaCode({
         method: 'sms',
@@ -498,9 +467,7 @@ describe('authRouter', () => {
 
     it('should resend email MFA code', async () => {
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       const result = await caller.resendMfaCode({
         method: 'email',
@@ -520,9 +487,7 @@ describe('authRouter', () => {
   describe('logout', () => {
     it('should logout user and revoke sessions', async () => {
       const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       const result = await caller.logout();
 
@@ -546,9 +511,7 @@ describe('authRouter', () => {
   describe('refreshSession', () => {
     it('should refresh session token', async () => {
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       const result = await caller.refreshSession({
         refreshToken: 'refresh_token_123',
@@ -566,9 +529,7 @@ describe('authRouter', () => {
       });
 
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       await expect(
         caller.refreshSession({
@@ -580,15 +541,13 @@ describe('authRouter', () => {
 
   describe('getSessions', () => {
     it('should return user sessions', async () => {
-      mockSessionService.getUserSessions.mockResolvedValueOnce([
+      mockSessionService.getUserSessions.mockResolvedValue([
         { id: 'session_1', deviceInfo: { browser: 'Chrome' } },
         { id: 'session_2', deviceInfo: { browser: 'Firefox' } },
       ]);
 
       const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       const result = await caller.getSessions();
 
@@ -600,9 +559,7 @@ describe('authRouter', () => {
   describe('revokeSession', () => {
     it('should revoke specific session', async () => {
       const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       const result = await caller.revokeSession({
         sessionId: TEST_UUIDS.session,
@@ -619,12 +576,10 @@ describe('authRouter', () => {
     });
 
     it('should throw error for non-existent session', async () => {
-      mockSessionService.revokeSession.mockResolvedValueOnce(false);
+      mockSessionService.revokeSession.mockResolvedValue(false);
 
       const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       await expect(
         caller.revokeSession({
@@ -641,9 +596,7 @@ describe('authRouter', () => {
   describe('setupMfa', () => {
     it('should setup TOTP MFA', async () => {
       const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       const result = await caller.setupMfa({
         method: 'totp',
@@ -651,15 +604,16 @@ describe('authRouter', () => {
 
       expect(result.success).toBe(true);
       expect(result.method).toBe('totp');
+      if (result.method !== 'totp') {
+        throw new Error(`Expected TOTP MFA setup, received ${result.method}`);
+      }
       expect(result.secret).toBeDefined();
       expect(result.qrCodeUrl).toContain('otpauth://');
     });
 
     it('should setup SMS MFA', async () => {
       const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       const result = await caller.setupMfa({
         method: 'sms',
@@ -668,15 +622,16 @@ describe('authRouter', () => {
 
       expect(result.success).toBe(true);
       expect(result.method).toBe('sms');
+      if (result.method !== 'sms') {
+        throw new Error(`Expected SMS MFA setup, received ${result.method}`);
+      }
       expect(result.codeSentTo).toBe('+1234567890');
       expect(mockMfaService.sendSmsOtp).toHaveBeenCalled();
     });
 
     it('should require phone for SMS MFA', async () => {
       const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       await expect(
         caller.setupMfa({
@@ -687,9 +642,7 @@ describe('authRouter', () => {
 
     it('should setup email MFA', async () => {
       const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       const result = await caller.setupMfa({
         method: 'email',
@@ -704,9 +657,7 @@ describe('authRouter', () => {
   describe('confirmMfa', () => {
     it('should confirm and enable TOTP MFA', async () => {
       const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       const result = await caller.confirmMfa({
         method: 'totp',
@@ -725,12 +676,10 @@ describe('authRouter', () => {
     });
 
     it('should reject invalid TOTP code', async () => {
-      mockMfaService.verifyTotp.mockReturnValueOnce(false);
+      mockMfaService.verifyTotp.mockReturnValue(false);
 
       const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       await expect(
         caller.confirmMfa({
@@ -744,9 +693,7 @@ describe('authRouter', () => {
   describe('getBackupCodes', () => {
     it('should generate backup codes', async () => {
       const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       const result = await caller.getBackupCodes();
 
@@ -768,33 +715,31 @@ describe('authRouter', () => {
 
   describe('getStatus', () => {
     it('should return authenticated status when session exists', async () => {
+      // Configure prismaMock to return user data for getStatus token verification
+      prismaMock.user.findUnique.mockResolvedValueOnce({
+        id: TEST_UUIDS.user,
+        email: 'test@example.com',
+        name: 'Test User',
+        role: 'USER',
+      } as any); // test-only mock — partial user shape
       // Create context with Authorization header
       const mockHeaders = new Map([
         ['Authorization', 'Bearer test-token-123'],
         ['x-forwarded-for', '127.0.0.1'],
         ['user-agent', 'Mozilla/5.0 Test Agent'],
       ]);
-      const mockContext = {
-        prisma: {
-          user: {
-            findUnique: vi.fn().mockResolvedValue({
-              id: TEST_UUIDS.user,
-              email: 'test@example.com',
-              name: 'Test User',
-              role: 'USER',
-            }),
-          },
+      // req uses a partial headers mock (get-only); cast to any is required for test-only mock
+      const mockReq = {
+        headers: {
+          get: (key: string) => mockHeaders.get(key) || mockHeaders.get(key.toLowerCase()),
         },
-        req: {
-          headers: {
-            get: (key: string) => mockHeaders.get(key) || mockHeaders.get(key.toLowerCase()),
-          },
-        },
+      } as any; // test-only mock
+      const mockContext = createTestContext({
+        prisma: prismaMock,
+        req: mockReq,
         user: undefined,
-      };
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      });
+      const caller = authRouter.createCaller(mockContext);
 
       const result = await caller.getStatus();
 
@@ -815,18 +760,18 @@ describe('authRouter', () => {
         ['x-forwarded-for', '127.0.0.1'],
         ['user-agent', 'Mozilla/5.0 Test Agent'],
       ]);
-      const mockContext = {
-        prisma: {},
-        req: {
-          headers: {
-            get: (key: string) => mockHeaders.get(key) || mockHeaders.get(key.toLowerCase()),
-          },
+      // req uses a partial headers mock (get-only); cast to any is required for test-only mock
+      const mockReq = {
+        headers: {
+          get: (key: string) => mockHeaders.get(key) || mockHeaders.get(key.toLowerCase()),
         },
+      } as any; // test-only mock
+      const mockContext = createTestContext({
+        prisma: prismaMock,
+        req: mockReq,
         user: undefined,
-      };
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      });
+      const caller = authRouter.createCaller(mockContext);
 
       const result = await caller.getStatus();
 
@@ -841,11 +786,12 @@ describe('authRouter', () => {
   describe('verifyEmail', () => {
     it('should process email verification via Supabase (IFC-120)', async () => {
       // Re-set after vi.clearAllMocks() wipes declaration-time mockResolvedValue
-      mockVerifyOtp.mockResolvedValue({ data: { user: { email: 'test@example.com' } }, error: null });
+      mockVerifyOtp.mockResolvedValue({
+        data: { user: { email: 'test@example.com' } },
+        error: null,
+      });
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       const result = await caller.verifyEmail({
         token_hash: 'a'.repeat(64), // Supabase token hash
@@ -861,9 +807,7 @@ describe('authRouter', () => {
     it('should resend verification email and always return success (AC-007)', async () => {
       mockSupabaseResend.mockResolvedValue({ data: {}, error: null });
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(
-        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
-      );
+      const caller = authRouter.createCaller(mockContext);
 
       const result = await caller.resendVerification({
         email: 'test@example.com',

@@ -9,6 +9,7 @@
 
 import { z } from 'zod';
 import { leadStatusSchema, leadSourceSchema } from '@intelliflow/validators';
+import type { PrismaClient } from '@intelliflow/db';
 
 /**
  * Tool action types for categorization and authorization
@@ -173,6 +174,10 @@ export interface AgentAuthContext {
   allowedActionTypes: AgentActionType[];
   maxActionsPerSession: number;
   actionCount: number;
+  /** Tenant ID for data scoping — required for search tools to return real results */
+  tenantId?: string;
+  /** Prisma client for direct DB queries in search tools (IFC-139) */
+  prisma?: PrismaClient;
 }
 
 /**

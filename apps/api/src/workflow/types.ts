@@ -139,8 +139,8 @@ export interface WorkflowDefinition<T extends Record<string, unknown> = Record<s
 export interface TransitionResult<T extends Record<string, unknown> = Record<string, unknown>> {
   /** Whether the transition was successful */
   success: boolean;
-  /** Updated workflow state */
-  state: WorkflowState<T>;
+  /** Updated workflow state (null when workflow not found) */
+  state: WorkflowState<T> | null;
   /** Error message if transition failed */
   error?: string;
   /** Whether the workflow has completed */

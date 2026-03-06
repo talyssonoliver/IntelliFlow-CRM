@@ -90,7 +90,9 @@ const eventBus: EventBusPort = {
     );
   },
   subscribe: async () => {
-    // No-op for fire-and-forget bus
+    // Intentional no-op: fire-and-forget event dispatch requires no subscription callback.
+    // This local EventBusPort stub logs events for observability; a real bus (e.g., OutboxEventBusAdapter)
+    // is wired in production via the DI container.
   },
 };
 

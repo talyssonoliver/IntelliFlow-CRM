@@ -307,6 +307,7 @@ describe('Timeline Router', () => {
         completedAt: null,
         cancellationReason: null,
         notes: null,
+        calendarId: null,
       };
 
       prismaMock.task.findMany.mockResolvedValue([]);
@@ -394,10 +395,14 @@ describe('Timeline Router', () => {
 
   describe('getStats', () => {
     it('should return correct task statistics', async () => {
-      prismaMock.task.count
-        .mockResolvedValueOnce(10) // total
-        .mockResolvedValueOnce(5) // completed
-        .mockResolvedValueOnce(2); // overdue
+      // getStats calls task.count 3 times concurrently in Promise.all; distinguish by args
+      (prismaMock.task.count as any).mockImplementation(
+        (args?: { where?: { status?: unknown; dueDate?: unknown } }) => {
+          if (args?.where?.dueDate) return Promise.resolve(2); // overdue
+          if (args?.where?.status === 'COMPLETED') return Promise.resolve(5); // completed
+          return Promise.resolve(10); // total
+        }
+      );
       // Note: appointment.count is only called when effectiveOpportunityId is provided
       // When no opportunityId, it returns Promise.resolve(0)
       prismaMock.appointment.count.mockResolvedValue(3);

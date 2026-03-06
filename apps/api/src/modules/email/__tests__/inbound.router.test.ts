@@ -173,7 +173,6 @@ Hello World`;
       (prismaMock.emailRecord.count as any).mockResolvedValue(0);
 
       const result = await protectedCaller.listEmails({
-
         limit: 20,
         offset: 0,
       });
@@ -188,7 +187,6 @@ Hello World`;
       (prismaMock.emailRecord.count as any).mockResolvedValue(0);
 
       const result = await protectedCaller.listEmails({
-
         limit: 10,
         offset: 5,
       });
@@ -215,7 +213,10 @@ Hello World`;
 
     it('should handle archive action', async () => {
       (prismaMock.emailRecord.findFirst as any).mockResolvedValue(mockExistingEmail);
-      (prismaMock.emailRecord.update as any).mockResolvedValue({ ...mockExistingEmail, metadata: { archived: true } });
+      (prismaMock.emailRecord.update as any).mockResolvedValue({
+        ...mockExistingEmail,
+        metadata: { archived: true },
+      });
 
       const result = await protectedCaller.processEmail({
         emailId: 'test-email-123',
@@ -227,7 +228,10 @@ Hello World`;
 
     it('should handle spam action', async () => {
       (prismaMock.emailRecord.findFirst as any).mockResolvedValue(mockExistingEmail);
-      (prismaMock.emailRecord.update as any).mockResolvedValue({ ...mockExistingEmail, metadata: { spam: true } });
+      (prismaMock.emailRecord.update as any).mockResolvedValue({
+        ...mockExistingEmail,
+        metadata: { spam: true },
+      });
 
       const result = await protectedCaller.processEmail({
         emailId: 'test-email-123',
@@ -263,7 +267,14 @@ Hello World`;
 
     it('should accept forward action with valid email', async () => {
       (prismaMock.emailRecord.findFirst as any).mockResolvedValue(mockExistingEmail);
-      (prismaMock.emailRecord.update as any).mockResolvedValue({ ...mockExistingEmail, metadata: { forwarded: true } });
+      (prismaMock.emailRecord.create as any).mockResolvedValue({
+        ...mockExistingEmail,
+        id: 'forward-record-id',
+      });
+      (prismaMock.emailRecord.update as any).mockResolvedValue({
+        ...mockExistingEmail,
+        metadata: { forwarded: true },
+      });
 
       const result = await protectedCaller.processEmail({
         emailId: 'test-email-123',
@@ -305,7 +316,9 @@ Hello World`;
 describe('markAsRead', () => {
   const caller = inboundEmailRouter.createCaller(createTestContext());
 
-  beforeEach(() => { vi.clearAllMocks(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it('marks a single email as read by emailId', async () => {
     (prismaMock.emailRecord.updateMany as any).mockResolvedValue({ count: 1 });
@@ -351,7 +364,9 @@ describe('markAsRead', () => {
 describe('getUnreadCounts', () => {
   const caller = inboundEmailRouter.createCaller(createTestContext());
 
-  beforeEach(() => { vi.clearAllMocks(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it('returns zero counts for all folders when no unread emails', async () => {
     (prismaMock.emailRecord.count as any).mockResolvedValue(0);
@@ -369,10 +384,10 @@ describe('getUnreadCounts', () => {
 
   it('returns actual counts for each folder', async () => {
     (prismaMock.emailRecord.count as any)
-      .mockResolvedValueOnce(5)  // inbox
-      .mockResolvedValueOnce(2)  // sent
-      .mockResolvedValueOnce(1)  // drafts
-      .mockResolvedValueOnce(0)  // trash
+      .mockResolvedValueOnce(5) // inbox
+      .mockResolvedValueOnce(2) // sent
+      .mockResolvedValueOnce(1) // drafts
+      .mockResolvedValueOnce(0) // trash
       .mockResolvedValueOnce(0); // spam
 
     const result = await caller.getUnreadCounts({

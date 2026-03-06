@@ -472,9 +472,9 @@ export interface RetryHandlerOptions<T> {
  * Retry manager class
  */
 export class RetryManager {
-  private queue: RetryQueue;
-  private config: RetryConfig;
-  private circuitBreaker?: CircuitBreaker;
+  private readonly queue: RetryQueue;
+  private readonly config: RetryConfig;
+  private readonly circuitBreaker?: CircuitBreaker;
   private isProcessing = false;
   private processingInterval?: ReturnType<typeof setInterval>;
 
@@ -495,8 +495,7 @@ export class RetryManager {
     error?: string,
     existingAttempts = 0
   ): Promise<RetryEntry> {
-    const attempts = existingAttempts;
-    const delay = calculateRetryDelay(attempts, this.config);
+    const delay = calculateRetryDelay(existingAttempts, this.config);
 
     const entry: RetryEntry = {
       id: createHash('sha256')
@@ -507,7 +506,7 @@ export class RetryManager {
       eventId,
       eventType,
       payload,
-      attempts,
+      attempts: existingAttempts,
       maxAttempts: this.config.maxAttempts,
       createdAt: new Date(),
       nextAttemptAt: new Date(Date.now() + delay),

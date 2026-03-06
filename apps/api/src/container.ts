@@ -24,6 +24,7 @@ import {
   PrismaNotificationPreferenceRepository,
   InMemoryEventBus,
   MockAIService,
+  OllamaAIService,
   InMemoryCache,
   GuardrailsAIService,
   DurableAuditLogAdapter,
@@ -36,6 +37,7 @@ import {
 import { InMemoryFeatureFlagProvider } from '@intelliflow/platform';
 import { TicketService } from './services/TicketService';
 import { TicketRoutingService } from './services/TicketRoutingService';
+import { LeadRoutingService } from './services/LeadRoutingService';
 import {
   LeadService,
   ContactService,
@@ -112,7 +114,17 @@ const createAdapters = (prismaClient: PrismaClient) => {
 
   // External services
   const eventBus = new InMemoryEventBus();
-  const baseAIService = new MockAIService();
+  const baseAIService =
+    process.env.AI_PROVIDER === 'ollama'
+      ? new OllamaAIService({
+          baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
+          model: process.env.OLLAMA_MODEL || 'mistral',
+          temperature: process.env.OLLAMA_TEMPERATURE
+            ? parseFloat(process.env.OLLAMA_TEMPERATURE)
+            : 0.1,
+          timeout: process.env.OLLAMA_TIMEOUT ? parseInt(process.env.OLLAMA_TIMEOUT, 10) : 60_000,
+        })
+      : new MockAIService();
   const cache = new InMemoryCache();
 
   // IFC-158: Notification service + ICS generation
@@ -239,10 +251,15 @@ const createServices = (prismaClient: PrismaClient) => {
   // IFC-067: Ticket Routing Service
   const ticketRoutingService = new TicketRoutingService(prismaClient);
 
+  // IFC-030: Lead Routing Service
+  const leadRoutingService = new LeadRoutingService(prismaClient);
+
   const analyticsService = new AnalyticsAggregationService(adapters.analyticsRepository);
 
   // IFC-068: Feedback Survey Analytics
-  const feedbackSurveyService = new FeedbackSurveyAnalyticsService(adapters.feedbackSurveyRepository);
+  const feedbackSurveyService = new FeedbackSurveyAnalyticsService(
+    adapters.feedbackSurveyRepository
+  );
 
   const chainVersionService = new ChainVersionService(
     adapters.chainVersionRepository,
@@ -304,6 +321,7 @@ const createServices = (prismaClient: PrismaClient) => {
     taskService,
     ticketService,
     ticketRoutingService,
+    leadRoutingService,
     analyticsService,
     feedbackSurveyService,
     chainVersionService,

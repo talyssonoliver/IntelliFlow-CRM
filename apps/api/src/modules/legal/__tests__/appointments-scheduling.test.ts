@@ -96,10 +96,7 @@ describe('Appointments Scheduling Integration (IFC-158)', () => {
 
       await mockIcsHandler.handleAppointmentRescheduled(event, appointment);
 
-      expect(mockIcsHandler.handleAppointmentRescheduled).toHaveBeenCalledWith(
-        event,
-        appointment
-      );
+      expect(mockIcsHandler.handleAppointmentRescheduled).toHaveBeenCalledWith(event, appointment);
     });
 
     it('should call reminder scheduler to reschedule reminders', async () => {

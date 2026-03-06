@@ -13,6 +13,17 @@ import { TRPCError } from '@trpc/server';
 import { intelligenceRouter } from '../intelligence.router';
 import { prismaMock, createTestContext, TEST_UUIDS } from '../../../test/setup';
 
+// Mock BullMQ for triggerPrediction tests
+const mockQueueAdd = vi.fn().mockResolvedValue({ id: 'job-123' });
+const mockQueueClose = vi.fn().mockResolvedValue(undefined);
+
+vi.mock('bullmq', () => ({
+  Queue: class MockQueue {
+    add = mockQueueAdd;
+    close = mockQueueClose;
+  },
+}));
+
 // Mock AI insight data
 function createMockLeadAIInsight(overrides: Record<string, any> = {}) {
   return {
@@ -43,7 +54,7 @@ function createMockContactAIInsight(overrides: Record<string, any> = {}) {
     conversionProbability: 80,
     lifetimeValue: 120000,
     engagementScore: 85,
-    sentiment: 'VERY_POSITIVE',
+    sentiment: 'POSITIVE',
     sentimentTrend: 'STABLE',
     lastEngagementDays: 1,
     nextBestAction: 'Upsell',
@@ -170,7 +181,7 @@ describe('intelligenceRouter', () => {
       expect(result!.conversionProbability).toBe(80);
       expect(result!.lifetimeValue).toBe(120000);
       expect(result!.engagementScore).toBe(85);
-      expect(result!.sentiment).toBe('VERY_POSITIVE');
+      expect(result!.sentiment).toBe('POSITIVE');
       expect(result!.sentimentTrend).toBe('STABLE');
       expect(result!.nextBestAction).toBe('Upsell');
     });
@@ -357,7 +368,60 @@ describe('intelligenceRouter', () => {
   });
 
   describe('triggerPrediction', () => {
-    it('should return pending status for a lead prediction', async () => {
+    beforeEach(() => {
+      mockQueueAdd.mockResolvedValue({ id: 'job-123' });
+      mockQueueClose.mockResolvedValue(undefined);
+    });
+
+    it('should enqueue a lead prediction and return QUEUED status', async () => {
+      prismaMock.lead.findUnique.mockResolvedValue({
+        id: TEST_UUIDS.lead1,
+      } as any);
+
+      const result = await caller.triggerPrediction({
+        entityType: 'lead',
+        entityId: TEST_UUIDS.lead1,
+        predictionType: 'CHURN_RISK',
+      });
+
+      expect(result.status).toBe('QUEUED');
+      expect(result.jobId).toBe('job-123');
+      expect(result.entityType).toBe('lead');
+      expect(result.entityId).toBe(TEST_UUIDS.lead1);
+      expect(result.predictionType).toBe('CHURN_RISK');
+      expect(result.queuedAt).toBeDefined();
+      expect(mockQueueAdd).toHaveBeenCalledWith(
+        'predict',
+        expect.objectContaining({
+          entityType: 'lead',
+          entityId: TEST_UUIDS.lead1,
+          predictionType: 'CHURN_RISK',
+        }),
+        expect.any(Object)
+      );
+      expect(mockQueueClose).toHaveBeenCalled();
+    });
+
+    it('should enqueue a contact prediction and return QUEUED status', async () => {
+      prismaMock.contact.findUnique.mockResolvedValue({
+        id: TEST_UUIDS.contact1,
+      } as any);
+
+      const result = await caller.triggerPrediction({
+        entityType: 'contact',
+        entityId: TEST_UUIDS.contact1,
+        predictionType: 'NEXT_BEST_ACTION',
+      });
+
+      expect(result.status).toBe('QUEUED');
+      expect(result.jobId).toBe('job-123');
+      expect(result.entityType).toBe('contact');
+      expect(result.predictionType).toBe('NEXT_BEST_ACTION');
+    });
+
+    it('should fall back to PENDING when Redis is unavailable', async () => {
+      mockQueueAdd.mockRejectedValue(new Error('Connection refused'));
+
       prismaMock.lead.findUnique.mockResolvedValue({
         id: TEST_UUIDS.lead1,
       } as any);
@@ -370,25 +434,7 @@ describe('intelligenceRouter', () => {
 
       expect(result.status).toBe('PENDING');
       expect(result.entityType).toBe('lead');
-      expect(result.entityId).toBe(TEST_UUIDS.lead1);
-      expect(result.predictionType).toBe('CHURN_RISK');
       expect(result.queuedAt).toBeDefined();
-    });
-
-    it('should return pending status for a contact prediction', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue({
-        id: TEST_UUIDS.contact1,
-      } as any);
-
-      const result = await caller.triggerPrediction({
-        entityType: 'contact',
-        entityId: TEST_UUIDS.contact1,
-        predictionType: 'NEXT_BEST_ACTION',
-      });
-
-      expect(result.status).toBe('PENDING');
-      expect(result.entityType).toBe('contact');
-      expect(result.predictionType).toBe('NEXT_BEST_ACTION');
     });
 
     it('should throw NOT_FOUND when lead does not exist', async () => {
@@ -425,7 +471,7 @@ describe('intelligenceRouter', () => {
       ).rejects.toThrow(TRPCError);
     });
 
-    it('should accept priority parameter', async () => {
+    it('should accept priority parameter and map to numeric priority', async () => {
       prismaMock.lead.findUnique.mockResolvedValue({
         id: TEST_UUIDS.lead1,
       } as any);
@@ -437,7 +483,12 @@ describe('intelligenceRouter', () => {
         priority: 'HIGH',
       });
 
-      expect(result.status).toBe('PENDING');
+      expect(result.status).toBe('QUEUED');
+      expect(mockQueueAdd).toHaveBeenCalledWith(
+        'predict',
+        expect.objectContaining({ priority: 1 }),
+        expect.objectContaining({ priority: 1 })
+      );
     });
 
     it('should default priority to NORMAL', async () => {
@@ -452,7 +503,12 @@ describe('intelligenceRouter', () => {
         predictionType: 'CHURN_RISK',
       });
 
-      expect(result.status).toBe('PENDING');
+      expect(result.status).toBe('QUEUED');
+      expect(mockQueueAdd).toHaveBeenCalledWith(
+        'predict',
+        expect.objectContaining({ priority: 5 }),
+        expect.objectContaining({ priority: 5 })
+      );
     });
 
     it('should not trigger database calls for opportunity entity type', async () => {
@@ -465,7 +521,7 @@ describe('intelligenceRouter', () => {
       // No entity verification for unsupported types
       expect(prismaMock.lead.findUnique).not.toHaveBeenCalled();
       expect(prismaMock.contact.findUnique).not.toHaveBeenCalled();
-      expect(result.status).toBe('PENDING');
+      expect(result.status).toBe('QUEUED');
     });
   });
 
@@ -573,7 +629,7 @@ describe('intelligenceRouter', () => {
         conversionProbability: 85,
         lifetimeValue: 150000,
         engagementScore: 90,
-        sentiment: 'VERY_POSITIVE',
+        sentiment: 'POSITIVE',
         nextBestAction: 'Upsell Premium',
         recommendations: ['Propose enterprise plan'],
       });

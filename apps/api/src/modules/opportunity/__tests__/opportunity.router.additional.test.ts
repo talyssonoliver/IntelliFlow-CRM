@@ -297,9 +297,14 @@ describe('opportunityRouter additional coverage', () => {
         },
       ];
 
-      prismaMock.opportunity.findMany
-        .mockResolvedValueOnce(activeOpps as any)
-        .mockResolvedValueOnce(closedDeals as any);
+      // forecast calls findMany twice sequentially; distinguish by args (stage filter)
+      (prismaMock.opportunity.findMany as any).mockImplementation(
+        (args: { where?: { stage?: { notIn?: string[]; in?: string[] } } }) => {
+          if (args?.where?.stage?.notIn) return Promise.resolve(activeOpps); // active opps
+          if (args?.where?.stage?.in) return Promise.resolve(closedDeals); // closed deals
+          return Promise.resolve([]);
+        }
+      );
 
       const caller = opportunityRouter.createCaller(ctx);
       const result = await caller.forecast();

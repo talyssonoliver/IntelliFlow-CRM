@@ -46,7 +46,13 @@ describe('intelligenceRouter.getLeadScoringDashboard', () => {
   it('TC-B1: returns dashboard data with valid filters', async () => {
     const scores = [
       createMockAIScore({ id: 'score-1', score: 85, confidence: 0.92 }),
-      createMockAIScore({ id: 'score-2', score: 60, confidence: 0.88, leadId: 'lead-002', lead: { id: 'lead-002', firstName: 'Jane', lastName: 'Smith', company: null } }),
+      createMockAIScore({
+        id: 'score-2',
+        score: 60,
+        confidence: 0.88,
+        leadId: 'lead-002',
+        lead: { id: 'lead-002', firstName: 'Jane', lastName: 'Smith', company: null },
+      }),
     ];
     (prismaMock.aIScore.findMany as any).mockResolvedValue(scores);
 

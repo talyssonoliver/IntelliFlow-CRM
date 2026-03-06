@@ -646,15 +646,26 @@ describe('Task Router', () => {
     };
 
     it('should return task statistics', async () => {
-      prismaMock.task.count.mockResolvedValueOnce(mockStats.total); // total
-      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
-        mockStats.byStatus
-      ); // byStatus
-      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
-        mockStats.byPriority
-      ); // byPriority
-      prismaMock.task.count.mockResolvedValueOnce(10); // overdue
-      prismaMock.task.count.mockResolvedValueOnce(5); // dueToday
+      // stats calls Promise.all with 5 concurrent queries:
+      //   count()                          → total (no where)
+      //   groupBy({by: ['status'], ...})   → byStatus
+      //   groupBy({by: ['priority'], ...}) → byPriority
+      //   count({where: {dueDate: {lt}}})  → overdue
+      //   count({where: {dueDate: {gte, lt}}}) → dueToday
+      (prismaMock.task.count as any).mockImplementation(
+        (args?: { where?: Record<string, unknown> }) => {
+          if (!args?.where) return Promise.resolve(mockStats.total);
+          const dueDate = args.where.dueDate as Record<string, unknown> | undefined;
+          if (dueDate?.gte !== undefined) return Promise.resolve(5); // dueToday has both gte and lt
+          if (dueDate?.lt !== undefined) return Promise.resolve(10); // overdue has only lt
+          return Promise.resolve(0);
+        }
+      );
+      (prismaMock.task.groupBy as any).mockImplementation((args: { by: string[] }) => {
+        if (args.by?.includes('status')) return Promise.resolve(mockStats.byStatus);
+        if (args.by?.includes('priority')) return Promise.resolve(mockStats.byPriority);
+        return Promise.resolve([]);
+      });
 
       const result = await caller.stats();
 
@@ -676,10 +687,8 @@ describe('Task Router', () => {
     });
 
     it('should count overdue tasks correctly', async () => {
-      prismaMock.task.count.mockResolvedValueOnce(100);
-      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
-      prismaMock.task.count.mockResolvedValueOnce(15); // overdue
-      prismaMock.task.count.mockResolvedValueOnce(3); // dueToday
+      (prismaMock.task.count as any).mockResolvedValue(100);
+      (prismaMock.task.groupBy as any).mockResolvedValue([]);
 
       await caller.stats();
 
@@ -693,10 +702,8 @@ describe('Task Router', () => {
     });
 
     it('should count due today tasks correctly', async () => {
-      prismaMock.task.count.mockResolvedValueOnce(100);
-      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
-      prismaMock.task.count.mockResolvedValueOnce(10); // overdue
-      prismaMock.task.count.mockResolvedValueOnce(8); // dueToday
+      (prismaMock.task.count as any).mockResolvedValue(100);
+      (prismaMock.task.groupBy as any).mockResolvedValue([]);
 
       await caller.stats();
 
@@ -713,10 +720,8 @@ describe('Task Router', () => {
     });
 
     it('should handle empty statistics', async () => {
-      prismaMock.task.count.mockResolvedValueOnce(0); // total
-      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
-      prismaMock.task.count.mockResolvedValueOnce(0); // overdue
-      prismaMock.task.count.mockResolvedValueOnce(0); // dueToday
+      (prismaMock.task.count as any).mockResolvedValue(0);
+      (prismaMock.task.groupBy as any).mockResolvedValue([]);
 
       const result = await caller.stats();
 

@@ -138,8 +138,8 @@ export interface IdempotencyCheckResult {
  * Idempotency middleware class
  */
 export class IdempotencyMiddleware {
-  private store: IdempotencyStore;
-  private config: IdempotencyConfig;
+  private readonly store: IdempotencyStore;
+  private readonly config: IdempotencyConfig;
   private cleanupTimer?: ReturnType<typeof setInterval>;
 
   constructor(store?: IdempotencyStore, config?: Partial<IdempotencyConfig>) {

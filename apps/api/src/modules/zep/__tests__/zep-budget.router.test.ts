@@ -24,7 +24,7 @@ const mockPrisma = {
 // Create a minimal context for testing
 const createTestContext = (overrides: Partial<Context> = {}): Context =>
   ({
-    prisma: mockPrisma as unknown as Context['prisma'],
+    prisma: mockPrisma as any, // test-only mock data
     user: {
       userId: 'test-user-id',
       tenantId: 'test-tenant-id',

@@ -338,12 +338,16 @@ describe('Contact Router - Coverage Tests', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      (prismaMock.contact.groupBy as any)
-        .mockResolvedValueOnce([
-          { department: null, _count: 10 },
-          { department: null, _count: 5 },
-        ])
-        .mockResolvedValueOnce([{ accountId: TEST_UUIDS.account1, _count: 8 }]);
+      (prismaMock.contact.groupBy as any).mockImplementation((args: { by: string[] }) => {
+        if (args.by?.includes('department'))
+          return Promise.resolve([
+            { department: null, _count: 10 },
+            { department: null, _count: 5 },
+          ]);
+        if (args.by?.includes('accountId'))
+          return Promise.resolve([{ accountId: TEST_UUIDS.account1, _count: 8 }]);
+        return Promise.resolve([]);
+      });
 
       prismaMock.account.findMany.mockResolvedValue([
         { id: TEST_UUIDS.account1, name: 'Acme Corp' },
@@ -360,12 +364,16 @@ describe('Contact Router - Coverage Tests', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      (prismaMock.contact.groupBy as any)
-        .mockResolvedValueOnce([{ department: 'Engineering', _count: 5 }])
-        .mockResolvedValueOnce([
-          { accountId: null, _count: 10 },
-          { accountId: null, _count: 5 },
-        ]);
+      (prismaMock.contact.groupBy as any).mockImplementation((args: { by: string[] }) => {
+        if (args.by?.includes('department'))
+          return Promise.resolve([{ department: 'Engineering', _count: 5 }]);
+        if (args.by?.includes('accountId'))
+          return Promise.resolve([
+            { accountId: null, _count: 10 },
+            { accountId: null, _count: 5 },
+          ]);
+        return Promise.resolve([]);
+      });
 
       const result = await caller.filterOptions();
 
@@ -380,10 +388,15 @@ describe('Contact Router - Coverage Tests', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      (prismaMock.contact.groupBy as any).mockResolvedValueOnce([]).mockResolvedValueOnce([
-        { accountId: TEST_UUIDS.account1, _count: 5 },
-        { accountId: TEST_UUIDS.account2, _count: 3 },
-      ]);
+      (prismaMock.contact.groupBy as any).mockImplementation((args: { by: string[] }) => {
+        if (args.by?.includes('department')) return Promise.resolve([]);
+        if (args.by?.includes('accountId'))
+          return Promise.resolve([
+            { accountId: TEST_UUIDS.account1, _count: 5 },
+            { accountId: TEST_UUIDS.account2, _count: 3 },
+          ]);
+        return Promise.resolve([]);
+      });
 
       // Only return one account (account2 is missing)
       prismaMock.account.findMany.mockResolvedValue([

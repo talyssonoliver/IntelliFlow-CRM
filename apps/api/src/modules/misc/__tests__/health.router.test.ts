@@ -79,7 +79,7 @@ describe('Health Router', () => {
         // Use 15ms to account for timing variability
         await new Promise((resolve) => setTimeout(resolve, 15));
         return [{ '?column?': 1 }];
-      }) as unknown as typeof prismaMock.$queryRaw);
+      }) as any);
 
       const result = await caller.check();
 
@@ -93,7 +93,7 @@ describe('Health Router', () => {
       vi.mocked(prismaMock.$queryRaw).mockImplementation((async () => {
         await new Promise((resolve) => setTimeout(resolve, 25));
         return [{ '?column?': 1 }];
-      }) as unknown as typeof prismaMock.$queryRaw);
+      }) as any);
 
       await caller.check();
 

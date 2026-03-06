@@ -15,7 +15,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@intelliflow/db';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import {
   churnRiskLevelSchema,
@@ -60,7 +60,12 @@ function parseRecommendations(raw: unknown): StructuredRecommendations {
 
   // Legacy: plain string[]
   if (Array.isArray(raw)) {
-    return { texts: raw.filter((r): r is string => typeof r === 'string'), emotions: [], keyPhrases: [], primaryEmotion: 'NEUTRAL' };
+    return {
+      texts: raw.filter((r): r is string => typeof r === 'string'),
+      emotions: [],
+      keyPhrases: [],
+      primaryEmotion: 'NEUTRAL',
+    };
   }
 
   // New: structured object
@@ -79,9 +84,10 @@ function buildRecommendationsJson(
   texts: string[] | undefined,
   emotions: Array<{ emotion: string; intensity: number }> | undefined,
   keyPhrases: Array<{ phrase: string; sentiment: string }> | undefined,
-  primaryEmotion: string | undefined,
+  primaryEmotion: string | undefined
 ) {
-  const hasStructuredData = (emotions && emotions.length > 0) || (keyPhrases && keyPhrases.length > 0);
+  const hasStructuredData =
+    (emotions && emotions.length > 0) || (keyPhrases && keyPhrases.length > 0);
   if (!hasStructuredData) {
     // Backward-compatible: plain string[]
     return texts ?? [];
@@ -172,7 +178,7 @@ function buildEntityName(
   firstName: string | null,
   lastName: string | null,
   company: string | null,
-  fallback: string,
+  fallback: string
 ): string {
   return [firstName, lastName].filter(Boolean).join(' ') || company || fallback;
 }
@@ -187,10 +193,13 @@ function dateRangeSince(dateRange: '7d' | '30d' | '90d'): Date {
 
 /** Fetch insight rows from both LeadAIInsight and ContactAIInsight tables */
 async function fetchAllInsightRows(
-  prisma: { leadAIInsight: { findMany: (...args: any[]) => any }; contactAIInsight: { findMany: (...args: any[]) => any } },
+  prisma: {
+    leadAIInsight: { findMany: (...args: any[]) => any };
+    contactAIInsight: { findMany: (...args: any[]) => any };
+  },
   tenantId: string,
   since: Date,
-  entityType: 'all' | 'lead' | 'contact',
+  entityType: 'all' | 'lead' | 'contact'
 ): Promise<BaseInsightRow[]> {
   const rows: BaseInsightRow[] = [];
 
@@ -207,7 +216,12 @@ async function fetchAllInsightRows(
         id: li.id,
         entityType: 'lead',
         entityId: li.leadId,
-        entityName: buildEntityName(li.lead.firstName, li.lead.lastName, li.lead.company, 'Unknown Lead'),
+        entityName: buildEntityName(
+          li.lead.firstName,
+          li.lead.lastName,
+          li.lead.company,
+          'Unknown Lead'
+        ),
         sentiment: (li.sentiment ?? 'NEUTRAL').toUpperCase(),
         churnRisk: li.churnRisk,
         engagementScore: li.engagementScore,
@@ -233,7 +247,12 @@ async function fetchAllInsightRows(
         id: ci.id,
         entityType: 'contact',
         entityId: ci.contactId,
-        entityName: buildEntityName(ci.contact.firstName, ci.contact.lastName, ci.contact.company, 'Unknown Contact'),
+        entityName: buildEntityName(
+          ci.contact.firstName,
+          ci.contact.lastName,
+          ci.contact.company,
+          'Unknown Contact'
+        ),
         sentiment: (ci.sentiment ?? 'NEUTRAL').toUpperCase(),
         churnRisk: ci.churnRisk,
         engagementScore: ci.engagementScore,
@@ -267,7 +286,7 @@ function paginateRows<T>(rows: T[], page: number, limit: number): T[] {
 function groupByDateKey<T extends { updatedAt: Date }, B extends Record<string, number>>(
   rows: T[],
   init: () => B,
-  accumulate: (bucket: B, row: T) => void,
+  accumulate: (bucket: B, row: T) => void
 ): Array<{ date: string; bucket: B }> {
   const trendMap = new Map<string, B>();
   for (const row of rows) {
@@ -306,7 +325,13 @@ export const intelligenceRouter = createTRPCRouter({
       allInsights.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
 
       // Stats
-      const sentimentCounts = { VERY_POSITIVE: 0, POSITIVE: 0, NEUTRAL: 0, NEGATIVE: 0, VERY_NEGATIVE: 0 };
+      const sentimentCounts = {
+        VERY_POSITIVE: 0,
+        POSITIVE: 0,
+        NEUTRAL: 0,
+        NEGATIVE: 0,
+        VERY_NEGATIVE: 0,
+      };
       let urgentCount = 0;
       for (const row of allInsights) {
         const s = row.sentiment as keyof typeof sentimentCounts;
@@ -321,7 +346,11 @@ export const intelligenceRouter = createTRPCRouter({
 
       // Recent analyses (paginated)
       const sentimentScoreMap: Record<string, number> = {
-        VERY_POSITIVE: 0.9, POSITIVE: 0.7, NEUTRAL: 0.5, NEGATIVE: 0.3, VERY_NEGATIVE: 0.1,
+        VERY_POSITIVE: 0.9,
+        POSITIVE: 0.7,
+        NEUTRAL: 0.5,
+        NEGATIVE: 0.3,
+        VERY_NEGATIVE: 0.1,
       };
       const recentAnalyses = paginateRows(allInsights, input.page, input.limit).map((row) => {
         const recs = parseRecommendations(row.recommendations);
@@ -350,7 +379,7 @@ export const intelligenceRouter = createTRPCRouter({
           else if (row.sentiment.includes('NEGATIVE')) bucket.negative++;
           else bucket.neutral++;
           bucket.total++;
-        },
+        }
       ).map(({ date, bucket: b }) => ({
         date,
         positive: b.positive,
@@ -360,7 +389,14 @@ export const intelligenceRouter = createTRPCRouter({
       }));
 
       return {
-        stats: { total, positive: posCount, neutral: neutralCount, negative: negCount, avgScore, urgentCount },
+        stats: {
+          total,
+          positive: posCount,
+          neutral: neutralCount,
+          negative: negCount,
+          avgScore,
+          urgentCount,
+        },
         distribution: sentimentCounts,
         recentAnalyses,
         trends,
@@ -542,13 +578,7 @@ export const intelligenceRouter = createTRPCRouter({
         },
         conversionProbability: aiInsight.conversionProbability,
         lifetimeValue: aiInsight.lifetimeValue ?? aiInsight.estimatedValue,
-        sentiment: aiInsight.sentiment as
-          | 'VERY_POSITIVE'
-          | 'POSITIVE'
-          | 'NEUTRAL'
-          | 'NEGATIVE'
-          | 'VERY_NEGATIVE'
-          | undefined,
+        sentiment: aiInsight.sentiment as 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE' | undefined,
         engagementScore: aiInsight.engagementScore,
         recommendations: Array.isArray(aiInsight.recommendations)
           ? (aiInsight.recommendations as string[])
@@ -605,19 +635,61 @@ export const intelligenceRouter = createTRPCRouter({
         }
       }
 
-      // BullMQ job queue integration is tracked under IFC-095 Phase 2.
-      // Once Redis + BullMQ are wired, this endpoint will enqueue a prediction
-      // job and return { jobId, status: 'QUEUED' } instead of PENDING.
+      // Enqueue prediction job via BullMQ (same pattern as home.router.ts)
+      const priorityMap = { HIGH: 1, NORMAL: 5, LOW: 10 } as const;
+      const correlationId = `prediction-${entityType}-${entityId}-${Date.now()}`;
 
-      return {
-        status: 'PENDING' as const,
-        message:
-          'Prediction job infrastructure not yet configured. Use synchronous prediction endpoints.',
-        entityType,
-        entityId,
-        predictionType,
-        queuedAt: new Date().toISOString(),
-      };
+      try {
+        const { Queue } = await import('bullmq');
+        const queue = new Queue('ai-prediction', {
+          connection: {
+            host: process.env.REDIS_HOST || 'localhost',
+            port: parseInt(process.env.REDIS_PORT || '6379', 10),
+          },
+        });
+
+        const job = await queue.add(
+          'predict',
+          {
+            entityType,
+            entityId,
+            predictionType,
+            correlationId,
+            context: {
+              tenantId: typedCtx.tenantId,
+              userId: typedCtx.userId,
+            },
+            priority: priorityMap[priority],
+          },
+          {
+            priority: priorityMap[priority],
+            attempts: 2,
+            backoff: { type: 'exponential', delay: 5000 },
+            removeOnComplete: { count: 100 },
+          }
+        );
+
+        await queue.close();
+
+        return {
+          status: 'QUEUED' as const,
+          jobId: job.id,
+          entityType,
+          entityId,
+          predictionType,
+          queuedAt: new Date().toISOString(),
+        };
+      } catch {
+        // Redis unavailable — fall back to PENDING status
+        return {
+          status: 'PENDING' as const,
+          message: 'Redis unavailable. Prediction job could not be queued.',
+          entityType,
+          entityId,
+          predictionType,
+          queuedAt: new Date().toISOString(),
+        };
+      }
     }),
 
   /**
@@ -632,7 +704,7 @@ export const intelligenceRouter = createTRPCRouter({
         conversionProbability: z.number().min(0).max(100).optional(),
         estimatedValue: z.number().optional(),
         engagementScore: z.number().min(0).max(100).optional(),
-        sentiment: z.string().optional(),
+        sentiment: z.enum(['POSITIVE', 'NEUTRAL', 'NEGATIVE']).optional(),
         sentimentTrend: z.string().optional(),
         nextBestAction: z.string().optional(),
         recommendations: z.array(z.string()).optional(),
@@ -674,7 +746,7 @@ export const intelligenceRouter = createTRPCRouter({
         updateData.recommendations,
         emotions,
         keyPhrases,
-        primaryEmotion,
+        primaryEmotion
       );
 
       // Upsert AI insight
@@ -720,7 +792,7 @@ export const intelligenceRouter = createTRPCRouter({
         conversionProbability: z.number().min(0).max(100).optional(),
         lifetimeValue: z.number().optional(),
         engagementScore: z.number().min(0).max(100).optional(),
-        sentiment: z.string().optional(),
+        sentiment: z.enum(['POSITIVE', 'NEUTRAL', 'NEGATIVE']).optional(),
         sentimentTrend: z.string().optional(),
         nextBestAction: z.string().optional(),
         recommendations: z.array(z.string()).optional(),
@@ -750,7 +822,7 @@ export const intelligenceRouter = createTRPCRouter({
         updateData.recommendations,
         emotions,
         keyPhrases,
-        primaryEmotion,
+        primaryEmotion
       );
 
       // Upsert AI insight
@@ -799,10 +871,18 @@ export const intelligenceRouter = createTRPCRouter({
       const since = dateRangeSince(input.dateRange);
 
       const slaHoursMap: Record<string, number> = {
-        CRITICAL: 24, HIGH: 48, MEDIUM: 168, LOW: 336, MINIMAL: 720,
+        CRITICAL: 24,
+        HIGH: 48,
+        MEDIUM: 168,
+        LOW: 336,
+        MINIMAL: 720,
       };
       const riskOrder: Record<string, number> = {
-        CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3, MINIMAL: 4,
+        CRITICAL: 0,
+        HIGH: 1,
+        MEDIUM: 2,
+        LOW: 3,
+        MINIMAL: 4,
       };
 
       const allInsights = await fetchAllInsightRows(ctx.prisma, tenantId, since, input.entityType);
@@ -812,7 +892,13 @@ export const intelligenceRouter = createTRPCRouter({
       });
 
       // Stats
-      const distribution: Record<string, number> = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, MINIMAL: 0 };
+      const distribution: Record<string, number> = {
+        CRITICAL: 0,
+        HIGH: 0,
+        MEDIUM: 0,
+        LOW: 0,
+        MINIMAL: 0,
+      };
       let totalEngagement = 0;
       for (const row of allInsights) {
         if (row.churnRisk in distribution) distribution[row.churnRisk]++;
@@ -836,7 +922,9 @@ export const intelligenceRouter = createTRPCRouter({
           slaHours,
           slaDeadline: slaDeadline.toISOString(),
           nextBestAction: row.nextBestAction,
-          recommendations: Array.isArray(row.recommendations) ? (row.recommendations as string[]) : [],
+          recommendations: Array.isArray(row.recommendations)
+            ? (row.recommendations as string[])
+            : [],
           lastEngagementDays: row.lastEngagementDays,
           updatedAt: row.updatedAt.toISOString(),
         };
@@ -851,7 +939,7 @@ export const intelligenceRouter = createTRPCRouter({
           if (key in bucket) (bucket[key] as number)++;
           bucket.totalEng += row.engagementScore;
           bucket.count++;
-        },
+        }
       ).map(({ date, bucket: b }) => ({
         date,
         critical: b.critical,
@@ -1019,7 +1107,7 @@ export const intelligenceRouter = createTRPCRouter({
               'conversations',
               'messages',
               'tickets',
-            ]),
+            ])
           )
           .optional(),
         searchType: z.enum(['fulltext', 'semantic', 'hybrid']).default('hybrid'),
@@ -1027,7 +1115,7 @@ export const intelligenceRouter = createTRPCRouter({
         dateRange: z.enum(['24h', '7d', '30d', 'all']).default('7d'),
         limit: z.number().min(1).max(50).default(20),
         offset: z.number().min(0).default(0),
-      }),
+      })
     )
     .query(async ({ ctx, input }) => {
       const startTime = performance.now();
@@ -1104,8 +1192,8 @@ export const intelligenceRouter = createTRPCRouter({
                   citation: 'Lead record',
                   createdAt: r.createdAt.toISOString(),
                   updatedAt: r.updatedAt.toISOString(),
-                })),
-              ),
+                }))
+              )
           );
         }
 
@@ -1137,8 +1225,8 @@ export const intelligenceRouter = createTRPCRouter({
                   citation: 'Contact record',
                   createdAt: r.createdAt.toISOString(),
                   updatedAt: r.updatedAt.toISOString(),
-                })),
-              ),
+                }))
+              )
           );
         }
 
@@ -1169,8 +1257,8 @@ export const intelligenceRouter = createTRPCRouter({
                   citation: 'Account record',
                   createdAt: r.createdAt.toISOString(),
                   updatedAt: r.updatedAt.toISOString(),
-                })),
-              ),
+                }))
+              )
           );
         }
 
@@ -1201,8 +1289,8 @@ export const intelligenceRouter = createTRPCRouter({
                   citation: 'Opportunity pipeline',
                   createdAt: r.createdAt.toISOString(),
                   updatedAt: r.updatedAt.toISOString(),
-                })),
-              ),
+                }))
+              )
           );
         }
 
@@ -1233,8 +1321,8 @@ export const intelligenceRouter = createTRPCRouter({
                   citation: 'Support ticket',
                   createdAt: r.createdAt.toISOString(),
                   updatedAt: r.updatedAt.toISOString(),
-                })),
-              ),
+                }))
+              )
           );
         }
 

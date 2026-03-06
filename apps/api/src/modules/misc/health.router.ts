@@ -18,6 +18,7 @@
  */
 
 import { z } from 'zod';
+import type { PrismaClient } from '@intelliflow/db';
 import { createTRPCRouter, publicProcedure } from '../../trpc';
 import { getCorrelationId } from '../../tracing/correlation';
 
@@ -149,9 +150,10 @@ export const healthRouter = createTRPCRouter({
    */
   dbStats: publicProcedure.query(async ({ ctx }) => {
     try {
-      const metricsProvider = (
-        ctx.prisma as unknown as { $metrics?: { json: () => Promise<unknown> } }
-      ).$metrics;
+      const prismaWithMetrics = ctx.prisma as PrismaClient & {
+        $metrics?: { json: () => Promise<unknown> };
+      };
+      const metricsProvider = prismaWithMetrics.$metrics;
       if (!metricsProvider?.json) {
         return {
           status: 'unsupported',

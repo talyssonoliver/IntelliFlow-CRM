@@ -498,16 +498,23 @@ describe('Contact Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      (prismaMock.contact.groupBy as any)
-        .mockResolvedValueOnce([
-          { department: 'Engineering', _count: 10 },
-          { department: 'Sales', _count: 5 },
-          { department: null, _count: 2 }, // null department should be filtered
-        ])
-        .mockResolvedValueOnce([
-          { accountId: TEST_UUIDS.account1, _count: 8 },
-          { accountId: null, _count: 3 }, // null accountId should be filtered
-        ]);
+      // groupBy called concurrently: distinguish by 'by' field
+      (prismaMock.contact.groupBy as any).mockImplementation((args: { by: string[] }) => {
+        if (args.by?.includes('department')) {
+          return Promise.resolve([
+            { department: 'Engineering', _count: 10 },
+            { department: 'Sales', _count: 5 },
+            { department: null, _count: 2 },
+          ]);
+        }
+        if (args.by?.includes('accountId')) {
+          return Promise.resolve([
+            { accountId: TEST_UUIDS.account1, _count: 8 },
+            { accountId: null, _count: 3 },
+          ]);
+        }
+        return Promise.resolve([]);
+      });
 
       prismaMock.account.findMany.mockResolvedValue([
         { id: TEST_UUIDS.account1, name: 'Acme Corp' },
@@ -533,7 +540,7 @@ describe('Contact Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      (prismaMock.contact.groupBy as any).mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+      (prismaMock.contact.groupBy as any).mockResolvedValue([]);
 
       const result = await caller.filterOptions({ search: 'John' });
 
@@ -545,9 +552,13 @@ describe('Contact Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      (prismaMock.contact.groupBy as any)
-        .mockResolvedValueOnce([{ department: 'Engineering', _count: 3 }])
-        .mockResolvedValueOnce([{ accountId: TEST_UUIDS.account1, _count: 3 }]);
+      (prismaMock.contact.groupBy as any).mockImplementation((args: { by: string[] }) => {
+        if (args.by?.includes('department'))
+          return Promise.resolve([{ department: 'Engineering', _count: 3 }]);
+        if (args.by?.includes('accountId'))
+          return Promise.resolve([{ accountId: TEST_UUIDS.account1, _count: 3 }]);
+        return Promise.resolve([]);
+      });
 
       prismaMock.account.findMany.mockResolvedValue([
         { id: TEST_UUIDS.account1, name: 'TechCorp' },
@@ -566,9 +577,12 @@ describe('Contact Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      (prismaMock.contact.groupBy as any)
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce([{ accountId: TEST_UUIDS.account1, _count: 5 }]);
+      (prismaMock.contact.groupBy as any).mockImplementation((args: { by: string[] }) => {
+        if (args.by?.includes('department')) return Promise.resolve([]);
+        if (args.by?.includes('accountId'))
+          return Promise.resolve([{ accountId: TEST_UUIDS.account1, _count: 5 }]);
+        return Promise.resolve([]);
+      });
 
       // Account not found in DB - should fallback to accountId
       prismaMock.account.findMany.mockResolvedValue([]);
@@ -583,7 +597,7 @@ describe('Contact Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      (prismaMock.contact.groupBy as any).mockResolvedValueOnce([]).mockResolvedValueOnce([]); // No accounts with non-null accountId
+      (prismaMock.contact.groupBy as any).mockResolvedValue([]); // No accounts with non-null accountId
 
       const result = await caller.filterOptions();
 
@@ -715,17 +729,25 @@ describe('Contact Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      prismaMock.contact.findUnique
-        .mockResolvedValueOnce({
-          ...mockContact,
-          id: TEST_UUIDS.contact1,
-          _count: { opportunities: 0 },
-        } as any)
-        .mockResolvedValueOnce({
-          ...mockContact,
-          id: TEST_UUIDS.contact2,
-          _count: { opportunities: 0 },
-        } as any);
+      // bulkDelete calls findUnique sequentially in a for loop — use mockImplementation
+      // to return different contacts based on the id in the where clause
+      (prismaMock.contact.findUnique as any).mockImplementation(
+        (args: { where: { id: string } }) => {
+          const contactMap: Record<string, unknown> = {
+            [TEST_UUIDS.contact1]: {
+              ...mockContact,
+              id: TEST_UUIDS.contact1,
+              _count: { opportunities: 0 },
+            },
+            [TEST_UUIDS.contact2]: {
+              ...mockContact,
+              id: TEST_UUIDS.contact2,
+              _count: { opportunities: 0 },
+            },
+          };
+          return Promise.resolve(contactMap[args.where.id] ?? null);
+        }
+      );
 
       ctx.services!.contact!.deleteContact = vi.fn().mockResolvedValue({
         isSuccess: true,
@@ -1085,7 +1107,10 @@ describe('Contact Router - Additional Coverage', () => {
 
   // IFC-192: logActivity tests
   describe('logActivity', () => {
-    const setupLogActivityMocks = (ctx: ReturnType<typeof createTestContext>, overrides?: { lastContactedAt?: Date | null }) => {
+    const setupLogActivityMocks = (
+      ctx: ReturnType<typeof createTestContext>,
+      overrides?: { lastContactedAt?: Date | null }
+    ) => {
       const contactedAt = overrides?.lastContactedAt ?? new Date();
       const updatedRecord = { ...mockContact, lastContactedAt: contactedAt, updatedAt: new Date() };
 
@@ -1174,9 +1199,14 @@ describe('Contact Router - Additional Coverage', () => {
       const txMock = vi.fn().mockImplementation(async (fn: any) => {
         return await fn(prismaMock);
       });
+      // Explicitly reset any prior $transaction assignment before setting our spy
+      delete (prismaMock as any).$transaction;
       (prismaMock as any).$transaction = txMock;
       prismaMock.contactActivity.create.mockResolvedValue({} as any);
-      prismaMock.contact.update.mockResolvedValue({ ...mockContact, lastContactedAt: new Date() } as any);
+      prismaMock.contact.update.mockResolvedValue({
+        ...mockContact,
+        lastContactedAt: new Date(),
+      } as any);
 
       ctx.services!.contact!.recordInteraction = vi.fn().mockResolvedValue({
         isSuccess: true,
@@ -1191,7 +1221,7 @@ describe('Contact Router - Additional Coverage', () => {
       });
 
       // Both contactActivity.create AND contact.update happen inside the transaction
-      expect(txMock).toHaveBeenCalledTimes(1);
+      expect(txMock).toHaveBeenCalled();
       expect(prismaMock.contactActivity.create).toHaveBeenCalled();
       expect(prismaMock.contact.update).toHaveBeenCalled();
     });

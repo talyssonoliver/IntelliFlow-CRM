@@ -72,12 +72,27 @@ export interface DataExportResult {
 // DSAR WORKFLOW CLASS
 // ============================================
 
-export class DSARWorkflow {
-  private readonly db: any; // Replace with actual Prisma client
-  private readonly emailService: any; // Replace with actual email service
-  private readonly storageService: any; // Replace with S3/storage service
+/**
+ * Minimal interface for the email service used by DSAR workflow
+ */
+interface DSAREmailService {
+  send(params: { to: string; subject: string; body: string }): Promise<void>;
+}
 
-  constructor(db: any, emailService: any, storageService: any) {
+/**
+ * Minimal interface for the storage service used by DSAR workflow.
+ * Compatible with SupabaseStorageAdapter.uploadToQuarantine + getSignedUrl pattern.
+ */
+interface DSARStorageService {
+  upload(fileName: string, content: string): Promise<string>;
+}
+
+export class DSARWorkflow {
+  private readonly db: any; // PrismaClient — uses dynamic model names, untyped here
+  private readonly emailService: DSAREmailService;
+  private readonly storageService: DSARStorageService;
+
+  constructor(db: any, emailService: DSAREmailService, storageService: DSARStorageService) {
     this.db = db;
     this.emailService = emailService;
     this.storageService = storageService;
@@ -580,8 +595,9 @@ export class DSARWorkflow {
   private async uploadDataExport(requestId: string, data: DataExportResult): Promise<string> {
     const fileName = `dsar-export-${requestId}-${Date.now()}.json`;
 
-    // In production, upload to S3/storage service
-    // For now, return a placeholder URL
+    // Serialise the export payload and upload via the configured storage adapter.
+    // The adapter (e.g. S3, GCS, local filesystem) is injected at construction time;
+    // the returned URL is the download location sent to the data subject.
     const uploadUrl = await this.storageService.upload(fileName, JSON.stringify(data, null, 2));
 
     return uploadUrl;
@@ -644,6 +660,10 @@ export class DSARWorkflow {
 /**
  * Factory function to create DSAR workflow instance
  */
-export function createDSARWorkflow(db: any, emailService: any, storageService: any): DSARWorkflow {
+export function createDSARWorkflow(
+  db: any,
+  emailService: DSAREmailService,
+  storageService: DSARStorageService
+): DSARWorkflow {
   return new DSARWorkflow(db, emailService, storageService);
 }

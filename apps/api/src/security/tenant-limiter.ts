@@ -15,7 +15,7 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@intelliflow/db';
 import { TenantAwareContext } from './tenant-context';
 
 /**

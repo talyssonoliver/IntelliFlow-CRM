@@ -127,6 +127,15 @@ function createTestWorkflowDefinition(): WorkflowDefinition<LeadQualificationSta
   };
 }
 
+function requireState<T extends Record<string, unknown>>(
+  result: TransitionResult<T>
+): WorkflowState<T> {
+  if (!result.state) {
+    throw new Error(result.error ?? 'Expected workflow state to be present');
+  }
+  return result.state;
+}
+
 // ============================================
 // TESTS
 // ============================================
@@ -197,8 +206,9 @@ describe('WorkflowStateMachine', () => {
       const result = await machine.transition<LeadQualificationState>(state.workflowId, 'next');
 
       expect(result.success).toBe(true);
-      expect(result.state.currentNode).toBe('score_lead');
-      expect(result.state.checkpoint).toBe(1);
+      const transitionState = requireState(result);
+      expect(transitionState.currentNode).toBe('score_lead');
+      expect(transitionState.checkpoint).toBe(1);
     });
 
     it('should execute action node handler', async () => {
@@ -213,8 +223,9 @@ describe('WorkflowStateMachine', () => {
       const result = await machine.transition<LeadQualificationState>(state.workflowId, 'next');
 
       expect(result.success).toBe(true);
-      expect(result.state.data.score).not.toBeNull();
-      expect(result.state.data.notes.length).toBeGreaterThan(0);
+      const transitionState = requireState(result);
+      expect(transitionState.data.score).not.toBeNull();
+      expect(transitionState.data.notes.length).toBeGreaterThan(0);
     });
 
     it('should follow decision node conditions', async () => {
@@ -237,7 +248,8 @@ describe('WorkflowStateMachine', () => {
 
       const result = await machine.transition<LeadQualificationState>(state.workflowId, 'next'); // check_threshold -> auto_qualify
 
-      expect(result.state.currentNode).toBe('auto_qualify');
+      const transitionState = requireState(result);
+      expect(transitionState.currentNode).toBe('auto_qualify');
     });
 
     it('should record transition history', async () => {
@@ -248,9 +260,10 @@ describe('WorkflowStateMachine', () => {
       await machine.transition(state.workflowId, 'next');
       const result = await machine.transition<LeadQualificationState>(state.workflowId, 'next');
 
-      expect(result.state.history.length).toBeGreaterThan(0);
-      expect(result.state.history[0].fromNode).toBe('start');
-      expect(result.state.history[0].toNode).toBe('score_lead');
+      const transitionState = requireState(result);
+      expect(transitionState.history.length).toBeGreaterThan(0);
+      expect(transitionState.history[0].fromNode).toBe('start');
+      expect(transitionState.history[0].toNode).toBe('score_lead');
     });
   });
 
@@ -273,8 +286,9 @@ describe('WorkflowStateMachine', () => {
       await machine.transition(state.workflowId, 'next'); // score_lead -> check_threshold
       const result = await machine.transition<LeadQualificationState>(state.workflowId, 'next'); // check_threshold -> human_review
 
-      expect(result.state.currentNode).toBe('human_review');
-      expect(result.state.isPaused).toBe(true);
+      const transitionState = requireState(result);
+      expect(transitionState.currentNode).toBe('human_review');
+      expect(transitionState.isPaused).toBe(true);
       expect(result.awaitingHumanInput).toBe(true);
     });
 
@@ -305,8 +319,9 @@ describe('WorkflowStateMachine', () => {
       const result = await machine.processHumanDecision<LeadQualificationState>(decision);
 
       expect(result.success).toBe(true);
-      expect(result.state.isPaused).toBe(false);
-      expect(result.state.data.reviewerId).toBe('user-456');
+      const transitionState = requireState(result);
+      expect(transitionState.isPaused).toBe(false);
+      expect(transitionState.data.reviewerId).toBe('user-456');
     });
 
     it('should process reject decision', async () => {
@@ -335,7 +350,8 @@ describe('WorkflowStateMachine', () => {
       const result = await machine.processHumanDecision<LeadQualificationState>(decision);
 
       expect(result.success).toBe(true);
-      expect(result.state.data.status).toBe('disqualified');
+      const transitionState = requireState(result);
+      expect(transitionState.data.status).toBe('disqualified');
     });
 
     it('should process modify decision with modifications', async () => {
@@ -365,8 +381,9 @@ describe('WorkflowStateMachine', () => {
       const result = await machine.processHumanDecision<LeadQualificationState>(decision);
 
       expect(result.success).toBe(true);
-      expect(result.state.data.score).toBe(75);
-      expect(result.state.data.status).toBe('qualified');
+      const transitionState = requireState(result);
+      expect(transitionState.data.score).toBe(75);
+      expect(transitionState.data.status).toBe('qualified');
     });
 
     it('should return error when processing decision for non-existent workflow', async () => {

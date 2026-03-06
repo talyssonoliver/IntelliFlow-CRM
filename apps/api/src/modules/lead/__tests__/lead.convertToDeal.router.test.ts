@@ -102,9 +102,7 @@ describe('lead.convertToDeal router', () => {
     const caller = leadRouter.createCaller(ctx);
 
     // dealValue must be positive integer per schema
-    await expect(
-      caller.convertToDeal({ ...validInput, dealValue: -100 })
-    ).rejects.toThrow();
+    await expect(caller.convertToDeal({ ...validInput, dealValue: -100 })).rejects.toThrow();
   });
 
   // R5: should return BAD_REQUEST when no account is resolvable

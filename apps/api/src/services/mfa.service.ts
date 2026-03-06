@@ -14,8 +14,8 @@
  * - qrcode: For QR code generation (optional, can use URL)
  */
 
-import { randomBytes, createHash, createHmac } from 'node:crypto';
-import { PrismaClient } from '@prisma/client';
+import { randomBytes, randomInt, createHash, createHmac } from 'node:crypto';
+import { PrismaClient } from '@intelliflow/db';
 
 // ============================================
 // TOTP Implementation (no external deps for now)
@@ -58,7 +58,7 @@ function base32Encode(buffer: Buffer): string {
  * Decode Base32 to bytes
  */
 function base32Decode(encoded: string): Buffer {
-  const cleanedInput = encoded.replace(/=+$/, '').toUpperCase();
+  const cleanedInput = encoded.replace(/={1,8}$/, '').toUpperCase();
   const output: number[] = [];
   let bits = 0;
   let value = 0;
@@ -380,7 +380,7 @@ export class MfaService {
       // SECURITY: Never log OTP codes - this placeholder exists only for development
       if (process.env.NODE_ENV === 'development') {
         // Development only - mask email for privacy
-        const maskedEmail = email.replace(/(.{2})(.*)(@.*)/, '$1***$3');
+        const maskedEmail = email.replace(/^(.{2})[^@]*(@.*)$/, '$1***$2');
         console.debug(`[MFA-DEV] Email challenge created for ${maskedEmail}`);
       }
 
@@ -419,6 +419,36 @@ export class MfaService {
   }
 
   /**
+   * Validate an MFA code against the challenge method, returning whether it is valid.
+   * Side effect: may mutate userMfaSettings.backupCodes when a backup code is consumed.
+   */
+  private validateChallengeCode(
+    challenge: MfaChallenge,
+    normalizedCode: string,
+    userMfaSettings?: MfaUserSettings
+  ): boolean {
+    switch (challenge.method) {
+      case 'totp':
+        return userMfaSettings?.totpSecret
+          ? this.verifyTotp(userMfaSettings.totpSecret, normalizedCode)
+          : false;
+
+      case 'sms':
+      case 'email':
+        return challenge.codeHash ? this.verifyCodeHash(normalizedCode, challenge.codeHash) : false;
+
+      case 'backup': {
+        if (!userMfaSettings?.backupCodes) return false;
+        const result = this.verifyBackupCode(normalizedCode, userMfaSettings.backupCodes);
+        if (result.valid && result.updatedCodes) {
+          userMfaSettings.backupCodes = result.updatedCodes;
+        }
+        return result.valid;
+      }
+    }
+  }
+
+  /**
    * Verify MFA challenge
    *
    * @param challengeId - The challenge ID
@@ -453,35 +483,7 @@ export class MfaService {
     challenge.attempts++;
 
     const normalizedCode = code.replace(/\s/g, '').toUpperCase();
-
-    // Verify based on method
-    let isValid = false;
-
-    switch (challenge.method) {
-      case 'totp':
-        if (userMfaSettings?.totpSecret) {
-          isValid = this.verifyTotp(userMfaSettings.totpSecret, normalizedCode);
-        }
-        break;
-
-      case 'sms':
-      case 'email':
-        if (challenge.codeHash) {
-          isValid = this.verifyCodeHash(normalizedCode, challenge.codeHash);
-        }
-        break;
-
-      case 'backup':
-        if (userMfaSettings?.backupCodes) {
-          const result = this.verifyBackupCode(normalizedCode, userMfaSettings.backupCodes);
-          isValid = result.valid;
-          if (result.valid && result.updatedCodes) {
-            // Update backup codes to mark as used
-            userMfaSettings.backupCodes = result.updatedCodes;
-          }
-        }
-        break;
-    }
+    const isValid = this.validateChallengeCode(challenge, normalizedCode, userMfaSettings);
 
     if (isValid) {
       challengeStore.delete(challengeId);
@@ -660,7 +662,7 @@ export class MfaService {
    */
   private generateNumericOtp(digits: number): string {
     const max = Math.pow(10, digits);
-    const randomNumber = Math.floor(Math.random() * max);
+    const randomNumber = randomInt(max);
     return randomNumber.toString().padStart(digits, '0');
   }
 

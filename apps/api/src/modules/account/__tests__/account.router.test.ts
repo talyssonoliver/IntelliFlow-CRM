@@ -10,7 +10,7 @@ import { TEST_UUIDS } from '../../../test/setup';
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@intelliflow/db';
 import { accountRouter } from '../account.router';
 import {
   prismaMock,
@@ -410,12 +410,22 @@ describe('Account Router', () => {
   describe('stats', () => {
     // stats still uses Prisma for aggregations
     it('should return account statistics', async () => {
-      prismaMock.account.count.mockResolvedValueOnce(100); // total
-      vi.mocked(prismaMock.account.groupBy).mockResolvedValue([
+      // stats calls count 3 times concurrently via Promise.all:
+      //   count()                               → total (no where)
+      //   count({where: {contacts: {some:{}}}}) → withContacts
+      //   count({where: {opportunities:{some:{}}}}) → withOpportunities
+      // Use mockImplementation to distinguish calls by args rather than order queue
+      (prismaMock.account.count as any).mockImplementation(
+        (args?: { where?: Record<string, unknown> }) => {
+          if (args?.where?.contacts) return Promise.resolve(75);
+          if (args?.where?.opportunities) return Promise.resolve(40);
+          return Promise.resolve(100);
+        }
+      );
+      (prismaMock.account.groupBy as any).mockResolvedValue([
         { industry: 'Technology', _count: 40 },
         { industry: 'Finance', _count: 30 },
-      ] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>);
-      prismaMock.account.count.mockResolvedValueOnce(75); // withContacts
+      ]);
       prismaMock.account.aggregate.mockResolvedValue({
         _sum: { revenue: new Prisma.Decimal(50000000) },
       } as Awaited<ReturnType<typeof prismaMock.account.aggregate>>);
@@ -433,9 +443,8 @@ describe('Account Router', () => {
     });
 
     it('should handle zero revenue', async () => {
-      prismaMock.account.count.mockResolvedValueOnce(0);
-      vi.mocked(prismaMock.account.groupBy).mockResolvedValue([]);
-      prismaMock.account.count.mockResolvedValueOnce(0);
+      (prismaMock.account.count as any).mockResolvedValue(0);
+      (prismaMock.account.groupBy as any).mockResolvedValue([]);
       prismaMock.account.aggregate.mockResolvedValue({
         _sum: { revenue: null },
       } as Awaited<ReturnType<typeof prismaMock.account.aggregate>>);
@@ -449,16 +458,26 @@ describe('Account Router', () => {
 
   describe('filterOptions', () => {
     it('should return filter options with counts', async () => {
-      vi.mocked(prismaMock.account.groupBy)
-        .mockResolvedValueOnce([
-          { industry: 'Technology', _count: 10 },
-          { industry: 'Finance', _count: 5 },
-          { industry: null, _count: 2 }, // null should be filtered out
-        ] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>)
-        .mockResolvedValueOnce([
-          { ownerId: TEST_UUIDS.user1, _count: 8 },
-          { ownerId: TEST_UUIDS.admin1, _count: 7 },
-        ] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>);
+      // groupBy is called twice concurrently in Promise.all:
+      //   groupBy({by: ['industry'], ...}) → industry counts
+      //   groupBy({by: ['ownerId'], ...})  → owner counts
+      // Use mockImplementation to distinguish by 'by' argument
+      (prismaMock.account.groupBy as any).mockImplementation((args: { by: string[] }) => {
+        if (args.by?.includes('industry')) {
+          return Promise.resolve([
+            { industry: 'Technology', _count: 10 },
+            { industry: 'Finance', _count: 5 },
+            { industry: null, _count: 2 }, // null should be filtered out
+          ]);
+        }
+        if (args.by?.includes('ownerId')) {
+          return Promise.resolve([
+            { ownerId: TEST_UUIDS.user1, _count: 8 },
+            { ownerId: TEST_UUIDS.admin1, _count: 7 },
+          ]);
+        }
+        return Promise.resolve([]);
+      });
 
       prismaMock.user.findMany.mockResolvedValue([
         { id: TEST_UUIDS.user1, name: 'John Doe', email: 'john@example.com' },
@@ -487,13 +506,7 @@ describe('Account Router', () => {
     });
 
     it('should apply search filter to filterOptions query', async () => {
-      vi.mocked(prismaMock.account.groupBy)
-        .mockResolvedValueOnce(
-          [] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>
-        )
-        .mockResolvedValueOnce(
-          [] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>
-        );
+      (prismaMock.account.groupBy as any).mockResolvedValue([]);
 
       await caller.filterOptions({ search: 'Tech' });
 
@@ -511,13 +524,7 @@ describe('Account Router', () => {
     });
 
     it('should apply industry filter to filterOptions query', async () => {
-      vi.mocked(prismaMock.account.groupBy)
-        .mockResolvedValueOnce(
-          [] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>
-        )
-        .mockResolvedValueOnce(
-          [] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>
-        );
+      (prismaMock.account.groupBy as any).mockResolvedValue([]);
 
       await caller.filterOptions({ industry: 'Finance' });
 
@@ -531,13 +538,7 @@ describe('Account Router', () => {
     });
 
     it('should apply ownerId filter to filterOptions query', async () => {
-      vi.mocked(prismaMock.account.groupBy)
-        .mockResolvedValueOnce(
-          [] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>
-        )
-        .mockResolvedValueOnce(
-          [] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>
-        );
+      (prismaMock.account.groupBy as any).mockResolvedValue([]);
 
       await caller.filterOptions({ ownerId: TEST_UUIDS.user1 });
 
@@ -551,13 +552,12 @@ describe('Account Router', () => {
     });
 
     it('should handle empty owner IDs', async () => {
-      vi.mocked(prismaMock.account.groupBy)
-        .mockResolvedValueOnce([{ industry: 'Tech', _count: 5 }] as unknown as Awaited<
-          ReturnType<typeof prismaMock.account.groupBy>
-        >)
-        .mockResolvedValueOnce([
-          { ownerId: null, _count: 3 }, // null ownerId
-        ] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>);
+      (prismaMock.account.groupBy as any).mockImplementation((args: { by: string[] }) => {
+        if (args.by?.includes('industry'))
+          return Promise.resolve([{ industry: 'Tech', _count: 5 }]);
+        if (args.by?.includes('ownerId')) return Promise.resolve([{ ownerId: null, _count: 3 }]);
+        return Promise.resolve([]);
+      });
 
       const result = await caller.filterOptions({});
 
@@ -567,13 +567,7 @@ describe('Account Router', () => {
     });
 
     it('should handle undefined input', async () => {
-      vi.mocked(prismaMock.account.groupBy)
-        .mockResolvedValueOnce(
-          [] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>
-        )
-        .mockResolvedValueOnce(
-          [] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>
-        );
+      (prismaMock.account.groupBy as any).mockResolvedValue([]);
 
       const result = await caller.filterOptions(undefined);
 
@@ -582,13 +576,12 @@ describe('Account Router', () => {
     });
 
     it('should fallback to ownerId when owner not found in map', async () => {
-      vi.mocked(prismaMock.account.groupBy)
-        .mockResolvedValueOnce(
-          [] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>
-        )
-        .mockResolvedValueOnce([{ ownerId: TEST_UUIDS.user1, _count: 5 }] as unknown as Awaited<
-          ReturnType<typeof prismaMock.account.groupBy>
-        >);
+      (prismaMock.account.groupBy as any).mockImplementation((args: { by: string[] }) => {
+        if (args.by?.includes('industry')) return Promise.resolve([]);
+        if (args.by?.includes('ownerId'))
+          return Promise.resolve([{ ownerId: TEST_UUIDS.user1, _count: 5 }]);
+        return Promise.resolve([]);
+      });
 
       // Return empty - user not found
       prismaMock.user.findMany.mockResolvedValue([]);

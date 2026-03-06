@@ -111,7 +111,7 @@ describe('Entry Points', () => {
             mockHeaders.forEach((value, key) => callback(value, key));
           },
         },
-      } as unknown as Request;
+      } as any;
       const mockRes = {} as Response;
 
       const context = await createContext({ req: mockReq, res: mockRes });

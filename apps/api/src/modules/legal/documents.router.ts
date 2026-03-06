@@ -618,8 +618,8 @@ export const documentsRouter = createTRPCRouter({
       }
 
       const auditLogs = await ctx.prisma.caseDocumentAudit.findMany({
-        where: { document_id: input.documentId },
-        orderBy: { created_at: 'desc' },
+        where: { documentId: input.documentId },
+        orderBy: { createdAt: 'desc' },
       });
 
       return auditLogs;
@@ -700,7 +700,10 @@ export const documentsRouter = createTRPCRouter({
           }
 
           // ACL check per document (AC-008, NF-002)
-          if (!document.hasAccess(userId, AccessLevel.EDIT) && document.toJSON().createdBy !== userId) {
+          if (
+            !document.hasAccess(userId, AccessLevel.EDIT) &&
+            document.toJSON().createdBy !== userId
+          ) {
             failed.push({ id: docId, error: 'Insufficient permissions to archive' });
             continue;
           }

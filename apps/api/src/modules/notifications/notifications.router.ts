@@ -40,8 +40,9 @@ import {
 
 // =============================================================================
 // Event Emitter for Real-time Updates
-// NOTE: In-process EventEmitter — single instance only.
-// TODO: Replace with Redis pub/sub for multi-instance deployment.
+// Uses an in-process EventEmitter scoped to a single server instance.
+// Note: For multi-instance deployments, swap this for a Redis pub/sub adapter
+//       so that notifications published on one instance are received on all.
 // =============================================================================
 
 import { EventEmitter } from 'events';
@@ -110,7 +111,7 @@ function mapDbToNotification(record: any): Notification {
 function createSubscriptionHandler(
   userId: string,
   types?: readonly string[],
-  priorities?: readonly string[],
+  priorities?: readonly string[]
 ) {
   return (emit: { next: (event: NotificationEvent) => void }) => {
     const handler = (payload: NotificationEmitPayload) => {
@@ -143,6 +144,77 @@ function createSubscriptionHandler(
 }
 
 // =============================================================================
+// Query Helpers
+// =============================================================================
+
+/**
+ * Build the Prisma WHERE clause for the notifications list query.
+ * Extracts the sequential filter-building logic to reduce cognitive complexity.
+ */
+function buildNotificationListWhere(
+  tenantId: string,
+  userId: string,
+  filters: {
+    types?: string[];
+    priorities?: string[];
+    status?: string;
+    isRead?: boolean;
+    fromDate?: Date;
+    toDate?: Date;
+    search?: string;
+    cursor?: string;
+  }
+): any {
+  const { types, priorities, status, isRead, fromDate, toDate, search, cursor } = filters;
+  const where: any = { tenantId, recipientId: userId };
+
+  const andClauses: any[] = [];
+
+  if (types && types.length > 0) {
+    if (types.length === 1) {
+      where.metadata = { path: ['notificationType'], equals: types[0] };
+    } else {
+      andClauses.push({
+        OR: types.map((t: string) => ({
+          metadata: { path: ['notificationType'], equals: t },
+        })),
+      });
+    }
+  }
+  if (priorities && priorities.length > 0) {
+    where.priority = { in: priorities.map((p: string) => p.toUpperCase()) };
+  }
+  if (status) {
+    where.status = status.toUpperCase();
+  }
+  if (fromDate || toDate) {
+    where.createdAt = {};
+    if (fromDate) where.createdAt.gte = fromDate;
+    if (toDate) where.createdAt.lte = toDate;
+  }
+  // isRead overrides status when both are supplied
+  if (isRead !== undefined) {
+    where.status = isRead ? 'READ' : 'PENDING';
+  }
+  if (search) {
+    andClauses.push({
+      OR: [
+        { subject: { contains: search, mode: 'insensitive' } },
+        { body: { contains: search, mode: 'insensitive' } },
+      ],
+    });
+  }
+  if (cursor) {
+    where.id = { lt: cursor };
+  }
+  if (andClauses.length > 0) {
+    where.AND = andClauses;
+  }
+
+  return where;
+}
+
+// =============================================================================
 // Router Implementation
 // =============================================================================
 
@@ -160,50 +232,16 @@ export const notificationsRouter = createTRPCRouter({
       const { limit, cursor, types, priorities, status, isRead, fromDate, toDate, search } = input;
 
       // Build WHERE clause on Notification table
-      const where: any = {
-        tenantId,
-        recipientId: userId,
-      };
-
-      // Filter by types (stored in metadata.notificationType)
-      if (types && types.length > 0) {
-        where.metadata = { path: ['notificationType'], in: types };
-      }
-
-      // Filter by priorities
-      if (priorities && priorities.length > 0) {
-        where.priority = { in: priorities.map((p: string) => p.toUpperCase()) };
-      }
-
-      // Filter by status
-      if (status) {
-        where.status = status.toUpperCase();
-      }
-
-      // Filter by date range
-      if (fromDate || toDate) {
-        where.createdAt = {};
-        if (fromDate) where.createdAt.gte = fromDate;
-        if (toDate) where.createdAt.lte = toDate;
-      }
-
-      // Filter by read status
-      if (isRead !== undefined) {
-        where.status = isRead ? 'READ' : 'PENDING';
-      }
-
-      // Search filter
-      if (search) {
-        where.OR = [
-          { subject: { contains: search, mode: 'insensitive' } },
-          { body: { contains: search, mode: 'insensitive' } },
-        ];
-      }
-
-      // Cursor pagination
-      if (cursor) {
-        where.id = { lt: cursor };
-      }
+      const where: any = buildNotificationListWhere(tenantId, userId, {
+        types,
+        priorities,
+        status,
+        isRead,
+        fromDate,
+        toDate,
+        search,
+        cursor,
+      });
 
       const records = await ctx.prisma.notification.findMany({
         where,
@@ -336,9 +374,7 @@ export const notificationsRouter = createTRPCRouter({
 
     const duration = performance.now() - startTime;
     if (duration > 200) {
-      console.warn(
-        `[notifications.markAllAsRead] SLOW: ${duration.toFixed(2)}ms (target: <200ms)`
-      );
+      console.warn(`[notifications.markAllAsRead] SLOW: ${duration.toFixed(2)}ms (target: <200ms)`);
     }
 
     return {
@@ -526,7 +562,15 @@ export const notificationsRouter = createTRPCRouter({
 
       if (filter) {
         if (filter.types && filter.types.length > 0) {
-          where.metadata = { path: ['notificationType'], in: filter.types };
+          if (filter.types.length === 1) {
+            where.metadata = { path: ['notificationType'], equals: filter.types[0] };
+          } else {
+            where.AND = (where.AND || []).concat({
+              OR: filter.types.map((t: string) => ({
+                metadata: { path: ['notificationType'], equals: t },
+              })),
+            });
+          }
         }
         if (filter.olderThan) {
           where.createdAt = { lt: filter.olderThan };

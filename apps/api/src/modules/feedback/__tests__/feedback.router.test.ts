@@ -180,7 +180,7 @@ describe('feedbackRouter', () => {
       const caller = feedbackRouter.createCaller(ctx);
 
       const thumbsDownFeedback = { ...mockFeedback, feedbackType: 'THUMBS_DOWN' };
-      getFeedbackService(ctx).submitSimpleFeedback.mockResolvedValueOnce(thumbsDownFeedback);
+      getFeedbackService(ctx).submitSimpleFeedback.mockResolvedValue(thumbsDownFeedback);
 
       const result = await caller.submitSimple({
         ...validSimpleFeedback,
@@ -269,7 +269,7 @@ describe('feedbackRouter', () => {
 
     it('should return empty array when no feedback exists', async () => {
       const ctx = createFeedbackTestContext();
-      getFeedbackService(ctx).getFeedbackForLead.mockResolvedValueOnce([]);
+      getFeedbackService(ctx).getFeedbackForLead.mockResolvedValue([]);
       const caller = feedbackRouter.createCaller(ctx);
 
       const result = await caller.getForLead({ leadId: 'lead_without_feedback' });
@@ -353,7 +353,7 @@ describe('feedbackRouter', () => {
 
     it('should indicate when retraining is not needed', async () => {
       const ctx = createFeedbackTestContext();
-      getFeedbackService(ctx).checkRetrainingNeeded.mockResolvedValueOnce({
+      getFeedbackService(ctx).checkRetrainingNeeded.mockResolvedValue({
         recommended: false,
         reason: 'Model performing well',
         metrics: {
@@ -374,7 +374,7 @@ describe('feedbackRouter', () => {
 
     it('should indicate when more samples needed', async () => {
       const ctx = createFeedbackTestContext();
-      getFeedbackService(ctx).checkRetrainingNeeded.mockResolvedValueOnce({
+      getFeedbackService(ctx).checkRetrainingNeeded.mockResolvedValue({
         recommended: false,
         reason: 'Insufficient samples for assessment',
         metrics: {
@@ -448,7 +448,7 @@ describe('feedbackRouter', () => {
 
     it('should propagate service errors', async () => {
       const ctx = createFeedbackTestContext();
-      getFeedbackService(ctx).submitSimpleFeedback.mockRejectedValueOnce(
+      getFeedbackService(ctx).submitSimpleFeedback.mockRejectedValue(
         new Error('Database connection failed')
       );
       const caller = feedbackRouter.createCaller(ctx);

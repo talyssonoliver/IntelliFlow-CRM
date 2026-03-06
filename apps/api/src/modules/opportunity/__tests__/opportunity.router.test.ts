@@ -10,7 +10,7 @@ import { TEST_UUIDS } from '../../../test/setup';
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@intelliflow/db';
 import { opportunityRouter } from '../opportunity.router';
 import {
   prismaMock,
@@ -399,17 +399,19 @@ describe('Opportunity Router', () => {
     // stats still uses Prisma for aggregations
     it('should return opportunity statistics', async () => {
       prismaMock.opportunity.count.mockResolvedValue(50);
-      vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue([
+      (prismaMock.opportunity.groupBy as any).mockResolvedValue([
         { stage: 'PROPOSAL', _count: 15, _sum: { value: new Prisma.Decimal(500000) } },
         { stage: 'NEGOTIATION', _count: 10, _sum: { value: new Prisma.Decimal(300000) } },
         { stage: 'CLOSED_WON', _count: 20, _sum: { value: new Prisma.Decimal(1000000) } },
-      ] as unknown as Awaited<ReturnType<typeof prismaMock.opportunity.groupBy>>);
-      prismaMock.opportunity.aggregate.mockResolvedValueOnce({
-        _sum: { value: new Prisma.Decimal(2000000) },
-      } as Awaited<ReturnType<typeof prismaMock.opportunity.aggregate>>);
-      prismaMock.opportunity.aggregate.mockResolvedValueOnce({
-        _avg: { probability: 65.5 },
-      } as Awaited<ReturnType<typeof prismaMock.opportunity.aggregate>>);
+      ]);
+      // aggregate is called twice concurrently in Promise.all; use mockImplementation to distinguish
+      (prismaMock.opportunity.aggregate as any).mockImplementation(
+        (args: { _sum?: unknown; _avg?: unknown }) => {
+          if (args._sum) return Promise.resolve({ _sum: { value: new Prisma.Decimal(2000000) } });
+          if (args._avg) return Promise.resolve({ _avg: { probability: 65.5 } });
+          return Promise.resolve({});
+        }
+      );
 
       const result = await caller.stats();
 
@@ -425,13 +427,14 @@ describe('Opportunity Router', () => {
 
     it('should handle zero statistics', async () => {
       prismaMock.opportunity.count.mockResolvedValue(0);
-      vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue([]);
-      prismaMock.opportunity.aggregate.mockResolvedValueOnce({
-        _sum: { value: null },
-      } as Awaited<ReturnType<typeof prismaMock.opportunity.aggregate>>);
-      prismaMock.opportunity.aggregate.mockResolvedValueOnce({
-        _avg: { probability: null },
-      } as Awaited<ReturnType<typeof prismaMock.opportunity.aggregate>>);
+      (prismaMock.opportunity.groupBy as any).mockResolvedValue([]);
+      (prismaMock.opportunity.aggregate as any).mockImplementation(
+        (args: { _sum?: unknown; _avg?: unknown }) => {
+          if (args._sum) return Promise.resolve({ _sum: { value: null } });
+          if (args._avg) return Promise.resolve({ _avg: { probability: null } });
+          return Promise.resolve({});
+        }
+      );
 
       const result = await caller.stats();
 
@@ -860,9 +863,7 @@ describe('Opportunity Router', () => {
 
     it('should return stages with opportunity counts and values', async () => {
       (prismaMock.pipelineStageConfig as any).findMany.mockResolvedValue(mockStageConfigs);
-      vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue(
-        mockGroupBy as unknown as Awaited<ReturnType<typeof prismaMock.opportunity.groupBy>>
-      );
+      vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue(mockGroupBy as any);
 
       const result = await caller.getPipeline({});
 
@@ -875,9 +876,7 @@ describe('Opportunity Router', () => {
 
     it('should exclude closed stages by default', async () => {
       (prismaMock.pipelineStageConfig as any).findMany.mockResolvedValue(mockStageConfigs);
-      vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue(
-        mockGroupBy as unknown as Awaited<ReturnType<typeof prismaMock.opportunity.groupBy>>
-      );
+      vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue(mockGroupBy as any);
 
       const result = await caller.getPipeline({});
 
@@ -908,9 +907,7 @@ describe('Opportunity Router', () => {
       ];
 
       (prismaMock.pipelineStageConfig as any).findMany.mockResolvedValue(allConfigs);
-      vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue(
-        mockGroupBy as unknown as Awaited<ReturnType<typeof prismaMock.opportunity.groupBy>>
-      );
+      vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue(mockGroupBy as any);
 
       const result = await caller.getPipeline({ includeClosedStages: true });
 
@@ -922,9 +919,7 @@ describe('Opportunity Router', () => {
 
     it('should handle empty pipeline (zero opportunities)', async () => {
       (prismaMock.pipelineStageConfig as any).findMany.mockResolvedValue([]);
-      vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue(
-        [] as unknown as Awaited<ReturnType<typeof prismaMock.opportunity.groupBy>>
-      );
+      vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue([] as any);
 
       const result = await caller.getPipeline({});
 
@@ -949,9 +944,7 @@ describe('Opportunity Router', () => {
       ];
 
       (prismaMock.pipelineStageConfig as any).findMany.mockResolvedValue(customConfigs);
-      vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue(
-        [] as unknown as Awaited<ReturnType<typeof prismaMock.opportunity.groupBy>>
-      );
+      vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue([] as any);
 
       const result = await caller.getPipeline({});
 

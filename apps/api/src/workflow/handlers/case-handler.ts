@@ -240,7 +240,7 @@ abstract class BaseCaseEventHandler implements ICaseEventHandler {
       const rulesEngine = getRulesEngine();
       const results = await rulesEngine.evaluate({
         eventType,
-        eventPayload: payload as unknown as Record<string, unknown>,
+        eventPayload: { ...payload },
         entityType: 'case',
         entityId: payload.caseId,
         timestamp: context.occurredAt,

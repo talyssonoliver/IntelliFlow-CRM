@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@intelliflow/db';
 import { randomUUID } from 'node:crypto';
 import type { AuditLogInput, RequiredAuditLoggerConfig } from './types';
 import { getAuditEncryption } from '../../shared/audit-encryption-module';

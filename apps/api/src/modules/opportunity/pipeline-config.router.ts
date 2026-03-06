@@ -74,7 +74,8 @@ export const pipelineConfigRouter = createTRPCRouter({
           updatedAt: existing.updatedAt,
         };
       }
-      // Return default config with placeholder id
+      // No custom configuration found — return built-in default for this stage.
+      // The id prefix "default-" distinguishes these from persisted configs.
       return {
         id: `default-${stageKey}`,
         ...getDefaultStageConfig(stageKey, index),

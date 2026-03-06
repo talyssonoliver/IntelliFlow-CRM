@@ -10,10 +10,7 @@
 
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure, adminProcedure } from '../../trpc';
-import {
-  toggleModuleInputSchema,
-  enabledModulesResponseSchema,
-} from '@intelliflow/validators';
+import { toggleModuleInputSchema, enabledModulesResponseSchema } from '@intelliflow/validators';
 import {
   CRM_MODULES,
   PLAN_TIERS,
@@ -37,7 +34,8 @@ export const moduleAccessRouter = createTRPCRouter({
       });
     }
 
-    const moduleAccess = ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
+    const moduleAccess =
+      ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
     if (!moduleAccess) {
       // Fallback: return Professional-tier modules (dev mode / no container)
       return {
@@ -71,41 +69,40 @@ export const moduleAccessRouter = createTRPCRouter({
    * Toggle a module on/off for the current tenant.
    * Only available to Enterprise plan admins.
    */
-  toggleModule: adminProcedure
-    .input(toggleModuleInputSchema)
-    .mutation(async ({ ctx, input }) => {
-      const tenantId = ctx.user?.tenantId;
-      if (!tenantId) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'Tenant context required',
-        });
-      }
+  toggleModule: adminProcedure.input(toggleModuleInputSchema).mutation(async ({ ctx, input }) => {
+    const tenantId = ctx.user?.tenantId;
+    if (!tenantId) {
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'Tenant context required',
+      });
+    }
 
-      if (input.moduleId === 'CORE_CRM') {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Core CRM module cannot be disabled',
-        });
-      }
+    if (input.moduleId === 'CORE_CRM') {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Core CRM module cannot be disabled',
+      });
+    }
 
-      const moduleAccess = ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
-      if (!moduleAccess) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Module access service not available',
-        });
-      }
+    const moduleAccess =
+      ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
+    if (!moduleAccess) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Module access service not available',
+      });
+    }
 
-      if (input.enabled) {
-        await moduleAccess.enableModule(tenantId, input.moduleId);
-      } else {
-        await moduleAccess.disableModule(tenantId, input.moduleId);
-      }
+    if (input.enabled) {
+      await moduleAccess.enableModule(tenantId, input.moduleId);
+    } else {
+      await moduleAccess.disableModule(tenantId, input.moduleId);
+    }
 
-      // Return updated module list
-      const modules = await moduleAccess.getEnabledModules(tenantId);
-      const plan = await moduleAccess.getTenantPlan(tenantId);
-      return { modules, plan };
-    }),
+    // Return updated module list
+    const modules = await moduleAccess.getEnabledModules(tenantId);
+    const plan = await moduleAccess.getTenantPlan(tenantId);
+    return { modules, plan };
+  }),
 });

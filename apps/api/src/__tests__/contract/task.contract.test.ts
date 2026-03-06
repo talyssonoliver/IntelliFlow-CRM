@@ -666,18 +666,37 @@ describe('Task Router Contract Tests', () => {
   });
 
   describe('stats - Contract', () => {
+    // Helper: mockImplementation for task.count distinguishing by dueDate filter shape
+    // count() no args → total
+    // count({where: {dueDate: {lt}, status: ...}}) → overdue (only lt, no gte)
+    // count({where: {dueDate: {gte, lt}, status: ...}}) → dueToday (has gte)
+    function mockCountImpl(total: number, overdue: number, dueToday: number) {
+      (prismaMock.task.count as any).mockImplementation(
+        (args?: { where?: Record<string, unknown> }) => {
+          if (!args?.where) return Promise.resolve(total);
+          const dueDate = args.where.dueDate as Record<string, unknown> | undefined;
+          if (dueDate?.gte !== undefined) return Promise.resolve(dueToday);
+          if (dueDate?.lt !== undefined) return Promise.resolve(overdue);
+          return Promise.resolve(0);
+        }
+      );
+    }
+
     it('should return stats matching contract', async () => {
-      prismaMock.task.count.mockResolvedValueOnce(100);
-      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
-        { status: 'PENDING', _count: 40 },
-        { status: 'IN_PROGRESS', _count: 30 },
-      ]);
-      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
-        { priority: 'HIGH', _count: 30 },
-        { priority: 'URGENT', _count: 10 },
-      ]);
-      prismaMock.task.count.mockResolvedValueOnce(10); // overdue
-      prismaMock.task.count.mockResolvedValueOnce(5); // dueToday
+      mockCountImpl(100, 10, 5);
+      (prismaMock.task.groupBy as any).mockImplementation((args: { by: string[] }) => {
+        if (args.by?.includes('status'))
+          return Promise.resolve([
+            { status: 'PENDING', _count: 40 },
+            { status: 'IN_PROGRESS', _count: 30 },
+          ]);
+        if (args.by?.includes('priority'))
+          return Promise.resolve([
+            { priority: 'HIGH', _count: 30 },
+            { priority: 'URGENT', _count: 10 },
+          ]);
+        return Promise.resolve([]);
+      });
 
       const result = await caller.stats();
 
@@ -686,14 +705,15 @@ describe('Task Router Contract Tests', () => {
     });
 
     it('should return byStatus correctly', async () => {
-      prismaMock.task.count.mockResolvedValueOnce(100);
-      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
-        { status: 'PENDING', _count: 40 },
-        { status: 'COMPLETED', _count: 25 },
-      ]);
-      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
-      prismaMock.task.count.mockResolvedValueOnce(0);
-      prismaMock.task.count.mockResolvedValueOnce(0);
+      mockCountImpl(100, 0, 0);
+      (prismaMock.task.groupBy as any).mockImplementation((args: { by: string[] }) => {
+        if (args.by?.includes('status'))
+          return Promise.resolve([
+            { status: 'PENDING', _count: 40 },
+            { status: 'COMPLETED', _count: 25 },
+          ]);
+        return Promise.resolve([]);
+      });
 
       const result = await caller.stats();
 
@@ -704,14 +724,15 @@ describe('Task Router Contract Tests', () => {
     });
 
     it('should return byPriority correctly', async () => {
-      prismaMock.task.count.mockResolvedValueOnce(100);
-      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
-      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
-        { priority: 'HIGH', _count: 30 },
-        { priority: 'LOW', _count: 20 },
-      ]);
-      prismaMock.task.count.mockResolvedValueOnce(0);
-      prismaMock.task.count.mockResolvedValueOnce(0);
+      mockCountImpl(100, 0, 0);
+      (prismaMock.task.groupBy as any).mockImplementation((args: { by: string[] }) => {
+        if (args.by?.includes('priority'))
+          return Promise.resolve([
+            { priority: 'HIGH', _count: 30 },
+            { priority: 'LOW', _count: 20 },
+          ]);
+        return Promise.resolve([]);
+      });
 
       const result = await caller.stats();
 
@@ -722,10 +743,8 @@ describe('Task Router Contract Tests', () => {
     });
 
     it('should count overdue tasks', async () => {
-      prismaMock.task.count.mockResolvedValueOnce(100);
-      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
-      prismaMock.task.count.mockResolvedValueOnce(15); // overdue
-      prismaMock.task.count.mockResolvedValueOnce(5); // dueToday
+      mockCountImpl(100, 15, 5);
+      (prismaMock.task.groupBy as any).mockResolvedValue([]);
 
       const result = await caller.stats();
 
@@ -733,10 +752,8 @@ describe('Task Router Contract Tests', () => {
     });
 
     it('should count tasks due today', async () => {
-      prismaMock.task.count.mockResolvedValueOnce(100);
-      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
-      prismaMock.task.count.mockResolvedValueOnce(10); // overdue
-      prismaMock.task.count.mockResolvedValueOnce(8); // dueToday
+      mockCountImpl(100, 10, 8);
+      (prismaMock.task.groupBy as any).mockResolvedValue([]);
 
       const result = await caller.stats();
 
@@ -744,10 +761,8 @@ describe('Task Router Contract Tests', () => {
     });
 
     it('should handle empty stats', async () => {
-      prismaMock.task.count.mockResolvedValueOnce(0);
-      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
-      prismaMock.task.count.mockResolvedValueOnce(0);
-      prismaMock.task.count.mockResolvedValueOnce(0);
+      mockCountImpl(0, 0, 0);
+      (prismaMock.task.groupBy as any).mockResolvedValue([]);
 
       const result = await caller.stats();
 

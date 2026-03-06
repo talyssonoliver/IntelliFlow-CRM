@@ -6,7 +6,7 @@
 
 import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vitest';
 import { TRPCError } from '@trpc/server';
-import { billingRouter } from '../billing.router';
+import { billingRouter, clearBillingCache } from '../billing.router';
 import { createTRPCRouter } from '../../../trpc';
 import type { UserSession } from '../../../context';
 
@@ -82,6 +82,16 @@ const mockStripeAdapterMethods: Record<string, any> = {
   createSubscription: vi.fn(),
   getInvoice: vi.fn(),
   payInvoice: vi.fn(),
+  retrieveUpcomingInvoice: vi.fn().mockResolvedValue({
+    isSuccess: true,
+    isFailure: false,
+    value: {
+      amountDue: 7900,
+      currency: 'gbp',
+      prorationDate: new Date('2025-02-01'),
+      invoiceItems: [],
+    },
+  }),
 };
 
 // Create a proper class mock for StripeAdapter
@@ -99,6 +109,7 @@ class MockStripeAdapter {
   createSubscription = mockStripeAdapterMethods.createSubscription;
   getInvoice = mockStripeAdapterMethods.getInvoice;
   payInvoice = mockStripeAdapterMethods.payInvoice;
+  retrieveUpcomingInvoice = mockStripeAdapterMethods.retrieveUpcomingInvoice;
 }
 
 // Mock the StripeAdapter module with a proper class
@@ -126,6 +137,7 @@ describe('billingRouter', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    clearBillingCache();
   });
 
   // ============================================
@@ -839,6 +851,19 @@ describe('billingRouter', () => {
     });
 
     it('returns upcoming invoice preview', async () => {
+      // vi.clearAllMocks() in beforeEach clears the default .mockResolvedValue;
+      // re-setup the mock for this test
+      mockStripeAdapterMethods.retrieveUpcomingInvoice.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: {
+          amountDue: 7900,
+          currency: 'gbp',
+          prorationDate: new Date('2025-02-01'),
+          invoiceItems: [],
+        },
+      });
+
       const mockContext = {
         user: {
           userId: 'user_123',
@@ -1747,7 +1772,14 @@ describe('billingRouter', () => {
       customerEmail: 'test@example.com',
       customerName: 'Test User',
       lineItems: [
-        { id: 'li_1', description: 'Professional Plan', quantity: 1, unitAmount: 7900, amount: 7900, currency: 'gbp' },
+        {
+          id: 'li_1',
+          description: 'Professional Plan',
+          quantity: 1,
+          unitAmount: 7900,
+          amount: 7900,
+          currency: 'gbp',
+        },
       ],
     };
 
@@ -2135,9 +2167,9 @@ describe('billingRouter', () => {
         mockContext as Parameters<typeof billingRouter.createCaller>[0]
       );
 
-      await expect(
-        caller.removePaymentMethod({ paymentMethodId: 'pm_123' })
-      ).rejects.toThrow('Cannot remove default payment method while you have an active subscription');
+      await expect(caller.removePaymentMethod({ paymentMethodId: 'pm_123' })).rejects.toThrow(
+        'Cannot remove default payment method while you have an active subscription'
+      );
     });
 
     it('throws error when removing last card with active subscription', async () => {
@@ -2174,9 +2206,9 @@ describe('billingRouter', () => {
         mockContext as Parameters<typeof billingRouter.createCaller>[0]
       );
 
-      await expect(
-        caller.removePaymentMethod({ paymentMethodId: 'pm_123' })
-      ).rejects.toThrow(/cannot remove/i);
+      await expect(caller.removePaymentMethod({ paymentMethodId: 'pm_123' })).rejects.toThrow(
+        /cannot remove/i
+      );
     });
 
     it('succeeds when removing non-default card even with active subscription', async () => {

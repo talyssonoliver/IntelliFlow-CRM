@@ -60,8 +60,14 @@ function getAssigneeTitle(role?: string | null): string {
  * Helper to get tenant ID from context
  */
 async function getTenantId(ctx: Context): Promise<string> {
-  // TODO: Extract from user session when multi-tenancy is implemented
-  // For now, get the default tenant from the database
+  // Resolves the tenant ID for the current request.
+  // tenantContextMiddleware populates ctx.tenant from the JWT, but this router
+  // also supports unauthenticated code paths that call getTenantId directly.
+  // When ctx.user is present, prefer the session-bound tenantId; otherwise fall
+  // back to the default tenant record for backwards-compatible tooling contexts.
+  if (ctx.user?.tenantId) {
+    return ctx.user.tenantId;
+  }
   const tenant = await ctx.prisma.tenant.findUnique({
     where: { slug: 'default' },
   });
@@ -90,7 +96,7 @@ export const ticketRouter = createTRPCRouter({
         tenantId,
       });
 
-      // Notify assignee if present
+      // Fire-and-forget: notification failure must not block the ticket creation response
       if (input.assigneeId) {
         createNotification(ctx.prisma, {
           userId: input.assigneeId,
@@ -103,7 +109,7 @@ export const ticketRouter = createTRPCRouter({
           entityId: ticket.id,
           entityName: input.subject,
           actionUrl: `/tickets/${ticket.id}`,
-        }).catch(() => {});
+        }).catch(() => {}); // Swallow notification errors — non-critical side-effect
       }
 
       return ticket;
@@ -201,7 +207,7 @@ export const ticketRouter = createTRPCRouter({
         assigneeId: updateData.assigneeId ?? undefined,
       });
 
-      // Notify on escalation (priority changed to URGENT or CRITICAL)
+      // Fire-and-forget: notification failure must not block the ticket update response
       if (updateData.priority && ['URGENT', 'CRITICAL'].includes(updateData.priority)) {
         const tenantId = await getTenantId(ctx);
         createNotification(ctx.prisma, {
@@ -215,7 +221,7 @@ export const ticketRouter = createTRPCRouter({
           entityId: ticket.id,
           entityName: ticket.subject,
           actionUrl: `/tickets/${ticket.id}`,
-        }).catch(() => {});
+        }).catch(() => {}); // Swallow notification errors — non-critical side-effect
       }
 
       return ticket;

@@ -7,7 +7,9 @@
  * - Invoice history
  * - Usage metrics
  *
- * Uses existing StripeAdapter from packages/adapters
+ * Uses existing StripeAdapter from packages/adapters.
+ * Implements server-side caching to avoid hitting Stripe on every page load.
+ * Cache is invalidated by webhook events.
  *
  * @implements PG-025 (Billing Portal)
  */
@@ -92,6 +94,8 @@ export interface StripeInvoice {
   discount?: number;
   customerEmail?: string;
   customerName?: string;
+  paymentMethodBrand?: string;
+  paymentMethodLast4?: string;
   billingAddress?: {
     line1?: string;
     line2?: string;
@@ -227,6 +231,53 @@ async function getStripeAdapter(): Promise<IStripeAdapter> {
 }
 
 // ============================================
+// Billing Data Cache
+// ============================================
+
+interface CacheEntry<T> {
+  data: T;
+  expiresAt: number;
+}
+
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+const billingCache = new Map<string, CacheEntry<unknown>>();
+
+function getCached<T>(key: string): T | undefined {
+  const entry = billingCache.get(key);
+  if (!entry) return undefined;
+  if (Date.now() > entry.expiresAt) {
+    billingCache.delete(key);
+    return undefined;
+  }
+  return entry.data as T;
+}
+
+function setCache<T>(key: string, data: T): void {
+  billingCache.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS });
+}
+
+/**
+ * Invalidate all cache entries for a given Stripe customer.
+ * Called after mutations and webhook events.
+ */
+export function invalidateBillingCache(customerId: string): void {
+  for (const key of billingCache.keys()) {
+    if (key.startsWith(customerId)) {
+      billingCache.delete(key);
+    }
+  }
+}
+
+/**
+ * Clear the entire billing cache.
+ * Exported for use in tests to prevent cross-test contamination.
+ */
+export function clearBillingCache(): void {
+  billingCache.clear();
+}
+
+// ============================================
 // Billing Router
 // ============================================
 
@@ -235,17 +286,21 @@ export const billingRouter = createTRPCRouter({
    * Get current subscription for the authenticated user
    *
    * Returns null if user has no Stripe customer ID or no active subscription.
+   * Uses server-side cache to avoid hitting Stripe on every page load.
    */
   getSubscription: protectedProcedure.query(async ({ ctx }) => {
+    const user = ctx.user;
+
+    if (!user?.stripeCustomerId) {
+      return null;
+    }
+
+    const cacheKey = `${user.stripeCustomerId}:subscription`;
+    const cached = getCached<StripeSubscription | null>(cacheKey);
+    if (cached !== undefined) return cached;
+
     try {
       const stripe = await getStripeAdapter();
-      const user = ctx.user;
-
-      if (!user?.stripeCustomerId) {
-        return null;
-      }
-
-      // Wrap Stripe API call with ExternalServiceError handling
       const result = await callStripeAPI(() => stripe.listSubscriptions(user.stripeCustomerId!));
 
       if (result.isFailure) {
@@ -253,13 +308,13 @@ export const billingRouter = createTRPCRouter({
       }
 
       const subscriptions = result.value;
-
-      // Return the first active subscription (customers typically have one)
       const activeSubscription = subscriptions.find(
         (sub) => sub.status === 'active' || sub.status === 'trialing'
       );
 
-      return activeSubscription ?? (subscriptions.length > 0 ? subscriptions[0] : null);
+      const data = activeSubscription ?? (subscriptions.length > 0 ? subscriptions[0] : null);
+      setCache(cacheKey, data);
+      return data;
     } catch (error) {
       if (error instanceof TRPCError) {
         throw error;
@@ -276,7 +331,6 @@ export const billingRouter = createTRPCRouter({
    * cursor-based pagination (starting_after param) when customers exceed this threshold.
    */
   listInvoices: protectedProcedure.input(listInvoicesInputSchema).query(async ({ ctx, input }) => {
-    const stripe = await getStripeAdapter();
     const user = ctx.user;
 
     if (!user?.stripeCustomerId) {
@@ -289,16 +343,24 @@ export const billingRouter = createTRPCRouter({
       };
     }
 
-    const result = await stripe.listInvoices(user.stripeCustomerId);
+    const cacheKey = `${user.stripeCustomerId}:invoices`;
+    let allInvoices = getCached<StripeInvoice[]>(cacheKey);
 
-    if (result.isFailure) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: result.error.message,
-      });
+    if (allInvoices === undefined) {
+      const stripe = await getStripeAdapter();
+      const result = await stripe.listInvoices(user.stripeCustomerId);
+
+      if (result.isFailure) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: result.error.message,
+        });
+      }
+
+      allInvoices = result.value;
+      setCache(cacheKey, allInvoices);
     }
 
-    const allInvoices = result.value;
     const { page, limit } = input;
     const start = (page - 1) * limit;
     const paginatedInvoices = allInvoices.slice(start, start + limit);
@@ -320,40 +382,38 @@ export const billingRouter = createTRPCRouter({
    *
    * @implements PG-028 (Invoice Detail)
    */
-  getInvoice: protectedProcedure
-    .input(getInvoiceInputSchema)
-    .query(async ({ ctx, input }) => {
-      const stripe = await getStripeAdapter();
-      const user = ctx.user;
+  getInvoice: protectedProcedure.input(getInvoiceInputSchema).query(async ({ ctx, input }) => {
+    const user = ctx.user;
 
-      if (!user?.stripeCustomerId) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'No billing account found.',
-        });
-      }
+    if (!user?.stripeCustomerId) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'No billing account found.',
+      });
+    }
 
-      const result = await stripe.getInvoice(input.invoiceId);
+    const stripe = await getStripeAdapter();
+    const result = await stripe.getInvoice(input.invoiceId);
 
-      if (result.isFailure || !result.value) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Invoice not found.',
-        });
-      }
+    if (result.isFailure || !result.value) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Invoice not found.',
+      });
+    }
 
-      const invoice = result.value;
+    const invoice = result.value;
 
-      // Ownership check — prevent cross-tenant access
-      if (invoice.customerId !== user.stripeCustomerId) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'You do not have permission to view this invoice.',
-        });
-      }
+    // Ownership check — prevent cross-tenant access
+    if (invoice.customerId !== user.stripeCustomerId) {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'You do not have permission to view this invoice.',
+      });
+    }
 
-      return invoice;
-    }),
+    return invoice;
+  }),
 
   /**
    * Pay an open invoice
@@ -363,70 +423,76 @@ export const billingRouter = createTRPCRouter({
    *
    * @implements PG-028 (Invoice Detail)
    */
-  payInvoice: protectedProcedure
-    .input(payInvoiceInputSchema)
-    .mutation(async ({ ctx, input }) => {
-      const stripe = await getStripeAdapter();
-      const user = ctx.user;
+  payInvoice: protectedProcedure.input(payInvoiceInputSchema).mutation(async ({ ctx, input }) => {
+    const user = ctx.user;
 
-      if (!user?.stripeCustomerId) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'No billing account found.',
-        });
-      }
+    if (!user?.stripeCustomerId) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'No billing account found.',
+      });
+    }
 
-      // Fetch invoice first for ownership + status verification
-      const getResult = await stripe.getInvoice(input.invoiceId);
+    const stripe = await getStripeAdapter();
 
-      if (getResult.isFailure || !getResult.value) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Invoice not found.',
-        });
-      }
+    // Fetch invoice first for ownership + status verification
+    const getResult = await stripe.getInvoice(input.invoiceId);
 
-      const invoice = getResult.value;
+    if (getResult.isFailure || !getResult.value) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Invoice not found.',
+      });
+    }
 
-      // Ownership check
-      if (invoice.customerId !== user.stripeCustomerId) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'You do not have permission to pay this invoice.',
-        });
-      }
+    const invoice = getResult.value;
 
-      // Only open invoices can be paid
-      if (invoice.status !== 'open') {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: `Invoice cannot be paid. Current status: ${invoice.status}`,
-        });
-      }
+    // Ownership check
+    if (invoice.customerId !== user.stripeCustomerId) {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'You do not have permission to pay this invoice.',
+      });
+    }
 
-      const payResult = await stripe.payInvoice(input.invoiceId);
+    // Only open invoices can be paid
+    if (invoice.status !== 'open') {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: `Invoice cannot be paid. Current status: ${invoice.status}`,
+      });
+    }
 
-      if (payResult.isFailure) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: payResult.error.message,
-        });
-      }
+    const payResult = await stripe.payInvoice(input.invoiceId);
 
-      return payResult.value;
-    }),
+    if (payResult.isFailure) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: payResult.error.message,
+      });
+    }
+
+    invalidateBillingCache(user.stripeCustomerId);
+    return payResult.value;
+  }),
 
   /**
    * Get payment methods for the user
+   *
+   * Returns cached data when available.
    */
   getPaymentMethods: protectedProcedure.query(async ({ ctx }) => {
-    const stripe = await getStripeAdapter();
     const user = ctx.user;
 
     if (!user?.stripeCustomerId) {
       return [] as (StripePaymentMethod & { isDefault: boolean })[];
     }
 
+    const cacheKey = `${user.stripeCustomerId}:paymentMethods`;
+    const cached = getCached<(StripePaymentMethod & { isDefault: boolean })[]>(cacheKey);
+    if (cached !== undefined) return cached;
+
+    const stripe = await getStripeAdapter();
     const result = await stripe.listPaymentMethods(user.stripeCustomerId);
 
     if (result.isFailure) {
@@ -443,10 +509,13 @@ export const billingRouter = createTRPCRouter({
       : null;
 
     // Map payment methods with isDefault flag
-    return result.value.map((pm) => ({
+    const data = result.value.map((pm) => ({
       ...pm,
       isDefault: pm.id === defaultPaymentMethodId,
     }));
+
+    setCache(cacheKey, data);
+    return data;
   }),
 
   /**
@@ -455,7 +524,6 @@ export const billingRouter = createTRPCRouter({
   updatePaymentMethod: protectedProcedure
     .input(updatePaymentMethodInputSchema)
     .mutation(async ({ ctx, input }) => {
-      const stripe = await getStripeAdapter();
       const user = ctx.user;
 
       if (!user?.stripeCustomerId) {
@@ -464,6 +532,8 @@ export const billingRouter = createTRPCRouter({
           message: 'No billing account found. Please set up billing first.',
         });
       }
+
+      const stripe = await getStripeAdapter();
 
       // Attach payment method to customer
       const result = await stripe.attachPaymentMethod(input.paymentMethodId, user.stripeCustomerId);
@@ -489,6 +559,8 @@ export const billingRouter = createTRPCRouter({
         }
       }
 
+      invalidateBillingCache(user.stripeCustomerId);
+
       return {
         success: true,
         paymentMethod: result.value,
@@ -501,7 +573,6 @@ export const billingRouter = createTRPCRouter({
   removePaymentMethod: protectedProcedure
     .input(updatePaymentMethodInputSchema.pick({ paymentMethodId: true }))
     .mutation(async ({ ctx, input }) => {
-      const stripe = await getStripeAdapter();
       const user = ctx.user;
 
       if (!user?.stripeCustomerId) {
@@ -510,6 +581,8 @@ export const billingRouter = createTRPCRouter({
           message: 'No billing account found.',
         });
       }
+
+      const stripe = await getStripeAdapter();
 
       // Check subscription guard before removing
       const subsResult = await stripe.listSubscriptions(user.stripeCustomerId);
@@ -556,6 +629,7 @@ export const billingRouter = createTRPCRouter({
         });
       }
 
+      invalidateBillingCache(user.stripeCustomerId);
       return { success: true };
     }),
 
@@ -565,7 +639,6 @@ export const billingRouter = createTRPCRouter({
   updateSubscription: protectedProcedure
     .input(updateSubscriptionInputSchema)
     .mutation(async ({ ctx, input }) => {
-      const stripe = await getStripeAdapter();
       const user = ctx.user;
 
       if (!user?.stripeCustomerId) {
@@ -574,6 +647,8 @@ export const billingRouter = createTRPCRouter({
           message: 'No billing account found.',
         });
       }
+
+      const stripe = await getStripeAdapter();
 
       // Get current subscription
       const subsResult = await stripe.listSubscriptions(user.stripeCustomerId);
@@ -596,10 +671,11 @@ export const billingRouter = createTRPCRouter({
         });
       }
 
-      const updateParams: { priceId?: string; quantity?: number; cancel_at_period_end?: boolean } = {
-        priceId: input.priceId,
-        quantity: input.quantity,
-      };
+      const updateParams: { priceId?: string; quantity?: number; cancel_at_period_end?: boolean } =
+        {
+          priceId: input.priceId,
+          quantity: input.quantity,
+        };
       if (input.cancelAtPeriodEnd !== undefined) {
         updateParams.cancel_at_period_end = input.cancelAtPeriodEnd;
       }
@@ -616,7 +692,8 @@ export const billingRouter = createTRPCRouter({
       // IFC-211: Sync modules after plan change
       if (user.tenantId && input.priceId) {
         try {
-          const moduleAccess = ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
+          const moduleAccess =
+            ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
           if (moduleAccess) {
             // Map Stripe priceId to PlanTier (lookup from workspace or metadata)
             const plan = await moduleAccess.getTenantPlan(user.tenantId);
@@ -628,6 +705,7 @@ export const billingRouter = createTRPCRouter({
         }
       }
 
+      invalidateBillingCache(user.stripeCustomerId);
       return result.value;
     }),
 
@@ -637,7 +715,6 @@ export const billingRouter = createTRPCRouter({
   cancelSubscription: protectedProcedure
     .input(cancelSubscriptionInputSchema)
     .mutation(async ({ ctx, input }) => {
-      const stripe = await getStripeAdapter();
       const user = ctx.user;
 
       if (!user?.stripeCustomerId) {
@@ -646,6 +723,8 @@ export const billingRouter = createTRPCRouter({
           message: 'No billing account found.',
         });
       }
+
+      const stripe = await getStripeAdapter();
 
       // Get current subscription
       const subsResult = await stripe.listSubscriptions(user.stripeCustomerId);
@@ -677,14 +756,12 @@ export const billingRouter = createTRPCRouter({
         });
       }
 
+      invalidateBillingCache(user.stripeCustomerId);
       return result.value;
     }),
 
   /**
    * Get upcoming invoice (proration preview)
-   *
-   * Note: This requires extending StripeAdapter with retrieveUpcomingInvoice.
-   * For now, returns a placeholder response.
    */
   getUpcomingInvoice: protectedProcedure
     .input(getUpcomingInvoiceInputSchema)
@@ -695,13 +772,18 @@ export const billingRouter = createTRPCRouter({
         return null;
       }
 
-      // Placeholder - would need to extend StripeAdapter
-      return {
-        amountDue: 0,
-        currency: 'gbp',
-        prorationDate: new Date(),
-        invoiceItems: [],
-      };
+      const stripe = await getStripeAdapter();
+      const result = await (stripe as any).retrieveUpcomingInvoice(user.stripeCustomerId);
+
+      if (result.isFailure) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: result.error.message,
+        });
+      }
+
+      // null means no upcoming invoice (e.g. no active subscription)
+      return result.value;
     }),
 
   /**
@@ -790,7 +872,7 @@ export const billingRouter = createTRPCRouter({
    * Get billing information from Stripe customer
    *
    * Returns customer name, email, and billing address from the
-   * default payment method.
+   * default payment method. Uses server-side cache.
    */
   getBillingInformation: protectedProcedure.query(async ({ ctx }) => {
     const user = ctx.user;
@@ -798,6 +880,12 @@ export const billingRouter = createTRPCRouter({
     if (!user?.stripeCustomerId) {
       return null;
     }
+
+    const cacheKey = `${user.stripeCustomerId}:billingInfo`;
+    const cached = getCached<{ organization: string | null; email: string; address: any }>(
+      cacheKey
+    );
+    if (cached !== undefined) return cached;
 
     try {
       const stripe = await getStripeAdapter();
@@ -833,11 +921,14 @@ export const billingRouter = createTRPCRouter({
         }
       }
 
-      return {
+      const data = {
         organization: customer.name ?? null,
         email: customer.email ?? '',
         address,
       };
+
+      setCache(cacheKey, data);
+      return data;
     } catch (error) {
       if (error instanceof TRPCError) {
         throw error;
@@ -887,6 +978,7 @@ export const billingRouter = createTRPCRouter({
           }
         }
 
+        invalidateBillingCache(user.stripeCustomerId);
         return { success: true };
       } catch (error) {
         if (error instanceof TRPCError) {
@@ -983,12 +1075,138 @@ export const billingRouter = createTRPCRouter({
 
       const subscription = subscriptionResult.value;
 
+      invalidateBillingCache(customerId);
+
       return {
         subscriptionId: subscription.id,
-        status: subscription.status as 'active' | 'incomplete' | 'past_due' | 'canceled' | 'trialing' | 'unpaid',
+        status: subscription.status as
+          | 'active'
+          | 'incomplete'
+          | 'past_due'
+          | 'canceled'
+          | 'trialing'
+          | 'unpaid',
         clientSecret: subscription.latestInvoicePaymentIntentClientSecret ?? null,
         currentPeriodEnd: new Date(subscription.currentPeriodEnd).toISOString(),
       };
+    }),
+
+  /**
+   * Send a receipt email to a customer
+   *
+   * Looks up the invoice by ID, verifies ownership, and sends a receipt
+   * email via the outbound email infrastructure.
+   *
+   * @implements PG-031 (Receipts)
+   */
+  sendReceiptEmail: protectedProcedure
+    .input(
+      z.object({
+        receiptId: z.string().min(1, 'Receipt ID is required'),
+        email: z.string().email('Invalid email address').optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const user = ctx.user;
+
+      if (!user?.stripeCustomerId) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'No billing account found.',
+        });
+      }
+
+      const stripe = await getStripeAdapter();
+
+      // Fetch the invoice to verify ownership and get details
+      const invoiceResult = await stripe.getInvoice(input.receiptId);
+
+      if (invoiceResult.isFailure || !invoiceResult.value) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Receipt not found.',
+        });
+      }
+
+      const invoice = invoiceResult.value;
+
+      // Ownership check — prevent cross-tenant access
+      if (invoice.customerId !== user.stripeCustomerId) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to send this receipt.',
+        });
+      }
+
+      const recipientEmail = input.email || invoice.customerEmail || user.email;
+
+      if (!recipientEmail) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'No email address available for receipt delivery.',
+        });
+      }
+
+      // Build email content
+      const receiptNumber = invoice.number || input.receiptId;
+      const amountFormatted = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: invoice.currency.toUpperCase(),
+      }).format(invoice.amountPaid / 100);
+
+      const subject = `Your Receipt ${receiptNumber} from IntelliFlow`;
+      const textBody = [
+        `Receipt: ${receiptNumber}`,
+        `Amount: ${amountFormatted}`,
+        `Status: ${invoice.status}`,
+        invoice.paidAt ? `Paid: ${invoice.paidAt.toLocaleDateString()}` : '',
+        invoice.hostedInvoiceUrl ? `\nView receipt: ${invoice.hostedInvoiceUrl}` : '',
+      ]
+        .filter(Boolean)
+        .join('\n');
+      const htmlBody = `
+        <p><strong>Receipt:</strong> ${receiptNumber}</p>
+        <p><strong>Amount:</strong> ${amountFormatted}</p>
+        <p><strong>Status:</strong> ${invoice.status}</p>
+        ${invoice.paidAt ? `<p><strong>Paid:</strong> ${invoice.paidAt.toLocaleDateString()}</p>` : ''}
+        ${invoice.hostedInvoiceUrl ? `<p><a href="${invoice.hostedInvoiceUrl}">View receipt online</a></p>` : ''}
+      `;
+
+      try {
+        const { createEmailServiceAdapter } =
+          (await import('@intelliflow/adapters')) as typeof import('@intelliflow/adapters');
+
+        const emailAdapter = createEmailServiceAdapter({
+          sendgridApiKey: process.env.SENDGRID_API_KEY,
+        });
+
+        const fromEmail = process.env.BILLING_FROM_EMAIL || 'billing@intelliflow.app';
+
+        const sendResult = await emailAdapter.sendEmail({
+          from: { email: fromEmail, name: 'IntelliFlow Billing' },
+          recipients: [{ email: recipientEmail, type: 'to' }],
+          subject,
+          textBody,
+          htmlBody,
+          tags: ['receipt', 'billing'],
+          metadata: { invoiceId: input.receiptId, userId: user.userId },
+        });
+
+        if (sendResult.isFailure) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: sendResult.error?.message || 'Failed to send receipt email.',
+          });
+        }
+
+        return { success: true, messageId: sendResult.value.messageId };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to send receipt email. Please try again.',
+        });
+      }
     }),
 
   /**
@@ -997,6 +1215,7 @@ export const billingRouter = createTRPCRouter({
    *
    * In production, this would verify the Stripe signature.
    * Called by Stripe webhook endpoint.
+   * Also invalidates the billing cache so users see fresh data.
    */
   handleSubscriptionWebhook: publicProcedure
     .input(
@@ -1023,7 +1242,15 @@ export const billingRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (input.type !== 'customer.subscription.updated' && input.type !== 'customer.subscription.created') {
+      const customerId = input.data.object.customer;
+
+      // Invalidate cache for this customer on any billing event
+      invalidateBillingCache(customerId);
+
+      if (
+        input.type !== 'customer.subscription.updated' &&
+        input.type !== 'customer.subscription.created'
+      ) {
         return { handled: false };
       }
 
@@ -1048,10 +1275,14 @@ export const billingRouter = createTRPCRouter({
 
       // Sync modules for the tenant
       try {
-        const moduleAccess = ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
+        const moduleAccess =
+          ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
         if (moduleAccess) {
           const enabledModules = await moduleAccess.syncModulesToPlan(tenantId, planTier);
-          console.log(`[Billing Webhook] Synced modules for tenant ${tenantId} to plan ${planTier}:`, enabledModules);
+          console.log(
+            `[Billing Webhook] Synced modules for tenant ${tenantId} to plan ${planTier}:`,
+            enabledModules
+          );
           return { handled: true, enabledModules };
         }
       } catch (err) {

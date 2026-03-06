@@ -335,7 +335,7 @@ describe('Contact Router Contract Tests', () => {
         value: createMockDomainContact(),
       });
 
-      prismaMock.contact.findUnique.mockResolvedValue(mockContact as never);
+      prismaMock.contact.findFirst.mockResolvedValue(mockContact as never);
 
       const result = await caller.getByEmail({ email: 'contact@example.com' });
 

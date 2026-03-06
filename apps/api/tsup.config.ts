@@ -3,6 +3,7 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: ['src/index.ts'],
   format: ['cjs', 'esm'],
+  tsconfig: 'tsconfig.build.json',
   dts: true, // Required for tRPC type exports - api-client depends on AppRouter type
   clean: true,
   external: [
@@ -23,6 +24,7 @@ export default defineConfig({
     '@opentelemetry/semantic-conventions',
     '@sentry/node',
     '@supabase/supabase-js',
+    'ioredis',
     'zod',
   ],
 });

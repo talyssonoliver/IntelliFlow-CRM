@@ -367,8 +367,8 @@ export const accountRouter = createTRPCRouter({
     ]);
 
     return {
-      total,
-      byIndustry: byIndustry.reduce(
+      total: total ?? 0,
+      byIndustry: (byIndustry ?? []).reduce(
         (acc, item) => {
           if (item.industry) {
             acc[item.industry] = item._count;
@@ -377,10 +377,10 @@ export const accountRouter = createTRPCRouter({
         },
         {} as Record<string, number>
       ),
-      withContacts,
-      withoutContacts: total - withContacts,
-      withOpportunities,
-      totalRevenue: totalRevenue._sum.revenue?.toString() || '0',
+      withContacts: withContacts ?? 0,
+      withoutContacts: (total ?? 0) - (withContacts ?? 0),
+      withOpportunities: withOpportunities ?? 0,
+      totalRevenue: totalRevenue?._sum?.revenue?.toString() || '0',
     };
   }),
 
@@ -439,7 +439,7 @@ export const accountRouter = createTRPCRouter({
       ]);
 
       // Get owner names for display
-      const ownerIds = ownerCounts.map((o) => o.ownerId).filter(Boolean) as string[];
+      const ownerIds = (ownerCounts ?? []).map((o) => o.ownerId).filter(Boolean) as string[];
       const owners =
         ownerIds.length > 0
           ? await ctx.prisma.user.findMany({
@@ -450,14 +450,14 @@ export const accountRouter = createTRPCRouter({
       const ownerMap = new Map(owners.map((o) => [o.id, o.name || o.email]));
 
       return {
-        industries: industryCounts
+        industries: (industryCounts ?? [])
           .filter((i) => i.industry)
           .map((i) => ({
             value: i.industry as string,
             label: i.industry as string,
             count: i._count,
           })),
-        owners: ownerCounts
+        owners: (ownerCounts ?? [])
           .filter((o) => o.ownerId)
           .map((o) => ({
             value: o.ownerId as string,

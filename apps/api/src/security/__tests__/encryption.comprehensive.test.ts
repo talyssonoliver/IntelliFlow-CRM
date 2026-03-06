@@ -304,10 +304,12 @@ describe('VaultKeyProvider Extended Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFetch.mockReset();
+    process.env.VAULT_LOCAL_DEK_SECRET = 'test-vault-dek-secret-for-unit-tests';
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    process.env = { ...originalEnv };
   });
 
   describe('getKeyMetadata', () => {

@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@intelliflow/db';
 import type { Context } from '../../context';
 
 /**
@@ -647,50 +647,14 @@ describe('RateLimitMiddleware', () => {
       expect(typeof limiter.checkLimit).toBe('function');
     });
 
-    it('should return true for all requests (placeholder)', async () => {
+    it('should require REDIS_URL to be configured', async () => {
       const { RedisRateLimiter } = await import('../rate-limit.js');
-      const limiter = new RedisRateLimiter();
-      const result = await limiter.checkLimit('test-key', 10, 60000);
-      expect(result).toBe(true);
-    });
-
-    it('should accept various key formats', async () => {
-      const { RedisRateLimiter } = await import('../rate-limit.js');
+      delete process.env.REDIS_URL;
       const limiter = new RedisRateLimiter();
 
-      const results = await Promise.all([
-        limiter.checkLimit('user-123', 10, 60000),
-        limiter.checkLimit('ip:192.168.1.1', 10, 60000),
-        limiter.checkLimit('api:endpoint:user-456', 10, 60000),
-      ]);
-
-      expect(results).toEqual([true, true, true]);
-    });
-
-    it('should handle different limit values', async () => {
-      const { RedisRateLimiter } = await import('../rate-limit.js');
-      const limiter = new RedisRateLimiter();
-
-      const results = await Promise.all([
-        limiter.checkLimit('key1', 1, 60000),
-        limiter.checkLimit('key2', 100, 60000),
-        limiter.checkLimit('key3', 10000, 60000),
-      ]);
-
-      expect(results).toEqual([true, true, true]);
-    });
-
-    it('should handle different window sizes', async () => {
-      const { RedisRateLimiter } = await import('../rate-limit.js');
-      const limiter = new RedisRateLimiter();
-
-      const results = await Promise.all([
-        limiter.checkLimit('key1', 10, 1000), // 1 second
-        limiter.checkLimit('key2', 10, 60000), // 1 minute
-        limiter.checkLimit('key3', 10, 3600000), // 1 hour
-      ]);
-
-      expect(results).toEqual([true, true, true]);
+      await expect(limiter.checkLimit('test-key', 10, 60000)).rejects.toThrow(
+        'REDIS_URL environment variable is required'
+      );
     });
   });
 

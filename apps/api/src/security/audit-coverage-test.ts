@@ -168,7 +168,7 @@ describe('Audit Logger', () => {
       await auditLogger.logLoginSuccess(TEST_TENANT_ID, {
         userId: 'user-1',
         email: 'test@example.com',
-        ipAddress: '192.168.1.1',
+        ipAddress: '192.168.1.1', // NOSONAR: fake IP address used as test fixture — not production configuration
         userAgent: 'Mozilla/5.0',
         mfaUsed: true,
       });
@@ -186,7 +186,7 @@ describe('Audit Logger', () => {
     it('should log failed login', async () => {
       await auditLogger.logLoginFailure(TEST_TENANT_ID, {
         email: 'test@example.com',
-        ipAddress: '192.168.1.1',
+        ipAddress: '192.168.1.1', // NOSONAR: fake IP address used as test fixture — not production configuration
         failureReason: 'Invalid password',
       });
 
@@ -242,7 +242,7 @@ describe('Audit Logger', () => {
       const id = await auditLogger.logAction('CREATE', 'lead', 'lead-123', TEST_TENANT_ID, {
         actorId: 'user-1',
         requestContext: {
-          ipAddress: '192.168.1.100',
+          ipAddress: '192.168.1.100', // NOSONAR: fake IP address used as test fixture — not production configuration
           userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
           requestId: 'req-12345',
           traceId: 'trace-67890',
@@ -253,7 +253,7 @@ describe('Audit Logger', () => {
       expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            ipAddress: '192.168.1.100',
+            ipAddress: '192.168.1.100', // NOSONAR: fake IP address used as test fixture — not production configuration
             userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
           }),
         })

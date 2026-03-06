@@ -32,7 +32,8 @@ interface WindowState {
 
 interface MiddlewareOpts {
   ctx: Context;
-  next: (opts?: { ctx: unknown }) => Promise<unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  next: (opts?: { ctx: unknown }) => Promise<any>;
 }
 
 // ---------------------------------------------------------------------------
@@ -184,12 +185,48 @@ export function createAuthEndpointRateLimitMiddleware() {
 }
 
 // ---------------------------------------------------------------------------
-// RedisRateLimiter — placeholder for future distributed implementation
+// RedisRateLimiter — sliding-window rate limiting via Redis INCR/PEXPIRE
 // ---------------------------------------------------------------------------
 
 export class RedisRateLimiter {
-  async checkLimit(_key: string, _limit: number, _windowMs: number): Promise<boolean> {
-    return true;
+  private redis: {
+    incr(key: string): Promise<number>;
+    pexpire(key: string, ms: number): Promise<number>;
+    connect(): Promise<void>;
+  } | null = null;
+  private connectionAttempted = false;
+
+  private async getRedis(): Promise<NonNullable<RedisRateLimiter['redis']>> {
+    if (this.redis) return this.redis;
+
+    const url = process.env.REDIS_URL;
+    if (!url) {
+      throw new Error('REDIS_URL environment variable is required for distributed rate limiting');
+    }
+
+    if (!this.connectionAttempted) {
+      this.connectionAttempted = true;
+      // Dynamic import — ioredis is only required when REDIS_URL is configured
+      const { Redis } = await import('ioredis');
+      const redis = new Redis(url, { lazyConnect: true, maxRetriesPerRequest: 1 });
+      await redis.connect();
+      this.redis = redis;
+    }
+
+    if (!this.redis) {
+      throw new Error('Redis connection failed');
+    }
+    return this.redis;
+  }
+
+  async checkLimit(key: string, limit: number, windowMs: number): Promise<boolean> {
+    const redis = await this.getRedis();
+    const windowKey = `rl:${key}:${Math.floor(Date.now() / windowMs)}`;
+    const count = await redis.incr(windowKey);
+    if (count === 1) {
+      await redis.pexpire(windowKey, windowMs);
+    }
+    return count <= limit;
   }
 }
 

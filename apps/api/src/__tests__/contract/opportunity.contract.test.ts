@@ -11,7 +11,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { z } from 'zod';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@intelliflow/db';
 import { opportunityRouter } from '../../modules/opportunity/opportunity.router';
 import {
   prismaMock,
@@ -53,7 +53,8 @@ const opportunityListResponseSchema = z.object({
 const opportunityStatsResponseSchema = z.object({
   total: z.number().int().min(0),
   byStage: z.record(
-    z.string(), z.object({
+    z.string(),
+    z.object({
       count: z.number().int().min(0),
       totalValue: z.string(),
     })
@@ -510,16 +511,17 @@ describe('Opportunity Router Contract Tests', () => {
   describe('stats - Contract', () => {
     it('should return stats matching contract', async () => {
       prismaMock.opportunity.count.mockResolvedValue(50);
-      vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue([
+      (prismaMock.opportunity.groupBy as any).mockResolvedValue([
         { stage: 'PROPOSAL', _count: 15, _sum: { value: new Prisma.Decimal(500000) } },
         { stage: 'NEGOTIATION', _count: 10, _sum: { value: new Prisma.Decimal(300000) } },
-      ] as any);
-      prismaMock.opportunity.aggregate.mockResolvedValueOnce({
-        _sum: { value: new Prisma.Decimal(2000000) },
-      } as any);
-      prismaMock.opportunity.aggregate.mockResolvedValueOnce({
-        _avg: { probability: 65.5 },
-      } as any);
+      ]);
+      (prismaMock.opportunity.aggregate as any).mockImplementation(
+        (args: { _sum?: unknown; _avg?: unknown }) => {
+          if (args._sum) return Promise.resolve({ _sum: { value: new Prisma.Decimal(2000000) } });
+          if (args._avg) return Promise.resolve({ _avg: { probability: 65.5 } });
+          return Promise.resolve({});
+        }
+      );
 
       const result = await caller.stats();
 
@@ -534,13 +536,14 @@ describe('Opportunity Router Contract Tests', () => {
 
     it('should return totalValue as string', async () => {
       prismaMock.opportunity.count.mockResolvedValue(10);
-      vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue([]);
-      prismaMock.opportunity.aggregate.mockResolvedValueOnce({
-        _sum: { value: new Prisma.Decimal(1000000) },
-      } as any);
-      prismaMock.opportunity.aggregate.mockResolvedValueOnce({
-        _avg: { probability: 50 },
-      } as any);
+      (prismaMock.opportunity.groupBy as any).mockResolvedValue([]);
+      (prismaMock.opportunity.aggregate as any).mockImplementation(
+        (args: { _sum?: unknown; _avg?: unknown }) => {
+          if (args._sum) return Promise.resolve({ _sum: { value: new Prisma.Decimal(1000000) } });
+          if (args._avg) return Promise.resolve({ _avg: { probability: 50 } });
+          return Promise.resolve({});
+        }
+      );
 
       const result = await caller.stats();
 
@@ -549,13 +552,14 @@ describe('Opportunity Router Contract Tests', () => {
 
     it('should handle zero values correctly', async () => {
       prismaMock.opportunity.count.mockResolvedValue(0);
-      vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue([]);
-      prismaMock.opportunity.aggregate.mockResolvedValueOnce({
-        _sum: { value: null },
-      } as any);
-      prismaMock.opportunity.aggregate.mockResolvedValueOnce({
-        _avg: { probability: null },
-      } as any);
+      (prismaMock.opportunity.groupBy as any).mockResolvedValue([]);
+      (prismaMock.opportunity.aggregate as any).mockImplementation(
+        (args: { _sum?: unknown; _avg?: unknown }) => {
+          if (args._sum) return Promise.resolve({ _sum: { value: null } });
+          if (args._avg) return Promise.resolve({ _avg: { probability: null } });
+          return Promise.resolve({});
+        }
+      );
 
       const result = await caller.stats();
 

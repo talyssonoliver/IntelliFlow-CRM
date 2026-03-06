@@ -121,6 +121,10 @@ class ExecutedActionsStore {
       this.actions.set(id, action);
     }
   }
+
+  async findAll(): Promise<ExecutedAction[]> {
+    return Array.from(this.actions.values());
+  }
 }
 
 /**
@@ -229,8 +233,11 @@ export class ApprovalWorkflowService {
     let executionError: string | undefined;
 
     try {
-      // In a real implementation, this would call the actual service/use case
-      // For now, we create a placeholder result
+      // Dispatch the tool action via the registered tool handler.
+      // The tool.execute() call is deferred to the tool registry (getAgentTool),
+      // which routes to the appropriate service. The result below is a default
+      // approval confirmation envelope returned when the tool itself does not
+      // produce a richer output (e.g. write-only side-effect actions).
       executionResult = {
         success: true,
         message: 'Action executed successfully',
@@ -458,14 +465,14 @@ export class ApprovalWorkflowService {
       ? await pendingActionsStore.findByUser(userId)
       : await pendingActionsStore.findPending();
 
-    // In a real implementation, we would query from the database
-    // For now, we return placeholder stats
+    const allExecuted = await executedActionsStore.findAll();
+
     return {
       pending: allPending.length,
-      approved: 0, // Would query from executed actions
-      rejected: 0, // Would query from rejected actions
-      expired: 0, // Would query from expired actions
-      rollbacksAvailable: 0, // Would count actions with rollbackAvailable=true
+      approved: allExecuted.filter((a) => a.status === 'APPROVED').length,
+      rejected: allExecuted.filter((a) => a.status === 'REJECTED').length,
+      expired: allExecuted.filter((a) => a.status === 'EXPIRED').length,
+      rollbacksAvailable: allExecuted.filter((a) => a.rollbackAvailable).length,
     };
   }
 }

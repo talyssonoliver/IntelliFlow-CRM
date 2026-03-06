@@ -54,4 +54,3 @@ export async function wrapExternalServiceCallWithTimeout<T>(
 export async function callStripeAPI<T>(apiCall: () => Promise<T>): Promise<T> {
   return wrapExternalServiceCallWithTimeout(apiCall, 'Stripe', 10000);
 }
-

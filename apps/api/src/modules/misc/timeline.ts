@@ -14,7 +14,7 @@
  * @kpi Response time <1s
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@intelliflow/db';
 import {
   TimelineEvent,
   TimelineEventType,
@@ -370,8 +370,8 @@ export class TimelineCommunicationService {
 
     // First get documents for this case
     const documentWhere: any = {
-      related_case_id: caseId,
-      deleted_at: null,
+      relatedCaseId: caseId,
+      deletedAt: null,
     };
 
     if (documentId) {
@@ -389,13 +389,13 @@ export class TimelineCommunicationService {
 
     // Build audit log where clause
     const auditWhere: any = {
-      document_id: { in: documents.map((d) => d.id) },
+      documentId: { in: documents.map((d) => d.id) },
     };
 
     if (fromDate || toDate) {
-      auditWhere.created_at = {};
-      if (fromDate) auditWhere.created_at.gte = fromDate;
-      if (toDate) auditWhere.created_at.lte = toDate;
+      auditWhere.createdAt = {};
+      if (fromDate) auditWhere.createdAt.gte = fromDate;
+      if (toDate) auditWhere.createdAt.lte = toDate;
     }
 
     const auditLogs = await this.prisma.caseDocumentAudit.findMany({
@@ -405,35 +405,35 @@ export class TimelineCommunicationService {
           select: {
             id: true,
             title: true,
-            version_major: true,
-            version_minor: true,
-            version_patch: true,
-            mime_type: true,
+            versionMajor: true,
+            versionMinor: true,
+            versionPatch: true,
+            mimeType: true,
           },
         },
       },
-      orderBy: { created_at: sortOrder },
+      orderBy: { createdAt: sortOrder },
       take: limit,
     });
 
     return auditLogs.map((log) => {
-      // Determine event type based on audit event_type
+      // Determine event type based on audit eventType
       let eventType: (typeof TimelineEventType)[keyof typeof TimelineEventType] =
         TimelineEventType.DOCUMENT;
-      if (log.event_type?.includes('VERSION') || log.event_type?.includes('UPDATED')) {
+      if (log.eventType?.includes('VERSION') || log.eventType?.includes('UPDATED')) {
         eventType = TimelineEventType.DOCUMENT_VERSION;
       }
 
       const version = log.document
-        ? `${log.document.version_major}.${log.document.version_minor}.${log.document.version_patch}`
+        ? `${log.document.versionMajor}.${log.document.versionMinor}.${log.document.versionPatch}`
         : null;
 
       return {
         id: `doc-audit-${log.id}`,
         type: eventType,
-        title: `${log.event_type}: ${log.document?.title || 'Document'}`,
+        title: `${log.eventType}: ${log.document?.title || 'Document'}`,
         description: null,
-        timestamp: log.created_at,
+        timestamp: log.createdAt,
         priority: null,
         entityType: 'document_audit',
         entityId: log.id,
@@ -441,22 +441,22 @@ export class TimelineCommunicationService {
           ? {
               documentId: log.document.id,
               filename: log.document.title,
-              version: log.document.version_major,
-              mimeType: log.document.mime_type,
+              version: log.document.versionMajor,
+              mimeType: log.document.mimeType,
             }
           : null,
         actor: {
-          id: log.user_id,
+          id: log.userId,
           name: null,
           email: null,
           avatarUrl: null,
           isAgent: false,
         },
         metadata: {
-          eventType: log.event_type,
+          eventType: log.eventType,
           changes: log.changes,
-          ipAddress: log.ip_address,
-          userAgent: log.user_agent,
+          ipAddress: log.ipAddress,
+          userAgent: log.userAgent,
           version,
         },
         isOverdue: false,

@@ -44,9 +44,7 @@ describe('Opportunity Router - Won Closure (IFC-065)', () => {
       const ctx = createTestContext();
       const mockOpp = createMockDomainOpportunity();
 
-      ctx.services!.closeDealWon!.execute = vi.fn().mockResolvedValue(
-        Result.ok(mockOpp)
-      );
+      ctx.services!.closeDealWon!.execute = vi.fn().mockResolvedValue(Result.ok(mockOpp));
 
       const caller = opportunityRouter.createCaller(ctx);
       const result = await caller.moveStage({
@@ -67,9 +65,15 @@ describe('Opportunity Router - Won Closure (IFC-065)', () => {
     it('from non-NEGOTIATION stage should return BAD_REQUEST', async () => {
       const ctx = createTestContext();
 
-      ctx.services!.closeDealWon!.execute = vi.fn().mockResolvedValue(
-        Result.fail(new ValidationError('Cannot mark opportunity as won from stage PROSPECTING. Must be in NEGOTIATION stage.'))
-      );
+      ctx.services!.closeDealWon!.execute = vi
+        .fn()
+        .mockResolvedValue(
+          Result.fail(
+            new ValidationError(
+              'Cannot mark opportunity as won from stage PROSPECTING. Must be in NEGOTIATION stage.'
+            )
+          )
+        );
 
       const caller = opportunityRouter.createCaller(ctx);
       await expect(
@@ -83,9 +87,11 @@ describe('Opportunity Router - Won Closure (IFC-065)', () => {
     it('for non-existent opportunity should return NOT_FOUND', async () => {
       const ctx = createTestContext();
 
-      ctx.services!.closeDealWon!.execute = vi.fn().mockResolvedValue(
-        Result.fail(new NotFoundError(`Opportunity not found: ${TEST_UUIDS.nonExistent}`))
-      );
+      ctx.services!.closeDealWon!.execute = vi
+        .fn()
+        .mockResolvedValue(
+          Result.fail(new NotFoundError(`Opportunity not found: ${TEST_UUIDS.nonExistent}`))
+        );
 
       const caller = opportunityRouter.createCaller(ctx);
       await expect(
@@ -100,9 +106,7 @@ describe('Opportunity Router - Won Closure (IFC-065)', () => {
       const ctx = createTestContext();
       const mockOpp = createMockDomainOpportunity();
 
-      ctx.services!.closeDealWon!.execute = vi.fn().mockResolvedValue(
-        Result.ok(mockOpp)
-      );
+      ctx.services!.closeDealWon!.execute = vi.fn().mockResolvedValue(Result.ok(mockOpp));
 
       const caller = opportunityRouter.createCaller(ctx);
       await caller.moveStage({
@@ -110,7 +114,8 @@ describe('Opportunity Router - Won Closure (IFC-065)', () => {
         targetStage: 'CLOSED_WON',
       });
 
-      const executeCall = (ctx.services!.closeDealWon!.execute as ReturnType<typeof vi.fn>).mock.calls[0][0];
+      const executeCall = (ctx.services!.closeDealWon!.execute as ReturnType<typeof vi.fn>).mock
+        .calls[0][0];
       expect(executeCall.closedBy).toBe(TEST_UUIDS.user1);
     });
 

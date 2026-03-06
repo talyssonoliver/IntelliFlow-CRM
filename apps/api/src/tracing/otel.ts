@@ -23,7 +23,7 @@
 
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import { Resource } from '@opentelemetry/resources';
+import { resourceFromAttributes } from '@opentelemetry/resources';
 import {
   ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
   ATTR_SERVICE_NAME,
@@ -85,13 +85,16 @@ export function initializeOpenTelemetry(): NodeSDK | null {
     return null;
   }
 
-  // Enable debug logging in development
-  if (config.environment === 'development') {
-    diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.INFO);
+  // In development without a custom OTLP endpoint, use console traces
+  // and disable metrics to avoid ECONNREFUSED on localhost:4318
+  if (config.environment === 'development' && !process.env.OTEL_EXPORTER_OTLP_ENDPOINT) {
+    process.env.OTEL_TRACES_EXPORTER = process.env.OTEL_TRACES_EXPORTER ?? 'console';
+    process.env.OTEL_METRICS_EXPORTER = process.env.OTEL_METRICS_EXPORTER ?? 'none';
+    process.env.OTEL_LOGS_EXPORTER = process.env.OTEL_LOGS_EXPORTER ?? 'none';
   }
 
   // Define service resource attributes
-  const resource = new Resource({
+  const resource = resourceFromAttributes({
     [ATTR_SERVICE_NAME]: config.serviceName,
     [ATTR_SERVICE_VERSION]: config.serviceVersion,
     [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]: config.environment,

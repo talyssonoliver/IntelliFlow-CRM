@@ -78,9 +78,7 @@ describe('ticketRouter - search (IFC-205)', () => {
   });
 
   it('should pass search parameter to TicketService.findMany', async () => {
-    const caller = ticketRouter.createCaller(
-      createMockContext() as unknown as Parameters<typeof ticketRouter.createCaller>[0]
-    );
+    const caller = ticketRouter.createCaller(createMockContext() as any);
 
     await caller.list({ search: 'login problem' });
 
@@ -93,9 +91,7 @@ describe('ticketRouter - search (IFC-205)', () => {
   });
 
   it('should combine search with pagination', async () => {
-    const caller = ticketRouter.createCaller(
-      createMockContext() as unknown as Parameters<typeof ticketRouter.createCaller>[0]
-    );
+    const caller = ticketRouter.createCaller(createMockContext() as any);
 
     await caller.list({ search: 'urgent', page: 2, limit: 10 });
 
@@ -109,9 +105,7 @@ describe('ticketRouter - search (IFC-205)', () => {
   });
 
   it('should handle empty search string gracefully', async () => {
-    const caller = ticketRouter.createCaller(
-      createMockContext() as unknown as Parameters<typeof ticketRouter.createCaller>[0]
-    );
+    const caller = ticketRouter.createCaller(createMockContext() as any);
 
     await expect(caller.list({ search: '' })).resolves.toBeDefined();
   });

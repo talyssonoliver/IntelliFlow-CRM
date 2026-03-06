@@ -24,17 +24,14 @@ export default defineConfig({
     unstubGlobals: true,
     unstubEnvs: true,
 
-    // Use forks pool for better memory isolation
     pool: 'forks',
-    isolate: true,
 
-    // Memory management - control heap size per worker
     execArgv: ['--max-old-space-size=4096', '--expose-gc'],
     maxWorkers: 4,
     minWorkers: 1,
 
-    // Prevent hanging
-    forceExit: true,
+    // Prevent hanging (disabled during coverage runs to allow Istanbul to write output)
+    forceExit: process.env['COVERAGE_RUN'] !== '1',
 
     // Disable caching to prevent stale state accumulation
     cache: false,
@@ -60,7 +57,7 @@ export default defineConfig({
     },
 
     coverage: {
-      provider: 'v8',
+      provider: 'istanbul',
       reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/**',

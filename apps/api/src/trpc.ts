@@ -108,8 +108,7 @@ const isAuthed = t.middleware(({ ctx, next }) => {
 // Rate limit middleware for authenticated endpoints (1000 req/min per user)
 const _rateLimitFn = createAuthenticatedRateLimitMiddleware();
 const rateLimitMiddleware = t.middleware(async (opts) => {
-  await _rateLimitFn({ ctx: opts.ctx, next: async () => {} });
-  return opts.next();
+  return _rateLimitFn({ ctx: opts.ctx, next: opts.next });
 });
 
 export const protectedProcedure = t.procedure

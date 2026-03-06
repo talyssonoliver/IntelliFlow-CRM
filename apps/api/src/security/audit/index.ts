@@ -5,7 +5,7 @@
  * Refactored from monolithic audit-logger.ts into modular components.
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@intelliflow/db';
 import { AuditLogger } from './audit-logger';
 
 export { AuditLogger } from './audit-logger';

@@ -27,7 +27,10 @@ const webhookPayloadSchema = z.object({
   sourceName: z.string().min(1).max(100),
   rawBody: z.string(),
   headers: z.record(z.string(), z.string()),
-  ip: z.string().regex(/^(\d{1,3}\.){3}\d{1,3}$|^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/).optional(),
+  ip: z
+    .string()
+    .regex(/^(\d{1,3}\.){3}\d{1,3}$|^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/)
+    .optional(),
 });
 
 const registerSourceSchema = z.object({

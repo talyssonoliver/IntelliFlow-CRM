@@ -14,7 +14,7 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@intelliflow/db';
 import { Context } from '../context';
 
 /**
@@ -116,7 +116,7 @@ export function createTenantScopedPrisma(
         },
       },
     },
-  }) as unknown as PrismaClient;
+  }) as PrismaClient;
 }
 
 /**

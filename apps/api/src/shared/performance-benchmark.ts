@@ -44,8 +44,7 @@ interface BenchmarkResult {
 async function runIteration<T>(fn: () => Promise<T>): Promise<number> {
   const start = performance.now();
   await fn();
-  const end = performance.now();
-  return end - start;
+  return performance.now() - start;
 }
 
 /**
@@ -181,34 +180,6 @@ async function runBenchmarks() {
       100
     );
     results.push(systemVersionResult);
-
-    // Note: Database operations benchmarks would require test data
-    // These are commented out to avoid requiring a running database
-    // Uncomment when running against a test database with seed data
-
-    /*
-    // Benchmark 5: Lead stats
-    const leadStatsResult = await benchmark(
-      'lead.stats',
-      async () => {
-        await caller.lead.stats();
-      },
-      50
-    );
-    results.push(leadStatsResult);
-    */
-
-    /*
-    // Benchmark 6: Lead list (with pagination)
-    const leadListResult = await benchmark(
-      'lead.list',
-      async () => {
-        await caller.lead.list({ page: 1, limit: 20 });
-      },
-      50
-    );
-    results.push(leadListResult);
-    */
 
     // Print summary
     console.log('\n═══════════════════════════════════════════');

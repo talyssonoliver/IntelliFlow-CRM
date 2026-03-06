@@ -92,9 +92,18 @@ export interface KeyProvider {
  */
 export class EnvironmentKeyProvider implements KeyProvider {
   private keyCache: Map<number, Buffer> = new Map();
-  private currentVersion = 1;
+  private currentVersion: number;
 
-  constructor(private masterKeyEnvVar: string = 'ENCRYPTION_MASTER_KEY') {}
+  constructor(
+    private masterKeyEnvVar: string = 'ENCRYPTION_MASTER_KEY',
+    initialVersion: number = 1
+  ) {
+    this.currentVersion = initialVersion;
+  }
+
+  setKeyVersion(version: number): void {
+    this.currentVersion = version;
+  }
 
   async getCurrentKey(): Promise<Buffer> {
     return this.getKeyByVersion(this.currentVersion);
@@ -142,18 +151,29 @@ export class VaultKeyProvider implements KeyProvider {
   private vaultAddress: string;
   private vaultToken: string;
   private keyName: string;
-  private currentVersion = 1;
+  private currentVersion: number;
 
-  constructor(options?: { address?: string; token?: string; keyName?: string }) {
+  constructor(options?: {
+    address?: string;
+    token?: string;
+    keyName?: string;
+    initialVersion?: number;
+  }) {
     this.vaultAddress = options?.address || process.env.VAULT_ADDR || 'http://127.0.0.1:8200';
     this.vaultToken = options?.token || process.env.VAULT_TOKEN || '';
     this.keyName = options?.keyName || 'intelliflow-data-key';
+    this.currentVersion = options?.initialVersion ?? 1;
+  }
+
+  setKeyVersion(version: number): void {
+    this.currentVersion = version;
   }
 
   async getCurrentKey(): Promise<Buffer> {
-    // Vault Transit doesn't export keys - encryption happens on Vault side
-    // This is a placeholder that returns a derived key for local operations
-    // In production, use encryptWithVault/decryptWithVault methods
+    // Vault Transit doesn't export raw keys — server-side encryption goes through
+    // encryptWithVault/decryptWithVault. This path derives a local DEK via PBKDF2
+    // for operations that require a local Buffer (e.g., AES-GCM encrypt/decrypt).
+    // In production with full Vault Transit, use encryptWithVault/decryptWithVault directly.
     return this.getKeyByVersion(this.currentVersion);
   }
 
@@ -161,9 +181,19 @@ export class VaultKeyProvider implements KeyProvider {
     const cached = this.keyCache.get(version);
     if (cached) return cached;
 
-    // For Vault Transit, we generate a data encryption key (DEK)
-    // that is wrapped by Vault's transit key
-    const dek = randomBytes(KEY_LENGTH);
+    // Derive a deterministic DEK from a local secret so that the same key
+    // is returned across restarts.  In production Vault Transit wraps the
+    // DEK server-side; this path is only used for local-operation fallback.
+    const secret = process.env.VAULT_LOCAL_DEK_SECRET || process.env.VAULT_TOKEN;
+    if (!secret) {
+      throw new EncryptionError(
+        'MISSING_KEY',
+        'Vault DEK secret not configured. Set VAULT_LOCAL_DEK_SECRET or VAULT_TOKEN environment variable.'
+      );
+    }
+
+    const salt = Buffer.from(`intelliflow-vault-v${version}`);
+    const dek = pbkdf2Sync(secret, salt, PBKDF2_ITERATIONS, KEY_LENGTH, PBKDF2_DIGEST);
     this.keyCache.set(version, dek);
     return dek;
   }
@@ -259,7 +289,7 @@ export class EncryptionError extends Error {
  * Main encryption service
  */
 export class EncryptionService {
-  private keyProvider: KeyProvider;
+  private readonly keyProvider: KeyProvider;
 
   constructor(keyProvider?: KeyProvider) {
     this.keyProvider = keyProvider || new EnvironmentKeyProvider();
@@ -435,7 +465,7 @@ export const FieldEncryption = {
   /**
    * Encrypt a specific field in an object
    */
-  async encryptField<T extends Record<string, unknown>>(
+  async encryptField<T extends Record<string, unknown>>( // NOSONAR S3516 — returns mutated vs unmutated result depending on path
     obj: T,
     fieldPath: string,
     service?: EncryptionService
@@ -462,7 +492,7 @@ export const FieldEncryption = {
   /**
    * Decrypt a specific field in an object
    */
-  async decryptField<T extends Record<string, unknown>>(
+  async decryptField<T extends Record<string, unknown>>( // NOSONAR S3516 — returns mutated vs unmutated result depending on path
     obj: T,
     fieldPath: string,
     service?: EncryptionService

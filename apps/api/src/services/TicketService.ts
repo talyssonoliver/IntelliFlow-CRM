@@ -379,7 +379,7 @@ export class TicketService {
         data: defaultNextSteps.map((step) => ({
           ticketId: ticket.id,
           title: step.title,
-          dueDate: step.dueDate,
+          dueDateLabel: step.dueDateLabel,
           completed: false,
           tenantId: data.tenantId,
         })),
@@ -638,17 +638,15 @@ export class TicketService {
   /**
    * Get default next steps based on ticket priority
    */
-  private getDefaultNextSteps(
-    priority: TicketPriority
-  ): { title: string; dueDate: string }[] {
-    const base: { title: string; dueDate: string }[] = [
+  private getDefaultNextSteps(priority: TicketPriority): { title: string; dueDateLabel: string }[] {
+    const base: { title: string; dueDateLabel: string }[] = [
       {
         title: 'Review ticket details and confirm category',
-        dueDate: 'Due Today',
+        dueDateLabel: 'Due Today',
       },
       {
         title: 'Send initial acknowledgement to customer',
-        dueDate: 'Due Today',
+        dueDateLabel: 'Due Today',
       },
     ];
 
@@ -657,11 +655,11 @@ export class TicketService {
         ...base,
         {
           title: 'Escalate to senior support if unresolved',
-          dueDate: priority === 'CRITICAL' ? 'Due in 1 hour' : 'Due Today',
+          dueDateLabel: priority === 'CRITICAL' ? 'Due in 1 hour' : 'Due Today',
         },
         {
           title: 'Update customer with resolution progress',
-          dueDate: 'Tomorrow',
+          dueDateLabel: 'Tomorrow',
         },
       ];
     }
@@ -670,7 +668,7 @@ export class TicketService {
       ...base,
       {
         title: 'Investigate root cause and document findings',
-        dueDate: 'Tomorrow',
+        dueDateLabel: 'Tomorrow',
       },
     ];
   }
@@ -732,9 +730,7 @@ export class TicketService {
 
       if (matches.length === 0) return;
 
-      const topMatches = matches
-        .sort((a, b) => b.similarity - a.similarity)
-        .slice(0, 5);
+      const topMatches = matches.sort((a, b) => b.similarity - a.similarity).slice(0, 5);
 
       await this.prisma.relatedTicket.createMany({
         data: topMatches.map((m) => ({

@@ -86,7 +86,7 @@ describe('Email Verification Procedures (IFC-120)', () => {
         'x-forwarded-for': '127.0.0.1',
         'user-agent': 'Mozilla/5.0 Test Agent',
       },
-    } as unknown as Request,
+    } as any,
     user: undefined,
   });
 

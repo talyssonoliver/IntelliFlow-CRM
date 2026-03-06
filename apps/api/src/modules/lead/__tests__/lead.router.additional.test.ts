@@ -95,21 +95,23 @@ describe('Lead Router - Additional Coverage', () => {
       ];
 
       // Mock transaction
-      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: (tx: unknown) => unknown) => {
-        const tx = {
-          lead: {
-            findMany: vi.fn().mockResolvedValue(mockLeads),
-            updateMany: vi.fn().mockResolvedValue({ count: 2 }),
-          },
-          contact: {
-            createMany: vi.fn().mockResolvedValue({ count: 2 }),
-          },
-          account: {
-            createMany: vi.fn().mockResolvedValue({ count: 0 }),
-          },
-        };
-        return fn(tx);
-      });
+      (prismaMock as any).$transaction = vi
+        .fn()
+        .mockImplementation(async (fn: (tx: unknown) => unknown) => {
+          const tx = {
+            lead: {
+              findMany: vi.fn().mockResolvedValue(mockLeads),
+              updateMany: vi.fn().mockResolvedValue({ count: 2 }),
+            },
+            contact: {
+              createMany: vi.fn().mockResolvedValue({ count: 2 }),
+            },
+            account: {
+              createMany: vi.fn().mockResolvedValue({ count: 0 }),
+            },
+          };
+          return fn(tx);
+        });
 
       const result = await caller.bulkConvert({
         ids: [TEST_UUIDS.lead1, TEST_UUIDS.lead2],
@@ -125,18 +127,20 @@ describe('Lead Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = leadRouter.createCaller(ctx);
 
-      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: (tx: unknown) => unknown) => {
-        const tx = {
-          lead: {
-            findMany: vi.fn().mockResolvedValue([]),
-            updateMany: vi.fn().mockResolvedValue({ count: 0 }),
-          },
-          contact: {
-            createMany: vi.fn().mockResolvedValue({ count: 0 }),
-          },
-        };
-        return fn(tx);
-      });
+      (prismaMock as any).$transaction = vi
+        .fn()
+        .mockImplementation(async (fn: (tx: unknown) => unknown) => {
+          const tx = {
+            lead: {
+              findMany: vi.fn().mockResolvedValue([]),
+              updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+            },
+            contact: {
+              createMany: vi.fn().mockResolvedValue({ count: 0 }),
+            },
+          };
+          return fn(tx);
+        });
 
       const result = await caller.bulkConvert({
         ids: [TEST_UUIDS.nonExistent],
@@ -152,12 +156,12 @@ describe('Lead Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = leadRouter.createCaller(ctx);
 
-      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: (tx: unknown) => unknown) => {
-        const tx = {
-          lead: {
-            findMany: vi
-              .fn()
-              .mockResolvedValue([
+      (prismaMock as any).$transaction = vi
+        .fn()
+        .mockImplementation(async (fn: (tx: unknown) => unknown) => {
+          const tx = {
+            lead: {
+              findMany: vi.fn().mockResolvedValue([
                 {
                   ...mockLead,
                   id: TEST_UUIDS.lead1,
@@ -165,14 +169,14 @@ describe('Lead Router - Additional Coverage', () => {
                   tenantId: 'test-tenant-id',
                 },
               ]),
-            updateMany: vi.fn().mockResolvedValue({ count: 0 }),
-          },
-          contact: {
-            createMany: vi.fn().mockResolvedValue({ count: 0 }),
-          },
-        };
-        return fn(tx);
-      });
+              updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+            },
+            contact: {
+              createMany: vi.fn().mockResolvedValue({ count: 0 }),
+            },
+          };
+          return fn(tx);
+        });
 
       const result = await caller.bulkConvert({
         ids: [TEST_UUIDS.lead1],
@@ -190,12 +194,12 @@ describe('Lead Router - Additional Coverage', () => {
 
       const mockAccountCreateMany = vi.fn().mockResolvedValue({ count: 1 });
 
-      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: (tx: unknown) => unknown) => {
-        const tx = {
-          lead: {
-            findMany: vi
-              .fn()
-              .mockResolvedValue([
+      (prismaMock as any).$transaction = vi
+        .fn()
+        .mockImplementation(async (fn: (tx: unknown) => unknown) => {
+          const tx = {
+            lead: {
+              findMany: vi.fn().mockResolvedValue([
                 {
                   ...mockLead,
                   id: TEST_UUIDS.lead1,
@@ -204,17 +208,17 @@ describe('Lead Router - Additional Coverage', () => {
                   tenantId: 'test-tenant-id',
                 },
               ]),
-            updateMany: vi.fn().mockResolvedValue({ count: 1 }),
-          },
-          contact: {
-            createMany: vi.fn().mockResolvedValue({ count: 1 }),
-          },
-          account: {
-            createMany: mockAccountCreateMany,
-          },
-        };
-        return fn(tx);
-      });
+              updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+            },
+            contact: {
+              createMany: vi.fn().mockResolvedValue({ count: 1 }),
+            },
+            account: {
+              createMany: mockAccountCreateMany,
+            },
+          };
+          return fn(tx);
+        });
 
       const result = await caller.bulkConvert({
         ids: [TEST_UUIDS.lead1],
@@ -231,12 +235,12 @@ describe('Lead Router - Additional Coverage', () => {
 
       const mockAccountCreateMany = vi.fn().mockResolvedValue({ count: 0 });
 
-      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: (tx: unknown) => unknown) => {
-        const tx = {
-          lead: {
-            findMany: vi
-              .fn()
-              .mockResolvedValue([
+      (prismaMock as any).$transaction = vi
+        .fn()
+        .mockImplementation(async (fn: (tx: unknown) => unknown) => {
+          const tx = {
+            lead: {
+              findMany: vi.fn().mockResolvedValue([
                 {
                   ...mockLead,
                   id: TEST_UUIDS.lead1,
@@ -245,17 +249,17 @@ describe('Lead Router - Additional Coverage', () => {
                   tenantId: 'test-tenant-id',
                 },
               ]),
-            updateMany: vi.fn().mockResolvedValue({ count: 1 }),
-          },
-          contact: {
-            createMany: vi.fn().mockResolvedValue({ count: 1 }),
-          },
-          account: {
-            createMany: mockAccountCreateMany,
-          },
-        };
-        return fn(tx);
-      });
+              updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+            },
+            contact: {
+              createMany: vi.fn().mockResolvedValue({ count: 1 }),
+            },
+            account: {
+              createMany: mockAccountCreateMany,
+            },
+          };
+          return fn(tx);
+        });
 
       const result = await caller.bulkConvert({
         ids: [TEST_UUIDS.lead1],
@@ -271,12 +275,12 @@ describe('Lead Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = leadRouter.createCaller(ctx);
 
-      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: (tx: unknown) => unknown) => {
-        const tx = {
-          lead: {
-            findMany: vi
-              .fn()
-              .mockResolvedValue([
+      (prismaMock as any).$transaction = vi
+        .fn()
+        .mockImplementation(async (fn: (tx: unknown) => unknown) => {
+          const tx = {
+            lead: {
+              findMany: vi.fn().mockResolvedValue([
                 {
                   ...mockLead,
                   id: TEST_UUIDS.lead1,
@@ -287,14 +291,14 @@ describe('Lead Router - Additional Coverage', () => {
                   tenantId: 'test-tenant-id',
                 },
               ]),
-            updateMany: vi.fn().mockResolvedValue({ count: 1 }),
-          },
-          contact: {
-            createMany: vi.fn().mockResolvedValue({ count: 1 }),
-          },
-        };
-        return fn(tx);
-      });
+              updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+            },
+            contact: {
+              createMany: vi.fn().mockResolvedValue({ count: 1 }),
+            },
+          };
+          return fn(tx);
+        });
 
       const result = await caller.bulkConvert({
         ids: [TEST_UUIDS.lead1],
@@ -571,25 +575,40 @@ describe('Lead Router - Additional Coverage', () => {
     });
   });
 
-  describe('update - phone value object handling', () => {
-    it('should extract phone value from phone value object in non-contact update path', async () => {
+  describe('update - unified service path', () => {
+    it('should route all updates through updateLead service', async () => {
       const ctx = createTestContext();
       const caller = leadRouter.createCaller(ctx);
 
-      prismaMock.lead.findUnique.mockResolvedValue(mockLead);
-      prismaMock.lead.update.mockResolvedValue({
-        ...mockLead,
-        status: 'CONTACTED',
-      } as any);
+      const mockDomainLead = {
+        id: { value: TEST_UUIDS.lead1 },
+        email: { value: 'lead@example.com' },
+        firstName: 'John',
+        lastName: 'Doe',
+        company: 'ACME Corp',
+        title: null,
+        phone: null,
+        source: 'WEBSITE' as const,
+        status: 'NEW' as const,
+        score: { value: 50, confidence: 0.5, tier: 'warm' as const },
+        ownerId: TEST_UUIDS.user1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-      // When status is set (no firstName/lastName/company/title/phone),
-      // it goes through the Prisma direct update path
-      const result = await caller.update({
-        id: TEST_UUIDS.lead1,
-        status: 'CONTACTED',
+      ctx.services!.lead!.updateLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainLead,
       });
 
-      expect(result.status).toBe('CONTACTED');
+      const result = await caller.update({
+        id: TEST_UUIDS.lead1,
+        location: 'New York',
+      });
+
+      expect(ctx.services!.lead!.updateLead).toHaveBeenCalled();
+      expect(result).toHaveProperty('id');
     });
   });
 

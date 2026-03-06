@@ -31,6 +31,132 @@ import { pendingActionsStore, rollbackStore } from '../approval-workflow';
  */
 const APPROVAL_EXPIRY_MS = 30 * 60 * 1000;
 
+// ── Preview-building helpers (reduce cognitive complexity in generatePreview) ──
+
+type ChangeEntry = {
+  field: string;
+  previousValue: string;
+  newValue: string;
+  changeType: 'MODIFY';
+};
+
+function makeChange(field: string, newValue: string): ChangeEntry {
+  return { field, previousValue: '(current value)', newValue, changeType: 'MODIFY' };
+}
+
+/**
+ * Build case change list and warnings from UpdateCaseInput fields.
+ */
+function buildCasePreviewParts(input: UpdateCaseInput): {
+  changes: ChangeEntry[];
+  warnings: string[];
+} {
+  const changes: ChangeEntry[] = [];
+  const warnings: string[] = [];
+
+  if (input.title !== undefined) changes.push(makeChange('title', input.title));
+  if (input.description !== undefined) changes.push(makeChange('description', input.description));
+
+  if (input.priority !== undefined) {
+    changes.push(makeChange('priority', input.priority));
+    if (input.priority === 'URGENT') {
+      warnings.push('Changing priority to URGENT will trigger immediate attention notifications');
+    }
+  }
+
+  if (input.status !== undefined) {
+    changes.push(makeChange('status', input.status));
+    if (input.status === 'CLOSED') {
+      warnings.push('Closing this case is a significant action that may affect related entities');
+    }
+    if (input.status === 'CANCELLED') {
+      warnings.push('Cancelling this case is irreversible in most workflows');
+    }
+  }
+
+  if (input.deadline !== undefined) {
+    changes.push(makeChange('deadline', input.deadline.toISOString()));
+    if (input.deadline < new Date()) {
+      warnings.push('Warning: New deadline is in the past');
+    }
+    const hoursUntil = (input.deadline.getTime() - Date.now()) / (1000 * 60 * 60);
+    if (hoursUntil > 0 && hoursUntil < 24) {
+      warnings.push('Warning: New deadline is less than 24 hours away');
+    }
+  }
+
+  if (input.assignedTo !== undefined) {
+    changes.push(makeChange('assignedTo', input.assignedTo));
+    warnings.push('Reassigning the case will notify the new assignee');
+  }
+
+  return { changes, warnings };
+}
+
+/**
+ * Compute estimated impact for a case update.
+ */
+function computeCaseImpact(input: UpdateCaseInput): 'LOW' | 'MEDIUM' | 'HIGH' {
+  if (input.status === 'CLOSED' || input.status === 'CANCELLED') return 'HIGH';
+  if (input.priority === 'URGENT' || input.priority === 'HIGH') return 'HIGH';
+  if (input.assignedTo !== undefined || input.deadline !== undefined) return 'MEDIUM';
+  return 'LOW';
+}
+
+/**
+ * Build appointment change list and warnings from UpdateAppointmentInput fields.
+ */
+function buildAppointmentPreviewParts(input: UpdateAppointmentInput): {
+  changes: ChangeEntry[];
+  warnings: string[];
+} {
+  const changes: ChangeEntry[] = [];
+  const warnings: string[] = [];
+
+  if (input.title !== undefined) changes.push(makeChange('title', input.title));
+  if (input.description !== undefined) changes.push(makeChange('description', input.description));
+
+  if (input.startTime !== undefined) {
+    changes.push(makeChange('startTime', input.startTime.toISOString()));
+    if (input.startTime < new Date()) {
+      warnings.push('Warning: New start time is in the past');
+    }
+    const hour = input.startTime.getHours();
+    if (hour < 8 || hour > 19) {
+      warnings.push('New time is outside typical business hours (8am-7pm)');
+    }
+    const day = input.startTime.getDay();
+    if (day === 0 || day === 6) {
+      warnings.push('New appointment time is on a weekend');
+    }
+    warnings.push('Rescheduling will notify all attendees of the time change');
+  }
+
+  if (input.endTime !== undefined) changes.push(makeChange('endTime', input.endTime.toISOString()));
+
+  if (input.location !== undefined) {
+    changes.push(makeChange('location', input.location));
+    warnings.push('Location change will notify all attendees');
+  }
+
+  if (input.appointmentType !== undefined) {
+    changes.push(makeChange('appointmentType', input.appointmentType));
+  }
+
+  if (input.notes !== undefined) changes.push(makeChange('notes', input.notes));
+
+  return { changes, warnings };
+}
+
+/**
+ * Compute estimated impact for an appointment update.
+ */
+function computeAppointmentImpact(input: UpdateAppointmentInput): 'LOW' | 'MEDIUM' | 'HIGH' {
+  if (input.startTime !== undefined || input.endTime !== undefined) return 'HIGH';
+  if (input.location !== undefined) return 'MEDIUM';
+  return 'LOW';
+}
+
 /**
  * Updated case result structure
  */
@@ -130,7 +256,7 @@ export const updateCaseTool: AgentToolDefinition<UpdateCaseInput, UpdatedCaseRes
         toolName: 'update_case',
         actionType: 'UPDATE',
         entityType: 'CASE',
-        input: input as unknown as Record<string, unknown>,
+        input: { ...input },
         preview,
         status: 'PENDING',
         createdAt: now,
@@ -192,99 +318,10 @@ export const updateCaseTool: AgentToolDefinition<UpdateCaseInput, UpdatedCaseRes
     input: UpdateCaseInput,
     _context: AgentAuthContext
   ): Promise<ActionPreview> {
-    const warnings: string[] = [];
-    const changes = [];
-
     // Note: In a real implementation, we would fetch the current case state
     // to show actual before/after diffs. For now, we show the intended changes.
-
-    if (input.title !== undefined) {
-      changes.push({
-        field: 'title',
-        previousValue: '(current value)',
-        newValue: input.title,
-        changeType: 'MODIFY' as const,
-      });
-    }
-
-    if (input.description !== undefined) {
-      changes.push({
-        field: 'description',
-        previousValue: '(current value)',
-        newValue: input.description,
-        changeType: 'MODIFY' as const,
-      });
-    }
-
-    if (input.priority !== undefined) {
-      changes.push({
-        field: 'priority',
-        previousValue: '(current value)',
-        newValue: input.priority,
-        changeType: 'MODIFY' as const,
-      });
-
-      if (input.priority === 'URGENT') {
-        warnings.push('Changing priority to URGENT will trigger immediate attention notifications');
-      }
-    }
-
-    if (input.status !== undefined) {
-      changes.push({
-        field: 'status',
-        previousValue: '(current value)',
-        newValue: input.status,
-        changeType: 'MODIFY' as const,
-      });
-
-      if (input.status === 'CLOSED') {
-        warnings.push('Closing this case is a significant action that may affect related entities');
-      }
-
-      if (input.status === 'CANCELLED') {
-        warnings.push('Cancelling this case is irreversible in most workflows');
-      }
-    }
-
-    if (input.deadline !== undefined) {
-      changes.push({
-        field: 'deadline',
-        previousValue: '(current value)',
-        newValue: input.deadline.toISOString(),
-        changeType: 'MODIFY' as const,
-      });
-
-      // Check if new deadline is in the past
-      if (input.deadline < new Date()) {
-        warnings.push('Warning: New deadline is in the past');
-      }
-
-      // Check if new deadline is very soon
-      const hoursUntil = (input.deadline.getTime() - Date.now()) / (1000 * 60 * 60);
-      if (hoursUntil > 0 && hoursUntil < 24) {
-        warnings.push('Warning: New deadline is less than 24 hours away');
-      }
-    }
-
-    if (input.assignedTo !== undefined) {
-      changes.push({
-        field: 'assignedTo',
-        previousValue: '(current value)',
-        newValue: input.assignedTo,
-        changeType: 'MODIFY' as const,
-      });
-      warnings.push('Reassigning the case will notify the new assignee');
-    }
-
-    // Determine impact level
-    let estimatedImpact: 'LOW' | 'MEDIUM' | 'HIGH' = 'LOW';
-    if (input.status === 'CLOSED' || input.status === 'CANCELLED') {
-      estimatedImpact = 'HIGH';
-    } else if (input.priority === 'URGENT' || input.priority === 'HIGH') {
-      estimatedImpact = 'HIGH';
-    } else if (input.assignedTo !== undefined || input.deadline !== undefined) {
-      estimatedImpact = 'MEDIUM';
-    }
+    const { changes, warnings } = buildCasePreviewParts(input);
+    const estimatedImpact = computeCaseImpact(input);
 
     return {
       summary: `Update case ${input.id}: ${changes.map((c) => c.field).join(', ')}`,
@@ -423,7 +460,7 @@ export const updateAppointmentTool: AgentToolDefinition<
         toolName: 'update_appointment',
         actionType: 'UPDATE',
         entityType: 'APPOINTMENT',
-        input: input as unknown as Record<string, unknown>,
+        input: { ...input },
         preview,
         status: 'PENDING',
         createdAt: now,
@@ -485,99 +522,8 @@ export const updateAppointmentTool: AgentToolDefinition<
     input: UpdateAppointmentInput,
     _context: AgentAuthContext
   ): Promise<ActionPreview> {
-    const warnings: string[] = [];
-    const changes = [];
-
-    if (input.title !== undefined) {
-      changes.push({
-        field: 'title',
-        previousValue: '(current value)',
-        newValue: input.title,
-        changeType: 'MODIFY' as const,
-      });
-    }
-
-    if (input.description !== undefined) {
-      changes.push({
-        field: 'description',
-        previousValue: '(current value)',
-        newValue: input.description,
-        changeType: 'MODIFY' as const,
-      });
-    }
-
-    if (input.startTime !== undefined) {
-      changes.push({
-        field: 'startTime',
-        previousValue: '(current value)',
-        newValue: input.startTime.toISOString(),
-        changeType: 'MODIFY' as const,
-      });
-
-      // Check if new time is in the past
-      if (input.startTime < new Date()) {
-        warnings.push('Warning: New start time is in the past');
-      }
-
-      // Check for outside business hours
-      const hour = input.startTime.getHours();
-      if (hour < 8 || hour > 19) {
-        warnings.push('New time is outside typical business hours (8am-7pm)');
-      }
-
-      // Check for weekend
-      const day = input.startTime.getDay();
-      if (day === 0 || day === 6) {
-        warnings.push('New appointment time is on a weekend');
-      }
-
-      warnings.push('Rescheduling will notify all attendees of the time change');
-    }
-
-    if (input.endTime !== undefined) {
-      changes.push({
-        field: 'endTime',
-        previousValue: '(current value)',
-        newValue: input.endTime.toISOString(),
-        changeType: 'MODIFY' as const,
-      });
-    }
-
-    if (input.location !== undefined) {
-      changes.push({
-        field: 'location',
-        previousValue: '(current value)',
-        newValue: input.location,
-        changeType: 'MODIFY' as const,
-      });
-      warnings.push('Location change will notify all attendees');
-    }
-
-    if (input.appointmentType !== undefined) {
-      changes.push({
-        field: 'appointmentType',
-        previousValue: '(current value)',
-        newValue: input.appointmentType,
-        changeType: 'MODIFY' as const,
-      });
-    }
-
-    if (input.notes !== undefined) {
-      changes.push({
-        field: 'notes',
-        previousValue: '(current value)',
-        newValue: input.notes,
-        changeType: 'MODIFY' as const,
-      });
-    }
-
-    // Determine impact level
-    let estimatedImpact: 'LOW' | 'MEDIUM' | 'HIGH' = 'LOW';
-    if (input.startTime !== undefined || input.endTime !== undefined) {
-      estimatedImpact = 'HIGH'; // Rescheduling affects all attendees
-    } else if (input.location !== undefined) {
-      estimatedImpact = 'MEDIUM';
-    }
+    const { changes, warnings } = buildAppointmentPreviewParts(input);
+    const estimatedImpact = computeAppointmentImpact(input);
 
     return {
       summary: `Update appointment ${input.id}: ${changes.map((c) => c.field).join(', ')}`,

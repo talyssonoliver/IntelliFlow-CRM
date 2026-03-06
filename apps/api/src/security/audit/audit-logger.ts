@@ -8,7 +8,7 @@
  * RELATED: ADR-008 (Audit Logging Approach)
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@intelliflow/db';
 import { randomUUID } from 'node:crypto';
 import type {
   AuditLogInput,

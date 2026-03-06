@@ -168,9 +168,7 @@ function isAllowedRedirect(url: string, appUrl: string): boolean {
   } catch {
     // Relative path check
     if (!url.startsWith('/')) return false;
-    return REDIRECT_ALLOWLIST.some(
-      (allowed) => url === allowed || url.startsWith(`${allowed}/`)
-    );
+    return REDIRECT_ALLOWLIST.some((allowed) => url === allowed || url.startsWith(`${allowed}/`));
   }
 }
 
@@ -178,7 +176,53 @@ function isAllowedRedirect(url: string, appUrl: string): boolean {
  * Mask email for logging: user@example.com → us***@example.com (NF-003)
  */
 function maskEmail(email: string): string {
-  return email.replace(/(.{2}).*@/, '$1***@');
+  return email.replace(/^(.{2})[^@]*@/, '$1***@');
+}
+
+/**
+ * Handle MFA setup for a specific method, returning the appropriate response.
+ * Extracted to reduce cognitive complexity of the setupMfa mutation.
+ */
+async function setupMfaByMethod(
+  mfaService: ReturnType<typeof getMfaService>,
+  input: { method: string; phone?: string },
+  user: { email: string; userId: string }
+): Promise<
+  | { success: true; method: 'totp'; secret: string; qrCodeUrl: string }
+  | { success: true; method: 'sms'; codeSentTo: string }
+  | { success: true; method: 'email'; codeSentTo: string }
+> {
+  if (input.method === 'totp') {
+    const { secret, otpauthUrl } = mfaService.generateTotpSecret(user.email);
+    return { success: true, method: 'totp', secret, qrCodeUrl: otpauthUrl };
+  }
+
+  if (input.method === 'sms') {
+    if (!input.phone) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Phone number required for SMS MFA' });
+    }
+    const result = await mfaService.sendSmsOtp(input.phone, user.userId);
+    if (!result.success) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: result.error || 'Failed to send SMS',
+      });
+    }
+    return { success: true, method: 'sms', codeSentTo: input.phone };
+  }
+
+  if (input.method === 'email') {
+    const result = await mfaService.sendEmailOtp(user.email, user.userId);
+    if (!result.success) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: result.error || 'Failed to send email',
+      });
+    }
+    return { success: true, method: 'email', codeSentTo: user.email };
+  }
+
+  throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid MFA method' });
 }
 
 // ============================================
@@ -399,7 +443,7 @@ export const authRouter = createTRPCRouter({
     // In production this would query the Supabase SSO provider table;
     // currently resolves from the static SSO_PROVIDER_CONFIG.
     const provider = SSO_PROVIDER_CONFIG.providers.find(
-      (p) => p.domain.toLowerCase() === domain && p.enabled,
+      (p) => p.domain.toLowerCase() === domain && p.enabled
     );
 
     if (provider) {
@@ -698,66 +742,7 @@ export const authRouter = createTRPCRouter({
    */
   setupMfa: protectedProcedure.input(mfaSetupSchema).mutation(async ({ ctx, input }) => {
     const mfaService = getMfaService(ctx.prisma);
-
-    if (input.method === 'totp') {
-      // Generate TOTP secret
-      const { secret, otpauthUrl } = mfaService.generateTotpSecret(ctx.user.email);
-
-      return {
-        success: true,
-        method: 'totp' as const,
-        secret,
-        qrCodeUrl: otpauthUrl,
-      };
-    }
-
-    if (input.method === 'sms') {
-      if (!input.phone) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Phone number required for SMS MFA',
-        });
-      }
-
-      // Send SMS OTP for verification
-      const result = await mfaService.sendSmsOtp(input.phone, ctx.user.userId);
-
-      if (!result.success) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: result.error || 'Failed to send SMS',
-        });
-      }
-
-      return {
-        success: true,
-        method: 'sms' as const,
-        codeSentTo: input.phone,
-      };
-    }
-
-    if (input.method === 'email') {
-      // Send Email OTP for verification
-      const result = await mfaService.sendEmailOtp(ctx.user.email, ctx.user.userId);
-
-      if (!result.success) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: result.error || 'Failed to send email',
-        });
-      }
-
-      return {
-        success: true,
-        method: 'email' as const,
-        codeSentTo: ctx.user.email,
-      };
-    }
-
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: 'Invalid MFA method',
-    });
+    return setupMfaByMethod(mfaService, input, ctx.user);
   }),
 
   /**
@@ -979,29 +964,27 @@ export const authRouter = createTRPCRouter({
    * Sends a password reset email via Supabase. Always returns success
    * to prevent email enumeration (AC-007). Rate limited per email (AC-008).
    */
-  requestPasswordReset: publicProcedure
-    .input(forgotPasswordSchema)
-    .mutation(async ({ input }) => {
-      // Check per-email rate limit (AC-008)
-      const rateCheck = passwordResetLimiter.check(input.email);
-      if (!rateCheck.allowed) {
-        throw new TRPCError({
-          code: 'TOO_MANY_REQUESTS',
-          message: `Too many requests. Please try again in ${Math.ceil(rateCheck.retryAfterSeconds / 60)} minutes.`,
-        });
-      }
+  requestPasswordReset: publicProcedure.input(forgotPasswordSchema).mutation(async ({ input }) => {
+    // Check per-email rate limit (AC-008)
+    const rateCheck = passwordResetLimiter.check(input.email);
+    if (!rateCheck.allowed) {
+      throw new TRPCError({
+        code: 'TOO_MANY_REQUESTS',
+        message: `Too many requests. Please try again in ${Math.ceil(rateCheck.retryAfterSeconds / 60)} minutes.`,
+      });
+    }
 
-      const redirectTo = `${process.env.APP_URL || 'http://localhost:3000'}/reset-password/callback`;
+    const redirectTo = `${process.env.APP_URL || 'http://localhost:3000'}/reset-password/callback`;
 
-      try {
-        await resetPasswordForEmail(input.email, redirectTo);
-      } catch {
-        // Silently swallow errors to prevent email enumeration (AC-007)
-      }
+    try {
+      await resetPasswordForEmail(input.email, redirectTo);
+    } catch {
+      // Silently swallow errors to prevent email enumeration (AC-007)
+    }
 
-      // Always return success (AC-007)
-      return { success: true };
-    }),
+    // Always return success (AC-007)
+    return { success: true };
+  }),
 
   /**
    * Reset password with Supabase access token
@@ -1010,23 +993,21 @@ export const authRouter = createTRPCRouter({
    *
    * Uses the access token from the Supabase callback URL to update the password.
    */
-  resetPassword: publicProcedure
-    .input(resetPasswordSchema)
-    .mutation(async ({ input }) => {
-      const { error } = await updateUserPassword(input.token, input.password);
+  resetPassword: publicProcedure.input(resetPasswordSchema).mutation(async ({ input }) => {
+    const { error } = await updateUserPassword(input.token, input.password);
 
-      if (error) {
-        const isExpired = error.message?.includes('expired') || error.message?.includes('invalid');
-        throw new TRPCError({
-          code: isExpired ? 'UNAUTHORIZED' : 'INTERNAL_SERVER_ERROR',
-          message: isExpired
-            ? 'Reset link has expired. Please request a new one.'
-            : 'Failed to reset password. Please try again.',
-        });
-      }
+    if (error) {
+      const isExpired = error.message?.includes('expired') || error.message?.includes('invalid');
+      throw new TRPCError({
+        code: isExpired ? 'UNAUTHORIZED' : 'INTERNAL_SERVER_ERROR',
+        message: isExpired
+          ? 'Reset link has expired. Please request a new one.'
+          : 'Failed to reset password. Please try again.',
+      });
+    }
 
-      return { success: true };
-    }),
+    return { success: true };
+  }),
 
   /**
    * Sign up a new user
@@ -1035,41 +1016,42 @@ export const authRouter = createTRPCRouter({
    *
    * Creates a user via Supabase Auth. Supabase auto-sends confirmation email.
    */
-  signup: publicProcedure
-    .input(signupSchema)
-    .mutation(async ({ input }) => {
-      const { data, error } = await supabaseAdmin.auth.signUp({
-        email: input.email,
-        password: input.password,
-        options: {
-          data: { name: input.name },
-        },
-      });
+  signup: publicProcedure.input(signupSchema).mutation(async ({ input }) => {
+    const { data, error } = await supabaseAdmin.auth.signUp({
+      email: input.email,
+      password: input.password,
+      options: {
+        data: { name: input.name },
+      },
+    });
 
-      if (error) {
-        // Supabase returns specific errors for duplicate email
-        if (error.message?.includes('already registered') || error.message?.includes('already been registered')) {
-          throw new TRPCError({
-            code: 'CONFLICT',
-            message: 'An account with this email already exists.',
-          });
-        }
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to create account. Please try again.',
-        });
-      }
-
-      // If Supabase returns a user with identities=[] it means user already exists
-      if (data.user && data.user.identities && data.user.identities.length === 0) {
+    if (error) {
+      // Supabase returns specific errors for duplicate email
+      if (
+        error.message?.includes('already registered') ||
+        error.message?.includes('already been registered')
+      ) {
         throw new TRPCError({
           code: 'CONFLICT',
           message: 'An account with this email already exists.',
         });
       }
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to create account. Please try again.',
+      });
+    }
 
-      return { success: true, needsEmailVerification: true };
-    }),
+    // If Supabase returns a user with identities=[] it means user already exists
+    if (data.user && data.user.identities && data.user.identities.length === 0) {
+      throw new TRPCError({
+        code: 'CONFLICT',
+        message: 'An account with this email already exists.',
+      });
+    }
+
+    return { success: true, needsEmailVerification: true };
+  }),
 
   /**
    * Verify email address via Supabase OTP
@@ -1078,26 +1060,24 @@ export const authRouter = createTRPCRouter({
    *
    * Validates the email verification token_hash from Supabase callback URL.
    */
-  verifyEmail: publicProcedure
-    .input(verifyEmailCallbackSchema)
-    .mutation(async ({ input }) => {
-      const { data, error } = await supabaseAdmin.auth.verifyOtp({
-        token_hash: input.token_hash,
-        type: input.type,
+  verifyEmail: publicProcedure.input(verifyEmailCallbackSchema).mutation(async ({ input }) => {
+    const { data, error } = await supabaseAdmin.auth.verifyOtp({
+      token_hash: input.token_hash,
+      type: input.type,
+    });
+
+    if (error) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Verification link is invalid or has expired.',
       });
+    }
 
-      if (error) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Verification link is invalid or has expired.',
-        });
-      }
-
-      return {
-        success: true,
-        email: data.user?.email || '',
-      };
-    }),
+    return {
+      success: true,
+      email: data.user?.email || '',
+    };
+  }),
 
   /**
    * Resend verification email

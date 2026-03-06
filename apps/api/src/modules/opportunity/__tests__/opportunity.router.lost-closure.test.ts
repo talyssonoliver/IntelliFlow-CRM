@@ -44,9 +44,7 @@ describe('Opportunity Router - Lost Closure (IFC-066)', () => {
       const ctx = createTestContext();
       const mockOpp = createMockDomainOpportunity();
 
-      ctx.services!.closeDealLost!.execute = vi.fn().mockResolvedValue(
-        Result.ok(mockOpp)
-      );
+      ctx.services!.closeDealLost!.execute = vi.fn().mockResolvedValue(Result.ok(mockOpp));
 
       const caller = opportunityRouter.createCaller(ctx);
       const result = await caller.moveStage({
@@ -69,9 +67,11 @@ describe('Opportunity Router - Lost Closure (IFC-066)', () => {
     it('should return error when opportunity is already CLOSED_WON', async () => {
       const ctx = createTestContext();
 
-      ctx.services!.closeDealLost!.execute = vi.fn().mockResolvedValue(
-        Result.fail(new ValidationError('Cannot mark opportunity as lost: already closed as won'))
-      );
+      ctx.services!.closeDealLost!.execute = vi
+        .fn()
+        .mockResolvedValue(
+          Result.fail(new ValidationError('Cannot mark opportunity as lost: already closed as won'))
+        );
 
       const caller = opportunityRouter.createCaller(ctx);
       await expect(
@@ -86,9 +86,11 @@ describe('Opportunity Router - Lost Closure (IFC-066)', () => {
     it('should return NOT_FOUND for non-existent opportunity', async () => {
       const ctx = createTestContext();
 
-      ctx.services!.closeDealLost!.execute = vi.fn().mockResolvedValue(
-        Result.fail(new NotFoundError(`Opportunity not found: ${TEST_UUIDS.nonExistent}`))
-      );
+      ctx.services!.closeDealLost!.execute = vi
+        .fn()
+        .mockResolvedValue(
+          Result.fail(new NotFoundError(`Opportunity not found: ${TEST_UUIDS.nonExistent}`))
+        );
 
       const caller = opportunityRouter.createCaller(ctx);
       await expect(
@@ -104,9 +106,7 @@ describe('Opportunity Router - Lost Closure (IFC-066)', () => {
       const ctx = createTestContext();
       const mockOpp = createMockDomainOpportunity();
 
-      ctx.services!.closeDealLost!.execute = vi.fn().mockResolvedValue(
-        Result.ok(mockOpp)
-      );
+      ctx.services!.closeDealLost!.execute = vi.fn().mockResolvedValue(Result.ok(mockOpp));
 
       const caller = opportunityRouter.createCaller(ctx);
       await caller.moveStage({
@@ -115,7 +115,8 @@ describe('Opportunity Router - Lost Closure (IFC-066)', () => {
         reason: 'Lost to competitor pricing',
       });
 
-      const executeCall = (ctx.services!.closeDealLost!.execute as ReturnType<typeof vi.fn>).mock.calls[0][0];
+      const executeCall = (ctx.services!.closeDealLost!.execute as ReturnType<typeof vi.fn>).mock
+        .calls[0][0];
       expect(executeCall.closedBy).toBe(TEST_UUIDS.user1);
     });
 
@@ -141,9 +142,7 @@ describe('Opportunity Router - Lost Closure (IFC-066)', () => {
       const ctx = createTestContext();
       const mockOpp = createMockDomainOpportunity();
 
-      ctx.services!.closeDealLost!.execute = vi.fn().mockResolvedValue(
-        Result.ok(mockOpp)
-      );
+      ctx.services!.closeDealLost!.execute = vi.fn().mockResolvedValue(Result.ok(mockOpp));
 
       const caller = opportunityRouter.createCaller(ctx);
       await caller.moveStage({
@@ -152,7 +151,8 @@ describe('Opportunity Router - Lost Closure (IFC-066)', () => {
         reason: 'Budget constraints forced cancellation',
       });
 
-      const executeCall = (ctx.services!.closeDealLost!.execute as ReturnType<typeof vi.fn>).mock.calls[0][0];
+      const executeCall = (ctx.services!.closeDealLost!.execute as ReturnType<typeof vi.fn>).mock
+        .calls[0][0];
       expect(executeCall.reason).toBe('Budget constraints forced cancellation');
     });
 

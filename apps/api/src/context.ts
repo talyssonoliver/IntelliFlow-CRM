@@ -41,6 +41,7 @@ export type Services = {
   task: Container['taskService'];
   ticket: Container['ticketService'];
   ticketRouting: Container['ticketRoutingService'];
+  leadRouting: Container['leadRoutingService'];
   analytics: Container['analyticsService'];
   chainVersion: Container['chainVersionService'];
   convertLeadToDeal: Container['convertLeadToDealUseCase'];
@@ -146,6 +147,7 @@ function extractBearerToken(req?: Request): string | null {
 const FALLBACK_USER: UserSession = {
   userId: '00000000-0000-4000-8000-000000000103', // Sarah Johnson from SEED_IDS.users.sarahJohnson
   email: 'sarah.johnson@intelliflow.dev',
+  name: 'Sarah Johnson',
   role: 'SALES_REP',
   tenantId: '00000000-0000-4000-8000-000000000001', // Default tenant from database
 };
@@ -163,6 +165,145 @@ const FALLBACK_USER: UserSession = {
  *
  * Falls back to mock user in development if no valid token is provided
  */
+/**
+ * Build the shared services object from the container
+ */
+function buildServicesFromContainer(): Services {
+  return {
+    lead: container.leadService,
+    contact: container.contactService,
+    account: container.accountService,
+    opportunity: container.opportunityService,
+    task: container.taskService,
+    ticket: container.ticketService,
+    ticketRouting: container.ticketRoutingService,
+    leadRouting: container.leadRoutingService,
+    analytics: container.analyticsService,
+    chainVersion: container.chainVersionService,
+    convertLeadToDeal: container.convertLeadToDealUseCase,
+    closeDealWon: container.closeDealWonUseCase,
+    closeDealLost: container.closeDealLostUseCase,
+    feedbackSurvey: container.feedbackSurveyService,
+  };
+}
+
+/**
+ * Attempt to resolve a UserSession from a verified Supabase user ID.
+ * Returns null when the DB user does not exist.
+ */
+async function resolveDbUser(supabaseId: string): Promise<UserSession | null> {
+  const dbUser = await apiPrisma.user.findUnique({
+    where: { id: supabaseId },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      tenantId: true,
+      stripeCustomerId: true,
+      timezone: true,
+    },
+  });
+
+  if (!dbUser) return null;
+
+  return {
+    userId: dbUser.id,
+    email: dbUser.email,
+    name: dbUser.name ?? undefined,
+    role: dbUser.role,
+    tenantId: dbUser.tenantId,
+    stripeCustomerId: dbUser.stripeCustomerId ?? undefined,
+    timezone: dbUser.timezone ?? 'UTC',
+  };
+}
+
+/**
+ * Auto-provision a new user (JIT — Just In Time user creation for OAuth).
+ * Returns a minimal UserSession on failure.
+ */
+async function provisionNewUser(supabaseUser: {
+  id: string;
+  email?: string;
+  user_metadata?: Record<string, unknown>;
+}): Promise<UserSession> {
+  try {
+    let defaultTenant = await apiPrisma.tenant.findUnique({ where: { slug: 'default' } });
+
+    if (!defaultTenant) {
+      console.log('[Auth] Creating default tenant...');
+      defaultTenant = await apiPrisma.tenant.create({
+        data: { name: 'Default Organization', slug: 'default', status: 'ACTIVE' },
+      });
+    }
+
+    const meta = supabaseUser.user_metadata ?? {};
+    const userName =
+      (meta.name as string | undefined) ||
+      (meta.full_name as string | undefined) ||
+      supabaseUser.email?.split('@')[0] ||
+      'User';
+    const avatarUrl =
+      (meta.avatar_url as string | undefined) || (meta.picture as string | undefined) || null;
+
+    const newUser = await apiPrisma.user.create({
+      data: {
+        id: supabaseUser.id,
+        email: supabaseUser.email || '',
+        name: userName,
+        avatarUrl,
+        role: 'USER',
+        tenantId: defaultTenant.id,
+      },
+    });
+
+    console.log('[Auth] Auto-provisioned new user:', {
+      id: newUser.id,
+      email: newUser.email,
+      name: newUser.name,
+      tenantId: newUser.tenantId,
+    });
+
+    return {
+      userId: newUser.id,
+      email: newUser.email,
+      name: newUser.name ?? undefined,
+      role: newUser.role,
+      tenantId: newUser.tenantId,
+    };
+  } catch (provisionError) {
+    console.error('[Auth] Failed to auto-provision user:', provisionError);
+    return {
+      userId: supabaseUser.id,
+      email: supabaseUser.email || '',
+      role: 'USER',
+      tenantId: '', // Will fail tenant isolation
+    };
+  }
+}
+
+/**
+ * Resolve a UserSession from a raw JWT token.
+ * Returns null when the token is invalid or the Supabase user cannot be verified.
+ */
+async function resolveUserFromToken(token: string): Promise<UserSession | null> {
+  const { user: supabaseUser, error } = await verifyToken(token);
+
+  if (error) {
+    console.warn('[Auth] Token verification failed:', error.message);
+    return null;
+  }
+
+  if (!supabaseUser) return null;
+
+  const existing = await resolveDbUser(supabaseUser.id);
+  if (existing) return existing;
+
+  // User exists in Supabase Auth but not in DB — auto-provision (JIT for OAuth)
+  console.log('[Auth] User not found in database, auto-provisioning:', supabaseUser.id);
+  return provisionNewUser(supabaseUser);
+}
+
 /**
  * Create context for WebSocket connections
  *
@@ -183,7 +324,14 @@ export const createWSContext = async (authHeader?: string): Promise<BaseContext>
         if (!error && supabaseUser) {
           const dbUser = await apiPrisma.user.findUnique({
             where: { id: supabaseUser.id },
-            select: { id: true, email: true, name: true, role: true, tenantId: true, timezone: true },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              role: true,
+              tenantId: true,
+              timezone: true,
+            },
           });
 
           if (dbUser) {
@@ -211,21 +359,7 @@ export const createWSContext = async (authHeader?: string): Promise<BaseContext>
   return {
     prisma: apiPrisma,
     container,
-    services: {
-      lead: container.leadService,
-      contact: container.contactService,
-      account: container.accountService,
-      opportunity: container.opportunityService,
-      task: container.taskService,
-      ticket: container.ticketService,
-      ticketRouting: container.ticketRoutingService,
-      analytics: container.analyticsService,
-      chainVersion: container.chainVersionService,
-      convertLeadToDeal: container.convertLeadToDealUseCase,
-      closeDealWon: container.closeDealWonUseCase,
-      closeDealLost: container.closeDealLostUseCase,
-      feedbackSurvey: container.feedbackSurveyService,
-    },
+    services: buildServicesFromContainer(),
     security: container.security,
     adapters: container.adapters,
     user,
@@ -239,112 +373,12 @@ export const createContext = async (opts?: {
   let user: UserSession | null = null;
   const hadBearerToken = Boolean(opts?.req && extractBearerToken(opts?.req));
 
-  // Extract token from Authorization header
+  // Extract and verify token from Authorization header
   const token = extractBearerToken(opts?.req);
 
   if (token) {
     try {
-      // Verify token with Supabase
-      const { user: supabaseUser, error } = await verifyToken(token);
-
-      if (error) {
-        console.warn('[Auth] Token verification failed:', error.message);
-      } else if (supabaseUser) {
-        // Look up user in database to get role and tenant
-        const dbUser = await apiPrisma.user.findUnique({
-          where: { id: supabaseUser.id },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            role: true,
-            tenantId: true,
-            stripeCustomerId: true,
-            timezone: true,
-          },
-        });
-
-        if (dbUser) {
-          user = {
-            userId: dbUser.id,
-            email: dbUser.email,
-            name: dbUser.name ?? undefined,
-            role: dbUser.role,
-            tenantId: dbUser.tenantId,
-            stripeCustomerId: dbUser.stripeCustomerId ?? undefined,
-            timezone: dbUser.timezone ?? 'UTC',
-          };
-        } else {
-          // User exists in Supabase Auth but not in database
-          // Auto-provision the user (JIT - Just In Time user creation for OAuth)
-          console.log('[Auth] User not found in database, auto-provisioning:', supabaseUser.id);
-
-          try {
-            // Get or create the default tenant
-            let defaultTenant = await apiPrisma.tenant.findUnique({
-              where: { slug: 'default' },
-            });
-
-            if (!defaultTenant) {
-              console.log('[Auth] Creating default tenant...');
-              defaultTenant = await apiPrisma.tenant.create({
-                data: {
-                  name: 'Default Organization',
-                  slug: 'default',
-                  status: 'ACTIVE',
-                },
-              });
-            }
-
-            // Extract name from user metadata
-            const userName =
-              supabaseUser.user_metadata?.name ||
-              supabaseUser.user_metadata?.full_name ||
-              supabaseUser.email?.split('@')[0] ||
-              'User';
-
-            // Extract avatar URL
-            const avatarUrl =
-              supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture || null;
-
-            // Create the user in the database
-            const newUser = await apiPrisma.user.create({
-              data: {
-                id: supabaseUser.id, // Use Supabase Auth ID
-                email: supabaseUser.email || '',
-                name: userName,
-                avatarUrl: avatarUrl,
-                role: 'USER',
-                tenantId: defaultTenant.id,
-              },
-            });
-
-            console.log('[Auth] Auto-provisioned new user:', {
-              id: newUser.id,
-              email: newUser.email,
-              name: newUser.name,
-              tenantId: newUser.tenantId,
-            });
-
-            user = {
-              userId: newUser.id,
-              email: newUser.email,
-              name: newUser.name ?? undefined,
-              role: newUser.role,
-              tenantId: newUser.tenantId,
-            };
-          } catch (provisionError) {
-            console.error('[Auth] Failed to auto-provision user:', provisionError);
-            // Fall back to minimal session
-            user = {
-              userId: supabaseUser.id,
-              email: supabaseUser.email || '',
-              role: 'USER',
-              tenantId: '', // Will fail tenant isolation
-            };
-          }
-        }
-      }
+      user = await resolveUserFromToken(token);
     } catch (err) {
       console.error('[Auth] Error verifying token:', err);
     }
@@ -362,21 +396,7 @@ export const createContext = async (opts?: {
     // Dependency injection container (for advanced use cases)
     container,
     // Application services (hexagonal architecture)
-    services: {
-      lead: container.leadService,
-      contact: container.contactService,
-      account: container.accountService,
-      opportunity: container.opportunityService,
-      task: container.taskService,
-      ticket: container.ticketService,
-      ticketRouting: container.ticketRoutingService,
-      analytics: container.analyticsService,
-      chainVersion: container.chainVersionService,
-      convertLeadToDeal: container.convertLeadToDealUseCase,
-      closeDealWon: container.closeDealWonUseCase,
-      closeDealLost: container.closeDealLostUseCase,
-      feedbackSurvey: container.feedbackSurveyService,
-    },
+    services: buildServicesFromContainer(),
     // Security services (IFC-098, IFC-113, IFC-127)
     security: container.security,
     // Adapters for direct access when needed

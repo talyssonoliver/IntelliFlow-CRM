@@ -17,6 +17,8 @@
  */
 
 import { createClient, SupabaseClient, User, Session } from '@supabase/supabase-js';
+import { z } from 'zod';
+import { leadSearchResultSchema, contactSearchResultSchema } from '@intelliflow/validators';
 
 // ============================================
 // ENVIRONMENT CONFIGURATION
@@ -559,9 +561,12 @@ export async function searchLeadsByEmbedding(
     match_count: limit,
   });
 
+  const parsed = z.array(leadSearchResultSchema).safeParse(data ?? []);
   return {
-    data: (data as unknown as LeadSearchResult[]) ?? [],
-    error: error,
+    data: parsed.success ? parsed.data : [],
+    error: parsed.success
+      ? error
+      : new Error(`Invalid lead search result shape: ${parsed.error.message}`),
   };
 }
 
@@ -581,9 +586,12 @@ export async function searchContactsByEmbedding(
     match_count: limit,
   });
 
+  const parsed = z.array(contactSearchResultSchema).safeParse(data ?? []);
   return {
-    data: (data as unknown as ContactSearchResult[]) ?? [],
-    error: error,
+    data: parsed.success ? parsed.data : [],
+    error: parsed.success
+      ? error
+      : new Error(`Invalid contact search result shape: ${parsed.error.message}`),
   };
 }
 
