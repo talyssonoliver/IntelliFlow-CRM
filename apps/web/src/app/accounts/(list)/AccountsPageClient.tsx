@@ -118,7 +118,9 @@ interface AccountsPageClientProps {
   initialStats?: unknown;
 }
 
-export default function AccountsPageClient({ initialStats: serverStats }: AccountsPageClientProps = {}) {
+export default function AccountsPageClient({
+  initialStats: serverStats,
+}: AccountsPageClientProps = {}) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [industryFilter, setIndustryFilter] = useState('');

@@ -113,7 +113,7 @@ export default function AnalyticsPage() {
             >
               <span className="material-symbols-outlined text-lg transition-transform group-hover:scale-110">
                 download
-              </span>
+              </span>{' '}
               Export
               <span
                 className={`material-symbols-outlined text-sm transition-transform ${exportMenuOpen ? 'rotate-180' : ''}`}
@@ -378,7 +378,7 @@ function MetricCard({
         >
           <span className="material-symbols-outlined text-sm">
             {isPositiveTrend ? 'trending_up' : 'trending_down'}
-          </span>
+          </span>{' '}
           {trend}
         </span>
         <span className="text-sm text-muted-foreground">{description}</span>

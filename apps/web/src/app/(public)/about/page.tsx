@@ -1,12 +1,30 @@
 import * as React from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Button, Card } from '@intelliflow/ui';
 import teamData from '../../../data/team-data.json';
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'About Us - Modern AI-First CRM | IntelliFlow',
   description:
     "Learn about IntelliFlow CRM's mission to build modern, AI-first CRM with governance-grade validation. Meet our team and discover our values.",
+  openGraph: {
+    title: 'About IntelliFlow CRM — AI-First, Governance-Grade',
+    description:
+      'Founded in 2024. IntelliFlow builds AI-first CRM that pairs automation with governance-grade validation. Meet the team building the future of CRM.',
+    url: 'https://intelliflow-crm.com/about',
+    siteName: 'IntelliFlow CRM',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'About IntelliFlow CRM — AI-First, Governance-Grade',
+    description:
+      'Our mission: AI-powered CRM with transparency and human oversight. Automation with integrity, evidence-driven decisions.',
+  },
+  alternates: {
+    canonical: '/about',
+  },
 };
 
 export default function AboutPage() {

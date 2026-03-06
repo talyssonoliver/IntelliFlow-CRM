@@ -71,7 +71,9 @@ interface ContactsPageClientProps {
   initialData?: unknown;
 }
 
-export default function ContactsPageClient({ initialData: serverData }: ContactsPageClientProps = {}) {
+export default function ContactsPageClient({
+  initialData: serverData,
+}: ContactsPageClientProps = {}) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');

@@ -18,13 +18,13 @@ function LoadingSkeleton() {
       <Skeleton className="h-8 w-64" />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-20 rounded-lg" />
+          <Skeleton key={i} className="h-20 rounded-lg" /> // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
         ))}
       </div>
       <Skeleton className="h-12 w-full rounded-lg" />
       <div className="space-y-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-32 w-full rounded-lg" />
+          <Skeleton key={i} className="h-32 w-full rounded-lg" /> // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
         ))}
       </div>
     </div>

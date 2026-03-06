@@ -380,31 +380,25 @@ export interface UseZepBudgetReturn {
 }
 
 export function useZepBudget(): UseZepBudgetReturn {
-  // Note: This requires the getZepBudget endpoint to be added to chain-version.router.ts
-  // For now, we'll provide a mock implementation
-  const mockBudget: EpisodeBudget = {
-    used: 0,
-    remaining: 1000,
-    total: 1000,
-    warningThreshold: 800,
-    limitThreshold: 950,
-    isWarning: false,
-    isLimited: false,
-    isPersisted: false,
-    lastSyncedAt: null,
-  };
+  const budgetQuery = api.chainVersion.getZepBudget.useQuery(undefined, {
+    staleTime: 60_000, // refetch at most once per minute
+  });
+
+  const budget = budgetQuery.data as EpisodeBudget | undefined;
 
   const percentUsed =
-    mockBudget.total > 0 ? Math.round((mockBudget.used / mockBudget.total) * 100) : 0;
+    budget && budget.total > 0 ? Math.round((budget.used / budget.total) * 100) : 0;
 
   const budgetStatus: 'normal' | 'warning' | 'critical' =
     percentUsed >= 95 ? 'critical' : percentUsed >= 80 ? 'warning' : 'normal';
 
   return {
-    budget: mockBudget,
-    isLoading: false,
-    error: null,
-    refetch: () => {},
+    budget,
+    isLoading: budgetQuery.isLoading,
+    error: budgetQuery.error ? new Error(budgetQuery.error.message) : null,
+    refetch: () => {
+      budgetQuery.refetch();
+    },
     percentUsed,
     budgetStatus,
   };

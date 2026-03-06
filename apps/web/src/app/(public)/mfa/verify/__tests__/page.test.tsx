@@ -38,20 +38,11 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 }));
 
 vi.mock('@/components/shared/auth-background', () => ({
-  AuthBackground: ({ children }: any) => (
-    <div data-testid="auth-background">{children}</div>
-  ),
+  AuthBackground: ({ children }: any) => <div data-testid="auth-background">{children}</div>,
 }));
 
 vi.mock('@/components/shared/auth-card', () => ({
-  AuthCard: ({
-    children,
-    title,
-    badge,
-    badgeIcon,
-    description,
-    securityBadge,
-  }: any) => (
+  AuthCard: ({ children, title, badge, badgeIcon, description, securityBadge }: any) => (
     <div
       data-testid="auth-card"
       data-title={title}
@@ -75,9 +66,7 @@ vi.mock('@/components/shared/mfa-verification', () => ({
   },
 }));
 
-const mockIsValidRedirectUrl = vi.fn(
-  (url: string) => url.startsWith('/') && !url.startsWith('//')
-);
+const mockIsValidRedirectUrl = vi.fn((url: string) => url.startsWith('/') && !url.startsWith('//'));
 vi.mock('@/lib/shared/logout-redirect', () => ({
   isValidRedirectUrl: (url: string) => mockIsValidRedirectUrl(url),
 }));
@@ -133,9 +122,7 @@ describe('MfaVerifyPage (PG-022)', () => {
 
     it('renders post-card security note (AC-013)', () => {
       renderPage({ challenge: 'test-challenge-id' });
-      expect(
-        screen.getByText(/verification codes expire after 5 minutes/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/verification codes expire after 5 minutes/i)).toBeInTheDocument();
     });
 
     it('renders "Back to sign in" link pointing to /login (AC-014)', () => {

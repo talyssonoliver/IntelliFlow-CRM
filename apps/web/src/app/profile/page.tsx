@@ -48,8 +48,8 @@ export default function ProfilePage() {
               href="/settings/account"
               className="inline-flex items-center gap-2 text-primary hover:underline text-sm font-medium"
             >
-              <span className="material-symbols-outlined text-lg">settings</span>
-              Edit Profile Settings
+              <span className="material-symbols-outlined text-lg">settings</span> Edit Profile
+              Settings
             </Link>
           </div>
         </Card>

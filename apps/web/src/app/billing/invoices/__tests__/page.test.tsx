@@ -108,7 +108,13 @@ describe('InvoicesPage', () => {
 
   it('resets invoices when page === 1', () => {
     mockUseQuery.mockReturnValue({
-      data: { invoices: [createMockInvoice('in_001')], total: 1, hasMore: false, page: 1, limit: 10 },
+      data: {
+        invoices: [createMockInvoice('in_001')],
+        total: 1,
+        hasMore: false,
+        page: 1,
+        limit: 10,
+      },
       isLoading: false,
       isFetching: false,
     });
@@ -117,7 +123,13 @@ describe('InvoicesPage', () => {
     expect(screen.getByText('Showing 1 of 1 invoices')).toBeInTheDocument();
 
     // Simulate new page 1 data (e.g. refetch)
-    const newData = { invoices: [createMockInvoice('in_999')], total: 1, hasMore: false, page: 1, limit: 10 };
+    const newData = {
+      invoices: [createMockInvoice('in_999')],
+      total: 1,
+      hasMore: false,
+      page: 1,
+      limit: 10,
+    };
     mockUseQuery.mockReturnValue({
       data: newData,
       isLoading: false,
@@ -131,7 +143,13 @@ describe('InvoicesPage', () => {
 
   it('handleLoadMore increments page when hasMore && !isFetching', () => {
     mockUseQuery.mockReturnValue({
-      data: { invoices: [createMockInvoice('in_001')], total: 5, hasMore: true, page: 1, limit: 10 },
+      data: {
+        invoices: [createMockInvoice('in_001')],
+        total: 5,
+        hasMore: true,
+        page: 1,
+        limit: 10,
+      },
       isLoading: false,
       isFetching: false,
     });
@@ -150,7 +168,13 @@ describe('InvoicesPage', () => {
 
   it('handleLoadMore does NOT increment when !hasMore', () => {
     mockUseQuery.mockReturnValue({
-      data: { invoices: [createMockInvoice('in_001')], total: 1, hasMore: false, page: 1, limit: 10 },
+      data: {
+        invoices: [createMockInvoice('in_001')],
+        total: 1,
+        hasMore: false,
+        page: 1,
+        limit: 10,
+      },
       isLoading: false,
       isFetching: false,
     });
@@ -163,7 +187,13 @@ describe('InvoicesPage', () => {
 
   it('handleLoadMore does NOT increment when isFetching', () => {
     mockUseQuery.mockReturnValue({
-      data: { invoices: [createMockInvoice('in_001')], total: 5, hasMore: true, page: 1, limit: 10 },
+      data: {
+        invoices: [createMockInvoice('in_001')],
+        total: 5,
+        hasMore: true,
+        page: 1,
+        limit: 10,
+      },
       isLoading: false,
       isFetching: true, // currently fetching
     });

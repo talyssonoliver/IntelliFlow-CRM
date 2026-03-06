@@ -239,7 +239,7 @@ describe('/api/quality-reports/test-run/[runId]', () => {
 
   describe('dynamic export', () => {
     it('does not export dynamic segment config (removed for useCache compatibility)', async () => {
-      const mod = await import('../route.js') as any;
+      const mod = (await import('../route.js')) as any;
       expect(mod.dynamic).toBeUndefined();
     });
   });

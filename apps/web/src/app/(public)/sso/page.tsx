@@ -12,7 +12,8 @@ import SsoPageClient from './SsoPageClient';
 
 export const metadata: Metadata = {
   title: 'Enterprise SSO | IntelliFlow CRM',
-  description: 'Sign in with your organization\'s SSO provider. Enter your work email to discover your enterprise authentication.',
+  description:
+    "Sign in with your organization's SSO provider. Enter your work email to discover your enterprise authentication.",
 };
 
 export default function SsoPage() {

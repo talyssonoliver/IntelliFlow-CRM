@@ -60,8 +60,7 @@ describe('DeveloperAppsPage Integration', () => {
     render(<DeveloperAppsPage />);
     const buttons = screen.getAllByRole('button');
     buttons.forEach((button) => {
-      const name =
-        button.getAttribute('aria-label') || button.textContent?.trim();
+      const name = button.getAttribute('aria-label') || button.textContent?.trim();
       expect(name).toBeTruthy();
     });
   });
@@ -74,9 +73,7 @@ describe('DeveloperAppsPage Integration', () => {
   });
 
   it('developer sidebar config has developer-tools section with apps item at /developers/apps', () => {
-    const devToolsSection = developerSidebarConfig.sections.find(
-      (s) => s.id === 'developer-tools'
-    );
+    const devToolsSection = developerSidebarConfig.sections.find((s) => s.id === 'developer-tools');
     expect(devToolsSection).toBeDefined();
     const appsItem = devToolsSection?.items.find((i) => i.id === 'apps');
     expect(appsItem).toBeDefined();
@@ -84,9 +81,7 @@ describe('DeveloperAppsPage Integration', () => {
   });
 
   it('sidebar apps item has label "My Apps"', () => {
-    const devToolsSection = developerSidebarConfig.sections.find(
-      (s) => s.id === 'developer-tools'
-    );
+    const devToolsSection = developerSidebarConfig.sections.find((s) => s.id === 'developer-tools');
     const appsItem = devToolsSection?.items.find((i) => i.id === 'apps');
     expect(appsItem?.label).toBe('My Apps');
   });

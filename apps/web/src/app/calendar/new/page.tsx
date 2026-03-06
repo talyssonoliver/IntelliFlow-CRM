@@ -7,8 +7,8 @@
  * Accessed from: Dashboard "Schedule Meeting" button, Calendar "New Appointment" button
  */
 
-import { useRouter } from 'next/navigation';
-import { useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useCallback, useMemo } from 'react';
 import { Skeleton } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared';
 import { AppointmentForm } from '@/components/appointments';
@@ -16,43 +16,44 @@ import type { AppointmentFormInput } from '@/components/appointments/types';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { api } from '@/lib/api';
 
-/** Typed escape-hatch for the appointments tRPC namespace (not yet in AppRouter). */
-interface AppointmentsNewApiEscape {
-  useUtils(): {
-    appointments?: {
-      list?: { invalidate?: () => void };
-      stats?: { invalidate?: () => void };
-    };
-  };
-  appointments?: {
-    create?: {
-      useMutation?: (opts: { onSuccess: () => void }) => {
-        mutateAsync: (data: AppointmentFormInput) => Promise<void>;
-        isPending: boolean;
-      };
-    };
-  };
-}
-
-const appointmentsApi = api as unknown as AppointmentsNewApiEscape;
-
 export default function NewAppointmentPage() {
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const utils = appointmentsApi.useUtils?.() ?? {};
+  const defaultStartTime = useMemo(() => {
+    const raw = searchParams.get('start');
+    if (!raw) return undefined;
+    const d = new Date(raw);
+    return isNaN(d.getTime()) ? undefined : d;
+  }, [searchParams]);
 
-  const createMutation = appointmentsApi.appointments?.create?.useMutation?.({
+  const defaultEndTime = useMemo(() => {
+    const raw = searchParams.get('end');
+    if (!raw) return undefined;
+    const d = new Date(raw);
+    return isNaN(d.getTime()) ? undefined : d;
+  }, [searchParams]);
+
+  const utils = api.useUtils();
+
+  const createMutation = api.appointments.create.useMutation({
     onSuccess: () => {
-      utils.appointments?.list?.invalidate?.();
-      utils.appointments?.stats?.invalidate?.();
+      utils.appointments.list.invalidate();
+      utils.appointments.stats.invalidate();
       router.push('/calendar');
     },
-  }) ?? { mutateAsync: async () => {}, isPending: false };
+  });
 
   const handleSubmit = useCallback(
     async (data: AppointmentFormInput) => {
-      await createMutation.mutateAsync(data);
+      // Convert null recurrence to undefined for the tRPC schema
+      const { recurrence, calendarId, ...rest } = data;
+      await createMutation.mutateAsync({
+        ...rest,
+        recurrence: recurrence ?? undefined,
+        calendarId: calendarId ?? undefined,
+      });
     },
     [createMutation]
   );
@@ -82,6 +83,8 @@ export default function NewAppointmentPage() {
         description="Create a new appointment, hearing, or consultation"
       />
       <AppointmentForm
+        defaultStartTime={defaultStartTime}
+        defaultEndTime={defaultEndTime}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
         isSubmitting={createMutation.isPending}

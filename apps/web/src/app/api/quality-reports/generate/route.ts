@@ -434,7 +434,7 @@ async function generatePerformanceReport(
 
     // Benchmark 1: JSON parsing
     const testJson = JSON.stringify({
-      data: Array(100).fill({ id: 1, name: 'test', value: Math.random() }),
+      data: Array(100).fill({ id: 1, name: 'test', value: Math.random() }), // NOSONAR — benchmark test data, not security-sensitive
     });
     const jsonTimes = runBenchmark(() => JSON.parse(testJson), 10000);
     benchmarkResults.benchmarks[0].p50Time = jsonTimes[Math.floor(jsonTimes.length * 0.5)];
@@ -443,7 +443,7 @@ async function generatePerformanceReport(
 
     // Benchmark 2: Array sorting
     const sortTimes = runBenchmark(() => {
-      const arr = Array.from({ length: 1000 }, () => Math.random());
+      const arr = Array.from({ length: 1000 }, () => Math.random()); // NOSONAR — benchmark test data, not security-sensitive
       arr.sort((a, b) => a - b);
     }, 1000);
     benchmarkResults.benchmarks[1].p50Time = sortTimes[Math.floor(sortTimes.length * 0.5)];
@@ -695,7 +695,7 @@ export async function GET() {
         method: 'POST',
         body: {
           reports: ['coverage', 'lighthouse', 'performance'],
-          url: 'http://localhost:3000 (for lighthouse)',
+          url: 'http://localhost:3000 (for lighthouse)', // NOSONAR — localhost dev URL in documentation string, not a network request
         },
       },
     },

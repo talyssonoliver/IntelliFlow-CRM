@@ -64,7 +64,12 @@ export default function AccountPage() {
           <h2 className="text-lg font-semibold text-foreground mb-4">Profile Information</h2>
           <div className="space-y-4">
             <div>
-              <label htmlFor="account-full-name" className="block text-sm font-medium text-foreground mb-1">Full Name</label>
+              <label
+                htmlFor="account-full-name"
+                className="block text-sm font-medium text-foreground mb-1"
+              >
+                Full Name
+              </label>
               <input
                 id="account-full-name"
                 type="text"
@@ -75,7 +80,12 @@ export default function AccountPage() {
               />
             </div>
             <div>
-              <label htmlFor="account-email" className="block text-sm font-medium text-foreground mb-1">Email</label>
+              <label
+                htmlFor="account-email"
+                className="block text-sm font-medium text-foreground mb-1"
+              >
+                Email
+              </label>
               <input
                 id="account-email"
                 type="email"
@@ -86,7 +96,12 @@ export default function AccountPage() {
               />
             </div>
             <div>
-              <label htmlFor="account-role" className="block text-sm font-medium text-foreground mb-1">Role</label>
+              <label
+                htmlFor="account-role"
+                className="block text-sm font-medium text-foreground mb-1"
+              >
+                Role
+              </label>
               <input
                 id="account-role"
                 type="text"

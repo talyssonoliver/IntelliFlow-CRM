@@ -41,7 +41,7 @@ export default function PublicHomeLoading() {
           <div className="h-4 w-48 bg-slate-200 rounded mb-4" />
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
             {Array.from({ length: 6 }).map((_, idx) => (
-              <div key={idx} className="h-10 bg-slate-100 rounded-lg" />
+              <div key={idx} className="h-10 bg-slate-100 rounded-lg" /> // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
             ))}
           </div>
         </div>
@@ -53,6 +53,7 @@ export default function PublicHomeLoading() {
           <div className="h-4 w-1/2 bg-slate-200 rounded" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {Array.from({ length: 3 }).map((_, idx) => (
+              // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
               <div key={idx} className="p-6 bg-white rounded-xl border border-slate-200 space-y-4">
                 <div className="h-12 w-12 bg-slate-200 rounded-lg" />
                 <div className="h-6 w-2/3 bg-slate-200 rounded" />
@@ -70,6 +71,7 @@ export default function PublicHomeLoading() {
           <div className="h-4 w-1/2 bg-slate-200 rounded" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {Array.from({ length: 3 }).map((_, idx) => (
+              // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
               <div
                 key={idx}
                 className="p-6 bg-slate-50 rounded-xl border border-slate-200 space-y-4"
@@ -90,6 +92,7 @@ export default function PublicHomeLoading() {
           <div className="h-4 w-1/2 bg-white/20 rounded" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {Array.from({ length: 3 }).map((_, idx) => (
+              // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
               <div
                 key={idx}
                 className="p-6 bg-white/10 rounded-xl border border-white/10 space-y-4"
@@ -110,6 +113,7 @@ export default function PublicHomeLoading() {
           <div className="h-4 w-1/2 bg-slate-200 rounded" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {Array.from({ length: 3 }).map((_, idx) => (
+              // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
               <div
                 key={idx}
                 className="p-6 bg-slate-50 rounded-xl border border-slate-200 space-y-4"

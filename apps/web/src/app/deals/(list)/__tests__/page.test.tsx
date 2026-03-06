@@ -194,7 +194,10 @@ vi.mock('@/components/deals', () => ({
   }) =>
     open ? (
       <div data-testid="loss-reason-modal" data-deal-name={dealName}>
-        <button data-testid="confirm-loss" onClick={() => onConfirm('Budget constraints prevented the deal')}>
+        <button
+          data-testid="confirm-loss"
+          onClick={() => onConfirm('Budget constraints prevented the deal')}
+        >
           Confirm
         </button>
         <button data-testid="cancel-loss" onClick={() => onCancel()}>
@@ -213,9 +216,18 @@ vi.mock('@/components/deals', () => ({
     onDealNavigate: (id: string) => void;
     pendingDealId?: string | null;
   }) => (
-    <div data-testid="pipeline-board" data-deal-count={deals.length} data-pending-deal={pendingDealId ?? ''}>
+    <div
+      data-testid="pipeline-board"
+      data-deal-count={deals.length}
+      data-pending-deal={pendingDealId ?? ''}
+    >
       {deals.map((d) => (
-        <button key={d.id} data-testid={`deal-${d.id}`} data-stage={d.stage} onClick={() => onDealNavigate(d.id)}>
+        <button
+          key={d.id}
+          data-testid={`deal-${d.id}`}
+          data-stage={d.stage}
+          onClick={() => onDealNavigate(d.id)}
+        >
           {d.name}
         </button>
       ))}
@@ -269,6 +281,23 @@ vi.mock('@/components/deals', () => ({
   ),
 }));
 
+// Mock next/dynamic — prevent stale mock leak from other test files
+vi.mock('next/dynamic', () => ({
+  __esModule: true,
+  default: (loader: () => Promise<{ default: React.ComponentType<Record<string, unknown>> }>) => {
+    const LazyComponent = React.lazy(loader);
+    function DynamicMock(props: Record<string, unknown>) {
+      return (
+        <React.Suspense fallback={null}>
+          <LazyComponent {...props} />
+        </React.Suspense>
+      );
+    }
+    DynamicMock.displayName = 'DynamicMock';
+    return DynamicMock;
+  },
+}));
+
 // Mock recharts
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
@@ -291,7 +320,7 @@ vi.mock('recharts', () => ({
 }));
 
 // NOW import after all mocks
-import { render, screen, act, cleanup } from '@testing-library/react';
+import { render, screen, act, cleanup, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import DealsPage from '../page';
 
@@ -362,7 +391,11 @@ describe('DealsPage', { timeout: 10000 }, () => {
         render(<DealsPage />);
       });
 
-      expect(screen.getByText('Deals by Stage')).toBeInTheDocument();
+      // DealsCharts is lazy-loaded via next/dynamic (React.lazy under the hood).
+      // waitFor flushes the async import Promise and waits for the Suspense boundary to resolve.
+      await waitFor(() => {
+        expect(screen.getByText('Deals by Stage')).toBeInTheDocument();
+      });
       expect(screen.getByText('Revenue by Stage')).toBeInTheDocument();
       expect(screen.getByTestId('pie-chart')).toBeInTheDocument();
       expect(screen.getByTestId('bar-chart')).toBeInTheDocument();
@@ -449,7 +482,10 @@ describe('DealsPage', { timeout: 10000 }, () => {
       // Trigger optimistic update
       let rollbackContext: unknown;
       await act(async () => {
-        rollbackContext = await capturedMoveStageConfig.onMutate({ id: '1', targetStage: 'PROPOSAL' });
+        rollbackContext = await capturedMoveStageConfig.onMutate({
+          id: '1',
+          targetStage: 'PROPOSAL',
+        });
       });
 
       // Verify optimistic update applied

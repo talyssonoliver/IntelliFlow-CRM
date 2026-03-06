@@ -66,6 +66,31 @@ export default function TicketDetailPage() {
     },
   });
 
+  const deleteMutation = api.ticket.delete.useMutation({
+    onSuccess: () => {
+      utils.ticket.list.invalidate();
+      utils.ticket.stats.invalidate();
+      toast({ title: 'Ticket Deleted', description: 'The ticket has been permanently deleted.' });
+      router.push('/tickets');
+    },
+    onError: (error) => {
+      toast({ title: 'Delete failed', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const archiveMutation = api.ticket.archive.useMutation({
+    onSuccess: () => {
+      utils.ticket.getById.invalidate({ id: ticketId });
+      utils.ticket.list.invalidate();
+      utils.ticket.stats.invalidate();
+      toast({ title: 'Ticket Archived', description: 'The ticket has been archived.' });
+      router.push('/tickets');
+    },
+    onError: (error) => {
+      toast({ title: 'Archive failed', description: error.message, variant: 'destructive' });
+    },
+  });
+
   const handleStatusChange = async (status: string) => {
     try {
       await updateMutation.mutateAsync({ id: ticketId, status } as never);
@@ -104,12 +129,12 @@ export default function TicketDetailPage() {
     }
   };
 
-  const handleAddResponse = async (content: string, isInternal: boolean) => {
+  const handleAddResponse = async (content: string, _isInternal: boolean) => {
     await addResponseMutation.mutateAsync({
       ticketId,
       content,
       authorName: 'Current User',
-      authorRole: isInternal ? 'agent' : 'agent',
+      authorRole: 'agent',
     });
   };
 
@@ -127,6 +152,22 @@ export default function TicketDetailPage() {
       await updateMutation.mutateAsync({ id: ticketId, status: 'CLOSED' } as never);
       toast({ title: 'Ticket Closed', description: 'The ticket has been closed.' });
       router.push('/tickets');
+    } catch {
+      // Handled in mutation onError to avoid unhandled promise rejections
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteMutation.mutateAsync({ id: ticketId });
+    } catch {
+      // Handled in mutation onError to avoid unhandled promise rejections
+    }
+  };
+
+  const handleArchive = async () => {
+    try {
+      await archiveMutation.mutateAsync({ id: ticketId });
     } catch {
       // Handled in mutation onError to avoid unhandled promise rejections
     }
@@ -168,7 +209,12 @@ export default function TicketDetailPage() {
   return (
     <TicketDetail
       ticket={ticketDetail}
-      isLoading={updateMutation.isPending || addResponseMutation.isPending}
+      isLoading={
+        updateMutation.isPending ||
+        addResponseMutation.isPending ||
+        deleteMutation.isPending ||
+        archiveMutation.isPending
+      }
       currentUserId={user?.id ?? null}
       currentUserName={user?.name ?? null}
       assigneeOptions={normalizedAssigneeOptions}
@@ -179,6 +225,8 @@ export default function TicketDetailPage() {
       onAddResponse={handleAddResponse}
       onResolve={handleResolve}
       onClose={handleClose}
+      onDelete={handleDelete}
+      onArchive={handleArchive}
     />
   );
 }

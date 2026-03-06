@@ -11,10 +11,7 @@ import { findPageFiles } from './test-helpers/ia-fs-helpers';
 const APP_DIR = path.resolve(__dirname, '..');
 const DOCS_DIR = path.resolve(__dirname, '../../../../../docs/design');
 const IA_PATH = path.join(DOCS_DIR, 'information-architecture.md');
-const ROUTER_PATH = path.resolve(
-  __dirname,
-  '../../../../../apps/api/src/router.ts'
-);
+const ROUTER_PATH = path.resolve(__dirname, '../../../../../apps/api/src/router.ts');
 
 describe('information-architecture.md Reconciliation', () => {
   let iaContent: string;
@@ -55,17 +52,11 @@ describe('information-architecture.md Reconciliation', () => {
     const documentedRouterCount = parseInt(match![1], 10);
 
     const routerContent = fs.readFileSync(ROUTER_PATH, 'utf-8');
-    const routerBlock = routerContent.match(
-      /createTRPCRouter\(\{([\s\S]*?)\}\)/
-    );
-    expect(
-      routerBlock,
-      'Could not find createTRPCRouter({...}) block in router.ts'
-    ).toBeTruthy();
+    const routerBlock = routerContent.match(/createTRPCRouter\(\{([\s\S]*?)\}\)/);
+    expect(routerBlock, 'Could not find createTRPCRouter({...}) block in router.ts').toBeTruthy();
 
     // Count key: valueRouter entries (skip comment-only and blank lines)
-    const entries =
-      routerBlock![1].match(/^\s+\w+:\s+\w+,?\s*(\/\/.*)?$/gm) || [];
+    const entries = routerBlock![1].match(/^\s+\w+:\s+\w+,?\s*(\/\/.*)?$/gm) || [];
     const actualRouterCount = entries.length;
 
     if (documentedRouterCount !== actualRouterCount) {
@@ -84,14 +75,22 @@ describe('information-architecture.md Reconciliation', () => {
     // 1. information-architecture.md — blockquote header
     const iaMatch = normalizedHeader.match(/\*\*Total Pages\*\*:\s*(\d+)/);
     expect(iaMatch, 'Missing Total Pages in information-architecture.md').toBeTruthy();
-    docs.push({ name: 'information-architecture.md', path: IA_PATH, count: parseInt(iaMatch![1], 10) });
+    docs.push({
+      name: 'information-architecture.md',
+      path: IA_PATH,
+      count: parseInt(iaMatch![1], 10),
+    });
 
     // 2. page-registry.md — bold header
     const registryPath = path.join(DOCS_DIR, 'page-registry.md');
     const registryContent = fs.readFileSync(registryPath, 'utf-8');
     const registryMatch = registryContent.match(/\*\*Total Pages\*\*:\s*(\d+)/);
     expect(registryMatch, 'Missing Total Pages in page-registry.md').toBeTruthy();
-    docs.push({ name: 'page-registry.md', path: registryPath, count: parseInt(registryMatch![1], 10) });
+    docs.push({
+      name: 'page-registry.md',
+      path: registryPath,
+      count: parseInt(registryMatch![1], 10),
+    });
 
     // 3. ui-flow-mapping.md — blockquote header (normalize line breaks)
     const uifPath = path.join(DOCS_DIR, 'ui-flow-mapping.md');
@@ -131,13 +130,8 @@ describe('information-architecture.md Reconciliation', () => {
   // TC-IA-05: Ghost link regression (ghost routes must NOT have page.tsx)
   it('ghost link routes do not have page.tsx on disk', () => {
     // Extract §4 Ghost Links Register section
-    const ghostSection = iaContent.match(
-      /## 4\.\s*Ghost Links Register[\s\S]*?(?=\n## \d|$)/
-    );
-    expect(
-      ghostSection,
-      'Could not find "## 4. Ghost Links Register" section'
-    ).toBeTruthy();
+    const ghostSection = iaContent.match(/## 4\.\s*Ghost Links Register[\s\S]*?(?=\n## \d|$)/);
+    expect(ghostSection, 'Could not find "## 4. Ghost Links Register" section').toBeTruthy();
 
     // Extract target URLs from ghost link rows: | G-NN | ... | ... | `/<route>` | ...
     const ghostUrls: string[] = [];

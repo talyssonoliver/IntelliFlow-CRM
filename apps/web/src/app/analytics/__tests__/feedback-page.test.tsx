@@ -8,15 +8,25 @@ import React from 'react';
 
 // Mock Recharts
 vi.mock('recharts', () => ({
-  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div data-testid="responsive-container">{children}</div>,
-  BarChart: ({ children }: { children: React.ReactNode }) => <div data-testid="bar-chart">{children}</div>,
+  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="responsive-container">{children}</div>
+  ),
+  BarChart: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="bar-chart">{children}</div>
+  ),
   Bar: () => <div data-testid="bar" />,
-  LineChart: ({ children }: { children: React.ReactNode }) => <div data-testid="line-chart">{children}</div>,
+  LineChart: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="line-chart">{children}</div>
+  ),
   Line: () => <div data-testid="line" />,
-  PieChart: ({ children }: { children: React.ReactNode }) => <div data-testid="pie-chart">{children}</div>,
+  PieChart: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="pie-chart">{children}</div>
+  ),
   Pie: ({ children }: { children: React.ReactNode }) => <div data-testid="pie">{children}</div>,
   Cell: () => <div data-testid="cell" />,
-  AreaChart: ({ children }: { children: React.ReactNode }) => <div data-testid="area-chart">{children}</div>,
+  AreaChart: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="area-chart">{children}</div>
+  ),
   Area: () => <div data-testid="area" />,
   XAxis: () => <div data-testid="x-axis" />,
   YAxis: () => <div data-testid="y-axis" />,
@@ -180,9 +190,7 @@ describe('FeedbackAnalyticsPage', () => {
       ces: null,
       sentiment: null,
       trends: [],
-      responseRates: [
-        { type: 'NPS', sent: 100, responded: 75, rate: 75 },
-      ],
+      responseRates: [{ type: 'NPS', sent: 100, responded: 75, rate: 75 }],
     };
 
     render(<FeedbackAnalyticsPage />);

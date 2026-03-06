@@ -166,7 +166,7 @@ export default function CustomizeDashboardPage() {
 
   const handleAddWidget = useCallback((template: WidgetTemplate) => {
     const newWidget: Widget = {
-      id: `widget-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+      id: `widget-${crypto.randomUUID()}`,
       type: template.type,
       title: template.title,
       colSpan: template.defaultColSpan,

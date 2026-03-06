@@ -27,8 +27,6 @@ const defaultFilterOptions: TicketFilterOptions = {
   statuses: [],
   priorities: [],
   slaStatuses: [],
-  assignees: [],
-  categories: [],
 };
 
 export default function TicketsPage() {
@@ -186,7 +184,7 @@ export default function TicketsPage() {
         total={((data as Record<string, unknown>)?.total as number) ?? 0}
         isLoading={isLoading}
         stats={stats}
-        filterOptions={(filterOptions as unknown as TicketFilterOptions) ?? defaultFilterOptions}
+        filterOptions={filterOptions ?? defaultFilterOptions}
         onRowClick={(t) => router.push(`/tickets/${t.id}`)}
         onBulkAction={handleBulkAction}
         pagination={{ page: filters.page, limit: filters.limit, onPageChange: setPage }}

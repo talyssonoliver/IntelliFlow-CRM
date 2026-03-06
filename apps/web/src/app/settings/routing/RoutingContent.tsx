@@ -9,12 +9,7 @@
  * Rules, Assignments, SLA, Queue, Workload
  */
 
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@intelliflow/ui';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@intelliflow/ui';
 import { RoutingRulesEditor } from '@/components/routing/RoutingRulesEditor';
 import { AssignmentDashboard } from '@/components/routing/AssignmentDashboard';
 import { SLAMonitor } from '@/components/routing/SLAMonitor';

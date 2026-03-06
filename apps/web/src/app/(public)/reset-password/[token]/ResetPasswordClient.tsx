@@ -180,7 +180,7 @@ function ResetPasswordPage({ params }: PageParams) {
                 aria-hidden="true"
               >
                 security
-              </span>
+              </span>{' '}
               This link can only be used once and expires in 1 hour.
             </p>
           </div>

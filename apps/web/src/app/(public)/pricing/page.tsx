@@ -107,7 +107,7 @@ export default function PricingPage() {
                     ) : (
                       <>
                         <div className="text-4xl font-bold text-slate-900 dark:text-white">
-                          £{price}
+                          £{price}{' '}
                           <span className="text-lg text-slate-600 dark:text-slate-400">
                             /user/mo
                           </span>

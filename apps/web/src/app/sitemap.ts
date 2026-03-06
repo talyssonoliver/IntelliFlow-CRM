@@ -1,105 +1,118 @@
 import type { MetadataRoute } from 'next';
+import { blogPosts } from '@/data/blog-posts';
+import { jobListings } from '@/data/job-listings';
+import landingPagesData from '@/data/landing-pages.json';
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_APP_URL ?? 'https://intelliflow-crm.com';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://intelliflow-crm.com';
 
-/** Known blog post slugs from generateStaticParams in blog/[slug]/page.tsx */
-const BLOG_SLUGS = [
-  'ai-lead-scoring-best-practices',
-  'governance-ready-automation',
-];
+// Update this date whenever static page content changes materially
+const STATIC_LAST_MODIFIED = '2025-12-28';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date();
-
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: BASE_URL,
-      lastModified: now,
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: 'weekly',
       priority: 1.0,
     },
     {
       url: `${BASE_URL}/features`,
-      lastModified: now,
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.9,
     },
     {
       url: `${BASE_URL}/pricing`,
-      lastModified: now,
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.9,
     },
     {
       url: `${BASE_URL}/signup`,
-      lastModified: now,
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
       url: `${BASE_URL}/about`,
-      lastModified: now,
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
       url: `${BASE_URL}/contact`,
-      lastModified: now,
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
       url: `${BASE_URL}/blog`,
-      lastModified: now,
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
       url: `${BASE_URL}/careers`,
-      lastModified: now,
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
       url: `${BASE_URL}/login`,
-      lastModified: now,
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.7,
     },
     {
       url: `${BASE_URL}/partners`,
-      lastModified: now,
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.6,
     },
     {
       url: `${BASE_URL}/press`,
-      lastModified: now,
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.6,
     },
     {
       url: `${BASE_URL}/security`,
-      lastModified: now,
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.6,
     },
     {
       url: `${BASE_URL}/status`,
-      lastModified: now,
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: 'hourly',
       priority: 0.4,
     },
   ];
 
-  // Known blog post pages
-  const blogRoutes: MetadataRoute.Sitemap = BLOG_SLUGS.map((slug) => ({
-    url: `${BASE_URL}/blog/${slug}`,
-    lastModified: now,
+  // Blog post detail pages — timestamps from data module
+  const blogRoutes: MetadataRoute.Sitemap = Object.values(blogPosts).map((post) => ({
+    url: `${BASE_URL}/blog/${post.slug}`,
+    lastModified: post.updatedAt ?? post.publishedAt,
     changeFrequency: 'monthly' as const,
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...blogRoutes];
+  // Career listing detail pages — timestamps from data module
+  const careersRoutes: MetadataRoute.Sitemap = Object.values(jobListings).map((job) => ({
+    url: `${BASE_URL}/careers/${job.id}`,
+    lastModified: job.postedAt,
+    changeFrequency: 'monthly' as const,
+    priority: 0.5,
+  }));
+
+  // Landing pages — timestamps from JSON data
+  const lpRoutes: MetadataRoute.Sitemap = Object.keys(landingPagesData.pages).map((slug) => ({
+    url: `${BASE_URL}/lp/${slug}`,
+    lastModified: landingPagesData.metadata.lastUpdated,
+    changeFrequency: 'monthly' as const,
+    priority: 0.7,
+  }));
+
+  return [...staticRoutes, ...blogRoutes, ...careersRoutes, ...lpRoutes];
 }

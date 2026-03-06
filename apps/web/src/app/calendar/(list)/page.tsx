@@ -21,32 +21,15 @@ import { PageHeader } from '@/components/shared';
 import { AppointmentList, AppointmentCalendar } from '@/components/appointments';
 import type {
   AppointmentStats,
-  CalendarAppointment,
   AppointmentListItem,
+  CalendarAppointment,
+  CalendarTask,
 } from '@/components/appointments/types';
+import { TaskForm, type TaskFormData } from '@/components/tasks/TaskForm';
 import { useAppointmentFilters } from '@/hooks/useAppointmentFilters';
+import { useCalendarVisibility } from '@/hooks/useCalendarVisibility';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { api } from '@/lib/api';
-
-/** Typed escape-hatch for the appointments tRPC namespace (not yet in AppRouter). */
-interface AppointmentsListApiEscape {
-  appointments?: {
-    list?: {
-      useQuery?: (
-        params: Record<string, unknown>,
-        opts?: { staleTime?: number }
-      ) => { data: unknown; isLoading: boolean };
-    };
-    stats?: {
-      useQuery?: (
-        params: undefined,
-        opts?: { staleTime?: number; refetchOnMount?: boolean; refetchOnWindowFocus?: boolean }
-      ) => { data: unknown };
-    };
-  };
-}
-
-const appointmentsApi = api as unknown as AppointmentsListApiEscape;
 
 const defaultStats: AppointmentStats = {
   total: 0,
@@ -65,43 +48,30 @@ export default function CalendarPage() {
     setSearch,
     setStatusFilter,
     setTypeFilter,
+    setDateRange,
+    setCaseFilter,
+    setSort,
     setPage,
     setViewMode,
     setCalendarView,
   } = useAppointmentFilters();
+  const { isVisible: isCalendarVisible } = useCalendarVisibility();
   const [currentDate, setCurrentDate] = useState(() => new Date());
+  const [showTaskCreate, setShowTaskCreate] = useState(false);
+  const [taskCreateDefaultDate, setTaskCreateDefaultDate] = useState<string>('');
 
-  // tRPC queries
-  const { data, isLoading } = appointmentsApi.appointments?.list?.useQuery?.(
-    queryParams as Record<string, unknown>,
-    {
-      staleTime: 30_000,
-    }
-  ) ?? { data: undefined, isLoading: false };
+  // tRPC queries — using typed client directly
+  const { data, isLoading } = api.appointments.list.useQuery(queryParams, { staleTime: 30_000 });
 
-  const { data: rawStats } = appointmentsApi.appointments?.stats?.useQuery?.(
-    undefined,
-    {
-      staleTime: 5 * 60_000,
-      refetchOnMount: false,
-      refetchOnWindowFocus: false,
-    }
-  ) ?? { data: undefined };
+  const { data: rawStats } = api.appointments.stats.useQuery(undefined, {
+    staleTime: 5 * 60_000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
 
-  const appointments = useMemo(() => {
-    if (!data) return [];
-    return ((data as Record<string, unknown>).appointments as AppointmentListItem[]) ?? [];
-  }, [data]);
-
-  const total = ((data as Record<string, unknown>)?.total as number) ?? 0;
-
-  const stats: AppointmentStats = useMemo(() => {
-    if (!rawStats) return defaultStats;
-    return rawStats as AppointmentStats;
-  }, [rawStats]);
-
-  const calendarAppointments = useMemo((): CalendarAppointment[] => {
-    return appointments.map((a) => ({
+  const appointments: AppointmentListItem[] = useMemo(() => {
+    if (!data?.appointments) return [];
+    return data.appointments.map((a) => ({
       id: a.id,
       title: a.title,
       startTime: new Date(a.startTime),
@@ -109,12 +79,50 @@ export default function CalendarPage() {
       appointmentType: a.appointmentType,
       status: a.status,
       location: a.location,
-      attendeeCount: a.attendeeCount,
-      hasConflict: a.hasConflict,
-      linkedCaseCount: a.linkedCaseCount,
-      isRecurring: a.isRecurring,
+      attendeeCount: a.attendees?.length ?? 0,
+      hasConflict: false,
+      linkedCaseCount: a.linkedCases?.length ?? 0,
+      isRecurring: Boolean(a.recurrencePattern),
+      calendarId: a.calendarId as string | null | undefined,
+      organizer: a.organizer ?? { id: '', name: 'Unknown' },
+      attendeeNames:
+        a.attendees?.map(
+          (att: Record<string, unknown>) =>
+            ((att.user as Record<string, unknown>)?.name as string) ?? 'Unknown'
+        ) ?? [],
     }));
-  }, [appointments]);
+  }, [data]);
+
+  const total = data?.total ?? 0;
+
+  const stats: AppointmentStats = useMemo(() => {
+    if (!rawStats) return defaultStats;
+    return rawStats as AppointmentStats;
+  }, [rawStats]);
+
+  const calendarAppointments = useMemo((): CalendarAppointment[] => {
+    return appointments
+      .filter((a) => {
+        if (a.calendarId) {
+          return isCalendarVisible(a.calendarId);
+        }
+        return isCalendarVisible('personal');
+      })
+      .map((a) => ({
+        id: a.id,
+        title: a.title,
+        startTime: a.startTime instanceof Date ? a.startTime : new Date(a.startTime),
+        endTime: a.endTime instanceof Date ? a.endTime : new Date(a.endTime),
+        appointmentType: a.appointmentType,
+        status: a.status,
+        location: a.location,
+        attendeeCount: a.attendeeCount,
+        hasConflict: a.hasConflict,
+        linkedCaseCount: a.linkedCaseCount,
+        isRecurring: a.isRecurring,
+        calendarId: a.calendarId,
+      }));
+  }, [appointments, isCalendarVisible]);
 
   const handleRowClick = useCallback(
     (id: string) => {
@@ -123,11 +131,83 @@ export default function CalendarPage() {
     [router]
   );
 
-  const handleCreateWithSlot = useCallback(
-    (_startTime: Date, _endTime: Date) => {
-      router.push('/calendar/new');
+  // Task query
+  const { data: taskData } = api.task.list.useQuery(
+    {},
+    { enabled: isAuthenticated && !authLoading, staleTime: 30_000 }
+  );
+
+  const calendarTasks: CalendarTask[] = useMemo(() => {
+    if (!taskData) return [];
+    const taskList = taskData.tasks ?? [];
+    return taskList
+      .filter((t) => t.dueDate != null)
+      .filter((t) => {
+        // calendarId may be present on extended task models
+        const cid = (t as { calendarId?: string | null }).calendarId;
+        if (cid) {
+          return isCalendarVisible(cid);
+        }
+        return isCalendarVisible('tasks');
+      })
+      .map((t) => ({
+        id: t.id,
+        title: t.title,
+        dueDate: t.dueDate as Date | string,
+        priority: t.priority as CalendarTask['priority'],
+        calendarId: (t as { calendarId?: string | null }).calendarId ?? undefined,
+      }));
+  }, [taskData, isCalendarVisible]);
+
+  // Task create mutation
+  const taskCreateMutation = api.task.create.useMutation({
+    onSuccess: () => {
+      setShowTaskCreate(false);
+    },
+  });
+
+  const handleTaskClick = useCallback(
+    (id: string) => {
+      router.push(`/tasks/${id}`);
     },
     [router]
+  );
+
+  const handleCreateWithSlot = useCallback(
+    (startTime: Date, endTime: Date) => {
+      const params = new URLSearchParams({
+        start: startTime.toISOString(),
+        end: endTime.toISOString(),
+      });
+      router.push(`/calendar/new?${params.toString()}`);
+    },
+    [router]
+  );
+
+  const handleCreateWithDate = useCallback((date: Date) => {
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    setTaskCreateDefaultDate(dateStr);
+    setShowTaskCreate(true);
+  }, []);
+
+  const handleTaskCreateSubmit = useCallback(
+    (formData: TaskFormData) => {
+      taskCreateMutation.mutate({
+        title: formData.title,
+        description: formData.description || undefined,
+        dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
+        priority: formData.priority,
+        leadId: formData.entityType === 'lead' && formData.entityId ? formData.entityId : undefined,
+        contactId:
+          formData.entityType === 'contact' && formData.entityId ? formData.entityId : undefined,
+        opportunityId:
+          formData.entityType === 'opportunity' && formData.entityId
+            ? formData.entityId
+            : undefined,
+        calendarId: formData.calendarId || undefined,
+      });
+    },
+    [taskCreateMutation]
   );
 
   if (authLoading || !isAuthenticated) {
@@ -148,8 +228,8 @@ export default function CalendarPage() {
     <>
       <PageHeader
         breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Calendar' }]}
-        title="Appointment Scheduling"
-        description="Manage appointments, hearings, and consultations"
+        title="Calendar"
+        description="Manage appointments and tasks in one view"
         actions={[
           {
             label: filters.viewMode === 'calendar' ? 'List View' : 'Calendar View',
@@ -169,13 +249,16 @@ export default function CalendarPage() {
       {filters.viewMode === 'calendar' ? (
         <AppointmentCalendar
           appointments={calendarAppointments}
+          tasks={calendarTasks}
           isLoading={isLoading}
           view={filters.calendarView}
           currentDate={currentDate}
           onViewChange={setCalendarView}
           onDateChange={setCurrentDate}
           onAppointmentClick={handleRowClick}
+          onTaskClick={handleTaskClick}
           onCreateWithSlot={handleCreateWithSlot}
+          onCreateWithDate={handleCreateWithDate}
         />
       ) : (
         <AppointmentList
@@ -194,9 +277,22 @@ export default function CalendarPage() {
             if (partial.search !== undefined) setSearch(partial.search);
             if (partial.status !== undefined) setStatusFilter(partial.status);
             if (partial.appointmentType !== undefined) setTypeFilter(partial.appointmentType);
+            if (partial.startTimeFrom !== undefined || partial.startTimeTo !== undefined)
+              setDateRange(partial.startTimeFrom, partial.startTimeTo);
+            if (partial.caseId !== undefined) setCaseFilter(partial.caseId);
+            if (partial.sortBy !== undefined) setSort(partial.sortBy, partial.sortOrder);
           }}
         />
       )}
+
+      {/* Task Create Form (from month-cell click) */}
+      <TaskForm
+        open={showTaskCreate}
+        onClose={() => setShowTaskCreate(false)}
+        onSubmit={handleTaskCreateSubmit}
+        initialData={taskCreateDefaultDate ? { dueDate: taskCreateDefaultDate } : null}
+        mode="create"
+      />
     </>
   );
 }

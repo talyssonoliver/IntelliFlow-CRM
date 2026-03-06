@@ -132,7 +132,9 @@ describe('AppEditor Integration', () => {
     const saveBtn = screen.getByRole('button', { name: /save changes/i });
     await user.click(saveBtn);
     await waitFor(() => {
-      expect(screen.getByTestId('webhook-config').querySelector('[role="alert"]')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('webhook-config').querySelector('[role="alert"]')
+      ).toBeInTheDocument();
     });
   });
 
@@ -145,7 +147,9 @@ describe('AppEditor Integration', () => {
     const saveBtn = screen.getByRole('button', { name: /save changes/i });
     await user.click(saveBtn);
     await waitFor(() => {
-      expect(screen.getByTestId('webhook-config').querySelector('[role="alert"]')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('webhook-config').querySelector('[role="alert"]')
+      ).toBeInTheDocument();
     });
   });
 
@@ -175,7 +179,9 @@ describe('AppEditor Integration', () => {
   it('EI-010: inactive app shows warning banner with correct text', () => {
     render(<AppEditor appId="app-003" />);
     expect(
-      screen.getByText(/this app is inactive\. changes will take effect if the app is reactivated\./i)
+      screen.getByText(
+        /this app is inactive\. changes will take effect if the app is reactivated\./i
+      )
     ).toBeInTheDocument();
   });
 });

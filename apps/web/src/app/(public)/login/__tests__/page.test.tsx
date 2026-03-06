@@ -7,6 +7,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { metadata } from '../layout';
 
 // Mock next/navigation
 const mockPush = vi.fn();
@@ -476,6 +477,31 @@ describe('LoginPage', () => {
 
       // Form should indicate busy state
       expect(screen.getByText(/signing in/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('Login Metadata', () => {
+    it('should have correct SEO metadata', () => {
+      expect(metadata.title).toBe('Log In');
+      expect(metadata.description).toContain('IntelliFlow CRM');
+      expect(metadata.description).toContain('SSO');
+    });
+
+    it('should have Open Graph metadata', () => {
+      expect(metadata.openGraph).toBeDefined();
+      expect(metadata.openGraph?.url).toBe('https://intelliflow-crm.com/login');
+      expect(metadata.openGraph?.siteName).toBe('IntelliFlow CRM');
+      expect((metadata.openGraph as Record<string, unknown>)?.type).toBe('website');
+    });
+
+    it('should have Twitter metadata', () => {
+      expect(metadata.twitter).toBeDefined();
+      expect((metadata.twitter as Record<string, unknown>)?.card).toBe('summary_large_image');
+      expect(metadata.twitter?.title).toBeDefined();
+    });
+
+    it('should have canonical URL', () => {
+      expect(metadata.alternates?.canonical).toBe('/login');
     });
   });
 });

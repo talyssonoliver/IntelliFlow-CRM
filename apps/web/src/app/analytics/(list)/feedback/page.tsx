@@ -41,9 +41,7 @@ const PERIOD_MAP: Record<PeriodKey, () => Date> = {
 };
 
 function ChartSkeleton() {
-  return (
-    <div className="h-64 animate-pulse rounded-lg border bg-muted" />
-  );
+  return <div className="h-64 animate-pulse rounded-lg border bg-muted" />;
 }
 
 export default function FeedbackAnalyticsPage() {
@@ -124,9 +122,7 @@ export default function FeedbackAnalyticsPage() {
             key={p}
             onClick={() => setPeriod(p)}
             className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-              period === p
-                ? 'bg-primary text-primary-foreground'
-                : 'border bg-card hover:bg-accent'
+              period === p ? 'bg-primary text-primary-foreground' : 'border bg-card hover:bg-accent'
             }`}
           >
             {p === 'ytd' ? 'YTD' : p}
@@ -171,9 +167,7 @@ export default function FeedbackAnalyticsPage() {
           <div className="flex flex-col items-center gap-2 rounded-lg border bg-card p-6">
             <h3 className="text-sm font-medium text-muted-foreground">CES Score</h3>
             <div className="text-5xl font-bold text-purple-600">{data.ces.score}</div>
-            <div className="text-sm text-muted-foreground">
-              {data.ces.totalResponses} responses
-            </div>
+            <div className="text-sm text-muted-foreground">{data.ces.totalResponses} responses</div>
           </div>
         )}
       </div>
@@ -206,10 +200,7 @@ export default function FeedbackAnalyticsPage() {
                 <span className="text-sm font-medium">{rr.type}</span>
                 <div className="flex items-center gap-3">
                   <div className="h-2 w-32 rounded-full bg-muted">
-                    <div
-                      className="h-2 rounded-full bg-primary"
-                      style={{ width: `${rr.rate}%` }}
-                    />
+                    <div className="h-2 rounded-full bg-primary" style={{ width: `${rr.rate}%` }} />
                   </div>
                   <span className="text-sm text-muted-foreground">{rr.rate}%</span>
                 </div>

@@ -4,14 +4,18 @@ import { useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { Card, Button, Skeleton } from '@intelliflow/ui';
+import { Card, Button, Skeleton, toast } from '@intelliflow/ui';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
 import { EntityHeader } from '@/components/shared';
 
 const ForecastRevenueChart = dynamic(() => import('@/components/deals/ForecastRevenueChart'), {
   ssr: false,
-  loading: () => <Card className="p-6 h-96"><Skeleton className="h-full w-full" /></Card>,
+  loading: () => (
+    <Card className="p-6 h-96">
+      <Skeleton className="h-full w-full" />
+    </Card>
+  ),
 });
 
 // Material Symbols icon helper component
@@ -325,22 +329,40 @@ function OpportunitiesAtRiskTable({ deals }: { deals: ForecastDeal[] }) {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
-              <th scope="col" className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <th
+                scope="col"
+                className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
                 Deal Name
               </th>
-              <th scope="col" className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <th
+                scope="col"
+                className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
                 Stage
               </th>
-              <th scope="col" className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <th
+                scope="col"
+                className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
                 Value
               </th>
-              <th scope="col" className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <th
+                scope="col"
+                className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
                 Probability
               </th>
-              <th scope="col" className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <th
+                scope="col"
+                className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
                 Expected Close
               </th>
-              <th scope="col" className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <th
+                scope="col"
+                className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
                 Owner
               </th>
             </tr>
@@ -463,6 +485,41 @@ function ForecastPageSkeleton() {
       </div>
     </div>
   );
+}
+
+// =============================================================================
+// CSV Export Utility
+// =============================================================================
+
+function buildForecastCSV(
+  deals: ForecastDeal[],
+  totalPipelineValue: number,
+  weightedForecast: number,
+  quarterLabel: string
+): string {
+  const lines: string[] = [];
+
+  lines.push(`IntelliFlow Forecast Report — ${quarterLabel}`);
+  lines.push(`Total Pipeline Value,${totalPipelineValue}`);
+  lines.push(`Weighted Forecast,${weightedForecast}`);
+  lines.push('');
+  lines.push('Deal Name,Stage,Value,Probability (%),Expected Close,Owner,Risk Level');
+
+  for (const deal of deals) {
+    const closeDate = new Date(deal.expectedCloseDate).toLocaleDateString('en-US');
+    const row = [
+      `"${deal.name.replace(/"/g, '""')}"`,
+      STAGE_LABELS[deal.stage] || deal.stage,
+      deal.value,
+      deal.probability,
+      closeDate,
+      `"${deal.owner.name.replace(/"/g, '""')}"`,
+      deal.riskLevel,
+    ].join(',');
+    lines.push(row);
+  }
+
+  return lines.join('\n');
 }
 
 // =============================================================================
@@ -610,19 +667,47 @@ export default function DealForecastPage() {
               label: 'This Quarter',
               icon: 'calendar_today',
               variant: 'secondary',
-              onClick: () => {},
+              onClick: () =>
+                toast({
+                  title: 'Quarter filter',
+                  description:
+                    'Date-range filtering across multiple quarters is tracked under IFC-048. The current view shows live data for the active quarter.',
+                }),
             },
             {
               label: 'USD',
               icon: 'attach_money',
               variant: 'secondary',
-              onClick: () => {},
+              onClick: () =>
+                toast({
+                  title: 'Currency conversion',
+                  description:
+                    'Multi-currency display is tracked under IFC-201. All values are currently shown in USD.',
+                }),
             },
             {
               label: 'Export Report',
               icon: 'download',
               variant: 'primary',
-              onClick: () => {},
+              onClick: () => {
+                const csv = buildForecastCSV(
+                  deals,
+                  totalPipelineValue,
+                  weightedForecast,
+                  currentQuarter
+                );
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const anchor = document.createElement('a');
+                anchor.href = url;
+                anchor.download = `forecast-${new Date().toISOString().split('T')[0]}.csv`;
+                anchor.click();
+                URL.revokeObjectURL(url);
+                toast({
+                  title: 'Exported',
+                  description: `Forecast report for ${currentQuarter} downloaded.`,
+                });
+              },
             },
           ]}
         >

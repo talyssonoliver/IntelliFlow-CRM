@@ -53,7 +53,6 @@ export function useRouting(options: UseRoutingOptions = {}) {
 
   // --- Mutations ---
 
-  // @ts-expect-error - tRPC type instantiation depth limit with complex routing schema
   const createRule = api.routing.create.useMutation({
     onSuccess: () => {
       utils.routing.list.invalidate();

@@ -4,6 +4,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import PricingPage from '../page';
+import { metadata } from '../layout';
 import pricingData from '@/data/pricing-data.json';
 
 /**
@@ -377,6 +378,31 @@ describe('PricingPage', () => {
 
       expect(container.querySelector('section')).toBeInTheDocument();
       expect(container.querySelector('h1')).toBeInTheDocument();
+    });
+  });
+
+  describe('Pricing Metadata', () => {
+    it('should have correct SEO metadata', () => {
+      expect(metadata.title).toBe('Pricing');
+      expect(metadata.description).toContain('IntelliFlow CRM');
+      expect(metadata.description).toContain('14-day free trial');
+    });
+
+    it('should have Open Graph metadata', () => {
+      expect(metadata.openGraph).toBeDefined();
+      expect(metadata.openGraph?.url).toBe('https://intelliflow-crm.com/pricing');
+      expect(metadata.openGraph?.siteName).toBe('IntelliFlow CRM');
+      expect((metadata.openGraph as Record<string, unknown>)?.type).toBe('website');
+    });
+
+    it('should have Twitter metadata', () => {
+      expect(metadata.twitter).toBeDefined();
+      expect((metadata.twitter as Record<string, unknown>)?.card).toBe('summary_large_image');
+      expect(metadata.twitter?.title).toBeDefined();
+    });
+
+    it('should have canonical URL', () => {
+      expect(metadata.alternates?.canonical).toBe('/pricing');
     });
   });
 });

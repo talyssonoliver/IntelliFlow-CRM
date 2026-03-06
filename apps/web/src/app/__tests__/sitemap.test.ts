@@ -72,8 +72,8 @@ describe('sitemap()', () => {
   });
 
   // TC-02
-  it('has length >= 13 (all static public routes)', () => {
-    expect(sitemapEntries.length).toBeGreaterThanOrEqual(13);
+  it('has length >= 23 (13 static + 2 blog + 5 careers + 3 LP)', () => {
+    expect(sitemapEntries.length).toBeGreaterThanOrEqual(23);
   });
 
   // TC-03
@@ -118,9 +118,7 @@ describe('sitemap()', () => {
 
   // TC-07
   it('root URL / present with priority 1.0', () => {
-    const root = sitemapEntries.find(
-      (e) => new URL(e.url).pathname === '/'
-    );
+    const root = sitemapEntries.find((e) => new URL(e.url).pathname === '/');
     expect(root).toBeDefined();
     expect(root!.priority).toBe(1.0);
   });
@@ -169,20 +167,14 @@ describe('sitemap()', () => {
 
   // TC-13
   it('/blog URL present', () => {
-    const blog = sitemapEntries.find(
-      (e) => new URL(e.url).pathname === '/blog'
-    );
+    const blog = sitemapEntries.find((e) => new URL(e.url).pathname === '/blog');
     expect(blog).toBeDefined();
   });
 
   // TC-14
   it('/pricing and /features URLs present', () => {
-    const pricing = sitemapEntries.find(
-      (e) => new URL(e.url).pathname === '/pricing'
-    );
-    const features = sitemapEntries.find(
-      (e) => new URL(e.url).pathname === '/features'
-    );
+    const pricing = sitemapEntries.find((e) => new URL(e.url).pathname === '/pricing');
+    const features = sitemapEntries.find((e) => new URL(e.url).pathname === '/features');
     expect(pricing).toBeDefined();
     expect(features).toBeDefined();
   });
@@ -195,9 +187,7 @@ describe('sitemap() fallback URL', () => {
     vi.resetModules();
     const mod = await import('../sitemap');
     const entries = mod.default();
-    const root = entries.find(
-      (e: { url: string }) => new URL(e.url).pathname === '/'
-    );
+    const root = entries.find((e: { url: string }) => new URL(e.url).pathname === '/');
     expect(root).toBeDefined();
     expect(root!.url).toBe('https://intelliflow-crm.com');
   });

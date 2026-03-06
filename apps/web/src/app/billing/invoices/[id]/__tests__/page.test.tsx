@@ -97,10 +97,7 @@ describe('InvoiceDetailPage', () => {
 
     render(<InvoiceDetailPage />);
 
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      { invoiceId: 'in_test123' },
-      { enabled: true }
-    );
+    expect(mockUseQuery).toHaveBeenCalledWith({ invoiceId: 'in_test123' }, { enabled: true });
   });
 
   // T-003
@@ -158,10 +155,7 @@ describe('InvoiceDetailPage', () => {
 
     render(<InvoiceDetailPage />);
 
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      expect.anything(),
-      { enabled: false }
-    );
+    expect(mockUseQuery).toHaveBeenCalledWith(expect.anything(), { enabled: false });
   });
 
   it('passes onPayNow callback to InvoiceDetail', () => {

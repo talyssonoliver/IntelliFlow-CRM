@@ -21,12 +21,16 @@ const {
   mockOAuthCallback,
   mockPush,
   mockSearchParams,
+  mockGetSession,
+  mockGetUser,
 } = vi.hoisted(() => ({
   mockExtractOAuthParams: vi.fn(),
   mockValidateOAuthParams: vi.fn(),
   mockOAuthCallback: vi.fn(),
   mockPush: vi.fn(),
   mockSearchParams: { current: new URLSearchParams() },
+  mockGetSession: vi.fn(),
+  mockGetUser: vi.fn(),
 }));
 
 // Mock next/navigation — use dynamic searchParams
@@ -46,6 +50,17 @@ vi.mock('@/lib/shared/token-exchange', () => ({
 // Mock login-security
 vi.mock('@/lib/shared/login-security', () => ({
   storeSessionFingerprint: vi.fn(),
+}));
+
+// Mock supabase-browser
+vi.mock('@/lib/supabase-browser', () => ({
+  getSupabaseBrowserClient: () => ({
+    auth: {
+      getSession: mockGetSession,
+      getUser: mockGetUser,
+    },
+  }),
+  clearSupabaseLocalStorage: vi.fn(),
 }));
 
 // Mock tRPC
@@ -68,8 +83,8 @@ import { OAuthCallback } from '@/components/shared/oauth-callback';
 describe('OAuthCallback Security', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default: valid params
-    mockSearchParams.current = new URLSearchParams('code=test123&provider=google');
+    // Default: valid params — include nonce to pass CSRF check
+    mockSearchParams.current = new URLSearchParams('code=test123&provider=google&nonce=test-nonce');
     mockExtractOAuthParams.mockReturnValue({
       code: 'test123',
       state: null,
@@ -87,6 +102,20 @@ describe('OAuthCallback Security', () => {
       user: { id: 'u1', email: 'u@e.com' },
     });
 
+    // Default supabase mock: successful session
+    mockGetSession.mockResolvedValue({
+      data: {
+        session: {
+          access_token: 'tok',
+          refresh_token: 'ref',
+        },
+      },
+      error: null,
+    });
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: 'u1', email: 'u@e.com' } },
+    });
+
     // Set up sessionStorage nonce
     sessionStorage.setItem('intelliflow_oauth_nonce', 'test-nonce');
   });
@@ -94,10 +123,10 @@ describe('OAuthCallback Security', () => {
   // T-13: XSS in error_description rendered as plain text
   it('T-13: renders XSS payload in error_description as plain text', async () => {
     const xssPayload = '<img src=x onerror=alert(1)>';
-    mockValidateOAuthParams.mockReturnValue({
-      ok: false,
-      error: { code: 'PROVIDER_ERROR', message: xssPayload },
-    });
+    // The component reads error_description directly from URL params
+    mockSearchParams.current = new URLSearchParams(
+      `error=access_denied&error_description=${encodeURIComponent(xssPayload)}`
+    );
 
     render(<OAuthCallback />);
 

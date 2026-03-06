@@ -1,8 +1,11 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* @source is valid Tailwind CSS v4 syntax — suppress S4662 false positives */
+/* sonar-disable-next-line css:S4662 */
 @source "../../../../packages/ui/src";
+/* sonar-disable-next-line css:S4662 */
 @source inline("inset-y-0 inset-x-0 inset-0 w-3/4 h-full sm:max-w-sm sm:max-w-[500px] slide-out-to-top slide-out-to-bottom slide-out-to-left slide-out-to-right slide-in-from-top slide-in-from-bottom slide-in-from-left slide-in-from-right fade-in-0 fade-out-0 animate-in animate-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-left data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-top data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=closed]:duration-300 data-[state=open]:duration-500");
 
 @theme inline {
@@ -58,44 +61,88 @@
   --animate-slide-in-from-right: slide-in-from-right 0.2s ease-out;
 
   @keyframes accordion-down {
-    from { height: 0; }
-    to { height: var(--radix-accordion-content-height); }
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
   }
   @keyframes accordion-up {
-    from { height: var(--radix-accordion-content-height); }
-    to { height: 0; }
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
   }
   @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
   @keyframes fade-out {
-    from { opacity: 1; }
-    to { opacity: 0; }
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
   }
   @keyframes zoom-in {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
   @keyframes zoom-out {
-    from { opacity: 1; transform: scale(1); }
-    to { opacity: 0; transform: scale(0.95); }
+    from {
+      opacity: 1;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.95);
+    }
   }
   @keyframes slide-in-from-top {
-    from { transform: translateY(-100%); }
-    to { transform: translateY(0); }
+    from {
+      transform: translateY(-100%);
+    }
+    to {
+      transform: translateY(0);
+    }
   }
   @keyframes slide-in-from-bottom {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
   }
   @keyframes slide-in-from-left {
-    from { transform: translateX(-100%); }
-    to { transform: translateX(0); }
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
   }
   @keyframes slide-in-from-right {
-    from { transform: translateX(100%); }
-    to { transform: translateX(0); }
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
   }
 }
 
@@ -124,12 +171,12 @@
     --radius: 0.5rem;
 
     /* Pipeline stage colors (PG-135) */
-    --stage-qualification: 209 87% 50%;   /* blue – matches primary */
-    --stage-needs-analysis: 38 92% 50%;   /* amber */
-    --stage-proposal: 262 52% 56%;        /* purple */
-    --stage-negotiation: 28 80% 52%;      /* orange */
-    --stage-won: 142 71% 45%;             /* green */
-    --stage-lost: 0 84% 60%;              /* red – matches destructive */
+    --stage-qualification: 209 87% 50%; /* blue – matches primary */
+    --stage-needs-analysis: 38 92% 50%; /* amber */
+    --stage-proposal: 262 52% 56%; /* purple */
+    --stage-negotiation: 28 80% 52%; /* orange */
+    --stage-won: 142 71% 45%; /* green */
+    --stage-lost: 0 84% 60%; /* red – matches destructive */
   }
 
   .dark {
@@ -190,5 +237,445 @@
 
 /* Material Symbols — required for icon rendering */
 .material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+}
+
+/* ─── Schedule-X calendar theme bridge ─── */
+
+/* Variable bridge — maps Schedule-X tokens to IntelliFlow design system */
+:root {
+  --sx-color-primary: #137fec;
+  --sx-color-on-primary: #fff;
+  --sx-color-primary-container: #dbeafe;
+  --sx-color-on-primary-container: #1e3a5f;
+  --sx-color-surface: #fff;
+  --sx-color-surface-dim: #f1f5f9;
+  --sx-color-surface-bright: #fff;
+  --sx-color-on-surface: #0f172a;
+  --sx-color-surface-container: #f8fafc;
+  --sx-color-surface-container-low: #fff;
+  --sx-color-surface-container-high: #f1f5f9;
+  --sx-color-background: #fff;
+  --sx-color-on-background: #0f172a;
+  --sx-color-outline: #cbd5e1;
+  --sx-color-outline-variant: #e2e8f0;
+  --sx-color-neutral: #64748b;
+  --sx-color-neutral-variant: #94a3b8;
+  --sx-color-surface-tint: #137fec;
+  --sx-internal-color-gray-ripple-background: #e2e8f0;
+  --sx-internal-color-light-gray: #f8fafc;
+  --sx-internal-color-text: #0f172a;
+  --sx-border: 1px solid #e2e8f0;
+  --sx-rounding-small: 0.5rem;
+  --sx-rounding-extra-small: 0.25rem;
+}
+
+.dark {
+  --sx-color-primary: #137fec;
+  --sx-color-on-primary: #fff;
+  --sx-color-primary-container: #1e3a5f;
+  --sx-color-on-primary-container: #bfdbfe;
+  --sx-color-surface: #1e2936;
+  --sx-color-surface-dim: #1e293b;
+  --sx-color-surface-bright: #334155;
+  --sx-color-on-surface: #f1f5f9;
+  --sx-color-surface-container: #1e293b;
+  --sx-color-surface-container-low: #1e2936;
+  --sx-color-surface-container-high: #334155;
+  --sx-color-background: #1e2936;
+  --sx-color-on-background: #f1f5f9;
+  --sx-color-outline: #475569;
+  --sx-color-outline-variant: #334155;
+  --sx-color-neutral: #94a3b8;
+  --sx-color-neutral-variant: #64748b;
+  --sx-color-surface-tint: #60a5fa;
+  --sx-internal-color-gray-ripple-background: #334155;
+  --sx-internal-color-light-gray: #1e293b;
+  --sx-internal-color-text: #f1f5f9;
+  --sx-border: 1px solid #334155;
+}
+
+/* Hide Schedule-X built-in header — we use our own navigation */
+.sx__calendar-header {
+  display: none !important;
+}
+
+/* Calendar container — match IntelliFlow card style */
+.sx__calendar {
+  border-width: 0 !important;
+  border-style: none !important;
+  background-color: #fff !important;
+  border-radius: 0 !important;
+}
+.dark .sx__calendar {
+  border-color: #334155 !important;
+  background-color: #1e2936 !important;
+}
+
+/* Month grid day cells */
+.sx__month-grid-day {
+  border-color: #e2e8f0 !important;
+}
+.dark .sx__month-grid-day {
+  border-color: #334155 !important;
+}
+
+/* Month grid week rows */
+.sx__month-grid-week {
+  border-color: #e2e8f0 !important;
+}
+.dark .sx__month-grid-week {
+  border-color: #334155 !important;
+}
+
+/* Day name headers — match table header style */
+.sx__month-grid-day__header-day-name {
+  color: #64748b !important;
+  font-weight: 500 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+.dark .sx__month-grid-day__header-day-name {
+  color: #94a3b8 !important;
+}
+
+/* Date numbers */
+.sx__month-grid-day__header-date {
+  color: #0f172a !important;
+}
+.dark .sx__month-grid-day__header-date {
+  color: #f1f5f9 !important;
+}
+
+/* Today indicator */
+.sx__month-grid-day__header-date.sx__is-today {
+  background-color: #137fec !important;
+  color: #0f172a !important;
+}
+
+/* Leading/trailing days (outside current month) */
+.sx__month-grid-day.is-leading-or-trailing .sx__month-grid-day__header-date {
+  color: #94a3b8 !important;
+}
+.dark .sx__month-grid-day.is-leading-or-trailing .sx__month-grid-day__header-date {
+  color: #475569 !important;
+}
+
+/* Week/day view — date axis */
+.sx__week-header {
+  background-color: #fff !important;
+}
+.dark .sx__week-header {
+  background-color: #1e2936 !important;
+}
+
+.sx__week-grid__day-name {
+  color: #64748b !important;
+  font-weight: 500 !important;
+}
+.dark .sx__week-grid__day-name {
+  color: #94a3b8 !important;
+}
+
+.sx__week-grid__date-number {
+  color: #334155 !important;
+}
+.dark .sx__week-grid__date-number {
+  color: #e2e8f0 !important;
+}
+
+/* Today column highlight */
+.sx__week-grid__date--is-today .sx__week-grid__day-name {
+  color: #137fec !important;
+  font-weight: 700 !important;
+}
+.sx__week-grid__date--is-today .sx__week-grid__date-number {
+  background-color: #137fec !important;
+  color: #fff !important;
+}
+
+/* Hour grid lines */
+.sx__week-grid__hour {
+  border-color: #e2e8f0 !important;
+}
+.dark .sx__week-grid__hour {
+  border-color: #334155 !important;
+}
+
+/* Hour labels */
+.sx__week-grid__hour-text {
+  color: #64748b !important;
+  font-size: 0.7rem !important;
+}
+.dark .sx__week-grid__hour-text {
+  color: #94a3b8 !important;
+}
+
+/* Time grid day columns */
+.sx__time-grid-day {
+  border-color: #e2e8f0 !important;
+}
+.dark .sx__time-grid-day {
+  border-color: #334155 !important;
+}
+
+/* Week header border */
+.sx__week-header-border {
+  border-color: #e2e8f0 !important;
+}
+.dark .sx__week-header-border {
+  border-color: #334155 !important;
+}
+
+/* Date grid (multi-day events in week view) */
+.sx__date-grid-day {
+  border-color: #e2e8f0 !important;
+}
+.dark .sx__date-grid-day {
+  border-color: #334155 !important;
+}
+
+/* Week number columns (if shown) */
+.sx__month-grid-week__week-number {
+  background-color: #f1f5f9 !important;
+  color: #64748b !important;
+}
+.dark .sx__month-grid-week__week-number {
+  background-color: #1e293b !important;
+  color: #94a3b8 !important;
+}
+
+/* "N more" link in month view */
+.sx__month-grid-day__events-more {
+  color: #64748b !important;
+}
+.sx__month-grid-day__events-more:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+.dark .sx__month-grid-day__events-more {
+  color: #94a3b8 !important;
+}
+.dark .sx__month-grid-day__events-more:hover {
+  background-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+/* Current time indicator */
+.sx__current-time-indicator {
+  background-color: #137fec !important;
+}
+.sx__current-time-indicator::before {
+  background-color: #137fec !important;
+}
+
+/* ─── Unified calendar container — prevents layout shift on view toggle ─── */
+
+/* Fixed-height wrapper so month/week/day occupy the same box */
+.sx-calendar-container {
+  height: 720px;
+  --sx-calendar-week-grid-padding-left: 56px;
+}
+@media (min-height: 900px) {
+  .sx-calendar-container {
+    height: calc(100vh - 260px);
+    min-height: 600px;
+    max-height: 900px;
+  }
+}
+
+/* Make Schedule-X fill the fixed container — include React wrapper in chain */
+.sx-calendar-container .sx-react-calendar-wrapper,
+.sx-calendar-container .sx__calendar-wrapper,
+.sx-calendar-container .sx__calendar {
+  height: 100% !important;
+}
+
+/* View container — flex column so children can stretch via flex: 1 */
+.sx-calendar-container .sx__view-container {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow-y: auto !important;
+}
+
+/* ─── Month grid — stretch to fill container ─── */
+.sx-calendar-container .sx__month-grid-wrapper {
+  flex: 1 !important;
+}
+
+/* Ensure month grid weeks share the vertical space evenly */
+.sx-calendar-container .sx__month-grid-week {
+  flex: 1 !important;
+  min-height: 0 !important;
+}
+
+/* ─── Week/day wrapper — also stretch to fill ─── */
+.sx-calendar-container .sx__week-wrapper {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* ─── Week/day grid — consistent left gutter ─── */
+
+/* Uniform gutter width for the time axis — scoped to container to beat theme defaults */
+.sx-calendar-container .sx__week-grid {
+  padding-left: var(--sx-calendar-week-grid-padding-left) !important;
+  position: relative !important;
+}
+.sx-calendar-container .sx__week-grid__date-axis {
+  padding-left: var(--sx-calendar-week-grid-padding-left) !important;
+  position: relative !important;
+}
+.sx-calendar-container .sx__date-grid {
+  padding-left: var(--sx-calendar-week-grid-padding-left) !important;
+}
+
+/* Re-position hour labels to match narrower gutter */
+.sx-calendar-container .sx__week-grid__hour-text {
+  left: -38px !important;
+  font-size: 0.65rem !important;
+  color: #94a3b8 !important;
+}
+.dark .sx-calendar-container .sx__week-grid__hour-text {
+  color: #64748b !important;
+}
+
+/* Fix the header border offset for narrow gutter */
+.sx-calendar-container .sx__week-header-border {
+  border-left-width: 0 !important;
+  border-left-color: transparent !important;
+}
+
+/* ─── Consistent header row (day-of-week names) across views ─── */
+
+/* Week/day date axis — tighter vertical padding */
+.sx-calendar-container .sx__week-grid__date {
+  padding: 8px 0 !important;
+  gap: 2px !important;
+}
+
+/* Smaller date number in week/day views — closer to month size */
+.sx-calendar-container .sx__week-grid__date-number {
+  font-size: 0.875rem !important;
+  height: 1.75em !important;
+  width: 1.75em !important;
+}
+
+/* Day-of-week names — identical style in both month and week/day */
+.sx-calendar-container .sx__month-grid-day__header-day-name,
+.sx-calendar-container .sx__week-grid__day-name {
+  font-size: 0.65rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  color: #94a3b8 !important;
+}
+.dark .sx-calendar-container .sx__month-grid-day__header-day-name,
+.dark .sx-calendar-container .sx__week-grid__day-name {
+  color: #64748b !important;
+}
+
+/* ─── Consistent backgrounds ─── */
+
+/* Grid body — white surface */
+.sx-calendar-container .sx__month-grid-wrapper,
+.sx-calendar-container .sx__week-wrapper {
+  background-color: #fff !important;
+}
+.dark .sx-calendar-container .sx__month-grid-wrapper,
+.dark .sx-calendar-container .sx__week-wrapper {
+  background-color: #1e2936 !important;
+}
+
+/* ─── Light-grey headers ─── */
+
+/* Week/day: top date-axis header bar */
+.sx-calendar-container .sx__week-header {
+  background-color: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+.dark .sx-calendar-container .sx__week-header {
+  background-color: #1a2332 !important;
+  border-bottom: 1px solid #334155 !important;
+}
+
+/* Month: day-name header area (top of each cell) */
+.sx-calendar-container .sx__month-grid-day__header {
+  background-color: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 4px 6px !important;
+}
+.dark .sx-calendar-container .sx__month-grid-day__header {
+  background-color: #1a2332 !important;
+  border-bottom: 1px solid #334155 !important;
+}
+
+/* ─── Light-grey left time gutter (week/day) ─── */
+
+/* The gutter is the padding-left area of the week grid — use a pseudo-element */
+.sx-calendar-container .sx__week-grid::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--sx-calendar-week-grid-padding-left, 56px);
+  height: 100%;
+  background-color: #f8fafc;
+  z-index: 0;
+  pointer-events: none;
+}
+.dark .sx-calendar-container .sx__week-grid::before {
+  background-color: #1a2332;
+}
+
+/* Also grey the date-axis left zone (the empty square above the gutter) */
+.sx-calendar-container .sx__week-grid__date-axis::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--sx-calendar-week-grid-padding-left, 56px);
+  height: 100%;
+  background-color: #f8fafc;
+  z-index: 0;
+  pointer-events: none;
+}
+.dark .sx-calendar-container .sx__week-grid__date-axis::before {
+  background-color: #1a2332;
+}
+
+/* ─── Subtle grid lines ─── */
+
+/* Thin, light separators for a clean look */
+.sx-calendar-container .sx__month-grid-day:not(:last-child) {
+  border-inline-end: 1px solid #f1f5f9 !important;
+}
+.sx-calendar-container .sx__month-grid-week {
+  border-top: 1px solid #f1f5f9 !important;
+}
+.dark .sx-calendar-container .sx__month-grid-day:not(:last-child) {
+  border-inline-end: 1px solid #1e293b !important;
+}
+.dark .sx-calendar-container .sx__month-grid-week {
+  border-top: 1px solid #1e293b !important;
+}
+
+/* Week/day hour grid lines — lighter */
+.sx-calendar-container .sx__week-grid__hour {
+  border-top: 1px solid #f1f5f9 !important;
+}
+.sx-calendar-container .sx__time-grid-day {
+  border-left: 1px solid #f1f5f9 !important;
+}
+.dark .sx-calendar-container .sx__week-grid__hour {
+  border-top: 1px solid #1e293b !important;
+}
+.dark .sx-calendar-container .sx__time-grid-day {
+  border-left: 1px solid #1e293b !important;
 }

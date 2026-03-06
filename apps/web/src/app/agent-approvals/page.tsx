@@ -149,55 +149,63 @@ function formatTimeRemaining(date: Date): string {
   return `${diffMins}m`;
 }
 
+const STATUS_BADGE_CONFIG: Record<
+  ActionStatus,
+  { label: string; className: string; iconName: string }
+> = {
+  pending: {
+    label: 'Pending Review',
+    className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+    iconName: 'schedule',
+  },
+  approved: {
+    label: 'Approved',
+    className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    iconName: 'check',
+  },
+  modified: {
+    label: 'Modified',
+    className: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+    iconName: 'edit',
+  },
+  rejected: {
+    label: 'Rejected',
+    className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+    iconName: 'close',
+  },
+  rolled_back: {
+    label: 'Rolled Back',
+    className: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+    iconName: 'history',
+  },
+  expired: {
+    label: 'Expired',
+    className: 'bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-400',
+    iconName: 'warning',
+  },
+};
+
 function getStatusBadge(status: ActionStatus): {
   label: string;
   className: string;
   icon: React.ReactNode;
 } {
-  switch (status) {
-    case 'pending':
-      return {
-        label: 'Pending Review',
-        className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
-        icon: <Icon name="schedule" className="text-xs" />,
-      };
-    case 'approved':
-      return {
-        label: 'Approved',
-        className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-        icon: <Icon name="check" className="text-xs" />,
-      };
-    case 'rejected':
-      return {
-        label: 'Rejected',
-        className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-        icon: <Icon name="close" className="text-xs" />,
-      };
-    case 'rolled_back':
-      return {
-        label: 'Rolled Back',
-        className: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-        icon: <Icon name="history" className="text-xs" />,
-      };
-    case 'expired':
-      return {
-        label: 'Expired',
-        className: 'bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-400',
-        icon: <Icon name="warning" className="text-xs" />,
-      };
-    default:
-      return {
-        label: status,
-        className: 'bg-slate-100 text-slate-800',
-        icon: null,
-      };
+  const config = STATUS_BADGE_CONFIG[status];
+  if (config) {
+    return {
+      label: config.label,
+      className: config.className,
+      icon: <Icon name={config.iconName} className="text-xs" />,
+    };
   }
+  return {
+    label: status,
+    className: 'bg-slate-100 text-slate-800',
+    icon: null,
+  };
 }
 
-function getConfidenceBadge(score: number): {
-  label: string;
-  className: string;
-} {
+function getConfidenceBadge(score: number): { label: string; className: string } {
   if (score >= 80) {
     return {
       label: 'High Confidence',
@@ -691,7 +699,11 @@ function AgentApprovalsContent() {
 
   // Get user ID for queries - use a fallback for demo purposes
   const userId = user?.id || '00000000-0000-4000-8000-000000000001';
-  const tenantId = '00000000-0000-4000-8000-000000000001'; // TODO: Get from auth context
+  // tenantId is required by getStatsByStatus (protectedProcedure, not tenantProcedure).
+  // AuthUser does not expose tenantId — it is resolved server-side from the JWT via tRPC context.
+  // Until the autoResponse router is migrated to tenantProcedure (IFC-149 follow-up), this
+  // falls back to the seeded default tenant. PG-084 OAuth integration will provide the real value.
+  const tenantId = '00000000-0000-4000-8000-000000000001';
 
   // ==========================================================================
   // tRPC Queries & Mutations - WIRED TO BACKEND
@@ -1009,14 +1021,15 @@ function AgentApprovalsContent() {
 
       {/* Actions List */}
       <div className="space-y-4">
-        {isLoading ? (
+        {isLoading && (
           <Card className="p-12">
             <div className="flex flex-col items-center justify-center">
               <Icon name="hourglass_empty" className="text-4xl text-slate-400 animate-spin mb-4" />
               <p className="text-slate-600 dark:text-slate-400">Loading approvals...</p>
             </div>
           </Card>
-        ) : filteredActions.length === 0 ? (
+        )}
+        {!isLoading && filteredActions.length === 0 && (
           <Card className="p-12">
             <div className="flex flex-col items-center justify-center text-center">
               <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
@@ -1032,7 +1045,9 @@ function AgentApprovalsContent() {
               </p>
             </div>
           </Card>
-        ) : (
+        )}
+        {!isLoading &&
+          filteredActions.length > 0 &&
           filteredActions.map((action) => (
             <div
               key={action.id}
@@ -1053,8 +1068,7 @@ function AgentApprovalsContent() {
                 isLoading={isMutating}
               />
             </div>
-          ))
-        )}
+          ))}
       </div>
 
       {/* Connection Status */}

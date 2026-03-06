@@ -20,10 +20,7 @@ import Link from 'next/link';
 import { cn } from '@intelliflow/ui';
 import { useRedirectIfAuthenticated } from '@/lib/auth/AuthContext';
 import { AuthBackground, AuthCard } from '@/components/shared';
-import {
-  ForgotPasswordForm,
-  ResetEmailSent,
-} from '@/components/shared/reset-email';
+import { ForgotPasswordForm, ResetEmailSent } from '@/components/shared/reset-email';
 import { trpc } from '@/lib/trpc';
 
 // ============================================
@@ -73,29 +70,32 @@ export default function ForgotPasswordPage() {
   const requestResetMutation = trpc.auth.requestPasswordReset.useMutation();
 
   // Handle password reset request
-  const handleSubmit = useCallback(async (submittedEmail: string) => {
-    setIsLoading(true);
-    setError(null);
+  const handleSubmit = useCallback(
+    async (submittedEmail: string) => {
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      await requestResetMutation.mutateAsync({ email: submittedEmail });
+      try {
+        await requestResetMutation.mutateAsync({ email: submittedEmail });
 
-      // Update state — server always returns success to prevent email enumeration
-      setEmail(submittedEmail);
-      setState('sent');
-      setResendCooldown(RESEND_COOLDOWN_SECONDS);
-    } catch (err: unknown) {
-      // Handle rate limiting
-      const trpcError = err as { data?: { code?: string }; message?: string };
-      if (trpcError.data?.code === 'TOO_MANY_REQUESTS') {
-        setError('Too many requests. Please try again in a few minutes.');
-      } else {
-        setError('An error occurred. Please try again.');
+        // Update state — server always returns success to prevent email enumeration
+        setEmail(submittedEmail);
+        setState('sent');
+        setResendCooldown(RESEND_COOLDOWN_SECONDS);
+      } catch (err: unknown) {
+        // Handle rate limiting
+        const trpcError = err as { data?: { code?: string }; message?: string };
+        if (trpcError.data?.code === 'TOO_MANY_REQUESTS') {
+          setError('Too many requests. Please try again in a few minutes.');
+        } else {
+          setError('An error occurred. Please try again.');
+        }
+      } finally {
+        setIsLoading(false);
       }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [requestResetMutation]);
+    },
+    [requestResetMutation]
+  );
 
   // Handle resend request
   const handleResend = useCallback(async () => {

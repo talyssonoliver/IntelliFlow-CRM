@@ -74,7 +74,7 @@ export default function PartnersPage() {
               >
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   send
-                </span>
+                </span>{' '}
                 Become a Partner
               </Link>
               <Link

@@ -20,85 +20,41 @@ import {
   formatDuration,
 } from '@/lib/appointments/appointment-utils';
 
-/** Typed escape-hatch for the appointments tRPC namespace (not yet in AppRouter). */
-interface AppointmentsApiEscape {
-  useUtils(): {
-    appointments?: {
-      getById?: { invalidate?: (args: { id: string }) => void };
-      list?: { invalidate?: () => void };
-      stats?: { invalidate?: () => void };
-    };
-  };
-  appointments?: {
-    getById?: {
-      useQuery?: (
-        args: { id: string }
-      ) => { data: unknown; isLoading: boolean };
-    };
-    confirm?: { useMutation?: (opts: { onSuccess: () => void }) => { mutateAsync: (args: Record<string, unknown>) => Promise<void> } };
-    complete?: { useMutation?: (opts: { onSuccess: () => void }) => { mutateAsync: (args: Record<string, unknown>) => Promise<void> } };
-    cancel?: { useMutation?: (opts: { onSuccess: () => void }) => { mutateAsync: (args: Record<string, unknown>) => Promise<void> } };
-    markNoShow?: { useMutation?: (opts: { onSuccess: () => void }) => { mutateAsync: (args: Record<string, unknown>) => Promise<void> } };
-    reschedule?: { useMutation?: (opts: { onSuccess: () => void }) => { mutateAsync: (args: Record<string, unknown>) => Promise<void> } };
-    addAttendee?: { useMutation?: (opts: { onSuccess: () => void }) => { mutateAsync: (args: Record<string, unknown>) => Promise<void> } };
-    removeAttendee?: { useMutation?: (opts: { onSuccess: () => void }) => { mutateAsync: (args: Record<string, unknown>) => Promise<void> } };
-    linkCase?: { useMutation?: (opts: { onSuccess: () => void }) => { mutateAsync: (args: Record<string, unknown>) => Promise<void> } };
-    unlinkCase?: { useMutation?: (opts: { onSuccess: () => void }) => { mutateAsync: (args: Record<string, unknown>) => Promise<void> } };
-  };
-}
-
-const appointmentsApi = api as unknown as AppointmentsApiEscape;
-
 export default function AppointmentDetailPage() {
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
   const params = useParams();
   const router = useRouter();
   const appointmentId = params.id as string;
 
-  const utils = appointmentsApi.useUtils?.() ?? {};
+  const utils = api.useUtils();
 
-  // tRPC queries
-  const { data: appointmentData, isLoading } =
-    appointmentsApi.appointments?.getById?.useQuery?.({ id: appointmentId }) ?? {
-      data: undefined,
-      isLoading: false,
-    };
+  // tRPC queries — using typed client directly
+  const { data: appointmentData, isLoading } = api.appointments.getById.useQuery({
+    id: appointmentId,
+  });
 
-  // Mutations
+  // Mutations with cache invalidation
   const invalidateAll = useCallback(() => {
-    utils.appointments?.getById?.invalidate?.({ id: appointmentId });
-    utils.appointments?.list?.invalidate?.();
-    utils.appointments?.stats?.invalidate?.();
+    utils.appointments.getById.invalidate({ id: appointmentId });
+    utils.appointments.list.invalidate();
+    utils.appointments.stats.invalidate();
   }, [utils, appointmentId]);
 
-  const confirmMutation = appointmentsApi.appointments?.confirm?.useMutation?.({
+  const confirmMutation = api.appointments.confirm.useMutation({ onSuccess: invalidateAll });
+  const completeMutation = api.appointments.complete.useMutation({ onSuccess: invalidateAll });
+  const cancelMutation = api.appointments.cancel.useMutation({ onSuccess: invalidateAll });
+  const noShowMutation = api.appointments.markNoShow.useMutation({ onSuccess: invalidateAll });
+  const rescheduleMutation = api.appointments.reschedule.useMutation({ onSuccess: invalidateAll });
+  const addAttendeeMutation = api.appointments.addAttendee.useMutation({
     onSuccess: invalidateAll,
-  }) ?? { mutateAsync: async () => {} };
-  const completeMutation = appointmentsApi.appointments?.complete?.useMutation?.({
+  });
+  const removeAttendeeMutation = api.appointments.removeAttendee.useMutation({
     onSuccess: invalidateAll,
-  }) ?? { mutateAsync: async () => {} };
-  const cancelMutation = appointmentsApi.appointments?.cancel?.useMutation?.({
+  });
+  const linkCaseMutation = api.appointments.linkToCase.useMutation({ onSuccess: invalidateAll });
+  const unlinkCaseMutation = api.appointments.unlinkFromCase.useMutation({
     onSuccess: invalidateAll,
-  }) ?? { mutateAsync: async () => {} };
-  const noShowMutation = appointmentsApi.appointments?.markNoShow?.useMutation?.({
-    onSuccess: invalidateAll,
-  }) ?? { mutateAsync: async () => {} };
-  const rescheduleMutation = appointmentsApi.appointments?.reschedule?.useMutation?.({
-    onSuccess: invalidateAll,
-  }) ?? { mutateAsync: async () => {} };
-  const addAttendeeMutation = appointmentsApi.appointments?.addAttendee?.useMutation?.(
-    { onSuccess: invalidateAll }
-  ) ?? { mutateAsync: async () => {} };
-  const removeAttendeeMutation =
-    appointmentsApi.appointments?.removeAttendee?.useMutation?.({ onSuccess: invalidateAll }) ?? {
-      mutateAsync: async () => {},
-    };
-  const linkCaseMutation = appointmentsApi.appointments?.linkCase?.useMutation?.({
-    onSuccess: invalidateAll,
-  }) ?? { mutateAsync: async () => {} };
-  const unlinkCaseMutation = appointmentsApi.appointments?.unlinkCase?.useMutation?.({
-    onSuccess: invalidateAll,
-  }) ?? { mutateAsync: async () => {} };
+  });
 
   const handleConfirm = useCallback(async () => {
     await confirmMutation.mutateAsync({ id: appointmentId });
@@ -126,8 +82,8 @@ export default function AppointmentDetailPage() {
     async (newStart: Date, newEnd: Date, reason?: string) => {
       await rescheduleMutation.mutateAsync({
         id: appointmentId,
-        startTime: newStart,
-        endTime: newEnd,
+        newStartTime: newStart,
+        newEndTime: newEnd,
         reason,
       });
     },
@@ -142,8 +98,8 @@ export default function AppointmentDetailPage() {
   );
 
   const handleRemoveAttendee = useCallback(
-    async (attendeeId: string) => {
-      await removeAttendeeMutation.mutateAsync({ appointmentId, attendeeId });
+    async (userId: string) => {
+      await removeAttendeeMutation.mutateAsync({ appointmentId, userId });
     },
     [removeAttendeeMutation, appointmentId]
   );
@@ -164,7 +120,8 @@ export default function AppointmentDetailPage() {
 
   const detailData = useMemo((): AppointmentDetailData | null => {
     if (!appointmentData) return null;
-    const d = appointmentData as never as AppointmentDetailData;
+    // tRPC returns properly typed data — map dates from serialized strings
+    const d = appointmentData as AppointmentDetailData;
     return {
       ...d,
       startTime: new Date(d.startTime),

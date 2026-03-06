@@ -292,7 +292,8 @@ export default function UploadDocumentPage() {
       console.error('Failed to upload document:', err);
       toast({
         title: 'Upload Failed',
-        description: err instanceof Error ? err.message : 'Failed to upload document. Please try again.',
+        description:
+          err instanceof Error ? err.message : 'Failed to upload document. Please try again.',
         variant: 'destructive',
       });
       setIsSubmitting(false);
@@ -444,7 +445,10 @@ export default function UploadDocumentPage() {
             <div className="space-y-4">
               {/* Title */}
               <div>
-                <label htmlFor="doc-title" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                <label
+                  htmlFor="doc-title"
+                  className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"
+                >
                   Title <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -464,7 +468,10 @@ export default function UploadDocumentPage() {
 
               {/* Description */}
               <div>
-                <label htmlFor="doc-description" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                <label
+                  htmlFor="doc-description"
+                  className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"
+                >
                   Description
                 </label>
                 <textarea
@@ -481,7 +488,10 @@ export default function UploadDocumentPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Document Type */}
                 <div>
-                  <label htmlFor="doc-document-type" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                  <label
+                    htmlFor="doc-document-type"
+                    className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"
+                  >
                     Document Type <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -509,7 +519,10 @@ export default function UploadDocumentPage() {
 
                 {/* Classification */}
                 <div>
-                  <label htmlFor="doc-classification" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                  <label
+                    htmlFor="doc-classification"
+                    className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"
+                  >
                     Classification
                   </label>
                   <select
@@ -529,7 +542,10 @@ export default function UploadDocumentPage() {
 
               {/* Tags */}
               <div>
-                <label htmlFor="doc-tag-input" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                <label
+                  htmlFor="doc-tag-input"
+                  className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"
+                >
                   Tags
                 </label>
                 <div className="space-y-3">
@@ -561,7 +577,7 @@ export default function UploadDocumentPage() {
                       type="text"
                       value={tagInput}
                       onChange={(e) => setTagInput(e.target.value)}
-                      onKeyPress={handleTagInputKeyPress}
+                      onKeyDown={handleTagInputKeyPress}
                       className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-[#1e2936] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#137fec] transition-colors"
                       placeholder="Type a tag and press Enter"
                     />
@@ -610,7 +626,10 @@ export default function UploadDocumentPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Related Case */}
               <div>
-                <label htmlFor="doc-related-case" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                <label
+                  htmlFor="doc-related-case"
+                  className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"
+                >
                   Related Case
                 </label>
                 <input
@@ -628,7 +647,10 @@ export default function UploadDocumentPage() {
 
               {/* Related Contact */}
               <div>
-                <label htmlFor="doc-related-contact" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                <label
+                  htmlFor="doc-related-contact"
+                  className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"
+                >
                   Related Contact
                 </label>
                 <input

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { z } from 'zod';
 
 interface QualityReport {
   id: string;
@@ -90,6 +91,65 @@ function findFile(relativePaths: string[]): string | null {
   return null;
 }
 
+interface LighthouseScores {
+  performance: number;
+  accessibility: number;
+  bestPractices: number;
+  seo: number;
+}
+
+// Zod schemas for validating filesystem JSON (external data boundary)
+const lighthouseScoresShape = z.object({
+  performance: z.number(),
+  accessibility: z.number(),
+  bestPractices: z.number(),
+  seo: z.number(),
+});
+
+const lighthouseSummaryFormat = z.object({
+  scores: lighthouseScoresShape,
+  generatedAt: z.string().optional(),
+});
+
+const lighthouseCategoryScore = z.object({ score: z.number().optional() }).optional();
+const lighthouseRawFormat = z.object({
+  categories: z.object({
+    performance: lighthouseCategoryScore,
+    accessibility: lighthouseCategoryScore,
+    'best-practices': lighthouseCategoryScore,
+    seo: lighthouseCategoryScore,
+  }),
+  fetchTime: z.string().optional(),
+});
+
+function parseLighthouseScores(data: unknown): { scores: LighthouseScores; generatedAt: string } {
+  // Try summary format first
+  const summaryResult = lighthouseSummaryFormat.safeParse(data);
+  if (summaryResult.success) {
+    return {
+      scores: summaryResult.data.scores,
+      generatedAt: summaryResult.data.generatedAt || new Date().toISOString(),
+    };
+  }
+
+  // Try raw Lighthouse format
+  const rawResult = lighthouseRawFormat.safeParse(data);
+  if (rawResult.success) {
+    const cats = rawResult.data.categories;
+    return {
+      scores: {
+        performance: Math.round((cats.performance?.score || 0) * 100),
+        accessibility: Math.round((cats.accessibility?.score || 0) * 100),
+        bestPractices: Math.round((cats['best-practices']?.score || 0) * 100),
+        seo: Math.round((cats.seo?.score || 0) * 100),
+      },
+      generatedAt: rawResult.data.fetchTime || new Date().toISOString(),
+    };
+  }
+
+  throw new Error('Unknown lighthouse report format');
+}
+
 function getLighthouseReport(): QualityReport {
   // Check multiple possible file locations
   const filePath = findFile([
@@ -104,31 +164,7 @@ function getLighthouseReport(): QualityReport {
       // Check if this is explicitly a placeholder report
       const isPlaceholder = data.type === 'unavailable' || data.source === 'placeholder';
 
-      // Handle both summary format and raw lighthouse format
-      let scores: {
-        performance: number;
-        accessibility: number;
-        bestPractices: number;
-        seo: number;
-      };
-      let generatedAt: string;
-
-      if (data.scores) {
-        // Summary format (from CI script or generate route)
-        scores = data.scores;
-        generatedAt = data.generatedAt || new Date().toISOString();
-      } else if (data.categories) {
-        // Raw Lighthouse format (from actual Lighthouse run)
-        scores = {
-          performance: Math.round((data.categories.performance?.score || 0) * 100),
-          accessibility: Math.round((data.categories.accessibility?.score || 0) * 100),
-          bestPractices: Math.round((data.categories['best-practices']?.score || 0) * 100),
-          seo: Math.round((data.categories.seo?.score || 0) * 100),
-        };
-        generatedAt = data.fetchTime || new Date().toISOString();
-      } else {
-        throw new Error('Unknown lighthouse report format');
-      }
+      const { scores, generatedAt } = parseLighthouseScores(data);
 
       const avgScore = Math.round(
         (scores.performance + scores.accessibility + scores.bestPractices + scores.seo) / 4
@@ -137,22 +173,21 @@ function getLighthouseReport(): QualityReport {
       // If we have valid scores, it's not a placeholder
       const hasValidData = avgScore > 0 || Object.values(scores).some((s) => s > 0);
 
+      const scoreStatus: 'passing' | 'failing' = avgScore >= 90 ? 'passing' : 'failing';
+      const lighthouseStatus: 'unknown' | 'passing' | 'failing' = isPlaceholder
+        ? 'unknown'
+        : scoreStatus;
+
       return {
         id: 'lighthouse',
         name: 'Lighthouse Performance',
         type: 'lighthouse',
-        status: isPlaceholder
-          ? 'unknown'
-          : avgScore >= 90
-            ? 'passing'
-            : avgScore >= 70
-              ? 'failing'
-              : 'failing',
+        status: lighthouseStatus,
         score: hasValidData ? avgScore : undefined,
         generatedAt,
         source: isPlaceholder ? 'placeholder' : data.source || 'ci',
         htmlPath: '/api/quality-reports/view?report=lighthouse',
-        details: scores,
+        details: { ...scores },
         isPlaceholder: isPlaceholder && !hasValidData,
         placeholderReason:
           isPlaceholder && !hasValidData ? data.message || 'Lighthouse not available' : undefined,
@@ -174,6 +209,72 @@ function getLighthouseReport(): QualityReport {
   };
 }
 
+interface CoverageMetaStatus {
+  status: 'passing' | 'failing' | 'unknown';
+  statusMessage?: string;
+}
+
+function resolveCoverageMetaStatus(
+  meta: Record<string, unknown>,
+  overall: number
+): CoverageMetaStatus {
+  switch (meta.status) {
+    case 'passed':
+      return { status: 'passing' };
+    case 'partial': {
+      const status = meta.thresholdsMet ? 'passing' : 'failing';
+      const statusMessage =
+        (meta.testsFailed as number) > 0
+          ? `${meta.testsPassed}/${meta.testsTotal} tests passing`
+          : 'Thresholds not met';
+      return { status, statusMessage };
+    }
+    case 'failed':
+      return { status: 'failing', statusMessage: 'Tests failed' };
+    case 'no-tests':
+      return { status: 'failing', statusMessage: 'No tests found' };
+    default:
+      return { status: overall >= 90 ? 'passing' : 'failing' };
+  }
+}
+
+interface ParsedCoverageData {
+  overall: number;
+  details: Record<string, unknown>;
+  generatedAt: string;
+}
+
+function parseCoverageData(
+  data: Record<string, unknown>,
+  meta: Record<string, unknown>
+): ParsedCoverageData {
+  if ((data.coverage as Record<string, unknown>)?.overall !== undefined) {
+    const cov = data.coverage as Record<string, unknown>;
+    return {
+      overall: cov.overall as number,
+      details: cov,
+      generatedAt:
+        (data.generatedAt as string) || (meta.lastRunAt as string) || new Date().toISOString(),
+    };
+  }
+  if ((data.total as Record<string, unknown>)?.lines !== undefined) {
+    const total = data.total as Record<string, { pct: number }>;
+    return {
+      overall: Math.round(
+        (total.lines.pct + total.branches.pct + total.functions.pct + total.statements.pct) / 4
+      ),
+      details: {
+        lines: Math.round(total.lines.pct),
+        branches: Math.round(total.branches.pct),
+        functions: Math.round(total.functions.pct),
+        statements: Math.round(total.statements.pct),
+      },
+      generatedAt: (meta.lastRunAt as string) || new Date().toISOString(),
+    };
+  }
+  throw new Error('Unknown coverage report format');
+}
+
 function getCoverageReport(): QualityReport {
   // DRY: Single source of truth for coverage data
   const filePath = findFile([
@@ -186,64 +287,23 @@ function getCoverageReport(): QualityReport {
       const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
       // TDD-friendly metadata from our coverage script
-      const meta = data.meta || {};
+      const meta = (data.meta || {}) as Record<string, unknown>;
       const hasTddMetadata = meta.lastRunAt !== undefined;
 
-      // Calculate coverage percentages
-      let overall: number;
-      let details: Record<string, unknown>;
-      let generatedAt: string;
-
-      if (data.coverage?.overall !== undefined) {
-        // CI summary format (from generate-coverage-report.js)
-        overall = data.coverage.overall;
-        details = data.coverage;
-        generatedAt = data.generatedAt || meta.lastRunAt || new Date().toISOString();
-      } else if (data.total?.lines?.pct !== undefined) {
-        // Istanbul format (from vitest + our metadata script)
-        const total = data.total;
-        overall = Math.round(
-          (total.lines.pct + total.branches.pct + total.functions.pct + total.statements.pct) / 4
-        );
-        details = {
-          lines: Math.round(total.lines.pct),
-          branches: Math.round(total.branches.pct),
-          functions: Math.round(total.functions.pct),
-          statements: Math.round(total.statements.pct),
-        };
-        generatedAt = meta.lastRunAt || new Date().toISOString();
-      } else {
-        throw new Error('Unknown coverage report format');
-      }
+      const { overall, details: baseDetails, generatedAt } = parseCoverageData(data, meta);
 
       // TDD-friendly status: Use metadata status if available
+      let details = baseDetails;
       let status: 'passing' | 'failing' | 'unknown';
       let statusMessage: string | undefined;
 
       if (hasTddMetadata) {
-        // Use TDD metadata for accurate status
-        switch (meta.status) {
-          case 'passed':
-            status = 'passing';
-            break;
-          case 'partial':
-            status = meta.thresholdsMet ? 'passing' : 'failing';
-            statusMessage =
-              meta.testsFailed > 0
-                ? `${meta.testsPassed}/${meta.testsTotal} tests passing`
-                : 'Thresholds not met';
-            break;
-          case 'failed':
-          case 'no-tests':
-            status = 'failing';
-            statusMessage = meta.status === 'no-tests' ? 'No tests found' : 'Tests failed';
-            break;
-          default:
-            status = overall >= 90 ? 'passing' : 'failing';
-        }
+        const metaStatus = resolveCoverageMetaStatus(meta, overall);
+        status = metaStatus.status;
+        statusMessage = metaStatus.statusMessage;
 
         // Add test results to details
-        if (meta.testsTotal > 0) {
+        if ((meta.testsTotal as number) > 0) {
           details = {
             ...details,
             testsTotal: meta.testsTotal,
@@ -273,7 +333,7 @@ function getCoverageReport(): QualityReport {
         details: {
           ...details,
           ...(statusMessage && { statusMessage }),
-          ...(meta.failingTests?.length > 0 && { failingTests: meta.failingTests }),
+          ...((meta.failingTests as unknown[])?.length > 0 && { failingTests: meta.failingTests }),
         },
         isPlaceholder: false, // TDD: Never show placeholder, always show real data
         placeholderReason: undefined,
@@ -296,6 +356,60 @@ function getCoverageReport(): QualityReport {
   };
 }
 
+interface ParsedPerformanceData {
+  passed: boolean;
+  score: number;
+  generatedAt: string;
+  details: Record<string, unknown>;
+}
+
+function parsePerformanceSummaryFormat(data: Record<string, unknown>): ParsedPerformanceData {
+  return {
+    passed: data.passed as boolean,
+    score: data.score as number,
+    generatedAt: data.generatedAt as string,
+    details: (data.metrics as Record<string, unknown>) || {},
+  };
+}
+
+function parsePerformanceBenchmarkFormat(data: Record<string, unknown>): ParsedPerformanceData {
+  const validation = data.validation as Record<string, unknown>;
+  const passed = validation.all_targets_met === true;
+  const benchmarks = (data.benchmarks as Array<{ operation: string; p95Time?: number }>) || [];
+
+  const tRPCBench = benchmarks.find((b) => b.operation.toLowerCase().includes('trpc'));
+  const dbBench = benchmarks.find((b) => b.operation.toLowerCase().includes('database'));
+
+  const tRPCScore =
+    tRPCBench?.p95Time !== undefined ? Math.max(0, 100 - (tRPCBench.p95Time / 50) * 100) : 80;
+  const dbScore =
+    dbBench?.p95Time !== undefined ? Math.max(0, 100 - (dbBench.p95Time / 20) * 100) : 80;
+
+  const score = Math.min(100, Math.max(0, Math.round((tRPCScore + dbScore) / 2)));
+
+  return {
+    passed,
+    score,
+    generatedAt: (data.timestamp as string) || new Date().toISOString(),
+    details: {
+      tRPC_p95: tRPCBench?.p95Time !== undefined ? `${tRPCBench.p95Time.toFixed(3)}ms` : 'N/A',
+      database_p95: dbBench?.p95Time !== undefined ? `${dbBench.p95Time.toFixed(3)}ms` : 'N/A',
+      all_targets_met: passed,
+      benchmarks: benchmarks.length,
+    },
+  };
+}
+
+function parsePerformanceData(data: Record<string, unknown>): ParsedPerformanceData {
+  if (data.score !== undefined) {
+    return parsePerformanceSummaryFormat(data);
+  }
+  if (data.validation) {
+    return parsePerformanceBenchmarkFormat(data);
+  }
+  throw new Error('Unknown performance report format');
+}
+
 function getPerformanceReport(): QualityReport {
   // Check multiple possible file locations
   const filePath = findFile([
@@ -309,56 +423,16 @@ function getPerformanceReport(): QualityReport {
 
       // Check for placeholder markers - synthetic benchmarks are still valid data
       const isPlaceholder =
-        data.source === 'placeholder' || data.message?.includes('not installed');
+        data.source === 'placeholder' || (data.message as string)?.includes('not installed');
 
-      // Handle both summary format and raw benchmark format
-      let passed: boolean;
-      let score: number;
-      let generatedAt: string;
-      let details: Record<string, unknown>;
-
-      if (data.score !== undefined) {
-        // Summary format (from generate route)
-        passed = data.passed;
-        score = data.score;
-        generatedAt = data.generatedAt;
-        details = data.metrics || {};
-      } else if (data.validation) {
-        // Raw benchmark format (existing benchmark files)
-        passed = data.validation.all_targets_met === true;
-
-        // Calculate a score based on how well benchmarks meet targets
-        const benchmarks = data.benchmarks || [];
-        const tRPCBench = benchmarks.find((b: { operation: string }) =>
-          b.operation.toLowerCase().includes('trpc')
-        );
-        const dbBench = benchmarks.find((b: { operation: string }) =>
-          b.operation.toLowerCase().includes('database')
-        );
-
-        // Score based on p95 times vs targets (lower is better)
-        // Target: tRPC < 50ms, DB < 20ms
-        const tRPCScore =
-          tRPCBench?.p95Time !== undefined ? Math.max(0, 100 - (tRPCBench.p95Time / 50) * 100) : 80;
-        const dbScore =
-          dbBench?.p95Time !== undefined ? Math.max(0, 100 - (dbBench.p95Time / 20) * 100) : 80;
-
-        score = Math.round((tRPCScore + dbScore) / 2);
-        score = Math.min(100, Math.max(0, score)); // Clamp 0-100
-
-        generatedAt = data.timestamp || new Date().toISOString();
-        details = {
-          tRPC_p95: tRPCBench?.p95Time !== undefined ? `${tRPCBench.p95Time.toFixed(3)}ms` : 'N/A',
-          database_p95: dbBench?.p95Time !== undefined ? `${dbBench.p95Time.toFixed(3)}ms` : 'N/A',
-          all_targets_met: passed,
-          benchmarks: benchmarks.length,
-        };
-      } else {
-        throw new Error('Unknown performance report format');
-      }
+      const { passed, score, generatedAt, details } = parsePerformanceData(data);
 
       // Synthetic benchmarks (type: 'synthetic') are still valid - just locally generated
       const isSynthetic = data.type === 'synthetic';
+      const nonPlaceholderSource: 'ci' | 'manual' = isSynthetic ? 'manual' : data.source || 'ci';
+      const performanceSource: 'ci' | 'manual' | 'placeholder' = isPlaceholder
+        ? 'placeholder'
+        : nonPlaceholderSource;
 
       return {
         id: 'performance',
@@ -367,7 +441,7 @@ function getPerformanceReport(): QualityReport {
         status: passed ? 'passing' : 'failing',
         score,
         generatedAt,
-        source: isPlaceholder ? 'placeholder' : isSynthetic ? 'manual' : data.source || 'ci',
+        source: performanceSource,
         htmlPath: '/api/quality-reports/view?report=performance',
         details,
         isPlaceholder: false, // If we have data, it's not a placeholder
@@ -494,9 +568,12 @@ function getSonarQubeReport(): QualityReport {
 
         // Status based on quality gate
         const gateStatus = summary?.gateStatus ?? sonar.qualityGate?.status ?? 'UNKNOWN';
-        let status: 'passing' | 'failing' | 'unknown' = 'unknown';
-        if (gateStatus === 'OK') status = 'passing';
-        else if (gateStatus === 'ERROR' || gateStatus === 'WARN') status = 'failing';
+        const GATE_STATUS_MAP: Record<string, 'passing' | 'failing' | 'unknown'> = {
+          OK: 'passing',
+          ERROR: 'failing',
+          WARN: 'failing',
+        };
+        const status: 'passing' | 'failing' | 'unknown' = GATE_STATUS_MAP[gateStatus] ?? 'unknown';
 
         return {
           id: 'sonarqube',

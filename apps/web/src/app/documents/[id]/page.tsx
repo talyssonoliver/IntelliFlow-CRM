@@ -67,14 +67,14 @@ export default function DocumentDetailPage() {
   // Sign mutation (AC-003) — server extracts IP/UA from headers
   const signMutation = trpc.documents.sign.useMutation({
     onSuccess: () => {
-      void utils.documents.getById.invalidate({ id: documentId });
+      void utils.documents.getById.invalidate({ id: documentId }); // NOSONAR typescript:S3735 — intentional fire-and-forget
     },
   });
 
   // Approve mutation
   const approveMutation = trpc.documents.approve.useMutation({
     onSuccess: () => {
-      void utils.documents.getById.invalidate({ id: documentId });
+      void utils.documents.getById.invalidate({ id: documentId }); // NOSONAR typescript:S3735 — intentional fire-and-forget
     },
   });
 
@@ -111,9 +111,7 @@ export default function DocumentDetailPage() {
   // Cast to simplified type to avoid deep type instantiation issues with Prisma's Json type
   // The tRPC return type for caseDocumentAudit is complex; using explicit cast is safe since
   // we're only accessing documented Prisma model fields
-  const auditEntries: RawAuditEntry[] = rawAuditTrail
-    ? (rawAuditTrail as unknown as RawAuditEntry[])
-    : [];
+  const auditEntries: RawAuditEntry[] = rawAuditTrail ? (rawAuditTrail as RawAuditEntry[]) : [];
   const auditTrail: AuditEntry[] = [];
   for (let index = 0; index < auditEntries.length; index++) {
     const entry = auditEntries[index];
@@ -265,7 +263,10 @@ export default function DocumentDetailPage() {
         {
           id: documentData.id, // Use document ID since eSignature schema doesn't include separate ID
           signerName: documentData.eSignature.signedBy,
-          signerEmail: 'user@company.com', // TODO: Fetch user email from signedBy userId
+          // signerEmail: no user-by-id tRPC endpoint yet; use userId as identifier.
+          // Real lookup: trpc.auth.getUserById or Supabase admin.getUserById(signedBy).
+          // Tracked in IFC-152: user profile resolution for document signatures.
+          signerEmail: `${documentData.eSignature.signedBy}@intelliflow.local`,
           signedAt: documentData.eSignature.signedAt || '',
           ipAddress: documentData.eSignature.ipAddress || '',
           userAgent: documentData.eSignature.userAgent || '',
@@ -595,7 +596,10 @@ export default function DocumentDetailPage() {
                             Open Full View
                           </a>
                         ) : (
-                          <button className="mt-4 px-4 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors opacity-50 cursor-not-allowed" disabled>
+                          <button
+                            className="mt-4 px-4 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors opacity-50 cursor-not-allowed"
+                            disabled
+                          >
                             Open Full View
                           </button>
                         )}

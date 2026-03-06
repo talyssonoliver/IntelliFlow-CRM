@@ -49,20 +49,18 @@ function MfaVerifyContent() {
 
   // Validate redirect URL — reject external URLs
   const validatedRedirectUrl =
-    redirectParam && isValidRedirectUrl(redirectParam)
-      ? redirectParam
-      : DEFAULT_REDIRECT;
+    redirectParam && isValidRedirectUrl(redirectParam) ? redirectParam : DEFAULT_REDIRECT;
 
   // Validate method against MFA_METHODS enum
-  const validatedMethod: MfaMethod = (
+  const validatedMethod: MfaMethod =
     methodParam && (MFA_METHODS as readonly string[]).includes(methodParam)
-  )
-    ? (methodParam as MfaMethod)
-    : DEFAULT_METHOD;
+      ? (methodParam as MfaMethod)
+      : DEFAULT_METHOD;
 
   // Handlers
   const handleSuccess = useCallback(() => {
-    // MfaVerification handles redirect internally via router.push(redirectUrl)
+    // Intentional no-op: MfaVerification component handles navigation internally
+    // via router.push(redirectUrl) after successful code verification.
   }, []);
 
   const handleCancel = useCallback(() => {
@@ -90,10 +88,7 @@ function MfaVerifyContent() {
 
       {/* Post-card security note */}
       <p className="mt-6 text-center text-xs text-slate-500">
-        <span
-          className="material-symbols-outlined text-xs align-middle mr-1"
-          aria-hidden="true"
-        >
+        <span className="material-symbols-outlined text-xs align-middle mr-1" aria-hidden="true">
           schedule
         </span>
         Verification codes expire after 5 minutes
@@ -105,10 +100,7 @@ function MfaVerifyContent() {
           href="/login"
           className="text-sm text-slate-400 hover:text-white transition-colors inline-flex items-center gap-1"
         >
-          <span
-            className="material-symbols-outlined text-sm"
-            aria-hidden="true"
-          >
+          <span className="material-symbols-outlined text-sm" aria-hidden="true">
             arrow_back
           </span>
           Back to sign in

@@ -68,15 +68,36 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: ComplianceD
     }
   }, [open]);
 
-  const getStatusBadgeClass = (status: 'compliant' | 'critical' | 'attention') => {
-    switch (status) {
-      case 'compliant':
-        return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
-      case 'critical':
-        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-      case 'attention':
-        return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
-    }
+  const STATUS_BADGE_CLASS: Record<'compliant' | 'critical' | 'attention', string> = {
+    compliant: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+    critical: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    attention: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+  };
+  const getStatusBadgeClass = (status: 'compliant' | 'critical' | 'attention') =>
+    STATUS_BADGE_CLASS[status];
+
+  const getTrendColor = (trend: number) => {
+    if (trend > 0) return 'text-emerald-500';
+    if (trend < 0) return 'text-red-500';
+    return 'text-muted-foreground';
+  };
+
+  const getTrendIcon = (trend: number) => {
+    if (trend > 0) return 'trending_up';
+    if (trend < 0) return 'trending_down';
+    return 'remove';
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return 'bg-emerald-500';
+    if (score >= 70) return 'bg-amber-500';
+    return 'bg-red-500';
+  };
+
+  const getScoreTextColor = (score: number) => {
+    if (score >= 90) return 'text-emerald-500';
+    if (score >= 70) return 'text-amber-500';
+    return 'text-red-500';
   };
 
   const controlStats = detail?.controls.reduce(
@@ -156,8 +177,8 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: ComplianceD
           />
 
           {/* Points */}
-          {points.map((p, i) => (
-            <g key={i}>
+          {points.map((p) => (
+            <g key={p.date}>
               <circle
                 cx={p.x}
                 cy={p.y}
@@ -170,9 +191,9 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: ComplianceD
           ))}
 
           {/* X-axis labels */}
-          {points.map((p, i) => (
+          {points.map((p) => (
             <text
-              key={i}
+              key={`label-${p.date}`}
               x={p.x}
               y={chartHeight - 5}
               className="fill-muted-foreground text-[7px]"
@@ -216,22 +237,8 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: ComplianceD
                   <p className="text-sm text-muted-foreground">Compliance Score</p>
                   <p className="text-3xl font-bold text-foreground">{detail.score}%</p>
                 </div>
-                <div
-                  className={`flex items-center gap-1 ${
-                    detail.trend > 0
-                      ? 'text-emerald-500'
-                      : detail.trend < 0
-                        ? 'text-red-500'
-                        : 'text-muted-foreground'
-                  }`}
-                >
-                  <span className="material-symbols-outlined">
-                    {detail.trend > 0
-                      ? 'trending_up'
-                      : detail.trend < 0
-                        ? 'trending_down'
-                        : 'remove'}
-                  </span>
+                <div className={`flex items-center gap-1 ${getTrendColor(detail.trend)}`}>
+                  <span className="material-symbols-outlined">{getTrendIcon(detail.trend)}</span>
                   <span className="text-sm font-medium">
                     {detail.trend > 0 ? '+' : ''}
                     {detail.trend}%
@@ -242,13 +249,7 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: ComplianceD
               {/* Mini progress bar */}
               <div className="mt-3 h-2 bg-background rounded-full overflow-hidden">
                 <div
-                  className={`h-full rounded-full transition-all ${
-                    detail.score >= 90
-                      ? 'bg-emerald-500'
-                      : detail.score >= 70
-                        ? 'bg-amber-500'
-                        : 'bg-red-500'
-                  }`}
+                  className={`h-full rounded-full transition-all ${getScoreColor(detail.score)}`}
                   style={{ width: `${detail.score}%` }}
                 />
               </div>
@@ -365,15 +366,7 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: ComplianceD
                               year: 'numeric',
                             })}
                           </span>
-                          <span
-                            className={`text-sm font-bold ${
-                              score.score >= 90
-                                ? 'text-emerald-500'
-                                : score.score >= 70
-                                  ? 'text-amber-500'
-                                  : 'text-red-500'
-                            }`}
-                          >
+                          <span className={`text-sm font-bold ${getScoreTextColor(score.score)}`}>
                             {score.score}%
                           </span>
                         </div>
@@ -385,7 +378,7 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: ComplianceD
               {activeTab === 'changes' && (
                 <div className="space-y-4">
                   {detail.recentChanges.map((change, index) => (
-                    <div key={index} className="flex gap-3">
+                    <div key={`${change.date}-${change.action}`} className="flex gap-3">
                       <div className="flex flex-col items-center">
                         <div className="w-2 h-2 rounded-full bg-primary mt-2" />
                         {index < detail.recentChanges.length - 1 && (

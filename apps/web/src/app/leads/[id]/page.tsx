@@ -4,10 +4,26 @@ import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {
+  Button,
   Card,
   Skeleton,
   ChurnRiskCard,
   NextBestActionCard,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+  toast,
   type ChurnRiskData,
   type NextBestActionData,
   type ChurnRiskLevel,
@@ -157,6 +173,7 @@ interface LeadWithRelations {
     email: string;
     name: string | null;
     avatarUrl: string | null;
+    role?: string;
   } | null;
   activities?: Array<{
     id: string;
@@ -211,12 +228,6 @@ const activityTypeFilters: { value: ActivityType | 'all'; label: string; icon: s
   { value: 'meeting', label: 'Meetings', icon: '📅' },
   { value: 'web_form', label: 'Web Forms', icon: '🌐' },
   { value: 'score_update', label: 'Scores', icon: '📊' },
-];
-
-// Mock similar leads (not implemented in API yet)
-const mockSimilarLeads = [
-  { id: 'l1', name: 'John Doe', title: 'CTO', company: 'TechGlob', score: 72 },
-  { id: 'l2', name: 'Alice Smith', title: 'VP Engineering', company: 'SoftCorp', score: 68 },
 ];
 
 // Lead Status Badge Component
@@ -357,6 +368,80 @@ export default function Lead360Page() {
   const [expandedActivities, setExpandedActivities] = useState<Set<string>>(new Set());
   const [visibleCount, setVisibleCount] = useState(5);
   const [activityView, setActivityView] = useState<'timeline' | 'unified'>('timeline');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
+  const [logCallOpen, setLogCallOpen] = useState(false);
+  const [logCallTitle, setLogCallTitle] = useState('');
+  const [logCallDescription, setLogCallDescription] = useState('');
+
+  // API utils for cache invalidation
+  const utils = api.useUtils();
+
+  // Mutations
+  const deleteMutation = api.lead.delete.useMutation({
+    onSuccess: () => {
+      toast({ title: 'Lead deleted', description: 'The lead has been permanently deleted.' });
+      router.push('/leads');
+    },
+    onError: (err) => {
+      toast({ title: 'Delete failed', description: err.message, variant: 'destructive' });
+    },
+  });
+
+  const archiveMutation = api.lead.update.useMutation({
+    onSuccess: () => {
+      toast({ title: 'Lead archived', description: 'The lead has been moved to Lost status.' });
+      utils.lead.getById.invalidate({ id: leadId });
+    },
+    onError: (err) => {
+      toast({ title: 'Archive failed', description: err.message, variant: 'destructive' });
+    },
+  });
+
+  const convertMutation = api.lead.convert.useMutation({
+    onSuccess: (data) => {
+      toast({ title: 'Lead converted', description: 'Lead has been converted to a contact.' });
+      router.push(`/contacts/${data.contactId}`);
+    },
+    onError: (err) => {
+      toast({ title: 'Conversion failed', description: err.message, variant: 'destructive' });
+    },
+  });
+
+  const scoreWithAIMutation = api.lead.scoreWithAI.useMutation({
+    onSuccess: () => {
+      toast({ title: 'AI analysis complete', description: 'Lead has been scored by AI.' });
+      utils.lead.getById.invalidate({ id: leadId });
+    },
+    onError: (err) => {
+      toast({ title: 'AI analysis failed', description: err.message, variant: 'destructive' });
+    },
+  });
+
+  const addNoteMutation = api.lead.addNote.useMutation({
+    onSuccess: () => {
+      toast({ title: 'Note added', description: 'Your note has been saved.' });
+      setActivityNote('');
+      utils.lead.getById.invalidate({ id: leadId });
+    },
+    onError: (err) => {
+      toast({ title: 'Failed to add note', description: err.message, variant: 'destructive' });
+    },
+  });
+
+  const logActivityMutation = api.lead.logActivity.useMutation({
+    onSuccess: () => {
+      toast({ title: 'Activity logged', description: 'Activity has been recorded.' });
+      setActivityNote('');
+      setLogCallOpen(false);
+      setLogCallTitle('');
+      setLogCallDescription('');
+      utils.lead.getById.invalidate({ id: leadId });
+    },
+    onError: (err) => {
+      toast({ title: 'Failed to log activity', description: err.message, variant: 'destructive' });
+    },
+  });
 
   // Calculate temperature based on score
   const getTemperature = (score: number): LeadTemperature => {
@@ -405,7 +490,15 @@ export default function Lead360Page() {
       owner: apiLead.owner
         ? {
             name: apiLead.owner.name || 'Unknown',
-            title: 'Sales Representative',
+            title: (() => {
+              const roleMap: Record<string, string> = {
+                SALES_REP: 'Sales Representative',
+                MANAGER: 'Manager',
+                ADMIN: 'Administrator',
+                USER: 'Team Member',
+              };
+              return roleMap[apiLead.owner?.role || ''] || 'Team Member';
+            })(),
             avatarUrl: normalizedOwnerAvatar,
           }
         : {
@@ -503,14 +596,14 @@ export default function Lead360Page() {
         nextBestActions: [
           { icon: 'calendar_add_on', label: 'Schedule Discovery Call', primary: true },
           { icon: 'mail', label: 'Send Follow-up Email', primary: false },
-        ],
+        ] as { icon: string; label: string; primary: boolean }[],
         recommendations: ['No AI recommendations available yet'],
         icpMatch: 'Not analyzed yet',
       };
     }
 
-    const engagementLevel =
-      insight.engagementScore >= 70 ? 'High' : insight.engagementScore >= 40 ? 'Medium' : 'Low';
+    const mediumOrLow = insight.engagementScore >= 40 ? 'Medium' : 'Low';
+    const engagementLevel = insight.engagementScore >= 70 ? 'High' : mediumOrLow;
 
     return {
       qualificationScore: lead?.score || insight.engagementScore,
@@ -523,10 +616,30 @@ export default function Lead360Page() {
       sentimentTrend: insight.sentimentTrend,
       lastEngagementDays: insight.lastEngagementDays,
       nextBestAction: insight.nextBestAction || 'No action recommended',
-      nextBestActions: [
-        { icon: 'calendar_add_on', label: 'Schedule Discovery Call', primary: true },
-        { icon: 'share', label: 'Send Case Study', primary: false },
-      ],
+      nextBestActions: (() => {
+        const actions: { icon: string; label: string; primary: boolean }[] = [];
+        if (insight.nextBestAction) {
+          const text = insight.nextBestAction.toUpperCase();
+          let icon = 'lightbulb';
+          if (text.includes('CALL') || text.includes('DISCOVERY')) icon = 'call';
+          else if (text.includes('EMAIL') || text.includes('FOLLOW')) icon = 'mail';
+          else if (text.includes('MEET') || text.includes('DEMO')) icon = 'calendar_add_on';
+          else if (text.includes('PROPOSAL')) icon = 'description';
+          actions.push({ icon, label: insight.nextBestAction, primary: true });
+        }
+        const recs = (insight.recommendations as string[]) || [];
+        if (recs.length > 0 && recs[0] !== insight.nextBestAction) {
+          actions.push({ icon: 'auto_awesome', label: recs[0], primary: false });
+        }
+        if (actions.length === 0) {
+          actions.push({
+            icon: 'calendar_add_on',
+            label: 'Schedule Discovery Call',
+            primary: true,
+          });
+        }
+        return actions;
+      })(),
       recommendations: (insight.recommendations as string[]) || [],
       icpMatch: insight.icpMatch || 'Not analyzed',
     };
@@ -565,10 +678,14 @@ export default function Lead360Page() {
       MINIMAL: 720,
     };
 
+    // Derive confidence from how far the engagement score deviates from neutral (50)
+    const engDelta = Math.abs(insight.engagementScore - 50);
+    const derivedConfidence = Math.min(0.95, 0.5 + engDelta / 100);
+
     return {
       score: scoreMap[level],
       level,
-      confidence: 0.85,
+      confidence: derivedConfidence,
       slaHours: slaMap[level],
       trend:
         insight.sentimentTrend === 'IMPROVING'
@@ -579,8 +696,10 @@ export default function Lead360Page() {
       factors: [
         {
           factor: 'Engagement Score',
-          impact:
-            insight.engagementScore < 30 ? 'HIGH' : insight.engagementScore < 60 ? 'MEDIUM' : 'LOW',
+          impact: (() => {
+            if (insight.engagementScore < 30) return 'HIGH';
+            return insight.engagementScore < 60 ? 'MEDIUM' : 'LOW';
+          })(),
           value: `${insight.engagementScore}%`,
         },
         {
@@ -636,7 +755,7 @@ export default function Lead360Page() {
       title: insight.nextBestAction,
       priority,
       rationale: `Based on ${insight.engagementScore}% engagement, ${insight.conversionProbability}% conversion probability, and ${insight.churnRisk} churn risk.`,
-      confidence: 0.85,
+      confidence: insight.engagementScore / 100,
       successProbability: insight.conversionProbability / 100,
     };
   }, [apiLead?.aiInsight]);
@@ -675,24 +794,47 @@ export default function Lead360Page() {
           <Skeleton className="h-8 w-64" />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Profile card skeleton */}
           <div className="lg:col-span-3">
             <Card className="p-6">
-              <Skeleton className="h-24 w-full mb-4" />
-              <Skeleton className="h-6 w-32 mb-2" />
-              <Skeleton className="h-4 w-24" />
+              <div className="flex flex-col items-center text-center gap-3 mb-4">
+                <Skeleton className="h-16 w-16 rounded-full" />
+                <Skeleton className="h-5 w-36" />
+                <Skeleton className="h-4 w-28" />
+              </div>
+              <div className="mt-3">
+                <div className="flex justify-between mb-1.5">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-3 w-8" />
+                </div>
+                <Skeleton className="h-2 w-full rounded-full" />
+              </div>
             </Card>
           </div>
+          {/* Tabs + content skeleton */}
           <div className="lg:col-span-6">
             <Card className="p-6">
-              <Skeleton className="h-10 w-full mb-4" />
-              <Skeleton className="h-32 w-full mb-4" />
-              <Skeleton className="h-32 w-full" />
+              <div className="flex gap-4 mb-6 border-b pb-3">
+                <Skeleton className="h-5 w-20" />
+                <Skeleton className="h-5 w-20" />
+                <Skeleton className="h-5 w-20" />
+              </div>
+              <Skeleton className="h-32 w-full mb-4 rounded-lg" />
+              <Skeleton className="h-32 w-full rounded-lg" />
             </Card>
           </div>
-          <div className="lg:col-span-3">
-            <Card className="p-6">
-              <Skeleton className="h-6 w-24 mb-4" />
-              <Skeleton className="h-20 w-full" />
+          {/* Sidebar skeleton */}
+          <div className="lg:col-span-3 flex flex-col gap-4">
+            <Card className="p-5">
+              <Skeleton className="h-5 w-20 mb-4" />
+              <Skeleton className="h-2 w-full rounded-full mb-2" />
+              <Skeleton className="h-4 w-3/4 mb-4" />
+              <Skeleton className="h-2 w-full rounded-full" />
+            </Card>
+            <Card className="p-5">
+              <Skeleton className="h-5 w-16 mb-3" />
+              <Skeleton className="h-10 w-full rounded mb-2" />
+              <Skeleton className="h-10 w-full rounded" />
             </Card>
           </div>
         </div>
@@ -716,22 +858,41 @@ export default function Lead360Page() {
 
   // Error state or no lead data (non-auth errors)
   if ((error && !isAuthError) || !lead) {
+    const isNotFound = error?.data?.code === 'NOT_FOUND' || !lead;
+    const isServerError = error?.data?.code === 'INTERNAL_SERVER_ERROR';
+
     return (
       <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
         <Card className="p-8 text-center">
-          <span className="material-symbols-outlined text-5xl text-red-500 mb-4">error</span>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Lead Not Found</h2>
+          <span className="material-symbols-outlined text-5xl text-red-500 mb-4">
+            {isServerError ? 'cloud_off' : 'error'}
+          </span>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+            {isServerError ? 'Something Went Wrong' : 'Lead Not Found'}
+          </h2>
           <p className="text-slate-500 dark:text-slate-400 mb-4">
-            The lead you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to
-            view it.
+            {isServerError
+              ? 'An unexpected error occurred. Please try again.'
+              : isNotFound
+                ? "The lead you're looking for doesn't exist or you don't have permission to view it."
+                : error?.message || 'An error occurred while loading this lead.'}
           </p>
-          <Link
-            href="/leads"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            <span className="material-symbols-outlined !text-lg">arrow_back</span>
-            Back to Leads
-          </Link>
+          <div className="flex items-center justify-center gap-3">
+            {isServerError && (
+              <button
+                onClick={() => window.location.reload()}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                <span className="material-symbols-outlined !text-lg">refresh</span> Retry
+              </button>
+            )}
+            <Link
+              href="/leads"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              <span className="material-symbols-outlined !text-lg">arrow_back</span> Back to Leads
+            </Link>
+          </div>
         </Card>
       </div>
     );
@@ -1005,15 +1166,25 @@ export default function Lead360Page() {
           </h1>
         </div>
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+          <button
+            onClick={() => convertMutation.mutate({ leadId: lead.id })}
+            disabled={convertMutation.isPending}
+            className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+          >
             <span className="material-symbols-outlined !text-[18px]">transform</span>
-            Convert Lead
+            {convertMutation.isPending ? 'Converting...' : 'Convert Lead'}
           </button>
-          <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+          <button
+            onClick={() => router.push(`/leads/${lead.id}/edit`)}
+            className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+          >
             <span className="material-symbols-outlined !text-[18px]">edit</span>
             Edit
           </button>
-          <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none">
+          <button
+            onClick={() => setLogCallOpen(true)}
+            className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none"
+          >
             <span className="material-symbols-outlined !text-[18px]">call</span>
             Log Call
           </button>
@@ -1041,10 +1212,131 @@ export default function Lead360Page() {
           url: `/leads/${lead.id}`,
         }}
         extraActions={[
-          { label: 'Archive', icon: 'archive', onClick: () => {} },
-          { label: 'Delete', icon: 'delete', onClick: () => {}, destructive: true },
+          { label: 'Archive', icon: 'archive', onClick: () => setArchiveConfirmOpen(true) },
+          {
+            label: 'Delete',
+            icon: 'delete',
+            onClick: () => setDeleteConfirmOpen(true),
+            destructive: true,
+          },
         ]}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Lead</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently delete {lead.firstName} {lead.lastName}? This
+              action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteMutation.mutate({ id: lead.id })}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Archive Confirmation Dialog */}
+      <AlertDialog open={archiveConfirmOpen} onOpenChange={setArchiveConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive Lead</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to archive {lead.firstName} {lead.lastName}? The lead will be
+              moved to Lost status.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => archiveMutation.mutate({ id: lead.id, status: 'LOST' })}
+            >
+              {archiveMutation.isPending ? 'Archiving...' : 'Archive'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Log Call Dialog */}
+      <Dialog open={logCallOpen} onOpenChange={setLogCallOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Log Call</DialogTitle>
+            <DialogDescription>
+              Record a call with {lead.firstName} {lead.lastName}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-2">
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="log-call-title"
+                className="text-sm font-medium text-slate-700 dark:text-slate-300"
+              >
+                Call Title <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="log-call-title"
+                type="text"
+                value={logCallTitle}
+                onChange={(e) => setLogCallTitle(e.target.value)}
+                placeholder="e.g. Discovery call, Follow-up"
+                className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="log-call-description"
+                className="text-sm font-medium text-slate-700 dark:text-slate-300"
+              >
+                Notes <span className="text-slate-400 text-xs font-normal">(optional)</span>
+              </label>
+              <textarea
+                id="log-call-description"
+                value={logCallDescription}
+                onChange={(e) => setLogCallDescription(e.target.value)}
+                placeholder="Call summary, outcomes, next steps..."
+                rows={3}
+                className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent resize-none"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <button
+              onClick={() => {
+                setLogCallOpen(false);
+                setLogCallTitle('');
+                setLogCallDescription('');
+              }}
+              className="px-4 py-2 rounded-md border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                if (!logCallTitle.trim()) return;
+                logActivityMutation.mutate({
+                  leadId: lead.id,
+                  type: 'CALL',
+                  title: logCallTitle.trim(),
+                  description: logCallDescription.trim() || undefined,
+                });
+              }}
+              disabled={!logCallTitle.trim() || logActivityMutation.isPending}
+              className="px-4 py-2 rounded-md bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {logActivityMutation.isPending ? 'Saving...' : 'Log Call'}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Main 3-column grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -1259,8 +1551,20 @@ export default function Lead360Page() {
                         <span className="material-symbols-outlined !text-[20px]">list</span>
                       </button>
                     </div>
-                    <button className="bg-[#137fec] text-white text-sm font-semibold px-4 py-1.5 rounded-lg hover:bg-blue-600 transition-colors">
-                      Log Activity
+                    <button
+                      onClick={() => {
+                        if (!activityNote.trim()) return;
+                        logActivityMutation.mutate({
+                          leadId,
+                          type: 'NOTE',
+                          title: 'Note Added',
+                          description: activityNote.trim(),
+                        });
+                      }}
+                      disabled={!activityNote.trim() || logActivityMutation.isPending}
+                      className="bg-[#137fec] text-white text-sm font-semibold px-4 py-1.5 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
+                    >
+                      {logActivityMutation.isPending ? 'Logging...' : 'Log Activity'}
                     </button>
                   </div>
                 </div>
@@ -1398,7 +1702,9 @@ export default function Lead360Page() {
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
                   }`}
                 >
-                  <span className="material-symbols-outlined text-sm align-middle mr-1">timeline</span>
+                  <span className="material-symbols-outlined text-sm align-middle mr-1">
+                    timeline
+                  </span>
                   Timeline
                 </button>
                 <button
@@ -1409,7 +1715,9 @@ export default function Lead360Page() {
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
                   }`}
                 >
-                  <span className="material-symbols-outlined text-sm align-middle mr-1">dynamic_feed</span>
+                  <span className="material-symbols-outlined text-sm align-middle mr-1">
+                    dynamic_feed
+                  </span>
                   All Sources
                 </button>
               </div>
@@ -1422,226 +1730,226 @@ export default function Lead360Page() {
                   emptyMessage="No activity found across all sources"
                 />
               ) : (
-              <>
-              {/* Filters and Search Bar */}
-              <div className="mb-6 space-y-4">
-                {/* Search */}
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 !text-[18px] text-slate-400">
-                    search
-                  </span>
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search activities..."
-                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec] placeholder:text-slate-400"
-                  />
-                </div>
-
-                {/* Type Filters */}
-                <div className="flex flex-wrap gap-2">
-                  {activityTypeFilters.map((filter) => (
-                    <button
-                      key={filter.value}
-                      onClick={() => setActivityTypeFilter(filter.value)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                        activityTypeFilter === filter.value
-                          ? 'bg-[#137fec] text-white'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                      }`}
-                    >
-                      <span>{filter.icon}</span>
-                      {filter.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Person Filter */}
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-500 font-medium">Filter by:</span>
-                  <select
-                    value={personFilter}
-                    onChange={(e) => setPersonFilter(e.target.value)}
-                    className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec]"
-                  >
-                    {personFilters.map((filter) => (
-                      <option key={filter.value} value={filter.value}>
-                        {filter.label}
-                      </option>
-                    ))}
-                  </select>
-                  {(activityTypeFilter !== 'all' || personFilter !== 'all' || searchQuery) && (
-                    <button
-                      onClick={() => {
-                        setActivityTypeFilter('all');
-                        setPersonFilter('all');
-                        setSearchQuery('');
-                      }}
-                      className="text-xs text-[#137fec] hover:underline"
-                    >
-                      Clear filters
-                    </button>
-                  )}
-                </div>
-
-                {/* AI Insights Banner */}
-                {aiInsights.sentimentTrend && (
-                  <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 rounded-lg border border-blue-100 dark:border-slate-700">
-                    <div className="w-8 h-8 rounded-full bg-[#137fec]/10 flex items-center justify-center">
-                      <span className="material-symbols-outlined !text-[18px] text-[#137fec]">
-                        auto_awesome
+                <>
+                  {/* Filters and Search Bar */}
+                  <div className="mb-6 space-y-4">
+                    {/* Search */}
+                    <div className="relative">
+                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 !text-[18px] text-slate-400">
+                        search
                       </span>
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search activities..."
+                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec] placeholder:text-slate-400"
+                      />
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">
-                        Sentiment is{' '}
-                        <span className={getSentimentTrendStyle(aiInsights.sentimentTrend)}>
-                          {aiInsights.sentimentTrend}
-                        </span>
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        Last engagement: {aiInsights.lastEngagementDays} day
-                        {aiInsights.lastEngagementDays !== 1 ? 's' : ''} ago
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
 
-              {/* Results count */}
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-slate-500">
-                  Showing {visibleActivities.length} of {filteredActivities.length} activities
-                </p>
-              </div>
-
-              {/* Timeline */}
-              <div className="relative pl-4 space-y-4">
-                {visibleActivities.map((activity) => {
-                  const isExpanded = expandedActivities.has(activity.id);
-                  return (
-                    <div key={activity.id} className="relative">
-                      {/* Timeline line */}
-                      <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700 -ml-4" />
-
-                      {/* Activity Card */}
-                      <div className="relative ml-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
-                        {/* Timeline dot */}
-                        <div
-                          className={`absolute -left-8 top-4 w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center z-10 ${getActivityIconBg(activity.type)}`}
+                    {/* Type Filters */}
+                    <div className="flex flex-wrap gap-2">
+                      {activityTypeFilters.map((filter) => (
+                        <button
+                          key={filter.value}
+                          onClick={() => setActivityTypeFilter(filter.value)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                            activityTypeFilter === filter.value
+                              ? 'bg-[#137fec] text-white'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                          }`}
                         >
-                          <span className="material-symbols-outlined !text-[16px]">
-                            {getActivityIcon(activity.type)}
+                          <span>{filter.icon}</span>
+                          {filter.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Person Filter */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-500 font-medium">Filter by:</span>
+                      <select
+                        value={personFilter}
+                        onChange={(e) => setPersonFilter(e.target.value)}
+                        className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec]"
+                      >
+                        {personFilters.map((filter) => (
+                          <option key={filter.value} value={filter.value}>
+                            {filter.label}
+                          </option>
+                        ))}
+                      </select>
+                      {(activityTypeFilter !== 'all' || personFilter !== 'all' || searchQuery) && (
+                        <button
+                          onClick={() => {
+                            setActivityTypeFilter('all');
+                            setPersonFilter('all');
+                            setSearchQuery('');
+                          }}
+                          className="text-xs text-[#137fec] hover:underline"
+                        >
+                          Clear filters
+                        </button>
+                      )}
+                    </div>
+
+                    {/* AI Insights Banner */}
+                    {aiInsights.sentimentTrend && (
+                      <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 rounded-lg border border-blue-100 dark:border-slate-700">
+                        <div className="w-8 h-8 rounded-full bg-[#137fec]/10 flex items-center justify-center">
+                          <span className="material-symbols-outlined !text-[18px] text-[#137fec]">
+                            auto_awesome
                           </span>
                         </div>
-
-                        {/* Header */}
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                              {activity.title}
-                            </p>
-                            <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
-                              {activity.description}
-                            </p>
-                            <p className="text-xs text-slate-500 mt-1">
-                              {activity.user} • {formatRelativeTime(activity.timestamp)}
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => toggleExpand(activity.id)}
-                            className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"
-                          >
-                            <span
-                              className={`material-symbols-outlined !text-[18px] transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                            >
-                              expand_more
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-slate-900 dark:text-white">
+                            Sentiment is{' '}
+                            <span className={getSentimentTrendStyle(aiInsights.sentimentTrend)}>
+                              {aiInsights.sentimentTrend}
                             </span>
-                          </button>
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            Last engagement: {aiInsights.lastEngagementDays} day
+                            {aiInsights.lastEngagementDays !== 1 ? 's' : ''} ago
+                          </p>
                         </div>
+                      </div>
+                    )}
+                  </div>
 
-                        {/* Reactions */}
-                        {activity.reactions && activity.reactions.length > 0 && (
-                          <div className="flex items-center gap-2 mt-2">
-                            {activity.reactions.map((reaction) => (
-                              <span
-                                key={`${activity.id}-${reaction.emoji}`}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded-full text-xs"
-                              >
-                                {reaction.emoji} {reaction.count}
+                  {/* Results count */}
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm text-slate-500">
+                      Showing {visibleActivities.length} of {filteredActivities.length} activities
+                    </p>
+                  </div>
+
+                  {/* Timeline */}
+                  <div className="relative pl-4 space-y-4">
+                    {visibleActivities.map((activity) => {
+                      const isExpanded = expandedActivities.has(activity.id);
+                      return (
+                        <div key={activity.id} className="relative">
+                          {/* Timeline line */}
+                          <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700 -ml-4" />
+
+                          {/* Activity Card */}
+                          <div className="relative ml-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
+                            {/* Timeline dot */}
+                            <div
+                              className={`absolute -left-8 top-4 w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center z-10 ${getActivityIconBg(activity.type)}`}
+                            >
+                              <span className="material-symbols-outlined !text-[16px]">
+                                {getActivityIcon(activity.type)}
                               </span>
-                            ))}
-                          </div>
-                        )}
+                            </div>
 
-                        {/* Expanded Content */}
-                        {isExpanded && (
-                          <div className="mt-3">
-                            {/* Rich Preview */}
-                            {renderRichPreview(activity)}
-
-                            {/* Comments */}
-                            {activity.comments && activity.comments.length > 0 && (
-                              <div className="mt-3 space-y-2">
-                                <p className="text-xs font-semibold text-slate-500 uppercase">
-                                  Comments
+                            {/* Header */}
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1">
+                                <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                                  {activity.title}
                                 </p>
-                                {activity.comments.map((comment) => (
-                                  <div
-                                    key={`${activity.id}-${comment.timestamp}`}
-                                    className="p-2 bg-slate-50 dark:bg-slate-800/50 rounded border border-slate-100 dark:border-slate-700"
+                                <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+                                  {activity.description}
+                                </p>
+                                <p className="text-xs text-slate-500 mt-1">
+                                  {activity.user} • {formatRelativeTime(activity.timestamp)}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => toggleExpand(activity.id)}
+                                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"
+                              >
+                                <span
+                                  className={`material-symbols-outlined !text-[18px] transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                >
+                                  expand_more
+                                </span>
+                              </button>
+                            </div>
+
+                            {/* Reactions */}
+                            {activity.reactions && activity.reactions.length > 0 && (
+                              <div className="flex items-center gap-2 mt-2">
+                                {activity.reactions.map((reaction) => (
+                                  <span
+                                    key={`${activity.id}-${reaction.emoji}`}
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded-full text-xs"
                                   >
-                                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                                      {comment.text}
-                                    </p>
-                                    <p className="text-xs text-slate-500 mt-1">
-                                      {comment.user} • {formatRelativeTime(comment.timestamp)}
-                                    </p>
-                                  </div>
+                                    {reaction.emoji} {reaction.count}
+                                  </span>
                                 ))}
                               </div>
                             )}
 
-                            {/* Inline Actions */}
-                            {renderActivityActions()}
+                            {/* Expanded Content */}
+                            {isExpanded && (
+                              <div className="mt-3">
+                                {/* Rich Preview */}
+                                {renderRichPreview(activity)}
+
+                                {/* Comments */}
+                                {activity.comments && activity.comments.length > 0 && (
+                                  <div className="mt-3 space-y-2">
+                                    <p className="text-xs font-semibold text-slate-500 uppercase">
+                                      Comments
+                                    </p>
+                                    {activity.comments.map((comment) => (
+                                      <div
+                                        key={`${activity.id}-${comment.timestamp}`}
+                                        className="p-2 bg-slate-50 dark:bg-slate-800/50 rounded border border-slate-100 dark:border-slate-700"
+                                      >
+                                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                                          {comment.text}
+                                        </p>
+                                        <p className="text-xs text-slate-500 mt-1">
+                                          {comment.user} • {formatRelativeTime(comment.timestamp)}
+                                        </p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* Inline Actions */}
+                                {renderActivityActions()}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Load More */}
+                  {hasMore && (
+                    <button
+                      onClick={() => setVisibleCount((prev) => prev + 5)}
+                      className="w-full mt-6 py-3 text-sm text-[#137fec] font-medium hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-slate-700"
+                    >
+                      Load more activities ({filteredActivities.length - visibleCount} remaining)
+                    </button>
+                  )}
+
+                  {filteredActivities.length === 0 && (
+                    <div className="text-center py-12">
+                      <span className="material-symbols-outlined !text-[48px] text-slate-300 mb-4">
+                        search_off
+                      </span>
+                      <p className="text-slate-500">No activities match your filters</p>
+                      <button
+                        onClick={() => {
+                          setActivityTypeFilter('all');
+                          setPersonFilter('all');
+                          setSearchQuery('');
+                        }}
+                        className="mt-2 text-sm text-[#137fec] hover:underline"
+                      >
+                        Clear filters
+                      </button>
                     </div>
-                  );
-                })}
-              </div>
-
-              {/* Load More */}
-              {hasMore && (
-                <button
-                  onClick={() => setVisibleCount((prev) => prev + 5)}
-                  className="w-full mt-6 py-3 text-sm text-[#137fec] font-medium hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-slate-700"
-                >
-                  Load more activities ({filteredActivities.length - visibleCount} remaining)
-                </button>
-              )}
-
-              {filteredActivities.length === 0 && (
-                <div className="text-center py-12">
-                  <span className="material-symbols-outlined !text-[48px] text-slate-300 mb-4">
-                    search_off
-                  </span>
-                  <p className="text-slate-500">No activities match your filters</p>
-                  <button
-                    onClick={() => {
-                      setActivityTypeFilter('all');
-                      setPersonFilter('all');
-                      setSearchQuery('');
-                    }}
-                    className="mt-2 text-sm text-[#137fec] hover:underline"
-                  >
-                    Clear filters
-                  </button>
-                </div>
-              )}
-              </>
+                  )}
+                </>
               )}
             </Card>
           )}
@@ -1656,9 +1964,18 @@ export default function Lead360Page() {
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Notes</h3>
-                <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
+                <button
+                  onClick={() => {
+                    const noteContent = window.prompt('Enter note:');
+                    if (noteContent?.trim()) {
+                      addNoteMutation.mutate({ leadId, content: noteContent.trim() });
+                    }
+                  }}
+                  disabled={addNoteMutation.isPending}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors disabled:opacity-50"
+                >
                   <span className="material-symbols-outlined !text-[18px]">add</span>
-                  Add Note
+                  {addNoteMutation.isPending ? 'Adding...' : 'Add Note'}
                 </button>
               </div>
               <div className="space-y-4">
@@ -1775,6 +2092,21 @@ export default function Lead360Page() {
           {/* AI Insights Tab (IFC-095) */}
           {activeTab === 'ai-insights' && (
             <div className="space-y-6">
+              {/* No AI analysis banner */}
+              {!apiLead?.aiInsight && (
+                <div className="rounded-lg border border-dashed border-amber-300 bg-amber-50 dark:bg-amber-950/20 p-4">
+                  <p className="text-sm text-amber-700 dark:text-amber-400 mb-3">
+                    AI analysis has not been run for this lead yet.
+                  </p>
+                  <Button
+                    size="sm"
+                    onClick={() => scoreWithAIMutation.mutate({ leadId: lead.id })}
+                    disabled={scoreWithAIMutation.isPending}
+                  >
+                    {scoreWithAIMutation.isPending ? 'Analyzing...' : 'Run AI Analysis'}
+                  </Button>
+                </div>
+              )}
               {/* Churn Risk and Next Best Action Cards */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {churnRiskData && (
@@ -1839,7 +2171,7 @@ export default function Lead360Page() {
                       <p className="text-2xl font-bold text-slate-900 dark:text-white">
                         {aiInsights.qualificationScore}
                       </p>
-                      <p className="text-xs text-slate-500">Qualification Score</p>
+                      <p className="text-xs text-slate-500">Lead Score</p>
                     </div>
                   </div>
                 </Card>
@@ -1905,12 +2237,18 @@ export default function Lead360Page() {
                 BETA
               </span>
             </div>
+            {!apiLead?.aiInsight && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-1">
+                <span className="material-symbols-outlined !text-[14px]">warning</span>
+                AI analysis not run yet
+              </p>
+            )}
             <div className="space-y-5">
-              {/* Qualification Score */}
+              {/* Lead Score */}
               <div>
                 <div className="flex justify-between mb-1.5">
                   <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                    Qualification Score
+                    Lead Score
                   </span>
                   <span className="text-sm font-bold text-green-600">
                     {aiInsights.qualificationScore}/100
@@ -2043,29 +2381,14 @@ export default function Lead360Page() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-slate-900 dark:text-white">Similar Leads</h3>
             </div>
-            <div className="space-y-3">
-              {mockSimilarLeads.map((similarLead) => (
-                <Link
-                  key={similarLead.id}
-                  href={`/leads/${similarLead.id}`}
-                  className="flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800 -mx-2 px-2 py-2 rounded-lg transition-colors"
-                >
-                  <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-xs font-bold">
-                    {similarLead.name
-                      .split(' ')
-                      .map((n) => n[0])
-                      .join('')}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-900 dark:text-white">
-                      {similarLead.name}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {similarLead.title} at {similarLead.company}
-                    </p>
-                  </div>
-                </Link>
-              ))}
+            <div className="text-center py-4">
+              <span className="material-symbols-outlined !text-[32px] text-slate-300 dark:text-slate-600 mb-2">
+                group
+              </span>
+              <p className="text-sm text-slate-500 dark:text-slate-400">No similar leads found</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                AI similarity matching coming soon
+              </p>
             </div>
           </Card>
         </aside>

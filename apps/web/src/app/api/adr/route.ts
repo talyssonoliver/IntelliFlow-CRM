@@ -13,11 +13,11 @@ export async function GET(request: NextRequest) {
 
   try {
     switch (action) {
-      case 'list':
+      case 'list': {
         const adrs = getAllADRs();
         return NextResponse.json({ success: true, data: adrs });
-
-      case 'search':
+      }
+      case 'search': {
         if (!query) {
           return NextResponse.json(
             { success: false, error: 'Query parameter "q" is required' },
@@ -26,15 +26,15 @@ export async function GET(request: NextRequest) {
         }
         const results = searchADRs(query);
         return NextResponse.json({ success: true, data: results });
-
-      case 'stats':
+      }
+      case 'stats': {
         const stats = getADRStats();
         return NextResponse.json({ success: true, data: stats });
-
-      case 'graph':
+      }
+      case 'graph': {
         const graph = generateDependencyGraph();
         return NextResponse.json({ success: true, data: graph });
-
+      }
       default:
         return NextResponse.json(
           { success: false, error: `Unknown action: ${action}` },

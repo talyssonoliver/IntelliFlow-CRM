@@ -13,9 +13,7 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 
 // Mock the ExperimentsDashboard component
 vi.mock('@/components/ai-intelligence/ExperimentsDashboard', () => ({
-  ExperimentsDashboard: () => (
-    <div data-testid="experiments-dashboard">Dashboard loaded</div>
-  ),
+  ExperimentsDashboard: () => <div data-testid="experiments-dashboard">Dashboard loaded</div>,
 }));
 
 // Mock Skeleton from ui package

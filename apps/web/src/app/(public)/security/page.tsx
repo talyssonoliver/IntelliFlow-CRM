@@ -73,7 +73,7 @@ export default function SecurityPage() {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-emerald-400 font-medium backdrop-blur mb-6">
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 verified_user
-              </span>
+              </span>{' '}
               Security & Compliance
             </div>
 
@@ -91,7 +91,7 @@ export default function SecurityPage() {
               >
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   shield
-                </span>
+                </span>{' '}
                 Visit Trust Center
               </Link>
               <a
@@ -180,17 +180,14 @@ export default function SecurityPage() {
                       style={{ color: getCategoryColor(category) }}
                       aria-hidden="true"
                     >
-                      {category === 'Data Protection'
-                        ? 'lock'
-                        : category === 'Architecture'
-                          ? 'architecture'
-                          : category === 'Compliance'
-                            ? 'gavel'
-                            : category === 'Access Control'
-                              ? 'key'
-                              : category === 'Security Operations'
-                                ? 'shield'
-                                : 'smart_toy'}
+                      {(() => {
+                        if (category === 'Data Protection') return 'lock';
+                        if (category === 'Architecture') return 'architecture';
+                        if (category === 'Compliance') return 'gavel';
+                        if (category === 'Access Control') return 'key';
+                        if (category === 'Security Operations') return 'shield';
+                        return 'smart_toy';
+                      })()}
                     </span>
                   </span>
                   {category}
@@ -223,9 +220,9 @@ export default function SecurityPage() {
                             {feature.description}
                           </p>
                           <ul className="space-y-1">
-                            {feature.highlights.map((highlight, index) => (
+                            {feature.highlights.map((highlight) => (
                               <li
-                                key={index}
+                                key={highlight}
                                 className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"
                               >
                                 <span
@@ -262,9 +259,9 @@ export default function SecurityPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {trustCenter.documents.map((doc, index) => (
+            {trustCenter.documents.map((doc) => (
               <Card
-                key={index}
+                key={doc.name}
                 className="p-6 text-center border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 hover:border-[#137fec] hover:shadow-md transition-all"
               >
                 <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-[#137fec]/10 flex items-center justify-center">

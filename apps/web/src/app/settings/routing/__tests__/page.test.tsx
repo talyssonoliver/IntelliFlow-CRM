@@ -26,13 +26,25 @@ vi.mock('@/components/routing/AgentWorkload', () => ({
 }));
 
 vi.mock('@intelliflow/ui', () => ({
-  Tabs: ({ children, defaultValue }: any) => <div data-testid="tabs" data-default={defaultValue}>{children}</div>,
-  TabsList: ({ children, ...props }: any) => <div role="tablist" {...props}>{children}</div>,
+  Tabs: ({ children, defaultValue }: any) => (
+    <div data-testid="tabs" data-default={defaultValue}>
+      {children}
+    </div>
+  ),
+  TabsList: ({ children, ...props }: any) => (
+    <div role="tablist" {...props}>
+      {children}
+    </div>
+  ),
   TabsTrigger: ({ children, value, ...props }: any) => (
-    <button role="tab" data-value={value} {...props}>{children}</button>
+    <button role="tab" data-value={value} {...props}>
+      {children}
+    </button>
   ),
   TabsContent: ({ children, value }: any) => (
-    <div role="tabpanel" data-value={value}>{children}</div>
+    <div role="tabpanel" data-value={value}>
+      {children}
+    </div>
   ),
   Skeleton: ({ className }: any) => <div className={className} data-testid="skeleton" />,
   Card: ({ children }: any) => <div>{children}</div>,

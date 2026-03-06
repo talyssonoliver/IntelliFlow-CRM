@@ -46,14 +46,18 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('next/link', () => ({
   default: ({ children, href, ...props }: { children: React.ReactNode; href: string }) => (
-    <a href={href} {...props}>{children}</a>
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
 vi.mock('next/dynamic', () => ({
   default: (_importFn: () => Promise<unknown>, _opts?: Record<string, unknown>) => {
     const Comp = (props: Record<string, unknown>) => (
-      <div data-testid="dynamic-chart" {...props}>Chart</div>
+      <div data-testid="dynamic-chart" {...props}>
+        Chart
+      </div>
     );
     Comp.displayName = 'DynamicChart';
     return Comp;
@@ -62,10 +66,21 @@ vi.mock('next/dynamic', () => ({
 
 vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, ...props }: { children: React.ReactNode }) => (
-    <div data-testid="card" {...props}>{children}</div>
+    <div data-testid="card" {...props}>
+      {children}
+    </div>
   ),
-  Button: ({ children, onClick, ...props }: { children: React.ReactNode; onClick?: () => void }) => (
-    <button onClick={onClick} {...props}>{children}</button>
+  Button: ({
+    children,
+    onClick,
+    ...props
+  }: {
+    children: React.ReactNode;
+    onClick?: () => void;
+  }) => (
+    <button onClick={onClick} {...props}>
+      {children}
+    </button>
   ),
   Skeleton: ({ className, ...props }: { className?: string }) => (
     <div data-testid="skeleton" className={className} {...props} />

@@ -38,6 +38,31 @@ import {
 type LogoutStatus = 'pending' | 'processing' | 'complete' | 'error';
 
 // ============================================
+// Lookup maps for status-derived styles
+// ============================================
+
+const HEADER_BG_CLASS: Record<LogoutStatus, string> = {
+  complete: 'bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-green-500/20',
+  error: 'bg-gradient-to-r from-red-500/10 to-rose-500/10 border-red-500/20',
+  processing: 'bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border-blue-500/20',
+  pending: 'bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border-blue-500/20',
+};
+
+const ICON_CONTAINER_CLASS: Record<LogoutStatus, string> = {
+  complete: 'bg-green-500/20 border-2 border-green-500',
+  error: 'bg-red-500/20 border-2 border-red-500',
+  processing: 'bg-blue-500/20 border-2 border-blue-500',
+  pending: 'bg-blue-500/20 border-2 border-blue-500',
+};
+
+const PAGE_TITLE: Record<LogoutStatus, string> = {
+  complete: 'Signed Out',
+  error: 'Logout Error',
+  processing: 'Signing Out',
+  pending: 'Logout',
+};
+
+// ============================================
 // Countdown Component
 // ============================================
 
@@ -65,6 +90,37 @@ function Countdown({ seconds, onComplete }: CountdownProps) {
   return (
     <span className="font-mono text-[#137fec]" aria-live="polite">
       {remaining}s
+    </span>
+  );
+}
+
+// ============================================
+// Status Icon Component
+// ============================================
+
+function StatusIcon({ status }: { status: LogoutStatus }) {
+  if (status === 'processing') {
+    return (
+      <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+    );
+  }
+  if (status === 'complete') {
+    return (
+      <span className="material-symbols-outlined text-3xl text-green-400" aria-hidden="true">
+        check_circle
+      </span>
+    );
+  }
+  if (status === 'error') {
+    return (
+      <span className="material-symbols-outlined text-3xl text-red-400" aria-hidden="true">
+        error
+      </span>
+    );
+  }
+  return (
+    <span className="material-symbols-outlined text-3xl text-blue-400" aria-hidden="true">
+      logout
     </span>
   );
 }
@@ -138,14 +194,14 @@ function LogoutContent() {
 
   // Get message based on status and reason
   const getMessage = () => {
-    if (status === 'error') {
-      return error || 'An error occurred during logout.';
-    }
-    if (status === 'processing') {
-      return 'Signing you out...';
-    }
+    if (status === 'error') return error || 'An error occurred during logout.';
+    if (status === 'processing') return 'Signing you out...';
     return getLogoutMessage(reason);
   };
+
+  const headerBgClass = HEADER_BG_CLASS[status];
+  const iconContainerClass = ICON_CONTAINER_CLASS[status];
+  const pageTitle = PAGE_TITLE[status];
 
   return (
     <AuthBackground>
@@ -153,63 +209,19 @@ function LogoutContent() {
         {/* Logout Card */}
         <div className="bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-slate-700/50 shadow-2xl overflow-hidden">
           {/* Header */}
-          <div
-            className={cn(
-              'p-8 text-center border-b',
-              status === 'complete'
-                ? 'bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-green-500/20'
-                : status === 'error'
-                  ? 'bg-gradient-to-r from-red-500/10 to-rose-500/10 border-red-500/20'
-                  : 'bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border-blue-500/20'
-            )}
-          >
+          <div className={cn('p-8 text-center border-b', headerBgClass)}>
             {/* Status Icon */}
             <div
               className={cn(
                 'inline-flex items-center justify-center w-16 h-16 rounded-full mb-4',
-                status === 'complete'
-                  ? 'bg-green-500/20 border-2 border-green-500'
-                  : status === 'error'
-                    ? 'bg-red-500/20 border-2 border-red-500'
-                    : 'bg-blue-500/20 border-2 border-blue-500'
+                iconContainerClass
               )}
             >
-              {status === 'processing' ? (
-                <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
-              ) : status === 'complete' ? (
-                <span
-                  className="material-symbols-outlined text-3xl text-green-400"
-                  aria-hidden="true"
-                >
-                  check_circle
-                </span>
-              ) : status === 'error' ? (
-                <span
-                  className="material-symbols-outlined text-3xl text-red-400"
-                  aria-hidden="true"
-                >
-                  error
-                </span>
-              ) : (
-                <span
-                  className="material-symbols-outlined text-3xl text-blue-400"
-                  aria-hidden="true"
-                >
-                  logout
-                </span>
-              )}
+              <StatusIcon status={status} />
             </div>
 
             {/* Title */}
-            <h1 className="text-2xl font-bold text-white mb-2">
-              {status === 'complete'
-                ? 'Signed Out'
-                : status === 'error'
-                  ? 'Logout Error'
-                  : status === 'processing'
-                    ? 'Signing Out'
-                    : 'Logout'}
-            </h1>
+            <h1 className="text-2xl font-bold text-white mb-2">{pageTitle}</h1>
 
             {/* Message */}
             <p className="text-slate-300">{getMessage()}</p>

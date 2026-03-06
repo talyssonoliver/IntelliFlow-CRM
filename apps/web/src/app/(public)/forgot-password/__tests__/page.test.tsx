@@ -46,9 +46,7 @@ vi.mock('@/lib/trpc', () => ({
 }));
 
 vi.mock('@/components/shared', () => ({
-  AuthBackground: ({ children }: any) => (
-    <div data-testid="auth-background">{children}</div>
-  ),
+  AuthBackground: ({ children }: any) => <div data-testid="auth-background">{children}</div>,
   AuthCard: ({ children, badge, badgeIcon, title, description, footer }: any) => (
     <div data-testid="auth-card">
       {badge && <span data-testid="auth-card-badge">{badge}</span>}

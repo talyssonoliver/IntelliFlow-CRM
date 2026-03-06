@@ -8,6 +8,7 @@ import {
   Skeleton,
   ChurnRiskCard,
   NextBestActionCard,
+  toast,
   type ChurnRiskData,
   type NextBestActionData,
   type ChurnRiskLevel,
@@ -130,7 +131,13 @@ const defaultOwnerAvatar =
   'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face';
 
 // Contact status type
-type ContactStatus = 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
+type ContactStatus =
+  | 'ACTIVE'
+  | 'INACTIVE'
+  | 'ARCHIVED'
+  | 'PROSPECT'
+  | 'CUSTOMER'
+  | 'FORMER_CUSTOMER';
 
 // Contact with relations type (from API)
 interface ContactWithRelations {
@@ -257,6 +264,36 @@ function ContactStatusBadge({ status }: { status: ContactStatus }) {
       icon: (
         <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
           <path d="m20.54 5.23-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM12 17.5L6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z" />
+        </svg>
+      ),
+    },
+    PROSPECT: {
+      label: 'Prospect',
+      className:
+        'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800',
+      icon: (
+        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-4h2v2h-2zm1-10c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z" />
+        </svg>
+      ),
+    },
+    CUSTOMER: {
+      label: 'Customer',
+      className:
+        'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800',
+      icon: (
+        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+        </svg>
+      ),
+    },
+    FORMER_CUSTOMER: {
+      label: 'Former Customer',
+      className:
+        'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800',
+      icon: (
+        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z" />
         </svg>
       ),
     },
@@ -526,8 +563,10 @@ export default function Contact360Page() {
       factors: [
         {
           factor: 'Engagement Score',
-          impact:
-            insight.engagementScore < 30 ? 'HIGH' : insight.engagementScore < 60 ? 'MEDIUM' : 'LOW',
+          impact: (() => {
+            if (insight.engagementScore < 30) return 'HIGH';
+            return insight.engagementScore < 60 ? 'MEDIUM' : 'LOW';
+          })(),
           value: `${insight.engagementScore}%`,
         },
         {
@@ -1088,7 +1127,10 @@ export default function Contact360Page() {
           </h1>
         </div>
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+          <button
+            onClick={() => router.push(`/contacts/${contact.id}/edit`)}
+            className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+          >
             <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="currentColor">
               <path d="M5 19h1.4l8.625-8.625-1.4-1.4L5 17.6ZM19.3 8.925l-4.25-4.2 1.4-1.4q.575-.575 1.413-.575.837 0 1.412.575l1.4 1.4q.575.575.6 1.388.025.812-.55 1.387Z" />
             </svg>
@@ -1130,9 +1172,28 @@ export default function Contact360Page() {
           url: `/contacts/${contact.id}`,
         }}
         extraActions={[
-          { label: 'Merge Duplicate', icon: 'merge', onClick: () => {} },
-          { label: 'Archive', icon: 'archive', onClick: () => {} },
-          { label: 'Delete', icon: 'delete', onClick: () => {}, destructive: true },
+          {
+            label: 'Merge Duplicate',
+            icon: 'merge',
+            onClick: () =>
+              toast({
+                title: 'Coming soon',
+                description: 'Merge duplicate contacts is under development',
+              }),
+          },
+          {
+            label: 'Archive',
+            icon: 'archive',
+            onClick: () =>
+              toast({ title: 'Coming soon', description: 'Archive contact is under development' }),
+          },
+          {
+            label: 'Delete',
+            icon: 'delete',
+            onClick: () =>
+              toast({ title: 'Coming soon', description: 'Delete contact is under development' }),
+            destructive: true,
+          },
         ]}
       />
 
@@ -1393,7 +1454,9 @@ export default function Contact360Page() {
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
                   }`}
                 >
-                  <span className="material-symbols-outlined text-sm align-middle mr-1">timeline</span>
+                  <span className="material-symbols-outlined text-sm align-middle mr-1">
+                    timeline
+                  </span>
                   Timeline
                 </button>
                 <button
@@ -1404,7 +1467,9 @@ export default function Contact360Page() {
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
                   }`}
                 >
-                  <span className="material-symbols-outlined text-sm align-middle mr-1">dynamic_feed</span>
+                  <span className="material-symbols-outlined text-sm align-middle mr-1">
+                    dynamic_feed
+                  </span>
                   All Sources
                 </button>
               </div>
@@ -1417,252 +1482,252 @@ export default function Contact360Page() {
                   emptyMessage="No activity found across all sources"
                 />
               ) : (
-              <>
-              {/* Filters and Search Bar */}
-              <div className="mb-6 space-y-4">
-                {/* Search */}
-                <div className="relative">
-                  <svg
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
-                  </svg>
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search activities..."
-                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec] placeholder:text-slate-400"
-                  />
-                </div>
-
-                {/* Type Filters */}
-                <div className="flex flex-wrap gap-2">
-                  {activityTypeFilters.map((filter) => (
-                    <button
-                      key={filter.value}
-                      onClick={() => setActivityTypeFilter(filter.value)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                        activityTypeFilter === filter.value
-                          ? 'bg-[#137fec] text-white'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                      }`}
-                    >
-                      <span>{filter.icon}</span>
-                      {filter.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Person Filter */}
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-500 font-medium">Filter by:</span>
-                  <select
-                    value={personFilter}
-                    onChange={(e) => setPersonFilter(e.target.value)}
-                    className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec]"
-                  >
-                    {personFilters.map((filter) => (
-                      <option key={filter.value} value={filter.value}>
-                        {filter.label}
-                      </option>
-                    ))}
-                  </select>
-                  {(activityTypeFilter !== 'all' || personFilter !== 'all' || searchQuery) && (
-                    <button
-                      onClick={() => {
-                        setActivityTypeFilter('all');
-                        setPersonFilter('all');
-                        setSearchQuery('');
-                      }}
-                      className="text-xs text-[#137fec] hover:underline"
-                    >
-                      Clear filters
-                    </button>
-                  )}
-                </div>
-
-                {/* AI Insights Banner (Sentiment Trend & Quiet Period Alert) */}
-                {aiInsights.sentimentTrend && (
-                  <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 rounded-lg border border-blue-100 dark:border-slate-700">
-                    <div className="w-8 h-8 rounded-full bg-[#137fec]/10 flex items-center justify-center">
+                <>
+                  {/* Filters and Search Bar */}
+                  <div className="mb-6 space-y-4">
+                    {/* Search */}
+                    <div className="relative">
                       <svg
-                        className="w-4 h-4 text-[#137fec]"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
                         viewBox="0 0 24 24"
                         fill="currentColor"
                       >
-                        <path d="m19 9 1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5z" />
+                        <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
                       </svg>
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search activities..."
+                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec] placeholder:text-slate-400"
+                      />
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">
-                        Sentiment is{' '}
-                        <span className={getSentimentTrendStyle(aiInsights.sentimentTrend)}>
-                          {aiInsights.sentimentTrend}
-                        </span>
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        Last engagement: {aiInsights.lastEngagementDays} days ago
-                      </p>
+
+                    {/* Type Filters */}
+                    <div className="flex flex-wrap gap-2">
+                      {activityTypeFilters.map((filter) => (
+                        <button
+                          key={filter.value}
+                          onClick={() => setActivityTypeFilter(filter.value)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                            activityTypeFilter === filter.value
+                              ? 'bg-[#137fec] text-white'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                          }`}
+                        >
+                          <span>{filter.icon}</span>
+                          {filter.label}
+                        </button>
+                      ))}
                     </div>
-                    {aiInsights.quietPeriodAlert && (
-                      <span className="px-2 py-1 rounded bg-yellow-100 text-yellow-700 text-xs font-medium">
-                        ⚠️ Quiet Period
-                      </span>
+
+                    {/* Person Filter */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-500 font-medium">Filter by:</span>
+                      <select
+                        value={personFilter}
+                        onChange={(e) => setPersonFilter(e.target.value)}
+                        className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec]"
+                      >
+                        {personFilters.map((filter) => (
+                          <option key={filter.value} value={filter.value}>
+                            {filter.label}
+                          </option>
+                        ))}
+                      </select>
+                      {(activityTypeFilter !== 'all' || personFilter !== 'all' || searchQuery) && (
+                        <button
+                          onClick={() => {
+                            setActivityTypeFilter('all');
+                            setPersonFilter('all');
+                            setSearchQuery('');
+                          }}
+                          className="text-xs text-[#137fec] hover:underline"
+                        >
+                          Clear filters
+                        </button>
+                      )}
+                    </div>
+
+                    {/* AI Insights Banner (Sentiment Trend & Quiet Period Alert) */}
+                    {aiInsights.sentimentTrend && (
+                      <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 rounded-lg border border-blue-100 dark:border-slate-700">
+                        <div className="w-8 h-8 rounded-full bg-[#137fec]/10 flex items-center justify-center">
+                          <svg
+                            className="w-4 h-4 text-[#137fec]"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                          >
+                            <path d="m19 9 1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-slate-900 dark:text-white">
+                            Sentiment is{' '}
+                            <span className={getSentimentTrendStyle(aiInsights.sentimentTrend)}>
+                              {aiInsights.sentimentTrend}
+                            </span>
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            Last engagement: {aiInsights.lastEngagementDays} days ago
+                          </p>
+                        </div>
+                        {aiInsights.quietPeriodAlert && (
+                          <span className="px-2 py-1 rounded bg-yellow-100 text-yellow-700 text-xs font-medium">
+                            ⚠️ Quiet Period
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
-              </div>
 
-              {/* Results count */}
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-slate-500">
-                  Showing {visibleActivities.length} of {filteredActivities.length} activities
-                </p>
-              </div>
+                  {/* Results count */}
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm text-slate-500">
+                      Showing {visibleActivities.length} of {filteredActivities.length} activities
+                    </p>
+                  </div>
 
-              {/* Activity Timeline */}
-              <div className="relative pl-4 space-y-4">
-                {visibleActivities.map((activity) => {
-                  const isExpanded = expandedActivities.has(activity.id);
-                  return (
-                    <div key={activity.id} className="relative">
-                      {/* Timeline line */}
-                      <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700 -ml-4" />
+                  {/* Activity Timeline */}
+                  <div className="relative pl-4 space-y-4">
+                    {visibleActivities.map((activity) => {
+                      const isExpanded = expandedActivities.has(activity.id);
+                      return (
+                        <div key={activity.id} className="relative">
+                          {/* Timeline line */}
+                          <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700 -ml-4" />
 
-                      {/* Activity Card */}
-                      <div className="relative ml-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
-                        {/* Timeline dot */}
-                        <div
-                          className={`absolute -left-8 top-4 w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center z-10 ${getActivityIconBg(activity.type)}`}
-                        >
-                          {getActivityIcon(activity.type)}
-                        </div>
-
-                        {/* Header */}
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                                {activity.title}
-                              </p>
-                              {activity.sentiment && (
-                                <span
-                                  className={`${getSentimentColor(activity.sentiment)}`}
-                                  title={`${activity.sentiment} sentiment`}
-                                >
-                                  {getSentimentEmoji(activity.sentiment)}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
-                              {activity.description}
-                            </p>
-                            <p className="text-xs text-slate-500 mt-1">
-                              {activity.user} • {formatRelativeTime(activity.timestamp)}
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => toggleExpand(activity.id)}
-                            className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"
-                          >
-                            <svg
-                              className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                              viewBox="0 0 24 24"
-                              fill="currentColor"
+                          {/* Activity Card */}
+                          <div className="relative ml-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
+                            {/* Timeline dot */}
+                            <div
+                              className={`absolute -left-8 top-4 w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center z-10 ${getActivityIconBg(activity.type)}`}
                             >
-                              <path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
-                            </svg>
-                          </button>
-                        </div>
+                              {getActivityIcon(activity.type)}
+                            </div>
 
-                        {/* Reactions */}
-                        {activity.reactions && activity.reactions.length > 0 && (
-                          <div className="flex items-center gap-2 mt-2">
-                            {activity.reactions.map((reaction) => (
-                              <span
-                                key={`${activity.id}-${reaction.emoji}`}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded-full text-xs"
-                              >
-                                {reaction.emoji} {reaction.count}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Expanded Content */}
-                        {isExpanded && (
-                          <div className="mt-3">
-                            {/* Rich Preview */}
-                            {renderRichPreview(activity)}
-
-                            {/* Comments */}
-                            {activity.comments && activity.comments.length > 0 && (
-                              <div className="mt-3 space-y-2">
-                                <p className="text-xs font-semibold text-slate-500 uppercase">
-                                  Comments
+                            {/* Header */}
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                                    {activity.title}
+                                  </p>
+                                  {activity.sentiment && (
+                                    <span
+                                      className={`${getSentimentColor(activity.sentiment)}`}
+                                      title={`${activity.sentiment} sentiment`}
+                                    >
+                                      {getSentimentEmoji(activity.sentiment)}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+                                  {activity.description}
                                 </p>
-                                {activity.comments.map((comment) => (
-                                  <div
-                                    key={`${activity.id}-${comment.timestamp}`}
-                                    className="p-2 bg-slate-50 dark:bg-slate-800/50 rounded border border-slate-100 dark:border-slate-700"
+                                <p className="text-xs text-slate-500 mt-1">
+                                  {activity.user} • {formatRelativeTime(activity.timestamp)}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => toggleExpand(activity.id)}
+                                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"
+                              >
+                                <svg
+                                  className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                  viewBox="0 0 24 24"
+                                  fill="currentColor"
+                                >
+                                  <path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
+                                </svg>
+                              </button>
+                            </div>
+
+                            {/* Reactions */}
+                            {activity.reactions && activity.reactions.length > 0 && (
+                              <div className="flex items-center gap-2 mt-2">
+                                {activity.reactions.map((reaction) => (
+                                  <span
+                                    key={`${activity.id}-${reaction.emoji}`}
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded-full text-xs"
                                   >
-                                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                                      {comment.text}
-                                    </p>
-                                    <p className="text-xs text-slate-500 mt-1">
-                                      {comment.user} • {formatRelativeTime(comment.timestamp)}
-                                    </p>
-                                  </div>
+                                    {reaction.emoji} {reaction.count}
+                                  </span>
                                 ))}
                               </div>
                             )}
 
-                            {/* Inline Actions */}
-                            {renderActivityActions(activity)}
+                            {/* Expanded Content */}
+                            {isExpanded && (
+                              <div className="mt-3">
+                                {/* Rich Preview */}
+                                {renderRichPreview(activity)}
+
+                                {/* Comments */}
+                                {activity.comments && activity.comments.length > 0 && (
+                                  <div className="mt-3 space-y-2">
+                                    <p className="text-xs font-semibold text-slate-500 uppercase">
+                                      Comments
+                                    </p>
+                                    {activity.comments.map((comment) => (
+                                      <div
+                                        key={`${activity.id}-${comment.timestamp}`}
+                                        className="p-2 bg-slate-50 dark:bg-slate-800/50 rounded border border-slate-100 dark:border-slate-700"
+                                      >
+                                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                                          {comment.text}
+                                        </p>
+                                        <p className="text-xs text-slate-500 mt-1">
+                                          {comment.user} • {formatRelativeTime(comment.timestamp)}
+                                        </p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* Inline Actions */}
+                                {renderActivityActions(activity)}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Load More / Infinite Scroll */}
+                  {hasMore && (
+                    <button
+                      onClick={() => setVisibleCount((prev) => prev + 5)}
+                      className="w-full mt-6 py-3 text-sm text-[#137fec] font-medium hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-slate-700"
+                    >
+                      Load more activities ({filteredActivities.length - visibleCount} remaining)
+                    </button>
+                  )}
+
+                  {filteredActivities.length === 0 && (
+                    <div className="text-center py-12">
+                      <svg
+                        className="w-12 h-12 text-slate-300 mx-auto mb-4"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
+                      </svg>
+                      <p className="text-slate-500">No activities match your filters</p>
+                      <button
+                        onClick={() => {
+                          setActivityTypeFilter('all');
+                          setPersonFilter('all');
+                          setSearchQuery('');
+                        }}
+                        className="mt-2 text-sm text-[#137fec] hover:underline"
+                      >
+                        Clear filters
+                      </button>
                     </div>
-                  );
-                })}
-              </div>
-
-              {/* Load More / Infinite Scroll */}
-              {hasMore && (
-                <button
-                  onClick={() => setVisibleCount((prev) => prev + 5)}
-                  className="w-full mt-6 py-3 text-sm text-[#137fec] font-medium hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-slate-700"
-                >
-                  Load more activities ({filteredActivities.length - visibleCount} remaining)
-                </button>
-              )}
-
-              {filteredActivities.length === 0 && (
-                <div className="text-center py-12">
-                  <svg
-                    className="w-12 h-12 text-slate-300 mx-auto mb-4"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
-                  </svg>
-                  <p className="text-slate-500">No activities match your filters</p>
-                  <button
-                    onClick={() => {
-                      setActivityTypeFilter('all');
-                      setPersonFilter('all');
-                      setSearchQuery('');
-                    }}
-                    className="mt-2 text-sm text-[#137fec] hover:underline"
-                  >
-                    Clear filters
-                  </button>
-                </div>
-              )}
-              </>
+                  )}
+                </>
               )}
             </Card>
           )}

@@ -162,15 +162,11 @@ export function VersionComparisonView({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Temperature:</span>
-                  <span className="font-medium">
-                    {comparison.versionA.temperature ?? 'N/A'}
-                  </span>
+                  <span className="font-medium">{comparison.versionA.temperature ?? 'N/A'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Max Tokens:</span>
-                  <span className="font-medium">
-                    {comparison.versionA.maxTokens ?? 'N/A'}
-                  </span>
+                  <span className="font-medium">{comparison.versionA.maxTokens ?? 'N/A'}</span>
                 </div>
               </div>
               {comparison.versionA.prompt && (
@@ -202,15 +198,11 @@ export function VersionComparisonView({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Temperature:</span>
-                  <span className="font-medium">
-                    {comparison.versionB.temperature ?? 'N/A'}
-                  </span>
+                  <span className="font-medium">{comparison.versionB.temperature ?? 'N/A'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Max Tokens:</span>
-                  <span className="font-medium">
-                    {comparison.versionB.maxTokens ?? 'N/A'}
-                  </span>
+                  <span className="font-medium">{comparison.versionB.maxTokens ?? 'N/A'}</span>
                 </div>
               </div>
               {comparison.versionB.prompt && (

@@ -67,10 +67,10 @@ function ConfettiAnimation() {
     for (let i = 0; i < 50; i++) {
       newPieces.push({
         id: i,
-        x: Math.random() * 100,
-        delay: Math.random() * 0.5,
-        duration: 2 + Math.random() * 2,
-        color: colors[Math.floor(Math.random() * colors.length)],
+        x: Math.random() * 100, // NOSONAR — UI animation positioning, not security-sensitive
+        delay: Math.random() * 0.5, // NOSONAR — UI animation timing, not security-sensitive
+        duration: 2 + Math.random() * 2, // NOSONAR — UI animation duration, not security-sensitive
+        color: colors[Math.floor(Math.random() * colors.length)], // NOSONAR — UI color selection, not security-sensitive
       });
     }
 
@@ -191,7 +191,9 @@ function SuccessContent() {
   }, []);
 
   // Mask email for display
-  const maskedEmail = email ? email.replace(/(.{2})(.*)(@.*)/, '$1***$3') : 'your email';
+  const maskedEmail = email
+    ? email.replace(/(.{2})([^@]{0,254})(@[^@]{0,254})/, '$1***$3')
+    : 'your email';
 
   // Resend button text based on mutation state
   const resendButtonText = resendMutation.isPending
@@ -203,7 +205,7 @@ function SuccessContent() {
   return (
     <>
       {/* Confetti Animation — respects prefers-reduced-motion */}
-      {showConfetti && !prefersReducedMotion && <ConfettiAnimation />}
+      {showConfetti && !prefersReducedMotion ? <ConfettiAnimation /> : null}
 
       <AuthBackground>
         <div className="relative z-10 w-full max-w-lg mx-auto px-4">
@@ -282,9 +284,7 @@ function SuccessContent() {
               </button>
             </p>
             {resendMutation.error && (
-              <p className="text-sm text-red-400 mt-1">
-                Failed to resend email. Please try again.
-              </p>
+              <p className="text-sm text-red-400 mt-1">Failed to resend email. Please try again.</p>
             )}
             <p className="text-sm text-slate-400 mt-2">
               Need help?{' '}

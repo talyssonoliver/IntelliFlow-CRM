@@ -29,9 +29,9 @@ beforeAll(async () => {
 
 describe('Sitemap Reconciliation', () => {
   // TC-25
-  it('total page.tsx count equals 102 (regression guard)', () => {
+  it('total page.tsx count equals 119 (regression guard)', () => {
     const pageFiles = findPageFiles(APP_DIR);
-    expect(pageFiles.length).toBe(111);
+    expect(pageFiles.length).toBe(119);
   });
 
   // TC-26
@@ -93,9 +93,8 @@ describe('Sitemap Reconciliation', () => {
 
   // TC-30
   it('sitemap entry count matches expected public route count', () => {
-    // 13 static marketing pages + 2 known blog slugs = 15
-    // (or at minimum 13 static routes)
-    expect(sitemapEntries.length).toBeGreaterThanOrEqual(13);
+    // 13 static + 2 blog + 5 careers + 3 LP = 23
+    expect(sitemapEntries.length).toBeGreaterThanOrEqual(23);
     // Each entry should be unique and valid
     const urls = sitemapEntries.map((e) => new URL(e.url).pathname);
     const unique = new Set(urls);

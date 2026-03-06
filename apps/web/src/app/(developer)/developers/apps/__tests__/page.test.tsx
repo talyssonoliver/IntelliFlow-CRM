@@ -15,9 +15,7 @@ describe('DeveloperAppsPage', () => {
 
   it('renders description paragraph', () => {
     render(<DeveloperAppsPage />);
-    expect(
-      screen.getByText(/Manage your registered applications/)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Manage your registered applications/)).toBeInTheDocument();
   });
 
   it('renders AppList component', () => {

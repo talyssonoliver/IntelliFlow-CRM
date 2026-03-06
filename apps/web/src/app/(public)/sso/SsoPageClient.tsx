@@ -53,10 +53,7 @@ export default function SsoPageClient() {
           title="Sign in with SSO"
           description="Enter your work email to find your organization's SSO provider"
         >
-          <SsoEntryForm
-            onResolve={handleResolve}
-            isLoading={isRedirecting}
-          />
+          <SsoEntryForm onResolve={handleResolve} isLoading={isRedirecting} />
 
           {/* Resolution announcement for screen readers */}
           <div aria-live="polite" className="sr-only">

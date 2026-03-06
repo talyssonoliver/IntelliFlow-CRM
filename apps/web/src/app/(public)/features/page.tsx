@@ -1,12 +1,30 @@
 import * as React from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Button, Card } from '@intelliflow/ui';
 import featuresData from '@/data/features-content.json';
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Powerful Features for Modern Sales Teams | IntelliFlow CRM',
   description:
-    'Discover AI-powered CRM features including lead scoring, workflow automation, predictive analytics, and enterprise-grade security.',
+    'Discover AI-powered CRM features: lead scoring, workflow automation, predictive analytics, smart contact management, and enterprise-grade security.',
+  openGraph: {
+    title: 'IntelliFlow CRM — AI Lead Scoring & Automation',
+    description:
+      'Explore features across Core CRM, AI & Intelligence, and Security & Governance. Built for modern sales teams that close more deals, faster.',
+    url: 'https://intelliflow-crm.com/features',
+    siteName: 'IntelliFlow CRM',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'IntelliFlow CRM — AI Lead Scoring & Automation',
+    description:
+      'AI lead scoring, deal forecasting, pipeline management, email automation, and zero trust security. 14-day free trial.',
+  },
+  alternates: {
+    canonical: '/features',
+  },
 };
 
 export default function FeaturesPage() {

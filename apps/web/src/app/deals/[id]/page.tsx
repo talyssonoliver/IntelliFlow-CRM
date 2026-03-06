@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Card, Button } from '@intelliflow/ui';
 import { EntityHeader } from '@/components/shared';
+import { ActivityFeed } from '@/components/shared/activity-feed';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
 import { PinButton } from '@/components/home/PinButton';
@@ -148,7 +149,7 @@ const SAMPLE_DEAL: Deal = {
   ],
 };
 
-const SAMPLE_ACTIVITIES: ActivityEvent[] = [
+const _SAMPLE_ACTIVITIES: ActivityEvent[] = [
   {
     id: 'agent-1',
     type: 'agent_action',
@@ -404,7 +405,13 @@ function StakeholdersCard({ deal }: { deal: Deal }) {
   );
 }
 
-function ActivityTimeline({ activities, dealId }: { activities: ActivityEvent[]; dealId: string }) {
+function _ActivityTimeline({
+  activities,
+  dealId,
+}: {
+  activities: ActivityEvent[];
+  dealId: string;
+}) {
   const [activeTab, setActiveTab] = useState<'activity' | 'notes' | 'emails'>('activity');
 
   const groupedActivities = useMemo(() => {
@@ -762,7 +769,19 @@ export default function DealDetailPage() {
 
           {/* Center - Activity Timeline */}
           <div className="lg:col-span-6 flex flex-col gap-6">
-            <ActivityTimeline activities={SAMPLE_ACTIVITIES} dealId={dealId} />
+            <Card className="p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Activity</h3>
+                <span className="text-xs text-slate-500">All Sources</span>
+              </div>
+              <ActivityFeed
+                entityType="OPPORTUNITY"
+                entityId={dealId}
+                limit={20}
+                height={620}
+                emptyMessage="No activity found across all sources"
+              />
+            </Card>
           </div>
 
           {/* Right Sidebar */}

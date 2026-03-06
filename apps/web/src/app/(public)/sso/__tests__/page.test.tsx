@@ -18,7 +18,9 @@ vi.mock('next/navigation', () => ({
 // Mock next/link
 vi.mock('next/link', () => ({
   default: ({ children, href, ...props }: { children: React.ReactNode; href: string }) => (
-    <a href={href} {...props}>{children}</a>
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -70,8 +72,20 @@ vi.mock('@/hooks/useFocusTrap', () => ({
 
 // Mock shared components
 vi.mock('@/components/shared', () => ({
-  AuthBackground: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-background">{children}</div>,
-  AuthCard: ({ children, title, description, badge }: { children: React.ReactNode; title: string; description: string; badge: string }) => (
+  AuthBackground: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="auth-background">{children}</div>
+  ),
+  AuthCard: ({
+    children,
+    title,
+    description,
+    badge,
+  }: {
+    children: React.ReactNode;
+    title: string;
+    description: string;
+    badge: string;
+  }) => (
     <div data-testid="auth-card">
       <h1>{title}</h1>
       <p>{description}</p>
@@ -83,7 +97,13 @@ vi.mock('@/components/shared', () => ({
 
 // Mock SsoEntryForm
 vi.mock('@/components/auth', () => ({
-  SsoEntryForm: ({ onResolve, isLoading }: { onResolve: (r: unknown) => void; isLoading?: boolean }) => (
+  SsoEntryForm: ({
+    onResolve,
+    isLoading,
+  }: {
+    onResolve: (r: unknown) => void;
+    isLoading?: boolean;
+  }) => (
     <div data-testid="sso-entry-form">
       <button
         onClick={() => onResolve({ found: true, config: { provider_name: 'Test SSO' } })}
@@ -99,7 +119,16 @@ vi.mock('@/components/auth', () => ({
 vi.mock('@/lib/trpc', () => ({
   trpc: {
     auth: {
-      getStatus: { useQuery: () => ({ data: null, isSuccess: false, isError: false, isPending: true, isFetching: true, refetch: vi.fn() }) },
+      getStatus: {
+        useQuery: () => ({
+          data: null,
+          isSuccess: false,
+          isError: false,
+          isPending: true,
+          isFetching: true,
+          refetch: vi.fn(),
+        }),
+      },
       login: { useMutation: () => ({ mutateAsync: vi.fn() }) },
       logout: { useMutation: () => ({ mutateAsync: vi.fn() }) },
       verifyMfa: { useMutation: () => ({ mutateAsync: vi.fn() }) },

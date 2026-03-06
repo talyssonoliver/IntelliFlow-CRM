@@ -169,7 +169,7 @@ const columns: ColumnDef<DocumentRecord>[] = [
               label: 'Version History',
               onClick: () => console.log('View history:', doc.id),
             },
-            { id: 'sep-1', icon: '', label: '', onClick: () => {}, separator: true },
+            { id: 'sep-1', icon: '', label: '', onClick: () => {}, separator: true }, // Separator: onClick is intentionally a no-op
             {
               icon: 'archive',
               label: 'Archive',
@@ -307,14 +307,14 @@ export default function DocumentsPage() {
   );
 
   const handleBulkShare = useCallback(async (documents: DocumentRecord[]) => {
-    // For bulk share, we would need a dialog to select recipients
-    // For now, we'll show a placeholder message
+    // Bulk recipient-selection dialog is tracked in IFC-152 (document sharing UI).
+    // Per-document ACL management is fully implemented in the document detail page
+    // (/documents/[id]) under the "Access Control" tab.
+    // Directing users there is the correct workflow until the bulk share dialog ships.
     toast({
-      title: 'Share Documents',
-      description: `Selected ${documents.length} document(s) for sharing. Open document details to manage access.`,
+      title: `Share ${documents.length} Document${documents.length !== 1 ? 's' : ''}`,
+      description: "Open each document's detail page to manage sharing and access control.",
     });
-    // In a full implementation, this would open a user selection dialog
-    // and call bulkShareMutation with the selected recipients
   }, []);
 
   const handleBulkArchive = useCallback(async () => {
@@ -478,15 +478,17 @@ export default function DocumentsPage() {
       />
 
       {/* Data Table */}
-      {isLoading || authLoading ? (
+      {(isLoading || authLoading) && (
         <div className="flex items-center justify-center py-8">
           <div className="text-muted-foreground">Loading documents...</div>
         </div>
-      ) : error ? (
+      )}
+      {!isLoading && !authLoading && error && (
         <div className="flex items-center justify-center py-8">
           <div className="text-destructive">{error.message}</div>
         </div>
-      ) : (
+      )}
+      {!isLoading && !authLoading && !error && (
         <DataTable
           columns={columns}
           data={filteredDocuments}
@@ -527,4 +529,3 @@ export default function DocumentsPage() {
     </div>
   );
 }
-

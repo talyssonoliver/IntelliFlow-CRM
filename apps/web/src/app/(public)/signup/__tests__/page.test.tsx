@@ -40,7 +40,9 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 }));
 
 // Mock tRPC — signup mutation
-const mockSignupMutateAsync = vi.fn().mockResolvedValue({ success: true, needsEmailVerification: true });
+const mockSignupMutateAsync = vi
+  .fn()
+  .mockResolvedValue({ success: true, needsEmailVerification: true });
 vi.mock('@/lib/trpc', () => ({
   trpc: {
     auth: {

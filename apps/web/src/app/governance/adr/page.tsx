@@ -613,7 +613,10 @@ export default function ADRRegistryPage() {
               </div>
               <form onSubmit={handleCreate} className="space-y-4">
                 <div>
-                  <label htmlFor="adr-new-title" className="block text-sm font-medium text-foreground mb-1">
+                  <label
+                    htmlFor="adr-new-title"
+                    className="block text-sm font-medium text-foreground mb-1"
+                  >
                     Title <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -627,7 +630,10 @@ export default function ADRRegistryPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="adr-new-story" className="block text-sm font-medium text-foreground mb-1">
+                  <label
+                    htmlFor="adr-new-story"
+                    className="block text-sm font-medium text-foreground mb-1"
+                  >
                     Technical Story (Optional)
                   </label>
                   <input
@@ -711,8 +717,8 @@ export default function ADRRegistryPage() {
                         </div>
                         {v.validation.errors.length > 0 && (
                           <div className="ml-7 space-y-1">
-                            {v.validation.errors.map((err, i) => (
-                              <p key={i} className="text-sm text-red-600 dark:text-red-400">
+                            {v.validation.errors.map((err) => (
+                              <p key={err} className="text-sm text-red-600 dark:text-red-400">
                                 Error: {err}
                               </p>
                             ))}
@@ -720,8 +726,11 @@ export default function ADRRegistryPage() {
                         )}
                         {v.validation.warnings.length > 0 && (
                           <div className="ml-7 space-y-1">
-                            {v.validation.warnings.map((warning, i) => (
-                              <p key={i} className="text-sm text-amber-600 dark:text-amber-400">
+                            {v.validation.warnings.map((warning) => (
+                              <p
+                                key={warning}
+                                className="text-sm text-amber-600 dark:text-amber-400"
+                              >
                                 Warning: {warning}
                               </p>
                             ))}

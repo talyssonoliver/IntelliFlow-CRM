@@ -14,40 +14,42 @@ import { PageHeader } from '@/components/shared';
 import { CaseForm } from '@/components/cases';
 import { api } from '@/lib/api';
 
-/** Typed escape-hatch for the cases tRPC namespace (TS2589 deep type instantiation workaround). */
-interface CasesApiEscape {
-  cases?: {
-    create?: {
-      useMutation?: (opts: {
-        onSuccess: (data: { id: string }) => void;
-        onError: (error: { message: string }) => void;
-      }) => {
-        mutateAsync: (data: Record<string, unknown>) => Promise<Record<string, unknown>>;
-        isPending: boolean;
-      };
-    };
-  };
-}
-
-const casesApi = api as unknown as CasesApiEscape;
-
 export default function NewCasePage() {
   const router = useRouter();
 
-  // Cast to avoid TS2589 deep type instantiation with tRPC inference
-  const createMutation = casesApi.cases?.create?.useMutation?.({
-    onSuccess: (data: { id: string }) => {
+  const createMutation = api.cases.create.useMutation({
+    onSuccess: (data) => {
       toast({ title: 'Case Created', description: 'Your case has been created successfully.' });
       router.push(`/cases/${data.id}`);
     },
-    onError: (error: { message: string }) => {
+    onError: (error) => {
       toast({ title: 'Failed to create case', description: error.message, variant: 'destructive' });
     },
-  }) ?? { mutateAsync: async () => ({}), isPending: false };
+  });
 
-  const handleSubmit = useCallback(async (data: Record<string, unknown>) => {
-    await createMutation.mutateAsync(data);
-  }, [createMutation]);
+  const handleSubmit = useCallback(
+    async (data: Record<string, unknown>) => {
+      // CaseForm populates title and clientId — validate before calling typed mutation
+      const { title, clientId, description, priority, deadline, assignedTo } = data;
+      if (typeof title !== 'string' || typeof clientId !== 'string') {
+        toast({
+          title: 'Validation Error',
+          description: 'Title and Client are required.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      await createMutation.mutateAsync({
+        title,
+        clientId,
+        description: typeof description === 'string' ? description : undefined,
+        priority: priority as 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | undefined,
+        deadline: deadline as Date | undefined,
+        assignedTo: typeof assignedTo === 'string' ? assignedTo : undefined,
+      });
+    },
+    [createMutation]
+  );
 
   const handleCancel = useCallback(() => {
     router.push('/cases');

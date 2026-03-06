@@ -338,12 +338,12 @@ export default function MfaSetupPage() {
         };
       case 'setup':
         return {
-          title:
-            selectedMethod === 'totp'
-              ? 'Set Up Authenticator App'
-              : selectedMethod === 'sms'
-                ? 'Set Up SMS Verification'
-                : 'Set Up Email Verification',
+          title: (() => {
+            if (selectedMethod === 'totp') return 'Set Up Authenticator App';
+            return selectedMethod === 'sms'
+              ? 'Set Up SMS Verification'
+              : 'Set Up Email Verification';
+          })(),
           description: 'Follow the instructions below to complete setup',
         };
       case 'verify':
@@ -516,7 +516,7 @@ export default function MfaSetupPage() {
             />
           )}
 
-        {/* SMS/Email Setup Step (placeholder) */}
+        {/* SMS/Email Setup Step */}
         {step === 'setup' && (setupData?.method === 'sms' || setupData?.method === 'email') && (
           <div className="space-y-4">
             <p className="text-muted-foreground">

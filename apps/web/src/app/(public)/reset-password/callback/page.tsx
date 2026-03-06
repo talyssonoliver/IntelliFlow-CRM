@@ -19,7 +19,6 @@ import { AuthBackground, AuthCard } from '@/components/shared';
 import { PasswordResetForm, ResetSuccess } from '@/components/shared/password-reset';
 import { useState, useCallback, useEffect } from 'react';
 
-
 // ============================================
 // Loading Fallback
 // ============================================
@@ -85,7 +84,10 @@ function ResetCallbackContent() {
           >
             <div className="text-center space-y-4 py-4">
               <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto">
-                <span className="material-symbols-outlined text-3xl text-red-400" aria-hidden="true">
+                <span
+                  className="material-symbols-outlined text-3xl text-red-400"
+                  aria-hidden="true"
+                >
                   error
                 </span>
               </div>
@@ -137,10 +139,7 @@ function ResetCallbackContent() {
             </p>
           }
         >
-          <PasswordResetForm
-            token={accessToken!}
-            onSuccess={handleSuccess}
-          />
+          <PasswordResetForm token={accessToken!} onSuccess={handleSuccess} />
         </AuthCard>
 
         <div className="mt-6 text-center">

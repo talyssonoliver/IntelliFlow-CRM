@@ -83,20 +83,32 @@ const mockNotificationFiltersProps = vi.hoisted(() => vi.fn());
 
 // Mock @/components/shared — PageHeader
 vi.mock('@/components/shared', () => ({
-  PageHeader: vi.fn(({ title, actions }: { title: string; actions?: Array<{ label: string; onClick?: () => void }> }) => (
-    <div data-testid="page-header">
-      <h1>{title}</h1>
-      {actions?.map((a, i) => (
-        a.onClick ? (
-          <button key={i} data-testid={`action-${a.label.toLowerCase().replace(/\s+/g, '-')}`} onClick={a.onClick}>
-            {a.label}
-          </button>
-        ) : (
-          <span key={i}>{a.label}</span>
-        )
-      ))}
-    </div>
-  )),
+  PageHeader: vi.fn(
+    ({
+      title,
+      actions,
+    }: {
+      title: string;
+      actions?: Array<{ label: string; onClick?: () => void }>;
+    }) => (
+      <div data-testid="page-header">
+        <h1>{title}</h1>
+        {actions?.map((a, i) =>
+          a.onClick ? (
+            <button
+              key={i}
+              data-testid={`action-${a.label.toLowerCase().replace(/\s+/g, '-')}`}
+              onClick={a.onClick}
+            >
+              {a.label}
+            </button>
+          ) : (
+            <span key={i}>{a.label}</span>
+          )
+        )}
+      </div>
+    )
+  ),
 }));
 
 // Mock @/components/notifications — NotificationFilters + NotificationList

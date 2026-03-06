@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   }
 
   const encoder = new TextEncoder();
-  const connectionId = `${runId}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const connectionId = `${runId}-${Date.now()}-${crypto.randomUUID().replace(/-/g, '')}`;
 
   const stream = new ReadableStream({
     start(controller) {
@@ -125,9 +125,6 @@ function formatSSE(data: object): string {
 /**
  * Get active connections count (for debugging)
  */
-function getActiveConnections(): number {
+function _getActiveConnections(): number {
   return connections.size;
 }
-
-// Reference to avoid unused function warning
-void getActiveConnections;

@@ -180,7 +180,7 @@ export default function CreateNewLeadPage() {
       if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
       if (!formData.email.trim()) {
         newErrors.email = 'Email is required';
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      } else if (!/^[^\s@]+@[^\s@.]+\.[^\s@.]+$/.test(formData.email)) {
         newErrors.email = 'Please enter a valid email address';
       }
       // Validate sourceOther when 'Other' is selected
@@ -247,12 +247,23 @@ export default function CreateNewLeadPage() {
     setIsSubmitting(true);
     try {
       // Map form data to API schema (createLeadSchema from @intelliflow/validators)
-      // Note: Additional BANT qualification fields (budget, authority, need, timeline)
-      // are not yet supported by the API schema - TODO: Extend schema or store separately
+      // Schema-supported fields: email, firstName, lastName, company, title, phone, source,
+      //   location, website, avatarUrl, lastContactedAt, estimatedValue, tags.
+      //
+      // BANT fields NOT yet in schema (tracked for schema extension in IFC-004):
+      //   budget, authority, need, timeline, companySize, industry, annualRevenue,
+      //   qualificationNotes — these are collected in the form UI but not sent to the API.
+      //   Schema extension task: add a `metadata` JSON column or dedicated BANT fields to Lead.
 
       // Helper to convert empty strings to undefined
       const toOptional = (value: string): string | undefined =>
         value.trim() ? value.trim() : undefined;
+
+      // Convert annualRevenue (string like "1000000") to estimatedValue (integer cents)
+      // if provided; field is schema-supported as an integer in cents.
+      const estimatedValueCents = formData.annualRevenue
+        ? Math.round(parseFloat(formData.annualRevenue) * 100) || undefined
+        : undefined;
 
       const leadData = {
         email: formData.email.trim(),
@@ -262,10 +273,11 @@ export default function CreateNewLeadPage() {
         title: toOptional(formData.jobTitle),
         phone: toOptional(formData.phone),
         source: mapSourceToEnum(formData.source),
-        // Lead 360 fields
+        // Lead 360 fields (schema-supported)
         website: toOptional(formData.website),
-        // Note: location, avatarUrl, lastContactedAt, estimatedValue, tags
-        // can be added to the form UI in the future
+        estimatedValue: estimatedValueCents,
+        // companySize, industry, qualificationNotes, budget, authority, need, timeline
+        // are not yet in createLeadSchema — see IFC-004 for schema extension.
       };
 
       await createLead.mutateAsync(leadData);
@@ -375,6 +387,12 @@ export default function CreateNewLeadPage() {
               {steps.map((step) => {
                 const status = getStepStatus(step);
                 const isClickable = status === 'completed' || status === 'current';
+                const stepCircleClass =
+                  status === 'current'
+                    ? 'bg-[#137fec] text-white'
+                    : status === 'completed'
+                      ? 'bg-[#137fec] text-white hover:bg-[#0e6ac7]'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-2 border-slate-200 dark:border-slate-700';
                 return (
                   <button
                     key={step.id}
@@ -384,13 +402,7 @@ export default function CreateNewLeadPage() {
                     className={`flex flex-col items-center gap-2 ${isClickable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
                   >
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white dark:ring-slate-900 shadow-sm transition-all ${
-                        status === 'current'
-                          ? 'bg-[#137fec] text-white'
-                          : status === 'completed'
-                            ? 'bg-[#137fec] text-white hover:bg-[#0e6ac7]'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-2 border-slate-200 dark:border-slate-700'
-                      }`}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white dark:ring-slate-900 shadow-sm transition-all ${stepCircleClass}`}
                     >
                       {status === 'completed' ? (
                         <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">

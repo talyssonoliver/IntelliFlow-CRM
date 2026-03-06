@@ -92,18 +92,30 @@ describe('ResetPasswordClient (IFC-120 legacy)', () => {
 
   describe('Wrapper Components', () => {
     it('renders AuthBackground wrapper', () => {
-      render(<ResetPasswordPage params={resolvedThenable({ token: 'validtoken12345678901234567890ab' })} />);
+      render(
+        <ResetPasswordPage
+          params={resolvedThenable({ token: 'validtoken12345678901234567890ab' })}
+        />
+      );
       expect(screen.getByTestId('auth-background')).toBeTruthy();
     });
 
     it('renders AuthCard with INTELLIFLOW badge', () => {
-      render(<ResetPasswordPage params={resolvedThenable({ token: 'validtoken12345678901234567890ab' })} />);
+      render(
+        <ResetPasswordPage
+          params={resolvedThenable({ token: 'validtoken12345678901234567890ab' })}
+        />
+      );
       expect(screen.getByTestId('auth-card')).toBeTruthy();
       expect(screen.getByTestId('auth-card-badge').textContent).toBe('INTELLIFLOW');
     });
 
     it('calls useRedirectIfAuthenticated with /dashboard', () => {
-      render(<ResetPasswordPage params={resolvedThenable({ token: 'validtoken12345678901234567890ab' })} />);
+      render(
+        <ResetPasswordPage
+          params={resolvedThenable({ token: 'validtoken12345678901234567890ab' })}
+        />
+      );
       expect(mockUseRedirectIfAuthenticated).toHaveBeenCalledWith('/dashboard');
     });
   });
@@ -112,7 +124,11 @@ describe('ResetPasswordClient (IFC-120 legacy)', () => {
 
   describe('Legacy Token Handling', () => {
     it('shows invalid state for all tokens (legacy route)', () => {
-      render(<ResetPasswordPage params={resolvedThenable({ token: 'any-valid-looking-token-here-1234567890' })} />);
+      render(
+        <ResetPasswordPage
+          params={resolvedThenable({ token: 'any-valid-looking-token-here-1234567890' })}
+        />
+      );
       const el = screen.getByTestId('token-invalid');
       expect(el.getAttribute('data-reason')).toBe('invalid');
     });
@@ -124,7 +140,11 @@ describe('ResetPasswordClient (IFC-120 legacy)', () => {
     });
 
     it('does not render PasswordResetForm (form state unreachable)', () => {
-      render(<ResetPasswordPage params={resolvedThenable({ token: 'validtoken12345678901234567890ab' })} />);
+      render(
+        <ResetPasswordPage
+          params={resolvedThenable({ token: 'validtoken12345678901234567890ab' })}
+        />
+      );
       expect(screen.queryByTestId('password-reset-form')).toBeNull();
     });
   });
@@ -133,7 +153,11 @@ describe('ResetPasswordClient (IFC-120 legacy)', () => {
 
   describe('Page Title', () => {
     it('shows "Reset Link Problem" title for invalid state', () => {
-      render(<ResetPasswordPage params={resolvedThenable({ token: 'validtoken12345678901234567890ab' })} />);
+      render(
+        <ResetPasswordPage
+          params={resolvedThenable({ token: 'validtoken12345678901234567890ab' })}
+        />
+      );
       expect(screen.getByTestId('auth-card-title').textContent).toBe('Reset Link Problem');
     });
   });
@@ -142,7 +166,11 @@ describe('ResetPasswordClient (IFC-120 legacy)', () => {
 
   describe('Footer', () => {
     it('shows "Back to sign in" footer', () => {
-      render(<ResetPasswordPage params={resolvedThenable({ token: 'validtoken12345678901234567890ab' })} />);
+      render(
+        <ResetPasswordPage
+          params={resolvedThenable({ token: 'validtoken12345678901234567890ab' })}
+        />
+      );
       const footer = screen.getByText('Back to sign in');
       expect(footer).toBeTruthy();
       expect(footer.getAttribute('href')).toBe('/login');

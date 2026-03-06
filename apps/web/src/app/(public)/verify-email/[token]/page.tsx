@@ -42,11 +42,7 @@ function LegacyVerifyContent() {
 
   return (
     <AuthBackground>
-      <AuthCard
-        badge="INTELLIFLOW"
-        badgeIcon="mark_email_read"
-        title="Invalid Verification Link"
-      >
+      <AuthCard badge="INTELLIFLOW" badgeIcon="mark_email_read" title="Invalid Verification Link">
         <div className="text-center space-y-4 py-4">
           <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto">
             <span className="material-symbols-outlined text-3xl text-amber-400" aria-hidden="true">
@@ -54,7 +50,8 @@ function LegacyVerifyContent() {
             </span>
           </div>
           <p className="text-slate-300 text-sm">
-            This verification link format is no longer supported. Please request a new verification email.
+            This verification link format is no longer supported. Please request a new verification
+            email.
           </p>
 
           {email && (

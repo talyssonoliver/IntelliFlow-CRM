@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { toast, Skeleton } from '@intelliflow/ui';
+import { toast } from '@intelliflow/ui';
 import type { TaskStatus, TaskPriority } from '@intelliflow/domain';
 import { PageHeader, SearchFilterBar } from '@/components/shared';
 import { taskStatusOptions, taskPriorityOptions } from '@/lib/shared/filter-utils';
@@ -16,7 +16,6 @@ function getEntityName(task: TaskListItem): string {
   if (task.opportunity) return task.opportunity.name;
   return '';
 }
-import { TaskCalendar, type CalendarTask } from '@/components/tasks/TaskCalendar';
 import { TaskForm, type TaskFormData } from '@/components/tasks/TaskForm';
 import { ReminderConfig } from '@/components/tasks/ReminderConfig';
 
@@ -36,8 +35,6 @@ function useDebounce<T>(value: T, delay: number): T {
 
   return debouncedValue;
 }
-
-type ViewMode = 'list' | 'calendar';
 
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest First' },
@@ -69,7 +66,6 @@ export default function TasksPage() {
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [priorityFilter, setPriorityFilter] = useState<string>('');
   const [sortOrder, setSortOrder] = useState<string>('newest');
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskListItem | null>(null);
   const [createDefaultDate, setCreateDefaultDate] = useState<string>('');
@@ -157,19 +153,8 @@ export default function TasksPage() {
 
   const tasks = useMemo(() => {
     if (!data?.tasks) return [];
-    return data.tasks as TaskListItem[];
+    return data.tasks;
   }, [data]);
-
-  const calendarTasks: CalendarTask[] = useMemo(() => {
-    return tasks
-      .filter((t) => t.dueDate != null)
-      .map((t) => ({
-        id: t.id,
-        title: t.title,
-        dueDate: t.dueDate!,
-        priority: t.priority,
-      }));
-  }, [tasks]);
 
   const overdueCount = useMemo(() => {
     const now = new Date();
@@ -296,27 +281,9 @@ export default function TasksPage() {
     [editingTask, updateMutation]
   );
 
-  const handleCalendarTaskClick = useCallback(
-    (id: string) => {
-      router.push(`/tasks/${id}`);
-    },
-    [router]
-  );
-
-  const handleCreateWithDate = useCallback((date: Date) => {
-    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-    setCreateDefaultDate(dateStr);
-    setShowCreateForm(true);
-  }, []);
-
-  const handleReminderFilter = useCallback((filter: 'overdue' | 'today') => {
-    if (filter === 'overdue') {
-      setStatusFilter('');
-      setSortOrder('dueDate-asc');
-    } else {
-      setStatusFilter('');
-      setSortOrder('dueDate-asc');
-    }
+  const handleReminderFilter = useCallback((_filter: 'overdue' | 'today') => {
+    setStatusFilter('');
+    setSortOrder('dueDate-asc');
   }, []);
 
   const totalItems = data?.total ?? tasks.length;
@@ -348,71 +315,36 @@ export default function TasksPage() {
         onFilter={handleReminderFilter}
       />
 
-      {/* View Mode Toggle + Search/Filters */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1 rounded-lg border p-0.5">
-            <button
-              type="button"
-              onClick={() => setViewMode('list')}
-              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'
-              }`}
-              aria-label="List view"
-              aria-pressed={viewMode === 'list'}
-            >
-              <span className="material-symbols-outlined text-base" aria-hidden="true">
-                view_list
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('calendar')}
-              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                viewMode === 'calendar' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'
-              }`}
-              aria-label="Calendar view"
-              aria-pressed={viewMode === 'calendar'}
-            >
-              <span className="material-symbols-outlined text-base" aria-hidden="true">
-                calendar_month
-              </span>
-            </button>
-          </div>
-        </div>
-
-        {viewMode === 'list' && (
-          <SearchFilterBar
-            searchValue={searchQuery}
-            onSearchChange={handleSearch}
-            searchPlaceholder="Search tasks by title..."
-            searchAriaLabel="Search tasks"
-            filters={[
-              {
-                id: 'status',
-                label: 'Status',
-                icon: 'filter_list',
-                options: taskStatusOptions(),
-                value: statusFilter,
-                onChange: setStatusFilter,
-              },
-              {
-                id: 'priority',
-                label: 'Priority',
-                icon: 'flag',
-                options: taskPriorityOptions(),
-                value: priorityFilter,
-                onChange: setPriorityFilter,
-              },
-            ]}
-            sort={{
-              options: SORT_OPTIONS,
-              value: sortOrder,
-              onChange: setSortOrder,
-            }}
-          />
-        )}
-      </div>
+      {/* Search/Filters */}
+      <SearchFilterBar
+        searchValue={searchQuery}
+        onSearchChange={handleSearch}
+        searchPlaceholder="Search tasks by title..."
+        searchAriaLabel="Search tasks"
+        filters={[
+          {
+            id: 'status',
+            label: 'Status',
+            icon: 'filter_list',
+            options: taskStatusOptions(),
+            value: statusFilter,
+            onChange: setStatusFilter,
+          },
+          {
+            id: 'priority',
+            label: 'Priority',
+            icon: 'flag',
+            options: taskPriorityOptions(),
+            value: priorityFilter,
+            onChange: setPriorityFilter,
+          },
+        ]}
+        sort={{
+          options: SORT_OPTIONS,
+          value: sortOrder,
+          onChange: setSortOrder,
+        }}
+      />
 
       {/* Error State */}
       {error && !isLoading && (
@@ -442,7 +374,7 @@ export default function TasksPage() {
       )}
 
       {/* Content */}
-      {!error && viewMode === 'list' && (
+      {!error && (
         <TaskList
           tasks={tasks}
           isLoading={isLoading}
@@ -456,20 +388,6 @@ export default function TasksPage() {
           onBulkArchive={handleBulkArchive}
         />
       )}
-
-      {!error &&
-        viewMode === 'calendar' &&
-        (isLoading ? (
-          <div className="space-y-3" data-testid="calendar-skeleton">
-            <Skeleton className="h-[400px] w-full rounded" />
-          </div>
-        ) : (
-          <TaskCalendar
-            tasks={calendarTasks}
-            onTaskClick={handleCalendarTaskClick}
-            onCreateWithDate={handleCreateWithDate}
-          />
-        ))}
 
       {/* Create Form */}
       <TaskForm
@@ -497,13 +415,11 @@ export default function TasksPage() {
                   : '',
                 priority: editingTask.priority,
                 status: editingTask.status,
-                entityType: editingTask.lead
-                  ? 'lead'
-                  : editingTask.contact
-                    ? 'contact'
-                    : editingTask.opportunity
-                      ? 'opportunity'
-                      : 'none',
+                entityType: (() => {
+                  if (editingTask.lead) return 'lead';
+                  if (editingTask.contact) return 'contact';
+                  return editingTask.opportunity ? 'opportunity' : 'none';
+                })(),
                 entityId:
                   editingTask.lead?.id ??
                   editingTask.contact?.id ??

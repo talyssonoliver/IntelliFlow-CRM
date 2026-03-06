@@ -48,6 +48,7 @@ const mockAppointment = {
   hasConflict: false,
   linkedCaseCount: 1,
   isRecurring: false,
+  calendarId: null,
 };
 
 const mockListData = {
@@ -87,7 +88,69 @@ vi.mock('@/lib/api', () => ({
         }),
       },
     },
+    task: {
+      list: {
+        useQuery: () => ({
+          data: { tasks: [], total: 0 },
+          isLoading: false,
+        }),
+      },
+      create: {
+        useMutation: () => ({
+          mutate: vi.fn(),
+        }),
+      },
+    },
   },
+}));
+
+// ─── 4a. @/hooks/useCalendarVisibility ─────────────────────────────
+const mockCalendarVisibility: Record<string, boolean> = {
+  personal: true,
+  team: true,
+  tasks: true,
+  holidays: false,
+};
+
+vi.mock('@/hooks/useCalendarVisibility', () => ({
+  useCalendarVisibility: () => ({
+    calendars: [
+      {
+        id: 'personal',
+        label: 'Personal',
+        color: '#3b82f6',
+        checked: mockCalendarVisibility.personal,
+        isDefault: true,
+      },
+      {
+        id: 'team',
+        label: 'Team Events',
+        color: '#22c55e',
+        checked: mockCalendarVisibility.team,
+        isDefault: true,
+      },
+      {
+        id: 'tasks',
+        label: 'Tasks',
+        color: '#14b8a6',
+        checked: mockCalendarVisibility.tasks,
+        isDefault: true,
+      },
+      {
+        id: 'holidays',
+        label: 'Holidays',
+        color: '#94a3b8',
+        checked: mockCalendarVisibility.holidays,
+        isDefault: true,
+      },
+    ],
+    toggle: vi.fn(),
+    isVisible: (id: string) => mockCalendarVisibility[id] ?? true,
+    addCalendar: vi.fn(),
+    removeCalendar: vi.fn(),
+    dbCalendars: [],
+  }),
+  CALENDAR_COLOR_OPTIONS: ['#3b82f6', '#22c55e', '#14b8a6', '#f59e0b'],
 }));
 
 // ─── 4. @/hooks/useAppointmentFilters ──────────────────────────────
@@ -139,13 +202,23 @@ vi.mock('@/components/shared', () => ({
       <h1>{title}</h1>
       {actions?.map((a) =>
         a.onClick ? (
-          <button key={a.label} data-testid={`action-${a.label.toLowerCase().replace(/\s/g, '-')}`} onClick={a.onClick}>
+          <button
+            key={a.label}
+            data-testid={`action-${a.label.toLowerCase().replace(/\s/g, '-')}`}
+            onClick={a.onClick}
+          >
             {a.label}
           </button>
         ) : null
       )}
     </header>
   ),
+}));
+
+// ─── 7a. @/components/tasks/TaskForm ─────────────────────────────
+vi.mock('@/components/tasks/TaskForm', () => ({
+  TaskForm: ({ open }: { open: boolean; [key: string]: unknown }) =>
+    open ? <div data-testid="task-form">Task Form</div> : null,
 }));
 
 // ─── 7. @/components/appointments ─────────────────────────────────
@@ -191,7 +264,13 @@ vi.mock('@/components/appointments', () => ({
         <>
           <button
             data-testid="list-filter-change"
-            onClick={() => onFilterChange({ search: 'test', status: 'SCHEDULED', appointmentType: 'CONSULTATION' })}
+            onClick={() =>
+              onFilterChange({
+                search: 'test',
+                status: 'SCHEDULED',
+                appointmentType: 'CONSULTATION',
+              })
+            }
           >
             Filter
           </button>
@@ -226,6 +305,10 @@ describe('CalendarPage', { timeout: 10000 }, () => {
     mockQueryState.isLoading = false;
     mockStatsState.data = mockStatsData;
     mockFilters.viewMode = 'calendar';
+    mockCalendarVisibility.personal = true;
+    mockCalendarVisibility.team = true;
+    mockCalendarVisibility.tasks = true;
+    mockCalendarVisibility.holidays = false;
   });
 
   afterEach(() => {
@@ -238,13 +321,13 @@ describe('CalendarPage', { timeout: 10000 }, () => {
     expect(typeof CalendarPage).toBe('function');
   });
 
-  // TC-02: Page renders PageHeader with "Appointment Scheduling" title
-  it('renders PageHeader with "Appointment Scheduling" title', async () => {
+  // TC-02: Page renders PageHeader with "Calendar" title
+  it('renders PageHeader with "Calendar" title', async () => {
     const CalendarPage = await loadCalendarPage();
     render(<CalendarPage />);
 
     expect(screen.getByTestId('page-header')).toBeInTheDocument();
-    expect(screen.getByText('Appointment Scheduling')).toBeInTheDocument();
+    expect(screen.getByText('Calendar')).toBeInTheDocument();
   });
 
   // TC-03: Auth loading renders skeleton, not calendar content
@@ -336,7 +419,7 @@ describe('CalendarPage', { timeout: 10000 }, () => {
     render(<CalendarPage />);
 
     await user.click(screen.getByTestId('calendar-create-slot'));
-    expect(mockPush).toHaveBeenCalledWith('/calendar/new');
+    expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('/calendar/new?start='));
   });
 
   // TC-supplementary: View mode toggle action invokes setViewMode (calendar → list)
@@ -389,6 +472,18 @@ describe('CalendarPage', { timeout: 10000 }, () => {
   // TC-supplementary: Data absent yields empty calendar
   it('renders calendar with zero appointments when data is undefined', async () => {
     mockQueryState.data = undefined;
+    mockFilters.viewMode = 'calendar';
+
+    const CalendarPage = await loadCalendarPage();
+    render(<CalendarPage />);
+
+    const calendar = screen.getByTestId('appointment-calendar');
+    expect(calendar).toHaveAttribute('data-appointment-count', '0');
+  });
+
+  // TC-supplementary: Calendar visibility toggle hides appointments
+  it('renders zero appointments when personal calendar is toggled off', async () => {
+    mockCalendarVisibility.personal = false;
     mockFilters.viewMode = 'calendar';
 
     const CalendarPage = await loadCalendarPage();

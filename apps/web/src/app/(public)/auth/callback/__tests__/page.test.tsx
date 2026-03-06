@@ -37,7 +37,9 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 vi.mock('@/components/shared/oauth-callback', () => ({
   OAuthCallback: (props: Record<string, unknown>) => {
     mockOAuthCallbackProps(props);
-    return <div data-testid="mock-oauth-callback" data-redirect-url={props.redirectUrl as string} />;
+    return (
+      <div data-testid="mock-oauth-callback" data-redirect-url={props.redirectUrl as string} />
+    );
   },
 }));
 

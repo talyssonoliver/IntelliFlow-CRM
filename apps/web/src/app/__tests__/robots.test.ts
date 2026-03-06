@@ -73,18 +73,14 @@ describe('robots()', () => {
   // TC-18
   it('disallow list covers /dashboard', () => {
     const disallowed = getAllDisallowed();
-    const coversDashboard = disallowed.some(
-      (d) => d === '/dashboard' || d === '/dashboard/'
-    );
+    const coversDashboard = disallowed.some((d) => d === '/dashboard' || d === '/dashboard/');
     expect(coversDashboard).toBe(true);
   });
 
   // TC-19
   it('disallow list covers /api/', () => {
     const disallowed = getAllDisallowed();
-    const coversApi = disallowed.some(
-      (d) => d === '/api/' || d === '/api'
-    );
+    const coversApi = disallowed.some((d) => d === '/api/' || d === '/api');
     expect(coversApi).toBe(true);
   });
 
@@ -110,9 +106,7 @@ describe('robots()', () => {
     ];
     const disallowed = getAllDisallowed();
     for (const prefix of authenticatedPrefixes) {
-      const covered = disallowed.some(
-        (d) => d === prefix || d === `${prefix}/`
-      );
+      const covered = disallowed.some((d) => d === prefix || d === `${prefix}/`);
       expect(covered, `Expected ${prefix} to be disallowed`).toBe(true);
     }
   });
@@ -132,9 +126,7 @@ describe('robots()', () => {
     ];
     const disallowed = getAllDisallowed();
     for (const page of publicPages) {
-      const isDisallowed = disallowed.some(
-        (d) => d === page
-      );
+      const isDisallowed = disallowed.some((d) => d === page);
       expect(isDisallowed, `Expected ${page} to NOT be disallowed`).toBe(false);
     }
   });
@@ -144,9 +136,7 @@ describe('robots()', () => {
     const authFlowPaths = ['/auth/', '/mfa/', '/verify-email/', '/reset-password/'];
     const disallowed = getAllDisallowed();
     for (const path of authFlowPaths) {
-      const covered = disallowed.some(
-        (d) => d === path || d.startsWith(path.replace(/\/$/, ''))
-      );
+      const covered = disallowed.some((d) => d === path || d.startsWith(path.replace(/\/$/, '')));
       expect(covered, `Expected ${path} to be disallowed`).toBe(true);
     }
   });
@@ -154,17 +144,13 @@ describe('robots()', () => {
   // TC-23
   it('disallow list covers /docs (developer portal)', () => {
     const disallowed = getAllDisallowed();
-    const coversDocs = disallowed.some(
-      (d) => d === '/docs' || d === '/docs/'
-    );
+    const coversDocs = disallowed.some((d) => d === '/docs' || d === '/docs/');
     expect(coversDocs).toBe(true);
   });
 
   // TC-24
   it('uses NEXT_PUBLIC_APP_URL env var for sitemap URL', () => {
-    expect(robotsResult.sitemap).toMatch(
-      /^https:\/\/test\.intelliflow\.com/
-    );
+    expect(robotsResult.sitemap).toMatch(/^https:\/\/test\.intelliflow\.com/);
   });
 });
 

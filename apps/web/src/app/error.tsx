@@ -8,7 +8,7 @@ import { Card } from '@intelliflow/ui';
  * Error boundary for home page
  * Displays a user-friendly error message with recovery options
  */
-export default function Error({
+export default function ErrorPage({
   error,
   reset,
 }: {

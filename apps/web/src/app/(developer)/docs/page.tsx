@@ -30,23 +30,21 @@ const docCategories: DocCategory[] = [
     id: 'architecture',
     title: 'Architecture',
     description:
-      'Hexagonal architecture, DDD bounded contexts, and 25 Architecture Decision Records',
-    href: 'https://intelliflow-crm.dev/docs/architecture',
+      'Hexagonal architecture, DDD bounded contexts, and 43 Architecture Decision Records',
+    href: '/docs/architecture',
     icon: 'architecture',
     color: 'bg-indigo-500',
-    docCount: 25,
-    external: true,
+    docCount: 43,
   },
   {
     id: 'developer-guides',
     title: 'Developer Guides',
     description:
       'Step-by-step tutorials for building features, testing strategies, and best practices',
-    href: 'https://intelliflow-crm.dev/docs/guides',
+    href: '/docs/guides',
     icon: 'code',
     color: 'bg-emerald-500',
     docCount: 20,
-    external: true,
   },
   {
     id: 'integration-resources',

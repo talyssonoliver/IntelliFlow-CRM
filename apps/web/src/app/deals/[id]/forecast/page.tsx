@@ -66,20 +66,14 @@ export default function DealForecastDetailPage() {
 
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = trpc.opportunity.dealForecast.useQuery(
+  const { data, isLoading, error, refetch } = trpc.opportunity.dealForecast.useQuery(
     { id: dealId },
     { enabled: isAuthenticated && !authLoading && !!dealId }
   );
 
   // Auth error redirect
   const isAuthError =
-    error?.data?.code === 'UNAUTHORIZED' ||
-    error?.message?.toLowerCase().includes('unauthorized');
+    error?.data?.code === 'UNAUTHORIZED' || error?.message?.toLowerCase().includes('unauthorized');
 
   useEffect(() => {
     if (error && isAuthError && !isLoading && !authLoading) {

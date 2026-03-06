@@ -74,7 +74,7 @@ export function VersionAuditLog({ auditLog, isLoading }: VersionAuditLogProps) {
         <div className="space-y-4">
           <Skeleton className="h-10 w-40" />
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-14 w-full" />
+            <Skeleton key={i} className="h-14 w-full" /> // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
           ))}
         </div>
       </Card>

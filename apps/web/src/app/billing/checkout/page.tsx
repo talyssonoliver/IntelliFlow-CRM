@@ -155,7 +155,10 @@ function CheckoutContent() {
               />
             </Elements>
           ) : (
-            <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive" role="alert">
+            <div
+              className="rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive"
+              role="alert"
+            >
               Payment processing is temporarily unavailable. Please try again later.
             </div>
           )}

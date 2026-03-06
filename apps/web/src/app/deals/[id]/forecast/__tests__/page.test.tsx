@@ -7,9 +7,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as React from 'react';
 import { render, screen } from '@testing-library/react';
-import {
-  createMockDealForecastResponse,
-} from '@/components/deals/__tests__/deal-test-utils';
+import { createMockDealForecastResponse } from '@/components/deals/__tests__/deal-test-utils';
 
 // ─── Mock State ─────────────────────────────────────────────────────────────
 
@@ -38,7 +36,7 @@ vi.mock('@/lib/trpc', () => ({
       dealForecast: {
         useQuery: vi.fn((input: { id: string }, _opts?: unknown) => {
           // Capture the input for assertion
-          (vi.mocked as unknown as { __lastInput: unknown }).__lastInput = input;
+          (vi.mocked as any).__lastInput = input; // test-only mock
           return mockQueryState;
         }),
       },
@@ -57,14 +55,18 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('next/link', () => ({
   default: ({ children, href, ...props }: { children: React.ReactNode; href: string }) => (
-    <a href={href} {...props}>{children}</a>
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
 vi.mock('next/dynamic', () => ({
   default: (_importFn: () => Promise<unknown>) => {
     const Comp = (props: Record<string, unknown>) => (
-      <div data-testid="dynamic-chart" data-mode={props.mode as string}>Chart</div>
+      <div data-testid="dynamic-chart" data-mode={props.mode as string}>
+        Chart
+      </div>
     );
     Comp.displayName = 'DynamicChart';
     return Comp;
@@ -73,10 +75,21 @@ vi.mock('next/dynamic', () => ({
 
 vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, ...props }: { children: React.ReactNode }) => (
-    <div data-testid="card" {...props}>{children}</div>
+    <div data-testid="card" {...props}>
+      {children}
+    </div>
   ),
-  Button: ({ children, onClick, ...props }: { children: React.ReactNode; onClick?: () => void }) => (
-    <button onClick={onClick} {...props}>{children}</button>
+  Button: ({
+    children,
+    onClick,
+    ...props
+  }: {
+    children: React.ReactNode;
+    onClick?: () => void;
+  }) => (
+    <button onClick={onClick} {...props}>
+      {children}
+    </button>
   ),
   Skeleton: ({ className, ...props }: { className?: string }) => (
     <div data-testid="skeleton" className={className} {...props} />

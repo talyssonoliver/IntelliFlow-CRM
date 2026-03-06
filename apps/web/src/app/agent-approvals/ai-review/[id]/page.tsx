@@ -323,7 +323,7 @@ export default function AIReviewDetailPage() {
               <Button onClick={handleClaim} disabled={isMutating}>
                 <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                   lock
-                </span>
+                </span>{' '}
                 Claim Review
               </Button>
             )}
@@ -338,7 +338,7 @@ export default function AIReviewDetailPage() {
                 >
                   <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                     check_circle
-                  </span>
+                  </span>{' '}
                   Approve
                 </Button>
                 <Button

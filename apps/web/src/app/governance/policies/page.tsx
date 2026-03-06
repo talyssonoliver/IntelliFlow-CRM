@@ -62,8 +62,8 @@ export default function PoliciesPage() {
 
         {/* Policies List */}
         <div className="space-y-4">
-          {policies.map((policy, index) => (
-            <Card key={index} className="p-4">
+          {policies.map((policy) => (
+            <Card key={policy.title} className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">

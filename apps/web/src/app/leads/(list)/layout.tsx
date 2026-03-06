@@ -7,7 +7,6 @@ import {
   SidebarWithSuspense,
   leadsSidebarConfig,
 } from '@/components/sidebar';
-import { UnsavedChangesProvider } from '@/hooks/useUnsavedChanges';
 
 export default function LeadsListLayout({ children }: { readonly children: React.ReactNode }) {
   return (
@@ -26,9 +25,7 @@ export default function LeadsListLayout({ children }: { readonly children: React
               <span className="text-sm font-medium text-foreground">Leads</span>
             </div>
             <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-3 md:p-4">
-              <UnsavedChangesProvider>
-                <div className="mx-auto flex flex-col gap-6">{children}</div>
-              </UnsavedChangesProvider>
+              <div className="mx-auto flex flex-col gap-6">{children}</div>
             </div>
           </main>
         </SidebarInset>

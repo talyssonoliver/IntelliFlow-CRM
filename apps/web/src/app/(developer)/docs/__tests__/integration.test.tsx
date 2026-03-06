@@ -65,12 +65,14 @@ describe('DocsPage Integration', () => {
     expect(screen.getByText('Integration Resources')).toBeInTheDocument();
     expect(screen.getByText('Changelog & Updates')).toBeInTheDocument();
 
-    // API Reference, Integration Resources, and Changelog are active internal links
+    // API Reference, Architecture, Developer Guides, Integration Resources, and Changelog are active internal links
     const links = screen.queryAllByRole('link');
-    expect(links.length).toBe(3);
+    expect(links.length).toBe(5);
     expect(links[0]).toHaveAttribute('href', '/docs/api');
-    expect(links[1]).toHaveAttribute('href', '/docs/integrations');
-    expect(links[2]).toHaveAttribute('href', '/docs/changelog');
+    expect(links[1]).toHaveAttribute('href', '/docs/architecture');
+    expect(links[2]).toHaveAttribute('href', '/docs/guides');
+    expect(links[3]).toHaveAttribute('href', '/docs/integrations');
+    expect(links[4]).toHaveAttribute('href', '/docs/changelog');
   });
 
   it('partial match filters categories correctly', async () => {

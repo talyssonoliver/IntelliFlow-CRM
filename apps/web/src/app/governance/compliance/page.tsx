@@ -100,7 +100,7 @@ function ComplianceCard({
         >
           <span className="material-symbols-outlined text-base">
             {trend > 0 ? 'trending_up' : trend < 0 ? 'trending_down' : 'remove'}
-          </span>
+          </span>{' '}
           {trend > 0 ? '+' : ''}
           {trend}%
         </span>
@@ -178,7 +178,7 @@ function OverallScoreCard() {
             <p className="font-bold text-white flex items-center justify-center gap-1">
               <span className="material-symbols-outlined text-emerald-400 text-base">
                 arrow_upward
-              </span>
+              </span>{' '}
               Positive
             </p>
           </div>

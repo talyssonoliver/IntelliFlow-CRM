@@ -25,10 +25,7 @@ export default function InvoiceDetailPage() {
     data: invoice,
     isLoading,
     error,
-  } = trpc.billing.getInvoice.useQuery(
-    { invoiceId },
-    { enabled: !!invoiceId }
-  );
+  } = trpc.billing.getInvoice.useQuery({ invoiceId }, { enabled: !!invoiceId });
 
   // Pay invoice mutation
   const payInvoiceMutation = trpc.billing.payInvoice.useMutation();

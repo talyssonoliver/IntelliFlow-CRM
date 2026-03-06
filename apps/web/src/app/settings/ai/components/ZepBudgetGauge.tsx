@@ -12,7 +12,14 @@
  * - Red (95-100%): Critical
  */
 
-import { Card, Skeleton, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@intelliflow/ui';
+import {
+  Card,
+  Skeleton,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@intelliflow/ui';
 import { useZepBudget } from '../hooks';
 
 interface ZepBudgetGaugeProps {
@@ -87,59 +94,59 @@ export function ZepBudgetGauge({ className }: ZepBudgetGaugeProps) {
         <h3 className="text-sm font-medium text-muted-foreground mb-4">Zep Memory Budget</h3>
 
         <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div
-              className={`relative inline-flex items-center justify-center rounded-full p-2 ${getBackgroundColor()}`}
-            >
-              {/* Background circle */}
-              <svg width={size} height={size} className="transform -rotate-90">
-                <circle
-                  cx={size / 2}
-                  cy={size / 2}
-                  r={radius}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={strokeWidth}
-                  className="text-muted/20"
-                />
-                {/* Progress circle */}
-                <circle
-                  cx={size / 2}
-                  cy={size / 2}
-                  r={radius}
-                  fill="none"
-                  strokeWidth={strokeWidth}
-                  strokeLinecap="round"
-                  className={getProgressColor()}
-                  style={{
-                    strokeDasharray: circumference,
-                    strokeDashoffset,
-                    transition: 'stroke-dashoffset 0.5s ease-in-out',
-                  }}
-                />
-              </svg>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div
+                className={`relative inline-flex items-center justify-center rounded-full p-2 ${getBackgroundColor()}`}
+              >
+                {/* Background circle */}
+                <svg width={size} height={size} className="transform -rotate-90">
+                  <circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={radius}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={strokeWidth}
+                    className="text-muted/20"
+                  />
+                  {/* Progress circle */}
+                  <circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={radius}
+                    fill="none"
+                    strokeWidth={strokeWidth}
+                    strokeLinecap="round"
+                    className={getProgressColor()}
+                    style={{
+                      strokeDasharray: circumference,
+                      strokeDashoffset,
+                      transition: 'stroke-dashoffset 0.5s ease-in-out',
+                    }}
+                  />
+                </svg>
 
-              {/* Center text */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className={`text-2xl font-bold ${getStatusColor()}`}>{percentUsed}%</span>
-                <span className="text-xs text-muted-foreground">used</span>
+                {/* Center text */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className={`text-2xl font-bold ${getStatusColor()}`}>{percentUsed}%</span>
+                  <span className="text-xs text-muted-foreground">used</span>
+                </div>
               </div>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>
-            <div className="text-sm">
-              <p>Used: {budget.used.toLocaleString()} episodes</p>
-              <p>Remaining: {budget.remaining.toLocaleString()} episodes</p>
-              <p>Total: {budget.total.toLocaleString()} episodes</p>
-              {budget.lastSyncedAt && (
-                <p className="text-muted-foreground mt-1">
-                  Last synced: {new Date(budget.lastSyncedAt).toLocaleString()}
-                </p>
-              )}
-            </div>
-          </TooltipContent>
-        </Tooltip>
+            </TooltipTrigger>
+            <TooltipContent>
+              <div className="text-sm">
+                <p>Used: {budget.used.toLocaleString()} episodes</p>
+                <p>Remaining: {budget.remaining.toLocaleString()} episodes</p>
+                <p>Total: {budget.total.toLocaleString()} episodes</p>
+                {budget.lastSyncedAt && (
+                  <p className="text-muted-foreground mt-1">
+                    Last synced: {new Date(budget.lastSyncedAt).toLocaleString()}
+                  </p>
+                )}
+              </div>
+            </TooltipContent>
+          </Tooltip>
         </TooltipProvider>
 
         {/* Status text */}

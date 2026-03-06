@@ -66,12 +66,7 @@ function SSOCallbackContent() {
     window.location.href = '/dashboard';
   };
 
-  return (
-    <OAuthCallback
-      onSuccess={handleSuccess}
-      redirectUrl="/dashboard"
-    />
-  );
+  return <OAuthCallback onSuccess={handleSuccess} redirectUrl="/dashboard" />;
 }
 
 // ============================================

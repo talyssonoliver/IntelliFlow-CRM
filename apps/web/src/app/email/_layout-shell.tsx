@@ -31,9 +31,7 @@ export default function EmailLayoutShell({ children }: { readonly children: Reac
               <SidebarTrigger />
               <span className="text-sm font-medium text-foreground">Email</span>
             </div>
-            <div className="flex-1 overflow-y-auto overflow-x-hidden">
-              {children}
-            </div>
+            <div className="flex-1 overflow-y-auto overflow-x-hidden">{children}</div>
           </main>
         </SidebarInset>
       </div>

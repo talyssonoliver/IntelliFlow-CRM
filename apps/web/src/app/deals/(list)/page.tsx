@@ -20,14 +20,24 @@ import { PageHeader } from '@/components/shared';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 
-import { PipelineBoard, ValueSummary, DealFilters, DealListView, LossReasonModal } from '@/components/deals';
+import {
+  PipelineBoard,
+  ValueSummary,
+  DealFilters,
+  DealListView,
+  LossReasonModal,
+} from '@/components/deals';
 
 const DealsCharts = dynamic(() => import('@/components/deals/DealsCharts'), {
   ssr: false,
   loading: () => (
     <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 mt-4">
-      <Card className="p-4 sm:p-6 bg-card border-border"><Skeleton className="h-[250px] w-full" /></Card>
-      <Card className="p-4 sm:p-6 bg-card border-border"><Skeleton className="h-[250px] w-full" /></Card>
+      <Card className="p-4 sm:p-6 bg-card border-border">
+        <Skeleton className="h-62.5 w-full" />
+      </Card>
+      <Card className="p-4 sm:p-6 bg-card border-border">
+        <Skeleton className="h-62.5 w-full" />
+      </Card>
     </div>
   ),
 });
@@ -73,6 +83,7 @@ function useViewMode(): [ViewMode, (mode: ViewMode) => void] {
 
 const STATS_SKELETON_KEYS = ['stats-a', 'stats-b', 'stats-c', 'stats-d'] as const;
 const COLUMN_SKELETON_KEYS = ['col-a', 'col-b', 'col-c', 'col-d', 'col-e', 'col-f'] as const;
+const LIST_SKELETON_KEYS = ['list-a', 'list-b', 'list-c', 'list-d', 'list-e'] as const;
 
 function StatsCardSkeleton() {
   return (
@@ -87,19 +98,19 @@ function ChartSkeleton() {
   return (
     <Card className="p-4 sm:p-6 bg-card border-border">
       <Skeleton className="h-6 w-32 mb-4" />
-      <Skeleton className="h-[250px] w-full" />
+      <Skeleton className="h-62.5 w-full" />
     </Card>
   );
 }
 
 function KanbanColumnSkeleton() {
   return (
-    <div className="flex-1 min-w-[240px] sm:min-w-[280px] max-w-[300px]">
+    <div className="flex-1 min-w-60 sm:min-w-70 max-w-75">
       <div className="flex items-center gap-2 mb-3 px-1">
         <Skeleton className="w-3 h-3 rounded-full" />
         <Skeleton className="h-5 w-24" />
       </div>
-      <div className="bg-muted/50 rounded-lg p-2 h-[300px] sm:h-[500px] space-y-2">
+      <div className="bg-muted/50 rounded-lg p-2 h-75 sm:h-125 space-y-2">
         <Skeleton className="h-32 w-full rounded-lg" />
         <Skeleton className="h-32 w-full rounded-lg" />
       </div>
@@ -143,9 +154,9 @@ function ListSkeleton() {
       </div>
       <Skeleton className="h-10 w-full mb-4" />
       <div className="space-y-3">
-        {[...Array(5)].map((_, i) => (
+        {LIST_SKELETON_KEYS.map((key) => (
           <div
-            key={`list-skel-${i}`}
+            key={key}
             className="flex items-center gap-4 p-4 bg-card rounded-lg border border-border"
           >
             <Skeleton className="size-9 rounded-lg" />
@@ -481,7 +492,7 @@ function DealsPageContent() {
             label: 'Forecast',
             icon: 'insights',
             variant: 'secondary',
-            href: '/deals/all/forecast',
+            href: '/deals/forecast',
             hideOnMobile: true,
           },
           {
