@@ -30,7 +30,7 @@ export function DashboardSidebar({
   onSelectConfig,
   footer,
   className = '',
-}: DashboardSidebarProps) {
+}: Readonly<DashboardSidebarProps>) {
   return (
     <aside
       className={`hidden lg:flex w-64 flex-col bg-surface-light dark:bg-surface-dark border-r border-border-light dark:border-border-dark flex-shrink-0 z-20 ${className}`}

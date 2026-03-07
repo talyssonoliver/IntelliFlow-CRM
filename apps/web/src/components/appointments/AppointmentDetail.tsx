@@ -27,7 +27,7 @@ export interface AppointmentDetailProps {
 type Tab = 'overview' | 'attendees' | 'cases';
 type Dialog = 'complete' | 'cancel' | 'reschedule' | 'addAttendee' | 'linkCase' | null;
 
-const TERMINAL_STATUSES: AppointmentDetailData['status'][] = ['COMPLETED', 'CANCELLED', 'NO_SHOW'];
+const TERMINAL_STATUSES = new Set<AppointmentDetailData['status']>(['COMPLETED', 'CANCELLED', 'NO_SHOW']);
 
 function formatReminder(minutes?: number): string {
   if (!minutes || minutes <= 0) return 'None';
@@ -73,7 +73,7 @@ export function AppointmentDetail({
 
   const typeConfig = getTypeConfig(appointment.appointmentType);
   const statusConfig = getStatusConfig(appointment.status);
-  const isTerminal = TERMINAL_STATUSES.includes(appointment.status);
+  const isTerminal = TERMINAL_STATUSES.has(appointment.status);
   const hasBuffer = appointment.bufferMinutesBefore > 0 || appointment.bufferMinutesAfter > 0;
 
   useEffect(() => {

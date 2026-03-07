@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createHash } from 'crypto';
+import { createHash } from 'node:crypto';
 import { InternalSignatureProvider } from '../InternalSignatureProvider';
 import type { SignatureProviderPort } from '../../ports/external/SignatureProviderPort';
 

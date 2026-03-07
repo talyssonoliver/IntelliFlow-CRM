@@ -30,7 +30,7 @@ vi.mock('../PublicHomePage', () => ({
 // Mock next/dynamic to resolve dynamic imports in test environment
 vi.mock('next/dynamic', () => ({
   default: (loader: () => Promise<unknown>, options: Record<string, unknown> = {}) => {
-    const DynamicComponent = (props: Readonly<Record<string, unknown>>) => {
+    const DynamicComponent = (props: Record<string, unknown>) => {
       const [Comp, setComp] = React.useState<React.ComponentType<any> | null>(null);
       React.useEffect(() => {
         let cancelled = false;

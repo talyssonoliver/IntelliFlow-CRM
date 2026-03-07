@@ -33,9 +33,9 @@ export function PricingCalculator({ tiers }: Readonly<PricingCalculatorProps>) {
   const [userCount, setUserCount] = useState(5);
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
 
-  const handleCheckout = async (tier: Readonly<PricingTier>) => {
+  const handleCheckout = async (tier: PricingTier) => {
     if (tier.price.custom) {
-      window.location.href = '/contact?ref=pricing';
+      globalThis.location.href = '/contact?ref=pricing';
       return;
     }
 
@@ -79,7 +79,7 @@ export function PricingCalculator({ tiers }: Readonly<PricingCalculatorProps>) {
             billing === 'annual' ? 'bg-blue-600 text-white' : 'bg-gray-200'
           }`}
         >
-          Annual <span className="text-xs">(Save 20%)</span>
+          Annual{' '}<span className="text-xs">(Save 20%)</span>
         </button>
       </div>
 

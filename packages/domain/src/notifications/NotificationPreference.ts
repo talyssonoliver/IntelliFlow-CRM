@@ -312,7 +312,7 @@ export class NotificationPreference extends Entity<string> {
    * Validate time format (HH:MM)
    */
   private isValidTimeFormat(time: string): boolean {
-    const regex = /^([01]?[0-9]|2[0-3]):([0-5][0-9])$/;
+    const regex = /^([01]?\d|2[0-3]):([0-5]\d)$/;
     return regex.test(time);
   }
 

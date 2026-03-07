@@ -75,7 +75,7 @@ export function validateEmbedding(
 ): embedding is VectorEmbedding {
   if (!Array.isArray(embedding)) return false;
   if (embedding.length !== expectedDimensions) return false;
-  return embedding.every((v) => typeof v === 'number' && !isNaN(v));
+  return embedding.every((v) => typeof v === 'number' && !Number.isNaN(v));
 }
 
 /**
@@ -90,8 +90,8 @@ export function formatEmbedding(embedding: VectorEmbedding): string {
  */
 export function parseEmbedding(vectorString: string): VectorEmbedding {
   // pgvector format: [0.1,0.2,0.3,...]
-  const cleaned = vectorString.replace(/[[\]]/g, '');
-  return cleaned.split(',').map((v) => parseFloat(v));
+  const cleaned = vectorString.replaceAll(/[[\]]/g, '');
+  return cleaned.split(',').map((v) => Number.parseFloat(v));
 }
 
 /**
@@ -312,11 +312,14 @@ export async function getEmbeddingIndexStatus(): Promise<{
     }
 
     const indexDef = result[0].indexdef;
-    const indexType = indexDef.includes('hnsw')
-      ? 'HNSW'
-      : indexDef.includes('ivfflat')
-        ? 'IVFFlat'
-        : 'Unknown';
+    let indexType: string;
+    if (indexDef.includes('hnsw')) {
+      indexType = 'HNSW';
+    } else if (indexDef.includes('ivfflat')) {
+      indexType = 'IVFFlat';
+    } else {
+      indexType = 'Unknown';
+    }
 
     return {
       indexExists: true,

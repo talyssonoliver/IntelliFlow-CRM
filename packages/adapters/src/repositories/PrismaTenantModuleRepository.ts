@@ -37,11 +37,9 @@ export class PrismaTenantModuleRepository implements ModuleAccessPort {
       const moduleId = override.moduleId as ModuleId;
       if (override.enabled) {
         enabledSet.add(moduleId); // à la carte addition
-      } else {
+      } else if (moduleId !== 'CORE_CRM') {
         // Only disable if it's not CORE_CRM (always on)
-        if (moduleId !== 'CORE_CRM') {
-          enabledSet.delete(moduleId);
-        }
+        enabledSet.delete(moduleId);
       }
     }
 

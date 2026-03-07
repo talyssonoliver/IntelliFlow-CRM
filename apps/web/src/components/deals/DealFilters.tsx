@@ -13,7 +13,7 @@ import type { DealFiltersValue } from './types';
 
 interface DealFiltersProps {
   readonly value: DealFiltersValue;
-  readonly onChange: (filters: Readonly<DealFiltersValue>) => void;
+  readonly onChange: (filters: DealFiltersValue) => void;
   readonly viewMode?: 'kanban' | 'list';
   readonly onViewModeChange?: (mode: 'kanban' | 'list') => void;
 }
@@ -116,7 +116,7 @@ export const DealFilters = React.memo(function DealFilters({
       {/* View Mode Toggle */}
       <div
         className="inline-flex items-center rounded-lg border border-slate-200 dark:border-slate-600 overflow-hidden"
-        role="group"
+        role="group" // NOSONAR typescript:S6819 — ARIA group for view mode toggle buttons; <fieldset> would require <legend> and changes layout
         aria-label="View mode"
       >
         <button

@@ -78,7 +78,7 @@ function formatValue(
   }
 }
 
-function getChangeIcon(direction: ChangeDirection): string {
+function getChangeIcon(direction: Readonly<ChangeDirection>): string {
   switch (direction) {
     case 'up':
       return 'trending_up';
@@ -90,7 +90,7 @@ function getChangeIcon(direction: ChangeDirection): string {
   }
 }
 
-function getChangeColorClass(direction: ChangeDirection): string {
+function getChangeColorClass(direction: Readonly<ChangeDirection>): string {
   switch (direction) {
     case 'up':
       return 'text-green-600 dark:text-green-400';
@@ -190,7 +190,11 @@ const MetricCard = React.forwardRef<HTMLDivElement, MetricCardProps>(
                   {getChangeIcon(change.direction)}
                 </span>
                 <span>
-                  {change.direction === 'up' ? '+' : change.direction === 'down' ? '-' : ''}
+                  {(() => {
+                    if (change.direction === 'up') return '+';
+                    if (change.direction === 'down') return '-';
+                    return '';
+                  })()}
                   {Math.abs(change.value)}%
                 </span>
               </div>

@@ -14,7 +14,6 @@ import type {
   AuditLogInput,
   SecurityEventInput,
   AuditAction,
-  ActorType,
   ResourceType,
   AuditLoggerConfig,
   RequiredAuditLoggerConfig,

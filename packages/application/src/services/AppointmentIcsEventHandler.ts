@@ -22,7 +22,7 @@ export class AppointmentIcsEventHandler {
    * In production, this would be persisted in a database
    * Key: appointmentId, Value: sequence number
    */
-  private sequenceStore: Map<string, number> = new Map();
+  private readonly sequenceStore: Map<string, number> = new Map();
 
   constructor(
     private readonly icsService: IcsGenerationServicePort,

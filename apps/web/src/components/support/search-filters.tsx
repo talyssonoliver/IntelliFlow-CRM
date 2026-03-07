@@ -8,7 +8,7 @@ export interface SearchFiltersProps {
   categoryFilter: string;
   onCategoryChange: (id: string) => void;
   sortBy: SortMode;
-  onSortChange: (sort: Readonly<SortMode>) => void;
+  onSortChange: (sort: SortMode) => void;
   popularOnly: boolean;
   onPopularOnlyChange: (value: boolean) => void;
   resultCount?: number;

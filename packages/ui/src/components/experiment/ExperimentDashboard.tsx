@@ -76,7 +76,7 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-function StatusBadge({ status, className }: StatusBadgeProps) {
+function StatusBadge({ status, className }: Readonly<StatusBadgeProps>) {
   const statusConfig: Record<ExperimentStatus, { label: string; variant: string }> = {
     DRAFT: { label: 'Draft', variant: 'bg-muted text-muted-foreground' },
     RUNNING: {
@@ -122,7 +122,7 @@ interface WinnerBadgeProps {
   className?: string;
 }
 
-function WinnerBadge({ winner, isSignificant, className }: WinnerBadgeProps) {
+function WinnerBadge({ winner, isSignificant, className }: Readonly<WinnerBadgeProps>) {
   if (!isSignificant || !winner) {
     return (
       <span
@@ -166,7 +166,7 @@ interface ProgressBarProps {
   className?: string;
 }
 
-function ProgressBar({ percent, label, className }: ProgressBarProps) {
+function ProgressBar({ percent, label, className }: Readonly<ProgressBarProps>) {
   const clampedPercent = Math.max(0, Math.min(100, percent));
 
   return (
@@ -181,11 +181,11 @@ function ProgressBar({ percent, label, className }: ProgressBarProps) {
         <div
           className={cn(
             'h-full rounded-full transition-all duration-300',
-            clampedPercent < 50
-              ? 'bg-amber-500'
-              : clampedPercent < 100
-                ? 'bg-blue-500'
-                : 'bg-green-500'
+            (() => {
+              if (clampedPercent < 50) return 'bg-amber-500';
+              if (clampedPercent < 100) return 'bg-blue-500';
+              return 'bg-green-500';
+            })()
           )}
           style={{ width: `${clampedPercent}%` }}
         />
@@ -216,7 +216,7 @@ function ExperimentCard({
   onPause,
   onComplete,
   onAnalyze,
-}: ExperimentCardProps) {
+}: Readonly<ExperimentCardProps>) {
   return (
     <div // NOSONAR
       className={cn(
@@ -342,15 +342,17 @@ interface ResultsPanelProps {
   result: ExperimentResult;
 }
 
-function ResultsPanel({ experiment, result }: ResultsPanelProps) {
-  const effectSizeLabel =
-    Math.abs(result.effectSize) < 0.2
-      ? 'Negligible'
-      : Math.abs(result.effectSize) < 0.5
-        ? 'Small'
-        : Math.abs(result.effectSize) < 0.8
-          ? 'Medium'
-          : 'Large';
+function ResultsPanel({ experiment, result }: Readonly<ResultsPanelProps>) {
+  let effectSizeLabel: string;
+  if (Math.abs(result.effectSize) < 0.2) {
+    effectSizeLabel = 'Negligible';
+  } else if (Math.abs(result.effectSize) < 0.5) {
+    effectSizeLabel = 'Small';
+  } else if (Math.abs(result.effectSize) < 0.8) {
+    effectSizeLabel = 'Medium';
+  } else {
+    effectSizeLabel = 'Large';
+  }
 
   return (
     <div className="rounded-lg border p-4 bg-card">
@@ -431,7 +433,7 @@ export function ExperimentDashboard({
   onCreateExperiment,
   isLoading,
   className,
-}: ExperimentDashboardProps) {
+}: Readonly<ExperimentDashboardProps>) {
   if (isLoading) {
     return (
       <div className={cn('flex items-center justify-center p-8', className)}>

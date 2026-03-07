@@ -21,7 +21,7 @@ import type {
 } from '@intelliflow/application';
 import { NotificationDeliveryError } from '@intelliflow/application';
 import type { EmailServiceAdapter } from '../messaging/email/EmailServiceAdapter';
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 
 export interface RealNotificationConfig {
   fromAddress: string;

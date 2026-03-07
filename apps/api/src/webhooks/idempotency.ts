@@ -9,7 +9,7 @@
  * KPI Target: Zero duplicate webhooks
  */
 
-import { createHash } from 'crypto';
+import { createHash } from 'node:crypto';
 
 // Idempotency entry
 export interface IdempotencyEntry {

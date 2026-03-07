@@ -8,18 +8,17 @@
  * - Circuit breaker pattern
  */
 
-import { createHash } from 'crypto';
+import { createHash } from 'node:crypto';
 import { z } from 'zod';
 import {
   calculateBackoff as calculateSharedBackoff,
   isRetryableError as isSharedRetryableError,
   type RetryPolicyConfig,
   CircuitBreaker as PlatformCircuitBreaker,
-  withCircuitBreaker,
 } from '@intelliflow/platform/resilience';
 
 // Re-export decorator for consumers that need method-level circuit breaking
-export { withCircuitBreaker };
+export { withCircuitBreaker } from '@intelliflow/platform/resilience';
 
 // Retry entry schema
 export const RetryEntrySchema = z.object({
@@ -559,11 +558,7 @@ export class RetryManager {
       // Update attempt count
       const attempts = entry.attempts + 1;
 
-      if (attempts >= this.config.maxAttempts) {
-        // Move to dead letter
-        await this.queue.moveToDeadLetter(entry.id);
-        options.onDeadLetter?.(entry);
-      } else if (isRetryableError(err, this.config)) {
+      if (attempts < this.config.maxAttempts && isRetryableError(err, this.config)) {
         // Schedule next retry
         const delay = calculateRetryDelay(attempts, this.config);
         await this.queue.update(entry.id, {
@@ -574,7 +569,7 @@ export class RetryManager {
           error: err.message,
         });
       } else {
-        // Non-retryable error - move to dead letter
+        // Move to dead letter (max attempts reached or non-retryable error)
         await this.queue.moveToDeadLetter(entry.id);
         options.onDeadLetter?.(entry);
       }

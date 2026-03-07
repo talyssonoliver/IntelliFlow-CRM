@@ -65,7 +65,7 @@ export function RevenueChart({ stageBreakdown, opportunities }: Readonly<Revenue
   }
 
   const totalValue = hasStageData
-    ? Object.values(stageBreakdown!).reduce((sum, v) => sum + v, 0)
+    ? Object.values(stageBreakdown).reduce((sum, v) => sum + v, 0)
     : 0;
 
   return (
@@ -82,7 +82,7 @@ export function RevenueChart({ stageBreakdown, opportunities }: Readonly<Revenue
                   key={stage}
                   className={`${STAGE_COLORS[stage] ?? 'bg-slate-400'} relative group`}
                   style={{ width: `${pct}%` }}
-                  title={`${stage.replaceAll(/_/g, ' ')}: ${formatCurrency(value)}`}
+                  title={`${stage.replaceAll('_', ' ')}: ${formatCurrency(value)}`}
                 >
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <span className="text-[10px] font-medium text-white drop-shadow">
@@ -97,7 +97,7 @@ export function RevenueChart({ stageBreakdown, opportunities }: Readonly<Revenue
             {Object.entries(stageBreakdown!).map(([stage, value]) => (
               <div key={stage} className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <span className={`w-2 h-2 rounded-full ${STAGE_COLORS[stage] ?? 'bg-slate-400'}`} />
-                <span>{stage.replaceAll(/_/g, ' ')}</span>
+                <span>{stage.replaceAll('_', ' ')}</span>
                 <span className="font-medium text-foreground">{formatCurrency(value)}</span>
               </div>
             ))}

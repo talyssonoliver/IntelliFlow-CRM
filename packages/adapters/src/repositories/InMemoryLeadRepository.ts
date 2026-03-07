@@ -6,7 +6,7 @@ import { LeadRepository } from '@intelliflow/application';
  * Used for testing and development
  */
 export class InMemoryLeadRepository implements LeadRepository {
-  private leads: Map<string, Lead> = new Map();
+  private readonly leads: Map<string, Lead> = new Map();
 
   async save(lead: Lead): Promise<void> {
     this.leads.set(lead.id.value, lead);

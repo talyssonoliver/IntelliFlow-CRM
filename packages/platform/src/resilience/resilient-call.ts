@@ -5,8 +5,7 @@
  * @see IFC-122: Circuit breaker and retry policies for external service calls
  */
 
-import type { CircuitBreaker } from './circuit-breaker';
-import type { FallbackFn } from './circuit-breaker';
+import type { CircuitBreaker, FallbackFn } from './circuit-breaker';
 import { withRetry } from './retry-policy';
 import type { RetryPolicyConfig, RetryOptions } from './retry-policy';
 

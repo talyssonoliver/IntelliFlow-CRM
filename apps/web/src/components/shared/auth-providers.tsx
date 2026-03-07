@@ -29,7 +29,7 @@ export interface AuthProviderButtonProps {
   /**
    * Called when an error occurs during the OAuth flow
    */
-  onError?: (error: Readonly<Error>) => void;
+  onError?: (error: Error) => void;
   /**
    * Disable the button (e.g., when another login is in progress)
    */
@@ -337,7 +337,7 @@ export interface SocialLoginGridProps {
   /** Handler for LinkedIn login (PG-124) */
   onLinkedInLogin?: () => Promise<void>;
   /** Error handler for all providers */
-  onError?: (error: Readonly<Error>) => void;
+  onError?: (error: Error) => void;
   /** Disable all buttons */
   disabled?: boolean;
 }

@@ -424,6 +424,100 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
       'lead-scored-subscription-bridge'
     );
 
+    // ========================================================================
+    // Task Domain Event Handlers
+    // ========================================================================
+
+    // task.created — trigger analytics and onboarding workflows
+    this.eventDispatcher.register(
+      DOMAIN_EVENT_TYPES.TASK_CREATED,
+      this.createHandler('task.created', async (event) => {
+        const { taskId, title, priority, ownerId } = event.payload as {
+          taskId?: string;
+          title?: string;
+          priority?: string;
+          ownerId?: string;
+        };
+        this.logger.info({ taskId, title, priority, ownerId }, 'Task created event handled');
+      }),
+      'task-created-handler'
+    );
+
+    // task.completed — update metrics and trigger celebration
+    this.eventDispatcher.register(
+      DOMAIN_EVENT_TYPES.TASK_COMPLETED,
+      this.createHandler('task.completed', async (event) => {
+        const { taskId, completedBy } = event.payload as {
+          taskId?: string;
+          completedBy?: string;
+        };
+        this.logger.info({ taskId, completedBy }, 'Task completed event handled');
+      }),
+      'task-completed-handler'
+    );
+
+    // task.status_changed — update timeline
+    this.eventDispatcher.register(
+      DOMAIN_EVENT_TYPES.TASK_STATUS_CHANGED,
+      this.createHandler('task.status_changed', async (event) => {
+        const { taskId, previousStatus, newStatus, changedBy } = event.payload as {
+          taskId?: string;
+          previousStatus?: string;
+          newStatus?: string;
+          changedBy?: string;
+        };
+        this.logger.info({ taskId, previousStatus, newStatus, changedBy }, 'Task status changed event handled');
+      }),
+      'task-status-changed-handler'
+    );
+
+    // task.priority_changed — trigger escalation if needed
+    this.eventDispatcher.register(
+      DOMAIN_EVENT_TYPES.TASK_PRIORITY_CHANGED,
+      this.createHandler('task.priority_changed', async (event) => {
+        const { taskId, previousPriority, newPriority, changedBy } = event.payload as {
+          taskId?: string;
+          previousPriority?: string;
+          newPriority?: string;
+          changedBy?: string;
+        };
+        if (newPriority === 'URGENT') {
+          this.logger.info({ taskId, changedBy }, 'Task escalated to URGENT — triggering notification');
+        }
+        this.logger.info({ taskId, previousPriority, newPriority }, 'Task priority changed event handled');
+      }),
+      'task-priority-changed-handler'
+    );
+
+    // task.due_date_changed — trigger calendar sync
+    this.eventDispatcher.register(
+      DOMAIN_EVENT_TYPES.TASK_DUE_DATE_CHANGED,
+      this.createHandler('task.due_date_changed', async (event) => {
+        const { taskId, previousDueDate, newDueDate, changedBy } = event.payload as {
+          taskId?: string;
+          previousDueDate?: string;
+          newDueDate?: string;
+          changedBy?: string;
+        };
+        this.logger.info({ taskId, previousDueDate, newDueDate, changedBy }, 'Task due date changed event handled');
+      }),
+      'task-due-date-changed-handler'
+    );
+
+    // task.cancelled — cleanup and notifications
+    this.eventDispatcher.register(
+      DOMAIN_EVENT_TYPES.TASK_CANCELLED,
+      this.createHandler('task.cancelled', async (event) => {
+        const { taskId, reason, cancelledBy } = event.payload as {
+          taskId?: string;
+          reason?: string;
+          cancelledBy?: string;
+        };
+        this.logger.info({ taskId, reason, cancelledBy }, 'Task cancelled event handled');
+      }),
+      'task-cancelled-handler'
+    );
+
     // Bridge task.assigned events to real-time subscriptions
     this.eventDispatcher.register(
       'task.assigned',

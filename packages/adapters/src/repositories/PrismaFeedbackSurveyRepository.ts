@@ -160,9 +160,9 @@ export class PrismaFeedbackSurveyRepository implements FeedbackSurveyRepositoryP
 
     return result.map((row) => ({
       period: row.period,
-      nps: row.avg_nps !== null ? Math.round(row.avg_nps) : null,
-      csat: row.avg_csat !== null ? Math.round(row.avg_csat) : null,
-      ces: row.avg_ces !== null ? Number(row.avg_ces.toFixed(2)) : null,
+      nps: row.avg_nps === null ? null : Math.round(row.avg_nps),
+      csat: row.avg_csat === null ? null : Math.round(row.avg_csat),
+      ces: row.avg_ces === null ? null : Number(row.avg_ces.toFixed(2)),
       responseCount: Number(row.response_count),
     }));
   }

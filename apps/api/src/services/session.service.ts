@@ -14,7 +14,7 @@
  * features like concurrent session limits and device tracking.
  */
 
-import { randomBytes, createHash } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { PrismaClient } from '@intelliflow/db';
 
 // ============================================
@@ -132,25 +132,25 @@ const sessionStore = new Map<string, SessionData>();
 function parseBrowserInfo(userAgent: string, info: DeviceInfo): void {
   if (userAgent.includes('Chrome') && !userAgent.includes('Edg')) {
     info.browser = 'Chrome';
-    const match = userAgent.match(/Chrome\/([\d.]+)/);
+    const match = /Chrome\/([\d.]+)/.exec(userAgent);
     if (match) info.browserVersion = match[1];
     return;
   }
   if (userAgent.includes('Firefox')) {
     info.browser = 'Firefox';
-    const match = userAgent.match(/Firefox\/([\d.]+)/);
+    const match = /Firefox\/([\d.]+)/.exec(userAgent);
     if (match) info.browserVersion = match[1];
     return;
   }
   if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) {
     info.browser = 'Safari';
-    const match = userAgent.match(/Version\/([\d.]+)/);
+    const match = /Version\/([\d.]+)/.exec(userAgent);
     if (match) info.browserVersion = match[1];
     return;
   }
   if (userAgent.includes('Edg')) {
     info.browser = 'Edge';
-    const match = userAgent.match(/Edg\/([\d.]+)/);
+    const match = /Edg\/([\d.]+)/.exec(userAgent);
     if (match) info.browserVersion = match[1];
   }
 }
@@ -167,8 +167,8 @@ function parseOsInfo(userAgent: string, info: DeviceInfo): void {
   }
   if (userAgent.includes('Mac OS X')) {
     info.os = 'macOS';
-    const match = userAgent.match(/Mac OS X ([\d_]+)/);
-    if (match) info.osVersion = match[1].replace(/_/g, '.');
+    const match = /Mac OS X ([\d_]+)/.exec(userAgent);
+    if (match) info.osVersion = match[1].replaceAll('_', '.');
     return;
   }
   if (userAgent.includes('Linux')) {
@@ -177,14 +177,14 @@ function parseOsInfo(userAgent: string, info: DeviceInfo): void {
   }
   if (userAgent.includes('Android')) {
     info.os = 'Android';
-    const match = userAgent.match(/Android ([\d.]+)/);
+    const match = /Android ([\d.]+)/.exec(userAgent);
     if (match) info.osVersion = match[1];
     return;
   }
   if (userAgent.includes('iOS') || userAgent.includes('iPhone') || userAgent.includes('iPad')) {
     info.os = 'iOS';
-    const match = userAgent.match(/OS ([\d_]+)/);
-    if (match) info.osVersion = match[1].replace(/_/g, '.');
+    const match = /OS ([\d_]+)/.exec(userAgent);
+    if (match) info.osVersion = match[1].replaceAll('_', '.');
   }
 }
 

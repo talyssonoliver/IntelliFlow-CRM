@@ -22,7 +22,7 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '../../trpc';
-import { DeadlineDomainService, deadlineDomainService } from '../../services';
+import { deadlineDomainService } from '../../services';
 
 // =============================================================================
 // Timeline Event Types

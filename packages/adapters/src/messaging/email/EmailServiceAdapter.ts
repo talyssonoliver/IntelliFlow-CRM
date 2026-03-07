@@ -45,8 +45,8 @@ export interface EmailServiceAdapterConfig {
  * Implements the EmailServicePort interface
  */
 export class EmailServiceAdapter implements EmailServicePort {
-  private outboundService: OutboundEmailService;
-  private inboundParser: InboundEmailParser;
+  private readonly outboundService: OutboundEmailService;
+  private readonly inboundParser: InboundEmailParser;
 
   constructor(config: EmailServiceAdapterConfig = {}) {
     this.outboundService = createOutboundEmailService({
@@ -341,4 +341,4 @@ export function createEmailServiceAdapter(
 }
 
 // Re-export domain errors for convenience
-export { EmailSendError, EmailParseError, RateLimitExceededError, DeliverabilityError };
+export { EmailSendError, EmailParseError, RateLimitExceededError, DeliverabilityError } from '@intelliflow/application';

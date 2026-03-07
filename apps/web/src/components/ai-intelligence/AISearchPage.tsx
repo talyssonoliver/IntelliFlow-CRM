@@ -197,7 +197,7 @@ export function AISearchPage() {
     }
   }, []);
 
-  const handleSourceToggle = useCallback((source: Readonly<SearchSource>) => {
+  const handleSourceToggle = useCallback((source: SearchSource) => {
     setSources((prev) =>
       prev.includes(source) ? prev.filter((s) => s !== source) : [...prev, source]
     );

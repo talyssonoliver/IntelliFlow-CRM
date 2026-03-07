@@ -81,7 +81,7 @@ export interface ContactDetailContact {
 export interface ContactDetailProps {
   contact: ContactDetailContact;
   activeTab: TabId;
-  onTabChange: (tab: Readonly<TabId>) => void;
+  onTabChange: (tab: TabId) => void;
   onEdit: () => void;
   onEmail: () => void;
   onCall: () => void;

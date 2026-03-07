@@ -29,7 +29,6 @@ import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions/incubating';
-import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
 
 /**
  * Configuration for OpenTelemetry

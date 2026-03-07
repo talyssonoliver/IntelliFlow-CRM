@@ -110,7 +110,7 @@ export function AppEditor({ appId }: Readonly<AppEditorProps>) {
     });
   };
 
-  const toggleScope = (scope: Readonly<ApiKeyScope>) => {
+  const toggleScope = (scope: ApiKeyScope) => {
     setFormData((prev) => {
       const scopes = prev.scopes.includes(scope)
         ? prev.scopes.filter((s) => s !== scope)

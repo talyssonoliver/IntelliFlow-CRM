@@ -6,7 +6,7 @@
 import type { ApiKey, ApiKeyScope } from '@/lib/developer/api-key-generator';
 import type { DeveloperApp } from '@/lib/developer/demo-data';
 
-export type { DeveloperApp };
+export type { DeveloperApp } from '@/lib/developer/demo-data';
 
 export function createMockApiKey(overrides?: Partial<ApiKey>): ApiKey {
   return {

@@ -279,7 +279,7 @@ function AddCardForm({ onSuccess, onClose, isAdding, setIsAdding }: Readonly<Add
   const [cardholderName, setCardholderName] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
 
@@ -436,7 +436,11 @@ function AddCardDialog({
             Enter your card details below. Your information is encrypted and secure.
           </DialogDescription>
         </DialogHeader>
-        {stripePromise !== null ? (
+        {stripePromise === null ? (
+          <div className="py-4 text-center text-muted-foreground text-sm">
+            <p>Payment processing is not configured. Please contact support.</p>
+          </div>
+        ) : (
           <Elements stripe={stripePromise}>
             <AddCardForm
               onSuccess={onAddSuccess}
@@ -445,10 +449,6 @@ function AddCardDialog({
               setIsAdding={setIsAdding}
             />
           </Elements>
-        ) : (
-          <div className="py-4 text-center text-muted-foreground text-sm">
-            <p>Payment processing is not configured. Please contact support.</p>
-          </div>
         )}
       </DialogContent>
     </Dialog>
@@ -496,7 +496,7 @@ function RemoveCardDialog({
           </div>
           <AlertDialogTitle>Remove Payment Method?</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to remove <strong>{displayString}</strong>?
+            Are you sure you want to remove{' '}<strong>{displayString}</strong>?
           </AlertDialogDescription>
         </AlertDialogHeader>
 

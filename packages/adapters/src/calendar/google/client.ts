@@ -1,10 +1,9 @@
-import { createHash, randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import { Result, DomainError, Appointment } from '@intelliflow/domain';
 import {
   CalendarServicePort,
   CalendarProvider,
   ExternalCalendarEvent,
-  ExternalAttendee,
   OAuthTokens,
   OAuthConfig,
   WebhookRegistration,
@@ -20,7 +19,6 @@ import { RetryHandler, RateLimiter } from '../shared/RetryHandler';
 import {
   IdempotencyManager,
   InMemoryIdempotencyStore,
-  calculateAppointmentHash,
 } from '../shared/IdempotencyManager';
 
 /**
@@ -765,7 +763,7 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
         id: channelId,
         provider: 'google',
         callbackUrl,
-        expiresAt: data.expiration ? new Date(parseInt(data.expiration)) : expiration,
+        expiresAt: data.expiration ? new Date(Number.parseInt(data.expiration)) : expiration,
         resourceId: data.resourceId,
         channelId: data.id,
       });
@@ -869,7 +867,7 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
         channelId,
         timestamp: new Date(),
       });
-    } catch (error) {
+    } catch {
       return Result.fail(new CalendarSyncError('google', 'Failed to parse webhook payload'));
     }
   }
@@ -947,17 +945,23 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
   }
 
   private googleEventToExternal(event: GoogleCalendarEvent): ExternalCalendarEvent {
-    const startTime = event.start?.dateTime
-      ? new Date(event.start.dateTime)
-      : event.start?.date
-        ? new Date(event.start.date)
-        : new Date();
+    let startTime: Date;
+    if (event.start?.dateTime) {
+      startTime = new Date(event.start.dateTime);
+    } else if (event.start?.date) {
+      startTime = new Date(event.start.date);
+    } else {
+      startTime = new Date();
+    }
 
-    const endTime = event.end?.dateTime
-      ? new Date(event.end.dateTime)
-      : event.end?.date
-        ? new Date(event.end.date)
-        : new Date(startTime.getTime() + 60 * 60 * 1000); // Default 1 hour
+    let endTime: Date;
+    if (event.end?.dateTime) {
+      endTime = new Date(event.end.dateTime);
+    } else if (event.end?.date) {
+      endTime = new Date(event.end.date);
+    } else {
+      endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // Default 1 hour
+    }
 
     return {
       externalId: event.id ?? '',
@@ -1010,7 +1014,7 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
           new CalendarEventNotFoundError('google', error.error?.message ?? 'Event not found')
         );
       case 429: {
-        const retryAfter = parseInt(error.error?.details?.[0]?.metadata?.retryAfterSeconds ?? '60');
+        const retryAfter = Number.parseInt(error.error?.details?.[0]?.metadata?.retryAfterSeconds ?? '60');
         return Result.fail(new CalendarRateLimitError('google', retryAfter));
       }
       default:

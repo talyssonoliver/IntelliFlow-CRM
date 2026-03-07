@@ -141,12 +141,12 @@ export default function ADRRegistryPage() {
     }
   }, [activeTab, indexContent, graphContent, fetchIndex, fetchGraph]);
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = (e: React.SyntheticEvent) => {
     e.preventDefault();
     fetchADRs();
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleCreate = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!newAdrTitle.trim()) return;
 
@@ -621,7 +621,7 @@ export default function ADRRegistryPage() {
                     htmlFor="adr-new-title"
                     className="block text-sm font-medium text-foreground mb-1"
                   >
-                    Title <span className="text-red-500">*</span>
+                    Title{' '}<span className="text-red-500">*</span>
                   </label>
                   <input
                     id="adr-new-title"

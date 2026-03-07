@@ -10,7 +10,8 @@
 
 import { DomainEvent } from '../shared/DomainEvent';
 import { CaseId } from '../legal/cases/CaseId';
-import { CaseTaskId } from '../legal/cases/CaseTaskId';
+
+export type CaseSLAType = 'response' | 'resolution' | 'update';
 
 // Re-export core case types for convenience
 export type { CaseStatus, CasePriority, CaseTaskStatus } from '../legal/cases/CaseEvents';
@@ -211,7 +212,7 @@ export class CaseSLABreachedEvent extends DomainEvent {
 
   constructor(
     public readonly caseId: CaseId,
-    public readonly slaType: 'response' | 'resolution' | 'update',
+    public readonly slaType: CaseSLAType,
     public readonly targetTime: Date,
     public readonly breachedAt: Date,
     public readonly overageMinutes: number
@@ -346,7 +347,7 @@ export class CaseTimerStartedEvent extends DomainEvent {
 
   constructor(
     public readonly caseId: CaseId,
-    public readonly timerType: 'response' | 'resolution' | 'update',
+    public readonly timerType: CaseSLAType,
     public readonly targetDuration: number, // in minutes
     public readonly startedAt: Date
   ) {
@@ -371,7 +372,7 @@ export class CaseTimerPausedEvent extends DomainEvent {
 
   constructor(
     public readonly caseId: CaseId,
-    public readonly timerType: 'response' | 'resolution' | 'update',
+    public readonly timerType: CaseSLAType,
     public readonly elapsedMinutes: number,
     public readonly reason: string
   ) {

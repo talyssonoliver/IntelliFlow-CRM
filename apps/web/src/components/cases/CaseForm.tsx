@@ -40,7 +40,7 @@ interface CaseFormData {
 
 interface CaseFormProps {
   initialData?: Partial<CaseFormData>;
-  onSubmit: (data: Readonly<Record<string, unknown>>) => Promise<void>;
+  onSubmit: (data: Record<string, unknown>) => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
   mode: 'create' | 'edit';
@@ -163,7 +163,7 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
@@ -210,7 +210,7 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
           {/* Subject */}
           <div>
             <label htmlFor="subject" className="block text-sm font-semibold text-foreground mb-1.5">
-              Subject <span className="text-destructive">*</span>
+              Subject{' '}<span className="text-destructive">*</span>
             </label>
             <input
               id="subject"
@@ -310,7 +310,7 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
               htmlFor="clientSearch"
               className="block text-sm font-semibold text-foreground mb-1.5"
             >
-              Link to Client/Account <span className="text-destructive">*</span>
+              Link to Client/Account{' '}<span className="text-destructive">*</span>
             </label>
 
             {formData.clientId ? (
@@ -366,7 +366,7 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
               <div
                 id="client-listbox"
                 className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-background shadow-lg max-h-56 overflow-y-auto"
-                role="listbox"
+                role="listbox" // NOSONAR typescript:S6819 — custom accessible autocomplete dropdown; <select> cannot contain custom-styled items
               >
                 {contactQuery.isLoading && (
                   <div className="flex items-center gap-2 px-3 py-3 text-sm text-muted-foreground">
@@ -391,7 +391,7 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
                       type="button"
                       onClick={() => handleClientSelect(client.id, client.name)}
                       className="w-full text-left px-3 py-2.5 hover:bg-accent transition-colors flex items-center gap-3"
-                      role="option"
+                      role="option" // NOSONAR typescript:S6819 — listbox option button; <option> cannot contain icons or custom layout
                       aria-selected={false}
                     >
                       <span

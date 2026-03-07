@@ -25,7 +25,7 @@ export const eventMetadataSchema = z.object({
   causationId: z.string().optional(),
   userId: z.string().optional(),
   tenantId: z.string().optional(),
-  timestamp: z.string().datetime({ message: 'Invalid ISO 8601 timestamp' }),
+  timestamp: z.iso.datetime({ message: 'Invalid ISO 8601 timestamp' }),
   version: z.string().default('1.0'),
   idempotencyKey: z.string().optional(),
 });
@@ -43,14 +43,14 @@ export type EventMetadataOutput = z.output<typeof eventMetadataSchema>;
 export const baseDomainEventSchema = z.object({
   id: z
     .string()
-    .regex(/^[a-z0-9]{8,}$/)
+    .check(z.regex(/^[a-z0-9]{8,}$/))
     .optional(),
   eventType: z
     .string()
     .min(1)
-    .regex(/^[a-z]+\.[a-z_]+$/, {
+    .check(z.regex(/^[a-z]+\.[a-z_]+$/, {
       message: 'Event type must follow pattern: aggregate.action (e.g., lead.created)',
-    }),
+    })),
   aggregateType: z.string().min(1),
   aggregateId: z.string().min(1),
   payload: z.record(z.string(), z.unknown()),
@@ -91,7 +91,7 @@ export type OutboxEventOutput = z.output<typeof outboxEventSchema>;
  */
 export const leadCreatedPayloadSchema = z.object({
   leadId: z.string().min(1),
-  email: z.string().email(),
+  email: z.email(),
   source: z.string().optional(),
   tenantId: z.string().min(1),
   createdAt: z.coerce.date().optional(),
@@ -138,7 +138,7 @@ export const leadConvertedPayloadSchema = z.object({
  */
 export const contactCreatedPayloadSchema = z.object({
   contactId: z.string().min(1),
-  email: z.string().email(),
+  email: z.email(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   tenantId: z.string().min(1),

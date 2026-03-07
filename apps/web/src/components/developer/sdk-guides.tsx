@@ -177,8 +177,8 @@ function QuickstartTab() {
         </h2>
         <p className="text-muted-foreground mb-3">
           Wrap your app with{' '}
-          <code className="text-sm bg-muted px-1 py-0.5 rounded">TRPCProvider</code>, then use the
-          typed <code className="text-sm bg-muted px-1 py-0.5 rounded">trpc</code> hooks.
+          <code className="text-sm bg-muted px-1 py-0.5 rounded">TRPCProvider</code>{', then use the'}
+          typed{' '}<code className="text-sm bg-muted px-1 py-0.5 rounded">trpc</code>{' '}hooks.
         </p>
         <CodeBlock
           code={`import { TRPCProvider } from '@intelliflow/api-client';

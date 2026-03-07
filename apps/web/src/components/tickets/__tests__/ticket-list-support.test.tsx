@@ -5,7 +5,7 @@ import type { TicketListItem, TicketStats, TicketFilterOptions } from '../types'
 
 // Mock the TicketList component
 vi.mock('../TicketList', () => ({
-  TicketList: vi.fn((props: Readonly<Record<string, unknown>>) => (
+  TicketList: vi.fn((props: Record<string, unknown>) => (
     <div
       data-testid="ticket-list"
       data-props={JSON.stringify({

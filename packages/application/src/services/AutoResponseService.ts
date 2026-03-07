@@ -8,12 +8,6 @@ import {
   ResponseContent,
   TriggerType,
   AutoResponseStatus,
-  InvalidLeadStatusError,
-  TenantMismatchError,
-  InvalidStatusTransitionError,
-  DraftExpiredError,
-  ApprovalRequiredError,
-  MaxEscalationsReachedError,
 } from '@intelliflow/domain';
 import { EventBusPort } from '../ports/external';
 import { PersistenceError, NotFoundError, ValidationError } from '../errors';
@@ -186,7 +180,7 @@ export class AutoResponseService {
     // Persist
     try {
       await this.draftRepository.save(draft);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save auto-response draft'));
     }
 
@@ -270,7 +264,7 @@ export class AutoResponseService {
 
     try {
       await this.draftRepository.save(draft);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save draft'));
     }
 
@@ -298,7 +292,7 @@ export class AutoResponseService {
 
     try {
       await this.draftRepository.save(draft);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save draft'));
     }
 
@@ -330,7 +324,7 @@ export class AutoResponseService {
 
     try {
       await this.draftRepository.save(draft);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save draft'));
     }
 
@@ -365,7 +359,7 @@ export class AutoResponseService {
 
     try {
       await this.draftRepository.save(draft);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save draft'));
     }
 
@@ -397,7 +391,7 @@ export class AutoResponseService {
 
     try {
       await this.draftRepository.save(draft);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save draft'));
     }
 
@@ -428,7 +422,7 @@ export class AutoResponseService {
 
     try {
       await this.draftRepository.save(draft);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save draft'));
     }
 
@@ -459,7 +453,7 @@ export class AutoResponseService {
 
     try {
       await this.draftRepository.save(draft);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save draft'));
     }
 
@@ -571,7 +565,7 @@ export class AutoResponseService {
       body: draft.content.body,
       modelVersion: draft.modelVersion,
       statusHistory: draft.statusHistory.map((h) => ({
-        status: h.status as AutoResponseStatus,
+        status: h.status,
         changedAt: h.changedAt,
         changedBy: h.changedBy,
         reason: h.reason,

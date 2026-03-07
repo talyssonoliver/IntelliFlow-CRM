@@ -115,7 +115,7 @@ export function RollbackConfirmDialog({
           {/* Reason Input */}
           <div className="space-y-2">
             <label htmlFor="rollback-reason" className="text-sm font-medium text-foreground">
-              Reason for rollback <span className="text-destructive">*</span>
+              Reason for rollback{' '}<span className="text-destructive">*</span>
             </label>
             <Textarea
               id="rollback-reason"

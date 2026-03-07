@@ -6,7 +6,8 @@ import { Card, Skeleton, toast } from '@intelliflow/ui';
 import { api } from '@/lib/api';
 import { TaskCreateSheet } from './TaskCreateSheet';
 
-type TaskEntityType = 'lead' | 'contact' | 'opportunity' | 'account';
+type TaskApiEntityType = 'lead' | 'contact' | 'opportunity';
+type TaskEntityType = TaskApiEntityType | 'account';
 
 export interface RelatedTasksCardProps {
   readonly entityType: TaskEntityType;
@@ -59,7 +60,7 @@ export function RelatedTasksCard({
   // account type not supported by API, skip query
   const queryEntityType = entityType === 'account' ? undefined : entityType;
   const { data, isLoading, error } = api.task.getByEntity.useQuery(
-    { entityType: queryEntityType as 'lead' | 'contact' | 'opportunity', entityId },
+    { entityType: queryEntityType as TaskApiEntityType, entityId },
     { enabled: !!queryEntityType && !!entityId }
   );
 

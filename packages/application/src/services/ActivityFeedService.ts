@@ -84,7 +84,7 @@ export class ActivityFeedService {
 
     const hasMore = deduped.length > limit;
     const pageItems = deduped.slice(0, limit);
-    const lastItem = pageItems[pageItems.length - 1];
+    const lastItem = pageItems.at(-1);
 
     const result: ActivityFeedPage = {
       items: pageItems,
@@ -129,7 +129,7 @@ export class ActivityFeedService {
 
     const hasMore = filtered.length > limit;
     const pageItems = filtered.slice(0, limit);
-    const lastItem = pageItems[pageItems.length - 1];
+    const lastItem = pageItems.at(-1);
 
     return {
       items: pageItems,

@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { router, publicProcedure } from '../../trpc';
+import { createTRPCRouter, publicProcedure } from '../../trpc';
 import { TRPCError } from '@trpc/server';
 import { IngestionOrchestrator } from '@intelliflow/application';
-import { createHash, createHmac } from 'crypto';
+import { createHmac } from 'node:crypto';
 
 /**
  * Email Attachment Schema
@@ -35,7 +35,7 @@ const inboundEmailSchema = z.object({
  * Processes inbound emails with attachments from SendGrid/SES webhooks.
  * Attachments are automatically ingested into the case document system.
  */
-export const emailInboundRouter = router({
+export const emailInboundRouter = createTRPCRouter({
   /**
    * Process inbound email with attachments
    */
@@ -134,7 +134,7 @@ function verifyWebhookSignature(payload: any, signature: string): boolean {
  * Example: case-123@tenant1.intelliflow.com → tenant1
  */
 function extractTenantId(email: string): string | null {
-  const match = email.match(/@([^.]{1,63})\.intelliflow\.com$/);
+  const match = /@([^.]{1,63})\.intelliflow\.com$/.exec(email);
   return match ? match[1] : null;
 }
 
@@ -143,6 +143,6 @@ function extractTenantId(email: string): string | null {
  * Example: case-123@tenant1.intelliflow.com → 123
  */
 function extractCaseId(email: string): string | undefined {
-  const match = email.match(/^case-([^@]+)@/);
+  const match = /^case-([^@]+)@/.exec(email);
   return match ? match[1] : undefined;
 }

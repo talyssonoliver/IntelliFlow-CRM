@@ -45,11 +45,11 @@ export class DateRange extends ValueObject<DateRangeProps> {
     const endDate = typeof end === 'string' ? new Date(end) : end;
 
     // Validate dates are valid
-    if (isNaN(startDate.getTime())) {
+    if (Number.isNaN(startDate.getTime())) {
       return Result.fail(new InvalidDateRangeError('Start date is invalid'));
     }
 
-    if (isNaN(endDate.getTime())) {
+    if (Number.isNaN(endDate.getTime())) {
       return Result.fail(new InvalidDateRangeError('End date is invalid'));
     }
 

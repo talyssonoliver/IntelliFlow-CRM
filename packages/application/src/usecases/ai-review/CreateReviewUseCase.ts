@@ -87,12 +87,12 @@ export class CreateReviewUseCase {
 
   async execute(input: CreateReviewInput): Promise<Result<CreateReviewOutput, DomainError>> {
     // 1. Validate output type
-    if (!AI_OUTPUT_TYPES.includes(input.outputType as AIOutputType)) {
+    if (!AI_OUTPUT_TYPES.includes(input.outputType)) {
       return Result.fail(new InvalidOutputTypeError(input.outputType));
     }
 
     // 2. Validate confidence
-    if (typeof input.confidence !== 'number' || isNaN(input.confidence)) {
+    if (typeof input.confidence !== 'number' || Number.isNaN(input.confidence)) {
       return Result.fail(new InvalidConfidenceError('Confidence must be a valid number, not NaN'));
     }
     if (input.confidence < 0) {
@@ -118,7 +118,7 @@ export class CreateReviewUseCase {
     // 4. Persist review
     try {
       await this.repository.save(review);
-    } catch (error) {
+    } catch {
       return Result.fail(new ReviewSaveError());
     }
 

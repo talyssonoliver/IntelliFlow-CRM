@@ -157,7 +157,7 @@ export function EntitySearchField({
         <div
           id="entity-search-listbox"
           className="absolute z-50 mt-1 w-full rounded-md border border-input bg-background shadow-lg max-h-48 overflow-y-auto"
-          role="listbox"
+          role="listbox" // NOSONAR typescript:S6819 — custom autocomplete dropdown; <select> cannot be positioned absolutely or contain custom layout
         >
           {isLoading && <div className="px-3 py-2 text-sm text-muted-foreground">Searching...</div>}
           {!isLoading && results.length === 0 && (
@@ -170,7 +170,7 @@ export function EntitySearchField({
                 type="button"
                 onClick={() => handleSelect(item.id, item.name)}
                 className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors"
-                role="option"
+                role="option" // NOSONAR typescript:S6819 — listbox option button; <option> cannot be styled or contain custom layout
                 aria-selected={false}
               >
                 {item.name}

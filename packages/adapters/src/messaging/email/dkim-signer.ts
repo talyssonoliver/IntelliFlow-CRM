@@ -10,7 +10,7 @@
  * RFC 6376 compliant implementation
  */
 
-import { createSign, createHash, createPrivateKey, KeyObject } from 'crypto';
+import { createSign, createHash, createPrivateKey, KeyObject } from 'node:crypto';
 import { z } from 'zod';
 
 // DKIM configuration schema
@@ -79,7 +79,7 @@ export interface DkimVerificationResult {
  */
 export function canonicalizeHeaderRelaxed(header: string): string {
   // Unfold header (remove CRLF followed by whitespace)
-  let result = header.replace(/\r?\n[\t ]+/g, ' ');
+  let result = header.replaceAll(/\r?\n[\t ]+/g, ' ');
 
   // Convert header name to lowercase
   const colonIndex = result.indexOf(':');
@@ -88,7 +88,7 @@ export function canonicalizeHeaderRelaxed(header: string): string {
     let value = result.slice(colonIndex + 1);
 
     // Reduce whitespace to single space
-    value = value.replace(/[\t ]+/g, ' ').trim();
+    value = value.replaceAll(/[\t ]+/g, ' ').trim();
 
     result = `${name}:${value}`;
   }
@@ -114,7 +114,7 @@ export function canonicalizeBodyRelaxed(body: string): string {
   // Process each line
   const processedLines = lines.map((line) => {
     // Reduce whitespace to single space
-    let processed = line.replace(/[\t ]+/g, ' ');
+    let processed = line.replaceAll(/[\t ]+/g, ' ');
     // Remove trailing whitespace
     processed = processed.trimEnd();
     return processed;
@@ -137,7 +137,7 @@ export function canonicalizeBodyRelaxed(body: string): string {
  */
 export function canonicalizeBodySimple(body: string): string {
   // Ensure CRLF line endings
-  let result = body.replace(/\r?\n/g, '\r\n');
+  let result = body.replaceAll(/\r?\n/g, '\r\n');
 
   // Remove trailing empty lines (keep one CRLF)
   result = result.replace(/(\r\n)+$/, '\r\n');
@@ -155,7 +155,7 @@ export function canonicalizeBodySimple(body: string): string {
  */
 export function parseEmailParts(rawEmail: string): { headers: string; body: string } {
   // Normalize line endings
-  const normalized = rawEmail.replace(/\r?\n/g, '\r\n');
+  const normalized = rawEmail.replaceAll(/\r?\n/g, '\r\n');
 
   // Find header/body separator
   const separator = normalized.indexOf('\r\n\r\n');
@@ -181,7 +181,7 @@ export function parseHeaderLines(
   let currentHeader: { name: string; value: string; raw: string } | null = null;
 
   for (const line of lines) {
-    if (line.match(/^[\t ]/)) {
+    if (/^[\t ]/.exec(line)) {
       // Continuation of previous header
       if (currentHeader) {
         currentHeader.value += ' ' + line.trim();
@@ -228,8 +228,8 @@ function wrapSignature(sig: string, lineLength = 76): string {
  * DKIM Signer class
  */
 export class DkimSigner {
-  private config: DkimConfig;
-  private privateKey: KeyObject;
+  private readonly config: DkimConfig;
+  private readonly privateKey: KeyObject;
 
   constructor(config: DkimConfig) {
     this.config = DkimConfigSchema.parse(config);
@@ -314,10 +314,12 @@ export class DkimSigner {
       dkimParts.push(`l=${this.config.bodyLengthLimit}`);
     }
 
-    dkimParts.push(`h=${signedHeaderNames.join(':')}`);
-    dkimParts.push(`bh=${bodyHash}`);
-    dkimParts.push(`b=`); // Empty signature tag — RFC 6376 §3.5 two-pass: this header (with b= empty) is
-    // included in the signing input, then the computed signature replaces it below.
+    dkimParts.push(
+      `h=${signedHeaderNames.join(':')}`,
+      `bh=${bodyHash}`,
+      `b=`, // Empty signature tag — RFC 6376 §3.5 two-pass: this header (with b= empty) is
+      // included in the signing input, then the computed signature replaces it below.
+    );
 
     const dkimHeaderValue = dkimParts.join('; ');
     const dkimHeaderForSigning = `dkim-signature:${dkimHeaderValue}`;
@@ -365,7 +367,7 @@ export class DkimSigner {
  * DKIM Key manager for key rotation
  */
 export class DkimKeyManager {
-  private signers: Map<string, DkimSigner> = new Map();
+  private readonly signers: Map<string, DkimSigner> = new Map();
   private activeKeyId: string | null = null;
 
   /**
@@ -502,11 +504,11 @@ export function generateDkimDnsRecord(
   // Public key (required)
   // Remove PEM headers and newlines
   const cleanKey = publicKey
-    .replace(/-----BEGIN PUBLIC KEY-----/g, '')
-    .replace(/-----END PUBLIC KEY-----/g, '')
-    .replace(/-----BEGIN RSA PUBLIC KEY-----/g, '')
-    .replace(/-----END RSA PUBLIC KEY-----/g, '')
-    .replace(/\s+/g, '');
+    .replaceAll('-----BEGIN PUBLIC KEY-----', '')
+    .replaceAll('-----END PUBLIC KEY-----', '')
+    .replaceAll('-----BEGIN RSA PUBLIC KEY-----', '')
+    .replaceAll('-----END RSA PUBLIC KEY-----', '')
+    .replaceAll(/\s+/g, '');
 
   parts.push(`p=${cleanKey}`);
 
@@ -532,7 +534,7 @@ export function parseDkimSignature(header: string): {
   const result: Record<string, string | number | string[]> = {};
 
   // Remove header name and unfold
-  const value = header.replace(/^DKIM-Signature:\s*/i, '').replace(/\r?\n[\t ]+/g, ' ');
+  const value = header.replace(/^DKIM-Signature:\s*/i, '').replaceAll(/\r?\n[\t ]+/g, ' ');
 
   // Parse tag=value pairs
   const pairs = value.split(/[ \t]{0,100};[ \t]{0,100}/);
@@ -563,16 +565,16 @@ export function parseDkimSignature(header: string): {
         result.bodyHash = tagValue;
         break;
       case 'b':
-        result.signature = tagValue.replace(/\s+/g, '');
+        result.signature = tagValue.replaceAll(/\s+/g, '');
         break;
       case 't':
-        result.timestamp = parseInt(tagValue, 10);
+        result.timestamp = Number.parseInt(tagValue, 10);
         break;
       case 'x':
-        result.expiration = parseInt(tagValue, 10);
+        result.expiration = Number.parseInt(tagValue, 10);
         break;
       case 'l':
-        result.bodyLength = parseInt(tagValue, 10);
+        result.bodyLength = Number.parseInt(tagValue, 10);
         break;
     }
   }

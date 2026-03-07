@@ -37,8 +37,8 @@ function base32Encode(buffer: Buffer): string {
   let value = 0;
   let output = '';
 
-  for (let i = 0; i < buffer.length; i++) {
-    value = (value << 8) | buffer[i];
+  for (const byte of buffer) {
+    value = (value << 8) | byte;
     bits += 8;
 
     while (bits >= 5) {
@@ -113,7 +113,7 @@ function generateTotpCode(
   const hmac = hmacSha1(key, counterBuffer);
 
   // Dynamic truncation
-  const offset = hmac[hmac.length - 1] & 0x0f;
+  const offset = hmac.at(-1)! & 0x0f;
   const binary =
     ((hmac[offset] & 0x7f) << 24) |
     ((hmac[offset + 1] & 0xff) << 16) |
@@ -140,7 +140,7 @@ function verifyTotpCode(secret: string, code: string, window: number = 1): boole
   for (let i = -window; i <= window; i++) {
     const checkTime = now + i * period;
     const expectedCode = generateTotpCode(secret, checkTime);
-    if (expectedCode === code.replace(/\s/g, '')) {
+    if (expectedCode === code.replaceAll(/\s/g, '')) {
       return true;
     }
   }
@@ -152,13 +152,15 @@ function verifyTotpCode(secret: string, code: string, window: number = 1): boole
 // Types
 // ============================================
 
+export type MfaMethod = 'totp' | 'sms' | 'email' | 'backup';
+
 /**
  * MFA challenge stored in database or cache
  */
 export interface MfaChallenge {
   id: string;
   userId: string;
-  method: 'totp' | 'sms' | 'email' | 'backup';
+  method: MfaMethod;
   /** For SMS/Email: the code sent */
   code?: string;
   /** For SMS/Email: hashed code for comparison */
@@ -280,7 +282,7 @@ export class MfaService {
    * @returns True if code is valid
    */
   verifyTotp(secret: string, code: string): boolean {
-    const normalizedCode = code.replace(/\s/g, '');
+    const normalizedCode = code.replaceAll(/\s/g, '');
     return verifyTotpCode(secret, normalizedCode);
   }
 
@@ -401,7 +403,7 @@ export class MfaService {
   /**
    * Create an MFA challenge for a user
    */
-  createChallenge(userId: string, method: 'totp' | 'sms' | 'email' | 'backup'): MfaChallenge {
+  createChallenge(userId: string, method: MfaMethod): MfaChallenge {
     const challengeId = this.generateChallengeId();
 
     const challenge: MfaChallenge = {
@@ -445,6 +447,8 @@ export class MfaService {
         }
         return result.valid;
       }
+      default:
+        return false;
     }
   }
 
@@ -482,7 +486,7 @@ export class MfaService {
     // Increment attempts
     challenge.attempts++;
 
-    const normalizedCode = code.replace(/\s/g, '').toUpperCase();
+    const normalizedCode = code.replaceAll(/\s/g, '').toUpperCase();
     const isValid = this.validateChallengeCode(challenge, normalizedCode, userMfaSettings);
 
     if (isValid) {
@@ -507,7 +511,7 @@ export class MfaService {
    */
   getChallengeInfo(challengeId: string): {
     exists: boolean;
-    method?: 'totp' | 'sms' | 'email' | 'backup';
+    method?: MfaMethod;
     expiresAt?: Date;
     attemptsRemaining?: number;
   } {
@@ -568,7 +572,7 @@ export class MfaService {
     code: string,
     hashedCodes: string[]
   ): { valid: boolean; updatedCodes?: string[] } {
-    const normalizedCode = code.replace(/\s/g, '').toUpperCase();
+    const normalizedCode = code.replaceAll(/\s/g, '').toUpperCase();
     const codeHash = this.hashCode(normalizedCode);
 
     const index = hashedCodes.indexOf(codeHash);
@@ -599,9 +603,9 @@ export class MfaService {
   /**
    * Get available MFA methods for user
    */
-  async getAvailableMfaMethods(userId: string): Promise<('totp' | 'sms' | 'email' | 'backup')[]> {
+  async getAvailableMfaMethods(userId: string): Promise<(MfaMethod)[]> {
     const settings = await this.getUserMfaSettings(userId);
-    const methods: ('totp' | 'sms' | 'email' | 'backup')[] = [];
+    const methods: (MfaMethod)[] = [];
 
     if (settings?.totpEnabled) methods.push('totp');
     if (settings?.smsEnabled) methods.push('sms');

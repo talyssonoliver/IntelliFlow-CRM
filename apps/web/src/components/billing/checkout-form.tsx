@@ -120,7 +120,7 @@ export function CheckoutForm({
   // Handlers
   // ============================================
 
-  const handleCardNumberChange = useCallback((event: Readonly<StripeCardNumberElementChangeEvent>) => {
+  const handleCardNumberChange = useCallback((event: StripeCardNumberElementChangeEvent) => {
     if (event.brand) {
       setCardBrand(event.brand);
     }
@@ -146,14 +146,14 @@ export function CheckoutForm({
 
   const handleNameBlur = useCallback(() => {
     setNameTouched(true);
-    if (!name.trim()) {
-      setNameError('Cardholder name is required');
-    } else {
+    if (name.trim()) {
       setNameError(undefined);
+    } else {
+      setNameError('Cardholder name is required');
     }
   }, [name]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
 
     if (!stripe || !elements) {

@@ -252,7 +252,7 @@ function GoalSection({ isLoading, goal }: Readonly<GoalSectionProps>) {
         <svg
           className="size-full -rotate-90"
           viewBox="0 0 36 36"
-          role="img"
+          role="img" // NOSONAR typescript:S6819 — SVG chart element, <img> cannot render SVG paths
           aria-labelledby="goal-progress-title"
         >
           <title id="goal-progress-title">{`${progress}% of ${goal?.label || 'goal'} target reached`}</title>
@@ -280,7 +280,7 @@ function GoalSection({ isLoading, goal }: Readonly<GoalSectionProps>) {
         </div>
       </div>
       <p className="text-sm text-center text-slate-600 dark:text-slate-400">
-        You need <span className="font-bold text-slate-900 dark:text-white">{remaining}</span> more
+        You need{' '}<span className="font-bold text-slate-900 dark:text-white">{remaining}</span>{' '}more
         to hit today&apos;s target.
       </p>
     </>
@@ -425,11 +425,11 @@ export function AuthenticatedHomePage() {
     [unpinMutation]
   );
 
-  const handleQuickActionsSave = useCallback((ids: Readonly<Set<string>>) => {
+  const handleQuickActionsSave = useCallback((ids: Set<string>) => {
     setEnabledActionIds(new Set(ids));
   }, []);
 
-  const handlePinnedNavSave = useCallback((ids: Readonly<Set<string>>) => {
+  const handlePinnedNavSave = useCallback((ids: Set<string>) => {
     setPinnedGroupIds(new Set(ids));
   }, []);
 

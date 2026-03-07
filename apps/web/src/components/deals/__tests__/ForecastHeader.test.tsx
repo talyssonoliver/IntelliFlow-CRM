@@ -29,7 +29,7 @@ vi.mock('@intelliflow/ui', () => ({
 // Mock EntityHeader — capture props to verify them
 const mockEntityHeader = vi.fn();
 vi.mock('@/components/shared', () => ({
-  EntityHeader: (props: Readonly<Record<string, unknown>>) => {
+  EntityHeader: (props: Record<string, unknown>) => {
     mockEntityHeader(props);
     return (
       <div data-testid="entity-header">

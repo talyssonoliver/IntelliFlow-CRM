@@ -13,9 +13,6 @@ import {
   TIMELINE_PRIORITIES,
   COMMUNICATION_CHANNELS,
   COMMUNICATION_DIRECTIONS,
-  TIMELINE_EVENT_TYPE_LABELS,
-  TIMELINE_EVENT_TYPE_ICONS,
-  AGENT_ACTION_STATUS_LABELS,
 } from '@intelliflow/domain';
 
 // Re-export label/icon maps from domain for convenience
@@ -52,8 +49,8 @@ export type CommunicationDirection = z.infer<typeof communicationDirectionSchema
 export const timelineActorSchema = z.object({
   id: z.string(),
   name: z.string().nullable().optional(),
-  email: z.string().email().nullable().optional(),
-  avatarUrl: z.string().url().nullable().optional(),
+  email: z.email().nullable().optional(),
+  avatarUrl: z.url().nullable().optional(),
   isAgent: z.boolean().optional(),
 });
 

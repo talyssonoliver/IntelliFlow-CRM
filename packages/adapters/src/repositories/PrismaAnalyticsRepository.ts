@@ -243,7 +243,7 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
     );
 
     const avgDays = result[0]?.avg_days;
-    return avgDays != null ? Math.round(avgDays * 10) / 10 : null;
+    return avgDays == null ? null : Math.round(avgDays * 10) / 10;
   }
 
   async getRevenueInRange(

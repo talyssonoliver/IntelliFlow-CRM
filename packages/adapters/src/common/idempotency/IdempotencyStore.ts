@@ -28,7 +28,7 @@ export interface IdempotencyStore {
  * In-memory idempotency store for development/testing
  */
 export class InMemoryIdempotencyStore implements IdempotencyStore {
-  private records = new Map<string, IdempotencyRecord>();
+  private readonly records = new Map<string, IdempotencyRecord>();
 
   async get(key: string): Promise<IdempotencyRecord | null> {
     const record = this.records.get(key);

@@ -236,10 +236,10 @@ function LeadCard({ lead }: Readonly<{ lead: ScoredLead }>) {
 function ScoreDistributionChart({
   distribution,
   total: _total,
-}: {
+}: Readonly<{
   distribution: { hot: number; warm: number; cold: number } | null;
   total: number;
-}) {
+}>) {
   const tiers = [
     { key: 'hot', label: 'Hot', color: 'bg-green-500', count: distribution?.hot ?? 0 },
     { key: 'warm', label: 'Warm', color: 'bg-orange-500', count: distribution?.warm ?? 0 },

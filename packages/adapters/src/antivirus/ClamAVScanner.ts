@@ -62,7 +62,7 @@ export class ClamAVScanner implements AVScannerPort {
       await this.ensureInitialized();
       const version = await this.clamscan.getVersion();
       return !!version;
-    } catch (error) {
+    } catch {
       return false;
     }
   }

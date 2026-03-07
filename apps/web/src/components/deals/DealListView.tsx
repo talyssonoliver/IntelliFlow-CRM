@@ -172,9 +172,9 @@ function DealAvatar({ deal }: Readonly<{ deal: Deal }>) {
 // =============================================================================
 
 interface RowActionHandlers {
-  onEdit: (deal: Readonly<Deal>) => void;
-  onMoveStage: (deal: Readonly<Deal>) => void;
-  onDelete: (deal: Readonly<Deal>) => void;
+  onEdit: (deal: Deal) => void;
+  onMoveStage: (deal: Deal) => void;
+  onDelete: (deal: Deal) => void;
 }
 
 function createColumns(handlers: Readonly<RowActionHandlers>): ColumnDef<Deal>[] {
@@ -269,15 +269,15 @@ function createColumns(handlers: Readonly<RowActionHandlers>): ColumnDef<Deal>[]
                 label: 'Edit Deal',
                 onClick: () => handlers.onEdit(deal),
               },
-              ...(!isClosed
-                ? [
+              ...(isClosed
+                ? []
+                : [
                     {
                       icon: 'swap_horiz',
                       label: 'Move Stage',
                       onClick: () => handlers.onMoveStage(deal),
                     },
-                  ]
-                : []),
+                  ]),
               { id: 'sep-1', icon: '', label: '', onClick: () => {}, separator: true },
               {
                 icon: 'delete',
@@ -379,7 +379,7 @@ export const DealListView = React.memo(function DealListView() {
   );
 
   // Handlers
-  const handleRowClick = useCallback((deal: Readonly<Deal>) => router.push(`/deals/${deal.id}`), [router]);
+  const handleRowClick = useCallback((deal: Deal) => router.push(`/deals/${deal.id}`), [router]);
 
   const handleSearch = useCallback((value: string) => setSearchQuery(value), []);
 
@@ -549,7 +549,7 @@ export const DealListView = React.memo(function DealListView() {
       {/* Loading State */}
       {isLoading && (
         <div className="space-y-3">
-          {[...Array(5)].map((_, i) => (
+          {[...new Array(5)].map((_, i) => (
             <div
               key={`skeleton-${i}`} // NOSONAR typescript:S6479
               className="flex items-center gap-4 p-4 bg-card rounded-lg border border-border"

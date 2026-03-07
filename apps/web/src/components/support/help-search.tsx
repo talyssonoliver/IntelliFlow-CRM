@@ -46,6 +46,9 @@ export function HelpSearch({
     }
   };
 
+  const resultWord = resultCount === 1 ? 'result' : 'results';
+  const resultText = resultCount !== undefined ? `${resultCount} ${resultWord} found` : '';
+
   return (
     <div role="search" className="w-full">
       <Input
@@ -59,9 +62,7 @@ export function HelpSearch({
         className="w-full"
       />
       <div aria-live="polite" aria-atomic="true" className="mt-2 text-sm text-muted-foreground min-h-[1.25rem]">
-        {resultCount !== undefined
-          ? `${resultCount} ${resultCount === 1 ? 'result' : 'results'} found`
-          : ''}
+        {resultText}
       </div>
     </div>
   );

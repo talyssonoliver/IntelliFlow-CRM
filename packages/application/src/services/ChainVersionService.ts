@@ -136,7 +136,7 @@ export {
   ChainVersionActivatedEvent,
   ChainVersionDeprecatedEvent,
   ChainVersionRolledBackEvent,
-};
+} from '@intelliflow/domain';
 
 // =============================================================================
 // Chain Version Service
@@ -515,7 +515,7 @@ export class ChainVersionService {
 
           if (previousVersions.length > 0) {
             // Sort by createdAt descending to get most recent
-            const sortedVersions = previousVersions.sort(
+            const sortedVersions = [...previousVersions].sort(
               (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
             );
             return { version: sortedVersions[0], selectedBy: 'rollout' };

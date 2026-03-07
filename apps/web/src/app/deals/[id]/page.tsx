@@ -652,15 +652,15 @@ function FilesCard({ files }: Readonly<{ files: Deal['files'] }>) {
       </div>
       <div className="space-y-2">
         {files.map((file, index) => (
-          <a
+          <button
             key={index} // NOSONAR typescript:S6479
-            href="#"
-            className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors group"
+            type="button"
+            className="flex w-full items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors group"
           >
             <div className={`p-1.5 rounded ${getFileIcon(file.type)}`}>
               <Icon name="description" className="text-xl" />
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 text-left">
               <p className="text-sm font-medium text-slate-900 truncate group-hover:text-primary">
                 {file.name}
               </p>
@@ -668,7 +668,7 @@ function FilesCard({ files }: Readonly<{ files: Deal['files'] }>) {
                 {file.size} &bull; {file.date}
               </p>
             </div>
-          </a>
+          </button>
         ))}
       </div>
     </Card>

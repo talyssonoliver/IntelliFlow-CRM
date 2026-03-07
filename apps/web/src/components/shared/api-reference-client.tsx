@@ -41,7 +41,7 @@ export function ApiReferenceClient({ specUrl }: Readonly<ApiReferenceClientProps
   if (isLoading) {
     return (
       <div
-        role="status"
+        role="status" // NOSONAR typescript:S6819 — loading state indicator; <output> is for form computation results, not loading spinners
         aria-busy="true"
         aria-live="polite"
         className="flex items-center justify-center py-12"
@@ -61,7 +61,7 @@ export function ApiReferenceClient({ specUrl }: Readonly<ApiReferenceClientProps
       >
         <h2 className="text-lg font-semibold text-destructive">Error Loading API Reference</h2>
         <p className="text-sm text-destructive/90 mt-1">{error || 'Unknown error'}</p>
-        <button onClick={() => window.location.reload()} className="mt-4 text-sm underline">
+        <button onClick={() => globalThis.location.reload()} className="mt-4 text-sm underline">
           Retry
         </button>
       </div>

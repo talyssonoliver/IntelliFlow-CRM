@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { IngestionOrchestrator } from '../IngestionOrchestrator';
 import { CaseDocumentRepository } from '@intelliflow/domain';
 import { EventBusPort } from '../../ports/external';
-import { createHash, randomUUID } from 'crypto';
+import { createHash, randomUUID } from 'node:crypto';
 
 // Valid RFC 4122 UUIDs for test data
 const TEST_TENANT_ID = '11111111-1111-4111-8111-111111111111';

@@ -52,7 +52,7 @@ export function RecurrenceEditor({ value, onChange, disabled }: Readonly<Recurre
     );
   }
 
-  const update = (patch: Readonly<Partial<RecurrencePattern>>) => {
+  const update = (patch: Partial<RecurrencePattern>) => {
     onChange({ ...value, ...patch });
   };
 
@@ -65,14 +65,14 @@ export function RecurrenceEditor({ value, onChange, disabled }: Readonly<Recurre
     onChange(base);
   };
 
-  const handleEndConditionChange = (condition: Readonly<EndCondition>) => {
+  const handleEndConditionChange = (condition: EndCondition) => {
     setEndCondition(condition);
     const patch: Partial<RecurrencePattern> = { endDate: undefined, occurrenceCount: undefined };
     if (condition === 'count') patch.occurrenceCount = 10;
     update(patch);
   };
 
-  const toggleDay = (day: Readonly<DayOfWeek>) => {
+  const toggleDay = (day: DayOfWeek) => {
     const current = value.daysOfWeek || [];
     const next = current.includes(day) ? current.filter((d) => d !== day) : [...current, day];
     update({ daysOfWeek: next });
@@ -112,7 +112,7 @@ export function RecurrenceEditor({ value, onChange, disabled }: Readonly<Recurre
                 name="frequency"
                 value={freq.value}
                 checked={value.frequency === freq.value}
-                onChange={() => handleFrequencyChange(freq.value as RecurrencePattern['frequency'])}
+                onChange={() => handleFrequencyChange(freq.value)}
                 className="sr-only"
               />
               {freq.label}

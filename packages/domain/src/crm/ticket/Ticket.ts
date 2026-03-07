@@ -125,7 +125,7 @@ const AT_RISK_THRESHOLD_MS = 30 * 60 * 1000;
  * status management, priority escalation, and customer linking.
  */
 export class Ticket extends AggregateRoot<TicketId> {
-  private props: TicketProps;
+  private readonly props: TicketProps;
 
   private constructor(id: TicketId, props: TicketProps) {
     super(id);

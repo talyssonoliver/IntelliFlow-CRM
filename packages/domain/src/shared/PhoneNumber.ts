@@ -37,7 +37,7 @@ export class PhoneNumber extends ValueObject<PhoneNumberProps> {
 
   get countryCode(): string {
     // Extract country code (1-3 digits after +)
-    const match = this.props.value.match(/^\+(\d{1,3})/);
+    const match = /^\+(\d{1,3})/.exec(this.props.value);
     return match ? match[1] : '';
   }
 
@@ -63,7 +63,7 @@ export class PhoneNumber extends ValueObject<PhoneNumberProps> {
     }
 
     // Normalize: remove all non-digit characters except leading +
-    let normalized = trimmed.replace(/[^\d+]/g, '');
+    let normalized = trimmed.replaceAll(/[^\d+]/g, '');
 
     // Ensure it starts with +
     if (!normalized.startsWith('+')) {

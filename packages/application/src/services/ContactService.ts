@@ -100,7 +100,7 @@ export class ContactService {
     // Persist
     try {
       await this.contactRepository.save(contact);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save contact'));
     }
 
@@ -147,7 +147,7 @@ export class ContactService {
 
     try {
       await this.contactRepository.save(contact);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save contact'));
     }
 
@@ -194,7 +194,7 @@ export class ContactService {
 
     try {
       await this.contactRepository.save(contact);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save contact'));
     }
 
@@ -241,7 +241,7 @@ export class ContactService {
 
     try {
       await this.contactRepository.save(contact);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save contact'));
     }
 
@@ -274,7 +274,7 @@ export class ContactService {
 
     try {
       await this.contactRepository.save(contact);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save contact'));
     }
 
@@ -364,7 +364,7 @@ export class ContactService {
 
     try {
       await this.contactRepository.save(contact);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save contact'));
     }
 
@@ -399,7 +399,7 @@ export class ContactService {
 
     try {
       await this.contactRepository.save(contact);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save contact'));
     }
 
@@ -510,7 +510,7 @@ export class ContactService {
 
       // Delete secondary contact
       await this.contactRepository.delete(secondaryIdResult.value);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to complete contact merge'));
     }
 
@@ -681,7 +681,7 @@ export class ContactService {
 
     try {
       await this.contactRepository.delete(contactIdResult.value);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to delete contact'));
     }
 

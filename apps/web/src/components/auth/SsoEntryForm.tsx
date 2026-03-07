@@ -16,7 +16,7 @@
  * - ARIA attributes for screen reader support
  */
 
-import { useState, type FormEvent } from 'react';
+import { useState, type SyntheticEvent } from 'react';
 import Link from 'next/link';
 import { Input, Button } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
@@ -28,7 +28,7 @@ import type { SsoResolution } from '@/lib/auth/sso-handler';
 
 export interface SsoEntryFormProps {
   /** Called when SSO provider is resolved */
-  onResolve: (resolution: Readonly<SsoResolution>) => void;
+  onResolve: (resolution: SsoResolution) => void;
   /** Whether the form is in a loading state (e.g., during SSO redirect) */
   isLoading?: boolean;
 }
@@ -50,7 +50,7 @@ export function SsoEntryForm({ onResolve, isLoading = false }: Readonly<SsoEntry
     return emailRegex.test(value);
   };
 
-  const handleSubmit = async (e: Readonly<FormEvent>) => {
+  const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
     setError(null);
 

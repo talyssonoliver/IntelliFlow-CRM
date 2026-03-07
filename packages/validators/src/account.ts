@@ -125,7 +125,7 @@ export const accountContactSchema = z.object({
   id: idSchema,
   firstName: z.string(),
   lastName: z.string(),
-  email: z.string().email(),
+  email: z.email(),
   phone: z.string().optional(),
   status: contactStatusSchema,
   createdAt: z.coerce.date(),
@@ -184,7 +184,7 @@ export type GetAccountOpportunitiesOutput = z.infer<typeof getAccountOpportuniti
 export const getAccountActivityInputSchema = z.object({
   accountId: idSchema,
   limit: z.number().int().min(1).max(50).default(20),
-  cursor: z.string().datetime().optional(),
+  cursor: z.iso.datetime().optional(),
   types: z.array(accountActivityTypeSchema).optional(),
 });
 
@@ -208,7 +208,7 @@ export const accountActivitySchema = z.object({
 
 export const getAccountActivityOutputSchema = z.object({
   activities: z.array(accountActivitySchema),
-  nextCursor: z.string().datetime().optional(),
+  nextCursor: z.iso.datetime().optional(),
 });
 
 export type GetAccountActivityOutput = z.infer<typeof getAccountActivityOutputSchema>;

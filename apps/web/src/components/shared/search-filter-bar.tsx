@@ -401,7 +401,7 @@ function FilterChipButton({ chip, isActive, onClick }: Readonly<FilterChipButton
 export function useFilterState<T>(initialValue: Readonly<T>) {
   const [value, setValue] = useState<T>(initialValue);
 
-  const onChange = useCallback((newValue: Readonly<T>) => {
+  const onChange = useCallback((newValue: T) => {
     setValue(newValue);
   }, []);
 
@@ -425,20 +425,21 @@ export function useFilterState<T>(initialValue: Readonly<T>) {
  * // filters.values.status, filters.set('status', 'active'), filters.reset()
  * ```
  */
-export function useMultiFilterState<T extends Record<string, string>>(initialValues: Readonly<T>) {
-  const [values, setValues] = useState<T>(initialValues);
+export function useMultiFilterState<T extends Record<string, string>>(initialValues: T) {
+  type Widened = { [K in keyof T]: string };
+  const [values, setValues] = useState<Widened>(initialValues as Widened);
 
-  const set = useCallback(<K extends keyof T>(key: K, value: T[K]) => {
+  const set = useCallback(<K extends keyof Widened>(key: K, value: string) => {
     setValues((prev) => ({ ...prev, [key]: value }));
   }, []);
 
   const reset = useCallback(() => {
-    setValues(initialValues);
+    setValues(initialValues as Widened);
   }, [initialValues]);
 
   const resetKey = useCallback(
-    <K extends keyof T>(key: Readonly<K>) => {
-      setValues((prev) => ({ ...prev, [key]: initialValues[key] }));
+    <K extends keyof Widened>(key: K) => {
+      setValues((prev) => ({ ...prev, [key]: (initialValues as Widened)[key] }));
     },
     [initialValues]
   );

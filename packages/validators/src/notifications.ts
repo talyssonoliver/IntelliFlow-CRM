@@ -19,7 +19,7 @@ import {
 } from '@intelliflow/domain';
 
 // Re-export domain constants for consumers
-export { NOTIFICATION_CHANNELS, NOTIFICATION_STATUSES, NOTIFICATION_PRIORITIES };
+export { NOTIFICATION_CHANNELS, NOTIFICATION_STATUSES, NOTIFICATION_PRIORITIES } from '@intelliflow/domain';
 
 // =============================================================================
 // Notification Types

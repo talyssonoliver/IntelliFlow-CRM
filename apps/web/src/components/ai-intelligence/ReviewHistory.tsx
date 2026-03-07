@@ -46,7 +46,7 @@ const OUTPUT_TYPE_OPTIONS = [
   ...AI_OUTPUT_TYPES.map((t) => ({
     value: t,
     label: t
-      .replaceAll(/_/g, ' ')
+      .replaceAll('_', ' ')
       .toLowerCase()
       .replaceAll(/\b\w/g, (c) => c.toUpperCase()),
   })),
@@ -284,7 +284,7 @@ export function ReviewHistory() {
   // Client-side date filtering
   const filteredReviews = useMemo(() => {
     if (!afterDate && !beforeDate) return reviews;
-    return reviews.filter((r: Readonly<ReviewResponse>) => {
+    return reviews.filter((r: ReviewResponse) => {
       const updated = new Date(r.updatedAt);
       if (afterDate && updated < new Date(afterDate)) return false;
       if (beforeDate) {

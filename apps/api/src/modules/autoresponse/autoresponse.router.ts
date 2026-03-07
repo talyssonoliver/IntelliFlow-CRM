@@ -21,8 +21,6 @@ import {
   markSentSchema,
   markFailedSchema,
   autoResponseQuerySchema,
-  triggerTypeSchema,
-  autoResponseStatusSchema,
   idSchema,
 } from '@intelliflow/validators';
 import {
@@ -33,7 +31,6 @@ import {
 } from '@intelliflow/domain';
 import type { Context } from '../../context';
 import { getTenantContext } from '../../security/tenant-context';
-import { mapErrorToTRPCError } from '../../shared/error-mapper';
 import { createNotification } from '../notifications/notifications.router';
 
 // Lazy-load the repository implementation to avoid workspace resolution issues
@@ -141,7 +138,7 @@ export const autoResponseRouter = createTRPCRouter({
 
       try {
         await repository.save(draft);
-      } catch (error) {
+      } catch {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to save auto-response draft',
@@ -276,7 +273,7 @@ export const autoResponseRouter = createTRPCRouter({
 
       try {
         await repository.save(draft);
-      } catch (error) {
+      } catch {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to save draft',
@@ -323,7 +320,7 @@ export const autoResponseRouter = createTRPCRouter({
 
       try {
         await repository.save(draft);
-      } catch (error) {
+      } catch {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to save draft',
@@ -371,7 +368,7 @@ export const autoResponseRouter = createTRPCRouter({
 
       try {
         await repository.save(draft);
-      } catch (error) {
+      } catch {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to save draft',
@@ -423,7 +420,7 @@ export const autoResponseRouter = createTRPCRouter({
 
       try {
         await repository.save(draft);
-      } catch (error) {
+      } catch {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to save draft',
@@ -491,7 +488,7 @@ export const autoResponseRouter = createTRPCRouter({
 
       try {
         await repository.save(draft);
-      } catch (error) {
+      } catch {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to save draft',
@@ -531,7 +528,7 @@ export const autoResponseRouter = createTRPCRouter({
 
     try {
       await repository.save(draft);
-    } catch (error) {
+    } catch {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to save draft',
@@ -571,7 +568,7 @@ export const autoResponseRouter = createTRPCRouter({
 
     try {
       await repository.save(draft);
-    } catch (error) {
+    } catch {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to save draft',
@@ -655,7 +652,7 @@ export const autoResponseRouter = createTRPCRouter({
 
       try {
         await repository.save(draft);
-      } catch (error) {
+      } catch {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to save draft',

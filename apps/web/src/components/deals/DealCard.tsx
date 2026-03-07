@@ -125,7 +125,7 @@ export const DealCard = React.memo(function DealCard({
           <div
             className="h-full bg-primary rounded-full transition-all duration-300"
             style={{ width: `${deal.probability}%` }}
-            role="progressbar"
+            role="progressbar" // NOSONAR typescript:S6819 — inner fill bar; <progress> cannot be positioned inside overflow:hidden container
             aria-valuenow={deal.probability}
             aria-valuemin={0}
             aria-valuemax={100}

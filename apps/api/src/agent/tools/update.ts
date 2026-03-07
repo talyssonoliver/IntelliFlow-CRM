@@ -10,7 +10,7 @@
  * rather than repositories directly.
  */
 
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import {
   AgentToolDefinition,
   AgentToolResult,

@@ -14,7 +14,7 @@ export interface RecommendedActionsProps {
   recommendations: Recommendation[];
   isLoading?: boolean;
   emptyMessage?: string;
-  onActionClick?: (recommendation: Readonly<Recommendation>) => void;
+  onActionClick?: (recommendation: Recommendation) => void;
 }
 
 const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };

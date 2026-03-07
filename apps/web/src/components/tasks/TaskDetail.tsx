@@ -5,21 +5,23 @@ import { useState } from 'react';
 import Link from 'next/link';
 import type { TaskStatus, TaskPriority } from '@intelliflow/domain';
 
+type DateStringNull = Date | string | null;
+
 export interface TaskDetailData {
   readonly id: string;
   readonly title: string;
   readonly description: string | null;
-  readonly dueDate: Date | string | null;
+  readonly dueDate: DateStringNull;
   readonly priority: TaskPriority;
   readonly status: TaskStatus;
   readonly ownerId: string;
   readonly owner: { id: string; email: string; name: string | null };
-  readonly lead: { id: string; firstName: string; lastName: string } | null;
-  readonly contact: { id: string; firstName: string; lastName: string } | null;
+  readonly lead: { id: string; email?: string; firstName: string | null; lastName: string | null } | null;
+  readonly contact: { id: string; email?: string; firstName: string; lastName: string } | null;
   readonly opportunity: { id: string; name: string; stage: string } | null;
   readonly createdAt: Date | string;
   readonly updatedAt: Date | string;
-  readonly completedAt: Date | string | null;
+  readonly completedAt: DateStringNull;
 }
 
 export interface TaskDetailProps {
@@ -27,10 +29,12 @@ export interface TaskDetailProps {
   readonly isLoading: boolean;
   readonly isNotFound?: boolean;
   readonly onComplete: (id: string) => void;
-  readonly onEdit: (task: Readonly<TaskDetailData>) => void;
+  readonly onStart: (id: string) => void;
+  readonly onEdit: (task: TaskDetailData) => void;
   readonly onDelete: (id: string) => void;
   readonly onArchive: (id: string) => void;
   readonly isCompleting?: boolean;
+  readonly isStarting?: boolean;
   readonly isDeleting?: boolean;
   readonly isArchiving?: boolean;
 }
@@ -50,14 +54,14 @@ const PRIORITY_STYLES: Record<string, { color: string; icon: string }> = {
   URGENT: { color: 'text-red-500', icon: 'priority_high' },
 };
 
-function formatDate(date: Date | string | null): string {
+function formatDate(date: DateStringNull): string {
   if (!date) return '—';
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return '—';
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function getDueDateStatus(date: Date | string | null): 'overdue' | 'today' | 'normal' {
+function getDueDateStatus(date: DateStringNull): 'overdue' | 'today' | 'normal' {
   if (!date) return 'normal';
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
@@ -100,10 +104,12 @@ export function TaskDetail({
   isLoading,
   isNotFound,
   onComplete,
+  onStart,
   onEdit,
   onDelete,
   onArchive,
   isCompleting = false,
+  isStarting = false,
   isDeleting = false,
   isArchiving = false,
 }: Readonly<TaskDetailProps>) {
@@ -250,24 +256,38 @@ export function TaskDetail({
 
       {/* Actions */}
       <div className="flex items-center gap-3">
-        {task.status !== 'COMPLETED' &&
-          task.status !== 'CANCELLED' &&
-          task.status !== 'ARCHIVED' && (
-            <button
-              type="button"
-              onClick={() => onComplete(task.id)}
-              disabled={isCompleting}
-              className="px-4 py-2 text-sm rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              aria-label="Complete task"
-            >
-              <span className="inline-flex items-center gap-1">
-                <span className="material-symbols-outlined text-base" aria-hidden="true">
-                  {isCompleting ? 'hourglass_empty' : 'check_circle'}
-                </span>{' '}
-                {isCompleting ? 'Completing...' : 'Complete'}
-              </span>
-            </button>
-          )}
+        {task.status === 'PENDING' && (
+          <button
+            type="button"
+            onClick={() => onStart(task.id)}
+            disabled={isStarting}
+            className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Start task"
+          >
+            <span className="inline-flex items-center gap-1">
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                {isStarting ? 'hourglass_empty' : 'play_arrow'}
+              </span>{' '}
+              {isStarting ? 'Starting...' : 'Start'}
+            </span>
+          </button>
+        )}
+        {task.status === 'IN_PROGRESS' && (
+          <button
+            type="button"
+            onClick={() => onComplete(task.id)}
+            disabled={isCompleting}
+            className="px-4 py-2 text-sm rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Complete task"
+          >
+            <span className="inline-flex items-center gap-1">
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                {isCompleting ? 'hourglass_empty' : 'check_circle'}
+              </span>{' '}
+              {isCompleting ? 'Completing...' : 'Complete'}
+            </span>
+          </button>
+        )}
         {(task.status === 'COMPLETED' || task.status === 'CANCELLED') && (
           <button
             type="button"

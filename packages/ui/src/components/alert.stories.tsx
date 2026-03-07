@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Alert, AlertTitle, AlertDescription } from './alert';
 
 // Material Symbol icon component for stories
-const MaterialIcon = ({ name, className }: { name: string; className?: string }) => (
+const MaterialIcon = ({ name, className }: Readonly<{ name: string; className?: string }>) => (
   <span className={`material-symbols-outlined ${className || ''}`} aria-hidden="true">
     {name}
   </span>

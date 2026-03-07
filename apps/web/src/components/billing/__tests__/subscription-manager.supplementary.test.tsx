@@ -261,7 +261,7 @@ vi.mock('@/lib/billing/plan-changes', () => ({
   }),
   estimateProration: (_fromPlan: any, _toPlan: any, daysRemaining: number, _totalDays: number) =>
     Math.round(daysRemaining * 50),
-  getDaysRemainingInPeriod: (_periodEnd: Readonly<Date>) => 15,
+  getDaysRemainingInPeriod: (_periodEnd: Date) => 15,
   CANCELLATION_REASONS: [
     'too_expensive',
     'missing_features',

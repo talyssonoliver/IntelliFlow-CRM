@@ -17,7 +17,6 @@
  * - Correlation ID support
  */
 
-import { z } from 'zod';
 import type { PrismaClient } from '@intelliflow/db';
 import { createTRPCRouter, publicProcedure } from '../../trpc';
 import { getCorrelationId } from '../../tracing/correlation';

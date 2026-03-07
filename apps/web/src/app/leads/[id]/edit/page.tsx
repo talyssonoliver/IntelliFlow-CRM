@@ -147,7 +147,7 @@ export default function EditLeadPage() {
   const toOptional = (value: string): string | undefined =>
     value.trim() ? value.trim() : undefined;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
 
     const payload: Record<string, unknown> = {

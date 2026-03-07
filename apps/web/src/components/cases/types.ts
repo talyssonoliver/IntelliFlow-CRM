@@ -4,7 +4,9 @@
 
 import type { CaseStatus, CasePriority, CaseTaskStatus } from '@intelliflow/domain';
 
-export type { CaseStatus, CasePriority, CaseTaskStatus };
+export type { CaseStatus, CasePriority, CaseTaskStatus } from '@intelliflow/domain';
+
+export type DateOrStringOrNull = Date | string | null;
 
 // ─── List View Types ────────────────────────────────────────────────────────
 
@@ -15,7 +17,7 @@ export interface CaseListItem {
   description: string | null;
   status: CaseStatus;
   priority: CasePriority;
-  deadline: Date | string | null;
+  deadline: DateOrStringOrNull;
   clientId: string;
   assignedTo: string;
   client: { id: string; name: string };

@@ -11,7 +11,6 @@ import { randomUUID } from 'node:crypto';
 import type {
   WorkflowDefinition,
   WorkflowState,
-  WorkflowNode,
   TransitionResult,
   HumanDecision,
   WorkflowQuery,
@@ -305,7 +304,7 @@ export class WorkflowStateMachine implements IWorkflowEngine {
     }
 
     const currentNode = definition.nodes.get(state.currentNode);
-    if (!currentNode || currentNode.type !== 'human') {
+    if (currentNode?.type !== 'human') {
       return {
         success: false,
         state,

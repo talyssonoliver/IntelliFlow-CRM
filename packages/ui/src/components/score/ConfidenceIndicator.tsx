@@ -47,7 +47,7 @@ function ConfidenceIndicator({
   size = 'md',
   className,
   ...props
-}: ConfidenceIndicatorProps) {
+}: Readonly<ConfidenceIndicatorProps>) {
   const config = getConfidenceLevelConfig(confidence);
   const percentage = Math.round(confidence * 100);
 
@@ -74,7 +74,7 @@ function ConfidenceIndicator({
       {/* Progress Bar */}
       <div
         className={cn('w-full bg-muted rounded-full overflow-hidden mt-1', barHeight)}
-        role="progressbar"
+        role="progressbar" // NOSONAR typescript:S6819 — custom styled progress with inner fill child; <progress> cannot contain child elements
         aria-label={`AI confidence: ${percentage}%`}
         aria-valuenow={percentage}
         aria-valuemin={0}

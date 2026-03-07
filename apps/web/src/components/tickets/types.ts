@@ -7,7 +7,9 @@
 
 import type { TicketStatus, TicketPriority, SLAStatus } from '@intelliflow/domain';
 
-export type { TicketStatus, TicketPriority, SLAStatus };
+export type { TicketStatus, TicketPriority, SLAStatus } from '@intelliflow/domain';
+
+export type DateStringNull = Date | string | null;
 
 // ─── List View Types ────────────────────────────────────────────────────────
 
@@ -19,8 +21,8 @@ export interface TicketListItem {
   priority: TicketPriority;
   slaStatus: SLAStatus;
   slaTimeRemaining: number; // minutes (negative = breached)
-  slaResponseDue: Date | string | null;
-  slaResolutionDue: Date | string | null;
+  slaResponseDue: DateStringNull;
+  slaResolutionDue: DateStringNull;
   contactName: string;
   contactEmail: string;
   assignee: string | null;

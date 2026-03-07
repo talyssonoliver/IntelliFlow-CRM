@@ -55,12 +55,12 @@ export interface CreateReviewProps {
  * Implements a state machine for the review lifecycle.
  */
 export class AIOutputReview extends AggregateRoot<ReviewId> {
-  private _tenantId: string;
-  private _outputType: AIOutputType;
-  private _outputPayload: unknown;
-  private _confidence: ConfidenceScore;
+  private readonly _tenantId: string;
+  private readonly _outputType: AIOutputType;
+  private readonly _outputPayload: unknown;
+  private readonly _confidence: ConfidenceScore;
   private _status: ReviewStatus;
-  private _slaDeadline: Date;
+  private readonly _slaDeadline: Date;
   private _escalationDepth: number;
   private _lockedBy?: string;
   private _lockedAt?: Date;
@@ -69,7 +69,7 @@ export class AIOutputReview extends AggregateRoot<ReviewId> {
   private _reviewDecision?: ReviewDecision;
   private _reviewNotes?: string;
   private _lockToken?: string;
-  private _createdAt: Date;
+  private readonly _createdAt: Date;
   private _updatedAt: Date;
 
   private constructor(

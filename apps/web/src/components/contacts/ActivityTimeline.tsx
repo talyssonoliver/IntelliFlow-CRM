@@ -159,7 +159,11 @@ export function ActivityTimeline({
 
   if (isLoading) {
     return (
-      <div role="status" aria-busy="true" className="space-y-4 p-6">
+      <div
+        role="status" // NOSONAR typescript:S6819 — loading state indicator; <output> is for form computation results
+        aria-busy="true"
+        className="space-y-4 p-6"
+      >
         <span className="sr-only">Loading activities...</span>
         {[1, 2, 3].map((i) => (
           <div key={i} className="h-20 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
@@ -191,7 +195,7 @@ export function ActivityTimeline({
         {activityTypeFilters.map((filter) => (
           <button
             key={filter.value}
-            role="radio"
+            role="radio" // NOSONAR typescript:S6819 — styled button acts as radio button in a radiogroup; <input type="radio"> cannot contain icon/label children
             aria-checked={typeFilter === filter.value}
             onClick={() => setTypeFilter(filter.value)}
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${

@@ -61,7 +61,7 @@ export type GoldenPath = z.infer<typeof goldenPathSchema>;
  */
 export const idpCapabilitiesSchema = z.object({
   status: idpStatusSchema,
-  version: z.string().regex(/^\d+\.\d+\.\d+$/), // semver
+  version: z.string().check(z.regex(/^\d+\.\d+\.\d+$/)), // semver
   capabilities: z.array(z.string()).min(1),
 });
 
@@ -221,7 +221,7 @@ export const validationResultSchema = z.object({
   command: z.string().min(1),
   exit_code: z.number().int(),
   passed: z.boolean(),
-  validated_at: z.string().datetime(),
+  validated_at: z.iso.datetime(),
 });
 
 // =============================================================================
@@ -234,8 +234,8 @@ export const validationResultSchema = z.object({
  * Validates the entire self-service-metrics.json file structure.
  */
 export const selfServiceMetricsSchema = z.object({
-  generated_at: z.string().datetime(),
-  task_id: z.string().regex(/^IFC-\d+$/),
+  generated_at: z.iso.datetime(),
+  task_id: z.string().check(z.regex(/^IFC-\d+$/)),
   sprint: z.number().int().nonnegative(),
   platform_engineering_foundation: z.object({
     internal_developer_platform: idpCapabilitiesSchema,

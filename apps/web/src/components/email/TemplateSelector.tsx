@@ -15,7 +15,7 @@ interface Template {
 }
 
 interface TemplateSelectorProps {
-  onSelect: (template: Readonly<Template>) => void;
+  onSelect: (template: Template) => void;
   currentBody?: string;
   className?: string;
 }
@@ -39,7 +39,7 @@ export function TemplateSelector({ onSelect, currentBody = '', className }: Read
   }, [templates, searchQuery]);
 
   const handleSelect = useCallback(
-    (template: Readonly<Template>) => {
+    (template: Template) => {
       if (currentBody.trim()) {
         setPendingTemplate(template);
       } else {
@@ -99,7 +99,7 @@ export function TemplateSelector({ onSelect, currentBody = '', className }: Read
       </button>
 
       {isOpen && (
-        <div
+        <div // NOSONAR typescript:S6848 — popup container captures keyboard events for keyboard navigation within the template picker
           className="absolute bottom-full left-0 z-50 mb-1 w-80 rounded-md border border-border bg-popover p-2 shadow-lg"
           onKeyDown={handleKeyDown}
         >
@@ -126,11 +126,14 @@ export function TemplateSelector({ onSelect, currentBody = '', className }: Read
               No templates available
             </div>
           ) : (
-            <ul className="max-h-48 space-y-0.5 overflow-auto" role="listbox">
+            <ul
+              className="max-h-48 space-y-0.5 overflow-auto"
+              role="listbox" // NOSONAR typescript:S6819 — custom styled template listbox; <select> cannot contain rich content
+            >
               {filteredTemplates.map((template, i) => (
                 <li
                   key={template.id}
-                  role="option"
+                  role="option" // NOSONAR typescript:S6819,S6842 — listbox option; <option> cannot contain custom styles or padding
                   aria-selected={i === highlightIndex}
                   data-highlighted={i === highlightIndex ? true : undefined}
                   tabIndex={-1}

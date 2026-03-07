@@ -15,7 +15,7 @@ import {
  * For testing purposes
  */
 export class InMemoryAppointmentRepository implements AppointmentRepository {
-  private appointments: Map<string, Appointment> = new Map();
+  private readonly appointments: Map<string, Appointment> = new Map();
 
   async save(appointment: Appointment): Promise<void> {
     this.appointments.set(appointment.id.value, appointment);
@@ -80,7 +80,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
   async findOverlapping(timeSlot: TimeSlot, excludeId?: AppointmentId): Promise<Appointment[]> {
     return Array.from(this.appointments.values())
       .filter((apt) => {
-        if (excludeId && apt.id.value === excludeId.value) return false;
+        if (apt.id.value === excludeId?.value) return false;
         if (apt.status === 'CANCELLED' || apt.status === 'NO_SHOW') return false;
         return apt.startTime < timeSlot.endTime && apt.endTime > timeSlot.startTime;
       })
@@ -94,7 +94,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
   ): Promise<Appointment[]> {
     return Array.from(this.appointments.values())
       .filter((apt) => {
-        if (excludeId && apt.id.value === excludeId.value) return false;
+        if (apt.id.value === excludeId?.value) return false;
         if (apt.status === 'CANCELLED' || apt.status === 'NO_SHOW') return false;
         if (apt.startTime >= timeRange.endTime || apt.endTime <= timeRange.startTime) return false;
 
@@ -231,7 +231,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     excludeId?: AppointmentId
   ): Promise<boolean> {
     for (const apt of this.appointments.values()) {
-      if (excludeId && apt.id.value === excludeId.value) continue;
+      if (apt.id.value === excludeId?.value) continue;
       if (apt.status === 'CANCELLED' || apt.status === 'NO_SHOW') continue;
 
       const isAttendee =

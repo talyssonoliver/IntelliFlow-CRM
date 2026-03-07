@@ -169,7 +169,7 @@ export function TestRunnerModal({ isOpen, onClose, onComplete }: Readonly<TestRu
     }
   }, [scope, withCoverage, isComplete]);
 
-  const handleProgressEvent = (data: Readonly<TestProgress>) => {
+  const handleProgressEvent = (data: TestProgress) => {
     switch (data.type) {
       case 'test_pass':
         setProgress((prev) => ({

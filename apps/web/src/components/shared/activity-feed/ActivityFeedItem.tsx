@@ -12,12 +12,11 @@
  */
 
 import Link from 'next/link';
-import type { ActivityFeedType, ActivityFeedSource } from '@intelliflow/domain';
 
 export interface ActivityFeedItemProps {
   id: string;
-  source: ActivityFeedSource | string;
-  type: ActivityFeedType | string;
+  source: string;
+  type: string;
   title: string;
   description: string | null;
   timestamp: Date | string;

@@ -570,7 +570,7 @@ describe('EmailCompose handler coverage', () => {
       const mockFile = new File(['content'], 'document.pdf', { type: 'application/pdf' });
       const mockTarget = { files: [mockFile] } as any as HTMLInputElement; // test-only mock
       const changeEvent = { target: mockTarget } as any as Event; // test-only mock
-      (fileInput.onchange as (e: Readonly<Event>) => void)(changeEvent);
+      (fileInput.onchange as (e: Event) => void)(changeEvent);
 
       // AttachmentManager appears when attachments.length > 0
       await waitFor(() => {

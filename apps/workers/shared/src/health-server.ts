@@ -8,7 +8,7 @@
  * @task IFC-163
  */
 
-import http from 'http';
+import http from 'node:http';
 import pino from 'pino';
 import type {
   HealthResponse,

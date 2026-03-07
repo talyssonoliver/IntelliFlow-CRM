@@ -7,7 +7,7 @@
  * trend chart, and at-risk customer list with filters and pagination.
  */
 
-import { useState, useCallback, Suspense, lazy } from 'react';
+import { useState, useCallback, Suspense, lazy, type ReactNode } from 'react';
 import {
   Card,
   CardContent,
@@ -162,7 +162,7 @@ function CustomerCard({ customer }: Readonly<{ customer: AtRiskCustomer }>) {
                 'text-xs font-medium w-8 text-right',
                 getEngagementBgClass(customer.engagementScore)
                   .split(' ')
-                  .filter((c) => c.startsWith('text-'))[0]
+                  .find((c) => c.startsWith('text-'))
               )}
             >
               {customer.engagementScore}
@@ -326,6 +326,46 @@ export function ChurnDashboard() {
     );
   }
 
+  let customerListContent: ReactNode;
+  if (isLoading) {
+    customerListContent = (
+      <div className="space-y-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-36 w-full rounded-lg" /> // NOSONAR typescript:S6479
+        ))}
+      </div>
+    );
+  } else if (filteredCustomers.length === 0) {
+    customerListContent = (
+      <Card>
+        <CardContent className="p-8 text-center" data-testid="empty-state">
+          <span
+            className="material-symbols-outlined text-4xl text-muted-foreground mb-2"
+            aria-hidden="true"
+          >
+            shield
+          </span>
+          <p className="text-sm text-muted-foreground">No churn risk data available</p>
+        </CardContent>
+      </Card>
+    );
+  } else {
+    customerListContent = (
+      <div className="space-y-3">
+        {filteredCustomers.map((customer) => (
+          <CustomerCard key={customer.id} customer={customer} />
+        ))}
+        {atRiskCustomers.length >= 20 && (
+          <div className="flex justify-center">
+            <Button variant="outline" onClick={handleLoadMore} data-testid="load-more-button">
+              Load more
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -376,7 +416,11 @@ export function ChurnDashboard() {
 
       {/* Date Range + SearchFilterBar */}
       <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-2" role="group" aria-label="Date range">
+        <div
+          className="flex items-center gap-2"
+          role="group" // NOSONAR typescript:S6819 — ARIA group for date-range filter buttons; <fieldset> requires <legend> and changes layout
+          aria-label="Date range"
+        >
           {DATE_RANGES.map((dr) => (
             <Button
               key={dr}
@@ -445,38 +489,7 @@ export function ChurnDashboard() {
       </Card>
 
       {/* At-Risk Customer List */}
-      {isLoading ? (
-        <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-36 w-full rounded-lg" /> // NOSONAR typescript:S6479
-          ))}
-        </div>
-      ) : filteredCustomers.length === 0 ? (
-        <Card>
-          <CardContent className="p-8 text-center" data-testid="empty-state">
-            <span
-              className="material-symbols-outlined text-4xl text-muted-foreground mb-2"
-              aria-hidden="true"
-            >
-              shield
-            </span>
-            <p className="text-sm text-muted-foreground">No churn risk data available</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {filteredCustomers.map((customer) => (
-            <CustomerCard key={customer.id} customer={customer} />
-          ))}
-          {atRiskCustomers.length >= 20 && (
-            <div className="flex justify-center">
-              <Button variant="outline" onClick={handleLoadMore} data-testid="load-more-button">
-                Load more
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
+      {customerListContent}
     </div>
   );
 }

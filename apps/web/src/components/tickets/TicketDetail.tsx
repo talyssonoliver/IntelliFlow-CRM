@@ -29,6 +29,7 @@ import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
 import { PinButton } from '@/components/home/PinButton';
 import { AppAvatar } from '@/components/shared/app-avatar';
+import { AssignSheet } from '@/components/shared/assign-sheet';
 import { EscalationAlert } from './EscalationAlert';
 import { ActivityFeed } from '@/components/shared/activity-feed';
 import { TicketAssignSidebar } from './TicketAssignSidebar';
@@ -61,7 +62,7 @@ interface TicketDetailProps {
   onPriorityChange: (priority: string) => Promise<void>;
   onAssign: (userId: string) => Promise<void>;
   onAddResponse: (content: string, isInternal: boolean) => Promise<void>;
-  onResolve: (resolution: Readonly<ResolutionInput>) => Promise<void>;
+  onResolve: (resolution: ResolutionInput) => Promise<void>;
   onClose: () => Promise<void>;
   /** Called after confirmed deletion — parent should redirect away */
   onDelete?: () => Promise<void>;
@@ -136,6 +137,8 @@ export function TicketDetail({
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
   const [assignSidebarOpen, setAssignSidebarOpen] = useState(false);
+  const [escalationSheetOpen, setEscalationSheetOpen] = useState(false);
+  const [escalationReason, setEscalationReason] = useState('');
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const [replyMode, setReplyMode] = useState<'public' | 'internal'>('public');
@@ -186,10 +189,28 @@ export function TicketDetail({
   };
 
   const handleEscalate = () => {
-    if (isLoading || ticket.priority === 'CRITICAL') {
-      return;
+    if (isLoading) return;
+    setEscalationSheetOpen(true);
+    setEscalationReason('');
+  };
+
+  const handleEscalateConfirm = async (managerId: string) => {
+    try {
+      // Escalation = assign to manager + bump priority to CRITICAL
+      await onAssign(managerId);
+      if (ticket.priority !== 'CRITICAL') {
+        await _onPriorityChange('CRITICAL');
+      }
+      toast({
+        title: 'Ticket Escalated',
+        description: `Ticket has been escalated and assigned to a manager.` + (escalationReason ? ` Reason: ${escalationReason}` : ''),
+      });
+      setEscalationSheetOpen(false);
+      setEscalationReason('');
+    } catch {
+      toast({ title: 'Escalation Failed', description: 'Could not escalate the ticket.', variant: 'destructive' });
+      throw new Error('Escalation failed'); // Keep AssignSheet open
     }
-    _onPriorityChange('CRITICAL').catch(() => {});
   };
 
   const activityCount = ticket.activities.length;
@@ -339,6 +360,46 @@ export function TicketDetail({
           isLoadingOptions={isAssigneeOptionsLoading}
           onAssign={onAssign}
         />
+        <AssignSheet
+          open={escalationSheetOpen}
+          onOpenChange={(open) => {
+            setEscalationSheetOpen(open);
+            if (!open) setEscalationReason('');
+          }}
+          title="Escalate Ticket"
+          description={`Escalate "${ticket.subject}" to a manager for urgent review.`}
+          currentUserId={currentUserId}
+          currentUserName={currentUserName}
+          assignees={assigneeOptions}
+          isAssigning={isLoading}
+          isLoadingOptions={isAssigneeOptionsLoading}
+          onAssign={handleEscalateConfirm}
+          showSelfAssign={false}
+          teamSectionLabel="Escalate To"
+          canAssign={!!escalationReason.trim()}
+        >
+          <div className="space-y-2">
+            <label
+              htmlFor="ticket-escalation-reason"
+              className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+            >
+              Reason for Escalation *
+            </label>
+            <textarea
+              id="ticket-escalation-reason"
+              value={escalationReason}
+              onChange={(e) => setEscalationReason(e.target.value)}
+              placeholder="Explain why this ticket needs urgent manager attention..."
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] resize-none text-sm"
+              rows={3}
+            />
+            {!escalationReason.trim() && (
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                A reason is required before selecting a reviewer.
+              </p>
+            )}
+          </div>
+        </AssignSheet>
 
         {/* Delete confirmation dialog */}
         <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
@@ -1224,7 +1285,7 @@ export function TicketDetail({
                 </button>
                 <button
                   onClick={handleEscalate}
-                  disabled={isLoading || ticket.priority === 'CRITICAL'}
+                  disabled={isLoading}
                   className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all group disabled:opacity-50 disabled:hover:border-slate-200 disabled:hover:bg-transparent dark:disabled:hover:border-slate-700 dark:disabled:hover:bg-transparent"
                 >
                   <span

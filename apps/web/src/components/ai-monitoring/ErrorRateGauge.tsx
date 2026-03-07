@@ -57,7 +57,7 @@ export function ErrorRateGauge({ driftResult, isLoading }: Readonly<ErrorRateGau
         ) : (
           <>
             <div
-              role="meter"
+              role="meter" // NOSONAR typescript:S6819 — composite SVG gauge with label; <meter> cannot contain child SVG elements
               aria-valuenow={clampedScore}
               aria-valuemin={0}
               aria-valuemax={1}

@@ -76,7 +76,7 @@ interface TranscriptViewProps {
 }
 
 function makeSystemKeyDownHandler(idx: number, toggle: (i: number) => void) {
-  return (e: Readonly<ReactKeyboardEvent>) => {
+  return (e: ReactKeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       toggle(idx);
@@ -134,7 +134,7 @@ function TranscriptView({ messages }: Readonly<TranscriptViewProps>) {
             : msg.content;
 
         return (
-          <div // NOSONAR
+          <div // NOSONAR typescript:S6845,S6848 — system messages are conditionally interactive; role="button" and tabIndex enable keyboard expand/collapse
             key={`${msg.role}-${idx}`}
             data-testid="message-bubble"
             role={isSystem ? 'button' : undefined}

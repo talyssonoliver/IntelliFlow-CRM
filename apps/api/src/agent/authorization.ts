@@ -326,7 +326,7 @@ export class AgentAuthorizationService {
       }
 
       return { authorized: true };
-    } catch (error) {
+    } catch {
       // DB errors should fail-secure
       return {
         authorized: false,

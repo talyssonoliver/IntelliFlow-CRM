@@ -10,7 +10,7 @@ import {
  * Used for testing and development
  */
 export class InMemoryOpportunityRepository implements OpportunityRepository {
-  private opportunities: Map<string, Opportunity> = new Map();
+  private readonly opportunities: Map<string, Opportunity> = new Map();
 
   async save(opportunity: Opportunity): Promise<void> {
     this.opportunities.set(opportunity.id.value, opportunity);

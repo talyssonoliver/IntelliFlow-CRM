@@ -1,6 +1,5 @@
 import {
   Appointment,
-  CreateAppointmentProps,
   AppointmentRepository,
   TimeSlot,
   Buffer,

@@ -160,7 +160,9 @@ export interface JobEvent {
 // ============================================================================
 
 export const QUEUE_NAMES = {
-  AI_SCORING: 'intelliflow:ai-scoring',
+  AI_SCORING: 'ai-scoring',
+  AI_PREDICTION: 'ai-prediction',
+  AI_INSIGHTS: 'ai-insights',
   EMAIL_NOTIFICATIONS: 'intelliflow:email-notifications',
   WEBHOOK_DELIVERY: 'intelliflow:webhook-delivery',
   DATA_SYNC: 'intelliflow:data-sync',
@@ -176,7 +178,7 @@ export const DEFAULT_QUEUE_CONFIGS: Record<string, QueueConfig> = {
   [QUEUE_NAMES.AI_SCORING]: {
     name: QUEUE_NAMES.AI_SCORING,
     defaultJobOptions: {
-      attempts: 5,
+      attempts: 3,
       backoff: {
         type: 'exponential',
         delay: 1000,
@@ -189,6 +191,34 @@ export const DEFAULT_QUEUE_CONFIGS: Record<string, QueueConfig> = {
     rateLimiter: {
       max: 100,
       duration: 60000, // 100 jobs per minute
+    },
+    concurrency: 5,
+  },
+  [QUEUE_NAMES.AI_PREDICTION]: {
+    name: QUEUE_NAMES.AI_PREDICTION,
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: {
+        type: 'exponential',
+        delay: 1000,
+        maxDelay: 60000,
+      },
+      removeOnComplete: 86400000, // 24 hours
+      removeOnFail: 604800000, // 7 days
+    },
+    concurrency: 5,
+  },
+  [QUEUE_NAMES.AI_INSIGHTS]: {
+    name: QUEUE_NAMES.AI_INSIGHTS,
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: {
+        type: 'exponential',
+        delay: 5000,
+        maxDelay: 60000,
+      },
+      removeOnComplete: 86400000, // 24 hours
+      removeOnFail: 604800000, // 7 days
     },
     concurrency: 5,
   },

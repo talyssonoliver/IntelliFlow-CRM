@@ -17,7 +17,7 @@ export function ApplicationForm({ positions }: Readonly<ApplicationFormProps>) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setIsSubmitting(true);
 
@@ -59,7 +59,7 @@ export function ApplicationForm({ positions }: Readonly<ApplicationFormProps>) {
               htmlFor="firstName"
               className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
             >
-              First Name <span className="text-red-500">*</span>
+              First Name{' '}<span className="text-red-500">*</span>
             </label>
             <input
               id="firstName"
@@ -75,7 +75,7 @@ export function ApplicationForm({ positions }: Readonly<ApplicationFormProps>) {
               htmlFor="lastName"
               className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
             >
-              Last Name <span className="text-red-500">*</span>
+              Last Name{' '}<span className="text-red-500">*</span>
             </label>
             <input
               id="lastName"
@@ -93,7 +93,7 @@ export function ApplicationForm({ positions }: Readonly<ApplicationFormProps>) {
             htmlFor="email"
             className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
           >
-            Email <span className="text-red-500">*</span>
+            Email{' '}<span className="text-red-500">*</span>
           </label>
           <input
             id="email"
@@ -126,7 +126,7 @@ export function ApplicationForm({ positions }: Readonly<ApplicationFormProps>) {
             htmlFor="position"
             className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
           >
-            Position <span className="text-red-500">*</span>
+            Position{' '}<span className="text-red-500">*</span>
           </label>
           <select
             id="position"
@@ -181,7 +181,7 @@ export function ApplicationForm({ positions }: Readonly<ApplicationFormProps>) {
             htmlFor="resume"
             className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
           >
-            Resume/CV <span className="text-red-500">*</span>
+            Resume/CV{' '}<span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <input

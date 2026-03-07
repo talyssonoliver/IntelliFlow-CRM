@@ -7,6 +7,8 @@ import { cn } from '../lib/utils';
 // Types
 // ============================================
 
+export type PaginationSize = 'sm' | 'md' | 'lg';
+
 export interface PaginationProps extends React.HTMLAttributes<HTMLElement> {
   /** Current page (1-indexed) */
   currentPage: number;
@@ -23,7 +25,7 @@ export interface PaginationProps extends React.HTMLAttributes<HTMLElement> {
   /** Maximum number of page buttons to show */
   maxVisiblePages?: number;
   /** Size variant */
-  size?: 'sm' | 'md' | 'lg';
+  size?: PaginationSize;
   /** Whether to show first/last page buttons */
   showFirstLast?: boolean;
   /** Show "Previous" and "Next" labels on nav buttons */
@@ -38,7 +40,7 @@ export interface PaginationProps extends React.HTMLAttributes<HTMLElement> {
 
 interface PageButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   isActive?: boolean;
-  size?: 'sm' | 'md' | 'lg';
+  size?: PaginationSize;
 }
 
 const PageButton = React.forwardRef<HTMLButtonElement, PageButtonProps>(
@@ -82,7 +84,7 @@ interface NavButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon: string;
   label?: string;
   iconPosition?: 'left' | 'right';
-  size?: 'sm' | 'md' | 'lg';
+  size?: PaginationSize;
 }
 
 const NavButton = React.forwardRef<HTMLButtonElement, NavButtonProps>(
@@ -287,7 +289,7 @@ const Pagination = React.forwardRef<HTMLElement, PaginationProps>(
             {pages.map((page, index) =>
               page === 'ellipsis' ? (
                 <span
-                  key={`ellipsis-${index}`}
+                  key={`ellipsis-${index}`} // NOSONAR typescript:S6479
                   className="flex items-center justify-center px-2 text-slate-400 dark:text-slate-500"
                   aria-hidden="true"
                 >

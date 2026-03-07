@@ -10,7 +10,7 @@ import {
  * Used for testing and development
  */
 export class InMemoryAccountRepository implements AccountRepository {
-  private accounts: Map<string, Account> = new Map();
+  private readonly accounts: Map<string, Account> = new Map();
 
   async save(account: Account): Promise<void> {
     this.accounts.set(account.id.value, account);

@@ -213,16 +213,16 @@ export class OutboxEventBusAdapter implements EventBusPort {
 
     // Try aggregate-specific ID first
     if (payload[aggregateIdField] !== undefined) {
-      return String(payload[aggregateIdField]);
+      return payload[aggregateIdField] as string;
     }
 
     // Fall back to common patterns
     if (payload.id !== undefined) {
-      return String(payload.id);
+      return payload.id as string;
     }
 
     if (payload.aggregateId !== undefined) {
-      return String(payload.aggregateId);
+      return payload.aggregateId as string;
     }
 
     // Use event ID as last resort

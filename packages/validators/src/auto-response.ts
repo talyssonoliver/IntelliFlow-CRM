@@ -26,7 +26,7 @@ export type ResponseContentInput = z.infer<typeof responseContentSchema>;
 export const autoResponseLeadInfoSchema = z.object({
   id: idSchema,
   name: z.string().min(1),
-  email: z.string().email(),
+  email: z.email(),
   company: z.string().optional(),
   status: z.string(), // Validated separately against allowed statuses
 });
@@ -74,7 +74,7 @@ export const createAutoResponseDraftSchema = z.object({
   subject: z.string().min(1).max(100),
   body: z.string().min(1).max(2000),
   aiConfidence: z.number().min(0).max(1),
-  recipientEmail: z.string().email(),
+  recipientEmail: z.email(),
   expiryHours: z.number().int().min(1).max(168).default(24), // 1 hour to 1 week
 });
 
@@ -189,7 +189,7 @@ export const autoResponseDraftResponseSchema = z.object({
       resolvedAt: z.coerce.date().optional(),
     })
     .optional(),
-  recipientEmail: z.string().email(),
+  recipientEmail: z.email(),
   createdAt: z.coerce.date(),
   expiresAt: z.coerce.date(),
   updatedAt: z.coerce.date(),

@@ -42,7 +42,7 @@ export const contactEmailPayloadSchema = z.object({
   textBody: z.string().min(1),
   metadata: z.object({
     source: z.literal('contact-form'),
-    submittedAt: z.string().datetime(),
+    submittedAt: z.iso.datetime(),
     name: z.string(),
     company: z.string().optional().nullable(),
   }),

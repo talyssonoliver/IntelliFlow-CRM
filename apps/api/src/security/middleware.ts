@@ -27,7 +27,7 @@
 import { TRPCError } from '@trpc/server';
 import { Context } from '../context';
 import { AuditLogger, getAuditLogger } from './audit-logger';
-import { RBACService, getRBACService, Permissions } from './rbac';
+import { RBACService, getRBACService } from './rbac';
 import { AuditAction, ResourceType, RoleName, PermissionAction, DataClassification } from './types';
 
 /**
@@ -283,7 +283,7 @@ export function securedAction(options: {
  */
 export function requireAdmin() {
   return async ({ ctx, next }: MiddlewareOpts<Context>) => {
-    if (!ctx.user || ctx.user.role !== 'ADMIN') {
+    if (ctx.user?.role !== 'ADMIN') {
       throw new TRPCError({
         code: 'FORBIDDEN',
         message: 'Admin access required',
@@ -399,4 +399,4 @@ function extractUserAgent(req?: Request): string | undefined {
 /**
  * Export permission constants for convenience
  */
-export { Permissions };
+export { Permissions } from './rbac';

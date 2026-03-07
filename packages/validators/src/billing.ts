@@ -123,8 +123,8 @@ export const invoiceSchema = z.object({
   currency: z.string().length(3),
   dueDate: z.coerce.date().nullable().optional(),
   paidAt: z.coerce.date().nullable().optional(),
-  hostedInvoiceUrl: z.string().url().nullable().optional(),
-  invoicePdf: z.string().url().nullable().optional(),
+  hostedInvoiceUrl: z.url().nullable().optional(),
+  invoicePdf: z.url().nullable().optional(),
   created: z.coerce.date(),
   number: z.string().optional(),
   subtotal: z.number().optional(),
@@ -301,7 +301,7 @@ export type BillingAddress = z.infer<typeof billingAddressSchema>;
  */
 export const billingInformationSchema = z.object({
   organization: z.string().nullable(),
-  email: z.string().email(),
+  email: z.email(),
   address: billingAddressSchema.nullable(),
 });
 export type BillingInformation = z.infer<typeof billingInformationSchema>;
@@ -311,7 +311,7 @@ export type BillingInformation = z.infer<typeof billingInformationSchema>;
  */
 export const updateBillingInformationInputSchema = z.object({
   organization: z.string().nullable().optional(),
-  email: z.string().email().optional(),
+  email: z.email().optional(),
   address: billingAddressSchema.optional(),
 });
 export type UpdateBillingInformationInput = z.infer<typeof updateBillingInformationInputSchema>;

@@ -198,7 +198,7 @@ export async function disconnectPrisma(): Promise<void> {
 }
 
 // Re-export Prisma types and client from generated path
-export { PrismaClient, Prisma };
+export { PrismaClient, Prisma } from '../generated/prisma/client';
 
 // Type exports for pgvector operations
 // These help with type-safe vector embedding queries

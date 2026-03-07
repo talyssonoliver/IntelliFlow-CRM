@@ -175,7 +175,7 @@ export class CircuitBreaker {
       : this.config.resetTimeoutMs;
     this.emit({ type: 'rejected', state: this.state, timestamp: Date.now() });
     const error = new CircuitBreakerOpenError(
-      `Circuit breaker is OPEN${this.config.name ? ` (${this.config.name})` : ''} - service is unhealthy`,
+      'Circuit breaker is OPEN' + (this.config.name ? ` (${this.config.name})` : '') + ' - service is unhealthy',
       Math.max(0, retryAfterMs)
     );
     return this.throwOrFallback(error, fallback);

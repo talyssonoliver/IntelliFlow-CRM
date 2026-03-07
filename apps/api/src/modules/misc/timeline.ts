@@ -18,8 +18,6 @@ import { PrismaClient } from '@intelliflow/db';
 import {
   TimelineEvent,
   TimelineEventType,
-  TimelinePriority,
-  AgentActionStatus,
 } from './timeline.router';
 
 // ─── Module-level helpers ───────────────────────────────────────────────────
@@ -58,10 +56,10 @@ function mapChatMessageToTimelineEvent(msg: {
     entityType: 'chat_message',
     entityId: msg.id,
     communication: {
-      channel: (msgChannel === 'whatsapp' ? 'whatsapp' : 'other') as 'whatsapp' | 'other',
-      direction: (isFromContact ? 'inbound' : 'outbound') as 'inbound' | 'outbound',
+      channel: (msgChannel === 'whatsapp' ? 'whatsapp' : 'other'),
+      direction: (isFromContact ? 'inbound' : 'outbound'),
       from: isFromContact ? contactEmail || undefined : undefined,
-      to: !isFromContact ? contactEmail || undefined : undefined,
+      to: isFromContact ? undefined : contactEmail || undefined,
     },
     actor: isUserOrBot
       ? {

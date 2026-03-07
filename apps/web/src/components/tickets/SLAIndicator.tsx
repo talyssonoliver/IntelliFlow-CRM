@@ -14,15 +14,18 @@ import { useState, useEffect, useCallback } from 'react';
 import type { TicketStatus, SLAStatus } from '@intelliflow/domain';
 import { formatSLATime, getSLAConfig } from '@/lib/tickets/ticket-utils';
 
+type DateStringNull = Date | string | null;
+type SizeVariant = 'sm' | 'md' | 'lg';
+
 interface SLAIndicatorProps {
   slaStatus: SLAStatus;
   slaTimeRemaining: number; // minutes
-  slaResponseDue?: Date | string | null;
-  slaResolutionDue?: Date | string | null;
-  firstResponseAt?: Date | string | null;
-  resolvedAt?: Date | string | null;
+  slaResponseDue?: DateStringNull;
+  slaResolutionDue?: DateStringNull;
+  firstResponseAt?: DateStringNull;
+  resolvedAt?: DateStringNull;
   ticketStatus?: TicketStatus;
-  size?: 'sm' | 'md' | 'lg';
+  size?: SizeVariant;
   showTimer?: boolean;
   showProgress?: boolean;
 }
@@ -112,7 +115,7 @@ export function SLAIndicator({
           className={`inline-flex items-center font-mono font-bold rounded w-fit ${sizeClasses[size]} ${config.bg} ${config.text} ${
             isBreachedOrAtRisk ? 'animate-pulse' : ''
           }`}
-          role="status"
+          role="status" // NOSONAR typescript:S6819 — SLA timer badge; <output> is for form computation results, not status indicators
           aria-label={`SLA ${config.label}: ${formatSLATime(remaining)} remaining`}
         >
           <span className={`material-symbols-outlined ${iconSizes[size]}`}>{config.icon}</span>
@@ -124,7 +127,7 @@ export function SLAIndicator({
       {!showTimer && (
         <span
           className={`inline-flex items-center rounded text-xs font-bold px-2 py-0.5 w-fit ${config.bg} ${config.text}`}
-          role="status"
+          role="status" // NOSONAR typescript:S6819 — SLA status badge; <output> is for form computation results, not status indicators
           aria-label={`SLA status: ${config.label}`}
         >
           {config.label}

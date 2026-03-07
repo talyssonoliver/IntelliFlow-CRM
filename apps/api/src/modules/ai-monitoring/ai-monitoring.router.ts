@@ -47,7 +47,7 @@ const hallucinationQuerySchema = timeRangeSchema.extend({
 });
 
 const agentLogsQuerySchema = z.object({
-  agentId: z.string().uuid().optional(),
+  agentId: z.uuid().optional(),
   limit: z.number().int().min(1).max(100).default(20),
   offset: z.number().int().min(0).default(0),
 });
@@ -60,15 +60,13 @@ type AIMonitoringModule = Pick<
 let aiMonitoringModulePromise: Promise<AIMonitoringModule> | null = null;
 
 async function loadAIMonitoringModule(): Promise<AIMonitoringModule> {
-  if (!aiMonitoringModulePromise) {
-    aiMonitoringModulePromise = import('@intelliflow/ai-worker').then((module) => ({
-      driftDetector: module.driftDetector,
-      latencyMonitor: module.latencyMonitor,
-      hallucinationChecker: module.hallucinationChecker,
-      roiTracker: module.roiTracker,
-      getMonitoringStatus: module.getMonitoringStatus,
-    }));
-  }
+  aiMonitoringModulePromise ??= import('@intelliflow/ai-worker').then((module) => ({
+    driftDetector: module.driftDetector,
+    latencyMonitor: module.latencyMonitor,
+    hallucinationChecker: module.hallucinationChecker,
+    roiTracker: module.roiTracker,
+    getMonitoringStatus: module.getMonitoringStatus,
+  }));
 
   try {
     return await aiMonitoringModulePromise;

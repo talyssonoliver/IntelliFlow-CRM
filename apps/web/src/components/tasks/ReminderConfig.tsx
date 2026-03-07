@@ -10,7 +10,11 @@ export function ReminderConfig({ overdueCount, dueTodayCount, onFilter }: Readon
   if (overdueCount === 0 && dueTodayCount === 0) return null;
 
   return (
-    <div className="flex items-center gap-3 text-sm" role="status" aria-label="Task reminders">
+    <div
+      className="flex items-center gap-3 text-sm"
+      role="status" // NOSONAR typescript:S6819 — live status region for task reminder counts; <output> is for form computation results
+      aria-label="Task reminders"
+    >
       {overdueCount > 0 && (
         <button
           type="button"

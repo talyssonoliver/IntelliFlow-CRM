@@ -106,7 +106,7 @@ export class AccountService {
     // Persist
     try {
       await this.accountRepository.save(account);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save account'));
     }
 
@@ -169,7 +169,7 @@ export class AccountService {
 
     try {
       await this.accountRepository.save(account);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save account'));
     }
 
@@ -203,7 +203,7 @@ export class AccountService {
 
     try {
       await this.accountRepository.save(account);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save account'));
     }
 
@@ -237,7 +237,7 @@ export class AccountService {
 
     try {
       await this.accountRepository.save(account);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save account'));
     }
 
@@ -268,7 +268,7 @@ export class AccountService {
 
     try {
       await this.accountRepository.save(account);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save account'));
     }
 
@@ -489,7 +489,7 @@ export class AccountService {
 
     try {
       await this.accountRepository.delete(accountIdResult.value);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to delete account'));
     }
 
@@ -579,7 +579,7 @@ export class AccountService {
         status: c.status,
         createdAt: c.createdAt,
       })),
-      nextCursor: hasMore ? results[results.length - 1]?.id.toString() : undefined,
+      nextCursor: hasMore ? results.at(-1)?.id.toString() : undefined,
       total: filteredContacts.length,
     });
   }
@@ -687,7 +687,7 @@ export class AccountService {
         expectedCloseDate: o.expectedCloseDate,
         createdAt: o.createdAt,
       })),
-      nextCursor: hasMore ? results[results.length - 1]?.id.toString() : undefined,
+      nextCursor: hasMore ? results.at(-1)?.id.toString() : undefined,
       total: filteredOpportunities.length,
       summary: { totalValue, weightedValue, stageBreakdown },
     });
@@ -812,7 +812,7 @@ export class AccountService {
 
     return Result.ok({
       activities: results,
-      nextCursor: hasMore ? results[results.length - 1]?.createdAt.toISOString() : undefined,
+      nextCursor: hasMore ? results.at(-1)?.createdAt.toISOString() : undefined,
     });
   }
 
@@ -842,7 +842,7 @@ export class AccountService {
     });
 
     const current = mapToNode(rawRecord);
-    const rootAccount = ancestorList.length > 0 ? ancestorList[ancestorList.length - 1] : null;
+    const rootAccount = ancestorList.length > 0 ? (ancestorList.at(-1) ?? null) : null;
 
     return Result.ok({ ancestors: ancestorList, current, rootAccount });
   }

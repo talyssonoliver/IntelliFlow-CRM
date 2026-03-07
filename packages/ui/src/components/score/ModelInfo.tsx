@@ -48,7 +48,7 @@ export interface ModelInfoProps
 function formatRelativeTime(timestamp: string): string {
   try {
     const date = new Date(timestamp);
-    if (isNaN(date.getTime())) return '';
+    if (Number.isNaN(date.getTime())) return '';
 
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -73,7 +73,7 @@ function formatRelativeTime(timestamp: string): string {
 function formatAbsoluteTime(timestamp: string): string {
   try {
     const date = new Date(timestamp);
-    if (isNaN(date.getTime())) return '';
+    if (Number.isNaN(date.getTime())) return '';
 
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -100,12 +100,15 @@ function ModelInfo({
   size = 'md',
   className,
   ...props
-}: ModelInfoProps) {
-  const formattedTimestamp = scoredAt
-    ? timestampFormat === 'relative'
-      ? formatRelativeTime(scoredAt)
-      : formatAbsoluteTime(scoredAt)
-    : '';
+}: Readonly<ModelInfoProps>) {
+  let formattedTimestamp: string;
+  if (!scoredAt) {
+    formattedTimestamp = '';
+  } else if (timestampFormat === 'relative') {
+    formattedTimestamp = formatRelativeTime(scoredAt);
+  } else {
+    formattedTimestamp = formatAbsoluteTime(scoredAt);
+  }
 
   const iconSize = {
     sm: 'text-sm',

@@ -199,7 +199,7 @@ export class IcsGenerationService implements IcsGenerationServicePort {
       // Simple regex-based parsing (for basic use cases)
       const uid = this.extractField(icsContent, 'UID');
       const sequenceStr = this.extractField(icsContent, 'SEQUENCE') || '0';
-      const sequence = parseInt(sequenceStr, 10);
+      const sequence = Number.parseInt(sequenceStr, 10);
       const method = (this.extractField(icsContent, 'METHOD') || 'REQUEST') as IcsMethod;
       const summary = this.extractField(icsContent, 'SUMMARY') || '';
 
@@ -329,7 +329,7 @@ export class IcsGenerationService implements IcsGenerationServicePort {
    */
   private extractField(icsContent: string, fieldName: string): string | null {
     const regex = new RegExp(`${fieldName}:([^\r\n]+)`);
-    const match = icsContent.match(regex);
+    const match = regex.exec(icsContent);
     return match ? match[1].trim() : null;
   }
 
@@ -339,15 +339,15 @@ export class IcsGenerationService implements IcsGenerationServicePort {
    */
   private parseIcsDate(dateStr: string): Date {
     // Remove any colons that might be in the string
-    dateStr = dateStr.replace(/:/g, '');
+    dateStr = dateStr.replaceAll(':', '');
 
     // Format: YYYYMMDDTHHmmssZ or YYYYMMDDTHHmmss
-    const year = parseInt(dateStr.substring(0, 4), 10);
-    const month = parseInt(dateStr.substring(4, 6), 10) - 1; // JS months are 0-based
-    const day = parseInt(dateStr.substring(6, 8), 10);
-    const hour = parseInt(dateStr.substring(9, 11), 10);
-    const minute = parseInt(dateStr.substring(11, 13), 10);
-    const second = parseInt(dateStr.substring(13, 15), 10);
+    const year = Number.parseInt(dateStr.substring(0, 4), 10);
+    const month = Number.parseInt(dateStr.substring(4, 6), 10) - 1; // JS months are 0-based
+    const day = Number.parseInt(dateStr.substring(6, 8), 10);
+    const hour = Number.parseInt(dateStr.substring(9, 11), 10);
+    const minute = Number.parseInt(dateStr.substring(11, 13), 10);
+    const second = Number.parseInt(dateStr.substring(13, 15), 10);
 
     // If ends with Z, it's UTC
     if (dateStr.endsWith('Z')) {

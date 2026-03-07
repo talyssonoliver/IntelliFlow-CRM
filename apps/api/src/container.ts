@@ -124,9 +124,9 @@ const createAdapters = (prismaClient: PrismaClient) => {
           baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
           model: process.env.OLLAMA_MODEL || 'mistral',
           temperature: process.env.OLLAMA_TEMPERATURE
-            ? parseFloat(process.env.OLLAMA_TEMPERATURE)
+            ? Number.parseFloat(process.env.OLLAMA_TEMPERATURE)
             : 0.1,
-          timeout: process.env.OLLAMA_TIMEOUT ? parseInt(process.env.OLLAMA_TIMEOUT, 10) : 60_000,
+          timeout: process.env.OLLAMA_TIMEOUT ? Number.parseInt(process.env.OLLAMA_TIMEOUT, 10) : 60_000,
         })
       : new MockAIService();
   const cache = new InMemoryCache();

@@ -159,9 +159,7 @@ let adaptersPromise: Promise<AdaptersModule> | null = null;
 let healthProviderForTests: ConnectorHealthProviderForTests | null = null;
 
 const loadAdapters = async (): Promise<AdaptersModule> => {
-  if (!adaptersPromise) {
-    adaptersPromise = import('@intelliflow/adapters') as Promise<AdaptersModule>;
-  }
+  adaptersPromise ??= import('@intelliflow/adapters') as Promise<AdaptersModule>;
   return adaptersPromise;
 };
 

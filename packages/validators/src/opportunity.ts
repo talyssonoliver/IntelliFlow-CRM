@@ -116,7 +116,7 @@ export type MoveStageInput = z.infer<typeof moveStageSchema>;
 export const opportunityHistoryQuerySchema = z.object({
   opportunityId: idSchema,
   limit: z.number().int().min(1).max(100).default(20),
-  cursor: z.string().datetime().optional(),
+  cursor: z.iso.datetime().optional(),
   types: z
     .array(
       z.enum(['EMAIL', 'CALL', 'MEETING', 'NOTE', 'TASK', 'STAGE_CHANGE', 'AGENT_ACTION', 'SYSTEM'])
@@ -223,7 +223,7 @@ export const updatePipelineStageConfigSchema = z.object({
   displayName: z.string().min(1).max(50).optional(),
   color: z
     .string()
-    .regex(/^#[0-9a-fA-F]{6}$/, 'Must be a valid hex color')
+    .check(z.regex(/^#[0-9a-fA-F]{6}$/, 'Must be a valid hex color'))
     .optional(),
   probability: z.number().int().min(0).max(100).optional(),
   isActive: z.boolean().optional(),

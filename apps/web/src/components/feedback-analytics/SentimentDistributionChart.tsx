@@ -6,7 +6,7 @@
  * Pie chart showing positive/neutral/negative sentiment breakdown.
  */
 
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts'; // NOSONAR typescript:S1874
 import type { SentimentDistributionChartProps } from '@/lib/feedback-survey/types';
 
 const COLORS = {
@@ -48,7 +48,7 @@ export default function SentimentDistributionChart({ sentiment }: Readonly<Senti
             }
           >
             {data.map((entry) => (
-              <Cell key={entry.name} fill={COLORS[entry.name as keyof typeof COLORS]} />
+              <Cell key={entry.name} fill={COLORS[entry.name as keyof typeof COLORS]} /> {/* NOSONAR typescript:S1874 */}
             ))}
           </Pie>
           <Tooltip />

@@ -239,7 +239,7 @@ export default function UploadDocumentPage() {
   };
 
   // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
 
     if (!validateForm()) return;

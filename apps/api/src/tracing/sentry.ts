@@ -136,7 +136,7 @@ export function initializeSentry(): void {
 
         // Scrub sensitive URLs
         if (breadcrumb.data?.url) {
-          breadcrumb.data.url = breadcrumb.data.url.replace(/apikey=[^&]+/gi, 'apikey=***');
+          breadcrumb.data.url = breadcrumb.data.url.replaceAll(/apikey=[^&]+/gi, 'apikey=***');
         }
 
         return breadcrumb;

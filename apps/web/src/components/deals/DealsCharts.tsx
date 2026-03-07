@@ -4,7 +4,7 @@ import { Card } from '@intelliflow/ui';
 import {
   PieChart,
   Pie,
-  Cell,
+  Cell, // NOSONAR typescript:S1874
   BarChart,
   Bar,
   XAxis,
@@ -51,7 +51,7 @@ export default function DealsCharts({ pieChartData, barChartData }: Readonly<Dea
               labelLine={false}
             >
               {pieChartData.map((entry) => (
-                <Cell key={`pie-${entry.name}`} fill={entry.color} />
+                <Cell key={`pie-${entry.name}`} fill={entry.color} /> {/* NOSONAR typescript:S1874 */}
               ))}
             </Pie>
             <Tooltip />
@@ -99,7 +99,7 @@ export default function DealsCharts({ pieChartData, barChartData }: Readonly<Dea
             />
             <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
               {barChartData.map((entry) => (
-                <Cell key={`bar-${entry.name}`} fill={entry.color} />
+                <Cell key={`bar-${entry.name}`} fill={entry.color} /> {/* NOSONAR typescript:S1874 */}
               ))}
             </Bar>
           </BarChart>

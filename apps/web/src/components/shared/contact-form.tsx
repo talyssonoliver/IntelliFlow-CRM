@@ -32,7 +32,7 @@ export function ContactForm() {
     Partial<Record<keyof ContactFormInput, string>>
   >({});
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormErrors({});
     setFormState({ isSubmitting: true, isSuccess: false, error: null });
@@ -222,7 +222,7 @@ export function ContactForm() {
             htmlFor="contact-phone"
             className="block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
-            Phone <span className="text-slate-500 text-xs">(optional)</span>
+            Phone{' '}<span className="text-slate-500 text-xs">(optional)</span>
           </label>
           <input
             type="tel"
@@ -259,7 +259,7 @@ export function ContactForm() {
             htmlFor="contact-company"
             className="block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
-            Company <span className="text-slate-500 text-xs">(optional)</span>
+            Company{' '}<span className="text-slate-500 text-xs">(optional)</span>
           </label>
           <input
             type="text"
@@ -284,7 +284,7 @@ export function ContactForm() {
           htmlFor="contact-subject"
           className="block text-sm font-medium text-slate-700 dark:text-slate-300"
         >
-          Subject <span className="text-slate-500 text-xs">(optional)</span>
+          Subject{' '}<span className="text-slate-500 text-xs">(optional)</span>
         </label>
         <input
           type="text"

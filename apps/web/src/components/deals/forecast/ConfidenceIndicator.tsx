@@ -54,7 +54,7 @@ export function ConfidenceIndicator({
     <div
       className={`inline-flex flex-col ${size === 'sm' ? 'gap-0.5' : 'gap-1'}`}
       data-testid="confidence-indicator"
-      role="meter"
+      role="meter" // NOSONAR typescript:S6819 — composite confidence display with label and bar; <meter> cannot contain child elements
       aria-valuenow={percentage}
       aria-valuemin={0}
       aria-valuemax={100}

@@ -97,7 +97,7 @@ function generateInvoiceNumber(): string {
 }
 
 export class Invoice extends AggregateRoot<InvoiceId> {
-  private props: InvoiceProps;
+  private readonly props: InvoiceProps;
 
   private constructor(id: InvoiceId, props: InvoiceProps) {
     super(id);

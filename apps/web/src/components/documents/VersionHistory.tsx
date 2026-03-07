@@ -95,7 +95,7 @@ export function VersionHistory({
         >
           <div
             ref={restoreDialogRef}
-            role="dialog"
+            role="dialog" // NOSONAR typescript:S6819 — custom modal within full-screen backdrop; <dialog> element lacks consistent cross-browser CSS support
             aria-modal="true"
             aria-label="Confirm restore"
             className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"

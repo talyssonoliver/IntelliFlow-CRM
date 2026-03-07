@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, protectedProcedure } from '../../trpc';
+import { createTRPCRouter, protectedProcedure } from '../../trpc';
 import { TRPCError } from '@trpc/server';
 import { IngestionOrchestrator } from '@intelliflow/application';
 
@@ -23,7 +23,7 @@ const uploadInputSchema = z.object({
  * - Orchestrates ingestion (AV scan, metadata extraction, storage)
  * - Returns document ID or error
  */
-export const uploadRouter = router({
+export const uploadRouter = createTRPCRouter({
   /**
    * Upload a document
    */
@@ -34,7 +34,7 @@ export const uploadRouter = router({
     let fileBuffer: Buffer;
     try {
       fileBuffer = Buffer.from(content, 'base64');
-    } catch (error) {
+    } catch {
       throw new TRPCError({
         code: 'BAD_REQUEST',
         message: 'Invalid base64 content',

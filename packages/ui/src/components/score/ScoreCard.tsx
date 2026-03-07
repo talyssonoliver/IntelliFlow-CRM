@@ -65,7 +65,7 @@ function ScoreCard({
   isCorrectionSubmitting = false,
   className,
   ...props
-}: ScoreCardProps) {
+}: Readonly<ScoreCardProps>) {
   const [isCorrectionModalOpen, setIsCorrectionModalOpen] = React.useState(false);
   const tierConfig = getScoreTierConfig(data.score);
   const scoreSize = { sm: 'text-2xl', md: 'text-3xl', lg: 'text-4xl' }[size];
@@ -152,7 +152,7 @@ function ScoreCard({
                   >
                     <span className="material-symbols-outlined text-sm" aria-hidden="true">
                       thumb_up
-                    </span>
+                    </span>{' '}
                     Helpful
                   </button>
                   <button
@@ -163,7 +163,7 @@ function ScoreCard({
                   >
                     <span className="material-symbols-outlined text-sm" aria-hidden="true">
                       thumb_down
-                    </span>
+                    </span>{' '}
                     Not helpful
                   </button>
                 </>
@@ -177,7 +177,7 @@ function ScoreCard({
                 >
                   <span className="material-symbols-outlined text-sm" aria-hidden="true">
                     edit
-                  </span>
+                  </span>{' '}
                   Suggest Correction
                 </button>
               )}

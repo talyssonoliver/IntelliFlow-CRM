@@ -11,7 +11,6 @@ import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import type { Queue } from 'bullmq';
 import { queueRegistry } from './queue-factory';
-import { QUEUE_NAMES } from './types';
 
 // ============================================================================
 // Bull Board Configuration
@@ -120,7 +119,7 @@ export function getBullBoardInstance(): ReturnType<typeof createBullBoard> | nul
  * app.use('/admin/queues', serverAdapter.getRouter());
  * ```
  */
-function configureBullBoardForExpress<T extends { setBasePath: (path: string) => void }>(
+function configureBullBoard<T extends { setBasePath: (path: string) => void }>(
   serverAdapter: T,
   config: BullBoardConfig = {}
 ): void {
@@ -135,36 +134,14 @@ function configureBullBoardForExpress<T extends { setBasePath: (path: string) =>
     serverAdapter: serverAdapter as any,
   });
 }
+
+const configureBullBoardForExpress = configureBullBoard;
 
 // ============================================================================
 // Fastify Plugin Setup
 // ============================================================================
 
-/**
- * Creates Fastify plugin for Bull Board
- * Usage:
- * ```
- * import { FastifyAdapter } from '@bull-board/fastify';
- * const serverAdapter = new FastifyAdapter();
- * configureBullBoardForFastify(serverAdapter, config);
- * await fastify.register(serverAdapter.registerPlugin());
- * ```
- */
-function configureBullBoardForFastify<T extends { setBasePath: (path: string) => void }>(
-  serverAdapter: T,
-  config: BullBoardConfig = {}
-): void {
-  const mergedConfig = { ...DEFAULT_CONFIG, ...config };
-
-  serverAdapter.setBasePath(mergedConfig.basePath || '/admin/queues');
-
-  const adapters = createQueueAdapters();
-
-  bullBoardInstance = createBullBoard({
-    queues: adapters,
-    serverAdapter: serverAdapter as any,
-  });
-}
+const configureBullBoardForFastify = configureBullBoard;
 
 // ============================================================================
 // Dashboard Information

@@ -9,7 +9,7 @@ vi.mock('next/dynamic', () => ({
   __esModule: true,
   default: (loader: () => Promise<{ default: React.ComponentType }>) => {
     // Return a mock component that renders testable output
-    const MockInner = (props: Readonly<Record<string, unknown>>) => {
+    const MockInner = (props: Record<string, unknown>) => {
       const tasks = (props.tasks ?? []) as CalendarTask[];
       return (
         <div data-testid="schedule-x-inner" data-view={props.view as string}>
@@ -42,7 +42,7 @@ vi.mock('next/dynamic', () => ({
             type="button"
             data-testid="mock-date-click"
             onClick={() => {
-              (props.onCreateWithDate as (d: Readonly<Date>) => void)?.(new Date('2026-02-14'));
+              (props.onCreateWithDate as (d: Date) => void)?.(new Date('2026-02-14'));
             }}
           >
             Click Date

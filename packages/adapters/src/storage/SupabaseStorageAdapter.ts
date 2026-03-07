@@ -98,7 +98,7 @@ export class SupabaseStorageAdapter implements StorageServicePort {
    * Sanitize filename to prevent path traversal attacks
    */
   private sanitizeFilename(filename: string): string {
-    return filename.replace(/[^a-zA-Z0-9.-]/g, '_');
+    return filename.replaceAll(/[^a-zA-Z0-9.-]/g, '_');
   }
 
   /**

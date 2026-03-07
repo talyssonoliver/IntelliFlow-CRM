@@ -11,7 +11,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { PrismaClient } from '@intelliflow/db';
 import { PrismaChainVersionAuditRepository } from '../PrismaChainVersionAuditRepository';
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 
 const AUDIT_ID_1 = randomUUID();
 const AUDIT_ID_2 = randomUUID();

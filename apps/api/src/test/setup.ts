@@ -11,7 +11,6 @@
 import { beforeEach, afterAll, vi } from 'vitest';
 import type { PrismaClient, Prisma as PrismaNamespace } from '@intelliflow/db';
 import { Prisma } from '@intelliflow/db';
-import type { DeepMockProxy } from 'vitest-mock-extended';
 import { mockDeep, mockReset } from 'vitest-mock-extended';
 import type { BaseContext } from '../context';
 
@@ -86,7 +85,7 @@ export function delayedPrismaResult<T>(
  * Mock Prisma client
  * Use mockDeep to create a deep mock of PrismaClient
  */
-export const prismaMock = mockDeep<PrismaClient>() as DeepMockProxy<PrismaClient>;
+export const prismaMock = mockDeep<PrismaClient>();
 
 /**
  * Reset all mocks before each test
@@ -114,8 +113,8 @@ afterAll(() => {
 
   // Explicit garbage collection if --expose-gc flag is set
   // Helps prevent OOM during test cleanup
-  if (global.gc) {
-    global.gc();
+  if (globalThis.gc) {
+    globalThis.gc();
   }
 });
 
@@ -271,7 +270,7 @@ export function createPublicContext(overrides?: Partial<BaseContext>): BaseConte
 export function generateTestUUID(name: string): string {
   // Generate a valid UUID v4 based on the name for deterministic test data
   const hash = name.split('').reduce((acc, char) => {
-    return ((acc << 5) - acc + char.charCodeAt(0)) | 0;
+    return Math.trunc((acc << 5) - acc + char.codePointAt(0)!);
   }, 0);
 
   const hex = Math.abs(hash).toString(16).padStart(8, '0');

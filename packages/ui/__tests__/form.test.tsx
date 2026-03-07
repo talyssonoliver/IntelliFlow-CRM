@@ -32,7 +32,7 @@ const FormFieldConsumer = () => {
 };
 
 // Test form component that uses all Form components
-const TestForm = ({ onSubmit }: { onSubmit?: (data: any) => void }) => {
+const TestForm = ({ onSubmit }: Readonly<{ onSubmit?: (data: any) => void }>) => {
   const form = useForm({
     defaultValues: {
       username: '',

@@ -190,17 +190,15 @@ export default function TicketDetailPage() {
 
   if (!ticket) {
     return (
-      <>
-        <PageHeader
-          breadcrumbs={[
-            { label: 'Dashboard', href: '/dashboard' },
-            { label: 'Tickets', href: '/tickets' },
-            { label: 'Not Found' },
-          ]}
-          title="Ticket Not Found"
-          description={`No ticket found with ID "${ticketId}"`}
-        />
-      </>
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Tickets', href: '/tickets' },
+          { label: 'Not Found' },
+        ]}
+        title="Ticket Not Found"
+        description={`No ticket found with ID "${ticketId}"`}
+      />
     );
   }
 

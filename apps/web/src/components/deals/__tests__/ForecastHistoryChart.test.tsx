@@ -22,18 +22,18 @@ vi.mock('recharts', () => ({
   Line: ({ type, dataKey }: Readonly<{ type: string; dataKey: string }>) => (
     <div data-testid="line" data-type={type} data-key={dataKey} />
   ),
-  XAxis: ({ label }: { label?: { value: string } }) => (
+  XAxis: ({ label }: Readonly<{ label?: { value: string } }>) => (
     <div data-testid="x-axis" data-label={label?.value} />
   ),
-  YAxis: ({ label }: { label?: { value: string } }) => (
+  YAxis: ({ label }: Readonly<{ label?: { value: string } }>) => (
     <div data-testid="y-axis" data-label={label?.value} />
   ),
   CartesianGrid: () => <div data-testid="cartesian-grid" />,
   Tooltip: ({
     content,
-  }: {
+  }: Readonly<{
     content?: React.FC<{ active?: boolean; payload?: Array<{ payload: unknown }> }>;
-  }) => {
+  }>) => {
     // Render the custom tooltip content if provided
     const Content = content;
     return (

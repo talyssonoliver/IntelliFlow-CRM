@@ -444,7 +444,7 @@ export const contactRouter = createTRPCRouter({
    * Get a contact by email using ContactService
    */
   getByEmail: tenantProcedure
-    .input(z.object({ email: z.string().email() }))
+    .input(z.object({ email: z.email() }))
     .query(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const contactService = getContactService(ctx);
@@ -881,7 +881,7 @@ export const contactRouter = createTRPCRouter({
     return {
       successful: contacts.map((c) => c.id),
       failed: ids
-        .filter((id: string) => !contacts.find((c) => c.id === id))
+        .filter((id: string) => !contacts.some((c) => c.id === id))
         .map((id: string) => ({
           id,
           error: 'Contact not found',
@@ -923,7 +923,7 @@ export const contactRouter = createTRPCRouter({
     return {
       successful: contacts.map((c) => c.id),
       failed: ids
-        .filter((id: string) => !contacts.find((c) => c.id === id))
+        .filter((id: string) => !contacts.some((c) => c.id === id))
         .map((id: string) => ({
           id,
           error: 'Contact not found',
@@ -1075,7 +1075,7 @@ export const contactRouter = createTRPCRouter({
           where: {
             contactId: input.contactId,
             ...(Object.keys(dateFilter).length > 0 && { createdAt: dateFilter }),
-            ...(cursorTimestamp && buildTaskCursorFilter(cursorTimestamp, cursorId, input.sortOrder as 'asc' | 'desc')),
+            ...(cursorTimestamp && buildTaskCursorFilter(cursorTimestamp, cursorId, input.sortOrder)),
           },
           orderBy: { createdAt: input.sortOrder },
           take: fetchLimit,
@@ -1156,7 +1156,7 @@ export const contactRouter = createTRPCRouter({
       // 8. Generate next cursor
       let nextCursor: string | null = null;
       if (hasMore && paginatedEvents.length > 0) {
-        const lastEvent = paginatedEvents[paginatedEvents.length - 1];
+        const lastEvent = paginatedEvents.at(-1)!;
         const cursorString = `${lastEvent.timestamp.toISOString()}:${lastEvent.id}`;
         nextCursor = Buffer.from(cursorString).toString('base64');
       }

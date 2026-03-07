@@ -10,7 +10,7 @@
  * processed by the messaging service after approval.
  */
 
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import {
   AgentToolDefinition,
   AgentToolResult,
@@ -29,13 +29,15 @@ import { pendingActionsStore } from '../approval-workflow';
  */
 const APPROVAL_EXPIRY_MS = 30 * 60 * 1000;
 
+export type MessageRecipientType = 'LEAD' | 'CONTACT' | 'ACCOUNT';
+
 /**
  * Drafted message result structure
  */
 export interface DraftedMessageResult {
   id: string;
   type: 'EMAIL' | 'SMS' | 'NOTE';
-  recipientType: 'LEAD' | 'CONTACT' | 'ACCOUNT';
+  recipientType: MessageRecipientType;
   recipientId: string;
   subject?: string;
   body: string;
@@ -69,13 +71,15 @@ function buildMessageChanges(input: DraftMessageInput): Array<{
     changeType: 'ADD';
   }> = [];
 
-  changes.push({ field: 'type', previousValue: null, newValue: input.type, changeType: 'ADD' });
-  changes.push({
-    field: 'recipient',
-    previousValue: null,
-    newValue: `${input.recipientType}: ${input.recipientId}`,
-    changeType: 'ADD',
-  });
+  changes.push(
+    { field: 'type', previousValue: null, newValue: input.type, changeType: 'ADD' },
+    {
+      field: 'recipient',
+      previousValue: null,
+      newValue: `${input.recipientType}: ${input.recipientId}`,
+      changeType: 'ADD',
+    },
+  );
   if (input.subject) {
     changes.push({
       field: 'subject',
@@ -146,7 +150,7 @@ function validateDraftMessageGuards(
   if (!context.allowedActionTypes.includes('DRAFT')) {
     return 'Not authorized to draft messages';
   }
-  const recipientEntityType = input.recipientType as 'LEAD' | 'CONTACT' | 'ACCOUNT';
+  const recipientEntityType = input.recipientType;
   if (!context.allowedEntityTypes.includes(recipientEntityType)) {
     return `Not authorized to send messages to ${input.recipientType}`;
   }
@@ -284,7 +288,7 @@ export const draftMessageTool: AgentToolDefinition<DraftMessageInput, DraftedMes
         action: 'CREATE' as const,
       },
       {
-        type: input.recipientType as 'LEAD' | 'CONTACT' | 'ACCOUNT',
+        type: input.recipientType,
         id: input.recipientId,
         name: `${input.recipientType} ${input.recipientId}`,
         action: 'UPDATE' as const, // Adding a message affects the recipient's activity

@@ -283,8 +283,22 @@ export function calculateRequiredSampleSize(
   alpha: number = EXPERIMENT_DEFAULTS.DEFAULT_SIGNIFICANCE_LEVEL
 ): number {
   // Z-scores for common values (approximation)
-  const zAlpha = alpha === 0.05 ? 1.96 : alpha === 0.01 ? 2.576 : 1.645;
-  const zBeta = power === 0.8 ? 0.84 : power === 0.9 ? 1.28 : 0.52;
+  let zAlpha: number;
+  if (alpha === 0.05) {
+    zAlpha = 1.96;
+  } else if (alpha === 0.01) {
+    zAlpha = 2.576;
+  } else {
+    zAlpha = 1.645;
+  }
+  let zBeta: number;
+  if (power === 0.8) {
+    zBeta = 0.84;
+  } else if (power === 0.9) {
+    zBeta = 1.28;
+  } else {
+    zBeta = 0.52;
+  }
 
   const n = 2 * Math.pow((zAlpha + zBeta) / effectSize, 2);
   return Math.ceil(n);

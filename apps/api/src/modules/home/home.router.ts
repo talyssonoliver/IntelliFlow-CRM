@@ -98,7 +98,7 @@ function getGreeting(timezone: string = 'UTC'): string {
       hour12: false,
       timeZone: timezone,
     }).format(new Date());
-    hour = parseInt(formatted, 10);
+    hour = Number.parseInt(formatted, 10);
   } catch {
     // Fallback to UTC if timezone is invalid
     const formatted = new Intl.DateTimeFormat('en-US', {
@@ -106,7 +106,7 @@ function getGreeting(timezone: string = 'UTC'): string {
       hour12: false,
       timeZone: 'UTC',
     }).format(new Date());
-    hour = parseInt(formatted, 10);
+    hour = Number.parseInt(formatted, 10);
   }
   if (hour < 12) return 'Good morning';
   if (hour < 17) return 'Good afternoon';
@@ -234,7 +234,13 @@ async function enqueueInsightGeneration(
     const queue = new Queue('ai-insights', {
       connection: {
         host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379', 10),
+        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+      },
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 5000 },
+        removeOnComplete: { count: 100 },
+        removeOnFail: { age: 604800 },
       },
     });
 
@@ -251,11 +257,6 @@ async function enqueueInsightGeneration(
         overdueTasksCount: data.overdueTasksCount,
         staleContacts: data.staleContacts,
         correlationId: `insight-${tenantId}-${Date.now()}`,
-      },
-      {
-        attempts: 2,
-        backoff: { type: 'exponential', delay: 5000 },
-        removeOnComplete: { count: 100 },
       }
     );
 
@@ -1149,7 +1150,7 @@ export const homeRouter = createTRPCRouter({
 
       if (cachedInsights.length > 0) {
         const total = cachedInsights.length;
-        const offset = cursor ? parseInt(Buffer.from(cursor, 'base64').toString('utf-8'), 10) : 0;
+        const offset = cursor ? Number.parseInt(Buffer.from(cursor, 'base64').toString('utf-8'), 10) : 0;
 
         const page = cachedInsights.slice(offset, offset + limit).map(mapAIInsightToResponse);
         const hasMore = offset + limit < total;
@@ -1191,7 +1192,7 @@ export const homeRouter = createTRPCRouter({
 
       const total = filtered.length;
 
-      const offset = cursor ? parseInt(Buffer.from(cursor, 'base64').toString('utf-8'), 10) : 0;
+      const offset = cursor ? Number.parseInt(Buffer.from(cursor, 'base64').toString('utf-8'), 10) : 0;
 
       const page = filtered.slice(offset, offset + limit);
       const hasMore = offset + limit < total;

@@ -39,7 +39,7 @@ describe('DocsSearch', () => {
     });
 
     const lastCall = onFilter.mock.calls[onFilter.mock.calls.length - 1][0] as DocCategory[];
-    expect(lastCall.some((c: Readonly<DocCategory>) => c.id === 'api-reference')).toBe(true);
+    expect(lastCall.some((c: DocCategory) => c.id === 'api-reference')).toBe(true);
   });
 
   it('filters categories by description match (case-insensitive)', async () => {
@@ -54,7 +54,7 @@ describe('DocsSearch', () => {
     });
 
     const lastCall = onFilter.mock.calls[onFilter.mock.calls.length - 1][0] as DocCategory[];
-    expect(lastCall.some((c: Readonly<DocCategory>) => c.id === 'architecture')).toBe(true);
+    expect(lastCall.some((c: DocCategory) => c.id === 'architecture')).toBe(true);
   });
 
   it('calls onFilter with empty array when no matches', async () => {
@@ -183,7 +183,7 @@ describe('DocsSearch', () => {
     const lastCall = onFilter.mock.calls[onFilter.mock.calls.length - 1][0] as DocCategory[];
     // "Developer Guides" title + "Getting Started" has "guides" in description + "migration guides" in Changelog
     expect(lastCall.length).toBeGreaterThanOrEqual(1);
-    expect(lastCall.some((c: Readonly<DocCategory>) => c.id === 'developer-guides')).toBe(true);
+    expect(lastCall.some((c: DocCategory) => c.id === 'developer-guides')).toBe(true);
   });
 
   it('shows result count in aria-live region', async () => {

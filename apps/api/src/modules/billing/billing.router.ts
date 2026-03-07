@@ -1103,7 +1103,7 @@ export const billingRouter = createTRPCRouter({
     .input(
       z.object({
         receiptId: z.string().min(1, 'Receipt ID is required'),
-        email: z.string().email('Invalid email address').optional(),
+        email: z.email('Invalid email address').optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {

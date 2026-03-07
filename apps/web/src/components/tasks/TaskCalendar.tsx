@@ -14,7 +14,7 @@ export interface CalendarTask {
 export interface TaskCalendarProps {
   readonly tasks: readonly CalendarTask[];
   readonly onTaskClick: (id: string) => void;
-  readonly onCreateWithDate: (date: Readonly<Date>) => void;
+  readonly onCreateWithDate: (date: Date) => void;
 }
 
 const TaskCalendarInner = dynamic(

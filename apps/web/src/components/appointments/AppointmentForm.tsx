@@ -24,11 +24,11 @@ export interface AppointmentFormProps {
   appointment?: AppointmentDetailData;
   defaultStartTime?: Date;
   defaultEndTime?: Date;
-  onSubmit: (data: Readonly<AppointmentFormInput>) => Promise<void>;
+  onSubmit: (data: AppointmentFormInput) => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
   conflicts?: ConflictInfo;
-  onConflictCheck: (params: Readonly<ConflictCheckParams>) => void;
+  onConflictCheck: (params: ConflictCheckParams) => void;
 }
 
 export function AppointmentForm({
@@ -114,7 +114,7 @@ export function AppointmentForm({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
@@ -141,7 +141,7 @@ export function AppointmentForm({
       {/* Title */}
       <div>
         <label htmlFor="appt-title" className="block text-sm font-medium text-gray-700 mb-1">
-          Title <span className="text-red-500">*</span>
+          Title{' '}<span className="text-red-500">*</span>
         </label>
         <input
           id="appt-title"
@@ -180,7 +180,7 @@ export function AppointmentForm({
       {/* Type */}
       <div>
         <label htmlFor="appt-type" className="block text-sm font-medium text-gray-700 mb-1">
-          Type <span className="text-red-500">*</span>
+          Type{' '}<span className="text-red-500">*</span>
         </label>
         <select
           id="appt-type"
@@ -205,7 +205,7 @@ export function AppointmentForm({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label htmlFor="appt-start" className="block text-sm font-medium text-gray-700 mb-1">
-            Start Time <span className="text-red-500">*</span>
+            Start Time{' '}<span className="text-red-500">*</span>
           </label>
           <input
             id="appt-start"
@@ -225,7 +225,7 @@ export function AppointmentForm({
         </div>
         <div>
           <label htmlFor="appt-end" className="block text-sm font-medium text-gray-700 mb-1">
-            End Time <span className="text-red-500">*</span>
+            End Time{' '}<span className="text-red-500">*</span>
           </label>
           <input
             id="appt-end"

@@ -13,18 +13,18 @@ import type {
 
 export function mapToMessage(data: Record<string, unknown>): SlackMessage {
   return {
-    ts: String(data.ts ?? ''),
-    channelId: String(data.channel ?? ''),
-    text: String(data.text ?? ''),
-    userId: String(data.user ?? ''),
-    username: data.username ? String(data.username) : undefined,
-    botId: data.bot_id ? String(data.bot_id) : undefined,
-    type: String(data.type ?? 'message'),
-    subtype: data.subtype ? String(data.subtype) : undefined,
-    threadTs: data.thread_ts ? String(data.thread_ts) : undefined,
+    ts: (data.ts as string | null | undefined) ?? '',
+    channelId: (data.channel as string | null | undefined) ?? '',
+    text: (data.text as string | null | undefined) ?? '',
+    userId: (data.user as string | null | undefined) ?? '',
+    username: data.username ? (data.username as string) : undefined,
+    botId: data.bot_id ? (data.bot_id as string) : undefined,
+    type: (data.type as string | null | undefined) ?? 'message',
+    subtype: data.subtype ? (data.subtype as string) : undefined,
+    threadTs: data.thread_ts ? (data.thread_ts as string) : undefined,
     replyCount: data.reply_count ? Number(data.reply_count) : undefined,
     replyUsersCount: data.reply_users_count ? Number(data.reply_users_count) : undefined,
-    latestReply: data.latest_reply ? String(data.latest_reply) : undefined,
+    latestReply: data.latest_reply ? (data.latest_reply as string) : undefined,
     reactions: data.reactions as SlackMessage['reactions'],
     attachments: data.attachments as SlackAttachment[] | undefined,
     blocks: data.blocks as SlackBlock[] | undefined,
@@ -33,8 +33,8 @@ export function mapToMessage(data: Record<string, unknown>): SlackMessage {
       : undefined,
     edited: data.edited
       ? {
-          user: String((data.edited as Record<string, unknown>).user ?? ''),
-          ts: String((data.edited as Record<string, unknown>).ts ?? ''),
+          user: ((data.edited as Record<string, unknown>).user as string | null | undefined) ?? '',
+          ts: ((data.edited as Record<string, unknown>).ts as string | null | undefined) ?? '',
         }
       : undefined,
   };
@@ -45,8 +45,8 @@ export function mapToChannel(data: Record<string, unknown>): SlackChannel {
   const purpose = data.purpose as Record<string, unknown> | undefined;
 
   return {
-    id: String(data.id ?? ''),
-    name: String(data.name ?? ''),
+    id: (data.id as string | null | undefined) ?? '',
+    name: (data.name as string | null | undefined) ?? '',
     isChannel: Boolean(data.is_channel),
     isPrivate: Boolean(data.is_private),
     isArchived: Boolean(data.is_archived),
@@ -54,21 +54,21 @@ export function mapToChannel(data: Record<string, unknown>): SlackChannel {
     isGeneral: Boolean(data.is_general),
     topic: topic
       ? {
-          value: String(topic.value ?? ''),
-          creator: String(topic.creator ?? ''),
+          value: (topic.value as string | null | undefined) ?? '',
+          creator: (topic.creator as string | null | undefined) ?? '',
           lastSet: Number(topic.last_set ?? 0),
         }
       : undefined,
     purpose: purpose
       ? {
-          value: String(purpose.value ?? ''),
-          creator: String(purpose.creator ?? ''),
+          value: (purpose.value as string | null | undefined) ?? '',
+          creator: (purpose.creator as string | null | undefined) ?? '',
           lastSet: Number(purpose.last_set ?? 0),
         }
       : undefined,
     memberCount: data.num_members ? Number(data.num_members) : undefined,
     created: Number(data.created ?? 0),
-    creator: String(data.creator ?? ''),
+    creator: (data.creator as string | null | undefined) ?? '',
   };
 }
 
@@ -76,38 +76,38 @@ export function mapToUser(data: Record<string, unknown>): SlackUser {
   const profile = (data.profile as Record<string, unknown>) ?? {};
 
   return {
-    id: String(data.id ?? ''),
-    teamId: String(data.team_id ?? ''),
-    name: String(data.name ?? ''),
-    realName: profile.real_name ? String(profile.real_name) : undefined,
-    displayName: profile.display_name ? String(profile.display_name) : undefined,
-    email: profile.email ? String(profile.email) : undefined,
-    phone: profile.phone ? String(profile.phone) : undefined,
-    title: profile.title ? String(profile.title) : undefined,
-    statusText: profile.status_text ? String(profile.status_text) : undefined,
-    statusEmoji: profile.status_emoji ? String(profile.status_emoji) : undefined,
+    id: (data.id as string | null | undefined) ?? '',
+    teamId: (data.team_id as string | null | undefined) ?? '',
+    name: (data.name as string | null | undefined) ?? '',
+    realName: profile.real_name ? (profile.real_name as string) : undefined,
+    displayName: profile.display_name ? (profile.display_name as string) : undefined,
+    email: profile.email ? (profile.email as string) : undefined,
+    phone: profile.phone ? (profile.phone as string) : undefined,
+    title: profile.title ? (profile.title as string) : undefined,
+    statusText: profile.status_text ? (profile.status_text as string) : undefined,
+    statusEmoji: profile.status_emoji ? (profile.status_emoji as string) : undefined,
     isAdmin: Boolean(data.is_admin),
     isOwner: Boolean(data.is_owner),
     isBot: Boolean(data.is_bot),
     deleted: Boolean(data.deleted),
-    timezone: data.tz ? String(data.tz) : undefined,
-    image24: profile.image_24 ? String(profile.image_24) : undefined,
-    image72: profile.image_72 ? String(profile.image_72) : undefined,
-    image192: profile.image_192 ? String(profile.image_192) : undefined,
+    timezone: data.tz ? (data.tz as string) : undefined,
+    image24: profile.image_24 ? (profile.image_24 as string) : undefined,
+    image72: profile.image_72 ? (profile.image_72 as string) : undefined,
+    image192: profile.image_192 ? (profile.image_192 as string) : undefined,
   };
 }
 
 export function mapToFile(data: Record<string, unknown>): SlackFile {
   return {
-    id: String(data.id ?? ''),
-    name: String(data.name ?? ''),
-    title: data.title ? String(data.title) : undefined,
-    mimetype: String(data.mimetype ?? 'application/octet-stream'),
+    id: (data.id as string | null | undefined) ?? '',
+    name: (data.name as string | null | undefined) ?? '',
+    title: data.title ? (data.title as string) : undefined,
+    mimetype: (data.mimetype as string | null | undefined) ?? 'application/octet-stream',
     size: Number(data.size ?? 0),
-    urlPrivate: data.url_private ? String(data.url_private) : undefined,
-    urlPrivateDownload: data.url_private_download ? String(data.url_private_download) : undefined,
-    permalink: data.permalink ? String(data.permalink) : undefined,
-    permalinkPublic: data.permalink_public ? String(data.permalink_public) : undefined,
+    urlPrivate: data.url_private ? (data.url_private as string) : undefined,
+    urlPrivateDownload: data.url_private_download ? (data.url_private_download as string) : undefined,
+    permalink: data.permalink ? (data.permalink as string) : undefined,
+    permalinkPublic: data.permalink_public ? (data.permalink_public as string) : undefined,
   };
 }
 
@@ -115,7 +115,7 @@ export function mapReactions(
   reactions: Array<Record<string, unknown>>
 ): Array<{ name: string; count: number; users: string[] }> {
   return reactions.map((r) => ({
-    name: String(r.name ?? ''),
+    name: (r.name as string | null | undefined) ?? '',
     count: Number(r.count ?? 0),
     users: (r.users as string[]) ?? [],
   }));

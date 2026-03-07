@@ -6,7 +6,7 @@ import { Card } from '@intelliflow/ui';
 import { ApplyButton, SaveJobButton, ShareJobButton } from './apply-button';
 import type { JobListing } from '@/data/job-listings';
 
-export type { JobListing };
+export type { JobListing } from '@/data/job-listings';
 
 interface JobDetailTemplateProps {
   job: JobListing;

@@ -64,7 +64,7 @@ export const reviewConfidenceSchema = z
   .number()
   .min(0, 'Confidence must be >= 0')
   .max(1, 'Confidence must be <= 1')
-  .refine((v) => !isNaN(v) && isFinite(v), {
+  .refine((v) => !Number.isNaN(v) && Number.isFinite(v), {
     message: 'Confidence must be a finite number',
   });
 
@@ -76,7 +76,7 @@ export const reviewConfidenceSchema = z
  * @returns True if v is a valid confidence score (number, 0-1, finite)
  */
 export const isValidConfidence = (v: unknown): v is number =>
-  typeof v === 'number' && !isNaN(v) && isFinite(v) && v >= 0 && v <= 1;
+  typeof v === 'number' && !Number.isNaN(v) && Number.isFinite(v) && v >= 0 && v <= 1;
 
 // ===========================================
 // Input Schemas

@@ -25,7 +25,7 @@ function getInitials(name: string, maxInitials: number): string {
   }
 
   if (parts.length === 1) {
-    return parts[0]!.slice(0, maxInitials).toUpperCase() || '?';
+    return parts[0].slice(0, maxInitials).toUpperCase() || '?';
   }
 
   return parts
@@ -78,7 +78,7 @@ export function AppAvatar({
         !showImage && fallbackClassName,
         className
       )}
-      role="img"
+      role="img" // NOSONAR typescript:S6819 — div-based avatar with dynamic content (image or initials); <img> cannot contain text fallback children
       aria-label={alt ?? `Avatar for ${name}`}
       {...props}
     >

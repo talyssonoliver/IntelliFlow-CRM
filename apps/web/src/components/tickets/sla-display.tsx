@@ -91,7 +91,7 @@ function SLATrack({
 
       <div className="flex items-center gap-2">
         <div
-          role="progressbar"
+          role="progressbar" // NOSONAR typescript:S6819 — custom styled progress bar with overflow:hidden child; <progress> cannot contain child elements
           aria-valuenow={progressPct}
           aria-valuemin={0}
           aria-valuemax={100}

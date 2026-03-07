@@ -495,7 +495,7 @@ export class RulesEngine {
 
     // Send notification action
     this.actionHandlers.set('send_notification', async (action, context) => {
-      const { channel, recipient, template, data } = action.config as {
+      const { channel, recipient, template } = action.config as {
         channel: string;
         recipient: string;
         template: string;
@@ -577,7 +577,7 @@ export class RulesEngine {
 
     // Call webhook action
     this.actionHandlers.set('call_webhook', async (action, context) => {
-      const { url, method, headers, body } = action.config as {
+      const { url, method, body } = action.config as {
         url: string;
         method?: string;
         headers?: Record<string, string>;
@@ -790,9 +790,7 @@ let globalRulesEngine: RulesEngine | null = null;
  * Get or create the global rules engine instance
  */
 export function getRulesEngine(config?: RulesEngineConfig): RulesEngine {
-  if (!globalRulesEngine) {
-    globalRulesEngine = new RulesEngine(config);
-  }
+  globalRulesEngine ??= new RulesEngine(config);
   return globalRulesEngine;
 }
 

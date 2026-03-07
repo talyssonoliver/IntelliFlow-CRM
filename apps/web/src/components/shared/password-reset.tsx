@@ -100,7 +100,7 @@ export function PasswordStrengthIndicator({
             config.color,
             config.width
           )}
-          role="progressbar"
+          role="progressbar" // NOSONAR typescript:S6819 — inner fill bar; <progress> cannot be positioned inside overflow:hidden container
           aria-valuenow={result.percentage}
           aria-valuemin={0}
           aria-valuemax={100}
@@ -351,7 +351,7 @@ export function PasswordResetForm({
 
   // Handle form submission
   const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
+    async (e: React.SyntheticEvent) => {
       e.preventDefault();
       setIsSubmitting(true);
       setErrors({});

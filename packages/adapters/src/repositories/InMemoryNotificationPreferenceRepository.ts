@@ -6,7 +6,7 @@
 import { NotificationPreference, NotificationPreferenceRepository } from '@intelliflow/domain';
 
 export class InMemoryNotificationPreferenceRepository implements NotificationPreferenceRepository {
-  private preferences: Map<string, NotificationPreference> = new Map();
+  private readonly preferences: Map<string, NotificationPreference> = new Map();
 
   private makeKey(tenantId: string, userId: string): string {
     return `${tenantId}:${userId}`;

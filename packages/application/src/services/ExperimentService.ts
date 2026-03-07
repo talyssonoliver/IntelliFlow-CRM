@@ -9,6 +9,8 @@
 
 import { EXPERIMENT_DEFAULTS, DomainEvent } from '@intelliflow/domain';
 import type { ExperimentStatus, ExperimentType, ExperimentVariant } from '@intelliflow/domain';
+
+type ExperimentWinner = 'control' | 'treatment' | null;
 import type {
   CreateExperimentInput,
   UpdateExperimentInput,
@@ -74,7 +76,7 @@ export interface ExperimentResultRecord {
   chiSquareStatistic: number | null;
   chiSquarePValue: number | null;
   isSignificant: boolean;
-  winner: 'control' | 'treatment' | null;
+  winner: ExperimentWinner;
   recommendation: string | null;
   analyzedAt: Date;
 }
@@ -197,7 +199,7 @@ export class ExperimentCompletedEvent extends DomainEvent {
   readonly eventType = 'experiment.completed';
   constructor(
     public readonly experimentId: string,
-    public readonly winner: 'control' | 'treatment' | null,
+    public readonly winner: ExperimentWinner,
     public readonly isSignificant: boolean,
     public readonly pValue: number,
     public readonly effectSize: number
@@ -467,7 +469,7 @@ export class ExperimentService {
     const combined = `${experimentId}:${leadId}`;
     let hash = 0;
     for (let i = 0; i < combined.length; i++) {
-      const char = combined.charCodeAt(i);
+      const char = combined.codePointAt(i)!;
       hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
@@ -599,7 +601,7 @@ export class ExperimentService {
     }
 
     // Determine winner
-    let winner: 'control' | 'treatment' | null = null;
+    let winner: ExperimentWinner = null;
     if (tTest.isSignificant) {
       winner = treatmentStats.mean > controlStats.mean ? 'treatment' : 'control';
     }
@@ -908,10 +910,12 @@ export class ExperimentService {
     // Simple approximation for t-critical value
     // For df > 30, use z-value approximation
     if (df > 30) {
-      return alpha === 0.025 ? 1.96 : alpha === 0.005 ? 2.576 : 1.645;
+      if (alpha === 0.025) return 1.96;
+      if (alpha === 0.005) return 2.576;
+      return 1.645;
     }
     // Rough interpolation for smaller df
-    return 2.0 + (30 - df) * 0.02;
+    return 2 + (30 - df) * 0.02;
   }
 
   private approximateChiSquarePValue(x: number, df: number): number {
@@ -941,7 +945,7 @@ export class ExperimentService {
 
   private generateRecommendation(
     isSignificant: boolean,
-    winner: 'control' | 'treatment' | null,
+    winner: ExperimentWinner,
     effectSize: number,
     difference: number,
     pValue: number
@@ -954,8 +958,14 @@ export class ExperimentService {
     }
 
     const winnerLabel = winner === 'treatment' ? 'AI scoring' : 'Manual scoring';
-    const effectLabel =
-      Math.abs(effectSize) < 0.5 ? 'small' : Math.abs(effectSize) < 0.8 ? 'medium' : 'large';
+    let effectLabel: string;
+    if (Math.abs(effectSize) < 0.5) {
+      effectLabel = 'small';
+    } else if (Math.abs(effectSize) < 0.8) {
+      effectLabel = 'medium';
+    } else {
+      effectLabel = 'large';
+    }
 
     return (
       `${winnerLabel} shows a statistically significant improvement of ${Math.abs(difference).toFixed(1)} points ` +

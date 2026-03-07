@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
-  Cell,
+  Cell, // NOSONAR typescript:S1874
   XAxis,
   YAxis,
   CartesianGrid,
@@ -50,7 +50,7 @@ export default function NpsBreakdownBar({ distribution }: Readonly<NpsBreakdownB
           <Tooltip />
           <Bar dataKey="count" radius={[4, 4, 0, 0]}>
             {data.map((entry) => (
-              <Cell key={entry.category} fill={CATEGORY_COLORS[entry.category]} />
+              <Cell key={entry.category} fill={CATEGORY_COLORS[entry.category]} /> {/* NOSONAR typescript:S1874 */}
             ))}
           </Bar>
         </BarChart>

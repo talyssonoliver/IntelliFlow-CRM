@@ -90,7 +90,12 @@ function StatusBadge({ status }: Readonly<{ status: string }>) {
 
 function InvoiceListSkeleton() {
   return (
-    <div className="space-y-3" role="status" aria-busy="true" aria-live="polite">
+    <div
+      className="space-y-3"
+      role="status" // NOSONAR typescript:S6819 — loading skeleton container; <output> is for form outputs, not loading states
+      aria-busy="true"
+      aria-live="polite"
+    >
       {Array.from({ length: 5 }).map((_, i) => (
         <div key={i} className="flex items-center justify-between py-3"> {/* NOSONAR typescript:S6479 */}
           <div className="flex items-center gap-4">

@@ -16,8 +16,8 @@
  * @see https://www.rapid7.com/blog/post/2016/12/23/the-value-of-correlation-ids/
  */
 
-import { randomUUID } from 'crypto';
-import { AsyncLocalStorage } from 'async_hooks';
+import { randomUUID } from 'node:crypto';
+import { AsyncLocalStorage } from 'node:async_hooks';
 
 /**
  * Request context stored in AsyncLocalStorage

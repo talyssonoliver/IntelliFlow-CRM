@@ -4,8 +4,8 @@ import { PhoneNumber, Money, WebsiteUrl, DateRange, Percentage } from '@intellif
 // Common ID schemas
 // Prisma uses @default(cuid()) while seed data uses deterministic UUIDs.
 // Accept both formats so runtime-created and seeded entities both pass validation.
-export const uuidSchema = z.string().uuid();
-export const cuidSchema = z.string().regex(/^c[a-z0-9]{8,}$/, 'Invalid CUID');
+export const uuidSchema = z.uuid();
+export const cuidSchema = z.string().check(z.regex(/^c[a-z0-9]{8,}$/, 'Invalid CUID'));
 export const idSchema = z.union([uuidSchema, cuidSchema]);
 
 // Common string schemas
@@ -33,7 +33,7 @@ export const phoneSchema = z
 
     if (result.isFailure) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: result.error.message,
       });
       return z.NEVER;
@@ -53,7 +53,7 @@ export const moneySchema = z
 
     if (result.isFailure) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: result.error.message,
       });
       return z.NEVER;
@@ -68,7 +68,7 @@ export const percentageSchema = z.number().transform((val, ctx) => {
 
   if (result.isFailure) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       message: result.error.message,
     });
     return z.NEVER;
@@ -89,7 +89,7 @@ export const urlSchema = z
 
     if (result.isFailure) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: result.error.message,
       });
       return z.NEVER;
@@ -119,7 +119,7 @@ export const dateRangeSchema = z
 
     if (result.isFailure) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: result.error.message,
       });
       return z.NEVER;
@@ -146,7 +146,7 @@ export const apiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
     success: z.boolean(),
     data: dataSchema,
     message: z.string().optional(),
-    timestamp: z.string().datetime(),
+    timestamp: z.iso.datetime(),
   });
 
 export const apiErrorSchema = z.object({
@@ -156,7 +156,7 @@ export const apiErrorSchema = z.object({
     message: z.string(),
     details: z.record(z.string(), z.unknown()).optional(),
   }),
-  timestamp: z.string().datetime(),
+  timestamp: z.iso.datetime(),
 });
 
 export type ApiError = z.infer<typeof apiErrorSchema>;

@@ -11,7 +11,7 @@
  * @artifact packages/adapters/src/webhooks/outbound.ts
  */
 
-import { createHmac, randomBytes } from 'crypto';
+import { createHmac, randomBytes } from 'node:crypto';
 import { z } from 'zod';
 
 // ============================================================================
@@ -88,11 +88,11 @@ export function verifyWebhookSignature(
   secret: string,
   toleranceSeconds: number = 300
 ): boolean {
-  const match = signature.match(/t=(\d+),v1=([a-f0-9]+)/);
+  const match = /t=(\d+),v1=([a-f0-9]+)/.exec(signature);
   if (!match) return false;
 
   const [, timestamp, hash] = match;
-  const ts = parseInt(timestamp, 10);
+  const ts = Number.parseInt(timestamp, 10);
 
   // Check timestamp tolerance
   const now = Math.floor(Date.now() / 1000);
@@ -175,6 +175,101 @@ export class OutboundWebhookClient {
   }
 
   /**
+   * Execute a single fetch attempt with timeout handling.
+   * Returns the response or throws on network/timeout errors.
+   */
+  private async fetchWithTimeout(
+    url: string,
+    method: string,
+    headers: Record<string, string>,
+    payload: string
+  ): Promise<Response> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.config.timeoutMs);
+    try {
+      return await fetch(url, { method, headers, body: payload, signal: controller.signal });
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  /**
+   * Handle a non-OK HTTP response: log and return failure, or signal retry.
+   * Returns a WebhookResponse if the error is terminal, or null to continue retrying.
+   */
+  private handleErrorResponse(
+    response: Response,
+    responseBody: string,
+    requestId: string,
+    url: string,
+    method: string,
+    payload: string,
+    attempts: number,
+    durationMs: number
+  ): WebhookResponse | null {
+    if (this.isRetryableStatus(response.status) && attempts <= this.config.maxRetries) {
+      return null; // signal: retry
+    }
+    const errorMsg = `HTTP ${response.status}: ${response.statusText}`;
+    this.logDelivery({
+      requestId,
+      url,
+      method,
+      statusCode: response.status,
+      success: false,
+      error: errorMsg,
+      attempts,
+      durationMs,
+      timestamp: new Date().toISOString(),
+      payloadSize: payload.length,
+      responseSize: responseBody.length,
+    });
+    return {
+      ...this.buildFailureResponse(requestId, response.status, errorMsg, attempts, durationMs),
+      responseBody: responseBody.slice(0, 1000),
+    };
+  }
+
+  /**
+   * Execute a single attempt and return a response or null to signal retry.
+   */
+  private async trySendAttempt(
+    request: WebhookRequest,
+    requestId: string,
+    method: string,
+    payload: string,
+    attempts: number,
+    startTime: number
+  ): Promise<{ response: WebhookResponse | null; lastError: Error | null; lastStatusCode: number | undefined }> {
+    try {
+      const headers = this.buildRequestHeaders(request, requestId, payload);
+      const res = await this.fetchWithTimeout(request.url, method, headers, payload);
+      const responseBody = await res.text();
+      const durationMs = Date.now() - startTime;
+
+      if (!res.ok) {
+        const errorResponse = this.handleErrorResponse(res, responseBody, requestId, request.url, method, payload, attempts, durationMs);
+        if (errorResponse) return { response: errorResponse, lastError: null, lastStatusCode: res.status };
+        await this.sleep(this.getBackoffMs(attempts));
+        return { response: null, lastError: null, lastStatusCode: res.status };
+      }
+
+      this.logDelivery({
+        requestId, url: request.url, method, statusCode: res.status, success: true,
+        attempts, durationMs, timestamp: new Date().toISOString(), payloadSize: payload.length, responseSize: responseBody.length,
+      });
+      return { response: this.buildSuccessResponse(requestId, res.status, responseBody, attempts, durationMs), lastError: null, lastStatusCode: undefined };
+    } catch (error) {
+      const lastError = error instanceof Error ? error : new Error(String(error));
+      const lastStatusCode = (error instanceof Error && error.name === 'AbortError') ? 408 : undefined;
+      if (attempts <= this.config.maxRetries) {
+        await this.sleep(this.getBackoffMs(attempts));
+      }
+      return { response: null, lastError, lastStatusCode };
+    }
+  }
+
+  /**
    * Send a webhook with retry logic
    */
   async send(request: WebhookRequest): Promise<WebhookResponse> {
@@ -189,108 +284,23 @@ export class OutboundWebhookClient {
 
     while (attempts <= this.config.maxRetries) {
       attempts++;
-
-      try {
-        const headers = this.buildRequestHeaders(request, requestId, payload);
-
-        // Create abort controller for timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), this.config.timeoutMs);
-
-        const response = await fetch(request.url, {
-          method,
-          headers,
-          body: payload,
-          signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-
-        const responseBody = await response.text();
-        const durationMs = Date.now() - startTime;
-
-        if (!response.ok) {
-          lastStatusCode = response.status;
-
-          // Check if we should retry based on status code
-          if (this.isRetryableStatus(response.status) && attempts <= this.config.maxRetries) {
-            await this.sleep(this.getBackoffMs(attempts));
-            continue;
-          }
-
-          const errorMsg = `HTTP ${response.status}: ${response.statusText}`;
-          this.logDelivery({
-            requestId,
-            url: request.url,
-            method,
-            statusCode: response.status,
-            success: false,
-            error: errorMsg,
-            attempts,
-            durationMs,
-            timestamp: new Date().toISOString(),
-            payloadSize: payload.length,
-            responseSize: responseBody.length,
-          });
-
-          return {
-            ...this.buildFailureResponse(requestId, response.status, errorMsg, attempts, durationMs),
-            responseBody: responseBody.slice(0, 1000),
-          };
-        }
-
-        this.logDelivery({
-          requestId,
-          url: request.url,
-          method,
-          statusCode: response.status,
-          success: true,
-          attempts,
-          durationMs,
-          timestamp: new Date().toISOString(),
-          payloadSize: payload.length,
-          responseSize: responseBody.length,
-        });
-
-        return this.buildSuccessResponse(requestId, response.status, responseBody, attempts, durationMs);
-      } catch (error) {
-        lastError = error instanceof Error ? error : new Error(String(error));
-
-        if (error instanceof Error && error.name === 'AbortError') {
-          lastStatusCode = 408;
-        }
-
-        // Retry on network errors
-        if (attempts <= this.config.maxRetries) {
-          await this.sleep(this.getBackoffMs(attempts));
-          continue;
-        }
-      }
+      const result = await this.trySendAttempt(request, requestId, method, payload, attempts, startTime);
+      if (result.response) return result.response;
+      if (result.lastError) lastError = result.lastError;
+      if (result.lastStatusCode !== undefined) lastStatusCode = result.lastStatusCode;
     }
 
     const durationMs = Date.now() - startTime;
-
     this.logDelivery({
-      requestId,
-      url: request.url,
-      method,
-      statusCode: lastStatusCode,
-      success: false,
-      error: lastError?.message || 'Unknown error',
-      attempts,
-      durationMs,
-      timestamp: new Date().toISOString(),
-      payloadSize: payload.length,
+      requestId, url: request.url, method, statusCode: lastStatusCode, success: false,
+      error: lastError?.message || 'Unknown error', attempts, durationMs,
+      timestamp: new Date().toISOString(), payloadSize: payload.length,
     });
 
     return {
-      success: false,
-      requestId,
-      statusCode: lastStatusCode,
+      success: false, requestId, statusCode: lastStatusCode,
       error: lastError?.message || 'Unknown error after all retries',
-      attempts,
-      durationMs,
-      timestamp: new Date().toISOString(),
+      attempts, durationMs, timestamp: new Date().toISOString(),
     };
   }
 
@@ -338,7 +348,7 @@ export class OutboundWebhookClient {
   private getBackoffMs(attempts: number): number {
     return (
       this.config.retryBackoffMs[attempts - 1] ||
-      this.config.retryBackoffMs[this.config.retryBackoffMs.length - 1]
+      this.config.retryBackoffMs.at(-1)!
     );
   }
 
@@ -367,8 +377,8 @@ export function createOutboundWebhookClient(
 ): OutboundWebhookClient {
   return new OutboundWebhookClient({
     signingSecret: process.env.WEBHOOK_SIGNING_SECRET,
-    timeoutMs: parseInt(process.env.WEBHOOK_TIMEOUT_MS || '30000', 10),
-    maxRetries: parseInt(process.env.WEBHOOK_MAX_RETRIES || '3', 10),
+    timeoutMs: Number.parseInt(process.env.WEBHOOK_TIMEOUT_MS || '30000', 10),
+    maxRetries: Number.parseInt(process.env.WEBHOOK_MAX_RETRIES || '3', 10),
     ...config,
   });
 }
@@ -377,8 +387,6 @@ export function createOutboundWebhookClient(
 let defaultClient: OutboundWebhookClient | null = null;
 
 export function getOutboundWebhookClient(): OutboundWebhookClient {
-  if (!defaultClient) {
-    defaultClient = createOutboundWebhookClient();
-  }
+  defaultClient ??= createOutboundWebhookClient();
   return defaultClient;
 }

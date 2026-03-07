@@ -11,7 +11,7 @@
  */
 
 import { z } from 'zod';
-import { createHash, randomUUID } from 'crypto';
+import { createHash, randomUUID } from 'node:crypto';
 
 // Email recipient schema
 export const EmailRecipientSchema = z.object({
@@ -194,7 +194,7 @@ export class EmailTemplateRenderer {
     }
 
     const interpolate = (str: string): string => {
-      return str.replace(/\{\{(\w+)\}\}/g, (_, key) => variables[key] || '');
+      return str.replaceAll(/\{\{(\w+)\}\}/g, (_, key) => variables[key] || '');
     };
 
     return {
@@ -287,7 +287,7 @@ export class SendGridProvider implements EmailProvider {
   }
 
   async send(email: OutboundEmail): Promise<EmailSendResult> {
-    const messageId = email.messageId || `sg-${Date.now()}-${randomUUID().replace(/-/g, '')}`;
+    const messageId = email.messageId || `sg-${Date.now()}-${randomUUID().replaceAll('-', '')}`;
 
     const payload = {
       personalizations: [

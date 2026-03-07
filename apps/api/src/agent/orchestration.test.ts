@@ -134,10 +134,18 @@ class MockOrchestrationService {
 
     const allSucceeded = Object.values(results).every((r) => r.success);
     const requiresHumanReview = lowConfidenceAgents.length > 0;
+    let workflowStatus: 'pending_review' | 'completed' | 'failed';
+    if (!allSucceeded) {
+      workflowStatus = 'failed';
+    } else if (requiresHumanReview) {
+      workflowStatus = 'pending_review';
+    } else {
+      workflowStatus = 'completed';
+    }
 
     return {
       workflowId: request.workflowId,
-      status: allSucceeded ? (requiresHumanReview ? 'pending_review' : 'completed') : 'failed',
+      status: workflowStatus,
       results,
       aggregatedOutput: this.aggregateResults(results),
       requiresHumanReview,

@@ -419,7 +419,7 @@ export const appointmentsRouter = createTRPCRouter({
         location: input.location,
         bufferMinutesBefore: input.bufferMinutesBefore,
         bufferMinutesAfter: input.bufferMinutesAfter,
-        recurrence: input.recurrence ? input.recurrence : undefined,
+        recurrence: input.recurrence ?? undefined,
         reminderMinutes: input.reminderMinutes,
         calendarId: input.calendarId || null,
         organizerId: ctx.user.userId,

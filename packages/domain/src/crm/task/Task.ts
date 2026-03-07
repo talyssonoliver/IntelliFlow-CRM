@@ -75,7 +75,7 @@ export interface CreateTaskProps {
  * Represents a task/activity in the CRM
  */
 export class Task extends AggregateRoot<TaskId> {
-  private props: TaskProps;
+  private readonly props: TaskProps;
 
   private constructor(id: TaskId, props: TaskProps) {
     super(id);

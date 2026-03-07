@@ -75,7 +75,7 @@ export function DocumentSearch({
   // ─── Close dropdown on outside click ──────────────────────────────────────
 
   useEffect(() => {
-    const handleClickOutside = (e: Readonly<MouseEvent>) => {
+    const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setOpenDropdown(null);
       }
@@ -87,7 +87,7 @@ export function DocumentSearch({
   // ─── Close dropdown on Escape ─────────────────────────────────────────────
 
   useEffect(() => {
-    const handleKeyDown = (e: Readonly<KeyboardEvent>) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setOpenDropdown(null);
     };
     document.addEventListener('keydown', handleKeyDown);
@@ -97,7 +97,7 @@ export function DocumentSearch({
   // ─── Filter Toggles ──────────────────────────────────────────────────────
 
   const toggleStatusFilter = useCallback(
-    (status: Readonly<DocumentStatus>) => {
+    (status: DocumentStatus) => {
       const current = activeFilters.status ?? [];
       const updated = current.includes(status)
         ? current.filter((s) => s !== status)
@@ -108,7 +108,7 @@ export function DocumentSearch({
   );
 
   const toggleClassificationFilter = useCallback(
-    (classification: Readonly<DocumentClassification>) => {
+    (classification: DocumentClassification) => {
       const current = activeFilters.classification ?? [];
       const updated = current.includes(classification)
         ? current.filter((c) => c !== classification)
@@ -181,7 +181,7 @@ export function DocumentSearch({
         {isOpen && (
           <div
             className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-20 py-2"
-            role="listbox"
+            role="listbox" // NOSONAR typescript:S6819 — custom dropdown filter listbox; <select> cannot be positioned absolutely or contain custom checkbox items
             aria-label={`${label} filter options`}
           >
             {options.map((opt) => {

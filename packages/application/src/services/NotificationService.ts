@@ -12,8 +12,6 @@ import {
   NotificationRepository,
   NotificationPreferenceRepository,
   NotificationPreference,
-  NotificationSentEvent,
-  NotificationFailedEvent,
   NotificationMovedToDLQEvent,
 } from '@intelliflow/domain';
 import {
@@ -102,7 +100,7 @@ export interface NotificationAuditLogger {
 }
 
 export class NotificationService {
-  private templates: Map<string, NotificationTemplate> = new Map();
+  private readonly templates: Map<string, NotificationTemplate> = new Map();
 
   constructor(
     private readonly notificationRepo: NotificationRepository,
@@ -562,7 +560,7 @@ export class NotificationService {
   private renderTemplate(template: string, variables: Record<string, string>): string {
     let result = template;
     for (const [key, value] of Object.entries(variables)) {
-      result = result.replace(new RegExp(`{{${key}}}`, 'g'), value);
+      result = result.replaceAll(new RegExp(`{{${key}}}`, 'g'), value);
     }
     return result;
   }

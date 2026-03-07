@@ -1,10 +1,9 @@
-import { createHash, randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import { Result, DomainError, Appointment } from '@intelliflow/domain';
 import {
   CalendarServicePort,
   CalendarProvider,
   ExternalCalendarEvent,
-  ExternalAttendee,
   OAuthTokens,
   OAuthConfig,
   WebhookRegistration,
@@ -20,7 +19,6 @@ import { RetryHandler, RateLimiter } from '../shared/RetryHandler';
 import {
   IdempotencyManager,
   InMemoryIdempotencyStore,
-  calculateAppointmentHash,
 } from '../shared/IdempotencyManager';
 
 /**
@@ -906,7 +904,7 @@ export class MicrosoftCalendarAdapter implements CalendarServicePort {
         channelId: notification.clientState ?? notification.subscriptionId,
         timestamp: new Date(),
       });
-    } catch (error) {
+    } catch {
       return Result.fail(new CalendarSyncError('microsoft', 'Failed to parse webhook payload'));
     }
   }
@@ -1067,7 +1065,7 @@ export class MicrosoftCalendarAdapter implements CalendarServicePort {
       case 404:
         return Result.fail(new CalendarEventNotFoundError('microsoft', errorMessage));
       case 429: {
-        const retryAfter = parseInt(error.error?.innerError?.retryAfterSeconds ?? '60');
+        const retryAfter = Number.parseInt(error.error?.innerError?.retryAfterSeconds ?? '60');
         return Result.fail(new CalendarRateLimitError('microsoft', retryAfter));
       }
       default:

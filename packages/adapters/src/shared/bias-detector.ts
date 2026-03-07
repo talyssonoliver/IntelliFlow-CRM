@@ -221,7 +221,6 @@ function metricsToCSV(metrics: BiasMetric[]): string {
  */
 function parseCSV(csv: string): BiasMetric[] {
   const lines = csv.trim().split('\n');
-  const headers = lines[0].split(',');
 
   return lines.slice(1).map((line) => {
     const values = line.split(',');
@@ -230,10 +229,10 @@ function parseCSV(csv: string): BiasMetric[] {
       model_version: values[1],
       demographic_segment: values[2],
       metric_name: values[3],
-      value: parseFloat(values[4]),
-      threshold: parseFloat(values[5]),
+      value: Number.parseFloat(values[4]),
+      threshold: Number.parseFloat(values[5]),
       passed: values[6] === 'true',
-      sample_size: parseInt(values[7], 10),
+      sample_size: Number.parseInt(values[7], 10),
     };
   });
 }

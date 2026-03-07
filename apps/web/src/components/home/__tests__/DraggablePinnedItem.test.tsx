@@ -23,7 +23,7 @@ const mockAttributes = { role: 'button', tabIndex: 0, 'aria-roledescription': 's
 let mockIsDragging = false;
 
 vi.mock('@dnd-kit/sortable', () => ({
-  useSortable: (args: Readonly<Record<string, unknown>>) => {
+  useSortable: (args: Record<string, unknown>) => {
     capturedSortableArgs = args;
     return {
       attributes: mockAttributes,

@@ -231,7 +231,7 @@ function deriveProbabilityHistory(
       history.push({
         date: new Date(activity.timestamp).toISOString().split('T')[0],
         probability: stageDefaults[toStage] ?? 50,
-        event: `Stage → ${toStage.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}`,
+        event: `Stage → ${toStage.replaceAll('_', ' ').replaceAll(/\b\w/g, (c) => c.toUpperCase())}`,
       });
     }
   }
@@ -255,7 +255,7 @@ function computeConfidenceScore(
     activityBonus = 0;
   }
   score += activityBonus;
-  score += opportunity.probability !== stageDefault ? 0.25 : 0.1;
+  score += opportunity.probability === stageDefault ? 0.1 : 0.25;
   score += opportunity.contact ? 0.25 : 0;
   score += opportunity.expectedCloseDate ? 0.25 : 0;
   return score;
@@ -693,7 +693,7 @@ export const opportunityRouter = createTRPCRouter({
 
     return {
       items,
-      nextCursor: hasMore ? items[items.length - 1].timestamp.toISOString() : null,
+      nextCursor: hasMore ? items.at(-1)!.timestamp.toISOString() : null,
       hasMore,
     };
   }),
@@ -942,7 +942,7 @@ export const opportunityRouter = createTRPCRouter({
    * PG-131: Deterministic risk scoring — no AI chain dependency
    */
   dealForecast: tenantProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.uuid() }))
     .query(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
 
@@ -985,7 +985,7 @@ export const opportunityRouter = createTRPCRouter({
 
       const stageDefault = STAGE_DEFAULTS[opportunity.stage] ?? 50;
 
-      const lastActivity = activities.length > 0 ? activities[activities.length - 1] : null;
+      const lastActivity = activities.length > 0 ? (activities.at(-1) ?? null) : null;
       const daysSinceActivity = lastActivity
         ? Math.floor(
             (Date.now() - new Date(lastActivity.timestamp).getTime()) / (1000 * 60 * 60 * 24)

@@ -83,7 +83,7 @@ function emitNotificationEvent(payload: NotificationEmitPayload) {
 function mapDbToNotification(record: any): Notification {
   return {
     id: record.id,
-    type: (record.metadata as any)?.notificationType || 'system_alert',
+    type: record.metadata?.notificationType || 'system_alert',
     title: record.subject,
     body: record.body,
     priority: record.priority?.toLowerCase() || 'normal',
@@ -94,12 +94,12 @@ function mapDbToNotification(record: any): Notification {
     expiresAt: null,
     entityType: record.sourceType || null,
     entityId: record.sourceId || null,
-    entityName: (record.metadata as any)?.entityName || null,
-    actionUrl: (record.metadata as any)?.actionUrl || null,
-    actionLabel: (record.metadata as any)?.actionLabel || null,
-    actor: (record.metadata as any)?.actor || null,
-    groupId: (record.metadata as any)?.groupId || null,
-    groupCount: (record.metadata as any)?.groupCount,
+    entityName: record.metadata?.entityName || null,
+    actionUrl: record.metadata?.actionUrl || null,
+    actionLabel: record.metadata?.actionLabel || null,
+    actor: record.metadata?.actor || null,
+    groupId: record.metadata?.groupId || null,
+    groupCount: record.metadata?.groupCount,
     metadata: record.metadata,
   };
 }
@@ -360,7 +360,7 @@ export const notificationsRouter = createTRPCRouter({
 
       return {
         notifications,
-        nextCursor: hasMore ? items[items.length - 1]?.id : null,
+        nextCursor: hasMore ? items.at(-1)?.id : null,
         hasMore,
         total,
         unreadCount,
@@ -678,6 +678,7 @@ export const notificationsRouter = createTRPCRouter({
    */
   onNew: tenantProcedure
     .input(notificationSubscriptionInputSchema)
+    // NOSONAR typescript:S1874 — legacy observable subscription, tRPC v11 async iterator migration tracked separately
     .subscription(({ ctx, input }) => {
       const userId = getUserId(ctx);
       return observable<NotificationEvent>(

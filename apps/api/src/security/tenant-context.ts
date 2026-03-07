@@ -108,7 +108,7 @@ export function createTenantScopedPrisma(
 
           // Set session variable (used by RLS policies)
           await prisma.$executeRawUnsafe(
-            `SET request.jwt.claims = '${claims.replace(/'/g, "''")}'`
+            `SET request.jwt.claims = '${claims.replaceAll("'", "''")}'`
           );
 
           // Execute the actual query
@@ -274,7 +274,7 @@ export function createTenantWhereClause<T extends Record<string, unknown>>(
   tenant: TenantContext,
   additionalWhere?: T
 ): T & { ownerId?: string | { in: string[] } } {
-  const base = additionalWhere || ({} as T);
+  const base = additionalWhere ?? ({} as T);
 
   // Admin can access all
   if (tenant.role === 'ADMIN') {

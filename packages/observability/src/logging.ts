@@ -142,10 +142,8 @@ export function initLogger(config: LoggerConfig): void {
  * Get the default logger instance
  */
 export function getLogger(): pino.Logger {
-  if (!defaultLogger) {
-    // Create a fallback logger if not initialized
-    defaultLogger = createLogger({ name: 'default' });
-  }
+  // Create a fallback logger if not initialized
+  defaultLogger ??= createLogger({ name: 'default' });
   return defaultLogger;
 }
 

@@ -57,11 +57,11 @@ export class Percentage extends ValueObject<PercentageProps> {
       return Result.fail(new InvalidPercentageError(0, 'value cannot be null or undefined'));
     }
 
-    if (isNaN(value)) {
+    if (Number.isNaN(value)) {
       return Result.fail(new InvalidPercentageError(value, 'value is not a number'));
     }
 
-    if (!isFinite(value)) {
+    if (!Number.isFinite(value)) {
       return Result.fail(new InvalidPercentageError(value, 'value must be finite'));
     }
 
@@ -174,7 +174,7 @@ export class Percentage extends ValueObject<PercentageProps> {
    * Result is clamped to 0-100 range
    */
   multiply(scalar: number): Result<Percentage, InvalidPercentageError> {
-    if (isNaN(scalar) || !isFinite(scalar)) {
+    if (Number.isNaN(scalar) || !Number.isFinite(scalar)) {
       return Result.fail(new InvalidPercentageError(0, 'scalar must be a finite number'));
     }
 

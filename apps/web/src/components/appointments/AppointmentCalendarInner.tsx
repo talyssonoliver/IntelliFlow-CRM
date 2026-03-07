@@ -24,8 +24,8 @@ export interface AppointmentCalendarInnerProps {
   onAppointmentClick: (id: string) => void;
   onTaskClick?: (id: string) => void;
   onCreateWithSlot: (startTime: Date, endTime: Date) => void;
-  onCreateWithDate?: (date: Readonly<Date>) => void;
-  onDateChange: (date: Readonly<Date>) => void;
+  onCreateWithDate?: (date: Date) => void;
+  onDateChange: (date: Date) => void;
 }
 
 const PRIORITY_CHIP_COLORS: Record<string, string> = {

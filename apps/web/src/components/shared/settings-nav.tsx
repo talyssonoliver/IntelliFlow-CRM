@@ -21,7 +21,11 @@ export function SettingsNav({ searchQuery, className }: Readonly<SettingsNavProp
 
   if (categories.length === 0) {
     return (
-      <div className={`text-center py-12 ${className ?? ''}`} role="status" aria-live="polite">
+      <div
+        className={`text-center py-12 ${className ?? ''}`}
+        role="status" // NOSONAR typescript:S6819 — live status region for search results; <output> is for form computation results
+        aria-live="polite"
+      >
         <span className="material-symbols-outlined text-4xl text-muted-foreground mb-3 block">
           search_off
         </span>

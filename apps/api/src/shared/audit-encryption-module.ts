@@ -256,7 +256,7 @@ export class AuditEncryption {
     const derived = hmac.digest();
 
     // Return 32 bytes for AES-256
-    return derived.slice(0, 32);
+    return derived.subarray(0, 32);
   }
 
   /**

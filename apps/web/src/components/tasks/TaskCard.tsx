@@ -3,12 +3,14 @@
 import { Card } from '@intelliflow/ui';
 import type { TaskStatus, TaskPriority } from '@intelliflow/domain';
 
+type DateStringNull = Date | string | null;
+
 export interface TaskCardProps {
   readonly task: {
     readonly id: string;
     readonly title: string;
     readonly description: string | null;
-    readonly dueDate: Date | string | null;
+    readonly dueDate: DateStringNull;
     readonly priority: TaskPriority;
     readonly status: TaskStatus;
     readonly lead?: { id: string; firstName: string; lastName: string } | null;
@@ -32,14 +34,14 @@ const STATUS_STYLES: Record<string, string> = {
   CANCELLED: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
 };
 
-function formatDueDate(date: Date | string | null): string | null {
+function formatDueDate(date: DateStringNull): string | null {
   if (!date) return null;
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return null;
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-function getDueDateStatus(date: Date | string | null): 'overdue' | 'today' | 'normal' {
+function getDueDateStatus(date: DateStringNull): 'overdue' | 'today' | 'normal' {
   if (!date) return 'normal';
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();

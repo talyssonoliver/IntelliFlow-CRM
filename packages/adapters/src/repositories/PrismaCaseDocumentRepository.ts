@@ -125,7 +125,7 @@ export class PrismaCaseDocumentRepository implements CaseDocumentRepository {
     if (!current) return [];
 
     // Walk up the parent chain to find root
-    while (current && current.parentVersionId) {
+    while (current?.parentVersionId) {
       rootId = current.parentVersionId;
       const nextDoc = await this.prisma.caseDocument.findUnique({
         where: { id: rootId },

@@ -8,7 +8,7 @@
  * @implements IFC-177
  */
 
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 
 /**
  * Generate a cryptographically secure lock token

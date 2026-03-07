@@ -11,7 +11,7 @@ import {
   type WebhookSourceConfig,
   type EventHandler,
 } from '../framework';
-import { createHmac } from 'crypto';
+import { createHmac } from 'node:crypto';
 
 function makeSource(overrides: Partial<WebhookSourceConfig> = {}): WebhookSourceConfig {
   return {

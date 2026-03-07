@@ -35,14 +35,16 @@ interface AssignSheetProps {
   isAssigning?: boolean;
   /** Whether the assignee list is still loading */
   isLoadingOptions?: boolean;
-  /** Callback when a team member is selected */
-  onAssign: (userId: string) => void;
+  /** Callback when a team member is selected. Return a promise to keep sheet open on error. */
+  onAssign: (userId: string) => void | Promise<void>;
   /** Optional: show "Assign to me" quick action. Default true */
   showSelfAssign?: boolean;
   /** Optional: label for the team section. Default "Team Members" */
   teamSectionLabel?: string;
   /** Optional: children rendered between header and team list (e.g. reason textarea) */
   children?: React.ReactNode;
+  /** When false, team member buttons are disabled (e.g. reason field not filled). Default true */
+  canAssign?: boolean;
 }
 
 export function AssignSheet({
@@ -59,6 +61,7 @@ export function AssignSheet({
   showSelfAssign = true,
   teamSectionLabel = 'Team Members',
   children,
+  canAssign = true,
 }: Readonly<AssignSheetProps>) {
   const uniqueAssignees = useMemo(() => {
     const seenIds = new Set<string>();
@@ -70,10 +73,16 @@ export function AssignSheet({
     });
   }, [assignees]);
 
-  const handleAssign = (assigneeId: string) => {
-    if (!assigneeId || isAssigning) return;
-    onAssign(assigneeId);
-    onOpenChange(false);
+  const isDisabled = isAssigning || !canAssign;
+
+  const handleAssign = async (assigneeId: string) => {
+    if (!assigneeId || isDisabled) return;
+    try {
+      await onAssign(assigneeId);
+      onOpenChange(false);
+    } catch {
+      // Keep sheet open on error — caller surfaces feedback
+    }
   };
 
   return (
@@ -100,7 +109,7 @@ export function AssignSheet({
               <button
                 type="button"
                 onClick={() => handleAssign(currentUserId)}
-                disabled={isAssigning}
+                disabled={isDisabled}
                 className="w-full flex items-center justify-between gap-3 p-3 rounded-lg bg-[#137fec]/5 border border-[#137fec]/20 text-left hover:bg-[#137fec]/10 transition-colors disabled:opacity-50"
               >
                 <div className="flex items-center gap-3 min-w-0">
@@ -157,7 +166,7 @@ export function AssignSheet({
                         key={assignee.id}
                         type="button"
                         onClick={() => handleAssign(assignee.id)}
-                        disabled={isAssigning}
+                        disabled={isDisabled}
                         className="w-full flex items-center justify-between gap-3 p-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left disabled:opacity-50"
                       >
                         <div className="flex items-center gap-3 min-w-0">

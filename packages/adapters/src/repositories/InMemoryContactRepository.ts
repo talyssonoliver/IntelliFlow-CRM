@@ -5,7 +5,7 @@ import { Contact, ContactId, Email, ContactRepository } from '@intelliflow/domai
  * Used for testing and development
  */
 export class InMemoryContactRepository implements ContactRepository {
-  private contacts: Map<string, Contact> = new Map();
+  private readonly contacts: Map<string, Contact> = new Map();
 
   async save(contact: Contact): Promise<void> {
     this.contacts.set(contact.id.value, contact);

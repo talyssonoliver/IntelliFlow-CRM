@@ -19,7 +19,7 @@
  * ```
  */
 
-import { randomBytes } from 'crypto';
+import { randomBytes } from 'node:crypto';
 import { AuditLogger } from './audit-logger';
 import { EncryptionService, EncryptedData, KeyMetadata, EncryptionError } from './encryption';
 
@@ -271,7 +271,7 @@ export class VaultKeyVersionStore implements KeyVersionStore {
     const keys = data.data.keys;
 
     return Object.entries(keys).map(([version, info]) => ({
-      version: parseInt(version),
+      version: Number.parseInt(version),
       createdAt: new Date(info.creation_time),
       algorithm: data.data.type,
       keyId: this.keyName,
@@ -696,8 +696,8 @@ export function getKeyRotationService(): KeyRotationService {
     keyRotationServiceInstance = new KeyRotationService(
       {
         enabled: process.env.KEY_ROTATION_ENABLED !== 'false',
-        intervalDays: parseInt(process.env.KEY_ROTATION_INTERVAL_DAYS || '30'),
-        retentionVersions: parseInt(process.env.KEY_RETENTION_VERSIONS || '5'),
+        intervalDays: Number.parseInt(process.env.KEY_ROTATION_INTERVAL_DAYS || '30'),
+        retentionVersions: Number.parseInt(process.env.KEY_RETENTION_VERSIONS || '5'),
         notificationWebhook: process.env.KEY_ROTATION_WEBHOOK,
       },
       versionStore

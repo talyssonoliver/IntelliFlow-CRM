@@ -14,17 +14,17 @@ import type {
 
 export function mapToCustomer(data: Record<string, unknown>): StripeCustomer {
   return {
-    id: String(data.id ?? ''),
-    email: data.email ? String(data.email) : undefined,
-    name: data.name ? String(data.name) : undefined,
-    phone: data.phone ? String(data.phone) : undefined,
-    description: data.description ? String(data.description) : undefined,
+    id: (data.id as string | null | undefined) ?? '',
+    email: data.email ? (data.email as string) : undefined,
+    name: data.name ? (data.name as string) : undefined,
+    phone: data.phone ? (data.phone as string) : undefined,
+    description: data.description ? (data.description as string) : undefined,
     metadata: data.metadata as Record<string, string> | undefined,
     defaultPaymentMethodId: data.invoice_settings
-      ? String((data.invoice_settings as Record<string, unknown>).default_payment_method ?? '')
+      ? ((data.invoice_settings as Record<string, unknown>).default_payment_method as string | null | undefined) ?? ''
       : undefined,
     balance: Number(data.balance ?? 0),
-    currency: String(data.currency ?? 'usd'),
+    currency: (data.currency as string | null | undefined) ?? 'usd',
     created: new Date(Number(data.created ?? 0) * 1000),
   };
 }
@@ -36,41 +36,41 @@ export function mapToPaymentMethod(data: Record<string, unknown>): StripePayment
   const address = (billingDetails.address as Record<string, unknown>) ?? {};
 
   return {
-    id: String(data.id ?? ''),
-    type: String(data.type ?? 'card') as StripePaymentMethod['type'],
-    customerId: data.customer ? String(data.customer) : undefined,
+    id: (data.id as string | null | undefined) ?? '',
+    type: ((data.type as string | null | undefined) ?? 'card') as StripePaymentMethod['type'],
+    customerId: data.customer ? (data.customer as string) : undefined,
     card: card
       ? {
-          brand: String(card.brand ?? ''),
-          last4: String(card.last4 ?? ''),
+          brand: (card.brand as string | null | undefined) ?? '',
+          last4: (card.last4 as string | null | undefined) ?? '',
           expMonth: Number(card.exp_month ?? 0),
           expYear: Number(card.exp_year ?? 0),
-          funding: String(card.funding ?? ''),
+          funding: (card.funding as string | null | undefined) ?? '',
         }
       : undefined,
     bankAccount: bankAccount
       ? {
-          bankName: String(bankAccount.bank_name ?? ''),
-          last4: String(bankAccount.last4 ?? ''),
+          bankName: (bankAccount.bank_name as string | null | undefined) ?? '',
+          last4: (bankAccount.last4 as string | null | undefined) ?? '',
           routingNumber: bankAccount.routing_number
-            ? String(bankAccount.routing_number)
+            ? (bankAccount.routing_number as string)
             : undefined,
-          accountHolderType: String(bankAccount.account_holder_type ?? 'individual') as
+          accountHolderType: ((bankAccount.account_holder_type as string | null | undefined) ?? 'individual') as
             | 'individual'
             | 'company',
         }
       : undefined,
     billingDetails: {
-      name: billingDetails.name ? String(billingDetails.name) : undefined,
-      email: billingDetails.email ? String(billingDetails.email) : undefined,
-      phone: billingDetails.phone ? String(billingDetails.phone) : undefined,
+      name: billingDetails.name ? (billingDetails.name as string) : undefined,
+      email: billingDetails.email ? (billingDetails.email as string) : undefined,
+      phone: billingDetails.phone ? (billingDetails.phone as string) : undefined,
       address: {
-        line1: address.line1 ? String(address.line1) : undefined,
-        line2: address.line2 ? String(address.line2) : undefined,
-        city: address.city ? String(address.city) : undefined,
-        state: address.state ? String(address.state) : undefined,
-        postalCode: address.postal_code ? String(address.postal_code) : undefined,
-        country: address.country ? String(address.country) : undefined,
+        line1: address.line1 ? (address.line1 as string) : undefined,
+        line2: address.line2 ? (address.line2 as string) : undefined,
+        city: address.city ? (address.city as string) : undefined,
+        state: address.state ? (address.state as string) : undefined,
+        postalCode: address.postal_code ? (address.postal_code as string) : undefined,
+        country: address.country ? (address.country as string) : undefined,
       },
     },
     created: new Date(Number(data.created ?? 0) * 1000),
@@ -79,16 +79,16 @@ export function mapToPaymentMethod(data: Record<string, unknown>): StripePayment
 
 export function mapToPaymentIntent(data: Record<string, unknown>): StripePaymentIntent {
   return {
-    id: String(data.id ?? ''),
+    id: (data.id as string | null | undefined) ?? '',
     amount: Number(data.amount ?? 0),
-    currency: String(data.currency ?? 'usd'),
-    status: String(data.status ?? 'requires_payment_method') as StripePaymentIntent['status'],
-    customerId: data.customer ? String(data.customer) : undefined,
-    paymentMethodId: data.payment_method ? String(data.payment_method) : undefined,
-    clientSecret: String(data.client_secret ?? ''),
-    description: data.description ? String(data.description) : undefined,
+    currency: (data.currency as string | null | undefined) ?? 'usd',
+    status: ((data.status as string | null | undefined) ?? 'requires_payment_method') as StripePaymentIntent['status'],
+    customerId: data.customer ? (data.customer as string) : undefined,
+    paymentMethodId: data.payment_method ? (data.payment_method as string) : undefined,
+    clientSecret: (data.client_secret as string | null | undefined) ?? '',
+    description: data.description ? (data.description as string) : undefined,
     metadata: data.metadata as Record<string, string> | undefined,
-    receiptEmail: data.receipt_email ? String(data.receipt_email) : undefined,
+    receiptEmail: data.receipt_email ? (data.receipt_email as string) : undefined,
     capturedAmount: data.amount_received ? Number(data.amount_received) : undefined,
     created: new Date(Number(data.created ?? 0) * 1000),
   };
@@ -96,13 +96,13 @@ export function mapToPaymentIntent(data: Record<string, unknown>): StripePayment
 
 export function mapToRefund(data: Record<string, unknown>): StripeRefund {
   return {
-    id: String(data.id ?? ''),
-    paymentIntentId: String(data.payment_intent ?? ''),
+    id: (data.id as string | null | undefined) ?? '',
+    paymentIntentId: (data.payment_intent as string | null | undefined) ?? '',
     amount: Number(data.amount ?? 0),
-    currency: String(data.currency ?? 'usd'),
-    status: String(data.status ?? 'pending') as StripeRefund['status'],
-    reason: data.reason ? (String(data.reason) as StripeRefund['reason']) : undefined,
-    receiptNumber: data.receipt_number ? String(data.receipt_number) : undefined,
+    currency: (data.currency as string | null | undefined) ?? 'usd',
+    status: ((data.status as string | null | undefined) ?? 'pending') as StripeRefund['status'],
+    reason: data.reason ? ((data.reason as string) as StripeRefund['reason']) : undefined,
+    receiptNumber: data.receipt_number ? (data.receipt_number as string) : undefined,
     created: new Date(Number(data.created ?? 0) * 1000),
   };
 }
@@ -114,12 +114,12 @@ export function mapToSubscription(data: Record<string, unknown>): StripeSubscrip
   const price = firstItem.price as Record<string, unknown> | undefined;
 
   return {
-    id: String(data.id ?? ''),
-    customerId: String(data.customer ?? ''),
-    status: String(data.status ?? 'incomplete') as StripeSubscription['status'],
-    priceId: price ? String(price.id ?? '') : '',
+    id: (data.id as string | null | undefined) ?? '',
+    customerId: (data.customer as string | null | undefined) ?? '',
+    status: ((data.status as string | null | undefined) ?? 'incomplete') as StripeSubscription['status'],
+    priceId: price ? ((price.id as string | null | undefined) ?? '') : '',
     quantity: Number(firstItem.quantity ?? 1),
-    currency: String(data.currency ?? 'usd'),
+    currency: (data.currency as string | null | undefined) ?? 'usd',
     currentPeriodStart: new Date(Number(data.current_period_start ?? 0) * 1000),
     currentPeriodEnd: new Date(Number(data.current_period_end ?? 0) * 1000),
     cancelAtPeriodEnd: Boolean(data.cancel_at_period_end),
@@ -145,8 +145,8 @@ function extractCardDetails(charge: unknown): {
   const card = extractChargeCard(charge);
   if (!card) return { paymentMethodBrand: undefined, paymentMethodLast4: undefined };
   return {
-    paymentMethodBrand: card.brand ? String(card.brand) : undefined,
-    paymentMethodLast4: card.last4 ? String(card.last4) : undefined,
+    paymentMethodBrand: card.brand ? (card.brand as string) : undefined,
+    paymentMethodLast4: card.last4 ? (card.last4 as string) : undefined,
   };
 }
 
@@ -156,12 +156,12 @@ function mapInvoiceLineItems(
   const linesObj = data.lines as Record<string, unknown> | undefined;
   const linesData = (linesObj?.data as Array<Record<string, unknown>>) ?? [];
   return linesData.map((item) => ({
-    id: String(item.id ?? ''),
-    description: String(item.description ?? ''),
+    id: (item.id as string | null | undefined) ?? '',
+    description: (item.description as string | null | undefined) ?? '',
     quantity: Number(item.quantity ?? 1),
     unitAmount: Number(item.unit_amount ?? 0),
     amount: Number(item.amount ?? 0),
-    currency: String(item.currency ?? data.currency ?? 'usd'),
+    currency: (item.currency as string | null | undefined) ?? (data.currency as string | null | undefined) ?? 'usd',
   }));
 }
 
@@ -180,12 +180,12 @@ function mapInvoiceBillingAddress(
   const customerAddress = data.customer_address as Record<string, unknown> | undefined;
   if (!customerAddress) return undefined;
   return {
-    line1: customerAddress.line1 ? String(customerAddress.line1) : undefined,
-    line2: customerAddress.line2 ? String(customerAddress.line2) : undefined,
-    city: customerAddress.city ? String(customerAddress.city) : undefined,
-    state: customerAddress.state ? String(customerAddress.state) : undefined,
-    postalCode: customerAddress.postal_code ? String(customerAddress.postal_code) : undefined,
-    country: customerAddress.country ? String(customerAddress.country) : undefined,
+    line1: customerAddress.line1 ? (customerAddress.line1 as string) : undefined,
+    line2: customerAddress.line2 ? (customerAddress.line2 as string) : undefined,
+    city: customerAddress.city ? (customerAddress.city as string) : undefined,
+    state: customerAddress.state ? (customerAddress.state as string) : undefined,
+    postalCode: customerAddress.postal_code ? (customerAddress.postal_code as string) : undefined,
+    country: customerAddress.country ? (customerAddress.country as string) : undefined,
   };
 }
 
@@ -199,28 +199,28 @@ export function mapToInvoice(data: Record<string, unknown>): StripeInvoice {
   const { paymentMethodBrand, paymentMethodLast4 } = extractCardDetails(data.charge);
 
   return {
-    id: String(data.id ?? ''),
-    customerId: String(data.customer ?? ''),
-    subscriptionId: data.subscription ? String(data.subscription) : undefined,
-    status: String(data.status ?? 'draft') as StripeInvoice['status'],
+    id: (data.id as string | null | undefined) ?? '',
+    customerId: (data.customer as string | null | undefined) ?? '',
+    subscriptionId: data.subscription ? (data.subscription as string) : undefined,
+    status: ((data.status as string | null | undefined) ?? 'draft') as StripeInvoice['status'],
     amountDue: Number(data.amount_due ?? 0),
     amountPaid: Number(data.amount_paid ?? 0),
     amountRemaining: Number(data.amount_remaining ?? 0),
-    currency: String(data.currency ?? 'usd'),
+    currency: (data.currency as string | null | undefined) ?? 'usd',
     dueDate: data.due_date ? new Date(Number(data.due_date) * 1000) : undefined,
     paidAt: data.status_transitions
       ? new Date(Number((data.status_transitions as Record<string, unknown>).paid_at ?? 0) * 1000)
       : undefined,
-    hostedInvoiceUrl: data.hosted_invoice_url ? String(data.hosted_invoice_url) : undefined,
-    invoicePdf: data.invoice_pdf ? String(data.invoice_pdf) : undefined,
+    hostedInvoiceUrl: data.hosted_invoice_url ? (data.hosted_invoice_url as string) : undefined,
+    invoicePdf: data.invoice_pdf ? (data.invoice_pdf as string) : undefined,
     created: new Date(Number(data.created ?? 0) * 1000),
-    number: data.number ? String(data.number) : undefined,
-    description: data.description ? String(data.description) : undefined,
-    subtotal: data.subtotal != null ? Number(data.subtotal) : undefined,
-    tax: data.tax != null ? Number(data.tax) : undefined,
-    discount: data.discount != null ? Number(data.discount) : undefined,
-    customerEmail: data.customer_email ? String(data.customer_email) : undefined,
-    customerName: data.customer_name ? String(data.customer_name) : undefined,
+    number: data.number ? (data.number as string) : undefined,
+    description: data.description ? (data.description as string) : undefined,
+    subtotal: data.subtotal == null ? undefined : Number(data.subtotal),
+    tax: data.tax == null ? undefined : Number(data.tax),
+    discount: data.discount == null ? undefined : Number(data.discount),
+    customerEmail: data.customer_email ? (data.customer_email as string) : undefined,
+    customerName: data.customer_name ? (data.customer_name as string) : undefined,
     paymentMethodBrand,
     paymentMethodLast4,
     billingAddress,

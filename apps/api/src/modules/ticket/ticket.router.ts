@@ -22,11 +22,7 @@ import {
   statsInputSchema,
 } from '@intelliflow/validators/ticket';
 import { type Context } from '../../context';
-import {
-  assertTenantContext,
-  createTenantWhereClause,
-  type TenantAwareContext,
-} from '../../security/tenant-context';
+import { assertTenantContext } from '../../security/tenant-context';
 import { createNotification } from '../notifications/notifications.router';
 
 /**

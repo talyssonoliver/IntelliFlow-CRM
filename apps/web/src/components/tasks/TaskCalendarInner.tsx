@@ -21,7 +21,7 @@ export interface TaskCalendarInnerProps {
   tasks: readonly CalendarTask[];
   currentDate: Date;
   onTaskClick: (id: string) => void;
-  onCreateWithDate: (date: Readonly<Date>) => void;
+  onCreateWithDate: (date: Date) => void;
 }
 
 function toTemporalPlainDate(date: Readonly<Date>): Temporal.PlainDate {

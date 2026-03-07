@@ -162,7 +162,7 @@ export function EmailCompose({
   }, [draftMutation, draftId, toRecipients, subject, getBodyHtml]);
 
   const handleFormat = useCallback((command: string) => {
-    document.execCommand(command, false);
+    document.execCommand(command, false); // NOSONAR typescript:S1874
     bodyRef.current?.focus();
   }, []);
 

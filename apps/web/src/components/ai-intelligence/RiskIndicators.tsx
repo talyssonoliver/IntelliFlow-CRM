@@ -5,7 +5,6 @@
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from '@intelliflow/ui';
-import type { ChurnRiskLevel } from '@intelliflow/domain';
 import { CHURN_RISK_LEVELS } from '@intelliflow/domain';
 import { getRiskBadgeClass } from '@/lib/churn-risk/churn-utils';
 
@@ -36,13 +35,13 @@ export function RiskIndicators({ distribution, total }: Readonly<RiskIndicatorsP
           return (
             <div key={level} className="flex items-center gap-3">
               <span
-                className={`inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-medium w-20 ${getRiskBadgeClass(level as ChurnRiskLevel)}`}
+                className={`inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-medium w-20 ${getRiskBadgeClass(level)}`}
               >
                 {level}
               </span>
               <div
                 className="flex-1 h-2 rounded-full bg-muted overflow-hidden"
-                role="progressbar"
+                role="progressbar" // NOSONAR typescript:S6819 — custom styled progress with inner fill child; <progress> cannot contain child elements
                 aria-valuenow={pct}
                 aria-valuemin={0}
                 aria-valuemax={100}

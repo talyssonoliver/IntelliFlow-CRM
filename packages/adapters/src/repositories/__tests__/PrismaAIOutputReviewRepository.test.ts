@@ -15,7 +15,7 @@ import {
   OptimisticLockError,
 } from '../PrismaAIOutputReviewRepository';
 import { AIOutputReview, ReviewStatus, ReviewDecision, AIOutputType } from '@intelliflow/domain';
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 
 // Generate valid UUIDs for tests
 const REVIEW_ID_1 = randomUUID();

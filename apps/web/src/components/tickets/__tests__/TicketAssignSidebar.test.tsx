@@ -121,11 +121,10 @@ describe('TicketAssignSidebar', () => {
     expect(screen.getByText('No team members available.')).toBeInTheDocument();
   });
 
-  it('disables Assign to me when no currentUserId', () => {
+  it('hides Assign to me when no currentUserId', () => {
     render(<TicketAssignSidebar {...baseProps} currentUserId={null} />);
 
-    const assignToMeBtn = screen.getByText('Assign to me').closest('button');
-    expect(assignToMeBtn).toBeDisabled();
+    expect(screen.queryByText('Assign to me')).not.toBeInTheDocument();
   });
 
   it('disables buttons when isAssigning', () => {

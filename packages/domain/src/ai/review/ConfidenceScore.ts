@@ -31,7 +31,7 @@ export class ConfidenceScore extends ValueObject<ConfidenceScoreProps> {
    * @throws InvalidConfidenceScoreError if value is outside valid range
    */
   static create(value: number): ConfidenceScore {
-    if (isNaN(value) || value < 0 || value > 1) {
+    if (Number.isNaN(value) || value < 0 || value > 1) {
       throw new InvalidConfidenceScoreError(value);
     }
     return new ConfidenceScore({ value });

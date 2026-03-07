@@ -66,7 +66,7 @@ export class WebsiteUrl extends ValueObject<WebsiteUrlProps> {
 
     // Add protocol if missing
     let urlWithProtocol = trimmed;
-    if (!trimmed.match(/^https?:\/\//i)) {
+    if (!/^https?:\/\//i.exec(trimmed)) {
       urlWithProtocol = `https://${trimmed}`;
     }
 
@@ -74,7 +74,7 @@ export class WebsiteUrl extends ValueObject<WebsiteUrlProps> {
     let url: URL;
     try {
       url = new URL(urlWithProtocol);
-    } catch (error) {
+    } catch {
       return Result.fail(new InvalidUrlError(value, 'malformed URL'));
     }
 

@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import { InMemoryCaseDocumentRepository } from '../InMemoryCaseDocumentRepository';
 import {
   CaseDocument,

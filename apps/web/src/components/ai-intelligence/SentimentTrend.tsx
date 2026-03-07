@@ -33,7 +33,11 @@ export default function SentimentTrend({ trends }: Readonly<SentimentTrendProps>
   }));
 
   return (
-    <div aria-label="Sentiment trend chart" role="img" className="w-full h-64">
+    <div
+      aria-label="Sentiment trend chart"
+      role="img" // NOSONAR typescript:S6819 — Recharts wrapper div; <img> cannot contain Recharts SVG components
+      className="w-full h-64"
+    >
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
           <XAxis

@@ -1,4 +1,4 @@
-import { Result, DomainError } from '../../shared/Result';
+import { DomainError } from '../../shared/Result';
 import { Appointment } from './Appointment';
 import { AppointmentId } from './AppointmentId';
 import { TimeSlot } from './TimeSlot';
@@ -179,7 +179,7 @@ export class ConflictDetector {
 
     for (const existing of existingAppointments) {
       // Skip excluded appointment (e.g., when rescheduling)
-      if (excludeAppointmentId && existing.id.value === excludeAppointmentId.value) {
+      if (existing.id.value === excludeAppointmentId?.value) {
         continue;
       }
 

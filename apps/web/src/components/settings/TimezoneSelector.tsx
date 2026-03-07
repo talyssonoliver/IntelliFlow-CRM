@@ -93,7 +93,7 @@ function groupByRegion(timezones: string[]): Record<string, string[]> {
 }
 
 function formatTimezoneLabel(tz: string): string {
-  const city = tz.includes('/') ? tz.split('/').slice(1).join('/').replaceAll(/_/g, ' ') : tz;
+  const city = tz.includes('/') ? tz.split('/').slice(1).join('/').replaceAll('_', ' ') : tz;
   try {
     const now = new Date();
     const offset = new Intl.DateTimeFormat('en-US', {

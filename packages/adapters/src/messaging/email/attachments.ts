@@ -10,7 +10,7 @@
  */
 
 import { z } from 'zod';
-import { createHash } from 'crypto';
+import { createHash } from 'node:crypto';
 
 // Attachment metadata schema
 export const AttachmentMetadataSchema = z.object({
@@ -205,8 +205,8 @@ export function getExtension(filename: string): string {
 export function sanitizeFilename(filename: string): string {
   // Remove path separators and dangerous characters
   return filename
-    .replace(/[/\\:*?"<>|]/g, '_')
-    .replace(/\.{2,}/g, '.')
+    .replaceAll(/[/\\:*?"<>|]/g, '_')
+    .replaceAll(/\.{2,}/g, '.')
     .replace(/^\.+/, '')
     .slice(0, 255);
 }
@@ -291,7 +291,7 @@ export class MockVirusScanner implements VirusScanner {
     // Check for EICAR test virus signature
     const contentStr = content.toString();
     if (
-      contentStr.includes('X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*')
+      contentStr.includes(String.raw`X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*`)
     ) {
       return {
         clean: false,
@@ -348,10 +348,10 @@ export class BasicContentExtractor implements ContentExtractor {
     if (mimeType === 'text/html') {
       // Strip HTML tags for plain text extraction
       return text
-        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-        .replace(/<[^>]{0,2000}>/g, ' ')
-        .replace(/\s+/g, ' ')
+        .replaceAll(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replaceAll(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replaceAll(/<[^>]{0,2000}>/g, ' ')
+        .replaceAll(/\s+/g, ' ')
         .trim();
     }
 
@@ -519,7 +519,7 @@ export class AttachmentHandler {
   }
 
   private async tryExtractContent(mimeType: string, content: Buffer): Promise<string | undefined> {
-    if (!this.contentExtractor || !this.contentExtractor.canExtract(mimeType)) return undefined;
+    if (!this.contentExtractor?.canExtract(mimeType)) return undefined;
     try {
       return (await this.contentExtractor.extract(content, mimeType)) || undefined;
     } catch (error) {

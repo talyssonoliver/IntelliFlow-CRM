@@ -11,7 +11,7 @@
  */
 
 import { Result, DomainError } from '../../shared/Result';
-import { DeadlineRule, DayCountType, DeadlineTrigger } from './DeadlineRule';
+import { DeadlineRule } from './DeadlineRule';
 import { HolidayCalendar } from './HolidayCalendar';
 import { Deadline, CreateDeadlineProps, DeadlinePriority } from './Deadline';
 import { CaseId } from '../cases/CaseId';
@@ -270,7 +270,7 @@ export class DeadlineEngine {
     const daysUntilDue = deadline.daysRemaining;
 
     // Check if current day matches any reminder interval
-    const matchesInterval = intervals.some((interval) => daysUntilDue === interval);
+    const matchesInterval = intervals.includes(daysUntilDue);
 
     if (!matchesInterval) {
       return { shouldSend: false, daysUntilDue, reminderType: 'NONE' };
@@ -296,7 +296,6 @@ export class DeadlineEngine {
     deadlines: Deadline[],
     thresholdDays: number = this.config.warningThresholdDays
   ): Deadline[] {
-    const now = new Date();
     return deadlines.filter((d) => {
       if (!d.isActive) return false;
       const daysRemaining = d.daysRemaining;

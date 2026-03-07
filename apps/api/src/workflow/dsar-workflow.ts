@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { randomBytes } from 'crypto';
+import { randomBytes } from 'node:crypto';
 
 /**
  * Data Subject Access Request (DSAR) Workflow - IFC-140
@@ -212,7 +212,7 @@ export class DSARWorkflow {
       where: { id: requestId },
     });
 
-    if (!dsarRecord || dsarRecord.status !== 'verified') {
+    if (dsarRecord?.status !== 'verified') {
       throw new Error('DSAR request not ready for processing');
     }
 

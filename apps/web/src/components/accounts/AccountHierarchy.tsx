@@ -40,7 +40,7 @@ interface TreeNodeProps {
   onToggle: (id: string) => void;
   onFocus: (id: string) => void;
   onNavigate: (id: string) => void;
-  nodeRefs: React.MutableRefObject<Map<string, HTMLLIElement>>;
+  nodeRefs: React.RefObject<Map<string, HTMLLIElement>>;
 }
 
 function TreeNode({
@@ -62,7 +62,7 @@ function TreeNode({
   const tierConfig = TIER_CONFIG[tier];
 
   return (
-    <li
+    <li // NOSONAR typescript:S6842 — treeitem role is the correct ARIA pattern for nodes in a tree widget; replacing with a div would break semantics
       ref={(el) => {
         if (el) nodeRefs.current.set(node.id, el);
       }}
@@ -127,11 +127,11 @@ function TreeNode({
           </Badge>
         ) : null}
 
-        {node.revenue != null ? (
+        {node.revenue == null ? null : (
           <span className="text-xs text-muted-foreground shrink-0 ml-auto">
             {formatCurrency(node.revenue)}
           </span>
-        ) : null}
+        )}
 
         <span className="text-[10px] text-muted-foreground shrink-0">
           {node._count.contacts}C &middot; {node._count.opportunities}O
@@ -139,7 +139,10 @@ function TreeNode({
       </button>
 
       {hasChildren && isExpanded ? (
-        <ul role="group" className="mt-0.5">
+        <ul
+          role="group" // NOSONAR typescript:S6819 — tree node group in a treeview pattern; <fieldset> is inappropriate for tree hierarchy
+          className="mt-0.5"
+        >
           {node.children.map((child) => (
             <TreeNode
               key={child.id}
@@ -278,7 +281,7 @@ export function AccountHierarchy({ accountId }: Readonly<AccountHierarchyProps>)
   );
 
   const handleKeyDown = useCallback(
-    (e: Readonly<KeyboardEvent<HTMLUListElement>>) => {
+    (e: KeyboardEvent<HTMLUListElement>) => {
       if (!focusedNodeId || !data?.current) return;
       const idx = visibleNodes.indexOf(focusedNodeId);
       if (idx === -1) return;
@@ -291,7 +294,7 @@ export function AccountHierarchy({ accountId }: Readonly<AccountHierarchyProps>)
       else if (e.key === 'ArrowLeft') handleArrowLeft(focusedNodeId, data.current);
       else if (e.key === 'Enter') onNavigate(focusedNodeId);
       else if (e.key === 'Home' && visibleNodes.length > 0) focusNode(visibleNodes[0]);
-      else if (e.key === 'End' && visibleNodes.length > 0) focusNode(visibleNodes.at(-1));
+      else if (e.key === 'End' && visibleNodes.length > 0) focusNode(visibleNodes.at(-1)!);
     },
     [
       focusedNodeId,
@@ -356,7 +359,7 @@ export function AccountHierarchy({ accountId }: Readonly<AccountHierarchyProps>)
 
       {hasHierarchy ? (
         <Card className="p-4">
-          <ul role="tree" aria-label="Account hierarchy" onKeyDown={handleKeyDown}>
+          <ul role="tree" aria-label="Account hierarchy" onKeyDown={handleKeyDown}> {/* NOSONAR typescript:S6842 — tree role is required for ARIA tree widget pattern */}
             <TreeNode
               node={data.current}
               currentId={accountId}

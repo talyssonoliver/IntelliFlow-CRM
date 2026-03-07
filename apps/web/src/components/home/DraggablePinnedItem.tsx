@@ -6,7 +6,7 @@ import { CSS } from '@dnd-kit/utilities';
 import type { SerializedPinnedItem } from './AuthenticatedHomePage';
 import { getPinnedIcon } from './PinnedItemsSheet';
 
-export type { SerializedPinnedItem };
+export type { SerializedPinnedItem } from './AuthenticatedHomePage';
 
 interface DraggablePinnedItemProps {
   item: SerializedPinnedItem;

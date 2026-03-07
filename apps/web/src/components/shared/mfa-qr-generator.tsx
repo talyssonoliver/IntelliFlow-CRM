@@ -97,10 +97,10 @@ export function MfaQrGenerator({
       <div className="flex flex-col items-center">
         <div
           className="bg-white p-4 rounded-lg"
-          role="img"
+          role="img" // NOSONAR typescript:S6819 — QR code wrapper div; <img> cannot contain the QRCodeSVG React component
           aria-label={`QR code for setting up two-factor authentication for ${accountName}`}
         >
-          <QRCodeSVG value={otpauthUrl} size={200} level="M" includeMargin={false} />
+          <QRCodeSVG value={otpauthUrl} size={200} level="M" marginSize={0} />
         </div>
         <p className="mt-3 text-sm text-slate-400 text-center max-w-xs">
           Scan this QR code with your authenticator app (Google Authenticator, Authy, 1Password,
@@ -161,13 +161,13 @@ export function MfaQrGenerator({
 
             <div className="text-xs text-slate-500 space-y-1">
               <p>
-                <strong>Type:</strong> Time-based (TOTP)
+                <strong>Type:</strong>{' '}Time-based (TOTP)
               </p>
               <p>
-                <strong>Digits:</strong> 6
+                <strong>Digits:</strong>{' '}6
               </p>
               <p>
-                <strong>Period:</strong> 30 seconds
+                <strong>Period:</strong>{' '}30 seconds
               </p>
             </div>
           </div>

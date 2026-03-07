@@ -22,7 +22,7 @@ export interface TaskFormData {
 export interface TaskFormProps {
   readonly open: boolean;
   readonly onClose: () => void;
-  readonly onSubmit: (data: Readonly<TaskFormData>) => void;
+  readonly onSubmit: (data: TaskFormData) => void;
   readonly initialData?: Partial<TaskFormData> | null;
   readonly mode: 'create' | 'edit';
 }
@@ -69,7 +69,7 @@ export function TaskForm({ open, onClose, onSubmit, initialData, mode }: Readonl
     return Object.keys(newErrors).length === 0;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
     if (!validate()) return;
     onSubmit(form);
@@ -104,7 +104,7 @@ export function TaskForm({ open, onClose, onSubmit, initialData, mode }: Readonl
           {/* Title */}
           <div>
             <label htmlFor="task-title" className="block text-sm font-medium text-foreground mb-1">
-              Title <span className="text-destructive">*</span>
+              Title{' '}<span className="text-destructive">*</span>
             </label>
             <input
               id="task-title"

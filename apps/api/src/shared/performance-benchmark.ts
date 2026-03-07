@@ -19,7 +19,7 @@
  * - p99 < 100ms
  */
 
-import { performance } from 'perf_hooks';
+import { performance } from 'node:perf_hooks';
 import { createContext } from '../context';
 import { appRouter } from '../router';
 
@@ -81,7 +81,7 @@ async function benchmark<T>(
   timings.sort((a, b) => a - b);
 
   const min = timings[0];
-  const max = timings[timings.length - 1];
+  const max = timings.at(-1)!;
   const mean = timings.reduce((a, b) => a + b, 0) / timings.length;
   const median = timings[Math.floor(timings.length / 2)];
   const p95 = timings[Math.floor(timings.length * 0.95)];
@@ -261,7 +261,7 @@ export type { BenchmarkResult };
  * Run if executed directly
  */
 if (require.main === module) {
-  (async () => {
+  (async () => { // NOSONAR typescript:S7785 — top-level await unavailable in CJS modules
     try {
       await runBenchmarks();
     } catch (error) {

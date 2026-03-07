@@ -71,7 +71,7 @@ function parseMarkdown(markdown: string): string {
   let html = markdown;
 
   // Escape HTML to prevent XSS
-  html = html.replaceAll(/&/g, '&amp;').replaceAll(/</g, '&lt;').replaceAll(/>/g, '&gt;');
+  html = html.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 
   // Code blocks (fenced)
   html = html.replaceAll(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
@@ -105,7 +105,7 @@ function parseMarkdown(markdown: string): string {
   html = html.replaceAll(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" loading="lazy" />');
 
   // Links
-  html = html.replace(
+  html = html.replaceAll(
     /\[([^\][\r\n]+)\]\(([^)\r\n]+)\)/g,
     '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
   );
@@ -115,7 +115,7 @@ function parseMarkdown(markdown: string): string {
   html = html.replaceAll(/^\*\*\*$/gm, '<hr />');
 
   // Unordered lists
-  html = html.replaceAll(/^[\*\-] (.*)$/gm, '<li>$1</li>');
+  html = html.replaceAll(/^[*-] (.*)$/gm, '<li>$1</li>');
   html = html.replaceAll(/(<li>[^]*?<\/li>)(?=\s*<li>)/g, '<ul>$1');
   html = html.replaceAll(/(<li>[^]*?<\/li>)(?!\s*<li>)/g, '$1</ul>');
 
@@ -137,7 +137,7 @@ function parseMarkdown(markdown: string): string {
         !block.startsWith('<hr') &&
         !block.startsWith('<li')
       ) {
-        return `<p>${block.replaceAll(/\n/g, '<br />')}</p>`;
+        return `<p>${block.replaceAll('\n', '<br />')}</p>`;
       }
       return block;
     })

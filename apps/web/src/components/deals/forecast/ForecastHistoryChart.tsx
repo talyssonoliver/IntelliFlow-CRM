@@ -17,6 +17,29 @@ import {
 } from 'recharts';
 import type { HistoryPoint, ForecastMode } from './types';
 
+// =============================================================================
+// Tooltip Sub-Component (extracted to avoid S6478: inner component definition)
+// =============================================================================
+
+interface ForecastTooltipProps {
+  active?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payload?: any[];
+}
+
+function ForecastTooltip({ active, payload }: ForecastTooltipProps) {
+  if (!active || !payload?.length) return null;
+  const point = payload[0].payload as HistoryPoint;
+  return (
+    <div className="bg-popover text-popover-foreground p-2 rounded-md border shadow-sm text-xs">
+      <p className="font-medium">{point.date}</p>
+      <p>{point.probability}%</p>
+      {point.event && <p className="text-muted-foreground">{point.event}</p>}
+      {point.isProjected && <p className="italic">Projected</p>}
+    </div>
+  );
+}
+
 interface ForecastHistoryChartProps {
   data: HistoryPoint[];
   mode: ForecastMode;
@@ -40,20 +63,8 @@ export default function ForecastHistoryChart({ data, mode }: Readonly<ForecastHi
             tick={{ fontSize: 12 }}
             label={{ value: yLabel, angle: -90, position: 'insideLeft' }}
           />
-          <Tooltip
-            content={({ active, payload }) => {
-              if (!active || !payload?.length) return null;
-              const point = payload[0].payload as HistoryPoint;
-              return (
-                <div className="bg-popover text-popover-foreground p-2 rounded-md border shadow-sm text-xs">
-                  <p className="font-medium">{point.date}</p>
-                  <p>{point.probability}%</p>
-                  {point.event && <p className="text-muted-foreground">{point.event}</p>}
-                  {point.isProjected && <p className="italic">Projected</p>}
-                </div>
-              );
-            }}
-          />
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <Tooltip content={ForecastTooltip as any} />
           {mode === 'deal' && (
             <ReferenceLine y={50} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" />
           )}

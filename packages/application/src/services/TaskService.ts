@@ -3,7 +3,6 @@ import {
   DomainError,
   Task,
   TaskId,
-  TaskStatus,
   TaskPriority,
   TaskRepository,
   LeadRepository,
@@ -17,11 +16,13 @@ import {
 import { EventBusPort } from '../ports/external';
 import { PersistenceError, ValidationError, NotFoundError } from '../errors';
 
+export type TaskEntityType = 'lead' | 'contact' | 'opportunity';
+
 /**
  * Task assignment validation rules
  */
 export interface TaskAssignmentValidation {
-  entityType: 'lead' | 'contact' | 'opportunity';
+  entityType: TaskEntityType;
   entityId: string;
   isValid: boolean;
   reason?: string;
@@ -152,7 +153,7 @@ export class TaskService {
     // Persist
     try {
       await this.taskRepository.save(task);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save task'));
     }
 
@@ -188,7 +189,7 @@ export class TaskService {
 
     try {
       await this.taskRepository.save(task);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save task'));
     }
 
@@ -223,7 +224,7 @@ export class TaskService {
 
     try {
       await this.taskRepository.save(task);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save task'));
     }
 
@@ -253,7 +254,7 @@ export class TaskService {
 
     try {
       await this.taskRepository.save(task);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save task'));
     }
 
@@ -292,7 +293,7 @@ export class TaskService {
 
     try {
       await this.taskRepository.save(task);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save task'));
     }
 
@@ -326,7 +327,7 @@ export class TaskService {
 
     try {
       await this.taskRepository.save(task);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save task'));
     }
 
@@ -365,7 +366,7 @@ export class TaskService {
 
     try {
       await this.taskRepository.save(task);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save task'));
     }
 
@@ -406,7 +407,7 @@ export class TaskService {
 
     try {
       await this.taskRepository.save(task);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save task'));
     }
 
@@ -446,7 +447,7 @@ export class TaskService {
 
     try {
       await this.taskRepository.save(task);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save task'));
     }
 
@@ -488,7 +489,7 @@ export class TaskService {
 
     try {
       await this.taskRepository.save(task);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save task'));
     }
 
@@ -534,7 +535,7 @@ export class TaskService {
    * Get tasks by entity (lead, contact, or opportunity)
    */
   async getTasksByEntity(
-    entityType: 'lead' | 'contact' | 'opportunity',
+    entityType: TaskEntityType,
     entityId: string
   ): Promise<Task[]> {
     switch (entityType) {
@@ -682,7 +683,7 @@ export class TaskService {
 
     try {
       await this.taskRepository.delete(taskIdResult.value);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to delete task'));
     }
 
@@ -710,7 +711,7 @@ export class TaskService {
 
     try {
       await this.taskRepository.save(task);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to archive task'));
     }
 
@@ -718,7 +719,7 @@ export class TaskService {
   }
 
   private selectValidationPromise(
-    entityType: 'lead' | 'contact' | 'opportunity',
+    entityType: TaskEntityType,
     entityId: string
   ): Promise<TaskAssignmentValidation> | null {
     switch (entityType) {
@@ -737,7 +738,7 @@ export class TaskService {
    * Validate entity assignment
    */
   private async validateAssignment(
-    entityType: 'lead' | 'contact' | 'opportunity',
+    entityType: TaskEntityType,
     entityId: string
   ): Promise<TaskAssignmentValidation> {
     const validationPromise = this.selectValidationPromise(entityType, entityId);
@@ -746,7 +747,7 @@ export class TaskService {
     }
     try {
       return await validationPromise;
-    } catch (error) {
+    } catch {
       return {
         entityType,
         entityId,

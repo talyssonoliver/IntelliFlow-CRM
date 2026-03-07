@@ -27,7 +27,7 @@ vi.mock('@/lib/api', () => ({
         useQuery: (...args: unknown[]) => useQueryMock(...args),
       },
       setParent: {
-        useMutation: (opts: Readonly<Record<string, unknown>>) => {
+        useMutation: (opts: Record<string, unknown>) => {
           useMutationMock(opts);
           return {
             mutate: vi.fn(),

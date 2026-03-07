@@ -340,8 +340,6 @@ function createGlobalLimiter() {
 let globalLimiter: ReturnType<typeof createGlobalLimiter> | null = null;
 
 export function getRateLimiter() {
-  if (!globalLimiter) {
-    globalLimiter = createGlobalLimiter();
-  }
+  globalLimiter ??= createGlobalLimiter();
   return globalLimiter;
 }

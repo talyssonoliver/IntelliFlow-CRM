@@ -30,7 +30,6 @@ import {
   type LeadScoredEvent,
   type TaskAssignedEvent,
   type SystemEvent,
-  type AIProgressEvent,
   // Re-export emit functions from platform for API consumers
   emitLeadScored,
   emitTaskAssigned,
@@ -221,7 +220,7 @@ export const subscriptionRouter = createTRPCRouter({
  *
  * @see @intelliflow/platform/realtime for function signatures
  */
-export { emitLeadScored, emitTaskAssigned, emitSystemEvent, emitAIProgress };
+export { emitLeadScored, emitTaskAssigned, emitSystemEvent, emitAIProgress } from '@intelliflow/platform';
 
 /**
  * CLIENT-SIDE USAGE EXAMPLE

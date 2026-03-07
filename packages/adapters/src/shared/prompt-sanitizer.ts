@@ -141,7 +141,7 @@ export function sanitizePrompt(input: unknown): {
   const sanitized: SafePrompt = {
     ...prompt,
     // eslint-disable-next-line no-control-regex
-    text: prompt.text.replace(/[\x00-\x1F\x7F]/g, ''),
+    text: prompt.text.replaceAll(/[\x00-\x1F\x7F]/g, ''),
   };
 
   return { sanitized, issues };

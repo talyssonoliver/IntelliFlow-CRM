@@ -10,7 +10,7 @@ import { RejectReviewUseCase, RejectReviewInput } from '../RejectReviewUseCase';
 import { AIOutputReview, DomainEvent, ReviewDecision } from '@intelliflow/domain';
 import { IAIOutputReviewRepository } from '../../../ports/repositories';
 import { EventBusPort } from '../../../ports/external';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 
 // =============================================================================
 // Mock Implementations

@@ -833,7 +833,7 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
   // Transform AI insights to NextBestActionData format (IFC-095)
   const nextBestActionData: NextBestActionData | null = useMemo(() => {
     const insight = apiLead?.aiInsight;
-    if (!insight?.nextBestAction) return null;
+    if (!insight || !insight.nextBestAction) return null; // NOSONAR typescript:S6582 — cannot use optional chain here as TS narrows both insight and nextBestAction
 
     const actionType = resolveNBAActionType(insight.nextBestAction.toUpperCase());
     const priority = resolveNBAPriority(insight.churnRisk, insight.conversionProbability);

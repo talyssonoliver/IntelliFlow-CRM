@@ -17,9 +17,8 @@
  */
 
 import { PrismaClient } from '@intelliflow/db';
-import { randomUUID } from 'crypto';
 import { AuditLogger, getAuditLogger } from './audit-logger';
-import { AuditAction, ActorType, DataClassification, ResourceType, ActionResult } from './types';
+import { AuditAction, ActorType, DataClassification, ResourceType } from './types';
 import { getAIEventSeverity } from '@intelliflow/domain';
 
 // ============================================================================
@@ -634,9 +633,7 @@ let handlerInstance: AuditEventHandler | null = null;
  * Get the global audit event handler instance
  */
 export function getAuditEventHandler(prisma: PrismaClient): AuditEventHandler {
-  if (!handlerInstance) {
-    handlerInstance = new AuditEventHandler(prisma);
-  }
+  handlerInstance ??= new AuditEventHandler(prisma);
   return handlerInstance;
 }
 

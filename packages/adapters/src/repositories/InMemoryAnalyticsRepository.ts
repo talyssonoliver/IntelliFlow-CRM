@@ -443,29 +443,34 @@ export class InMemoryAnalyticsRepository implements AnalyticsRepository {
   private getDescriptionForAction(action: string, metadata?: Record<string, unknown>): string {
     const data = metadata || {};
 
+    const name = (data.name as string | null | undefined) || 'Unknown';
+    const resourceType = (data.resourceType as string | null | undefined) || 'item';
+    const value = (data.value as number | null | undefined) || 0;
+    const title = (data.title as string | null | undefined) || 'Unknown';
+
     switch (action) {
       case 'CREATE':
-        return `New ${data.resourceType || 'item'}: ${data.name || 'Unknown'}`;
+        return `New ${resourceType}: ${name}`;
       case 'QUALIFY':
-        return `Qualified: ${data.name || 'Unknown'}`;
+        return `Qualified: ${name}`;
       case 'CONVERT':
-        return `Converted: ${data.name || 'Unknown'}`;
+        return `Converted: ${name}`;
       case 'UPDATE':
-        return `Updated: ${data.name || 'Unknown'}`;
+        return `Updated: ${name}`;
       case 'lead.created':
-        return `New lead: ${data.name || 'Unknown'}`;
+        return `New lead: ${name}`;
       case 'lead.qualified':
-        return `Lead qualified: ${data.name || 'Unknown'}`;
+        return `Lead qualified: ${name}`;
       case 'lead.converted':
-        return `Lead converted to contact: ${data.name || 'Unknown'}`;
+        return `Lead converted to contact: ${name}`;
       case 'opportunity.created':
-        return `New deal: ${data.name || 'Unknown'}`;
+        return `New deal: ${name}`;
       case 'opportunity.won':
-        return `Deal won: ${data.name || 'Unknown'} ($${data.value || 0})`;
+        return `Deal won: ${name} ($${value})`;
       case 'contact.created':
-        return `New contact: ${data.name || 'Unknown'}`;
+        return `New contact: ${name}`;
       case 'task.completed':
-        return `Task completed: ${data.title || 'Unknown'}`;
+        return `Task completed: ${title}`;
       default:
         return action;
     }

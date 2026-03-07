@@ -50,7 +50,7 @@ function getPreview(email: Readonly<EmailItemData>): string {
 
 export function EmailListItem({ email, isSelected, onSelect }: Readonly<EmailListItemProps>) {
   return (
-    <li // NOSONAR — custom listbox option item; role="option" is the correct ARIA pattern for items in a listbox widget; replacing with <option> would require a <select> parent and lose rich visual design
+    <li // NOSONAR typescript:S6842 — custom listbox option item; role="option" is the correct ARIA pattern for items in a listbox widget; replacing with <option> would require a <select> parent and lose rich visual design
       role="option"
       aria-selected={isSelected}
       tabIndex={-1}
@@ -86,7 +86,7 @@ export function EmailListItem({ email, isSelected, onSelect }: Readonly<EmailLis
         <div
           className={cn(
             'truncate text-sm',
-            !email.isRead ? 'font-semibold text-foreground' : 'text-muted-foreground'
+            email.isRead ? 'text-muted-foreground' : 'font-semibold text-foreground'
           )}
         >
           {email.subject}

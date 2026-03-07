@@ -13,7 +13,7 @@ export function TotalLeadsWidget({ initialData }: Readonly<WidgetProps>) {
   } = trpc.lead.stats.useQuery(undefined, {
     enabled: isAuthenticated && !authLoading,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...(initialData != null ? { initialData: initialData as any } : Readonly<{}>),
+    ...(initialData == null ? {} : { initialData: initialData as any }),
   });
 
   if (isLoading || authLoading) {

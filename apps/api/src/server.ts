@@ -80,7 +80,7 @@ export const loggedProcedure = t.procedure.use(loggingMiddleware);
  * Admin-only procedure
  */
 const isAdmin = t.middleware(({ ctx, next }) => {
-  if (!ctx.user || ctx.user.role !== 'ADMIN') {
+  if (ctx.user?.role !== 'ADMIN') {
     throw new TRPCError({
       code: 'FORBIDDEN',
       message: 'Admin access required',

@@ -11,7 +11,7 @@
  */
 
 import { z } from 'zod';
-import { createHash, createHmac, randomBytes, timingSafeEqual } from 'crypto';
+import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 
 // Webhook event schema
 export const WebhookEventSchema = z.object({
@@ -130,7 +130,7 @@ export class StripeSignatureVerifier implements SignatureVerifier {
     }
 
     // Check timestamp tolerance
-    const timestampNum = parseInt(timestamp, 10);
+    const timestampNum = Number.parseInt(timestamp, 10);
     const now = Math.floor(Date.now() / 1000);
     if (Math.abs(now - timestampNum) > this.toleranceSeconds) {
       return false;
@@ -256,7 +256,7 @@ export class WebhookEventRouter {
     // Check for failures
     const failures = results.filter((r) => r.status === 'rejected');
     if (failures.length > 0) {
-      const errors = failures.map((f) => (f as PromiseRejectedResult).reason);
+      const errors = failures.map((f) => f.reason);
       console.error(`Handler errors for event ${event.id}:`, errors);
       throw new AggregateError(errors, `${failures.length} handler(s) failed`);
     }

@@ -7,8 +7,8 @@
  * Usage: npx tsx apps/api/scripts/generate-openapi.ts
  */
 
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 interface OpenAPITag {
   name: string;

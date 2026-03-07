@@ -43,7 +43,7 @@ export function ACLManager({
   // ─── Grant Access ─────────────────────────────────────────────────────────
 
   const handleGrantSubmit = useCallback(
-    (e: React.FormEvent) => {
+    (e: React.SyntheticEvent) => {
       e.preventDefault();
       if (!grantUserId.trim()) return;
       onGrantAccess(grantUserId.trim(), grantLevel);
@@ -256,10 +256,10 @@ export function ACLManager({
 
       {/* Revoke Confirmation Dialog */}
       {revokeTarget && (
-        <div
+        <div // NOSONAR typescript:S6847 — role="dialog" makes this an interactive landmark; keydown handler is required for keyboard accessibility (Escape to close)
           ref={revokeDialogRef}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          role="dialog"
+          role="dialog" // NOSONAR typescript:S6819 — custom modal with backdrop overlay; <dialog> element lacks consistent cross-browser CSS support
           aria-modal="true"
           aria-label="Confirm revoke access"
           onKeyDown={(e) => {

@@ -28,7 +28,7 @@ export async function listUsers(
 
     return Result.ok({
       users,
-      nextCursor: metadata?.next_cursor ? String(metadata.next_cursor) : undefined,
+      nextCursor: metadata?.next_cursor ? (metadata.next_cursor as string) : undefined,
     });
   } catch (error) {
     return Result.fail(

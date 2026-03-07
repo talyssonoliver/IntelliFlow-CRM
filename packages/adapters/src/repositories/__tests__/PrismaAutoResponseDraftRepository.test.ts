@@ -5,7 +5,7 @@ import {
   OptimisticLockError,
 } from '../PrismaAutoResponseDraftRepository';
 import { AutoResponseDraft, AutoResponseDraftId, ResponseContent } from '@intelliflow/domain';
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 
 // Generate valid UUIDs for tests
 const DRAFT_ID_1 = randomUUID();

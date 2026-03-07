@@ -71,10 +71,7 @@ function displayInfrastructureAlert(reason: string): void {
 // Try to initialize Prisma and related services
 try {
   // Check if DATABASE_URL is set first
-  if (!process.env.DATABASE_URL) {
-    _infrastructureUnavailableReason = 'DATABASE_URL environment variable not set';
-    displayInfrastructureAlert(_infrastructureUnavailableReason);
-  } else {
+  if (process.env.DATABASE_URL) {
     // Dynamic require to catch module not found errors
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { PrismaClient } = require('@prisma/client'); // NOSONAR
@@ -143,6 +140,9 @@ try {
     };
 
     _isInfrastructureAvailable = true;
+  } else {
+    _infrastructureUnavailableReason = 'DATABASE_URL environment variable not set';
+    displayInfrastructureAlert(_infrastructureUnavailableReason);
   }
 } catch (error) {
   const errorMessage = error instanceof Error ? error.message : String(error);
@@ -161,7 +161,7 @@ try {
  * @see packages/db/src/seed-ids.ts
  * These are always available regardless of infrastructure state
  */
-import { SEED_IDS } from '@intelliflow/db/seed-ids';
+import { SEED_IDS } from '@intelliflow/db/seed-ids'; // NOSONAR typescript:S7763 — re-export via import/export required here due to module ordering constraints
 export { SEED_IDS };
 
 /**

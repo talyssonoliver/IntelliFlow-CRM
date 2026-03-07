@@ -519,9 +519,9 @@ export class PayPalAdapter implements PayPalServicePort {
         summary: event.summary,
         createTime: new Date(event.create_time),
         links: (event.links ?? []).map((link: Record<string, unknown>) => ({
-          href: String(link.href ?? ''),
-          rel: String(link.rel ?? ''),
-          method: link.method ? String(link.method) : undefined,
+          href: (link.href as string | null | undefined) ?? '',
+          rel: (link.rel as string | null | undefined) ?? '',
+          method: link.method ? (link.method as string) : undefined,
         })),
       });
     } catch (error) {
@@ -611,7 +611,7 @@ export class PayPalAdapter implements PayPalServicePort {
           new PayPalResourceNotFoundError(data.name ?? 'Resource', data.debug_id ?? 'unknown')
         );
       case 429: {
-        const retryAfter = parseInt(response.headers.get('Retry-After') ?? '60');
+        const retryAfter = Number.parseInt(response.headers.get('Retry-After') ?? '60');
         return Result.fail(new PayPalRateLimitError(retryAfter));
       }
       default: {

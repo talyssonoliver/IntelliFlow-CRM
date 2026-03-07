@@ -28,7 +28,7 @@ interface ActivityFeedBaseProps {
 /** Internal mode: component fetches its own data */
 interface ActivityFeedInternalProps extends ActivityFeedBaseProps, UseActivityFeedOptions {
   /** If items is provided, operates in external data mode */
-  items?: undefined;
+  items?: never;
 }
 
 /** External mode: parent provides items and pagination */
@@ -203,7 +203,7 @@ export function ActivityFeed(props: Readonly<ActivityFeedProps>) {
                   type={item.type}
                   title={item.title}
                   description={item.description}
-                  timestamp={item.timestamp as Date | string}
+                  timestamp={item.timestamp}
                   actor={item.actor}
                   entity={item.entity}
                   metadata={item.metadata}

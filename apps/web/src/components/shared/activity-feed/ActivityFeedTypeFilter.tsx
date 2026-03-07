@@ -32,7 +32,7 @@ export const ACTIVITY_FEED_TYPE_FILTER_OPTIONS: Array<{
 
 interface ActivityFeedTypeFilterProps {
   value: ActivityFeedTypeFilterValue;
-  onChange: (value: Readonly<ActivityFeedTypeFilterValue>) => void;
+  onChange: (value: ActivityFeedTypeFilterValue) => void;
 }
 
 export function ActivityFeedTypeFilter({ value, onChange }: Readonly<ActivityFeedTypeFilterProps>) {
@@ -51,7 +51,7 @@ export function ActivityFeedTypeFilter({ value, onChange }: Readonly<ActivityFee
         aria-expanded={open}
         aria-haspopup="listbox"
         className={`p-1 transition-colors rounded flex items-center gap-1 ${
-          value !== 'all' ? 'text-[#137fec]' : 'text-slate-400 hover:text-[#137fec]'
+          value === 'all' ? 'text-slate-400 hover:text-[#137fec]' : 'text-[#137fec]'
         }`}
       >
         <span className="material-symbols-outlined text-[20px]" aria-hidden="true">

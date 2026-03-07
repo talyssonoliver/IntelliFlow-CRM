@@ -380,7 +380,7 @@ function TotalsSection({ invoice }: Readonly<{ invoice: InvoiceDetailData }>) {
 
   // Total = totalAmount if provided, else compute from subtotal + tax - discount, else amountDue
   const computedTotal =
-    totalAmount ?? (subtotal != null ? subtotal + (tax ?? 0) - (discount ?? 0) : amountDue);
+    totalAmount ?? (subtotal == null ? amountDue : subtotal + (tax ?? 0) - (discount ?? 0));
 
   return (
     <div className="space-y-2 border-t border-slate-200 dark:border-slate-800 pt-4">

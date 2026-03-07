@@ -5,7 +5,7 @@
  * to produce dashboard-ready analytics data.
  */
 
-import { calculateNPS, calculateCSAT, calculateCES, type SurveyType } from '@intelliflow/domain';
+import { calculateNPS, calculateCSAT, calculateCES } from '@intelliflow/domain';
 import type {
   FeedbackSurveyRepositoryPort,
   FeedbackAnalyticsQuery,

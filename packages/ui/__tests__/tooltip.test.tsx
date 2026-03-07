@@ -12,7 +12,7 @@ import {
 import { Button } from '../src/components/button';
 
 describe('Tooltip', () => {
-  const TooltipWrapper = ({ children }: { children: React.ReactNode }) => (
+  const TooltipWrapper = ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <TooltipProvider>{children}</TooltipProvider>
   );
 

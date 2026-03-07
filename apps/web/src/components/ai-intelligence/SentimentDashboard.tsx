@@ -100,7 +100,7 @@ const SENTIMENT_OPTIONS = [
   ...SENTIMENT_LABELS.map((s) => ({
     value: s,
     label: s
-      .replaceAll(/_/g, ' ')
+      .replaceAll('_', ' ')
       .toLowerCase()
       .replaceAll(/\b\w/g, (c) => c.toUpperCase()),
   })),
@@ -152,7 +152,7 @@ function AnalysisCard({ analysis }: Readonly<{ analysis: SentimentAnalysis }>) {
                 <span className="material-symbols-outlined text-sm" aria-hidden="true">
                   {getSentimentIcon(analysis.sentiment)}
                 </span>
-                {analysis.sentiment.replaceAll(/_/g, ' ')}
+                {analysis.sentiment.replaceAll('_', ' ')}
               </span>
               <span
                 className={cn(

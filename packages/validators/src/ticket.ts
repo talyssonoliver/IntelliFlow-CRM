@@ -23,7 +23,7 @@ export type SLAStatus = z.infer<typeof slaStatusSchema>;
 export type TicketCategory = z.infer<typeof ticketCategorySchema>;
 
 // Re-export transition helper for use in API layer
-export { canTransitionTicketTo };
+export { canTransitionTicketTo } from '@intelliflow/domain';
 
 // Create Ticket Schema
 export const createTicketSchema = z.object({
@@ -32,7 +32,7 @@ export const createTicketSchema = z.object({
   priority: ticketPrioritySchema,
   category: ticketCategorySchema.optional(), // Optional until IFC-189 migration
   contactName: z.string().min(1).max(100),
-  contactEmail: z.string().email(),
+  contactEmail: z.email(),
   contactId: idSchema.optional(),
   assigneeId: idSchema.optional(),
   slaPolicyId: idSchema,

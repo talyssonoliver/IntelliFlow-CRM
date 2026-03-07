@@ -36,6 +36,10 @@ vi.mock('../TicketAssignSidebar', () => ({
   TicketAssignSidebar: ({ open }: any) => (open ? <div data-testid="assign-sidebar" /> : null),
 }));
 
+vi.mock('@/components/shared/assign-sheet', () => ({
+  AssignSheet: ({ open }: any) => (open ? <div data-testid="escalation-sheet" /> : null),
+}));
+
 vi.mock('../SLAIndicator', () => ({
   SLAIndicator: ({ slaStatus }: any) => <div data-testid="sla-indicator">{slaStatus}</div>,
 }));

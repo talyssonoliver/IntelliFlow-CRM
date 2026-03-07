@@ -31,7 +31,7 @@ export class BillingDomainService {
 
     try {
       await this.invoiceRepository.save(invoice);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save invoice'));
     }
 
@@ -57,7 +57,7 @@ export class BillingDomainService {
 
     try {
       await this.invoiceRepository.save(invoice);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save invoice'));
     }
 
@@ -105,7 +105,7 @@ export class BillingDomainService {
     try {
       await this.invoiceRepository.save(invoice);
       await this.receiptRepository.save(receipt);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save invoice/receipt'));
     }
 
@@ -137,7 +137,7 @@ export class BillingDomainService {
 
     try {
       await this.invoiceRepository.save(invoice);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save invoice'));
     }
 
@@ -163,7 +163,7 @@ export class BillingDomainService {
 
     try {
       await this.invoiceRepository.save(invoice);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save invoice'));
     }
 
@@ -189,7 +189,7 @@ export class BillingDomainService {
 
     try {
       await this.invoiceRepository.save(invoice);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save invoice'));
     }
 

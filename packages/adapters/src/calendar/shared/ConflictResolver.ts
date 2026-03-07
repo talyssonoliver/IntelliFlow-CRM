@@ -183,11 +183,11 @@ export function mergeAppointmentChanges(
 } {
   return {
     // Use the longer/more detailed title
-    title: preferLocal
-      ? localAppointment.title
-      : remoteEvent.title.length > localAppointment.title.length
-        ? remoteEvent.title
-        : localAppointment.title,
+    title: (() => {
+      if (preferLocal) return localAppointment.title;
+      if (remoteEvent.title.length > localAppointment.title.length) return remoteEvent.title;
+      return localAppointment.title;
+    })(),
 
     // Merge descriptions (keep both if different)
     description: mergeDescriptions(

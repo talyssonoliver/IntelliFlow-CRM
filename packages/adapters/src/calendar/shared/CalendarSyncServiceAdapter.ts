@@ -15,9 +15,9 @@ import type {
   SyncError,
   ConflictResolution,
   CalendarProvider,
+  ExternalCalendarEvent,
 } from '@intelliflow/application';
 import type { Appointment, AppointmentId } from '@intelliflow/domain';
-import type { ExternalCalendarEvent } from '@intelliflow/application';
 
 export class CalendarSyncServiceAdapter implements CalendarSyncServicePort {
   async handleWebhookNotification(

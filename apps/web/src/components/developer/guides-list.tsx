@@ -324,7 +324,7 @@ export function GuidesList() {
                   <Link
                     key={item.id}
                     href={item.href}
-                    {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : Readonly<{}>)}
+                    {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                     className="group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
                   >
                     {cardContent}

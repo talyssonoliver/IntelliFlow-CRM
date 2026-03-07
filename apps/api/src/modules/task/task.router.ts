@@ -17,6 +17,8 @@ import {
   updateTaskSchema,
   taskQuerySchema,
   completeTaskSchema,
+  startTaskSchema,
+  cancelTaskSchema,
   assignTaskSchema,
   rescheduleTaskSchema,
   getRemindersSchema,
@@ -36,7 +38,6 @@ import {
   TaskAlreadyCancelledError,
   TaskCannotBeArchivedError,
   canTransitionTaskTo,
-  type TaskStatus,
 } from '@intelliflow/domain';
 import { createNotification } from '../notifications/notifications.router';
 import { getAuditLogger } from '../../security/audit-logger';
@@ -408,8 +409,8 @@ export const taskRouter = createTRPCRouter({
 
     // Validate status transitions through domain state machine (B-06)
     if (otherData.status && otherData.status !== getResult.value.status) {
-      const currentStatus = getResult.value.status as TaskStatus;
-      const newStatus = otherData.status as TaskStatus;
+      const currentStatus = getResult.value.status;
+      const newStatus = otherData.status;
       if (!canTransitionTaskTo(currentStatus, newStatus)) {
         throw new TRPCError({
           code: 'PRECONDITION_FAILED',
@@ -621,10 +622,81 @@ export const taskRouter = createTRPCRouter({
   }),
 
   /**
+   * Start a task (transition PENDING → IN_PROGRESS)
+   */
+  start: tenantProcedure.input(startTaskSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const taskService = getTaskService(ctx);
+    const auditLogger = getAuditLogger(ctx.prisma);
+
+    const result = await taskService.startTask(input.taskId, typedCtx.tenant.userId);
+
+    if (result.isFailure) {
+      const errorCode = result.error.code;
+      const message = result.error.message;
+
+      if (errorCode === 'NOT_FOUND_ERROR' || message.includes('not found')) {
+        throw new TRPCError({ code: 'NOT_FOUND', message });
+      }
+      if (errorCode === 'VALIDATION_ERROR') {
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message });
+      }
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message });
+    }
+
+    auditLogger.logAction('UPDATE', 'task', input.taskId, typedCtx.tenant.tenantId, {
+      actorId: typedCtx.tenant.userId,
+      resourceName: result.value.title,
+    }).catch(() => {});
+
+    return mapTaskToResponse(result.value);
+  }),
+
+  /**
+   * Cancel a task with a reason
+   */
+  cancel: tenantProcedure.input(cancelTaskSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const taskService = getTaskService(ctx);
+    const auditLogger = getAuditLogger(ctx.prisma);
+
+    const result = await taskService.cancelTask(input.taskId, input.reason, typedCtx.tenant.userId);
+
+    if (result.isFailure) {
+      const errorCode = result.error.code;
+      const message = result.error.message;
+
+      if (
+        result.error instanceof TaskAlreadyCompletedError ||
+        result.error instanceof TaskAlreadyCancelledError
+      ) {
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message });
+      }
+      if (errorCode === 'NOT_FOUND_ERROR' || message.includes('not found')) {
+        throw new TRPCError({ code: 'NOT_FOUND', message });
+      }
+      if (errorCode === 'VALIDATION_ERROR') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message });
+      }
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message });
+    }
+
+    auditLogger.logAction('UPDATE', 'task', input.taskId, typedCtx.tenant.tenantId, {
+      actorId: typedCtx.tenant.userId,
+      resourceName: result.value.title,
+    }).catch(() => {});
+
+    return mapTaskToResponse(result.value);
+  }),
+
+  /**
    * Get task statistics
    */
   stats: tenantProcedure.query(async ({ ctx }) => {
     const typedCtx = getTenantContext(ctx);
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
     const [total, byStatus, byPriority, overdue, dueToday] = await Promise.all([
       typedCtx.prismaWithTenant.task.count(),
       typedCtx.prismaWithTenant.task.groupBy({
@@ -637,15 +709,15 @@ export const taskRouter = createTRPCRouter({
       }),
       typedCtx.prismaWithTenant.task.count({
         where: {
-          dueDate: { lt: new Date() },
+          dueDate: { lt: startOfDay },
           status: { notIn: ['COMPLETED', 'CANCELLED'] },
         },
       }),
       typedCtx.prismaWithTenant.task.count({
         where: {
           dueDate: {
-            gte: new Date(new Date().setHours(0, 0, 0, 0)),
-            lt: new Date(new Date().setHours(23, 59, 59, 999)),
+            gte: startOfDay,
+            lt: endOfDay,
           },
           status: { notIn: ['COMPLETED', 'CANCELLED'] },
         },

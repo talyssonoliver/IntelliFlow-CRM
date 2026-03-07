@@ -43,7 +43,7 @@ export interface RetryContext {
  * Retry Handler for calendar API operations
  */
 export class RetryHandler {
-  private config: RetryConfig;
+  private readonly config: RetryConfig;
 
   constructor(config: Partial<RetryConfig> = {}) {
     this.config = { ...DEFAULT_RETRY_CONFIG, ...config };

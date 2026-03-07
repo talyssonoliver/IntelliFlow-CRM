@@ -118,7 +118,7 @@ export interface PaymentServicePort {
  * Stripe Payment Adapter
  */
 export class StripeAdapter implements PaymentServicePort {
-  private config: StripeConfig;
+  private readonly config: StripeConfig;
 
   constructor(config: StripeConfig) {
     this.config = config;

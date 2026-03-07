@@ -22,11 +22,11 @@ export interface AppointmentCalendarProps {
   view: 'month' | 'week' | 'day';
   currentDate: Date;
   onViewChange: (view: 'month' | 'week' | 'day') => void;
-  onDateChange: (date: Readonly<Date>) => void;
+  onDateChange: (date: Date) => void;
   onAppointmentClick: (id: string) => void;
   onTaskClick?: (id: string) => void;
   onCreateWithSlot: (startTime: Date, endTime: Date) => void;
-  onCreateWithDate?: (date: Readonly<Date>) => void;
+  onCreateWithDate?: (date: Date) => void;
   isLoading?: boolean;
 }
 

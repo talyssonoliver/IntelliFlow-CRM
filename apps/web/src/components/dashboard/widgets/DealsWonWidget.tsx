@@ -39,7 +39,7 @@ export function DealsWonWidget(_props: Readonly<WidgetProps>) {
     return null;
   }
 
-  const maxValue = Math.max(...chartData.map((d: Readonly<DealsWonData>) => d.value), 1);
+  const maxValue = Math.max(...chartData.map((d: DealsWonData) => d.value), 1);
 
   return (
     <div className="p-6 h-full flex flex-col">

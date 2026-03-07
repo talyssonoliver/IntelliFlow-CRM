@@ -11,7 +11,7 @@
  */
 
 import { z } from 'zod';
-import { createHash } from 'crypto';
+import { createHash } from 'node:crypto';
 
 // Parsed email address schema
 export const ParsedEmailAddressSchema = z.object({
@@ -103,7 +103,7 @@ export function parseEmailAddress(raw: string): ParsedEmailAddress {
   const trimmed = raw.trim();
 
   // Pattern: "Name" <email@example.com> or Name <email@example.com>
-  const namedMatch = trimmed.match(/^"?([^"<]{1,500})"?\s{0,100}<([^>]{1,500})>$/);
+  const namedMatch = /^"?([^"<]{1,500})"?\s{0,100}<([^>]{1,500})>$/.exec(trimmed);
   if (namedMatch) {
     return {
       address: namedMatch[2].trim().toLowerCase(),
@@ -113,7 +113,7 @@ export function parseEmailAddress(raw: string): ParsedEmailAddress {
   }
 
   // Pattern: <email@example.com>
-  const bracketMatch = trimmed.match(/^<([^>]+)>$/);
+  const bracketMatch = /^<([^>]+)>$/.exec(trimmed);
   if (bracketMatch) {
     return {
       address: bracketMatch[1].trim().toLowerCase(),
@@ -166,7 +166,7 @@ export function parseEmailAddresses(header: string): ParsedEmailAddress[] {
  * MIME boundary parser
  */
 export function parseMimeBoundary(contentType: string): string | null {
-  const match = contentType.match(/boundary=["']?([^"';\s]+)["']?/i);
+  const match = /boundary=["']?([^"';\s]+)["']?/i.exec(contentType);
   return match ? match[1] : null;
 }
 
@@ -175,15 +175,15 @@ export function parseMimeBoundary(contentType: string): string | null {
  */
 export function decodeQuotedPrintable(input: string): string {
   return input
-    .replace(/=\r?\n/g, '')
-    .replace(/=([0-9A-Fa-f]{2})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+    .replaceAll(/=\r?\n/g, '')
+    .replaceAll(/=([0-9A-Fa-f]{2})/g, (_, hex) => String.fromCodePoint(Number.parseInt(hex, 16)));
 }
 
 /**
  * Decode base64 content
  */
 export function decodeBase64(input: string): Buffer {
-  return Buffer.from(input.replace(/\s/g, ''), 'base64');
+  return Buffer.from(input.replaceAll(/\s/g, ''), 'base64');
 }
 
 /**
@@ -214,7 +214,7 @@ export function extractThreadInfo(headers: EmailHeaders): ThreadInfo {
     references[0] ||
     inReplyTo ||
     createHash('sha256')
-      .update(headers.subject.replace(/^(Re|Fwd|Fw):\s*/gi, ''))
+      .update(headers.subject.replaceAll(/^(Re|Fwd|Fw):\s*/gi, ''))
       .digest('hex')
       .slice(0, 16);
 
@@ -408,10 +408,10 @@ function parseMimeSection(section: string, endMarkerSuffix: string): MimePart | 
     contentDisposition.includes('attachment') ||
     (contentDisposition.includes('filename') && !contentDisposition.includes('inline'));
 
-  const filenameMatch = contentDisposition.match(/filename=["']?([^"';\s]+)["']?/i);
+  const filenameMatch = /filename=["']?([^"';\s]+)["']?/i.exec(contentDisposition);
   const filename = filenameMatch ? filenameMatch[1] : undefined;
 
-  const contentIdMatch = headers['content-id']?.match(/<([^>]{1,500})>/);
+  const contentIdMatch = headers['content-id'] ? /<([^>]{1,500})>/.exec(headers['content-id']) : undefined;
   const contentId = contentIdMatch ? contentIdMatch[1] : undefined;
 
   return {
@@ -476,7 +476,7 @@ export function parseHeaders(raw: string): Record<string, string> {
   let currentValue = '';
 
   for (const line of lines) {
-    if (line.match(/^\s+/)) {
+    if (/^\s+/.exec(line)) {
       // Continuation of previous header
       currentValue += ' ' + line.trim();
     } else {
@@ -531,8 +531,8 @@ export class InboundEmailParser {
     const authResults = rawHeaders['authentication-results'];
 
     return {
-      messageId: rawHeaders['message-id']?.replace(/[<>]/g, ''),
-      inReplyTo: rawHeaders['in-reply-to']?.replace(/[<>]/g, ''),
+      messageId: rawHeaders['message-id']?.replaceAll(/[<>]/g, ''),
+      inReplyTo: rawHeaders['in-reply-to']?.replaceAll(/[<>]/g, ''),
       references,
       subject: rawHeaders['subject'] || '(no subject)',
       date,

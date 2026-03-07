@@ -7,7 +7,7 @@ import { CaseDocument, CaseDocumentRepository, AccessLevel } from '@intelliflow/
  * Stores documents in memory and supports all repository operations.
  */
 export class InMemoryCaseDocumentRepository implements CaseDocumentRepository {
-  private documents = new Map<string, CaseDocument>();
+  private readonly documents = new Map<string, CaseDocument>();
 
   async save(document: CaseDocument): Promise<void> {
     this.documents.set(document.id, document);

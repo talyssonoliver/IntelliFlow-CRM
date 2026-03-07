@@ -17,7 +17,7 @@
  * - Decision 7: Cross-tenant isolation
  */
 
-import { createHmac, randomUUID, createCipheriv, createDecipheriv } from 'crypto';
+import { createHmac, randomUUID, createCipheriv } from 'node:crypto';
 import type {
   AuditLogPort,
   AISecurityEventInput,
@@ -224,7 +224,7 @@ export class DurableAuditLogAdapter implements AuditLogPort {
             integrityHash,
           });
           successCount++;
-        } catch (error) {
+        } catch {
           failureCount++;
           results.push({
             eventId: randomUUID(),
@@ -271,7 +271,7 @@ export class DurableAuditLogAdapter implements AuditLogPort {
     const hashMatch = computedHash === entry.integrityHash;
     const signatureValid = this.verifySignature(entry);
 
-    const invalidReason = !hashMatch ? 'HASH_MISMATCH' : 'SIGNATURE_INVALID';
+    const invalidReason = hashMatch ? 'SIGNATURE_INVALID' : 'HASH_MISMATCH';
     return {
       valid: hashMatch && signatureValid,
       reason: hashMatch && signatureValid ? undefined : invalidReason,

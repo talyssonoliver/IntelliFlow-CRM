@@ -218,7 +218,11 @@ export function LatencyMonitorDashboard() {
 
       {/* Time range filter + model select */}
       <div className="flex flex-wrap items-center gap-2 mt-6">
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by time range">
+        <div
+          className="flex flex-wrap gap-1.5"
+          role="group" // NOSONAR typescript:S6819 — ARIA group for time-range filter chips; <fieldset> would require <legend> and changes layout
+          aria-label="Filter by time range"
+        >
           {TIME_RANGES.map((range) => (
             <button
               key={range}

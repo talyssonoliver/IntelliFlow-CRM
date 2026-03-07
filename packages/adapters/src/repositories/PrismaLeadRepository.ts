@@ -87,7 +87,7 @@ export class PrismaLeadRepository implements LeadRepository {
       status: record.status as LeadStatus,
       score: {
         value: record.score,
-        confidence: 1.0, // Default confidence since Prisma only stores score value
+        confidence: 1, // Default confidence since Prisma only stores score value
       },
       ownerId: record.ownerId,
       tenantId: record.tenantId,
@@ -115,7 +115,7 @@ export class PrismaLeadRepository implements LeadRepository {
       status: record.status as LeadStatus,
       score: {
         value: record.score,
-        confidence: 1.0,
+        confidence: 1,
       },
       ownerId: record.ownerId,
       tenantId: record.tenantId,
@@ -142,7 +142,7 @@ export class PrismaLeadRepository implements LeadRepository {
         status: record.status as LeadStatus,
         score: {
           value: record.score,
-          confidence: 1.0,
+          confidence: 1,
         },
         ownerId: record.ownerId,
         tenantId: record.tenantId,
@@ -173,7 +173,7 @@ export class PrismaLeadRepository implements LeadRepository {
         status: record.status as LeadStatus,
         score: {
           value: record.score,
-          confidence: 1.0,
+          confidence: 1,
         },
         ownerId: record.ownerId,
         tenantId: record.tenantId,
@@ -204,7 +204,7 @@ export class PrismaLeadRepository implements LeadRepository {
         status: record.status as LeadStatus,
         score: {
           value: record.score,
-          confidence: 1.0,
+          confidence: 1,
         },
         ownerId: record.ownerId,
         tenantId: record.tenantId,
@@ -268,7 +268,7 @@ export class PrismaLeadRepository implements LeadRepository {
         status: record.status as LeadStatus,
         score: {
           value: record.score,
-          confidence: 1.0,
+          confidence: 1,
         },
         ownerId: record.ownerId,
         tenantId: record.tenantId,
@@ -320,7 +320,7 @@ export class PrismaLeadRepository implements LeadRepository {
     } catch (error) {
       // If batch update fails, all IDs fail
       for (const id of ids) {
-        if (!failed.find((f) => f.id === id)) {
+        if (!failed.some((f) => f.id === id)) {
           failed.push({
             id,
             error: error instanceof Error ? error.message : 'Unknown error',
@@ -368,7 +368,7 @@ export class PrismaLeadRepository implements LeadRepository {
     } catch (error) {
       // If batch delete fails, all IDs fail
       for (const id of ids) {
-        if (!failed.find((f) => f.id === id)) {
+        if (!failed.some((f) => f.id === id)) {
           failed.push({
             id,
             error: error instanceof Error ? error.message : 'Unknown error',

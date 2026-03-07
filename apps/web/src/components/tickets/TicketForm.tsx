@@ -25,7 +25,7 @@ interface TicketFormData {
 
 interface TicketFormProps {
   initialData?: Partial<TicketFormData>;
-  onSubmit: (data: Readonly<Record<string, unknown>>) => Promise<void>;
+  onSubmit: (data: Record<string, unknown>) => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
   mode: 'create' | 'edit';
@@ -84,7 +84,7 @@ export function TicketForm({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
@@ -233,7 +233,7 @@ export function TicketForm({
             <option value="">Select category...</option>
             {TICKET_CATEGORIES.map((c) => (
               <option key={c} value={c}>
-                {c.replaceAll(/_/g, ' ')}
+                {c.replaceAll('_', ' ')}
               </option>
             ))}
           </select>

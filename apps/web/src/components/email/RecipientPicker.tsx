@@ -48,7 +48,7 @@ export function RecipientPicker({ label, value, onChange, className }: Readonly<
   const suggestions = contacts.filter((c) => !value.some((r) => r.email === c.email));
 
   const addRecipient = useCallback(
-    (recipient: Readonly<Recipient>) => {
+    (recipient: Recipient) => {
       onChange([...value, recipient]);
       setInputValue('');
       setIsOpen(false);
@@ -125,7 +125,7 @@ export function RecipientPicker({ label, value, onChange, className }: Readonly<
         {label}
       </label>
       <div
-        role="combobox"
+        role="combobox" // NOSONAR typescript:S6819 — multi-value combobox container with chip tags; no native equivalent supports this pattern
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         aria-controls={listboxId}
@@ -173,7 +173,7 @@ export function RecipientPicker({ label, value, onChange, className }: Readonly<
       {isOpen && suggestions.length > 0 ? (
         <ul
           id={listboxId}
-          role="listbox"
+          role="listbox" // NOSONAR typescript:S6819,S6842 — ARIA listbox for autocomplete suggestions; <select> cannot contain custom-styled items
           aria-label={`${label} suggestions`}
           className="absolute z-50 mt-1 max-h-48 w-full overflow-auto rounded-md border border-border bg-popover p-1 shadow-md"
         >
@@ -181,7 +181,7 @@ export function RecipientPicker({ label, value, onChange, className }: Readonly<
             <li
               key={contact.id}
               id={`${listboxId}-option-${i}`}
-              role="option"
+              role="option" // NOSONAR typescript:S6819,S6842 — autocomplete listbox option; <option> cannot contain custom layout or icons
               aria-selected={i === highlightIndex}
               data-highlighted={i === highlightIndex ? 'true' : undefined}
               className={cn(

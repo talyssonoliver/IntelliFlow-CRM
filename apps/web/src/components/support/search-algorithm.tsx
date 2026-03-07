@@ -31,7 +31,7 @@ const BONUS_POPULAR = 5;
 const MAX_KEYWORD_HITS = 3;
 
 function escapeRegex(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return str.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 }
 
 export function scoreHelpMatch(

@@ -109,7 +109,7 @@ export function NotificationBell() {
                     key={n.id}
                     type="button"
                     onClick={() => handleNotificationClick(n)}
-                    className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-100 dark:hover:bg-slate-700 ${!n.isRead ? 'bg-slate-50/50 dark:bg-slate-800/50' : ''}`}
+                    className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-100 dark:hover:bg-slate-700 ${n.isRead ? '' : 'bg-slate-50/50 dark:bg-slate-800/50'}`}
                   >
                     <div
                       className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${typeConfig.bgColor} ${typeConfig.iconColor}`}
@@ -118,7 +118,7 @@ export function NotificationBell() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p
-                        className={`text-sm ${!n.isRead ? 'font-semibold' : 'font-medium'} text-slate-900 dark:text-white truncate`}
+                        className={`text-sm ${n.isRead ? 'font-medium' : 'font-semibold'} text-slate-900 dark:text-white truncate`}
                       >
                         {n.title}
                       </p>

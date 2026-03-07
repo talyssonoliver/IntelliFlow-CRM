@@ -76,7 +76,7 @@ export function AttachmentManager({
   return (
     <div className={cn('space-y-2', className)}>
       {/* Drop zone */}
-      <div
+      <div // NOSONAR typescript:S6848 — drop zone is a non-interactive container; drag events (onDragOver/onDrop) are valid on any element per HTML spec
         data-testid="drop-zone"
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -126,7 +126,7 @@ export function AttachmentManager({
         <div className="space-y-1">
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Paperclip className="h-3 w-3" />
-            <span>{files.length}</span> file{files.length === 1 ? '' : 's'} attached
+            <span>{files.length}</span>{' '}file{files.length === 1 ? '' : 's'} attached
           </div>
           {files.map((file, i) => {
             const Icon = getFileIcon(file.type);

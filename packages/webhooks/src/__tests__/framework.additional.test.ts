@@ -8,7 +8,7 @@ import {
   sendgridEventTransformer,
   type WebhookSourceConfig,
 } from '../framework';
-import { createHmac } from 'crypto';
+import { createHmac } from 'node:crypto';
 
 function makeSource(ov: Partial<WebhookSourceConfig> = {}): WebhookSourceConfig {
   return {

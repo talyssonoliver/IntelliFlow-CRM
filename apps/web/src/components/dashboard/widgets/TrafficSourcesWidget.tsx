@@ -54,7 +54,7 @@ export function TrafficSourcesWidget(_props: Readonly<WidgetProps>) {
       </div>
 
       <div className="space-y-2">
-        {sources.map((source: Readonly<TrafficSourceData>) => (
+        {sources.map((source: TrafficSourceData) => (
           <div key={source.name} className="flex items-center gap-2">
             <div className={`size-3 rounded-full ${source.color}`} />
             <span className="text-sm text-slate-600 dark:text-slate-400 flex-1">{source.name}</span>

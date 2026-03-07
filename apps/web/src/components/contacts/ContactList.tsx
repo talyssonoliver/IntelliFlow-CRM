@@ -28,15 +28,15 @@ export interface ContactListProps {
   contacts: Contact[];
   total: number;
   isLoading: boolean;
-  onRowClick: (contact: Readonly<Contact>) => void;
-  onDelete: (contact: Readonly<Contact>) => void;
+  onRowClick: (contact: Contact) => void;
+  onDelete: (contact: Contact) => void;
   onBulkDelete: (ids: string[]) => void;
   onBulkEmail: (ids: string[]) => void;
   onBulkExport: (ids: string[], format: 'csv' | 'json') => void;
-  onEdit?: (contact: Readonly<Contact>) => void;
-  onCreateDeal?: (contact: Readonly<Contact>) => void;
-  onCreateTicket?: (contact: Readonly<Contact>) => void;
-  onScheduleMeeting?: (contact: Readonly<Contact>) => void;
+  onEdit?: (contact: Contact) => void;
+  onCreateDeal?: (contact: Contact) => void;
+  onCreateTicket?: (contact: Contact) => void;
+  onScheduleMeeting?: (contact: Contact) => void;
   pageSize?: number;
 }
 
@@ -54,10 +54,6 @@ function getAvatarColor(name: string) {
   return colors[hash % colors.length];
 }
 
-const noActivityCell = (
-  <span className="text-sm text-muted-foreground italic">No activity</span>
-);
-
 function formatDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return 'Invalid date';
@@ -69,6 +65,207 @@ function formatDate(date: Date | string): string {
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// ─── Column sub-components (module-level — fixes S6478) ─────────────────────────
+
+function ContactNameCell({ contact }: Readonly<{ contact: Contact }>) {
+  const name = `${contact.firstName}${contact.lastName}`;
+  const initials = `${contact.firstName?.[0] || ''}${contact.lastName?.[0] || ''}`.toUpperCase() || '?';
+  return (
+    <div className="flex items-center gap-3">
+      <span
+        className={`size-10 rounded-full shrink-0 flex items-center justify-center font-bold text-sm border ${getAvatarColor(name)}`}
+        aria-hidden="true"
+      >
+        {initials}
+      </span>
+      <div>
+        <p className="font-medium text-slate-900 dark:text-white">
+          {contact.firstName} {contact.lastName}
+        </p>
+        {contact.title && (
+          <p className="text-sm text-slate-500 dark:text-slate-400">{contact.title}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ContactAccountCell({ contact }: Readonly<{ contact: Contact }>) {
+  return (
+    <div>
+      <p className="font-medium text-slate-900 dark:text-white">
+        {contact.account?.name || '-'}
+      </p>
+      {contact.department && (
+        <p className="text-sm text-slate-500 dark:text-slate-400">{contact.department}</p>
+      )}
+    </div>
+  );
+}
+
+function ContactEmailCell({ contact }: Readonly<{ contact: Contact }>) {
+  return (
+    <a
+      href={`mailto:${contact.email}`}
+      onClick={(e) => e.stopPropagation()}
+      className="text-primary hover:underline text-sm"
+      aria-label={`Send email to ${contact.firstName} ${contact.lastName}`}
+    >
+      {contact.email}
+    </a>
+  );
+}
+
+function ContactPhoneCell({ contact }: Readonly<{ contact: Contact }>) {
+  return (
+    <span className="text-sm text-slate-500 dark:text-slate-400">{contact.phone || '-'}</span>
+  );
+}
+
+function ContactAddedCell({ contact }: Readonly<{ contact: Contact }>) {
+  return (
+    <span className="text-sm text-slate-600 dark:text-slate-400">
+      {formatDate(contact.createdAt)}
+    </span>
+  );
+}
+
+const noActivityCell = (
+  <span className="text-sm text-muted-foreground italic">No activity</span>
+);
+
+function ContactActivityCell({ contact }: Readonly<{ contact: Contact }>) {
+  const opp = contact._count?.opportunities ?? 0;
+  const tasks = contact._count?.tasks ?? 0;
+  if (opp === 0 && tasks === 0) return noActivityCell;
+  return (
+    <div className="flex flex-col gap-1">
+      {opp > 0 && (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
+          <span className="material-symbols-outlined text-sm" aria-hidden="true">handshake</span>
+          {opp} {opp === 1 ? 'Deal' : 'Deals'}
+        </span>
+      )}
+      {tasks > 0 && (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+          <span className="material-symbols-outlined text-sm" aria-hidden="true">task_alt</span>
+          {tasks} {tasks === 1 ? 'Task' : 'Tasks'}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function ContactActionsHeader() {
+  return <span className="block text-right">Actions</span>;
+}
+
+interface ContactActionCallbacks {
+  onDelete: (c: Contact) => void;
+  onEdit?: (c: Contact) => void;
+  onCreateDeal?: (c: Contact) => void;
+  onCreateTicket?: (c: Contact) => void;
+  onScheduleMeeting?: (c: Contact) => void;
+}
+
+function ContactActionsCell({
+  contact,
+  onDelete,
+  onEdit,
+  onCreateDeal,
+  onCreateTicket,
+  onScheduleMeeting,
+}: Readonly<{ contact: Contact } & ContactActionCallbacks>) {
+  return (
+    <TableRowActions
+      quickActions={[
+        {
+          icon: 'phone',
+          label: 'Call',
+          onClick: () => { if (contact.phone) window.open(`tel:${contact.phone}`); },
+        },
+        {
+          icon: 'mail',
+          label: 'Send Email',
+          onClick: () => window.open(`mailto:${contact.email}`),
+        },
+      ]}
+      dropdownActions={[
+        { icon: 'edit', label: 'Edit Contact', onClick: () => onEdit?.(contact) },
+        ...(onCreateDeal
+          ? [{ icon: 'handshake', label: 'Create Deal', onClick: () => onCreateDeal(contact) }]
+          : []),
+        ...(onCreateTicket
+          ? [{ icon: 'confirmation_number', label: 'Create Ticket', onClick: () => onCreateTicket(contact) }]
+          : []),
+        ...(onScheduleMeeting
+          ? [{ icon: 'event', label: 'Schedule Meeting', onClick: () => onScheduleMeeting(contact) }]
+          : []),
+        { id: 'sep-1', icon: '', label: '', onClick: () => undefined, separator: true },
+        { icon: 'delete', label: 'Delete', variant: 'danger', onClick: () => onDelete(contact) },
+      ]}
+    />
+  );
+}
+
+/** Column factory — defined at module level (not inside the component) to satisfy S6478. */
+function buildContactColumns(callbacks: ContactActionCallbacks): ColumnDef<Contact>[] {
+  const { onDelete, onEdit, onCreateDeal, onCreateTicket, onScheduleMeeting } = callbacks;
+  return [
+    {
+      accessorKey: 'firstName',
+      header: 'Contact Name',
+      size: 220,
+      cell: ({ row }) => <ContactNameCell contact={row.original} />,
+    },
+    {
+      accessorKey: 'account',
+      header: 'Account',
+      size: 180,
+      cell: ({ row }) => <ContactAccountCell contact={row.original} />,
+    },
+    {
+      accessorKey: 'email',
+      header: 'Email',
+      size: 200,
+      cell: ({ row }) => <ContactEmailCell contact={row.original} />,
+    },
+    {
+      accessorKey: 'phone',
+      header: 'Phone',
+      size: 140,
+      cell: ({ row }) => <ContactPhoneCell contact={row.original} />,
+    },
+    {
+      accessorKey: 'createdAt',
+      header: 'Added',
+      size: 100,
+      cell: ({ row }) => <ContactAddedCell contact={row.original} />,
+    },
+    {
+      id: 'activity',
+      header: 'Activity',
+      size: 120,
+      cell: ({ row }) => <ContactActivityCell contact={row.original} />,
+    },
+    {
+      id: 'actions',
+      header: () => <ContactActionsHeader />,
+      size: 120,
+      cell: ({ row }) => (
+        <ContactActionsCell
+          contact={row.original}
+          onDelete={onDelete}
+          onEdit={onEdit}
+          onCreateDeal={onCreateDeal}
+          onCreateTicket={onCreateTicket}
+          onScheduleMeeting={onScheduleMeeting}
+        />
+      ),
+    },
+  ];
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────────
@@ -88,170 +285,10 @@ export function ContactList({
   onScheduleMeeting,
   pageSize = 10,
 }: Readonly<ContactListProps>) {
-  const columns: ColumnDef<Contact>[] = useMemo(
-    () => [
-      {
-        accessorKey: 'firstName',
-        header: 'Contact Name',
-        size: 220,
-        cell: ({ row }) => {
-          const c = row.original;
-          const name = `${c.firstName}${c.lastName}`;
-          const initials = `${c.firstName?.[0] || ''}${c.lastName?.[0] || ''}`.toUpperCase() || '?';
-          return (
-            <div className="flex items-center gap-3">
-              <span
-                className={`size-10 rounded-full shrink-0 flex items-center justify-center font-bold text-sm border ${getAvatarColor(name)}`}
-                aria-hidden="true"
-              >
-                {initials}
-              </span>
-              <div>
-                <p className="font-medium text-slate-900 dark:text-white">
-                  {c.firstName} {c.lastName}
-                </p>
-                {c.title && <p className="text-sm text-slate-500 dark:text-slate-400">{c.title}</p>}
-              </div>
-            </div>
-          );
-        },
-      },
-      {
-        accessorKey: 'account',
-        header: 'Account',
-        size: 180,
-        cell: ({ row }) => (
-          <div>
-            <p className="font-medium text-slate-900 dark:text-white">
-              {row.original.account?.name || '-'}
-            </p>
-            {row.original.department && (
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                {row.original.department}
-              </p>
-            )}
-          </div>
-        ),
-      },
-      {
-        accessorKey: 'email',
-        header: 'Email',
-        size: 200,
-        cell: ({ row }) => (
-          <a
-            href={`mailto:${row.original.email}`}
-            onClick={(e) => e.stopPropagation()}
-            className="text-primary hover:underline text-sm"
-            aria-label={`Send email to ${row.original.firstName} ${row.original.lastName}`}
-          >
-            {row.original.email}
-          </a>
-        ),
-      },
-      {
-        accessorKey: 'phone',
-        header: 'Phone',
-        size: 140,
-        cell: ({ row }) => (
-          <span className="text-sm text-slate-500 dark:text-slate-400">
-            {row.original.phone || '-'}
-          </span>
-        ),
-      },
-      {
-        accessorKey: 'createdAt',
-        header: 'Added',
-        size: 100,
-        cell: ({ row }) => (
-          <span className="text-sm text-slate-600 dark:text-slate-400">
-            {formatDate(row.original.createdAt)}
-          </span>
-        ),
-      },
-      {
-        id: 'activity',
-        header: 'Activity',
-        size: 120,
-        cell: ({ row }) => {
-          const opp = row.original._count?.opportunities ?? 0;
-          const tasks = row.original._count?.tasks ?? 0;
-          if (opp === 0 && tasks === 0)
-            return noActivityCell;
-          return (
-            <div className="flex flex-col gap-1">
-              {opp > 0 && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                  <span className="material-symbols-outlined text-sm" aria-hidden="true">
-                    handshake
-                  </span>
-                  {opp} {opp === 1 ? 'Deal' : 'Deals'}
-                </span>
-              )}
-              {tasks > 0 && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                  <span className="material-symbols-outlined text-sm" aria-hidden="true">
-                    task_alt
-                  </span>
-                  {tasks} {tasks === 1 ? 'Task' : 'Tasks'}
-                </span>
-              )}
-            </div>
-          );
-        },
-      },
-      {
-        id: 'actions',
-        header: () => <span className="block text-right">Actions</span>,
-        size: 120,
-        cell: ({ row }) => {
-          const c = row.original;
-          return (
-            <TableRowActions
-              quickActions={[
-                {
-                  icon: 'phone',
-                  label: 'Call',
-                  onClick: () => {
-                    if (c.phone) window.open(`tel:${c.phone}`);
-                  },
-                },
-                {
-                  icon: 'mail',
-                  label: 'Send Email',
-                  onClick: () => window.open(`mailto:${c.email}`),
-                },
-              ]}
-              dropdownActions={[
-                { icon: 'edit', label: 'Edit Contact', onClick: () => onEdit?.(c) },
-                ...(onCreateDeal
-                  ? [{ icon: 'handshake', label: 'Create Deal', onClick: () => onCreateDeal(c) }]
-                  : []),
-                ...(onCreateTicket
-                  ? [
-                      {
-                        icon: 'confirmation_number',
-                        label: 'Create Ticket',
-                        onClick: () => onCreateTicket(c),
-                      },
-                    ]
-                  : []),
-                ...(onScheduleMeeting
-                  ? [
-                      {
-                        icon: 'event',
-                        label: 'Schedule Meeting',
-                        onClick: () => onScheduleMeeting(c),
-                      },
-                    ]
-                  : []),
-                { id: 'sep-1', icon: '', label: '', onClick: () => undefined, separator: true }, // Separator: onClick is intentionally a no-op
-                { icon: 'delete', label: 'Delete', variant: 'danger', onClick: () => onDelete(c) },
-              ]}
-            />
-          );
-        },
-      },
-    ],
+  // Columns are built by a module-level factory to avoid S6478 (JSX-returning
+  // functions defined inside a React component). useMemo caches the result.
+  const columns = useMemo(
+    () => buildContactColumns({ onDelete, onEdit, onCreateDeal, onCreateTicket, onScheduleMeeting }),
     [onDelete, onEdit, onCreateDeal, onCreateTicket, onScheduleMeeting]
   );
 
@@ -285,7 +322,7 @@ export function ContactList({
     return (
       <div aria-live="polite" aria-busy="true" className="space-y-3">
         <span className="sr-only">Loading contacts...</span>
-        {[...Array(5)].map((_, i) => (
+        {[...new Array(5)].map((_, i) => (
           <div
             key={i} // NOSONAR typescript:S6479
             className="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"

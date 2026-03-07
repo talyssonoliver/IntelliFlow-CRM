@@ -39,7 +39,7 @@ function ScoreFactorList({
   showSummary = false,
   className,
   ...props
-}: ScoreFactorListProps) {
+}: Readonly<ScoreFactorListProps>) {
   const [isExpanded, setIsExpanded] = React.useState(initialExpanded);
 
   // Sort factors if requested
@@ -77,7 +77,7 @@ function ScoreFactorList({
       )}
 
       {/* Factor List */}
-      <ul role="list" className="space-y-2">
+      <ul className="space-y-2">
         {visibleFactors.map((factor, index) => (
           <li key={`${factor.name}-${index}`}>
             <ScoreFactorComponent factor={factor} showImpactBar={showImpactBars} />

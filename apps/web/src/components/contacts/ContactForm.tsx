@@ -28,7 +28,7 @@ export interface ContactFormData {
 export interface ContactFormProps {
   mode: 'create' | 'edit';
   contact?: Partial<ContactFormData>;
-  onSubmit: (data: Readonly<ContactFormData>) => Promise<void>;
+  onSubmit: (data: ContactFormData) => Promise<void>;
   onCancel: () => void;
   isSubmitting?: boolean;
   onDirtyChange?: (isDirty: boolean) => void;
@@ -159,7 +159,7 @@ export function ContactForm({
   }, [currentStepIndex]);
 
   const handleStepClick = useCallback(
-    (step: Readonly<Step>) => {
+    (step: Step) => {
       const targetIndex = steps.findIndex((s) => s.id === step.id);
       if (targetIndex <= currentStepIndex) {
         setCurrentStep(step.id);
@@ -193,7 +193,7 @@ export function ContactForm({
         className="px-8 pt-8 pb-6 border-b border-slate-200 dark:border-slate-700"
       >
         <div
-          role="progressbar"
+          role="progressbar" // NOSONAR typescript:S6819 — step indicator with child step elements; <progress> cannot contain child nodes
           aria-valuenow={currentStepIndex + 1}
           aria-valuemin={1}
           aria-valuemax={steps.length}

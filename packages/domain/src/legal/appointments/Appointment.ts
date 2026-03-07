@@ -116,7 +116,7 @@ export interface CreateAppointmentProps {
  * Represents a scheduled appointment with conflict detection, buffers, and recurrence support
  */
 export class Appointment extends AggregateRoot<AppointmentId> {
-  private props: AppointmentProps;
+  private readonly props: AppointmentProps;
 
   private constructor(id: AppointmentId, props: AppointmentProps) {
     super(id);

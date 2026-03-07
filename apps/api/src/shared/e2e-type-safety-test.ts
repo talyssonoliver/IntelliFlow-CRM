@@ -14,9 +14,8 @@
  */
 
 import { z } from 'zod';
-import type { AppRouter } from '../router';
 import type { Lead, Contact, Account } from '@intelliflow/db';
-import { createLeadSchema, updateLeadSchema } from '@intelliflow/validators/lead';
+import { createLeadSchema } from '@intelliflow/validators/lead';
 
 /**
  * DEMONSTRATION 1: Prisma → TypeScript types

@@ -157,7 +157,7 @@ export function AppMetrics({ app }: Readonly<AppMetricsProps>) {
           <CardContent>
             <div
               className="flex items-end gap-0.5 h-32"
-              role="img"
+              role="img" // NOSONAR typescript:S6819 — SVG-less chart built from divs; <img> cannot contain dynamic bar elements
               aria-label="Daily API calls chart"
             >
               {usage.dailyBreakdown.map((day) => {
@@ -189,7 +189,7 @@ export function AppMetrics({ app }: Readonly<AppMetricsProps>) {
           <CardContent>
             <div
               className="flex h-4 rounded overflow-hidden"
-              role="img"
+              role="img" // NOSONAR typescript:S6819 — segmented bar chart built from divs; <img> cannot contain dynamic segment elements
               aria-label="Error breakdown by category"
             >
               {errorBreakdown.map((segment) => (

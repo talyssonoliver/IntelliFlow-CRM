@@ -89,7 +89,7 @@ export function ScoreCorrectionModal({
   originalScore,
   onSubmit,
   isSubmitting = false,
-}: ScoreCorrectionModalProps) {
+}: Readonly<ScoreCorrectionModalProps>) {
   const [correctedScore, setCorrectedScore] = React.useState(originalScore);
   const [category, setCategory] = React.useState<FeedbackCategory | ''>('');
   const [reason, setReason] = React.useState('');
@@ -110,7 +110,7 @@ export function ScoreCorrectionModal({
   const handleSubmit = () => {
     if (!isValid) return;
     // Type narrowing: after isValid check, category is guaranteed to be FeedbackCategory
-    const validCategory = category as FeedbackCategory;
+    const validCategory = category;
 
     onSubmit({
       correctedScore,
@@ -208,7 +208,7 @@ export function ScoreCorrectionModal({
           {/* Optional Reason */}
           <div className="space-y-2">
             <Label htmlFor="reason-text">
-              Additional details <span className="text-muted-foreground">(optional)</span>
+              Additional details{' '}<span className="text-muted-foreground">(optional)</span>
             </Label>
             <Textarea
               id="reason-text"

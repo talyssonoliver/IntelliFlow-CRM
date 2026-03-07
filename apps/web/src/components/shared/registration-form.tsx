@@ -47,7 +47,7 @@ export interface RegistrationFormErrors {
 }
 
 export interface RegistrationFormProps {
-  onSubmit: (data: Readonly<RegistrationFormData>) => Promise<void>;
+  onSubmit: (data: RegistrationFormData) => Promise<void>;
   isLoading?: boolean;
   className?: string;
   initialEmail?: string;
@@ -155,7 +155,7 @@ function PasswordStrengthIndicator({ password, className }: Readonly<PasswordStr
             strengthColors[strength],
             strengthWidths[strength]
           )}
-          role="progressbar"
+          role="progressbar" // NOSONAR typescript:S6819 — inner fill bar; <progress> cannot be positioned inside overflow:hidden container
           aria-valuenow={Math.round((calculatePasswordStrength(password).score / 6) * 100)}
           aria-valuemin={0}
           aria-valuemax={100}
@@ -369,7 +369,7 @@ export function RegistrationForm({
   );
 
   const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
+    async (e: React.SyntheticEvent) => {
       e.preventDefault();
 
       // Mark all fields as touched

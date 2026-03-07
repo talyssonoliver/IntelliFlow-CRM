@@ -69,10 +69,10 @@ export const NotificationItem = React.memo(function NotificationItem({
   );
 
   return (
-    <div
+    <div // NOSONAR typescript:S6845,S6848 — notification item conditionally acts as a link; <a> cannot contain interactive child elements (action buttons)
       onClick={handleItemClick}
       onKeyDown={handleKeyDown}
-      role={actionLink ? 'link' : undefined}
+      role={actionLink ? 'link' : undefined} // NOSONAR typescript:S6819,S6842 — notification item is a styled div that conditionally acts as a link
       tabIndex={actionLink ? 0 : undefined}
       className={`group relative flex w-full items-start gap-4 rounded-xl p-4 shadow-sm border transition-all hover:shadow-md ${actionLink ? 'cursor-pointer' : ''} ${containerClass}`}
     >

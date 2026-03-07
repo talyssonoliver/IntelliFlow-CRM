@@ -93,7 +93,7 @@ const nbaCardVariants = cva(
 // Helper Functions
 // ============================================
 
-function getActionConfig(actionType: NBAActionType) {
+function getActionConfig(actionType: Readonly<NBAActionType>) {
   const configs: Record<NBAActionType, { icon: string; label: string; color: string }> = {
     CALL: { icon: 'call', label: 'Make a Call', color: 'text-green-600 dark:text-green-400' },
     EMAIL: { icon: 'mail', label: 'Send Email', color: 'text-blue-600 dark:text-blue-400' },
@@ -143,7 +143,7 @@ function getActionConfig(actionType: NBAActionType) {
   return configs[actionType] || configs.WAIT;
 }
 
-function getPriorityConfig(priority: NBAPriority) {
+function getPriorityConfig(priority: Readonly<NBAPriority>) {
   switch (priority) {
     case 'CRITICAL':
       return {
@@ -236,7 +236,7 @@ function NextBestActionCard({
   size = 'md',
   className,
   ...props
-}: NextBestActionCardProps) {
+}: Readonly<NextBestActionCardProps>) {
   if (isLoading) {
     return (
       <div className={cn(nbaCardVariants({ size }), className)} {...props}>
@@ -338,7 +338,7 @@ function NextBestActionCard({
               onClick={onActionTaken}
               className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
             >
-              <span className="material-symbols-outlined text-sm">check</span>
+              <span className="material-symbols-outlined text-sm">check</span>{' '}
               Mark Done
             </button>
           )}
@@ -348,7 +348,7 @@ function NextBestActionCard({
               onClick={onDismiss}
               className="flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium border border-border hover:bg-muted transition-colors"
             >
-              <span className="material-symbols-outlined text-sm">close</span>
+              <span className="material-symbols-outlined text-sm">close</span>{' '}
               Dismiss
             </button>
           )}

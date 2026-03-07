@@ -219,7 +219,7 @@ interface ModuleColorTheme {
 interface SidebarSectionComponentProps {
   section: SidebarSection;
   isExpanded: boolean;
-  isItemActive: (item: Readonly<SidebarItem>) => boolean;
+  isItemActive: (item: SidebarItem) => boolean;
   moduleColor: ModuleColorTheme;
 }
 
@@ -535,7 +535,7 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: R
 
   // Handle escape key
   React.useEffect(() => {
-    const handleKeyDown = (e: Readonly<KeyboardEvent>) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isMobileOpen) {
         closeMobile();
       }
@@ -562,7 +562,7 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: R
       firstFocusable?.focus();
     });
 
-    const handleTab = (e: Readonly<KeyboardEvent>) => {
+    const handleTab = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') return;
 
       const focusables = Array.from(drawer.querySelectorAll<HTMLElement>(focusableSelector));
@@ -573,7 +573,7 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: R
 
       if (e.shiftKey && document.activeElement === first) {
         e.preventDefault();
-        last.focus();
+        last?.focus();
       } else if (!e.shiftKey && document.activeElement === last) {
         e.preventDefault();
         first.focus();

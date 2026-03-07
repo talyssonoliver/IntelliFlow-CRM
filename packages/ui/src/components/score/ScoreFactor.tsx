@@ -8,7 +8,7 @@
 
 import * as React from 'react';
 import { cn } from '../../lib/utils';
-import { formatImpact, getImpactDirection, getImpactBarWidth } from './utils';
+import { formatImpact, getImpactDirection } from './utils';
 import type { ScoreFactor as ScoreFactorType } from './types';
 
 export interface ScoreFactorProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -23,7 +23,7 @@ export interface ScoreFactorProps extends React.HTMLAttributes<HTMLDivElement> {
 /**
  * Impact bar visual component
  */
-function ImpactBar({ impact, maxImpact = 50 }: { impact: number; maxImpact?: number }) {
+function ImpactBar({ impact, maxImpact = 50 }: Readonly<{ impact: number; maxImpact?: number }>) {
   const direction = getImpactDirection(impact);
 
   return (
@@ -54,7 +54,7 @@ function ScoreFactor({
   defaultExpanded = false,
   className,
   ...props
-}: ScoreFactorProps) {
+}: Readonly<ScoreFactorProps>) {
   const [isExpanded, setIsExpanded] = React.useState(defaultExpanded);
   const direction = getImpactDirection(factor.impact);
   const hasReasoning = factor.reasoning && factor.reasoning.length > 0;

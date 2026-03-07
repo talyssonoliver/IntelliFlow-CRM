@@ -19,7 +19,7 @@
  * ```
  */
 
-import { randomBytes, createCipheriv, createDecipheriv, pbkdf2Sync, timingSafeEqual } from 'crypto';
+import { randomBytes, createCipheriv, createDecipheriv, pbkdf2Sync, timingSafeEqual } from 'node:crypto';
 
 /**
  * Encryption algorithm configuration
@@ -481,9 +481,9 @@ export const FieldEncryption = {
       current = current[parts[i]] as Record<string, unknown>;
     }
 
-    const lastKey = parts[parts.length - 1];
+    const lastKey = parts.at(-1)!;
     if (current[lastKey] !== undefined && typeof current[lastKey] === 'string') {
-      current[lastKey] = await svc.encryptToString(current[lastKey] as string);
+      current[lastKey] = await svc.encryptToString(current[lastKey]);
     }
 
     return result;
@@ -508,9 +508,9 @@ export const FieldEncryption = {
       current = current[parts[i]] as Record<string, unknown>;
     }
 
-    const lastKey = parts[parts.length - 1];
+    const lastKey = parts.at(-1)!;
     if (current[lastKey] !== undefined && typeof current[lastKey] === 'string') {
-      current[lastKey] = await svc.decryptFromString(current[lastKey] as string);
+      current[lastKey] = await svc.decryptFromString(current[lastKey]);
     }
 
     return result;

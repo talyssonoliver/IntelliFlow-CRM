@@ -44,6 +44,18 @@ vi.mock('../TicketAssignSidebar', () => ({
     ) : null,
 }));
 
+vi.mock('@/components/shared/assign-sheet', () => ({
+  AssignSheet: ({ open, onAssign, children }: any) =>
+    open ? (
+      <div data-testid="escalation-sheet">
+        {children}
+        <button onClick={() => onAssign('00000000-0000-4000-8000-000000000108')}>
+          Escalate to manager
+        </button>
+      </div>
+    ) : null,
+}));
+
 // Mock PinButton to avoid tRPC context requirement
 vi.mock('@/components/home/PinButton', () => ({
   PinButton: () => <button data-testid="pin-button" aria-label="Pin" />,
@@ -267,13 +279,18 @@ describe('TicketDetail', () => {
     expect(screen.queryByTestId('escalation-alert')).not.toBeInTheDocument();
   });
 
-  it('escalates ticket by setting priority to CRITICAL', () => {
+  it('opens escalation sheet when escalate is clicked from SLA alert', () => {
     render(<TicketDetail ticket={mockTicket} isLoading={false} {...handlers} />);
 
+    // Escalation sheet should not be open initially
+    expect(screen.queryByTestId('escalation-sheet')).not.toBeInTheDocument();
+
+    // Click escalate on the SLA breach alert
     const escalationAlert = screen.getByTestId('escalation-alert');
     fireEvent.click(within(escalationAlert).getByRole('button', { name: /escalate/i }));
 
-    expect(handlers.onPriorityChange).toHaveBeenCalledWith('CRITICAL');
+    // Escalation sheet should now be open
+    expect(screen.getByTestId('escalation-sheet')).toBeInTheDocument();
   });
 
   it('uses current user id for reassign action', () => {

@@ -24,7 +24,7 @@ const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HT
     <h3
       ref={ref}
       className={cn('text-2xl font-semibold leading-none tracking-tight', className)}
-      {...props} // NOSONAR javascript:S6850
+      {...props} // NOSONAR typescript:S6850 — heading content is passed via props by the consumer; empty heading is never rendered
     />
   )
 );

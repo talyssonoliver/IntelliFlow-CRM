@@ -74,13 +74,13 @@ function StatCard({
 
 const STATUS_OPTIONS = REVIEW_STATUSES.map((s) => ({
   value: s,
-  label: s.replaceAll(/_/g, ' '),
+  label: s.replaceAll('_', ' '),
 }));
 
 const OUTPUT_TYPE_OPTIONS = AI_OUTPUT_TYPES.map((t) => ({
   value: t,
   label: t
-    .replaceAll(/_/g, ' ')
+    .replaceAll('_', ' ')
     .toLowerCase()
     .replaceAll(/\b\w/g, (c) => c.toUpperCase()),
 }));
@@ -125,8 +125,8 @@ export function ReviewQueue() {
 
   // Sync search-filter-bar state to query filters
   const updateQueryFilters = useCallback(
-    (partial: Readonly<Partial<ReviewListFilter>>) => {
-      setFilters((prev: Readonly<Partial<ReviewListFilter>>) => ({ ...prev, ...partial, page: 1 }));
+    (partial: Partial<ReviewListFilter>) => {
+      setFilters((prev: Partial<ReviewListFilter>) => ({ ...prev, ...partial, page: 1 }));
     },
     [setFilters]
   );
@@ -181,7 +181,7 @@ export function ReviewQueue() {
   );
 
   const handleLoadMore = useCallback(() => {
-    setFilters((prev: Readonly<Partial<ReviewListFilter>>) => ({ ...prev, page: (prev.page ?? 1) + 1 }));
+    setFilters((prev: Partial<ReviewListFilter>) => ({ ...prev, page: (prev.page ?? 1) + 1 }));
   }, [setFilters]);
 
   // Mutation handlers
@@ -353,7 +353,7 @@ export function ReviewQueue() {
         );
         return (
         <div className="space-y-3">
-          {reviews.map((review: Readonly<ReviewResponse>) => (
+          {reviews.map((review: ReviewResponse) => (
             <ReviewCard
               key={review.id}
               review={review}

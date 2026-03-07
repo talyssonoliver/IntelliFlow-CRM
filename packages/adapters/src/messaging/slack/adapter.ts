@@ -96,7 +96,7 @@ export interface SlackMessagingPort {
  * Implements messaging operations via Slack Web API
  */
 export class SlackAdapter implements SlackMessagingPort {
-  private config: SlackConfig;
+  private readonly config: SlackConfig;
 
   constructor(config: SlackConfig) {
     this.config = config;

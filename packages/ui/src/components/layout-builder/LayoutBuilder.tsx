@@ -26,7 +26,7 @@ export function LayoutBuilderProvider({
   initialWidgets = [],
   onSave,
   onCancel,
-}: LayoutBuilderProviderProps) {
+}: Readonly<LayoutBuilderProviderProps>) {
   const [widgets, setWidgets] = useState<Widget[]>(initialWidgets);
   const [savedWidgets, setSavedWidgets] = useState<Widget[]>(initialWidgets);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -89,7 +89,7 @@ interface LayoutBuilderGridProps {
   className?: string;
 }
 
-export function LayoutBuilderGrid({ children, className = '' }: LayoutBuilderGridProps) {
+export function LayoutBuilderGrid({ children, className = '' }: Readonly<LayoutBuilderGridProps>) {
   return (
     <div
       className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 auto-rows-min ${className}`}
@@ -111,7 +111,7 @@ export function LayoutBuilderHeader({
   description,
   onCancel,
   onSave,
-}: LayoutBuilderHeaderProps) {
+}: Readonly<LayoutBuilderHeaderProps>) {
   const { isDirty, lastSaved, save, cancel } = useLayoutBuilder();
 
   const handleSave = () => {

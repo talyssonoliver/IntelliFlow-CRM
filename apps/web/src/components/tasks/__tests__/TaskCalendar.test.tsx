@@ -12,7 +12,7 @@ import { TaskCalendar, type CalendarTask } from '../TaskCalendar';
 vi.mock('next/dynamic', () => ({
   __esModule: true,
   default: (loader: () => Promise<{ default: React.ComponentType }>) => {
-    const MockInner = (props: Readonly<Record<string, unknown>>) => {
+    const MockInner = (props: Record<string, unknown>) => {
       const tasks = props.tasks as CalendarTask[] | undefined;
       return (
         <div data-testid="schedule-x-task-inner">
@@ -34,11 +34,11 @@ vi.mock('next/dynamic', () => ({
             role="gridcell"
             aria-label="test cell"
             tabIndex={0}
-            onClick={() => (props.onCreateWithDate as (d: Readonly<Date>) => void)?.(new Date('2026-02-15'))}
+            onClick={() => (props.onCreateWithDate as (d: Date) => void)?.(new Date('2026-02-15'))}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                (props.onCreateWithDate as (d: Readonly<Date>) => void)?.(new Date('2026-02-15'));
+                (props.onCreateWithDate as (d: Date) => void)?.(new Date('2026-02-15'));
               }
             }}
           />

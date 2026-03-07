@@ -13,7 +13,7 @@ import {
 } from '../src/components/toast';
 
 describe('Toast', () => {
-  const ToastWrapper = ({ children }: { children: React.ReactNode }) => (
+  const ToastWrapper = ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <ToastProvider>
       {children}
       <ToastViewport />

@@ -174,11 +174,11 @@ export function shouldRetry(error: Error, attemptsMade: number, maxAttempts: num
  * Tracks retry budgets to prevent runaway retries
  */
 export class RetryBudgetTracker {
-  private budgets: Map<string, { remaining: number; resetAt: number }> = new Map();
+  private readonly budgets: Map<string, { remaining: number; resetAt: number }> = new Map();
 
   constructor(
-    private defaultBudget: number = 100,
-    private windowMs: number = 60000
+    private readonly defaultBudget: number = 100,
+    private readonly windowMs: number = 60000
   ) {}
 
   /**

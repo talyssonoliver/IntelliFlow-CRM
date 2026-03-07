@@ -13,7 +13,7 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { Prisma } from '@intelliflow/db';
-import { createTRPCRouter, protectedProcedure, tenantProcedure } from '../../trpc';
+import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import {
   createLeadSchema,
   updateLeadSchema,
@@ -259,7 +259,7 @@ function collectBulkFailures(
 ): void {
   const errorMessage = error instanceof Error ? error.message : 'Unknown error';
   for (const id of ids) {
-    if (!failed.find((f) => f.id === id) && !successful.includes(id)) {
+    if (!failed.some((f) => f.id === id) && !successful.includes(id)) {
       failed.push({ id, error: errorMessage });
     }
   }
@@ -1094,7 +1094,7 @@ export const leadRouter = createTRPCRouter({
       ]);
 
       // Get owner names for display
-      const ownerIds = (ownerCounts ?? []).map((o) => o.ownerId).filter(Boolean) as string[];
+      const ownerIds = (ownerCounts ?? []).map((o) => o.ownerId).filter(Boolean);
       const owners =
         ownerIds.length > 0
           ? await ctx.prisma.user.findMany({
@@ -1118,7 +1118,7 @@ export const leadRouter = createTRPCRouter({
         owners: (ownerCounts ?? [])
           .filter((o) => o.ownerId)
           .map((o) => ({
-            value: o.ownerId as string,
+            value: o.ownerId!,
             label: ownerMap.get(o.ownerId as string) || o.ownerId,
             count: o._count,
           })),
@@ -1437,7 +1437,7 @@ export const leadRouter = createTRPCRouter({
       }
     } catch (error) {
       for (const id of ids) {
-        if (!failed.find((f) => f.id === id) && !successful.includes(id)) {
+        if (!failed.some((f) => f.id === id) && !successful.includes(id)) {
           failed.push({
             id,
             error: error instanceof Error ? error.message : 'Unknown error',

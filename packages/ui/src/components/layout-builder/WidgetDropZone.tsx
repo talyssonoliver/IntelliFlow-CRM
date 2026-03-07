@@ -8,7 +8,7 @@ interface WidgetDropZoneProps {
   className?: string;
 }
 
-export function WidgetDropZone({ isOver = false, onClick, className = '' }: WidgetDropZoneProps) {
+export function WidgetDropZone({ isOver = false, onClick, className = '' }: Readonly<WidgetDropZoneProps>) {
   return (
     <button
       type="button"
@@ -36,7 +36,7 @@ interface SortablePlaceholderProps {
   className?: string;
 }
 
-export function SortablePlaceholder({ height = 150, className = '' }: SortablePlaceholderProps) {
+export function SortablePlaceholder({ height = 150, className = '' }: Readonly<SortablePlaceholderProps>) {
   return (
     <div
       className={`col-span-1 border-2 border-dashed border-ds-primary/60 bg-ds-primary/10 rounded-xl ${className}`}

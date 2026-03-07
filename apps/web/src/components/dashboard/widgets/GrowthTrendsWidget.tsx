@@ -38,8 +38,8 @@ export function GrowthTrendsWidget(_props: Readonly<WidgetProps>) {
     return null;
   }
 
-  const dataPoints = trendData.map((d: Readonly<GrowthTrendData>) => d.value);
-  const months = trendData.map((d: Readonly<GrowthTrendData>) => d.month);
+  const dataPoints = trendData.map((d: GrowthTrendData) => d.value);
+  const months = trendData.map((d: GrowthTrendData) => d.month);
   const yoyChange = trendData[trendData.length - 1]?.yoyChange || 0;
   const lineSegments = dataPoints.map((p: number, i: number) => `L${(i / (dataPoints.length - 1)) * 300},${100 - p}`).join(" "); // NOSONAR typescript:S4624 — arithmetic expressions inside template literal, not nested template
 

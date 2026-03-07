@@ -30,7 +30,7 @@ interface EmailListProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onEmailSelect: (emailId: string) => void;
-  onFilterChange: (filters: Readonly<EmailFilters>) => void;
+  onFilterChange: (filters: EmailFilters) => void;
   onRetry: () => void;
   filters: EmailFilters;
   className?: string;

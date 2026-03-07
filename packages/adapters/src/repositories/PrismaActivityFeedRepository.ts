@@ -197,8 +197,8 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       ];
     }
     if (filters.entityId) where.leadId = filters.entityId;
-    if (filters.after) where.timestamp = { ...(where.timestamp || {}), gte: filters.after };
-    if (filters.before) where.timestamp = { ...(where.timestamp || {}), lte: filters.before };
+    if (filters.after) where.timestamp = { ...where.timestamp, gte: filters.after };
+    if (filters.before) where.timestamp = { ...where.timestamp, lte: filters.before };
 
     const rows = await this.prisma.leadActivity.findMany({
       where,
@@ -240,8 +240,8 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       ];
     }
     if (filters.entityId) where.contactId = filters.entityId;
-    if (filters.after) where.timestamp = { ...(where.timestamp || {}), gte: filters.after };
-    if (filters.before) where.timestamp = { ...(where.timestamp || {}), lte: filters.before };
+    if (filters.after) where.timestamp = { ...where.timestamp, gte: filters.after };
+    if (filters.before) where.timestamp = { ...where.timestamp, lte: filters.before };
 
     const rows = await this.prisma.contactActivity.findMany({
       where,
@@ -283,8 +283,8 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       ];
     }
     if (filters.entityId) where.opportunityId = filters.entityId;
-    if (filters.after) where.timestamp = { ...(where.timestamp || {}), gte: filters.after };
-    if (filters.before) where.timestamp = { ...(where.timestamp || {}), lte: filters.before };
+    if (filters.after) where.timestamp = { ...where.timestamp, gte: filters.after };
+    if (filters.before) where.timestamp = { ...where.timestamp, lte: filters.before };
 
     const rows = await this.prisma.activityEvent.findMany({
       where,
@@ -325,8 +325,8 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       ];
     }
     if (filters.entityId) where.ticketId = filters.entityId;
-    if (filters.after) where.timestamp = { ...(where.timestamp || {}), gte: filters.after };
-    if (filters.before) where.timestamp = { ...(where.timestamp || {}), lte: filters.before };
+    if (filters.after) where.timestamp = { ...where.timestamp, gte: filters.after };
+    if (filters.before) where.timestamp = { ...where.timestamp, lte: filters.before };
 
     const rows = await this.prisma.ticketActivity.findMany({
       where,
@@ -368,8 +368,8 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       ];
     }
     if (filters.entityId && filters.entityType === 'CONTACT') where.contactId = filters.entityId;
-    if (filters.after) where.createdAt = { ...(where.createdAt || {}), gte: filters.after };
-    if (filters.before) where.createdAt = { ...(where.createdAt || {}), lte: filters.before };
+    if (filters.after) where.createdAt = { ...where.createdAt, gte: filters.after };
+    if (filters.before) where.createdAt = { ...where.createdAt, lte: filters.before };
 
     const rows = await this.prisma.emailRecord.findMany({
       where,
@@ -404,8 +404,8 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       ];
     }
     if (filters.entityId && filters.entityType === 'CONTACT') where.contactId = filters.entityId;
-    if (filters.after) where.startedAt = { ...(where.startedAt || {}), gte: filters.after };
-    if (filters.before) where.startedAt = { ...(where.startedAt || {}), lte: filters.before };
+    if (filters.after) where.startedAt = { ...where.startedAt, gte: filters.after };
+    if (filters.before) where.startedAt = { ...where.startedAt, lte: filters.before };
 
     const rows = await this.prisma.callRecord.findMany({
       where,
@@ -417,7 +417,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       id: `call_${r.id}`,
       source: 'CALL' as const,
       type: 'CALL' as const,
-      title: `${r.direction === 'inbound' ? 'Incoming' : 'Outgoing'} call${r.contactName ? ` with ${r.contactName}` : ''}`,
+      title: `${r.direction === 'inbound' ? 'Incoming' : 'Outgoing'} call` + (r.contactName ? ` with ${r.contactName}` : ''),
       description: r.summary || r.outcome || null,
       timestamp: r.startedAt,
       actor: r.userName ? { id: r.userId, name: r.userName } : null,
@@ -446,8 +446,8 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
         { createdAt: cursor.timestamp, id: { lt: cursor.id } },
       ];
     }
-    if (filters.after) where.createdAt = { ...(where.createdAt || {}), gte: filters.after };
-    if (filters.before) where.createdAt = { ...(where.createdAt || {}), lte: filters.before };
+    if (filters.after) where.createdAt = { ...where.createdAt, gte: filters.after };
+    if (filters.before) where.createdAt = { ...where.createdAt, lte: filters.before };
 
     const rows = await this.prisma.chatMessage.findMany({
       where,

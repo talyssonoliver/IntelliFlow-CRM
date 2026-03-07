@@ -318,7 +318,7 @@ function IntervalToggle({
   onChange,
 }: Readonly<{
   value: BillingInterval;
-  onChange: (interval: Readonly<BillingInterval>) => void;
+  onChange: (interval: BillingInterval) => void;
 }>) {
   const intervals = getBillingIntervals();
 

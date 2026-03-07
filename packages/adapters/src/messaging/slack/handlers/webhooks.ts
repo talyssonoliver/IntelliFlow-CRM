@@ -15,10 +15,10 @@ export function verifyWebhookSignature(
   if (!config.signingSecret) return false;
 
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const crypto = require('crypto');
+  const crypto = require('node:crypto');
   const fiveMinutesAgo = Math.floor(Date.now() / 1000) - 60 * 5;
 
-  if (parseInt(timestamp) < fiveMinutesAgo) {
+  if (Number.parseInt(timestamp) < fiveMinutesAgo) {
     return false;
   }
 

@@ -37,7 +37,7 @@ function getLeadRoutingService(ctx: Context): LeadRoutingService {
       message: 'LeadRoutingService not configured',
     });
   }
-  return service as LeadRoutingService;
+  return service;
 }
 
 export const routingRouter = createTRPCRouter({

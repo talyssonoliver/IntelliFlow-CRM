@@ -24,8 +24,8 @@ interface AgentWorkloadItem {
   status: string;
   currentCapacity: number;
   maxCapacity: number;
-  shiftStart?: Date | string | null | undefined;
-  shiftEnd?: Date | string | null | undefined;
+  shiftStart?: Date | string | null;
+  shiftEnd?: Date | string | null;
   user?: { id: string; name: string | null; email: string } | null;
   skills?: AgentSkill[];
 }
@@ -138,7 +138,7 @@ export function AgentWorkload() {
               {/* Skills */}
               {agent.skills && agent.skills.length > 0 && (
                 <div className="flex flex-wrap gap-1">
-                  {agent.skills.map((skill: Readonly<AgentSkill>) => (
+                  {agent.skills.map((skill: AgentSkill) => (
                     <span
                       key={skill.id}
                       className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs"

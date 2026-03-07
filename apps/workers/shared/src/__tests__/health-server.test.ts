@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import http from 'http';
+import http from 'node:http';
 import pino from 'pino';
 import { HealthServer, createDefaultHealthProvider, type HealthProvider } from '../health-server';
 import type { HealthCheckConfig } from '../worker-config';

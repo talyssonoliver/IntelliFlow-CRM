@@ -107,6 +107,17 @@ export default function TaskDetailPage() {
     },
   });
 
+  const startMutation = api.task.start.useMutation({
+    onSuccess: () => {
+      utils.task.getById.invalidate({ id: params.id });
+      utils.task.list.invalidate();
+      toast({ title: 'Task Started', description: 'The task is now in progress.' });
+    },
+    onError: (err) => {
+      toast({ title: 'Start Failed', description: err.message, variant: 'destructive' });
+    },
+  });
+
   const archiveMutation = api.task.archive.useMutation({
     onSuccess: () => {
       utils.task.getById.invalidate({ id: params.id });
@@ -118,6 +129,13 @@ export default function TaskDetailPage() {
       toast({ title: 'Archive Failed', description: err.message, variant: 'destructive' });
     },
   });
+
+  const handleStart = useCallback(
+    (id: string) => {
+      startMutation.mutate({ taskId: id });
+    },
+    [startMutation]
+  );
 
   const handleComplete = useCallback(
     (id: string) => {
@@ -183,10 +201,12 @@ export default function TaskDetailPage() {
         isLoading={isLoading}
         isNotFound={isNotFound}
         onComplete={handleComplete}
+        onStart={handleStart}
         onEdit={handleEdit}
         onDelete={handleDelete}
         onArchive={handleArchive}
         isCompleting={completeMutation.isPending}
+        isStarting={startMutation.isPending}
         isDeleting={deleteMutation.isPending}
         isArchiving={archiveMutation.isPending}
       />

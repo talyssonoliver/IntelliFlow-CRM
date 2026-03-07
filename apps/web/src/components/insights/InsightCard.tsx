@@ -34,7 +34,7 @@ function resolveInsightHref(actionUrl: string | null | undefined, title?: string
     return '#';
   }
   if (actionUrl.includes('tab=')) return actionUrl;
-  const entityMatch = actionUrl.match(/^\/(leads|contacts)\/[^?]+$/);
+  const entityMatch = /^\/(leads|contacts)\/[^?]+$/.exec(actionUrl);
   if (entityMatch) return `${actionUrl}?tab=ai-insights`;
   return actionUrl;
 }

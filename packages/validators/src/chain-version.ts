@@ -61,7 +61,7 @@ export const createChainVersionSchema = z.object({
     .default(CHAIN_VERSION_DEFAULTS.DEFAULT_MAX_TOKENS),
   additionalParams: z.record(z.string(), z.unknown()).optional(),
   description: z.string().max(1000).optional(),
-  parentVersionId: z.string().uuid().optional(),
+  parentVersionId: z.uuid().optional(),
   rolloutStrategy: versionRolloutStrategySchema.default(
     CHAIN_VERSION_DEFAULTS.DEFAULT_ROLLOUT_STRATEGY
   ),
@@ -74,7 +74,7 @@ export const createChainVersionSchema = z.object({
     .optional(),
   experimentId: z
     .string()
-    .regex(/^c[a-z0-9]{8,}$/)
+    .check(z.regex(/^c[a-z0-9]{8,}$/))
     .optional(),
 });
 
@@ -95,7 +95,7 @@ export const updateChainVersionSchema = z.object({
   rolloutPercent: z.number().int().min(1).max(100).optional(),
   experimentId: z
     .string()
-    .regex(/^c[a-z0-9]{8,}$/)
+    .check(z.regex(/^c[a-z0-9]{8,}$/))
     .nullable()
     .optional(),
 });
@@ -108,10 +108,10 @@ export type UpdateChainVersionInput = z.infer<typeof updateChainVersionSchema>;
 
 // Date fields use union to support both Date objects (server-side, storybook)
 // and ISO strings (tRPC client without superjson transformer)
-const dateOrString = z.union([z.date(), z.string().datetime()]);
+const dateOrString = z.union([z.date(), z.iso.datetime()]);
 
 export const chainVersionSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   chainType: chainTypeSchema,
   status: chainVersionStatusSchema,
   prompt: z.string(),
@@ -120,12 +120,12 @@ export const chainVersionSchema = z.object({
   maxTokens: z.number().int(),
   additionalParams: z.record(z.string(), z.unknown()).nullable(),
   description: z.string().nullable(),
-  parentVersionId: z.string().uuid().nullable(),
+  parentVersionId: z.uuid().nullable(),
   rolloutStrategy: versionRolloutStrategySchema,
   rolloutPercent: z.number().int().nullable(),
   experimentId: z
     .string()
-    .regex(/^c[a-z0-9]{8,}$/)
+    .check(z.regex(/^c[a-z0-9]{8,}$/))
     .nullable(),
   createdBy: z.string(),
   createdAt: dateOrString,
@@ -140,7 +140,7 @@ export type ChainVersion = z.infer<typeof chainVersionSchema>;
 // =============================================================================
 
 export const chainVersionSummarySchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   chainType: chainTypeSchema,
   status: chainVersionStatusSchema,
   model: z.string(),
@@ -158,7 +158,7 @@ export type ChainVersionSummary = z.infer<typeof chainVersionSummarySchema>;
 // =============================================================================
 
 export const activateVersionSchema = z.object({
-  versionId: z.string().uuid(),
+  versionId: z.uuid(),
 });
 
 export type ActivateVersionInput = z.infer<typeof activateVersionSchema>;
@@ -168,7 +168,7 @@ export type ActivateVersionInput = z.infer<typeof activateVersionSchema>;
 // =============================================================================
 
 export const rollbackVersionSchema = z.object({
-  versionId: z.string().uuid(),
+  versionId: z.uuid(),
   reason: z.string().min(10).max(500),
 });
 
@@ -180,9 +180,9 @@ export type RollbackVersionInput = z.infer<typeof rollbackVersionSchema>;
 
 export const rollbackResultSchema = z.object({
   success: z.boolean(),
-  previousVersionId: z.string().uuid(),
-  rolledBackVersionId: z.string().uuid(),
-  auditId: z.string().uuid(),
+  previousVersionId: z.uuid(),
+  rolledBackVersionId: z.uuid(),
+  auditId: z.uuid(),
   rolledBackAt: dateOrString,
 });
 
@@ -193,8 +193,8 @@ export type RollbackResult = z.infer<typeof rollbackResultSchema>;
 // =============================================================================
 
 export const chainVersionAuditSchema = z.object({
-  id: z.string().uuid(),
-  versionId: z.string().uuid(),
+  id: z.uuid(),
+  versionId: z.uuid(),
   action: chainVersionAuditActionSchema,
   previousState: z.record(z.string(), z.unknown()).nullable(),
   newState: z.record(z.string(), z.unknown()).nullable(),
@@ -285,7 +285,14 @@ export function canActivateVersion(
  * Format version info for display
  */
 export function formatVersionInfo(version: ChainVersion): string {
-  const status = version.status === 'ACTIVE' ? '✅' : version.status === 'DRAFT' ? '📝' : '📦';
+  let status: string;
+  if (version.status === 'ACTIVE') {
+    status = '✅';
+  } else if (version.status === 'DRAFT') {
+    status = '📝';
+  } else {
+    status = '📦';
+  }
   return `${status} ${version.chainType} v${version.id.slice(0, 8)} (${version.model})`;
 }
 

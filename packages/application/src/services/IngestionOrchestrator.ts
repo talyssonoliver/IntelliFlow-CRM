@@ -1,9 +1,8 @@
-import { createHash } from 'crypto';
+import { createHash } from 'node:crypto';
 import {
   CaseDocument,
   CaseDocumentRepository,
   DocumentClassification,
-  DocumentStatus,
   AccessLevel,
   DocumentIngestionCreatedEvent,
   DocumentIngestionFailedEvent,

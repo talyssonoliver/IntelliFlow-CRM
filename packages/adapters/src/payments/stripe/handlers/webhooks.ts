@@ -35,7 +35,7 @@ export function constructWebhookEvent(
 
     // Check timestamp tolerance (5 minutes)
     const tolerance = 300;
-    const timestampAge = Math.floor(Date.now() / 1000) - parseInt(timestamp);
+    const timestampAge = Math.floor(Date.now() / 1000) - Number.parseInt(timestamp);
 
     if (timestampAge > tolerance) {
       return Result.fail(new StripeInvalidRequestError('Webhook timestamp too old'));

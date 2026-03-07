@@ -66,7 +66,7 @@ export interface ScoreBadgeProps
 /**
  * Material Symbols icon component
  */
-function MaterialIcon({ name, className }: { name: string; className?: string }) {
+function MaterialIcon({ name, className }: Readonly<{ name: string; className?: string }>) {
   return (
     <span className={cn('material-symbols-outlined', className)} aria-hidden="true">
       {name}
@@ -88,7 +88,7 @@ function ScoreBadge({
   className,
   onClick,
   ...props
-}: ScoreBadgeProps) {
+}: Readonly<ScoreBadgeProps>) {
   const tierConfig = getScoreTierConfig(score);
 
   const badgeContent = (
@@ -118,7 +118,7 @@ function ScoreBadge({
   );
 
   const ariaLabel = `Lead score: ${score} out of 100, ${tierConfig.label} tier${
-    confidence !== undefined ? `, ${formatConfidence(confidence)} confidence` : ''
+    confidence === undefined ? '' : `, ${formatConfidence(confidence)} confidence`
   }`;
 
   // Expanded mode with factors shows popover
@@ -149,7 +149,7 @@ function ScoreBadge({
             )}
             <div className="space-y-2">
               {factors.slice(0, 5).map((factor, index) => (
-                <div key={index} className="flex items-center justify-between text-sm">
+                <div key={index} className="flex items-center justify-between text-sm"> {/* NOSONAR typescript:S6479 */}
                   <span className="text-muted-foreground truncate max-w-[180px]">
                     {factor.name}
                   </span>

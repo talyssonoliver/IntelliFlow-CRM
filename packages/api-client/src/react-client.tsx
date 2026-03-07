@@ -68,7 +68,7 @@ export function TRPCProvider({
   url,
   headers,
   queryClient: providedQueryClient,
-}: TRPCProviderProps) {
+}: Readonly<TRPCProviderProps>) {
   const [queryClient] = useState(
     () =>
       providedQueryClient ||

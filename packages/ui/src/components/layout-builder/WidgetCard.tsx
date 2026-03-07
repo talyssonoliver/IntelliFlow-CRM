@@ -3,12 +3,15 @@
 import * as React from 'react';
 import type { Widget } from './types';
 
+type ColSpan = 1 | 2 | 3 | 4;
+type RowSpan = 1 | 2;
+
 interface WidgetCardProps {
   widget: Widget;
   children: React.ReactNode;
   onSettings?: (widget: Widget) => void;
   onDelete?: (id: string) => void;
-  onResize?: (id: string, colSpan: 1 | 2 | 3 | 4, rowSpan: 1 | 2) => void;
+  onResize?: (id: string, colSpan: ColSpan, rowSpan: RowSpan) => void;
   isEditing?: boolean;
   isDragging?: boolean;
   isResizing?: boolean;
@@ -30,7 +33,7 @@ export function WidgetCard({
   dragHandleProps,
   className = '',
   skipGridClasses = false,
-}: WidgetCardProps) {
+}: Readonly<WidgetCardProps>) {
   // 4-column grid: 1 = single stat, 2 = half width, 3 = 3/4 width, 4 = full width
   const colSpanClasses: Record<number, string> = {
     1: 'col-span-1',
@@ -168,11 +171,11 @@ export function WidgetCard({
 interface ResizeHandleProps {
   widget: Widget;
   position: 'right' | 'bottom' | 'bottom-right';
-  onResize: (id: string, colSpan: 1 | 2 | 3 | 4, rowSpan: 1 | 2) => void;
+  onResize: (id: string, colSpan: ColSpan, rowSpan: RowSpan) => void;
   isResizing?: boolean;
 }
 
-function ResizeHandle({ widget, position, onResize, isResizing }: ResizeHandleProps) {
+function ResizeHandle({ widget, position, onResize, isResizing }: Readonly<ResizeHandleProps>) {
   const handleRef = React.useRef<HTMLButtonElement>(null);
   const startPosRef = React.useRef({ x: 0, y: 0 });
   const startSpanRef = React.useRef({ colSpan: widget.colSpan, rowSpan: widget.rowSpan });
@@ -236,21 +239,21 @@ function ResizeHandle({ widget, position, onResize, isResizing }: ResizeHandlePr
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     const { colSpan, rowSpan } = widget;
-    let newColSpan = colSpan as 1 | 2 | 3 | 4;
-    let newRowSpan = rowSpan as 1 | 2;
+    let newColSpan = colSpan;
+    let newRowSpan = rowSpan;
 
     if (e.key === 'ArrowRight' && (position === 'right' || position === 'bottom-right')) {
       e.preventDefault();
-      newColSpan = Math.min(4, colSpan + 1) as 1 | 2 | 3 | 4;
+      newColSpan = Math.min(4, colSpan + 1) as ColSpan;
     } else if (e.key === 'ArrowLeft' && (position === 'right' || position === 'bottom-right')) {
       e.preventDefault();
-      newColSpan = Math.max(1, colSpan - 1) as 1 | 2 | 3 | 4;
+      newColSpan = Math.max(1, colSpan - 1) as ColSpan;
     } else if (e.key === 'ArrowDown' && (position === 'bottom' || position === 'bottom-right')) {
       e.preventDefault();
-      newRowSpan = Math.min(2, rowSpan + 1) as 1 | 2;
+      newRowSpan = Math.min(2, rowSpan + 1) as RowSpan;
     } else if (e.key === 'ArrowUp' && (position === 'bottom' || position === 'bottom-right')) {
       e.preventDefault();
-      newRowSpan = Math.max(1, rowSpan - 1) as 1 | 2;
+      newRowSpan = Math.max(1, rowSpan - 1) as RowSpan;
     } else {
       return;
     }
@@ -300,7 +303,7 @@ export function CompactWidgetContent({
   subtitle,
   progress,
   progressColor = 'bg-amber-500',
-}: CompactWidgetCardProps) {
+}: Readonly<CompactWidgetCardProps>) {
   return (
     <div className="p-5 flex flex-col justify-between h-full">
       <div className="flex items-center gap-3">

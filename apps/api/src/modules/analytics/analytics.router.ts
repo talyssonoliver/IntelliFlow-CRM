@@ -126,8 +126,8 @@ export const analyticsRouter = createTRPCRouter({
   exportMetrics: protectedProcedure
     .input(
       z.object({
-        startDate: z.string().datetime(),
-        endDate: z.string().datetime(),
+        startDate: z.iso.datetime(),
+        endDate: z.iso.datetime(),
         metrics: z.array(z.enum(['revenue', 'leads', 'deals', 'contacts'])),
       })
     )
@@ -152,8 +152,8 @@ export const analyticsRouter = createTRPCRouter({
   exportConversionFunnel: protectedProcedure
     .input(
       z.object({
-        startDate: z.string().datetime(),
-        endDate: z.string().datetime(),
+        startDate: z.iso.datetime(),
+        endDate: z.iso.datetime(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -176,8 +176,8 @@ export const analyticsRouter = createTRPCRouter({
   getOverview: protectedProcedure
     .input(
       z.object({
-        startDate: z.string().datetime().optional(),
-        endDate: z.string().datetime().optional(),
+        startDate: z.iso.datetime().optional(),
+        endDate: z.iso.datetime().optional(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -198,8 +198,8 @@ export const analyticsRouter = createTRPCRouter({
   getSalesMetrics: protectedProcedure
     .input(
       z.object({
-        startDate: z.string().datetime(),
-        endDate: z.string().datetime(),
+        startDate: z.iso.datetime(),
+        endDate: z.iso.datetime(),
         ownerId: z.string().optional(),
       })
     )
@@ -220,8 +220,8 @@ export const analyticsRouter = createTRPCRouter({
   getLeadMetrics: protectedProcedure
     .input(
       z.object({
-        startDate: z.string().datetime(),
-        endDate: z.string().datetime(),
+        startDate: z.iso.datetime(),
+        endDate: z.iso.datetime(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -240,8 +240,8 @@ export const analyticsRouter = createTRPCRouter({
   getConversionFunnel: protectedProcedure
     .input(
       z.object({
-        startDate: z.string().datetime(),
-        endDate: z.string().datetime(),
+        startDate: z.iso.datetime(),
+        endDate: z.iso.datetime(),
         includeLeads: z.boolean().default(true),
       })
     )
@@ -263,8 +263,8 @@ export const analyticsRouter = createTRPCRouter({
     .input(
       z.object({
         metric: z.enum(['revenue', 'leads', 'deals', 'contacts', 'pipeline_value', 'win_rate']),
-        startDate: z.string().datetime(),
-        endDate: z.string().datetime(),
+        startDate: z.iso.datetime(),
+        endDate: z.iso.datetime(),
         granularity: z.enum(['day', 'week', 'month']).default('month'),
         ownerId: z.string().optional(),
       })
@@ -309,8 +309,8 @@ export const analyticsRouter = createTRPCRouter({
       z.object({
         format: z.enum(['csv', 'json']),
         reportType: z.enum(['sales', 'leads', 'funnel', 'timeseries', 'overview']),
-        startDate: z.string().datetime(),
-        endDate: z.string().datetime(),
+        startDate: z.iso.datetime(),
+        endDate: z.iso.datetime(),
         metrics: z
           .array(z.enum(['revenue', 'leads', 'deals', 'contacts', 'pipeline_value', 'win_rate']))
           .optional(),

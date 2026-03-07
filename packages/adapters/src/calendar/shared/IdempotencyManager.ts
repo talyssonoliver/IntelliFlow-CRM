@@ -1,4 +1,4 @@
-import { createHash } from 'crypto';
+import { createHash } from 'node:crypto';
 
 /**
  * Idempotency Manager
@@ -7,14 +7,17 @@ import { createHash } from 'crypto';
  * @see IFC-138: Idempotency implementation for sync operations
  */
 
+export type IdempotencyOperation = 'create' | 'update' | 'delete';
+export type IdempotencyResult = 'success' | 'failure';
+
 export interface IdempotencyRecord {
   key: string;
-  operation: 'create' | 'update' | 'delete';
+  operation: IdempotencyOperation;
   appointmentId: string;
   externalEventId?: string;
   createdAt: Date;
   expiresAt: Date;
-  result?: 'success' | 'failure';
+  result?: IdempotencyResult;
   error?: string;
 }
 
@@ -29,7 +32,7 @@ export interface IdempotencyStore {
  * In-memory idempotency store for development/testing
  */
 export class InMemoryIdempotencyStore implements IdempotencyStore {
-  private records = new Map<string, IdempotencyRecord>();
+  private readonly records = new Map<string, IdempotencyRecord>();
 
   async get(key: string): Promise<IdempotencyRecord | null> {
     const record = this.records.get(key);
@@ -92,7 +95,7 @@ export class IdempotencyManager {
    */
   generateKey(
     appointmentId: string,
-    operation: 'create' | 'update' | 'delete',
+    operation: IdempotencyOperation,
     provider: string
   ): string {
     const data = `${appointmentId}:${operation}:${provider}`;
@@ -106,7 +109,7 @@ export class IdempotencyManager {
    */
   generateContentKey(
     appointmentId: string,
-    operation: 'create' | 'update' | 'delete',
+    operation: IdempotencyOperation,
     provider: string,
     contentHash: string
   ): string {
@@ -138,7 +141,7 @@ export class IdempotencyManager {
   async recordSuccess(
     key: string,
     appointmentId: string,
-    operation: 'create' | 'update' | 'delete',
+    operation: IdempotencyOperation,
     externalEventId?: string
   ): Promise<void> {
     const now = new Date();
@@ -159,7 +162,7 @@ export class IdempotencyManager {
   async recordFailure(
     key: string,
     appointmentId: string,
-    operation: 'create' | 'update' | 'delete',
+    operation: IdempotencyOperation,
     error: string
   ): Promise<void> {
     const now = new Date();

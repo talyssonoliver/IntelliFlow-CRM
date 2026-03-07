@@ -187,7 +187,11 @@ export function DriftDashboard() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2 mt-6">
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by severity">
+        <div
+          className="flex flex-wrap gap-1.5"
+          role="group" // NOSONAR typescript:S6819 — ARIA group for filter chips; <fieldset> would require <legend> and changes layout
+          aria-label="Filter by severity"
+        >
           {SEVERITY_FILTERS.map((sev) => (
             <button
               key={sev}

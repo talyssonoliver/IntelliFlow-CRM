@@ -11,6 +11,8 @@ import {
   getFilteredRowModel,
   VisibilityState,
   RowSelectionState,
+  type Table as ReactTable,
+  type Row,
 } from '@tanstack/react-table';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './table';
 import { Button } from './button';
@@ -91,13 +93,13 @@ export function TableRowActions<T>({
   actions,
   quickActions,
   dropdownActions,
-}: TableRowActionsProps<T>) {
+}: Readonly<TableRowActionsProps<T>>) {
   // Filter out separator items for the dropdown
   const menuItems = dropdownActions?.filter((a) => !a.separator) || [];
   const hasDropdown = menuItems.length > 0;
 
   return (
-    <div
+    <div // NOSONAR typescript:S6848 — wrapper div prevents click/key event bubbling to table row selection; all interactive content is inside proper <button> elements
       className="flex items-center justify-end gap-1"
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
@@ -105,7 +107,7 @@ export function TableRowActions<T>({
       {/* Quick action buttons (icon only) */}
       {quickActions?.map((action, index) => (
         <button
-          key={index}
+          key={index} // NOSONAR typescript:S6479
           onClick={action.onClick}
           className="p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"
           aria-label={action.label}
@@ -119,7 +121,7 @@ export function TableRowActions<T>({
       {/* Legacy actions */}
       {actions?.map((action, index) => (
         <Button
-          key={index}
+          key={index} // NOSONAR typescript:S6479
           variant={action.variant === 'destructive' ? 'destructive' : 'ghost'}
           size="sm"
           onClick={() => row && action.onClick(row)}
@@ -199,12 +201,12 @@ export function ConfirmationDialog({
   onConfirm,
   isLoading,
   icon,
-}: ConfirmationDialogProps) {
+}: Readonly<ConfirmationDialogProps>) {
   if (!open) return null;
 
   return (
     <div
-      role="button"
+      role="button" // NOSONAR typescript:S6819 — backdrop overlay needs div for full-screen layout
       tabIndex={0}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 cursor-default"
       onClick={() => onOpenChange(false)}
@@ -213,13 +215,14 @@ export function ConfirmationDialog({
       }}
       aria-label="Close dialog"
     >
-      <div
-        role="dialog"
+      <div // NOSONAR typescript:S6847 — dialog div prevents event bubbling to backdrop; role="dialog" makes it an interactive landmark
+        role="dialog" // NOSONAR typescript:S6819 — custom modal overlay; <dialog> element lacks cross-browser CSS layout support
         aria-modal="true"
         aria-labelledby="confirmation-dialog-title"
         aria-describedby={description ? 'confirmation-dialog-desc' : undefined}
         className="bg-white dark:bg-slate-900 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-4">
           {icon && (
@@ -293,7 +296,7 @@ export function StatusSelectDialog({
   currentValue,
   onSelect,
   onConfirm,
-}: StatusSelectDialogProps) {
+}: Readonly<StatusSelectDialogProps>) {
   const [selectedValue, setSelectedValue] = React.useState(currentValue || '');
 
   if (!open) return null;
@@ -317,7 +320,7 @@ export function StatusSelectDialog({
       }}
       aria-label="Close dialog"
     >
-      <dialog
+      <dialog // NOSONAR typescript:S6847 — <dialog> is the correct semantic element; click/keydown handlers prevent event bubbling to backdrop
         open
         aria-modal="true"
         aria-labelledby="status-dialog-title"
@@ -386,7 +389,7 @@ function BulkActionsBar<T>({
   bulkActions,
   selectedRows,
   onClearSelection,
-}: BulkActionsBarProps<T>) {
+}: Readonly<BulkActionsBarProps<T>>) {
   if (selectedCount === 0) return null;
 
   return (
@@ -429,6 +432,47 @@ function BulkActionsBar<T>({
 }
 
 // =============================================================================
+// Selection Column Sub-Components (extracted to avoid S6478: inner component)
+// =============================================================================
+
+function SelectAllHeader<TData>({ table }: Readonly<{ table: ReactTable<TData> }>) {
+  return (
+    <div className="px-1">
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && 'indeterminate')
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    </div>
+  );
+}
+
+function SelectRowCell<TData>({ row }: Readonly<{ row: Row<TData> }>) {
+  return (
+    <div
+      className="px-1"
+      onClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }}
+      role="presentation" // NOSONAR typescript:S6819 — wrapper div prevents click bubbling to row; presentation role correctly marks it as non-semantic
+    >
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    </div>
+  );
+}
+
+// =============================================================================
 // DataTable Component
 // =============================================================================
 
@@ -444,7 +488,7 @@ export function DataTable<TData, TValue>({
   bulkActions,
   hidePagination,
   columnSizing,
-}: DataTableProps<TData, TValue>) {
+}: Readonly<DataTableProps<TData, TValue>>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -456,37 +500,8 @@ export function DataTable<TData, TValue>({
 
     const selectionColumn: ColumnDef<TData, TValue> = {
       id: 'select',
-      header: ({ table }) => (
-        <div className="px-1">
-          <Checkbox
-            checked={
-              table.getIsAllPageRowsSelected() ||
-              (table.getIsSomePageRowsSelected() && 'indeterminate')
-            }
-            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="Select all"
-          />
-        </div>
-      ),
-      cell: ({ row }) => (
-        <div
-          className="px-1"
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              e.stopPropagation();
-            }
-          }}
-          role="presentation"
-        >
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Select row"
-          />
-        </div>
-      ),
+      header: SelectAllHeader as ColumnDef<TData, TValue>['header'],
+      cell: SelectRowCell as ColumnDef<TData, TValue>['cell'],
       enableSorting: false,
       enableHiding: false,
       size: 40,

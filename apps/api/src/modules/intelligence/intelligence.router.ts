@@ -149,7 +149,7 @@ const entityTypeSchema = z.enum(['lead', 'contact', 'opportunity', 'account']);
  */
 const getInsightsInputSchema = z.object({
   entityType: entityTypeSchema,
-  entityId: z.string().uuid(),
+  entityId: z.uuid(),
 });
 
 /**
@@ -157,7 +157,7 @@ const getInsightsInputSchema = z.object({
  */
 const triggerPredictionInputSchema = z.object({
   entityType: entityTypeSchema,
-  entityId: z.string().uuid(),
+  entityId: z.uuid(),
   predictionType: z.enum(['CHURN_RISK', 'NEXT_BEST_ACTION', 'QUALIFICATION']),
   priority: z.enum(['LOW', 'NORMAL', 'HIGH']).default('NORMAL'),
 });
@@ -573,7 +573,7 @@ export const intelligenceRouter = createTRPCRouter({
    * Returns the stored AI insights from LeadAIInsight model
    */
   getLeadInsights: tenantProcedure
-    .input(z.object({ leadId: z.string().uuid() }))
+    .input(z.object({ leadId: z.uuid() }))
     .output(aiInsightsResponseSchema.nullable())
     .query(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
@@ -622,7 +622,7 @@ export const intelligenceRouter = createTRPCRouter({
    * Returns the stored AI insights from ContactAIInsight model
    */
   getContactInsights: tenantProcedure
-    .input(z.object({ contactId: z.string().uuid() }))
+    .input(z.object({ contactId: z.uuid() }))
     .output(aiInsightsResponseSchema.nullable())
     .query(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
@@ -718,7 +718,7 @@ export const intelligenceRouter = createTRPCRouter({
       };
 
       // Validate action type against the canonical schema, falling back to 'WAIT'
-      const rawAction = aiInsight.nextBestAction?.toUpperCase().replace(/\s+/g, '_') || 'WAIT';
+      const rawAction = aiInsight.nextBestAction?.toUpperCase().replaceAll(/\s+/g, '_') || 'WAIT';
       const parsedAction = nbaActionTypeSchema.safeParse(rawAction);
       const action = parsedAction.success ? parsedAction.data : 'WAIT';
 
@@ -809,7 +809,13 @@ export const intelligenceRouter = createTRPCRouter({
         const queue = new Queue('ai-prediction', {
           connection: {
             host: process.env.REDIS_HOST || 'localhost',
-            port: parseInt(process.env.REDIS_PORT || '6379', 10),
+            port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+          },
+          defaultJobOptions: {
+            attempts: 3,
+            backoff: { type: 'exponential', delay: 1000 },
+            removeOnComplete: { count: 1000, age: 86400 },
+            removeOnFail: { age: 604800 },
           },
         });
 
@@ -828,9 +834,6 @@ export const intelligenceRouter = createTRPCRouter({
           },
           {
             priority: priorityMap[priority],
-            attempts: 2,
-            backoff: { type: 'exponential', delay: 5000 },
-            removeOnComplete: { count: 100 },
           }
         );
 
@@ -864,7 +867,7 @@ export const intelligenceRouter = createTRPCRouter({
   updateLeadInsights: tenantProcedure
     .input(
       z.object({
-        leadId: z.string().uuid(),
+        leadId: z.uuid(),
         churnRisk: churnRiskLevelSchema.optional(),
         conversionProbability: z.number().min(0).max(100).optional(),
         estimatedValue: z.number().optional(),
@@ -898,7 +901,7 @@ export const intelligenceRouter = createTRPCRouter({
       // Check if human review is required based on confidence
       // Use CHURN_PREDICTION chain type for churn risk assessments
       const needsReview =
-        confidence !== undefined ? requiresHumanReview(confidence, 'CHURN_PREDICTION') : false;
+        confidence === undefined ? false : requiresHumanReview(confidence, 'CHURN_PREDICTION');
 
       if (needsReview) {
         console.warn(
@@ -952,7 +955,7 @@ export const intelligenceRouter = createTRPCRouter({
   updateContactInsights: tenantProcedure
     .input(
       z.object({
-        contactId: z.string().uuid(),
+        contactId: z.uuid(),
         churnRisk: churnRiskLevelSchema.optional(),
         conversionProbability: z.number().min(0).max(100).optional(),
         lifetimeValue: z.number().optional(),
@@ -1053,7 +1056,7 @@ export const intelligenceRouter = createTRPCRouter({
       const allInsights = await fetchAllInsightRows(ctx.prisma, tenantId, since, input.entityType);
       allInsights.sort((a, b) => {
         const riskDiff = (riskOrder[a.churnRisk] ?? 4) - (riskOrder[b.churnRisk] ?? 4);
-        return riskDiff !== 0 ? riskDiff : b.updatedAt.getTime() - a.updatedAt.getTime();
+        return riskDiff === 0 ? b.updatedAt.getTime() - a.updatedAt.getTime() : riskDiff;
       });
 
       // Stats
@@ -1101,7 +1104,7 @@ export const intelligenceRouter = createTRPCRouter({
         () => ({ critical: 0, high: 0, medium: 0, low: 0, minimal: 0, totalEng: 0, count: 0 }),
         (bucket, row) => {
           const key = row.churnRisk.toLowerCase() as keyof typeof bucket;
-          if (key in bucket) (bucket[key] as number)++;
+          if (key in bucket) bucket[key]++;
           bucket.totalEng += row.engagementScore;
           bucket.count++;
         }
@@ -1196,9 +1199,9 @@ export const intelligenceRouter = createTRPCRouter({
         let factors: Array<{ name: string; impact: number; reasoning: string }> = [];
         if (Array.isArray(s.factors)) {
           factors = (s.factors as Array<Record<string, unknown>>).map((f) => ({
-            name: String(f.name ?? ''),
+            name: (f.name as string | null | undefined) ?? '',
             impact: Number(f.impact ?? 0),
-            reasoning: String(f.reasoning ?? ''),
+            reasoning: (f.reasoning as string | null | undefined) ?? '',
           }));
         }
 

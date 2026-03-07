@@ -154,7 +154,7 @@ export function sanitizePrompt(input: unknown): {
   const sanitized: SafePrompt = {
     ...prompt,
     // eslint-disable-next-line no-control-regex
-    text: prompt.text.replace(/[\x00-\x1F\x7F]/g, ''),
+    text: prompt.text.replaceAll(/[\x00-\x1F\x7F]/g, ''),
   };
 
   return { sanitized, issues };
@@ -170,7 +170,7 @@ export function sanitizeOutput(output: string, userId: string): SanitizedOutput 
 
   // Detect and redact PII
   for (const [fieldName, pattern] of Object.entries(PII_PATTERNS)) {
-    const matches = sanitized.match(pattern);
+    const matches = pattern.exec(sanitized);
     if (matches) {
       containsPII = true;
       redactedFields.push(fieldName);
@@ -184,7 +184,7 @@ export function sanitizeOutput(output: string, userId: string): SanitizedOutput 
             const localPart = match.slice(0, atIndex);
             const domain = match.slice(atIndex);
             const domainParts = domain.split('.');
-            const tld = domainParts[domainParts.length - 1];
+            const tld = domainParts.at(-1);
             const maskedLocal =
               localPart.slice(0, 2) + '*'.repeat(Math.max(localPart.length - 2, 0));
             const maskedDomain = domainParts.length > 1 ? '***.' + tld : '***';

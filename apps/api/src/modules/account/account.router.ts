@@ -28,7 +28,6 @@ import { type Context } from '../../context';
 import {
   getTenantContext,
   createTenantWhereClause,
-  type TenantAwareContext,
 } from '../../security/tenant-context';
 
 /**
@@ -439,7 +438,7 @@ export const accountRouter = createTRPCRouter({
       ]);
 
       // Get owner names for display
-      const ownerIds = (ownerCounts ?? []).map((o) => o.ownerId).filter(Boolean) as string[];
+      const ownerIds = (ownerCounts ?? []).map((o) => o.ownerId).filter(Boolean);
       const owners =
         ownerIds.length > 0
           ? await ctx.prisma.user.findMany({
@@ -453,14 +452,14 @@ export const accountRouter = createTRPCRouter({
         industries: (industryCounts ?? [])
           .filter((i) => i.industry)
           .map((i) => ({
-            value: i.industry as string,
-            label: i.industry as string,
+            value: i.industry!,
+            label: i.industry!,
             count: i._count,
           })),
         owners: (ownerCounts ?? [])
           .filter((o) => o.ownerId)
           .map((o) => ({
-            value: o.ownerId as string,
+            value: o.ownerId,
             label: ownerMap.get(o.ownerId as string) || o.ownerId,
             count: o._count,
           })),

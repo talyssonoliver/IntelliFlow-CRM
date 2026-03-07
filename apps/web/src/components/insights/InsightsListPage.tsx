@@ -25,7 +25,7 @@ const Icon = ({ name, className = '' }: Readonly<{ name: string; className?: str
   </span>
 );
 
-const VALID_TYPES: AIInsightType[] = ['warning', 'opportunity', 'reminder', 'achievement'];
+const VALID_TYPES = new Set<AIInsightType>(['warning', 'opportunity', 'reminder', 'achievement']);
 
 const TYPE_FILTERS: Array<{ key: AIInsightType | 'all'; label: string }> = [
   { key: 'all', label: 'All' },
@@ -91,7 +91,7 @@ export function InsightsListPage() {
   const pathname = usePathname();
   const typeFromUrl = searchParams.get('type') as AIInsightType | null;
 
-  const selectedType = typeFromUrl && VALID_TYPES.includes(typeFromUrl) ? typeFromUrl : null;
+  const selectedType = typeFromUrl && VALID_TYPES.has(typeFromUrl) ? typeFromUrl : null;
   const types = selectedType ? [selectedType] : undefined;
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
@@ -162,7 +162,7 @@ export function InsightsListPage() {
         </div>
         <div className="flex items-center gap-3">
           <span className="text-sm text-slate-500 dark:text-slate-400">
-            {allInsights.length} insight{allInsights.length !== 1 ? 's' : ''}
+            {allInsights.length} insight{allInsights.length === 1 ? '' : 's'}
           </span>
         </div>
       </div>

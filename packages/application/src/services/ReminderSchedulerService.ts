@@ -18,7 +18,7 @@ export class ReminderSchedulerService {
    * In production, this would be persisted in a database
    * Key: appointmentId, Value: array of reminder notification IDs
    */
-  private reminderStore: Map<string, string[]> = new Map();
+  private readonly reminderStore: Map<string, string[]> = new Map();
 
   constructor(private readonly notificationService: NotificationServicePort) {}
 

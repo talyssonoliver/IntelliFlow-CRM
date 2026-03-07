@@ -14,7 +14,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { router, publicProcedure, tenantProcedure } from '../../trpc';
+import { createTRPCRouter, publicProcedure, tenantProcedure } from '../../trpc';
 import { MarkAsReadInputSchema, GetUnreadCountsInputSchema } from '@intelliflow/validators';
 // Import from adapters - using any cast for module resolution compatibility
 import * as adapters from '@intelliflow/adapters';
@@ -64,7 +64,7 @@ const InboundEmailWebhookSchema = z.object({
 const ProcessEmailInputSchema = z.object({
   emailId: z.string(),
   action: z.enum(['archive', 'spam', 'delete', 'forward']),
-  forwardTo: z.string().email().optional(),
+  forwardTo: z.email().optional(),
 });
 
 const ListEmailsInputSchema = z.object({
@@ -164,7 +164,7 @@ function parseRecipients(str: string): Array<{ address: string; name?: string }>
 
 const parser = new InboundEmailParser();
 
-export const inboundEmailRouter = router({
+export const inboundEmailRouter = createTRPCRouter({
   /**
    * Webhook endpoint for receiving inbound emails
    * This is a public endpoint that email providers call
@@ -510,9 +510,9 @@ export const inboundEmailRouter = router({
   sendEmail: tenantProcedure
     .input(
       z.object({
-        to: z.array(z.string().email()),
-        cc: z.array(z.string().email()).optional(),
-        bcc: z.array(z.string().email()).optional(),
+        to: z.array(z.email()),
+        cc: z.array(z.email()).optional(),
+        bcc: z.array(z.email()).optional(),
         subject: z.string(),
         htmlBody: z.string(),
         textBody: z.string().optional(),
@@ -614,9 +614,9 @@ export const inboundEmailRouter = router({
     .input(
       z.object({
         id: z.string().optional(),
-        to: z.array(z.string().email()).optional(),
-        cc: z.array(z.string().email()).optional(),
-        bcc: z.array(z.string().email()).optional(),
+        to: z.array(z.email()).optional(),
+        cc: z.array(z.email()).optional(),
+        bcc: z.array(z.email()).optional(),
         subject: z.string().optional(),
         htmlBody: z.string().optional(),
         textBody: z.string().optional(),
@@ -645,7 +645,7 @@ export const inboundEmailRouter = router({
             ccEmails: input.cc?.join(', ') ?? existing.ccEmails,
             bccEmails: input.bcc?.join(', ') ?? existing.bccEmails,
             metadata: {
-              ...((existing.metadata as any) ?? {}),
+              ...existing.metadata,
               isDraft: true,
               isHtml: true,
               textBody: input.textBody,

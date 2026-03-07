@@ -276,7 +276,7 @@ describe('Email Inbound Router', () => {
       });
 
       it('should accept valid signature when SENDGRID_WEBHOOK_KEY is set', async () => {
-        const { createHmac } = await import('crypto');
+        const { createHmac } = await import('node:crypto');
         const key = 'my-secret-key';
         process.env.SENDGRID_WEBHOOK_KEY = key;
 

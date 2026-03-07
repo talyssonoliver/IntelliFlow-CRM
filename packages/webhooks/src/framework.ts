@@ -27,7 +27,7 @@
  * ```
  */
 
-import { createHash, createHmac, timingSafeEqual } from 'crypto';
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 
 // ============================================================================
 // Types and Interfaces

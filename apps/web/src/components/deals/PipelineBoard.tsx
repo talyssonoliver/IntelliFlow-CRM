@@ -103,7 +103,7 @@ export const PipelineBoard = React.memo(function PipelineBoard({
   }, []);
 
   const handleDragStart = useCallback(
-    (event: Readonly<DragStartEvent>) => {
+    (event: DragStartEvent) => {
       const deal = deals.find((d) => d.id === String(event.active.id));
       if (deal) setActiveDeal(deal);
     },
@@ -111,7 +111,7 @@ export const PipelineBoard = React.memo(function PipelineBoard({
   );
 
   const handleDragEnd = useCallback(
-    (event: Readonly<DragEndEvent>) => {
+    (event: DragEndEvent) => {
       const { active, over } = event;
       setActiveDeal(null);
 

@@ -12,8 +12,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { PrismaClient, Prisma } from '@intelliflow/db';
 import { PrismaChainVersionRepository } from '../PrismaChainVersionRepository';
-import { randomUUID } from 'crypto';
-import { createHash } from 'crypto';
+import { randomUUID } from 'node:crypto';
+import { createHash } from 'node:crypto';
 
 const VERSION_ID_1 = randomUUID();
 const VERSION_ID_2 = randomUUID();

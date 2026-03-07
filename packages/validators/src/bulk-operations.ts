@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { idSchema } from './common';
-import { LEAD_STATUSES } from '@intelliflow/domain';
-import { TICKET_STATUSES, TICKET_PRIORITIES } from '@intelliflow/domain';
+import { LEAD_STATUSES, TICKET_STATUSES } from '@intelliflow/domain';
 
 // =============================================================================
 // Common Bulk Operation Schemas

@@ -19,7 +19,7 @@ export interface AppointmentListProps {
   onRowClick: (id: string) => void;
   pagination: { page: number; limit: number; onPageChange: (page: number) => void };
   filters: AppointmentFilters;
-  onFilterChange: (filters: Readonly<Partial<AppointmentFilters>>) => void;
+  onFilterChange: (filters: Partial<AppointmentFilters>) => void;
 }
 
 const STAT_CARDS = [

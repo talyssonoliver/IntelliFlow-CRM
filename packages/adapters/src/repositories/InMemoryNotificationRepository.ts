@@ -12,7 +12,7 @@ import {
 } from '@intelliflow/domain';
 
 export class InMemoryNotificationRepository implements NotificationRepository {
-  private notifications: Map<string, Notification> = new Map();
+  private readonly notifications: Map<string, Notification> = new Map();
 
   async save(notification: Notification): Promise<void> {
     this.notifications.set(notification.id.value, notification);

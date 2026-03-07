@@ -100,10 +100,12 @@ export interface SessionMetadata {
   [key: string]: unknown;
 }
 
+export type ZepRole = 'user' | 'assistant' | 'system';
+
 export interface ZepMessage {
-  role: 'user' | 'assistant' | 'system';
+  role: ZepRole;
   content: string;
-  roleType?: 'user' | 'assistant';
+  roleType?: Exclude<ZepRole, 'system'>;
   metadata?: Record<string, unknown>;
 }
 
@@ -162,7 +164,7 @@ export class ZepMemoryAdapter {
     this.warningThresholdPercent =
       config.warningThresholdPercent ?? ZEP_CONFIG.WARNING_THRESHOLD_PERCENT;
     this.hardLimitPercent = config.hardLimitPercent ?? ZEP_CONFIG.HARD_LIMIT_PERCENT;
-    this.prisma = config.prisma as ZepPrismaClient | undefined;
+    this.prisma = config.prisma;
     this.tenantId = config.tenantId ?? 'global';
   }
 
@@ -347,9 +349,9 @@ export class ZepMemoryAdapter {
       const messages = Array.isArray(response.messages) ? response.messages : [];
       return {
         messages: messages.map((m: Record<string, unknown>) => ({
-          role: m.role as 'user' | 'assistant' | 'system',
+          role: m.role as ZepRole,
           content: m.content as string,
-          roleType: m.role_type as 'user' | 'assistant' | undefined,
+          roleType: m.role_type as Exclude<ZepRole, 'system'> | undefined,
           metadata: m.metadata as Record<string, unknown> | undefined,
         })),
         summary: response.summary as string | undefined,
@@ -431,7 +433,7 @@ export class ZepMemoryAdapter {
       const results = Array.isArray(response.results) ? response.results : [];
 
       return results.map((r: Record<string, unknown>) => ({
-        role: r.role as 'user' | 'assistant' | 'system',
+        role: r.role as ZepRole,
         content: r.content as string,
         metadata: r.metadata as Record<string, unknown> | undefined,
       }));

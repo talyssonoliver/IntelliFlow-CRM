@@ -298,7 +298,7 @@ export interface EmailServicePort {
  * Implements email operations via Gmail REST API
  */
 export class GmailAdapter implements EmailServicePort {
-  private config: GmailConfig;
+  private readonly config: GmailConfig;
   private readonly apiBaseUrl = 'https://gmail.googleapis.com/gmail/v1';
   private readonly oauthBaseUrl = 'https://oauth2.googleapis.com';
 
@@ -507,8 +507,8 @@ export class GmailAdapter implements EmailServicePort {
       if (response.isFailure) return Result.fail(response.error);
 
       return Result.ok({
-        id: String(response.value.id ?? ''),
-        threadId: String(response.value.threadId ?? ''),
+        id: (response.value.id as string | null | undefined) ?? '',
+        threadId: (response.value.threadId as string | null | undefined) ?? '',
         labelIds: (response.value.labelIds as string[]) ?? [],
       });
     } catch (error) {
@@ -699,8 +699,8 @@ ${original.body.text ?? original.body.html ?? ''}
       );
 
       return Result.ok({
-        id: String(response.value.id ?? ''),
-        historyId: String(response.value.historyId ?? ''),
+        id: (response.value.id as string | null | undefined) ?? '',
+        historyId: (response.value.historyId as string | null | undefined) ?? '',
         messages,
       });
     } catch (error) {
@@ -819,8 +819,8 @@ ${original.body.text ?? original.body.html ?? ''}
       if (response.isFailure) return Result.fail(response.error);
 
       return Result.ok({
-        id: String(response.value.id ?? ''),
-        threadId: String(response.value.threadId ?? ''),
+        id: (response.value.id as string | null | undefined) ?? '',
+        threadId: (response.value.threadId as string | null | undefined) ?? '',
         labelIds: (response.value.labelIds as string[]) ?? [],
       });
     } catch (error) {
@@ -918,7 +918,7 @@ ${original.body.text ?? original.body.html ?? ''}
       if (response.isFailure) return Result.fail(response.error);
 
       return Result.ok({
-        data: String(response.value.data ?? ''),
+        data: (response.value.data as string | null | undefined) ?? '',
         size: Number(response.value.size ?? 0),
       });
     } catch (error) {
@@ -952,7 +952,7 @@ ${original.body.text ?? original.body.html ?? ''}
         status: latencyMs < 1000 ? 'healthy' : 'degraded',
         latencyMs,
       });
-    } catch (error) {
+    } catch {
       return Result.ok({
         status: 'unhealthy',
         latencyMs: Date.now() - start,
@@ -1003,7 +1003,7 @@ ${original.body.text ?? original.body.html ?? ''}
       case 404:
         return Result.fail(new GmailNotFoundError('Resource', error.message ?? 'unknown'));
       case 429: {
-        const retryAfter = parseInt(response.headers.get('Retry-After') ?? '60');
+        const retryAfter = Number.parseInt(response.headers.get('Retry-After') ?? '60');
         return Result.fail(new GmailRateLimitError(retryAfter));
       }
       default:
@@ -1024,30 +1024,27 @@ ${original.body.text ?? original.body.html ?? ''}
     if (params.references) lines.push(`References: <${params.references}>`);
 
     if (params.attachments?.length) {
-      lines.push(`MIME-Version: 1.0`);
-      lines.push(`Content-Type: multipart/mixed; boundary="${boundary}"`);
-      lines.push('');
+      lines.push(`MIME-Version: 1.0`, `Content-Type: multipart/mixed; boundary="${boundary}"`, '');
       lines.push(`--${boundary}`);
     }
 
     // Body
-    lines.push(`Content-Type: ${params.isHtml ? 'text/html' : 'text/plain'}; charset="UTF-8"`);
-    lines.push('');
-    lines.push(params.body);
+    lines.push(`Content-Type: ${params.isHtml ? 'text/html' : 'text/plain'}; charset="UTF-8"`, '', params.body);
 
     // Attachments
     if (params.attachments?.length) {
       for (const attachment of params.attachments) {
-        lines.push('');
-        lines.push(`--${boundary}`);
-        lines.push(`Content-Type: ${attachment.mimeType}; name="${attachment.filename}"`);
-        lines.push('Content-Transfer-Encoding: base64');
-        lines.push(`Content-Disposition: attachment; filename="${attachment.filename}"`);
-        lines.push('');
-        lines.push(attachment.content);
+        lines.push(
+          '',
+          `--${boundary}`,
+          `Content-Type: ${attachment.mimeType}; name="${attachment.filename}"`,
+          'Content-Transfer-Encoding: base64',
+          `Content-Disposition: attachment; filename="${attachment.filename}"`,
+          '',
+          attachment.content,
+        );
       }
-      lines.push('');
-      lines.push(`--${boundary}--`);
+      lines.push('', `--${boundary}--`);
     }
 
     const message = lines.join('\r\n');
@@ -1067,7 +1064,7 @@ ${original.body.text ?? original.body.html ?? ''}
     const parseEmailAddress = (value: string): { name?: string; email: string } => {
       // Check if the email has angle brackets (e.g., "Name" <email@example.com>)
       if (value.includes('<') && value.includes('>')) {
-        const match = value.match(/^"?([^"<]{0,500})"?\s{0,100}<([^>]{1,500})>$/);
+        const match = /^"?([^"<]{0,500})"?\s{0,100}<([^>]{1,500})>$/.exec(value);
         if (match) {
           return {
             name: match[1]?.trim() || undefined,
@@ -1090,8 +1087,8 @@ ${original.body.text ?? original.body.html ?? ''}
     const attachments = this.extractAttachments(payload);
 
     return {
-      id: String(data.id ?? ''),
-      threadId: String(data.threadId ?? ''),
+      id: (data.id as string | null | undefined) ?? '',
+      threadId: (data.threadId as string | null | undefined) ?? '',
       from: parseEmailAddress(getHeader('From')),
       to: parseEmailAddresses(getHeader('To')),
       cc: getHeader('Cc') ? parseEmailAddresses(getHeader('Cc')) : undefined,
@@ -1110,14 +1107,14 @@ ${original.body.text ?? original.body.html ?? ''}
     const result: { text?: string; html?: string } = {};
 
     const extractFromPart = (part: Record<string, unknown>): void => {
-      const mimeType = String(part.mimeType ?? '');
+      const mimeType = (part.mimeType as string | null | undefined) ?? '';
       const body = part.body as Record<string, unknown> | undefined;
       const parts = part.parts as Array<Record<string, unknown>> | undefined;
 
       if (mimeType === 'text/plain' && body?.data) {
-        result.text = Buffer.from(String(body.data), 'base64url').toString('utf-8');
+        result.text = Buffer.from(body.data as string, 'base64url').toString('utf-8');
       } else if (mimeType === 'text/html' && body?.data) {
-        result.html = Buffer.from(String(body.data), 'base64url').toString('utf-8');
+        result.html = Buffer.from(body.data as string, 'base64url').toString('utf-8');
       } else if (parts) {
         parts.forEach(extractFromPart);
       }
@@ -1143,10 +1140,10 @@ ${original.body.text ?? original.body.html ?? ''}
 
       if (body?.attachmentId && part.filename) {
         attachments.push({
-          filename: String(part.filename),
-          mimeType: String(part.mimeType ?? 'application/octet-stream'),
+          filename: part.filename as string,
+          mimeType: (part.mimeType as string | null | undefined) ?? 'application/octet-stream',
           size: Number(body.size ?? 0),
-          attachmentId: String(body.attachmentId),
+          attachmentId: body.attachmentId as string,
         });
       }
 
@@ -1163,20 +1160,20 @@ ${original.body.text ?? original.body.html ?? ''}
     const payload = (data.payload as Record<string, unknown>) ?? {};
 
     return {
-      id: String(data.id ?? ''),
-      threadId: String(data.threadId ?? ''),
+      id: (data.id as string | null | undefined) ?? '',
+      threadId: (data.threadId as string | null | undefined) ?? '',
       labelIds: (data.labelIds as string[]) ?? [],
-      snippet: String(data.snippet ?? ''),
-      historyId: String(data.historyId ?? ''),
+      snippet: (data.snippet as string | null | undefined) ?? '',
+      historyId: (data.historyId as string | null | undefined) ?? '',
       internalDate: new Date(Number(data.internalDate ?? 0)),
       payload: {
         headers: (payload.headers as Array<{ name: string; value: string }>) ?? [],
-        mimeType: String(payload.mimeType ?? ''),
+        mimeType: (payload.mimeType as string | null | undefined) ?? '',
         body: payload.body as { size: number; data?: string } | undefined,
         parts: payload.parts as GmailMessagePart[] | undefined,
       },
       sizeEstimate: Number(data.sizeEstimate ?? 0),
-      raw: data.raw ? String(data.raw) : undefined,
+      raw: data.raw ? (data.raw as string) : undefined,
     };
   }
 
@@ -1184,16 +1181,16 @@ ${original.body.text ?? original.body.html ?? ''}
     const message = (data.message as Record<string, unknown>) ?? {};
 
     return {
-      id: String(data.id ?? ''),
+      id: (data.id as string | null | undefined) ?? '',
       message: this.mapToGmailMessage(message),
     };
   }
 
   private mapToLabel(data: Record<string, unknown>): GmailLabel {
     return {
-      id: String(data.id ?? ''),
-      name: String(data.name ?? ''),
-      type: String(data.type ?? 'user') as 'system' | 'user',
+      id: (data.id as string | null | undefined) ?? '',
+      name: (data.name as string | null | undefined) ?? '',
+      type: ((data.type as string | null | undefined) ?? 'user') as 'system' | 'user',
       messageListVisibility: data.messageListVisibility as 'show' | 'hide' | undefined,
       labelListVisibility: data.labelListVisibility as
         | 'labelShow'

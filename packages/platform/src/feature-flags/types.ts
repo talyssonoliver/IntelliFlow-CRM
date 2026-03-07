@@ -1,4 +1,4 @@
-export type FeatureFlagKey = string;
+export type FeatureFlagKey = string; // NOSONAR typescript:S6564 — exported as part of the public API for type-safe feature flag key usage
 
 export interface FeatureFlagContext {
   /**

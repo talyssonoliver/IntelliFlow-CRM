@@ -9,7 +9,7 @@ interface SourceHighlightProps {
 }
 
 function escapeRegex(str: string): string {
-  return str.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return str.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 }
 
 export function SourceHighlight({ text, query, maxLength = 300 }: Readonly<SourceHighlightProps>) {

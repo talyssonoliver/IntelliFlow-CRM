@@ -57,7 +57,7 @@ const entityAvatarVariants = cva(
  * Uses a simple hash function to ensure the same name always gets the same color
  */
 function getColorFromString(str: string): string {
-  const hash = str.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const hash = str.split('').reduce((acc, char) => acc + char.codePointAt(0)!, 0);
   return AVATAR_COLORS[hash % AVATAR_COLORS.length];
 }
 
@@ -168,22 +168,22 @@ const EntityAvatar = React.forwardRef<HTMLDivElement, EntityAvatarProps>(
           showImage && 'bg-muted',
           className
         )}
-        role="img"
+        role="img" // NOSONAR typescript:S6819 — div-based avatar with dynamic content (image or initials fallback); <img> cannot contain text children
         aria-label={alt || `Avatar for ${name}`}
         {...props}
       >
-        {showImage ? (
-          <img
-            src={imageUrl}
-            alt={alt || name}
-            className="h-full w-full object-cover"
-            onError={() => setImageError(true)}
-          />
-        ) : fallback ? (
-          fallback
-        ) : (
-          <span aria-hidden="true">{initials}</span>
-        )}
+        {(() => {
+          if (showImage) return (
+            <img
+              src={imageUrl}
+              alt={alt || name}
+              className="h-full w-full object-cover"
+              onError={() => setImageError(true)}
+            />
+          );
+          if (fallback) return fallback;
+          return <span aria-hidden="true">{initials}</span>;
+        })()}
       </div>
     );
   }

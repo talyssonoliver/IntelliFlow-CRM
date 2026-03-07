@@ -3,16 +3,13 @@ import {
   DomainError,
   Lead,
   LeadId,
-  LeadScore,
   LeadStatus,
   LeadSource,
   Email,
   PhoneNumber,
   LeadRepository,
   Contact,
-  ContactId,
   Account,
-  AccountId,
   CreateLeadProps,
 } from '@intelliflow/domain';
 import { AIServicePort, EventBusPort } from '../ports/external';
@@ -123,7 +120,7 @@ export class LeadService {
     // Persist
     try {
       await this.leadRepository.save(lead);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save lead'));
     }
 
@@ -171,7 +168,7 @@ export class LeadService {
 
     try {
       await this.leadRepository.delete(leadIdResult.value);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to delete lead'));
     }
 
@@ -239,7 +236,7 @@ export class LeadService {
     // Persist changes
     try {
       await this.leadRepository.save(lead);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save lead after scoring'));
     }
 
@@ -291,7 +288,7 @@ export class LeadService {
 
     try {
       await this.leadRepository.save(lead);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save lead'));
     }
 
@@ -380,7 +377,7 @@ export class LeadService {
     try {
       await this.contactRepository.save(contact);
       await this.leadRepository.save(lead);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save conversion'));
     }
 
@@ -498,7 +495,7 @@ export class LeadService {
 
     try {
       await this.leadRepository.save(lead);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save lead'));
     }
 
@@ -572,7 +569,7 @@ export class LeadService {
 
     try {
       await this.leadRepository.save(lead);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save lead'));
     }
 
@@ -626,7 +623,7 @@ export class LeadService {
 
     try {
       await this.leadRepository.save(lead);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save lead'));
     }
 

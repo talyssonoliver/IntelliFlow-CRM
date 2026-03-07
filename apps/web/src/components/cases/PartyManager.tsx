@@ -39,7 +39,7 @@ export function PartyManager({ parties, onUpdate, disabled }: Readonly<PartyMana
     setShowForm(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
@@ -62,7 +62,7 @@ export function PartyManager({ parties, onUpdate, disabled }: Readonly<PartyMana
     resetForm();
   };
 
-  const handleEdit = (party: Readonly<PartyData>) => {
+  const handleEdit = (party: PartyData) => {
     setName(party.name);
     setRole(party.role);
     setOrganization(party.organization || '');
@@ -77,7 +77,7 @@ export function PartyManager({ parties, onUpdate, disabled }: Readonly<PartyMana
     onUpdate(parties.filter((p) => p.id !== partyId));
   };
 
-  const getRoleBadgeColor = (r: Readonly<PartyRole>) => {
+  const getRoleBadgeColor = (r: PartyRole) => {
     switch (r) {
       case 'CLIENT':
         return 'bg-blue-100 text-blue-700';

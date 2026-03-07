@@ -10,9 +10,8 @@
 
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure, adminProcedure } from '../../trpc';
-import { toggleModuleInputSchema, enabledModulesResponseSchema } from '@intelliflow/validators';
+import { toggleModuleInputSchema } from '@intelliflow/validators';
 import {
-  CRM_MODULES,
   PLAN_TIERS,
   MODULE_PLAN_MAP,
   MODULE_METADATA,

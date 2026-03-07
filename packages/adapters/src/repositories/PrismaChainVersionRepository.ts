@@ -5,7 +5,7 @@
  * ChainVersionRecord interface.
  */
 
-import { createHash } from 'crypto';
+import { createHash } from 'node:crypto';
 import {
   Prisma,
   type PrismaClient,
@@ -42,7 +42,7 @@ function buildChainVersionUpdateData(data: Partial<ChainVersionRecord>): Record<
   if (data.experimentId !== undefined) updateData.experimentId = data.experimentId;
   if (data.status !== undefined) {
     updateData.status = data.status;
-    applyLifecycleTimestamp(data.status as ChainVersionStatus, updateData);
+    applyLifecycleTimestamp(data.status, updateData);
   }
   return updateData;
 }

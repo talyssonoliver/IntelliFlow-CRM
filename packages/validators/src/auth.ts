@@ -51,7 +51,7 @@ export const loginResponseSchema = z.object({
       email: emailSchema,
       name: z.string().nullable(),
       role: z.string(),
-      avatar: z.string().url().nullable().optional(),
+      avatar: z.url().nullable().optional(),
     })
     .optional(),
   session: z
@@ -62,7 +62,7 @@ export const loginResponseSchema = z.object({
     })
     .optional(),
   requiresMfa: z.boolean().default(false),
-  mfaChallengeId: z.string().uuid().optional(),
+  mfaChallengeId: z.uuid().optional(),
   mfaMethods: z.array(mfaMethodSchema).optional(),
 });
 
@@ -77,12 +77,12 @@ export type LoginResponse = z.infer<typeof loginResponseSchema>;
  * Used when verifying TOTP, SMS, Email OTP, or backup codes
  */
 export const mfaVerifySchema = z.object({
-  challengeId: z.string().uuid(),
+  challengeId: z.uuid(),
   code: z
     .string()
     .min(6, 'Code must be at least 6 characters')
     .max(20, 'Code is too long')
-    .transform((val) => val.replace(/\s/g, '').toUpperCase()),
+    .transform((val) => val.replaceAll(/\s/g, '').toUpperCase()),
   method: mfaMethodSchema,
 });
 
@@ -96,7 +96,7 @@ export const mfaSetupSchema = z.object({
   method: mfaMethodSchema,
   phone: z
     .string()
-    .regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format (E.164)')
+    .check(z.regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format (E.164)'))
     .optional(), // Required for SMS method
 });
 
@@ -111,7 +111,7 @@ export const mfaSetupResponseSchema = z.object({
   method: mfaMethodSchema,
   // For TOTP - return secret and QR code
   secret: z.string().optional(),
-  qrCodeUrl: z.string().url().optional(),
+  qrCodeUrl: z.url().optional(),
   // For SMS/Email - confirmation that code was sent
   codeSentTo: z.string().optional(),
 });
@@ -128,7 +128,7 @@ export const mfaConfirmSchema = z.object({
     .string()
     .min(6)
     .max(20)
-    .transform((val) => val.replace(/\s/g, '').toUpperCase()),
+    .transform((val) => val.replaceAll(/\s/g, '').toUpperCase()),
 });
 
 export type MfaConfirmInput = z.infer<typeof mfaConfirmSchema>;
@@ -154,9 +154,9 @@ export const resendMfaCodeSchema = z.object({
   email: emailSchema.optional(),
   phone: z
     .string()
-    .regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format (E.164)')
+    .check(z.regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format (E.164)'))
     .optional(),
-  challengeId: z.string().uuid().optional(),
+  challengeId: z.uuid().optional(),
 });
 
 export type ResendMfaCodeInput = z.infer<typeof resendMfaCodeSchema>;
@@ -181,7 +181,7 @@ export type ResendMfaCodeResponse = z.infer<typeof resendMfaCodeResponseSchema>;
  */
 export const oauthInitSchema = z.object({
   provider: oauthProviderSchema,
-  redirectTo: z.string().url().optional(),
+  redirectTo: z.url().optional(),
 });
 
 export type OAuthInitInput = z.infer<typeof oauthInitSchema>;
@@ -215,7 +215,7 @@ export type SsoResolveInput = z.infer<typeof ssoResolveSchema>;
 export const ssoResolutionSchema = z.object({
   provider_id: z.string(),
   provider_name: z.string(),
-  redirect_url: z.string().url(),
+  redirect_url: z.url(),
 });
 
 export type SsoResolution = z.infer<typeof ssoResolutionSchema>;
@@ -289,10 +289,10 @@ export const strongPasswordSchema = z
   .string()
   .min(8, 'Password must be at least 8 characters')
   .max(128, 'Password is too long')
-  .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-  .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-  .regex(/[0-9]/, 'Password must contain at least one number')
-  .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character');
+  .check(z.regex(/[A-Z]/, 'Password must contain at least one uppercase letter'))
+  .check(z.regex(/[a-z]/, 'Password must contain at least one lowercase letter'))
+  .check(z.regex(/\d/, 'Password must contain at least one number'))
+  .check(z.regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'));
 
 /**
  * Forgot password schema
@@ -378,7 +378,7 @@ export const verifyEmailSchema = z.object({
     .string()
     .min(64, 'Invalid verification token')
     .max(64, 'Invalid verification token')
-    .regex(/^[a-f0-9]+$/, 'Invalid verification token format'),
+    .check(z.regex(/^[a-f0-9]+$/, 'Invalid verification token format')),
 });
 
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;

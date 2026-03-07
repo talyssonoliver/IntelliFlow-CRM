@@ -93,7 +93,7 @@ export function EmailPage({ initialEmailId, className }: Readonly<EmailPageProps
 
   // Keyboard shortcut: 'c' to compose
   useEffect(() => {
-    const handler = (e: Readonly<KeyboardEvent>) => {
+    const handler = (e: KeyboardEvent) => {
       // Don't trigger if typing in an input or contenteditable
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {

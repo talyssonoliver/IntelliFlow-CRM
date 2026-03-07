@@ -76,10 +76,10 @@ const sizeConfig = {
 function ActionButton({
   action,
   variant = 'default',
-}: {
+}: Readonly<{
   action: EmptyStateAction;
   variant?: 'default' | 'outline';
-}) {
+}>) {
   const buttonContent = (
     <>
       {action.icon && (

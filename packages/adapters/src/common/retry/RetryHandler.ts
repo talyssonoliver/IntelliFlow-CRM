@@ -45,8 +45,8 @@ export interface RetryContext {
  * Generic Retry Handler for adapter API operations
  */
 export class RetryHandler {
-  private config: RetryConfig;
-  private provider: string;
+  private readonly config: RetryConfig;
+  private readonly provider: string;
 
   constructor(provider: string, config: Partial<RetryConfig> = {}) {
     this.provider = provider;

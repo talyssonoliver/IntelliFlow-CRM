@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from '@intelliflow/ui';
 import type { TaskStatus, TaskPriority } from '@intelliflow/domain';
 import { PageHeader, SearchFilterBar } from '@/components/shared';
@@ -92,6 +92,7 @@ function getSortParams(sortOrder: string): { sortBy: string; sortOrder: 'asc' | 
 
 export default function TasksPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [priorityFilter, setPriorityFilter] = useState<string>('');
@@ -99,6 +100,26 @@ export default function TasksPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskListItem | null>(null);
   const [createDefaultDate, setCreateDefaultDate] = useState<string>('');
+  const [page, setPage] = useState(1);
+
+  // F-11: Read sidebar URL filter params on mount
+  useEffect(() => {
+    const urlStatus = searchParams.get('status');
+    const urlPriority = searchParams.get('priority');
+    const urlView = searchParams.get('view');
+
+    if (urlStatus === 'OVERDUE') {
+      setSortOrder('dueDate-asc');
+    } else if (urlStatus) {
+      setStatusFilter(urlStatus);
+    }
+    if (urlPriority) {
+      setPriorityFilter(urlPriority);
+    }
+    if (urlView === 'my') {
+      // "My tasks" view — no additional filter needed, ownerId is already the current user
+    }
+  }, [searchParams]);
 
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
   const debouncedSearch = useDebounce(searchQuery, 300);
@@ -106,12 +127,19 @@ export default function TasksPage() {
   const utils = api.useUtils();
   const sortParams = getSortParams(sortOrder);
 
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, statusFilter, priorityFilter, sortOrder]);
+
   // Main data query
   const { data, isLoading, error, refetch } = api.task.list.useQuery(
     {
+      page,
       search: debouncedSearch || undefined,
       status: statusFilter ? [statusFilter as TaskStatus] : undefined,
       priority: priorityFilter ? [priorityFilter as TaskPriority] : undefined,
+      overdue: searchParams.get('status') === 'OVERDUE' ? true : undefined,
       sortBy: sortParams.sortBy,
       sortOrder: sortParams.sortOrder,
     },
@@ -290,13 +318,18 @@ export default function TasksPage() {
   );
 
   const handleReminderFilter = useCallback((filter: 'overdue' | 'today') => {
-    setStatusFilter('');
     setPriorityFilter('');
-    setSortOrder('dueDate-asc');
-    // Set search to filter by the reminder type visually — the actual filtering
-    // happens client-side via the overdue/today counts already computed
     setSearchQuery('');
-  }, []);
+    setSortOrder('dueDate-asc');
+    if (filter === 'overdue') {
+      setStatusFilter('');
+      // Navigate with overdue param so the query picks up the `overdue: true` flag
+      router.push('/tasks?status=OVERDUE');
+    } else {
+      setStatusFilter('');
+      router.push('/tasks');
+    }
+  }, [router]);
 
   const totalItems = data?.total ?? tasks.length;
   const taskCountSuffix = totalItems > 0 ? ` (${totalItems} total)` : '';
@@ -403,6 +436,36 @@ export default function TasksPage() {
           onBulkDelete={handleBulkDelete}
           onBulkArchive={handleBulkArchive}
         />
+      )}
+
+      {/* Pagination */}
+      {!error && data && data.total > data.limit && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Showing {(page - 1) * data.limit + 1}–{Math.min(page * data.limit, data.total)} of {data.total}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="px-3 py-1.5 text-sm rounded-md border hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <span className="text-sm text-muted-foreground">
+              Page {page} of {Math.ceil(data.total / data.limit)}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPage((p) => p + 1)}
+              disabled={!data.hasMore}
+              className="px-3 py-1.5 text-sm rounded-md border hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Create Form */}

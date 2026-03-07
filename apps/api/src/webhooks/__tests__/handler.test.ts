@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createHmac } from 'crypto';
+import { createHmac } from 'node:crypto';
 import {
   HmacSha256Verifier,
   StripeSignatureVerifier,

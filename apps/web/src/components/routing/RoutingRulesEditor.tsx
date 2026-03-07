@@ -111,9 +111,9 @@ function SortableRule({
   onToggle,
 }: Readonly<{
   rule: RoutingRule;
-  onEdit: (rule: Readonly<RoutingRule>) => void;
+  onEdit: (rule: RoutingRule) => void;
   onDelete: (id: string) => void;
-  onDuplicate: (rule: Readonly<RoutingRule>) => void;
+  onDuplicate: (rule: RoutingRule) => void;
   onToggle: (id: string, isActive: boolean) => void;
 }>) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
@@ -141,9 +141,9 @@ function SortableRule({
       ref={setNodeRef}
       style={style}
       className="flex items-center gap-3 p-3 border rounded-lg bg-card hover:bg-accent/50 transition-colors"
-      role="option"
+      role="option" // NOSONAR typescript:S6819 — custom drag-and-drop sortable option; <option> cannot have drag listeners
       aria-selected={false}
-      aria-grabbed={false}
+      aria-grabbed={false} // NOSONAR typescript:S1874
     >
       <button
         className="cursor-grab text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring rounded"
@@ -215,7 +215,7 @@ export function RoutingRulesEditor() {
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
 
   const handleDragEnd = useCallback(
-    (event: Readonly<DragEndEvent>) => {
+    (event: DragEndEvent) => {
       const { active, over } = event;
       if (!over || active.id === over.id || !rules) return;
 
@@ -242,7 +242,7 @@ export function RoutingRulesEditor() {
     setIsSheetOpen(true);
   };
 
-  const openEdit = (rule: Readonly<RoutingRule>) => {
+  const openEdit = (rule: RoutingRule) => {
     setEditingRule(rule);
     setFormData({
       name: rule.name,
@@ -253,7 +253,7 @@ export function RoutingRulesEditor() {
     setIsSheetOpen(true);
   };
 
-  const openDuplicate = (rule: Readonly<RoutingRule>) => {
+  const openDuplicate = (rule: RoutingRule) => {
     setEditingRule(null);
     setFormData({
       name: `Copy of ${rule.name}`,
@@ -405,7 +405,7 @@ export function RoutingRulesEditor() {
                         <SelectContent>
                           {ROUTING_CONDITION_OPERATORS.map((o) => (
                             <SelectItem key={o} value={o}>
-                              {o.replaceAll(/_/g, ' ')}
+                              {o.replaceAll('_', ' ')}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -449,7 +449,7 @@ export function RoutingRulesEditor() {
                         <SelectContent>
                           {ROUTING_ACTION_TYPES.map((t) => (
                             <SelectItem key={t} value={t}>
-                              {t.replaceAll(/_/g, ' ')}
+                              {t.replaceAll('_', ' ')}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -511,7 +511,11 @@ export function RoutingRulesEditor() {
             onDragEnd={handleDragEnd}
           >
             <SortableContext items={rules.map((r) => r.id)} strategy={verticalListSortingStrategy}>
-              <div className="space-y-2" role="listbox" aria-label="Routing rules list">
+              <div
+                className="space-y-2"
+                role="listbox" // NOSONAR typescript:S6819 — drag-and-drop sortable list; <select> cannot contain custom drag handles
+                aria-label="Routing rules list"
+              >
                 {rules.map(parseRoutingRule).map((rule) => (
                   <SortableRule
                     key={rule.id}

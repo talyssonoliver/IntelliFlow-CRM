@@ -456,7 +456,7 @@ export default function CreateNewLeadPage() {
                         htmlFor="firstName"
                         className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
                       >
-                        First Name <span className="text-red-500">*</span>
+                        First Name{' '}<span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -482,7 +482,7 @@ export default function CreateNewLeadPage() {
                         htmlFor="lastName"
                         className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
                       >
-                        Last Name <span className="text-red-500">*</span>
+                        Last Name{' '}<span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -506,7 +506,7 @@ export default function CreateNewLeadPage() {
                         htmlFor="email"
                         className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
                       >
-                        Email Address <span className="text-red-500">*</span>
+                        Email Address{' '}<span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">

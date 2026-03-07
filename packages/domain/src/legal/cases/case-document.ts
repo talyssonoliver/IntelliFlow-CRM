@@ -49,12 +49,12 @@ export class DocumentVersion {
   }
 
   static fromString(version: string): DocumentVersion {
-    const match = version.match(/^(\d+)\.(\d+)\.(\d+)$/);
+    const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(version);
     if (!match) throw new Error(`Invalid version format: ${version}`);
     return new DocumentVersion(
-      parseInt(match[1], 10),
-      parseInt(match[2], 10),
-      parseInt(match[3], 10)
+      Number.parseInt(match[1], 10),
+      Number.parseInt(match[2], 10),
+      Number.parseInt(match[3], 10)
     );
   }
 
@@ -137,10 +137,10 @@ export const documentVersionSchema = z.object({
 });
 
 export const accessControlEntrySchema = z.object({
-  principalId: z.string().uuid(),
+  principalId: z.uuid(),
   principalType: z.enum(['USER', 'ROLE', 'TENANT']),
-  accessLevel: z.nativeEnum(AccessLevel),
-  grantedBy: z.string().uuid(),
+  accessLevel: z.enum(AccessLevel),
+  grantedBy: z.uuid(),
   grantedAt: z.date(),
   expiresAt: z.date().optional(),
 });
@@ -149,36 +149,36 @@ export const caseDocumentMetadataSchema = z.object({
   title: z.string().min(1).max(255),
   description: z.string().max(2000).optional(),
   documentType: z.enum(DOCUMENT_TYPES),
-  classification: z.nativeEnum(DocumentClassification),
+  classification: z.enum(DocumentClassification),
   tags: z.array(z.string().max(50)).max(20).default([]),
-  relatedCaseId: z.string().uuid().optional(),
-  relatedContactId: z.string().uuid().optional(),
+  relatedCaseId: z.uuid().optional(),
+  relatedContactId: z.uuid().optional(),
 });
 
 export const caseDocumentSchema = z.object({
-  id: z.string().uuid(),
-  tenantId: z.string().uuid(),
+  id: z.uuid(),
+  tenantId: z.uuid(),
   version: documentVersionSchema,
-  status: z.nativeEnum(DocumentStatus),
+  status: z.enum(DocumentStatus),
   metadata: caseDocumentMetadataSchema,
   storageKey: z.string().min(1), // S3 key or file path
-  contentHash: z.string().regex(/^[a-f0-9]{64}$/), // SHA-256 hash
+  contentHash: z.string().check(z.regex(/^[a-f0-9]{64}$/)), // SHA-256 hash
   mimeType: z.string().min(1),
   sizeBytes: z.number().int().positive(),
   acl: z.array(accessControlEntrySchema).default([]),
-  createdBy: z.string().uuid(),
+  createdBy: z.uuid(),
   createdAt: z.date(),
-  updatedBy: z.string().uuid(),
+  updatedBy: z.uuid(),
   updatedAt: z.date(),
-  parentVersionId: z.string().uuid().optional(), // For version history
+  parentVersionId: z.uuid().optional(), // For version history
   isLatestVersion: z.boolean().default(true),
   retentionUntil: z.date().optional(), // Legal hold or retention policy
   deletedAt: z.date().optional(), // Soft delete
   eSignature: z
     .object({
-      signedBy: z.string().uuid(),
+      signedBy: z.uuid(),
       signedAt: z.date(),
-      signatureHash: z.string().regex(/^[a-f0-9]{64}$/),
+      signatureHash: z.string().check(z.regex(/^[a-f0-9]{64}$/)),
       ipAddress: z.string().min(1),
       userAgent: z.string(),
     })
@@ -198,7 +198,7 @@ export type CaseDocumentData = z.infer<typeof caseDocumentSchema>;
  * Handles document lifecycle, versioning, and access control with GDPR compliance.
  */
 export class CaseDocument {
-  private constructor(private data: CaseDocumentData) {}
+  private constructor(private readonly data: CaseDocumentData) {}
 
   // ========== Factory Methods ==========
 

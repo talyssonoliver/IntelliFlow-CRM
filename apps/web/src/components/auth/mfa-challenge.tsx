@@ -122,7 +122,7 @@ export function MfaChallenge({
   const [selectedMethod, setSelectedMethod] = useState<MfaMethod>(
     defaultMethod || availableMethods[0] || 'totp'
   );
-  const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(''));
+  const [code, setCode] = useState<string[]>(new Array(CODE_LENGTH).fill(''));
   const [backupCode, setBackupCode] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -147,7 +147,7 @@ export function MfaChallenge({
 
   // Clear code when method changes
   useEffect(() => {
-    setCode(Array(CODE_LENGTH).fill(''));
+    setCode(new Array(CODE_LENGTH).fill(''));
     setBackupCode('');
     setLocalError(null);
   }, [selectedMethod]);
@@ -183,7 +183,7 @@ export function MfaChallenge({
       }
 
       // Auto-submit when complete
-      if (value && index === CODE_LENGTH - 1 && newCode.every((c) => c)) {
+      if (value && index === CODE_LENGTH - 1 && newCode.every(Boolean)) {
         handleSubmit(newCode.join(''));
       }
     },
@@ -207,7 +207,7 @@ export function MfaChallenge({
   );
 
   const handlePaste = useCallback(
-    (e: Readonly<ClipboardEvent<HTMLInputElement>>) => {
+    (e: ClipboardEvent<HTMLInputElement>) => {
       e.preventDefault();
       const pastedData = e.clipboardData.getData('text').replaceAll(/\D/g, '');
 
@@ -255,7 +255,7 @@ export function MfaChallenge({
           if (selectedMethod === 'backup') {
             setBackupCode('');
           } else {
-            setCode(Array(CODE_LENGTH).fill(''));
+            setCode(new Array(CODE_LENGTH).fill(''));
             inputRefs.current[0]?.focus();
           }
         }

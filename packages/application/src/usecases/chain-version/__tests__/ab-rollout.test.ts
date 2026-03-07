@@ -24,7 +24,7 @@ import {
   type FeatureFlagProviderPort,
 } from '../ChainVersionService';
 import type { EventBusPort } from '../../../../ports/external';
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 
 const TENANT_ID = 'tenant-ab-test';
 const USER_ID = 'user-ab-1';

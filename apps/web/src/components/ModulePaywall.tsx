@@ -41,7 +41,7 @@ export function ModulePaywall({ moduleId, className }: Readonly<ModulePaywallPro
         {/* Plan info */}
         {minPlan && (
           <p className="text-sm text-muted-foreground">
-            Available on <span className="font-medium text-foreground">{minPlan}</span> plan and
+            Available on{' '}<span className="font-medium text-foreground">{minPlan}</span>{' '}plan and
             above, or as an add-on.
           </p>
         )}

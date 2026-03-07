@@ -36,34 +36,34 @@ const createDocumentInputSchema = z.object({
   ]),
   classification: z.enum(['PUBLIC', 'INTERNAL', 'CONFIDENTIAL', 'PRIVILEGED']),
   tags: z.array(z.string().max(50)).max(20).default([]),
-  relatedCaseId: z.string().uuid().optional(),
-  relatedContactId: z.string().uuid().optional(),
-  contentHash: z.string().regex(/^[a-f0-9]{64}$/),
+  relatedCaseId: z.uuid().optional(),
+  relatedContactId: z.uuid().optional(),
+  contentHash: z.string().check(z.regex(/^[a-f0-9]{64}$/)),
   mimeType: z.string().min(1),
   sizeBytes: z.number().int().positive(),
 });
 
 const grantAccessInputSchema = z.object({
-  documentId: z.string().uuid(),
-  principalId: z.string().uuid(),
+  documentId: z.uuid(),
+  principalId: z.uuid(),
   principalType: z.enum(['USER', 'ROLE', 'TENANT']),
   accessLevel: z.enum(['NONE', 'VIEW', 'COMMENT', 'EDIT', 'ADMIN']),
   expiresAt: z.coerce.date().optional(),
 });
 
 const createVersionInputSchema = z.object({
-  documentId: z.string().uuid(),
+  documentId: z.uuid(),
   versionType: z.enum(['major', 'minor', 'patch']),
   storageKey: z.string().min(1),
-  contentHash: z.string().regex(/^[a-f0-9]{64}$/),
+  contentHash: z.string().check(z.regex(/^[a-f0-9]{64}$/)),
 });
 
 const signDocumentInputSchema = z.object({
-  documentId: z.string().uuid(),
+  documentId: z.uuid(),
 });
 
 const placeLegalHoldInputSchema = z.object({
-  documentId: z.string().uuid(),
+  documentId: z.uuid(),
   retentionUntil: z.coerce.date(),
 });
 
@@ -167,7 +167,7 @@ export const documentsRouter = createTRPCRouter({
    * Get document by ID
    */
   getById: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.uuid() }))
     .query(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
       if (!userId) {
@@ -201,7 +201,7 @@ export const documentsRouter = createTRPCRouter({
     .input(
       z
         .object({
-          caseId: z.string().uuid().optional(),
+          caseId: z.uuid().optional(),
           status: z
             .enum(['DRAFT', 'UNDER_REVIEW', 'APPROVED', 'SIGNED', 'ARCHIVED', 'SUPERSEDED'])
             .optional(),
@@ -291,7 +291,7 @@ export const documentsRouter = createTRPCRouter({
    * Revoke access from a user or role
    */
   revokeAccess: protectedProcedure
-    .input(z.object({ documentId: z.string().uuid(), principalId: z.string().uuid() }))
+    .input(z.object({ documentId: z.uuid(), principalId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
       if (!userId) {
@@ -325,7 +325,7 @@ export const documentsRouter = createTRPCRouter({
    * Submit document for review
    */
   submitForReview: protectedProcedure
-    .input(z.object({ documentId: z.string().uuid() }))
+    .input(z.object({ documentId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
       if (!userId) {
@@ -358,7 +358,7 @@ export const documentsRouter = createTRPCRouter({
    * Approve document
    */
   approve: protectedProcedure
-    .input(z.object({ documentId: z.string().uuid() }))
+    .input(z.object({ documentId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
       if (!userId) {
@@ -446,7 +446,7 @@ export const documentsRouter = createTRPCRouter({
    * Archive document
    */
   archive: protectedProcedure
-    .input(z.object({ documentId: z.string().uuid() }))
+    .input(z.object({ documentId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
       if (!userId) {
@@ -509,7 +509,7 @@ export const documentsRouter = createTRPCRouter({
    * Release legal hold
    */
   releaseLegalHold: protectedProcedure
-    .input(z.object({ documentId: z.string().uuid() }))
+    .input(z.object({ documentId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
       const userRole = ctx.user?.role;
@@ -539,7 +539,7 @@ export const documentsRouter = createTRPCRouter({
    * Soft delete document
    */
   delete: protectedProcedure
-    .input(z.object({ documentId: z.string().uuid() }))
+    .input(z.object({ documentId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
       if (!userId) {
@@ -567,7 +567,7 @@ export const documentsRouter = createTRPCRouter({
    * Get a signed URL for document preview/download (AC-004)
    */
   getSignedUrl: protectedProcedure
-    .input(z.object({ documentId: z.string().uuid() }))
+    .input(z.object({ documentId: z.uuid() }))
     .query(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
       if (!userId) {
@@ -600,7 +600,7 @@ export const documentsRouter = createTRPCRouter({
    * Get audit trail for document
    */
   getAuditTrail: protectedProcedure
-    .input(z.object({ documentId: z.string().uuid() }))
+    .input(z.object({ documentId: z.uuid() }))
     .query(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
       if (!userId) {

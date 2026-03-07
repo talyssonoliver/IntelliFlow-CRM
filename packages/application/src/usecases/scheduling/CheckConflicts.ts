@@ -3,7 +3,6 @@ import {
   TimeSlot,
   Buffer,
   ConflictDetector,
-  AppointmentConflict,
   AvailabilitySlot,
   DomainError,
   Result,

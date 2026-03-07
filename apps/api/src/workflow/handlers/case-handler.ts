@@ -18,17 +18,12 @@ import {
   CaseId,
   // Workflow-specific events from case-events.ts
   CaseWorkflowStartedEvent,
-  CaseWorkflowCompletedEvent,
   CaseWorkflowFailedEvent,
   CaseApprovalRequiredEvent,
   CaseEscalatedEvent,
-  // Event routing configuration
-  CASE_EVENT_WORKFLOW_ROUTING,
   type CaseEventType,
   // Domain event publisher interface
   type DomainEventPublisher,
-  // Result type for error handling
-  type Result,
 } from '@intelliflow/domain';
 
 import {
@@ -259,7 +254,7 @@ abstract class BaseCaseEventHandler implements ICaseEventHandler {
 
       return { matched, actionsExecuted };
     } catch (error) {
-      console.error(`[BaseCaseEventHandler] Rules evaluation error: ${error}`);
+      console.error(`[BaseCaseEventHandler] Rules evaluation error: ${error instanceof Error ? error.message : String(error)}`);
       return { matched: false, actionsExecuted: 0 };
     }
   }
@@ -333,7 +328,7 @@ export class CaseCreatedHandler extends BaseCaseEventHandler {
         },
       };
     } catch (error) {
-      console.error(`[CaseCreatedHandler] Error: ${error}`);
+      console.error(`[CaseCreatedHandler] Error: ${error instanceof Error ? error.message : String(error)}`);
       return {
         success: false,
         error: String(error),
@@ -406,7 +401,7 @@ export class CaseStatusChangedHandler extends BaseCaseEventHandler {
         },
       };
     } catch (error) {
-      console.error(`[CaseStatusChangedHandler] Error: ${error}`);
+      console.error(`[CaseStatusChangedHandler] Error: ${error instanceof Error ? error.message : String(error)}`);
       return {
         success: false,
         error: String(error),
@@ -488,7 +483,7 @@ export class CasePriorityChangedHandler extends BaseCaseEventHandler {
         },
       };
     } catch (error) {
-      console.error(`[CasePriorityChangedHandler] Error: ${error}`);
+      console.error(`[CasePriorityChangedHandler] Error: ${error instanceof Error ? error.message : String(error)}`);
       return {
         success: false,
         error: String(error),
@@ -555,7 +550,7 @@ export class CaseDeadlineUpdatedHandler extends BaseCaseEventHandler {
         },
       };
     } catch (error) {
-      console.error(`[CaseDeadlineUpdatedHandler] Error: ${error}`);
+      console.error(`[CaseDeadlineUpdatedHandler] Error: ${error instanceof Error ? error.message : String(error)}`);
       return {
         success: false,
         error: String(error),
@@ -624,7 +619,7 @@ export class CaseClosedHandler extends BaseCaseEventHandler {
         },
       };
     } catch (error) {
-      console.error(`[CaseClosedHandler] Error: ${error}`);
+      console.error(`[CaseClosedHandler] Error: ${error instanceof Error ? error.message : String(error)}`);
       return {
         success: false,
         error: String(error),
@@ -689,7 +684,7 @@ export class CaseTaskAddedHandler extends BaseCaseEventHandler {
         },
       };
     } catch (error) {
-      console.error(`[CaseTaskAddedHandler] Error: ${error}`);
+      console.error(`[CaseTaskAddedHandler] Error: ${error instanceof Error ? error.message : String(error)}`);
       return {
         success: false,
         error: String(error),
@@ -750,7 +745,7 @@ export class CaseTaskCompletedHandler extends BaseCaseEventHandler {
         },
       };
     } catch (error) {
-      console.error(`[CaseTaskCompletedHandler] Error: ${error}`);
+      console.error(`[CaseTaskCompletedHandler] Error: ${error instanceof Error ? error.message : String(error)}`);
       return {
         success: false,
         error: String(error),
@@ -830,7 +825,7 @@ export class CaseApprovalRequiredHandler extends BaseCaseEventHandler {
         },
       };
     } catch (error) {
-      console.error(`[CaseApprovalRequiredHandler] Error: ${error}`);
+      console.error(`[CaseApprovalRequiredHandler] Error: ${error instanceof Error ? error.message : String(error)}`);
       return {
         success: false,
         error: String(error),

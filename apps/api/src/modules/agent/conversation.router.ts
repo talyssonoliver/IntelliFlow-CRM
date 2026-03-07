@@ -138,7 +138,7 @@ export const conversationRouter = createTRPCRouter({
    */
   create: protectedProcedure.input(CreateConversationSchema).mutation(async ({ ctx, input }) => {
     const sessionId =
-      input.sessionId || `conv_${Date.now()}_${randomUUID().replace(/-/g, '').slice(0, 8)}`;
+      input.sessionId || `conv_${Date.now()}_${randomUUID().replaceAll('-', '').slice(0, 8)}`;
 
     // Extract IP address and user agent from request headers
     const ipAddress = ctx.req?.headers?.get('x-forwarded-for') || undefined;

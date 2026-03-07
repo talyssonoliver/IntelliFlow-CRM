@@ -165,7 +165,7 @@ export function ForgotPasswordForm({
 
   // Handle form submission
   const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
+    async (e: React.SyntheticEvent) => {
       e.preventDefault();
       setTouched(true);
 
@@ -290,7 +290,7 @@ export function ResetEmailSent({
           </span>
           <div className="text-sm text-slate-300">
             <p>
-              The link will expire in <span className="text-white font-medium">1 hour</span>.
+              The link will expire in{' '}<span className="text-white font-medium">1 hour</span>.
             </p>
             <p className="mt-1">If you don&apos;t see the email, check your spam folder.</p>
           </div>
@@ -381,10 +381,10 @@ export function buildResetEmailPayload(options: {
 
   // Escape HTML in user-provided content
   const escapedName = name
-    .replaceAll(/&/g, '&amp;')
-    .replaceAll(/</g, '&lt;')
-    .replaceAll(/>/g, '&gt;')
-    .replaceAll(/"/g, '&quot;');
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
 
   const htmlBody = `
 <!DOCTYPE html>

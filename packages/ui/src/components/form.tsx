@@ -30,7 +30,7 @@ const FormField = <
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 >({
   ...props
-}: ControllerProps<TFieldValues, TName>) => {
+}: Readonly<ControllerProps<TFieldValues, TName>>) => {
   const contextValue = React.useMemo(() => ({ name: props.name }), [props.name]);
 
   return (

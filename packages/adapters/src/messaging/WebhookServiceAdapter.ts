@@ -45,7 +45,7 @@ export interface WebhookServiceAdapterConfig {
  * Implements the WebhookServicePort interface
  */
 export class WebhookServiceAdapter implements WebhookServicePort {
-  private framework: WebhookFramework;
+  private readonly framework: WebhookFramework;
 
   constructor(config: WebhookServiceAdapterConfig = {}) {
     this.framework = createWebhookFramework({
@@ -174,4 +174,4 @@ export function createWebhookServiceAdapter(
 }
 
 // Re-export domain errors for convenience
-export { WebhookVerificationError, WebhookProcessingError, WebhookSourceNotFoundError };
+export { WebhookVerificationError, WebhookProcessingError, WebhookSourceNotFoundError } from '@intelliflow/application';

@@ -75,7 +75,7 @@ export function DocumentUpload({
   // ─── File Selection ───────────────────────────────────────────────────────
 
   const handleFileSelect = useCallback(
-    async (file: Readonly<File>) => {
+    async (file: File) => {
       const error = validateFile(file);
       if (error) {
         toast({ title: 'Invalid file', description: error, variant: 'destructive' });
@@ -133,7 +133,7 @@ export function DocumentUpload({
   // ─── Submit ───────────────────────────────────────────────────────────────
 
   const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
+    async (e: React.SyntheticEvent) => {
       e.preventDefault();
       if (!selectedFile || !title.trim()) {
         toast({
@@ -162,7 +162,7 @@ export function DocumentUpload({
         // Derive a documentType from the file MIME type for the required API field.
         // The full document type selector UI is tracked in IFC-152.
         const mimeType = selectedFile.type || 'application/octet-stream';
-        let documentType: string;
+        let documentType: 'OTHER' | 'CONTRACT' | 'AGREEMENT' | 'EVIDENCE' | 'CORRESPONDENCE' | 'REPORT' | 'COURT_FILING' | 'MEMO';
         if (mimeType.startsWith('image/')) {
           documentType = 'EVIDENCE';
         } else if (
@@ -184,7 +184,7 @@ export function DocumentUpload({
         const result = await createDocumentMutation.mutateAsync({
           title: title.trim(),
           description: description.trim() || undefined,
-          documentType: documentType as 'CONTRACT' | 'EVIDENCE' | 'OTHER',
+          documentType: documentType,
           classification: classification,
           tags: tagArray,
           relatedCaseId: _relatedCaseId,
@@ -266,7 +266,7 @@ export function DocumentUpload({
           className="hidden"
           accept={ACCEPTED_EXTENSIONS.join(',')}
           onChange={handleFileInputChange}
-          aria-hidden="true"
+          tabIndex={-1}
         />
 
         {selectedFile ? (
@@ -312,7 +312,7 @@ export function DocumentUpload({
       {isUploading && (
         <div
           className="space-y-2"
-          role="progressbar"
+          role="progressbar" // NOSONAR typescript:S6819 — custom multi-part progress display, <progress> cannot contain nested elements
           aria-valuenow={uploadProgress}
           aria-valuemin={0}
           aria-valuemax={100}
@@ -337,7 +337,7 @@ export function DocumentUpload({
             htmlFor="doc-title"
             className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
           >
-            Title <span className="text-red-500">*</span>
+            Title{' '}<span className="text-red-500">*</span>
           </label>
           <input
             id="doc-title"

@@ -37,11 +37,7 @@ export function TicketAssignSidebar({
       assignees={assignees}
       isAssigning={isAssigning}
       isLoadingOptions={isLoadingOptions}
-      onAssign={(userId) => {
-        onAssign(userId).catch(() => {
-          // Mutation error feedback is surfaced by caller
-        });
-      }}
+      onAssign={onAssign}
     />
   );
 }

@@ -34,9 +34,9 @@ export interface RedisConnectionConfig {
 export function getDefaultConnectionConfig(): RedisConnectionConfig {
   return {
     host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || '6379', 10),
+    port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
     password: process.env.REDIS_PASSWORD || undefined,
-    db: parseInt(process.env.REDIS_DB || '0', 10),
+    db: Number.parseInt(process.env.REDIS_DB || '0', 10),
     tls: process.env.REDIS_TLS === 'true',
     maxRetriesPerRequest: null, // BullMQ requires null for blocking commands
     enableReadyCheck: true,
@@ -105,7 +105,7 @@ export async function checkConnectionHealth(
     let redisVersion: string | undefined;
     try {
       const info = await infoFn();
-      const versionMatch = info.match(/redis_version:([^\r\n]+)/);
+      const versionMatch = /redis_version:([^\r\n]+)/.exec(info);
       if (versionMatch) {
         redisVersion = versionMatch[1];
       }
@@ -135,7 +135,7 @@ export async function checkConnectionHealth(
  * Simple connection registry for managing multiple Redis connections
  */
 class ConnectionRegistry {
-  private connections: Map<string, { config: RedisConnectionConfig; createdAt: Date }> = new Map();
+  private readonly connections: Map<string, { config: RedisConnectionConfig; createdAt: Date }> = new Map();
 
   /**
    * Register a connection configuration
@@ -190,4 +190,4 @@ export const connectionRegistry = new ConnectionRegistry();
 // Exports
 // ============================================================================
 
-export type { ConnectionOptions };
+export type { ConnectionOptions } from 'bullmq';

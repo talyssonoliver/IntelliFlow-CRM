@@ -5,11 +5,13 @@ import { ColumnDef } from '@tanstack/react-table';
 import { DataTable, TableRowActions, type BulkAction, Skeleton } from '@intelliflow/ui';
 import type { TaskStatus, TaskPriority } from '@intelliflow/domain';
 
+type DateStringNull = Date | string | null;
+
 export interface TaskListItem {
   readonly id: string;
   readonly title: string;
   readonly description: string | null;
-  readonly dueDate: Date | string | null;
+  readonly dueDate: DateStringNull;
   readonly priority: TaskPriority;
   readonly status: TaskStatus;
   readonly ownerId: string;
@@ -24,7 +26,7 @@ export interface TaskListProps {
   readonly isLoading: boolean;
   readonly onRowClick: (id: string) => void;
   readonly onComplete: (id: string) => void;
-  readonly onEdit: (task: Readonly<TaskListItem>) => void;
+  readonly onEdit: (task: TaskListItem) => void;
   readonly onDelete: (id: string) => void;
   readonly onArchive: (id: string) => void;
   readonly onBulkComplete: (ids: string[]) => void;
@@ -53,7 +55,7 @@ const ENTITY_ICONS: Record<string, string> = {
   deal: 'handshake',
 };
 
-function getDueDateStatus(date: Date | string | null): 'overdue' | 'today' | 'normal' {
+function getDueDateStatus(date: DateStringNull): 'overdue' | 'today' | 'normal' {
   if (!date) return 'normal';
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
@@ -64,7 +66,7 @@ function getDueDateStatus(date: Date | string | null): 'overdue' | 'today' | 'no
   return 'normal';
 }
 
-function formatDueDate(date: Date | string | null): string {
+function formatDueDate(date: DateStringNull): string {
   if (!date) return '—';
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return '—';
@@ -91,7 +93,7 @@ function getEntityInfo(task: Readonly<TaskListItem>): { type: string; name: stri
 
 function createColumns(handlers: {
   onComplete: (id: string) => void;
-  onEdit: (task: Readonly<TaskListItem>) => void;
+  onEdit: (task: TaskListItem) => void;
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
 }): ColumnDef<TaskListItem>[] {

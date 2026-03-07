@@ -15,6 +15,33 @@ import pino from 'pino';
 import type { RedisConfig, QueueConfig } from './worker-config';
 import type { ComponentHealth } from './types';
 
+// Default job options per queue (aligned with ai-worker job definitions)
+const QUEUE_DEFAULT_JOB_OPTIONS: Record<string, {
+  attempts: number;
+  backoff: { type: 'fixed' | 'exponential'; delay: number };
+  removeOnComplete: number | { count: number; age?: number } | boolean;
+  removeOnFail: number | { age: number } | boolean;
+}> = {
+  'ai-scoring': {
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 1000 },
+    removeOnComplete: { count: 1000, age: 86400 },
+    removeOnFail: { age: 604800 },
+  },
+  'ai-prediction': {
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 1000 },
+    removeOnComplete: { count: 1000, age: 86400 },
+    removeOnFail: { age: 604800 },
+  },
+  'ai-insights': {
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 5000 },
+    removeOnComplete: { count: 100 },
+    removeOnFail: { age: 604800 },
+  },
+};
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -119,8 +146,10 @@ export class QueueConnector {
       return this.queues.get(name)!;
     }
 
+    const defaults = QUEUE_DEFAULT_JOB_OPTIONS[name];
     const queue = new Queue(name, {
       connection: this.getBullConnection(),
+      ...(defaults ? { defaultJobOptions: defaults } : {}),
     });
 
     this.queues.set(name, queue);

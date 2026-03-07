@@ -12,7 +12,7 @@ import {
   emitSystemEvent,
   emitAIProgress,
 } from './subscription-demo';
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'node:events';
 
 describe('Subscription Demo', () => {
   beforeEach(() => {

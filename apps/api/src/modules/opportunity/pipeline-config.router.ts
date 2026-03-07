@@ -12,10 +12,8 @@
  * Target: <100ms save operations
  */
 
-import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import {
-  opportunityStageSchema,
   updatePipelineStageConfigSchema,
   updatePipelineConfigSchema,
   DEFAULT_STAGE_COLORS,
@@ -24,7 +22,7 @@ import {
   validateStageDeactivation,
 } from '@intelliflow/validators/opportunity';
 import { OPPORTUNITY_STAGES } from '@intelliflow/domain';
-import { getTenantContext, type TenantAwareContext } from '../../security/tenant-context';
+import { getTenantContext } from '../../security/tenant-context';
 
 /**
  * Get default configuration for a stage

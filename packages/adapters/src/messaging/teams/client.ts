@@ -10,6 +10,8 @@ import { Result, DomainError } from '@intelliflow/domain';
 
 // ==================== Types ====================
 
+export type TeamsMessageImportance = 'normal' | 'high' | 'urgent';
+
 export interface TeamsConfig {
   clientId: string;
   clientSecret: string;
@@ -70,7 +72,7 @@ export interface TeamsMessage {
   attachments?: TeamsAttachment[];
   mentions?: TeamsMention[];
   reactions?: TeamsReaction[];
-  importance: 'normal' | 'high' | 'urgent';
+  importance: TeamsMessageImportance;
   webUrl?: string;
   replyToId?: string;
 }
@@ -373,7 +375,7 @@ export interface TeamsMessagingPort {
  * Implements messaging operations via Microsoft Graph API
  */
 export class TeamsAdapter implements TeamsMessagingPort {
-  private config: TeamsConfig;
+  private readonly config: TeamsConfig;
   private readonly graphBaseUrl = 'https://graph.microsoft.com/v1.0';
   private readonly oauthBaseUrl: string;
 
@@ -485,7 +487,7 @@ export class TeamsAdapter implements TeamsMessagingPort {
       // Creating a team is async, so we may get a 202 with a location header
       // For simplicity, we return a minimal team object
       return Result.ok({
-        id: String(response.value.id ?? 'pending'),
+        id: (response.value.id as string | null | undefined) ?? 'pending',
         displayName,
         description,
         visibility,
@@ -1233,7 +1235,7 @@ export class TeamsAdapter implements TeamsMessagingPort {
         status: latencyMs < 1000 ? 'healthy' : 'degraded',
         latencyMs,
       });
-    } catch (error) {
+    } catch (_error) {
       return Result.ok({
         status: 'unhealthy',
         latencyMs: Date.now() - start,
@@ -1284,7 +1286,7 @@ export class TeamsAdapter implements TeamsMessagingPort {
       case 404:
         return Result.fail(new TeamsNotFoundError('Resource', error.message ?? 'unknown'));
       case 429: {
-        const retryAfter = parseInt(response.headers.get('Retry-After') ?? '60');
+        const retryAfter = Number.parseInt(response.headers.get('Retry-After') ?? '60');
         return Result.fail(new TeamsRateLimitError(retryAfter));
       }
       default:
@@ -1333,25 +1335,25 @@ export class TeamsAdapter implements TeamsMessagingPort {
 
   private mapToTeam(data: Record<string, unknown>): TeamsTeam {
     return {
-      id: String(data.id ?? ''),
-      displayName: String(data.displayName ?? ''),
-      description: data.description ? String(data.description) : undefined,
+      id: (data.id as string | null | undefined) ?? '',
+      displayName: (data.displayName as string | null | undefined) ?? '',
+      description: data.description ? (data.description as string) : undefined,
       visibility: (data.visibility ?? 'private') as 'private' | 'public',
       isArchived: Boolean(data.isArchived),
-      createdDateTime: new Date(String(data.createdDateTime ?? new Date().toISOString())),
-      webUrl: data.webUrl ? String(data.webUrl) : undefined,
+      createdDateTime: new Date((data.createdDateTime as string | null | undefined) ?? new Date().toISOString()),
+      webUrl: data.webUrl ? (data.webUrl as string) : undefined,
     };
   }
 
   private mapToChannel(data: Record<string, unknown>): TeamsChannel {
     return {
-      id: String(data.id ?? ''),
-      displayName: String(data.displayName ?? ''),
-      description: data.description ? String(data.description) : undefined,
+      id: (data.id as string | null | undefined) ?? '',
+      displayName: (data.displayName as string | null | undefined) ?? '',
+      description: data.description ? (data.description as string) : undefined,
       membershipType: (data.membershipType ?? 'standard') as 'standard' | 'private' | 'shared',
-      createdDateTime: new Date(String(data.createdDateTime ?? new Date().toISOString())),
-      webUrl: data.webUrl ? String(data.webUrl) : undefined,
-      email: data.email ? String(data.email) : undefined,
+      createdDateTime: new Date((data.createdDateTime as string | null | undefined) ?? new Date().toISOString()),
+      webUrl: data.webUrl ? (data.webUrl as string) : undefined,
+      email: data.email ? (data.email as string) : undefined,
     };
   }
 
@@ -1360,24 +1362,24 @@ export class TeamsAdapter implements TeamsMessagingPort {
     const from = data.from as Record<string, unknown> | undefined;
 
     return {
-      id: String(data.id ?? ''),
-      createdDateTime: new Date(String(data.createdDateTime ?? new Date().toISOString())),
+      id: (data.id as string | null | undefined) ?? '',
+      createdDateTime: new Date((data.createdDateTime as string | null | undefined) ?? new Date().toISOString()),
       lastModifiedDateTime: data.lastModifiedDateTime
-        ? new Date(String(data.lastModifiedDateTime))
+        ? new Date(data.lastModifiedDateTime as string)
         : undefined,
-      deletedDateTime: data.deletedDateTime ? new Date(String(data.deletedDateTime)) : undefined,
-      subject: data.subject ? String(data.subject) : undefined,
+      deletedDateTime: data.deletedDateTime ? new Date(data.deletedDateTime as string) : undefined,
+      subject: data.subject ? (data.subject as string) : undefined,
       body: {
         contentType: (body.contentType ?? 'text') as 'text' | 'html',
-        content: String(body.content ?? ''),
+        content: (body.content as string | null | undefined) ?? '',
       },
       from: from ? this.mapToFrom(from) : undefined,
       attachments: data.attachments as TeamsAttachment[] | undefined,
       mentions: data.mentions as TeamsMention[] | undefined,
       reactions: data.reactions as TeamsReaction[] | undefined,
       importance: (data.importance ?? 'normal') as 'normal' | 'high' | 'urgent',
-      webUrl: data.webUrl ? String(data.webUrl) : undefined,
-      replyToId: data.replyToId ? String(data.replyToId) : undefined,
+      webUrl: data.webUrl ? (data.webUrl as string) : undefined,
+      replyToId: data.replyToId ? (data.replyToId as string) : undefined,
     };
   }
 
@@ -1388,16 +1390,16 @@ export class TeamsAdapter implements TeamsMessagingPort {
     return {
       user: user
         ? {
-            id: String(user.id ?? ''),
-            displayName: String(user.displayName ?? ''),
-            userIdentityType: String(user.userIdentityType ?? ''),
+            id: (user.id as string | null | undefined) ?? '',
+            displayName: (user.displayName as string | null | undefined) ?? '',
+            userIdentityType: (user.userIdentityType as string | null | undefined) ?? '',
           }
         : undefined,
       application: application
         ? {
-            id: String(application.id ?? ''),
-            displayName: String(application.displayName ?? ''),
-            applicationIdentityType: String(application.applicationIdentityType ?? ''),
+            id: (application.id as string | null | undefined) ?? '',
+            displayName: (application.displayName as string | null | undefined) ?? '',
+            applicationIdentityType: (application.applicationIdentityType as string | null | undefined) ?? '',
           }
         : undefined,
     };
@@ -1405,27 +1407,27 @@ export class TeamsAdapter implements TeamsMessagingPort {
 
   private mapToChat(data: Record<string, unknown>): TeamsChat {
     return {
-      id: String(data.id ?? ''),
-      topic: data.topic ? String(data.topic) : undefined,
+      id: (data.id as string | null | undefined) ?? '',
+      topic: data.topic ? (data.topic as string) : undefined,
       chatType: (data.chatType ?? 'oneOnOne') as 'oneOnOne' | 'group' | 'meeting',
-      createdDateTime: new Date(String(data.createdDateTime ?? new Date().toISOString())),
+      createdDateTime: new Date((data.createdDateTime as string | null | undefined) ?? new Date().toISOString()),
       lastUpdatedDateTime: data.lastUpdatedDateTime
-        ? new Date(String(data.lastUpdatedDateTime))
+        ? new Date(data.lastUpdatedDateTime as string)
         : undefined,
       members: data.members
         ? (data.members as Array<Record<string, unknown>>).map((m) => this.mapToMember(m))
         : undefined,
-      webUrl: data.webUrl ? String(data.webUrl) : undefined,
+      webUrl: data.webUrl ? (data.webUrl as string) : undefined,
     };
   }
 
   private mapToMember(data: Record<string, unknown>): TeamsMember {
     return {
-      id: String(data.id ?? ''),
+      id: (data.id as string | null | undefined) ?? '',
       roles: (data.roles as string[]) ?? [],
-      displayName: data.displayName ? String(data.displayName) : undefined,
-      userId: data.userId ? String(data.userId) : undefined,
-      email: data.email ? String(data.email) : undefined,
+      displayName: data.displayName ? (data.displayName as string) : undefined,
+      userId: data.userId ? (data.userId as string) : undefined,
+      email: data.email ? (data.email as string) : undefined,
     };
   }
 }

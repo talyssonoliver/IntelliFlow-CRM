@@ -54,7 +54,7 @@ async function handleErrorResponse(
     case 401:
       return Result.fail(new StripeAuthenticationError(error.message ?? 'Invalid API key'));
     case 429: {
-      const retryAfter = parseInt(response.headers.get('Retry-After') ?? '60');
+      const retryAfter = Number.parseInt(response.headers.get('Retry-After') ?? '60');
       return Result.fail(new StripeRateLimitError(retryAfter));
     }
     case 402:

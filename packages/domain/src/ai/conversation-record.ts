@@ -143,8 +143,8 @@ export interface MessageRecordData {
   role: string;
   content: string;
   contentType: string;
-  metadata: unknown | null;
-  attachments: unknown | null;
+  metadata: unknown;
+  attachments: unknown;
   modelUsed: string | null;
   finishReason: string | null;
   tokenCount: number | null;
@@ -174,10 +174,10 @@ export interface ToolCallRecordData {
   toolName: string;
   toolType: string | null;
   toolVersion: string | null;
-  toolInput: unknown | null;
-  toolOutput: unknown | null;
-  inputParameters: unknown | null;
-  outputResult: unknown | null;
+  toolInput: unknown;
+  toolOutput: unknown;
+  inputParameters: unknown;
+  outputResult: unknown;
   status: string;
   duration: number | null;
   durationMs: number | null;
@@ -195,6 +195,6 @@ export interface ToolCallRecordData {
   affectedEntityId: string | null;
   affectedEntity: string | null;
   changeDescription: string | null;
-  rollbackData: unknown | null;
+  rollbackData: unknown;
   createdAt: Date;
 }

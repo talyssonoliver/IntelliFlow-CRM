@@ -65,7 +65,7 @@ export const chainVersionRouter = createTRPCRouter({
   update: tenantProcedure
     .input(
       z.object({
-        versionId: z.string().uuid(),
+        versionId: z.uuid(),
         data: updateChainVersionSchema,
       })
     )
@@ -91,7 +91,7 @@ export const chainVersionRouter = createTRPCRouter({
    * SECURITY: Uses adminProcedure
    */
   deprecate: adminProcedure
-    .input(z.object({ versionId: z.string().uuid() }))
+    .input(z.object({ versionId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const chainVersionService = getChainVersionService(ctx);
       const typedCtx = getTenantContext(ctx);
@@ -104,7 +104,7 @@ export const chainVersionRouter = createTRPCRouter({
    * SECURITY: Uses adminProcedure
    */
   archive: adminProcedure
-    .input(z.object({ versionId: z.string().uuid() }))
+    .input(z.object({ versionId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const chainVersionService = getChainVersionService(ctx);
       const typedCtx = getTenantContext(ctx);
@@ -136,7 +136,7 @@ export const chainVersionRouter = createTRPCRouter({
    * SECURITY: Uses tenantProcedure
    */
   getById: tenantProcedure
-    .input(z.object({ versionId: z.string().uuid() }))
+    .input(z.object({ versionId: z.uuid() }))
     .query(async ({ ctx, input }) => {
       const chainVersionService = getChainVersionService(ctx);
       return chainVersionService.getVersion(input.versionId);
@@ -252,7 +252,7 @@ export const chainVersionRouter = createTRPCRouter({
   getAuditLog: adminProcedure
     .input(
       z.object({
-        versionId: z.string().uuid(),
+        versionId: z.uuid(),
         limit: z.number().int().min(1).max(100).default(50),
       })
     )
@@ -285,8 +285,8 @@ export const chainVersionRouter = createTRPCRouter({
   compare: tenantProcedure
     .input(
       z.object({
-        versionIdA: z.string().uuid(),
-        versionIdB: z.string().uuid(),
+        versionIdA: z.uuid(),
+        versionIdB: z.uuid(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -312,15 +312,15 @@ export const chainVersionRouter = createTRPCRouter({
    * @implements PG-128 (Zep Budget UI)
    */
   getZepBudget: protectedProcedure.query(async () => {
-    const total = parseInt(process.env.ZEP_EPISODE_BUDGET ?? '1000', 10);
-    const used = parseInt(process.env.ZEP_EPISODE_USED ?? '0', 10);
+    const total = Number.parseInt(process.env.ZEP_EPISODE_BUDGET ?? '1000', 10);
+    const used = Number.parseInt(process.env.ZEP_EPISODE_USED ?? '0', 10);
     const remaining = Math.max(0, total - used);
 
-    const warningThreshold = parseInt(
+    const warningThreshold = Number.parseInt(
       process.env.ZEP_WARNING_THRESHOLD ?? String(Math.floor(total * 0.8)),
       10
     );
-    const limitThreshold = parseInt(
+    const limitThreshold = Number.parseInt(
       process.env.ZEP_LIMIT_THRESHOLD ?? String(Math.floor(total * 0.95)),
       10
     );

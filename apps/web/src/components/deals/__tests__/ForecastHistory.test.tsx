@@ -22,7 +22,7 @@ vi.mock('@intelliflow/ui', () => ({
 vi.mock('next/dynamic', () => ({
   default: (_importFn: () => Promise<{ default: React.ComponentType<unknown> }>) => {
     // For test purposes, just render a placeholder representing the chart
-    const DynamicComponent = (props: Readonly<Record<string, unknown>>) => (
+    const DynamicComponent = (props: Record<string, unknown>) => (
       <div
         data-testid="history-chart"
         data-mode={String(props.mode)}

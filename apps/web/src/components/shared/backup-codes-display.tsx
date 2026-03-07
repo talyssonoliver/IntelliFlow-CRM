@@ -139,7 +139,7 @@ export function BackupCodesDisplay({
             <h4 className="font-medium text-amber-300 text-sm">Save your backup codes</h4>
             <p className="text-xs text-amber-200/80">
               These codes are the only way to access your account if you lose your authenticator
-              device. Each code can only be used <strong>once</strong>. Store them in a secure
+              device. Each code can only be used{' '}<strong>once</strong>. Store them in a secure
               location.
             </p>
           </div>

@@ -27,7 +27,7 @@ export interface ActivityFeedFiltersProps {
   /** Current filter values */
   values?: Partial<ActivityFeedFilterValues>;
   /** Called when any filter changes */
-  onChange: (filters: Readonly<ActivityFeedFilterValues>) => void;
+  onChange: (filters: ActivityFeedFilterValues) => void;
   /** Show search input. Defaults to true. */
   showSearch?: boolean;
   /** Show source filter chips. Defaults to false. */
@@ -98,7 +98,7 @@ export function ActivityFeedFilters({
   );
 
   const toggleType = useCallback(
-    (type: Readonly<ActivityFeedType>) => {
+    (type: ActivityFeedType) => {
       const next = current.types.includes(type)
         ? current.types.filter((t) => t !== type)
         : [...current.types, type];
@@ -108,7 +108,7 @@ export function ActivityFeedFilters({
   );
 
   const toggleSource = useCallback(
-    (source: Readonly<ActivityFeedSource>) => {
+    (source: ActivityFeedSource) => {
       const next = current.sources.includes(source)
         ? current.sources.filter((s) => s !== source)
         : [...current.sources, source];
@@ -165,7 +165,11 @@ export function ActivityFeedFilters({
       )}
 
       {/* Type filter chips */}
-      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by activity type">
+      <div
+        className="flex flex-wrap gap-1.5"
+        role="group" // NOSONAR typescript:S6819 — ARIA group for filter chips; <fieldset> would require <legend> and changes layout
+        aria-label="Filter by activity type"
+      >
         {ACTIVITY_FEED_TYPES.map((type) => {
           const isActive = current.types.includes(type);
           return (
@@ -188,7 +192,11 @@ export function ActivityFeedFilters({
 
       {/* Source filter chips (optional) */}
       {showSources && (
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by source">
+        <div
+          className="flex flex-wrap gap-1.5"
+          role="group" // NOSONAR typescript:S6819 — ARIA group for filter chips; <fieldset> would require <legend> and changes layout
+          aria-label="Filter by source"
+        >
           {ACTIVITY_FEED_SOURCES.map((source) => {
             const isActive = current.sources.includes(source);
             return (

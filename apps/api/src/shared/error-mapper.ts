@@ -65,6 +65,10 @@ export function mapErrorToTRPCError(error: unknown): TRPCError {
     // Map common domain error codes
     switch (code) {
       case 'VALIDATION_ERROR':
+      case 'NOTIFICATION_SCHEDULING_ERROR':
+      case 'INVALID_REVIEW_STATE':
+      case 'REJECTION_NOTES_REQUIRED':
+      case 'NO_ACTIVE_LOCK':
         return new TRPCError({
           code: 'BAD_REQUEST',
           message: domainError.message,
@@ -107,20 +111,6 @@ export function mapErrorToTRPCError(error: unknown): TRPCError {
         });
 
       case 'NOTIFICATION_DELIVERY_ERROR':
-        return new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: domainError.message,
-        });
-
-      case 'NOTIFICATION_SCHEDULING_ERROR':
-      case 'INVALID_REVIEW_STATE':
-      case 'REJECTION_NOTES_REQUIRED':
-      case 'NO_ACTIVE_LOCK':
-        return new TRPCError({
-          code: 'BAD_REQUEST',
-          message: domainError.message,
-        });
-
       case 'PERSISTENCE_ERROR':
         return new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',

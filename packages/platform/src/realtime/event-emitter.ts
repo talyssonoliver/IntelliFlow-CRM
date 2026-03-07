@@ -9,7 +9,7 @@
  * @task IFC-150/IFC-016 Integration
  */
 
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'node:events';
 
 /**
  * Singleton EventEmitter for real-time events

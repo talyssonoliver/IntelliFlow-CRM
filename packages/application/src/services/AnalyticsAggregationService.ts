@@ -164,12 +164,12 @@ export class AnalyticsAggregationService {
 
     // Calculate YoY change for the latest month (fixed off-by-one)
     if (result.length >= 12) {
-      const latest = result[result.length - 1];
-      const yearAgo = result[result.length - 12]; // Correct index: 12 months back
-      if (yearAgo && yearAgo.value > 0) {
+      const latest = result.at(-1);
+      const yearAgo = result.at(-12); // Correct index: 12 months back
+      if (latest && yearAgo && yearAgo.value > 0) {
         latest.yoyChange =
           Math.round(((latest.value - yearAgo.value) / yearAgo.value) * 100 * 10) / 10;
-      } else {
+      } else if (latest) {
         latest.yoyChange = 0;
       }
     }
@@ -276,13 +276,7 @@ export class AnalyticsAggregationService {
       this.analyticsRepository.countOpportunitiesInRange(tenantId, dateRange),
     ]);
 
-    // closedWon is a subset tracked via revenue (count of won deals)
-    const closedWon = await this.analyticsRepository.getMonthlyRevenue(tenantId, dateRange);
-    // For funnel, we need count not revenue. Use opportunities with stage filter.
-    // Since the port doesn't have a countClosedWon method, we approximate via
-    // the deals won by month count. For export accuracy, use opportunities as proxy.
-    // Actually, getMonthlyRevenue returns revenue amount, not count.
-    // Let's count closed-won opportunities via the deals won trend method.
+    // Count closed-won opportunities via the deals won trend method.
     const dealsWon = await this.analyticsRepository.getDealsWonByMonth(
       tenantId,
       this.monthsDiff(dateRange.startDate, dateRange.endDate) + 1
@@ -443,9 +437,9 @@ export class AnalyticsAggregationService {
   ): Promise<ConversionFunnelResult> {
     const [stageData, totalLeads] = await Promise.all([
       this.analyticsRepository.getOpportunitiesByStageInRange(tenantId, dateRange),
-      includeLeads !== false
-        ? this.analyticsRepository.countLeadsInRange(tenantId, dateRange)
-        : Promise.resolve(0),
+      includeLeads === false
+        ? Promise.resolve(0)
+        : this.analyticsRepository.countLeadsInRange(tenantId, dateRange),
     ]);
 
     const stageMap = new Map(stageData.map((s) => [s.stage, s]));
@@ -605,9 +599,8 @@ export class AnalyticsAggregationService {
       );
 
       // Clamp to actual date range
-      const effectiveStart =
-        startOfMonth < dateRange.startDate ? dateRange.startDate : startOfMonth;
-      const effectiveEnd = endOfMonth > dateRange.endDate ? dateRange.endDate : endOfMonth;
+      const effectiveStart = new Date(Math.max(startOfMonth.getTime(), dateRange.startDate.getTime()));
+      const effectiveEnd = new Date(Math.min(endOfMonth.getTime(), dateRange.endDate.getTime()));
 
       const label = current.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 
@@ -710,7 +703,7 @@ export class AnalyticsAggregationService {
         return total > 0 ? Math.round((won / total) * 100 * 10) / 10 : 0;
       }
       default:
-        return this.getMetricValue(tenantId, metric as GrowthMetricType, range);
+        return this.getMetricValue(tenantId, metric, range);
     }
   }
 
@@ -719,18 +712,18 @@ export class AnalyticsAggregationService {
       if (data.length === 0) return '';
       const flat = data.map((item) => this.flattenObject(item));
       const headers = Object.keys(flat[0]);
-      const rows = flat.map((row) => headers.map((h) => String(row[h] ?? '')).join(','));
+      const rows = flat.map((row) => headers.map((h) => (row[h] as string | null | undefined) ?? '').join(','));
       return [headers.join(','), ...rows].join('\n');
     }
 
     if (typeof data === 'object' && data !== null) {
       const flat = this.flattenObject(data as Record<string, unknown>);
       const headers = Object.keys(flat);
-      const values = headers.map((h) => String(flat[h] ?? ''));
+      const values = headers.map((h) => (flat[h] as string | null | undefined) ?? '');
       return [headers.join(','), values.join(',')].join('\n');
     }
 
-    return String(data ?? '');
+    return (data as string | null | undefined) ?? '';
   }
 
   private flattenObject(obj: Record<string, unknown>, prefix = ''): Record<string, unknown> {

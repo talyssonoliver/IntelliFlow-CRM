@@ -7,9 +7,8 @@
 
 import { Queue, Worker, QueueEvents, Job, ConnectionOptions } from 'bullmq';
 import { getBullMQConnectionOptions } from './connection';
-import { QueueConfig, JobMetrics, JobEvent, QUEUE_NAMES, DEFAULT_QUEUE_CONFIGS } from './types';
+import { QueueConfig, QUEUE_NAMES, DEFAULT_QUEUE_CONFIGS } from './types';
 import {
-  calculateBackoffDelay,
   createBackoffStrategy,
   globalRetryBudget,
   BACKOFF_PRESETS,

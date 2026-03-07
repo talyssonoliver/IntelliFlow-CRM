@@ -10,6 +10,9 @@ import { Result, DomainError } from '@intelliflow/domain';
 
 // ==================== Types ====================
 
+export type OutlookImportance = 'low' | 'normal' | 'high';
+export type OutlookFlagStatus = 'notFlagged' | 'flagged' | 'complete';
+
 export interface OutlookConfig {
   clientId: string;
   clientSecret: string;
@@ -43,10 +46,10 @@ export interface OutlookMessage {
   receivedDateTime: Date;
   sentDateTime?: Date;
   hasAttachments: boolean;
-  importance: 'low' | 'normal' | 'high';
+  importance: OutlookImportance;
   isRead: boolean;
   isDraft: boolean;
-  flag: { flagStatus: 'notFlagged' | 'flagged' | 'complete' };
+  flag: { flagStatus: OutlookFlagStatus };
   categories: string[];
   parentFolderId: string;
   webLink?: string;
@@ -306,7 +309,7 @@ export interface OutlookEmailServicePort {
  * Implements email operations via Microsoft Graph API
  */
 export class OutlookAdapter implements OutlookEmailServicePort {
-  private config: OutlookConfig;
+  private readonly config: OutlookConfig;
   private readonly graphBaseUrl = 'https://graph.microsoft.com/v1.0';
   private readonly oauthBaseUrl: string;
 
@@ -943,7 +946,7 @@ export class OutlookAdapter implements OutlookEmailServicePort {
         status: latencyMs < 1000 ? 'healthy' : 'degraded',
         latencyMs,
       });
-    } catch (error) {
+    } catch (_error) {
       return Result.ok({
         status: 'unhealthy',
         latencyMs: Date.now() - start,
@@ -996,7 +999,7 @@ export class OutlookAdapter implements OutlookEmailServicePort {
       case 404:
         return Result.fail(new OutlookNotFoundError('Resource', error.message ?? 'unknown'));
       case 429: {
-        const retryAfter = parseInt(response.headers.get('Retry-After') ?? '60');
+        const retryAfter = Number.parseInt(response.headers.get('Retry-After') ?? '60');
         return Result.fail(new OutlookRateLimitError(retryAfter));
       }
       default:
@@ -1047,13 +1050,13 @@ export class OutlookAdapter implements OutlookEmailServicePort {
     const flag = (data.flag as Record<string, unknown>) ?? {};
 
     return {
-      id: String(data.id ?? ''),
-      conversationId: String(data.conversationId ?? ''),
-      subject: String(data.subject ?? ''),
-      bodyPreview: String(data.bodyPreview ?? ''),
+      id: (data.id as string | null | undefined) ?? '',
+      conversationId: (data.conversationId as string | null | undefined) ?? '',
+      subject: (data.subject as string | null | undefined) ?? '',
+      bodyPreview: (data.bodyPreview as string | null | undefined) ?? '',
       body: {
         contentType: (body.contentType ?? 'text') as 'text' | 'html',
-        content: String(body.content ?? ''),
+        content: (body.content as string | null | undefined) ?? '',
       },
       from: this.mapToEmailAddress(from),
       toRecipients: ((data.toRecipients as Array<Record<string, unknown>>) ?? []).map((r) =>
@@ -1069,8 +1072,8 @@ export class OutlookAdapter implements OutlookEmailServicePort {
             this.mapToEmailAddress(r)
           )
         : undefined,
-      receivedDateTime: new Date(String(data.receivedDateTime ?? new Date().toISOString())),
-      sentDateTime: data.sentDateTime ? new Date(String(data.sentDateTime)) : undefined,
+      receivedDateTime: new Date((data.receivedDateTime as string | null | undefined) ?? new Date().toISOString()),
+      sentDateTime: data.sentDateTime ? new Date(data.sentDateTime as string) : undefined,
       hasAttachments: Boolean(data.hasAttachments),
       importance: (data.importance ?? 'normal') as 'low' | 'normal' | 'high',
       isRead: Boolean(data.isRead),
@@ -1079,8 +1082,8 @@ export class OutlookAdapter implements OutlookEmailServicePort {
         flagStatus: (flag.flagStatus ?? 'notFlagged') as 'notFlagged' | 'flagged' | 'complete',
       },
       categories: (data.categories as string[]) ?? [],
-      parentFolderId: String(data.parentFolderId ?? ''),
-      webLink: data.webLink ? String(data.webLink) : undefined,
+      parentFolderId: (data.parentFolderId as string | null | undefined) ?? '',
+      webLink: data.webLink ? (data.webLink as string) : undefined,
     };
   }
 
@@ -1089,17 +1092,17 @@ export class OutlookAdapter implements OutlookEmailServicePort {
 
     return {
       emailAddress: {
-        name: emailAddress.name ? String(emailAddress.name) : undefined,
-        address: String(emailAddress.address ?? ''),
+        name: emailAddress.name ? (emailAddress.name as string) : undefined,
+        address: (emailAddress.address as string | null | undefined) ?? '',
       },
     };
   }
 
   private mapToFolder(data: Record<string, unknown>): OutlookFolder {
     return {
-      id: String(data.id ?? ''),
-      displayName: String(data.displayName ?? ''),
-      parentFolderId: data.parentFolderId ? String(data.parentFolderId) : undefined,
+      id: (data.id as string | null | undefined) ?? '',
+      displayName: (data.displayName as string | null | undefined) ?? '',
+      parentFolderId: data.parentFolderId ? (data.parentFolderId as string) : undefined,
       childFolderCount: Number(data.childFolderCount ?? 0),
       totalItemCount: Number(data.totalItemCount ?? 0),
       unreadItemCount: Number(data.unreadItemCount ?? 0),
@@ -1108,20 +1111,20 @@ export class OutlookAdapter implements OutlookEmailServicePort {
 
   private mapToAttachment(data: Record<string, unknown>): OutlookAttachment {
     return {
-      id: String(data.id ?? ''),
-      name: String(data.name ?? ''),
-      contentType: String(data.contentType ?? 'application/octet-stream'),
+      id: (data.id as string | null | undefined) ?? '',
+      name: (data.name as string | null | undefined) ?? '',
+      contentType: (data.contentType as string | null | undefined) ?? 'application/octet-stream',
       size: Number(data.size ?? 0),
       isInline: Boolean(data.isInline),
-      contentId: data.contentId ? String(data.contentId) : undefined,
-      contentBytes: data.contentBytes ? String(data.contentBytes) : undefined,
+      contentId: data.contentId ? (data.contentId as string) : undefined,
+      contentBytes: data.contentBytes ? (data.contentBytes as string) : undefined,
     };
   }
 
   private mapToCategory(data: Record<string, unknown>): OutlookCategory {
     return {
-      id: String(data.id ?? ''),
-      displayName: String(data.displayName ?? ''),
+      id: (data.id as string | null | undefined) ?? '',
+      displayName: (data.displayName as string | null | undefined) ?? '',
       color: (data.color ?? 'none') as OutlookCategory['color'],
     };
   }

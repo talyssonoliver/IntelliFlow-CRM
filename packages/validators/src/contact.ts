@@ -40,7 +40,7 @@ const baseContactFieldsSchema = z.object({
   city: z.string().max(100).optional(),
   zipCode: z.string().max(20).optional(),
   company: z.string().max(200).optional(),
-  linkedInUrl: z.string().url().max(500).optional().or(z.literal('')),
+  linkedInUrl: z.string().check(z.url()).max(500).optional().or(z.literal('')),
   contactType: contactTypeSchema.optional(),
   tags: z.array(z.string().max(50)).max(20).optional(),
   contactNotes: z.string().max(5000).optional(),

@@ -84,7 +84,7 @@ vi.mock('@intelliflow/ui', () => ({
   TableRowActions: ({
     quickActions,
     dropdownActions,
-  }: {
+  }: Readonly<{
     quickActions?: Array<{ icon: string; label: string; onClick: () => void }>;
     dropdownActions?: Array<{
       icon: string;
@@ -94,7 +94,7 @@ vi.mock('@intelliflow/ui', () => ({
       variant?: string;
       id?: string;
     }>;
-  }) => (
+  }>) => (
     <div data-testid="row-actions">
       {quickActions?.map((action) => (
         <button key={action.label} onClick={action.onClick}>

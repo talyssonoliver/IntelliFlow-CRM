@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, Badge, Button } from '@intelliflow/ui';
 import { generateApiKey } from '@/lib/developer/api-key-generator';
 import { DEMO_APPS, type DeveloperApp } from '@/lib/developer/demo-data';
 
-export type { DeveloperApp };
+export type { DeveloperApp } from '@/lib/developer/demo-data';
 
 function StatusBadge({ status }: Readonly<{ status: DeveloperApp['status'] }>) {
   switch (status) {

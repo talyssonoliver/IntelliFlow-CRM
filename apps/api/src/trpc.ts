@@ -14,7 +14,6 @@
 import { initTRPC, TRPCError } from '@trpc/server';
 import { Context } from './context';
 import { ZodError } from 'zod';
-import { tenantContextMiddleware } from './security/tenant-context';
 import { tracingMiddleware } from './tracing/middleware';
 import { createAuthenticatedRateLimitMiddleware } from './middleware/rate-limit';
 
@@ -132,7 +131,7 @@ export const loggedProcedure = publicProcedure;
  * Throws FORBIDDEN error if user is not an admin.
  */
 const isAdmin = t.middleware(({ ctx, next }) => {
-  if (!ctx.user || ctx.user.role !== 'ADMIN') {
+  if (ctx.user?.role !== 'ADMIN') {
     throw new TRPCError({
       code: 'FORBIDDEN',
       message: 'Admin access required. This resource is restricted to administrators.',

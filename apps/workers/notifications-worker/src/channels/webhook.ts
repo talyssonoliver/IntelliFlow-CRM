@@ -9,7 +9,7 @@
  * @artifact apps/workers/notifications-worker/src/channels/webhook.ts
  */
 
-import { createHmac, randomBytes } from 'crypto';
+import { createHmac, randomBytes } from 'node:crypto';
 import pino from 'pino';
 import { z } from 'zod';
 

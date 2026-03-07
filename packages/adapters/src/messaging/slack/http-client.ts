@@ -32,7 +32,7 @@ export async function makeRequest(
     const queryParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined) {
-        queryParams.set(key, String(value));
+        queryParams.set(key, value as string);
       }
     });
     url += `?${queryParams}`;

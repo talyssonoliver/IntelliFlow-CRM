@@ -229,8 +229,8 @@ export type FollowupOutput = z.infer<typeof followupOutputSchema>;
  * Defines the input for lead qualification analysis
  */
 export const qualificationInputSchema = z.object({
-  leadId: z.string().uuid(),
-  email: z.string().email(),
+  leadId: z.uuid(),
+  email: z.email(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   company: z.string().optional(),
@@ -238,7 +238,7 @@ export const qualificationInputSchema = z.object({
   phone: z.string().optional(),
   industry: z.string().optional(),
   companySize: z.string().optional(),
-  website: z.string().url().optional(),
+  website: z.url().optional(),
   source: z.string().optional(),
   notes: z.string().optional(),
   interactionHistory: z
@@ -259,9 +259,9 @@ export type QualificationInput = z.infer<typeof qualificationInputSchema>;
  * Defines the input for AI email generation
  */
 export const emailWriterInputSchema = z.object({
-  leadId: z.string().uuid(),
+  leadId: z.uuid(),
   recipientName: z.string(),
-  recipientEmail: z.string().email(),
+  recipientEmail: z.email(),
   recipientCompany: z.string().optional(),
   recipientTitle: z.string().optional(),
   senderName: z.string(),
@@ -289,9 +289,9 @@ export type EmailWriterInput = z.infer<typeof emailWriterInputSchema>;
  * Defines the input for follow-up recommendations
  */
 export const followupInputSchema = z.object({
-  leadId: z.string().uuid(),
+  leadId: z.uuid(),
   leadName: z.string(),
-  leadEmail: z.string().email(),
+  leadEmail: z.email(),
   leadCompany: z.string().optional(),
   currentStatus: z.string(),
   score: z.number().min(0).max(100),
@@ -382,8 +382,8 @@ export type ChurnRiskOutput = z.infer<typeof churnRiskOutputSchema>;
  */
 export const churnRiskInputSchema = z.object({
   entityType: z.enum(['lead', 'contact', 'opportunity', 'account']),
-  entityId: z.string().uuid(),
-  tenantId: z.string().uuid(),
+  entityId: z.uuid(),
+  tenantId: z.uuid(),
 
   // Engagement metrics
   daysSinceLastLogin: z.number().optional(),
@@ -435,7 +435,7 @@ export const nbaRecommendationSchema = z.object({
   title: z.string(),
   description: z.string(),
   rationale: z.string(),
-  deadline: z.string().datetime().optional(),
+  deadline: z.iso.datetime().optional(),
   confidence: confidenceSchema,
   successProbability: z.number().min(0).max(1).optional(),
 });
@@ -454,7 +454,7 @@ export const nextBestActionOutputSchema = z.object({
 
   // Metadata
   confidence: confidenceSchema,
-  analysisTimestamp: z.string().datetime(),
+  analysisTimestamp: z.iso.datetime(),
   modelVersion: z.string(),
 });
 export type NextBestActionOutput = z.infer<typeof nextBestActionOutputSchema>;
@@ -495,7 +495,7 @@ export const aiInsightsSummarySchema = z.object({
     score: z.number().min(0).max(100),
     level: churnRiskLevelSchema,
     trend: z.enum(['IMPROVING', 'STABLE', 'DECLINING']).optional(),
-    lastAssessedAt: z.string().datetime().optional(),
+    lastAssessedAt: z.iso.datetime().optional(),
   }),
 
   // Next best action summary
@@ -519,6 +519,6 @@ export const aiInsightsSummarySchema = z.object({
 
   // Metadata
   confidence: confidenceSchema,
-  lastUpdatedAt: z.string().datetime(),
+  lastUpdatedAt: z.iso.datetime(),
 });
 export type AIInsightsSummary = z.infer<typeof aiInsightsSummarySchema>;

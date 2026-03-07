@@ -133,7 +133,7 @@ export function AccountOpportunitiesList({ accountId }: Readonly<AccountOpportun
               </p>
             </div>
             <Badge variant="outline" className="text-xs shrink-0">
-              {opp.stage.replaceAll(/_/g, ' ')}
+              {opp.stage.replaceAll('_', ' ')}
             </Badge>
           </button>
         ))}

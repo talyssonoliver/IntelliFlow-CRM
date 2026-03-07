@@ -20,9 +20,9 @@ interface ContactCardContact {
 
 export interface ContactCardProps {
   contact: ContactCardContact;
-  onClick?: (contact: Readonly<ContactCardContact>) => void;
-  onCall?: (contact: Readonly<ContactCardContact>) => void;
-  onEmail?: (contact: Readonly<ContactCardContact>) => void;
+  onClick?: (contact: ContactCardContact) => void;
+  onCall?: (contact: ContactCardContact) => void;
+  onEmail?: (contact: ContactCardContact) => void;
   compact?: boolean;
 }
 

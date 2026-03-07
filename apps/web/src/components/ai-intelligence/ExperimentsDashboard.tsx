@@ -111,7 +111,7 @@ export function ExperimentsDashboard() {
   const statusFilter = statusChip === 'all' ? null : statusChip;
 
   // Filter experiments
-  const filtered = experiments.filter((exp: Readonly<ExperimentSummary>) => {
+  const filtered = experiments.filter((exp: ExperimentSummary) => {
     if (statusFilter && exp.status !== statusFilter) return false;
     if (searchValue) {
       const q = searchValue.toLowerCase();
@@ -309,7 +309,7 @@ export function ExperimentsDashboard() {
 
       {/* Experiment Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        {paginated.map((exp: Readonly<ExperimentSummary>) => {
+        {paginated.map((exp: ExperimentSummary) => {
           const actions = getExperimentActions(exp.status);
           const isExpanded = expandedId === exp.id;
 
@@ -356,7 +356,7 @@ export function ExperimentsDashboard() {
                     <span>{exp.progressPercent}%</span>
                   </div>
                   <div
-                    role="progressbar"
+                    role="progressbar" // NOSONAR typescript:S6819 — custom styled progress with inner fill child; <progress> cannot contain child elements
                     aria-valuenow={exp.progressPercent}
                     aria-valuemin={0}
                     aria-valuemax={100}

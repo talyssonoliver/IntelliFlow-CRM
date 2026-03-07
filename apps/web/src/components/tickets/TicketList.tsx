@@ -51,7 +51,7 @@ export interface TicketListProps {
   isLoading: boolean;
   stats: TicketStats;
   filterOptions: TicketFilterOptions;
-  onRowClick: (ticket: Readonly<TicketListItem>) => void;
+  onRowClick: (ticket: TicketListItem) => void;
   onBulkAction: (
     action: BulkActionType,
     ticketIds: string[],
@@ -181,6 +181,148 @@ function PriorityBadge({ priority }: Readonly<{ priority: string }>) {
 }
 
 // =============================================================================
+// Column sub-components (module-level — fixes S6478)
+// =============================================================================
+
+function TicketNumberCell({ ticket }: Readonly<{ ticket: TicketListItem }>) {
+  return (
+    <div>
+      <span className="font-bold text-primary text-sm">#{ticket.ticketNumber}</span>
+      <p className="text-sm font-medium text-slate-900 dark:text-white mt-0.5">{ticket.subject}</p>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{ticket.contactName}</p>
+    </div>
+  );
+}
+
+function TicketSlaTimerCell({ ticket }: Readonly<{ ticket: TicketListItem }>) {
+  return (
+    <SLAIndicator
+      slaStatus={ticket.slaStatus}
+      slaTimeRemaining={ticket.slaTimeRemaining}
+      ticketStatus={ticket.status}
+      size="md"
+    />
+  );
+}
+
+function TicketSlaStatusCell({ ticket }: Readonly<{ ticket: TicketListItem }>) {
+  return (
+    <SLAIndicator
+      slaStatus={ticket.slaStatus}
+      slaTimeRemaining={ticket.slaTimeRemaining}
+      ticketStatus={ticket.status}
+      size="sm"
+      showTimer={false}
+    />
+  );
+}
+
+function TicketAssigneeCell({ ticket }: Readonly<{ ticket: TicketListItem }>) {
+  if (!ticket.assignee) {
+    return <span className="text-sm text-slate-500 dark:text-slate-400 italic">Unassigned</span>;
+  }
+  const avatarValue = ticket.assigneeAvatar?.trim() ?? null;
+  return (
+    <div className="flex items-center gap-2">
+      <AppAvatar
+        name={ticket.assignee}
+        src={avatarValue}
+        className="w-7 h-7"
+        fallbackClassName="text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700"
+      />
+      <span className="text-sm text-slate-900 dark:text-white">{ticket.assignee}</span>
+    </div>
+  );
+}
+
+function TicketUpdatedCell({ ticket }: Readonly<{ ticket: TicketListItem }>) {
+  return (
+    <span className="text-sm text-slate-500 dark:text-slate-400">{ticket.updatedAt}</span>
+  );
+}
+
+interface TicketActionHandlers {
+  onSingleResolve: (ticket: TicketListItem) => void;
+  onSingleEscalate: (ticket: TicketListItem) => void;
+  onSingleAssign: (ticket: TicketListItem) => void;
+  onSingleChangePriority: (ticket: TicketListItem) => void;
+  onViewHistory: (ticket: TicketListItem) => void;
+  onSingleDelete: (ticket: TicketListItem) => void;
+}
+
+function TicketActionsCell({
+  ticket,
+  handlers,
+}: Readonly<{ ticket: TicketListItem; handlers: TicketActionHandlers }>) {
+  return (
+    <TableRowActions
+      quickActions={[
+        {
+          icon: 'check_circle',
+          label: 'Resolve',
+          variant: 'success',
+          onClick: () => handlers.onSingleResolve(ticket),
+        },
+        {
+          icon: 'publish',
+          label: 'Escalate',
+          variant: 'danger',
+          onClick: () => handlers.onSingleEscalate(ticket),
+        },
+      ]}
+      dropdownActions={[
+        { icon: 'person_add', label: 'Assign to...', onClick: () => handlers.onSingleAssign(ticket) },
+        { icon: 'flag', label: 'Change Priority', onClick: () => handlers.onSingleChangePriority(ticket) },
+        { icon: 'history', label: 'View History', onClick: () => handlers.onViewHistory(ticket) },
+        { id: 'sep-1', icon: '', label: '', onClick: () => {}, separator: true },
+        { icon: 'delete', label: 'Delete', variant: 'danger', onClick: () => handlers.onSingleDelete(ticket) },
+      ]}
+    />
+  );
+}
+
+/** Column factory — defined at module level (not inside the component) to satisfy S6478. */
+function buildTicketColumns(handlers: TicketActionHandlers): ColumnDef<TicketListItem>[] {
+  return [
+    {
+      accessorKey: 'ticketNumber',
+      header: 'Ticket',
+      cell: ({ row }) => <TicketNumberCell ticket={row.original} />,
+    },
+    {
+      id: 'slaTimer',
+      header: 'SLA Timer',
+      cell: ({ row }) => <TicketSlaTimerCell ticket={row.original} />,
+    },
+    {
+      accessorKey: 'slaStatus',
+      header: 'SLA Status',
+      cell: ({ row }) => <TicketSlaStatusCell ticket={row.original} />,
+    },
+    {
+      accessorKey: 'priority',
+      header: 'Priority',
+      cell: ({ row }) => <PriorityBadge priority={row.original.priority} />,
+    },
+    {
+      accessorKey: 'assignee',
+      header: 'Assignee',
+      cell: ({ row }) => <TicketAssigneeCell ticket={row.original} />,
+    },
+    {
+      accessorKey: 'updatedAt',
+      header: 'Updated',
+      cell: ({ row }) => <TicketUpdatedCell ticket={row.original} />,
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => <TicketActionsCell ticket={row.original} handlers={handlers} />,
+    },
+  ];
+}
+
+// =============================================================================
 // Main Component
 // =============================================================================
 
@@ -216,177 +358,59 @@ export function TicketList({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // =============================================================================
-  // Column Definitions
+  // Single Action Handlers (defined before columns)
   // =============================================================================
 
-  const columns: ColumnDef<TicketListItem>[] = useMemo(
-    () => [
-      {
-        accessorKey: 'ticketNumber',
-        header: 'Ticket',
-        cell: ({ row }) => {
-          const ticket = row.original;
-          return (
-            <div>
-              <span className="font-bold text-primary text-sm">#{ticket.ticketNumber}</span>
-              <p className="text-sm font-medium text-slate-900 dark:text-white mt-0.5">
-                {ticket.subject}
-              </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                {ticket.contactName}
-              </p>
-            </div>
-          );
-        },
-      },
-      {
-        id: 'slaTimer',
-        header: 'SLA Timer',
-        cell: ({ row }) => (
-          <SLAIndicator
-            slaStatus={row.original.slaStatus}
-            slaTimeRemaining={row.original.slaTimeRemaining}
-            ticketStatus={row.original.status}
-            size="md"
-          />
-        ),
-      },
-      {
-        accessorKey: 'slaStatus',
-        header: 'SLA Status',
-        cell: ({ row }) => (
-          <SLAIndicator
-            slaStatus={row.original.slaStatus}
-            slaTimeRemaining={row.original.slaTimeRemaining}
-            ticketStatus={row.original.status}
-            size="sm"
-            showTimer={false}
-          />
-        ),
-      },
-      {
-        accessorKey: 'priority',
-        header: 'Priority',
-        cell: ({ row }) => <PriorityBadge priority={row.original.priority} />,
-      },
-      {
-        accessorKey: 'assignee',
-        header: 'Assignee',
-        cell: ({ row }) => {
-          const ticket = row.original;
-          if (!ticket.assignee) {
-            return (
-              <span className="text-sm text-slate-500 dark:text-slate-400 italic">Unassigned</span>
-            );
-          }
-
-          const avatarValue = ticket.assigneeAvatar?.trim() ?? null;
-
-          return (
-            <div className="flex items-center gap-2">
-              <AppAvatar
-                name={ticket.assignee}
-                src={avatarValue}
-                className="w-7 h-7"
-                fallbackClassName="text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700"
-              />
-              <span className="text-sm text-slate-900 dark:text-white">{ticket.assignee}</span>
-            </div>
-          );
-        },
-      },
-      {
-        accessorKey: 'updatedAt',
-        header: 'Updated',
-        cell: ({ row }) => (
-          <span className="text-sm text-slate-500 dark:text-slate-400">
-            {row.original.updatedAt}
-          </span>
-        ),
-      },
-      {
-        id: 'actions',
-        header: 'Actions',
-        cell: ({ row }) => {
-          const ticket = row.original;
-          return (
-            <TableRowActions
-              quickActions={[
-                {
-                  icon: 'check_circle',
-                  label: 'Resolve',
-                  variant: 'success',
-                  onClick: () => handleSingleResolve(ticket),
-                },
-                {
-                  icon: 'publish',
-                  label: 'Escalate',
-                  variant: 'danger',
-                  onClick: () => handleSingleEscalate(ticket),
-                },
-              ]}
-              dropdownActions={[
-                {
-                  icon: 'person_add',
-                  label: 'Assign to...',
-                  onClick: () => handleSingleAssign(ticket),
-                },
-                {
-                  icon: 'flag',
-                  label: 'Change Priority',
-                  onClick: () => handleSingleChangePriority(ticket),
-                },
-                {
-                  icon: 'history',
-                  label: 'View History',
-                  onClick: () => handleViewHistory(ticket),
-                },
-                { id: 'sep-1', icon: '', label: '', onClick: () => {}, separator: true },
-                {
-                  icon: 'delete',
-                  label: 'Delete',
-                  variant: 'danger',
-                  onClick: () => handleSingleDelete(ticket),
-                },
-              ]}
-            />
-          );
-        },
-      },
-    ],
-    []
-  );
-
-  // =============================================================================
-  // Single Action Handlers
-  // =============================================================================
-
-  const handleSingleResolve = useCallback((ticket: Readonly<TicketListItem>) => {
+  const handleSingleResolve = useCallback((ticket: TicketListItem) => {
     selectedTicketsRef.current = [ticket];
     setShowResolveDialog(true);
   }, []);
 
-  const handleSingleEscalate = useCallback((ticket: Readonly<TicketListItem>) => {
+  const handleSingleEscalate = useCallback((ticket: TicketListItem) => {
     selectedTicketsRef.current = [ticket];
     setShowEscalateDialog(true);
   }, []);
 
-  const handleSingleAssign = useCallback((ticket: Readonly<TicketListItem>) => {
+  const handleSingleAssign = useCallback((ticket: TicketListItem) => {
     selectedTicketsRef.current = [ticket];
     setShowAssignDialog(true);
   }, []);
 
-  const handleSingleChangePriority = useCallback((ticket: Readonly<TicketListItem>) => {
+  const handleSingleChangePriority = useCallback((ticket: TicketListItem) => {
     console.log('Change priority:', ticket.id);
   }, []);
 
-  const handleViewHistory = useCallback((ticket: Readonly<TicketListItem>) => {
+  const handleViewHistory = useCallback((ticket: TicketListItem) => {
     console.log('View history:', ticket.id);
   }, []);
 
-  const handleSingleDelete = useCallback((ticket: Readonly<TicketListItem>) => {
+  const handleSingleDelete = useCallback((ticket: TicketListItem) => {
     console.log('Delete ticket:', ticket.id);
   }, []);
+
+  // =============================================================================
+  // Column Definitions (via module-level factory to satisfy S6478)
+  // =============================================================================
+
+  const columns = useMemo(
+    () =>
+      buildTicketColumns({
+        onSingleResolve: handleSingleResolve,
+        onSingleEscalate: handleSingleEscalate,
+        onSingleAssign: handleSingleAssign,
+        onSingleChangePriority: handleSingleChangePriority,
+        onViewHistory: handleViewHistory,
+        onSingleDelete: handleSingleDelete,
+      }),
+    [
+      handleSingleResolve,
+      handleSingleEscalate,
+      handleSingleAssign,
+      handleSingleChangePriority,
+      handleViewHistory,
+      handleSingleDelete,
+    ]
+  );
 
   // =============================================================================
   // Bulk Action Handlers

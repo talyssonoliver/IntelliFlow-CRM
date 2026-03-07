@@ -122,14 +122,14 @@ vi.mock('@intelliflow/ui', () => ({
   SheetDescription: ({ children }: Readonly<{ children: React.ReactNode }>) => <p>{children}</p>,
   RadioGroup: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
   RadioGroupItem: () => <input type="radio" />,
-  Input: (props: Readonly<Record<string, unknown>>) => (
+  Input: (props: Record<string, unknown>) => (
     <input {...(props as React.InputHTMLAttributes<HTMLInputElement>)} />
   ),
   Label: ({ children }: Readonly<{ children: React.ReactNode }>) => <label>{children}</label>,
 }));
 
 vi.mock('@/components/insights/InsightCard', () => ({
-  InsightCard: ({ insight }: { insight: { title: string } }) => (
+  InsightCard: ({ insight }: Readonly<{ insight: { title: string } }>) => (
     <div data-testid="insight-card">{insight.title}</div>
   ),
 }));

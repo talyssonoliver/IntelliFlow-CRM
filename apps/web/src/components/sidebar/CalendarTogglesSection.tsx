@@ -95,7 +95,11 @@ export function CalendarTogglesSection({ isExpanded }: Readonly<CalendarTogglesS
           </Popover>
         </div>
       )}
-      <div className="flex flex-col gap-0.5" role="group" aria-label="My Calendars">
+      <div
+        className="flex flex-col gap-0.5"
+        role="group" // NOSONAR typescript:S6819 — ARIA group for calendar toggles; <fieldset> would require <legend> and changes layout
+        aria-label="My Calendars"
+      >
         {calendars.map((cal) => (
           <div
             key={cal.id}
@@ -108,7 +112,7 @@ export function CalendarTogglesSection({ isExpanded }: Readonly<CalendarTogglesS
             <button
               onClick={() => toggle(cal.id)}
               className="flex items-center gap-3 flex-1 min-w-0"
-              role="checkbox"
+              role="checkbox" // NOSONAR typescript:S6819 — styled button acts as checkbox toggle; <input type="checkbox"> cannot contain icon/label children
               aria-checked={cal.checked}
               aria-label={cal.label}
             >

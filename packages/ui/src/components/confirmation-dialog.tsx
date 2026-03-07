@@ -120,7 +120,7 @@ export function ConfirmationDialog({
               <>
                 <span className="material-symbols-outlined text-lg animate-spin mr-2">
                   progress_activity
-                </span>
+                </span>{' '}
                 Processing...
               </>
             ) : (

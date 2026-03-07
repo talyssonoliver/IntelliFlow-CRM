@@ -89,6 +89,21 @@ export const taskListResponseSchema = z.object({
 
 export type TaskListResponse = z.infer<typeof taskListResponseSchema>;
 
+// Start Task Schema
+export const startTaskSchema = z.object({
+  taskId: idSchema,
+});
+
+export type StartTaskInput = z.infer<typeof startTaskSchema>;
+
+// Cancel Task Schema
+export const cancelTaskSchema = z.object({
+  taskId: idSchema,
+  reason: z.string().min(5).max(1000),
+});
+
+export type CancelTaskInput = z.infer<typeof cancelTaskSchema>;
+
 // Complete Task Schema
 export const completeTaskSchema = z.object({
   taskId: idSchema,

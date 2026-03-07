@@ -134,7 +134,7 @@ export class OpportunityService {
     // Persist
     try {
       await this.opportunityRepository.save(opportunity);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save opportunity'));
     }
 
@@ -173,7 +173,7 @@ export class OpportunityService {
     let filtered = opportunities;
 
     if (params.stage && params.stage.length > 0) {
-      filtered = filtered.filter((o) => params.stage!.includes(o.stage as OpportunityStage));
+      filtered = filtered.filter((o) => params.stage!.includes(o.stage));
     }
 
     if (params.accountId) {
@@ -273,6 +273,48 @@ export class OpportunityService {
   }
 
   /**
+   * Validate optional accountId and contactId references before updating.
+   * Returns the first validation error found, or null if all valid.
+   */
+  private async validateForeignKeys(data: {
+    accountId?: string;
+    contactId?: string | null;
+  }): Promise<DomainError | null> {
+    if (data.accountId !== undefined) {
+      const accountError = await this.validateAccountId(data.accountId);
+      if (accountError) return accountError;
+    }
+    if (data.contactId !== undefined && data.contactId !== null) {
+      const contactError = await this.validateContactId(data.contactId);
+      if (contactError) return contactError;
+    }
+    return null;
+  }
+
+  /**
+   * Apply all scalar field updates to the opportunity domain entity.
+   * Returns the first domain error encountered, or null if all updates succeed.
+   */
+  private applyScalarUpdates(
+    opportunity: Opportunity,
+    data: { value?: number; probability?: number; stage?: OpportunityStage; expectedCloseDate?: Date | null },
+    updatedBy: string
+  ): DomainError | null {
+    const valueError = this.applyValueUpdate(opportunity, data.value, updatedBy);
+    if (valueError) return valueError;
+
+    const probError = this.applyProbabilityUpdate(opportunity, data.probability, updatedBy);
+    if (probError) return probError;
+
+    if (data.stage !== undefined) {
+      const stageError = this.applyStageChange(opportunity, data.stage, updatedBy);
+      if (stageError) return stageError;
+    }
+
+    return this.applyExpectedCloseDateUpdate(opportunity, data.expectedCloseDate, updatedBy);
+  }
+
+  /**
    * Update opportunity with validation
    */
   async updateOpportunity(
@@ -289,39 +331,18 @@ export class OpportunityService {
     updatedBy: string
   ): Promise<Result<Opportunity, DomainError>> {
     const oppIdResult = OpportunityId.create(opportunityId);
-    if (oppIdResult.isFailure) {
-      return Result.fail(oppIdResult.error);
-    }
+    if (oppIdResult.isFailure) return Result.fail(oppIdResult.error);
 
     const opportunity = await this.opportunityRepository.findById(oppIdResult.value);
     if (!opportunity) {
       return Result.fail(new NotFoundError(`Opportunity not found: ${opportunityId}`));
     }
 
-    if (data.accountId !== undefined) {
-      const accountError = await this.validateAccountId(data.accountId);
-      if (accountError) return Result.fail(accountError);
-    }
+    const fkError = await this.validateForeignKeys(data);
+    if (fkError) return Result.fail(fkError);
 
-    if (data.contactId !== undefined && data.contactId !== null) {
-      const contactError = await this.validateContactId(data.contactId);
-      if (contactError) return Result.fail(contactError);
-    }
-
-    // Apply scalar updates using extracted helpers
-    const valueError = this.applyValueUpdate(opportunity, data.value, updatedBy);
-    if (valueError) return Result.fail(valueError);
-
-    const probError = this.applyProbabilityUpdate(opportunity, data.probability, updatedBy);
-    if (probError) return Result.fail(probError);
-
-    if (data.stage !== undefined) {
-      const stageError = this.applyStageChange(opportunity, data.stage, updatedBy);
-      if (stageError) return Result.fail(stageError);
-    }
-
-    const dateError = this.applyExpectedCloseDateUpdate(opportunity, data.expectedCloseDate, updatedBy);
-    if (dateError) return Result.fail(dateError);
+    const updateError = this.applyScalarUpdates(opportunity, data, updatedBy);
+    if (updateError) return Result.fail(updateError);
 
     // Name update - domain entity may need a method for this
     // For now, we assume it's handled at persistence layer
@@ -329,7 +350,7 @@ export class OpportunityService {
 
     try {
       await this.opportunityRepository.save(opportunity);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save opportunity'));
     }
 
@@ -401,7 +422,7 @@ export class OpportunityService {
 
     try {
       await this.opportunityRepository.save(opportunity);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save opportunity'));
     }
 
@@ -435,7 +456,7 @@ export class OpportunityService {
 
     try {
       await this.opportunityRepository.save(opportunity);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save opportunity'));
     }
 
@@ -485,7 +506,7 @@ export class OpportunityService {
 
     try {
       await this.opportunityRepository.save(opportunity);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save opportunity'));
     }
 
@@ -524,7 +545,7 @@ export class OpportunityService {
 
     try {
       await this.opportunityRepository.save(opportunity);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save opportunity'));
     }
 
@@ -566,7 +587,7 @@ export class OpportunityService {
 
     try {
       await this.opportunityRepository.save(opportunity);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save opportunity'));
     }
 
@@ -605,7 +626,7 @@ export class OpportunityService {
 
     try {
       await this.opportunityRepository.save(opportunity);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save opportunity'));
     }
 
@@ -639,7 +660,7 @@ export class OpportunityService {
 
     try {
       await this.opportunityRepository.save(opportunity);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save opportunity'));
     }
 
@@ -677,7 +698,7 @@ export class OpportunityService {
     let closingThisQuarter = 0;
 
     activeOpportunities.forEach((opp) => {
-      const stage = opp.stage as OpportunityStage;
+      const stage = opp.stage;
       byStage[stage].count++;
       byStage[stage].totalValue += opp.value.amount;
       byStage[stage].weightedValue += opp.weightedValue.amount;
@@ -787,7 +808,7 @@ export class OpportunityService {
 
     try {
       await this.opportunityRepository.delete(oppIdResult.value);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to delete opportunity'));
     }
 

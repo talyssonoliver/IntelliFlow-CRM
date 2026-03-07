@@ -13,6 +13,169 @@ import type {
 } from './types';
 
 // =============================================================================
+// Sub-components and column factory (module-level — fixes S6478)
+// =============================================================================
+
+function DocSelectAllHeader({
+  selectedCount,
+  totalCount,
+  onToggle,
+}: Readonly<{ selectedCount: number; totalCount: number; onToggle: () => void }>) {
+  return (
+    <input
+      type="checkbox"
+      checked={selectedCount === totalCount && totalCount > 0}
+      onChange={onToggle}
+      aria-label="Select all documents"
+    />
+  );
+}
+
+function DocSelectCell({
+  id,
+  title,
+  isChecked,
+  onToggle,
+}: Readonly<{ id: string; title: string; isChecked: boolean; onToggle: (id: string) => void }>) {
+  return (
+    <input
+      type="checkbox"
+      checked={isChecked}
+      onChange={(e) => {
+        e.stopPropagation();
+        onToggle(id);
+      }}
+      aria-label={`Select ${title}`}
+    />
+  );
+}
+
+function DocSortableHeader({
+  label,
+  field,
+  sortField,
+  sortDirection,
+  onSort,
+}: Readonly<{
+  label: string;
+  field: string;
+  sortField: string;
+  sortDirection: 'asc' | 'desc';
+  onSort: (field: string) => void;
+}>) {
+  return (
+    <button onClick={() => onSort(field)} className="flex items-center gap-1">
+      {label}
+      {sortField === field && <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>}
+    </button>
+  );
+}
+
+function DocNameCell({ doc }: Readonly<{ doc: DocumentRecord }>) {
+  const iconName = getMimeTypeIcon(doc.mimeType ?? 'application/octet-stream');
+  return (
+    <div className="flex items-center gap-3">
+      <div className="p-2 rounded bg-slate-100 dark:bg-slate-700">
+        <span className="material-symbols-outlined text-[20px] text-primary">{iconName}</span>
+      </div>
+      <div>
+        <p className="font-medium text-slate-900 dark:text-white">{doc.metadata.title}</p>
+        {doc.metadata.description && (
+          <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-1">
+            {doc.metadata.description}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Column factory — defined at module level (not inside the component) to satisfy S6478. */
+function buildDocumentColumns(
+  selectedIds: Set<string>,
+  paginatedDocuments: DocumentRecord[],
+  toggleSelectAll: () => void,
+  toggleSelection: (id: string) => void,
+  handleSort: (field: string) => void,
+  sortField: string,
+  sortDirection: 'asc' | 'desc'
+): ColumnDef<DocumentRecord>[] {
+  return [
+    {
+      id: 'select',
+      header: () => (
+        <DocSelectAllHeader
+          selectedCount={selectedIds.size}
+          totalCount={paginatedDocuments.length}
+          onToggle={toggleSelectAll}
+        />
+      ),
+      cell: ({ row }) => (
+        <DocSelectCell
+          id={row.original.id}
+          title={row.original.metadata.title}
+          isChecked={selectedIds.has(row.original.id)}
+          onToggle={toggleSelection}
+        />
+      ),
+      enableSorting: false,
+    },
+    {
+      accessorKey: 'metadata.title',
+      header: () => (
+        <DocSortableHeader
+          label="Name"
+          field="name"
+          sortField={sortField}
+          sortDirection={sortDirection}
+          onSort={handleSort}
+        />
+      ),
+      cell: ({ row }) => <DocNameCell doc={row.original} />,
+    },
+    {
+      accessorKey: 'status',
+      header: () => (
+        <DocSortableHeader
+          label="Status"
+          field="status"
+          sortField={sortField}
+          sortDirection={sortDirection}
+          onSort={handleSort}
+        />
+      ),
+      cell: ({ row }) => <DocumentStatusBadge status={row.original.status} />,
+    },
+    {
+      accessorKey: 'sizeBytes',
+      header: () => (
+        <DocSortableHeader
+          label="Size"
+          field="size"
+          sortField={sortField}
+          sortDirection={sortDirection}
+          onSort={handleSort}
+        />
+      ),
+      cell: ({ row }) => formatFileSize(Number(row.original.sizeBytes) || 0),
+    },
+    {
+      accessorKey: 'createdAt',
+      header: () => (
+        <DocSortableHeader
+          label="Date"
+          field="date"
+          sortField={sortField}
+          sortDirection={sortDirection}
+          onSort={handleSort}
+        />
+      ),
+      cell: ({ row }) => formatDate(row.original.createdAt),
+    },
+  ];
+}
+
+// =============================================================================
 // DocumentStatusBadge Sub-Component
 // =============================================================================
 
@@ -51,8 +214,8 @@ export function DocumentList({
   const [confirmAction, setConfirmAction] = useState<{ action: BulkAction; ids: string[] } | null>(
     null
   );
-  const [documents] = useState<DocumentRecord[]>(initialDocuments ?? []);
-  const [isLoading] = useState(false);
+  const [documents, _setDocuments] = useState<DocumentRecord[]>(initialDocuments ?? []);
+  const [isLoading, _setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // ─── Client-Side Filtering ────────────────────────────────────────────────
@@ -136,7 +299,7 @@ export function DocumentList({
   // ─── Bulk Actions ─────────────────────────────────────────────────────────
 
   const handleBulkAction = useCallback(
-    (action: Readonly<BulkAction>) => {
+    (action: BulkAction) => {
       const ids = Array.from(selectedIds);
       if (ids.length === 0) return;
       setConfirmAction({ action, ids });
@@ -169,95 +332,20 @@ export function DocumentList({
   );
 
   // ─── Column Definitions ───────────────────────────────────────────────────
+  // Columns are built by a module-level factory to avoid S6478 (JSX-returning
+  // functions defined inside a React component). useMemo caches the result.
 
-  const columns: ColumnDef<DocumentRecord>[] = useMemo(
-    () => [
-      {
-        id: 'select',
-        header: () => (
-          <input
-            type="checkbox"
-            checked={
-              selectedIds.size === paginatedDocuments.length && paginatedDocuments.length > 0
-            }
-            onChange={toggleSelectAll}
-            aria-label="Select all documents"
-          />
-        ),
-        cell: ({ row }) => (
-          <input
-            type="checkbox"
-            checked={selectedIds.has(row.original.id)}
-            onChange={(e) => {
-              e.stopPropagation();
-              toggleSelection(row.original.id);
-            }}
-            aria-label={`Select ${row.original.metadata.title}`}
-          />
-        ),
-        enableSorting: false,
-      },
-      {
-        accessorKey: 'metadata.title',
-        header: () => (
-          <button onClick={() => handleSort('name')} className="flex items-center gap-1">
-            Name
-            {sortField === 'name' && <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>}
-          </button>
-        ),
-        cell: ({ row }) => {
-          const doc = row.original;
-          const iconName = getMimeTypeIcon(doc.mimeType ?? 'application/octet-stream');
-          return (
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded bg-slate-100 dark:bg-slate-700">
-                <span className="material-symbols-outlined text-[20px] text-primary">
-                  {iconName}
-                </span>
-              </div>
-              <div>
-                <p className="font-medium text-slate-900 dark:text-white">{doc.metadata.title}</p>
-                {doc.metadata.description && (
-                  <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-1">
-                    {doc.metadata.description}
-                  </p>
-                )}
-              </div>
-            </div>
-          );
-        },
-      },
-      {
-        accessorKey: 'status',
-        header: () => (
-          <button onClick={() => handleSort('status')} className="flex items-center gap-1">
-            Status
-            {sortField === 'status' && <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>}
-          </button>
-        ),
-        cell: ({ row }) => <DocumentStatusBadge status={row.original.status} />,
-      },
-      {
-        accessorKey: 'sizeBytes',
-        header: () => (
-          <button onClick={() => handleSort('size')} className="flex items-center gap-1">
-            Size
-            {sortField === 'size' && <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>}
-          </button>
-        ),
-        cell: ({ row }) => formatFileSize(Number(row.original.sizeBytes) || 0),
-      },
-      {
-        accessorKey: 'createdAt',
-        header: () => (
-          <button onClick={() => handleSort('date')} className="flex items-center gap-1">
-            Date
-            {sortField === 'date' && <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>}
-          </button>
-        ),
-        cell: ({ row }) => formatDate(row.original.createdAt),
-      },
-    ],
+  const columns = useMemo(
+    () =>
+      buildDocumentColumns(
+        selectedIds,
+        paginatedDocuments,
+        toggleSelectAll,
+        toggleSelection,
+        handleSort,
+        sortField,
+        sortDirection
+      ),
     [
       selectedIds,
       paginatedDocuments,
@@ -273,7 +361,11 @@ export function DocumentList({
 
   if (isLoading) {
     return (
-      <div className="space-y-4" role="status" aria-label="Loading documents">
+      <div
+        className="space-y-4"
+        role="status" // NOSONAR typescript:S6819 — loading skeleton region; <output> is for form computation results
+        aria-label="Loading documents"
+      >
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="h-16 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" /> // NOSONAR typescript:S6479
         ))}
@@ -339,7 +431,10 @@ export function DocumentList({
       )}
 
       {/* Data Table */}
-      <div role="table" aria-label="Documents table">
+      <div
+        role="table" // NOSONAR typescript:S6819 — wrapper div needed to pass aria-label; DataTable renders its own <table> internally
+        aria-label="Documents table"
+      >
         <DataTable
           columns={columns}
           data={paginatedDocuments}

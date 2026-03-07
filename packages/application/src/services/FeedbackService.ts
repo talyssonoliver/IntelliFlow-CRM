@@ -9,11 +9,9 @@
 
 import {
   RETRAINING_THRESHOLDS,
-  CORRECTION_MAGNITUDE_BUCKETS,
   ScoreFeedbackSubmittedEvent,
   RetrainingRecommendedEvent,
   TrainingDataExportedEvent,
-  FeedbackAnalyticsGeneratedEvent,
 } from '@intelliflow/domain';
 import type { FeedbackType, FeedbackCategory } from '@intelliflow/domain';
 import type {

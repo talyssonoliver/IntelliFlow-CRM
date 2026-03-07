@@ -73,7 +73,7 @@ export class ScoreLeadUseCase {
     // 4. Persist changes
     try {
       await this.leadRepository.save(lead);
-    } catch (error) {
+    } catch {
       return Result.fail(new PersistenceError('Failed to save lead'));
     }
 

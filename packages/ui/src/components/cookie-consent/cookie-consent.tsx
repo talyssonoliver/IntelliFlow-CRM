@@ -171,7 +171,7 @@ export const COOKIE_INVENTORY: CookieInfo[] = [
  * Get consent from cookie storage
  */
 export function getStoredConsent(): CookieConsent | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof globalThis.window === 'undefined') return null;
 
   try {
     const stored = document.cookie
@@ -197,8 +197,8 @@ export function getStoredConsent(): CookieConsent | null {
 /**
  * Store consent in cookie
  */
-export function storeConsent(consent: CookieConsent): void {
-  if (typeof window === 'undefined') return;
+export function storeConsent(consent: Readonly<CookieConsent>): void {
+  if (typeof globalThis.window === 'undefined') return;
 
   const value = encodeURIComponent(JSON.stringify(consent));
   const expires = new Date();
@@ -211,7 +211,7 @@ export function storeConsent(consent: CookieConsent): void {
  * Clear non-necessary cookies when consent is withdrawn
  */
 export function clearNonNecessaryCookies(categories: CookieCategory[]): void {
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis.window === 'undefined') return;
 
   const cookiesToClear = COOKIE_INVENTORY.filter(
     (cookie) => categories.includes(cookie.category) && cookie.category !== 'necessary'
@@ -369,7 +369,7 @@ export function CookieConsentBanner({
   cookiePolicyUrl = '/cookies',
   className = '',
   position = 'bottom',
-}: CookieConsentBannerProps): React.ReactElement | null {
+}: Readonly<CookieConsentBannerProps>): React.ReactElement | null {
   const {
     showBanner,
     settingsOpen,
@@ -415,7 +415,7 @@ export function CookieConsentBanner({
       {/* Main Banner */}
       {showBanner && !settingsOpen ? (
         <div
-          role="dialog"
+          role="dialog" // NOSONAR typescript:S6819 — cookie consent banner uses custom fixed positioning; <dialog> lacks consistent CSS layout support
           aria-modal="true"
           aria-labelledby="cookie-consent-title"
           aria-describedby="cookie-consent-description"
@@ -628,7 +628,7 @@ function CookieCategorySection({
   onChange,
   cookies,
   'data-testid': testId,
-}: CookieCategorySectionProps): React.ReactElement {
+}: Readonly<CookieCategorySectionProps>): React.ReactElement {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -645,6 +645,7 @@ function CookieCategorySection({
               <span className="text-sm text-gray-500 dark:text-gray-400">Always active</span>
             ) : (
               <label className="relative inline-flex items-center cursor-pointer">
+                <span className="sr-only">{title}</span>
                 <input
                   type="checkbox"
                   checked={enabled}

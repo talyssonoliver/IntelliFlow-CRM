@@ -36,7 +36,7 @@ export function createWebSocketServer(port: number = WS_PORT): WebSocketServer {
     router: appRouter,
     createContext: async (opts): Promise<Context> => {
       // Use WebSocket-specific context creation
-      const authHeader = opts.req.headers.authorization as string | undefined;
+      const authHeader = opts.req.headers.authorization;
       return createWSContext(authHeader);
     },
     // Keep connections alive with ping/pong

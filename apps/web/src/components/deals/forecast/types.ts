@@ -70,4 +70,4 @@ export {
   PIPELINE_STAGE_CONFIG,
   STAGE_PROBABILITIES,
 } from '../types';
-export type { OpportunityStage };
+export type { OpportunityStage } from '@intelliflow/domain';

@@ -5,7 +5,7 @@ import { AppDashboard } from '../app-dashboard';
 
 // Mock AppMetrics to isolate dashboard tests
 vi.mock('@/components/developer/app-metrics', () => ({
-  AppMetrics: ({ app }: { app: { name: string } }) => (
+  AppMetrics: ({ app }: Readonly<{ app: { name: string } }>) => (
     <div data-testid="app-metrics">Metrics for {app.name}</div>
   ),
 }));

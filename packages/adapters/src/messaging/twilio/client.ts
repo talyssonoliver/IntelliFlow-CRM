@@ -93,7 +93,7 @@ export class TwilioClient {
       to: message.to,
       from: message.from,
       body: message.body || '',
-      numSegments: parseInt(message.numSegments || '1', 10),
+      numSegments: Number.parseInt(message.numSegments || '1', 10),
       price: message.price ?? undefined,
       priceUnit: message.priceUnit ?? undefined,
       dateCreated: message.dateCreated,
@@ -139,7 +139,7 @@ export class TwilioClient {
       to: message.to,
       from: message.from,
       body: message.body || '',
-      numSegments: parseInt(message.numSegments || '1', 10),
+      numSegments: Number.parseInt(message.numSegments || '1', 10),
       price: message.price ?? undefined,
       priceUnit: message.priceUnit ?? undefined,
       dateCreated: message.dateCreated,
@@ -174,7 +174,7 @@ export class TwilioClient {
             }
           : undefined,
       };
-    } catch (error) {
+    } catch {
       return {
         valid: false,
         phoneNumber,
@@ -230,8 +230,6 @@ export function createTwilioClient(config?: Partial<TwilioConfig>): TwilioClient
 let defaultClient: TwilioClient | null = null;
 
 export function getTwilioClient(): TwilioClient {
-  if (!defaultClient) {
-    defaultClient = createTwilioClient();
-  }
+  defaultClient ??= createTwilioClient();
   return defaultClient;
 }

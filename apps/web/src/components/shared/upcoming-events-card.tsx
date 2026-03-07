@@ -104,7 +104,7 @@ export function UpcomingEventsCard({
       sortOrder: 'asc' as const,
       limit: maxItems + 1, // fetch one extra to detect "has more"
       startTimeFrom: now,
-      ...(entityType === 'case' && entityId ? { caseId: entityId } : Readonly<{}>),
+      ...(entityType === 'case' && entityId ? { caseId: entityId } : {}),
     },
     { enabled: true }
   );

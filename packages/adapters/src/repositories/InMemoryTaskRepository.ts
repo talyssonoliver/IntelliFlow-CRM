@@ -5,7 +5,7 @@ import { Task, TaskId, TaskStatus, TaskPriority, TaskRepository } from '@intelli
  * Used for testing and development
  */
 export class InMemoryTaskRepository implements TaskRepository {
-  private tasks: Map<string, Task> = new Map();
+  private readonly tasks: Map<string, Task> = new Map();
 
   async save(task: Task): Promise<void> {
     this.tasks.set(task.id.value, task);

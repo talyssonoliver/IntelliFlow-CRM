@@ -106,7 +106,7 @@ const STORAGE_KEY = 'intelliflow:quick-actions';
 // =============================================================================
 
 function loadEnabledActions(): Set<string> {
-  if (typeof window === 'undefined') return DEFAULT_ENABLED;
+  if (typeof globalThis.window === 'undefined') return DEFAULT_ENABLED;
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -162,7 +162,7 @@ function Toggle({ checked, onChange }: Readonly<{ checked: boolean; onChange: (v
 interface EditQuickActionsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (enabledIds: Readonly<Set<string>>) => void;
+  onSave: (enabledIds: Set<string>) => void;
 }
 
 export function EditQuickActionsSheet({ open, onOpenChange, onSave }: Readonly<EditQuickActionsSheetProps>) {
@@ -418,7 +418,7 @@ const DEFAULT_PINNED_GROUPS = new Set(['nav-leads', 'nav-contacts', 'nav-deals']
 const PINNED_GROUPS_STORAGE_KEY = 'intelliflow:pinned-groups';
 
 function loadPinnedGroups(): Set<string> {
-  if (typeof window === 'undefined') return DEFAULT_PINNED_GROUPS;
+  if (typeof globalThis.window === 'undefined') return DEFAULT_PINNED_GROUPS;
   try {
     const stored = localStorage.getItem(PINNED_GROUPS_STORAGE_KEY);
     if (stored) {
@@ -448,7 +448,7 @@ export type { PinnedNavGroup };
 interface EditPinnedNavigationSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (enabledGroupIds: Readonly<Set<string>>) => void;
+  onSave: (enabledGroupIds: Set<string>) => void;
   pinnedItems?: PinnedItemDisplay[];
   onUnpin: (entityType: string, entityId: string) => void;
 }

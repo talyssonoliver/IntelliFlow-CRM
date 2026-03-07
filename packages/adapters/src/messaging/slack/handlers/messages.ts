@@ -38,8 +38,8 @@ export async function postMessage(
 
     return Result.ok({
       ok: true,
-      channelId: String(response.value.channel ?? ''),
-      ts: String(response.value.ts ?? ''),
+      channelId: (response.value.channel as string | null | undefined) ?? '',
+      ts: (response.value.ts as string | null | undefined) ?? '',
       message: mapToMessage(response.value.message as Record<string, unknown>),
     });
   } catch (error) {
@@ -69,8 +69,8 @@ export async function updateMessage(
 
     return Result.ok({
       ok: true,
-      channelId: String(response.value.channel ?? ''),
-      ts: String(response.value.ts ?? ''),
+      channelId: (response.value.channel as string | null | undefined) ?? '',
+      ts: (response.value.ts as string | null | undefined) ?? '',
       message: mapToMessage(response.value.message as Record<string, unknown>),
     });
   } catch (error) {
@@ -183,7 +183,7 @@ export async function getChannelHistory(
 
     return Result.ok({
       messages,
-      nextCursor: metadata?.next_cursor ? String(metadata.next_cursor) : undefined,
+      nextCursor: metadata?.next_cursor ? (metadata.next_cursor as string) : undefined,
     });
   } catch (error) {
     return Result.fail(

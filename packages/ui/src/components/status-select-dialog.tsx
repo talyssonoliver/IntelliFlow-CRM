@@ -125,7 +125,7 @@ export function StatusSelectDialog({
             {description}
             {itemCount !== undefined && itemCount > 0 && (
               <span className="block mt-1 text-slate-600 dark:text-slate-400">
-                This will update <strong>{itemCount}</strong> {itemCount === 1 ? 'item' : 'items'}.
+                This will update{' '}<strong>{itemCount}</strong>{' '}{itemCount === 1 ? 'item' : 'items'}.
               </span>
             )}
           </DialogDescription>
@@ -189,7 +189,7 @@ export function StatusSelectDialog({
               <>
                 <span className="material-symbols-outlined text-lg animate-spin mr-2">
                   progress_activity
-                </span>
+                </span>{' '}
                 Updating...
               </>
             ) : (

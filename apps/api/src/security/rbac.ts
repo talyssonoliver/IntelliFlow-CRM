@@ -723,9 +723,7 @@ export class RBACService {
 let rbacServiceInstance: RBACService | null = null;
 
 export function getRBACService(prisma: PrismaClient): RBACService {
-  if (!rbacServiceInstance) {
-    rbacServiceInstance = new RBACService(prisma);
-  }
+  rbacServiceInstance ??= new RBACService(prisma);
   return rbacServiceInstance;
 }
 

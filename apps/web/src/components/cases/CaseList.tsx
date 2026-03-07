@@ -31,7 +31,7 @@ export interface CaseListProps {
   isLoading: boolean;
   stats: CaseStats;
   filterOptions: CaseFilterOptions;
-  onRowClick: (caseItem: Readonly<CaseListItem>) => void;
+  onRowClick: (caseItem: CaseListItem) => void;
   pagination: {
     page: number;
     limit: number;
@@ -45,9 +45,9 @@ export interface CaseListProps {
   onPriorityChange: (value: string) => void;
   sortValue: string;
   onSortChange: (value: string) => void;
-  onEdit?: (caseItem: Readonly<CaseListItem>) => void;
-  onDelete?: (caseItem: Readonly<CaseListItem>) => void;
-  onAssign?: (caseItem: Readonly<CaseListItem>) => void;
+  onEdit?: (caseItem: CaseListItem) => void;
+  onDelete?: (caseItem: CaseListItem) => void;
+  onAssign?: (caseItem: CaseListItem) => void;
   onBulkAssign?: (ids: string[]) => void;
   onBulkClose?: (ids: string[]) => void;
   onBulkDelete?: (ids: string[]) => void;
@@ -160,6 +160,210 @@ function StatsBar({ stats, isLoading }: Readonly<{ stats: CaseStats; isLoading: 
 }
 
 // =============================================================================
+// Column sub-components (module-level — fixes S6478)
+// =============================================================================
+
+function CaseCaseNumberCell({ row }: Readonly<{ row: CaseListItem }>) {
+  return (
+    <span className="text-sm font-bold text-primary">
+      {row.caseNumber || row.id.slice(0, 12)}
+    </span>
+  );
+}
+
+function CaseTitleCell({ row }: Readonly<{ row: CaseListItem }>) {
+  const isClosed = row.status === 'CLOSED' || row.status === 'CANCELLED';
+  const subtitle = row.lastActivityText || (row.updatedAt ? `Updated ${timeAgo(row.updatedAt)}` : '');
+  return (
+    <div className={cn('flex flex-col', isClosed && 'opacity-70')}>
+      <span className="text-sm font-semibold text-foreground">{row.title}</span>
+      {subtitle && <span className="text-xs text-muted-foreground">{subtitle}</span>}
+    </div>
+  );
+}
+
+function CaseClientCell({ row }: Readonly<{ row: CaseListItem }>) {
+  return <span className="text-sm text-foreground">{row.client.name}</span>;
+}
+
+function CaseStatusCell({ row }: Readonly<{ row: CaseListItem }>) {
+  const statusCfg = getStatusConfig(row.status);
+  const isClosed = row.status === 'CLOSED' || row.status === 'CANCELLED';
+  const isOverdue = row.isOverdue && !isClosed;
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+        isOverdue ? 'bg-red-100 text-red-700' : statusCfg.bgColor,
+        !isOverdue && statusCfg.color
+      )}
+    >
+      {isOverdue ? 'Overdue' : statusCfg.label}
+    </span>
+  );
+}
+
+function CasePriorityCell({ row }: Readonly<{ row: CaseListItem }>) {
+  const priorityCfg = getPriorityConfig(row.priority);
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1.5 text-xs font-medium',
+        priorityCfg.textColor
+      )}
+    >
+      <span className={cn('size-2 rounded-full', priorityCfg.dotColor)} />
+      {priorityCfg.label}
+    </span>
+  );
+}
+
+function CaseAssigneeCell({ row }: Readonly<{ row: CaseListItem }>) {
+  const { assignee } = row;
+  const shortName = assignee.name
+    .split(' ')
+    .map((p: string, i: number) => (i === 0 ? p : `${p[0]}.`))
+    .join(' ');
+  return (
+    <div className="flex items-center gap-2">
+      {assignee.avatarUrl ? (
+        <div
+          className="size-7 rounded-full bg-muted bg-cover bg-center shrink-0"
+          style={{ backgroundImage: `url(${assignee.avatarUrl})` }}
+          aria-label={assignee.name}
+        />
+      ) : (
+        <div className="size-7 rounded-full bg-primary text-white flex items-center justify-center text-[10px] font-bold shrink-0">
+          {getInitials(assignee.name)}
+        </div>
+      )}
+      <span className="text-sm text-foreground">{shortName}</span>
+    </div>
+  );
+}
+
+function CaseDeadlineCell({ row }: Readonly<{ row: CaseListItem }>) {
+  const isClosed = row.status === 'CLOSED' || row.status === 'CANCELLED';
+  const isOverdue = row.isOverdue && !isClosed;
+  let deadlineCls: string;
+  if (isOverdue) {
+    deadlineCls = 'text-red-600 font-semibold';
+  } else if (isClosed) {
+    deadlineCls = 'text-muted-foreground';
+  } else {
+    deadlineCls = 'text-foreground';
+  }
+  return (
+    <span className={cn('text-sm', deadlineCls)}>
+      {isClosed ? 'Completed' : formatDeadline(row.deadline)}
+    </span>
+  );
+}
+
+function CaseActionsHeader() {
+  return <span className="block text-right">Actions</span>;
+}
+
+interface CaseActionsCallbacks {
+  onRowClick: (c: CaseListItem) => void;
+  onEdit?: (c: CaseListItem) => void;
+  onDelete?: (c: CaseListItem) => void;
+  onAssign?: (c: CaseListItem) => void;
+}
+
+function CaseActionsCell({
+  row,
+  onRowClick,
+  onEdit,
+  onDelete,
+  onAssign,
+}: Readonly<{ row: CaseListItem } & CaseActionsCallbacks>) {
+  return (
+    <TableRowActions
+      quickActions={[
+        { icon: 'visibility', label: 'View', onClick: () => onRowClick(row) },
+        { icon: 'edit', label: 'Edit', onClick: () => onEdit?.(row) },
+      ]}
+      dropdownActions={[
+        { icon: 'person_add', label: 'Reassign', onClick: () => onAssign?.(row) },
+        {
+          icon: 'content_copy',
+          label: 'Duplicate',
+          onClick: () =>
+            toast({ title: 'Coming soon', description: 'Duplicate case is under development' }),
+        },
+        { icon: 'history', label: 'View History', onClick: () => onRowClick(row) },
+        { id: 'sep-1', icon: '', label: '', onClick: () => undefined, separator: true },
+        { icon: 'delete', label: 'Delete', variant: 'danger', onClick: () => onDelete?.(row) },
+      ]}
+    />
+  );
+}
+
+/** Column factory — defined at module level (not inside the component) to satisfy S6478. */
+function buildCaseColumns(callbacks: CaseActionsCallbacks): ColumnDef<CaseListItem, unknown>[] {
+  const { onRowClick, onEdit, onDelete, onAssign } = callbacks;
+  return [
+    {
+      accessorKey: 'caseNumber',
+      header: 'Case Number',
+      size: 130,
+      cell: ({ row }) => <CaseCaseNumberCell row={row.original} />,
+    },
+    {
+      accessorKey: 'title',
+      header: 'Title',
+      size: 280,
+      cell: ({ row }) => <CaseTitleCell row={row.original} />,
+    },
+    {
+      accessorKey: 'client',
+      header: 'Client',
+      size: 150,
+      cell: ({ row }) => <CaseClientCell row={row.original} />,
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      size: 120,
+      cell: ({ row }) => <CaseStatusCell row={row.original} />,
+    },
+    {
+      accessorKey: 'priority',
+      header: 'Priority',
+      size: 100,
+      cell: ({ row }) => <CasePriorityCell row={row.original} />,
+    },
+    {
+      accessorKey: 'assignee',
+      header: 'Assignee',
+      size: 150,
+      cell: ({ row }) => <CaseAssigneeCell row={row.original} />,
+    },
+    {
+      accessorKey: 'deadline',
+      header: 'Next Deadline',
+      size: 130,
+      cell: ({ row }) => <CaseDeadlineCell row={row.original} />,
+    },
+    {
+      id: 'actions',
+      header: () => <CaseActionsHeader />,
+      size: 120,
+      cell: ({ row }) => (
+        <CaseActionsCell
+          row={row.original}
+          onRowClick={onRowClick}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onAssign={onAssign}
+        />
+      ),
+    },
+  ];
+}
+
+// =============================================================================
 // Main Component
 // =============================================================================
 
@@ -221,190 +425,10 @@ export function CaseList({
   );
 
   // ── Table columns ───────────────────────────────────────────────────────
-  const columns: ColumnDef<CaseListItem, unknown>[] = useMemo(
-    () => [
-      {
-        accessorKey: 'caseNumber',
-        header: 'Case Number',
-        size: 130,
-        cell: ({ row }) => (
-          <span className="text-sm font-bold text-primary">
-            {row.original.caseNumber || row.original.id.slice(0, 12)}
-          </span>
-        ),
-      },
-      {
-        accessorKey: 'title',
-        header: 'Title',
-        size: 280,
-        cell: ({ row }) => {
-          const c = row.original;
-          const isClosed = c.status === 'CLOSED' || c.status === 'CANCELLED';
-          const subtitle =
-            c.lastActivityText || (c.updatedAt ? `Updated ${timeAgo(c.updatedAt)}` : '');
-          return (
-            <div className={cn('flex flex-col', isClosed && 'opacity-70')}>
-              <span className="text-sm font-semibold text-foreground">{c.title}</span>
-              {subtitle && <span className="text-xs text-muted-foreground">{subtitle}</span>}
-            </div>
-          );
-        },
-      },
-      {
-        accessorKey: 'client',
-        header: 'Client',
-        size: 150,
-        cell: ({ row }) => (
-          <span className="text-sm text-foreground">{row.original.client.name}</span>
-        ),
-      },
-      {
-        accessorKey: 'status',
-        header: 'Status',
-        size: 120,
-        cell: ({ row }) => {
-          const c = row.original;
-          const statusCfg = getStatusConfig(c.status);
-          const isClosed = c.status === 'CLOSED' || c.status === 'CANCELLED';
-          const isOverdue = c.isOverdue && !isClosed;
-          return (
-            <span
-              className={cn(
-                'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                isOverdue ? 'bg-red-100 text-red-700' : statusCfg.bgColor,
-                !isOverdue && statusCfg.color
-              )}
-            >
-              {isOverdue ? 'Overdue' : statusCfg.label}
-            </span>
-          );
-        },
-      },
-      {
-        accessorKey: 'priority',
-        header: 'Priority',
-        size: 100,
-        cell: ({ row }) => {
-          const priorityCfg = getPriorityConfig(row.original.priority);
-          return (
-            <span
-              className={cn(
-                'inline-flex items-center gap-1.5 text-xs font-medium',
-                priorityCfg.textColor
-              )}
-            >
-              <span className={cn('size-2 rounded-full', priorityCfg.dotColor)} />
-              {priorityCfg.label}
-            </span>
-          );
-        },
-      },
-      {
-        accessorKey: 'assignee',
-        header: 'Assignee',
-        size: 150,
-        cell: ({ row }) => {
-          const assignee = row.original.assignee;
-          const shortName = assignee.name
-            .split(' ')
-            .map((p, i) => (i === 0 ? p : `${p[0]}.`))
-            .join(' ');
-          return (
-            <div className="flex items-center gap-2">
-              {assignee.avatarUrl ? (
-                <div
-                  className="size-7 rounded-full bg-muted bg-cover bg-center shrink-0"
-                  style={{ backgroundImage: `url(${assignee.avatarUrl})` }}
-                  aria-label={assignee.name}
-                />
-              ) : (
-                <div className="size-7 rounded-full bg-primary text-white flex items-center justify-center text-[10px] font-bold shrink-0">
-                  {getInitials(assignee.name)}
-                </div>
-              )}
-              <span className="text-sm text-foreground">{shortName}</span>
-            </div>
-          );
-        },
-      },
-      {
-        accessorKey: 'deadline',
-        header: 'Next Deadline',
-        size: 130,
-        cell: ({ row }) => {
-          const c = row.original;
-          const isClosed = c.status === 'CLOSED' || c.status === 'CANCELLED';
-          const isOverdue = c.isOverdue && !isClosed;
-          let deadlineCls: string;
-          if (isOverdue) {
-            deadlineCls = 'text-red-600 font-semibold';
-          } else if (isClosed) {
-            deadlineCls = 'text-muted-foreground';
-          } else {
-            deadlineCls = 'text-foreground';
-          }
-          return (
-            <span
-              className={cn('text-sm', deadlineCls)}
-            >
-              {isClosed ? 'Completed' : formatDeadline(c.deadline)}
-            </span>
-          );
-        },
-      },
-      {
-        id: 'actions',
-        header: () => <span className="block text-right">Actions</span>,
-        size: 120,
-        cell: ({ row }) => {
-          const c = row.original;
-          return (
-            <TableRowActions
-              quickActions={[
-                {
-                  icon: 'visibility',
-                  label: 'View',
-                  onClick: () => onRowClick(c),
-                },
-                {
-                  icon: 'edit',
-                  label: 'Edit',
-                  onClick: () => onEdit?.(c),
-                },
-              ]}
-              dropdownActions={[
-                {
-                  icon: 'person_add',
-                  label: 'Reassign',
-                  onClick: () => onAssign?.(c),
-                },
-                {
-                  icon: 'content_copy',
-                  label: 'Duplicate',
-                  onClick: () =>
-                    toast({
-                      title: 'Coming soon',
-                      description: 'Duplicate case is under development',
-                    }),
-                },
-                {
-                  icon: 'history',
-                  label: 'View History',
-                  onClick: () => onRowClick(c),
-                },
-                { id: 'sep-1', icon: '', label: '', onClick: () => undefined, separator: true }, // Separator: onClick is intentionally a no-op
-                {
-                  icon: 'delete',
-                  label: 'Delete',
-                  variant: 'danger',
-                  onClick: () => onDelete?.(c),
-                },
-              ]}
-            />
-          );
-        },
-      },
-    ],
+  // Columns are built by a module-level factory to avoid S6478 (JSX-returning
+  // functions defined inside a React component). useMemo caches the result.
+  const columns = useMemo(
+    () => buildCaseColumns({ onRowClick, onEdit, onDelete, onAssign }),
     [onRowClick, onEdit, onDelete, onAssign]
   );
 
@@ -499,7 +523,7 @@ export function CaseList({
 
       {isLoading ? (
         <div className="space-y-3" data-testid="case-list-loading">
-          {[...Array(6)].map((_, idx) => (
+          {[...new Array(6)].map((_, idx) => (
             <div
               key={`case-row-skeleton-${idx}`} // NOSONAR typescript:S6479
               className="flex items-center gap-4 p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
@@ -529,7 +553,7 @@ export function CaseList({
 
           {total > 0 && (
             <div
-              role="status"
+              role="status" // NOSONAR typescript:S6819 — live region for pagination status; <output> is for form computation results
               aria-live="polite"
               className="mt-3 flex items-center justify-between text-sm text-muted-foreground"
             >

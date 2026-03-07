@@ -20,17 +20,17 @@ export function mapToOrder(data: Record<string, unknown>): PayPalOrder {
   const links = (data.links as Array<Record<string, unknown>>) ?? [];
 
   return {
-    id: String(data.id ?? ''),
-    status: String(data.status ?? 'CREATED') as PayPalOrder['status'],
-    intent: String(data.intent ?? 'CAPTURE') as PayPalOrder['intent'],
+    id: (data.id as string | null | undefined) ?? '',
+    status: ((data.status as string | null | undefined) ?? 'CREATED') as PayPalOrder['status'],
+    intent: ((data.intent as string | null | undefined) ?? 'CAPTURE') as PayPalOrder['intent'],
     purchaseUnits: purchaseUnits.map((unit) => mapToPurchaseUnit(unit)),
     payer: payer ? mapToPayer(payer) : undefined,
-    createTime: new Date(String(data.create_time ?? new Date().toISOString())),
-    updateTime: new Date(String(data.update_time ?? new Date().toISOString())),
+    createTime: new Date((data.create_time as string | null | undefined) ?? new Date().toISOString()),
+    updateTime: new Date((data.update_time as string | null | undefined) ?? new Date().toISOString()),
     links: links.map((link) => ({
-      href: String(link.href ?? ''),
-      rel: String(link.rel ?? ''),
-      method: link.method ? String(link.method) : undefined,
+      href: (link.href as string | null | undefined) ?? '',
+      rel: (link.rel as string | null | undefined) ?? '',
+      method: link.method ? (link.method as string) : undefined,
     })),
   };
 }
@@ -43,13 +43,13 @@ export function mapToPurchaseUnit(data: Record<string, unknown>): PayPalPurchase
   const payments = data.payments as Record<string, unknown> | undefined;
 
   return {
-    referenceId: String(data.reference_id ?? ''),
-    description: data.description ? String(data.description) : undefined,
-    customId: data.custom_id ? String(data.custom_id) : undefined,
-    invoiceId: data.invoice_id ? String(data.invoice_id) : undefined,
+    referenceId: (data.reference_id as string | null | undefined) ?? '',
+    description: data.description ? (data.description as string) : undefined,
+    customId: data.custom_id ? (data.custom_id as string) : undefined,
+    invoiceId: data.invoice_id ? (data.invoice_id as string) : undefined,
     amount: {
-      currencyCode: String(amount.currency_code ?? 'USD'),
-      value: String(amount.value ?? '0.00'),
+      currencyCode: (amount.currency_code as string | null | undefined) ?? 'USD',
+      value: (amount.value as string | null | undefined) ?? '0.00',
       breakdown: breakdown ? mapBreakdown(breakdown) : undefined,
     },
     items: items.map((item) => mapToItem(item)),
@@ -72,26 +72,20 @@ function mapBreakdown(breakdown: Record<string, unknown>) {
   return {
     itemTotal: breakdown.item_total
       ? {
-          currencyCode: String(
-            (breakdown.item_total as Record<string, unknown>).currency_code ?? 'USD'
-          ),
-          value: String((breakdown.item_total as Record<string, unknown>).value ?? '0.00'),
+          currencyCode: ((breakdown.item_total as Record<string, unknown>).currency_code as string | null | undefined) ?? 'USD',
+          value: ((breakdown.item_total as Record<string, unknown>).value as string | null | undefined) ?? '0.00',
         }
       : undefined,
     shipping: breakdown.shipping
       ? {
-          currencyCode: String(
-            (breakdown.shipping as Record<string, unknown>).currency_code ?? 'USD'
-          ),
-          value: String((breakdown.shipping as Record<string, unknown>).value ?? '0.00'),
+          currencyCode: ((breakdown.shipping as Record<string, unknown>).currency_code as string | null | undefined) ?? 'USD',
+          value: ((breakdown.shipping as Record<string, unknown>).value as string | null | undefined) ?? '0.00',
         }
       : undefined,
     taxTotal: breakdown.tax_total
       ? {
-          currencyCode: String(
-            (breakdown.tax_total as Record<string, unknown>).currency_code ?? 'USD'
-          ),
-          value: String((breakdown.tax_total as Record<string, unknown>).value ?? '0.00'),
+          currencyCode: ((breakdown.tax_total as Record<string, unknown>).currency_code as string | null | undefined) ?? 'USD',
+          value: ((breakdown.tax_total as Record<string, unknown>).value as string | null | undefined) ?? '0.00',
         }
       : undefined,
   };
@@ -101,15 +95,15 @@ export function mapToItem(data: Record<string, unknown>): PayPalItem {
   const unitAmount = (data.unit_amount as Record<string, unknown>) ?? {};
 
   return {
-    name: String(data.name ?? ''),
+    name: (data.name as string | null | undefined) ?? '',
     unitAmount: {
-      currencyCode: String(unitAmount.currency_code ?? 'USD'),
-      value: String(unitAmount.value ?? '0.00'),
+      currencyCode: (unitAmount.currency_code as string | null | undefined) ?? 'USD',
+      value: (unitAmount.value as string | null | undefined) ?? '0.00',
     },
-    quantity: String(data.quantity ?? '1'),
-    description: data.description ? String(data.description) : undefined,
-    sku: data.sku ? String(data.sku) : undefined,
-    category: data.category ? (String(data.category) as PayPalItem['category']) : undefined,
+    quantity: (data.quantity as string | null | undefined) ?? '1',
+    description: data.description ? (data.description as string) : undefined,
+    sku: data.sku ? (data.sku as string) : undefined,
+    category: data.category ? ((data.category as string) as PayPalItem['category']) : undefined,
   };
 }
 
@@ -118,10 +112,10 @@ function mapPayerPhone(
 ): { phoneType?: string; phoneNumber?: { nationalNumber?: string } } {
   const phoneNumberObj = phone.phone_number as Record<string, unknown> | undefined;
   const nationalNumber = phoneNumberObj?.national_number
-    ? String(phoneNumberObj.national_number)
+    ? (phoneNumberObj.national_number as string)
     : undefined;
   return {
-    phoneType: phone.phone_type ? String(phone.phone_type) : undefined,
+    phoneType: phone.phone_type ? (phone.phone_type as string) : undefined,
     phoneNumber: phoneNumberObj ? { nationalNumber } : undefined,
   };
 }
@@ -131,8 +125,8 @@ function mapPayerName(
 ): { givenName?: string; surname?: string } | undefined {
   if (!name) return undefined;
   return {
-    givenName: name.given_name ? String(name.given_name) : undefined,
-    surname: name.surname ? String(name.surname) : undefined,
+    givenName: name.given_name ? (name.given_name as string) : undefined,
+    surname: name.surname ? (name.surname as string) : undefined,
   };
 }
 
@@ -142,23 +136,23 @@ export function mapToPayer(data: Record<string, unknown>): PayPalPayer {
   const address = data.address as Record<string, unknown> | undefined;
 
   return {
-    payerId: data.payer_id ? String(data.payer_id) : undefined,
+    payerId: data.payer_id ? (data.payer_id as string) : undefined,
     name: mapPayerName(name),
-    emailAddress: data.email_address ? String(data.email_address) : undefined,
+    emailAddress: data.email_address ? (data.email_address as string) : undefined,
     phone: phone ? mapPayerPhone(phone) : undefined,
-    birthDate: data.birth_date ? String(data.birth_date) : undefined,
+    birthDate: data.birth_date ? (data.birth_date as string) : undefined,
     address: address ? mapToAddress(address) : undefined,
   };
 }
 
 export function mapToAddress(data: Record<string, unknown>): PayPalAddress {
   return {
-    addressLine1: data.address_line_1 ? String(data.address_line_1) : undefined,
-    addressLine2: data.address_line_2 ? String(data.address_line_2) : undefined,
-    adminArea1: data.admin_area_1 ? String(data.admin_area_1) : undefined,
-    adminArea2: data.admin_area_2 ? String(data.admin_area_2) : undefined,
-    postalCode: data.postal_code ? String(data.postal_code) : undefined,
-    countryCode: data.country_code ? String(data.country_code) : undefined,
+    addressLine1: data.address_line_1 ? (data.address_line_1 as string) : undefined,
+    addressLine2: data.address_line_2 ? (data.address_line_2 as string) : undefined,
+    adminArea1: data.admin_area_1 ? (data.admin_area_1 as string) : undefined,
+    adminArea2: data.admin_area_2 ? (data.admin_area_2 as string) : undefined,
+    postalCode: data.postal_code ? (data.postal_code as string) : undefined,
+    countryCode: data.country_code ? (data.country_code as string) : undefined,
   };
 }
 
@@ -170,7 +164,7 @@ function mapToShipping(data: Record<string, unknown>): {
   const address = data.address as Record<string, unknown> | undefined;
 
   return {
-    name: name ? { fullName: name.full_name ? String(name.full_name) : undefined } : undefined,
+    name: name ? { fullName: name.full_name ? (name.full_name as string) : undefined } : undefined,
     address: address ? mapToAddress(address) : undefined,
   };
 }
@@ -180,21 +174,21 @@ export function mapToCapture(data: Record<string, unknown>): PayPalCapture {
   const sellerProtection = data.seller_protection as Record<string, unknown> | undefined;
 
   return {
-    id: String(data.id ?? ''),
-    status: String(data.status ?? 'PENDING') as PayPalCapture['status'],
+    id: (data.id as string | null | undefined) ?? '',
+    status: ((data.status as string | null | undefined) ?? 'PENDING') as PayPalCapture['status'],
     amount: {
-      currencyCode: String(amount.currency_code ?? 'USD'),
-      value: String(amount.value ?? '0.00'),
+      currencyCode: (amount.currency_code as string | null | undefined) ?? 'USD',
+      value: (amount.value as string | null | undefined) ?? '0.00',
     },
     finalCapture: Boolean(data.final_capture),
     sellerProtection: sellerProtection
       ? {
-          status: String(sellerProtection.status ?? ''),
+          status: (sellerProtection.status as string | null | undefined) ?? '',
           disputeCategories: sellerProtection.dispute_categories as string[] | undefined,
         }
       : undefined,
-    createTime: new Date(String(data.create_time ?? new Date().toISOString())),
-    updateTime: new Date(String(data.update_time ?? new Date().toISOString())),
+    createTime: new Date((data.create_time as string | null | undefined) ?? new Date().toISOString()),
+    updateTime: new Date((data.update_time as string | null | undefined) ?? new Date().toISOString()),
   };
 }
 
@@ -202,15 +196,15 @@ export function mapToAuthorization(data: Record<string, unknown>): PayPalAuthori
   const amount = (data.amount as Record<string, unknown>) ?? {};
 
   return {
-    id: String(data.id ?? ''),
-    status: String(data.status ?? 'PENDING') as PayPalAuthorization['status'],
+    id: (data.id as string | null | undefined) ?? '',
+    status: ((data.status as string | null | undefined) ?? 'PENDING') as PayPalAuthorization['status'],
     amount: {
-      currencyCode: String(amount.currency_code ?? 'USD'),
-      value: String(amount.value ?? '0.00'),
+      currencyCode: (amount.currency_code as string | null | undefined) ?? 'USD',
+      value: (amount.value as string | null | undefined) ?? '0.00',
     },
-    expirationTime: data.expiration_time ? new Date(String(data.expiration_time)) : undefined,
-    createTime: new Date(String(data.create_time ?? new Date().toISOString())),
-    updateTime: new Date(String(data.update_time ?? new Date().toISOString())),
+    expirationTime: data.expiration_time ? new Date(data.expiration_time as string) : undefined,
+    createTime: new Date((data.create_time as string | null | undefined) ?? new Date().toISOString()),
+    updateTime: new Date((data.update_time as string | null | undefined) ?? new Date().toISOString()),
   };
 }
 
@@ -218,16 +212,16 @@ export function mapToRefund(data: Record<string, unknown>): PayPalRefund {
   const amount = (data.amount as Record<string, unknown>) ?? {};
 
   return {
-    id: String(data.id ?? ''),
-    status: String(data.status ?? 'PENDING') as PayPalRefund['status'],
+    id: (data.id as string | null | undefined) ?? '',
+    status: ((data.status as string | null | undefined) ?? 'PENDING') as PayPalRefund['status'],
     amount: {
-      currencyCode: String(amount.currency_code ?? 'USD'),
-      value: String(amount.value ?? '0.00'),
+      currencyCode: (amount.currency_code as string | null | undefined) ?? 'USD',
+      value: (amount.value as string | null | undefined) ?? '0.00',
     },
-    invoiceId: data.invoice_id ? String(data.invoice_id) : undefined,
-    noteToPayer: data.note_to_payer ? String(data.note_to_payer) : undefined,
-    createTime: new Date(String(data.create_time ?? new Date().toISOString())),
-    updateTime: new Date(String(data.update_time ?? new Date().toISOString())),
+    invoiceId: data.invoice_id ? (data.invoice_id as string) : undefined,
+    noteToPayer: data.note_to_payer ? (data.note_to_payer as string) : undefined,
+    createTime: new Date((data.create_time as string | null | undefined) ?? new Date().toISOString()),
+    updateTime: new Date((data.update_time as string | null | undefined) ?? new Date().toISOString()),
   };
 }
 
@@ -237,18 +231,18 @@ export function mapToSubscription(data: Record<string, unknown>): PayPalSubscrip
   const links = (data.links as Array<Record<string, unknown>>) ?? [];
 
   return {
-    id: String(data.id ?? ''),
-    status: String(data.status ?? 'APPROVAL_PENDING') as PayPalSubscription['status'],
-    planId: String(data.plan_id ?? ''),
-    quantity: data.quantity ? String(data.quantity) : undefined,
+    id: (data.id as string | null | undefined) ?? '',
+    status: ((data.status as string | null | undefined) ?? 'APPROVAL_PENDING') as PayPalSubscription['status'],
+    planId: (data.plan_id as string | null | undefined) ?? '',
+    quantity: data.quantity ? (data.quantity as string) : undefined,
     subscriber: subscriber ? mapToPayer(subscriber) : undefined,
     billingInfo: billingInfo ? mapBillingInfo(billingInfo) : undefined,
-    createTime: new Date(String(data.create_time ?? new Date().toISOString())),
-    updateTime: new Date(String(data.update_time ?? new Date().toISOString())),
+    createTime: new Date((data.create_time as string | null | undefined) ?? new Date().toISOString()),
+    updateTime: new Date((data.update_time as string | null | undefined) ?? new Date().toISOString()),
     links: links.map((link) => ({
-      href: String(link.href ?? ''),
-      rel: String(link.rel ?? ''),
-      method: link.method ? String(link.method) : undefined,
+      href: (link.href as string | null | undefined) ?? '',
+      rel: (link.rel as string | null | undefined) ?? '',
+      method: link.method ? (link.method as string) : undefined,
     })),
   };
 }
@@ -257,43 +251,27 @@ function mapBillingInfo(billingInfo: Record<string, unknown>) {
   return {
     outstandingBalance: billingInfo.outstanding_balance
       ? {
-          currencyCode: String(
-            (billingInfo.outstanding_balance as Record<string, unknown>).currency_code ?? 'USD'
-          ),
-          value: String(
-            (billingInfo.outstanding_balance as Record<string, unknown>).value ?? '0.00'
-          ),
+          currencyCode: ((billingInfo.outstanding_balance as Record<string, unknown>).currency_code as string | null | undefined) ?? 'USD',
+          value: ((billingInfo.outstanding_balance as Record<string, unknown>).value as string | null | undefined) ?? '0.00',
         }
       : undefined,
     lastPayment: billingInfo.last_payment
       ? {
           amount: {
-            currencyCode: String(
-              (
-                (billingInfo.last_payment as Record<string, unknown>).amount as Record<
-                  string,
-                  unknown
-                >
-              )?.currency_code ?? 'USD'
-            ),
-            value: String(
-              (
-                (billingInfo.last_payment as Record<string, unknown>).amount as Record<
-                  string,
-                  unknown
-                >
-              )?.value ?? '0.00'
-            ),
+            currencyCode: (
+              (billingInfo.last_payment as Record<string, unknown>).amount as Record<string, unknown>
+            )?.currency_code as string | undefined ?? 'USD',
+            value: (
+              (billingInfo.last_payment as Record<string, unknown>).amount as Record<string, unknown>
+            )?.value as string | undefined ?? '0.00',
           },
           time: new Date(
-            String(
-              (billingInfo.last_payment as Record<string, unknown>).time ?? new Date().toISOString()
-            )
+            ((billingInfo.last_payment as Record<string, unknown>).time as string | null | undefined) ?? new Date().toISOString()
           ),
         }
       : undefined,
     nextBillingTime: billingInfo.next_billing_time
-      ? new Date(String(billingInfo.next_billing_time))
+      ? new Date(billingInfo.next_billing_time as string)
       : undefined,
     failedPaymentsCount: billingInfo.failed_payments_count
       ? Number(billingInfo.failed_payments_count)

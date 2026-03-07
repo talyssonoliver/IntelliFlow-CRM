@@ -153,13 +153,13 @@ function StatusBadge({
   variant: variantProp,
   className,
   ...props
-}: StatusBadgeProps) {
+}: Readonly<StatusBadgeProps>) {
   // Determine the configuration source
   const statusConfigs = config || STATUS_CONFIGS[type];
   const statusConfig = statusConfigs[status];
 
   // Fallback for unknown status
-  const displayLabel = label || statusConfig?.label || status.replace(/_/g, ' ');
+  const displayLabel = label || statusConfig?.label || status.replaceAll('_', ' ');
   const displayIcon = showIcon ? statusConfig?.icon : undefined;
   const displayVariant = variantProp || statusConfig?.variant || 'muted';
 

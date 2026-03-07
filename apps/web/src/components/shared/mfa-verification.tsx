@@ -327,7 +327,7 @@ export function MfaVerification({
         <div
           data-testid="loading-indicator"
           className="absolute inset-0 bg-slate-900/50 flex items-center justify-center z-10"
-          role="progressbar"
+          role="progressbar" // NOSONAR typescript:S6819 — indeterminate loading overlay with spinner icon; <progress> cannot contain child elements
           aria-label="Verifying code"
         >
           <span className="material-symbols-outlined animate-spin text-3xl text-primary">

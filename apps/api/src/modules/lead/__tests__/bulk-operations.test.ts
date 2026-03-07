@@ -12,7 +12,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { PrismaClient } from '@intelliflow/db';
 import { PrismaPg } from '@prisma/adapter-pg';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 
 // Use crypto.randomUUID() instead of uuid package
 const uuid = () => crypto.randomUUID();

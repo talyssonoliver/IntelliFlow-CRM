@@ -59,7 +59,7 @@ export function GoalSettingsModal({
     updateGoal.mutate({
       type: goalType as 'revenue' | 'calls' | 'meetings' | 'tasks' | 'custom',
       targetValue,
-      ...(goalType === 'custom' && customUnit ? { customUnit } : Readonly<{}>),
+      ...(goalType === 'custom' && customUnit ? { customUnit } : {}),
     });
   }, [goalType, targetValue, customUnit, updateGoal]);
 

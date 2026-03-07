@@ -41,7 +41,6 @@ import {
 } from '@intelliflow/validators';
 import {
   signIn,
-  signOut,
   signOutUser,
   getSession,
   signInWithOAuth,
@@ -234,7 +233,7 @@ function resolveMfaChallengeUserId(
 ): string {
   if (!challengeId) return 'unknown';
   const info = mfaService.getChallengeInfo(challengeId);
-  return 'userId' in info && info.userId ? String(info.userId) : 'unknown';
+  return 'userId' in info && info.userId ? (info.userId as string) : 'unknown';
 }
 
 // ============================================

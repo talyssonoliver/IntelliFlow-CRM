@@ -34,8 +34,8 @@ export function ApplyButton({
 }: Readonly<ApplyButtonProps>) {
   const handleClick = () => {
     // Track analytics event (in production, integrate with analytics service)
-    if (typeof window !== 'undefined') {
-      const win = window as Window & {
+    if (typeof globalThis.window !== 'undefined') {
+      const win = globalThis as typeof globalThis & {
         gtag?: (cmd: string, event: string, data: Record<string, string>) => void;
       };
       win.gtag?.('event', 'apply_click', {
@@ -99,7 +99,7 @@ export function SaveJobButton({ jobId, jobTitle, className }: Readonly<SaveJobBu
     setIsSaved(!isSaved);
 
     // In production, persist to user's saved jobs list
-    if (typeof window !== 'undefined') {
+    if (typeof globalThis.window !== 'undefined') {
       const savedJobs = JSON.parse(localStorage.getItem('savedJobs') || '[]');
       if (isSaved) {
         localStorage.setItem(
@@ -114,7 +114,7 @@ export function SaveJobButton({ jobId, jobTitle, className }: Readonly<SaveJobBu
 
   React.useEffect(() => {
     // Check if job is already saved on mount
-    if (typeof window !== 'undefined') {
+    if (typeof globalThis.window !== 'undefined') {
       const savedJobs = JSON.parse(localStorage.getItem('savedJobs') || '[]');
       setIsSaved(savedJobs.includes(jobId));
     }
@@ -155,9 +155,9 @@ export function ShareJobButton({ jobId, jobTitle, className }: Readonly<ShareJob
   const [showDropdown, setShowDropdown] = React.useState(false);
 
   const jobUrl =
-    typeof window === 'undefined'
+    typeof globalThis.window === 'undefined'
       ? `/careers/${jobId}`
-      : `${window.location.origin}/careers/${jobId}`;
+      : `${globalThis.location.origin}/careers/${jobId}`;
 
   const linkedInTitle = `${jobTitle} at IntelliFlow`;
   const twitterText = `Check out this opportunity: ${jobTitle} at IntelliFlow`;
@@ -180,7 +180,7 @@ ${jobUrl}`;
       label: 'Share on LinkedIn',
       icon: 'work',
       action: () => {
-        window.open(
+        globalThis.open(
           `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(jobUrl)}&title=${encodeURIComponent(linkedInTitle)}`,
           '_blank'
         );
@@ -191,7 +191,7 @@ ${jobUrl}`;
       label: 'Share on Twitter',
       icon: 'share',
       action: () => {
-        window.open(
+        globalThis.open(
           `https://twitter.com/intent/tweet?text=${encodeURIComponent(twitterText)}&url=${encodeURIComponent(jobUrl)}`,
           '_blank'
         );
@@ -202,7 +202,7 @@ ${jobUrl}`;
       label: 'Email',
       icon: 'mail',
       action: () => {
-        window.open(
+        globalThis.open(
           `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`,
           '_blank'
         );

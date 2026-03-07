@@ -5,7 +5,7 @@
  * Extracted from apps/web/src/app/deals/(list)/page.tsx.
  */
 
-import { OPPORTUNITY_STAGES, type OpportunityStage } from '@intelliflow/domain';
+import { type OpportunityStage } from '@intelliflow/domain';
 
 // ─── Interfaces ──────────────────────────────────────────────────────────────
 
@@ -89,8 +89,8 @@ export const STAGE_PROBABILITIES: Record<OpportunityStage, number> = {
 };
 
 /** All opportunity stages re-exported for convenience */
-export { OPPORTUNITY_STAGES };
-export type { OpportunityStage };
+export { OPPORTUNITY_STAGES } from '@intelliflow/domain';
+export type { OpportunityStage } from '@intelliflow/domain';
 
 // ─── Data Transformation Helpers ─────────────────────────────────────────────
 

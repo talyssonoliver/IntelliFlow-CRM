@@ -96,7 +96,7 @@ export function CommentsWidget({ postSlug: _postSlug, className }: Readonly<Comm
   const [replyingTo, setReplyingTo] = React.useState<string | null>(null);
   const [replyContent, setReplyContent] = React.useState('');
 
-  const handleSubmitComment = async (e: React.FormEvent) => {
+  const handleSubmitComment = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
 

@@ -20,14 +20,13 @@ const nodeEnvSchema = z
 
 // Database configuration
 const databaseUrlSchema = z
-  .string()
   .url()
   .refine((v) => v.startsWith('postgresql://'), 'Must start with postgresql://');
 
 // API configuration
 const apiConfigSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3000),
-  API_URL: z.string().url().optional(),
+  API_URL: z.url().optional(),
   CORS_ORIGIN: z.string().default('*'),
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(900000), // 15 minutes
@@ -45,7 +44,7 @@ const authConfigSchema = z.object({
 const aiConfigSchema = z.object({
   OPENAI_API_KEY: z.string().min(1).optional(),
   OPENAI_MODEL: z.string().default('gpt-4'),
-  OLLAMA_BASE_URL: z.string().url().default('http://localhost:11434'),
+  OLLAMA_BASE_URL: z.url().default('http://localhost:11434'),
   AI_TIMEOUT_MS: z.coerce.number().int().positive().default(30000),
   AI_MAX_RETRIES: z.coerce.number().int().nonnegative().default(3),
 });
@@ -56,26 +55,26 @@ const emailConfigSchema = z.object({
   SMTP_PORT: z.coerce.number().int().positive().optional(),
   SMTP_USER: z.string().optional(),
   SMTP_PASSWORD: z.string().optional(),
-  EMAIL_FROM: z.string().email().optional(),
+  EMAIL_FROM: z.email().optional(),
 });
 
 // Observability configuration
 const observabilityConfigSchema = z.object({
-  SENTRY_DSN: z.string().url().optional(),
+  SENTRY_DSN: z.url().optional(),
   OTEL_ENABLED: z.coerce.boolean().default(false),
-  OTEL_ENDPOINT: z.string().url().optional(),
+  OTEL_ENDPOINT: z.url().optional(),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 });
 
 // Redis/cache configuration
 const cacheConfigSchema = z.object({
-  REDIS_URL: z.string().url().optional(),
+  REDIS_URL: z.url().optional(),
   CACHE_TTL_SECONDS: z.coerce.number().int().positive().default(3600),
 });
 
 // Supabase configuration
 const supabaseConfigSchema = z.object({
-  SUPABASE_URL: z.string().url().optional(),
+  SUPABASE_URL: z.url().optional(),
   SUPABASE_ANON_KEY: z.string().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
 });
@@ -136,7 +135,7 @@ export type Env = z.infer<typeof envSchema>;
  * This schema allows development without full infrastructure.
  */
 export const devEnvSchema = envSchema.extend({
-  DATABASE_URL: z.string().url().optional().default('postgresql://localhost:5432/intelliflow_dev'),
+  DATABASE_URL: z.url().optional().default('postgresql://localhost:5432/intelliflow_dev'),
   JWT_SECRET: z.string().optional().default('dev-secret-change-in-production-min-32-chars'),
   SESSION_SECRET: z.string().optional().default('dev-session-secret-change-in-production'),
 });
@@ -150,12 +149,11 @@ export const devEnvSchema = envSchema.extend({
 export const prodEnvSchema = envSchema.extend({
   NODE_ENV: z.literal('production'),
   DATABASE_URL: z
-    .string()
     .url()
     .refine((v) => v.startsWith('postgresql://'), 'Must start with postgresql://'),
   JWT_SECRET: z.string().min(32),
   SESSION_SECRET: z.string().min(32),
-  SENTRY_DSN: z.string().url(), // Required in production
+  SENTRY_DSN: z.url(), // Required in production
   CORS_ORIGIN: z
     .string()
     .refine((val) => val !== '*', 'CORS_ORIGIN must be specific in production (not *)'),
@@ -168,7 +166,7 @@ export const prodEnvSchema = envSchema.extend({
  */
 export const testEnvSchema = envSchema.extend({
   NODE_ENV: z.literal('test'),
-  DATABASE_URL: z.string().url().optional().default('postgresql://localhost:5432/intelliflow_test'),
+  DATABASE_URL: z.url().optional().default('postgresql://localhost:5432/intelliflow_test'),
   JWT_SECRET: z.string().optional().default('test-secret-min-32-characters-long'),
   SESSION_SECRET: z.string().optional().default('test-session-secret-min-32-chars'),
 });
@@ -204,7 +202,7 @@ export function validateEnv(env: NodeJS.ProcessEnv = process.env): Env {
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error('❌ Environment validation failed:');
-      console.error(JSON.stringify(error.format(), null, 2));
+      console.error(JSON.stringify(z.treeifyError(error), null, 2));
       throw new Error('Invalid environment configuration. Check the errors above.', {
         cause: error,
       });

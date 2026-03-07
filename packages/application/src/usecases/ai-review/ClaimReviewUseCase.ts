@@ -8,7 +8,7 @@
  * @implements IFC-177
  */
 
-import { Result, DomainError, AIOutputReview, ReviewStatus } from '@intelliflow/domain';
+import { Result, DomainError, ReviewStatus } from '@intelliflow/domain';
 import { IAIOutputReviewRepository } from '../../ports/repositories';
 import { EventBusPort } from '../../ports/external';
 import { generateLockToken } from './lock-token-utils';

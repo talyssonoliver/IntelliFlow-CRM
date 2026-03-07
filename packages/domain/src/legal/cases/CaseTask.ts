@@ -41,7 +41,7 @@ export interface CreateCaseTaskProps {
  * Tasks are part of the Case aggregate
  */
 export class CaseTask extends Entity<CaseTaskId> {
-  private props: CaseTaskProps;
+  private readonly props: CaseTaskProps;
 
   private constructor(id: CaseTaskId, props: CaseTaskProps) {
     super(id);

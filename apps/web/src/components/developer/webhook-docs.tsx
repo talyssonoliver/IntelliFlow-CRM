@@ -451,7 +451,7 @@ function OverviewTab() {
         </h2>
         <p className="text-muted-foreground mb-3">
           All webhook management is exposed via 9 tRPC procedures on the{' '}
-          <code className="font-mono text-xs bg-muted px-1 rounded">webhooks</code> router.
+          <code className="font-mono text-xs bg-muted px-1 rounded">webhooks</code>{' '}router.
         </p>
         <div className="border rounded-lg overflow-hidden">
           <table className="w-full text-sm">
@@ -595,7 +595,7 @@ function SecurityTab() {
           HMAC-SHA256 Verification Example
         </h2>
         <p className="text-muted-foreground mb-3">
-          Use <code className="font-mono text-sm bg-muted px-1 rounded">timingSafeEqual</code> from
+          Use{' '}<code className="font-mono text-sm bg-muted px-1 rounded">timingSafeEqual</code>{' '}from
           Node.js crypto module to compare signatures. This prevents timing-based side-channel
           attacks that could leak information about the expected signature.
         </p>
@@ -626,7 +626,7 @@ function verifyHmacSignature(
         </h2>
         <div className="border-l-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20 p-4 rounded-r-lg">
           <p className="text-sm text-muted-foreground">
-            <strong>Important:</strong> The current SendGrid signature verifier uses HMAC-SHA256.
+            <strong>Important:</strong>{' '}The current SendGrid signature verifier uses HMAC-SHA256.
             Production deployments requiring SendGrid&apos;s Signed Event Webhooks should upgrade to
             ECDSA verification as specified in SendGrid&apos;s Signed Event Webhook documentation.
           </p>
