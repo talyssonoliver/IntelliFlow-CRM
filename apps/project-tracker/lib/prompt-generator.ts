@@ -44,32 +44,25 @@ export function generateSprintPrompt(options: GeneratorOptions): string {
   const completedTasks = sprintTasks.filter((t) => t.Status === 'Done' || t.Status === 'Completed');
   const pendingTasks = sprintTasks.filter((t) => t.Status !== 'Done' && t.Status !== 'Completed');
 
-  const sections: string[] = [];
-
-  // Title and Mission Brief
-  sections.push(generateHeader(sprintNumber, projectName));
-  sections.push(generateMissionBrief(sprintNumber, projectName, theme || inferTheme(sprintTasks)));
-
-  // Overview Table
-  sections.push(generateOverviewTable(sprintTasks, completedTasks, pendingTasks, phases, theme));
-
-  // Dependency Graph
-  sections.push(generateDependencyGraphSection(phases, parallelStreams, sprintTasks));
-
-  // Complete Task List
-  sections.push(generateTaskListSection(completedTasks, pendingTasks));
-
-  // Execution Strategy
-  sections.push(generateExecutionStrategy(phases, parallelStreams, tasks));
-
-  // Success Criteria
-  sections.push(generateSuccessCriteria(sprintTasks));
-
-  // Agent Orchestration Instructions
-  sections.push(generateAgentInstructions(sprintNumber, phases));
-
-  // Definition of Done
-  sections.push(generateDefinitionOfDone(sprintNumber));
+  const sections: string[] = [
+    // Title and Mission Brief
+    generateHeader(sprintNumber, projectName),
+    generateMissionBrief(sprintNumber, projectName, theme || inferTheme(sprintTasks)),
+    // Overview Table
+    generateOverviewTable(sprintTasks, completedTasks, pendingTasks, phases, theme),
+    // Dependency Graph
+    generateDependencyGraphSection(phases, parallelStreams, sprintTasks),
+    // Complete Task List
+    generateTaskListSection(completedTasks, pendingTasks),
+    // Execution Strategy
+    generateExecutionStrategy(phases, parallelStreams, tasks),
+    // Success Criteria
+    generateSuccessCriteria(sprintTasks),
+    // Agent Orchestration Instructions
+    generateAgentInstructions(sprintNumber, phases),
+    // Definition of Done
+    generateDefinitionOfDone(sprintNumber),
+  ];
 
   return sections.join('\n\n---\n\n');
 }
@@ -157,6 +150,30 @@ function generateOverviewTable(
 | **Web App** | http://localhost:3000 |`;
 }
 
+function renderParallelPhase(phase: ExecutionPhase, lines: string[]): void {
+  const streamGroups = new Map<string, TaskPhaseEntry[]>();
+  for (const task of phase.tasks) {
+    const stream = task.parallelStreamId || 'default';
+    if (!streamGroups.has(stream)) streamGroups.set(stream, []);
+    streamGroups.get(stream)!.push(task);
+  }
+  lines.push('  [PARALLEL EXECUTION]');
+  for (const [streamId, streamTasks] of streamGroups) {
+    lines.push(`  Stream ${streamId}:`);
+    for (const task of streamTasks) {
+      lines.push(`    ${task.status === 'completed' ? '✓' : '○'} ${task.taskId}`);
+    }
+  }
+  lines.push('  ↓ (all complete before next phase)');
+}
+
+function renderSequentialPhase(phase: ExecutionPhase, lines: string[]): void {
+  for (const task of phase.tasks) {
+    lines.push(`  ${task.status === 'completed' ? '✓' : '○'} ${task.taskId} → ${task.description.slice(0, 40)}...`);
+  }
+  lines.push('  ↓');
+}
+
 /**
  * Generate dependency graph section
  */
@@ -167,62 +184,26 @@ function generateDependencyGraphSection(
 ): string {
   const lines: string[] = ['## Sprint Dependency Graph', '', '```'];
 
-  // Header
-  lines.push('EXECUTION PHASES');
-  lines.push('='.repeat(60));
-  lines.push('');
+  lines.push('EXECUTION PHASES', '='.repeat(60), '');
 
-  // Draw each phase
   for (const phase of phases) {
-    lines.push(`Phase ${phase.phaseNumber}: ${phase.name}`);
-    lines.push('-'.repeat(40));
+    lines.push(`Phase ${phase.phaseNumber}: ${phase.name}`, '-'.repeat(40));
 
     if (phase.executionType === 'parallel') {
-      // Group by stream
-      const streamGroups = new Map<string, TaskPhaseEntry[]>();
-      for (const task of phase.tasks) {
-        const stream = task.parallelStreamId || 'default';
-        if (!streamGroups.has(stream)) {
-          streamGroups.set(stream, []);
-        }
-        streamGroups.get(stream)!.push(task);
-      }
-
-      // Show parallel notation
-      lines.push('  [PARALLEL EXECUTION]');
-      for (const [streamId, streamTasks] of streamGroups) {
-        lines.push(`  Stream ${streamId}:`);
-        for (const task of streamTasks) {
-          const status = task.status === 'completed' ? '✓' : '○';
-          lines.push(`    ${status} ${task.taskId}`);
-        }
-      }
-      lines.push('  ↓ (all complete before next phase)');
+      renderParallelPhase(phase, lines);
     } else {
-      // Sequential
-      for (const task of phase.tasks) {
-        const status = task.status === 'completed' ? '✓' : '○';
-        lines.push(`  ${status} ${task.taskId} → ${task.description.slice(0, 40)}...`);
-      }
-      lines.push('  ↓');
+      renderSequentialPhase(phase, lines);
     }
 
     lines.push('');
   }
 
-  lines.push('='.repeat(60));
-  lines.push('```');
+  lines.push('='.repeat(60), '```');
 
-  // Add parallel streams summary
   if (parallelStreams.length > 0) {
-    lines.push('');
-    lines.push('### Parallel Streams');
-    lines.push('');
-    lines.push('| Stream | Tasks | Dependencies |');
-    lines.push('|--------|-------|--------------|');
+    lines.push('', '### Parallel Streams', '', '| Stream | Tasks | Dependencies |', '|--------|-------|--------------|');
     for (const stream of parallelStreams) {
-      const deps =
-        stream.sharedDependencies.length > 0 ? stream.sharedDependencies.join(', ') : 'None';
+      const deps = stream.sharedDependencies.length > 0 ? stream.sharedDependencies.join(', ') : 'None';
       lines.push(`| ${stream.streamId} | ${stream.tasks.join(', ')} | ${deps} |`);
     }
   }
@@ -238,11 +219,7 @@ function generateTaskListSection(completed: CSVTask[], pending: CSVTask[]): stri
 
   // Completed tasks
   if (completed.length > 0) {
-    lines.push('');
-    lines.push(`### Completed Tasks (${completed.length})`);
-    lines.push('');
-    lines.push('| Task ID | Section | Description | Status |');
-    lines.push('|---------|---------|-------------|--------|');
+    lines.push('', `### Completed Tasks (${completed.length})`, '', '| Task ID | Section | Description | Status |', '|---------|---------|-------------|--------|');
     for (const task of completed) {
       lines.push(
         `| **${task['Task ID']}** | ${task.Section} | ${task.Description} | ✅ Completed |`
@@ -252,11 +229,7 @@ function generateTaskListSection(completed: CSVTask[], pending: CSVTask[]): stri
 
   // Pending tasks
   if (pending.length > 0) {
-    lines.push('');
-    lines.push(`### Pending Tasks (${pending.length})`);
-    lines.push('');
-    lines.push('| Task ID | Section | Description | Owner | Dependencies | KPIs |');
-    lines.push('|---------|---------|-------------|-------|--------------|------|');
+    lines.push('', `### Pending Tasks (${pending.length})`, '', '| Task ID | Section | Description | Owner | Dependencies | KPIs |', '|---------|---------|-------------|-------|--------------|------|');
     for (const task of pending) {
       const deps = task.Dependencies || 'None';
       const kpis = task.KPIs || '-';
@@ -272,6 +245,25 @@ function generateTaskListSection(completed: CSVTask[], pending: CSVTask[]): stri
 /**
  * Generate execution strategy section
  */
+function renderParallelStreamBlock(phase: ExecutionPhase, lines: string[]): void {
+  lines.push('Execute these streams **simultaneously** using the `Task` tool:', '', '```bash', '# Spawn parallel sub-agents');
+  const phaseStreams = new Set(phase.tasks.map((t) => t.parallelStreamId).filter(Boolean));
+  for (const streamId of phaseStreams) {
+    const streamTasks = phase.tasks.filter((t) => t.parallelStreamId === streamId);
+    lines.push(`Task("${streamId}", "${inferStreamName(streamTasks)}") &`);
+  }
+  lines.push('```', '');
+}
+
+function renderPhaseTaskSpecs(phase: ExecutionPhase, allTasks: CSVTask[], lines: string[]): void {
+  for (const task of phase.tasks) {
+    const csvTask = allTasks.find((t) => t['Task ID'] === task.taskId);
+    if (csvTask) {
+      lines.push(generateTaskSpecification(csvTask, task), '');
+    }
+  }
+}
+
 function generateExecutionStrategy(
   phases: ExecutionPhase[],
   parallelStreams: ParallelStream[],
@@ -279,40 +271,15 @@ function generateExecutionStrategy(
 ): string {
   const lines: string[] = ['## Execution Strategy'];
 
-  // Generate per-phase sections
   for (const phase of phases) {
-    lines.push('');
-    lines.push(
-      `### Phase ${phase.phaseNumber}: ${phase.name} (${phase.executionType.charAt(0).toUpperCase() + phase.executionType.slice(1)})`
-    );
-    lines.push('');
+    const typeName = phase.executionType.charAt(0).toUpperCase() + phase.executionType.slice(1);
+    lines.push('', `### Phase ${phase.phaseNumber}: ${phase.name} (${typeName})`, '');
 
     if (phase.executionType === 'parallel') {
-      lines.push('Execute these streams **simultaneously** using the `Task` tool:');
-      lines.push('');
-      lines.push('```bash');
-      lines.push('# Spawn parallel sub-agents');
-
-      // Get unique streams in this phase
-      const phaseStreams = new Set(phase.tasks.map((t) => t.parallelStreamId).filter(Boolean));
-      for (const streamId of phaseStreams) {
-        const streamTasks = phase.tasks.filter((t) => t.parallelStreamId === streamId);
-        const streamName = inferStreamName(streamTasks);
-        lines.push(`Task("${streamId}", "${streamName}") &`);
-      }
-
-      lines.push('```');
-      lines.push('');
+      renderParallelStreamBlock(phase, lines);
     }
 
-    // Generate task specifications
-    for (const task of phase.tasks) {
-      const csvTask = allTasks.find((t) => t['Task ID'] === task.taskId);
-      if (csvTask) {
-        lines.push(generateTaskSpecification(csvTask, task));
-        lines.push('');
-      }
-    }
+    renderPhaseTaskSpecs(phase, allTasks, lines);
   }
 
   return lines.join('\n');
@@ -352,20 +319,17 @@ function appendDefinitionOfDoneSection(lines: string[], csvTask: CSVTask): void 
       taskNum++;
     }
   }
-  lines.push(...KEY_OBJECTIVES_LINES);
-  lines.push('');
+  lines.push(...KEY_OBJECTIVES_LINES, '');
 }
 
 function appendValidationSection(lines: string[], csvTask: CSVTask): void {
   if (!csvTask['Validation Method']) return;
-  lines.push('#### Validation');
-  lines.push('```bash');
+  lines.push('#### Validation', '```bash');
   const validations = csvTask['Validation Method'].split(';').map((v) => v.trim());
   for (const validation of validations) {
     if (validation) lines.push(`# ${validation}`);
   }
-  lines.push('```');
-  lines.push('');
+  lines.push('```', '');
 }
 
 function appendKpisSection(lines: string[], csvTask: CSVTask): void {
@@ -380,13 +344,11 @@ function appendKpisSection(lines: string[], csvTask: CSVTask): void {
 
 function appendArtifactsSection(lines: string[], csvTask: CSVTask): void {
   if (!csvTask['Artifacts To Track']) return;
-  lines.push('#### Artifacts');
-  lines.push('| Type | Path | Description |');
-  lines.push('|------|------|-------------|');
+  lines.push('#### Artifacts', '| Type | Path | Description |', '|------|------|-------------|');
   const artifacts = csvTask['Artifacts To Track'].split(';').map((a) => a.trim());
   for (const artifact of artifacts) {
     if (!artifact) continue;
-    const match = artifact.match(/^(ARTIFACT|EVIDENCE|SPEC|PLAN):(.+)$/);
+    const match = /^(ARTIFACT|EVIDENCE|SPEC|PLAN):(.+)$/.exec(artifact);
     if (match) {
       const type = match[1];
       const path = match[2].trim();
@@ -403,14 +365,16 @@ function appendArtifactsSection(lines: string[], csvTask: CSVTask): void {
 function generateTaskSpecification(csvTask: CSVTask, phaseEntry: TaskPhaseEntry): string {
   const lines: string[] = [];
 
-  lines.push(`### ${csvTask['Task ID']}: ${csvTask.Description}`);
-  lines.push('');
-  lines.push(...KEY_OBJECTIVES_LINES);
-  lines.push('#### Context');
-  lines.push(`Dependency: ${csvTask.Dependencies || 'None'}`);
-  lines.push(`Owner: ${csvTask.Owner}`);
-  lines.push(`Execution Mode: ${phaseEntry.executionMode.toUpperCase()}`);
-  lines.push('');
+  lines.push(
+    `### ${csvTask['Task ID']}: ${csvTask.Description}`,
+    '',
+    ...KEY_OBJECTIVES_LINES,
+    '#### Context',
+    `Dependency: ${csvTask.Dependencies || 'None'}`,
+    `Owner: ${csvTask.Owner}`,
+    `Execution Mode: ${phaseEntry.executionMode.toUpperCase()}`,
+    '',
+  );
 
   appendPrerequisitesSection(lines, csvTask);
   appendDefinitionOfDoneSection(lines, csvTask);
@@ -426,7 +390,7 @@ function generateTaskSpecification(csvTask: CSVTask, phaseEntry: TaskPhaseEntry)
  */
 function inferArtifactDescription(path: string): string {
   const filename = path.split('/').pop() || path;
-  const baseName = filename.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+  const baseName = filename.replace(/\.[^.]+$/, '').replaceAll(/[-_]/g, ' ');
 
   // Common patterns
   if (path.includes('attestation')) return 'Completion attestation';
@@ -442,7 +406,26 @@ function inferArtifactDescription(path: string): string {
   if (path.includes('report')) return 'Report output';
 
   // Capitalize first letter of each word
-  return baseName.replace(/\b\w/g, (l) => l.toUpperCase());
+  return baseName.replaceAll(/\b\w/g, (l) => l.toUpperCase());
+}
+
+function buildKpiCategoryMap(tasks: CSVTask[]): Record<string, string[]> {
+  const kpiCategories: Record<string, string[]> = {};
+  for (const task of tasks) {
+    if (!task.KPIs) continue;
+    const category = task.Section || 'General';
+    if (!kpiCategories[category]) kpiCategories[category] = [];
+    const kpis = task.KPIs.split(';').map((k) => k.trim()).filter(Boolean);
+    kpiCategories[category].push(...kpis);
+  }
+  return kpiCategories;
+}
+
+function kpiToTableRow(category: string, kpi: string): string {
+  const parts = kpi.split(':').map((p) => p.trim());
+  const metric = parts[0] || kpi;
+  const target = parts[1] || 'Met';
+  return `| ${category} | ${metric} | ${target} |`;
 }
 
 /**
@@ -450,33 +433,13 @@ function inferArtifactDescription(path: string): string {
  */
 function generateSuccessCriteria(tasks: CSVTask[]): string {
   const lines: string[] = ['## Success Criteria', ''];
+  const kpiCategories = buildKpiCategoryMap(tasks);
 
-  // Group KPIs by category
-  const kpiCategories: Record<string, string[]> = {};
-
-  for (const task of tasks) {
-    if (task.KPIs) {
-      const category = task.Section || 'General';
-      if (!kpiCategories[category]) {
-        kpiCategories[category] = [];
-      }
-      const kpis = task.KPIs.split(';')
-        .map((k) => k.trim())
-        .filter((k) => k);
-      kpiCategories[category].push(...kpis);
-    }
-  }
-
-  lines.push('| Category | Metric | Target |');
-  lines.push('|----------|--------|--------|');
+  lines.push('| Category | Metric | Target |', '|----------|--------|--------|');
 
   for (const [category, kpis] of Object.entries(kpiCategories)) {
-    for (const kpi of [...new Set(kpis)]) {
-      // Parse KPI string to extract metric and target
-      const parts = kpi.split(':').map((p) => p.trim());
-      const metric = parts[0] || kpi;
-      const target = parts[1] || 'Met';
-      lines.push(`| ${category} | ${metric} | ${target} |`);
+    for (const kpi of new Set(kpis)) {
+      lines.push(kpiToTableRow(category, kpi));
     }
   }
 
@@ -486,35 +449,36 @@ function generateSuccessCriteria(tasks: CSVTask[]): string {
 /**
  * Generate agent orchestration instructions
  */
+function buildParallelExampleLines(phase: ExecutionPhase): string {
+  const streams = new Map<string, string[]>();
+  for (const task of phase.tasks) {
+    const streamId = task.parallelStreamId || 'default';
+    if (!streams.has(streamId)) streams.set(streamId, []);
+    streams.get(streamId)!.push(task.taskId);
+  }
+  return Array.from(streams.entries())
+    .map(([streamId, taskIds]) => `Task("${streamId}", "Execute ${taskIds.join(', ')}") &`)
+    .join('\n');
+}
+
+function buildFallbackParallelExample(allTasks: TaskPhaseEntry[]): string {
+  return allTasks
+    .slice(0, 3)
+    .map((t, i) => `Task("STREAM-${String.fromCodePoint(65 + i)}", "Execute ${t.taskId}") &`)
+    .join('\n');
+}
+
 function generateAgentInstructions(sprintNumber: number, phases: ExecutionPhase[]): string {
   const swarmTasks = phases.flatMap((p) => p.tasks).filter((t) => t.executionMode === 'swarm');
   const matopTasks = phases.flatMap((p) => p.tasks).filter((t) => t.executionMode === 'matop');
   const manualTasks = phases.flatMap((p) => p.tasks).filter((t) => t.executionMode === 'manual');
   const allTasks = phases.flatMap((p) => p.tasks);
 
-  // Generate actual parallel spawn example from this sprint's tasks
   const parallelPhases = phases.filter((p) => p.executionType === 'parallel');
-  let parallelExample = '';
-  if (parallelPhases.length > 0) {
-    const firstParallelPhase = parallelPhases[0];
-    const streams = new Map<string, string[]>();
-    for (const task of firstParallelPhase.tasks) {
-      const streamId = task.parallelStreamId || 'default';
-      if (!streams.has(streamId)) {
-        streams.set(streamId, []);
-      }
-      streams.get(streamId)!.push(task.taskId);
-    }
-    parallelExample = Array.from(streams.entries())
-      .map(([streamId, taskIds]) => `Task("${streamId}", "Execute ${taskIds.join(', ')}") &`)
-      .join('\n');
-  } else if (allTasks.length > 0) {
-    // Fallback: show first few tasks as example
-    parallelExample = allTasks
-      .slice(0, 3)
-      .map((t, i) => `Task("STREAM-${String.fromCharCode(65 + i)}", "Execute ${t.taskId}") &`)
-      .join('\n');
-  }
+  const parallelExample =
+    parallelPhases.length > 0
+      ? buildParallelExampleLines(parallelPhases[0])
+      : buildFallbackParallelExample(allTasks);
 
   // Calculate previous sprint for context
   const prevSprint = sprintNumber > 0 ? sprintNumber - 1 : 0;
@@ -800,7 +764,7 @@ pnpm --filter api typecheck
 
 | Phase | Type | Tasks |
 |-------|------|-------|
-${phases.map((p) => `| ${p.phaseNumber} | ${p.executionType} | ${p.tasks.map((t) => t.taskId).join(', ')} |`).join('\n')}`;
+${phases.map((p) => '| ' + p.phaseNumber + ' | ' + p.executionType + ' | ' + p.tasks.map((t) => t.taskId).join(', ') + ' |').join('\n')}`;
 }
 
 /**
@@ -973,26 +937,26 @@ export function generateSprintPromptData(options: GeneratorOptions): SprintPromp
         csvTask['Pre-requisites']
           ?.split(';')
           .map((p) => p.trim())
-          .filter((p) => p) || [],
+          .filter(Boolean) || [],
       tasks:
         csvTask['Definition of Done']
           ?.split(';')
           .map((t) => t.trim())
-          .filter((t) => t) || [],
+          .filter(Boolean) || [],
       validation:
         csvTask['Validation Method']
           ?.split(';')
           .map((v) => v.trim())
-          .filter((v) => v) || [],
+          .filter(Boolean) || [],
       kpis:
         csvTask.KPIs?.split(';')
           .map((k) => k.trim())
-          .filter((k) => k) || [],
+          .filter(Boolean) || [],
       artifacts:
         csvTask['Artifacts To Track']
           ?.split(',')
           .map((a) => a.trim())
-          .filter((a) => a) || [],
+          .filter(Boolean) || [],
       executionMode: phaseEntry?.executionMode || 'manual',
       dependencies:
         csvTask.Dependencies?.split(',')
@@ -1009,7 +973,7 @@ export function generateSprintPromptData(options: GeneratorOptions): SprintPromp
     if (task.KPIs) {
       const kpis = task.KPIs.split(';')
         .map((k) => k.trim())
-        .filter((k) => k);
+        .filter(Boolean);
       for (const kpi of kpis) {
         if (!seenMetrics.has(kpi)) {
           seenMetrics.add(kpi);

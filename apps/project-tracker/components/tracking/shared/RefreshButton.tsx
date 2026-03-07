@@ -47,6 +47,11 @@ export default function RefreshButton({
     ghost: 'text-blue-600 hover:bg-blue-50 disabled:opacity-50',
   };
 
+  let ariaLabel: string | undefined;
+  if (!showLabel) {
+    ariaLabel = isRefreshing ? `${label}: refreshing` : label;
+  }
+
   return (
     <button
       onClick={handleRefresh}
@@ -58,11 +63,15 @@ export default function RefreshButton({
         disabled:cursor-not-allowed
       `}
       aria-busy={isRefreshing}
-      {...(!showLabel ? { 'aria-label': isRefreshing ? `${label}: refreshing` : label } : {})}
+      aria-label={ariaLabel}
     >
       <Icon
         name="refresh"
-        size={size === 'sm' ? 'xs' : size === 'lg' ? 'lg' : 'sm'}
+        size={(() => {
+          if (size === 'sm') return 'xs';
+          if (size === 'lg') return 'lg';
+          return 'sm';
+        })()}
         className={isRefreshing ? 'animate-spin' : ''}
       />
       {showLabel && <span>{isRefreshing ? 'Refreshing...' : label}</span>}

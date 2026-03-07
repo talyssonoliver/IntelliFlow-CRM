@@ -287,7 +287,7 @@ export default function ScheduleView() {
         <h3 className="text-lg font-medium text-red-800">Error Loading Schedule</h3>
         <p className="text-red-600 mt-1">{error}</p>
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => globalThis.location.reload()}
           className="mt-4 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
         >
           Retry
@@ -322,8 +322,9 @@ export default function ScheduleView() {
         <div className="flex items-center gap-4">
           {/* Sprint selector - synced with main navigation */}
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Sprint</label>
+            <label htmlFor="schedule-sprint-select" className="text-sm font-medium text-gray-700">Sprint</label>
             <select
+              id="schedule-sprint-select"
               value={currentSprint}
               onChange={(e) => {
                 const val = e.target.value;
@@ -353,7 +354,7 @@ export default function ScheduleView() {
               checked={showCriticalOnly}
               onChange={(e) => setShowCriticalOnly(e.target.checked)}
               className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
+            />{' '}
             Critical Path Only
           </label>
         </div>
@@ -478,7 +479,7 @@ export default function ScheduleView() {
                     handleTaskClick(scored.taskId);
                   }
                 }}
-                role="button"
+                role="button" // NOSONAR typescript:S6819 — schedule task row with nested icon and text; <button> cannot be flex row container
                 tabIndex={0}
               >
                 <span className="text-xs font-bold text-red-500 w-4">{idx + 1}.</span>

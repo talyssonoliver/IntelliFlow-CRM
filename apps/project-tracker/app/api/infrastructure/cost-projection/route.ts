@@ -6,8 +6,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { existsSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import Papa from 'papaparse';
 import type { RawCSVRow } from '../../../../lib/types';
 
@@ -33,6 +33,13 @@ function getProjectRoot(): string {
   return process.cwd().replace(/[\\/]apps[\\/]project-tracker$/, '');
 }
 
+function computeGateStatus(status: string | undefined): InvestmentGate['status'] {
+  const s = status?.toLowerCase() || '';
+  if (s === 'completed' || s === 'done') return 'completed';
+  if (s === 'in progress') return 'approved';
+  return 'pending';
+}
+
 // Load Sprint_plan.csv to find investment gates
 function loadInvestmentGates(): InvestmentGate[] {
   const projectRoot = getProjectRoot();
@@ -53,7 +60,7 @@ function loadInvestmentGates(): InvestmentGate[] {
       const results = Papa.parse(content, { header: true, skipEmptyLines: true });
 
       // Known investment gate tasks
-      const gateTaskIds = ['IFC-019', 'IFC-027', 'IFC-034', 'IFC-049'];
+      const gateTaskIds = new Set(['IFC-019', 'IFC-027', 'IFC-034', 'IFC-049']);
       const gateAmounts: Record<string, number> = {
         'IFC-019': 500, // Gate 1: £500
         'IFC-027': 2000, // Gate 2: £2000
@@ -63,19 +70,13 @@ function loadInvestmentGates(): InvestmentGate[] {
 
       for (const row of results.data as RawCSVRow[]) {
         const taskId = row['Task ID'];
-        if (taskId && gateTaskIds.includes(taskId)) {
-          const status = row['Status']?.toLowerCase();
+        if (taskId && gateTaskIds.has(taskId)) {
           gates.push({
             taskId,
-            sprint: parseInt(String(row['Target Sprint'] ?? '0')) || 0,
+            sprint: Number.parseInt(String(row['Target Sprint'] ?? '0')) || 0,
             amount: gateAmounts[taskId] || 0,
             description: row['Description'] || '',
-            status:
-              status === 'completed' || status === 'done'
-                ? 'completed'
-                : status === 'in progress'
-                  ? 'approved'
-                  : 'pending',
+            status: computeGateStatus(row['Status']),
           });
         }
       }
@@ -92,53 +93,50 @@ function calculateCosts(): CostItem[] {
   const costs: CostItem[] = [];
 
   // Development phase costs (free tier heavy)
-  costs.push({
-    service: 'Supabase (Database + Auth)',
-    category: 'database',
-    monthlyCost: 0, // Free tier
-    annualCost: 0,
-    trend: 'stable',
-  });
-
-  costs.push({
-    service: 'Vercel (Hosting)',
-    category: 'compute',
-    monthlyCost: 0, // Free tier / hobby
-    annualCost: 0,
-    trend: 'stable',
-  });
-
-  costs.push({
-    service: 'OpenAI API',
-    category: 'ai',
-    monthlyCost: 20, // Estimated dev usage
-    annualCost: 240,
-    trend: 'increasing',
-  });
-
-  costs.push({
-    service: 'GitHub (Actions)',
-    category: 'compute',
-    monthlyCost: 0, // Free tier
-    annualCost: 0,
-    trend: 'stable',
-  });
-
-  costs.push({
-    service: 'Domain + SSL',
-    category: 'other',
-    monthlyCost: 1.5,
-    annualCost: 18,
-    trend: 'stable',
-  });
-
-  costs.push({
-    service: 'Sentry (Error Tracking)',
-    category: 'saas',
-    monthlyCost: 0, // Free tier
-    annualCost: 0,
-    trend: 'stable',
-  });
+  costs.push(
+    {
+      service: 'Supabase (Database + Auth)',
+      category: 'database',
+      monthlyCost: 0, // Free tier
+      annualCost: 0,
+      trend: 'stable',
+    },
+    {
+      service: 'Vercel (Hosting)',
+      category: 'compute',
+      monthlyCost: 0, // Free tier / hobby
+      annualCost: 0,
+      trend: 'stable',
+    },
+    {
+      service: 'OpenAI API',
+      category: 'ai',
+      monthlyCost: 20, // Estimated dev usage
+      annualCost: 240,
+      trend: 'increasing',
+    },
+    {
+      service: 'GitHub (Actions)',
+      category: 'compute',
+      monthlyCost: 0, // Free tier
+      annualCost: 0,
+      trend: 'stable',
+    },
+    {
+      service: 'Domain + SSL',
+      category: 'other',
+      monthlyCost: 1.5,
+      annualCost: 18,
+      trend: 'stable',
+    },
+    {
+      service: 'Sentry (Error Tracking)',
+      category: 'saas',
+      monthlyCost: 0, // Free tier
+      annualCost: 0,
+      trend: 'stable',
+    },
+  );
 
   return costs;
 }

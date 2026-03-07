@@ -47,6 +47,28 @@ export interface ExecutionHistorySummary {
 /**
  * Load all execution runs from artifacts/reports/sprint-runs/ and artifacts/sprint-runs/
  */
+function collectRunFiles(
+  runsDirs: string[],
+  stoaRunsDir: string,
+  systemAuditDir: string
+): Array<{ name: string; path: string; mtime: number }> {
+  const allFiles: Array<{ name: string; path: string; mtime: number }> = [];
+  for (const runsDir of runsDirs) {
+    if (existsSync(runsDir)) {
+      const files = readdirSync(runsDir)
+        .filter((f) => f.endsWith('.json') && !f.endsWith('-results.json'))
+        .map((f) => {
+          const fullPath = join(runsDir, f);
+          return { name: f, path: fullPath, mtime: statSync(fullPath).mtimeMs };
+        });
+      allFiles.push(...files);
+    }
+  }
+  collectJsonSummaries(stoaRunsDir, allFiles);
+  collectJsonSummaries(systemAuditDir, allFiles);
+  return allFiles;
+}
+
 export function loadExecutionHistory(
   projectRoot: string,
   options?: {
@@ -58,34 +80,13 @@ export function loadExecutionHistory(
   // Load sprint map for task → sprint lookup
   const taskSprintMap = buildTaskSprintMap(projectRoot);
 
-  // Check both directories for backwards compatibility
   const runsDirs = [
     join(projectRoot, 'artifacts', 'reports', 'sprint-runs'),
     join(projectRoot, 'artifacts', 'sprint-runs'),
   ];
-
-  // Also check STOA evidence directories for MATOP runs
   const stoaRunsDir = join(projectRoot, 'artifacts', 'stoa-runs');
   const systemAuditDir = join(projectRoot, 'artifacts', 'reports', 'system-audit');
-
-  // Collect files from all directories
-  const allFiles: Array<{ name: string; path: string; mtime: number }> = [];
-
-  for (const runsDir of runsDirs) {
-    if (existsSync(runsDir)) {
-      const files = readdirSync(runsDir)
-        .filter((f) => f.endsWith('.json') && !f.endsWith('-results.json'))
-        .map((f) => {
-          const fullPath = join(runsDir, f);
-          const stats = statSync(fullPath);
-          return { name: f, path: fullPath, mtime: stats.mtimeMs };
-        });
-      allFiles.push(...files);
-    }
-  }
-
-  collectStoaSummaries(stoaRunsDir, allFiles);
-  collectSystemAuditSummaries(systemAuditDir, allFiles);
+  const allFiles = collectRunFiles(runsDirs, stoaRunsDir, systemAuditDir);
 
   if (allFiles.length === 0) {
     return {
@@ -98,7 +99,7 @@ export function loadExecutionHistory(
   }
 
   // Sort by modification time, newest first
-  const files = allFiles.sort((a, b) => b.mtime - a.mtime);
+  const files = [...allFiles].sort((a, b) => b.mtime - a.mtime);
 
   const runs: ExecutionRun[] = [];
 
@@ -159,7 +160,7 @@ export function loadExecutionHistory(
 function parseMATOPRun(data: any, filename: string): ExecutionRun {
   return {
     runId: data.runId || filename.replace('.json', ''),
-    sprintNumber: parseInt(data.sprint, 10) || 0,
+    sprintNumber: Number.parseInt(data.sprint, 10) || 0,
     timestamp: data.timestamp || new Date().toISOString(),
     status: determineStatus(data),
     totalTasks: data.totalTasks || data.tasks?.length || 0,
@@ -218,7 +219,11 @@ function parseSystemAuditRun(
         taskId: data.taskId || 'UNKNOWN',
         description: data.taskName || '',
         status,
-        verdict: verdict === 'PASS' ? 'PASS' : verdict === 'WARN' ? 'WARN' : 'FAIL',
+        verdict: (() => {
+          if (verdict === 'PASS') return 'PASS';
+          if (verdict === 'WARN') return 'WARN';
+          return 'FAIL';
+        })() as 'PASS' | 'WARN' | 'FAIL',
         duration: 0,
         evidenceDir: data.evidence_location,
         error: verdict === 'PASS' || verdict === 'WARN' ? undefined : data.consensus?.reason,
@@ -289,7 +294,7 @@ function buildTaskSprintMap(projectRoot: string): Map<string, number> {
       const id = row['Task ID'];
       if (id) {
         const sprintRaw = row['Target Sprint'];
-        const sprint = sprintRaw === 'Continuous' ? -1 : parseInt(sprintRaw, 10) || 0;
+        const sprint = sprintRaw === 'Continuous' ? -1 : Number.parseInt(sprintRaw, 10) || 0;
         map.set(id, sprint);
       }
     }
@@ -302,22 +307,7 @@ function buildTaskSprintMap(projectRoot: string): Map<string, number> {
 /**
  * Get a specific execution run by ID
  */
-function collectStoaSummaries(
-  dir: string,
-  allFiles: Array<{ name: string; path: string; mtime: number }>
-) {
-  if (!existsSync(dir)) return;
-  const files = readdirSync(dir)
-    .filter((f) => f.endsWith('.json'))
-    .map((f) => {
-      const fullPath = join(dir, f);
-      const stats = statSync(fullPath);
-      return { name: f, path: fullPath, mtime: stats.mtimeMs };
-    });
-  allFiles.push(...files);
-}
-
-function collectSystemAuditSummaries(
+function collectJsonSummaries(
   dir: string,
   allFiles: Array<{ name: string; path: string; mtime: number }>
 ) {

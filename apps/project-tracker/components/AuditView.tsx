@@ -12,7 +12,7 @@ type BundleListItem = {
   taskId?: string;
   sprintNumber?: number;
   updatedAt: string | null;
-  summary: any | null;
+  summary: any;
   paths: { summaryJson: string; summaryMd: string };
 };
 
@@ -112,63 +112,115 @@ function getBundleTypeBadge(type?: 'system' | 'sprint' | 'matop') {
   return { cls: 'bg-blue-100 text-blue-800 border-blue-300', label: 'System' };
 }
 
+type TaskIssue = {
+  description: string;
+  missingArtifacts: string[];
+  foundArtifacts: string[];
+  issues: string[];
+  dodUnverified: number;
+};
+
+function extractDodUnverified(issues: string[]): number {
+  for (const issue of issues) {
+    const match = /(\d{1,10}) DoD criteria unverified/.exec(issue);
+    if (match) return Number.parseInt(match[1], 10);
+  }
+  return 0;
+}
+
+function buildTaskIssues(taskResults: any[]): Record<string, TaskIssue> {
+  const taskIssues: Record<string, TaskIssue> = {};
+  for (const task of taskResults) {
+    if (task.verdict !== 'FAIL') continue;
+    const missingArtifacts = (task.artifacts || [])
+      .filter((a: any) => a.status === 'missing')
+      .map((a: any) => a.path);
+    const foundArtifacts = (task.artifacts || [])
+      .filter((a: any) => a.status === 'found')
+      .map((a: any) => a.path);
+    taskIssues[task.taskId] = {
+      description: task.description || '',
+      missingArtifacts,
+      foundArtifacts,
+      issues: task.issues || [],
+      dodUnverified: extractDodUnverified(task.issues || []),
+    };
+  }
+  return taskIssues;
+}
+
+function getXlsxColumns(xlsx: string): string {
+  if (xlsx.includes('training-completion')) return 'employee_id,name,course,completion_date,score';
+  if (xlsx.includes('alternatives')) return 'vendor,service,alternative,migration_effort,notes';
+  if (xlsx.includes('mapping')) return 'source_table,source_field,target_table,target_field,transformation';
+  return 'appropriate columns for the task';
+}
+
+function buildTaskSummarySection(taskIssues: Record<string, TaskIssue>): string {
+  let out = '';
+  for (const [taskId, info] of Object.entries(taskIssues)) {
+    out += `### ${taskId}: ${info.description}\n\n`;
+    const xlsxFiles = info.missingArtifacts.filter((a) => a.endsWith('.xlsx'));
+    const otherMissing = info.missingArtifacts.filter((a) => !a.endsWith('.xlsx'));
+    const contextAckMissing = otherMissing.filter((a) => a.includes('context_ack.json'));
+    const regularMissing = otherMissing.filter((a) => !a.includes('context_ack.json'));
+    if (regularMissing.length > 0) {
+      out += `**Missing Artifacts (create these):**\n`;
+      for (const artifact of regularMissing) {
+        out += `- \`${artifact.replace(/^EVIDENCE:/, '')}\`\n`;
+      }
+      out += '\n';
+    }
+    if (xlsxFiles.length > 0) {
+      out += `**Excel Files Required (create as CSV instead):**\n`;
+      for (const artifact of xlsxFiles) {
+        out += `- \`${artifact.replace('.xlsx', '.csv')}\` (instead of .xlsx)\n`;
+      }
+      out += '\n';
+    }
+    if (contextAckMissing.length > 0) {
+      out += `**Create attestation file:** \`${contextAckMissing[0].replace(/^EVIDENCE:/, '')}\`\n\n`;
+    }
+    if (info.dodUnverified > 0) {
+      out += `**DoD Criteria:** ${info.dodUnverified} unverified criteria need evidence\n\n`;
+    }
+    out += '---\n\n';
+  }
+  return out;
+}
+
+function buildDetailedFixSection(taskIssues: Record<string, TaskIssue>, timestamp: string): string {
+  let out = '';
+  for (const [taskId, info] of Object.entries(taskIssues)) {
+    const xlsxFiles = info.missingArtifacts.filter((a) => a.endsWith('.xlsx'));
+    const attestationDir = `artifacts/attestations/${taskId}`;
+    out += `### ${taskId}\n\n`;
+    for (const xlsx of xlsxFiles) {
+      const csvPath = xlsx.replace('.xlsx', '.csv');
+      out += `1. Create \`${csvPath}\` with columns: \`${getXlsxColumns(xlsx)}\`\n`;
+    }
+    const ackNum = xlsxFiles.length > 0 ? '2' : '1';
+    const moreArtifactsSuffix = info.foundArtifacts.length > 3 ? ',\n    "..."' : '';
+    const filesReadJson = info.foundArtifacts.length > 0
+      ? `\n    "${info.foundArtifacts.slice(0, 3).join('",\n    "')}"${moreArtifactsSuffix}`
+      : '';
+    out += `${ackNum}. Create \`${attestationDir}/context_ack.json\`:\n\`\`\`json\n{\n  "task_id": "${taskId}",\n  "acknowledged_at": "${timestamp}",\n  "files_read": [${filesReadJson}\n  ],\n  "invariants_acknowledged": [\n    "All required artifacts have been created",\n    "Implementation matches task requirements",\n    "DoD criteria verified through artifact inspection"\n  ]\n}\n\`\`\`\n\n`;
+  }
+  return out;
+}
+
 /**
  * Generates a prompt for fixing failed audit issues
  */
 function generateFixPrompt(bundle: BundleDetailResponse): string {
   const summary = bundle.summary;
-  if (!summary || summary.verdict !== 'FAIL') {
-    return '';
-  }
+  if (summary?.verdict !== 'FAIL') return '';
 
   const sprintNumber = summary.sprint ?? 'Unknown';
-  const taskResults = summary.task_results || [];
-
-  // Group issues by task
-  const taskIssues: Record<
-    string,
-    {
-      description: string;
-      missingArtifacts: string[];
-      foundArtifacts: string[];
-      issues: string[];
-      dodUnverified: number;
-    }
-  > = {};
-
-  for (const task of taskResults) {
-    if (task.verdict === 'FAIL') {
-      const missingArtifacts = (task.artifacts || [])
-        .filter((a: any) => a.status === 'missing')
-        .map((a: any) => a.path);
-
-      const foundArtifacts = (task.artifacts || [])
-        .filter((a: any) => a.status === 'found')
-        .map((a: any) => a.path);
-
-      // Extract DoD unverified count from issues
-      let dodUnverified = 0;
-      for (const issue of task.issues || []) {
-        const match = issue.match(/(\d{1,10}) DoD criteria unverified/);
-        if (match) {
-          dodUnverified = parseInt(match[1], 10);
-        }
-      }
-
-      taskIssues[task.taskId] = {
-        description: task.description || '',
-        missingArtifacts,
-        foundArtifacts,
-        issues: task.issues || [],
-        dodUnverified,
-      };
-    }
-  }
-
+  const taskIssues = buildTaskIssues(summary.task_results || []);
   const timestamp = new Date().toISOString();
 
-  // Build the prompt
-  let prompt = `# Fix Sprint ${sprintNumber} Audit Failures
+  return `# Fix Sprint ${sprintNumber} Audit Failures
 
 ## Context
 The Sprint ${sprintNumber} completion audit has FAILED. There are ${Object.keys(taskIssues).length} tasks with issues that need to be resolved.
@@ -180,96 +232,11 @@ npx tsx tools/scripts/audit-sprint-completion.ts --sprint ${sprintNumber}
 
 ## Tasks to Fix
 
-`;
-
-  for (const [taskId, info] of Object.entries(taskIssues)) {
-    prompt += `### ${taskId}: ${info.description}\n\n`;
-
-    // Separate xlsx files (need manual/special handling) from other artifacts
-    const xlsxFiles = info.missingArtifacts.filter((a) => a.endsWith('.xlsx'));
-    const otherMissing = info.missingArtifacts.filter((a) => !a.endsWith('.xlsx'));
-    const contextAckMissing = otherMissing.filter((a) => a.includes('context_ack.json'));
-    const regularMissing = otherMissing.filter((a) => !a.includes('context_ack.json'));
-
-    if (regularMissing.length > 0) {
-      prompt += `**Missing Artifacts (create these):**\n`;
-      for (const artifact of regularMissing) {
-        const cleanPath = artifact.replace(/^EVIDENCE:/, '');
-        prompt += `- \`${cleanPath}\`\n`;
-      }
-      prompt += '\n';
-    }
-
-    if (xlsxFiles.length > 0) {
-      prompt += `**Excel Files Required (create as CSV instead):**\n`;
-      for (const artifact of xlsxFiles) {
-        const csvPath = artifact.replace('.xlsx', '.csv');
-        prompt += `- \`${csvPath}\` (instead of .xlsx)\n`;
-      }
-      prompt += '\n';
-    }
-
-    if (contextAckMissing.length > 0) {
-      const cleanPath = contextAckMissing[0].replace(/^EVIDENCE:/, '');
-      prompt += `**Create attestation file:** \`${cleanPath}\`\n\n`;
-    }
-
-    if (info.dodUnverified > 0) {
-      prompt += `**DoD Criteria:** ${info.dodUnverified} unverified criteria need evidence\n\n`;
-    }
-
-    prompt += '---\n\n';
-  }
-
-  // Generate specific instructions for each task
-  prompt += `## Detailed Fix Instructions
+${buildTaskSummarySection(taskIssues)}## Detailed Fix Instructions
 
 For each task above, create the required artifacts. Here are the specific actions:
 
-`;
-
-  for (const [taskId, info] of Object.entries(taskIssues)) {
-    const xlsxFiles = info.missingArtifacts.filter((a) => a.endsWith('.xlsx'));
-    const attestationDir = `artifacts/attestations/${taskId}`;
-
-    prompt += `### ${taskId}\n\n`;
-
-    // Handle xlsx → csv conversion suggestions
-    if (xlsxFiles.length > 0) {
-      for (const xlsx of xlsxFiles) {
-        const csvPath = xlsx.replace('.xlsx', '.csv');
-        if (xlsx.includes('training-completion')) {
-          prompt += `1. Create \`${csvPath}\` with columns: \`employee_id,name,course,completion_date,score\`\n`;
-        } else if (xlsx.includes('alternatives')) {
-          prompt += `1. Create \`${csvPath}\` with columns: \`vendor,service,alternative,migration_effort,notes\`\n`;
-        } else if (xlsx.includes('mapping')) {
-          prompt += `1. Create \`${csvPath}\` with columns: \`source_table,source_field,target_table,target_field,transformation\`\n`;
-        } else {
-          prompt += `1. Create \`${csvPath}\` with appropriate columns for the task\n`;
-        }
-      }
-    }
-
-    // Generate context_ack.json content
-    prompt += `${xlsxFiles.length > 0 ? '2' : '1'}. Create \`${attestationDir}/context_ack.json\`:\n`;
-    prompt += `\`\`\`json
-{
-  "task_id": "${taskId}",
-  "acknowledged_at": "${timestamp}",
-  "files_read": [${info.foundArtifacts.length > 0 ? `\n    "${info.foundArtifacts.slice(0, 3).join('",\n    "')}"${info.foundArtifacts.length > 3 ? ',\n    "..."' : ''}` : ''}
-  ],
-  "invariants_acknowledged": [
-    "All required artifacts have been created",
-    "Implementation matches task requirements",
-    "DoD criteria verified through artifact inspection"
-  ]
-}
-\`\`\`
-
-`;
-  }
-
-  prompt += `## Execution Steps
+${buildDetailedFixSection(taskIssues, timestamp)}## Execution Steps
 
 1. **Read task requirements** from Sprint_plan.csv to understand each task's DoD
 2. **Create missing artifacts** using the templates above
@@ -284,8 +251,6 @@ For each task above, create the required artifacts. Here are the specific action
 - The \`context_ack.json\` files prove you've reviewed the task completion
 - Focus on tasks with the most unverified DoD criteria first
 `;
-
-  return prompt;
 }
 
 export default function AuditView() {
@@ -350,17 +315,51 @@ export default function AuditView() {
 
   const appendLogLine = (line: string) => {
     setLogLines((prev) => {
-      const next = prev.length > 2000 ? prev.slice(prev.length - 2000) : prev;
+      const next = prev.length > 2000 ? prev.slice(-2000) : prev;
       return [...next, line];
     });
   };
 
   const parseAuditProgress = (line: string) => {
-    const m = line.match(/^\[audit\]\s+(\S+)\s+tier=(\d+)\s+status=(\S+)\s+source=(\S+)/);
+    const m = /^\[audit\]\s+(\S+)\s+tier=(\d+)\s+status=(\S+)\s+source=(\S+)/.exec(line);
     if (!m) return;
     const [, toolId, tierRaw, status, source] = m;
     const tier = Number.parseInt(tierRaw, 10);
     setToolStatuses((prev) => ({ ...prev, [toolId]: { tier, status, source } }));
+  };
+
+  const handleStreamStart = (e: Event, runIdRef: { current: string | null }) => {
+    const data = JSON.parse((e as MessageEvent).data);
+    setCurrentCmd(data.cmd ?? null);
+    setCurrentRunId(data.runId ?? null);
+    runIdRef.current = data.runId ?? null;
+    setStartedAt(data.startedAt ?? null);
+    if (data.runId) setSelectedRunId(String(data.runId));
+    appendLogLine(`[ui] started cmd=${data.cmd} runId=${data.runId ?? ''}`);
+  };
+
+  const handleStreamLog = (e: Event) => {
+    const data = JSON.parse((e as MessageEvent).data);
+    const prefix = data.stream === 'stderr' ? '[stderr]' : '[stdout]';
+    appendLogLine(`${prefix} ${data.line}`);
+    parseAuditProgress(String(data.line || ''));
+  };
+
+  const handleStreamServerError = (e: Event) => {
+    const data = JSON.parse((e as MessageEvent).data);
+    setServerError(String(data.message || 'Unknown server error'));
+    appendLogLine(`[ui] server-error: ${String(data.message || '')}`);
+  };
+
+  const handleStreamExit = async (e: Event, runIdRef: { current: string | null }) => {
+    const data = JSON.parse((e as MessageEvent).data);
+    setExitCode(typeof data.exitCode === 'number' ? data.exitCode : null);
+    appendLogLine(`[ui] exit code=${data.exitCode}`);
+    stopStream();
+    await refresh();
+    if (runIdRef.current) {
+      await openBundle(runIdRef.current);
+    }
   };
 
   const startStream = (url: string) => {
@@ -374,47 +373,13 @@ export default function AuditView() {
 
     const es = new EventSource(url);
     eventSourceRef.current = es;
-    let streamRunId: string | null = null;
+    const runIdRef = { current: null as string | null };
 
-    es.addEventListener('start', (e) => {
-      const data = JSON.parse((e as MessageEvent).data);
-      setCurrentCmd(data.cmd ?? null);
-      setCurrentRunId(data.runId ?? null);
-      streamRunId = data.runId ?? null;
-      setStartedAt(data.startedAt ?? null);
-      if (data.runId) setSelectedRunId(String(data.runId));
-      appendLogLine(`[ui] started cmd=${data.cmd} runId=${data.runId ?? ''}`);
-    });
-
-    es.addEventListener('log', (e) => {
-      const data = JSON.parse((e as MessageEvent).data);
-      const prefix = data.stream === 'stderr' ? '[stderr]' : '[stdout]';
-      const line = `${prefix} ${data.line}`;
-      appendLogLine(line);
-      parseAuditProgress(String(data.line || ''));
-    });
-
-    es.addEventListener('server-error', (e) => {
-      const data = JSON.parse((e as MessageEvent).data);
-      setServerError(String(data.message || 'Unknown server error'));
-      appendLogLine(`[ui] server-error: ${String(data.message || '')}`);
-    });
-
-    es.addEventListener('exit', async (e) => {
-      const data = JSON.parse((e as MessageEvent).data);
-      setExitCode(typeof data.exitCode === 'number' ? data.exitCode : null);
-      appendLogLine(`[ui] exit code=${data.exitCode}`);
-      stopStream();
-      await refresh();
-      if (streamRunId) {
-        await openBundle(streamRunId);
-      }
-    });
-
-    es.onerror = () => {
-      // Connection-level errors (server already sends server-error when possible).
-      stopStream();
-    };
+    es.addEventListener('start', (e) => handleStreamStart(e, runIdRef));
+    es.addEventListener('log', handleStreamLog);
+    es.addEventListener('server-error', handleStreamServerError);
+    es.addEventListener('exit', (e) => handleStreamExit(e, runIdRef));
+    es.onerror = () => stopStream();
   };
 
   const loadBundles = async () => {
@@ -612,7 +577,7 @@ export default function AuditView() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Icon name="terminal" size="xl" className="text-blue-600" />
+            <Icon name="terminal" size="xl" className="text-blue-600" />{' '}
             Audit
           </h2>
           <p className="text-sm text-gray-600 mt-1">
@@ -627,7 +592,7 @@ export default function AuditView() {
           disabled={isLoading || isRunning}
           className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
         >
-          <Icon name="refresh" size="sm" className={isLoading ? 'animate-spin' : ''} />
+          <Icon name="refresh" size="sm" className={isLoading ? 'animate-spin' : ''} />{' '}
           Refresh
         </button>
       </div>
@@ -637,7 +602,7 @@ export default function AuditView() {
         <div className="bg-white rounded-lg shadow p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <Icon name="play_arrow" size="lg" className="text-green-600" />
+              <Icon name="play_arrow" size="lg" className="text-green-600" />{' '}
               Run System Audit
             </h3>
             {isRunning && (
@@ -710,7 +675,7 @@ export default function AuditView() {
               checked={resume}
               onChange={(e) => setResume(e.target.checked)}
               className="rounded"
-            />
+            />{' '}
             Resume passing results when possible
           </label>
 
@@ -721,7 +686,7 @@ export default function AuditView() {
               disabled={isRunning}
               className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
             >
-              <Icon name="play_arrow" size="sm" />
+              <Icon name="play_arrow" size="sm" />{' '}
               Run
             </button>
             <button
@@ -730,7 +695,7 @@ export default function AuditView() {
               disabled={!isRunning}
               className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 disabled:opacity-50"
             >
-              <Icon name="cancel" size="sm" />
+              <Icon name="cancel" size="sm" />{' '}
               Stop
             </button>
           </div>
@@ -738,7 +703,7 @@ export default function AuditView() {
 
         <div className="bg-white rounded-lg shadow p-6 space-y-4">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Icon name="description" size="lg" className="text-purple-600" />
+            <Icon name="description" size="lg" className="text-purple-600" />{' '}
             Reports & Utilities
           </h3>
 
@@ -773,25 +738,28 @@ export default function AuditView() {
 
           <div className="border-t pt-4 space-y-3">
             <div className="text-sm font-medium text-gray-700 flex items-center gap-2">
-              <Icon name="assignment_turned_in" size="sm" className="text-teal-600" />
+              <Icon name="assignment_turned_in" size="sm" className="text-teal-600" />{' '}
               Sprint Completion Audit
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label className="text-sm">
                 <span className="block text-gray-600 mb-1">Sprint # (with completed tasks)</span>
-                {isLoadingSprints ? (
-                  <div className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-400">
-                    Loading...
-                  </div>
-                ) : availableSprints.length === 0 ? (
-                  <div className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-500 text-sm">
-                    No sprints with completed tasks
-                  </div>
-                ) : (
+                {(() => {
+                  if (isLoadingSprints) return (
+                    <div className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-400">
+                      Loading...
+                    </div>
+                  );
+                  if (availableSprints.length === 0) return (
+                    <div className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-500 text-sm">
+                      No sprints with completed tasks
+                    </div>
+                  );
+                  return (
                   <select
                     value={sprintToAudit ?? ''}
                     onChange={(e) => {
-                      const sprint = parseInt(e.target.value, 10);
+                      const sprint = Number.parseInt(e.target.value, 10);
                       setSprintToAudit(sprint);
                       loadSprintAuditReport(sprint);
                     }}
@@ -803,7 +771,8 @@ export default function AuditView() {
                       </option>
                     ))}
                   </select>
-                )}
+                  );
+                })()}
               </label>
               <div className="space-y-1">
                 <label className="flex items-center gap-2 text-sm text-gray-700">
@@ -812,7 +781,7 @@ export default function AuditView() {
                     checked={strictMode}
                     onChange={(e) => setStrictMode(e.target.checked)}
                     className="rounded"
-                  />
+                  />{' '}
                   Strict Mode
                 </label>
                 <label className="flex items-center gap-2 text-sm text-gray-700">
@@ -821,7 +790,7 @@ export default function AuditView() {
                     checked={skipValidations}
                     onChange={(e) => setSkipValidations(e.target.checked)}
                     className="rounded"
-                  />
+                  />{' '}
                   Skip Validations
                 </label>
               </div>
@@ -834,12 +803,12 @@ export default function AuditView() {
             >
               {isRunning ? (
                 <>
-                  <Icon name="refresh" size="sm" className="animate-spin" />
+                  <Icon name="refresh" size="sm" className="animate-spin" />{' '}
                   Auditing...
                 </>
               ) : (
                 <>
-                  <Icon name="play_arrow" size="sm" />
+                  <Icon name="play_arrow" size="sm" />{' '}
                   Run Completion Audit
                 </>
               )}
@@ -865,7 +834,7 @@ export default function AuditView() {
 
                 {sprintAuditResult.error && (
                   <div className="flex items-center gap-2 text-sm text-red-600">
-                    <Icon name="warning" size="sm" />
+                    <Icon name="warning" size="sm" />{' '}
                     {sprintAuditResult.error}
                   </div>
                 )}
@@ -961,7 +930,7 @@ export default function AuditView() {
 
         {serverError && (
           <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
-            <Icon name="warning" size="sm" />
+            <Icon name="warning" size="sm" />{' '}
             {serverError}
           </div>
         )}
@@ -1088,7 +1057,7 @@ export default function AuditView() {
                         onClick={handleGenerateFixPrompt}
                         className="flex items-center gap-1 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-xs font-medium"
                       >
-                        <Icon name="auto_fix_high" size="sm" />
+                        <Icon name="auto_fix_high" size="sm" />{' '}
                         Generate Fix Prompt
                       </button>
                     )}
@@ -1107,7 +1076,7 @@ export default function AuditView() {
 
         {!isLoading && bundles.length === 0 && (
           <div className="text-sm text-gray-500">
-            No audit bundles found yet. Run an audit to generate <code>{bundlesDir}</code>.
+            No audit bundles found yet. Run an audit to generate{' '}<code>{bundlesDir}</code>.
           </div>
         )}
 
@@ -1190,12 +1159,12 @@ export default function AuditView() {
                 >
                   {promptCopied ? (
                     <>
-                      <Icon name="check_circle" size="sm" />
+                      <Icon name="check_circle" size="sm" />{' '}
                       Copied!
                     </>
                   ) : (
                     <>
-                      <Icon name="content_copy" size="sm" />
+                      <Icon name="content_copy" size="sm" />{' '}
                       Copy to Clipboard
                     </>
                   )}

@@ -54,6 +54,7 @@ interface DependencyGraphResponse {
   };
   violations_count: number;
   last_updated: string;
+  nodes?: Record<string, { task_id: string; dependencies: string[]; dependents: string[] }>;
 }
 
 interface NextStepsViewProps {
@@ -61,7 +62,135 @@ interface NextStepsViewProps {
   sprint?: number | 'all' | 'Continuous';
 }
 
-export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextStepsViewProps) {
+function buildDepGraphNodesFromResult(
+  nodes: Record<string, { task_id: string; dependencies: string[]; dependents: string[] }> | undefined
+): Map<string, DepGraphNode> {
+  const map = new Map<string, DepGraphNode>();
+  if (!nodes) return map;
+  for (const [id, node] of Object.entries(nodes)) {
+    map.set(id, {
+      task_id: node.task_id || id,
+      dependencies: node.dependencies || [],
+      dependents: node.dependents || [],
+    });
+  }
+  return map;
+}
+
+function buildScheduleMapFromCritData(
+  critData: any,
+  schedCalcData: any,
+  criticalPathIds: Set<string>
+): Map<string, ScheduleTaskInfo> {
+  const map = new Map<string, ScheduleTaskInfo>();
+  if (!critData?.tasks) return map;
+  for (const t of critData.tasks) {
+    const calcTask = schedCalcData?.tasks?.[t.taskId];
+    map.set(t.taskId, {
+      taskId: t.taskId,
+      earlyFinish: t.earlyFinish,
+      totalFloat: calcTask?.totalFloat,
+      isCritical: criticalPathIds.has(t.taskId),
+    });
+  }
+  return map;
+}
+
+type PlanStatusEntry = {
+  hasSpec: boolean;
+  hasPlan: boolean;
+  specPath?: string | null;
+  planPath?: string | null;
+};
+
+async function fetchPlanStatusForTask(taskId: string): Promise<PlanStatusEntry> {
+  try {
+    const planRes = await fetch(`/api/tasks/plan?taskId=${taskId}`);
+    if (planRes.ok) {
+      const planData = await planRes.json();
+      return {
+        hasSpec: planData.hasSpec,
+        hasPlan: planData.hasPlan,
+        specPath: planData.specPath,
+        planPath: planData.planPath,
+      };
+    }
+  } catch {
+    // fall through to default
+  }
+  return { hasSpec: false, hasPlan: false, specPath: null, planPath: null };
+}
+
+async function buildPlanStatusMap(
+  taskIds: string[]
+): Promise<Record<string, PlanStatusEntry>> {
+  const entries = await Promise.all(
+    taskIds.map(async (taskId) => [taskId, await fetchPlanStatusForTask(taskId)] as const)
+  );
+  return Object.fromEntries(entries);
+}
+
+async function computeScoredTaskMap(
+  result: DependencyGraphResponse,
+  planStatusMap: Record<string, PlanStatusEntry>,
+  sprintParam: string,
+  sprint: number | 'all' | 'Continuous'
+): Promise<Map<string, ScoredTask>> {
+  const [critRes, schedCalcRes, progressRes] = await Promise.all([
+    fetch(`/api/schedule/critical-path?sprint=${sprintParam}`).catch(() => null),
+    fetch(`/api/schedule/calculate?sprint=${sprintParam}`).catch(() => null),
+    fetch(`/api/sprint/progress?sprint=${sprintParam}`).catch(() => null),
+  ]);
+  const critData = critRes ? await critRes.json().catch(() => null) : null;
+  const schedCalcData = schedCalcRes ? await schedCalcRes.json().catch(() => null) : null;
+  const progressData = progressRes ? await progressRes.json().catch(() => null) : null;
+
+  const depGraphNodes = buildDepGraphNodesFromResult(result.nodes);
+  const criticalPathIds = new Set<string>(critData?.criticalPath?.taskIds || []);
+  const scheduleTaskMap = buildScheduleMapFromCritData(critData, schedCalcData, criticalPathIds);
+  const phaseProgress: PhaseProgress[] = progressData?.phases || [];
+
+  const sessionStatuses = new Map<string, SessionStatus>(
+    Object.entries(planStatusMap).map(([id, ps]) => [id, { hasSpec: ps.hasSpec, hasPlan: ps.hasPlan }])
+  );
+
+  const readyTasks = result.ready_to_start_details.map((rd: ReadyTaskDetail) => ({
+    id: rd.taskId,
+    section: rd.section,
+    description: rd.description,
+    owner: rd.owner,
+    dependencies: rd.dependencies,
+    cleanDependencies: [],
+    crossQuarterDeps: false,
+    prerequisites: '',
+    dod: '',
+    status: (rd.status || 'Planned') as import('../lib/types').TaskStatus,
+    kpis: '',
+    sprint: rd.sprint,
+    artifacts: [],
+    validation: '',
+    cadence: '',
+  }));
+
+  const currentSprintNum = typeof sprint === 'number' ? sprint : undefined;
+  const scored = computePriorityScores(
+    readyTasks,
+    depGraphNodes,
+    criticalPathIds,
+    sessionStatuses,
+    scheduleTaskMap,
+    phaseProgress,
+    currentSprintNum
+  );
+
+  const map = new Map<string, ScoredTask>();
+  for (const s of scored) {
+    map.set(s.taskId, s);
+  }
+  return map;
+}
+
+export default function NextStepsView({ onTaskClick, sprint = 'all' }: Readonly<NextStepsViewProps>) {
   const [data, setData] = useState<DependencyGraphResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -96,134 +225,19 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
       setError(null);
       const sprintParam = getSprintParam();
       const response = await fetch(`/api/dependency-graph?sprint=${sprintParam}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch dependency graph');
-      }
+      if (!response.ok) throw new Error('Failed to fetch dependency graph');
+
       const result = await response.json();
       setData(result);
 
-      // Auto-expand the next actionable sprint
       if (result.summary?.next_sprint !== null) {
         setExpandedSprints((prev) => new Set([...prev, result.summary.next_sprint]));
       }
 
-      // Fetch planning status for all ready tasks
       if (result.ready_to_start && result.ready_to_start.length > 0) {
-        const planStatusMap: Record<
-          string,
-          { hasSpec: boolean; hasPlan: boolean; specPath?: string | null; planPath?: string | null }
-        > = {};
-
-        // Fetch planning status for each ready task in parallel
-        const planChecks = result.ready_to_start.map(async (taskId: string) => {
-          try {
-            const planRes = await fetch(`/api/tasks/plan?taskId=${taskId}`);
-            if (planRes.ok) {
-              const planData = await planRes.json();
-              planStatusMap[taskId] = {
-                hasSpec: planData.hasSpec,
-                hasPlan: planData.hasPlan,
-                specPath: planData.specPath,
-                planPath: planData.planPath,
-              };
-            }
-          } catch {
-            // Default to not planned
-            planStatusMap[taskId] = {
-              hasSpec: false,
-              hasPlan: false,
-              specPath: null,
-              planPath: null,
-            };
-          }
-        });
-
-        await Promise.all(planChecks);
+        const planStatusMap = await buildPlanStatusMap(result.ready_to_start);
         setTaskPlanStatus(planStatusMap);
-
-        // Fetch critical path, schedule calculate, and sprint progress for priority scoring
-        const [critRes, schedCalcRes, progressRes] = await Promise.all([
-          fetch(`/api/schedule/critical-path?sprint=${sprintParam}`).catch(() => null),
-          fetch(`/api/schedule/calculate?sprint=${sprintParam}`).catch(() => null),
-          fetch(`/api/sprint/progress?sprint=${sprintParam}`).catch(() => null),
-        ]);
-        const critData = critRes ? await critRes.json().catch(() => null) : null;
-        const schedCalcData = schedCalcRes ? await schedCalcRes.json().catch(() => null) : null;
-        const progressData = progressRes ? await progressRes.json().catch(() => null) : null;
-
-        // Build structures for priority scorer
-        const depGraphNodes = new Map<string, DepGraphNode>();
-        if (result.nodes) {
-          for (const [id, node] of Object.entries(
-            result.nodes as Record<
-              string,
-              { task_id: string; dependencies: string[]; dependents: string[] }
-            >
-          )) {
-            depGraphNodes.set(id, {
-              task_id: node.task_id || id,
-              dependencies: node.dependencies || [],
-              dependents: node.dependents || [],
-            });
-          }
-        }
-
-        const criticalPathIds = new Set<string>(critData?.criticalPath?.taskIds || []);
-
-        const scheduleTaskMap = new Map<string, ScheduleTaskInfo>();
-        if (critData?.tasks) {
-          for (const t of critData.tasks) {
-            // Enrich with totalFloat from schedule/calculate data (CPM-based)
-            const calcTask = schedCalcData?.tasks?.[t.taskId];
-            scheduleTaskMap.set(t.taskId, {
-              taskId: t.taskId,
-              earlyFinish: t.earlyFinish,
-              totalFloat: calcTask?.totalFloat,
-              isCritical: criticalPathIds.has(t.taskId),
-            });
-          }
-        }
-
-        const phaseProgress: PhaseProgress[] = progressData?.phases || [];
-
-        const sessionStatuses = new Map<string, SessionStatus>();
-        for (const [taskId, ps] of Object.entries(planStatusMap)) {
-          sessionStatuses.set(taskId, { hasSpec: ps.hasSpec, hasPlan: ps.hasPlan });
-        }
-
-        // Build minimal Task objects for scorer
-        const readyTasks = result.ready_to_start_details.map((rd: ReadyTaskDetail) => ({
-          id: rd.taskId,
-          section: rd.section,
-          description: rd.description,
-          owner: rd.owner,
-          dependencies: rd.dependencies,
-          cleanDependencies: [],
-          crossQuarterDeps: false,
-          prerequisites: '',
-          dod: '',
-          status: rd.status || 'Planned',
-          kpis: '',
-          sprint: rd.sprint,
-          artifacts: [],
-          validation: '',
-        }));
-
-        const currentSprintNum = typeof sprint === 'number' ? sprint : undefined;
-        const scored = computePriorityScores(
-          readyTasks,
-          depGraphNodes,
-          criticalPathIds,
-          sessionStatuses,
-          scheduleTaskMap,
-          phaseProgress,
-          currentSprintNum
-        );
-
-        const newMap = new Map<string, ScoredTask>();
-        for (const s of scored) {
-          newMap.set(s.taskId, s);
-        }
+        const newMap = await computeScoredTaskMap(result, planStatusMap, sprintParam, sprint);
         setScoredMap(newMap);
       }
     } catch (err) {
@@ -531,7 +545,7 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
               <div>
                 <h3 className="text-lg font-semibold text-white">Ready to Start</h3>
                 <p className="text-green-100 text-sm">
-                  {summary.ready_count} task{summary.ready_count !== 1 ? 's' : ''} with all
+                  {summary.ready_count} task{summary.ready_count === 1 ? '' : 's'} with all
                   dependencies satisfied
                 </p>
               </div>
@@ -596,7 +610,7 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                         )}
                       </div>
                       <span className="text-sm text-gray-500">
-                        {sprintTasks.length} task{sprintTasks.length !== 1 ? 's' : ''}
+                        {sprintTasks.length} task{sprintTasks.length === 1 ? '' : 's'}
                         {(nowCount > 0 || nextCount > 0) && (
                           <span className="ml-1 text-xs">
                             ({nowCount > 0 && <span className="text-red-600">{nowCount} NOW</span>}
@@ -630,7 +644,7 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                                   handleTaskClick(task.taskId);
                                 }
                               }}
-                              role="button"
+                              role="button" // NOSONAR typescript:S6819 — task card with nested display content; <button> cannot be block container
                               tabIndex={0}
                               className="p-3 hover:bg-gray-50 cursor-pointer transition-colors"
                             >
@@ -688,86 +702,86 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                                     {task.owner}
                                   </span>
                                   {/* Show Plan or Start button based on planning status and task readiness */}
-                                  {isReadyStatus ? (
-                                    isTaskPlanned(task.taskId) ? (
-                                      <>
-                                        <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
-                                          <Icon name="check" size="xs" />
-                                          Planned
-                                        </span>
-                                        <button
-                                          onClick={(e) => copyPath(e, specPath)}
-                                          className="px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 border border-gray-200 text-gray-700 hover:bg-gray-100"
-                                          title={specPath || 'Spec path'}
-                                        >
-                                          <Icon name="content_copy" size="xs" />
-                                          Spec
-                                        </button>
-                                        <button
-                                          onClick={(e) => copyPath(e, planPath)}
-                                          className="px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 border border-gray-200 text-gray-700 hover:bg-gray-100"
-                                          title={planPath || 'Plan path'}
-                                        >
-                                          <Icon name="content_copy" size="xs" />
-                                          Plan
-                                        </button>
-                                        <button
-                                          onClick={(e) => handleStartClick(e, task)}
-                                          disabled={startingTask === task.taskId}
-                                          className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-all ${
-                                            startingTask === task.taskId
-                                              ? 'bg-gray-200 text-gray-500 cursor-wait'
-                                              : 'bg-green-600 text-white hover:bg-green-700 shadow-sm hover:shadow'
-                                          }`}
-                                        >
-                                          {startingTask === task.taskId ? (
-                                            <>
-                                              <Icon
-                                                name="progress_activity"
-                                                size="sm"
-                                                className="animate-spin"
-                                              />
-                                              <span>Starting...</span>
-                                            </>
-                                          ) : (
-                                            <>
-                                              <Icon name="play_arrow" size="sm" />
-                                              <span>Start</span>
-                                            </>
-                                          )}
-                                        </button>
-                                      </>
-                                    ) : (
+                                  {!isReadyStatus && (
+                                    <span className="text-xs text-gray-500">
+                                      Not ready to plan/start
+                                    </span>
+                                  )}
+                                  {isReadyStatus && isTaskPlanned(task.taskId) && (
+                                    <>
+                                      <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+                                        <Icon name="check" size="xs" />
+                                        Planned
+                                      </span>
                                       <button
-                                        onClick={(e) => handlePlanClick(e, task)}
-                                        disabled={planningTask === task.taskId}
+                                        onClick={(e) => copyPath(e, specPath)}
+                                        className="px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 border border-gray-200 text-gray-700 hover:bg-gray-100"
+                                        title={specPath || 'Spec path'}
+                                      >
+                                        <Icon name="content_copy" size="xs" />
+                                        Spec
+                                      </button>
+                                      <button
+                                        onClick={(e) => copyPath(e, planPath)}
+                                        className="px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 border border-gray-200 text-gray-700 hover:bg-gray-100"
+                                        title={planPath || 'Plan path'}
+                                      >
+                                        <Icon name="content_copy" size="xs" />
+                                        Plan
+                                      </button>
+                                      <button
+                                        onClick={(e) => handleStartClick(e, task)}
+                                        disabled={startingTask === task.taskId}
                                         className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-all ${
-                                          planningTask === task.taskId
+                                          startingTask === task.taskId
                                             ? 'bg-gray-200 text-gray-500 cursor-wait'
-                                            : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow'
+                                            : 'bg-green-600 text-white hover:bg-green-700 shadow-sm hover:shadow'
                                         }`}
                                       >
-                                        {planningTask === task.taskId ? (
+                                        {startingTask === task.taskId ? (
                                           <>
                                             <Icon
                                               name="progress_activity"
                                               size="sm"
                                               className="animate-spin"
                                             />
-                                            <span>Planning...</span>
+                                            <span>Starting...</span>
                                           </>
                                         ) : (
                                           <>
-                                            <Icon name="edit_document" size="sm" />
-                                            <span>Plan</span>
+                                            <Icon name="play_arrow" size="sm" />
+                                            <span>Start</span>
                                           </>
                                         )}
                                       </button>
-                                    )
-                                  ) : (
-                                    <span className="text-xs text-gray-500">
-                                      Not ready to plan/start
-                                    </span>
+                                    </>
+                                  )}
+                                  {isReadyStatus && !isTaskPlanned(task.taskId) && (
+                                    <button
+                                      onClick={(e) => handlePlanClick(e, task)}
+                                      disabled={planningTask === task.taskId}
+                                      className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-all ${
+                                        planningTask === task.taskId
+                                          ? 'bg-gray-200 text-gray-500 cursor-wait'
+                                          : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow'
+                                      }`}
+                                    >
+                                      {planningTask === task.taskId ? (
+                                        <>
+                                          <Icon
+                                            name="progress_activity"
+                                            size="sm"
+                                            className="animate-spin"
+                                          />
+                                          <span>Planning...</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Icon name="edit_document" size="sm" />
+                                          <span>Plan</span>
+                                        </>
+                                      )}
+                                    </button>
                                   )}
                                 </div>
                               </div>
@@ -814,7 +828,7 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                       handleTaskClick(task.taskId);
                     }
                   }}
-                  role="button"
+                  role="button" // NOSONAR typescript:S6819 — blocked task card with nested display content; <button> cannot be block container
                   tabIndex={0}
                   className="border border-orange-200 rounded-lg p-3 hover:bg-orange-50 cursor-pointer transition-colors"
                 >

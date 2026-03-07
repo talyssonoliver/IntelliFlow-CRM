@@ -141,7 +141,7 @@ function parseLogForStatus(logContent: string): {
     if (msgMatch) lastMessage = msgMatch[1].trim();
   }
   if (!lastMessage && lines.length > 0) {
-    const msgMatch = /- (.+)$/.exec(lines[lines.length - 1]);
+    const msgMatch = /- (.+)$/.exec(lines.at(-1)!);
     lastMessage = msgMatch ? msgMatch[1].trim() : 'Starting task execution...';
   }
 
@@ -161,7 +161,7 @@ function parseLogForStatus(logContent: string): {
   // Get last activity time
   let lastActivityTime = new Date().toISOString();
   if (lines.length > 0) {
-    const timeMatch = /(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/.exec(lines[lines.length - 1]);
+    const timeMatch = /(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/.exec(lines.at(-1)!);
     if (timeMatch) lastActivityTime = new Date(timeMatch[1]).toISOString();
   }
 
@@ -181,6 +181,41 @@ export interface SwarmTaskStatus {
   csvStatus?: string;
   startedAt?: string;
   completedAt?: string;
+}
+
+function resolveActiveStatus(
+  heartbeatAge: number,
+  currentPhase: string | null,
+  recentActivity: string[]
+): SwarmTaskStatus['status'] {
+  const needsHuman =
+    currentPhase === 'CRASHED' ||
+    currentPhase === 'WATCHDOG_STUCK' ||
+    currentPhase === 'IN_REVIEW' ||
+    recentActivity.some((a) => a.includes('HUMAN') || a.includes('review'));
+  if (needsHuman) return 'needs_human';
+  if (heartbeatAge > 300) return 'stuck'; // 5 minutes without heartbeat
+  return 'running';
+}
+
+function resolveInactiveStatus(
+  csvStatus: string,
+  currentPhase: string | null
+): SwarmTaskStatus['status'] {
+  if (csvStatus === 'completed' || csvStatus === 'done' || currentPhase === 'COMPLETED') return 'completed';
+  if (csvStatus === 'failed' || csvStatus === 'blocked' || currentPhase === 'CRASHED') return 'failed';
+  return 'not_started';
+}
+
+function resolveTaskStatus(
+  isActive: boolean,
+  heartbeatAge: number,
+  taskPhaseInfo: { currentPhase: string | null; attempt: number; updatedAt: string | null },
+  logInfo: { recentActivity: string[] },
+  csvTask: { Status?: string }
+): SwarmTaskStatus['status'] {
+  if (isActive) return resolveActiveStatus(heartbeatAge, taskPhaseInfo.currentPhase, logInfo.recentActivity);
+  return resolveInactiveStatus((csvTask.Status?.toLowerCase() || ''), taskPhaseInfo.currentPhase);
 }
 
 export async function GET(request: Request) {
@@ -237,37 +272,7 @@ export async function GET(request: Request) {
     }
 
     // Determine overall status
-    let status: SwarmTaskStatus['status'] = 'not_started';
-
-    if (isActive) {
-      // Task is currently running in swarm
-      const isStuck = heartbeatAge > 300; // 5 minutes without heartbeat
-      const needsHuman =
-        taskPhaseInfo.currentPhase === 'CRASHED' ||
-        taskPhaseInfo.currentPhase === 'WATCHDOG_STUCK' ||
-        taskPhaseInfo.currentPhase === 'IN_REVIEW' ||
-        logInfo.recentActivity.some((a) => a.includes('HUMAN') || a.includes('review'));
-
-      if (needsHuman) {
-        status = 'needs_human';
-      } else if (isStuck) {
-        status = 'stuck';
-      } else {
-        status = 'running';
-      }
-    } else {
-      // Task not actively running - check CSV status
-      const csvStatus = csvTask.Status?.toLowerCase() || '';
-      if (csvStatus === 'completed' || csvStatus === 'done') {
-        status = 'completed';
-      } else if (csvStatus === 'failed' || csvStatus === 'blocked') {
-        status = 'failed';
-      } else if (taskPhaseInfo.currentPhase === 'COMPLETED') {
-        status = 'completed';
-      } else if (taskPhaseInfo.currentPhase === 'CRASHED') {
-        status = 'failed';
-      }
-    }
+    const status = resolveTaskStatus(isActive, heartbeatAge, taskPhaseInfo, logInfo, csvTask);
 
     // Use JSON phase if available, otherwise fall back to log parsing
     const displayPhase = taskPhaseInfo.currentPhase

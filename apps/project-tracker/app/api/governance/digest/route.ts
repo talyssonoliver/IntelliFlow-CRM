@@ -4,10 +4,10 @@
  */
 
 import { NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import path from 'path';
-import fs from 'fs';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
+import path from 'node:path';
+import fs from 'node:fs';
 
 const execAsync = promisify(exec);
 
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
       {
         success: exitCode === 0,
         exitCode,
-        sprint: parseInt(sprint),
+        sprint: Number.parseInt(sprint),
         command,
         stdout,
         stderr,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
 
 const ARTIFACTS_DIR = path.join(process.cwd(), '..', '..', 'artifacts');
 const SECURITY_DIR = path.join(ARTIFACTS_DIR, 'reports', 'security');

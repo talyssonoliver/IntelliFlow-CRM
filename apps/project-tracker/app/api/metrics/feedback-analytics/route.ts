@@ -8,8 +8,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,66 +36,62 @@ function getProjectRoot(): string {
   return process.cwd().replace(/[\\/]apps[\\/]project-tracker$/, '');
 }
 
+function extractAckFeedback(taskId: string, content: any, timestamp: string): FeedbackRecord[] {
+  const records: FeedbackRecord[] = [];
+
+  if (content.validation) {
+    const allPassed = Object.values(content.validation).every((v) => v === true);
+    records.push({
+      taskId,
+      type: allPassed ? 'positive' : 'negative',
+      category: 'validation',
+      timestamp,
+      details: allPassed ? 'All validations passed' : 'Some validations failed',
+    });
+  }
+
+  if (content.kpis) {
+    const kpisMet = Object.entries(content.kpis)
+      .filter(([, value]) => typeof value === 'boolean')
+      .every(([, value]) => value === true);
+    records.push({
+      taskId,
+      type: kpisMet ? 'positive' : 'neutral',
+      category: 'kpi',
+      timestamp,
+      details: kpisMet ? 'All KPIs met' : 'Some KPIs pending',
+    });
+  }
+
+  if (content.approach?.pattern === 'RSI') {
+    records.push({ taskId, type: 'positive', category: 'architecture', timestamp, details: 'RSI pattern implemented' });
+  }
+
+  return records;
+}
+
 // Scan attestations for feedback signals
 function extractFeedbackFromAttestations(): FeedbackRecord[] {
-  const projectRoot = getProjectRoot();
-  const attestationsDir = join(projectRoot, 'artifacts', 'attestations');
+  const attestationsDir = join(getProjectRoot(), 'artifacts', 'attestations');
+
+  if (!existsSync(attestationsDir)) return [];
+
   const records: FeedbackRecord[] = [];
 
   try {
-    if (!existsSync(attestationsDir)) return records;
-
     const taskDirs = readdirSync(attestationsDir, { withFileTypes: true })
       .filter((d) => d.isDirectory())
       .map((d) => d.name);
 
     for (const taskId of taskDirs) {
       const ackPath = join(attestationsDir, taskId, 'context_ack.json');
-      if (existsSync(ackPath)) {
-        try {
-          const content = JSON.parse(readFileSync(ackPath, 'utf8'));
-          const stats = statSync(ackPath);
-
-          // Analyze validation results for feedback signals
-          if (content.validation) {
-            const allPassed = Object.values(content.validation).every((v) => v === true);
-            records.push({
-              taskId,
-              type: allPassed ? 'positive' : 'negative',
-              category: 'validation',
-              timestamp: content.completed_at || stats.mtime.toISOString(),
-              details: allPassed ? 'All validations passed' : 'Some validations failed',
-            });
-          }
-
-          // Analyze KPIs for feedback
-          if (content.kpis) {
-            const kpisMet = Object.entries(content.kpis)
-              .filter(([_key, value]) => typeof value === 'boolean')
-              .every(([_, value]) => value === true);
-
-            records.push({
-              taskId,
-              type: kpisMet ? 'positive' : 'neutral',
-              category: 'kpi',
-              timestamp: content.completed_at || stats.mtime.toISOString(),
-              details: kpisMet ? 'All KPIs met' : 'Some KPIs pending',
-            });
-          }
-
-          // Check for RSI pattern usage (positive signal)
-          if (content.approach?.pattern === 'RSI') {
-            records.push({
-              taskId,
-              type: 'positive',
-              category: 'architecture',
-              timestamp: content.completed_at || stats.mtime.toISOString(),
-              details: 'RSI pattern implemented',
-            });
-          }
-        } catch {
-          // Skip invalid files
-        }
+      if (!existsSync(ackPath)) continue;
+      try {
+        const content = JSON.parse(readFileSync(ackPath, 'utf8'));
+        const timestamp = content.completed_at || statSync(ackPath).mtime.toISOString();
+        records.push(...extractAckFeedback(taskId, content, timestamp));
+      } catch {
+        // Skip invalid files
       }
     }
   } catch (error) {
@@ -147,8 +143,8 @@ export async function GET(request: NextRequest) {
 
     // Apply date filter
     if (daysFilter) {
-      const days = parseInt(daysFilter, 10);
-      if (!isNaN(days)) {
+      const days = Number.parseInt(daysFilter, 10);
+      if (!Number.isNaN(days)) {
         const cutoff = new Date();
         cutoff.setDate(cutoff.getDate() - days);
         allRecords = allRecords.filter((r) => new Date(r.timestamp) >= cutoff);
@@ -204,7 +200,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Recent records for display
-    const recentRecords = allRecords
+    const recentRecords = [...allRecords]
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       .slice(0, 50);
 

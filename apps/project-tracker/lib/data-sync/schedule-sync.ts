@@ -38,8 +38,8 @@ export function syncScheduleData(tasks: TaskRecord[], metricsDir: string): Sched
   const tasksBySprint = new Map<number, TaskRecord[]>();
   for (const task of tasks) {
     const sprintRaw = task['Target Sprint'];
-    const sprintNum = parseInt(sprintRaw || '0', 10);
-    if (!isNaN(sprintNum) && sprintNum >= 0) {
+    const sprintNum = Number.parseInt(sprintRaw || '0', 10);
+    if (!Number.isNaN(sprintNum) && sprintNum >= 0) {
       if (!tasksBySprint.has(sprintNum)) {
         tasksBySprint.set(sprintNum, []);
       }
@@ -174,9 +174,9 @@ function _getScheduleSummary(
 } | null {
   // Filter by sprint if specified
   const filteredTasks =
-    sprintNum !== undefined
-      ? tasks.filter((t) => parseInt(t['Target Sprint'] || '0', 10) === sprintNum)
-      : tasks;
+    sprintNum === undefined
+      ? tasks
+      : tasks.filter((t) => Number.parseInt(t['Target Sprint'] || '0', 10) === sprintNum);
 
   if (filteredTasks.length === 0) return null;
 

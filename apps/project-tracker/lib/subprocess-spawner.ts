@@ -5,10 +5,10 @@
  * Handles Windows/Unix compatibility, timeouts, and output streaming.
  */
 
-import { spawn, ChildProcess } from 'child_process';
-import { join } from 'path';
-import { platform } from 'os';
-import { EventEmitter } from 'events';
+import { spawn, ChildProcess } from 'node:child_process';
+import { join } from 'node:path';
+import { platform } from 'node:os';
+import { EventEmitter } from 'node:events';
 
 export interface SubprocessResult {
   success: boolean;
@@ -485,7 +485,7 @@ async function _validateScripts(): Promise<{
   swarm: { exists: boolean; path: string };
   matop: { exists: boolean; path: string };
 }> {
-  const { existsSync } = await import('fs');
+  const { existsSync } = await import('node:fs');
   const projectRoot = getProjectRoot();
 
   const swarmPath = join(projectRoot, 'scripts', 'swarm', 'orchestrator.sh');

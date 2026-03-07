@@ -6,8 +6,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { existsSync, readFileSync, statSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,47 +36,64 @@ function getProjectRoot(): string {
   return process.cwd().replace(/[\\/]apps[\\/]project-tracker$/, '');
 }
 
+function parseZapAlert(alert: any): ZapAlert {
+  const riskcode = Number.parseInt(alert.riskcode) || 0;
+  return {
+    id: alert.pluginid || 'unknown',
+    name: alert.name || 'Unknown alert',
+    riskcode,
+    risk: getRiskFromCode(riskcode),
+    confidence: alert.confidence || 'Medium',
+    description: alert.desc || '',
+    solution: alert.solution || '',
+    count: Number.parseInt(alert.count) || 1,
+    cweid: alert.cweid || '',
+  };
+}
+
 // Load ZAP scan report
 function loadZapReport(): { alerts: ZapAlert[]; timestamp: string; site: string } | null {
-  const projectRoot = getProjectRoot();
-  const zapPath = join(projectRoot, 'artifacts', 'reports', 'zap-scan-report.json');
+  const zapPath = join(getProjectRoot(), 'artifacts', 'reports', 'zap-scan-report.json');
+
+  if (!existsSync(zapPath)) return null;
 
   try {
-    if (existsSync(zapPath)) {
-      const content = JSON.parse(readFileSync(zapPath, 'utf8'));
-      const stats = statSync(zapPath);
-      const alerts: ZapAlert[] = [];
-
-      // Parse ZAP JSON format
-      if (content.site) {
-        for (const site of content.site) {
-          for (const alert of site.alerts || []) {
-            const riskcode = parseInt(alert.riskcode) || 0;
-            alerts.push({
-              id: alert.pluginid || 'unknown',
-              name: alert.name || 'Unknown alert',
-              riskcode,
-              risk: getRiskFromCode(riskcode),
-              confidence: alert.confidence || 'Medium',
-              description: alert.desc || '',
-              solution: alert.solution || '',
-              count: parseInt(alert.count) || 1,
-              cweid: alert.cweid || '',
-            });
-          }
-        }
-      }
-
-      return {
-        alerts,
-        timestamp: stats.mtime.toISOString(),
-        site: content.site?.[0]?.['@name'] || 'unknown',
-      };
-    }
+    const content = JSON.parse(readFileSync(zapPath, 'utf8'));
+    const stats = statSync(zapPath);
+    const alerts: ZapAlert[] = (content.site || []).flatMap(
+      (site: any) => (site.alerts || []).map(parseZapAlert)
+    );
+    return { alerts, timestamp: stats.mtime.toISOString(), site: content.site?.[0]?.['@name'] || 'unknown' };
   } catch {
-    // Ignore errors
+    return null;
   }
-  return null;
+}
+
+const CWE_TO_OWASP: Array<[number[], string]> = [
+  [[79, 80], 'A03:2021 - Injection'],
+  [[287, 306, 384], 'A07:2021 - Auth Failures'],
+  [[200, 209, 497], 'A01:2021 - Broken Access'],
+  [[311, 319, 523], 'A02:2021 - Crypto Failures'],
+  [[16, 614], 'A05:2021 - Security Misconfig'],
+];
+
+function getCweCategory(cwe: number): string {
+  for (const [cwes, category] of CWE_TO_OWASP) {
+    if (cwes.includes(cwe)) return category;
+  }
+  return 'Other';
+}
+
+function buildOwaspMapping(alerts: ZapAlert[]): Map<string, string[]> {
+  const mapping = new Map<string, string[]>();
+  for (const alert of alerts) {
+    if (!alert.cweid) continue;
+    const cwe = Number.parseInt(alert.cweid);
+    const category = getCweCategory(cwe);
+    if (!mapping.has(category)) mapping.set(category, []);
+    mapping.get(category)!.push(alert.name);
+  }
+  return mapping;
 }
 
 export async function GET(_request: NextRequest) {
@@ -137,22 +154,7 @@ export async function GET(_request: NextRequest) {
         : mediumOrSafeRecommendation;
 
     // Map to OWASP Top 10 categories
-    const owaspMapping = new Map<string, string[]>();
-    for (const alert of alerts) {
-      if (alert.cweid) {
-        // Simplified CWE to OWASP mapping
-        const cwe = parseInt(alert.cweid);
-        let category = 'Other';
-        if ([79, 80].includes(cwe)) category = 'A03:2021 - Injection';
-        if ([287, 306, 384].includes(cwe)) category = 'A07:2021 - Auth Failures';
-        if ([200, 209, 497].includes(cwe)) category = 'A01:2021 - Broken Access';
-        if ([311, 319, 523].includes(cwe)) category = 'A02:2021 - Crypto Failures';
-        if ([16, 614].includes(cwe)) category = 'A05:2021 - Security Misconfig';
-
-        if (!owaspMapping.has(category)) owaspMapping.set(category, []);
-        owaspMapping.get(category)!.push(alert.name);
-      }
-    }
+    const owaspMapping = buildOwaspMapping(alerts);
 
     return NextResponse.json(
       {

@@ -31,10 +31,16 @@ interface CsvTask {
 export async function POST(request: Request) {
   try {
     const body: GenerateTaskPromptRequest = await request.json();
-    const taskIds: string[] =
-      body.taskIds && body.taskIds.length > 0 ? body.taskIds : body.taskId ? [body.taskId] : [];
+    let taskIds: string[];
+    if (body.taskIds && body.taskIds.length > 0) {
+      taskIds = body.taskIds;
+    } else if (body.taskId) {
+      taskIds = [body.taskId];
+    } else {
+      taskIds = [];
+    }
 
-    if (!taskIds || taskIds.length === 0) {
+    if (taskIds.length === 0) {
       return NextResponse.json({ error: 'taskId or taskIds is required' }, { status: 400 });
     }
 
@@ -78,7 +84,7 @@ export async function POST(request: Request) {
       );
     }
 
-    let dependencyGraph: any | null = null;
+    let dependencyGraph: any = null;
     if (existsSync(graphPath)) {
       try {
         const graphContent = await readFile(graphPath, 'utf-8');
@@ -88,7 +94,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const timestamp = new Date().toISOString().replaceAll(/[:.]/g, '-');
     const defaultPath =
       taskIds.length === 1
         ? `artifacts/prompts/task-${taskIds[0]}.md`
@@ -119,21 +125,23 @@ export async function POST(request: Request) {
   }
 }
 
-function buildTaskPrompt(tasks: CsvTask[], dependencyGraph: any | null): string {
+function buildTaskPrompt(tasks: CsvTask[], dependencyGraph: any): string {
   const lines: string[] = [];
 
-  lines.push('# Task Execution Prompt');
-  lines.push('');
-  lines.push('Implement the selected task(s) with TDD, brand/page/sitemap, and flow context.');
-  lines.push('### Key Objectives');
-  lines.push('- Code: Deliver high-quality, tested code for the web app');
-  lines.push('- Integration: Seamlessly integrate new features into existing architecture');
-  lines.push('- Security: Ensure robust security and compliance');
-  lines.push('- Performance: Optimize for speed and responsiveness');
-  lines.push('- Aviability: Ensure high availability and reliability');
-  lines.push('- Maintainability: Write clean, maintainable code');
-  lines.push('- Documentation: Provide clear documentation and specs');
-  lines.push('');
+  lines.push(
+    '# Task Execution Prompt',
+    '',
+    'Implement the selected task(s) with TDD, brand/page/sitemap, and flow context.',
+    '### Key Objectives',
+    '- Code: Deliver high-quality, tested code for the web app',
+    '- Integration: Seamlessly integrate new features into existing architecture',
+    '- Security: Ensure robust security and compliance',
+    '- Performance: Optimize for speed and responsiveness',
+    '- Aviability: Ensure high availability and reliability',
+    '- Maintainability: Write clean, maintainable code',
+    '- Documentation: Provide clear documentation and specs',
+    '',
+  );
   tasks.forEach((task) => {
     const depsRaw = task.CleanDependencies || task.Dependencies || '';
     const deps = depsRaw
@@ -163,59 +171,63 @@ function buildTaskPrompt(tasks: CsvTask[], dependencyGraph: any | null): string 
       .map((a) => a.trim())
       .filter(Boolean);
 
-    lines.push(`## ${task['Task ID']} – ${task.Description}`);
-    lines.push('');
-    lines.push(`**Sprint:** ${task['Target Sprint']}`);
-    lines.push(`**Section:** ${task.Section}`);
-    lines.push(`**Owner:** ${task.Owner}`);
-    lines.push(`**Status:** ${task.Status}`);
-    lines.push('');
     lines.push(
-      'You must adhere to the following guidelines while implementing this task: .specify/memory/constitution.md'
+      `## ${task['Task ID']} – ${task.Description}`,
+      '',
+      `**Sprint:** ${task['Target Sprint']}`,
+      `**Section:** ${task.Section}`,
+      `**Owner:** ${task.Owner}`,
+      `**Status:** ${task.Status}`,
+      '',
     );
-    lines.push('');
-    lines.push('### Dependencies');
-    lines.push(deps.length ? deps.map((d) => `- ${d}`).join('\n') : '- None');
+    lines.push(
+      'You must adhere to the following guidelines while implementing this task: .specify/memory/constitution.md',
+      '',
+      '### Dependencies',
+      deps.length ? deps.map((d) => `- ${d}`).join('\n') : '- None',
+    );
     if (depStatus.length) {
-      lines.push('');
-      lines.push('Dependency Status:');
-      lines.push(depStatus.map((d) => `- ${d}`).join('\n'));
+      lines.push('', 'Dependency Status:', depStatus.map((d) => `- ${d}`).join('\n'));
     }
-    lines.push('');
-    lines.push('### Pre-requisites');
-    lines.push(task['Pre-requisites'] || 'None specified');
-    lines.push('');
-    lines.push('### Definition of Done');
     lines.push(
-      dodItems.length ? dodItems.map((d, i) => `${i + 1}. ${d}`).join('\n') : '- None specified'
+      '',
+      '### Pre-requisites',
+      task['Pre-requisites'] || 'None specified',
+      '',
+      '### Definition of Done',
+      dodItems.length ? dodItems.map((d, i) => `${i + 1}. ${d}`).join('\n') : '- None specified',
     );
-    lines.push('');
-    lines.push('### Artifacts to Track');
-    lines.push(artifacts.length ? artifacts.map((a) => `- ${a}`).join('\n') : '- None specified');
-    lines.push('');
-    lines.push('### Validation');
-    lines.push(task['Validation Method'] || 'Manual review');
-    lines.push('');
-    lines.push('### Brand / UX / Flows References');
-    lines.push('- Brand: docs/company/brand/style-guide.md');
-    lines.push('- Page Registry: docs/design/page-registry.md');
-    lines.push('- Sitemap: docs/design/sitemap.md');
-    lines.push('- Check the relevant Flows: apps/project-tracker/docs/metrics/_global/flows/');
-    lines.push('');
-    lines.push('### Context Controls');
-    lines.push('- Build context pack and context ack before coding.');
-    lines.push('- Evidence folder: .specify/sprints/sprint-{N}/attestations/<task_id>/');
-    lines.push('- Use spec/plan from .specify/sprints/sprint-{N}/specifications/ and planning/');
-    lines.push('');
-    lines.push('---');
-    lines.push('');
+    lines.push(
+      '',
+      '### Artifacts to Track',
+      artifacts.length ? artifacts.map((a) => `- ${a}`).join('\n') : '- None specified',
+      '',
+      '### Validation',
+      task['Validation Method'] || 'Manual review',
+      '',
+      '### Brand / UX / Flows References',
+      '- Brand: docs/company/brand/style-guide.md',
+      '- Page Registry: docs/design/page-registry.md',
+      '- Sitemap: docs/design/sitemap.md',
+      '- Check the relevant Flows: apps/project-tracker/docs/metrics/_global/flows/',
+      '',
+      '### Context Controls',
+      '- Build context pack and context ack before coding.',
+      '- Evidence folder: .specify/sprints/sprint-{N}/attestations/<task_id>/',
+      '- Use spec/plan from .specify/sprints/sprint-{N}/specifications/ and planning/',
+      '',
+      '---',
+      '',
+    );
   });
 
-  lines.push('## Delivery Checklist');
-  lines.push('- Follow TDD: write/extend tests before implementation.');
-  lines.push('- Respect Definition of Done and produce required artifacts.');
-  lines.push('- Run lint/typecheck/test/build/security scans.');
-  lines.push('- Attach evidence (context_pack, context_ack, summaries).');
+  lines.push(
+    '## Delivery Checklist',
+    '- Follow TDD: write/extend tests before implementation.',
+    '- Respect Definition of Done and produce required artifacts.',
+    '- Run lint/typecheck/test/build/security scans.',
+    '- Attach evidence (context_pack, context_ack, summaries).',
+  );
 
   return lines.join('\n');
 }

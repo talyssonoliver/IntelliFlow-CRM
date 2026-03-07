@@ -9,7 +9,7 @@ import { cn } from './utils';
 /**
  * Icon name type for type-safe icon usage
  */
-export type IconName = string;
+export type IconName = string; // NOSONAR typescript:S6564 — exported as part of the public API for type-safe icon name usage
 
 export interface IconProps {
   /** Material Symbol icon name (e.g., 'check', 'close', 'search') */
@@ -39,7 +39,7 @@ const SIZE_CLASSES = {
  * <Icon name="settings" size="lg" />
  * ```
  */
-export function Icon({ name, className, size = 'base' }: IconProps) {
+export function Icon({ name, className, size = 'base' }: Readonly<IconProps>) {
   return (
     <span
       className={cn('material-symbols-outlined', SIZE_CLASSES[size], className)}

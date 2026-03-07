@@ -49,8 +49,10 @@ export async function GET(request: Request) {
     }
 
     // Parse sprint number
-    const sprintNumber =
-      sprintParam === 'all' ? undefined : sprintParam ? parseInt(sprintParam, 10) : undefined;
+    let sprintNumber: number | undefined;
+    if (sprintParam !== 'all' && sprintParam) {
+      sprintNumber = Number.parseInt(sprintParam, 10);
+    }
 
     // Return statistics
     if (statsParam === 'true' && sprintNumber !== undefined) {
@@ -66,7 +68,7 @@ export async function GET(request: Request) {
     // Load execution history
     const history = loadExecutionHistory(projectRoot, {
       sprintNumber,
-      limit: limitParam ? parseInt(limitParam, 10) : undefined,
+      limit: limitParam ? Number.parseInt(limitParam, 10) : undefined,
       includeDetails: detailsParam === 'true',
     });
 

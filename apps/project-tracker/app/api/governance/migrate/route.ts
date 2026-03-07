@@ -4,9 +4,9 @@
  */
 
 import { NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import path from 'path';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
+import path from 'node:path';
 
 const execAsync = promisify(exec);
 
@@ -67,12 +67,10 @@ export async function POST(request: Request) {
         command,
         stdout,
         stderr,
-        message:
-          exitCode === 0
-            ? dryRun
-              ? 'Migration preview completed'
-              : 'Schema migration completed successfully'
-            : 'Migration failed',
+        message: (() => {
+          if (exitCode !== 0) return 'Migration failed';
+          return dryRun ? 'Migration preview completed' : 'Schema migration completed successfully';
+        })(),
       },
       {
         headers: {

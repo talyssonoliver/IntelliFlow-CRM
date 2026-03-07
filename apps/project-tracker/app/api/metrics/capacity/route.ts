@@ -7,8 +7,8 @@
 
 import { NextResponse } from 'next/server';
 import { loadCSVTasks } from '@/lib/governance';
-import { existsSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +28,24 @@ function getProjectRoot(): string {
   return process.cwd().replace(/[\\/]apps[\\/]project-tracker$/, '');
 }
 
+function parseSimpleCsvLine(line: string): string[] {
+  const values: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  for (const char of line) {
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      values.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  values.push(current.trim());
+  return values;
+}
+
 function loadCapacityConfig(): CapacityRole[] {
   const projectRoot = getProjectRoot();
   const configPath = join(projectRoot, 'artifacts', 'misc', 'capacity-model.csv');
@@ -39,35 +57,17 @@ function loadCapacityConfig(): CapacityRole[] {
   try {
     const content = readFileSync(configPath, 'utf8');
     const lines = content.trim().split('\n');
-
     if (lines.length < 2) return [];
 
-    // Skip header row
     return lines
       .slice(1)
       .map((line) => {
-        // Parse CSV properly handling quoted values
-        const values: string[] = [];
-        let current = '';
-        let inQuotes = false;
-
-        for (const char of line) {
-          if (char === '"') {
-            inQuotes = !inQuotes;
-          } else if (char === ',' && !inQuotes) {
-            values.push(current.trim());
-            current = '';
-          } else {
-            current += char;
-          }
-        }
-        values.push(current.trim());
-
+        const values = parseSimpleCsvLine(line);
         return {
           role: values[0] || 'Unknown',
-          fte: parseFloat(values[1]) || 1.0,
-          availableDays: parseInt(values[2], 10) || 10,
-          focusFactor: parseFloat(values[3]) || 0.7,
+          fte: Number.parseFloat(values[1]) || 1,
+          availableDays: Number.parseInt(values[2], 10) || 10,
+          focusFactor: Number.parseFloat(values[3]) || 0.7,
           notes: values[4] || '',
           actualTasks: 0,
           completedTasks: 0,
@@ -104,6 +104,59 @@ function mapOwnerToRole(owner: string): string {
   return 'Engineering';
 }
 
+type TaskCounts = { total: number; completed: number; inProgress: number };
+
+function buildRoleMap(roles: CapacityRole[]): Map<string, CapacityRole> {
+  const roleMap = new Map<string, CapacityRole>();
+  for (const role of roles) {
+    roleMap.set(role.role, { ...role });
+  }
+  if (roleMap.size === 0) {
+    roleMap.set('Engineering', {
+      role: 'Engineering', fte: 1, availableDays: 10, focusFactor: 0.7,
+      notes: 'Default', actualTasks: 0, completedTasks: 0, inProgressTasks: 0, utilization: 0,
+    });
+  }
+  return roleMap;
+}
+
+function accumulateTaskCounts(allTasks: ReturnType<typeof loadCSVTasks>): Map<string, TaskCounts> {
+  const roleTaskCounts = new Map<string, TaskCounts>();
+  for (const task of allTasks) {
+    const role = mapOwnerToRole(task.owner || 'Unassigned');
+    if (!roleTaskCounts.has(role)) {
+      roleTaskCounts.set(role, { total: 0, completed: 0, inProgress: 0 });
+    }
+    const counts = roleTaskCounts.get(role)!;
+    counts.total++;
+    const status = task.status.toLowerCase();
+    if (status === 'completed' || status === 'done') counts.completed++;
+    else if (status === 'in progress' || status === 'in_progress') counts.inProgress++;
+  }
+  return roleTaskCounts;
+}
+
+function mergeRoles(roleMap: Map<string, CapacityRole>, roleTaskCounts: Map<string, TaskCounts>): CapacityRole[] {
+  const resultRoles: CapacityRole[] = [];
+  for (const [roleName, roleConfig] of roleMap) {
+    const taskCounts = roleTaskCounts.get(roleName) || { total: 0, completed: 0, inProgress: 0 };
+    const capacity = roleConfig.fte * roleConfig.availableDays * roleConfig.focusFactor;
+    const utilization = capacity > 0 ? Math.min(100, Math.round(((taskCounts.total * 0.5) / capacity) * 100)) : 0;
+    resultRoles.push({ ...roleConfig, actualTasks: taskCounts.total, completedTasks: taskCounts.completed, inProgressTasks: taskCounts.inProgress, utilization });
+  }
+  for (const [roleName, taskCounts] of roleTaskCounts) {
+    if (!roleMap.has(roleName)) {
+      resultRoles.push({
+        role: roleName, fte: 1, availableDays: 10, focusFactor: 0.7,
+        notes: 'Auto-detected from tasks',
+        actualTasks: taskCounts.total, completedTasks: taskCounts.completed, inProgressTasks: taskCounts.inProgress,
+        utilization: Math.min(100, Math.round(((taskCounts.total * 0.5) / 7) * 100)),
+      });
+    }
+  }
+  return resultRoles;
+}
+
 export async function GET() {
   try {
     const roles = loadCapacityConfig();
@@ -113,88 +166,9 @@ export async function GET() {
       return NextResponse.json({ error: 'No tasks found' }, { status: 404 });
     }
 
-    // Create a role map for tracking
-    const roleMap = new Map<string, CapacityRole>();
-    for (const role of roles) {
-      roleMap.set(role.role, { ...role });
-    }
-
-    // If no roles from config, create default ones
-    if (roleMap.size === 0) {
-      roleMap.set('Engineering', {
-        role: 'Engineering',
-        fte: 1.0,
-        availableDays: 10,
-        focusFactor: 0.7,
-        notes: 'Default',
-        actualTasks: 0,
-        completedTasks: 0,
-        inProgressTasks: 0,
-        utilization: 0,
-      });
-    }
-
-    // Track tasks by role
-    const roleTaskCounts = new Map<
-      string,
-      { total: number; completed: number; inProgress: number }
-    >();
-
-    for (const task of allTasks) {
-      const owner = task.owner || 'Unassigned';
-      const role = mapOwnerToRole(owner);
-
-      if (!roleTaskCounts.has(role)) {
-        roleTaskCounts.set(role, { total: 0, completed: 0, inProgress: 0 });
-      }
-
-      const counts = roleTaskCounts.get(role)!;
-      counts.total++;
-
-      const status = task.status.toLowerCase();
-      if (status === 'completed' || status === 'done') {
-        counts.completed++;
-      } else if (status === 'in progress' || status === 'in_progress') {
-        counts.inProgress++;
-      }
-    }
-
-    // Merge task counts with capacity config
-    const resultRoles: CapacityRole[] = [];
-
-    // First add configured roles
-    for (const [roleName, roleConfig] of roleMap) {
-      const taskCounts = roleTaskCounts.get(roleName) || { total: 0, completed: 0, inProgress: 0 };
-      const capacity = roleConfig.fte * roleConfig.availableDays * roleConfig.focusFactor;
-      // Estimate: 1 task = ~0.5 days of work on average
-      const taskDays = taskCounts.total * 0.5;
-      const utilization = capacity > 0 ? Math.min(100, Math.round((taskDays / capacity) * 100)) : 0;
-
-      resultRoles.push({
-        ...roleConfig,
-        actualTasks: taskCounts.total,
-        completedTasks: taskCounts.completed,
-        inProgressTasks: taskCounts.inProgress,
-        utilization,
-      });
-    }
-
-    // Add any roles from tasks that aren't in config
-    for (const [roleName, taskCounts] of roleTaskCounts) {
-      if (!roleMap.has(roleName)) {
-        resultRoles.push({
-          role: roleName,
-          fte: 1.0,
-          availableDays: 10,
-          focusFactor: 0.7,
-          notes: 'Auto-detected from tasks',
-          actualTasks: taskCounts.total,
-          completedTasks: taskCounts.completed,
-          inProgressTasks: taskCounts.inProgress,
-          utilization: Math.min(100, Math.round(((taskCounts.total * 0.5) / 7) * 100)),
-        });
-      }
-    }
+    const roleMap = buildRoleMap(roles);
+    const roleTaskCounts = accumulateTaskCounts(allTasks);
+    const resultRoles = mergeRoles(roleMap, roleTaskCounts);
 
     // Sort by utilization descending
     resultRoles.sort((a, b) => b.utilization - a.utilization);

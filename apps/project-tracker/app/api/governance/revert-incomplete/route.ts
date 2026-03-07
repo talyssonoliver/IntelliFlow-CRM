@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, access } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parse } from 'csv-parse/sync';
 import Papa from 'papaparse';
-import { access } from 'node:fs/promises';
 
 export const dynamic = 'force-dynamic';
 
@@ -96,6 +95,28 @@ async function checkPathExists(artifactPath: string): Promise<boolean> {
   }
 }
 
+async function findTasksToRevert(tasks: CsvTask[]): Promise<Array<{ taskId: string; missingArtifacts: string[]; missingEvidence: string[] }>> {
+  const results: Array<{ taskId: string; missingArtifacts: string[]; missingEvidence: string[] }> = [];
+
+  for (const task of tasks) {
+    const status = (task.Status || '').toLowerCase().trim();
+    if (status !== 'completed' && status !== 'done') continue;
+
+    const parsed = parseArtifactsWithPrefixes(task['Artifacts To Track']);
+    const missingArtifacts = await Promise.all(parsed.artifacts.map(async (a) => (await checkPathExists(a) ? null : a)));
+    const missingEvidence = await Promise.all(parsed.evidence.map(async (e) => (await checkPathExists(e) ? null : e)));
+
+    const filteredArtifacts = missingArtifacts.filter((a): a is string => a !== null);
+    const filteredEvidence = missingEvidence.filter((e): e is string => e !== null);
+
+    if (filteredArtifacts.length > 0 || filteredEvidence.length > 0) {
+      results.push({ taskId: task['Task ID'], missingArtifacts: filteredArtifacts, missingEvidence: filteredEvidence });
+    }
+  }
+
+  return results;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
@@ -105,74 +126,21 @@ export async function POST(request: Request) {
     const csvContent = await readFile(csvPath, 'utf-8');
 
     const tasks = parse(csvContent, {
-      columns: true,
-      skip_empty_lines: true,
-      relax_quotes: true,
-      relax_column_count: true,
-      bom: true,
+      columns: true, skip_empty_lines: true, relax_quotes: true, relax_column_count: true, bom: true,
     }) as CsvTask[];
 
-    const tasksToRevert: Array<{
-      taskId: string;
-      missingArtifacts: string[];
-      missingEvidence: string[];
-    }> = [];
+    const tasksToRevert = await findTasksToRevert(tasks);
 
-    // Check each completed task for missing artifacts/evidence
-    for (const task of tasks) {
-      const status = (task.Status || '').toLowerCase().trim();
-      const isCompleted = status === 'completed' || status === 'done';
-
-      if (!isCompleted) continue;
-
-      const parsed = parseArtifactsWithPrefixes(task['Artifacts To Track']);
-      const missingArtifacts: string[] = [];
-      const missingEvidence: string[] = [];
-
-      // Check ARTIFACT: paths
-      for (const artifact of parsed.artifacts) {
-        const exists = await checkPathExists(artifact);
-        if (!exists) {
-          missingArtifacts.push(artifact);
-        }
-      }
-
-      // Check EVIDENCE: paths
-      for (const evidence of parsed.evidence) {
-        const exists = await checkPathExists(evidence);
-        if (!exists) {
-          missingEvidence.push(evidence);
-        }
-      }
-
-      if (missingArtifacts.length > 0 || missingEvidence.length > 0) {
-        tasksToRevert.push({
-          taskId: task['Task ID'],
-          missingArtifacts,
-          missingEvidence,
-        });
-      }
-    }
-
-    // If not dry run, update the CSV
     const revertedTaskIds: string[] = [];
     if (!dryRun && tasksToRevert.length > 0) {
       const taskIdsToRevert = new Set(tasksToRevert.map((t) => t.taskId));
-
       for (const task of tasks) {
         if (taskIdsToRevert.has(task['Task ID'])) {
           task.Status = 'In Progress';
           revertedTaskIds.push(task['Task ID']);
         }
       }
-
-      // Write updated CSV using papaparse
-      const updatedCsv = Papa.unparse(tasks, {
-        header: true,
-        quotes: true,
-      });
-
-      await writeFile(csvPath, updatedCsv, 'utf-8');
+      await writeFile(csvPath, Papa.unparse(tasks, { header: true, quotes: true }), 'utf-8');
     }
 
     const result: RevertResult = {
@@ -185,19 +153,11 @@ export async function POST(request: Request) {
       timestamp: new Date().toISOString(),
     };
 
-    return NextResponse.json(result, {
-      headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-      },
-    });
+    return NextResponse.json(result, { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } });
   } catch (error) {
     console.error('Error in revert-incomplete:', error);
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to process revert request',
-        details: error instanceof Error ? error.message : String(error),
-      },
+      { success: false, error: 'Failed to process revert request', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

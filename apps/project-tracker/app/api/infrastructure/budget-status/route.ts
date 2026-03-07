@@ -6,8 +6,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { existsSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import Papa from 'papaparse';
 import type { RawCSVRow } from '../../../../lib/types';
 
@@ -140,7 +140,7 @@ function loadBudgetData(): { lines: BudgetLine[]; milestones: MilestonePayment[]
     console.error('Error loading milestone data:', error);
   }
 
-  return { lines, milestones: milestones.sort((a, b) => a.taskId.localeCompare(b.taskId)) };
+  return { lines, milestones: [...milestones].sort((a, b) => a.taskId.localeCompare(b.taskId)) };
 }
 
 export async function GET(_request: NextRequest) {

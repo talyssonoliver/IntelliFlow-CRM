@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     }
 
     // Get sprint number from task
-    const sprintNumber = parseInt(task['Target Sprint'] || '0', 10);
+    const sprintNumber = Number.parseInt(task['Target Sprint'] || '0', 10);
     const sprintDir = join(specifyDir, 'sprints', `sprint-${sprintNumber}`);
 
     // Sprint-based paths
@@ -200,7 +200,7 @@ async function generateContext(
   const depArtifacts = await Promise.all(
     deps.map(async (depId: string) => {
       const depTask = allTasks.find((t: TaskRecord) => t['Task ID'] === depId);
-      const depSprint = parseInt(depTask?.['Target Sprint'] || '0', 10);
+      const depSprint = Number.parseInt(depTask?.['Target Sprint'] || '0', 10);
       const depSprintDir = join(specifyDir, 'sprints', `sprint-${depSprint}`);
 
       // Check both new sprint-based paths and legacy paths
@@ -318,27 +318,27 @@ function selectAgentsForTask(task: TaskRecord): { domain: string; agents: string
   let domain = 'general';
   const agents: string[] = ['Domain-Expert', 'Test-Engineer']; // Always included
 
-  if (text.match(/frontend|ui|component|page|form|dashboard|react|next/)) {
+  if (/frontend|ui|component|page|form|dashboard|react|next/.exec(text)) {
     domain = 'frontend';
     agents.push('Frontend-Lead');
   }
-  if (text.match(/backend|api|router|endpoint|database|prisma|trpc/)) {
+  if (/backend|api|router|endpoint|database|prisma|trpc/.exec(text)) {
     domain = 'backend';
     agents.push('Backend-Architect');
   }
-  if (text.match(/ai|ml|embedding|vector|langchain|model|agent|llm/)) {
+  if (/ai|ml|embedding|vector|langchain|model|agent|llm/.exec(text)) {
     domain = 'ai';
     agents.push('AI-Specialist');
   }
-  if (text.match(/security|auth|permission|encrypt|token|rbac/)) {
+  if (/security|auth|permission|encrypt|token|rbac/.exec(text)) {
     domain = 'security';
     agents.push('Security-Lead');
   }
-  if (text.match(/docker|deploy|ci|pipeline|infra|monitoring/)) {
+  if (/docker|deploy|ci|pipeline|infra|monitoring/.exec(text)) {
     domain = 'devops';
     agents.push('DevOps-Lead');
   }
-  if (text.match(/schema|migration|query|database|model|prisma/)) {
+  if (/schema|migration|query|database|model|prisma/.exec(text)) {
     agents.push('Data-Engineer');
   }
 

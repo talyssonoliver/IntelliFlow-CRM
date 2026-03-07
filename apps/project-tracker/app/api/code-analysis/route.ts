@@ -9,9 +9,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { execSync } from 'child_process';
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { execSync } from 'node:child_process';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { MONOREPO_ROOT, PATHS } from '../../../lib/paths';
 
 const PROJECT_ROOT = MONOREPO_ROOT;
@@ -76,87 +76,53 @@ interface AnalysisResult {
  *   ]
  * }
  */
+function collectUniqueNames(items: any[] | undefined, bag: string[]): void {
+  if (!Array.isArray(items)) return;
+  for (const item of items) {
+    if (item.name && !bag.includes(item.name)) bag.push(item.name);
+  }
+}
+
+function parseKnipIssues(issues: any[]): Pick<KnipResult, 'dependencies' | 'devDependencies' | 'unlisted' | 'exports' | 'types'> {
+  const dependencies: string[] = [];
+  const devDependencies: string[] = [];
+  const unlisted: string[] = [];
+  const exports: Array<{ file: string; exports: string[] }> = [];
+  const types: Array<{ file: string; types: string[] }> = [];
+
+  for (const issue of issues) {
+    collectUniqueNames(issue.dependencies, dependencies);
+    collectUniqueNames(issue.devDependencies, devDependencies);
+    collectUniqueNames(issue.unlisted, unlisted);
+
+    if (Array.isArray(issue.exports) && issue.exports.length > 0) {
+      exports.push({ file: issue.file, exports: issue.exports.map((e: any) => e.name) });
+    }
+    if (Array.isArray(issue.types) && issue.types.length > 0) {
+      types.push({ file: issue.file, types: issue.types.map((t: any) => t.name) });
+    }
+  }
+
+  return { dependencies, devDependencies, unlisted, exports, types };
+}
+
 function parseKnipOutput(output: string): KnipResult {
+  const empty: KnipResult = {
+    files: [], dependencies: [], devDependencies: [], unlisted: [], exports: [], types: [], duplicates: [],
+  };
+
   try {
     const parsed = JSON.parse(output);
-
-    // Files are at the top level
-    const files: string[] = parsed.files || [];
-
-    // Dependencies and exports are inside the "issues" array
-    const dependencies: string[] = [];
-    const devDependencies: string[] = [];
-    const exports: Array<{ file: string; exports: string[] }> = [];
-    const types: Array<{ file: string; types: string[] }> = [];
-    const unlisted: string[] = [];
-
-    if (parsed.issues && Array.isArray(parsed.issues)) {
-      for (const issue of parsed.issues) {
-        // Collect dependencies
-        if (issue.dependencies && Array.isArray(issue.dependencies)) {
-          for (const dep of issue.dependencies) {
-            if (dep.name && !dependencies.includes(dep.name)) {
-              dependencies.push(dep.name);
-            }
-          }
-        }
-
-        // Collect devDependencies
-        if (issue.devDependencies && Array.isArray(issue.devDependencies)) {
-          for (const dep of issue.devDependencies) {
-            if (dep.name && !devDependencies.includes(dep.name)) {
-              devDependencies.push(dep.name);
-            }
-          }
-        }
-
-        // Collect unlisted dependencies
-        if (issue.unlisted && Array.isArray(issue.unlisted)) {
-          for (const dep of issue.unlisted) {
-            if (dep.name && !unlisted.includes(dep.name)) {
-              unlisted.push(dep.name);
-            }
-          }
-        }
-
-        // Collect exports (per file)
-        if (issue.exports && Array.isArray(issue.exports) && issue.exports.length > 0) {
-          exports.push({
-            file: issue.file,
-            exports: issue.exports.map((e: any) => e.name),
-          });
-        }
-
-        // Collect types (per file)
-        if (issue.types && Array.isArray(issue.types) && issue.types.length > 0) {
-          types.push({
-            file: issue.file,
-            types: issue.types.map((t: any) => t.name),
-          });
-        }
-      }
-    }
-
+    const issues = Array.isArray(parsed.issues) ? parseKnipIssues(parsed.issues) : {};
     return {
-      files,
-      dependencies,
-      devDependencies,
-      unlisted,
-      exports,
-      types,
+      files: parsed.files || [],
       duplicates: parsed.duplicates || [],
+      dependencies: [], devDependencies: [], unlisted: [], exports: [], types: [],
+      ...issues,
     };
   } catch (err) {
     console.error('Failed to parse Knip JSON output:', err);
-    return {
-      files: [],
-      dependencies: [],
-      devDependencies: [],
-      unlisted: [],
-      exports: [],
-      types: [],
-      duplicates: [],
-    };
+    return empty;
   }
 }
 
@@ -185,8 +151,7 @@ function runKnip(): AnalysisResult['knip'] {
     // Knip exits with non-zero when issues are found, so we need to handle that
     let output = '';
     try {
-      output = execSync('npx knip --reporter json --exclude unlisted,unresolved --no-gitignore', {
-        // NOSONAR: PATH inherited from developer environment — internal tooling only, not user-facing
+      output = execSync('npx knip --reporter json --exclude unlisted,unresolved --no-gitignore', { // NOSONAR — PATH inherited from dev environment, internal tooling only
         cwd: PROJECT_ROOT,
         encoding: 'utf-8',
         timeout: 120000, // 2 minutes

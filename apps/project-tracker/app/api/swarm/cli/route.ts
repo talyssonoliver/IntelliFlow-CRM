@@ -25,7 +25,7 @@ function isValidCommand(cmd: string): cmd is ValidCommand {
 // Convert Windows path to Unix-style for Git Bash
 function toUnixPath(windowsPath: string): string {
   // Convert backslashes to forward slashes
-  let unixPath = windowsPath.replace(/\\/g, '/');
+  let unixPath = windowsPath.replaceAll('\\', '/');
   // Convert C: to /c (Git Bash style)
   unixPath = unixPath.replace(/^([A-Za-z]):/, (_, drive) => `/${drive.toLowerCase()}`);
   return unixPath;
@@ -36,13 +36,13 @@ function getBashPath(): string {
   if (process.platform === 'win32') {
     // Common Git Bash locations on Windows (check both bin and usr/bin)
     const gitBashPaths = [
-      'C:\\Program Files\\Git\\bin\\bash.exe',
-      'C:\\Program Files\\Git\\usr\\bin\\bash.exe',
-      'C:\\Program Files (x86)\\Git\\bin\\bash.exe',
-      'C:\\Program Files (x86)\\Git\\usr\\bin\\bash.exe',
-      process.env.PROGRAMFILES ? `${process.env.PROGRAMFILES}\\Git\\bin\\bash.exe` : '',
-      process.env.PROGRAMFILES ? `${process.env.PROGRAMFILES}\\Git\\usr\\bin\\bash.exe` : '',
-      process.env.LOCALAPPDATA ? `${process.env.LOCALAPPDATA}\\Programs\\Git\\bin\\bash.exe` : '',
+      String.raw`C:\Program Files\Git\bin\bash.exe`,
+      String.raw`C:\Program Files\Git\usr\bin\bash.exe`,
+      String.raw`C:\Program Files (x86)\Git\bin\bash.exe`,
+      String.raw`C:\Program Files (x86)\Git\usr\bin\bash.exe`,
+      process.env.PROGRAMFILES ? String.raw`${process.env.PROGRAMFILES}\Git\bin\bash.exe` : '',
+      process.env.PROGRAMFILES ? String.raw`${process.env.PROGRAMFILES}\Git\usr\bin\bash.exe` : '',
+      process.env.LOCALAPPDATA ? String.raw`${process.env.LOCALAPPDATA}\Programs\Git\bin\bash.exe` : '',
     ].filter(Boolean);
 
     for (const p of gitBashPaths) {
@@ -51,13 +51,13 @@ function getBashPath(): string {
       }
     }
     // Fallback: default Git Bash location
-    return 'C:\\Program Files\\Git\\bin\\bash.exe';
+    return String.raw`C:\Program Files\Git\bin\bash.exe`;
   }
   return 'bash'; // Unix systems
 }
 
 // Commands that may return exit code 1 for "incomplete" status (not errors)
-const STATUS_COMMANDS = ['status', 'list', 'interventions', 'blockers'];
+const STATUS_COMMANDS = new Set(['status', 'list', 'interventions', 'blockers']);
 
 // Timeout per command type (ms)
 const COMMAND_TIMEOUTS: Record<string, number> = {
@@ -121,11 +121,11 @@ export async function POST(request: Request) {
         resolved = true;
 
         // Clean up output - remove carriage returns and ANSI codes
-        const cleanStdout = stripVTControlCharacters(stdout.trim().replace(/\r/g, ''));
-        const cleanStderr = stderr.trim().replace(/\r/g, '');
+        const cleanStdout = stripVTControlCharacters(stdout.trim().replaceAll('\r', ''));
+        const cleanStderr = stderr.trim().replaceAll('\r', '');
 
         // For status commands, exit code 1 often means "tasks incomplete" not error
-        const isStatusCommand = STATUS_COMMANDS.includes(command);
+        const isStatusCommand = STATUS_COMMANDS.has(command);
         const success = code === 0 || (isStatusCommand && code === 1 && cleanStdout.length > 0);
 
         resolve(
@@ -158,7 +158,7 @@ export async function POST(request: Request) {
         child.kill();
 
         // Return partial output if available
-        const cleanStdout = stripVTControlCharacters(stdout.trim().replace(/\r/g, ''));
+        const cleanStdout = stripVTControlCharacters(stdout.trim().replaceAll('\r', ''));
         if (cleanStdout.length > 0) {
           resolve(
             NextResponse.json({

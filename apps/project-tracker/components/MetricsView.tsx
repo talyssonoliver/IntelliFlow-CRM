@@ -122,6 +122,25 @@ interface RiskData {
   };
 }
 
+function getStatusColor(status: string): string {
+  if (status === 'MET' || status === 'ON_TARGET') return 'text-green-600 bg-green-50';
+  if (status === 'BELOW_TARGET' || status === 'ABOVE_TARGET') return 'text-red-600 bg-red-50';
+  if (status === 'MEASURING') return 'text-blue-600 bg-blue-50';
+  return 'text-gray-600 bg-gray-50';
+}
+
+function getPhaseStatus(phase: PhaseMetrics): string {
+  if (phase.completed_at) return 'DONE';
+  if (phase.started_at) return 'IN_PROGRESS';
+  return 'NOT_STARTED';
+}
+
+function getPhaseStatusColor(status: string): string {
+  if (status === 'DONE') return 'bg-green-500';
+  if (status === 'IN_PROGRESS') return 'bg-blue-500';
+  return 'bg-gray-300';
+}
+
 interface MetricsViewProps {
   selectedSprint: number | 'all' | 'Continuous';
 }
@@ -166,12 +185,25 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
     return String(selectedSprint);
   };
 
+  const applyMetricsResponses = async (
+    sprintRes: Response,
+    phasesRes: Response,
+    velocityRes: Response,
+    capacityRes: Response,
+    risksRes: Response
+  ) => {
+    if (sprintRes.ok) setSprintSummary(await sprintRes.json());
+    if (phasesRes.ok) setPhases(await phasesRes.json());
+    if (velocityRes.ok) setVelocityData(await velocityRes.json());
+    if (capacityRes.ok) setCapacityData(await capacityRes.json());
+    if (risksRes.ok) setRiskData(await risksRes.json());
+  };
+
   const loadMetrics = async () => {
     setIsLoading(true);
     const sprintParam = getSprintParam();
     try {
       const timestamp = Date.now();
-
       const [sprintRes, phasesRes, velocityRes, capacityRes, risksRes] = await Promise.all([
         fetch(`/api/metrics/sprint?sprint=${sprintParam}&t=${timestamp}`, { cache: 'no-store' }),
         fetch(`/api/metrics/phases?sprint=${sprintParam}&t=${timestamp}`, { cache: 'no-store' }),
@@ -179,32 +211,7 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
         fetch(`/api/metrics/capacity?t=${timestamp}`, { cache: 'no-store' }),
         fetch(`/api/metrics/risks?t=${timestamp}`, { cache: 'no-store' }),
       ]);
-
-      if (sprintRes.ok) {
-        const sprintData = await sprintRes.json();
-        setSprintSummary(sprintData);
-      }
-
-      if (phasesRes.ok) {
-        const phasesData = await phasesRes.json();
-        setPhases(phasesData);
-      }
-
-      if (velocityRes.ok) {
-        const velData = await velocityRes.json();
-        setVelocityData(velData);
-      }
-
-      if (capacityRes.ok) {
-        const capData = await capacityRes.json();
-        setCapacityData(capData);
-      }
-
-      if (risksRes.ok) {
-        const riskDataRes = await risksRes.json();
-        setRiskData(riskDataRes);
-      }
-
+      await applyMetricsResponses(sprintRes, phasesRes, velocityRes, capacityRes, risksRes);
       setLastUpdated(new Date());
     } catch (error) {
       console.error('Error loading metrics:', error);
@@ -234,39 +241,6 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
     };
   }, [selectedSprint]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'MET':
-      case 'ON_TARGET':
-        return 'text-green-600 bg-green-50';
-      case 'BELOW_TARGET':
-      case 'ABOVE_TARGET':
-        return 'text-red-600 bg-red-50';
-      case 'MEASURING':
-        return 'text-blue-600 bg-blue-50';
-      default:
-        return 'text-gray-600 bg-gray-50';
-    }
-  };
-
-  const getPhaseStatus = (phase: PhaseMetrics) => {
-    if (phase.completed_at) return 'DONE';
-    if (phase.started_at) return 'IN_PROGRESS';
-    return 'NOT_STARTED';
-  };
-
-  const getPhaseStatusColor = (status: string) => {
-    switch (status) {
-      case 'DONE':
-        return 'bg-green-500';
-      case 'IN_PROGRESS':
-        return 'bg-blue-500';
-      case 'NOT_STARTED':
-        return 'bg-gray-300';
-      default:
-        return 'bg-gray-300';
-    }
-  };
 
   if (isLoading && !sprintSummary) {
     return (

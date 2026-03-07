@@ -27,6 +27,78 @@ interface DependencyGraph {
 }
 
 /**
+ * Compute the phase number for a task using topological sort (recursive, memoised).
+ * Extracted from calculatePhases to reduce cognitive complexity.
+ */
+function computeTaskPhase(
+  taskId: string,
+  visited: Set<string>,
+  phaseAssignment: Map<string, number>,
+  dependencyGraph: DependencyGraph,
+  taskIds: Set<string>,
+  includeAll: boolean,
+  sprintNumber: number | 'all'
+): number {
+  if (phaseAssignment.has(taskId)) {
+    return phaseAssignment.get(taskId)!;
+  }
+  if (visited.has(taskId)) {
+    console.warn(`Circular dependency detected involving: ${taskId}`);
+    return 0;
+  }
+  visited.add(taskId);
+
+  const node = dependencyGraph.nodes[taskId];
+  if (!node) {
+    phaseAssignment.set(taskId, 0);
+    return 0;
+  }
+
+  const sprintDeps = node.dependencies.filter((depId) =>
+    isRelevantDependency(depId, taskIds, includeAll, sprintNumber, dependencyGraph)
+  );
+
+  if (sprintDeps.length === 0) {
+    phaseAssignment.set(taskId, 0);
+    return 0;
+  }
+
+  let maxDepPhase = -1;
+  for (const depId of sprintDeps) {
+    const depPhase = computeTaskPhase(
+      depId,
+      new Set(visited),
+      phaseAssignment,
+      dependencyGraph,
+      taskIds,
+      includeAll,
+      sprintNumber
+    );
+    maxDepPhase = Math.max(maxDepPhase, depPhase);
+  }
+
+  const phase = maxDepPhase + 1;
+  phaseAssignment.set(taskId, phase);
+  return phase;
+}
+
+function isRelevantDependency(
+  depId: string,
+  taskIds: Set<string>,
+  includeAll: boolean,
+  sprintNumber: number | 'all',
+  dependencyGraph: DependencyGraph
+): boolean {
+  const depNode = dependencyGraph.nodes[depId];
+  if (!depNode) return false;
+  if (taskIds.has(depId)) return true;
+  if (!includeAll && typeof sprintNumber === 'number') {
+    if (depNode.sprint < sprintNumber && depNode.status !== 'DONE') return true;
+  }
+  return false;
+}
+
+/**
  * Calculate execution phases for a sprint using topological sorting
  */
 export function calculatePhases(
@@ -56,64 +128,17 @@ export function calculatePhases(
   const phaseAssignment = new Map<string, number>();
   const _taskMap = new Map(sprintTasks.map((t) => [t['Task ID'], t]));
 
-  // Calculate phase for each task: phase = max(dependency phases) + 1
-  const calculateTaskPhase = (taskId: string, visited: Set<string>): number => {
-    if (phaseAssignment.has(taskId)) {
-      return phaseAssignment.get(taskId)!;
-    }
-
-    // Detect circular dependencies
-    if (visited.has(taskId)) {
-      console.warn(`Circular dependency detected involving: ${taskId}`);
-      return 0;
-    }
-
-    visited.add(taskId);
-
-    const node = dependencyGraph.nodes[taskId];
-    if (!node) {
-      phaseAssignment.set(taskId, 0);
-      return 0;
-    }
-
-    // Get dependencies within this sprint (or all when includeAll)
-    const sprintDeps = node.dependencies.filter((depId) => {
-      const depNode = dependencyGraph.nodes[depId];
-      if (!depNode) return false;
-
-      // If dep is part of the current execution set, it must be scheduled first
-      if (taskIds.has(depId)) return true;
-
-      if (!includeAll) {
-        // If dep is from previous sprint and not done, this task is blocked
-        if (depNode.sprint < sprintNumber && depNode.status !== 'DONE') {
-          return true; // This will push the task to a later phase
-        }
-      }
-
-      return false;
-    });
-
-    if (sprintDeps.length === 0) {
-      phaseAssignment.set(taskId, 0);
-      return 0;
-    }
-
-    // Phase = max dependency phase + 1
-    let maxDepPhase = -1;
-    for (const depId of sprintDeps) {
-      const depPhase = calculateTaskPhase(depId, new Set(visited));
-      maxDepPhase = Math.max(maxDepPhase, depPhase);
-    }
-
-    const phase = maxDepPhase + 1;
-    phaseAssignment.set(taskId, phase);
-    return phase;
-  };
-
   // Calculate phases for all sprint tasks
   for (const task of sprintTasks) {
-    calculateTaskPhase(task['Task ID'], new Set());
+    computeTaskPhase(
+      task['Task ID'],
+      new Set(),
+      phaseAssignment,
+      dependencyGraph,
+      taskIds,
+      includeAll,
+      sprintNumber
+    );
   }
 
   // Group tasks by phase
@@ -185,7 +210,7 @@ function identifyParallelStreams(
   const signatureGroups = new Map<string, string[]>();
 
   for (const task of tasks) {
-    const signature = task.dependencies.sort((a, b) => a.localeCompare(b)).join(',') || 'no-deps';
+    const signature = [...task.dependencies].sort((a, b) => a.localeCompare(b)).join(',') || 'no-deps';
     if (!signatureGroups.has(signature)) {
       signatureGroups.set(signature, []);
     }
@@ -322,47 +347,51 @@ function estimatePhaseDuration(
   }
 }
 
+const SWARM_SECTION_KEYWORDS = ['implementation', 'development', 'coding', 'core crm'];
+const MATOP_SECTION_KEYWORDS = ['validation', 'security', 'quality', 'exception'];
+const AIENV_SECTION_KEYWORDS = ['ai foundation', 'environment', 'automation'];
+const VALIDATION_DESC_KEYWORDS = ['validate', 'verify', 'audit'];
+
+function isSwarmTask(section: string, taskId: string): boolean {
+  if (SWARM_SECTION_KEYWORDS.some((kw) => section.includes(kw))) return true;
+  if (taskId.startsWith('IFC-') || taskId.startsWith('PG-')) return true;
+  return false;
+}
+
+function isMatopTask(section: string, taskId: string): boolean {
+  if (MATOP_SECTION_KEYWORDS.some((kw) => section.includes(kw))) return true;
+  if (taskId.startsWith('EXC-')) return true;
+  return false;
+}
+
+function isAiEnvSection(section: string): boolean {
+  return AIENV_SECTION_KEYWORDS.some((kw) => section.includes(kw));
+}
+
+function isValidationDescription(description: string): boolean {
+  const lc = description.toLowerCase();
+  return VALIDATION_DESC_KEYWORDS.some((kw) => lc.includes(kw));
+}
+
+function resolveExecutionMode(
+  section: string,
+  taskId: string,
+  description: string
+): 'swarm' | 'matop' | 'manual' {
+  if (isSwarmTask(section, taskId)) return 'swarm';
+  if (isMatopTask(section, taskId)) return 'matop';
+  if (isAiEnvSection(section)) {
+    return isValidationDescription(description) ? 'matop' : 'swarm';
+  }
+  return 'manual';
+}
+
 /**
  * Convert CSV task to TaskPhaseEntry
  */
 function csvTaskToPhaseEntryLocal(task: CSVTask, dependencyGraph: DependencyGraph): TaskPhaseEntry {
   const section = task.Section.toLowerCase();
-  let executionMode: 'swarm' | 'matop' | 'manual' = 'manual';
-
-  // Determine execution mode based on section and task ID patterns
-  if (
-    section.includes('implementation') ||
-    section.includes('development') ||
-    section.includes('coding') ||
-    section.includes('core crm') ||
-    task['Task ID'].startsWith('IFC-') ||
-    task['Task ID'].startsWith('PG-')
-  ) {
-    executionMode = 'swarm';
-  } else if (
-    section.includes('validation') ||
-    section.includes('security') ||
-    section.includes('quality') ||
-    section.includes('exception') ||
-    task['Task ID'].startsWith('EXC-')
-  ) {
-    executionMode = 'matop';
-  } else if (
-    section.includes('ai foundation') ||
-    section.includes('environment') ||
-    section.includes('automation')
-  ) {
-    // AI/Environment tasks can use either - check if it's setup vs validation
-    if (
-      task.Description?.toLowerCase().includes('validate') ||
-      task.Description?.toLowerCase().includes('verify') ||
-      task.Description?.toLowerCase().includes('audit')
-    ) {
-      executionMode = 'matop';
-    } else {
-      executionMode = 'swarm';
-    }
-  }
+  const executionMode = resolveExecutionMode(section, task['Task ID'], task.Description || '');
 
   // Get dependencies from graph or CSV
   const node = dependencyGraph.nodes[task['Task ID']];
@@ -425,7 +454,19 @@ function mapCSVStatusLocal(
  * Get stream letter (A, B, C, ...)
  */
 function getStreamLetterLocal(index: number): string {
-  return String.fromCharCode(65 + index);
+  return String.fromCodePoint(65 + index);
+}
+
+function isInTargetSprint(sprint: string, sprintNumber: number | 'all', includeAll: boolean): boolean {
+  if (includeAll) return true;
+  if (sprint === String(sprintNumber)) return true;
+  if (sprintNumber === -1 && sprint === 'Continuous') return true;
+  return false;
+}
+
+function isNotDone(status: string): boolean {
+  const statusNorm = (status || '').trim().toLowerCase();
+  return statusNorm !== 'done' && statusNorm !== 'completed';
 }
 
 /**
@@ -442,17 +483,22 @@ export function getReadyTasks(
   return tasks
     .filter((t) => {
       const sprint = t['Target Sprint'];
-      const isTargetSprint =
-        includeAll ||
-        sprint === String(sprintNumber) ||
-        (sprintNumber === -1 && sprint === 'Continuous');
-      const isReady = readyTaskIds.has(t['Task ID']);
-      const statusNorm = (t.Status || '').trim().toLowerCase();
-      const notDone = statusNorm !== 'done' && statusNorm !== 'completed';
-
-      return isTargetSprint && isReady && notDone;
+      return (
+        isInTargetSprint(sprint, sprintNumber, includeAll) &&
+        readyTaskIds.has(t['Task ID']) &&
+        isNotDone(t.Status)
+      );
     })
     .map((t) => csvTaskToPhaseEntryLocal(t, dependencyGraph));
+}
+
+function getUnsatisfiedDeps(taskId: string, dependencyGraph: DependencyGraph): string[] {
+  const node = dependencyGraph.nodes[taskId];
+  if (!node) return [];
+  return node.dependencies.filter((depId) => {
+    const depNode = dependencyGraph.nodes[depId];
+    return depNode && depNode.status !== 'DONE';
+  });
 }
 
 /**
@@ -469,29 +515,46 @@ export function getBlockedTasks(
   return tasks
     .filter((t) => {
       const sprint = t['Target Sprint'];
-      const isTargetSprint =
-        includeAll ||
-        sprint === String(sprintNumber) ||
-        (sprintNumber === -1 && sprint === 'Continuous');
-      const isBlocked = blockedTaskIds.has(t['Task ID']);
-      const statusNorm = (t.Status || '').trim().toLowerCase();
-      const notDone = statusNorm !== 'done' && statusNorm !== 'completed';
-
-      return isTargetSprint && isBlocked && notDone;
+      return (
+        isInTargetSprint(sprint, sprintNumber, includeAll) &&
+        blockedTaskIds.has(t['Task ID']) &&
+        isNotDone(t.Status)
+      );
     })
-    .map((t) => {
-      const node = dependencyGraph.nodes[t['Task ID']];
-      const unsatisfiedDeps =
-        node?.dependencies.filter((depId) => {
-          const depNode = dependencyGraph.nodes[depId];
-          return depNode && depNode.status !== 'DONE';
-        }) || [];
+    .map((t) => ({
+      task: csvTaskToPhaseEntryLocal(t, dependencyGraph),
+      blockedBy: getUnsatisfiedDeps(t['Task ID'], dependencyGraph),
+    }));
+}
 
-      return {
-        task: csvTaskToPhaseEntryLocal(t, dependencyGraph),
-        blockedBy: unsatisfiedDeps,
-      };
-    });
+function renderParallelPhase(phase: ExecutionPhase): string[] {
+  const lines: string[] = [];
+  const streamTasks = new Map<string, string[]>();
+  for (const task of phase.tasks) {
+    const stream = task.parallelStreamId || 'default';
+    if (!streamTasks.has(stream)) streamTasks.set(stream, []);
+    streamTasks.get(stream)!.push(task.taskId);
+  }
+  const streamLines: string[][] = [];
+  for (const [streamId, taskIds] of streamTasks) {
+    streamLines.push([`[${streamId}]`, ...taskIds.map((id) => `  ${id}`)]);
+  }
+  const maxLen = Math.max(...streamLines.map((s) => s.length));
+  for (let i = 0; i < maxLen; i++) {
+    const row = streamLines.map((s) => (s[i] || '').padEnd(20)).join(' | ');
+    lines.push(`  ${row}`);
+  }
+  lines.push('  ↓ (parallel execution)');
+  return lines;
+}
+
+function renderSequentialPhase(phase: ExecutionPhase): string[] {
+  const lines: string[] = [];
+  for (const task of phase.tasks) {
+    lines.push(`  → ${task.taskId}`);
+  }
+  lines.push('  ↓');
+  return lines;
 }
 
 /**
@@ -503,54 +566,19 @@ export function generateAsciiGraph(
 ): string {
   const lines: string[] = [];
 
-  lines.push('```');
-  lines.push('EXECUTION DEPENDENCY GRAPH');
-  lines.push('='.repeat(60));
-  lines.push('');
+  lines.push('```', 'EXECUTION DEPENDENCY GRAPH', '='.repeat(60), '');
 
   for (const phase of phases) {
-    lines.push(`Phase ${phase.phaseNumber}: ${phase.name}`);
-    lines.push('-'.repeat(40));
+    lines.push(`Phase ${phase.phaseNumber}: ${phase.name}`, '-'.repeat(40));
 
-    if (phase.executionType === 'parallel') {
-      // Group tasks by stream
-      const streamTasks = new Map<string, string[]>();
-      for (const task of phase.tasks) {
-        const stream = task.parallelStreamId || 'default';
-        if (!streamTasks.has(stream)) {
-          streamTasks.set(stream, []);
-        }
-        streamTasks.get(stream)!.push(task.taskId);
-      }
-
-      // Draw parallel streams
-      const streamLines: string[][] = [];
-      for (const [streamId, taskIds] of streamTasks) {
-        const streamLine = [`[${streamId}]`, ...taskIds.map((id) => `  ${id}`)];
-        streamLines.push(streamLine);
-      }
-
-      // Print streams side by side (simplified)
-      const maxLen = Math.max(...streamLines.map((s) => s.length));
-      for (let i = 0; i < maxLen; i++) {
-        const row = streamLines.map((s) => (s[i] || '').padEnd(20)).join(' | ');
-        lines.push(`  ${row}`);
-      }
-
-      lines.push('  ↓ (parallel execution)');
-    } else {
-      // Sequential tasks
-      for (const task of phase.tasks) {
-        lines.push(`  → ${task.taskId}`);
-      }
-      lines.push('  ↓');
-    }
-
-    lines.push('');
+    const phaseLines =
+      phase.executionType === 'parallel'
+        ? renderParallelPhase(phase)
+        : renderSequentialPhase(phase);
+    lines.push(...phaseLines, '');
   }
 
-  lines.push('='.repeat(60));
-  lines.push('```');
+  lines.push('='.repeat(60), '```');
 
   return lines.join('\n');
 }

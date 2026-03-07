@@ -6,8 +6,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync, readdirSync, statSync, type Stats } from 'node:fs';
+import { join } from 'node:path';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,6 +38,55 @@ function getProjectRoot(): string {
   return process.cwd().replace(/[\\/]apps[\\/]project-tracker$/, '');
 }
 
+function buildSummary(benchmarks: BenchmarkResult[]): ProfilingReport['summary'] {
+  const passing = benchmarks.filter((b) => b.met).length;
+  return {
+    totalBenchmarks: benchmarks.length,
+    passing,
+    failing: benchmarks.length - passing,
+    overallScore: benchmarks.length > 0 ? Math.round((passing / benchmarks.length) * 100) : 0,
+  };
+}
+
+function parsePerformanceSummaryFormat(content: any, fileStat: Stats, benchPath: string): ProfilingReport | null {
+  if (!content.benchmarks || !Array.isArray(content.benchmarks)) return null;
+  const benchmarks: BenchmarkResult[] = content.benchmarks.map((b: any) => ({
+    operation: b.operation || b.name || 'Unknown',
+    meanTime: b.meanTime || b.mean || 0,
+    p95Time: b.p95Time || b.p95 || 0,
+    p99Time: b.p99Time || b.p99 || 0,
+    opsPerSecond: b.opsPerSecond || (b.meanTime > 0 ? 1000 / b.meanTime : 0),
+    target: b.target,
+    met: b.target ? (b.p95Time || b.meanTime) <= b.target : true,
+  }));
+  return {
+    timestamp: content.timestamp || fileStat.mtime.toISOString(),
+    source: benchPath.split(/[\\/]/).pop() || 'unknown',
+    benchmarks,
+    summary: buildSummary(benchmarks),
+  };
+}
+
+function parseProfilingResultsFormat(content: any, fileStat: Stats): ProfilingReport | null {
+  if (!content.profiles && !content.traces) return null;
+  const profiles = content.profiles || content.traces || [];
+  const benchmarks: BenchmarkResult[] = profiles.map((p: any) => ({
+    operation: p.name || p.operation || 'Unknown',
+    meanTime: p.duration || p.meanTime || 0,
+    p95Time: p.p95 || p.duration * 1.2 || 0,
+    p99Time: p.p99 || p.duration * 1.5 || 0,
+    opsPerSecond: p.duration > 0 ? 1000 / p.duration : 0,
+    target: p.target || 100,
+    met: p.duration <= (p.target || 100),
+  }));
+  return {
+    timestamp: content.timestamp || fileStat.mtime.toISOString(),
+    source: 'profiling-results.json',
+    benchmarks,
+    summary: buildSummary(benchmarks),
+  };
+}
+
 // Load benchmark results
 function loadBenchmarkResults(): ProfilingReport | null {
   const projectRoot = getProjectRoot();
@@ -49,67 +98,12 @@ function loadBenchmarkResults(): ProfilingReport | null {
 
   for (const benchPath of possiblePaths) {
     try {
-      if (existsSync(benchPath)) {
-        const content = JSON.parse(readFileSync(benchPath, 'utf8'));
-        const stats = statSync(benchPath);
-
-        // Handle performance-summary.json format
-        if (content.benchmarks && Array.isArray(content.benchmarks)) {
-          const benchmarks: BenchmarkResult[] = content.benchmarks.map((b: any) => ({
-            operation: b.operation || b.name || 'Unknown',
-            meanTime: b.meanTime || b.mean || 0,
-            p95Time: b.p95Time || b.p95 || 0,
-            p99Time: b.p99Time || b.p99 || 0,
-            opsPerSecond: b.opsPerSecond || (b.meanTime > 0 ? 1000 / b.meanTime : 0),
-            target: b.target,
-            met: b.target ? (b.p95Time || b.meanTime) <= b.target : true,
-          }));
-
-          const passing = benchmarks.filter((b) => b.met).length;
-
-          return {
-            timestamp: content.timestamp || stats.mtime.toISOString(),
-            source: benchPath.split(/[\\/]/).pop() || 'unknown',
-            benchmarks,
-            summary: {
-              totalBenchmarks: benchmarks.length,
-              passing,
-              failing: benchmarks.length - passing,
-              overallScore:
-                benchmarks.length > 0 ? Math.round((passing / benchmarks.length) * 100) : 0,
-            },
-          };
-        }
-
-        // Handle profiling-results.json format
-        if (content.profiles || content.traces) {
-          const profiles = content.profiles || content.traces || [];
-          const benchmarks: BenchmarkResult[] = profiles.map((p: any) => ({
-            operation: p.name || p.operation || 'Unknown',
-            meanTime: p.duration || p.meanTime || 0,
-            p95Time: p.p95 || p.duration * 1.2 || 0,
-            p99Time: p.p99 || p.duration * 1.5 || 0,
-            opsPerSecond: p.duration > 0 ? 1000 / p.duration : 0,
-            target: p.target || 100,
-            met: p.duration <= (p.target || 100),
-          }));
-
-          const passing = benchmarks.filter((b) => b.met).length;
-
-          return {
-            timestamp: content.timestamp || stats.mtime.toISOString(),
-            source: 'profiling-results.json',
-            benchmarks,
-            summary: {
-              totalBenchmarks: benchmarks.length,
-              passing,
-              failing: benchmarks.length - passing,
-              overallScore:
-                benchmarks.length > 0 ? Math.round((passing / benchmarks.length) * 100) : 0,
-            },
-          };
-        }
-      }
+      if (!existsSync(benchPath)) continue;
+      const content = JSON.parse(readFileSync(benchPath, 'utf8'));
+      const fileStat = statSync(benchPath);
+      const report = parsePerformanceSummaryFormat(content, fileStat, benchPath)
+        ?? parseProfilingResultsFormat(content, fileStat);
+      if (report) return report;
     } catch (error) {
       console.error(`Error loading ${benchPath}:`, error);
     }
@@ -138,7 +132,7 @@ function generateSyntheticBenchmarks(): BenchmarkResult[] {
         for (const route of routes) {
           const routePath = String(route)
             .replace(/[\\/]route\.ts$/, '')
-            .replace(/[\\/]/g, '/');
+            .replaceAll(/[\\/]/g, '/');
           endpoints.push({
             operation: `API: ${routePath}`,
             meanTime: Math.random() * 50 + 10, // NOSONAR — synthetic benchmark data, not security-sensitive
@@ -249,12 +243,11 @@ export async function GET(request: NextRequest) {
         },
         report,
         targets,
-        status:
-          report.summary.overallScore >= 90
-            ? 'passing'
-            : report.summary.overallScore >= 70
-              ? 'warning'
-              : 'failing',
+        status: (() => {
+          if (report.summary.overallScore >= 90) return 'passing';
+          if (report.summary.overallScore >= 70) return 'warning';
+          return 'failing';
+        })() as 'passing' | 'warning' | 'failing',
       },
       {
         headers: {

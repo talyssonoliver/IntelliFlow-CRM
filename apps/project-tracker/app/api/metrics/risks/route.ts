@@ -6,8 +6,8 @@
  */
 
 import { NextResponse } from 'next/server';
-import { existsSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 export const dynamic = 'force-dynamic';
 
@@ -86,25 +86,21 @@ function parseRiskMatrix(): { risks: Risk[]; summary: RiskSummary } {
         continue;
       }
 
-      // Parse risk rows
-      if (inRiskTable && headerParsed && trimmed.startsWith('|')) {
-        const cells = trimmed
-          .split('|')
-          .map((c) => c.trim())
-          .filter((c) => c !== '');
+      // Parse risk rows — guard: must be in table, header parsed, and starts with |
+      if (!inRiskTable || !headerParsed || !trimmed.startsWith('|')) continue;
 
-        if (cells.length >= 8 && cells[0].match(/^R\d+$/)) {
-          risks.push({
-            id: cells[0],
-            risk: cells[1],
-            category: cells[2],
-            probability: cells[3],
-            impact: cells[4],
-            score: parseInt(cells[5], 10) || 0,
-            status: cells[6],
-            owner: cells[7],
-          });
-        }
+      const cells = trimmed.split('|').map((c) => c.trim()).filter((c) => c !== '');
+      if (cells.length >= 8 && /^R\d+$/.exec(cells[0])) {
+        risks.push({
+          id: cells[0],
+          risk: cells[1],
+          category: cells[2],
+          probability: cells[3],
+          impact: cells[4],
+          score: Number.parseInt(cells[5], 10) || 0,
+          status: cells[6],
+          owner: cells[7],
+        });
       }
     }
 

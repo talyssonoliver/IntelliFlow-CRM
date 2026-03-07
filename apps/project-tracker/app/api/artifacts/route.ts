@@ -15,7 +15,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync } from 'node:fs';
 import {
   scanFullRegistry,
   FileEntry,
@@ -126,7 +126,7 @@ function parseCSVLine(line: string): string[] {
     if (char === '"') {
       if (inQuotes && line[i + 1] === '"') {
         current += '"';
-        i++;
+        i++; // NOSONAR typescript:S2310 — intentionally skipping the escaped quote character
       } else {
         inQuotes = !inQuotes;
       }
@@ -169,8 +169,8 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category') as FileCategory | null;
     const orphansOnly = searchParams.get('orphans') === 'true';
     const linkedOnly = searchParams.get('linked') === 'true';
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const pageSize = parseInt(searchParams.get('pageSize') || '100', 10);
+    const page = Number.parseInt(searchParams.get('page') || '1', 10);
+    const pageSize = Number.parseInt(searchParams.get('pageSize') || '100', 10);
     const forceRefresh = searchParams.get('refresh') === 'true';
 
     const registry = getFullRegistry(forceRefresh);

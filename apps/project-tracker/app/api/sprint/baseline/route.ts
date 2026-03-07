@@ -8,8 +8,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import Papa from 'papaparse';
 import type { RawCSVRow } from '../../../../lib/types';
 
@@ -46,7 +46,7 @@ function getFallbackPath(sprintNumber: number): string {
 }
 
 // Load fallback data if exists
-function loadFallback(sprintNumber: number): any | null {
+function loadFallback(sprintNumber: number): any {
   const fallbackPath = getFallbackPath(sprintNumber);
   try {
     if (existsSync(fallbackPath)) {
@@ -68,21 +68,56 @@ function saveFallback(sprintNumber: number, data: any): void {
   }
 }
 
+const INTERNAL_DEP_PREFIXES = ['IFC-', 'ENV-', 'AI-'];
+
+function splitField(value: string): string[] {
+  return value.split(',').map((s) => s.trim()).filter(Boolean);
+}
+
+function buildRiskFactors(
+  taskCount: number,
+  internalDeps: number,
+  criticalPathLen: number,
+  sectionCount: number
+): string[] {
+  const risks: string[] = [];
+  if (taskCount > 30) risks.push('High task count may cause resource contention');
+  if (internalDeps > 20) risks.push('Many internal dependencies - blocking risk');
+  if (criticalPathLen > 5) risks.push('Long critical path - schedule risk');
+  if (sectionCount > 5) risks.push('Many sections - coordination overhead');
+  return risks;
+}
+
+function buildBaselineTask(row: RawCSVRow, sprintNum: number): BaselineTask {
+  const r = row as Record<string, unknown>;
+  return {
+    taskId: row['Task ID'] || '',
+    description: row['Description'] || '',
+    section: row['Section'] || '',
+    dependencies: splitField(row['Dependencies'] || ''),
+    prerequisites: splitField(row['Pre-requisites'] || ''),
+    targetSprint: sprintNum,
+    estimatedEffort: (r['Effort'] as string | undefined) ?? (r['Story Points'] as string | undefined) ?? '',
+    priority: (r['Priority'] as string | undefined) ?? '',
+  };
+}
+
+function countDependencies(deps: string[]): { internal: number; external: number } {
+  let internal = 0;
+  let external = 0;
+  for (const dep of deps) {
+    if (INTERNAL_DEP_PREFIXES.some((p) => dep.startsWith(p))) internal++;
+    else external++;
+  }
+  return { internal, external };
+}
+
 // Load sprint baseline from CSV
 function loadSprintBaseline(sprintNumber: number): {
   tasks: BaselineTask[];
   baseline: SprintBaseline;
 } {
-  const projectRoot = getProjectRoot();
-  const csvPath = join(
-    projectRoot,
-    'apps',
-    'project-tracker',
-    'docs',
-    'metrics',
-    '_global',
-    'Sprint_plan.csv'
-  );
+  const csvPath = join(getProjectRoot(), 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'Sprint_plan.csv');
   const tasks: BaselineTask[] = [];
   const sections = new Set<string>();
   let internalDeps = 0;
@@ -91,66 +126,29 @@ function loadSprintBaseline(sprintNumber: number): {
 
   try {
     if (existsSync(csvPath)) {
-      const content = readFileSync(csvPath, 'utf8');
-      const results = Papa.parse(content, { header: true, skipEmptyLines: true });
+      const results = Papa.parse(readFileSync(csvPath, 'utf8'), { header: true, skipEmptyLines: true });
 
       for (const row of results.data as RawCSVRow[]) {
         const targetSprint = row['Target Sprint'];
-        const sprintNum = targetSprint === 'Continuous' ? -1 : parseInt(String(targetSprint ?? ''));
+        const sprintNum = targetSprint === 'Continuous' ? -1 : Number.parseInt(String(targetSprint ?? ''));
+        if (sprintNum !== sprintNumber) continue;
 
-        if (sprintNum === sprintNumber) {
-          const dependencies = (row['Dependencies'] || '')
-            .split(',')
-            .map((d: string) => d.trim())
-            .filter(Boolean);
-          const prerequisites = (row['Pre-requisites'] || '')
-            .split(',')
-            .map((p: string) => p.trim())
-            .filter(Boolean);
+        const task = buildBaselineTask(row, sprintNum);
+        tasks.push(task);
+        sections.add(row['Section'] || 'Unknown');
 
-          tasks.push({
-            taskId: row['Task ID'] || '',
-            description: row['Description'] || '',
-            section: row['Section'] || '',
-            dependencies,
-            prerequisites,
-            targetSprint: sprintNum,
-            estimatedEffort: String(
-              (row as Record<string, unknown>)['Effort'] ??
-                (row as Record<string, unknown>)['Story Points'] ??
-                ''
-            ),
-            priority: String((row as Record<string, unknown>)['Priority'] ?? ''),
-          });
+        const { internal, external } = countDependencies(task.dependencies);
+        internalDeps += internal;
+        externalDeps += external;
 
-          sections.add(row['Section'] || 'Unknown');
-
-          // Count dependencies
-          for (const dep of dependencies) {
-            if (dep.startsWith('IFC-') || dep.startsWith('ENV-') || dep.startsWith('AI-')) {
-              internalDeps++;
-            } else {
-              externalDeps++;
-            }
-          }
-
-          // Tasks with many dependencies are on critical path
-          if (dependencies.length >= 2 && row['Task ID']) {
-            criticalPath.push(row['Task ID']);
-          }
-        }
+        if (task.dependencies.length >= 2 && row['Task ID']) criticalPath.push(row['Task ID']);
       }
     }
   } catch (error) {
     console.error('Error loading sprint baseline:', error);
   }
 
-  // Identify risk factors
-  const riskFactors: string[] = [];
-  if (tasks.length > 30) riskFactors.push('High task count may cause resource contention');
-  if (internalDeps > 20) riskFactors.push('Many internal dependencies - blocking risk');
-  if (criticalPath.length > 5) riskFactors.push('Long critical path - schedule risk');
-  if (sections.size > 5) riskFactors.push('Many sections - coordination overhead');
+  const riskFactors = buildRiskFactors(tasks.length, internalDeps, criticalPath.length, sections.size);
 
   return {
     tasks,
@@ -166,7 +164,7 @@ function loadSprintBaseline(sprintNumber: number): {
 }
 
 // Load sprint summary if available
-function loadSprintSummary(sprintNumber: number): any | null {
+function loadSprintSummary(sprintNumber: number): any {
   const projectRoot = getProjectRoot();
   const summaryPath = join(
     projectRoot,
@@ -191,7 +189,7 @@ function loadSprintSummary(sprintNumber: number): any | null {
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const sprintNumber = parseInt(searchParams.get('sprint') || '0');
+    const sprintNumber = Number.parseInt(searchParams.get('sprint') || '0');
 
     const { tasks, baseline } = loadSprintBaseline(sprintNumber);
     const summary = loadSprintSummary(sprintNumber);
@@ -228,6 +226,14 @@ export async function GET(request: NextRequest) {
       .map(([taskId, count]) => ({ taskId, blocksCount: count }));
 
     // Build response data
+    let parallelizationPotential: 'High' | 'Medium' | 'Low';
+    if (readyToStart.length > 3) {
+      parallelizationPotential = 'High';
+    } else if (readyToStart.length > 1) {
+      parallelizationPotential = 'Medium';
+    } else {
+      parallelizationPotential = 'Low';
+    }
     const responseData = {
       source: 'fresh',
       timestamp: new Date().toISOString(),
@@ -239,8 +245,7 @@ export async function GET(request: NextRequest) {
       scheduling: {
         readyToStart,
         topBlockers,
-        parallelizationPotential:
-          readyToStart.length > 3 ? 'High' : readyToStart.length > 1 ? 'Medium' : 'Low',
+        parallelizationPotential,
       },
       existingSummary: summary
         ? {

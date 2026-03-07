@@ -77,7 +77,8 @@ export default function ContinuousTaskHealth() {
 
   const { total, fresh, stale, missing, freshnessScore, lastUpdated } = data;
 
-  const variant = stale === 0 && missing === 0 ? 'success' : stale > 0 ? 'warning' : 'error';
+  const nonSuccessVariant = stale > 0 ? 'warning' : 'error';
+  const variant = stale === 0 && missing === 0 ? 'success' : nonSuccessVariant;
 
   const variantStyles = {
     success: 'border-green-200 bg-green-50',

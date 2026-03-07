@@ -8,8 +8,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import Papa from 'papaparse';
 import type { RawCSVRow } from '../../../../lib/types';
 
@@ -51,7 +51,7 @@ function getFallbackPath(sprintNumber: number): string {
 }
 
 // Load fallback data if exists
-function loadFallback(sprintNumber: number): any | null {
+function loadFallback(sprintNumber: number): any {
   const fallbackPath = getFallbackPath(sprintNumber);
   try {
     if (existsSync(fallbackPath)) {
@@ -73,6 +73,33 @@ function saveFallback(sprintNumber: number, data: any): void {
   }
 }
 
+// Get task IDs belonging to a specific sprint from the CSV
+function getSprintTaskIds(csvPath: string, sprintNumber: number): string[] {
+  if (!existsSync(csvPath)) return [];
+  const content = readFileSync(csvPath, 'utf8');
+  const results = Papa.parse(content, { header: true, skipEmptyLines: true });
+  const taskIds: string[] = [];
+  for (const row of results.data as RawCSVRow[]) {
+    const targetSprint = row['Target Sprint'];
+    const sprintNum = targetSprint === 'Continuous' ? -1 : Number.parseInt(String(targetSprint ?? ''));
+    if (sprintNum === sprintNumber && row['Task ID']) {
+      taskIds.push(row['Task ID']);
+    }
+  }
+  return taskIds;
+}
+
+// Load attestation for a single task
+function loadTaskAttestationFromDir(attestationsDir: string, taskId: string): any {
+  const ackPath = join(attestationsDir, taskId, 'context_ack.json');
+  if (!existsSync(ackPath)) return null;
+  try {
+    return JSON.parse(readFileSync(ackPath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
 // Load all attestations for a sprint
 function loadSprintAttestations(sprintNumber: number): Map<string, any> {
   const projectRoot = getProjectRoot();
@@ -89,30 +116,11 @@ function loadSprintAttestations(sprintNumber: number): Map<string, any> {
   const attestations = new Map<string, any>();
 
   try {
-    // First get task IDs for this sprint
-    const sprintTaskIds: string[] = [];
-    if (existsSync(csvPath)) {
-      const content = readFileSync(csvPath, 'utf8');
-      const results = Papa.parse(content, { header: true, skipEmptyLines: true });
-
-      for (const row of results.data as RawCSVRow[]) {
-        const targetSprint = row['Target Sprint'];
-        const sprintNum = targetSprint === 'Continuous' ? -1 : parseInt(String(targetSprint ?? ''));
-
-        if (sprintNum === sprintNumber && row['Task ID']) {
-          sprintTaskIds.push(row['Task ID']);
-        }
-      }
-    }
-
-    // Load attestations for sprint tasks
-    if (existsSync(attestationsDir)) {
-      for (const taskId of sprintTaskIds) {
-        const ackPath = join(attestationsDir, taskId, 'context_ack.json');
-        if (existsSync(ackPath)) {
-          attestations.set(taskId, JSON.parse(readFileSync(ackPath, 'utf8')));
-        }
-      }
+    const sprintTaskIds = getSprintTaskIds(csvPath, sprintNumber);
+    if (!existsSync(attestationsDir)) return attestations;
+    for (const taskId of sprintTaskIds) {
+      const data = loadTaskAttestationFromDir(attestationsDir, taskId);
+      if (data) attestations.set(taskId, data);
     }
   } catch (error) {
     console.error('Error loading sprint attestations:', error);
@@ -121,62 +129,55 @@ function loadSprintAttestations(sprintNumber: number): Map<string, any> {
   return attestations;
 }
 
-// Extract validation results from attestations
-function extractValidations(attestations: Map<string, any>): ValidationResult[] {
-  const validations: ValidationResult[] = [];
-
-  for (const [taskId, attestation] of attestations) {
-    // Extract validation results from attestation
-    if (attestation.validation_results) {
-      for (const validation of attestation.validation_results) {
-        validations.push({
-          taskId,
-          validationType: validation.type || 'generic',
-          passed: validation.passed || validation.status === 'passed',
-          details: validation.details || validation.message || '',
-          timestamp: attestation.attestation_timestamp || '',
-        });
-      }
-    }
-
-    // Also check evidence_summary
-    if (attestation.evidence_summary) {
-      validations.push({
+// Extract validation results from a single attestation entry
+function extractValidationsFromEntry(taskId: string, attestation: any): ValidationResult[] {
+  const results: ValidationResult[] = [];
+  if (attestation.validation_results) {
+    for (const v of attestation.validation_results) {
+      results.push({
         taskId,
-        validationType: 'evidence',
-        passed: attestation.verdict === 'COMPLETE',
-        details: `Artifacts: ${attestation.evidence_summary.artifacts_verified}, Validations: ${attestation.evidence_summary.validations_passed}`,
+        validationType: v.type || 'generic',
+        passed: v.passed || v.status === 'passed',
+        details: v.details || v.message || '',
         timestamp: attestation.attestation_timestamp || '',
       });
     }
   }
+  if (attestation.evidence_summary) {
+    results.push({
+      taskId,
+      validationType: 'evidence',
+      passed: attestation.verdict === 'COMPLETE',
+      details: `Artifacts: ${attestation.evidence_summary.artifacts_verified}, Validations: ${attestation.evidence_summary.validations_passed}`,
+      timestamp: attestation.attestation_timestamp || '',
+    });
+  }
+  return results;
+}
 
-  return validations;
+// Extract validation results from attestations
+function extractValidations(attestations: Map<string, any>): ValidationResult[] {
+  return Array.from(attestations.entries()).flatMap(([taskId, attestation]) =>
+    extractValidationsFromEntry(taskId, attestation)
+  );
 }
 
 // Extract KPI validations from attestations
 function extractKpiValidations(attestations: Map<string, any>): KpiValidation[] {
-  const kpiValidations: KpiValidation[] = [];
-
-  for (const [taskId, attestation] of attestations) {
-    if (attestation.kpi_results) {
-      for (const kpi of attestation.kpi_results) {
-        kpiValidations.push({
-          taskId,
-          kpi: kpi.kpi || kpi.name || '',
-          target: kpi.target || '',
-          actual: kpi.actual || '',
-          met: kpi.met || false,
-        });
-      }
-    }
-  }
-
-  return kpiValidations;
+  return Array.from(attestations.entries()).flatMap(([taskId, attestation]) => {
+    if (!attestation.kpi_results) return [];
+    return attestation.kpi_results.map((kpi: any) => ({
+      taskId,
+      kpi: kpi.kpi || kpi.name || '',
+      target: kpi.target || '',
+      actual: kpi.actual || '',
+      met: kpi.met || false,
+    }));
+  });
 }
 
 // Load validation file if exists
-function loadValidationFile(sprintNumber: number): any | null {
+function loadValidationFile(sprintNumber: number): any {
   const projectRoot = getProjectRoot();
   const validationPath = join(
     projectRoot,
@@ -198,7 +199,7 @@ function loadValidationFile(sprintNumber: number): any | null {
 }
 
 // Load sprint summary for additional context
-function loadSprintSummary(sprintNumber: number): any | null {
+function loadSprintSummary(sprintNumber: number): any {
   const projectRoot = getProjectRoot();
   const summaryPath = join(
     projectRoot,
@@ -231,10 +232,21 @@ function getValidationRecommendation(
   return 'Run validations to verify sprint completion';
 }
 
+function resolveValidationStatus(
+  totalValidations: number,
+  passedValidations: number,
+  failedValidations: number
+): SprintValidation['overallStatus'] {
+  if (totalValidations === 0) return 'pending';
+  if (failedValidations === 0) return 'passed';
+  if (passedValidations === 0) return 'failed';
+  return 'partial';
+}
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const sprintNumber = parseInt(searchParams.get('sprint') || '0');
+    const sprintNumber = Number.parseInt(searchParams.get('sprint') || '0');
 
     const attestations = loadSprintAttestations(sprintNumber);
     const validations = extractValidations(attestations);
@@ -255,16 +267,7 @@ export async function GET(request: NextRequest) {
     const kpiScore = totalKpis > 0 ? Math.round((passedKpis / totalKpis) * 100) : 0;
 
     // Determine overall status
-    let overallStatus: SprintValidation['overallStatus'] = 'pending';
-    if (totalValidations > 0) {
-      if (failedValidations === 0) {
-        overallStatus = 'passed';
-      } else if (passedValidations === 0) {
-        overallStatus = 'failed';
-      } else {
-        overallStatus = 'partial';
-      }
-    }
+    const overallStatus = resolveValidationStatus(totalValidations, passedValidations, failedValidations);
 
     // Group validations by type
     const byType = validations.reduce(
@@ -337,7 +340,7 @@ export async function GET(request: NextRequest) {
             lastUpdated: sprintSummary.updated_at,
           }
         : null,
-      recentValidations: validations
+      recentValidations: [...validations]
         .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
         .slice(0, 15)
         .map((v) => ({

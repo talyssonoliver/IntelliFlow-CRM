@@ -92,7 +92,7 @@ export default function ContractTagBadge({
   value,
   status,
   compact = false,
-}: ContractTagBadgeProps) {
+}: Readonly<ContractTagBadgeProps>) {
   const config = TAG_CONFIG[type];
   const statusConfig = status ? STATUS_INDICATOR[status] : null;
 
@@ -128,7 +128,7 @@ export default function ContractTagBadge({
 }
 
 // Summary badge for compact display (shows count per type)
-export function ContractTagSummary({ tags }: { tags: { type: ContractTagType; count: number }[] }) {
+export function ContractTagSummary({ tags }: Readonly<{ tags: { type: ContractTagType; count: number }[] }>) {
   return (
     <div className="flex flex-wrap gap-1">
       {tags.map(({ type, count }) => {

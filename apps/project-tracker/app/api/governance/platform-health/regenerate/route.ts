@@ -33,8 +33,7 @@ function getRoot(): string {
 // All git invocations in this module use static arguments — no user-controlled data.
 function safeExec(args: string[], root: string): string {
   try {
-    return execFileSync('git', args, {
-      // NOSONAR — PATH inherited from developer environment, internal tooling only
+    return execFileSync('git', args, { // NOSONAR — PATH inherited from dev environment, internal tooling only
       cwd: root,
       encoding: 'utf-8',
       timeout: 15000,
@@ -76,6 +75,62 @@ function safeReadJson(filePath: string): any {
   }
 }
 
+function collectTurbo(root: string, existing: any): { turboTaskCount: number; turboRemoteCache: boolean } {
+  const turboJson = safeReadJson(resolve(root, 'turbo.json'));
+  return {
+    turboTaskCount: turboJson?.tasks
+      ? Object.keys(turboJson.tasks).length
+      : (existing.turborepo_integration?.tasks_defined ?? 0),
+    turboRemoteCache: !!turboJson?.remoteCache,
+  };
+}
+
+function collectWorkflows(root: string): { workflowCount: number; workflowNames: string[] } {
+  const workflowDir = resolve(root, '.github/workflows');
+  if (!existsSync(workflowDir)) return { workflowCount: 0, workflowNames: [] };
+  const files = readdirSync(workflowDir).filter((f) => f.endsWith('.yml') || f.endsWith('.yaml'));
+  return { workflowCount: files.length, workflowNames: files.map((f) => f.replace(/\.(yml|yaml)$/, '')) };
+}
+
+function collectPackageCount(root: string): number {
+  const workspaceYaml = resolve(root, 'pnpm-workspace.yaml');
+  if (!existsSync(workspaceYaml)) return 0;
+  let count = 0;
+  const appsDir = resolve(root, 'apps');
+  const pkgsDir = resolve(root, 'packages');
+  if (existsSync(appsDir)) count += readdirSync(appsDir).filter((d) => existsSync(join(appsDir, d, 'package.json'))).length;
+  if (existsSync(pkgsDir)) count += readdirSync(pkgsDir).filter((d) => existsSync(join(pkgsDir, d, 'package.json'))).length;
+  return count;
+}
+
+function collectGitVelocity(root: string): { commitCount30d: number; branchCount: number } {
+  const commitResult = safeExec(['log', '--oneline', '--since=30 days ago', '--no-merges'], root);
+  const branchResult = safeExec(['branch', '--list'], root);
+  return {
+    commitCount30d: commitResult ? commitResult.split('\n').filter(Boolean).length : 0,
+    branchCount: branchResult ? branchResult.split('\n').filter(Boolean).length : 0,
+  };
+}
+
+const DEFAULT_GOLDEN_PATHS = [
+  { name: 'web-app-development', description: 'Standard path for Next.js web applications', entry_point: 'pnpm --filter web dev', documentation: 'docs/operations/engineering-playbook.md' },
+  { name: 'api-development', description: 'Standard path for tRPC API development', entry_point: 'pnpm --filter api dev', documentation: 'docs/operations/engineering-playbook.md' },
+  { name: 'ai-worker-development', description: 'Standard path for AI worker/agent development', entry_point: 'pnpm --filter ai-worker dev', documentation: 'docs/operations/engineering-playbook.md' },
+  { name: 'database-migrations', description: 'Standard path for Prisma migrations', entry_point: 'pnpm run db:migrate:create', documentation: 'docs/operations/engineering-playbook.md' },
+];
+
+function countVerifiedGoldenPaths(goldenPaths: any[], root: string): number {
+  let verified = 0;
+  for (const gp of goldenPaths) {
+    const docPath = resolve(root, gp.documentation);
+    if (!existsSync(docPath)) continue;
+    const content = readFileSync(docPath, 'utf-8').toLowerCase();
+    const terms = gp.name.split('-');
+    if (content.includes(gp.name) || terms.every((t: string) => content.includes(t))) verified++;
+  }
+  return verified;
+}
+
 export async function POST() {
   const timestamp = new Date().toISOString();
 
@@ -87,56 +142,10 @@ export async function POST() {
     // Read existing metrics as base (preserve manual fields like deploy metrics)
     const existing = safeReadJson(metricsPath) || {};
 
-    // =============================================
-    // AUTO-COLLECT: Turborepo
-    // =============================================
-    const turboJson = safeReadJson(resolve(root, 'turbo.json'));
-    const turboTaskCount = turboJson?.tasks
-      ? Object.keys(turboJson.tasks).length
-      : (existing.turborepo_integration?.tasks_defined ?? 0);
-    const turboRemoteCache = !!turboJson?.remoteCache;
-
-    // =============================================
-    // AUTO-COLLECT: CI/CD Workflows
-    // =============================================
-    const workflowDir = resolve(root, '.github/workflows');
-    let workflowCount = 0;
-    let workflowNames: string[] = [];
-    if (existsSync(workflowDir)) {
-      const files = readdirSync(workflowDir).filter(
-        (f) => f.endsWith('.yml') || f.endsWith('.yaml')
-      );
-      workflowCount = files.length;
-      workflowNames = files.map((f) => f.replace(/\.(yml|yaml)$/, ''));
-    }
-
-    // =============================================
-    // AUTO-COLLECT: Database migrations
-    // =============================================
-    const migrationsDir = resolve(root, 'packages/db/prisma/migrations');
-    const migrationCount = countDirs(migrationsDir);
-
-    // =============================================
-    // AUTO-COLLECT: Workspace packages
-    // =============================================
-    let packageCount = 0;
-    const workspaceYaml = resolve(root, 'pnpm-workspace.yaml');
-    if (existsSync(workspaceYaml)) {
-      const _content = readFileSync(workspaceYaml, 'utf-8');
-      // Count actual package.json files in workspace globs
-      const appsDir = resolve(root, 'apps');
-      const pkgsDir = resolve(root, 'packages');
-      if (existsSync(appsDir)) {
-        packageCount += readdirSync(appsDir).filter((d) =>
-          existsSync(join(appsDir, d, 'package.json'))
-        ).length;
-      }
-      if (existsSync(pkgsDir)) {
-        packageCount += readdirSync(pkgsDir).filter((d) =>
-          existsSync(join(pkgsDir, d, 'package.json'))
-        ).length;
-      }
-    }
+    const { turboTaskCount, turboRemoteCache } = collectTurbo(root, existing);
+    const { workflowCount, workflowNames } = collectWorkflows(root);
+    const migrationCount = countDirs(resolve(root, 'packages/db/prisma/migrations'));
+    const packageCount = collectPackageCount(root);
 
     // =============================================
     // AUTO-COLLECT: Codebase stats
@@ -145,16 +154,8 @@ export async function POST() {
     const testFileCount = countFiles(root, '*.test.ts') + countFiles(root, '*.test.tsx');
     const totalTrackedFiles = countFiles(root, '*');
 
-    // Git velocity (last 30 days)
     // S4721: safeExec now uses execFileSync with argument arrays — no shell interpolation.
-    const commitCount30d = (() => {
-      const result = safeExec(['log', '--oneline', '--since=30 days ago', '--no-merges'], root);
-      return result ? result.split('\n').filter(Boolean).length : 0;
-    })();
-    const branchCount = (() => {
-      const result = safeExec(['branch', '--list'], root);
-      return result ? result.split('\n').filter(Boolean).length : 0;
-    })();
+    const { commitCount30d, branchCount } = collectGitVelocity(root);
 
     // =============================================
     // AUTO-COLLECT: Test coverage
@@ -165,45 +166,8 @@ export async function POST() {
     // =============================================
     // AUTO-COLLECT: Golden paths verification
     // =============================================
-    const goldenPaths = existing.platform_engineering_foundation?.golden_paths?.paths || [
-      {
-        name: 'web-app-development',
-        description: 'Standard path for Next.js web applications',
-        entry_point: 'pnpm --filter web dev',
-        documentation: 'docs/operations/engineering-playbook.md',
-      },
-      {
-        name: 'api-development',
-        description: 'Standard path for tRPC API development',
-        entry_point: 'pnpm --filter api dev',
-        documentation: 'docs/operations/engineering-playbook.md',
-      },
-      {
-        name: 'ai-worker-development',
-        description: 'Standard path for AI worker/agent development',
-        entry_point: 'pnpm --filter ai-worker dev',
-        documentation: 'docs/operations/engineering-playbook.md',
-      },
-      {
-        name: 'database-migrations',
-        description: 'Standard path for Prisma migrations',
-        entry_point: 'pnpm run db:migrate:create',
-        documentation: 'docs/operations/engineering-playbook.md',
-      },
-    ];
-
-    // Verify each golden path doc content
-    let goldenPathsVerified = 0;
-    for (const gp of goldenPaths) {
-      const docPath = resolve(root, gp.documentation);
-      if (existsSync(docPath)) {
-        const content = readFileSync(docPath, 'utf-8').toLowerCase();
-        const terms = gp.name.split('-');
-        const hasContent =
-          content.includes(gp.name) || terms.every((t: string) => content.includes(t));
-        if (hasContent) goldenPathsVerified++;
-      }
-    }
+    const goldenPaths = existing.platform_engineering_foundation?.golden_paths?.paths || DEFAULT_GOLDEN_PATHS;
+    const goldenPathsVerified = countVerifiedGoldenPaths(goldenPaths, root);
 
     // =============================================
     // AUTO-COLLECT: Env files
@@ -227,12 +191,12 @@ export async function POST() {
       task_id: existing.task_id || 'IFC-078',
       sprint: existing.sprint || 18,
       provenance: {
-        ...(existing.provenance || {}),
+        ...existing.provenance,
         collection_method: 'automated_scan',
         collected_by: 'Platform Health Dashboard (auto-regenerate)',
         last_collected_at: timestamp,
         sources: {
-          ...(existing.provenance?.sources || {}),
+          ...existing.provenance?.sources,
           codebase_scan: {
             source: 'Filesystem + git analysis',
             collection_method: 'automated_pipeline',
@@ -313,9 +277,9 @@ export async function POST() {
         average_time_to_deploy_seconds: 145,
       },
       standardized_workflows: {
-        ...(existing.standardized_workflows || {}),
+        ...existing.standardized_workflows,
         ci_pipeline: {
-          ...(existing.standardized_workflows?.ci_pipeline || {}),
+          ...existing.standardized_workflows?.ci_pipeline,
           name: 'Continuous Integration',
           file: '.github/workflows/ci.yml',
           stages: ['typecheck', 'lint', 'test', 'build'],
@@ -344,7 +308,7 @@ export async function POST() {
         },
       },
       turborepo_integration: {
-        ...(existing.turborepo_integration || {}),
+        ...existing.turborepo_integration,
         status: 'mature',
         cache_enabled: true,
         remote_cache_enabled: turboRemoteCache,
@@ -445,7 +409,7 @@ export async function POST() {
           commits30d: commitCount30d,
           branches: branchCount,
           goldenPathsVerified: `${goldenPathsVerified}/${goldenPaths.length}`,
-          testCoverage: overallCoverage !== null ? `${overallCoverage}%` : 'not available',
+          testCoverage: overallCoverage === null ? 'not available' : `${overallCoverage}%`,
           envFiles: `${envFilesExist}/${envFiles.length}`,
           scripts: scriptCount,
         },

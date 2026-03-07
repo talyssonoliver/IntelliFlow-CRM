@@ -10,7 +10,7 @@ interface ContractsViewProps {
   sprint: number | string;
 }
 
-export default function ContractsView({ tasks, sprint }: ContractsViewProps) {
+export default function ContractsView({ tasks, sprint }: Readonly<ContractsViewProps>) {
   return (
     <div className="space-y-6">
       {/* Header */}

@@ -36,7 +36,7 @@ interface PhaseResult {
  * Prerequisites: Spec must exist (SESSION 1 must be complete)
  * Updates Sprint_plan.csv status: Planning -> Plan Complete
  */
-export async function POST(request: Request) {
+export async function POST(request: Request) { // NOSONAR typescript:S3776
   let taskId: string | undefined;
 
   try {
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     }
 
     // Get sprint number from task
-    const sprintNumber = parseInt(task['Target Sprint'] || '0', 10);
+    const sprintNumber = Number.parseInt(task['Target Sprint'] || '0', 10);
     const sprintDir = join(specifyDir, 'sprints', `sprint-${sprintNumber}`);
 
     // Sprint-based paths
@@ -180,21 +180,19 @@ export async function POST(request: Request) {
   }
 }
 
+const AGENT_DOMAIN_MAP: Array<[string, string]> = [
+  ['Frontend-Lead', 'frontend'],
+  ['Backend-Architect', 'backend'],
+  ['AI-Specialist', 'ai'],
+  ['Security-Lead', 'security'],
+  ['DevOps-Lead', 'devops'],
+];
+
 function extractDomainFromSpec(specContent: string): string {
-  // Try to extract domain from spec content
-  const domainMatch = specContent.match(/Domain:\s*(\w+)/i);
-  if (domainMatch) {
-    return domainMatch[1].toLowerCase();
-  }
-
-  // Infer from agents mentioned
-  if (specContent.includes('Frontend-Lead')) return 'frontend';
-  if (specContent.includes('Backend-Architect')) return 'backend';
-  if (specContent.includes('AI-Specialist')) return 'ai';
-  if (specContent.includes('Security-Lead')) return 'security';
-  if (specContent.includes('DevOps-Lead')) return 'devops';
-
-  return 'general';
+  const domainMatch = /Domain:\s*(\w+)/i.exec(specContent);
+  if (domainMatch) return domainMatch[1].toLowerCase();
+  const agentEntry = AGENT_DOMAIN_MAP.find(([agent]) => specContent.includes(agent));
+  return agentEntry ? agentEntry[1] : 'general';
 }
 
 function generatePlan(task: TaskRecord, domain: string, sprintNumber: number = 0): string {
@@ -349,6 +347,5 @@ function estimateEffort(task: TaskRecord): string {
 function estimateStepDuration(step: string): string {
   const words = step.split(' ').length;
   if (words < 5) return '20 min';
-  if (words < 10) return '30 min';
-  return '45 min';
+  return words < 10 ? '30 min' : '45 min';
 }

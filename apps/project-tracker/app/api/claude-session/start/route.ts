@@ -64,7 +64,7 @@ export async function POST(request: Request) {
 
     // Check prerequisites (skip for hydrate as it's Phase 0)
     if (session !== 'hydrate') {
-      const sessionCheck = session === 'exec' ? 'exec' : (session as 'spec' | 'plan');
+      const sessionCheck = session === 'exec' ? 'exec' : session;
       const check = canProceedToSession(task, sessionCheck);
       if (!check.canProceed) {
         return NextResponse.json(
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
             plan: 'Plan Complete',
             exec: 'Completed',
           };
-          void updateTaskStatus(taskId, successStatus[session]);
+          updateTaskStatus(taskId, successStatus[session]).catch(() => {});
         } else if (finalResult.status === 'failed' || finalResult.status === 'timeout') {
           const failureStatus: Record<SessionType, WorkflowStatus> = {
             hydrate: 'Backlog',
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
             plan: 'Spec Complete',
             exec: 'Failed',
           };
-          void updateTaskStatus(taskId, failureStatus[session]);
+          updateTaskStatus(taskId, failureStatus[session]).catch(() => {});
         }
       },
     });
@@ -118,7 +118,17 @@ export async function POST(request: Request) {
       statusFile: result.statusFile,
       startedAt: result.startedAt,
       pid: result.pid,
-      message: `Claude Code session started: ${session === 'hydrate' ? '/hydrate-context' : session === 'exec' ? '/exec' : `/${session}-session`} ${taskId}`,
+      message: (() => {
+        let sessionPath: string;
+        if (session === 'hydrate') {
+          sessionPath = '/hydrate-context';
+        } else if (session === 'exec') {
+          sessionPath = '/exec';
+        } else {
+          sessionPath = `/${session}-session`;
+        }
+        return `Claude Code session started: ${sessionPath} ${taskId}`;
+      })(),
     });
   } catch (error) {
     console.error('[claude-session/start] Error:', error);

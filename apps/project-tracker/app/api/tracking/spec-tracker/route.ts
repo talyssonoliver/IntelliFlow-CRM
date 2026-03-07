@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
+import { promises as fs } from 'node:fs';
 import { PATHS } from '@/lib/paths';
-import { join } from 'path';
+import { join } from 'node:path';
 
 const SPEC_TRACKER_PATH = join(PATHS.artifacts.reports, 'spec-tracker.json');
 

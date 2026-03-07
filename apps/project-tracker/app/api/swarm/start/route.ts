@@ -6,7 +6,7 @@ import { PATHS, ensureArtifactDirs } from '@/lib/paths';
 
 // Convert Windows path to Unix-style for Git Bash
 function toUnixPath(windowsPath: string): string {
-  let unixPath = windowsPath.replace(/\\/g, '/');
+  let unixPath = windowsPath.replaceAll('\\', '/');
   unixPath = unixPath.replace(/^([A-Za-z]):/, (_, drive) => `/${drive.toLowerCase()}`);
   return unixPath;
 }
@@ -15,12 +15,12 @@ function toUnixPath(windowsPath: string): string {
 function getBashPath(): string {
   if (process.platform === 'win32') {
     const gitBashPaths = [
-      'C:\\Program Files\\Git\\bin\\bash.exe',
-      'C:\\Program Files\\Git\\usr\\bin\\bash.exe',
-      'C:\\Program Files (x86)\\Git\\bin\\bash.exe',
-      'C:\\Program Files (x86)\\Git\\usr\\bin\\bash.exe',
-      process.env.PROGRAMFILES ? `${process.env.PROGRAMFILES}\\Git\\bin\\bash.exe` : '',
-      process.env.PROGRAMFILES ? `${process.env.PROGRAMFILES}\\Git\\usr\\bin\\bash.exe` : '',
+      String.raw`C:\Program Files\Git\bin\bash.exe`,
+      String.raw`C:\Program Files\Git\usr\bin\bash.exe`,
+      String.raw`C:\Program Files (x86)\Git\bin\bash.exe`,
+      String.raw`C:\Program Files (x86)\Git\usr\bin\bash.exe`,
+      process.env.PROGRAMFILES ? String.raw`${process.env.PROGRAMFILES}\Git\bin\bash.exe` : '',
+      process.env.PROGRAMFILES ? String.raw`${process.env.PROGRAMFILES}\Git\usr\bin\bash.exe` : '',
     ].filter(Boolean);
 
     for (const p of gitBashPaths) {
@@ -29,7 +29,7 @@ function getBashPath(): string {
       }
     }
     // Fallback
-    return 'C:\\Program Files\\Git\\bin\\bash.exe';
+    return String.raw`C:\Program Files\Git\bin\bash.exe`;
   }
   return 'bash';
 }

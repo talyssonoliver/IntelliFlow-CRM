@@ -80,7 +80,7 @@ const TAG_CONFIG: Record<
   },
 };
 
-export default function ContractAnalyticsView({ tasks }: ContractAnalyticsViewProps) {
+export default function ContractAnalyticsView({ tasks }: Readonly<ContractAnalyticsViewProps>) {
   const [filterType, setFilterType] = useState<ContractTagType | 'all'>('all');
 
   // Calculate tag distribution
@@ -146,7 +146,7 @@ export default function ContractAnalyticsView({ tasks }: ContractAnalyticsViewPr
       });
     });
 
-    return refs.sort((a, b) => b.taskCount - a.taskCount).slice(0, 10);
+    return [...refs].sort((a, b) => b.taskCount - a.taskCount).slice(0, 10);
   }, [tasks]);
 
   // Calculate most used policies
@@ -174,7 +174,7 @@ export default function ContractAnalyticsView({ tasks }: ContractAnalyticsViewPr
       });
     });
 
-    return refs.sort((a, b) => b.taskCount - a.taskCount).slice(0, 10);
+    return [...refs].sort((a, b) => b.taskCount - a.taskCount).slice(0, 10);
   }, [tasks]);
 
   const maxCount = Math.max(...tagDistribution.stats.map((s) => s.count));

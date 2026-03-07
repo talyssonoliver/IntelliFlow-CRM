@@ -6,6 +6,7 @@ import React, {
   useState,
   useCallback,
   useEffect,
+  useMemo,
   ReactNode,
 } from 'react';
 import type { Task, SprintNumber, TaskStatus } from './types';
@@ -84,7 +85,7 @@ interface TaskDataProviderProps {
   children: ReactNode;
 }
 
-export function TaskDataProvider({ children }: TaskDataProviderProps) {
+export function TaskDataProvider({ children }: Readonly<TaskDataProviderProps>) {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [sections, setSections] = useState<string[]>([]);
   const [sprints, setSprints] = useState<SprintNumber[]>([]);
@@ -215,7 +216,7 @@ export function TaskDataProvider({ children }: TaskDataProviderProps) {
     };
   }, [refreshData]);
 
-  const value: TaskDataContextType = {
+  const value: TaskDataContextType = useMemo(() => ({
     allTasks,
     filteredTasks,
     sections,
@@ -230,7 +231,7 @@ export function TaskDataProvider({ children }: TaskDataProviderProps) {
     refreshData,
     selectTask,
     selectedTask,
-  };
+  }), [allTasks, filteredTasks, sections, sprints, currentSprint, statusCounts, sectionData, lastUpdated, isLoading, error, setCurrentSprint, refreshData, selectTask, selectedTask]);
 
   return <TaskDataContext.Provider value={value}>{children}</TaskDataContext.Provider>;
 }
@@ -239,7 +240,7 @@ export function TaskDataProvider({ children }: TaskDataProviderProps) {
  * Hook to get status counts for a specific sprint
  * Useful for views that need sprint-specific counts
  */
-export function useSprintStatusCounts(sprint: SprintNumber): TaskSummary {
+export function useSprintStatusCounts(sprint: Readonly<SprintNumber>): TaskSummary {
   const { allTasks, statusCounts } = useTaskData();
 
   // If 'all', return global counts

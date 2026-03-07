@@ -104,6 +104,74 @@ export function syncMetricsFromCSV(csvPath: string, metricsDir: string): SyncRes
   }
 }
 
+function applyResult(
+  result: SafeUpdateResult,
+  filesUpdated: string[],
+  errors: string[],
+  overrideName?: string
+): void {
+  if (result.success) {
+    filesUpdated.push(overrideName ?? result.file);
+  } else {
+    errors.push(`${result.file}: ${result.error}`);
+  }
+}
+
+function groupTasksBySprint(tasks: TaskRecord[]): Map<number, TaskRecord[]> {
+  const tasksBySprint = new Map<number, TaskRecord[]>();
+  for (const task of tasks) {
+    const sprintNum = Number.parseInt(task['Target Sprint'] || '0', 10);
+    if (!Number.isNaN(sprintNum) && sprintNum >= 0) {
+      if (!tasksBySprint.has(sprintNum)) {
+        tasksBySprint.set(sprintNum, []);
+      }
+      tasksBySprint.get(sprintNum)!.push(task);
+    }
+  }
+  return tasksBySprint;
+}
+
+function processSprintTasks(
+  sprintNum: number,
+  sprintTasks: TaskRecord[],
+  tasks: TaskRecord[],
+  metricsDir: string,
+  filesUpdated: string[],
+  errors: string[]
+): void {
+  const sprintDir = join(metricsDir, `sprint-${sprintNum}`);
+  if (!existsSync(sprintDir)) return;
+
+  for (const task of sprintTasks) {
+    const taskResult = safeUpdate(
+      () => updateIndividualTaskFile(task, metricsDir, tasks, sprintNum),
+      `sprint-${sprintNum}/${task['Task ID']}.json`
+    );
+    if (taskResult.success) {
+      filesUpdated.push(taskResult.file);
+    } else if (!taskResult.error?.includes('not found')) {
+      errors.push(`${taskResult.file}: ${taskResult.error}`);
+    }
+  }
+
+  if (sprintNum === 0) {
+    applyResult(
+      safeUpdate(() => updatePhaseSummaries(sprintTasks, metricsDir), 'sprint-0/phase summaries'),
+      filesUpdated,
+      errors
+    );
+  }
+
+  applyResult(
+    safeUpdate(
+      () => updateSprintSummaryGeneric(sprintTasks, metricsDir, sprintNum),
+      `sprint-${sprintNum}/_summary.json`
+    ),
+    filesUpdated,
+    errors
+  );
+}
+
 /**
  * Update all metrics files
  */
@@ -113,107 +181,36 @@ function updateAllMetricsFiles(
   filesUpdated: string[],
   errors: string[]
 ): void {
-  // Update Sprint_plan.json
-  const updateResult = safeUpdate(
-    () => updateSprintPlanJson(tasks, metricsDir),
-    'Sprint_plan.json'
+  applyResult(
+    safeUpdate(() => updateSprintPlanJson(tasks, metricsDir), 'Sprint_plan.json'),
+    filesUpdated,
+    errors
   );
-  if (updateResult.success) {
-    filesUpdated.push(updateResult.file);
-  } else {
-    errors.push(`${updateResult.file}: ${updateResult.error}`);
-  }
 
-  // Update task-registry.json
-  const registryResult = safeUpdate(
-    () => updateTaskRegistry(tasks, metricsDir),
-    'task-registry.json'
+  applyResult(
+    safeUpdate(() => updateTaskRegistry(tasks, metricsDir), 'task-registry.json'),
+    filesUpdated,
+    errors
   );
-  if (registryResult.success) {
-    filesUpdated.push(registryResult.file);
-  } else {
-    errors.push(`${registryResult.file}: ${registryResult.error}`);
-  }
 
-  // Group tasks by sprint
-  const tasksBySprint = new Map<number, TaskRecord[]>();
-  for (const task of tasks) {
-    const sprintRaw = task['Target Sprint'];
-    const sprintNum = parseInt(sprintRaw || '0', 10);
-    if (!isNaN(sprintNum) && sprintNum >= 0) {
-      if (!tasksBySprint.has(sprintNum)) {
-        tasksBySprint.set(sprintNum, []);
-      }
-      tasksBySprint.get(sprintNum)!.push(task);
-    }
-  }
-
-  // Process each sprint
+  const tasksBySprint = groupTasksBySprint(tasks);
   for (const [sprintNum, sprintTasks] of tasksBySprint) {
-    const sprintDir = join(metricsDir, `sprint-${sprintNum}`);
-    if (!existsSync(sprintDir)) continue;
-
-    // Update individual task files
-    for (const task of sprintTasks) {
-      const taskResult = safeUpdate(
-        () => updateIndividualTaskFile(task, metricsDir, tasks, sprintNum),
-        `sprint-${sprintNum}/${task['Task ID']}.json`
-      );
-      if (taskResult.success) {
-        filesUpdated.push(taskResult.file);
-      } else if (!taskResult.error?.includes('not found')) {
-        errors.push(`${taskResult.file}: ${taskResult.error}`);
-      }
-    }
-
-    // Update phase summaries for Sprint 0
-    if (sprintNum === 0) {
-      const phaseResult = safeUpdate(
-        () => updatePhaseSummaries(sprintTasks, metricsDir),
-        'sprint-0/phase summaries'
-      );
-      if (phaseResult.success) {
-        filesUpdated.push(phaseResult.file);
-      } else {
-        errors.push(`${phaseResult.file}: ${phaseResult.error}`);
-      }
-    }
-
-    // Update sprint summary
-    const summaryResult = safeUpdate(
-      () => updateSprintSummaryGeneric(sprintTasks, metricsDir, sprintNum),
-      `sprint-${sprintNum}/_summary.json`
-    );
-    if (summaryResult.success) {
-      filesUpdated.push(summaryResult.file);
-    } else {
-      errors.push(`${summaryResult.file}: ${summaryResult.error}`);
-    }
+    processSprintTasks(sprintNum, sprintTasks, tasks, metricsDir, filesUpdated, errors);
   }
 
-  // Update dependency graph
-  const graphResult = safeUpdate(
-    () => updateDependencyGraph(tasks, metricsDir),
-    'dependency-graph.json'
+  applyResult(
+    safeUpdate(() => updateDependencyGraph(tasks, metricsDir), 'dependency-graph.json'),
+    filesUpdated,
+    errors
   );
-  if (graphResult.success) {
-    filesUpdated.push(graphResult.file);
-  } else {
-    errors.push(`${graphResult.file}: ${graphResult.error}`);
-  }
 
-  // Calculate and sync PMBOK schedule data
   const scheduleResult = safeUpdate(() => {
     const result = syncScheduleData(tasks, metricsDir);
     if (!result.success) {
       throw new Error(result.errors.join('; '));
     }
   }, 'schedule-data');
-  if (scheduleResult.success) {
-    filesUpdated.push('schedule-data (PMBOK)');
-  } else {
-    errors.push(`${scheduleResult.file}: ${scheduleResult.error}`);
-  }
+  applyResult(scheduleResult, filesUpdated, errors, 'schedule-data (PMBOK)');
 }
 
 /**

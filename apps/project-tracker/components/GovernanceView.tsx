@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Icon } from '@/lib/icons';
 
 interface GovernanceSummary {
@@ -210,7 +210,7 @@ interface ActionableSummaryProps {
   readonly tierTasks: TierTasks;
 }
 
-function ActionableSummary({ tierTasks }: ActionableSummaryProps) {
+function ActionableSummary({ tierTasks }: Readonly<ActionableSummaryProps>) {
   const tierAErrors = tierTasks.A.filter((t) => t.hasLintErrors && t.status !== 'done');
   const tierBErrors = tierTasks.B.filter((t) => t.hasLintErrors && t.status !== 'done');
   const pendingA = tierTasks.A.filter((t) => t.status !== 'done').length;
@@ -254,16 +254,16 @@ function ActionableSummary({ tierTasks }: ActionableSummaryProps) {
                   <p className="font-medium text-blue-800">How to fix:</p>
                   <ol className="list-decimal list-inside text-blue-700 mt-1 space-y-1">
                     <li>
-                      Open <code className="bg-blue-100 px-1 rounded">Sprint_plan.csv</code>
+                      Open{' '}<code className="bg-blue-100 px-1 rounded">Sprint_plan.csv</code>
                     </li>
                     <li>
                       Add column{' '}
-                      <code className="bg-blue-100 px-1 rounded">Acceptance Criteria</code> if
+                      <code className="bg-blue-100 px-1 rounded">Acceptance Criteria</code>{' '}if
                       missing
                     </li>
                     <li>For each task above, add specific acceptance criteria</li>
                     <li>
-                      Run <code className="bg-blue-100 px-1 rounded">Run Lint</code> to verify
+                      Run{' '}<code className="bg-blue-100 px-1 rounded">Run Lint</code>{' '}to verify
                     </li>
                   </ol>
                 </div>
@@ -315,7 +315,7 @@ function TierCard({
   onToggle,
   getTaskCardClass,
   getTaskStatusIcon,
-}: TierCardProps) {
+}: Readonly<TierCardProps>) {
   const colorMap = {
     A: {
       bg: 'bg-red-100 text-red-800 border-red-300',
@@ -405,11 +405,957 @@ function TierCard({
   );
 }
 
+function getTierColor(tier: string): string {
+  if (tier === 'A') return 'bg-red-100 text-red-800 border-red-300';
+  if (tier === 'B') return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+  if (tier === 'C') return 'bg-green-100 text-green-800 border-green-300';
+  return 'bg-gray-100 text-gray-800 border-gray-300';
+}
+
+function getPriorityColor(priority: string): string {
+  if (priority === 'critical') return 'bg-red-500 text-white';
+  if (priority === 'high') return 'bg-orange-500 text-white';
+  if (priority === 'medium') return 'bg-yellow-500 text-black';
+  if (priority === 'low') return 'bg-blue-500 text-white';
+  return 'bg-gray-500 text-white';
+}
+
+function getSeverityColor(severity: string): string {
+  if (severity === 'critical') return 'text-red-600 bg-red-50';
+  if (severity === 'high') return 'text-orange-600 bg-orange-50';
+  if (severity === 'medium') return 'text-yellow-600 bg-yellow-50';
+  if (severity === 'low') return 'text-blue-600 bg-blue-50';
+  return 'text-gray-600 bg-gray-50';
+}
+
+function getDaysUntilExpiry(expiryDate: string): number {
+  const now = new Date();
+  const expiry = new Date(expiryDate);
+  return Math.floor((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function getTaskStatusIcon(status: string, hasLintErrors: boolean): React.ReactNode {
+  if (status === 'done') return <Icon name="check_circle" size="sm" className="text-green-600" />;
+  if (hasLintErrors) return <Icon name="cancel" size="sm" className="text-red-600" />;
+  return <Icon name="schedule" size="sm" className="text-gray-400" />;
+}
+
+function getTaskCardClass(status: string, hasLintErrors: boolean): string {
+  if (status === 'done') return 'bg-green-50 border-green-200';
+  if (hasLintErrors) return 'bg-red-50 border-red-300';
+  return 'bg-gray-50 border-gray-200';
+}
+
+function getTabClass(activeTab: string, tabId: string, isCritical: boolean, hasItems: boolean): string {
+  if (activeTab === tabId) {
+    return isCritical ? 'border-red-500 text-red-600' : 'border-blue-500 text-blue-600';
+  }
+  if (isCritical && hasItems) return 'border-transparent text-red-500 hover:text-red-700';
+  return 'border-transparent text-gray-500 hover:text-gray-700';
+}
+
+function getExpiryBadgeClass(daysUntil: number): string {
+  if (daysUntil <= 0) return 'bg-red-500 text-white';
+  if (daysUntil <= 30) return 'bg-orange-500 text-white';
+  return 'bg-gray-200';
+}
+
+function getRecommendationClass(priority: string): string {
+  if (priority === 'CRITICAL') return 'bg-red-50 border-red-500';
+  if (priority === 'HIGH') return 'bg-orange-50 border-orange-500';
+  return 'bg-yellow-50 border-yellow-500';
+}
+
+function getRecommendationBadgeClass(priority: string): string {
+  if (priority === 'CRITICAL') return 'bg-red-100 text-red-700';
+  if (priority === 'HIGH') return 'bg-orange-100 text-orange-700';
+  return 'bg-yellow-100 text-yellow-700';
+}
+
+interface PhantomTabContentProps {
+  phantomAudit: PhantomAudit | null;
+  lintOutput: string;
+  isRunningLint: boolean;
+  runPlanLint: () => void;
+  expandedItems: Set<string>;
+  toggleExpand: (id: string) => void;
+}
+
+function PhantomTabContent({
+  phantomAudit,
+  lintOutput,
+  isRunningLint,
+  runPlanLint,
+  expandedItems,
+  toggleExpand,
+}: Readonly<PhantomTabContentProps>) {
+  return (
+    <div className="space-y-6">
+      {phantomAudit ? (
+        <>
+          <div className="grid grid-cols-4 gap-4">
+            <div className="p-4 bg-gray-50 rounded-lg text-center">
+              <p className="text-3xl font-bold text-gray-700">{phantomAudit.summary.total_completed_tasks}</p>
+              <p className="text-sm text-gray-500">Claimed Complete</p>
+            </div>
+            <div className="p-4 bg-green-50 rounded-lg text-center">
+              <p className="text-3xl font-bold text-green-700">{phantomAudit.summary.verified_completions}</p>
+              <p className="text-sm text-green-600">Verified</p>
+            </div>
+            <div className="p-4 bg-red-50 rounded-lg text-center">
+              <p className="text-3xl font-bold text-red-700">{phantomAudit.summary.phantom_completions}</p>
+              <p className="text-sm text-red-600">Phantom</p>
+            </div>
+            <div className="p-4 bg-orange-50 rounded-lg text-center">
+              <p className="text-3xl font-bold text-orange-700">{phantomAudit.summary.integrity_score}</p>
+              <p className="text-sm text-orange-600">Integrity Score</p>
+            </div>
+          </div>
+          <div>
+            <h3 className="font-semibold text-red-600 mb-3 flex items-center gap-2">
+              <Icon name="warning" size="lg" />
+              Phantom Completions ({phantomAudit.phantom_completions.length})
+            </h3>
+            <div className="space-y-3">
+              {phantomAudit.phantom_completions.map((item) => (
+                <div key={item.task_id} className="border border-red-200 rounded-lg overflow-hidden bg-white">
+                  <button
+                    type="button"
+                    className="w-full flex items-center justify-between p-4 cursor-pointer hover:bg-red-50 text-left"
+                    onClick={() => toggleExpand(`phantom-${item.task_id}`)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon name="cancel" size="lg" className="text-red-500" />
+                      <span className="font-semibold text-red-700">{item.task_id}</span>
+                      <span className="text-sm text-gray-500">{item.description}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded">
+                        {item.missing_artifacts.length} missing
+                      </span>
+                      {expandedItems.has(`phantom-${item.task_id}`) ? (
+                        <Icon name="expand_less" size="sm" />
+                      ) : (
+                        <Icon name="expand_more" size="sm" />
+                      )}
+                    </div>
+                  </button>
+                  {expandedItems.has(`phantom-${item.task_id}`) && (
+                    <div className="border-t border-red-100 p-4 bg-red-50">
+                      <div className="mb-3">
+                        <p className="text-sm font-semibold text-red-700 mb-2">Missing Artifacts:</p>
+                        <ul className="list-disc list-inside text-sm text-red-600 space-y-1">
+                          {item.missing_artifacts.map((artifact) => (
+                            <li key={artifact} className="font-mono text-xs">{artifact}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      {item.partially_exists && item.partially_exists.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-red-200">
+                          <p className="text-sm font-semibold text-orange-700 mb-2">Partially Exists:</p>
+                          <ul className="list-disc list-inside text-sm text-orange-600 space-y-1">
+                            {item.partially_exists.map((artifact) => (
+                              <li key={artifact} className="font-mono text-xs">{artifact}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {item.note && (
+                        <p className="text-sm text-gray-600 mt-3 italic">Note: {item.note}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+          {phantomAudit.recommendations.length > 0 && (
+            <div>
+              <h3 className="font-semibold text-gray-700 mb-3">Recommendations</h3>
+              <div className="space-y-2">
+                {phantomAudit.recommendations.map((rec) => (
+                  <div key={`${rec.priority}-${rec.action}`} className={`p-3 rounded-lg border-l-4 ${getRecommendationClass(rec.priority)}`}>
+                    <div className="flex items-start gap-2">
+                      <span className={`px-2 py-0.5 text-xs rounded font-medium ${getRecommendationBadgeClass(rec.priority)}`}>
+                        {rec.priority}
+                      </span>
+                      <div>
+                        <p className="font-medium text-gray-800">{rec.action}</p>
+                        {rec.details && <p className="text-sm text-gray-600 mt-1">{rec.details}</p>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="text-center py-8">
+          <Icon name="warning" size="2xl" className="mx-auto mb-4 text-gray-400" />
+          <p className="text-gray-500 mb-4">No phantom completion audit available.</p>
+          <p className="text-sm text-gray-400 mb-4">Run the Python linter to generate an audit report.</p>
+          <button
+            onClick={runPlanLint}
+            disabled={isRunningLint}
+            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 disabled:opacity-50"
+          >
+            <Icon name="play_arrow" size="sm" className="inline mr-2" />
+            {isRunningLint ? 'Running...' : 'Run Lint'}
+          </button>
+        </div>
+      )}
+      {lintOutput && (
+        <div className="mt-4">
+          <h3 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+            <Icon name="terminal" size="sm" />
+            Linter Output
+          </h3>
+          <pre className="bg-gray-900 text-green-400 p-4 rounded-lg text-xs overflow-auto max-h-64 font-mono">
+            {lintOutput}
+          </pre>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface PlatformHealthTabProps {
+  platformHealth: PlatformHealthData | null;
+  expandedSections: Set<string>;
+  toggleSection: (id: string) => void;
+  isRegenerating: boolean;
+  regenResult: { success: boolean; message: string } | null;
+  setRegenResult: (v: { success: boolean; message: string } | null) => void;
+  regenerateMetrics: () => void;
+}
+
+function PlatformHealthTab({ // NOSONAR typescript:S3776
+  platformHealth,
+  expandedSections,
+  toggleSection,
+  isRegenerating,
+  regenResult,
+  setRegenResult,
+  regenerateMetrics,
+}: Readonly<PlatformHealthTabProps>) {
+  return (
+<div className="space-y-6">
+  {platformHealth ? (
+    <>
+      {/* Header: Status + Regenerate Button */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <span
+            className={`px-3 py-1 rounded-full text-sm font-medium ${
+              (() => {
+                if (platformHealth.status === 'passing') return 'bg-green-100 text-green-800';
+                if (platformHealth.status === 'degraded') return 'bg-yellow-100 text-yellow-800';
+                return 'bg-red-100 text-red-800';
+              })()
+            }`}
+          >
+            {platformHealth.status.toUpperCase()}
+          </span>
+          <span className="text-sm text-gray-500">
+            Task: {platformHealth.metrics.taskId} | Sprint{' '}
+            {platformHealth.metrics.sprint}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={regenerateMetrics}
+          disabled={isRegenerating}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+        >
+          <Icon
+            name="refresh"
+            size="sm"
+            className={isRegenerating ? 'animate-spin' : ''}
+          />
+          {isRegenerating ? 'Regenerating...' : 'Regenerate Metrics'}
+        </button>
+      </div>
+
+      {/* Regeneration Result Banner */}
+      {regenResult && (
+        <div
+          className={`rounded-lg p-3 flex items-center gap-3 text-sm ${
+            regenResult.success
+              ? 'bg-green-50 border border-green-200 text-green-800'
+              : 'bg-red-50 border border-red-200 text-red-800'
+          }`}
+        >
+          <Icon
+            name={regenResult.success ? 'check_circle' : 'error'}
+            size="sm"
+            className={regenResult.success ? 'text-green-500' : 'text-red-500'}
+          />
+          {regenResult.message}
+          <button
+            type="button"
+            onClick={() => setRegenResult(null)}
+            className="ml-auto text-gray-400 hover:text-gray-600"
+          >
+            <Icon name="close" size="sm" />
+          </button>
+        </div>
+      )}
+
+      {/* Staleness Warning Banner */}
+      {platformHealth.summary.provenance &&
+        !platformHealth.summary.provenance.fresh && (
+          <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 flex items-start gap-3">
+            <Icon
+              name="warning"
+              size="lg"
+              className="text-amber-500 flex-shrink-0 mt-0.5"
+            />
+            <div className="flex-1">
+              <p className="font-semibold text-amber-800">Metrics are stale</p>
+              <p className="text-sm text-amber-700">
+                Last collected {platformHealth.summary.provenance.daysSinceCollection}{' '}
+                days ago (threshold: {platformHealth.summary.provenance.threshold}{' '}
+                days).
+                {platformHealth.summary.provenance.nextDue && (
+                  <>
+                    {' '}
+                    Next collection was due:{' '}
+                    {new Date(
+                      platformHealth.summary.provenance.nextDue
+                    ).toLocaleDateString()}
+                  </>
+                )}
+              </p>
+              <p className="text-xs text-amber-600 mt-1">
+                Click &quot;Regenerate Metrics&quot; above to auto-collect fresh data
+                from the codebase.
+              </p>
+            </div>
+          </div>
+        )}
+
+      {/* Maturity Level Card */}
+      {platformHealth.maturity && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex items-start justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4">
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-lg"
+                style={{ backgroundColor: platformHealth.maturity.color }}
+              >
+                {platformHealth.maturity.score}
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-800">
+                  {platformHealth.maturity.name}
+                </h3>
+                <p className="text-sm text-gray-500">
+                  {platformHealth.maturity.criteria.filter((c) => c.passed).length}/
+                  {platformHealth.maturity.criteria.length} criteria met across all
+                  levels
+                </p>
+              </div>
+            </div>
+            {platformHealth.maturity.nextLevel && (
+              <div className="text-right min-w-[200px]">
+                <p className="text-xs text-gray-500 mb-1">
+                  Progress to {platformHealth.maturity.nextLevel}
+                </p>
+                <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-blue-500 rounded-full transition-all"
+                    style={{ width: `${platformHealth.maturity.progressToNext}%` }}
+                  />
+                </div>
+                <p className="text-xs text-gray-400 mt-1">
+                  {platformHealth.maturity.progressToNext}%
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Next level requirements */}
+          {platformHealth.maturity.nextRequirements.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <p className="text-xs font-medium text-gray-500 mb-2">
+                Remaining for {platformHealth.maturity.nextLevel}:
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {platformHealth.maturity.nextRequirements.map((req) => (
+                  <span
+                    key={req}
+                    className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs"
+                  >
+                    {req}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Top Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="p-4 bg-white rounded-lg border border-gray-200">
+          <div className="flex items-center gap-2 mb-2">
+            {platformHealth.summary.schema === 'PASS' ? (
+              <Icon name="check_circle" size="lg" className="text-green-500" />
+            ) : (
+              <Icon name="cancel" size="lg" className="text-red-500" />
+            )}
+            <p className="text-sm font-medium text-gray-600">Schema</p>
+          </div>
+          <p
+            className={`text-2xl font-bold ${platformHealth.summary.schema === 'PASS' ? 'text-green-700' : 'text-red-700'}`}
+          >
+            {platformHealth.summary.schema}
+          </p>
+        </div>
+
+        <div className="p-4 bg-white rounded-lg border border-gray-200">
+          <div className="flex items-center gap-2 mb-2">
+            {platformHealth.summary.kpis.allMet ? (
+              <Icon name="check_circle" size="lg" className="text-green-500" />
+            ) : (
+              <Icon name="cancel" size="lg" className="text-red-500" />
+            )}
+            <p className="text-sm font-medium text-gray-600">KPIs</p>
+          </div>
+          <p
+            className={`text-2xl font-bold ${platformHealth.summary.kpis.allMet ? 'text-green-700' : 'text-red-700'}`}
+          >
+            {platformHealth.summary.kpis.met}/{platformHealth.summary.kpis.total}
+          </p>
+          <p className="text-xs text-gray-500">met</p>
+        </div>
+
+        <div className="p-4 bg-white rounded-lg border border-gray-200">
+          <div className="flex items-center gap-2 mb-2">
+            {platformHealth.summary.evidence.passed ===
+            platformHealth.summary.evidence.total ? (
+              <Icon name="check_circle" size="lg" className="text-green-500" />
+            ) : (
+              <Icon name="warning" size="lg" className="text-yellow-500" />
+            )}
+            <p className="text-sm font-medium text-gray-600">Evidence</p>
+          </div>
+          <p
+            className={`text-2xl font-bold ${platformHealth.summary.evidence.passed === platformHealth.summary.evidence.total ? 'text-green-700' : 'text-yellow-700'}`}
+          >
+            {platformHealth.summary.evidence.passed}/
+            {platformHealth.summary.evidence.total}
+          </p>
+          <p className="text-xs text-gray-500">verified</p>
+        </div>
+
+        <div className="p-4 bg-white rounded-lg border border-gray-200">
+          <div className="flex items-center gap-2 mb-2">
+            {platformHealth.summary.provenance.fresh ? (
+              <Icon name="check_circle" size="lg" className="text-green-500" />
+            ) : (
+              <Icon name="warning" size="lg" className="text-yellow-500" />
+            )}
+            <p className="text-sm font-medium text-gray-600">Provenance</p>
+          </div>
+          <p
+            className={`text-2xl font-bold ${platformHealth.summary.provenance.fresh ? 'text-green-700' : 'text-yellow-700'}`}
+          >
+            {platformHealth.summary.provenance.fresh ? 'Fresh' : 'Stale'}
+          </p>
+          <p className="text-xs text-gray-500">
+            {platformHealth.summary.provenance.daysSinceCollection}d ago
+          </p>
+        </div>
+      </div>
+
+      {/* Recommendations */}
+      {platformHealth.recommendations && platformHealth.recommendations.length > 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h3 className="font-semibold text-gray-700 mb-4 flex items-center gap-2">
+            <Icon name="lightbulb" size="lg" />
+            Recommendations ({platformHealth.recommendations.length})
+          </h3>
+          <div className="space-y-3">
+            {platformHealth.recommendations.map((rec) => (
+              <div
+                key={rec.title}
+                className={`p-4 rounded-lg border-l-4 ${
+                  (() => {
+                    if (rec.severity === 'high') return 'border-l-red-500 bg-red-50';
+                    if (rec.severity === 'medium') return 'border-l-amber-500 bg-amber-50';
+                    return 'border-l-blue-500 bg-blue-50';
+                  })()
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-medium text-gray-800">{rec.title}</p>
+                      <span
+                        className={`px-2 py-0.5 text-xs rounded-full font-medium ${
+                          (() => {
+                            if (rec.severity === 'high') return 'bg-red-100 text-red-700';
+                            if (rec.severity === 'medium') return 'bg-amber-100 text-amber-700';
+                            return 'bg-blue-100 text-blue-700';
+                          })()
+                        }`}
+                      >
+                        {rec.severity}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600">{rec.description}</p>
+                  </div>
+                  <span className="text-xs text-gray-400 whitespace-nowrap">
+                    {rec.estimatedTime}
+                  </span>
+                </div>
+                {rec.action === 'regenerate' && (
+                  <button
+                    type="button"
+                    onClick={regenerateMetrics}
+                    disabled={isRegenerating}
+                    className="mt-2 text-xs px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {isRegenerating ? 'Regenerating...' : 'Regenerate Now'}
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Codebase Health */}
+      {platformHealth.codebaseHealth && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h3 className="font-semibold text-gray-700 mb-4 flex items-center gap-2">
+            <Icon name="code" size="lg" />
+            Codebase Health
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <p className="text-2xl font-bold text-gray-800">
+                {platformHealth.codebaseHealth.typescript_files.toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-500">TypeScript Files</p>
+            </div>
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <p className="text-2xl font-bold text-gray-800">
+                {platformHealth.codebaseHealth.test_files.toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-500">Test Files</p>
+            </div>
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <p className="text-2xl font-bold text-gray-800">
+                {platformHealth.codebaseHealth.test_ratio}%
+              </p>
+              <p className="text-xs text-gray-500">Test Ratio</p>
+            </div>
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <p className="text-2xl font-bold text-gray-800">
+                {platformHealth.codebaseHealth.test_coverage_pct === null
+                  ? 'N/A'
+                  : `${platformHealth.codebaseHealth.test_coverage_pct}%`}
+              </p>
+              <p className="text-xs text-gray-500">Coverage</p>
+            </div>
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <p className="text-2xl font-bold text-gray-800">
+                {platformHealth.codebaseHealth.workspace_packages}
+              </p>
+              <p className="text-xs text-gray-500">Packages</p>
+            </div>
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <p className="text-2xl font-bold text-gray-800">
+                {platformHealth.codebaseHealth.ci_workflows}
+              </p>
+              <p className="text-xs text-gray-500">CI Workflows</p>
+            </div>
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <p className="text-2xl font-bold text-gray-800">
+                {platformHealth.codebaseHealth.database_migrations}
+              </p>
+              <p className="text-xs text-gray-500">DB Migrations</p>
+            </div>
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <p className="text-2xl font-bold text-gray-800">
+                {platformHealth.codebaseHealth.git_velocity.commits_30d}
+              </p>
+              <p className="text-xs text-gray-500">Commits (30d)</p>
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-xs text-gray-500 border-t pt-3">
+            <span>
+              Tracked files:{' '}
+              <strong>
+                {platformHealth.codebaseHealth.total_tracked_files.toLocaleString()}
+              </strong>
+            </span>
+            <span>
+              Root scripts:{' '}
+              <strong>{platformHealth.codebaseHealth.root_scripts}</strong>
+            </span>
+            <span>
+              Env docs:{' '}
+              <strong>
+                {platformHealth.codebaseHealth.env_files_documented}/
+                {platformHealth.codebaseHealth.env_files_expected}
+              </strong>
+            </span>
+            <span>
+              Branches:{' '}
+              <strong>{platformHealth.codebaseHealth.git_velocity.branches}</strong>
+            </span>
+            <span>
+              Golden paths:{' '}
+              <strong>
+                {platformHealth.codebaseHealth.golden_paths_verified}/
+                {platformHealth.codebaseHealth.golden_paths_total}
+              </strong>{' '}
+              verified
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Golden Paths Table */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="font-semibold text-gray-700 mb-4 flex items-center gap-2">
+          <Icon name="route" size="lg" />
+          Golden Paths ({platformHealth.goldenPaths.length})
+        </h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-gray-50">
+                <th className="text-left p-3 font-medium text-gray-600">Name</th>
+                <th className="text-left p-3 font-medium text-gray-600">Entrypoint</th>
+                <th className="text-center p-3 font-medium text-gray-600">
+                  Doc Exists
+                </th>
+                <th className="text-center p-3 font-medium text-gray-600">
+                  Content Verified
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {platformHealth.goldenPaths.map((gp) => (
+                <tr key={gp.name} className="border-b hover:bg-gray-50">
+                  <td className="p-3 font-medium">{gp.name}</td>
+                  <td className="p-3">
+                    <code className="bg-gray-100 px-2 py-0.5 rounded text-xs">
+                      {gp.entrypoint}
+                    </code>
+                  </td>
+                  <td className="p-3 text-center">
+                    {gp.docExists ? (
+                      <Icon
+                        name="check_circle"
+                        size="sm"
+                        className="text-green-500 inline"
+                      />
+                    ) : (
+                      <Icon name="cancel" size="sm" className="text-red-500 inline" />
+                    )}
+                  </td>
+                  <td className="p-3 text-center">
+                    {gp.contentVerified ? (
+                      <Icon
+                        name="check_circle"
+                        size="sm"
+                        className="text-green-500 inline"
+                      />
+                    ) : (
+                      <Icon name="cancel" size="sm" className="text-red-500 inline" />
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* KPIs Table */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="font-semibold text-gray-700 mb-4 flex items-center gap-2">
+          <Icon name="speed" size="lg" />
+          KPI Results ({platformHealth.kpis.length})
+        </h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-gray-50">
+                <th className="text-left p-3 font-medium text-gray-600">KPI</th>
+                <th className="text-left p-3 font-medium text-gray-600">Target</th>
+                <th className="text-left p-3 font-medium text-gray-600">Actual</th>
+                <th className="text-center p-3 font-medium text-gray-600">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {platformHealth.kpis.map((kpi) => (
+                <tr key={kpi.name} className="border-b hover:bg-gray-50">
+                  <td className="p-3 font-medium capitalize">{kpi.name}</td>
+                  <td className="p-3 text-gray-600">{kpi.target}</td>
+                  <td className="p-3 text-gray-600">{kpi.actual}</td>
+                  <td className="p-3 text-center">
+                    <span
+                      className={`px-2 py-0.5 text-xs rounded-full font-medium ${
+                        kpi.met
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-red-100 text-red-700'
+                      }`}
+                    >
+                      {kpi.met ? 'MET' : 'NOT MET'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Validation Details - Collapsible Sections */}
+      <div className="space-y-3">
+        <h3 className="font-semibold text-gray-700 flex items-center gap-2">
+          <Icon name="fact_check" size="lg" />
+          Validation Details
+        </h3>
+
+        {/* Evidence Checks */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => toggleSection('evidence')}
+            className="w-full flex items-center justify-between p-4 hover:bg-gray-50 text-left"
+          >
+            <div className="flex items-center gap-3">
+              <span className="font-medium">Evidence Checks</span>
+              <span
+                className={`px-2 py-0.5 text-xs rounded-full ${
+                  platformHealth.summary.evidence.passed ===
+                  platformHealth.summary.evidence.total
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-yellow-100 text-yellow-700'
+                }`}
+              >
+                {platformHealth.summary.evidence.passed}/
+                {platformHealth.summary.evidence.total} passed
+              </span>
+            </div>
+            {expandedSections.has('evidence') ? (
+              <Icon name="expand_less" size="sm" />
+            ) : (
+              <Icon name="expand_more" size="sm" />
+            )}
+          </button>
+          {expandedSections.has('evidence') && (
+            <div className="border-t p-4 space-y-2">
+              {platformHealth.evidenceChecks.map((check) => (
+                <div
+                  key={check.name}
+                  className="flex items-start gap-3 p-2 rounded hover:bg-gray-50"
+                >
+                  {check.passed ? (
+                    <Icon
+                      name="check_circle"
+                      size="sm"
+                      className="text-green-500 mt-0.5"
+                    />
+                  ) : (
+                    <Icon name="warning" size="sm" className="text-yellow-500 mt-0.5" />
+                  )}
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">{check.name}</p>
+                    <p className="text-xs text-gray-500">{check.detail}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Provenance Checks */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => toggleSection('provenance')}
+            className="w-full flex items-center justify-between p-4 hover:bg-gray-50 text-left"
+          >
+            <div className="flex items-center gap-3">
+              <span className="font-medium">Provenance Checks</span>
+              <span
+                className={`px-2 py-0.5 text-xs rounded-full ${
+                  platformHealth.provenanceChecks.every((c) => c.passed)
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-yellow-100 text-yellow-700'
+                }`}
+              >
+                {platformHealth.provenanceChecks.filter((c) => c.passed).length}/
+                {platformHealth.provenanceChecks.length} passed
+              </span>
+            </div>
+            {expandedSections.has('provenance') ? (
+              <Icon name="expand_less" size="sm" />
+            ) : (
+              <Icon name="expand_more" size="sm" />
+            )}
+          </button>
+          {expandedSections.has('provenance') && (
+            <div className="border-t p-4 space-y-2">
+              {platformHealth.provenanceChecks.map((check) => (
+                <div
+                  key={check.name}
+                  className="flex items-start gap-3 p-2 rounded hover:bg-gray-50"
+                >
+                  {check.passed ? (
+                    <Icon
+                      name="check_circle"
+                      size="sm"
+                      className="text-green-500 mt-0.5"
+                    />
+                  ) : (
+                    <Icon name="warning" size="sm" className="text-yellow-500 mt-0.5" />
+                  )}
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">{check.name}</p>
+                    <p className="text-xs text-gray-500">{check.detail}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Consistency Checks */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => toggleSection('consistency')}
+            className="w-full flex items-center justify-between p-4 hover:bg-gray-50 text-left"
+          >
+            <div className="flex items-center gap-3">
+              <span className="font-medium">Consistency Checks</span>
+              <span
+                className={`px-2 py-0.5 text-xs rounded-full ${
+                  platformHealth.summary.consistency.passed ===
+                  platformHealth.summary.consistency.total
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-red-100 text-red-700'
+                }`}
+              >
+                {platformHealth.summary.consistency.passed}/
+                {platformHealth.summary.consistency.total} passed
+              </span>
+            </div>
+            {expandedSections.has('consistency') ? (
+              <Icon name="expand_less" size="sm" />
+            ) : (
+              <Icon name="expand_more" size="sm" />
+            )}
+          </button>
+          {expandedSections.has('consistency') && (
+            <div className="border-t p-4 space-y-2">
+              {platformHealth.consistencyChecks.map((check) => (
+                <div
+                  key={check.name}
+                  className="flex items-start gap-3 p-2 rounded hover:bg-gray-50"
+                >
+                  {check.passed ? (
+                    <Icon
+                      name="check_circle"
+                      size="sm"
+                      className="text-green-500 mt-0.5"
+                    />
+                  ) : (
+                    <Icon name="cancel" size="sm" className="text-red-500 mt-0.5" />
+                  )}
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">{check.name}</p>
+                    <p className="text-xs text-gray-500">{check.detail}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Quick Stats Footer */}
+      <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
+        <div className="flex flex-wrap gap-x-6 gap-y-1">
+          <span>
+            IDP: <strong>{platformHealth.metrics.idpStatus}</strong>
+          </span>
+          <span>
+            Deploy Success: <strong>{platformHealth.metrics.deploySuccessRate}%</strong>
+          </span>
+          <span>
+            Total Deploys: <strong>{platformHealth.metrics.totalDeploys}</strong>
+          </span>
+          <span>
+            Cache Hit Rate: <strong>{platformHealth.metrics.cacheHitRate}%</strong>
+          </span>
+          <span>
+            CI Pass Rate: <strong>{platformHealth.metrics.ciPassRate}%</strong>
+          </span>
+          <span className="text-gray-400">
+            Last generated:{' '}
+            {new Date(platformHealth.metrics.generatedAt).toLocaleString()}
+          </span>
+        </div>
+      </div>
+    </>
+  ) : (
+    <div className="text-center py-8">
+      <Icon name="developer_board" size="2xl" className="mx-auto mb-4 text-gray-400" />
+      <p className="text-gray-500 mb-2">No platform health data available.</p>
+      <p className="text-sm text-gray-400 mb-4">
+        Ensure{' '}
+        <code className="bg-gray-100 px-1 rounded">
+          artifacts/metrics/self-service-metrics.json
+        </code>{' '}
+        exists.
+      </p>
+      <button
+        type="button"
+        onClick={regenerateMetrics}
+        disabled={isRegenerating}
+        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm font-medium"
+      >
+        {isRegenerating ? 'Generating...' : 'Generate Metrics'}
+      </button>
+    </div>
+  )}
+</div>
+  );
+}
+
+
+function sprintLabel(selectedSprint: number | 'all' | 'Continuous'): string {
+  if (selectedSprint === 'all') return 'All Sprints';
+  if (selectedSprint === 'Continuous') return 'Continuous Tasks';
+  return `Sprint ${selectedSprint}`;
+}
+
+function toggleSetItem<T>(set: Set<T>, item: T): Set<T> {
+  const next = new Set(set);
+  if (next.has(item)) {
+    next.delete(item);
+  } else {
+    next.add(item);
+  }
+  return next;
+}
+
 interface GovernanceViewProps {
   selectedSprint: number | 'all' | 'Continuous';
 }
 
-export default function GovernanceView({ selectedSprint }: GovernanceViewProps) {
+export default function GovernanceView({ selectedSprint }: Readonly<GovernanceViewProps>) {
   const [summary, setSummary] = useState<GovernanceSummary | null>(null);
   const [reviewQueue, setReviewQueue] = useState<ReviewQueueItem[]>([]);
   const [debtItems, setDebtItems] = useState<DebtItem[]>([]);
@@ -454,6 +1400,29 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
     return String(selectedSprint);
   };
 
+  const applyGovernanceData = (
+    summaryData: any,
+    queueData: any,
+    debtData: any,
+    lintData: any,
+    phantomData: any,
+    platformData: any
+  ) => {
+    if (summaryData) {
+      setSummary(summaryData.data);
+      setFilesExist(summaryData.filesExist);
+      if (summaryData.tierTasks) setTierTasks(summaryData.tierTasks);
+    }
+    if (queueData) setReviewQueue(queueData.items || []);
+    if (debtData) setDebtItems(debtData.items || []);
+    if (lintData) {
+      setLintErrors(lintData.data?.errors || []);
+      setLintWarnings(lintData.data?.warnings || []);
+    }
+    if (phantomData?.audit) setPhantomAudit(phantomData.audit);
+    if (platformData?.status) setPlatformHealth(platformData);
+  };
+
   const loadGovernanceData = async () => {
     setIsLoading(true);
     const sprintParam = getSprintParam();
@@ -467,20 +1436,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
           fetchJson(`/api/governance/phantom-audit?sprint=${sprintParam}`),
           fetchJson('/api/governance/platform-health'),
         ]);
-
-      if (summaryData) {
-        setSummary(summaryData.data);
-        setFilesExist(summaryData.filesExist);
-        if (summaryData.tierTasks) setTierTasks(summaryData.tierTasks);
-      }
-      if (queueData) setReviewQueue(queueData.items || []);
-      if (debtData) setDebtItems(debtData.items || []);
-      if (lintData) {
-        setLintErrors(lintData.data?.errors || []);
-        setLintWarnings(lintData.data?.warnings || []);
-      }
-      if (phantomData?.audit) setPhantomAudit(phantomData.audit);
-      if (platformData && platformData.status) setPlatformHealth(platformData);
+      applyGovernanceData(summaryData, queueData, debtData, lintData, phantomData, platformData);
     } catch (error) {
       console.error('Error loading governance data:', error);
     } finally {
@@ -535,7 +1491,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
         });
         // Reload platform health data
         const platformData = await fetchJson('/api/governance/platform-health');
-        if (platformData && platformData.status) setPlatformHealth(platformData);
+        if (platformData?.status) setPlatformHealth(platformData);
       } else {
         const err = await res.json().catch(() => ({ error: 'Unknown error' }));
         setRegenResult({ success: false, message: err.error || 'Failed to regenerate' });
@@ -552,149 +1508,17 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
   }, [selectedSprint]);
 
   const toggleExpand = (id: string) => {
-    const newExpanded = new Set(expandedItems);
-    if (newExpanded.has(id)) {
-      newExpanded.delete(id);
-    } else {
-      newExpanded.add(id);
-    }
-    setExpandedItems(newExpanded);
+    setExpandedItems((prev) => toggleSetItem(prev, id));
   };
 
   const toggleSection = (id: string) => {
-    const next = new Set(expandedSections);
-    if (next.has(id)) {
-      next.delete(id);
-    } else {
-      next.add(id);
-    }
-    setExpandedSections(next);
+    setExpandedSections((prev) => toggleSetItem(prev, id));
   };
 
   const toggleTier = (tier: string) => {
-    const newExpanded = new Set(expandedTiers);
-    if (newExpanded.has(tier)) {
-      newExpanded.delete(tier);
-    } else {
-      newExpanded.add(tier);
-    }
-    setExpandedTiers(newExpanded);
+    setExpandedTiers((prev) => toggleSetItem(prev, tier));
   };
 
-  const getTierColor = (tier: string) => {
-    switch (tier) {
-      case 'A':
-        return 'bg-red-100 text-red-800 border-red-300';
-      case 'B':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-      case 'C':
-        return 'bg-green-100 text-green-800 border-green-300';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-300';
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'critical':
-        return 'bg-red-500 text-white';
-      case 'high':
-        return 'bg-orange-500 text-white';
-      case 'medium':
-        return 'bg-yellow-500 text-black';
-      case 'low':
-        return 'bg-blue-500 text-white';
-      default:
-        return 'bg-gray-500 text-white';
-    }
-  };
-
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'critical':
-        return 'text-red-600 bg-red-50';
-      case 'high':
-        return 'text-orange-600 bg-orange-50';
-      case 'medium':
-        return 'text-yellow-600 bg-yellow-50';
-      case 'low':
-        return 'text-blue-600 bg-blue-50';
-      default:
-        return 'text-gray-600 bg-gray-50';
-    }
-  };
-
-  const getDaysUntilExpiry = (expiryDate: string) => {
-    const now = new Date();
-    const expiry = new Date(expiryDate);
-    return Math.floor((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  };
-
-  // Helper to get task status icon
-  const getTaskStatusIcon = (status: string, hasLintErrors: boolean) => {
-    if (status === 'done') {
-      return <Icon name="check_circle" size="sm" className="text-green-600" />;
-    }
-    if (hasLintErrors) {
-      return <Icon name="cancel" size="sm" className="text-red-600" />;
-    }
-    return <Icon name="schedule" size="sm" className="text-gray-400" />;
-  };
-
-  // Helper to get task card background class
-  const getTaskCardClass = (status: string, hasLintErrors: boolean) => {
-    if (status === 'done') {
-      return 'bg-green-50 border-green-200';
-    }
-    if (hasLintErrors) {
-      return 'bg-red-50 border-red-300';
-    }
-    return 'bg-gray-50 border-gray-200';
-  };
-
-  // Helper to get tab styling class
-  const getTabClass = (tabId: string, isCritical: boolean, hasItems: boolean) => {
-    if (activeTab === tabId) {
-      return isCritical ? 'border-red-500 text-red-600' : 'border-blue-500 text-blue-600';
-    }
-    if (isCritical && hasItems) {
-      return 'border-transparent text-red-500 hover:text-red-700';
-    }
-    return 'border-transparent text-gray-500 hover:text-gray-700';
-  };
-
-  // Helper to get expiry badge class
-  const getExpiryBadgeClass = (daysUntil: number) => {
-    if (daysUntil <= 0) {
-      return 'bg-red-500 text-white';
-    }
-    if (daysUntil <= 30) {
-      return 'bg-orange-500 text-white';
-    }
-    return 'bg-gray-200';
-  };
-
-  // Helper to get recommendation styling class
-  const getRecommendationClass = (priority: string) => {
-    if (priority === 'CRITICAL') {
-      return 'bg-red-50 border-red-500';
-    }
-    if (priority === 'HIGH') {
-      return 'bg-orange-50 border-orange-500';
-    }
-    return 'bg-yellow-50 border-yellow-500';
-  };
-
-  // Helper to get recommendation badge class
-  const getRecommendationBadgeClass = (priority: string) => {
-    if (priority === 'CRITICAL') {
-      return 'bg-red-100 text-red-700';
-    }
-    if (priority === 'HIGH') {
-      return 'bg-orange-100 text-orange-700';
-    }
-    return 'bg-yellow-100 text-yellow-700';
-  };
 
   if (isLoading && !summary) {
     return (
@@ -711,7 +1535,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
         <h2 className="text-xl font-semibold text-yellow-800 mb-2">Governance Not Initialized</h2>
         <p className="text-yellow-700 mb-4">The plan governance system has not been set up yet.</p>
         <p className="text-sm text-yellow-600 mb-4">
-          Run <code className="bg-yellow-100 px-2 py-1 rounded">pnpm run plan-lint</code> from the
+          Run{' '}<code className="bg-yellow-100 px-2 py-1 rounded">pnpm run plan-lint</code>{' '}from the
           project root to initialize.
         </p>
         <button
@@ -735,11 +1559,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
           <div>
             <h1 className="text-2xl font-bold">Plan Governance</h1>
             <p className="text-gray-600">
-              {selectedSprint === 'all'
-                ? 'All Sprints'
-                : selectedSprint === 'Continuous'
-                  ? 'Continuous Tasks'
-                  : `Sprint ${selectedSprint}`}{' '}
+              {sprintLabel(selectedSprint)}{' '}
               validation and compliance
             </p>
           </div>
@@ -967,7 +1787,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-4 py-3 text-sm font-medium border-b-2 flex items-center gap-1 ${getTabClass(tab.id, !!tab.critical, (tab.count || 0) > 0)}`}
+                className={`px-4 py-3 text-sm font-medium border-b-2 flex items-center gap-1 ${getTabClass(activeTab, tab.id, !!tab.critical, (tab.count || 0) > 0)}`}
               >
                 {tab.iconName && <Icon name={tab.iconName} size="sm" />}
                 {tab.label}
@@ -1076,7 +1896,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
 
                         {item.dependent_count && item.dependent_count > 0 && (
                           <p className="text-sm text-gray-600">
-                            <strong>Dependents:</strong> {item.dependent_count} task(s) depend on
+                            <strong>Dependents:</strong>{' '}{item.dependent_count} task(s) depend on
                             this
                           </p>
                         )}
@@ -1205,868 +2025,28 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
 
           {/* Phantom Completions Tab */}
           {activeTab === 'phantom' && (
-            <div className="space-y-6">
-              {phantomAudit ? (
-                <>
-                  {/* Summary */}
-                  <div className="grid grid-cols-4 gap-4">
-                    <div className="p-4 bg-gray-50 rounded-lg text-center">
-                      <p className="text-3xl font-bold text-gray-700">
-                        {phantomAudit.summary.total_completed_tasks}
-                      </p>
-                      <p className="text-sm text-gray-500">Claimed Complete</p>
-                    </div>
-                    <div className="p-4 bg-green-50 rounded-lg text-center">
-                      <p className="text-3xl font-bold text-green-700">
-                        {phantomAudit.summary.verified_completions}
-                      </p>
-                      <p className="text-sm text-green-600">Verified</p>
-                    </div>
-                    <div className="p-4 bg-red-50 rounded-lg text-center">
-                      <p className="text-3xl font-bold text-red-700">
-                        {phantomAudit.summary.phantom_completions}
-                      </p>
-                      <p className="text-sm text-red-600">Phantom</p>
-                    </div>
-                    <div className="p-4 bg-orange-50 rounded-lg text-center">
-                      <p className="text-3xl font-bold text-orange-700">
-                        {phantomAudit.summary.integrity_score}
-                      </p>
-                      <p className="text-sm text-orange-600">Integrity Score</p>
-                    </div>
-                  </div>
-
-                  {/* Phantom Completions List */}
-                  <div>
-                    <h3 className="font-semibold text-red-600 mb-3 flex items-center gap-2">
-                      <Icon name="warning" size="lg" />
-                      Phantom Completions ({phantomAudit.phantom_completions.length})
-                    </h3>
-                    <div className="space-y-3">
-                      {phantomAudit.phantom_completions.map((item) => (
-                        <div
-                          key={item.task_id}
-                          className="border border-red-200 rounded-lg overflow-hidden bg-white"
-                        >
-                          <button
-                            type="button"
-                            className="w-full flex items-center justify-between p-4 cursor-pointer hover:bg-red-50 text-left"
-                            onClick={() => toggleExpand(`phantom-${item.task_id}`)}
-                          >
-                            <div className="flex items-center gap-3">
-                              <Icon name="cancel" size="lg" className="text-red-500" />
-                              <span className="font-semibold text-red-700">{item.task_id}</span>
-                              <span className="text-sm text-gray-500">{item.description}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded">
-                                {item.missing_artifacts.length} missing
-                              </span>
-                              {expandedItems.has(`phantom-${item.task_id}`) ? (
-                                <Icon name="expand_less" size="sm" />
-                              ) : (
-                                <Icon name="expand_more" size="sm" />
-                              )}
-                            </div>
-                          </button>
-
-                          {expandedItems.has(`phantom-${item.task_id}`) && (
-                            <div className="border-t border-red-100 p-4 bg-red-50">
-                              <div className="mb-3">
-                                <p className="text-sm font-semibold text-red-700 mb-2">
-                                  Missing Artifacts:
-                                </p>
-                                <ul className="list-disc list-inside text-sm text-red-600 space-y-1">
-                                  {item.missing_artifacts.map((artifact) => (
-                                    <li key={artifact} className="font-mono text-xs">
-                                      {artifact}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-
-                              {item.partially_exists && item.partially_exists.length > 0 && (
-                                <div className="mt-3 pt-3 border-t border-red-200">
-                                  <p className="text-sm font-semibold text-orange-700 mb-2">
-                                    Partially Exists:
-                                  </p>
-                                  <ul className="list-disc list-inside text-sm text-orange-600 space-y-1">
-                                    {item.partially_exists.map((artifact) => (
-                                      <li key={artifact} className="font-mono text-xs">
-                                        {artifact}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-
-                              {item.note && (
-                                <p className="text-sm text-gray-600 mt-3 italic">
-                                  Note: {item.note}
-                                </p>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Recommendations */}
-                  {phantomAudit.recommendations.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold text-gray-700 mb-3">Recommendations</h3>
-                      <div className="space-y-2">
-                        {phantomAudit.recommendations.map((rec) => (
-                          <div
-                            key={`${rec.priority}-${rec.action}`}
-                            className={`p-3 rounded-lg border-l-4 ${getRecommendationClass(rec.priority)}`}
-                          >
-                            <div className="flex items-start gap-2">
-                              <span
-                                className={`px-2 py-0.5 text-xs rounded font-medium ${getRecommendationBadgeClass(rec.priority)}`}
-                              >
-                                {rec.priority}
-                              </span>
-                              <div>
-                                <p className="font-medium text-gray-800">{rec.action}</p>
-                                {rec.details && (
-                                  <p className="text-sm text-gray-600 mt-1">{rec.details}</p>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-8">
-                  <Icon name="warning" size="2xl" className="mx-auto mb-4 text-gray-400" />
-                  <p className="text-gray-500 mb-4">No phantom completion audit available.</p>
-                  <p className="text-sm text-gray-400 mb-4">
-                    Run the Python linter to generate an audit report.
-                  </p>
-                  <button
-                    onClick={runPlanLint}
-                    disabled={isRunningLint}
-                    className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 disabled:opacity-50"
-                  >
-                    <Icon name="play_arrow" size="sm" className="inline mr-2" />
-                    {isRunningLint ? 'Running...' : 'Run Lint'}
-                  </button>
-                </div>
-              )}
-
-              {/* Lint Output */}
-              {lintOutput && (
-                <div className="mt-4">
-                  <h3 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                    <Icon name="terminal" size="sm" />
-                    Linter Output
-                  </h3>
-                  <pre className="bg-gray-900 text-green-400 p-4 rounded-lg text-xs overflow-auto max-h-64 font-mono">
-                    {lintOutput}
-                  </pre>
-                </div>
-              )}
-            </div>
+            <PhantomTabContent
+              phantomAudit={phantomAudit}
+              lintOutput={lintOutput}
+              isRunningLint={isRunningLint}
+              runPlanLint={runPlanLint}
+              expandedItems={expandedItems}
+              toggleExpand={toggleExpand}
+            />
           )}
+
 
           {/* Platform Health Tab */}
           {activeTab === 'platform' && (
-            <div className="space-y-6">
-              {platformHealth ? (
-                <>
-                  {/* Header: Status + Regenerate Button */}
-                  <div className="flex items-center justify-between flex-wrap gap-3">
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          platformHealth.status === 'passing'
-                            ? 'bg-green-100 text-green-800'
-                            : platformHealth.status === 'degraded'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {platformHealth.status.toUpperCase()}
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        Task: {platformHealth.metrics.taskId} | Sprint{' '}
-                        {platformHealth.metrics.sprint}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={regenerateMetrics}
-                      disabled={isRegenerating}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors"
-                    >
-                      <Icon
-                        name="refresh"
-                        size="sm"
-                        className={isRegenerating ? 'animate-spin' : ''}
-                      />
-                      {isRegenerating ? 'Regenerating...' : 'Regenerate Metrics'}
-                    </button>
-                  </div>
-
-                  {/* Regeneration Result Banner */}
-                  {regenResult && (
-                    <div
-                      className={`rounded-lg p-3 flex items-center gap-3 text-sm ${
-                        regenResult.success
-                          ? 'bg-green-50 border border-green-200 text-green-800'
-                          : 'bg-red-50 border border-red-200 text-red-800'
-                      }`}
-                    >
-                      <Icon
-                        name={regenResult.success ? 'check_circle' : 'error'}
-                        size="sm"
-                        className={regenResult.success ? 'text-green-500' : 'text-red-500'}
-                      />
-                      {regenResult.message}
-                      <button
-                        type="button"
-                        onClick={() => setRegenResult(null)}
-                        className="ml-auto text-gray-400 hover:text-gray-600"
-                      >
-                        <Icon name="close" size="sm" />
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Staleness Warning Banner */}
-                  {platformHealth.summary.provenance &&
-                    !platformHealth.summary.provenance.fresh && (
-                      <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 flex items-start gap-3">
-                        <Icon
-                          name="warning"
-                          size="lg"
-                          className="text-amber-500 flex-shrink-0 mt-0.5"
-                        />
-                        <div className="flex-1">
-                          <p className="font-semibold text-amber-800">Metrics are stale</p>
-                          <p className="text-sm text-amber-700">
-                            Last collected {platformHealth.summary.provenance.daysSinceCollection}{' '}
-                            days ago (threshold: {platformHealth.summary.provenance.threshold}{' '}
-                            days).
-                            {platformHealth.summary.provenance.nextDue && (
-                              <>
-                                {' '}
-                                Next collection was due:{' '}
-                                {new Date(
-                                  platformHealth.summary.provenance.nextDue
-                                ).toLocaleDateString()}
-                              </>
-                            )}
-                          </p>
-                          <p className="text-xs text-amber-600 mt-1">
-                            Click &quot;Regenerate Metrics&quot; above to auto-collect fresh data
-                            from the codebase.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                  {/* Maturity Level Card */}
-                  {platformHealth.maturity && (
-                    <div className="bg-white rounded-lg border border-gray-200 p-6">
-                      <div className="flex items-start justify-between flex-wrap gap-4">
-                        <div className="flex items-center gap-4">
-                          <div
-                            className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-lg"
-                            style={{ backgroundColor: platformHealth.maturity.color }}
-                          >
-                            {platformHealth.maturity.score}
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-bold text-gray-800">
-                              {platformHealth.maturity.name}
-                            </h3>
-                            <p className="text-sm text-gray-500">
-                              {platformHealth.maturity.criteria.filter((c) => c.passed).length}/
-                              {platformHealth.maturity.criteria.length} criteria met across all
-                              levels
-                            </p>
-                          </div>
-                        </div>
-                        {platformHealth.maturity.nextLevel && (
-                          <div className="text-right min-w-[200px]">
-                            <p className="text-xs text-gray-500 mb-1">
-                              Progress to {platformHealth.maturity.nextLevel}
-                            </p>
-                            <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-blue-500 rounded-full transition-all"
-                                style={{ width: `${platformHealth.maturity.progressToNext}%` }}
-                              />
-                            </div>
-                            <p className="text-xs text-gray-400 mt-1">
-                              {platformHealth.maturity.progressToNext}%
-                            </p>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Next level requirements */}
-                      {platformHealth.maturity.nextRequirements.length > 0 && (
-                        <div className="mt-4 pt-4 border-t border-gray-100">
-                          <p className="text-xs font-medium text-gray-500 mb-2">
-                            Remaining for {platformHealth.maturity.nextLevel}:
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {platformHealth.maturity.nextRequirements.map((req) => (
-                              <span
-                                key={req}
-                                className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs"
-                              >
-                                {req}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Top Summary Cards */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="p-4 bg-white rounded-lg border border-gray-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        {platformHealth.summary.schema === 'PASS' ? (
-                          <Icon name="check_circle" size="lg" className="text-green-500" />
-                        ) : (
-                          <Icon name="cancel" size="lg" className="text-red-500" />
-                        )}
-                        <p className="text-sm font-medium text-gray-600">Schema</p>
-                      </div>
-                      <p
-                        className={`text-2xl font-bold ${platformHealth.summary.schema === 'PASS' ? 'text-green-700' : 'text-red-700'}`}
-                      >
-                        {platformHealth.summary.schema}
-                      </p>
-                    </div>
-
-                    <div className="p-4 bg-white rounded-lg border border-gray-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        {platformHealth.summary.kpis.allMet ? (
-                          <Icon name="check_circle" size="lg" className="text-green-500" />
-                        ) : (
-                          <Icon name="cancel" size="lg" className="text-red-500" />
-                        )}
-                        <p className="text-sm font-medium text-gray-600">KPIs</p>
-                      </div>
-                      <p
-                        className={`text-2xl font-bold ${platformHealth.summary.kpis.allMet ? 'text-green-700' : 'text-red-700'}`}
-                      >
-                        {platformHealth.summary.kpis.met}/{platformHealth.summary.kpis.total}
-                      </p>
-                      <p className="text-xs text-gray-500">met</p>
-                    </div>
-
-                    <div className="p-4 bg-white rounded-lg border border-gray-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        {platformHealth.summary.evidence.passed ===
-                        platformHealth.summary.evidence.total ? (
-                          <Icon name="check_circle" size="lg" className="text-green-500" />
-                        ) : (
-                          <Icon name="warning" size="lg" className="text-yellow-500" />
-                        )}
-                        <p className="text-sm font-medium text-gray-600">Evidence</p>
-                      </div>
-                      <p
-                        className={`text-2xl font-bold ${platformHealth.summary.evidence.passed === platformHealth.summary.evidence.total ? 'text-green-700' : 'text-yellow-700'}`}
-                      >
-                        {platformHealth.summary.evidence.passed}/
-                        {platformHealth.summary.evidence.total}
-                      </p>
-                      <p className="text-xs text-gray-500">verified</p>
-                    </div>
-
-                    <div className="p-4 bg-white rounded-lg border border-gray-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        {platformHealth.summary.provenance.fresh ? (
-                          <Icon name="check_circle" size="lg" className="text-green-500" />
-                        ) : (
-                          <Icon name="warning" size="lg" className="text-yellow-500" />
-                        )}
-                        <p className="text-sm font-medium text-gray-600">Provenance</p>
-                      </div>
-                      <p
-                        className={`text-2xl font-bold ${platformHealth.summary.provenance.fresh ? 'text-green-700' : 'text-yellow-700'}`}
-                      >
-                        {platformHealth.summary.provenance.fresh ? 'Fresh' : 'Stale'}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {platformHealth.summary.provenance.daysSinceCollection}d ago
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Recommendations */}
-                  {platformHealth.recommendations && platformHealth.recommendations.length > 0 && (
-                    <div className="bg-white rounded-lg border border-gray-200 p-6">
-                      <h3 className="font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                        <Icon name="lightbulb" size="lg" />
-                        Recommendations ({platformHealth.recommendations.length})
-                      </h3>
-                      <div className="space-y-3">
-                        {platformHealth.recommendations.map((rec) => (
-                          <div
-                            key={rec.title}
-                            className={`p-4 rounded-lg border-l-4 ${
-                              rec.severity === 'high'
-                                ? 'border-l-red-500 bg-red-50'
-                                : rec.severity === 'medium'
-                                  ? 'border-l-amber-500 bg-amber-50'
-                                  : 'border-l-blue-500 bg-blue-50'
-                            }`}
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <p className="font-medium text-gray-800">{rec.title}</p>
-                                  <span
-                                    className={`px-2 py-0.5 text-xs rounded-full font-medium ${
-                                      rec.severity === 'high'
-                                        ? 'bg-red-100 text-red-700'
-                                        : rec.severity === 'medium'
-                                          ? 'bg-amber-100 text-amber-700'
-                                          : 'bg-blue-100 text-blue-700'
-                                    }`}
-                                  >
-                                    {rec.severity}
-                                  </span>
-                                </div>
-                                <p className="text-sm text-gray-600">{rec.description}</p>
-                              </div>
-                              <span className="text-xs text-gray-400 whitespace-nowrap">
-                                {rec.estimatedTime}
-                              </span>
-                            </div>
-                            {rec.action === 'regenerate' && (
-                              <button
-                                type="button"
-                                onClick={regenerateMetrics}
-                                disabled={isRegenerating}
-                                className="mt-2 text-xs px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-                              >
-                                {isRegenerating ? 'Regenerating...' : 'Regenerate Now'}
-                              </button>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Codebase Health */}
-                  {platformHealth.codebaseHealth && (
-                    <div className="bg-white rounded-lg border border-gray-200 p-6">
-                      <h3 className="font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                        <Icon name="code" size="lg" />
-                        Codebase Health
-                      </h3>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="text-center p-3 bg-gray-50 rounded-lg">
-                          <p className="text-2xl font-bold text-gray-800">
-                            {platformHealth.codebaseHealth.typescript_files.toLocaleString()}
-                          </p>
-                          <p className="text-xs text-gray-500">TypeScript Files</p>
-                        </div>
-                        <div className="text-center p-3 bg-gray-50 rounded-lg">
-                          <p className="text-2xl font-bold text-gray-800">
-                            {platformHealth.codebaseHealth.test_files.toLocaleString()}
-                          </p>
-                          <p className="text-xs text-gray-500">Test Files</p>
-                        </div>
-                        <div className="text-center p-3 bg-gray-50 rounded-lg">
-                          <p className="text-2xl font-bold text-gray-800">
-                            {platformHealth.codebaseHealth.test_ratio}%
-                          </p>
-                          <p className="text-xs text-gray-500">Test Ratio</p>
-                        </div>
-                        <div className="text-center p-3 bg-gray-50 rounded-lg">
-                          <p className="text-2xl font-bold text-gray-800">
-                            {platformHealth.codebaseHealth.test_coverage_pct !== null
-                              ? `${platformHealth.codebaseHealth.test_coverage_pct}%`
-                              : 'N/A'}
-                          </p>
-                          <p className="text-xs text-gray-500">Coverage</p>
-                        </div>
-                        <div className="text-center p-3 bg-gray-50 rounded-lg">
-                          <p className="text-2xl font-bold text-gray-800">
-                            {platformHealth.codebaseHealth.workspace_packages}
-                          </p>
-                          <p className="text-xs text-gray-500">Packages</p>
-                        </div>
-                        <div className="text-center p-3 bg-gray-50 rounded-lg">
-                          <p className="text-2xl font-bold text-gray-800">
-                            {platformHealth.codebaseHealth.ci_workflows}
-                          </p>
-                          <p className="text-xs text-gray-500">CI Workflows</p>
-                        </div>
-                        <div className="text-center p-3 bg-gray-50 rounded-lg">
-                          <p className="text-2xl font-bold text-gray-800">
-                            {platformHealth.codebaseHealth.database_migrations}
-                          </p>
-                          <p className="text-xs text-gray-500">DB Migrations</p>
-                        </div>
-                        <div className="text-center p-3 bg-gray-50 rounded-lg">
-                          <p className="text-2xl font-bold text-gray-800">
-                            {platformHealth.codebaseHealth.git_velocity.commits_30d}
-                          </p>
-                          <p className="text-xs text-gray-500">Commits (30d)</p>
-                        </div>
-                      </div>
-                      <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-xs text-gray-500 border-t pt-3">
-                        <span>
-                          Tracked files:{' '}
-                          <strong>
-                            {platformHealth.codebaseHealth.total_tracked_files.toLocaleString()}
-                          </strong>
-                        </span>
-                        <span>
-                          Root scripts:{' '}
-                          <strong>{platformHealth.codebaseHealth.root_scripts}</strong>
-                        </span>
-                        <span>
-                          Env docs:{' '}
-                          <strong>
-                            {platformHealth.codebaseHealth.env_files_documented}/
-                            {platformHealth.codebaseHealth.env_files_expected}
-                          </strong>
-                        </span>
-                        <span>
-                          Branches:{' '}
-                          <strong>{platformHealth.codebaseHealth.git_velocity.branches}</strong>
-                        </span>
-                        <span>
-                          Golden paths:{' '}
-                          <strong>
-                            {platformHealth.codebaseHealth.golden_paths_verified}/
-                            {platformHealth.codebaseHealth.golden_paths_total}
-                          </strong>{' '}
-                          verified
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Golden Paths Table */}
-                  <div className="bg-white rounded-lg border border-gray-200 p-6">
-                    <h3 className="font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                      <Icon name="route" size="lg" />
-                      Golden Paths ({platformHealth.goldenPaths.length})
-                    </h3>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b bg-gray-50">
-                            <th className="text-left p-3 font-medium text-gray-600">Name</th>
-                            <th className="text-left p-3 font-medium text-gray-600">Entrypoint</th>
-                            <th className="text-center p-3 font-medium text-gray-600">
-                              Doc Exists
-                            </th>
-                            <th className="text-center p-3 font-medium text-gray-600">
-                              Content Verified
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {platformHealth.goldenPaths.map((gp) => (
-                            <tr key={gp.name} className="border-b hover:bg-gray-50">
-                              <td className="p-3 font-medium">{gp.name}</td>
-                              <td className="p-3">
-                                <code className="bg-gray-100 px-2 py-0.5 rounded text-xs">
-                                  {gp.entrypoint}
-                                </code>
-                              </td>
-                              <td className="p-3 text-center">
-                                {gp.docExists ? (
-                                  <Icon
-                                    name="check_circle"
-                                    size="sm"
-                                    className="text-green-500 inline"
-                                  />
-                                ) : (
-                                  <Icon name="cancel" size="sm" className="text-red-500 inline" />
-                                )}
-                              </td>
-                              <td className="p-3 text-center">
-                                {gp.contentVerified ? (
-                                  <Icon
-                                    name="check_circle"
-                                    size="sm"
-                                    className="text-green-500 inline"
-                                  />
-                                ) : (
-                                  <Icon name="cancel" size="sm" className="text-red-500 inline" />
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  {/* KPIs Table */}
-                  <div className="bg-white rounded-lg border border-gray-200 p-6">
-                    <h3 className="font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                      <Icon name="speed" size="lg" />
-                      KPI Results ({platformHealth.kpis.length})
-                    </h3>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b bg-gray-50">
-                            <th className="text-left p-3 font-medium text-gray-600">KPI</th>
-                            <th className="text-left p-3 font-medium text-gray-600">Target</th>
-                            <th className="text-left p-3 font-medium text-gray-600">Actual</th>
-                            <th className="text-center p-3 font-medium text-gray-600">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {platformHealth.kpis.map((kpi) => (
-                            <tr key={kpi.name} className="border-b hover:bg-gray-50">
-                              <td className="p-3 font-medium capitalize">{kpi.name}</td>
-                              <td className="p-3 text-gray-600">{kpi.target}</td>
-                              <td className="p-3 text-gray-600">{kpi.actual}</td>
-                              <td className="p-3 text-center">
-                                <span
-                                  className={`px-2 py-0.5 text-xs rounded-full font-medium ${
-                                    kpi.met
-                                      ? 'bg-green-100 text-green-700'
-                                      : 'bg-red-100 text-red-700'
-                                  }`}
-                                >
-                                  {kpi.met ? 'MET' : 'NOT MET'}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  {/* Validation Details - Collapsible Sections */}
-                  <div className="space-y-3">
-                    <h3 className="font-semibold text-gray-700 flex items-center gap-2">
-                      <Icon name="fact_check" size="lg" />
-                      Validation Details
-                    </h3>
-
-                    {/* Evidence Checks */}
-                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                      <button
-                        type="button"
-                        onClick={() => toggleSection('evidence')}
-                        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 text-left"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="font-medium">Evidence Checks</span>
-                          <span
-                            className={`px-2 py-0.5 text-xs rounded-full ${
-                              platformHealth.summary.evidence.passed ===
-                              platformHealth.summary.evidence.total
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-yellow-100 text-yellow-700'
-                            }`}
-                          >
-                            {platformHealth.summary.evidence.passed}/
-                            {platformHealth.summary.evidence.total} passed
-                          </span>
-                        </div>
-                        {expandedSections.has('evidence') ? (
-                          <Icon name="expand_less" size="sm" />
-                        ) : (
-                          <Icon name="expand_more" size="sm" />
-                        )}
-                      </button>
-                      {expandedSections.has('evidence') && (
-                        <div className="border-t p-4 space-y-2">
-                          {platformHealth.evidenceChecks.map((check) => (
-                            <div
-                              key={check.name}
-                              className="flex items-start gap-3 p-2 rounded hover:bg-gray-50"
-                            >
-                              {check.passed ? (
-                                <Icon
-                                  name="check_circle"
-                                  size="sm"
-                                  className="text-green-500 mt-0.5"
-                                />
-                              ) : (
-                                <Icon name="warning" size="sm" className="text-yellow-500 mt-0.5" />
-                              )}
-                              <div>
-                                <p className="text-sm font-medium text-gray-700">{check.name}</p>
-                                <p className="text-xs text-gray-500">{check.detail}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Provenance Checks */}
-                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                      <button
-                        type="button"
-                        onClick={() => toggleSection('provenance')}
-                        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 text-left"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="font-medium">Provenance Checks</span>
-                          <span
-                            className={`px-2 py-0.5 text-xs rounded-full ${
-                              platformHealth.provenanceChecks.every((c) => c.passed)
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-yellow-100 text-yellow-700'
-                            }`}
-                          >
-                            {platformHealth.provenanceChecks.filter((c) => c.passed).length}/
-                            {platformHealth.provenanceChecks.length} passed
-                          </span>
-                        </div>
-                        {expandedSections.has('provenance') ? (
-                          <Icon name="expand_less" size="sm" />
-                        ) : (
-                          <Icon name="expand_more" size="sm" />
-                        )}
-                      </button>
-                      {expandedSections.has('provenance') && (
-                        <div className="border-t p-4 space-y-2">
-                          {platformHealth.provenanceChecks.map((check) => (
-                            <div
-                              key={check.name}
-                              className="flex items-start gap-3 p-2 rounded hover:bg-gray-50"
-                            >
-                              {check.passed ? (
-                                <Icon
-                                  name="check_circle"
-                                  size="sm"
-                                  className="text-green-500 mt-0.5"
-                                />
-                              ) : (
-                                <Icon name="warning" size="sm" className="text-yellow-500 mt-0.5" />
-                              )}
-                              <div>
-                                <p className="text-sm font-medium text-gray-700">{check.name}</p>
-                                <p className="text-xs text-gray-500">{check.detail}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Consistency Checks */}
-                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                      <button
-                        type="button"
-                        onClick={() => toggleSection('consistency')}
-                        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 text-left"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="font-medium">Consistency Checks</span>
-                          <span
-                            className={`px-2 py-0.5 text-xs rounded-full ${
-                              platformHealth.summary.consistency.passed ===
-                              platformHealth.summary.consistency.total
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-red-100 text-red-700'
-                            }`}
-                          >
-                            {platformHealth.summary.consistency.passed}/
-                            {platformHealth.summary.consistency.total} passed
-                          </span>
-                        </div>
-                        {expandedSections.has('consistency') ? (
-                          <Icon name="expand_less" size="sm" />
-                        ) : (
-                          <Icon name="expand_more" size="sm" />
-                        )}
-                      </button>
-                      {expandedSections.has('consistency') && (
-                        <div className="border-t p-4 space-y-2">
-                          {platformHealth.consistencyChecks.map((check) => (
-                            <div
-                              key={check.name}
-                              className="flex items-start gap-3 p-2 rounded hover:bg-gray-50"
-                            >
-                              {check.passed ? (
-                                <Icon
-                                  name="check_circle"
-                                  size="sm"
-                                  className="text-green-500 mt-0.5"
-                                />
-                              ) : (
-                                <Icon name="cancel" size="sm" className="text-red-500 mt-0.5" />
-                              )}
-                              <div>
-                                <p className="text-sm font-medium text-gray-700">{check.name}</p>
-                                <p className="text-xs text-gray-500">{check.detail}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Quick Stats Footer */}
-                  <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
-                    <div className="flex flex-wrap gap-x-6 gap-y-1">
-                      <span>
-                        IDP: <strong>{platformHealth.metrics.idpStatus}</strong>
-                      </span>
-                      <span>
-                        Deploy Success: <strong>{platformHealth.metrics.deploySuccessRate}%</strong>
-                      </span>
-                      <span>
-                        Total Deploys: <strong>{platformHealth.metrics.totalDeploys}</strong>
-                      </span>
-                      <span>
-                        Cache Hit Rate: <strong>{platformHealth.metrics.cacheHitRate}%</strong>
-                      </span>
-                      <span>
-                        CI Pass Rate: <strong>{platformHealth.metrics.ciPassRate}%</strong>
-                      </span>
-                      <span className="text-gray-400">
-                        Last generated:{' '}
-                        {new Date(platformHealth.metrics.generatedAt).toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-8">
-                  <Icon name="developer_board" size="2xl" className="mx-auto mb-4 text-gray-400" />
-                  <p className="text-gray-500 mb-2">No platform health data available.</p>
-                  <p className="text-sm text-gray-400 mb-4">
-                    Ensure{' '}
-                    <code className="bg-gray-100 px-1 rounded">
-                      artifacts/metrics/self-service-metrics.json
-                    </code>{' '}
-                    exists.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={regenerateMetrics}
-                    disabled={isRegenerating}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm font-medium"
-                  >
-                    {isRegenerating ? 'Generating...' : 'Generate Metrics'}
-                  </button>
-                </div>
-              )}
-            </div>
+            <PlatformHealthTab
+              platformHealth={platformHealth}
+              expandedSections={expandedSections}
+              toggleSection={toggleSection}
+              isRegenerating={isRegenerating}
+              regenResult={regenResult}
+              setRegenResult={setRegenResult}
+              regenerateMetrics={regenerateMetrics}
+            />
           )}
         </div>
       </div>

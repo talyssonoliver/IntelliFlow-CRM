@@ -90,13 +90,1117 @@ function isFullTask(task: Task | MinimalTask): task is Task {
   return 'section' in task && 'owner' in task && 'dod' in task;
 }
 
+/** Map a task status string to a Tailwind badge class */
+function getStatusClass(status: string): string {
+  if (status === 'Completed') return 'bg-green-100 text-green-800';
+  if (status === 'In Progress') return 'bg-blue-100 text-blue-800';
+  if (status === 'Blocked') return 'bg-red-100 text-red-800';
+  return 'bg-gray-100 text-gray-800';
+}
+
+/** Map total float value to Tailwind container/text classes */
+function getFloatClasses(totalFloat: number): { container: string; text: string } {
+  if (totalFloat <= 0) return { container: 'bg-red-50 border-red-200', text: 'text-red-700' };
+  if (totalFloat < 60) return { container: 'bg-amber-50 border-amber-200', text: 'text-amber-700' };
+  return { container: 'bg-green-50 border-green-200', text: 'text-green-700' };
+}
+
+/** Map percent-complete + isCritical to a progress bar color class */
+function getProgressBarColor(percentComplete: number, isCritical: boolean): string {
+  if (percentComplete >= 100) return 'bg-green-500';
+  return isCritical ? 'bg-red-500' : 'bg-blue-500';
+}
+
+/** Map validation item status to Tailwind classes */
+const VALIDATION_STATUS_CLASSES: Record<string, { container: string; text: string }> = {
+  pass: { container: 'bg-green-50 border-green-200', text: 'text-green-700' },
+  fail: { container: 'bg-red-50 border-red-200', text: 'text-red-700' },
+  pending: { container: 'bg-gray-50 border-gray-200', text: 'text-gray-500' },
+  skip: { container: 'bg-gray-50 border-gray-200', text: 'text-gray-500' },
+};
+
+function getValidationStatusClasses(status: string): { container: string; text: string } {
+  return VALIDATION_STATUS_CLASSES[status] ?? VALIDATION_STATUS_CLASSES.pending;
+}
+
+const VALIDATION_ICONS: Record<string, { name: string; cls: string }> = {
+  pass: { name: 'check_circle', cls: 'text-green-600' },
+  fail: { name: 'cancel', cls: 'text-red-600' },
+  pending: { name: 'schedule', cls: 'text-gray-400' },
+  skip: { name: 'block', cls: 'text-gray-400' },
+};
+
+function getValidationIcon(status: string): { name: string; cls: string } {
+  return VALIDATION_ICONS[status] ?? VALIDATION_ICONS.pending;
+}
+
+function ValidationItemCard({ item }: Readonly<{ item: { name: string; status: string } }>) {
+  const vsClasses = getValidationStatusClasses(item.status);
+  const icon = getValidationIcon(item.status);
+  return (
+    <div className={clsx('rounded-lg p-3 text-center border', vsClasses.container)}>
+      <div className="text-xs font-medium uppercase text-gray-500 mb-1">{item.name}</div>
+      <div className="flex items-center justify-center gap-1">
+        <Icon name={icon.name} size="sm" className={icon.cls} />
+        <span className={clsx('text-sm font-medium uppercase', vsClasses.text)}>{item.status}</span>
+      </div>
+    </div>
+  );
+}
+
+function FloatCard({ totalFloat }: Readonly<{ totalFloat: number }>) {
+  const { container: floatContainerClass, text: floatTextClass } = getFloatClasses(totalFloat);
+  return (
+    <div className={clsx('rounded-lg p-4 border', floatContainerClass)}>
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-xs text-gray-500 mb-1">Total Float</div>
+          <div className={clsx('text-2xl font-bold', floatTextClass)}>{totalFloat} min</div>
+          <div className="text-xs text-gray-400">
+            {Math.round((totalFloat / 60) * 10) / 10} hours
+          </div>
+        </div>
+        {totalFloat <= 0 && <Icon name="warning" size="xl" className="text-red-400" />}
+      </div>
+    </div>
+  );
+}
+
+function AttestationSummary({
+  attestation,
+}: Readonly<{
+  attestation: {
+    verdict?: string;
+    artifactsVerified?: number;
+    gatesPassed?: number;
+  };
+}>) {
+  const verdict = attestation.verdict ?? '';
+  const incompleteVerdictClass =
+    verdict === 'INCOMPLETE' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700';
+  const verdictClass = verdict === 'COMPLETE' ? 'bg-green-100 text-green-700' : incompleteVerdictClass;
+  return (
+    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+      <div className="flex items-center gap-2">
+        <Icon name="workspace_premium" size="sm" className="text-amber-500" />
+        <span className="text-sm font-medium">Attestation</span>
+        <span className={clsx('px-2 py-0.5 text-xs font-medium rounded', verdictClass)}>
+          {verdict}
+        </span>
+      </div>
+      <div className="flex items-center gap-4 text-xs text-gray-500">
+        {attestation.artifactsVerified !== undefined && (
+          <span>{attestation.artifactsVerified} artifacts</span>
+        )}
+        {attestation.gatesPassed !== undefined && (
+          <span>{attestation.gatesPassed} gates passed</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Tab content sub-components ──────────────────────────────────────────────
+
+interface DetailsTabProps {
+  loadingTask: boolean;
+  displayTask: FullTaskData | null;
+  planStatus: PlanStatus | null;
+  actionMessage: string | null;
+  onNavigateToTask?: (taskId: string) => void;
+}
+
+function DetailsTab({ loadingTask, displayTask, planStatus, actionMessage, onNavigateToTask }: Readonly<DetailsTabProps>) {
+  const handleDependencyClick = (depId: string) => {
+    if (onNavigateToTask) onNavigateToTask(depId);
+  };
+  if (loadingTask) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        </div>
+      </div>
+    );
+  }
+  if (!displayTask) {
+    return <div className="space-y-6"><div className="text-center py-8 text-gray-500">Unable to load task details</div></div>;
+  }
+  return (
+    <div className="space-y-6">
+        {/* Description */}
+          <div>
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Description</h3>
+            <p className="text-gray-900">{displayTask.description}</p>
+          </div>
+
+          {/* Info Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 mb-1">Owner</h3>
+              <p className="text-gray-900">{displayTask.owner}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 mb-1">Sprint</h3>
+              <p className="text-gray-900">{displayTask.sprint}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 mb-1">Status</h3>
+              <span
+                className={clsx(
+                  'px-3 py-1 inline-flex text-sm font-semibold rounded-full',
+                  getStatusClass(displayTask.status)
+                )}
+              >
+                {displayTask.status}
+              </span>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 mb-1">Section</h3>
+              <p className="text-gray-900">{displayTask.section}</p>
+            </div>
+          </div>
+
+          {/* Definition of Done */}
+          {displayTask.dod && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 mb-2">Definition of Done</h3>
+              <p className="text-gray-900 whitespace-pre-wrap">{displayTask.dod}</p>
+            </div>
+          )}
+
+          {/* KPIs */}
+          {displayTask.kpis && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 mb-2">KPIs</h3>
+              <p className="text-gray-900">{displayTask.kpis}</p>
+            </div>
+          )}
+
+          {/* Dependencies */}
+          {displayTask.dependencies && displayTask.dependencies.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 mb-2">
+                Dependencies ({displayTask.dependencies.length})
+              </h3>
+              <div className="space-y-1">
+                {displayTask.dependencies.map((dep) => (
+                  <button
+                    key={dep}
+                    onClick={() => handleDependencyClick(dep)}
+                    disabled={!onNavigateToTask}
+                    className={clsx(
+                      'flex items-center gap-2 px-3 py-2 rounded-lg text-left w-full transition-colors',
+                      onNavigateToTask
+                        ? 'bg-gray-50 hover:bg-blue-50 cursor-pointer group'
+                        : 'bg-gray-50 cursor-default'
+                    )}
+                  >
+                    <Icon
+                      name="chevron_right"
+                      size="sm"
+                      className={clsx(
+                        'text-gray-400',
+                        onNavigateToTask && 'group-hover:text-blue-500'
+                      )}
+                    />
+                    <span className="font-mono text-sm text-blue-700">{dep}</span>
+                    {onNavigateToTask && (
+                      <>
+                        <span className="text-xs text-gray-400 ml-auto">Click to view</span>
+                        <Icon
+                          name="open_in_new"
+                          size="xs"
+                          className="text-gray-400 group-hover:text-blue-500"
+                        />
+                      </>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Plan Status */}
+          {planStatus && (
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Spec & Plan Status</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-2">
+                  {planStatus.hasSpec ? (
+                    <Icon name="check_circle" size="lg" className="text-green-500" />
+                  ) : (
+                    <Icon name="cancel" size="lg" className="text-gray-400" />
+                  )}
+                  <span className="text-sm">
+                    Specification: {planStatus.hasSpec ? 'Exists' : 'Missing'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {planStatus.hasPlan ? (
+                    <Icon name="check_circle" size="lg" className="text-green-500" />
+                  ) : (
+                    <Icon name="cancel" size="lg" className="text-gray-400" />
+                  )}
+                  <span className="text-sm">
+                    Plan: {planStatus.hasPlan ? 'Exists' : 'Missing'}
+                  </span>
+                </div>
+              </div>
+              {planStatus.specPath && (
+                <p className="text-xs text-gray-500 mt-2 font-mono truncate">
+                  {planStatus.specPath}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Action Message */}
+          {actionMessage && (
+            <div
+              className={clsx(
+                'p-3 rounded-lg text-sm',
+                actionMessage.startsWith('Error')
+                  ? 'bg-red-50 text-red-700'
+                  : 'bg-green-50 text-green-700'
+              )}
+            >
+              {actionMessage}
+            </div>
+          )}
+    </div>
+  );
+}
+
+interface ContractTabProps {
+  loadingTask: boolean;
+  displayTask: FullTaskData | null;
+  hasPrereqTags: boolean;
+  hasArtifactTags: boolean;
+  hasValidationTags: boolean;
+  artifactsString: string;
+}
+
+function ComplianceIndicator({ met, label }: Readonly<{ met: boolean; label: string }>) {
+  return (
+    <div>
+      <div className={clsx('text-2xl font-bold', met ? 'text-green-600' : 'text-gray-400')}>
+        {met ? '✓' : '○'}
+      </div>
+      <div className="text-xs text-gray-500 mt-1">{label}</div>
+    </div>
+  );
+}
+
+function ContractTab({
+  loadingTask,
+  displayTask,
+  hasPrereqTags,
+  hasArtifactTags,
+  hasValidationTags,
+  artifactsString,
+}: Readonly<ContractTabProps>) {
+  if (loadingTask) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        </div>
+      </div>
+    );
+  }
+  if (!displayTask) {
+    return <div className="space-y-6"><div className="text-center py-8 text-gray-500">Unable to load task details</div></div>;
+  }
+  return (
+    <div className="space-y-6">
+      {/* Prerequisites */}
+      <div>
+        <h3 className="text-sm font-medium text-gray-500 mb-3 flex items-center gap-2">
+          Pre-requisites
+          {hasPrereqTags && <span className="text-xs text-green-600">({parseContractTags(displayTask.prerequisites).length} tags)</span>}
+        </h3>
+        {hasPrereqTags ? (
+          <ContractTagList rawString={displayTask.prerequisites} mode="full" />
+        ) : (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-700">
+            No contract tags found. Raw value:{' '}
+            <span className="font-mono">{displayTask.prerequisites || '(empty)'}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Artifacts */}
+      <div>
+        <h3 className="text-sm font-medium text-gray-500 mb-3 flex items-center gap-2">
+          Artifacts To Track (Evidence)
+          {hasArtifactTags && <span className="text-xs text-green-600">({parseContractTags(artifactsString).length} tags)</span>}
+        </h3>
+        {hasArtifactTags ? (
+          <ContractTagList rawString={artifactsString} mode="full" />
+        ) : (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-700">
+            No EVIDENCE tags found. Raw artifacts:
+            <ul className="mt-2 font-mono text-xs space-y-1">
+              {displayTask.artifacts?.map((a) => <li key={a}>{a}</li>)}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      {/* Validation */}
+      <div>
+        <h3 className="text-sm font-medium text-gray-500 mb-3 flex items-center gap-2">
+          Validation Method
+          {hasValidationTags && <span className="text-xs text-green-600">({parseContractTags(displayTask.validation).length} tags)</span>}
+        </h3>
+        {hasValidationTags ? (
+          <ContractTagList rawString={displayTask.validation} mode="full" />
+        ) : (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-700">
+            No contract tags found. Raw value:{' '}
+            <span className="font-mono">{displayTask.validation || '(empty)'}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Compliance Summary */}
+      <div className="bg-gray-50 rounded-lg p-4">
+        <h3 className="text-sm font-medium text-gray-700 mb-3">Contract Compliance</h3>
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <ComplianceIndicator met={hasPrereqTags} label="Prerequisites" />
+          <ComplianceIndicator met={hasArtifactTags} label="Evidence" />
+          <ComplianceIndicator met={hasValidationTags} label="Validation" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface ContextTabProps {
+  loadingContext: boolean;
+  contextData: ContextPackData | null;
+  validationSummary: TaskValidationSummary | null;
+  requiresContextAck: boolean;
+  onRefresh: () => void;
+}
+
+function ContextTab({
+  loadingContext,
+  contextData,
+  validationSummary,
+  requiresContextAck,
+  onRefresh,
+}: Readonly<ContextTabProps>) {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-medium text-gray-700">
+          Context Pack & Acknowledgment Status
+        </h3>
+        <button
+          onClick={onRefresh}
+          disabled={loadingContext}
+          className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:text-gray-900 disabled:opacity-50"
+        >
+          <Icon name="refresh" size="sm" className={loadingContext ? 'animate-spin' : ''} />
+          Refresh
+        </button>
+      </div>
+
+      {loadingContext ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {/* Plan Deliverables Verification */}
+          {validationSummary?.planDeliverables && (
+            <PlanDeliverablesStatus data={validationSummary.planDeliverables} />
+          )}
+
+          {/* Context Pack Status */}
+          {contextData ? (
+            <ContextPackStatus data={contextData} />
+          ) : (
+            <div className="bg-gray-50 rounded-lg p-8 text-center">
+              <p className="text-gray-500">No context pack data available for this task.</p>
+              {requiresContextAck && (
+                <p className="text-sm text-yellow-600 mt-2">
+                  This task requires context_ack but none has been generated yet.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Requirements */}
+      {requiresContextAck && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 className="text-sm font-medium text-blue-800 mb-2">
+            Context Acknowledgment Required
+          </h4>
+          <p className="text-sm text-blue-700">
+            This task has{' '}
+            <code className="bg-blue-100 px-1 rounded">EVIDENCE:context_ack</code>{' '}in its
+            artifacts. The agent must produce a valid context_ack.json with SHA256 hashes
+            matching all FILE: prerequisites before code changes are accepted.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface ScheduleTabProps {
+  loadingSchedule: boolean;
+  scheduleData: ScheduleTaskData | null;
+}
+
+function ScheduleTab({ loadingSchedule, scheduleData }: Readonly<ScheduleTabProps>) {
+  return (
+    <div className="space-y-6">
+      {(() => {
+        if (loadingSchedule) return (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        </div>
+        );
+        if (scheduleData) return (
+        <>
+          {/* Critical Path Indicator */}
+          {scheduleData.isCritical && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-center gap-2">
+                <Icon name="warning" size="lg" className="text-red-500" />
+                <div>
+                  <h4 className="text-sm font-semibold text-red-800">Critical Path Task</h4>
+                  <p className="text-sm text-red-600">
+                    This task is on the critical path. Any delay will impact the sprint
+                    completion date.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Progress */}
+          <div>
+            <h3 className="text-sm font-medium text-gray-500 mb-3">Progress</h3>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-700">Percent Complete</span>
+                <span className="text-lg font-bold text-gray-900">
+                  {scheduleData.percentComplete}%
+                </span>
+              </div>
+              <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className={clsx(
+                    'h-full rounded-full transition-all',
+                    getProgressBarColor(scheduleData.percentComplete, scheduleData.isCritical)
+                  )}
+                  style={{ width: `${Math.min(100, scheduleData.percentComplete)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Duration & Estimate */}
+          <div>
+            <h3 className="text-sm font-medium text-gray-500 mb-3">
+              Duration Estimate (PERT)
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {scheduleData.estimate ? (
+                <>
+                  <div className="bg-green-50 rounded-lg p-3 text-center border border-green-200">
+                    <div className="text-xs text-green-600 mb-1">Optimistic</div>
+                    <div className="text-lg font-bold text-green-700">
+                      {Math.round(scheduleData.estimate.optimistic / 60)}h
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 rounded-lg p-3 text-center border border-blue-200">
+                    <div className="text-xs text-blue-600 mb-1">Most Likely</div>
+                    <div className="text-lg font-bold text-blue-700">
+                      {Math.round(scheduleData.estimate.mostLikely / 60)}h
+                    </div>
+                  </div>
+                  <div className="bg-amber-50 rounded-lg p-3 text-center border border-amber-200">
+                    <div className="text-xs text-amber-600 mb-1">Pessimistic</div>
+                    <div className="text-lg font-bold text-amber-700">
+                      {Math.round(scheduleData.estimate.pessimistic / 60)}h
+                    </div>
+                  </div>
+                  <div className="bg-purple-50 rounded-lg p-3 text-center border border-purple-200">
+                    <div className="text-xs text-purple-600 mb-1">Expected</div>
+                    <div className="text-lg font-bold text-purple-700">
+                      {Math.round((scheduleData.expectedDuration / 60) * 10) / 10}h
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="col-span-4 bg-gray-50 rounded-lg p-3 text-center border border-gray-200">
+                  <div className="text-xs text-gray-600 mb-1">Expected Duration</div>
+                  <div className="text-lg font-bold text-gray-700">
+                    {Math.round((scheduleData.expectedDuration / 60) * 10) / 10}h
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    No three-point estimate provided
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Schedule Dates */}
+          <div>
+            <h3 className="text-sm font-medium text-gray-500 mb-3">Calculated Schedule</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-xs font-medium text-gray-500 mb-3 uppercase">
+                  Early Dates (Forward Pass)
+                </h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Early Start</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {new Date(scheduleData.earlyStart).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Early Finish</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {new Date(scheduleData.earlyFinish).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-xs font-medium text-gray-500 mb-3 uppercase">
+                  Late Dates (Backward Pass)
+                </h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Late Start</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {new Date(scheduleData.lateStart).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Late Finish</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {new Date(scheduleData.lateFinish).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Float (Slack) */}
+          <div>
+            <h3 className="text-sm font-medium text-gray-500 mb-3">Float / Slack</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <FloatCard totalFloat={scheduleData.totalFloat} />
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div className="text-xs text-gray-500 mb-1">Free Float</div>
+                <div className="text-2xl font-bold text-gray-700">
+                  {scheduleData.freeFloat} min
+                </div>
+                <div className="text-xs text-gray-400">
+                  {Math.round((scheduleData.freeFloat / 60) * 10) / 10} hours
+                </div>
+              </div>
+            </div>
+            <p className="text-xs text-gray-400 mt-2">
+              Total Float = Late Start - Early Start. Tasks with zero float are on the
+              critical path.
+            </p>
+          </div>
+
+          {/* Status */}
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Icon name="info" size="sm" className="text-gray-400" />
+                <span className="text-sm text-gray-600">Task Status</span>
+              </div>
+              <span
+                className={clsx(
+                  'px-3 py-1 text-sm font-medium rounded-full',
+                  getStatusClass(scheduleData.status)
+                )}
+              >
+                {scheduleData.status}
+              </span>
+            </div>
+          </div>
+        </>
+        );
+        return (
+        <div className="bg-gray-50 rounded-lg p-8 text-center">
+          <Icon name="calendar_today" size="xl" className="text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-500">No schedule data available for this task.</p>
+          <p className="text-sm text-gray-400 mt-2">
+            Schedule data is calculated from Sprint_plan.csv columns:
+            <br />
+            Estimate (O/M/P), Planned Start, Planned Finish, Percent Complete, Dependency
+            Types
+          </p>
+        </div>
+        );
+      })()}
+    </div>
+  );
+}
+
+interface ValidationTabProps {
+  loadingValidation: boolean;
+  validationSummary: TaskValidationSummary | null;
+  expandedPanels: Record<string, boolean>;
+  onTogglePanel: (panel: string) => void;
+}
+
+function ValidationTab({
+  loadingValidation,
+  validationSummary,
+  expandedPanels,
+  onTogglePanel,
+}: Readonly<ValidationTabProps>) {
+  if (loadingValidation) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        </div>
+      </div>
+    );
+  }
+  if (!validationSummary) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-gray-50 rounded-lg p-8 text-center">
+          <p className="text-gray-500">No validation data available for this task.</p>
+          <p className="text-sm text-gray-400 mt-2">Validation data is generated when a task has an attestation file.</p>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-6">
+          {/* Build Validation Grid */}
+          <div>
+            <h3 className="text-sm font-medium text-gray-500 mb-3">Build Validation</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {validationSummary.buildValidation.items.map((item) => (
+                <ValidationItemCard key={item.name} item={item} />
+              ))}
+            </div>
+          </div>
+
+          {/* Coverage Metrics */}
+          {validationSummary.coverage && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 mb-3">Coverage Metrics</h3>
+              <div className="space-y-2">
+                {(['lines', 'branches', 'functions'] as const).map((metric) => {
+                  const data =
+                    validationSummary.coverage?.[metric as keyof CoverageMetrics];
+                  if (!data || typeof data !== 'object' || !('pct' in data)) return null;
+                  const coverageData = {
+                    pct: Number(data.pct) || 0,
+                    met: Boolean((data as Record<string, unknown>).met),
+                  };
+                  return (
+                    <div key={metric} className="flex items-center gap-3">
+                      <span className="text-xs text-gray-500 w-20 capitalize">
+                        {metric}
+                      </span>
+                      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className={clsx(
+                            'h-full rounded-full transition-all',
+                            coverageData.met ? 'bg-green-500' : 'bg-amber-500'
+                          )}
+                          style={{ width: `${Math.min(100, coverageData.pct)}%` }}
+                        />
+                      </div>
+                      <span
+                        className={clsx(
+                          'text-xs font-medium w-12 text-right',
+                          coverageData.met ? 'text-green-600' : 'text-amber-600'
+                        )}
+                      >
+                        {coverageData.pct.toFixed(1)}%
+                      </span>
+                      {coverageData.met ? (
+                        <Icon name="check" size="xs" className="text-green-500" />
+                      ) : (
+                        <Icon name="close" size="xs" className="text-amber-500" />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* MATOP Execution Panel */}
+          {validationSummary.matop && (
+            <div className="border rounded-lg overflow-hidden">
+              <button
+                onClick={() => onTogglePanel('matop')}
+                className="w-full px-4 py-3 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Icon name="smart_toy" size="sm" className="text-purple-500" />
+                  <span className="text-sm font-medium">MATOP Execution</span>
+                  <span
+                    className={clsx(
+                      'px-2 py-0.5 text-xs font-medium rounded',
+                      validationSummary.matop.consensusVerdict === 'PASS' &&
+                        'bg-green-100 text-green-700',
+                      validationSummary.matop.consensusVerdict === 'WARN' &&
+                        'bg-yellow-100 text-yellow-700',
+                      validationSummary.matop.consensusVerdict === 'FAIL' &&
+                        'bg-red-100 text-red-700'
+                    )}
+                  >
+                    {validationSummary.matop.consensusVerdict}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  {validationSummary.matop.gatesExecuted.passed}/
+                  {validationSummary.matop.gatesExecuted.total} gates
+                  <Icon
+                    name={expandedPanels.matop ? 'expand_less' : 'expand_more'}
+                    size="sm"
+                  />
+                </div>
+              </button>
+              {expandedPanels.matop && (
+                <div className="p-4 space-y-3">
+                  <div className="grid grid-cols-3 gap-3 text-center">
+                    <div className="bg-green-50 rounded-lg p-2">
+                      <div className="text-lg font-bold text-green-700">
+                        {validationSummary.matop.gatesExecuted.passed}
+                      </div>
+                      <div className="text-xs text-green-600">Passed</div>
+                    </div>
+                    <div className="bg-yellow-50 rounded-lg p-2">
+                      <div className="text-lg font-bold text-yellow-700">
+                        {validationSummary.matop.gatesExecuted.warned}
+                      </div>
+                      <div className="text-xs text-yellow-600">Warned</div>
+                    </div>
+                    <div className="bg-red-50 rounded-lg p-2">
+                      <div className="text-lg font-bold text-red-700">
+                        {validationSummary.matop.gatesExecuted.failed}
+                      </div>
+                      <div className="text-xs text-red-600">Failed</div>
+                    </div>
+                  </div>
+                  {Object.keys(validationSummary.matop.stoaResults).length > 0 && (
+                    <div>
+                      <div className="text-xs font-medium text-gray-500 mb-2">
+                        STOA Verdicts
+                      </div>
+                      <div className="space-y-1">
+                        {Object.entries(validationSummary.matop.stoaResults).map(
+                          ([stoa, result]) => (
+                            <div
+                              key={stoa}
+                              className="flex items-center justify-between text-sm"
+                            >
+                              <span className="text-gray-700">{stoa}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-400">{result.role}</span>
+                                <span
+                                  className={clsx(
+                                    'px-2 py-0.5 text-xs rounded',
+                                    result.verdict === 'PASS' &&
+                                      'bg-green-100 text-green-700',
+                                    result.verdict === 'WARN' &&
+                                      'bg-yellow-100 text-yellow-700',
+                                    result.verdict === 'FAIL' && 'bg-red-100 text-red-700'
+                                  )}
+                                >
+                                  {result.verdict}
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  <div className="text-xs text-gray-400">
+                    Run ID: {validationSummary.matop.runId}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* KPI Results Panel */}
+          {validationSummary.kpis.total > 0 && (
+            <div className="border rounded-lg overflow-hidden">
+              <button
+                onClick={() => onTogglePanel('kpis')}
+                className="w-full px-4 py-3 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Icon name="my_location" size="sm" className="text-blue-500" />
+                  <span className="text-sm font-medium">KPI Results</span>
+                  <span
+                    className={clsx(
+                      'px-2 py-0.5 text-xs font-medium rounded',
+                      validationSummary.kpis.met === validationSummary.kpis.total
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-amber-100 text-amber-700'
+                    )}
+                  >
+                    {validationSummary.kpis.met}/{validationSummary.kpis.total}
+                  </span>
+                </div>
+                <Icon
+                  name={expandedPanels.kpis ? 'expand_less' : 'expand_more'}
+                  size="sm"
+                  className="text-gray-400"
+                />
+              </button>
+              {expandedPanels.kpis && (
+                <div className="p-4">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-xs text-gray-500">
+                        <th className="pb-2">KPI</th>
+                        <th className="pb-2">Target</th>
+                        <th className="pb-2">Actual</th>
+                        <th className="pb-2 text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {validationSummary.kpis.results.map((kpi, idx) => (
+                        <tr key={idx} className="border-t"> {/* NOSONAR typescript:S6479 */}
+                          <td className="py-2 text-gray-700">{kpi.kpi}</td>
+                          <td className="py-2 text-gray-500 font-mono text-xs">
+                            {kpi.target}
+                          </td>
+                          <td className="py-2 text-gray-700 font-mono text-xs">
+                            {kpi.actual}
+                          </td>
+                          <td className="py-2 text-center">
+                            {kpi.met ? (
+                              <Icon
+                                name="check_circle"
+                                size="sm"
+                                className="text-green-500"
+                              />
+                            ) : (
+                              <Icon name="cancel" size="sm" className="text-red-500" />
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* DoD Results Panel */}
+          {validationSummary.dod.total > 0 && (
+            <div className="border rounded-lg overflow-hidden">
+              <button
+                onClick={() => onTogglePanel('dod')}
+                className="w-full px-4 py-3 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Icon name="checklist" size="sm" className="text-green-500" />
+                  <span className="text-sm font-medium">Definition of Done</span>
+                  <span
+                    className={clsx(
+                      'px-2 py-0.5 text-xs font-medium rounded',
+                      validationSummary.dod.met === validationSummary.dod.total
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-amber-100 text-amber-700'
+                    )}
+                  >
+                    {validationSummary.dod.met}/{validationSummary.dod.total}
+                  </span>
+                </div>
+                <Icon
+                  name={expandedPanels.dod ? 'expand_less' : 'expand_more'}
+                  size="sm"
+                  className="text-gray-400"
+                />
+              </button>
+              {expandedPanels.dod && (
+                <div className="p-4 space-y-2">
+                  {validationSummary.dod.items.map((item, idx) => (
+                    <div
+                      key={idx} // NOSONAR typescript:S6479
+                      className={clsx(
+                        'flex items-start gap-3 p-2 rounded',
+                        item.met ? 'bg-green-50' : 'bg-red-50'
+                      )}
+                    >
+                      {item.met ? (
+                        <Icon
+                          name="check_circle"
+                          size="sm"
+                          className="text-green-500 mt-0.5"
+                        />
+                      ) : (
+                        <Icon name="cancel" size="sm" className="text-red-500 mt-0.5" />
+                      )}
+                      <div>
+                        <div className="text-sm text-gray-700">{item.criterion}</div>
+                        {item.evidence && (
+                          <div className="text-xs text-gray-500 mt-1">{item.evidence}</div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Document Previews */}
+          {(validationSummary.spec.exists || validationSummary.plan.exists) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Spec Preview */}
+              {validationSummary.spec.exists && (
+                <div className="border rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => onTogglePanel('spec')}
+                    className="w-full px-4 py-3 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icon name="description" size="sm" className="text-purple-500" />
+                      <span className="text-sm font-medium">Specification</span>
+                      <Icon name="check_circle" size="xs" className="text-green-500" />
+                    </div>
+                    <Icon
+                      name={expandedPanels.spec ? 'expand_less' : 'expand_more'}
+                      size="sm"
+                      className="text-gray-400"
+                    />
+                  </button>
+                  {expandedPanels.spec && (
+                    <div className="p-4 space-y-2">
+                      {validationSummary.spec.title && (
+                        <div className="font-medium text-sm">
+                          {validationSummary.spec.title}
+                        </div>
+                      )}
+                      {validationSummary.spec.sections &&
+                        validationSummary.spec.sections.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {validationSummary.spec.sections
+                              .slice(0, 5)
+                              .map((section, idx) => (
+                                <span
+                                  key={idx} // NOSONAR typescript:S6479
+                                  className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs"
+                                >
+                                  {section}
+                                </span>
+                              ))}
+                            {validationSummary.spec.sections.length > 5 && (
+                              <span className="text-xs text-gray-400">
+                                +{validationSummary.spec.sections.length - 5} more
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      {validationSummary.spec.path && (
+                        <div className="text-xs text-gray-400 font-mono truncate">
+                          {validationSummary.spec.path}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Plan Preview */}
+              {validationSummary.plan.exists && (
+                <div className="border rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => onTogglePanel('plan')}
+                    className="w-full px-4 py-3 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icon name="task_alt" size="sm" className="text-blue-500" />
+                      <span className="text-sm font-medium">Implementation Plan</span>
+                      <Icon name="check_circle" size="xs" className="text-green-500" />
+                    </div>
+                    <Icon
+                      name={expandedPanels.plan ? 'expand_less' : 'expand_more'}
+                      size="sm"
+                      className="text-gray-400"
+                    />
+                  </button>
+                  {expandedPanels.plan && (
+                    <div className="p-4 space-y-2">
+                      {validationSummary.plan.title && (
+                        <div className="font-medium text-sm">
+                          {validationSummary.plan.title}
+                        </div>
+                      )}
+                      {validationSummary.plan.sections &&
+                        validationSummary.plan.sections.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {validationSummary.plan.sections
+                              .slice(0, 5)
+                              .map((section, idx) => (
+                                <span
+                                  key={idx} // NOSONAR typescript:S6479
+                                  className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs"
+                                >
+                                  {section}
+                                </span>
+                              ))}
+                            {validationSummary.plan.sections.length > 5 && (
+                              <span className="text-xs text-gray-400">
+                                +{validationSummary.plan.sections.length - 5} more
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      {validationSummary.plan.path && (
+                        <div className="text-xs text-gray-400 font-mono truncate">
+                          {validationSummary.plan.path}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Attestation Summary */}
+          {validationSummary.attestation.exists && (
+            <AttestationSummary attestation={validationSummary.attestation} />
+          )}
+    </div>
+  );
+}
+
 export default function TaskModal({
   task,
   onClose,
   onNavigateToTask,
   isOpen = true,
   allTasks: _allTasks,
-}: TaskModalProps) {
+}: Readonly<TaskModalProps>) {
   const taskId = getTaskId(task);
 
   // Full task data (fetched from API if not provided)
@@ -246,7 +1350,7 @@ export default function TaskModal({
       fetch(`/api/schedule/calculate?sprint=${sprint}`)
         .then((res) => res.json())
         .then((data) => {
-          if (data.tasks && data.tasks[taskId]) {
+          if (data.tasks?.[taskId]) {
             setScheduleData(data.tasks[taskId]);
           }
           setLoadingSchedule(false);
@@ -325,15 +1429,6 @@ export default function TaskModal({
     }
   }, [taskId]);
 
-  const handleDependencyClick = useCallback(
-    (depId: string) => {
-      if (onNavigateToTask) {
-        onNavigateToTask(depId);
-      }
-    },
-    [onNavigateToTask]
-  );
-
   const refreshContext = () => {
     if (!taskId) return;
     setLoadingContext(true);
@@ -369,11 +1464,7 @@ export default function TaskModal({
               <span
                 className={clsx(
                   'px-2 py-0.5 text-xs font-semibold rounded-full',
-                  displayTask.status === 'Completed' && 'bg-green-100 text-green-800',
-                  displayTask.status === 'In Progress' && 'bg-blue-100 text-blue-800',
-                  displayTask.status === 'Blocked' && 'bg-red-100 text-red-800',
-                  !['Completed', 'In Progress', 'Blocked'].includes(displayTask.status) &&
-                    'bg-gray-100 text-gray-800'
+                  getStatusClass(displayTask.status)
                 )}
               >
                 {displayTask.status}
@@ -463,1075 +1554,55 @@ export default function TaskModal({
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {/* Details Tab */}
           {activeTab === 'details' && (
-            <div className="space-y-6">
-              {loadingTask ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-                </div>
-              ) : displayTask ? (
-                <>
-                  {/* Description */}
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-2">Description</h3>
-                    <p className="text-gray-900">{displayTask.description}</p>
-                  </div>
-
-                  {/* Info Grid */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-1">Owner</h3>
-                      <p className="text-gray-900">{displayTask.owner}</p>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-1">Sprint</h3>
-                      <p className="text-gray-900">{displayTask.sprint}</p>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-1">Status</h3>
-                      <span
-                        className={clsx(
-                          'px-3 py-1 inline-flex text-sm font-semibold rounded-full',
-                          displayTask.status === 'Completed' && 'bg-green-100 text-green-800',
-                          displayTask.status === 'In Progress' && 'bg-blue-100 text-blue-800',
-                          displayTask.status === 'Blocked' && 'bg-red-100 text-red-800',
-                          !['Completed', 'In Progress', 'Blocked'].includes(displayTask.status) &&
-                            'bg-gray-100 text-gray-800'
-                        )}
-                      >
-                        {displayTask.status}
-                      </span>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-1">Section</h3>
-                      <p className="text-gray-900">{displayTask.section}</p>
-                    </div>
-                  </div>
-
-                  {/* Definition of Done */}
-                  {displayTask.dod && (
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-2">Definition of Done</h3>
-                      <p className="text-gray-900 whitespace-pre-wrap">{displayTask.dod}</p>
-                    </div>
-                  )}
-
-                  {/* KPIs */}
-                  {displayTask.kpis && (
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-2">KPIs</h3>
-                      <p className="text-gray-900">{displayTask.kpis}</p>
-                    </div>
-                  )}
-
-                  {/* Dependencies */}
-                  {displayTask.dependencies && displayTask.dependencies.length > 0 && (
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-2">
-                        Dependencies ({displayTask.dependencies.length})
-                      </h3>
-                      <div className="space-y-1">
-                        {displayTask.dependencies.map((dep) => (
-                          <button
-                            key={dep}
-                            onClick={() => handleDependencyClick(dep)}
-                            disabled={!onNavigateToTask}
-                            className={clsx(
-                              'flex items-center gap-2 px-3 py-2 rounded-lg text-left w-full transition-colors',
-                              onNavigateToTask
-                                ? 'bg-gray-50 hover:bg-blue-50 cursor-pointer group'
-                                : 'bg-gray-50 cursor-default'
-                            )}
-                          >
-                            <Icon
-                              name="chevron_right"
-                              size="sm"
-                              className={clsx(
-                                'text-gray-400',
-                                onNavigateToTask && 'group-hover:text-blue-500'
-                              )}
-                            />
-                            <span className="font-mono text-sm text-blue-700">{dep}</span>
-                            {onNavigateToTask && (
-                              <>
-                                <span className="text-xs text-gray-400 ml-auto">Click to view</span>
-                                <Icon
-                                  name="open_in_new"
-                                  size="xs"
-                                  className="text-gray-400 group-hover:text-blue-500"
-                                />
-                              </>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Plan Status */}
-                  {planStatus && (
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h3 className="text-sm font-medium text-gray-700 mb-3">Spec & Plan Status</h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="flex items-center gap-2">
-                          {planStatus.hasSpec ? (
-                            <Icon name="check_circle" size="lg" className="text-green-500" />
-                          ) : (
-                            <Icon name="cancel" size="lg" className="text-gray-400" />
-                          )}
-                          <span className="text-sm">
-                            Specification: {planStatus.hasSpec ? 'Exists' : 'Missing'}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {planStatus.hasPlan ? (
-                            <Icon name="check_circle" size="lg" className="text-green-500" />
-                          ) : (
-                            <Icon name="cancel" size="lg" className="text-gray-400" />
-                          )}
-                          <span className="text-sm">
-                            Plan: {planStatus.hasPlan ? 'Exists' : 'Missing'}
-                          </span>
-                        </div>
-                      </div>
-                      {planStatus.specPath && (
-                        <p className="text-xs text-gray-500 mt-2 font-mono truncate">
-                          {planStatus.specPath}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Action Message */}
-                  {actionMessage && (
-                    <div
-                      className={clsx(
-                        'p-3 rounded-lg text-sm',
-                        actionMessage.startsWith('Error')
-                          ? 'bg-red-50 text-red-700'
-                          : 'bg-green-50 text-green-700'
-                      )}
-                    >
-                      {actionMessage}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-8 text-gray-500">Unable to load task details</div>
-              )}
-            </div>
+            <DetailsTab
+              loadingTask={loadingTask}
+              displayTask={displayTask}
+              planStatus={planStatus}
+              actionMessage={actionMessage}
+              onNavigateToTask={onNavigateToTask}
+            />
           )}
 
           {/* Contract Tags Tab */}
           {activeTab === 'contract' && (
-            <div className="space-y-6">
-              {loadingTask ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-                </div>
-              ) : displayTask ? (
-                <>
-                  {/* Prerequisites */}
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-3 flex items-center gap-2">
-                      Pre-requisites
-                      {hasPrereqTags && (
-                        <span className="text-xs text-green-600">
-                          ({parseContractTags(displayTask.prerequisites).length} tags)
-                        </span>
-                      )}
-                    </h3>
-                    {hasPrereqTags ? (
-                      <ContractTagList rawString={displayTask.prerequisites} mode="full" />
-                    ) : (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-700">
-                        No contract tags found. Raw value:{' '}
-                        <span className="font-mono">{displayTask.prerequisites || '(empty)'}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Artifacts */}
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-3 flex items-center gap-2">
-                      Artifacts To Track (Evidence)
-                      {hasArtifactTags && (
-                        <span className="text-xs text-green-600">
-                          ({parseContractTags(artifactsString).length} tags)
-                        </span>
-                      )}
-                    </h3>
-                    {hasArtifactTags ? (
-                      <ContractTagList rawString={artifactsString} mode="full" />
-                    ) : (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-700">
-                        No EVIDENCE tags found. Raw artifacts:
-                        <ul className="mt-2 font-mono text-xs space-y-1">
-                          {displayTask.artifacts?.map((a) => (
-                            <li key={a}>{a}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Validation */}
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-3 flex items-center gap-2">
-                      Validation Method
-                      {hasValidationTags && (
-                        <span className="text-xs text-green-600">
-                          ({parseContractTags(displayTask.validation).length} tags)
-                        </span>
-                      )}
-                    </h3>
-                    {hasValidationTags ? (
-                      <ContractTagList rawString={displayTask.validation} mode="full" />
-                    ) : (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-700">
-                        No contract tags found. Raw value:{' '}
-                        <span className="font-mono">{displayTask.validation || '(empty)'}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Compliance Summary */}
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="text-sm font-medium text-gray-700 mb-3">Contract Compliance</h3>
-                    <div className="grid grid-cols-3 gap-4 text-center">
-                      <div>
-                        <div
-                          className={clsx(
-                            'text-2xl font-bold',
-                            hasPrereqTags ? 'text-green-600' : 'text-gray-400'
-                          )}
-                        >
-                          {hasPrereqTags ? '✓' : '○'}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">Prerequisites</div>
-                      </div>
-                      <div>
-                        <div
-                          className={clsx(
-                            'text-2xl font-bold',
-                            hasArtifactTags ? 'text-green-600' : 'text-gray-400'
-                          )}
-                        >
-                          {hasArtifactTags ? '✓' : '○'}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">Evidence</div>
-                      </div>
-                      <div>
-                        <div
-                          className={clsx(
-                            'text-2xl font-bold',
-                            hasValidationTags ? 'text-green-600' : 'text-gray-400'
-                          )}
-                        >
-                          {hasValidationTags ? '✓' : '○'}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">Validation</div>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-8 text-gray-500">Unable to load task details</div>
-              )}
-            </div>
+            <ContractTab
+              loadingTask={loadingTask}
+              displayTask={displayTask}
+              hasPrereqTags={hasPrereqTags}
+              hasArtifactTags={hasArtifactTags}
+              hasValidationTags={hasValidationTags}
+              artifactsString={artifactsString}
+            />
           )}
+
 
           {/* Context Tab */}
           {activeTab === 'context' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-gray-700">
-                  Context Pack & Acknowledgment Status
-                </h3>
-                <button
-                  onClick={refreshContext}
-                  disabled={loadingContext}
-                  className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:text-gray-900 disabled:opacity-50"
-                >
-                  <Icon name="refresh" size="sm" className={loadingContext ? 'animate-spin' : ''} />
-                  Refresh
-                </button>
-              </div>
-
-              {loadingContext ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {/* Plan Deliverables Verification */}
-                  {validationSummary?.planDeliverables && (
-                    <PlanDeliverablesStatus data={validationSummary.planDeliverables} />
-                  )}
-
-                  {/* Context Pack Status */}
-                  {contextData ? (
-                    <ContextPackStatus data={contextData} />
-                  ) : (
-                    <div className="bg-gray-50 rounded-lg p-8 text-center">
-                      <p className="text-gray-500">No context pack data available for this task.</p>
-                      {requiresContextAck && (
-                        <p className="text-sm text-yellow-600 mt-2">
-                          This task requires context_ack but none has been generated yet.
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Requirements */}
-              {requiresContextAck && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-blue-800 mb-2">
-                    Context Acknowledgment Required
-                  </h4>
-                  <p className="text-sm text-blue-700">
-                    This task has{' '}
-                    <code className="bg-blue-100 px-1 rounded">EVIDENCE:context_ack</code> in its
-                    artifacts. The agent must produce a valid context_ack.json with SHA256 hashes
-                    matching all FILE: prerequisites before code changes are accepted.
-                  </p>
-                </div>
-              )}
-            </div>
+            <ContextTab
+              loadingContext={loadingContext}
+              contextData={contextData}
+              validationSummary={validationSummary}
+              requiresContextAck={requiresContextAck}
+              onRefresh={refreshContext}
+            />
           )}
 
           {/* Schedule Tab */}
           {activeTab === 'schedule' && (
-            <div className="space-y-6">
-              {loadingSchedule ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-                </div>
-              ) : scheduleData ? (
-                <>
-                  {/* Critical Path Indicator */}
-                  {scheduleData.isCritical && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                      <div className="flex items-center gap-2">
-                        <Icon name="warning" size="lg" className="text-red-500" />
-                        <div>
-                          <h4 className="text-sm font-semibold text-red-800">Critical Path Task</h4>
-                          <p className="text-sm text-red-600">
-                            This task is on the critical path. Any delay will impact the sprint
-                            completion date.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Progress */}
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-3">Progress</h3>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-gray-700">Percent Complete</span>
-                        <span className="text-lg font-bold text-gray-900">
-                          {scheduleData.percentComplete}%
-                        </span>
-                      </div>
-                      <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                        {(() => {
-                          const incompleteBarColor = scheduleData.isCritical
-                            ? 'bg-red-500'
-                            : 'bg-blue-500';
-                          const progressBarColor =
-                            scheduleData.percentComplete >= 100
-                              ? 'bg-green-500'
-                              : incompleteBarColor;
-                          return (
-                            <div
-                              className={clsx(
-                                'h-full rounded-full transition-all',
-                                progressBarColor
-                              )}
-                              style={{ width: `${Math.min(100, scheduleData.percentComplete)}%` }}
-                            />
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Duration & Estimate */}
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-3">
-                      Duration Estimate (PERT)
-                    </h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {scheduleData.estimate ? (
-                        <>
-                          <div className="bg-green-50 rounded-lg p-3 text-center border border-green-200">
-                            <div className="text-xs text-green-600 mb-1">Optimistic</div>
-                            <div className="text-lg font-bold text-green-700">
-                              {Math.round(scheduleData.estimate.optimistic / 60)}h
-                            </div>
-                          </div>
-                          <div className="bg-blue-50 rounded-lg p-3 text-center border border-blue-200">
-                            <div className="text-xs text-blue-600 mb-1">Most Likely</div>
-                            <div className="text-lg font-bold text-blue-700">
-                              {Math.round(scheduleData.estimate.mostLikely / 60)}h
-                            </div>
-                          </div>
-                          <div className="bg-amber-50 rounded-lg p-3 text-center border border-amber-200">
-                            <div className="text-xs text-amber-600 mb-1">Pessimistic</div>
-                            <div className="text-lg font-bold text-amber-700">
-                              {Math.round(scheduleData.estimate.pessimistic / 60)}h
-                            </div>
-                          </div>
-                          <div className="bg-purple-50 rounded-lg p-3 text-center border border-purple-200">
-                            <div className="text-xs text-purple-600 mb-1">Expected</div>
-                            <div className="text-lg font-bold text-purple-700">
-                              {Math.round((scheduleData.expectedDuration / 60) * 10) / 10}h
-                            </div>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="col-span-4 bg-gray-50 rounded-lg p-3 text-center border border-gray-200">
-                          <div className="text-xs text-gray-600 mb-1">Expected Duration</div>
-                          <div className="text-lg font-bold text-gray-700">
-                            {Math.round((scheduleData.expectedDuration / 60) * 10) / 10}h
-                          </div>
-                          <div className="text-xs text-gray-400 mt-1">
-                            No three-point estimate provided
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Schedule Dates */}
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-3">Calculated Schedule</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h4 className="text-xs font-medium text-gray-500 mb-3 uppercase">
-                          Early Dates (Forward Pass)
-                        </h4>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">Early Start</span>
-                            <span className="text-sm font-medium text-gray-900">
-                              {new Date(scheduleData.earlyStart).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">Early Finish</span>
-                            <span className="text-sm font-medium text-gray-900">
-                              {new Date(scheduleData.earlyFinish).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h4 className="text-xs font-medium text-gray-500 mb-3 uppercase">
-                          Late Dates (Backward Pass)
-                        </h4>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">Late Start</span>
-                            <span className="text-sm font-medium text-gray-900">
-                              {new Date(scheduleData.lateStart).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">Late Finish</span>
-                            <span className="text-sm font-medium text-gray-900">
-                              {new Date(scheduleData.lateFinish).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Float (Slack) */}
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-3">Float / Slack</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      {(() => {
-                        const lowFloatContainerClass =
-                          scheduleData.totalFloat < 60
-                            ? 'bg-amber-50 border-amber-200'
-                            : 'bg-green-50 border-green-200';
-                        const floatContainerClass =
-                          scheduleData.totalFloat <= 0
-                            ? 'bg-red-50 border-red-200'
-                            : lowFloatContainerClass;
-                        const lowFloatTextClass =
-                          scheduleData.totalFloat < 60 ? 'text-amber-700' : 'text-green-700';
-                        const floatTextClass =
-                          scheduleData.totalFloat <= 0 ? 'text-red-700' : lowFloatTextClass;
-                        return (
-                          <div className={clsx('rounded-lg p-4 border', floatContainerClass)}>
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <div className="text-xs text-gray-500 mb-1">Total Float</div>
-                                <div className={clsx('text-2xl font-bold', floatTextClass)}>
-                                  {scheduleData.totalFloat} min
-                                </div>
-                                <div className="text-xs text-gray-400">
-                                  {Math.round((scheduleData.totalFloat / 60) * 10) / 10} hours
-                                </div>
-                              </div>
-                              {scheduleData.totalFloat <= 0 && (
-                                <Icon name="warning" size="xl" className="text-red-400" />
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })()}
-                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                        <div className="text-xs text-gray-500 mb-1">Free Float</div>
-                        <div className="text-2xl font-bold text-gray-700">
-                          {scheduleData.freeFloat} min
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          {Math.round((scheduleData.freeFloat / 60) * 10) / 10} hours
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-400 mt-2">
-                      Total Float = Late Start - Early Start. Tasks with zero float are on the
-                      critical path.
-                    </p>
-                  </div>
-
-                  {/* Status */}
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Icon name="info" size="sm" className="text-gray-400" />
-                        <span className="text-sm text-gray-600">Task Status</span>
-                      </div>
-                      <span
-                        className={clsx(
-                          'px-3 py-1 text-sm font-medium rounded-full',
-                          scheduleData.status === 'Completed' && 'bg-green-100 text-green-800',
-                          scheduleData.status === 'In Progress' && 'bg-blue-100 text-blue-800',
-                          scheduleData.status === 'Blocked' && 'bg-red-100 text-red-800',
-                          !['Completed', 'In Progress', 'Blocked'].includes(scheduleData.status) &&
-                            'bg-gray-100 text-gray-800'
-                        )}
-                      >
-                        {scheduleData.status}
-                      </span>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="bg-gray-50 rounded-lg p-8 text-center">
-                  <Icon name="calendar_today" size="xl" className="text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">No schedule data available for this task.</p>
-                  <p className="text-sm text-gray-400 mt-2">
-                    Schedule data is calculated from Sprint_plan.csv columns:
-                    <br />
-                    Estimate (O/M/P), Planned Start, Planned Finish, Percent Complete, Dependency
-                    Types
-                  </p>
-                </div>
-              )}
-            </div>
+            <ScheduleTab loadingSchedule={loadingSchedule} scheduleData={scheduleData} />
           )}
+
 
           {/* Validation Tab */}
           {activeTab === 'validation' && (
-            <div className="space-y-6">
-              {loadingValidation ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-                </div>
-              ) : validationSummary ? (
-                <>
-                  {/* Build Validation Grid */}
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-3">Build Validation</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {validationSummary.buildValidation.items.map((item) => (
-                        <div
-                          key={item.name}
-                          className={clsx(
-                            'rounded-lg p-3 text-center border',
-                            item.status === 'pass' && 'bg-green-50 border-green-200',
-                            item.status === 'fail' && 'bg-red-50 border-red-200',
-                            item.status === 'pending' && 'bg-gray-50 border-gray-200',
-                            item.status === 'skip' && 'bg-gray-50 border-gray-200'
-                          )}
-                        >
-                          <div className="text-xs font-medium uppercase text-gray-500 mb-1">
-                            {item.name}
-                          </div>
-                          <div className="flex items-center justify-center gap-1">
-                            {item.status === 'pass' && (
-                              <Icon name="check_circle" size="sm" className="text-green-600" />
-                            )}
-                            {item.status === 'fail' && (
-                              <Icon name="cancel" size="sm" className="text-red-600" />
-                            )}
-                            {item.status === 'pending' && (
-                              <Icon name="schedule" size="sm" className="text-gray-400" />
-                            )}
-                            {item.status === 'skip' && (
-                              <Icon name="block" size="sm" className="text-gray-400" />
-                            )}
-                            <span
-                              className={clsx(
-                                'text-sm font-medium uppercase',
-                                item.status === 'pass' && 'text-green-700',
-                                item.status === 'fail' && 'text-red-700',
-                                item.status === 'pending' && 'text-gray-500',
-                                item.status === 'skip' && 'text-gray-500'
-                              )}
-                            >
-                              {item.status}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Coverage Metrics */}
-                  {validationSummary.coverage && (
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-3">Coverage Metrics</h3>
-                      <div className="space-y-2">
-                        {(['lines', 'branches', 'functions'] as const).map((metric) => {
-                          const data =
-                            validationSummary.coverage?.[metric as keyof CoverageMetrics];
-                          if (!data || typeof data !== 'object' || !('pct' in data)) return null;
-                          const coverageData = {
-                            pct: Number(data.pct) || 0,
-                            met: Boolean((data as Record<string, unknown>).met),
-                          };
-                          return (
-                            <div key={metric} className="flex items-center gap-3">
-                              <span className="text-xs text-gray-500 w-20 capitalize">
-                                {metric}
-                              </span>
-                              <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div
-                                  className={clsx(
-                                    'h-full rounded-full transition-all',
-                                    coverageData.met ? 'bg-green-500' : 'bg-amber-500'
-                                  )}
-                                  style={{ width: `${Math.min(100, coverageData.pct)}%` }}
-                                />
-                              </div>
-                              <span
-                                className={clsx(
-                                  'text-xs font-medium w-12 text-right',
-                                  coverageData.met ? 'text-green-600' : 'text-amber-600'
-                                )}
-                              >
-                                {coverageData.pct.toFixed(1)}%
-                              </span>
-                              {coverageData.met ? (
-                                <Icon name="check" size="xs" className="text-green-500" />
-                              ) : (
-                                <Icon name="close" size="xs" className="text-amber-500" />
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* MATOP Execution Panel */}
-                  {validationSummary.matop && (
-                    <div className="border rounded-lg overflow-hidden">
-                      <button
-                        onClick={() => togglePanel('matop')}
-                        className="w-full px-4 py-3 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Icon name="smart_toy" size="sm" className="text-purple-500" />
-                          <span className="text-sm font-medium">MATOP Execution</span>
-                          <span
-                            className={clsx(
-                              'px-2 py-0.5 text-xs font-medium rounded',
-                              validationSummary.matop.consensusVerdict === 'PASS' &&
-                                'bg-green-100 text-green-700',
-                              validationSummary.matop.consensusVerdict === 'WARN' &&
-                                'bg-yellow-100 text-yellow-700',
-                              validationSummary.matop.consensusVerdict === 'FAIL' &&
-                                'bg-red-100 text-red-700'
-                            )}
-                          >
-                            {validationSummary.matop.consensusVerdict}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          {validationSummary.matop.gatesExecuted.passed}/
-                          {validationSummary.matop.gatesExecuted.total} gates
-                          <Icon
-                            name={expandedPanels.matop ? 'expand_less' : 'expand_more'}
-                            size="sm"
-                          />
-                        </div>
-                      </button>
-                      {expandedPanels.matop && (
-                        <div className="p-4 space-y-3">
-                          <div className="grid grid-cols-3 gap-3 text-center">
-                            <div className="bg-green-50 rounded-lg p-2">
-                              <div className="text-lg font-bold text-green-700">
-                                {validationSummary.matop.gatesExecuted.passed}
-                              </div>
-                              <div className="text-xs text-green-600">Passed</div>
-                            </div>
-                            <div className="bg-yellow-50 rounded-lg p-2">
-                              <div className="text-lg font-bold text-yellow-700">
-                                {validationSummary.matop.gatesExecuted.warned}
-                              </div>
-                              <div className="text-xs text-yellow-600">Warned</div>
-                            </div>
-                            <div className="bg-red-50 rounded-lg p-2">
-                              <div className="text-lg font-bold text-red-700">
-                                {validationSummary.matop.gatesExecuted.failed}
-                              </div>
-                              <div className="text-xs text-red-600">Failed</div>
-                            </div>
-                          </div>
-                          {Object.keys(validationSummary.matop.stoaResults).length > 0 && (
-                            <div>
-                              <div className="text-xs font-medium text-gray-500 mb-2">
-                                STOA Verdicts
-                              </div>
-                              <div className="space-y-1">
-                                {Object.entries(validationSummary.matop.stoaResults).map(
-                                  ([stoa, result]) => (
-                                    <div
-                                      key={stoa}
-                                      className="flex items-center justify-between text-sm"
-                                    >
-                                      <span className="text-gray-700">{stoa}</span>
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-xs text-gray-400">{result.role}</span>
-                                        <span
-                                          className={clsx(
-                                            'px-2 py-0.5 text-xs rounded',
-                                            result.verdict === 'PASS' &&
-                                              'bg-green-100 text-green-700',
-                                            result.verdict === 'WARN' &&
-                                              'bg-yellow-100 text-yellow-700',
-                                            result.verdict === 'FAIL' && 'bg-red-100 text-red-700'
-                                          )}
-                                        >
-                                          {result.verdict}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  )
-                                )}
-                              </div>
-                            </div>
-                          )}
-                          <div className="text-xs text-gray-400">
-                            Run ID: {validationSummary.matop.runId}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* KPI Results Panel */}
-                  {validationSummary.kpis.total > 0 && (
-                    <div className="border rounded-lg overflow-hidden">
-                      <button
-                        onClick={() => togglePanel('kpis')}
-                        className="w-full px-4 py-3 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Icon name="my_location" size="sm" className="text-blue-500" />
-                          <span className="text-sm font-medium">KPI Results</span>
-                          <span
-                            className={clsx(
-                              'px-2 py-0.5 text-xs font-medium rounded',
-                              validationSummary.kpis.met === validationSummary.kpis.total
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-amber-100 text-amber-700'
-                            )}
-                          >
-                            {validationSummary.kpis.met}/{validationSummary.kpis.total}
-                          </span>
-                        </div>
-                        <Icon
-                          name={expandedPanels.kpis ? 'expand_less' : 'expand_more'}
-                          size="sm"
-                          className="text-gray-400"
-                        />
-                      </button>
-                      {expandedPanels.kpis && (
-                        <div className="p-4">
-                          <table className="w-full text-sm">
-                            <thead>
-                              <tr className="text-left text-xs text-gray-500">
-                                <th className="pb-2">KPI</th>
-                                <th className="pb-2">Target</th>
-                                <th className="pb-2">Actual</th>
-                                <th className="pb-2 text-center">Status</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {validationSummary.kpis.results.map((kpi, idx) => (
-                                <tr key={idx} className="border-t">
-                                  <td className="py-2 text-gray-700">{kpi.kpi}</td>
-                                  <td className="py-2 text-gray-500 font-mono text-xs">
-                                    {kpi.target}
-                                  </td>
-                                  <td className="py-2 text-gray-700 font-mono text-xs">
-                                    {kpi.actual}
-                                  </td>
-                                  <td className="py-2 text-center">
-                                    {kpi.met ? (
-                                      <Icon
-                                        name="check_circle"
-                                        size="sm"
-                                        className="text-green-500"
-                                      />
-                                    ) : (
-                                      <Icon name="cancel" size="sm" className="text-red-500" />
-                                    )}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* DoD Results Panel */}
-                  {validationSummary.dod.total > 0 && (
-                    <div className="border rounded-lg overflow-hidden">
-                      <button
-                        onClick={() => togglePanel('dod')}
-                        className="w-full px-4 py-3 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Icon name="checklist" size="sm" className="text-green-500" />
-                          <span className="text-sm font-medium">Definition of Done</span>
-                          <span
-                            className={clsx(
-                              'px-2 py-0.5 text-xs font-medium rounded',
-                              validationSummary.dod.met === validationSummary.dod.total
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-amber-100 text-amber-700'
-                            )}
-                          >
-                            {validationSummary.dod.met}/{validationSummary.dod.total}
-                          </span>
-                        </div>
-                        <Icon
-                          name={expandedPanels.dod ? 'expand_less' : 'expand_more'}
-                          size="sm"
-                          className="text-gray-400"
-                        />
-                      </button>
-                      {expandedPanels.dod && (
-                        <div className="p-4 space-y-2">
-                          {validationSummary.dod.items.map((item, idx) => (
-                            <div
-                              key={idx}
-                              className={clsx(
-                                'flex items-start gap-3 p-2 rounded',
-                                item.met ? 'bg-green-50' : 'bg-red-50'
-                              )}
-                            >
-                              {item.met ? (
-                                <Icon
-                                  name="check_circle"
-                                  size="sm"
-                                  className="text-green-500 mt-0.5"
-                                />
-                              ) : (
-                                <Icon name="cancel" size="sm" className="text-red-500 mt-0.5" />
-                              )}
-                              <div>
-                                <div className="text-sm text-gray-700">{item.criterion}</div>
-                                {item.evidence && (
-                                  <div className="text-xs text-gray-500 mt-1">{item.evidence}</div>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Document Previews */}
-                  {(validationSummary.spec.exists || validationSummary.plan.exists) && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {/* Spec Preview */}
-                      {validationSummary.spec.exists && (
-                        <div className="border rounded-lg overflow-hidden">
-                          <button
-                            onClick={() => togglePanel('spec')}
-                            className="w-full px-4 py-3 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
-                          >
-                            <div className="flex items-center gap-2">
-                              <Icon name="description" size="sm" className="text-purple-500" />
-                              <span className="text-sm font-medium">Specification</span>
-                              <Icon name="check_circle" size="xs" className="text-green-500" />
-                            </div>
-                            <Icon
-                              name={expandedPanels.spec ? 'expand_less' : 'expand_more'}
-                              size="sm"
-                              className="text-gray-400"
-                            />
-                          </button>
-                          {expandedPanels.spec && (
-                            <div className="p-4 space-y-2">
-                              {validationSummary.spec.title && (
-                                <div className="font-medium text-sm">
-                                  {validationSummary.spec.title}
-                                </div>
-                              )}
-                              {validationSummary.spec.sections &&
-                                validationSummary.spec.sections.length > 0 && (
-                                  <div className="flex flex-wrap gap-1">
-                                    {validationSummary.spec.sections
-                                      .slice(0, 5)
-                                      .map((section, idx) => (
-                                        <span
-                                          key={idx}
-                                          className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs"
-                                        >
-                                          {section}
-                                        </span>
-                                      ))}
-                                    {validationSummary.spec.sections.length > 5 && (
-                                      <span className="text-xs text-gray-400">
-                                        +{validationSummary.spec.sections.length - 5} more
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
-                              {validationSummary.spec.path && (
-                                <div className="text-xs text-gray-400 font-mono truncate">
-                                  {validationSummary.spec.path}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Plan Preview */}
-                      {validationSummary.plan.exists && (
-                        <div className="border rounded-lg overflow-hidden">
-                          <button
-                            onClick={() => togglePanel('plan')}
-                            className="w-full px-4 py-3 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
-                          >
-                            <div className="flex items-center gap-2">
-                              <Icon name="task_alt" size="sm" className="text-blue-500" />
-                              <span className="text-sm font-medium">Implementation Plan</span>
-                              <Icon name="check_circle" size="xs" className="text-green-500" />
-                            </div>
-                            <Icon
-                              name={expandedPanels.plan ? 'expand_less' : 'expand_more'}
-                              size="sm"
-                              className="text-gray-400"
-                            />
-                          </button>
-                          {expandedPanels.plan && (
-                            <div className="p-4 space-y-2">
-                              {validationSummary.plan.title && (
-                                <div className="font-medium text-sm">
-                                  {validationSummary.plan.title}
-                                </div>
-                              )}
-                              {validationSummary.plan.sections &&
-                                validationSummary.plan.sections.length > 0 && (
-                                  <div className="flex flex-wrap gap-1">
-                                    {validationSummary.plan.sections
-                                      .slice(0, 5)
-                                      .map((section, idx) => (
-                                        <span
-                                          key={idx}
-                                          className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs"
-                                        >
-                                          {section}
-                                        </span>
-                                      ))}
-                                    {validationSummary.plan.sections.length > 5 && (
-                                      <span className="text-xs text-gray-400">
-                                        +{validationSummary.plan.sections.length - 5} more
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
-                              {validationSummary.plan.path && (
-                                <div className="text-xs text-gray-400 font-mono truncate">
-                                  {validationSummary.plan.path}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Attestation Summary */}
-                  {validationSummary.attestation.exists &&
-                    (() => {
-                      const incompleteVerdictClass =
-                        validationSummary.attestation.verdict === 'INCOMPLETE'
-                          ? 'bg-amber-100 text-amber-700'
-                          : 'bg-red-100 text-red-700';
-                      const verdictClass =
-                        validationSummary.attestation.verdict === 'COMPLETE'
-                          ? 'bg-green-100 text-green-700'
-                          : incompleteVerdictClass;
-                      return (
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div className="flex items-center gap-2">
-                            <Icon name="workspace_premium" size="sm" className="text-amber-500" />
-                            <span className="text-sm font-medium">Attestation</span>
-                            <span
-                              className={clsx(
-                                'px-2 py-0.5 text-xs font-medium rounded',
-                                verdictClass
-                              )}
-                            >
-                              {validationSummary.attestation.verdict}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-4 text-xs text-gray-500">
-                            {validationSummary.attestation.artifactsVerified !== undefined && (
-                              <span>
-                                {validationSummary.attestation.artifactsVerified} artifacts
-                              </span>
-                            )}
-                            {validationSummary.attestation.gatesPassed !== undefined && (
-                              <span>{validationSummary.attestation.gatesPassed} gates passed</span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })()}
-                </>
-              ) : (
-                <div className="bg-gray-50 rounded-lg p-8 text-center">
-                  <p className="text-gray-500">No validation data available for this task.</p>
-                  <p className="text-sm text-gray-400 mt-2">
-                    Validation data is generated when a task has an attestation file.
-                  </p>
-                </div>
-              )}
-            </div>
+            <ValidationTab
+              loadingValidation={loadingValidation}
+              validationSummary={validationSummary}
+              expandedPanels={expandedPanels}
+              onTogglePanel={togglePanel}
+            />
           )}
+
         </div>
 
         {/* Footer */}

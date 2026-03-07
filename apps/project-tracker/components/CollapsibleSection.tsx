@@ -44,7 +44,7 @@ export function CollapsibleSection({
   gradient,
   headerClassName = '',
   children,
-}: CollapsibleSectionProps) {
+}: Readonly<CollapsibleSectionProps>) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -52,7 +52,7 @@ export function CollapsibleSection({
   useEffect(() => {
     const stored = localStorage.getItem(`dashboard_collapsed_${storageKey}`);
     if (stored !== null) {
-      setIsExpanded(stored === 'false' ? false : true);
+      setIsExpanded(stored !== 'false');
     }
     setIsHydrated(true);
   }, [storageKey]);

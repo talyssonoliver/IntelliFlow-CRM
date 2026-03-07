@@ -75,6 +75,20 @@ interface BlockedTaskDetail {
   }>;
 }
 
+async function loadTaskDescriptions(csvPath: string): Promise<Record<string, { description: string; section: string; owner: string }>> {
+  const result: Record<string, { description: string; section: string; owner: string }> = {};
+  try {
+    const csvContent = await readFile(csvPath, 'utf-8');
+    const tasks = parse(csvContent, { columns: true, skip_empty_lines: true, relax_quotes: true, relax_column_count: true, bom: true }) as CsvTask[];
+    for (const task of tasks) {
+      if (task['Task ID']) result[task['Task ID']] = { description: task.Description || '', section: task.Section || '', owner: task.Owner || '' };
+    }
+  } catch (error_) {
+    console.warn('Could not load task descriptions from CSV:', error_);
+  }
+  return result;
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -97,32 +111,7 @@ export async function GET(request: Request) {
     }
 
     // Read CSV for task descriptions
-    const taskDescriptions: Record<
-      string,
-      { description: string; section: string; owner: string }
-    > = {};
-    try {
-      const csvContent = await readFile(csvPath, 'utf-8');
-      const tasks = parse(csvContent, {
-        columns: true,
-        skip_empty_lines: true,
-        relax_quotes: true,
-        relax_column_count: true,
-        bom: true,
-      }) as CsvTask[];
-
-      for (const task of tasks) {
-        if (task['Task ID']) {
-          taskDescriptions[task['Task ID']] = {
-            description: task.Description || '',
-            section: task.Section || '',
-            owner: task.Owner || '',
-          };
-        }
-      }
-    } catch (csvErr) {
-      console.warn('Could not load task descriptions from CSV:', csvErr);
-    }
+    const taskDescriptions = await loadTaskDescriptions(csvPath);
 
     // Filter out tasks that should not be started (safety against stale graph data)
     const readyCandidates = graph.ready_to_start.filter((taskId) => {
@@ -189,8 +178,8 @@ export async function GET(request: Request) {
     let filteredReadyBySprint = readyBySprint;
 
     if (sprintParam && sprintParam !== 'all') {
-      const targetSprint = parseInt(sprintParam, 10);
-      if (!isNaN(targetSprint)) {
+      const targetSprint = Number.parseInt(sprintParam, 10);
+      if (!Number.isNaN(targetSprint)) {
         filteredReadyDetails = readyToStartDetails.filter((t) => t.sprint === targetSprint);
         filteredBlockedDetails = blockedTasksDetails.filter((t) => t.sprint === targetSprint);
         filteredReadyBySprint = {};

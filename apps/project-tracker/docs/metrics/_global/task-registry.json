@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-03-06T23:11:46.615Z",
+  "last_updated": "2026-03-07T15:00:26.652Z",
   "total_tasks": 380,
   "current_sprint": 14,
   "active_sprint": "sprint-14",
@@ -451,14 +451,17 @@
       "PG-179",
       "IFC-209",
       "IFC-210",
+      "DOC-014",
       "IFC-213",
-      "IFC-222"
+      "IFC-222",
+      "IFC-223",
+      "IFC-224"
     ],
     "IN_PROGRESS": [],
     "VALIDATING": [],
     "BLOCKED": [],
     "PLANNED": [
-      "IFC-223"
+      "PG-044"
     ],
     "BACKLOG": [
       "IFC-031",
@@ -486,7 +489,6 @@
       "IFC-083",
       "IFC-084",
       "IFC-087",
-      "PG-044",
       "PG-045",
       "PG-047",
       "PG-048",
@@ -597,7 +599,6 @@
       "PG-177",
       "PG-178",
       "IFC-208",
-      "DOC-014",
       "DOC-015",
       "DOC-016",
       "IFC-211",
@@ -611,7 +612,6 @@
       "IFC-219",
       "IFC-220",
       "IFC-221",
-      "IFC-224",
       "IFC-225",
       "IFC-226",
       "IFC-227",
@@ -3911,18 +3911,18 @@
       "section": "Support Pages",
       "description": "Help Search",
       "owner": "Support Eng (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "sprint": 16,
       "dependencies": [
         "PG-043"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/help-center/search/page.tsx;ARTIFACT:apps/web/src/components/support/search-algorithm.tsx;ARTIFACT:apps/web/src/components/support/search-filters.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-044/context_ack.json"
+        "ARTIFACT:apps/web/src/app/help-center/search/page.tsx;ARTIFACT:apps/web/src/components/support/search-algorithm.tsx;ARTIFACT:apps/web/src/components/support/search-filters.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-044/context_ack.json;SPEC:.specify/sprints/sprint-16/specifications/PG-044-spec.md"
       ],
       "kpis": "Search working, results relevant, filters functional",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, results relevant; artifacts: page.tsx, search-algorithm.tsx, search-filters.tsx",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Search algorithm;ENV:relevance ranking;FILE:apps/web/src/app/(support)/help-center/page.tsx",
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Search algorithm;ENV:relevance ranking;FILE:apps/web/src/app/help-center/(list)/page.tsx",
       "cadence": ""
     },
     "PG-045": {
@@ -9155,7 +9155,7 @@
       "section": "Documentation",
       "description": "Automated content audit script - TypeScript CLI that scans page.tsx files, resolves metadata chains, calculates SEO scores, detects ghost links, and regenerates content-audit-results.json; integrates as CI check on PR modifying app routes",
       "owner": "PM (STOA-Automation)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 15,
       "dependencies": [
         "DOC-009"
@@ -9455,13 +9455,13 @@
       "section": "Notifications",
       "description": "Wire actual Email Outbound Adapter (Resolves R-018)",
       "owner": "Backend Dev (STOA-Domain)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 14,
       "dependencies": [
         "IFC-157"
       ],
       "artifacts": [
-        "ARTIFACT:packages/adapters/src/messaging/email/outbound.ts;EVIDENCE:.specify/sprints/sprint-14/attestations/IFC-223/context_ack.json;SPEC:.specify/sprints/sprint-14/specifications/IFC-223-spec.md"
+        "ARTIFACT:packages/adapters/src/messaging/email/outbound.ts;EVIDENCE:.specify/sprints/sprint-14/attestations/IFC-223/context_ack.json;SPEC:.specify/sprints/sprint-14/specifications/IFC-223-spec.md;PLAN:.specify/sprints/sprint-14/planning/IFC-223-plan.md;ATTESTATION:.specify/sprints/sprint-14/attestations/IFC-223/attestation.json"
       ],
       "kpis": "Emails dispatch to external provider",
       "definition_of_done": "Email outbound connects to real SMTP/API provider; verified by: pnpm test",
@@ -9473,18 +9473,18 @@
       "section": "Calendar Integration",
       "description": "Implement Calendar Webhook Ingestion Routes (Resolves R-008)",
       "owner": "Backend Dev (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 14,
       "dependencies": [
         "IFC-138"
       ],
       "artifacts": [
-        "ARTIFACT:apps/api/src/modules/integrations/webhooks.router.ts;EVIDENCE:.specify/sprints/sprint-14/attestations/IFC-224/context_ack.json"
+        "ARTIFACT:apps/api/src/modules/calendar/calendar-webhook.service.ts;EVIDENCE:.specify/sprints/sprint-14/attestations/IFC-224/context_ack.json;SPEC:.specify/sprints/sprint-14/specifications/IFC-224-spec.md;PLAN:.specify/sprints/sprint-14/planning/IFC-224-plan.md;ATTESTATION:.specify/sprints/sprint-14/attestations/IFC-224/attestation.json"
       ],
       "kpis": "External calendar syncs arrive via webhook",
       "definition_of_done": "Webhooks endpoints configured to receive external calendar events; verified by: pnpm test",
       "validation": "VALIDATE:pnpm test",
-      "prerequisites": "FILE:packages/adapters/src/calendar/shared/index.ts",
+      "prerequisites": "FILE:packages/adapters/src/index.ts",
       "cadence": ""
     },
     "IFC-225": {
@@ -10531,7 +10531,7 @@
     },
     "IFC-289": {
       "section": "Core CRM",
-      "description": "Agent/Conversation Chat UI Wiring. Wire 11 dead agent + conversation router endpoints: agent.executeTool, agent.getPendingCount, agent.getTool, agent.listTools, conversation.addMessage, conversation.approveToolCall, conversation.archiveOld, conversation.endConversation, conversation.getBySessionId, conversation.recordToolCall, conversation.updateToolCall. Backend built (IFC-139, IFC-148), zero web callers. Decision: build agent chat panel (IFC-235) to consume these. Audit: artifacts/reports/dead-endpoints-audit.csv rows 4-18.",
+      "description": "Agent/Conversation Router Frontend Wiring. 17 dead endpoints (13 conversation.* + 4 agent.*) with zero frontend callers. Frontend uses autoResponse/aiReview/aiMonitoring routers that query the same DB tables directly bypassing the canonical conversation router. Fix: wire all endpoints to proper frontend consumers — chat panel, agent-approvals, AI Search, admin dashboard — and refactor aiMonitoring to delegate to conversation router instead of duplicating DB queries. Audit: artifacts/reports/dead-endpoints-audit.csv rows 4-18.",
       "owner": "Frontend Dev (STOA-Quality)",
       "status": "BACKLOG",
       "sprint": 22,
@@ -10539,10 +10539,10 @@
         "IFC-139:FS;IFC-148:FS"
       ],
       "artifacts": [
-        "ARTIFACT:apps/api/src/modules/agent/conversation.router.ts"
+        "ARTIFACT:apps/api/src/modules/agent/conversation.router.ts;ARTIFACT:apps/api/src/modules/agent/agent.router.ts;ARTIFACT:apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts;ARTIFACT:apps/web/src/app/agent-approvals/page.tsx;ARTIFACT:apps/web/src/components/ai-monitoring/AgentLogsViewer.tsx;ARTIFACT:apps/web/src/components/ai-intelligence/AISearchPage.tsx"
       ],
-      "kpis": "11/11 agent endpoints wired to UI",
-      "definition_of_done": "All 11 agent/conversation endpoints wired to chat UI panel; zero dead endpoints in agent and conversation routers; tests >=90%",
+      "kpis": "17/17 dead endpoints wired to frontend consumers",
+      "definition_of_done": "All 17 endpoints wired to frontend callers; aiMonitoring delegates to conversation router (no duplicate Prisma queries); agent-approvals uses conversation.approveToolCall/escalate/getPendingApprovals; AI Search wires conversation.search; admin dashboard wires getAnalytics/archiveOld; zero dead endpoints in Knip; tests >=90%",
       "validation": "VALIDATE:pnpm test --filter @intelliflow/api --filter @intelliflow/web",
       "prerequisites": "FILE:artifacts/reports/dead-endpoints-audit.csv",
       "cadence": ""

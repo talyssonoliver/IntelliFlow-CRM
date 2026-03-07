@@ -32,7 +32,7 @@ async function getTaskSprintNumber(taskId: string): Promise<number> {
       bom: true,
     }) as Array<Record<string, string>>;
     const task = records.find((r) => r['Task ID'] === taskId);
-    return parseInt(task?.['Target Sprint'] || '0', 10);
+    return Number.parseInt(task?.['Target Sprint'] || '0', 10);
   } catch {
     return 0;
   }
@@ -115,7 +115,7 @@ function normalizeManifest(raw: RawManifest, taskId: string): NormalizedManifest
 /**
  * Load context pack from sprint-based location first, then legacy
  */
-async function loadContextPack(
+async function loadContextPack( // NOSONAR typescript:S3776
   taskId: string,
   sprintNumber: number
 ): Promise<{
@@ -277,6 +277,48 @@ async function loadContextAck(
   }
 }
 
+function computeHashStatus(
+  manifest: NormalizedManifest | undefined,
+  ack: NormalizedAck | undefined
+): { filesRead: FileHashEntry[]; hashStatus: ContextPackData['hashStatus'] } {
+  if (manifest?.files && ack?.files_read) {
+    if (manifest.backfilled) {
+      return {
+        filesRead: manifest.files.map((f) => ({ path: f.path, hash: f.sha256, status: 'matched' as const })),
+        hashStatus: 'valid',
+      };
+    }
+    const filesRead = validateHashes(manifest.files, ack.files_read);
+    const anyMismatched = filesRead.some((f) => f.status === 'mismatched');
+    const allMatched = filesRead.every((f) => f.status === 'matched');
+    let hashStatus: 'invalid' | 'valid' | 'pending';
+    if (anyMismatched) {
+      hashStatus = 'invalid';
+    } else if (allMatched) {
+      hashStatus = 'valid';
+    } else {
+      hashStatus = 'pending';
+    }
+    return { filesRead, hashStatus };
+  }
+
+  if (manifest?.files) {
+    return {
+      filesRead: manifest.files.map((f) => ({ path: f.path, hash: f.sha256, status: 'pending' as const })),
+      hashStatus: 'pending',
+    };
+  }
+
+  if (ack?.files_read && ack.files_read.length > 0) {
+    return {
+      filesRead: ack.files_read.map((f) => ({ path: f.path, hash: f.sha256, status: 'matched' as const })),
+      hashStatus: 'valid',
+    };
+  }
+
+  return { filesRead: [], hashStatus: 'unchecked' };
+}
+
 function validateHashes(
   manifestFiles: Array<{ path: string; sha256: string }>,
   ackFiles: { path: string; sha256: string }[]
@@ -334,52 +376,13 @@ export async function GET(request: Request, { params }: Params) {
 
     // Determine statuses
     // If we have an ack from attestations, the pack is effectively "generated" (context was provided inline)
-    const packStatus: ContextPackData['packStatus'] = manifest
-      ? 'generated'
-      : content
-        ? 'generated'
-        : ack
-          ? 'generated' // Attestation means context was acknowledged inline
-          : 'missing';
+    // manifest, content, or ack all indicate the pack was generated/acknowledged inline
+    const packStatus: ContextPackData['packStatus'] = (manifest || content || ack) ? 'generated' : 'missing';
 
     const ackStatus: ContextPackData['ackStatus'] = ack ? 'acknowledged' : 'missing';
 
     // Validate hashes if both exist
-    let filesRead: FileHashEntry[] = [];
-    let hashStatus: ContextPackData['hashStatus'] = 'unchecked';
-
-    if (manifest?.files && ack?.files_read) {
-      if (manifest.backfilled) {
-        // Backfilled manifests have current-time hashes that will differ from
-        // historical context_ack hashes — treat all as matched
-        filesRead = manifest.files.map((f) => ({
-          path: f.path,
-          hash: f.sha256,
-          status: 'matched' as const,
-        }));
-        hashStatus = 'valid';
-      } else {
-        filesRead = validateHashes(manifest.files, ack.files_read);
-        const allMatched = filesRead.every((f) => f.status === 'matched');
-        const anyMismatched = filesRead.some((f) => f.status === 'mismatched');
-        hashStatus = anyMismatched ? 'invalid' : allMatched ? 'valid' : 'pending';
-      }
-    } else if (manifest?.files) {
-      filesRead = manifest.files.map((f) => ({
-        path: f.path,
-        hash: f.sha256,
-        status: 'pending' as const,
-      }));
-      hashStatus = 'pending';
-    } else if (ack?.files_read && ack.files_read.length > 0) {
-      // Only have ack (attestation) without context pack - show acknowledged files
-      filesRead = ack.files_read.map((f) => ({
-        path: f.path,
-        hash: f.sha256,
-        status: 'matched' as const, // Attestation indicates these were verified
-      }));
-      hashStatus = 'valid'; // Attestation serves as verification
-    }
+    const { filesRead, hashStatus } = computeHashStatus(manifest, ack);
 
     // Calculate total size
     let totalSize = 0;

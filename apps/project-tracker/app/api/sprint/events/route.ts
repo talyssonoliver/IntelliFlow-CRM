@@ -26,7 +26,7 @@ export async function GET(request: Request) {
   }
 
   const encoder = new TextEncoder();
-  const connectionId = `${runId}-${Date.now()}-${crypto.randomUUID().replace(/-/g, '')}`;
+  const connectionId = `${runId}-${Date.now()}-${crypto.randomUUID().replaceAll('-', '')}`;
 
   const stream = new ReadableStream({
     start(controller) {

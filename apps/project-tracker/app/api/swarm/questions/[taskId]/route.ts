@@ -95,7 +95,7 @@ function sanitizeAnswerText(answerText: string): string | null {
   if (!answer) return null;
   if (answer.includes('REQUIRES HUMAN INPUT')) return null;
 
-  const normalized = answer.replace(/\s+/g, ' ').trim().toLowerCase();
+  const normalized = answer.replaceAll(/\s+/g, ' ').trim().toLowerCase();
   if (normalized === '(not provided)') return null;
 
   return answer;
@@ -266,7 +266,7 @@ export async function POST(request: Request, context: RouteContext) {
       answersContent += `**Context:** ${q.context}\n`;
       answersContent += `**Question:** ${q.question}\n\n`;
 
-      if (answer && answer.answer) {
+      if (answer?.answer) {
         answersContent += `**Answer (from human):**\n${answer.answer}\n\n`;
       } else {
         answersContent += `**Answer:** (not provided)\n\n`;

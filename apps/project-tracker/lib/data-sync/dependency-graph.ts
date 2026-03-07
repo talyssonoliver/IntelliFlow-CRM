@@ -7,12 +7,13 @@ import type { DependencyNode, CrossSprintDep, CriticalPath, TaskRecord } from '.
 import { mapCsvStatusToGraph, parseDependencies } from './csv-mapping';
 import { writeJsonFile } from './file-io';
 
-/**
- * Update dependency-graph.json with current task states
- */
-export function updateDependencyGraph(tasks: TaskRecord[], metricsDir: string): void {
-  const graphPath = join(metricsDir, '_global', 'dependency-graph.json');
-
+function buildGraphNodes(
+  tasks: TaskRecord[]
+): {
+  nodes: Record<string, DependencyNode>;
+  taskStatusMap: Map<string, string>;
+  taskSprintMap: Map<string, number>;
+} {
   const nodes: Record<string, DependencyNode> = {};
   const taskStatusMap = new Map<string, string>();
   const taskSprintMap = new Map<string, number>();
@@ -20,47 +21,36 @@ export function updateDependencyGraph(tasks: TaskRecord[], metricsDir: string): 
   for (const task of tasks) {
     const taskId = task['Task ID'];
     if (!taskId) continue;
-
     const status = mapCsvStatusToGraph(task.Status || '');
     const sprintRaw = task['Target Sprint'];
-    const sprint = sprintRaw === 'Continuous' ? -1 : parseInt(sprintRaw || '0', 10) || 0;
-
+    const sprint = sprintRaw === 'Continuous' ? -1 : Number.parseInt(sprintRaw || '0', 10) || 0;
     const deps = parseDependencies(task.CleanDependencies || task.Dependencies || '');
-
     taskStatusMap.set(taskId, status);
     taskSprintMap.set(taskId, sprint);
-
-    nodes[taskId] = {
-      task_id: taskId,
-      sprint,
-      status,
-      dependencies: deps,
-      dependents: [],
-    };
+    nodes[taskId] = { task_id: taskId, sprint, status, dependencies: deps, dependents: [] };
   }
 
-  // Build dependents (reverse lookup)
   for (const [taskId, node] of Object.entries(nodes)) {
     for (const depId of node.dependencies) {
-      if (nodes[depId]) {
-        nodes[depId].dependents.push(taskId);
-      }
+      if (nodes[depId]) nodes[depId].dependents.push(taskId);
     }
   }
 
-  // Compute ready_to_start and blocked_tasks
+  return { nodes, taskStatusMap, taskSprintMap };
+}
+
+const SKIP_STATUSES = new Set(['DONE', 'IN_PROGRESS', 'FAILED']);
+
+function classifyTaskReadiness(
+  nodes: Record<string, DependencyNode>,
+  taskStatusMap: Map<string, string>
+): { ready_to_start: string[]; blocked_tasks: string[] } {
   const ready_to_start: string[] = [];
   const blocked_tasks: string[] = [];
 
   for (const [taskId, node] of Object.entries(nodes)) {
-    if (node.status === 'DONE' || node.status === 'IN_PROGRESS' || node.status === 'FAILED')
-      continue;
-
-    const allDepsComplete = node.dependencies.every((depId) => {
-      const depStatus = taskStatusMap.get(depId);
-      return depStatus === 'DONE';
-    });
-
+    if (SKIP_STATUSES.has(node.status)) continue;
+    const allDepsComplete = node.dependencies.every((depId) => taskStatusMap.get(depId) === 'DONE');
     if (allDepsComplete && (node.status === 'PLANNED' || node.status === 'BACKLOG')) {
       ready_to_start.push(taskId);
     } else {
@@ -68,9 +58,22 @@ export function updateDependencyGraph(tasks: TaskRecord[], metricsDir: string): 
     }
   }
 
-  // Sort by sprint
-  ready_to_start.sort((a, b) => (nodes[a]?.sprint ?? 999) - (nodes[b]?.sprint ?? 999));
-  blocked_tasks.sort((a, b) => (nodes[a]?.sprint ?? 999) - (nodes[b]?.sprint ?? 999));
+  const bySprintAsc = (a: string, b: string) =>
+    (nodes[a]?.sprint ?? 999) - (nodes[b]?.sprint ?? 999);
+  ready_to_start.sort(bySprintAsc);
+  blocked_tasks.sort(bySprintAsc);
+
+  return { ready_to_start, blocked_tasks };
+}
+
+/**
+ * Update dependency-graph.json with current task states
+ */
+export function updateDependencyGraph(tasks: TaskRecord[], metricsDir: string): void {
+  const graphPath = join(metricsDir, '_global', 'dependency-graph.json');
+
+  const { nodes, taskStatusMap, taskSprintMap } = buildGraphNodes(tasks);
+  const { ready_to_start, blocked_tasks } = classifyTaskReadiness(nodes, taskStatusMap);
 
   // Compute cross-sprint dependencies
   const cross_sprint_dependencies = computeCrossSprintDeps(nodes, taskSprintMap);
@@ -135,7 +138,7 @@ function groupTasksByDepKey(
   for (const taskId of taskIds) {
     const node = nodes[taskId];
     if (node.status === 'DONE') continue;
-    const depKey = node.dependencies.sort((a, b) => a.localeCompare(b)).join(',') || 'no-deps';
+    const depKey = [...node.dependencies].sort((a, b) => a.localeCompare(b)).join(',') || 'no-deps';
     if (!depGroups[depKey]) depGroups[depKey] = [];
     depGroups[depKey].push(taskId);
   }
@@ -174,12 +177,53 @@ export function computeParallelGroups(
   }
 
   for (const [sprintNum, taskIds] of Object.entries(tasksBySprint)) {
-    const sprint = parseInt(sprintNum, 10);
+    const sprint = Number.parseInt(sprintNum, 10);
     if (sprint < 0) continue;
     groups[`sprint-${sprint}`] = buildParallelGroupsForSprint(taskIds, nodes);
   }
 
   return groups;
+}
+
+function tracePathFromNode(
+  startId: string,
+  nodes: Record<string, DependencyNode>
+): string[] {
+  const path: string[] = [];
+  const visited = new Set<string>();
+
+  function recurse(taskId: string): void {
+    if (visited.has(taskId)) return;
+    visited.add(taskId);
+    path.unshift(taskId);
+    const node = nodes[taskId];
+    if (node && node.dependencies.length > 0) {
+      const firstDep = node.dependencies.find((d) => nodes[d]);
+      if (firstDep) recurse(firstDep);
+    }
+  }
+
+  recurse(startId);
+  return path;
+}
+
+function buildCriticalPath(
+  endNode: DependencyNode,
+  nodes: Record<string, DependencyNode>,
+  taskStatusMap: Map<string, string>
+): CriticalPath | null {
+  const path = tracePathFromNode(endNode.task_id, nodes);
+  if (path.length <= 1) return null;
+  const doneCount = path.filter((t) => taskStatusMap.get(t) === 'DONE').length;
+  const completionPct = (doneCount / path.length) * 100;
+  const blockingTask = path.find((t) => taskStatusMap.get(t) !== 'DONE') || path.at(-1);
+  return {
+    name: `Path to ${endNode.task_id}`,
+    tasks: path,
+    total_duration_estimate_minutes: path.length * 15,
+    completion_percentage: Math.round(completionPct * 10) / 10,
+    blocking_status: blockingTask,
+  };
 }
 
 /**
@@ -189,46 +233,14 @@ export function computeCriticalPaths(
   nodes: Record<string, DependencyNode>,
   taskStatusMap: Map<string, string>
 ): CriticalPath[] {
-  const paths: CriticalPath[] = [];
-
   const endTasks = Object.values(nodes).filter(
     (n) => n.dependents.length === 0 && n.status !== 'DONE'
   );
 
+  const paths: CriticalPath[] = [];
   for (const endNode of endTasks.slice(0, 5)) {
-    const path: string[] = [];
-    const visited = new Set<string>();
-
-    const tracePath = (taskId: string): void => {
-      if (visited.has(taskId)) return;
-      visited.add(taskId);
-      path.unshift(taskId);
-
-      const node = nodes[taskId];
-      if (node && node.dependencies.length > 0) {
-        const firstDep = node.dependencies.find((d) => nodes[d]);
-        if (firstDep) {
-          tracePath(firstDep);
-        }
-      }
-    };
-
-    tracePath(endNode.task_id);
-
-    if (path.length > 1) {
-      const doneCount = path.filter((t) => taskStatusMap.get(t) === 'DONE').length;
-      const completionPct = (doneCount / path.length) * 100;
-      const blockingTask =
-        path.find((t) => taskStatusMap.get(t) !== 'DONE') || path[path.length - 1];
-
-      paths.push({
-        name: `Path to ${endNode.task_id}`,
-        tasks: path,
-        total_duration_estimate_minutes: path.length * 15,
-        completion_percentage: Math.round(completionPct * 10) / 10,
-        blocking_status: blockingTask,
-      });
-    }
+    const cp = buildCriticalPath(endNode, nodes, taskStatusMap);
+    if (cp) paths.push(cp);
   }
 
   return paths;

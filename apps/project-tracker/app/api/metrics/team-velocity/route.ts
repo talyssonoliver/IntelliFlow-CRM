@@ -9,8 +9,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { loadCSVTasks } from '@/lib/governance';
-import { existsSync, readFileSync, readdirSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 
 export const dynamic = 'force-dynamic';
 
@@ -94,6 +94,95 @@ function loadAttestationData(): Map<string, AttestationData> {
   return attestations;
 }
 
+type AnyTask = ReturnType<typeof loadCSVTasks>[number];
+
+function isTaskDone(status: string): boolean {
+  const s = status.toLowerCase();
+  return s === 'completed' || s === 'done';
+}
+
+function buildSprintVelocities(sprintTasks: AnyTask[]): SprintVelocity[] {
+  const sprintMap = new Map<number, { planned: number; completed: number }>();
+  for (const task of sprintTasks) {
+    const sprint = task.sprint as number;
+    if (!sprintMap.has(sprint)) sprintMap.set(sprint, { planned: 0, completed: 0 });
+    const counts = sprintMap.get(sprint)!;
+    counts.planned++;
+    if (isTaskDone(task.status)) counts.completed++;
+  }
+  return Array.from(sprintMap.entries())
+    .map(([sprint, counts]) => ({
+      sprint,
+      planned: counts.planned,
+      completed: counts.completed,
+      velocity: counts.planned > 0 ? Math.round((counts.completed / counts.planned) * 100) : 0,
+      tasksPerDay: Math.round((counts.completed / 10) * 10) / 10,
+    }))
+    .sort((a, b) => a.sprint - b.sprint);
+}
+
+function buildOwnerVelocities(allTasks: AnyTask[], ownerFilter: string | null): OwnerVelocity[] {
+  const ownerMap = new Map<string, { completed: number; inProgress: number; planned: number }>();
+  for (const task of allTasks) {
+    const owner = task.owner || 'Unassigned';
+    if (!ownerMap.has(owner)) ownerMap.set(owner, { completed: 0, inProgress: 0, planned: 0 });
+    const counts = ownerMap.get(owner)!;
+    const status = task.status.toLowerCase();
+    if (isTaskDone(task.status)) {
+      counts.completed++;
+    } else if (status === 'in progress' || status === 'in_progress') {
+      counts.inProgress++;
+    } else {
+      counts.planned++;
+    }
+  }
+  let velocities: OwnerVelocity[] = Array.from(ownerMap.entries())
+    .map(([owner, counts]) => {
+      const total = counts.completed + counts.inProgress + counts.planned;
+      return {
+        owner,
+        completed: counts.completed,
+        inProgress: counts.inProgress,
+        planned: counts.planned,
+        completionRate: total > 0 ? Math.round((counts.completed / total) * 100) : 0,
+      };
+    })
+    .sort((a, b) => b.completed - a.completed);
+  if (ownerFilter) {
+    velocities = velocities.filter((o) => o.owner.toLowerCase().includes(ownerFilter.toLowerCase()));
+  }
+  return velocities;
+}
+
+function buildSectionVelocities(allTasks: AnyTask[]): SectionVelocity[] {
+  const sectionMap = new Map<string, { completed: number; total: number }>();
+  for (const task of allTasks) {
+    if (!sectionMap.has(task.section)) sectionMap.set(task.section, { completed: 0, total: 0 });
+    const counts = sectionMap.get(task.section)!;
+    counts.total++;
+    if (isTaskDone(task.status)) counts.completed++;
+  }
+  return Array.from(sectionMap.entries())
+    .map(([section, counts]) => ({
+      section,
+      completed: counts.completed,
+      total: counts.total,
+      completionRate: counts.total > 0 ? Math.round((counts.completed / counts.total) * 100) : 0,
+    }))
+    .sort((a, b) => b.completionRate - a.completionRate);
+}
+
+function calculateVelocityTrend(sprintVelocities: SprintVelocity[]): string {
+  const recentSprints = sprintVelocities.slice(-3);
+  if (recentSprints.length < 2) return 'stable';
+  const avgRecent = recentSprints.reduce((sum, s) => sum + s.velocity, 0) / recentSprints.length;
+  const previousSlice = sprintVelocities.slice(-6, -3);
+  const avgPrevious = previousSlice.reduce((sum, s) => sum + s.velocity, 0) / Math.max(1, previousSlice.length);
+  if (avgRecent > avgPrevious * 1.1) return 'improving';
+  if (avgRecent < avgPrevious * 0.9) return 'declining';
+  return 'stable';
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -107,10 +196,7 @@ export async function GET(request: NextRequest) {
 
     if (!allTasks.length) {
       return NextResponse.json(
-        {
-          error: 'No tasks found',
-          message: 'Sprint_plan.csv is empty or not found',
-        },
+        { error: 'No tasks found', message: 'Sprint_plan.csv is empty or not found' },
         { status: 404 }
       );
     }
@@ -118,105 +204,12 @@ export async function GET(request: NextRequest) {
     // Filter out continuous tasks for velocity calculation
     const sprintTasks = allTasks.filter((t) => typeof t.sprint === 'number');
 
-    // Calculate velocity by sprint
-    const sprintMap = new Map<number, { planned: number; completed: number }>();
+    const sprintVelocities = buildSprintVelocities(sprintTasks);
+    const ownerVelocities = buildOwnerVelocities(allTasks, ownerFilter);
+    const sectionVelocities = buildSectionVelocities(allTasks);
 
-    for (const task of sprintTasks) {
-      const sprint = task.sprint as number;
-      if (!sprintMap.has(sprint)) {
-        sprintMap.set(sprint, { planned: 0, completed: 0 });
-      }
-      const counts = sprintMap.get(sprint)!;
-      counts.planned++;
-
-      const status = task.status.toLowerCase();
-      if (status === 'completed' || status === 'done') {
-        counts.completed++;
-      }
-    }
-
-    const sprintVelocities: SprintVelocity[] = Array.from(sprintMap.entries())
-      .map(([sprint, counts]) => ({
-        sprint,
-        planned: counts.planned,
-        completed: counts.completed,
-        velocity: counts.planned > 0 ? Math.round((counts.completed / counts.planned) * 100) : 0,
-        tasksPerDay: Math.round((counts.completed / 10) * 10) / 10, // 10-day sprint assumption
-      }))
-      .sort((a, b) => a.sprint - b.sprint);
-
-    // Calculate velocity by owner
-    const ownerMap = new Map<string, { completed: number; inProgress: number; planned: number }>();
-
-    for (const task of allTasks) {
-      const owner = task.owner || 'Unassigned';
-      if (!ownerMap.has(owner)) {
-        ownerMap.set(owner, { completed: 0, inProgress: 0, planned: 0 });
-      }
-      const counts = ownerMap.get(owner)!;
-
-      const status = task.status.toLowerCase();
-      if (status === 'completed' || status === 'done') {
-        counts.completed++;
-      } else if (status === 'in progress' || status === 'in_progress') {
-        counts.inProgress++;
-      } else {
-        counts.planned++;
-      }
-    }
-
-    let ownerVelocities: OwnerVelocity[] = Array.from(ownerMap.entries())
-      .map(([owner, counts]) => ({
-        owner,
-        completed: counts.completed,
-        inProgress: counts.inProgress,
-        planned: counts.planned,
-        completionRate:
-          counts.completed + counts.inProgress + counts.planned > 0
-            ? Math.round(
-                (counts.completed / (counts.completed + counts.inProgress + counts.planned)) * 100
-              )
-            : 0,
-      }))
-      .sort((a, b) => b.completed - a.completed);
-
-    if (ownerFilter) {
-      ownerVelocities = ownerVelocities.filter((o) =>
-        o.owner.toLowerCase().includes(ownerFilter.toLowerCase())
-      );
-    }
-
-    // Calculate velocity by section
-    const sectionMap = new Map<string, { completed: number; total: number }>();
-
-    for (const task of allTasks) {
-      if (!sectionMap.has(task.section)) {
-        sectionMap.set(task.section, { completed: 0, total: 0 });
-      }
-      const counts = sectionMap.get(task.section)!;
-      counts.total++;
-
-      const status = task.status.toLowerCase();
-      if (status === 'completed' || status === 'done') {
-        counts.completed++;
-      }
-    }
-
-    const sectionVelocities: SectionVelocity[] = Array.from(sectionMap.entries())
-      .map(([section, counts]) => ({
-        section,
-        completed: counts.completed,
-        total: counts.total,
-        completionRate: counts.total > 0 ? Math.round((counts.completed / counts.total) * 100) : 0,
-      }))
-      .sort((a, b) => b.completionRate - a.completionRate);
-
-    // Calculate overall metrics
     const totalTasks = allTasks.length;
-    const completedTasks = allTasks.filter((t) => {
-      const status = t.status.toLowerCase();
-      return status === 'completed' || status === 'done';
-    }).length;
+    const completedTasks = allTasks.filter((t) => isTaskDone(t.status)).length;
 
     // Calculate KPI metrics from attestations (source of truth for completion evidence)
     const attestedTasks = Array.from(attestations.values());
@@ -234,24 +227,13 @@ export async function GET(request: NextRequest) {
       ),
     };
 
-    // Calculate trend (comparing last 3 sprints)
-    const recentSprints = sprintVelocities.slice(-3);
-    let trend = 'stable';
-    if (recentSprints.length >= 2) {
-      const avgRecent =
-        recentSprints.reduce((sum, s) => sum + s.velocity, 0) / recentSprints.length;
-      const avgPrevious =
-        sprintVelocities.slice(-6, -3).reduce((sum, s) => sum + s.velocity, 0) /
-        Math.max(1, sprintVelocities.slice(-6, -3).length);
-      if (avgRecent > avgPrevious * 1.1) trend = 'improving';
-      else if (avgRecent < avgPrevious * 0.9) trend = 'declining';
-    }
+    const trend = calculateVelocityTrend(sprintVelocities);
 
     // Filter by sprint if requested
     let filteredSprintVelocities = sprintVelocities;
     if (sprintFilter) {
-      const sprintNum = parseInt(sprintFilter, 10);
-      if (!isNaN(sprintNum)) {
+      const sprintNum = Number.parseInt(sprintFilter, 10);
+      if (!Number.isNaN(sprintNum)) {
         filteredSprintVelocities = sprintVelocities.filter((s) => s.sprint === sprintNum);
       }
     }

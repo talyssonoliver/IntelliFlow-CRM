@@ -7,8 +7,8 @@
 
 import { NextResponse } from 'next/server';
 import { loadCSVTasks } from '@/lib/governance';
-import { existsSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 export const dynamic = 'force-dynamic';
 
@@ -99,6 +99,30 @@ function loadVelocityConfig(): VelocityConfig | null {
   }
 }
 
+type AnyTask = ReturnType<typeof loadCSVTasks>[number];
+
+function isDone(status: string): boolean {
+  const s = status.toLowerCase();
+  return s === 'completed' || s === 'done';
+}
+
+function buildSprintBars(sprintTasks: AnyTask[]): SprintBar[] {
+  const sprintMap = new Map<number, { planned: number; completed: number }>();
+  for (const task of sprintTasks) {
+    const sprint = task.sprint as number;
+    if (!sprintMap.has(sprint)) sprintMap.set(sprint, { planned: 0, completed: 0 });
+    const counts = sprintMap.get(sprint)!;
+    counts.planned++;
+    if (isDone(task.status)) counts.completed++;
+  }
+  return Array.from(sprintMap.entries())
+    .map(([sprint, counts]) => {
+      const velocity = counts.planned > 0 ? Math.round((counts.completed / counts.planned) * 100) : 0;
+      return { sprint, velocity, percentage: velocity, planned: counts.planned, completed: counts.completed };
+    })
+    .sort((a, b) => a.sprint - b.sprint);
+}
+
 export async function GET() {
   try {
     const config = loadVelocityConfig();
@@ -112,43 +136,11 @@ export async function GET() {
     const sprintTasks = allTasks.filter((t) => typeof t.sprint === 'number');
 
     // Calculate velocity by sprint
-    const sprintMap = new Map<number, { planned: number; completed: number }>();
-
-    for (const task of sprintTasks) {
-      const sprint = task.sprint as number;
-      if (!sprintMap.has(sprint)) {
-        sprintMap.set(sprint, { planned: 0, completed: 0 });
-      }
-      const counts = sprintMap.get(sprint)!;
-      counts.planned++;
-
-      const status = task.status.toLowerCase();
-      if (status === 'completed' || status === 'done') {
-        counts.completed++;
-      }
-    }
-
-    // Calculate sprint bars for visualization
-    const sprintBars: SprintBar[] = Array.from(sprintMap.entries())
-      .map(([sprint, counts]) => {
-        const velocity =
-          counts.planned > 0 ? Math.round((counts.completed / counts.planned) * 100) : 0;
-        return {
-          sprint,
-          velocity,
-          percentage: velocity, // For bar height
-          planned: counts.planned,
-          completed: counts.completed,
-        };
-      })
-      .sort((a, b) => a.sprint - b.sprint);
+    const sprintBars = buildSprintBars(sprintTasks);
 
     // Calculate overall velocity
     const totalPlanned = sprintTasks.length;
-    const totalCompleted = sprintTasks.filter((t) => {
-      const status = t.status.toLowerCase();
-      return status === 'completed' || status === 'done';
-    }).length;
+    const totalCompleted = sprintTasks.filter((t) => isDone(t.status)).length;
     const currentVelocity =
       totalPlanned > 0 ? Math.round((totalCompleted / totalPlanned) * 100) : 0;
 

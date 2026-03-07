@@ -35,23 +35,6 @@ import {
   startSession as basStartSession,
   completeSession as basCompleteSession,
   checkArtifactsExist as basCheckArtifactsExist,
-
-  // Functions that don't need wrapping
-  canProceedToSession,
-  getSessionStartStatus,
-  getSessionSuccessStatus,
-  getSessionFailureStatus,
-  validateTransition,
-  getNextSession,
-  getStatusGuidance,
-  getTaskPaths,
-  generateRunId,
-  assignStoas,
-  calculateConsensus,
-  getTaskGates,
-  getStatusFromVerdict,
-  getSessionInfo,
-  getAllSessions,
 } from '@tools/scripts/lib/workflow/adapter';
 
 // Re-export types
@@ -62,7 +45,7 @@ export type {
   SessionResult,
   WorkflowOptions,
   MatopVerdict,
-};
+} from '@tools/scripts/lib/workflow/adapter';
 
 // Re-export functions that don't need path context
 export {
@@ -81,7 +64,7 @@ export {
   getStatusFromVerdict,
   getSessionInfo,
   getAllSessions,
-};
+} from '@tools/scripts/lib/workflow/adapter';
 
 /**
  * Get the monorepo root from the Next.js app directory

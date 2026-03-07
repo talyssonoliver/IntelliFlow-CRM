@@ -94,7 +94,7 @@ interface SecurityMetrics {
 
 export const STALE_THRESHOLD_MINUTES = 10080; // 7 * 24 * 60
 
-export function getSecurityStatus(vulns: VulnerabilityCounts) {
+export function getSecurityStatus(vulns: Readonly<VulnerabilityCounts>) {
   const hasCritical = vulns.critical > 0;
   const hasVulnerabilities = vulns.total > 0;
   const vulnOrSafeBannerClass = hasVulnerabilities
@@ -159,7 +159,7 @@ export function getScanButtonState(scanning: boolean) {
   };
 }
 
-export function getRemediationSummary(remediation: RemediationSummary) {
+export function getRemediationSummary(remediation: Readonly<RemediationSummary>) {
   const isEmpty = remediation.items.length === 0;
   return {
     isEmpty,
@@ -167,12 +167,12 @@ export function getRemediationSummary(remediation: RemediationSummary) {
     fixedCount: remediation.fixedCount,
     openCount: remediation.openCount,
     waiverCount: remediation.waiverCount,
-    mttrDisplay: remediation.mttrHours !== null ? `${remediation.mttrHours}h` : 'N/A',
+    mttrDisplay: remediation.mttrHours === null ? 'N/A' : `${remediation.mttrHours}h`,
   };
 }
 
 export function getScanProgressDisplay(scanState: ScanState | null) {
-  if (!scanState || scanState.status !== 'running') {
+  if (scanState?.status !== 'running') {
     return { showBanner: false, currentStep: null, isRunning: false };
   }
   return {
@@ -201,6 +201,12 @@ export function getLoadingState(
 }
 
 // --- Severity badge helper ---
+
+function getPackageTypeBadgeClass(type: string): string {
+  if (type === 'major') return 'bg-red-100 text-red-700';
+  if (type === 'minor') return 'bg-yellow-100 text-yellow-700';
+  return 'bg-blue-100 text-blue-700';
+}
 
 function getSeverityBadgeClass(severity: string): string {
   switch (severity.toLowerCase()) {
@@ -231,9 +237,61 @@ function getStatusBadgeClass(status: string): string {
   }
 }
 
+// --- Utility: format a date string for display ---
+
+function formatBaselineDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  return Number.isNaN(d.getTime()) ? dateStr : d.toLocaleDateString();
+}
+
+// --- Security Status Banner Content (extracted IIFE) ---
+
+interface SecurityStatusBannerContentProps {
+  status: ReturnType<typeof getSecurityStatus>;
+}
+
+function SecurityStatusBannerContent({ status }: Readonly<SecurityStatusBannerContentProps>) {
+  const vulnOrSafeIconClass = status.hasVulnerabilities ? 'text-yellow-600' : 'text-green-600';
+  const iconClass = status.hasCritical ? 'text-red-500' : vulnOrSafeIconClass;
+  const vulnOrSafeHeadingClass = status.hasVulnerabilities ? 'text-yellow-700' : 'text-green-700';
+  const headingClass = status.hasCritical ? 'text-red-700' : vulnOrSafeHeadingClass;
+  const vulnOrSafeBodyText = status.hasVulnerabilities
+    ? 'Review and address vulnerabilities as appropriate'
+    : 'Your dependencies are secure';
+  const bodyText = status.hasCritical
+    ? 'Immediate action required - critical security issues detected'
+    : vulnOrSafeBodyText;
+  return (
+    <>
+      <Icon name={status.iconName} className={iconClass} size="2xl" />
+      <div>
+        <div className={`text-lg font-semibold ${headingClass}`}>{status.statusText}</div>
+        <div className="text-sm text-gray-600">{bodyText}</div>
+      </div>
+    </>
+  );
+}
+
+function buildInitialScanState(scanId: string): Partial<ScanState> {
+  return {
+    completedAt: null,
+    progress: {
+      dependency_check: 'pending',
+      outdated_check: 'pending',
+      secret_scan: 'pending',
+      sast_scan: 'pending',
+    },
+    errors: [],
+    status: 'running' as const,
+    startedAt: new Date().toISOString(),
+    currentStep: 'Initializing...',
+    scanId,
+  };
+}
+
 // --- Component ---
 
-export default function SecurityDashboard() {
+export default function SecurityDashboard() { // NOSONAR typescript:S3776
   const [data, setData] = useState<SecurityMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
@@ -262,21 +320,15 @@ export default function SecurityDashboard() {
       if (!response.ok) throw new Error('Scan failed');
       const result = await response.json();
       if (result.scanId) {
-        setScanState((prev) => ({
-          ...(prev || {
-            completedAt: null,
-            progress: {
-              dependency_check: 'pending',
-              outdated_check: 'pending',
-              secret_scan: 'pending',
-              sast_scan: 'pending',
-            },
-            errors: [],
-          }),
-          status: 'running' as const,
-          startedAt: new Date().toISOString(),
-          currentStep: 'Initializing...',
-          scanId: result.scanId,
+        setScanState(() => ({
+          status: 'idle' as const,
+          startedAt: null,
+          completedAt: null,
+          currentStep: null,
+          progress: { dependency_check: 'pending', outdated_check: 'pending', secret_scan: 'pending', sast_scan: 'pending' },
+          errors: [],
+          scanId: null,
+          ...buildInitialScanState(result.scanId),
         }));
       }
     } catch (err) {
@@ -413,31 +465,7 @@ export default function SecurityDashboard() {
       {/* Security Status Banner */}
       <div className={`rounded-lg p-4 border ${status.bannerClass}`}>
         <div className="flex items-center gap-3">
-          {(() => {
-            const vulnOrSafeIconClass = status.hasVulnerabilities
-              ? 'text-yellow-600'
-              : 'text-green-600';
-            const iconClass = status.hasCritical ? 'text-red-500' : vulnOrSafeIconClass;
-            const vulnOrSafeHeadingClass = status.hasVulnerabilities
-              ? 'text-yellow-700'
-              : 'text-green-700';
-            const headingClass = status.hasCritical ? 'text-red-700' : vulnOrSafeHeadingClass;
-            const vulnOrSafeBodyText = status.hasVulnerabilities
-              ? 'Review and address vulnerabilities as appropriate'
-              : 'Your dependencies are secure';
-            const bodyText = status.hasCritical
-              ? 'Immediate action required - critical security issues detected'
-              : vulnOrSafeBodyText;
-            return (
-              <>
-                <Icon name={status.iconName} className={iconClass} size="2xl" />
-                <div>
-                  <div className={`text-lg font-semibold ${headingClass}`}>{status.statusText}</div>
-                  <div className="text-sm text-gray-600">{bodyText}</div>
-                </div>
-              </>
-            );
-          })()}
+          <SecurityStatusBannerContent status={status} />
         </div>
       </div>
 
@@ -486,12 +514,7 @@ export default function SecurityDashboard() {
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
           <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
             <Icon name="difference" size="base" />
-            Baseline Comparison (from{' '}
-            {(() => {
-              const d = new Date(data.baseline.date);
-              return isNaN(d.getTime()) ? data.baseline.date : d.toLocaleDateString();
-            })()}
-            )
+            Baseline Comparison (from {formatBaselineDate(data.baseline.date)})
           </h4>
           <div className="grid grid-cols-2 gap-4">
             {(['critical', 'high'] as const).map((severity) => {
@@ -589,15 +612,7 @@ export default function SecurityDashboard() {
                           <td className="py-1 pr-4 text-gray-500">{pkg.current}</td>
                           <td className="py-1 pr-4">{pkg.latest}</td>
                           <td className="py-1">
-                            <span
-                              className={`px-1.5 py-0.5 rounded text-xs ${
-                                pkg.type === 'major'
-                                  ? 'bg-red-100 text-red-700'
-                                  : pkg.type === 'minor'
-                                    ? 'bg-yellow-100 text-yellow-700'
-                                    : 'bg-blue-100 text-blue-700'
-                              }`}
-                            >
+                            <span className={`px-1.5 py-0.5 rounded text-xs ${getPackageTypeBadgeClass(pkg.type)}`}>
                               {pkg.type}
                             </span>
                           </td>
@@ -690,7 +705,9 @@ export default function SecurityDashboard() {
           <Icon name="healing" size="base" />
           Remediation Tracking
         </h4>
-        {!remediationDisplay.isEmpty ? (
+        {remediationDisplay.isEmpty ? (
+          <div className="text-sm text-gray-400 italic">{remediationDisplay.emptyMessage}</div>
+        ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <MetricCard
@@ -760,8 +777,6 @@ export default function SecurityDashboard() {
               </div>
             )}
           </>
-        ) : (
-          <div className="text-sm text-gray-400 italic">{remediationDisplay.emptyMessage}</div>
         )}
       </div>
 

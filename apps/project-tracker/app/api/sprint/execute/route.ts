@@ -50,11 +50,49 @@ interface DependencyGraph {
   blocked_tasks: string[];
 }
 
+function checkTaskPrerequisite(
+  taskId: string,
+  csvTasks: TaskRecord[],
+  specifyDir: string,
+  prerequisiteErrors: { taskId: string; error: string }[],
+  tasksToExecute: string[]
+): void {
+  const csvTask = csvTasks.find((t: TaskRecord) => t['Task ID'] === taskId);
+  const taskSprintNumber = Number.parseInt(csvTask?.['Target Sprint'] || '0', 10);
+  const sprintDir = join(specifyDir, 'sprints', `sprint-${taskSprintNumber}`);
+
+  const specExists =
+    existsSync(join(sprintDir, 'specifications', `${taskId}-spec.md`)) ||
+    existsSync(join(specifyDir, 'specifications', `${taskId}-spec.md`));
+  const planExists =
+    existsSync(join(sprintDir, 'planning', `${taskId}-plan.md`)) ||
+    existsSync(join(specifyDir, 'planning', `${taskId}-plan.md`));
+
+  if (!specExists) {
+    prerequisiteErrors.push({ taskId, error: 'Spec required. Run SESSION 1: Spec first.' });
+    return;
+  }
+  if (!planExists) {
+    prerequisiteErrors.push({ taskId, error: 'Plan required. Run SESSION 2: Plan first.' });
+    return;
+  }
+  if (!csvTask) {
+    tasksToExecute.push(taskId);
+    return;
+  }
+  const canProceed = canProceedToSession(csvTask, 'exec');
+  if (canProceed.canProceed) {
+    tasksToExecute.push(taskId);
+  } else {
+    prerequisiteErrors.push({ taskId, error: canProceed.reason || 'Cannot proceed to execution' });
+  }
+}
+
 /**
  * POST /api/sprint/execute
  * Execute a sprint with computed phases
  */
-export async function POST(request: Request) {
+export async function POST(request: Request) { // NOSONAR typescript:S3776
   try {
     const body: ExecuteRequest = await request.json();
     const {
@@ -129,46 +167,7 @@ export async function POST(request: Request) {
 
     for (const phase of phases) {
       for (const task of phase.tasks) {
-        // Get task's sprint number from CSV
-        const csvTask = csvTasks.find((t: TaskRecord) => t['Task ID'] === task.taskId);
-        const taskSprintNumber = parseInt(csvTask?.['Target Sprint'] || '0', 10);
-        const sprintDir = join(specifyDir, 'sprints', `sprint-${taskSprintNumber}`);
-
-        // Check sprint-based paths first, then legacy for backward compatibility
-        const specPathNew = join(sprintDir, 'specifications', `${task.taskId}-spec.md`);
-        const planPathNew = join(sprintDir, 'planning', `${task.taskId}-plan.md`);
-        const specPathLegacy = join(specifyDir, 'specifications', `${task.taskId}-spec.md`);
-        const planPathLegacy = join(specifyDir, 'planning', `${task.taskId}-plan.md`);
-
-        const specExists = existsSync(specPathNew) || existsSync(specPathLegacy);
-        const planExists = existsSync(planPathNew) || existsSync(planPathLegacy);
-
-        if (!specExists) {
-          prerequisiteErrors.push({
-            taskId: task.taskId,
-            error: 'Spec required. Run SESSION 1: Spec first.',
-          });
-        } else if (!planExists) {
-          prerequisiteErrors.push({
-            taskId: task.taskId,
-            error: 'Plan required. Run SESSION 2: Plan first.',
-          });
-        } else {
-          // Also check CSV task status using canProceedToSession
-          if (csvTask) {
-            const canProceed = canProceedToSession(csvTask, 'exec');
-            if (!canProceed.canProceed) {
-              prerequisiteErrors.push({
-                taskId: task.taskId,
-                error: canProceed.reason || 'Cannot proceed to execution',
-              });
-            } else {
-              tasksToExecute.push(task.taskId);
-            }
-          } else {
-            tasksToExecute.push(task.taskId);
-          }
-        }
+        checkTaskPrerequisite(task.taskId, csvTasks, specifyDir, prerequisiteErrors, tasksToExecute);
       }
     }
 
@@ -399,19 +398,13 @@ export async function GET() {
 function generateExecutionInstructions(phases: ExecutionPhase[], runId: string): string {
   const lines: string[] = [];
 
-  lines.push('## Execution Instructions');
-  lines.push('');
-  lines.push(`Run ID: ${runId}`);
-  lines.push('');
-  lines.push('Execute phases in order:');
-  lines.push('');
+  lines.push('## Execution Instructions', '', `Run ID: ${runId}`, '', 'Execute phases in order:', '');
 
   for (const phase of phases) {
     lines.push(`### Phase ${phase.phaseNumber}: ${phase.name}`);
 
     if (phase.executionType === 'parallel') {
-      lines.push('```bash');
-      lines.push('# Spawn parallel sub-agents');
+      lines.push('```bash', '# Spawn parallel sub-agents');
 
       const streams = new Set(phase.tasks.map((t) => t.parallelStreamId).filter(Boolean));
       for (const streamId of streams) {
@@ -433,12 +426,12 @@ function generateExecutionInstructions(phases: ExecutionPhase[], runId: string):
     lines.push('');
   }
 
-  lines.push('After each task, update status:');
-  lines.push('```bash');
   lines.push(
-    `curl -X POST /api/sprint/status -d '{"runId": "${runId}", "update": {"type": "task_complete", "taskId": "TASK_ID", "phaseNumber": N}}'`
+    'After each task, update status:',
+    '```bash',
+    `curl -X POST /api/sprint/status -d '{"runId": "${runId}", "update": {"type": "task_complete", "taskId": "TASK_ID", "phaseNumber": N}}'`,
+    '```',
   );
-  lines.push('```');
 
   return lines.join('\n');
 }
@@ -508,7 +501,7 @@ async function executeSprintAsync(
     await updateStatus({ type: 'complete' });
 
     // Save final results to file
-    const { writeFile } = await import('fs/promises');
+    const { writeFile } = await import('node:fs/promises');
     const finalResults = {
       runId,
       completedAt: new Date().toISOString(),

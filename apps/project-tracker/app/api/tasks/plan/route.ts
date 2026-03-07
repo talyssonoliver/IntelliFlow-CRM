@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     }
 
     const task = tasks[taskIndex];
-    const sprintNumber = parseInt(task['Target Sprint'] || '0', 10);
+    const sprintNumber = Number.parseInt(task['Target Sprint'] || '0', 10);
     const sprintDir = join(specifyDir, 'sprints', `sprint-${sprintNumber}`);
 
     // Sprint-based paths (new structure)
@@ -167,11 +167,11 @@ function addPlanToArtifacts(current: string, taskId: string, sprintNumber: numbe
 
   // Find SPEC position and insert PLAN after it
   const specIndex = parts.findIndex((p) => p.startsWith('SPEC:'));
-  if (specIndex !== -1) {
-    parts.splice(specIndex + 1, 0, planPath);
-  } else {
+  if (specIndex === -1) {
     // No SPEC found, add PLAN at the beginning
     parts.unshift(planPath);
+  } else {
+    parts.splice(specIndex + 1, 0, planPath);
   }
 
   return parts.join(';');
@@ -287,7 +287,7 @@ async function getTaskSprintNumber(taskId: string): Promise<number> {
     const csvContent = await readFile(csvPath, 'utf-8');
     const { data } = Papa.parse(csvContent, { header: true, skipEmptyLines: true });
     const task = (data as TaskRecord[]).find((t) => t['Task ID'] === taskId);
-    return parseInt(task?.['Target Sprint'] || '0', 10);
+    return Number.parseInt(task?.['Target Sprint'] || '0', 10);
   } catch {
     return 0;
   }

@@ -249,7 +249,7 @@ export default function SpecTrackerPanel() {
                     : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
-                {filter === 'ALL' ? 'All' : filter.replace(/_/g, ' ')}
+                {filter === 'ALL' ? 'All' : filter.replaceAll('_', ' ')}
               </button>
             )
           )}
@@ -331,7 +331,7 @@ export default function SpecTrackerPanel() {
                     <span
                       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[task.real_status] ?? 'bg-gray-100 text-gray-800'}`}
                     >
-                      {task.real_status.replace(/_/g, ' ')}
+                      {task.real_status.replaceAll('_', ' ')}
                     </span>
                   </td>
                 </tr>
@@ -366,7 +366,7 @@ export default function SpecTrackerPanel() {
               <span
                 className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium flex-shrink-0 ${STATUS_COLORS[status] ?? 'bg-gray-100 text-gray-800'}`}
               >
-                {status.replace(/_/g, ' ')}
+                {status.replaceAll('_', ' ')}
               </span>
               <span className="text-xs text-gray-600">{description}</span>
             </div>
@@ -376,7 +376,7 @@ export default function SpecTrackerPanel() {
 
       {/* Source info */}
       <p className="text-xs text-gray-500">
-        Generated from <code>artifacts/reports/spec-tracker.json</code>. Last generated:{' '}
+        Generated from{' '}<code>artifacts/reports/spec-tracker.json</code>. Last generated:{' '}
         {new Date(data.generated_at).toLocaleString()}.
       </p>
     </div>
@@ -414,7 +414,7 @@ function TaskDetailPanel({ task, issue, onClose }: Readonly<TaskDetailPanelProps
             <span
               className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[task.real_status] ?? 'bg-gray-100 text-gray-800'}`}
             >
-              {task.real_status.replace(/_/g, ' ')}
+              {task.real_status.replaceAll('_', ' ')}
             </span>
           </div>
           <p className="mt-1 text-sm text-gray-700">{task.title}</p>

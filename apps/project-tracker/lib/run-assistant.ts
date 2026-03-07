@@ -89,8 +89,8 @@ function matchBuildRequest(lowerInput: string): RunRequest | null {
 }
 
 function matchTestRequest(lowerInput: string): RunRequest | null {
-  const testMatch = lowerInput.match(
-    /tests?\s+(?:for\s+)?(?:a\s+)?(?:particular\s+)?(?:package\s+)?(\w+)/i
+  const testMatch = /tests?\s+(?:for\s+)?(?:a\s+)?(?:particular\s+)?(?:package\s+)?(\w+)/i.exec(
+    lowerInput
   );
   if (testMatch || lowerInput.includes('test')) {
     const pkg = testMatch?.[1];
@@ -161,38 +161,35 @@ export function parseRunInput(input: string): RunRequest {
  * Executes a RunRequest with optional runner and timeout
  * @throws Error if command is unsafe or times out
  */
+function assertCommandSafe(command: string): void {
+  for (const pattern of UNSAFE_PATTERNS) {
+    if (pattern.test(command)) {
+      throw new Error('Unsafe or dangerous command cannot be executed');
+    }
+  }
+}
+
+async function runWithOptionalTimeout(
+  runner: (cmd: string) => Promise<{ code: number; stdout: string; stderr: string }>,
+  command: string,
+  timeoutMs?: number
+): Promise<{ code: number; stdout: string; stderr: string }> {
+  if (!timeoutMs) return runner(command);
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => reject(new Error('Command timed out')), timeoutMs);
+  });
+  return Promise.race([runner(command), timeoutPromise]);
+}
+
 export async function executeRunRequest(
   req: RunRequest,
   opts?: ExecuteOptions
 ): Promise<ExecutionResult> {
-  // Re-validate command safety before execution
-  for (const pattern of UNSAFE_PATTERNS) {
-    if (pattern.test(req.command)) {
-      throw new Error('Unsafe or dangerous command cannot be executed');
-    }
-  }
+  assertCommandSafe(req.command);
 
   const runner = opts?.runner ?? defaultRunner;
-  const timeoutMs = opts?.timeoutMs;
+  const result = await runWithOptionalTimeout(runner, req.command, opts?.timeoutMs);
 
-  if (timeoutMs) {
-    // Execute with timeout
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Command timed out')), timeoutMs);
-    });
-
-    const result = await Promise.race([runner(req.command), timeoutPromise]);
-
-    return {
-      success: result.code === 0,
-      code: result.code,
-      stdout: result.stdout,
-      stderr: result.stderr,
-    };
-  }
-
-  // Execute without timeout
-  const result = await runner(req.command);
   return {
     success: result.code === 0,
     code: result.code,

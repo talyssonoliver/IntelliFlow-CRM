@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const rawTaskId = searchParams.get('taskId');
-    const lines = parseInt(searchParams.get('lines') || '100', 10);
+    const lines = Number.parseInt(searchParams.get('lines') || '100', 10);
 
     if (!rawTaskId) {
       return NextResponse.json({ error: 'taskId is required' }, { status: 400 });

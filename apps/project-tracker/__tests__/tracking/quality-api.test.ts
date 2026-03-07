@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { promises as fs } from 'fs';
+import { promises as fs } from 'node:fs';
 import { NextRequest } from 'next/server';
 
 // Mock fs module with default export

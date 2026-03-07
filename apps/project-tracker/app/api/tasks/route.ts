@@ -41,8 +41,8 @@ function parseArtifacts(artifacts: string): string[] {
 function parseSprint(sprint: string): number | string {
   if (!sprint) return 0;
   if (sprint.toLowerCase() === 'continuous') return 'Continuous';
-  const num = parseInt(sprint, 10);
-  return isNaN(num) ? sprint : num;
+  const num = Number.parseInt(sprint, 10);
+  return Number.isNaN(num) ? sprint : num;
 }
 
 export async function GET(request: Request) {

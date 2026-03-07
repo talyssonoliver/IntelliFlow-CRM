@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
 
 const ARTIFACTS_DIR = path.join(process.cwd(), '..', '..', 'artifacts');
 const AI_METRICS_PATH = path.join(ARTIFACTS_DIR, 'metrics', 'ai-metrics.json');
@@ -120,8 +120,8 @@ async function parseCostBudget(): Promise<{ current: number; budget: number } | 
       if (lower.includes('ai') || lower.includes('inference') || lower.includes('openai')) {
         const values = line.split(',');
         return {
-          budget: parseFloat(values[1]) || 0,
-          current: parseFloat(values[2]) || 0,
+          budget: Number.parseFloat(values[1]) || 0,
+          current: Number.parseFloat(values[2]) || 0,
         };
       }
     }
@@ -168,9 +168,9 @@ export async function GET() {
       },
       hallucination: {
         rate:
-          hallucinationKpi?.current_percentage != null
-            ? hallucinationKpi.current_percentage / 100
-            : null,
+          hallucinationKpi?.current_percentage == null
+            ? null
+            : hallucinationKpi.current_percentage / 100,
         threshold: (hallucinationKpi?.target_percentage ?? 5) / 100,
         samples_checked: 0,
         history: aiData?.history?.hallucination ?? [],
@@ -180,8 +180,8 @@ export async function GET() {
         p99_target_ms: p99Target,
         p95_actual_ms: p95Actual,
         p99_actual_ms: p99Actual,
-        p95_compliant: p95Actual != null ? p95Actual <= p95Target : null,
-        p99_compliant: p99Actual != null ? p99Actual <= p99Target : null,
+        p95_compliant: p95Actual == null ? null : p95Actual <= p95Target,
+        p99_compliant: p99Actual == null ? null : p99Actual <= p99Target,
         success_rate: null,
       },
       roi: {

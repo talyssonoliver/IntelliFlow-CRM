@@ -240,7 +240,11 @@ export default function RiskRegister() {
                 : 'bg-gray-100 text-gray-600 hover:text-gray-900'
             }`}
           >
-            {f === 'all' ? 'All' : f === 'open' ? 'Open Only' : 'High Risk'}
+            {(() => {
+              if (f === 'all') return 'All';
+              if (f === 'open') return 'Open Only';
+              return 'High Risk';
+            })()}
           </button>
         ))}
       </div>
@@ -398,19 +402,46 @@ export default function RiskRegister() {
   );
 }
 
+type RiskFormData = {
+  category: string;
+  description: string;
+  impact: number;
+  likelihood: number;
+  status: RiskStatus;
+  owner: string;
+  mitigation: string;
+  escalationPath: string;
+  evidence: string;
+  notes: string;
+};
+
+function buildChangedFields(formData: RiskFormData, orig: Risk): Partial<Risk> {
+  const FIELD_KEYS = [
+    'category', 'description', 'impact', 'likelihood',
+    'status', 'owner', 'mitigation', 'escalationPath', 'evidence', 'notes',
+  ] as const;
+  const updates: Partial<Risk> = {};
+  for (const key of FIELD_KEYS) {
+    if ((formData as any)[key] !== (orig as any)[key]) {
+      (updates as any)[key] = (formData as any)[key];
+    }
+  }
+  return updates;
+}
+
 function RiskModal({
   onClose,
   onAdd,
   onEdit,
   editRisk,
   categories,
-}: {
+}: Readonly<{
   onClose: () => void;
   onAdd: (risk: Partial<Risk>) => void;
   onEdit: (riskId: string, updates: Partial<Risk>) => void;
   editRisk?: Risk;
   categories: string[];
-}) {
+}>) {
   const isEdit = !!editRisk;
   const allCategories = [...new Set([...categories, 'Other'])];
 
@@ -421,7 +452,7 @@ function RiskModal({
     likelihood: editRisk?.likelihood || 3,
     owner: editRisk?.owner || '',
     mitigation: editRisk?.mitigation || '',
-    status: editRisk?.status || ('Open' as RiskStatus),
+    status: editRisk?.status || 'Open',
     escalationPath: editRisk?.escalationPath || '',
     evidence: editRisk?.evidence || '',
     notes: editRisk?.notes || '',
@@ -430,25 +461,15 @@ function RiskModal({
   const computedScore = formData.impact * formData.likelihood;
   const validTransitions = isEdit ? (VALID_RISK_TRANSITIONS[editRisk?.status ?? 'Open'] ?? []) : [];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const buildEditUpdates = (): Partial<Risk> =>
+    buildChangedFields(formData, editRisk!);
+
+  const handleSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!formData.description.trim()) return;
 
     if (isEdit) {
-      const updates: Partial<Risk> = {};
-      if (formData.category !== editRisk!.category) updates.category = formData.category;
-      if (formData.description !== editRisk!.description)
-        updates.description = formData.description;
-      if (formData.impact !== editRisk!.impact) updates.impact = formData.impact;
-      if (formData.likelihood !== editRisk!.likelihood) updates.likelihood = formData.likelihood;
-      if (formData.status !== editRisk!.status) updates.status = formData.status;
-      if (formData.owner !== editRisk!.owner) updates.owner = formData.owner;
-      if (formData.mitigation !== editRisk!.mitigation) updates.mitigation = formData.mitigation;
-      if (formData.escalationPath !== editRisk!.escalationPath)
-        updates.escalationPath = formData.escalationPath;
-      if (formData.evidence !== editRisk!.evidence) updates.evidence = formData.evidence;
-      if (formData.notes !== editRisk!.notes) updates.notes = formData.notes;
-      onEdit(editRisk!.id, updates);
+      onEdit(editRisk!.id, buildEditUpdates());
     } else {
       onAdd({
         category: formData.category,
@@ -481,8 +502,9 @@ function RiskModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Category</label>
+            <label htmlFor="risk-category" className="block text-sm text-gray-600 mb-1">Category</label>
             <select
+              id="risk-category"
               value={formData.category}
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
               className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
@@ -496,8 +518,9 @@ function RiskModal({
           </div>
 
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Description</label>
+            <label htmlFor="risk-description" className="block text-sm text-gray-600 mb-1">Description</label>
             <textarea
+              id="risk-description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
@@ -509,10 +532,11 @@ function RiskModal({
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Impact (1-5)</label>
+              <label htmlFor="risk-impact" className="block text-sm text-gray-600 mb-1">Impact (1-5)</label>
               <select
+                id="risk-impact"
                 value={formData.impact}
-                onChange={(e) => setFormData({ ...formData, impact: parseInt(e.target.value) })}
+                onChange={(e) => setFormData({ ...formData, impact: Number.parseInt(e.target.value) })}
                 className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
               >
                 {[1, 2, 3, 4, 5].map((v) => (
@@ -523,10 +547,11 @@ function RiskModal({
               </select>
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Likelihood (1-5)</label>
+              <label htmlFor="risk-likelihood" className="block text-sm text-gray-600 mb-1">Likelihood (1-5)</label>
               <select
+                id="risk-likelihood"
                 value={formData.likelihood}
-                onChange={(e) => setFormData({ ...formData, likelihood: parseInt(e.target.value) })}
+                onChange={(e) => setFormData({ ...formData, likelihood: Number.parseInt(e.target.value) })}
                 className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
               >
                 {[1, 2, 3, 4, 5].map((v) => (
@@ -537,8 +562,9 @@ function RiskModal({
               </select>
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Score</label>
+              <span className="block text-sm text-gray-600 mb-1">Score</span>
               <div
+                aria-label="Computed risk score"
                 className={`flex items-center justify-center h-[42px] rounded-lg border text-sm font-bold ${getScoreColor(computedScore)}`}
               >
                 {computedScore}
@@ -548,8 +574,9 @@ function RiskModal({
 
           {isEdit && (
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Status</label>
+              <label htmlFor="risk-status" className="block text-sm text-gray-600 mb-1">Status</label>
               <select
+                id="risk-status"
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as RiskStatus })}
                 className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
@@ -565,8 +592,9 @@ function RiskModal({
           )}
 
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Owner</label>
+            <label htmlFor="risk-owner" className="block text-sm text-gray-600 mb-1">Owner</label>
             <input
+              id="risk-owner"
               type="text"
               value={formData.owner}
               onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
@@ -576,8 +604,9 @@ function RiskModal({
           </div>
 
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Mitigation</label>
+            <label htmlFor="risk-mitigation" className="block text-sm text-gray-600 mb-1">Mitigation</label>
             <textarea
+              id="risk-mitigation"
               value={formData.mitigation}
               onChange={(e) => setFormData({ ...formData, mitigation: e.target.value })}
               className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
@@ -589,8 +618,9 @@ function RiskModal({
           {isEdit && (
             <>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Escalation Path</label>
+                <label htmlFor="risk-escalation" className="block text-sm text-gray-600 mb-1">Escalation Path</label>
                 <input
+                  id="risk-escalation"
                   type="text"
                   value={formData.escalationPath}
                   onChange={(e) => setFormData({ ...formData, escalationPath: e.target.value })}
@@ -599,8 +629,9 @@ function RiskModal({
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Evidence</label>
+                <label htmlFor="risk-evidence" className="block text-sm text-gray-600 mb-1">Evidence</label>
                 <input
+                  id="risk-evidence"
                   type="text"
                   value={formData.evidence}
                   onChange={(e) => setFormData({ ...formData, evidence: e.target.value })}
@@ -609,8 +640,9 @@ function RiskModal({
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Notes</label>
+                <label htmlFor="risk-notes" className="block text-sm text-gray-600 mb-1">Notes</label>
                 <textarea
+                  id="risk-notes"
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900"

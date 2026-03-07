@@ -28,7 +28,7 @@ interface ScheduleHealthWidgetProps {
   sprint?: number | 'all';
 }
 
-export default function ScheduleHealthWidget({ sprint = 0 }: ScheduleHealthWidgetProps) {
+export default function ScheduleHealthWidget({ sprint = 0 }: Readonly<ScheduleHealthWidgetProps>) {
   const [data, setData] = useState<ScheduleHealthData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

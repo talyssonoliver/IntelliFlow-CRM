@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,6 +72,22 @@ interface K6RawData {
   };
 }
 
+// Helper to recursively extract all checks from groups
+function getAllChecks(group: {
+  checks?: K6Check[];
+  groups?: { checks?: K6Check[]; groups?: unknown[] }[];
+}): K6Check[] {
+  const checks: K6Check[] = group.checks ? [...group.checks] : [];
+  if (group.groups) {
+    for (const subGroup of group.groups) {
+      checks.push(
+        ...getAllChecks(subGroup as { checks?: K6Check[]; groups?: { checks?: K6Check[]; groups?: unknown[] }[] })
+      );
+    }
+  }
+  return checks;
+}
+
 export async function GET() {
   try {
     // Read baseline.json from artifacts directory
@@ -118,7 +134,7 @@ export async function GET() {
     const realSuccessRate = realBenchmarks.length > 0 ? 100 : null; // All real benchmarks passed
 
     // Extract k6 load test results if available
-    const loadTestResults = (data as any).load_test_results as
+    const loadTestResults = data.load_test_results as
       | {
           timestamp: string;
           target_vus: number;
@@ -136,6 +152,7 @@ export async function GET() {
     // Use k6 load test data if available, otherwise use API benchmark data
     const pendingStatus: 'pending' | 'running' | 'completed' | 'failed' =
       data.status === 'COMPLETED' ? 'completed' : 'pending';
+    const fallbackErrorRate = realSuccessRate === null ? null : 0;
     const performanceMetrics = hasPerformanceData
       ? {
           // Response times: prefer load test results, fallback to API benchmark
@@ -147,7 +164,7 @@ export async function GET() {
             loadTestResults?.p99_response_time ?? aggregateResult?.p99 ?? healthResult?.p99 ?? null,
           // Load test specific metrics - only from k6, never fake
           requests_per_second: loadTestResults?.requests_per_second ?? null,
-          error_rate: loadTestResults?.error_rate ?? (realSuccessRate !== null ? 0 : null),
+          error_rate: loadTestResults?.error_rate ?? fallbackErrorRate,
           max_concurrent_users: loadTestResults?.max_concurrent_users ?? null,
           // Test counts from API benchmarks
           total_tests: totalTests,
@@ -190,30 +207,6 @@ export async function GET() {
         avg: Math.round(r.avgTime * 100) / 100,
       }));
 
-    // Helper to recursively extract all checks from groups
-    function getAllChecks(group: {
-      checks?: K6Check[];
-      groups?: { checks?: K6Check[]; groups?: unknown[] }[];
-    }): K6Check[] {
-      const checks: K6Check[] = [];
-      if (group.checks) {
-        checks.push(...group.checks);
-      }
-      if (group.groups) {
-        for (const subGroup of group.groups) {
-          checks.push(
-            ...getAllChecks(
-              subGroup as {
-                checks?: K6Check[];
-                groups?: { checks?: K6Check[]; groups?: unknown[] }[];
-              }
-            )
-          );
-        }
-      }
-      return checks;
-    }
-
     // Extract k6 tested endpoints from ALL checks (including nested groups)
     const allK6Checks = k6RawData?.raw_data?.root_group
       ? getAllChecks(k6RawData.raw_data.root_group)
@@ -226,7 +219,7 @@ export async function GET() {
         fails: check.fails,
         total: check.passes + check.fails,
         success_rate:
-          check.passes > 0 && check.passes + check.fails > 0
+          check.passes > 0
             ? (check.passes / (check.passes + check.fails)) * 100
             : 0,
       }));

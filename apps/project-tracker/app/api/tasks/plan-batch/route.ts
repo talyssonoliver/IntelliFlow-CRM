@@ -53,7 +53,7 @@ export async function GET(request: Request) {
     for (const task of allTasks) {
       const id = task['Task ID'];
       if (id) {
-        sprintMap.set(id, parseInt(task['Target Sprint'] || '0', 10));
+        sprintMap.set(id, Number.parseInt(task['Target Sprint'] || '0', 10));
       }
     }
 

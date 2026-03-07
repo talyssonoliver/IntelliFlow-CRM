@@ -65,7 +65,7 @@ export function SessionOutputModal({
   phase,
   isSwarm: _isSwarm = false,
   onKill,
-}: SessionOutputModalProps) {
+}: Readonly<SessionOutputModalProps>) {
   const outputRef = useRef<HTMLPreElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
 
@@ -113,7 +113,7 @@ export function SessionOutputModal({
             onClose();
           }
         }}
-        role="button"
+        role="button" // NOSONAR typescript:S6819 — full-screen backdrop div; <button> cannot fill viewport as position:absolute overlay
         tabIndex={-1}
         aria-label="Close modal"
       />
@@ -246,7 +246,7 @@ export function useSessionPolling({
   sessionType: _sessionType,
   enabled,
   pollInterval = 3000,
-}: UseSessionPollingOptions): UseSessionPollingResult {
+}: Readonly<UseSessionPollingOptions>): UseSessionPollingResult {
   const [output, setOutput] = useState('');
   const [status, setStatus] = useState<SessionStatus>('not_started');
   const [phase, _setPhase] = useState<string | undefined>();

@@ -6,8 +6,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { existsSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,7 +32,7 @@ function getProjectRoot(): string {
 }
 
 // Load health check configuration
-function loadHealthCheckConfig(): any | null {
+function loadHealthCheckConfig(): any {
   const projectRoot = getProjectRoot();
   const healthPath = join(projectRoot, 'artifacts', 'misc', 'health-check.yaml');
 
@@ -93,33 +93,34 @@ function checkServices(): ServiceHealth[] {
   const services: ServiceHealth[] = [];
 
   // Check if services are likely running based on env vars
-  services.push({
-    name: 'PostgreSQL (Supabase)',
-    status: process.env.DATABASE_URL ? 'healthy' : 'unknown',
-    lastCheck: new Date().toISOString(),
-    details: process.env.DATABASE_URL ? 'Connection string configured' : 'DATABASE_URL not set',
-  });
-
-  services.push({
-    name: 'Supabase Auth',
-    status: process.env.SUPABASE_ANON_KEY ? 'healthy' : 'unknown',
-    lastCheck: new Date().toISOString(),
-    details: process.env.SUPABASE_ANON_KEY ? 'Auth keys configured' : 'SUPABASE_ANON_KEY not set',
-  });
-
-  services.push({
-    name: 'OpenAI API',
-    status: process.env.OPENAI_API_KEY ? 'healthy' : 'unknown',
-    lastCheck: new Date().toISOString(),
-    details: process.env.OPENAI_API_KEY ? 'API key configured' : 'OPENAI_API_KEY not set',
-  });
-
-  services.push({
-    name: 'Redis Cache',
-    status: process.env.REDIS_URL ? 'healthy' : 'unknown',
-    lastCheck: new Date().toISOString(),
-    details: process.env.REDIS_URL ? 'Redis URL configured' : 'REDIS_URL not set',
-  });
+  services.push(
+    {
+      name: 'PostgreSQL (Supabase)',
+      status: process.env.DATABASE_URL ? 'healthy' : 'unknown',
+      lastCheck: new Date().toISOString(),
+      details: process.env.DATABASE_URL ? 'Connection string configured' : 'DATABASE_URL not set',
+    },
+    {
+      name: 'Supabase Auth',
+      status: process.env.SUPABASE_ANON_KEY ? 'healthy' : 'unknown',
+      lastCheck: new Date().toISOString(),
+      details: process.env.SUPABASE_ANON_KEY
+        ? 'Auth keys configured'
+        : 'SUPABASE_ANON_KEY not set',
+    },
+    {
+      name: 'OpenAI API',
+      status: process.env.OPENAI_API_KEY ? 'healthy' : 'unknown',
+      lastCheck: new Date().toISOString(),
+      details: process.env.OPENAI_API_KEY ? 'API key configured' : 'OPENAI_API_KEY not set',
+    },
+    {
+      name: 'Redis Cache',
+      status: process.env.REDIS_URL ? 'healthy' : 'unknown',
+      lastCheck: new Date().toISOString(),
+      details: process.env.REDIS_URL ? 'Redis URL configured' : 'REDIS_URL not set',
+    },
+  );
 
   return services;
 }
@@ -186,10 +187,11 @@ export async function GET(_request: NextRequest) {
         },
         healthCheckConfigured: !!healthConfig,
         nodeEnv: process.env.NODE_ENV || 'development',
-        recommendation:
-          envSummary.missing.length > 0
-            ? `Set missing environment variables: ${envSummary.missing.slice(0, 3).join(', ')}${envSummary.missing.length > 3 ? '...' : ''}`
-            : 'Environment configuration is complete',
+        recommendation: (() => {
+          if (envSummary.missing.length === 0) return 'Environment configuration is complete';
+          const truncationSuffix = envSummary.missing.length > 3 ? '...' : '';
+          return `Set missing environment variables: ${envSummary.missing.slice(0, 3).join(', ')}${truncationSuffix}`;
+        })(),
       },
       {
         headers: {

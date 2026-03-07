@@ -32,57 +32,11 @@ interface CsvTask {
 }
 
 function getPhasesFromCsv(tasks: CsvTask[], sprintNumber: string): PhaseMetrics[] {
-  // Filter tasks for this sprint
   const sprintTasks = tasks.filter((task) => task['Target Sprint'] === sprintNumber);
-
-  // Group by section
-  const sections: Record<string, CsvTask[]> = {};
-  for (const task of sprintTasks) {
-    const section = task.Section || 'Other';
-    if (!sections[section]) {
-      sections[section] = [];
-    }
-    sections[section].push(task);
-  }
-
-  // Convert sections to phase metrics
-  const phases: PhaseMetrics[] = [];
-  for (const [section, sectionTasks] of Object.entries(sections)) {
-    const metrics = {
-      total_tasks: sectionTasks.length,
-      done: 0,
-      in_progress: 0,
-      blocked: 0,
-      not_started: 0,
-    };
-
-    for (const task of sectionTasks) {
-      const status = normalizeStatus(task.Status || '');
-      if (STATUS_GROUPS.completed.includes(status)) {
-        metrics.done++;
-      } else if (STATUS_GROUPS.active.includes(status)) {
-        metrics.in_progress++;
-      } else if (status === TASK_STATUSES.BLOCKED || status === TASK_STATUSES.NEEDS_HUMAN) {
-        metrics.blocked++;
-      } else {
-        metrics.not_started++;
-      }
-    }
-
-    const allDone = metrics.done === metrics.total_tasks;
-    const hasProgress = metrics.done > 0 || metrics.in_progress > 0;
-
-    phases.push({
-      phase: section,
-      description: `${section} tasks for Sprint ${sprintNumber}`,
-      status: allDone ? 'completed' : hasProgress ? 'in_progress' : 'not_started',
-      aggregated_metrics: metrics,
-      started_at: hasProgress ? new Date().toISOString() : null,
-      completed_at: allDone ? new Date().toISOString() : null,
-    });
-  }
-
-  return phases;
+  const sections = groupTasksBySection(sprintTasks);
+  return Object.entries(sections).map(([section, sectionTasks]) =>
+    buildPhaseMetricsForSection(section, sectionTasks, `tasks for Sprint ${sprintNumber}`)
+  );
 }
 
 const NO_CACHE = {
@@ -141,11 +95,19 @@ function buildPhaseMetricsForSection(
   const allDone = metrics.done === metrics.total_tasks;
   const hasProgress = metrics.done > 0 || metrics.in_progress > 0;
   const now = new Date().toISOString();
+  let phaseStatus: 'completed' | 'in_progress' | 'not_started';
+  if (allDone) {
+    phaseStatus = 'completed';
+  } else if (hasProgress) {
+    phaseStatus = 'in_progress';
+  } else {
+    phaseStatus = 'not_started';
+  }
 
   return {
     phase: section,
     description: `${section} ${descriptionSuffix}`,
-    status: allDone ? 'completed' : hasProgress ? 'in_progress' : 'not_started',
+    status: phaseStatus,
     aggregated_metrics: metrics,
     started_at: hasProgress ? now : null,
     completed_at: allDone ? now : null,

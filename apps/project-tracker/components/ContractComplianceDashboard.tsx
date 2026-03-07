@@ -71,14 +71,20 @@ function ProgressBar({
   value,
   max,
   color = 'blue',
-}: {
+}: Readonly<{
   value: number;
   max: number;
   color?: 'blue' | 'green' | 'cyan';
-}) {
+}>) {
   const percentage = max > 0 ? Math.round((value / max) * 100) : 0;
-  const colorClass =
-    color === 'green' ? 'bg-green-500' : color === 'cyan' ? 'bg-cyan-500' : 'bg-blue-500';
+  let colorClass: string;
+  if (color === 'green') {
+    colorClass = 'bg-green-500';
+  } else if (color === 'cyan') {
+    colorClass = 'bg-cyan-500';
+  } else {
+    colorClass = 'bg-blue-500';
+  }
 
   return (
     <div className="w-full">
@@ -96,7 +102,7 @@ function ProgressBar({
 export default function ContractComplianceDashboard({
   tasks,
   sprint,
-}: ContractComplianceDashboardProps) {
+}: Readonly<ContractComplianceDashboardProps>) {
   const stats = useMemo(() => calculateComplianceStats(tasks), [tasks]);
 
   const tasksMissingAck = useMemo(() => {

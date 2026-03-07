@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const sprintParam = searchParams.get('sprint');
     const sprintNumber =
-      sprintParam === 'all' ? ('all' as const) : parseInt(sprintParam || '0', 10);
+      sprintParam === 'all' ? ('all' as const) : Number.parseInt(sprintParam || '0', 10);
 
     const metricsDir = join(process.cwd(), 'docs', 'metrics');
     const csvPath = join(metricsDir, '_global', 'Sprint_plan.csv');

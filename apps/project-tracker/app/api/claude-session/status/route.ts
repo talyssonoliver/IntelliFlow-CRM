@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get('sessionId');
-    const lines = parseInt(searchParams.get('lines') || '100', 10);
+    const lines = Number.parseInt(searchParams.get('lines') || '100', 10);
     const listAll = searchParams.get('list') === 'true';
 
     // List all active sessions

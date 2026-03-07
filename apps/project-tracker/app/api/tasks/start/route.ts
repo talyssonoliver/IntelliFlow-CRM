@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
     const task = tasks[taskIndex];
     const currentStatus = task.Status;
-    const sprintNumber = parseInt(task['Target Sprint'] || '0', 10);
+    const sprintNumber = Number.parseInt(task['Target Sprint'] || '0', 10);
     const sprintDir = join(specifyDir, 'sprints', `sprint-${sprintNumber}`);
 
     // Sprint-based paths
@@ -63,19 +63,17 @@ export async function POST(request: Request) {
       : null;
 
     // Check if task has spec/plan (unless skipped)
-    if (!skipPlanCheck) {
-      if (!hasSpec || !hasPlan) {
-        return NextResponse.json(
-          {
-            error: 'Task must be planned before starting',
-            needsPlanning: true,
-            hasSpec,
-            hasPlan,
-            suggestion: `Run planning first: POST /api/tasks/plan with {"taskId": "${taskId}"}`,
-          },
-          { status: 400 }
-        );
-      }
+    if (!skipPlanCheck && (!hasSpec || !hasPlan)) {
+      return NextResponse.json(
+        {
+          error: 'Task must be planned before starting',
+          needsPlanning: true,
+          hasSpec,
+          hasPlan,
+          suggestion: `Run planning first: POST /api/tasks/plan with {"taskId": "${taskId}"}`,
+        },
+        { status: 400 }
+      );
     }
 
     // Validate status transition - must be Planned to start (or Backlog with skipPlanCheck)
@@ -84,9 +82,7 @@ export async function POST(request: Request) {
     if (!validStartStatuses.includes(currentStatus)) {
       return NextResponse.json(
         {
-          error: skipPlanCheck
-            ? `Cannot start task with status '${currentStatus}'. Must be: ${validStartStatuses.join(', ')}`
-            : `Task must be 'Planned' before starting. Current status: '${currentStatus}'. Run planning first.`,
+          error: buildStatusErrorMessage(skipPlanCheck ?? false, currentStatus, validStartStatuses),
           currentStatus,
           needsPlanning: currentStatus === 'Backlog',
         },
@@ -158,4 +154,11 @@ export async function POST(request: Request) {
 function getBaseUrl(request: Request): string {
   const url = new URL(request.url);
   return `${url.protocol}//${url.host}`;
+}
+
+function buildStatusErrorMessage(skipPlanCheck: boolean, currentStatus: string, validStartStatuses: string[]): string {
+  if (skipPlanCheck) {
+    return `Cannot start task with status '${currentStatus}'. Must be: ${validStartStatuses.join(', ')}`;
+  }
+  return `Task must be 'Planned' before starting. Current status: '${currentStatus}'. Run planning first.`;
 }

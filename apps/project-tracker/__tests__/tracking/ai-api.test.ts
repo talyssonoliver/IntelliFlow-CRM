@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { promises as fs } from 'fs';
+import { promises as fs } from 'node:fs';
 
 // Mock fs module with default export
 vi.mock('fs', async () => {

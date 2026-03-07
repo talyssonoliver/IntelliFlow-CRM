@@ -131,7 +131,7 @@ function toFibonacci(normalized: number): number {
  */
 function isTierAId(taskId: string, lcSection: string, dependentCount: number): boolean {
   if (taskId.includes('SEC') || lcSection.includes('security')) return true;
-  if (taskId.startsWith('IFC-0') && parseInt(taskId.replace('IFC-', ''), 10) <= 10) return true;
+  if (taskId.startsWith('IFC-0') && Number.parseInt(taskId.replace('IFC-', ''), 10) <= 10) return true;
   if (dependentCount >= 5) return true;
   if (taskId.startsWith('EXC-')) return true;
   if (lcSection.includes('planning') || lcSection.includes('strategy')) return true;
@@ -193,27 +193,27 @@ export function scoreBusinessValue(
  * CPM-based schedule pressure metrics.
  */
 function floatToScore(totalFloat: number): number {
-  if (totalFloat <= 0) return 1.0;
+  if (totalFloat <= 0) return 1;
   if (totalFloat <= 60) return 0.8;
   if (totalFloat <= 480) return 0.6;
   if (totalFloat <= 2400) return 0.3;
-  return 0.0;
+  return 0;
 }
 
 function earlyFinishToScore(earlyFinish: string): number {
   const diffMs = new Date(earlyFinish).getTime() - Date.now();
   const diffDays = diffMs / (1000 * 60 * 60 * 24);
-  if (diffDays < 0) return 1.0;
+  if (diffDays < 0) return 1;
   if (diffDays < 1) return 0.8;
   if (diffDays < 7) return 0.5;
   if (diffDays < 14) return 0.2;
-  return 0.0;
+  return 0;
 }
 
 function sprintDistanceToScore(taskSprint: number | string, currentSprint: number): number {
   if (typeof taskSprint !== 'number') return 0;
   const distance = taskSprint - currentSprint;
-  if (distance <= 0) return 1.0;
+  if (distance <= 0) return 1;
   if (distance === 1) return 0.6;
   if (distance === 2) return 0.3;
   return 0;
@@ -253,22 +253,20 @@ export function scoreTimeCriticality(
  * From SAFe: "highlight jobs that may not bring revenue immediately
  * but benefit the long-run" — a high fan-out task is exactly that.
  */
+function computePhaseHealthScore(phaseProgress: PhaseProgress[]): number {
+  if (phaseProgress.length === 0) return 0;
+  const phasesWithTasks = phaseProgress.filter((p) => p.total > 0);
+  if (phasesWithTasks.length === 0) return 0;
+  const minPct = Math.min(...phasesWithTasks.map((p) => p.percentage));
+  if (minPct < 50) return 1;
+  if (minPct < 75) return 0.5;
+  return 0;
+}
+
 export function scoreRiskReduction(dependentCount: number, phaseProgress: PhaseProgress[]): number {
   // Fan-out: 0 deps → 0, 1 → 0.15, 2 → 0.3, 3 → 0.5, 4 → 0.7, 5+ → 0.9
-  const fanOutScore = Math.min(dependentCount / 5.5, 1.0);
-
-  // Phase health: if worst phase < 50% → 1.0 risk, < 75% → 0.5, else → 0
-  let phaseScore = 0;
-  if (phaseProgress.length > 0) {
-    const phasesWithTasks = phaseProgress.filter((p) => p.total > 0);
-    if (phasesWithTasks.length > 0) {
-      const minPct = Math.min(...phasesWithTasks.map((p) => p.percentage));
-      if (minPct < 50) phaseScore = 1.0;
-      else if (minPct < 75) phaseScore = 0.5;
-    }
-  }
-
-  // Weighted: 70% fan-out, 30% phase health
+  const fanOutScore = Math.min(dependentCount / 5.5, 1);
+  const phaseScore = computePhaseHealthScore(phaseProgress);
   const combined = fanOutScore * 0.7 + phaseScore * 0.3;
   return toFibonacci(combined);
 }
@@ -394,6 +392,59 @@ interface ScoredTaskInternal extends ScoredTask {
 // Main entry point
 // ---------------------------------------------------------------------------
 
+function buildTaskGroupMap(parallelGroups?: ParallelGroup[]): Map<string, string> {
+  const taskToGroupMap = new Map<string, string>();
+  if (!parallelGroups) return taskToGroupMap;
+  for (const group of parallelGroups) {
+    for (const taskId of group.tasks) {
+      taskToGroupMap.set(taskId, group.group_id);
+    }
+  }
+  return taskToGroupMap;
+}
+
+function scoreTask(
+  task: Task,
+  ctx: {
+    depGraphNodes: Map<string, DepGraphNode>;
+    criticalPathIds: Set<string>;
+    sessionStatuses: Map<string, SessionStatus>;
+    scheduleTaskMap: Map<string, ScheduleTaskInfo>;
+    phaseProgress: PhaseProgress[];
+    effectiveSprint: number;
+    taskToGroupMap: Map<string, string>;
+  }
+): ScoredTaskInternal {
+  const session = ctx.sessionStatuses.get(task.id);
+  const node = ctx.depGraphNodes.get(task.id);
+  const dependentCount = node?.dependents.length ?? 0;
+  const isCriticalPath = ctx.criticalPathIds.has(task.id);
+  const scheduleInfo = ctx.scheduleTaskMap.get(task.id);
+
+  const businessValue = scoreBusinessValue(task.id, task.section, dependentCount, isCriticalPath);
+  const timeCriticality = scoreTimeCriticality(task.id, ctx.scheduleTaskMap, task.sprint, ctx.effectiveSprint);
+  const riskReductionOpportunity = scoreRiskReduction(dependentCount, ctx.phaseProgress);
+  const jobSizeProxy = computeJobSizeProxy(session);
+
+  const factors: PriorityFactors = { businessValue, timeCriticality, riskReductionOpportunity, jobSizeProxy };
+  const costOfDelay = businessValue + timeCriticality + riskReductionOpportunity;
+  const score = Math.round((costOfDelay / jobSizeProxy) * 100) / 100;
+
+  return {
+    taskId: task.id,
+    task,
+    score,
+    factors,
+    reason: buildReason(factors, dependentCount, isCriticalPath, scheduleInfo?.totalFloat),
+    recommendedAction: getRecommendedAction(session),
+    bucket: 'wait' as const,
+    sprintNumber: typeof task.sprint === 'number' ? task.sprint : 0,
+    parallelGroupId: ctx.taskToGroupMap.get(task.id) ?? null,
+    _isCriticalPath: isCriticalPath,
+    _totalFloat: scheduleInfo?.totalFloat,
+  };
+}
+
 export function computePriorityScores(
   readyTasks: Task[],
   depGraphNodes: Map<string, DepGraphNode>,
@@ -404,7 +455,6 @@ export function computePriorityScores(
   currentSprint?: number,
   parallelGroups?: ParallelGroup[]
 ): ScoredTask[] {
-  // Infer current sprint from the lowest sprint number in ready tasks
   const effectiveSprint =
     currentSprint ??
     Math.min(
@@ -412,61 +462,10 @@ export function computePriorityScores(
       0
     );
 
-  // Build taskId → groupId lookup from parallel execution groups
-  const taskToGroupMap = new Map<string, string>();
-  if (parallelGroups) {
-    for (const group of parallelGroups) {
-      for (const taskId of group.tasks) {
-        taskToGroupMap.set(taskId, group.group_id);
-      }
-    }
-  }
+  const taskToGroupMap = buildTaskGroupMap(parallelGroups);
+  const ctx = { depGraphNodes, criticalPathIds, sessionStatuses, scheduleTaskMap, phaseProgress, effectiveSprint, taskToGroupMap };
 
-  const scored: ScoredTaskInternal[] = readyTasks.map((task) => {
-    const session = sessionStatuses.get(task.id);
-    const node = depGraphNodes.get(task.id);
-    const dependentCount = node?.dependents.length ?? 0;
-    const isCriticalPath = criticalPathIds.has(task.id);
-    const scheduleInfo = scheduleTaskMap.get(task.id);
-
-    // --- WSJF numerator: Cost of Delay ---
-    const businessValue = scoreBusinessValue(task.id, task.section, dependentCount, isCriticalPath);
-    const timeCriticality = scoreTimeCriticality(
-      task.id,
-      scheduleTaskMap,
-      task.sprint,
-      effectiveSprint
-    );
-    const riskReductionOpportunity = scoreRiskReduction(dependentCount, phaseProgress);
-
-    // --- WSJF denominator ---
-    const jobSizeProxy = computeJobSizeProxy(session);
-
-    const factors: PriorityFactors = {
-      businessValue,
-      timeCriticality,
-      riskReductionOpportunity,
-      jobSizeProxy,
-    };
-
-    // WSJF = Cost of Delay / Job Size
-    const costOfDelay = businessValue + timeCriticality + riskReductionOpportunity;
-    const score = Math.round((costOfDelay / jobSizeProxy) * 100) / 100;
-
-    return {
-      taskId: task.id,
-      task,
-      score,
-      factors,
-      reason: buildReason(factors, dependentCount, isCriticalPath, scheduleInfo?.totalFloat),
-      recommendedAction: getRecommendedAction(session),
-      bucket: 'wait' as const, // provisional, overwritten by assignBuckets
-      sprintNumber: typeof task.sprint === 'number' ? task.sprint : 0,
-      parallelGroupId: taskToGroupMap.get(task.id) ?? null,
-      _isCriticalPath: isCriticalPath,
-      _totalFloat: scheduleInfo?.totalFloat,
-    };
-  });
+  const scored: ScoredTaskInternal[] = readyTasks.map((task) => scoreTask(task, ctx));
 
   // Sort descending by WSJF score (used for bucket assignment + NEXT/WAIT ordering)
   scored.sort((a, b) => b.score - a.score);

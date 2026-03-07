@@ -10,9 +10,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { execFileSync } from 'child_process';
-import { existsSync, statSync } from 'fs';
-import { join } from 'path';
+import { execFileSync } from 'node:child_process';
+import { existsSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 
 const PROJECT_ROOT = process.cwd().replace(/[\\/]apps[\\/]project-tracker$/, '');
 
@@ -63,12 +63,39 @@ function extractTaskId(message: string): string | null {
   ];
 
   for (const pattern of patterns) {
-    const match = message.match(pattern);
+    const match = pattern.exec(message);
     if (match) {
       return match[1].toUpperCase();
     }
   }
   return null;
+}
+
+/**
+ * Compute staleness fields from a date string and threshold.
+ */
+function computeStaleness(
+  dateStr: string,
+  staleDays: number,
+  label: string
+): { daysSinceModified: number; isStale: boolean; staleReason: string | null } {
+  const modDate = new Date(dateStr);
+  const diffMs = Date.now() - modDate.getTime();
+  const daysSinceModified = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const isStale = daysSinceModified > staleDays;
+  return {
+    daysSinceModified,
+    isStale,
+    staleReason: isStale ? `Not modified in ${daysSinceModified} days (${label})` : null,
+  };
+}
+
+/**
+ * Parse a git log line in format: hash|date|author|subject
+ */
+function parseGitLogLine(line: string): { hash: string; date: string; author: string; message: string } {
+  const [hash, date, author, ...messageParts] = line.split('|');
+  return { hash: hash || '', date: date || '', author: author || '', message: messageParts.join('|') };
 }
 
 /**
@@ -115,20 +142,13 @@ function getFileHistory(relativePath: string, staleDays: number): FileHistoryEnt
     const creationOutput = execFileSync(
       'git', // NOSONAR S4036 — PATH inherited from developer environment, internal tooling only
       ['log', '--follow', '--diff-filter=A', '--format=%H|%aI|%an|%s', '--', relativePath],
-      {
-        cwd: PROJECT_ROOT,
-        encoding: 'utf-8',
-        timeout: 10000,
-      }
+      { cwd: PROJECT_ROOT, encoding: 'utf-8', timeout: 10000 }
     ).trim();
 
     if (creationOutput) {
       const lines = creationOutput.split('\n');
       // Take the last line (oldest commit that added the file)
-      const lastLine = lines[lines.length - 1];
-      const [hash, date, author, ...messageParts] = lastLine.split('|');
-      const message = messageParts.join('|'); // Re-join in case message had |
-
+      const { hash, date, author, message } = parseGitLogLine(lines.at(-1));
       entry.createdInCommit = hash || null;
       entry.createdAt = date || null;
       entry.createdBy = author || null;
@@ -141,49 +161,30 @@ function getFileHistory(relativePath: string, staleDays: number): FileHistoryEnt
     const modifyOutput = execFileSync(
       'git', // NOSONAR S4036 — PATH inherited from developer environment, internal tooling only
       ['log', '-1', '--format=%H|%aI|%an|%s', '--', relativePath],
-      {
-        cwd: PROJECT_ROOT,
-        encoding: 'utf-8',
-        timeout: 10000,
-      }
+      { cwd: PROJECT_ROOT, encoding: 'utf-8', timeout: 10000 }
     ).trim();
 
     if (modifyOutput) {
-      const [hash, date, author, ...messageParts] = modifyOutput.split('|');
-      const message = messageParts.join('|');
-
+      const { hash, date, author, message } = parseGitLogLine(modifyOutput);
       entry.lastModifiedCommit = hash || null;
       entry.lastModifiedAt = date || null;
       entry.lastModifiedBy = author || null;
       entry.lastModifiedMessage = message || null;
 
-      // Calculate days since modified
       if (date) {
-        const modDate = new Date(date);
-        const now = new Date();
-        const diffMs = now.getTime() - modDate.getTime();
-        entry.daysSinceModified = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-        // Check if stale
-        if (entry.daysSinceModified > staleDays) {
-          entry.isStale = true;
-          entry.staleReason = `Not modified in ${entry.daysSinceModified} days (threshold: ${staleDays})`;
-        }
+        const stale = computeStaleness(date, staleDays, `threshold: ${staleDays}`);
+        entry.daysSinceModified = stale.daysSinceModified;
+        entry.isStale = stale.isStale;
+        entry.staleReason = stale.staleReason;
       }
     }
   } catch {
-    // File might not be tracked by git yet
-    // Use filesystem timestamps if available
+    // File might not be tracked by git yet — use filesystem timestamps if available
     if (entry.fsModifiedAt) {
-      const modDate = new Date(entry.fsModifiedAt);
-      const now = new Date();
-      const diffMs = now.getTime() - modDate.getTime();
-      entry.daysSinceModified = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-      if (entry.daysSinceModified > staleDays) {
-        entry.isStale = true;
-        entry.staleReason = `Not modified in ${entry.daysSinceModified} days (untracked file)`;
-      }
+      const stale = computeStaleness(entry.fsModifiedAt, staleDays, 'untracked file');
+      entry.daysSinceModified = stale.daysSinceModified;
+      entry.isStale = stale.isStale;
+      entry.staleReason = stale.staleReason;
     }
   }
 
@@ -195,8 +196,7 @@ function getFileHistory(relativePath: string, staleDays: number): FileHistoryEnt
  */
 function getAllTrackedFiles(): string[] {
   try {
-    const output = execFileSync('git', ['ls-files'], {
-      // NOSONAR: PATH inherited from developer environment — internal tooling only, not user-facing
+    const output = execFileSync('git', ['ls-files'], { // NOSONAR — PATH inherited from dev environment, internal tooling only
       cwd: PROJECT_ROOT,
       encoding: 'utf-8',
       timeout: 30000,
@@ -217,8 +217,7 @@ function getAllTrackedFiles(): string[] {
  */
 function getUntrackedFiles(): string[] {
   try {
-    const output = execFileSync('git', ['ls-files', '--others', '--exclude-standard'], {
-      // NOSONAR: PATH inherited from developer environment — internal tooling only, not user-facing
+    const output = execFileSync('git', ['ls-files', '--others', '--exclude-standard'], { // NOSONAR — PATH inherited from dev environment, internal tooling only
       cwd: PROJECT_ROOT,
       encoding: 'utf-8',
       timeout: 30000,
@@ -239,7 +238,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const specificPath = searchParams.get('path');
     const staleOnly = searchParams.get('stale') === 'true';
-    const staleDays = parseInt(searchParams.get('staleDays') || '30', 10);
+    const staleDays = Number.parseInt(searchParams.get('staleDays') || '30', 10);
 
     // If specific path requested
     if (specificPath) {

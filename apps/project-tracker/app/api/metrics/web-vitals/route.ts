@@ -7,9 +7,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { existsSync, readFileSync, mkdirSync, readdirSync } from 'fs';
-import { join } from 'path';
-import { execFileSync } from 'child_process';
+import { existsSync, readFileSync, mkdirSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,6 +39,50 @@ function getProjectRoot(): string {
   return process.cwd().replace(/[\\/]apps[\\/]project-tracker$/, '');
 }
 
+function scoreToStatus(score: number): 'passing' | 'warning' | 'failing' {
+  if (score >= 90) return 'passing';
+  if (score >= 70) return 'warning';
+  return 'failing';
+}
+
+function averageScores(...scores: number[]): number {
+  return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+}
+
+function parseSummaryFormat(content: any): WebVitalsReport | null {
+  if (!content.scores) return null;
+  const { performance = 0, accessibility = 0, bestPractices = 0, seo = 0 } = content.scores;
+  return {
+    url: content.url || 'http://localhost:3000',
+    timestamp: content.generatedAt || new Date().toISOString(),
+    metrics: { performance, accessibility, bestPractices, seo },
+    overallScore: averageScores(performance, accessibility, bestPractices, seo),
+    status: scoreToStatus(performance),
+  };
+}
+
+function parseRawLighthouseFormat(content: any): WebVitalsReport | null {
+  if (!content.categories) return null;
+  const metrics = {
+    performance: Math.round((content.categories.performance?.score || 0) * 100),
+    accessibility: Math.round((content.categories.accessibility?.score || 0) * 100),
+    bestPractices: Math.round((content.categories['best-practices']?.score || 0) * 100),
+    seo: Math.round((content.categories.seo?.score || 0) * 100),
+  };
+  return {
+    url: content.finalUrl || content.requestedUrl || 'http://localhost:3000',
+    timestamp: content.fetchTime || new Date().toISOString(),
+    metrics,
+    overallScore: averageScores(metrics.performance, metrics.accessibility, metrics.bestPractices, metrics.seo),
+    status: scoreToStatus(metrics.performance),
+    coreWebVitals: content.audits ? {
+      lcp: content.audits['largest-contentful-paint']?.numericValue || 0,
+      fid: content.audits['max-potential-fid']?.numericValue || 0,
+      cls: content.audits['cumulative-layout-shift']?.numericValue || 0,
+    } : undefined,
+  };
+}
+
 // Load latest Lighthouse report
 function loadLatestLighthouseReport(): WebVitalsReport | null {
   const projectRoot = getProjectRoot();
@@ -49,69 +93,11 @@ function loadLatestLighthouseReport(): WebVitalsReport | null {
   ];
 
   for (const reportPath of possiblePaths) {
+    if (!existsSync(reportPath)) continue;
     try {
-      if (existsSync(reportPath)) {
-        const content = JSON.parse(readFileSync(reportPath, 'utf8'));
-
-        // Handle different report formats
-        if (content.scores) {
-          // Summary format
-          return {
-            url: content.url || 'http://localhost:3000',
-            timestamp: content.generatedAt || new Date().toISOString(),
-            metrics: {
-              performance: content.scores.performance || 0,
-              accessibility: content.scores.accessibility || 0,
-              bestPractices: content.scores.bestPractices || 0,
-              seo: content.scores.seo || 0,
-            },
-            overallScore: Math.round(
-              (content.scores.performance +
-                content.scores.accessibility +
-                content.scores.bestPractices +
-                content.scores.seo) /
-                4
-            ),
-            status:
-              content.scores.performance >= 90
-                ? 'passing'
-                : content.scores.performance >= 70
-                  ? 'warning'
-                  : 'failing',
-          };
-        } else if (content.categories) {
-          // Raw Lighthouse format
-          const metrics = {
-            performance: Math.round((content.categories.performance?.score || 0) * 100),
-            accessibility: Math.round((content.categories.accessibility?.score || 0) * 100),
-            bestPractices: Math.round((content.categories['best-practices']?.score || 0) * 100),
-            seo: Math.round((content.categories.seo?.score || 0) * 100),
-          };
-
-          return {
-            url: content.finalUrl || content.requestedUrl || 'http://localhost:3000',
-            timestamp: content.fetchTime || new Date().toISOString(),
-            metrics,
-            overallScore: Math.round(
-              (metrics.performance + metrics.accessibility + metrics.bestPractices + metrics.seo) /
-                4
-            ),
-            status:
-              metrics.performance >= 90
-                ? 'passing'
-                : metrics.performance >= 70
-                  ? 'warning'
-                  : 'failing',
-            coreWebVitals: content.audits
-              ? {
-                  lcp: content.audits['largest-contentful-paint']?.numericValue || 0,
-                  fid: content.audits['max-potential-fid']?.numericValue || 0,
-                  cls: content.audits['cumulative-layout-shift']?.numericValue || 0,
-                }
-              : undefined,
-          };
-        }
-      }
+      const content = JSON.parse(readFileSync(reportPath, 'utf8'));
+      const report = parseSummaryFormat(content) ?? parseRawLighthouseFormat(content);
+      if (report) return report;
     } catch (error) {
       console.error(`Error loading ${reportPath}:`, error);
     }

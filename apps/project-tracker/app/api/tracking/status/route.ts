@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
 import Papa from 'papaparse';
 
 const ARTIFACTS_DIR = path.join(process.cwd(), '..', '..', 'artifacts');
@@ -444,7 +444,7 @@ async function generateStatusFromCSV(): Promise<NextResponse> {
     });
   } catch (error) {
     return NextResponse.json(
-      { status: 'error', message: `Failed to generate from CSV: ${error}` },
+      { status: 'error', message: `Failed to generate from CSV: ${error instanceof Error ? error.message : String(error)}` },
       { status: 500 }
     );
   }

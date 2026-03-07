@@ -147,7 +147,7 @@ export default function KanbanView({ tasks, onTaskClick }: KanbanViewProps) {
                                       task.status === 'Completed' ? 'bg-green-500' : 'bg-gray-300'
                                     }`}
                                     title="Pack"
-                                  />
+                                  />{' '}
                                   Pack
                                 </span>
                                 <span className="flex items-center gap-1">
@@ -156,7 +156,7 @@ export default function KanbanView({ tasks, onTaskClick }: KanbanViewProps) {
                                       task.status === 'Completed' ? 'bg-green-500' : 'bg-gray-300'
                                     }`}
                                     title="Ack"
-                                  />
+                                  />{' '}
                                   Ack
                                 </span>
                                 <span className="flex items-center gap-1">
@@ -165,7 +165,7 @@ export default function KanbanView({ tasks, onTaskClick }: KanbanViewProps) {
                                       task.status === 'Completed' ? 'bg-green-500' : 'bg-gray-300'
                                     }`}
                                     title="Valid"
-                                  />
+                                  />{' '}
                                   Valid
                                 </span>
                               </div>

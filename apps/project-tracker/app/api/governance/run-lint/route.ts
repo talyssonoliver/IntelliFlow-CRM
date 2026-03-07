@@ -4,9 +4,9 @@
  */
 
 import { NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import path from 'path';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
+import path from 'node:path';
 import { loadLintReport, loadReviewQueue, loadPhantomCompletionAudit } from '@/lib/governance';
 
 const execAsync = promisify(exec);

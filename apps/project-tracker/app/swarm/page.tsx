@@ -29,6 +29,20 @@ function getCapacityBarColor(active: number, max: number): string {
   return 'bg-gray-500';
 }
 
+// Helper to get question type badge class
+function getQuestionTypeBadgeClass(type: string): string {
+  if (type === 'human') return 'bg-purple-500/30 text-purple-300';
+  if (type === 'codebase') return 'bg-blue-500/30 text-blue-300';
+  return 'bg-green-500/30 text-green-300';
+}
+
+// Helper to get question priority badge class
+function getQuestionPriorityBadgeClass(priority: string): string {
+  if (priority === 'blocking') return 'bg-red-500/30 text-red-300';
+  if (priority === 'important') return 'bg-yellow-500/30 text-yellow-300';
+  return 'bg-gray-500/30 text-gray-300';
+}
+
 interface SwarmHealth {
   active: number;
   max?: number;
@@ -92,7 +106,77 @@ export default function SwarmPage() {
   );
 }
 
-function SwarmPageContent() {
+// Helper to get heartbeat status details
+function getHeartbeatStatus(heartbeatAge?: number): {
+  color: string;
+  bgColor: string;
+  label: string;
+  isAlive: boolean;
+} {
+  if (heartbeatAge === undefined || heartbeatAge < 0) {
+    return { color: 'text-gray-400', bgColor: 'bg-gray-400', label: 'No heartbeat', isAlive: false };
+  }
+  if (heartbeatAge < 30) {
+    return { color: 'text-green-500', bgColor: 'bg-green-500', label: `${heartbeatAge}s`, isAlive: true };
+  }
+  if (heartbeatAge < 60) {
+    return { color: 'text-yellow-500', bgColor: 'bg-yellow-500', label: `${heartbeatAge}s`, isAlive: true };
+  }
+  if (heartbeatAge < 300) {
+    return { color: 'text-orange-500', bgColor: 'bg-orange-500', label: `${Math.floor(heartbeatAge / 60)}m`, isAlive: true };
+  }
+  return { color: 'text-red-500', bgColor: 'bg-red-500', label: `${Math.floor(heartbeatAge / 60)}m`, isAlive: false };
+}
+
+// Helper to get log level color class
+function getLogLevelColor(level: string): string {
+  const LOG_LEVEL_COLORS: Record<string, string> = {
+    ERROR: 'text-red-400',
+    WARN: 'text-yellow-400',
+    PHASE: 'text-purple-400',
+    SUCCESS: 'text-green-400',
+  };
+  return LOG_LEVEL_COLORS[level] ?? 'text-blue-400';
+}
+
+function buildCliOutputText(result: {
+  success: boolean;
+  stdout?: string;
+  stderr?: string;
+  error?: string;
+  partial?: boolean;
+  warning?: string;
+  exitCode?: number;
+}): string {
+  if (!result.success) {
+    const errorMsg = result.stderr || result.error || 'Unknown error';
+    return `❌ Error (exit ${result.exitCode}):\n${errorMsg}`;
+  }
+  const output = result.stdout || '(no output)';
+  if (result.partial && result.warning) {
+    return `⚠️ ${result.warning}\n\n${output}`;
+  }
+  return output;
+}
+
+// Build log entries for all active tasks from recent activity
+function buildLogEntries(tasks: TaskLog[]): LogEntry[] {
+  const entries: LogEntry[] = [];
+  for (const task of tasks) {
+    if (!task.recentActivity) continue;
+    for (const activity of task.recentActivity) {
+      entries.push({
+        timestamp: new Date().toISOString(),
+        taskId: task.taskId,
+        level: getLogLevel(activity),
+        message: activity,
+      });
+    }
+  }
+  return entries;
+}
+
+function SwarmPageContent() { // NOSONAR typescript:S3776
   const searchParams = useSearchParams();
   const taskFromUrl = searchParams.get('task');
   const [health, setHealth] = useState<SwarmHealth | null>(null);
@@ -140,22 +224,8 @@ function SwarmPageContent() {
         const data = await tasksRes.json();
         setActiveTasks(data);
 
-        // Parse recent activity into log entries
-        const newEntries: LogEntry[] = [];
-        for (const task of data) {
-          if (task.recentActivity) {
-            for (const activity of task.recentActivity) {
-              newEntries.push({
-                timestamp: new Date().toISOString(),
-                taskId: task.taskId,
-                level: getLogLevel(activity),
-                message: activity,
-              });
-            }
-          }
-        }
-
-        // Keep last 500 entries
+        // Parse recent activity into log entries and keep last 500
+        const newEntries = buildLogEntries(data);
         setLogEntries((prev) => [...prev, ...newEntries].slice(-500));
       }
     } catch (error) {
@@ -185,7 +255,7 @@ function SwarmPageContent() {
     if (!answers) return;
 
     const answersList = Object.entries(answers).map(([qId, answer]) => ({
-      questionId: parseInt(qId, 10),
+      questionId: Number.parseInt(qId, 10),
       answer,
     }));
 
@@ -218,7 +288,7 @@ function SwarmPageContent() {
         alert(`Error: ${result.error}`);
       }
     } catch (error) {
-      alert(`Failed to submit answers: ${error}`);
+      alert(`Failed to submit answers: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsSubmittingAnswers(null);
     }
@@ -229,7 +299,7 @@ function SwarmPageContent() {
     setQuestionAnswers((prev) => ({
       ...prev,
       [taskId]: {
-        ...(prev[taskId] || {}),
+        ...prev[taskId],
         [questionId]: answer,
       },
     }));
@@ -357,19 +427,9 @@ function SwarmPageContent() {
       });
       const result = await response.json();
 
-      if (result.success) {
-        let output = result.stdout || '(no output)';
-        // Show warning for partial results
-        if (result.partial && result.warning) {
-          output = `⚠️ ${result.warning}\n\n${output}`;
-        }
-        setCliOutput(output);
-      } else {
-        const errorMsg = result.stderr || result.error || 'Unknown error';
-        setCliOutput(`❌ Error (exit ${result.exitCode}):\n${errorMsg}`);
-      }
+      setCliOutput(buildCliOutputText(result));
     } catch (error) {
-      setCliOutput(`❌ Failed to run command: ${error}`);
+      setCliOutput(`❌ Failed to run command: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsRunningCli(false);
       // Scroll to bottom of CLI output
@@ -400,7 +460,7 @@ function SwarmPageContent() {
         setCliOutput(`❌ Error: ${result.error || 'Failed to get explanation'}`);
       }
     } catch (error) {
-      setCliOutput(`❌ Failed to explain task: ${error}`);
+      setCliOutput(`❌ Failed to explain task: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsRunningCli(false);
       if (cliOutputRef.current) {
@@ -419,62 +479,6 @@ function SwarmPageContent() {
       }
       return next;
     });
-  };
-
-  const getHeartbeatStatus = (heartbeatAge?: number) => {
-    if (heartbeatAge === undefined || heartbeatAge < 0) {
-      return {
-        color: 'text-gray-400',
-        bgColor: 'bg-gray-400',
-        label: 'No heartbeat',
-        isAlive: false,
-      };
-    }
-    if (heartbeatAge < 30) {
-      return {
-        color: 'text-green-500',
-        bgColor: 'bg-green-500',
-        label: `${heartbeatAge}s`,
-        isAlive: true,
-      };
-    }
-    if (heartbeatAge < 60) {
-      return {
-        color: 'text-yellow-500',
-        bgColor: 'bg-yellow-500',
-        label: `${heartbeatAge}s`,
-        isAlive: true,
-      };
-    }
-    if (heartbeatAge < 300) {
-      return {
-        color: 'text-orange-500',
-        bgColor: 'bg-orange-500',
-        label: `${Math.floor(heartbeatAge / 60)}m`,
-        isAlive: true,
-      };
-    }
-    return {
-      color: 'text-red-500',
-      bgColor: 'bg-red-500',
-      label: `${Math.floor(heartbeatAge / 60)}m`,
-      isAlive: false,
-    };
-  };
-
-  const getLogLevelColor = (level: string) => {
-    switch (level) {
-      case 'ERROR':
-        return 'text-red-400';
-      case 'WARN':
-        return 'text-yellow-400';
-      case 'PHASE':
-        return 'text-purple-400';
-      case 'SUCCESS':
-        return 'text-green-400';
-      default:
-        return 'text-blue-400';
-    }
   };
 
   const maxAgents = health?.max || 4;
@@ -794,24 +798,12 @@ function SwarmPageContent() {
                           <div key={q.id} className="bg-gray-800/50 rounded p-2">
                             <div className="flex items-start gap-2 mb-2">
                               <span
-                                className={`text-xs px-2 py-0.5 rounded ${
-                                  q.type === 'human'
-                                    ? 'bg-purple-500/30 text-purple-300'
-                                    : q.type === 'codebase'
-                                      ? 'bg-blue-500/30 text-blue-300'
-                                      : 'bg-green-500/30 text-green-300'
-                                }`}
+                                className={`text-xs px-2 py-0.5 rounded ${getQuestionTypeBadgeClass(q.type)}`}
                               >
                                 {q.type}
                               </span>
                               <span
-                                className={`text-xs px-2 py-0.5 rounded ${
-                                  q.priority === 'blocking'
-                                    ? 'bg-red-500/30 text-red-300'
-                                    : q.priority === 'important'
-                                      ? 'bg-yellow-500/30 text-yellow-300'
-                                      : 'bg-gray-500/30 text-gray-300'
-                                }`}
+                                className={`text-xs px-2 py-0.5 rounded ${getQuestionPriorityBadgeClass(q.priority)}`}
                               >
                                 {q.priority}
                               </span>
@@ -821,7 +813,7 @@ function SwarmPageContent() {
 
                             {q.context && (
                               <p className="text-xs text-gray-500 mb-2">
-                                <span className="text-gray-400">Context:</span> {q.context}
+                                <span className="text-gray-400">Context:</span>{' '}{q.context}
                               </p>
                             )}
 

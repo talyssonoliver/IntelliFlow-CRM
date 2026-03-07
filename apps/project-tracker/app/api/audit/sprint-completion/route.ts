@@ -8,9 +8,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import * as fs from 'fs';
-import * as path from 'path';
-import { spawn } from 'child_process';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { spawn } from 'node:child_process';
 
 // =============================================================================
 // Types
@@ -142,6 +142,52 @@ function runAuditCli(
 // POST - Trigger Audit
 // =============================================================================
 
+function parseSummaryFromReport(report: any): AuditResponse['summary'] {
+  return {
+    total: report.summary.totalTasks,
+    audited: report.summary.auditedTasks,
+    passed: report.summary.passedTasks,
+    failed: report.summary.failedTasks,
+    needsHuman: report.summary.needsHumanTasks,
+  };
+}
+
+function buildAuditResponse(result: { success: boolean; stdout: string; stderr: string }): NextResponse<AuditResponse> {
+  let report: any;
+  try {
+    report = JSON.parse(result.stdout);
+  } catch {
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, error: result.stderr || 'Audit failed' },
+        { status: 500 }
+      );
+    }
+    return NextResponse.json(
+      { success: false, error: 'Failed to parse audit output' },
+      { status: 500 }
+    );
+  }
+
+  if (!result.success) {
+    return NextResponse.json({
+      success: false,
+      runId: report.run_id,
+      verdict: report.verdict,
+      summary: parseSummaryFromReport(report),
+      error: 'Audit completed with failures',
+    });
+  }
+
+  return NextResponse.json({
+    success: true,
+    runId: report.run_id,
+    verdict: report.verdict,
+    reportPath: `artifacts/reports/sprint-audit/${report.run_id}/audit.md`,
+    summary: parseSummaryFromReport(report),
+  });
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse<AuditResponse>> {
   try {
     const body = (await request.json()) as AuditRequest;
@@ -155,66 +201,13 @@ export async function POST(request: NextRequest): Promise<NextResponse<AuditResp
 
     console.log(`Starting audit for sprint ${body.sprint}...`);
 
-    // Run the audit CLI
     const result = await runAuditCli(
       body.sprint,
       body.strict ?? false,
       body.skipValidations ?? false
     );
 
-    if (!result.success) {
-      // Try to parse partial output
-      try {
-        const report = JSON.parse(result.stdout);
-        return NextResponse.json({
-          success: false,
-          runId: report.run_id,
-          verdict: report.verdict,
-          summary: {
-            total: report.summary.totalTasks,
-            audited: report.summary.auditedTasks,
-            passed: report.summary.passedTasks,
-            failed: report.summary.failedTasks,
-            needsHuman: report.summary.needsHumanTasks,
-          },
-          error: 'Audit completed with failures',
-        });
-      } catch {
-        return NextResponse.json(
-          {
-            success: false,
-            error: result.stderr || 'Audit failed',
-          },
-          { status: 500 }
-        );
-      }
-    }
-
-    // Parse the JSON output
-    try {
-      const report = JSON.parse(result.stdout);
-      return NextResponse.json({
-        success: true,
-        runId: report.run_id,
-        verdict: report.verdict,
-        reportPath: `artifacts/reports/sprint-audit/${report.run_id}/audit.md`,
-        summary: {
-          total: report.summary.totalTasks,
-          audited: report.summary.auditedTasks,
-          passed: report.summary.passedTasks,
-          failed: report.summary.failedTasks,
-          needsHuman: report.summary.needsHumanTasks,
-        },
-      });
-    } catch (parseError) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Failed to parse audit output: ${parseError}`,
-        },
-        { status: 500 }
-      );
-    }
+    return buildAuditResponse(result);
   } catch (error) {
     console.error('Audit error:', error);
     return NextResponse.json(
@@ -252,15 +245,15 @@ function getSprintsWithCompletedTasks(): Array<{ sprint: number; completedCount:
     const targetSprint = record['Target Sprint'];
 
     if ((status === 'completed' || status === 'done') && targetSprint) {
-      const sprintNum = parseInt(targetSprint, 10);
-      if (!isNaN(sprintNum)) {
+      const sprintNum = Number.parseInt(targetSprint, 10);
+      if (!Number.isNaN(sprintNum)) {
         sprintCounts[sprintNum] = (sprintCounts[sprintNum] || 0) + 1;
       }
     }
   }
 
   return Object.entries(sprintCounts)
-    .map(([sprint, count]) => ({ sprint: parseInt(sprint, 10), completedCount: count }))
+    .map(([sprint, count]) => ({ sprint: Number.parseInt(sprint, 10), completedCount: count }))
     .sort((a, b) => a.sprint - b.sprint);
 }
 
@@ -275,7 +268,7 @@ function parseCSV(content: string): Record<string, string>[] {
 
   // First, split into logical lines (handling multi-line quoted fields)
   // Normalize \r\n and \r to \n before iterating to avoid loop counter mutation
-  const normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const normalized = content.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
   for (const char of normalized) {
     if (char === '"') {
       inQuotes = !inQuotes;
@@ -321,22 +314,26 @@ function parseCSVLine(line: string): string[] {
   let current = '';
   let inQuotes = false;
 
-  for (let i = 0; i < line.length; i++) {
+  let i = 0;
+  while (i < line.length) {
     const char = line[i];
 
     if (char === '"') {
       if (inQuotes && line[i + 1] === '"') {
         // Escaped quote
         current += '"';
-        i++;
+        i += 2;
       } else {
         inQuotes = !inQuotes;
+        i++;
       }
     } else if (char === ',' && !inQuotes) {
       fields.push(current);
       current = '';
+      i++;
     } else {
       current += char;
+      i++;
     }
   }
   fields.push(current);
@@ -418,8 +415,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const sprint = parseInt(sprintStr, 10);
-    if (isNaN(sprint)) {
+    const sprint = Number.parseInt(sprintStr, 10);
+    if (Number.isNaN(sprint)) {
       return NextResponse.json(
         { success: false, error: 'sprint must be a number' },
         { status: 400 }

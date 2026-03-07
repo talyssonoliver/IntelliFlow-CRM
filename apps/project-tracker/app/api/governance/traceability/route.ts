@@ -13,8 +13,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { loadCSVTasks } from '@/lib/governance';
-import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 
 export const dynamic = 'force-dynamic';
 
@@ -97,7 +97,7 @@ function getTaskSprint(taskId: string): number {
     for (let i = 1; i < lines.length; i++) {
       const row = lines[i].split(',');
       if (row[taskIdIndex]?.trim() === taskId) {
-        const sprint = parseInt(row[sprintIndex]?.trim() || '0', 10);
+        const sprint = Number.parseInt(row[sprintIndex]?.trim() || '0', 10);
         taskSprintCache.set(taskId, sprint);
         return sprint;
       }
@@ -200,8 +200,8 @@ function findRelatedTests(taskId: string): TraceLink[] {
   const projectRoot = getProjectRoot();
   const patterns = [
     taskId.toLowerCase(),
-    taskId.replace(/-/g, '_').toLowerCase(),
-    taskId.replace(/-/g, '').toLowerCase(),
+    taskId.replaceAll('-', '_').toLowerCase(),
+    taskId.replaceAll('-', '').toLowerCase(),
   ];
 
   const tests: TraceLink[] = [];
@@ -226,7 +226,7 @@ function findRelatedDocs(taskId: string, _section: string): TraceLink[] {
         const fileName = String(file).toLowerCase();
         if (
           fileName.includes(taskId.toLowerCase()) ||
-          fileName.includes(taskId.replace(/-/g, '_').toLowerCase())
+          fileName.includes(taskId.replaceAll('-', '_').toLowerCase())
         ) {
           const filePath = `docs/planning/adr/${file}`;
           const info = getFileInfo(filePath);
@@ -284,6 +284,48 @@ function applyCoverageFilter(
   return matrix;
 }
 
+type AnyTask = ReturnType<typeof loadCSVTasks>[number];
+
+const COVERAGE_WEIGHTS = { artifacts: 0.4, attestations: 0.3, tests: 0.2, documentation: 0.1 };
+
+function buildTaskTraceability(task: AnyTask): TaskTraceability {
+  const links: TraceLink[] = [];
+
+  // Add declared artifacts
+  for (const artifact of task.artifacts) {
+    if (!artifact?.trim()) continue;
+    const info = getFileInfo(artifact);
+    links.push({ type: 'artifact', path: artifact, exists: info.exists, size: info.size, modifiedAt: info.modifiedAt });
+  }
+
+  // Add attestation, tests, documentation
+  const attestation = findAttestation(task.taskId);
+  if (attestation) links.push(attestation);
+  links.push(...findRelatedTests(task.taskId), ...findRelatedDocs(task.taskId, task.section));
+
+  const byType = (type: TraceLink['type']) => links.filter((l) => l.type === type);
+  const artifactLinks = byType('artifact');
+  const attestationLinks = byType('attestation');
+  const testLinks = byType('test');
+  const docLinks = byType('documentation');
+
+  const coverage = {
+    artifacts: { total: task.artifacts.filter((a) => a?.trim()).length || 1, found: artifactLinks.filter((l) => l.exists).length },
+    attestations: { total: 1, found: attestationLinks.filter((l) => l.exists).length },
+    tests: { total: 1, found: testLinks.some((l) => l.exists) ? 1 : 0 },
+    documentation: { total: 1, found: docLinks.some((l) => l.exists) ? 1 : 0 },
+  };
+
+  const overallCoverage = Math.round(
+    (coverage.artifacts.found / coverage.artifacts.total) * COVERAGE_WEIGHTS.artifacts * 100 +
+    (coverage.attestations.found / coverage.attestations.total) * COVERAGE_WEIGHTS.attestations * 100 +
+    (coverage.tests.found / coverage.tests.total) * COVERAGE_WEIGHTS.tests * 100 +
+    (coverage.documentation.found / coverage.documentation.total) * COVERAGE_WEIGHTS.documentation * 100
+  );
+
+  return { task_id: task.taskId, description: task.description, section: task.section, status: task.status, sprint: task.sprint, links, coverage, overallCoverage };
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -321,93 +363,14 @@ export async function GET(request: NextRequest) {
     }
 
     if (sprintFilter) {
-      const sprintNum = parseInt(sprintFilter, 10);
-      if (!isNaN(sprintNum)) {
+      const sprintNum = Number.parseInt(sprintFilter, 10);
+      if (!Number.isNaN(sprintNum)) {
         filteredTasks = filteredTasks.filter((t) => t.sprint === sprintNum);
       }
     }
 
     // Build traceability matrix
-    const traceabilityMatrix: TaskTraceability[] = [];
-
-    for (const task of filteredTasks) {
-      const links: TraceLink[] = [];
-
-      // Add declared artifacts
-      for (const artifact of task.artifacts) {
-        if (artifact && artifact.trim()) {
-          const info = getFileInfo(artifact);
-          links.push({
-            type: 'artifact',
-            path: artifact,
-            exists: info.exists,
-            size: info.size,
-            modifiedAt: info.modifiedAt,
-          });
-        }
-      }
-
-      // Add attestation
-      const attestation = findAttestation(task.taskId);
-      if (attestation) {
-        links.push(attestation);
-      }
-
-      // Add related tests
-      const tests = findRelatedTests(task.taskId);
-      links.push(...tests);
-
-      // Add related documentation
-      const docs = findRelatedDocs(task.taskId, task.section);
-      links.push(...docs);
-
-      // Calculate coverage
-      const artifactLinks = links.filter((l) => l.type === 'artifact');
-      const attestationLinks = links.filter((l) => l.type === 'attestation');
-      const testLinks = links.filter((l) => l.type === 'test');
-      const docLinks = links.filter((l) => l.type === 'documentation');
-
-      const coverage = {
-        artifacts: {
-          total: task.artifacts.filter((a) => a && a.trim()).length || 1,
-          found: artifactLinks.filter((l) => l.exists).length,
-        },
-        attestations: {
-          total: 1,
-          found: attestationLinks.filter((l) => l.exists).length,
-        },
-        tests: {
-          total: 1,
-          found: testLinks.filter((l) => l.exists).length > 0 ? 1 : 0,
-        },
-        documentation: {
-          total: 1,
-          found: docLinks.filter((l) => l.exists).length > 0 ? 1 : 0,
-        },
-      };
-
-      // Calculate overall coverage (weighted)
-      const weights = { artifacts: 0.4, attestations: 0.3, tests: 0.2, documentation: 0.1 };
-      const overallCoverage = Math.round(
-        (coverage.artifacts.found / coverage.artifacts.total) * weights.artifacts * 100 +
-          (coverage.attestations.found / coverage.attestations.total) * weights.attestations * 100 +
-          (coverage.tests.found / coverage.tests.total) * weights.tests * 100 +
-          (coverage.documentation.found / coverage.documentation.total) *
-            weights.documentation *
-            100
-      );
-
-      traceabilityMatrix.push({
-        task_id: task.taskId,
-        description: task.description,
-        section: task.section,
-        status: task.status,
-        sprint: task.sprint,
-        links,
-        coverage,
-        overallCoverage,
-      });
-    }
+    const traceabilityMatrix = filteredTasks.map(buildTaskTraceability);
 
     // Apply coverage filter
     const finalMatrix = applyCoverageFilter(traceabilityMatrix, coverageFilter);

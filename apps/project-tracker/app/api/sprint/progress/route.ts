@@ -8,8 +8,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { existsSync, readFileSync, readdirSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import Papa from 'papaparse';
 import type { RawCSVRow } from '../../../../lib/types';
 
@@ -37,6 +37,49 @@ function getProjectRoot(): string {
   return process.cwd().replace(/[\\/]apps[\\/]project-tracker$/, '');
 }
 
+function isDone(status: string): boolean {
+  const s = status.toLowerCase();
+  return s === 'completed' || s === 'done';
+}
+
+function buildPhaseEntry(sprintDir: string, name: string): PhaseProgress | null {
+  const summaryPath = join(sprintDir, name, '_phase-summary.json');
+  if (!existsSync(summaryPath)) return null;
+  const summary = JSON.parse(readFileSync(summaryPath, 'utf8'));
+  return {
+    phaseId: name,
+    phaseName: summary.phase_name || name,
+    total: summary.total_tasks || 0,
+    completed: summary.completed_tasks || 0,
+    inProgress: summary.in_progress_tasks || 0,
+    percentage:
+      summary.total_tasks > 0
+        ? Math.round((summary.completed_tasks / summary.total_tasks) * 100)
+        : 0,
+  };
+}
+
+function loadAttestationEntry(
+  attestationsDir: string,
+  taskDir: import('fs').Dirent
+): [string, { timestamp: string; verdict: string }] | null {
+  if (!taskDir.isDirectory()) return null;
+  const ackPath = join(attestationsDir, taskDir.name, 'context_ack.json');
+  if (!existsSync(ackPath)) return null;
+  const ack = JSON.parse(readFileSync(ackPath, 'utf8'));
+  return [taskDir.name, { timestamp: ack.attestation_timestamp || '', verdict: ack.verdict || 'PENDING' }];
+}
+
+function accumulateSectionCounts(
+  acc: Record<string, { total: number; completed: number }>,
+  t: TaskProgress
+): Record<string, { total: number; completed: number }> {
+  if (!acc[t.section]) acc[t.section] = { total: 0, completed: 0 };
+  acc[t.section].total++;
+  if (isDone(t.status)) acc[t.section].completed++;
+  return acc;
+}
+
 // Get fallback file path pattern
 function getFallbackPath(sprintNumber: number): string {
   const projectRoot = getProjectRoot();
@@ -44,7 +87,7 @@ function getFallbackPath(sprintNumber: number): string {
 }
 
 // Load fallback data if exists
-function loadFallback(sprintNumber: number): any | null {
+function loadFallback(sprintNumber: number): any {
   const fallbackPath = getFallbackPath(sprintNumber);
   try {
     if (existsSync(fallbackPath)) {
@@ -86,7 +129,7 @@ function loadSprintTasks(sprintNumber: number): TaskProgress[] {
       const results = Papa.parse(content, { header: true, skipEmptyLines: true });
 
       for (const row of results.data as RawCSVRow[]) {
-        const targetSprint = parseInt(String(row['Target Sprint'] ?? ''));
+        const targetSprint = Number.parseInt(String(row['Target Sprint'] ?? ''));
         if (
           targetSprint === sprintNumber ||
           (row['Target Sprint'] === 'Continuous' && sprintNumber === 0)
@@ -125,23 +168,9 @@ function loadPhaseProgress(sprintNumber: number): PhaseProgress[] {
       const entries = readdirSync(sprintDir, { withFileTypes: true });
 
       for (const entry of entries) {
-        if (entry.isDirectory() && entry.name.startsWith('phase-')) {
-          const summaryPath = join(sprintDir, entry.name, '_phase-summary.json');
-          if (existsSync(summaryPath)) {
-            const summary = JSON.parse(readFileSync(summaryPath, 'utf8'));
-            phases.push({
-              phaseId: entry.name,
-              phaseName: summary.phase_name || entry.name,
-              total: summary.total_tasks || 0,
-              completed: summary.completed_tasks || 0,
-              inProgress: summary.in_progress_tasks || 0,
-              percentage:
-                summary.total_tasks > 0
-                  ? Math.round((summary.completed_tasks / summary.total_tasks) * 100)
-                  : 0,
-            });
-          }
-        }
+        if (!entry.isDirectory() || !entry.name.startsWith('phase-')) continue;
+        const phase = buildPhaseEntry(sprintDir, entry.name);
+        if (phase) phases.push(phase);
       }
     }
   } catch (error) {
@@ -164,16 +193,8 @@ function loadAttestations(
       const taskDirs = readdirSync(attestationsDir, { withFileTypes: true });
 
       for (const taskDir of taskDirs) {
-        if (taskDir.isDirectory()) {
-          const ackPath = join(attestationsDir, taskDir.name, 'context_ack.json');
-          if (existsSync(ackPath)) {
-            const ack = JSON.parse(readFileSync(ackPath, 'utf8'));
-            attestations.set(taskDir.name, {
-              timestamp: ack.attestation_timestamp || '',
-              verdict: ack.verdict || 'PENDING',
-            });
-          }
-        }
+        const entry = loadAttestationEntry(attestationsDir, taskDir);
+        if (entry) attestations.set(entry[0], entry[1]);
       }
     }
   } catch (error) {
@@ -234,7 +255,7 @@ function generateMarkdown(
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const sprintNumber = parseInt(searchParams.get('sprint') || '0');
+    const sprintNumber = Number.parseInt(searchParams.get('sprint') || '0');
     const format = searchParams.get('format') || 'json';
 
     const tasks = loadSprintTasks(sprintNumber);
@@ -251,9 +272,7 @@ export async function GET(request: NextRequest) {
 
     // Calculate metrics
     const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(
-      (t) => t.status.toLowerCase() === 'completed' || t.status.toLowerCase() === 'done'
-    ).length;
+    const completedTasks = tasks.filter((t) => isDone(t.status)).length;
     const inProgressTasks = tasks.filter((t) => t.status.toLowerCase() === 'in progress').length;
     const plannedTasks = totalTasks - completedTasks - inProgressTasks;
 
@@ -283,17 +302,7 @@ export async function GET(request: NextRequest) {
         percentage: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
       },
       phases,
-      bySection: tasks.reduce(
-        (acc, t) => {
-          if (!acc[t.section]) acc[t.section] = { total: 0, completed: 0 };
-          acc[t.section].total++;
-          if (t.status.toLowerCase() === 'completed' || t.status.toLowerCase() === 'done') {
-            acc[t.section].completed++;
-          }
-          return acc;
-        },
-        {} as Record<string, { total: number; completed: number }>
-      ),
+      bySection: tasks.reduce((acc, t) => accumulateSectionCounts(acc, t), {} as Record<string, { total: number; completed: number }>),
       recentCompletions: tasks
         .filter((t) => t.completedAt)
         .sort((a, b) => (b.completedAt || '').localeCompare(a.completedAt || ''))

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { spawn } from 'child_process';
-import path from 'path';
-import fs from 'fs';
+import { spawn } from 'node:child_process';
+import path from 'node:path';
+import fs from 'node:fs';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120; // 2 minute timeout for tests
@@ -47,8 +47,8 @@ export async function POST(request: NextRequest) {
 
     if (fs.existsSync(envPath)) {
       const envContent = fs.readFileSync(envPath, 'utf-8');
-      const urlMatch = envContent.match(/SUPABASE_URL=([^\r\n]+)/);
-      const keyMatch = envContent.match(/SUPABASE_ANON_KEY=([^\r\n]+)/);
+      const urlMatch = /SUPABASE_URL=([^\r\n]+)/.exec(envContent);
+      const keyMatch = /SUPABASE_ANON_KEY=([^\r\n]+)/.exec(envContent);
       if (urlMatch) supabaseUrl = urlMatch[1].trim();
       if (keyMatch) supabaseAnonKey = keyMatch[1].trim();
     }
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     // Run k6 test
     const k6Path =
       process.platform === 'win32'
-        ? 'C:\\Users\\talys\\tools\\k6\\k6-v0.49.0-windows-amd64\\k6.exe'
+        ? String.raw`C:\Users\talys\tools\k6\k6-v0.49.0-windows-amd64\k6.exe`
         : 'k6';
 
     const result = await new Promise<TestResult>((resolve) => {
@@ -89,17 +89,17 @@ export async function POST(request: NextRequest) {
         const duration = Math.round((Date.now() - startTime) / 1000);
 
         // Parse output for summary
-        const endpointsMatch = output.match(/Endpoints Tested: (\d+)/);
-        const passedMatch = output.match(/Total: (\d+) passed/);
-        const failedMatch = output.match(/(\d{1,10}) failed/);
+        const endpointsMatch = /Endpoints Tested: (\d+)/.exec(output);
+        const passedMatch = /Total: (\d+) passed/.exec(output);
+        const failedMatch = /(\d{1,10}) failed/.exec(output);
 
         resolve({
           success: code === 0,
           testType,
           output: output.slice(-5000), // Last 5000 chars
-          endpointsTested: endpointsMatch ? parseInt(endpointsMatch[1]) : undefined,
-          passed: passedMatch ? parseInt(passedMatch[1]) : undefined,
-          failed: failedMatch ? parseInt(failedMatch[1]) : undefined,
+          endpointsTested: endpointsMatch ? Number.parseInt(endpointsMatch[1]) : undefined,
+          passed: passedMatch ? Number.parseInt(passedMatch[1]) : undefined,
+          failed: failedMatch ? Number.parseInt(failedMatch[1]) : undefined,
           duration,
         });
       });

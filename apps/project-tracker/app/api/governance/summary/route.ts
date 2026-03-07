@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     const sprintParam = searchParams.get('sprint') || '0';
 
     // Handle 'all' as a special case, otherwise parse as integer
-    const sprint: number | 'all' = sprintParam === 'all' ? 'all' : parseInt(sprintParam, 10);
+    const sprint: number | 'all' = sprintParam === 'all' ? 'all' : Number.parseInt(sprintParam, 10);
 
     // Check if governance files exist
     const filesExist = checkGovernanceFilesExist();

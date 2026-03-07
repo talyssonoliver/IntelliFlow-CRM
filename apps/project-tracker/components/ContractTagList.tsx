@@ -82,7 +82,7 @@ export default function ContractTagList({
   mode = 'full',
   statusMap = {},
   maxVisible = 10,
-}: ContractTagListProps) {
+}: Readonly<ContractTagListProps>) {
   const tags = useMemo(() => parseContractTags(rawString), [rawString]);
   const tagCounts = useMemo(() => getTagCounts(tags), [tags]);
 
@@ -107,6 +107,9 @@ export default function ContractTagList({
     return groups;
   }, [tags]);
 
+  const visibleTags = tags.slice(0, maxVisible);
+  const hiddenCount = tags.length - maxVisible;
+
   if (tags.length === 0) {
     return <div className="text-sm text-gray-500 italic">No contract tags found</div>;
   }
@@ -118,8 +121,6 @@ export default function ContractTagList({
 
   // Compact mode - inline badges
   if (mode === 'compact') {
-    const visibleTags = tags.slice(0, maxVisible);
-    const hiddenCount = tags.length - maxVisible;
 
     return (
       <div className="flex flex-wrap gap-1">
@@ -182,11 +183,11 @@ function _ContractComplianceIndicator({
   prerequisites,
   artifacts,
   validation,
-}: {
+}: Readonly<{
   prerequisites: string;
   artifacts: string;
   validation: string;
-}) {
+}>) {
   const prereqTags = parseContractTags(prerequisites);
   const artifactTags = parseContractTags(artifacts);
   const validationTags = parseContractTags(validation);

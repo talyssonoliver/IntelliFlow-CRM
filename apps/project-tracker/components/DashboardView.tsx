@@ -100,7 +100,11 @@ export default function DashboardView({
 
       {/* Schedule Health (EVM Metrics) */}
       <ScheduleHealthWidget
-        sprint={typeof sprint === 'number' ? sprint : sprint === 'all' ? 'all' : 0}
+        sprint={(() => {
+          if (typeof sprint === 'number') return sprint;
+          if (sprint === 'all') return 'all';
+          return 0;
+        })()}
       />
 
       {/* Executive Summary */}

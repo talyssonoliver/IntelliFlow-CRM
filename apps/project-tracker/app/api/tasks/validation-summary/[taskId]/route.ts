@@ -46,7 +46,7 @@ async function getTaskSprintNumber(taskId: string): Promise<number> {
       bom: true,
     }) as Array<Record<string, string>>;
     const task = records.find((r) => r['Task ID'] === taskId);
-    return parseInt(task?.['Target Sprint'] || '0', 10);
+    return Number.parseInt(task?.['Target Sprint'] || '0', 10);
   } catch {
     return 0;
   }
@@ -60,9 +60,11 @@ interface Params {
 
 // Attestation file structure from .specify/sprints/sprint-{N}/attestations/{taskId}/attestation.json
 // Completion gates status for enforcement validation
+type GateStatus = 'pass' | 'warn' | 'blocked' | 'pending';
+
 interface CompletionGate {
   name: string;
-  status: 'pass' | 'warn' | 'blocked' | 'pending';
+  status: GateStatus;
   details?: string;
   required: boolean;
 }
@@ -254,7 +256,7 @@ async function loadContextAck(taskId: string, sprintNumber: number): Promise<Con
           files_read?: unknown[];
           invariants_acknowledged?: unknown[];
         };
-        const relativePath = relative(repoRoot, path).replace(/\\/g, '/');
+        const relativePath = relative(repoRoot, path).replaceAll('\\', '/');
         return {
           exists: true,
           path: relativePath,
@@ -311,11 +313,11 @@ async function loadCoverageSummary(taskId: string): Promise<CoverageMetrics | nu
       if (filePath === 'total' || !fileCoverage) continue;
 
       // Normalize path separators for cross-platform compatibility
-      const normalizedPath = filePath.replace(/\\/g, '/');
+      const normalizedPath = filePath.replaceAll('\\', '/');
 
       // Check if file belongs to any of the task's packages
       const belongsToPackage = taskPackages.some((pkg) =>
-        normalizedPath.includes(pkg.replace(/\\/g, '/'))
+        normalizedPath.includes(pkg.replaceAll('\\', '/'))
       );
 
       if (belongsToPackage) {
@@ -433,7 +435,7 @@ function extractMarkdownSections(content: string): string[] {
  * Extract title from markdown content (first H1)
  */
 function extractMarkdownTitle(content: string): string | undefined {
-  const match = content.match(/^#\s+([^\n]{1,500})$/m);
+  const match = /^#\s+([^\n]{1,500})$/m.exec(content);
   return match ? match[1].trim() : undefined;
 }
 
@@ -462,7 +464,7 @@ async function loadDocumentPreview(
         const content = await readFile(path, 'utf-8');
         const sections = extractMarkdownSections(content);
         const title = extractMarkdownTitle(content);
-        const relativePath = relative(repoRoot, path).replace(/\\/g, '/');
+        const relativePath = relative(repoRoot, path).replaceAll('\\', '/');
 
         return {
           exists: true,
@@ -483,11 +485,17 @@ async function loadDocumentPreview(
   };
 }
 
+function extractFilePathsFromBlock(block: string): string[] {
+  return (block.match(/- `([^`]+)`/g) || [])
+    .map((m) => /- `([^`]+)`/.exec(m)?.[1])
+    .filter((p): p is string => !!p);
+}
+
 /**
  * Parse plan markdown to extract deliverables and checkboxes
  * Uses the structure from /plan-session skill
  */
-async function parsePlanDeliverables(
+async function parsePlanDeliverables( // NOSONAR typescript:S3776
   taskId: string,
   sprintNumber: number
 ): Promise<PlanDeliverablesVerification | null> {
@@ -513,7 +521,7 @@ async function parsePlanDeliverables(
     if (existsSync(path)) {
       try {
         planContent = await readFile(path, 'utf-8');
-        planPath = relative(repoRoot, path).replace(/\\/g, '/');
+        planPath = relative(repoRoot, path).replaceAll('\\', '/');
         break;
       } catch {
         // Continue to next path
@@ -536,69 +544,51 @@ async function parsePlanDeliverables(
 
   // Extract files from "Files to Create:" and "Files to Modify:" sections
   const deliverables: PlanDeliverable[] = [];
+
+  async function addDeliverableIfNew(
+    filePath: string,
+    fromSection: PlanDeliverable['fromSection'],
+    invertStatus = false
+  ): Promise<void> {
+    if (deliverables.some((d) => d.path === filePath)) return;
+    const fullPath = join(repoRoot, filePath);
+    const fileExists = existsSync(fullPath);
+    let size: number | undefined;
+    let lastModified: string | undefined;
+    if (fileExists && !invertStatus) {
+      try {
+        const stats = (await import('node:fs')).statSync(fullPath);
+        size = stats.size;
+        lastModified = stats.mtime.toISOString();
+      } catch {
+        // Ignore stat errors
+      }
+    }
+    const statusWhenInverted = fileExists ? 'missing' : 'deleted';
+    const statusWhenNormal = fileExists ? 'exists' : 'missing';
+    const status = invertStatus ? statusWhenInverted : statusWhenNormal;
+    deliverables.push({ path: filePath, type: 'file', status, size, lastModified, fromSection });
+  }
+
   const filePatterns = [
     /\*\*Files to Create:\*\*\s*\n((?:- `[^`]+`\n?)+)/g,
     /\*\*Files to Modify:\*\*\s*\n((?:- `[^`]+`\n?)+)/g,
   ];
-
   for (const pattern of filePatterns) {
     let match;
     while ((match = pattern.exec(planContent)) !== null) {
-      const fileListBlock = match[1];
-      const fileMatches = fileListBlock.match(/- `([^`]+)`/g);
-      if (fileMatches) {
-        for (const fileMatch of fileMatches) {
-          const filePath = fileMatch.match(/- `([^`]+)`/)?.[1];
-          if (filePath && !deliverables.some((d) => d.path === filePath)) {
-            const fullPath = join(repoRoot, filePath);
-            const fileExists = existsSync(fullPath);
-            let size: number | undefined;
-            let lastModified: string | undefined;
-
-            if (fileExists) {
-              try {
-                const stats = (await import('node:fs')).statSync(fullPath);
-                size = stats.size;
-                lastModified = stats.mtime.toISOString();
-              } catch {
-                // Ignore stat errors
-              }
-            }
-
-            deliverables.push({
-              path: filePath,
-              type: 'file',
-              status: fileExists ? 'exists' : 'missing',
-              size,
-              lastModified,
-              fromSection: 'Files to Create/Modify',
-            });
-          }
-        }
+      for (const fp of extractFilePathsFromBlock(match[1])) {
+        await addDeliverableIfNew(fp, 'Files to Create/Modify');
       }
     }
   }
 
-  // Extract files from "Files to Delete:" sections (inverted check: missing on disk = correctly deleted)
+  // Extract files from "Files to Delete:" sections
   const deletePattern = /\*\*Files to Delete[^:]*:\*\*\s*\n((?:- `[^`]+`\n?)+)/g;
   let deleteMatch;
   while ((deleteMatch = deletePattern.exec(planContent)) !== null) {
-    const fileListBlock = deleteMatch[1];
-    const fileMatches = fileListBlock.match(/- `([^`]+)`/g);
-    if (fileMatches) {
-      for (const fileMatch of fileMatches) {
-        const filePath = fileMatch.match(/- `([^`]+)`/)?.[1];
-        if (filePath && !deliverables.some((d) => d.path === filePath)) {
-          const fullPath = join(repoRoot, filePath);
-          const fileExists = existsSync(fullPath);
-          deliverables.push({
-            path: filePath,
-            type: 'file',
-            status: fileExists ? 'missing' : 'deleted',
-            fromSection: 'Files to Delete',
-          });
-        }
-      }
+    for (const fp of extractFilePathsFromBlock(deleteMatch[1])) {
+      await addDeliverableIfNew(fp, 'Files to Delete', true);
     }
   }
 
@@ -606,76 +596,30 @@ async function parsePlanDeliverables(
   const artifactPattern = /`(artifacts\/[^`]+)`/g;
   let artifactMatch;
   while ((artifactMatch = artifactPattern.exec(planContent)) !== null) {
-    const artifactPath = artifactMatch[1];
-    if (!deliverables.some((d) => d.path === artifactPath)) {
-      const fullPath = join(repoRoot, artifactPath);
-      const fileExists = existsSync(fullPath);
-
-      deliverables.push({
-        path: artifactPath,
-        type: 'file',
-        status: fileExists ? 'exists' : 'missing',
-        fromSection: 'Artifacts',
-      });
-    }
+    await addDeliverableIfNew(artifactMatch[1], 'Artifacts');
   }
 
   // Extract files from "Test Files:" sections
   const testFilesPattern = /\*\*Test Files:\*\*\s*\n((?:- `[^`]+`\n?)+)/g;
   let testMatch;
   while ((testMatch = testFilesPattern.exec(planContent)) !== null) {
-    const fileListBlock = testMatch[1];
-    const fileMatches = fileListBlock.match(/- `([^`]+)`/g);
-    if (fileMatches) {
-      for (const fm of fileMatches) {
-        const filePath = fm.match(/- `([^`]+)`/)?.[1];
-        if (filePath && !deliverables.some((d) => d.path === filePath)) {
-          const fullPath = join(repoRoot, filePath);
-          const fileExists = existsSync(fullPath);
-          deliverables.push({
-            path: filePath,
-            type: 'file',
-            status: fileExists ? 'exists' : 'missing',
-            fromSection: 'Implementation Steps',
-          });
-        }
-      }
+    for (const fp of extractFilePathsFromBlock(testMatch[1])) {
+      await addDeliverableIfNew(fp, 'Implementation Steps');
     }
   }
 
-  // Extract files from checkbox items: - [x] Create `path/to/file.ts`
-  // and numbered steps: 1. Create `path/to/file.ts`
-  // and any backtick-wrapped file path with / and extension
+  // Extract inline file paths from backtick-wrapped references
+  const KNOWN_PREFIXES = [
+    'apps/', 'packages/', 'infra/', 'docs/', 'tests/', 'scripts/',
+    'artifacts/', '.specify/', '.claude/', '.github/',
+  ];
   const inlineFilePattern = /`((?:[\w@.-]+\/)+[\w.-]+\.(?:ts|tsx|json|md|js|jsx|css|yaml|yml))`/g;
   let inlineMatch;
   while ((inlineMatch = inlineFilePattern.exec(planContent)) !== null) {
     const filePath = inlineMatch[1];
-    // Skip paths that are clearly not project files (e.g., npm package names, partial paths)
     if (filePath.startsWith('node_modules/') || filePath.startsWith('http')) continue;
-    // Skip partial paths that don't start with a known project directory
-    const knownPrefixes = [
-      'apps/',
-      'packages/',
-      'infra/',
-      'docs/',
-      'tests/',
-      'scripts/',
-      'artifacts/',
-      '.specify/',
-      '.claude/',
-      '.github/',
-    ];
-    if (!knownPrefixes.some((p) => filePath.startsWith(p))) continue;
-    if (!deliverables.some((d) => d.path === filePath)) {
-      const fullPath = join(repoRoot, filePath);
-      const fileExists = existsSync(fullPath);
-      deliverables.push({
-        path: filePath,
-        type: 'file',
-        status: fileExists ? 'exists' : 'missing',
-        fromSection: 'Implementation Steps',
-      });
-    }
+    if (!KNOWN_PREFIXES.some((p) => filePath.startsWith(p))) continue;
+    await addDeliverableIfNew(filePath, 'Implementation Steps');
   }
 
   // Extract checkboxes from the plan
@@ -687,13 +631,13 @@ async function parsePlanDeliverables(
     const line = lines[i].replace(/\r$/, ''); // Strip trailing CR for CRLF files
 
     // Track current phase (e.g., "### Phase 1: RED", "## Final Validation")
-    const phaseMatch = line.match(/^#{2,3}\s+(?:Phase \d+[:\s]*)?([^\n]{1,500})$/);
+    const phaseMatch = /^#{2,3}\s+(?:Phase \d+[:\s]*)?([^\n]{1,500})$/.exec(line);
     if (phaseMatch) {
       currentPhase = phaseMatch[1].trim();
     }
 
     // Match checkboxes: - [ ] or - [x]
-    const checkboxMatch = line.match(/^(\s*)-\s*\[([ xX])\]\s*([^\n]{1,500})$/);
+    const checkboxMatch = /^(\s*)-\s*\[([ xX])\]\s*([^\n]{1,500})$/.exec(line);
     if (checkboxMatch) {
       const isChecked = checkboxMatch[2].toLowerCase() === 'x';
       const text = checkboxMatch[3].trim();
@@ -802,8 +746,8 @@ async function loadMATOPSummary(
       const deliveryContent = await readFile(deliveryPath, 'utf-8');
       // Extract basic info from delivery if available
       // Match both "Consensus Verdict:** PASS" and "**Consensus: 4/4 PASS**"
-      const consensusMatch = deliveryContent.match(
-        /\*?\*?Consensus(?:\s+Verdict)?:.*?\b(PASS|WARN|FAIL)\b/i
+      const consensusMatch = /\*?\*?Consensus(?:\s+Verdict)?:.*?\b(PASS|WARN|FAIL)\b/i.exec(
+        deliveryContent
       );
       if (consensusMatch) {
         // Extract STOA results from delivery table (| STOA | Verdict | Notes |)
@@ -862,51 +806,168 @@ function buildValidationItems(attestation: RawAttestation | null): BuildValidati
   const matchValidation = (namePattern: string, commandPattern: string) =>
     attestation.validation_results!.find(
       (r) =>
-        (r.name && r.name.toLowerCase().includes(namePattern)) ||
-        (!r.name && r.command && r.command.toLowerCase().includes(commandPattern))
+        r.name?.toLowerCase().includes(namePattern) ||
+        (!r.name && r.command?.toLowerCase().includes(commandPattern))
     );
   const typecheck = matchValidation('type', 'typecheck');
   const tests = matchValidation('test', 'vitest');
   const lint = matchValidation('lint', 'eslint');
   const build = matchValidation('build', 'build');
 
-  items.push({
-    name: 'typecheck',
-    status: typecheck ? (typecheck.passed ? 'pass' : 'fail') : 'pending',
-    exitCode: typecheck?.exit_code,
-    command: typecheck?.command,
-    timestamp: typecheck?.timestamp,
-    duration: typecheck?.duration_ms,
-  });
+  const resolveStatus = (v: { passed?: boolean } | null | undefined): 'pass' | 'fail' | 'pending' => {
+    if (v?.passed === undefined) return 'pending';
+    return v.passed ? 'pass' : 'fail';
+  };
 
-  items.push({
-    name: 'tests',
-    status: tests ? (tests.passed ? 'pass' : 'fail') : 'pending',
-    exitCode: tests?.exit_code,
-    command: tests?.command,
-    timestamp: tests?.timestamp,
-    duration: tests?.duration_ms,
-  });
-
-  items.push({
-    name: 'lint',
-    status: lint ? (lint.passed ? 'pass' : 'fail') : 'pending',
-    exitCode: lint?.exit_code,
-    command: lint?.command,
-    timestamp: lint?.timestamp,
-    duration: lint?.duration_ms,
-  });
-
-  items.push({
-    name: 'build',
-    status: build ? (build.passed ? 'pass' : 'fail') : 'pending',
-    exitCode: build?.exit_code,
-    command: build?.command,
-    timestamp: build?.timestamp,
-    duration: build?.duration_ms,
-  });
+  items.push(
+    {
+      name: 'typecheck',
+      status: resolveStatus(typecheck),
+      exitCode: typecheck?.exit_code,
+      command: typecheck?.command,
+      timestamp: typecheck?.timestamp,
+      duration: typecheck?.duration_ms,
+    },
+    {
+      name: 'tests',
+      status: resolveStatus(tests),
+      exitCode: tests?.exit_code,
+      command: tests?.command,
+      timestamp: tests?.timestamp,
+      duration: tests?.duration_ms,
+    },
+    {
+      name: 'lint',
+      status: resolveStatus(lint),
+      exitCode: lint?.exit_code,
+      command: lint?.command,
+      timestamp: lint?.timestamp,
+      duration: lint?.duration_ms,
+    },
+    {
+      name: 'build',
+      status: resolveStatus(build),
+      exitCode: build?.exit_code,
+      command: build?.command,
+      timestamp: build?.timestamp,
+      duration: build?.duration_ms,
+    },
+  );
 
   return items;
+}
+
+function buildLifecycleGate(
+  spec: DocumentPreview,
+  plan: DocumentPreview,
+  contextAckExists: boolean,
+  attestation: RawAttestation | null,
+  blockingReasons: string[]
+): CompletionGate {
+  const missing: string[] = [];
+  if (!spec.exists) missing.push('spec');
+  if (!plan.exists) missing.push('plan');
+  if (!contextAckExists) missing.push('context_ack.json');
+  if (!attestation) missing.push('attestation');
+  if (missing.length > 0) blockingReasons.push(`Lifecycle files missing: ${missing.join(', ')}`);
+  return {
+    name: 'Lifecycle Flow',
+    status: missing.length === 0 ? 'pass' : 'blocked',
+    details: missing.length === 0 ? 'spec, plan, context_ack, attestation all present' : `Missing: ${missing.join(', ')}`,
+    required: true,
+  };
+}
+
+function buildCheckboxGate(
+  planDeliverables: PlanDeliverablesVerification | null,
+  blockingReasons: string[]
+): CompletionGate {
+  const total = planDeliverables?.checkboxes?.total ?? 0;
+  const checked = planDeliverables?.checkboxes?.checked ?? 0;
+  const pct = total > 0 ? Math.round((checked / total) * 100) : 100;
+  let status: GateStatus;
+  if (!planDeliverables?.planExists) {
+    status = 'pending';
+  } else if (pct === 100) {
+    status = 'pass';
+  } else if (pct >= 80) {
+    status = 'warn';
+  } else {
+    status = 'blocked';
+    blockingReasons.push(`Plan checkboxes incomplete: ${checked}/${total} (${pct}%)`);
+  }
+  return { name: 'Plan Checkboxes', status, details: `${checked}/${total} (${pct}%)`, required: true };
+}
+
+function buildArtifactGate(
+  planDeliverables: PlanDeliverablesVerification | null,
+  blockingReasons: string[]
+): CompletionGate {
+  const total = planDeliverables?.deliverables?.total ?? 0;
+  const verified = planDeliverables?.deliverables?.verified ?? 0;
+  const artMissing = planDeliverables?.deliverables?.missing ?? 0;
+  let status: GateStatus;
+  if (total === 0) {
+    status = 'pending';
+  } else if (artMissing === 0) {
+    status = 'pass';
+  } else {
+    status = 'blocked';
+    blockingReasons.push(`Missing artifacts: ${artMissing} files`);
+  }
+  return { name: 'Artifact Verification', status, details: `${verified}/${total} verified`, required: true };
+}
+
+function buildBuildValidationGate(
+  validationItems: BuildValidationItem[],
+  blockingReasons: string[]
+): { gate: CompletionGate; allPending: boolean } {
+  const keys = ['typecheck', 'tests', 'lint', 'build'] as const;
+  const items = keys.map((k) => validationItems.find((i) => i.name === k));
+  const allPending = items.every((i) => i?.status === 'pending');
+  const allPassed = items.every((i) => i?.status === 'pass');
+  const anyFailed = items.some((i) => i?.status === 'fail');
+  let status: GateStatus;
+  if (allPending) {
+    status = 'blocked';
+    blockingReasons.push('Build validation not executed');
+  } else if (allPassed) {
+    status = 'pass';
+  } else if (anyFailed) {
+    status = 'blocked';
+    const failed = items.filter((i) => i?.status === 'fail').map((i) => i?.name);
+    blockingReasons.push(`Build validation failed: ${failed.join(', ')}`);
+  } else {
+    status = 'warn';
+  }
+  const details = allPassed
+    ? 'typecheck, tests, lint, build all passed'
+    : `${validationItems.filter((i) => i.status === 'pass').length}/4 passed`;
+  return { gate: { name: 'Build Validation', status, details, required: true }, allPending };
+}
+
+function buildStoaGate(
+  matop: MATOPExecutionSummary | null,
+  allBuildPending: boolean,
+  blockingReasons: string[]
+): CompletionGate {
+  let status: GateStatus = 'pending';
+  if (!matop) {
+    if (!allBuildPending) blockingReasons.push('MATOP validation not executed');
+  } else if (matop.consensusVerdict === 'PASS') {
+    status = 'pass';
+  } else if (matop.consensusVerdict === 'WARN') {
+    status = 'warn';
+  } else if (matop.consensusVerdict === 'FAIL') {
+    status = 'blocked';
+    blockingReasons.push('MATOP consensus verdict: FAIL');
+  }
+  return {
+    name: 'STOA Gate Pass',
+    status,
+    details: matop ? `Consensus: ${matop.consensusVerdict}` : 'Not executed',
+    required: true,
+  };
 }
 
 /**
@@ -922,143 +983,15 @@ function buildCompletionGates(
   plan: DocumentPreview,
   contextAckExists: boolean
 ): CompletionGatesStatus {
-  const gates: CompletionGate[] = [];
   const blockingReasons: string[] = [];
 
-  // Gate 0: Lifecycle Flow (spec + plan + context_ack + attestation must exist)
-  const lifecycleMissing: string[] = [];
-  if (!spec.exists) lifecycleMissing.push('spec');
-  if (!plan.exists) lifecycleMissing.push('plan');
-  if (!contextAckExists) lifecycleMissing.push('context_ack.json');
-  if (!attestation) lifecycleMissing.push('attestation');
+  const lifecycleGate = buildLifecycleGate(spec, plan, contextAckExists, attestation, blockingReasons);
+  const checkboxGate = buildCheckboxGate(planDeliverables, blockingReasons);
+  const artifactGate = buildArtifactGate(planDeliverables, blockingReasons);
+  const { gate: buildGate, allPending: allBuildPending } = buildBuildValidationGate(validationItems, blockingReasons);
+  const stoaGate = buildStoaGate(matop, allBuildPending, blockingReasons);
 
-  const lifecycleStatus: 'pass' | 'blocked' = lifecycleMissing.length === 0 ? 'pass' : 'blocked';
-  if (lifecycleMissing.length > 0) {
-    blockingReasons.push(`Lifecycle files missing: ${lifecycleMissing.join(', ')}`);
-  }
-
-  gates.push({
-    name: 'Lifecycle Flow',
-    status: lifecycleStatus,
-    details:
-      lifecycleMissing.length === 0
-        ? 'spec, plan, context_ack, attestation all present'
-        : `Missing: ${lifecycleMissing.join(', ')}`,
-    required: true,
-  });
-
-  // Gate 1: Plan Checkboxes
-  const checkboxTotal = planDeliverables?.checkboxes?.total ?? 0;
-  const checkboxChecked = planDeliverables?.checkboxes?.checked ?? 0;
-  const checkboxPct = checkboxTotal > 0 ? Math.round((checkboxChecked / checkboxTotal) * 100) : 100;
-
-  let checkboxStatus: 'pass' | 'warn' | 'blocked' | 'pending';
-  if (!planDeliverables?.planExists) {
-    checkboxStatus = 'pending';
-  } else if (checkboxPct === 100) {
-    checkboxStatus = 'pass';
-  } else if (checkboxPct >= 80) {
-    checkboxStatus = 'warn';
-  } else {
-    checkboxStatus = 'blocked';
-    blockingReasons.push(
-      `Plan checkboxes incomplete: ${checkboxChecked}/${checkboxTotal} (${checkboxPct}%)`
-    );
-  }
-
-  gates.push({
-    name: 'Plan Checkboxes',
-    status: checkboxStatus,
-    details: `${checkboxChecked}/${checkboxTotal} (${checkboxPct}%)`,
-    required: true,
-  });
-
-  // Gate 2: Artifact Verification
-  const artifactTotal = planDeliverables?.deliverables?.total ?? 0;
-  const artifactVerified = planDeliverables?.deliverables?.verified ?? 0;
-  const artifactMissing = planDeliverables?.deliverables?.missing ?? 0;
-
-  let artifactStatus: 'pass' | 'warn' | 'blocked' | 'pending';
-  if (artifactTotal === 0) {
-    artifactStatus = 'pending';
-  } else if (artifactMissing === 0) {
-    artifactStatus = 'pass';
-  } else {
-    artifactStatus = 'blocked';
-    blockingReasons.push(`Missing artifacts: ${artifactMissing} files`);
-  }
-
-  gates.push({
-    name: 'Artifact Verification',
-    status: artifactStatus,
-    details: `${artifactVerified}/${artifactTotal} verified`,
-    required: true,
-  });
-
-  // Gate 3: Build Validation (typecheck, tests, lint, build)
-  const typecheckItem = validationItems.find((i) => i.name === 'typecheck');
-  const testsItem = validationItems.find((i) => i.name === 'tests');
-  const lintItem = validationItems.find((i) => i.name === 'lint');
-  const buildItem = validationItems.find((i) => i.name === 'build');
-
-  const buildValidationPassed = [typecheckItem, testsItem, lintItem, buildItem].every(
-    (i) => i?.status === 'pass'
-  );
-  const anyBuildFailed = [typecheckItem, testsItem, lintItem, buildItem].some(
-    (i) => i?.status === 'fail'
-  );
-  const allBuildPending = [typecheckItem, testsItem, lintItem, buildItem].every(
-    (i) => i?.status === 'pending'
-  );
-
-  let buildStatus: 'pass' | 'warn' | 'blocked' | 'pending';
-  if (allBuildPending) {
-    buildStatus = 'blocked';
-    blockingReasons.push('Build validation not executed');
-  } else if (buildValidationPassed) {
-    buildStatus = 'pass';
-  } else if (anyBuildFailed) {
-    buildStatus = 'blocked';
-    const failed = [typecheckItem, testsItem, lintItem, buildItem]
-      .filter((i) => i?.status === 'fail')
-      .map((i) => i?.name);
-    blockingReasons.push(`Build validation failed: ${failed.join(', ')}`);
-  } else {
-    buildStatus = 'warn';
-  }
-
-  gates.push({
-    name: 'Build Validation',
-    status: buildStatus,
-    details: buildValidationPassed
-      ? 'typecheck, tests, lint, build all passed'
-      : `${validationItems.filter((i) => i.status === 'pass').length}/4 passed`,
-    required: true,
-  });
-
-  // Gate 4: STOA Gate Pass
-  let stoaStatus: 'pass' | 'warn' | 'blocked' | 'pending' = 'pending';
-  if (!matop) {
-    stoaStatus = 'pending';
-    // Only add as blocking reason if other gates have been executed
-    if (!allBuildPending) {
-      blockingReasons.push('MATOP validation not executed');
-    }
-  } else if (matop.consensusVerdict === 'PASS') {
-    stoaStatus = 'pass';
-  } else if (matop.consensusVerdict === 'WARN') {
-    stoaStatus = 'warn';
-  } else if (matop.consensusVerdict === 'FAIL') {
-    stoaStatus = 'blocked';
-    blockingReasons.push('MATOP consensus verdict: FAIL');
-  }
-
-  gates.push({
-    name: 'STOA Gate Pass',
-    status: stoaStatus,
-    details: matop ? `Consensus: ${matop.consensusVerdict}` : 'Not executed',
-    required: true,
-  });
+  const gates = [lifecycleGate, checkboxGate, artifactGate, buildGate, stoaGate];
 
   // Calculate overall status
   const allGatesPassed = gates.every((g) => g.status === 'pass' || g.status === 'warn');

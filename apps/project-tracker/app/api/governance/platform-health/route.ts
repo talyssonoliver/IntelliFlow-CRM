@@ -322,6 +322,183 @@ function loadTrendHistory(root: string): TrendPoint[] {
   }
 }
 
+function computeGoldenPaths(metrics: Record<string, any>, root: string): GoldenPathResult[] {
+  const paths = metrics.platform_engineering_foundation?.golden_paths?.paths;
+  if (!paths) return [];
+
+  return paths.map((path: any) => {
+    const docPath = resolve(root, path.documentation);
+    const docExists = existsSync(docPath);
+    let contentVerified = false;
+
+    if (docExists) {
+      try {
+        const content = readFileSync(docPath, 'utf-8').toLowerCase();
+        const searchTerms = path.name.split('-');
+        const hasContent =
+          content.includes(path.name) ||
+          searchTerms.every((term: string) => content.includes(term));
+        const hasEntryPoint = path.entry_point
+          ? content.includes(path.entry_point.toLowerCase())
+          : true;
+        contentVerified = hasContent && hasEntryPoint;
+      } catch {
+        contentVerified = false;
+      }
+    }
+
+    return { name: path.name, entrypoint: path.entry_point, docExists, contentVerified };
+  });
+}
+
+function computeEvidenceChecks(
+  goldenPaths: GoldenPathResult[],
+  metrics: Record<string, any>,
+  root: string
+): HealthCheck[] {
+  const evidenceChecks: HealthCheck[] = goldenPaths.map((gp) => ({
+    name: `golden_path_doc:${gp.name}`,
+    passed: gp.docExists && gp.contentVerified,
+    detail: (() => {
+      if (!gp.docExists) return 'Documentation file missing';
+      if (gp.contentVerified) return 'Documentation verified with entrypoint';
+      return 'Documentation exists but missing content for this path';
+    })(),
+  }));
+
+  const ciFile = metrics.standardized_workflows?.ci_pipeline?.file;
+  if (ciFile) {
+    const ciExists = existsSync(resolve(root, ciFile));
+    evidenceChecks.push({
+      name: 'ci_workflow_file',
+      passed: ciExists,
+      detail: ciExists ? `${ciFile} exists` : `MISSING: ${ciFile}`,
+    });
+  }
+
+  const envDoc = metrics.environment_management?.configuration?.documentation;
+  if (envDoc) {
+    const candidates = [
+      resolve(root, envDoc),
+      resolve(root, `.${envDoc}`),
+      resolve(root, `apps/web/${envDoc}`),
+      resolve(root, `apps/web/.${envDoc}`),
+      resolve(root, `packages/db/${envDoc}`),
+      resolve(root, `packages/db/.${envDoc}`),
+    ];
+    const found = candidates.some((c) => existsSync(c));
+    evidenceChecks.push({
+      name: 'env_documentation',
+      passed: found,
+      detail: found
+        ? `${envDoc} found in codebase`
+        : `${envDoc} not found (checked common locations)`,
+    });
+  }
+
+  return evidenceChecks;
+}
+
+function computeProvenanceChecks(metrics: Record<string, any>): {
+  provenanceChecks: HealthCheck[];
+  daysSinceCollection: number;
+  provenanceFresh: boolean;
+  nextDue: string;
+} {
+  const provenanceChecks: HealthCheck[] = [];
+  let daysSinceCollection = 0;
+  let provenanceFresh = true;
+  let nextDue = '';
+
+  if (!metrics.provenance) return { provenanceChecks, daysSinceCollection, provenanceFresh, nextDue };
+
+  const prov = metrics.provenance;
+  const now = new Date();
+  const lastCollected = new Date(prov.last_collected_at);
+  daysSinceCollection = Math.floor((now.getTime() - lastCollected.getTime()) / (1000 * 60 * 60 * 24));
+  const isStale = daysSinceCollection > prov.staleness_threshold_days;
+  provenanceFresh = !isStale;
+  nextDue = prov.next_collection_due;
+
+  provenanceChecks.push({
+    name: 'metrics_staleness',
+    passed: !isStale,
+    detail: isStale
+      ? `Last collected ${daysSinceCollection} days ago (threshold: ${prov.staleness_threshold_days} days)`
+      : `Fresh: Last collected ${daysSinceCollection} days ago (threshold: ${prov.staleness_threshold_days} days)`,
+  });
+
+  const nextDueDate = new Date(prov.next_collection_due);
+  const overdueDays = Math.floor((now.getTime() - nextDueDate.getTime()) / (1000 * 60 * 60 * 24));
+  provenanceChecks.push({
+    name: 'collection_schedule',
+    passed: overdueDays <= 30,
+    detail:
+      overdueDays > 0
+        ? `Collection overdue by ${overdueDays} days (due: ${prov.next_collection_due})`
+        : `Next collection due: ${prov.next_collection_due}`,
+  });
+
+  if (prov.sources) {
+    for (const [key, source] of Object.entries(prov.sources)) {
+      provenanceChecks.push({
+        name: `source_confidence:${key}`,
+        passed: source.confidence !== 'low',
+        detail: `${key}: confidence=${source.confidence}, method=${source.collection_method}`,
+      });
+    }
+  }
+
+  provenanceChecks.push({
+    name: 'collector_identity',
+    passed: prov.collected_by.length > 3,
+    detail: `Collected by: ${prov.collected_by}`,
+  });
+
+  return { provenanceChecks, daysSinceCollection, provenanceFresh, nextDue };
+}
+
+function computeConsistencyChecks(metrics: Record<string, any>): HealthCheck[] {
+  const consistencyChecks: HealthCheck[] = [];
+
+  if (metrics.self_service_deploy_metrics) {
+    const deploy = metrics.self_service_deploy_metrics;
+    const expectedTotal = deploy.successful_deploys + deploy.failed_deploys;
+    consistencyChecks.push({
+      name: 'deploy_count_consistency',
+      passed: deploy.total_self_service_deploys === expectedTotal,
+      detail:
+        deploy.total_self_service_deploys === expectedTotal
+          ? `Total ${deploy.total_self_service_deploys} = ${deploy.successful_deploys} success + ${deploy.failed_deploys} failed`
+          : `MISMATCH: total=${deploy.total_self_service_deploys} != ${deploy.successful_deploys}+${deploy.failed_deploys}=${expectedTotal}`,
+    });
+
+    const computedRate =
+      deploy.total_self_service_deploys > 0
+        ? (deploy.successful_deploys / deploy.total_self_service_deploys) * 100
+        : 0;
+    const rateMatch = Math.abs(deploy.success_rate_percent - computedRate) < 0.2;
+    consistencyChecks.push({
+      name: 'deploy_rate_consistency',
+      passed: rateMatch,
+      detail: rateMatch
+        ? `Success rate ${deploy.success_rate_percent}% matches computed ${computedRate.toFixed(1)}%`
+        : `MISMATCH: reported=${deploy.success_rate_percent}% vs computed=${computedRate.toFixed(1)}%`,
+    });
+  }
+
+  if (metrics.turborepo_integration) {
+    const turbo = metrics.turborepo_integration;
+    consistencyChecks.push({
+      name: 'cache_speedup_plausible',
+      passed: turbo.average_cached_build_time_seconds < turbo.average_fresh_build_time_seconds,
+      detail: `Cached=${turbo.average_cached_build_time_seconds}s < Fresh=${turbo.average_fresh_build_time_seconds}s`,
+    });
+  }
+
+  return consistencyChecks;
+}
+
 export async function GET() {
   const timestamp = new Date().toISOString();
 
@@ -387,7 +564,7 @@ export async function GET() {
     const kpiEntries: Array<{ name: string; target: string; actual: string; met: boolean }> = [];
     let kpisMet = 0;
     if (metrics.kpis) {
-      for (const [key, kpi] of Object.entries(metrics.kpis) as [string, any][]) {
+      for (const [key, kpi] of Object.entries(metrics.kpis)) {
         kpiEntries.push({
           name: key.replaceAll('_', ' '),
           target: kpi.target,
@@ -398,180 +575,15 @@ export async function GET() {
       }
     }
 
-    // --- Golden Paths ---
-    const goldenPaths: GoldenPathResult[] = [];
-    if (metrics.platform_engineering_foundation?.golden_paths?.paths) {
-      for (const path of metrics.platform_engineering_foundation.golden_paths.paths) {
-        const docPath = resolve(root, path.documentation);
-        const docExists = existsSync(docPath);
-        let contentVerified = false;
-
-        if (docExists) {
-          try {
-            const content = readFileSync(docPath, 'utf-8').toLowerCase();
-            const searchTerms = path.name.split('-');
-            const hasContent =
-              content.includes(path.name) ||
-              searchTerms.every((term: string) => content.includes(term));
-            const hasEntryPoint = path.entry_point
-              ? content.includes(path.entry_point.toLowerCase())
-              : true;
-            contentVerified = hasContent && hasEntryPoint;
-          } catch {
-            contentVerified = false;
-          }
-        }
-
-        goldenPaths.push({
-          name: path.name,
-          entrypoint: path.entry_point,
-          docExists,
-          contentVerified,
-        });
-      }
-    }
-
-    // --- Evidence checks ---
-    const evidenceChecks: HealthCheck[] = [];
-
-    for (const gp of goldenPaths) {
-      evidenceChecks.push({
-        name: `golden_path_doc:${gp.name}`,
-        passed: gp.docExists && gp.contentVerified,
-        detail: !gp.docExists
-          ? 'Documentation file missing'
-          : gp.contentVerified
-            ? 'Documentation verified with entrypoint'
-            : 'Documentation exists but missing content for this path',
-      });
-    }
-
-    const ciFile = metrics.standardized_workflows?.ci_pipeline?.file;
-    if (ciFile) {
-      const ciExists = existsSync(resolve(root, ciFile));
-      evidenceChecks.push({
-        name: 'ci_workflow_file',
-        passed: ciExists,
-        detail: ciExists ? `${ciFile} exists` : `MISSING: ${ciFile}`,
-      });
-    }
-
-    const envDoc = metrics.environment_management?.configuration?.documentation;
-    if (envDoc) {
-      const candidates = [
-        resolve(root, envDoc),
-        resolve(root, `.${envDoc}`),
-        resolve(root, `apps/web/${envDoc}`),
-        resolve(root, `apps/web/.${envDoc}`),
-        resolve(root, `packages/db/${envDoc}`),
-        resolve(root, `packages/db/.${envDoc}`),
-      ];
-      const found = candidates.some((c) => existsSync(c));
-      evidenceChecks.push({
-        name: 'env_documentation',
-        passed: found,
-        detail: found
-          ? `${envDoc} found in codebase`
-          : `${envDoc} not found (checked common locations)`,
-      });
-    }
-
+    const goldenPaths = computeGoldenPaths(metrics, root);
+    const evidenceChecks = computeEvidenceChecks(goldenPaths, metrics, root);
     const evidencePassed = evidenceChecks.filter((c) => c.passed).length;
     const evidenceWarnings = evidenceChecks.filter((c) => !c.passed).map((c) => c.detail);
 
-    // --- Provenance checks ---
-    const provenanceChecks: HealthCheck[] = [];
-    let daysSinceCollection = 0;
-    let provenanceFresh = true;
-    let nextDue = '';
+    const { provenanceChecks, daysSinceCollection, provenanceFresh, nextDue } =
+      computeProvenanceChecks(metrics);
 
-    if (metrics.provenance) {
-      const prov = metrics.provenance;
-      const now = new Date();
-      const lastCollected = new Date(prov.last_collected_at);
-      daysSinceCollection = Math.floor(
-        (now.getTime() - lastCollected.getTime()) / (1000 * 60 * 60 * 24)
-      );
-      const isStale = daysSinceCollection > prov.staleness_threshold_days;
-      provenanceFresh = !isStale;
-      nextDue = prov.next_collection_due;
-
-      provenanceChecks.push({
-        name: 'metrics_staleness',
-        passed: !isStale,
-        detail: isStale
-          ? `Last collected ${daysSinceCollection} days ago (threshold: ${prov.staleness_threshold_days} days)`
-          : `Fresh: Last collected ${daysSinceCollection} days ago (threshold: ${prov.staleness_threshold_days} days)`,
-      });
-
-      const nextDueDate = new Date(prov.next_collection_due);
-      const overdueDays = Math.floor(
-        (now.getTime() - nextDueDate.getTime()) / (1000 * 60 * 60 * 24)
-      );
-      provenanceChecks.push({
-        name: 'collection_schedule',
-        passed: overdueDays <= 30,
-        detail:
-          overdueDays > 0
-            ? `Collection overdue by ${overdueDays} days (due: ${prov.next_collection_due})`
-            : `Next collection due: ${prov.next_collection_due}`,
-      });
-
-      if (prov.sources) {
-        for (const [key, source] of Object.entries(prov.sources) as [string, any][]) {
-          provenanceChecks.push({
-            name: `source_confidence:${key}`,
-            passed: source.confidence !== 'low',
-            detail: `${key}: confidence=${source.confidence}, method=${source.collection_method}`,
-          });
-        }
-      }
-
-      provenanceChecks.push({
-        name: 'collector_identity',
-        passed: prov.collected_by.length > 3,
-        detail: `Collected by: ${prov.collected_by}`,
-      });
-    }
-
-    // --- Consistency checks ---
-    const consistencyChecks: HealthCheck[] = [];
-
-    if (metrics.self_service_deploy_metrics) {
-      const deploy = metrics.self_service_deploy_metrics;
-      const expectedTotal = deploy.successful_deploys + deploy.failed_deploys;
-      consistencyChecks.push({
-        name: 'deploy_count_consistency',
-        passed: deploy.total_self_service_deploys === expectedTotal,
-        detail:
-          deploy.total_self_service_deploys === expectedTotal
-            ? `Total ${deploy.total_self_service_deploys} = ${deploy.successful_deploys} success + ${deploy.failed_deploys} failed`
-            : `MISMATCH: total=${deploy.total_self_service_deploys} != ${deploy.successful_deploys}+${deploy.failed_deploys}=${expectedTotal}`,
-      });
-
-      const computedRate =
-        deploy.total_self_service_deploys > 0
-          ? (deploy.successful_deploys / deploy.total_self_service_deploys) * 100
-          : 0;
-      const rateMatch = Math.abs(deploy.success_rate_percent - computedRate) < 0.2;
-      consistencyChecks.push({
-        name: 'deploy_rate_consistency',
-        passed: rateMatch,
-        detail: rateMatch
-          ? `Success rate ${deploy.success_rate_percent}% matches computed ${computedRate.toFixed(1)}%`
-          : `MISMATCH: reported=${deploy.success_rate_percent}% vs computed=${computedRate.toFixed(1)}%`,
-      });
-    }
-
-    if (metrics.turborepo_integration) {
-      const turbo = metrics.turborepo_integration;
-      consistencyChecks.push({
-        name: 'cache_speedup_plausible',
-        passed: turbo.average_cached_build_time_seconds < turbo.average_fresh_build_time_seconds,
-        detail: `Cached=${turbo.average_cached_build_time_seconds}s < Fresh=${turbo.average_fresh_build_time_seconds}s`,
-      });
-    }
-
+    const consistencyChecks = computeConsistencyChecks(metrics);
     const consistencyPassed = consistencyChecks.filter((c) => c.passed).length;
     const consistencyFailures = consistencyChecks.filter((c) => !c.passed).map((c) => c.detail);
 

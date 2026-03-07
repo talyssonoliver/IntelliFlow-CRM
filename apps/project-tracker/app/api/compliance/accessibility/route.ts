@@ -6,8 +6,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { existsSync, readFileSync, readdirSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,6 +42,33 @@ function loadAxeResults(): { issues: AccessibilityIssue[]; timestamp: string } |
   return null;
 }
 
+function isAccessibilityKpi(kpiName: string): boolean {
+  const lower = kpiName.toLowerCase();
+  return lower.includes('access') || lower.includes('wcag') || lower.includes('a11y');
+}
+
+function extractAccessibilityKpisFromTask(
+  taskId: string,
+  attestationsDir: string
+): { taskId: string; kpi: string; met: boolean }[] {
+  const ackPath = join(attestationsDir, taskId, 'context_ack.json');
+  if (!existsSync(ackPath)) return [];
+
+  try {
+    const content = JSON.parse(readFileSync(ackPath, 'utf8'));
+    if (!content.kpi_results) return [];
+    return content.kpi_results
+      .filter((result: { kpi: string; met: unknown }) => isAccessibilityKpi(result.kpi))
+      .map((result: { kpi: string; met: unknown }) => ({
+        taskId,
+        kpi: result.kpi,
+        met: result.met === true,
+      }));
+  } catch {
+    return [];
+  }
+}
+
 // Check accessibility-related KPIs from attestations
 function loadAccessibilityKPIs(): { taskId: string; kpi: string; met: boolean }[] {
   const projectRoot = getProjectRoot();
@@ -56,29 +83,7 @@ function loadAccessibilityKPIs(): { taskId: string; kpi: string; met: boolean }[
       .map((d) => d.name);
 
     for (const taskId of taskDirs) {
-      const ackPath = join(attestationsDir, taskId, 'context_ack.json');
-      if (existsSync(ackPath)) {
-        try {
-          const content = JSON.parse(readFileSync(ackPath, 'utf8'));
-          if (content.kpi_results) {
-            for (const result of content.kpi_results) {
-              if (
-                result.kpi.toLowerCase().includes('access') ||
-                result.kpi.toLowerCase().includes('wcag') ||
-                result.kpi.toLowerCase().includes('a11y')
-              ) {
-                kpis.push({
-                  taskId,
-                  kpi: result.kpi,
-                  met: result.met === true,
-                });
-              }
-            }
-          }
-        } catch {
-          // Skip invalid files
-        }
-      }
+      kpis.push(...extractAccessibilityKpisFromTask(taskId, attestationsDir));
     }
   } catch (error) {
     console.error('Error loading attestations:', error);
@@ -93,26 +98,18 @@ export async function GET(_request: NextRequest) {
     const accessibilityKPIs = loadAccessibilityKPIs();
 
     // Compute compliance score
-    let score = 100;
     const issues = axeResults?.issues || [];
-
-    for (const issue of issues) {
-      switch (issue.impact) {
-        case 'critical':
-          score -= 25;
-          break;
-        case 'serious':
-          score -= 15;
-          break;
-        case 'moderate':
-          score -= 5;
-          break;
-        case 'minor':
-          score -= 2;
-          break;
-      }
-    }
-    score = Math.max(0, score);
+    const IMPACT_DEDUCTIONS: Record<string, number> = {
+      critical: 25,
+      serious: 15,
+      moderate: 5,
+      minor: 2,
+    };
+    const totalDeduction = issues.reduce(
+      (sum, issue) => sum + (IMPACT_DEDUCTIONS[issue.impact] ?? 0),
+      0
+    );
+    const score = Math.max(0, 100 - totalDeduction);
 
     const warningOrFailingStatus = score >= 70 ? 'warning' : 'failing';
     const accessibilityStatus = score >= 90 ? 'passing' : warningOrFailingStatus;

@@ -118,6 +118,90 @@ function parseSprint(sprintValue: string): number | 'Continuous' {
   return Number.isNaN(num) ? 0 : num;
 }
 
+interface GroupData {
+  total: number;
+  done: number;
+  in_progress: number;
+  blocked: number;
+  not_started: number;
+}
+
+function accumulateTaskSummary(status: TaskStatus, counts: TaskSummary): void {
+  if (STATUS_GROUPS.completed.includes(status)) {
+    counts.done++;
+  } else if (STATUS_GROUPS.active.includes(status)) {
+    counts.in_progress++;
+  } else if (
+    status === TASK_STATUSES.BLOCKED ||
+    status === TASK_STATUSES.NEEDS_HUMAN ||
+    status === TASK_STATUSES.FAILED
+  ) {
+    counts.blocked++;
+    if (status === TASK_STATUSES.FAILED) {
+      counts.failed++;
+    }
+  } else {
+    counts.not_started++;
+  }
+}
+
+function accumulateGroupData(status: TaskStatus, data: GroupData): void {
+  data.total++;
+  if (STATUS_GROUPS.completed.includes(status)) {
+    data.done++;
+  } else if (STATUS_GROUPS.active.includes(status)) {
+    data.in_progress++;
+  } else if (STATUS_GROUPS.blocked.includes(status)) {
+    data.blocked++;
+  } else {
+    data.not_started++;
+  }
+}
+
+function applySprintFilter(allTasks: UnifiedTask[], sprintFilter: string | null): UnifiedTask[] {
+  if (sprintFilter === null || sprintFilter === 'all') return allTasks;
+  if (sprintFilter === 'continuous') return allTasks.filter((t) => t.sprint === 'Continuous');
+  const sprintNum = Number.parseInt(sprintFilter, 10);
+  if (!Number.isNaN(sprintNum)) return allTasks.filter((t) => t.sprint === sprintNum);
+  return allTasks;
+}
+
+function compareSprints(a: number | 'Continuous', b: number | 'Continuous'): number {
+  if (a === 'Continuous') return 1;
+  if (b === 'Continuous') return -1;
+  return a - b;
+}
+
+function groupBySection(tasks: UnifiedTask[]): Map<string, SectionData> {
+  const sectionMap = new Map<string, SectionData>();
+  for (const task of tasks) {
+    const section = task.section || 'Other';
+    if (!sectionMap.has(section)) {
+      sectionMap.set(section, { name: section, total: 0, done: 0, in_progress: 0, blocked: 0, not_started: 0, progress: 0 });
+    }
+    accumulateGroupData(task.status, sectionMap.get(section)!);
+  }
+  for (const data of sectionMap.values()) {
+    data.progress = data.total > 0 ? Math.round((data.done / data.total) * 100) : 0;
+  }
+  return sectionMap;
+}
+
+function groupBySprint(tasks: UnifiedTask[]): Map<number | 'Continuous', SprintData> {
+  const sprintMap = new Map<number | 'Continuous', SprintData>();
+  for (const task of tasks) {
+    const sprint = task.sprint;
+    if (!sprintMap.has(sprint)) {
+      sprintMap.set(sprint, { sprint, total: 0, done: 0, in_progress: 0, blocked: 0, not_started: 0, progress: 0 });
+    }
+    accumulateGroupData(task.status, sprintMap.get(sprint)!);
+  }
+  for (const data of sprintMap.values()) {
+    data.progress = data.total > 0 ? Math.round((data.done / data.total) * 100) : 0;
+  }
+  return sprintMap;
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -159,104 +243,19 @@ export async function GET(request: Request) {
       .filter((t) => t.id); // Filter out empty rows
 
     // Apply sprint filter if specified
-    let tasks = allTasks;
-    if (sprintFilter !== null && sprintFilter !== 'all') {
-      if (sprintFilter === 'continuous') {
-        tasks = allTasks.filter((t) => t.sprint === 'Continuous');
-      } else {
-        const sprintNum = parseInt(sprintFilter, 10);
-        if (!isNaN(sprintNum)) {
-          tasks = allTasks.filter((t) => t.sprint === sprintNum);
-        }
-      }
-    }
+    const tasks = applySprintFilter(allTasks, sprintFilter);
 
     // Compute status counts using STATUS_GROUPS
     const statusCounts: TaskSummary = createEmptyTaskSummary();
     statusCounts.total = tasks.length;
 
     for (const task of tasks) {
-      if (STATUS_GROUPS.completed.includes(task.status)) {
-        statusCounts.done++;
-      } else if (STATUS_GROUPS.active.includes(task.status)) {
-        statusCounts.in_progress++;
-      } else if (
-        task.status === TASK_STATUSES.BLOCKED ||
-        task.status === TASK_STATUSES.NEEDS_HUMAN ||
-        task.status === TASK_STATUSES.FAILED
-      ) {
-        statusCounts.blocked++;
-        if (task.status === TASK_STATUSES.FAILED) {
-          statusCounts.failed++;
-        }
-      } else {
-        statusCounts.not_started++;
-      }
+      accumulateTaskSummary(task.status, statusCounts);
     }
 
-    // Group by section
-    const sectionMap = new Map<string, SectionData>();
-    for (const task of tasks) {
-      const section = task.section || 'Other';
-      if (!sectionMap.has(section)) {
-        sectionMap.set(section, {
-          name: section,
-          total: 0,
-          done: 0,
-          in_progress: 0,
-          blocked: 0,
-          not_started: 0,
-          progress: 0,
-        });
-      }
-      const data = sectionMap.get(section)!;
-      data.total++;
-      if (STATUS_GROUPS.completed.includes(task.status)) {
-        data.done++;
-      } else if (STATUS_GROUPS.active.includes(task.status)) {
-        data.in_progress++;
-      } else if (STATUS_GROUPS.blocked.includes(task.status)) {
-        data.blocked++;
-      } else {
-        data.not_started++;
-      }
-    }
-    // Calculate progress percentages
-    for (const data of sectionMap.values()) {
-      data.progress = data.total > 0 ? Math.round((data.done / data.total) * 100) : 0;
-    }
-
-    // Group by sprint
-    const sprintMap = new Map<number | 'Continuous', SprintData>();
-    for (const task of tasks) {
-      const sprint = task.sprint;
-      if (!sprintMap.has(sprint)) {
-        sprintMap.set(sprint, {
-          sprint,
-          total: 0,
-          done: 0,
-          in_progress: 0,
-          blocked: 0,
-          not_started: 0,
-          progress: 0,
-        });
-      }
-      const data = sprintMap.get(sprint)!;
-      data.total++;
-      if (STATUS_GROUPS.completed.includes(task.status)) {
-        data.done++;
-      } else if (STATUS_GROUPS.active.includes(task.status)) {
-        data.in_progress++;
-      } else if (STATUS_GROUPS.blocked.includes(task.status)) {
-        data.blocked++;
-      } else {
-        data.not_started++;
-      }
-    }
-    // Calculate progress percentages
-    for (const data of sprintMap.values()) {
-      data.progress = data.total > 0 ? Math.round((data.done / data.total) * 100) : 0;
-    }
+    // Group by section and sprint
+    const sectionMap = groupBySection(tasks);
+    const sprintMap = groupBySprint(tasks);
 
     // Collect unique values
     const uniqueSections = [...new Set(tasks.map((t) => t.section))].sort((a, b) =>
@@ -265,20 +264,12 @@ export async function GET(request: Request) {
     const uniqueOwners = [...new Set(tasks.map((t) => t.owner))]
       .filter(Boolean)
       .sort((a, b) => a.localeCompare(b));
-    const uniqueSprints = [...new Set(tasks.map((t) => t.sprint))].sort((a, b) => {
-      if (a === 'Continuous') return 1;
-      if (b === 'Continuous') return -1;
-      return (a as number) - (b as number);
-    });
+    const uniqueSprints = [...new Set(tasks.map((t) => t.sprint))].sort(compareSprints);
 
     const response: UnifiedDataResponse = {
       tasks,
       sections: Array.from(sectionMap.values()).sort((a, b) => a.name.localeCompare(b.name)),
-      sprints: Array.from(sprintMap.values()).sort((a, b) => {
-        if (a.sprint === 'Continuous') return 1;
-        if (b.sprint === 'Continuous') return -1;
-        return (a.sprint as number) - (b.sprint as number);
-      }),
+      sprints: Array.from(sprintMap.values()).sort((a, b) => compareSprints(a.sprint, b.sprint)),
       status_counts: statusCounts,
       unique_sections: uniqueSections,
       unique_owners: uniqueOwners,

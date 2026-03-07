@@ -59,11 +59,14 @@ export default function MetricCard({
     stable: 'text-gray-500',
   };
 
-  const parsedLastUpdated = lastUpdated
-    ? typeof lastUpdated === 'string'
-      ? new Date(lastUpdated)
-      : lastUpdated
-    : null;
+  let parsedLastUpdated: Date | null;
+  if (!lastUpdated) {
+    parsedLastUpdated = null;
+  } else if (typeof lastUpdated === 'string') {
+    parsedLastUpdated = new Date(lastUpdated);
+  } else {
+    parsedLastUpdated = lastUpdated;
+  }
 
   return (
     <div className={`rounded-lg border p-4 shadow-sm ${variantStyles[variant]}`}>

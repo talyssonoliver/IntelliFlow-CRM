@@ -62,7 +62,7 @@ function getStringParam(searchParams: URLSearchParams, key: string): string | un
   const v = searchParams.get(key);
   if (!v) return undefined;
   const trimmed = v.trim();
-  return trimmed ? trimmed : undefined;
+  return trimmed || undefined;
 }
 
 function getBoolParam(searchParams: URLSearchParams, key: string): boolean {
@@ -77,103 +77,70 @@ function getIntParam(searchParams: URLSearchParams, key: string, fallback: numbe
   return Number.isFinite(n) ? n : fallback;
 }
 
+type CommandResult = { displayName: string; runId?: string; argv: string[]; useShell?: boolean };
+
+function buildRunAuditCommand(python: string, searchParams: URLSearchParams): CommandResult {
+  const mode = getStringParam(searchParams, 'mode');
+  const tier = getStringParam(searchParams, 'tier');
+  const scope = getStringParam(searchParams, 'scope');
+  const baseRef = getStringParam(searchParams, 'baseRef') ?? 'origin/main';
+  const resume = getBoolParam(searchParams, 'resume');
+  const concurrency = getIntParam(searchParams, 'concurrency', 1);
+  const runId = getStringParam(searchParams, 'runId') ?? generateRunId('ui-audit');
+
+  const args: string[] = [python, path.join('tools', 'audit', 'run_audit.py')];
+  if (mode) args.push('--mode', mode);
+  else if (tier) args.push('--tier', tier);
+  else args.push('--mode', 'pr');
+
+  if (scope) args.push('--scope', scope);
+  if (baseRef) args.push('--base-ref', baseRef);
+  if (resume) args.push('--resume');
+  if (concurrency > 1) args.push('--concurrency', String(concurrency));
+  args.push('--run-id', runId);
+
+  return { displayName: 'System Audit', runId, argv: args };
+}
+
+function buildSprintCompletionCommand(searchParams: URLSearchParams): CommandResult {
+  const sprint = getIntParam(searchParams, 'sprint', 0);
+  const strict = getBoolParam(searchParams, 'strict');
+  const skipValidations = getBoolParam(searchParams, 'skipValidations');
+  const runId = generateRunId(`sprint${sprint}-audit`);
+
+  const args: string[] = ['pnpm', 'tsx', path.join('tools', 'scripts', 'audit-sprint-completion.ts'), '--sprint', String(sprint), '--run-id', runId];
+  if (strict) args.push('--strict');
+  if (skipValidations) args.push('--skip-validations');
+
+  return { displayName: `Sprint ${sprint} Completion Audit`, runId, argv: args, useShell: true };
+}
+
 function buildCommand(
   cmd: AuditStreamCommand,
   searchParams: URLSearchParams
-): { displayName: string; runId?: string; argv: string[]; useShell?: boolean } {
+): CommandResult {
   const python = getPythonCommand();
 
-  if (cmd === 'run-audit') {
-    const mode = getStringParam(searchParams, 'mode');
-    const tier = getStringParam(searchParams, 'tier');
-    const scope = getStringParam(searchParams, 'scope');
-    const baseRef = getStringParam(searchParams, 'baseRef') ?? 'origin/main';
-    const resume = getBoolParam(searchParams, 'resume');
-    const concurrency = getIntParam(searchParams, 'concurrency', 1);
-    const runId = getStringParam(searchParams, 'runId') ?? generateRunId('ui-audit');
-
-    const args: string[] = [python, path.join('tools', 'audit', 'run_audit.py')];
-
-    if (mode) {
-      args.push('--mode', mode);
-    } else if (tier) {
-      args.push('--tier', tier);
-    } else {
-      args.push('--mode', 'pr');
-    }
-
-    if (scope) args.push('--scope', scope);
-    if (baseRef) args.push('--base-ref', baseRef);
-    if (resume) args.push('--resume');
-    if (concurrency > 1) args.push('--concurrency', String(concurrency));
-
-    args.push('--run-id', runId);
-
-    return { displayName: 'System Audit', runId, argv: args };
-  }
+  if (cmd === 'run-audit') return buildRunAuditCommand(python, searchParams);
 
   if (cmd === 'status-snapshot') {
-    return {
-      displayName: 'Status Snapshot',
-      argv: [python, path.join('tools', 'audit', 'status_snapshot.py')],
-    };
+    return { displayName: 'Status Snapshot', argv: [python, path.join('tools', 'audit', 'status_snapshot.py')] };
   }
 
   if (cmd === 'sprint0-audit') {
     const runId = getStringParam(searchParams, 'runId');
-    if (!runId) {
-      throw new Error('Missing required query param: runId');
-    }
-    return {
-      displayName: 'Sprint 0 Audit Reports',
-      runId,
-      argv: [python, path.join('tools', 'audit', 'sprint0_audit.py'), '--run-id', runId],
-    };
+    if (!runId) throw new Error('Missing required query param: runId');
+    return { displayName: 'Sprint 0 Audit Reports', runId, argv: [python, path.join('tools', 'audit', 'sprint0_audit.py'), '--run-id', runId] };
   }
 
-  if (cmd === 'sprint-completion') {
-    const sprint = getIntParam(searchParams, 'sprint', 0);
-    const strict = getBoolParam(searchParams, 'strict');
-    const skipValidations = getBoolParam(searchParams, 'skipValidations');
-    const runId = generateRunId(`sprint${sprint}-audit`);
-
-    // Use pnpm tsx which is more reliable across platforms
-    const args: string[] = [
-      'pnpm',
-      'tsx',
-      path.join('tools', 'scripts', 'audit-sprint-completion.ts'),
-      '--sprint',
-      String(sprint),
-      '--run-id',
-      runId,
-    ];
-    if (strict) args.push('--strict');
-    if (skipValidations) args.push('--skip-validations');
-
-    return {
-      displayName: `Sprint ${sprint} Completion Audit`,
-      runId,
-      argv: args,
-      useShell: true, // Required for pnpm/npx on Windows
-    };
-  }
+  if (cmd === 'sprint-completion') return buildSprintCompletionCommand(searchParams);
 
   // cmd === 'affected'
-  {
-    const baseRef = getStringParam(searchParams, 'baseRef') ?? 'origin/main';
-    const includeDependents = getBoolParam(searchParams, 'includeDependents');
-    const args: string[] = [
-      python,
-      path.join('tools', 'audit', 'affected.py'),
-      '--base-ref',
-      baseRef,
-    ];
-    if (includeDependents) args.push('--include-dependents');
-    return {
-      displayName: 'Affected Scope',
-      argv: args,
-    };
-  }
+  const baseRef = getStringParam(searchParams, 'baseRef') ?? 'origin/main';
+  const includeDependents = getBoolParam(searchParams, 'includeDependents');
+  const args: string[] = [python, path.join('tools', 'audit', 'affected.py'), '--base-ref', baseRef];
+  if (includeDependents) args.push('--include-dependents');
+  return { displayName: 'Affected Scope', argv: args };
 }
 
 export async function GET(request: NextRequest) {
@@ -214,7 +181,7 @@ export async function GET(request: NextRequest) {
       };
 
       const sendLogLine = (streamName: 'stdout' | 'stderr', line: string) => {
-        const clean = stripVTControlCharacters(line.replace(/\r/g, ''));
+        const clean = stripVTControlCharacters(line.replaceAll('\r', ''));
         if (!clean.trim()) return;
         sendSse(controller, encoder, 'log', {
           stream: streamName,

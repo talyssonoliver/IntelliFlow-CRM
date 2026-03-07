@@ -99,8 +99,8 @@ export function loadCSVTasks(): CSVTask[] {
         if (sprintValue.toLowerCase() === 'continuous') {
           sprint = 'Continuous';
         } else {
-          const num = parseInt(sprintValue, 10);
-          sprint = isNaN(num) ? 0 : num;
+          const num = Number.parseInt(sprintValue, 10);
+          sprint = Number.isNaN(num) ? 0 : num;
         }
 
         const depsStr = row['CleanDependencies'] || row['Dependencies'] || '';
@@ -146,7 +146,7 @@ export function loadCSVTasks(): CSVTask[] {
 function isTierATask(taskId: string, section: string, dependentCount: number): boolean {
   const lc = section.toLowerCase();
   if (taskId.includes('SEC') || lc.includes('security')) return true;
-  if (taskId.startsWith('IFC-0') && parseInt(taskId.replace('IFC-', '')) <= 10) return true;
+  if (taskId.startsWith('IFC-0') && Number.parseInt(taskId.replace('IFC-', '')) <= 10) return true;
   if (dependentCount >= 5) return true;
   if (taskId.startsWith('EXC-')) return true;
   if (lc.includes('planning') || lc.includes('strategy')) return true;
@@ -237,6 +237,30 @@ interface SprintSummary {
   completed_tasks: CompletedTask[];
 }
 
+// Keys in plan-overrides.yaml that are metadata, not task overrides
+const YAML_META_KEYS = new Set(['schema_version', 'last_updated', 'maintainer', 'gate_profiles']);
+
+function isMetaKey(key: string): boolean {
+  return key.startsWith('_') || YAML_META_KEYS.has(key);
+}
+
+function parseOverrideEntry(taskId: string, override: any): TaskOverride {
+  return {
+    taskId,
+    tier: (override.tier as TaskTier) || 'C',
+    gateProfile: override.gate_profile || [],
+    acceptanceOwner: override.acceptance_owner,
+    debtAllowed: override.debt_allowed === true || override.debt_allowed === 'yes',
+    waiverExpiry: override.waiver_expiry,
+    evidenceRequired: override.evidence_required || [],
+    overrideDepsAdd: override.override_deps_add,
+    overrideDepsRemove: override.override_deps_remove,
+    sprintOverride: override.sprint_override,
+    exceptionPolicy: override.exception_policy,
+    notes: override.notes,
+  };
+}
+
 /**
  * Load and parse plan-overrides.yaml
  */
@@ -251,33 +275,10 @@ export function loadPlanOverrides(): Record<string, TaskOverride> {
     const data = yaml.load(content) as Record<string, any>;
 
     const overrides: Record<string, TaskOverride> = {};
-
     for (const [taskId, override] of Object.entries(data)) {
-      if (
-        taskId.startsWith('_') ||
-        taskId === 'schema_version' ||
-        taskId === 'last_updated' ||
-        taskId === 'maintainer' ||
-        taskId === 'gate_profiles'
-      ) {
-        continue;
-      }
-
+      if (isMetaKey(taskId)) continue;
       if (typeof override === 'object' && override !== null) {
-        overrides[taskId] = {
-          taskId,
-          tier: (override.tier as TaskTier) || 'C',
-          gateProfile: override.gate_profile || [],
-          acceptanceOwner: override.acceptance_owner,
-          debtAllowed: override.debt_allowed === true || override.debt_allowed === 'yes',
-          waiverExpiry: override.waiver_expiry,
-          evidenceRequired: override.evidence_required || [],
-          overrideDepsAdd: override.override_deps_add,
-          overrideDepsRemove: override.override_deps_remove,
-          sprintOverride: override.sprint_override,
-          exceptionPolicy: override.exception_policy,
-          notes: override.notes,
-        };
+        overrides[taskId] = parseOverrideEntry(taskId, override);
       }
     }
 
@@ -467,49 +468,13 @@ export function getGovernanceSummary(sprint: number | 'all' = 0): GovernanceSumm
   const lintReport = loadLintReport();
   const debtLedger = loadDebtLedger();
 
-  const tierBreakdown = { A: 0, B: 0, C: 0 };
-  for (const task of allTasksWithGov) {
-    tierBreakdown[task.tier]++;
-  }
+  const tierBreakdown = buildTierBreakdown(allTasksWithGov);
+  const expiringWaivers = countExpiringWaivers(overrides);
+  const { tierCompletion, taskSummary: partialSummary } = buildTierCompletion(allTasksWithGov);
 
-  const now = new Date();
-  const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-  let expiringWaivers = 0;
-
-  for (const override of Object.values(overrides)) {
-    if (override.waiverExpiry) {
-      const expiry = new Date(override.waiverExpiry);
-      if (expiry <= thirtyDaysFromNow && expiry > now) {
-        expiringWaivers++;
-      }
-    }
-  }
-
-  const tierCompletion = {
-    A: { done: 0, total: 0 },
-    B: { done: 0, total: 0 },
-    C: { done: 0, total: 0 },
-  };
-
-  const taskSummary = {
-    total: allTasksWithGov.length,
-    done: 0,
-    in_progress: 0,
-    blocked: 0,
-    not_started: 0,
-    failed: 0,
-  };
-
-  for (const task of allTasksWithGov) {
-    tierCompletion[task.tier].total++;
-    accumulateTaskStatus(task, tierCompletion, taskSummary);
-  }
-
-  let filteredReviewQueue = reviewQueue?.items || [];
-  if (sprint !== 'all' && typeof sprint === 'number') {
-    const sprintTaskIds = new Set(allTasksWithGov.map((t) => t.taskId));
-    filteredReviewQueue = filteredReviewQueue.filter((item) => sprintTaskIds.has(item.task_id));
-  }
+  const taskSummary = { total: allTasksWithGov.length, ...partialSummary };
+  const sprintTaskIds = new Set(allTasksWithGov.map((t) => t.taskId));
+  const filteredReviewQueue = filterReviewQueueForSprint(reviewQueue, sprint, sprintTaskIds);
 
   return {
     sprint: typeof sprint === 'number' ? sprint : 0,
@@ -608,6 +573,55 @@ type TaskSummary = {
   failed: number;
 };
 
+function countExpiringWaivers(overrides: Record<string, TaskOverride>): number {
+  const now = new Date();
+  const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  let count = 0;
+  for (const override of Object.values(overrides)) {
+    if (override.waiverExpiry) {
+      const expiry = new Date(override.waiverExpiry);
+      if (expiry <= thirtyDaysFromNow && expiry > now) {
+        count++;
+      }
+    }
+  }
+  return count;
+}
+
+function buildTierBreakdown(tasks: Array<{ tier: TierKey }>): Record<TierKey, number> {
+  const breakdown = { A: 0, B: 0, C: 0 } as Record<TierKey, number>;
+  for (const task of tasks) {
+    breakdown[task.tier]++;
+  }
+  return breakdown;
+}
+
+function buildTierCompletion(
+  tasks: Array<{ tier: TierKey; status: string }>
+): { tierCompletion: TierCompletion; taskSummary: Omit<TaskSummary, 'total'> } {
+  const tierCompletion: TierCompletion = {
+    A: { done: 0, total: 0 },
+    B: { done: 0, total: 0 },
+    C: { done: 0, total: 0 },
+  };
+  const taskSummary = { done: 0, in_progress: 0, blocked: 0, not_started: 0, failed: 0 };
+  for (const task of tasks) {
+    tierCompletion[task.tier].total++;
+    accumulateTaskStatus(task, tierCompletion, taskSummary);
+  }
+  return { tierCompletion, taskSummary };
+}
+
+function filterReviewQueueForSprint(
+  reviewQueue: ReviewQueue | null,
+  sprint: number | 'all',
+  taskIds: Set<string>
+): Array<ReviewQueue['items'][number]> {
+  const items = reviewQueue?.items || [];
+  if (sprint === 'all' || typeof sprint !== 'number') return items;
+  return items.filter((item) => taskIds.has(item.task_id));
+}
+
 function accumulateTaskStatus(
   task: { tier: TierKey; status: string },
   tierCompletion: TierCompletion,
@@ -682,7 +696,11 @@ export function getDetailedTasksByTier(sprintFilter?: number | 'all'): {
 
     const detail: TierTaskDetail = {
       taskId: task.taskId,
-      status: isDone ? 'done' : isBlocked ? 'blocked' : 'pending',
+      status: (() => {
+        if (isDone) return 'done';
+        if (isBlocked) return 'blocked';
+        return 'pending';
+      })() as 'done' | 'blocked' | 'pending',
       acceptanceOwner: task.acceptanceOwner,
       hasLintErrors: lintErrors.length > 0,
       lintErrorTypes: lintErrors,

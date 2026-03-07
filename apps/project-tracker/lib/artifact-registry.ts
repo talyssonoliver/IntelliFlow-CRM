@@ -7,9 +7,9 @@
  * - Cleanup assistant (orphan detection, size analysis)
  */
 
-import { readdirSync, statSync, existsSync } from 'fs';
-import { join, extname } from 'path';
-import { execFileSync } from 'child_process';
+import { readdirSync, statSync, existsSync, type Dirent } from 'node:fs';
+import { join, extname } from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { MONOREPO_ROOT } from './paths';
 
 // =============================================================================
@@ -120,7 +120,7 @@ export interface CodebaseHealth {
 export interface MissingFile {
   path: string;
   expectedBy: string[];
-  prefix: 'ARTIFACT' | 'EVIDENCE' | 'FILE' | 'CONTEXT' | 'PLAN' | 'SPEC';
+  prefix: 'ARTIFACT' | 'EVIDENCE' | 'FILE' | 'CONTEXT' | 'PLAN' | 'SPEC' | 'ATTESTATION';
 }
 
 export interface CleanupSuggestion {
@@ -170,7 +170,7 @@ const CONTENT_ISSUE_PATTERNS: Array<{
   },
   {
     type: 'placeholder',
-    pattern: /Status:\s*PLACEHOLDER|PLACEHOLDER\s*-\s*[Vv]ideo|placeholder.*pending/gi,
+    pattern: /Status:\s*PLACEHOLDER|PLACEHOLDER\s*-\s*video|placeholder.*pending/gi,
     message: 'File marked as placeholder with pending status',
   },
   // Mock data indicators
@@ -328,7 +328,7 @@ export function validateFileContent(
     const actualExtension = filePath.substring(filePath.lastIndexOf('.'));
     const wrongFormats = FORMAT_EXPECTATIONS[expectedExtension];
 
-    if (wrongFormats && wrongFormats.includes(actualExtension)) {
+    if (wrongFormats?.includes(actualExtension)) {
       issues.push({
         type: 'wrong_format',
         message: `Expected ${expectedExtension} file but got ${actualExtension}`,
@@ -505,58 +505,54 @@ function isTestFile(path: string): boolean {
 // FILE SCANNING
 // =============================================================================
 
+function scanItem(
+  item: Dirent<string>,
+  fullPath: string,
+  relativePath: string,
+  entries: FileEntry[]
+): void {
+  try {
+    const stats = statSync(fullPath);
+    if (item.isDirectory()) {
+      const depth = relativePath.split(/[/\\]/).length;
+      if (SKIP_DIRS_TOP_LEVEL.has(item.name) && depth <= 3) return;
+      entries.push(...scanDirectoryRecursive(fullPath, relativePath));
+    } else if (item.isFile()) {
+      const ext = extname(item.name).toLowerCase() || 'none';
+      const normalizedPath = relativePath.replaceAll('\\', '/');
+      entries.push({
+        path: normalizedPath,
+        absolutePath: fullPath,
+        exists: true,
+        type: 'file',
+        size: stats.size,
+        lastModified: stats.mtime.toISOString(),
+        linkedTasks: [],
+        isOrphan: true,
+        category: detectCategory(normalizedPath, ext),
+        directory: detectDirectory(normalizedPath),
+        extension: ext,
+        isTestFile: isTestFile(normalizedPath),
+        hasTest: false,
+      });
+    }
+  } catch {
+    // Skip files we can't stat
+  }
+}
+
 function scanDirectoryRecursive(dir: string, basePath: string = ''): FileEntry[] {
   const entries: FileEntry[] = [];
 
-  if (!existsSync(dir)) {
-    return entries;
-  }
+  if (!existsSync(dir)) return entries;
 
   try {
     const items = readdirSync(dir, { withFileTypes: true });
-
     for (const item of items) {
-      // Skip ignored directories and files
-      if (SKIP_DIRS.has(item.name) || SKIP_FILES.has(item.name)) {
-        continue;
-      }
-
+      if (SKIP_DIRS.has(item.name) || SKIP_FILES.has(item.name)) continue;
       const fullPath = join(dir, item.name);
       const relativePath = basePath ? join(basePath, item.name) : item.name;
-
-      try {
-        const stats = statSync(fullPath);
-
-        if (item.isDirectory()) {
-          // Skip top-level build dirs (e.g., apps/web/build) but not nested ones (e.g., api/tracking/build)
-          const depth = relativePath.split(/[/\\]/).length;
-          if (SKIP_DIRS_TOP_LEVEL.has(item.name) && depth <= 3) {
-            continue;
-          }
-          entries.push(...scanDirectoryRecursive(fullPath, relativePath));
-        } else if (item.isFile()) {
-          const ext = extname(item.name).toLowerCase() || 'none';
-          const normalizedPath = relativePath.replace(/\\/g, '/');
-
-          entries.push({
-            path: normalizedPath,
-            absolutePath: fullPath,
-            exists: true,
-            type: 'file',
-            size: stats.size,
-            lastModified: stats.mtime.toISOString(),
-            linkedTasks: [],
-            isOrphan: true,
-            category: detectCategory(normalizedPath, ext),
-            directory: detectDirectory(normalizedPath),
-            extension: ext,
-            isTestFile: isTestFile(normalizedPath),
-            hasTest: false,
-          });
-        }
-      } catch {
-        // Skip files we can't stat
-      }
+      scanItem(item, fullPath, relativePath, entries);
     }
   } catch {
     // Skip directories we can't read
@@ -591,9 +587,10 @@ export interface ParsedTaskFileRefs {
   context: string[];
   plan: string[];
   spec: string[];
+  attestation: string[];
 }
 
-type PrefixKey = 'ARTIFACT:' | 'EVIDENCE:' | 'CONTEXT:' | 'PLAN:' | 'SPEC:';
+type PrefixKey = 'ARTIFACT:' | 'EVIDENCE:' | 'CONTEXT:' | 'PLAN:' | 'SPEC:' | 'ATTESTATION:';
 const SKIP_PREFIXES = ['VALIDATE:', 'GATE:', 'AUDIT:'];
 
 function classifyArtifactLine(trimmed: string, result: ParsedTaskFileRefs): void {
@@ -603,13 +600,14 @@ function classifyArtifactLine(trimmed: string, result: ParsedTaskFileRefs): void
     'CONTEXT:': 'context',
     'PLAN:': 'plan',
     'SPEC:': 'spec',
+    'ATTESTATION:': 'attestation',
   };
 
   for (const [prefix, key] of Object.entries(prefixMap) as Array<
     [PrefixKey, keyof ParsedTaskFileRefs]
   >) {
     if (trimmed.startsWith(prefix)) {
-      (result[key] as string[]).push(trimmed.slice(prefix.length).trim());
+      result[key].push(trimmed.slice(prefix.length).trim());
       return;
     }
   }
@@ -632,6 +630,7 @@ export function parseTaskFileRefs(
     context: [],
     plan: [],
     spec: [],
+    attestation: [],
   };
 
   if (artifactsField) {
@@ -673,6 +672,7 @@ export interface TaskFileMap {
     expectedContext: string[];
     expectedPlan: string[];
     expectedSpec: string[];
+    expectedAttestation: string[];
     status: string;
     section: string;
   };
@@ -691,7 +691,7 @@ export function buildTaskFileMap(
   const map: TaskFileMap = {};
 
   for (const task of tasks) {
-    const { artifacts, evidence, files, context, plan, spec } = parseTaskFileRefs(
+    const { artifacts, evidence, files, context, plan, spec, attestation } = parseTaskFileRefs(
       task.artifacts.join(','),
       task.prerequisites,
       task.validation
@@ -704,6 +704,7 @@ export function buildTaskFileMap(
       expectedContext: context,
       expectedPlan: plan,
       expectedSpec: spec,
+      expectedAttestation: attestation,
       status: task.status,
       section: task.section,
     };
@@ -731,11 +732,11 @@ function linkGlobPath(
   files: FileEntry[],
   pathToTasks: Record<string, string[]>
 ): void {
-  const normalizedPath = path.replace(/\\/g, '/').toLowerCase();
+  const normalizedPath = path.replaceAll('\\', '/').toLowerCase();
   const regexPattern = normalizedPath
-    .replace(/\./g, '\\.')
-    .replace(/\*\*/g, '.*')
-    .replace(/\*/g, '[^/]*');
+    .replaceAll('.', String.raw`\.`)
+    .replaceAll('**', '.*')
+    .replaceAll('*', '[^/]*');
   const regex = new RegExp(`^${regexPattern}$`, 'i');
 
   for (const file of files) {
@@ -756,13 +757,14 @@ export function linkFilesToTasks(files: FileEntry[], taskMap: TaskFileMap): File
       ...data.expectedContext,
       ...data.expectedPlan,
       ...data.expectedSpec,
+      ...data.expectedAttestation,
     ];
 
     for (const path of allPaths) {
       if (path.includes('*')) {
         linkGlobPath(path, taskId, files, pathToTasks);
       } else {
-        const normalizedPath = path.replace(/\\/g, '/').toLowerCase();
+        const normalizedPath = path.replaceAll('\\', '/').toLowerCase();
         addTaskIdToPath(pathToTasks, normalizedPath, taskId);
       }
     }
@@ -802,7 +804,7 @@ function addTestCoverage(files: FileEntry[]): FileEntry[] {
     if (file.category === 'app-source' || file.category === 'package-source') {
       const hasTest =
         testFiles.has(file.path.toLowerCase()) ||
-        testFiles.has(file.path.replace(/\\/g, '/').toLowerCase());
+        testFiles.has(file.path.replaceAll('\\', '/').toLowerCase());
       return { ...file, hasTest };
     }
     return file;
@@ -813,45 +815,63 @@ function addTestCoverage(files: FileEntry[]): FileEntry[] {
 // MISSING FILE DETECTION
 // =============================================================================
 
+const ACTIVE_STATUSES = new Set(['Completed', 'In Progress', 'Validating']);
+
+function getTaskCheckPaths(
+  data: TaskFileMap[string]
+): Array<{ paths: string[]; prefix: MissingFile['prefix'] }> {
+  return [
+    { paths: data.expectedArtifacts, prefix: 'ARTIFACT' },
+    { paths: data.expectedEvidence, prefix: 'EVIDENCE' },
+    { paths: data.requiredFiles, prefix: 'FILE' },
+    { paths: data.expectedContext, prefix: 'CONTEXT' },
+    { paths: data.expectedPlan, prefix: 'PLAN' },
+    { paths: data.expectedSpec, prefix: 'SPEC' },
+    { paths: data.expectedAttestation, prefix: 'ATTESTATION' },
+  ];
+}
+
+function recordMissingPath(
+  missing: MissingFile[],
+  expectedPath: string,
+  taskId: string,
+  prefix: MissingFile['prefix']
+): void {
+  const normalizedPath = expectedPath.replaceAll('\\', '/').toLowerCase();
+  const existing = missing.find((m) => m.path.toLowerCase() === normalizedPath);
+  if (existing) {
+    if (!existing.expectedBy.includes(taskId)) {
+      existing.expectedBy.push(taskId);
+    }
+  } else {
+    missing.push({ path: expectedPath, expectedBy: [taskId], prefix });
+  }
+}
+
+function checkPathGroup(
+  paths: string[],
+  prefix: MissingFile['prefix'],
+  taskId: string,
+  existingPaths: Set<string>,
+  missing: MissingFile[]
+): void {
+  for (const expectedPath of paths) {
+    if (expectedPath.includes('*')) continue;
+    const normalizedPath = expectedPath.replaceAll('\\', '/').toLowerCase();
+    if (!existingPaths.has(normalizedPath)) {
+      recordMissingPath(missing, expectedPath, taskId, prefix);
+    }
+  }
+}
+
 export function findMissingFiles(files: FileEntry[], taskMap: TaskFileMap): MissingFile[] {
   const missing: MissingFile[] = [];
   const existingPaths = new Set(files.map((f) => f.path.toLowerCase()));
 
   for (const [taskId, data] of Object.entries(taskMap)) {
-    if (!['Completed', 'In Progress', 'Validating'].includes(data.status)) {
-      continue;
-    }
-
-    const checkPaths = [
-      { paths: data.expectedArtifacts, prefix: 'ARTIFACT' as const },
-      { paths: data.expectedEvidence, prefix: 'EVIDENCE' as const },
-      { paths: data.requiredFiles, prefix: 'FILE' as const },
-      { paths: data.expectedContext, prefix: 'CONTEXT' as const },
-      { paths: data.expectedPlan, prefix: 'PLAN' as const },
-      { paths: data.expectedSpec, prefix: 'SPEC' as const },
-    ];
-
-    for (const { paths, prefix } of checkPaths) {
-      for (const expectedPath of paths) {
-        if (expectedPath.includes('*')) continue;
-
-        const normalizedPath = expectedPath.replace(/\\/g, '/').toLowerCase();
-
-        if (!existingPaths.has(normalizedPath)) {
-          const existing = missing.find((m) => m.path.toLowerCase() === normalizedPath);
-          if (existing) {
-            if (!existing.expectedBy.includes(taskId)) {
-              existing.expectedBy.push(taskId);
-            }
-          } else {
-            missing.push({
-              path: expectedPath,
-              expectedBy: [taskId],
-              prefix,
-            });
-          }
-        }
-      }
+    if (!ACTIVE_STATUSES.has(data.status)) continue;
+    for (const { paths, prefix } of getTaskCheckPaths(data)) {
+      checkPathGroup(paths, prefix, taskId, existingPaths, missing);
     }
   }
 
@@ -918,7 +938,7 @@ export function generateCleanupSuggestions(files: FileEntry[]): CleanupSuggestio
   const priorityOrder = { high: 0, medium: 1, low: 2 };
   return suggestions.sort((a, b) => {
     const priDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
-    return priDiff !== 0 ? priDiff : b.size - a.size;
+    return priDiff === 0 ? b.size - a.size : priDiff;
   });
 }
 
@@ -946,12 +966,73 @@ const TASK_ID_PATTERNS = [
 
 function extractTaskIdFromMessage(message: string): string | null {
   for (const pattern of TASK_ID_PATTERNS) {
-    const match = message.match(pattern);
+    const match = pattern.exec(message);
     if (match) {
       return match[1].toUpperCase();
     }
   }
   return null;
+}
+
+function runGitLog(args: string[]): string {
+  try {
+    return execFileSync(
+      'git', // NOSONAR S4036 — PATH inherited from developer environment, internal tooling only
+      args,
+      { cwd: MONOREPO_ROOT, encoding: 'utf-8', timeout: 5000 }
+    ).trim();
+  } catch {
+    return '';
+  }
+}
+
+function parseGitLogLine(line: string): { hash: string; date: string; author: string; subject: string } | null {
+  const parts = line.split('|');
+  if (parts.length < 4) return null;
+  return {
+    hash: parts[0] || '',
+    date: parts[1] || '',
+    author: parts[2] || '',
+    subject: parts.slice(3).join('|') || '',
+  };
+}
+
+function applyCreationInfo(history: NonNullable<FileEntry['gitHistory']>, relativePath: string): void {
+  const output = runGitLog([
+    'log', '--follow', '--diff-filter=A', '--format=%H|%aI|%an|%s', '--', relativePath,
+  ]);
+  if (!output) return;
+  const lines = output.split('\n');
+  const parsed = parseGitLogLine(lines.at(-1));
+  if (!parsed) return;
+  history.createdCommit = parsed.hash || null;
+  history.createdAt = parsed.date || null;
+  history.createdBy = parsed.author || null;
+  history.createdPurpose = parsed.subject || null;
+  history.createdTaskId = parsed.subject ? extractTaskIdFromMessage(parsed.subject) : null;
+}
+
+function applyModificationInfo(
+  history: NonNullable<FileEntry['gitHistory']>,
+  relativePath: string,
+  staleDays: number
+): void {
+  const output = runGitLog(['log', '-1', '--format=%H|%aI|%an|%s', '--', relativePath]);
+  if (!output) return;
+  const parsed = parseGitLogLine(output);
+  if (!parsed) return;
+  history.lastModifiedCommit = parsed.hash || null;
+  history.lastModifiedBy = parsed.author || null;
+  history.lastModifiedMessage = parsed.subject || null;
+  if (parsed.date) {
+    const diffMs = Date.now() - new Date(parsed.date).getTime();
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    history.daysSinceModified = days;
+    if (days > staleDays) {
+      history.isStale = true;
+      history.staleReason = `Not modified in ${days} days`;
+    }
+  }
 }
 
 /**
@@ -961,7 +1042,7 @@ function getGitHistoryForFile(
   relativePath: string,
   staleDays: number = 30
 ): FileEntry['gitHistory'] {
-  const history: FileEntry['gitHistory'] = {
+  const history: NonNullable<FileEntry['gitHistory']> = {
     createdAt: null,
     createdBy: null,
     createdCommit: null,
@@ -976,81 +1057,10 @@ function getGitHistoryForFile(
   };
 
   try {
-    // Get creation commit (first commit that added this file)
-    // S4721: use execFileSync with argument array — relativePath comes from internal fs scan
-    // but avoiding shell interpolation is safer and satisfies S4721.
-    let creationOutput = '';
-    try {
-      creationOutput = execFileSync(
-        'git', // NOSONAR S4036 — PATH inherited from developer environment, internal tooling only
-        ['log', '--follow', '--diff-filter=A', '--format=%H|%aI|%an|%s', '--', relativePath],
-        {
-          cwd: MONOREPO_ROOT,
-          encoding: 'utf-8',
-          timeout: 5000,
-        }
-      ).trim();
-    } catch {
-      // File might not be tracked
-    }
-
-    if (creationOutput) {
-      const lines = creationOutput.split('\n');
-      const lastLine = lines[lines.length - 1]; // Oldest commit
-      const parts = lastLine.split('|');
-      if (parts.length >= 4) {
-        history.createdCommit = parts[0] || null;
-        history.createdAt = parts[1] || null;
-        history.createdBy = parts[2] || null;
-        history.createdPurpose = parts.slice(3).join('|') || null;
-        history.createdTaskId = history.createdPurpose
-          ? extractTaskIdFromMessage(history.createdPurpose)
-          : null;
-      }
-    }
-
-    // Get last modification commit
-    // S4721: use execFileSync with argument array — avoids shell interpretation.
-    let modifyOutput = '';
-    try {
-      modifyOutput = execFileSync(
-        'git', // NOSONAR S4036 — PATH inherited from developer environment, internal tooling only
-        ['log', '-1', '--format=%H|%aI|%an|%s', '--', relativePath],
-        {
-          cwd: MONOREPO_ROOT,
-          encoding: 'utf-8',
-          timeout: 5000,
-        }
-      ).trim();
-    } catch {
-      // File might not be tracked
-    }
-
-    if (modifyOutput) {
-      const parts = modifyOutput.split('|');
-      if (parts.length >= 4) {
-        history.lastModifiedCommit = parts[0] || null;
-        const modifiedAt = parts[1] || null;
-        history.lastModifiedBy = parts[2] || null;
-        history.lastModifiedMessage = parts.slice(3).join('|') || null;
-
-        // Calculate days since modified
-        if (modifiedAt) {
-          const modDate = new Date(modifiedAt);
-          const now = new Date();
-          const diffMs = now.getTime() - modDate.getTime();
-          history.daysSinceModified = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-          // Check if stale
-          if (history.daysSinceModified > staleDays) {
-            history.isStale = true;
-            history.staleReason = `Not modified in ${history.daysSinceModified} days`;
-          }
-        }
-      }
-    }
+    applyCreationInfo(history, relativePath);
+    applyModificationInfo(history, relativePath, staleDays);
   } catch {
-    // Git commands failed, leave history as null
+    // Git commands failed, leave history as null values
   }
 
   return history;
@@ -1216,7 +1226,7 @@ export interface FullRegistryResult {
 export type ArtifactEntry = FileEntry;
 export type ArtifactSummary = CodebaseHealth;
 export type MissingArtifact = MissingFile;
-export type ArtifactCategory = FileCategory;
+export type ArtifactCategory = FileCategory; // NOSONAR typescript:S6564 — backward-compatible re-export alias used by other modules
 
 export interface ArtifactRegistryResult {
   artifacts: FileEntry[];

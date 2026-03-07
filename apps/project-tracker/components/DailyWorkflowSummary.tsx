@@ -40,6 +40,68 @@ interface TaskWorkflowStatus {
   dependencies: string[];
 }
 
+function buildDepGraphNodes(
+  nodesData: Record<string, any> | undefined
+): Map<string, DepGraphNode> {
+  const map = new Map<string, DepGraphNode>();
+  if (!nodesData) return map;
+  for (const [id, node] of Object.entries(nodesData)) {
+    const n = node as { task_id: string; dependencies: string[]; dependents: string[] };
+    map.set(id, {
+      task_id: n.task_id || id,
+      dependencies: n.dependencies || [],
+      dependents: n.dependents || [],
+    });
+  }
+  return map;
+}
+
+function buildScheduleTaskMap(
+  criticalPathData: any,
+  scheduleCalcData: any,
+  criticalPathIds: Set<string>
+): Map<string, ScheduleTaskInfo> {
+  const map = new Map<string, ScheduleTaskInfo>();
+  if (!criticalPathData?.tasks) return map;
+  for (const t of criticalPathData.tasks) {
+    const calcTask = scheduleCalcData?.tasks?.[t.taskId];
+    map.set(t.taskId, {
+      taskId: t.taskId,
+      earlyFinish: t.earlyFinish,
+      totalFloat: calcTask?.totalFloat,
+      isCritical: criticalPathIds.has(t.taskId),
+    });
+  }
+  return map;
+}
+
+function resolveCurrentSession(
+  hasDelivery: boolean,
+  hasSpec: boolean,
+  hasPlan: boolean,
+  dependenciesMet: boolean
+): TaskWorkflowStatus['currentSession'] {
+  if (hasDelivery) return 'completed';
+  if (hasSpec && hasPlan) return 'exec';
+  if (hasSpec) return 'plan';
+  if (dependenciesMet) return 'spec';
+  return 'ready';
+}
+
+function flattenParallelGroups(rawGroups: any): ParallelGroup[] {
+  const groups: ParallelGroup[] = [];
+  if (!rawGroups || typeof rawGroups !== 'object') return groups;
+  for (const [sprintKey, sprintGroups] of Object.entries(rawGroups)) {
+    if (!sprintGroups || typeof sprintGroups !== 'object') continue;
+    for (const [groupKey, taskList] of Object.entries(sprintGroups as Record<string, string[]>)) {
+      if (Array.isArray(taskList) && taskList.length > 0) {
+        groups.push({ group_id: `${sprintKey}/${groupKey}`, tasks: taskList });
+      }
+    }
+  }
+  return groups;
+}
+
 /**
  * Optimistic UI state for a task being processed
  */
@@ -65,6 +127,81 @@ interface WorkflowData {
   scoredTasks: ScoredTask[];
 }
 
+type BatchPlanStatus = {
+  hasSpec: boolean;
+  hasPlan: boolean;
+  hasContext: boolean;
+};
+
+function buildSingleWorkflowTask(
+  task: Task,
+  planStatus: BatchPlanStatus,
+  readyToStartDetails: Array<{ taskId: string }>,
+  sessionStatusMap: Map<string, SessionStatus>
+): TaskWorkflowStatus {
+  sessionStatusMap.set(task.id, {
+    hasSpec: planStatus.hasSpec || false,
+    hasPlan: planStatus.hasPlan || false,
+  });
+
+  const dependenciesMet =
+    readyToStartDetails?.some((r) => r.taskId === task.id) || false;
+  const hasContext = planStatus.hasContext || false;
+  const hasSpec = planStatus.hasSpec || false;
+  const hasPlan = planStatus.hasPlan || false;
+  const hasDelivery = task.status === 'Completed';
+  const currentSession = resolveCurrentSession(hasDelivery, hasSpec, hasPlan, dependenciesMet);
+
+  return {
+    taskId: task.id,
+    description: task.description,
+    section: task.section,
+    owner: task.owner,
+    sprint: typeof task.sprint === 'number' ? task.sprint : 0,
+    status: task.status,
+    hasContext,
+    hasSpec,
+    hasPlan,
+    hasDelivery,
+    currentSession,
+    dependenciesMet,
+    dependencies: task.dependencies || [],
+  };
+}
+
+function categorizeWorkflowTasks(
+  filteredTasks: TaskWorkflowStatus[]
+): Pick<
+  WorkflowData,
+  | 'readyTasks'
+  | 'inProgressTasks'
+  | 'awaitingSpec'
+  | 'awaitingPlan'
+  | 'awaitingExec'
+  | 'completedToday'
+  | 'blockedTasks'
+> {
+  return {
+    readyTasks: filteredTasks.filter(
+      (t) => t.dependenciesMet && t.status !== 'Completed' && t.status !== 'Blocked'
+    ),
+    inProgressTasks: filteredTasks.filter(
+      (t) => t.status === 'In Progress' || t.status === 'Validating'
+    ),
+    awaitingSpec: filteredTasks.filter((t) => t.currentSession === 'spec' && !t.hasSpec),
+    awaitingPlan: filteredTasks.filter(
+      (t) => t.currentSession === 'plan' || (t.hasSpec && !t.hasPlan)
+    ),
+    awaitingExec: filteredTasks.filter(
+      (t) => t.currentSession === 'exec' && t.hasSpec && t.hasPlan
+    ),
+    completedToday: filteredTasks.filter((t) => t.status === 'Completed').slice(0, 5),
+    blockedTasks: filteredTasks.filter(
+      (t) => t.status === 'Blocked' || (!t.dependenciesMet && t.status !== 'Completed')
+    ),
+  };
+}
+
 /**
  * Daily Workflow Summary - Follows Workflow.txt Structure
  *
@@ -83,7 +220,7 @@ interface WorkflowData {
  * - Re-calculate ready tasks
  * - Generate daily summary
  */
-export function DailyWorkflowSummary({ tasks, sprint, onTaskClick }: DailyWorkflowSummaryProps) {
+export function DailyWorkflowSummary({ tasks, sprint, onTaskClick }: Readonly<DailyWorkflowSummaryProps>) {
   const router = useRouter();
   const [workflowData, setWorkflowData] = useState<WorkflowData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -143,33 +280,9 @@ export function DailyWorkflowSummary({ tasks, sprint, onTaskClick }: DailyWorkfl
         : null;
 
       // Build dep graph node map and critical path set for priority scoring
-      const depGraphNodes = new Map<string, DepGraphNode>();
-      if (graphData.nodes) {
-        for (const [id, node] of Object.entries(graphData.nodes)) {
-          const n = node as { task_id: string; dependencies: string[]; dependents: string[] };
-          depGraphNodes.set(id, {
-            task_id: n.task_id || id,
-            dependencies: n.dependencies || [],
-            dependents: n.dependents || [],
-          });
-        }
-      }
-
+      const depGraphNodes = buildDepGraphNodes(graphData.nodes);
       const criticalPathIds = new Set<string>(criticalPathData?.criticalPath?.taskIds || []);
-
-      const scheduleTaskMap = new Map<string, ScheduleTaskInfo>();
-      if (criticalPathData?.tasks) {
-        for (const t of criticalPathData.tasks) {
-          // Enrich with totalFloat from schedule/calculate data (CPM-based)
-          const calcTask = scheduleCalcData?.tasks?.[t.taskId];
-          scheduleTaskMap.set(t.taskId, {
-            taskId: t.taskId,
-            earlyFinish: t.earlyFinish,
-            totalFloat: calcTask?.totalFloat,
-            isCritical: criticalPathIds.has(t.taskId),
-          });
-        }
-      }
+      const scheduleTaskMap = buildScheduleTaskMap(criticalPathData, scheduleCalcData, criticalPathIds);
 
       const phaseProgress: PhaseProgress[] = sprintProgressData?.phases || [];
 
@@ -193,79 +306,24 @@ export function DailyWorkflowSummary({ tasks, sprint, onTaskClick }: DailyWorkfl
         }
       > = batchData.tasks || {};
 
-      const workflowTasks: TaskWorkflowStatus[] = tasks.map((task) => {
-        const planStatus = batchTasks[task.id] || {
-          hasSpec: false,
-          hasPlan: false,
-          hasContext: false,
-        };
-
-        // Collect session status for priority scoring
-        sessionStatusMap.set(task.id, {
-          hasSpec: planStatus.hasSpec || false,
-          hasPlan: planStatus.hasPlan || false,
-        });
-
-        const dependenciesMet =
-          graphData.ready_to_start_details?.some((r: { taskId: string }) => r.taskId === task.id) ||
-          false;
-
-        const hasContext = planStatus.hasContext || false;
-        const hasSpec = planStatus.hasSpec || false;
-        const hasPlan = planStatus.hasPlan || false;
-        const hasDelivery = task.status === 'Completed';
-
-        // Determine current session
-        let currentSession: TaskWorkflowStatus['currentSession'] = 'ready';
-        if (hasDelivery) {
-          currentSession = 'completed';
-        } else if (hasSpec && hasPlan) {
-          currentSession = 'exec';
-        } else if (hasSpec) {
-          currentSession = 'plan';
-        } else if (dependenciesMet) {
-          currentSession = 'spec';
-        }
-
-        return {
-          taskId: task.id,
-          description: task.description,
-          section: task.section,
-          owner: task.owner,
-          sprint: typeof task.sprint === 'number' ? task.sprint : 0,
-          status: task.status,
-          hasContext,
-          hasSpec,
-          hasPlan,
-          hasDelivery,
-          currentSession,
-          dependenciesMet,
-          dependencies: task.dependencies || [],
-        };
-      });
+      const readyToStartDetails: Array<{ taskId: string }> =
+        graphData.ready_to_start_details || [];
+      const workflowTasks: TaskWorkflowStatus[] = tasks.map((task) =>
+        buildSingleWorkflowTask(
+          task,
+          batchTasks[task.id] || { hasSpec: false, hasPlan: false, hasContext: false },
+          readyToStartDetails,
+          sessionStatusMap
+        )
+      );
 
       // Filter by sprint if needed
       const filteredTasks =
         sprint === 'all' ? workflowTasks : workflowTasks.filter((t) => t.sprint === sprint);
 
-      // Categorize tasks
-      const readyTasks = filteredTasks.filter(
-        (t) => t.dependenciesMet && t.status !== 'Completed' && t.status !== 'Blocked'
-      );
-      const inProgressTasks = filteredTasks.filter(
-        (t) => t.status === 'In Progress' || t.status === 'Validating'
-      );
-      const awaitingSpec = filteredTasks.filter((t) => t.currentSession === 'spec' && !t.hasSpec);
-      const awaitingPlan = filteredTasks.filter(
-        (t) => t.currentSession === 'plan' || (t.hasSpec && !t.hasPlan)
-      );
-      const awaitingExec = filteredTasks.filter(
-        (t) => t.currentSession === 'exec' && t.hasSpec && t.hasPlan
-      );
-      const completedToday = filteredTasks.filter((t) => t.status === 'Completed').slice(0, 5);
-      const blockedTasks = filteredTasks.filter(
-        (t) => t.status === 'Blocked' || (!t.dependenciesMet && t.status !== 'Completed')
-      );
+      const categories = categorizeWorkflowTasks(filteredTasks);
+      const { readyTasks, inProgressTasks, awaitingSpec, awaitingPlan, awaitingExec,
+              completedToday, blockedTasks } = categories;
 
       // Compute priority scores for ready tasks
       const readyFullTasks = readyTasks
@@ -276,24 +334,7 @@ export function DailyWorkflowSummary({ tasks, sprint, onTaskClick }: DailyWorkfl
         .filter(Boolean);
 
       const currentSprintNum = typeof sprint === 'number' ? sprint : undefined;
-      // parallel_execution_groups is Record<"sprint-N", Record<"group-N", string[]>>
-      // Flatten into ParallelGroup[] for the scorer
-      const parallelGroups: ParallelGroup[] = [];
-      const rawGroups = graphData.parallel_execution_groups;
-      if (rawGroups && typeof rawGroups === 'object') {
-        for (const [sprintKey, groups] of Object.entries(rawGroups)) {
-          if (groups && typeof groups === 'object') {
-            for (const [groupKey, taskList] of Object.entries(groups as Record<string, string[]>)) {
-              if (Array.isArray(taskList) && taskList.length > 0) {
-                parallelGroups.push({
-                  group_id: `${sprintKey}/${groupKey}`,
-                  tasks: taskList,
-                });
-              }
-            }
-          }
-        }
-      }
+      const parallelGroups = flattenParallelGroups(graphData.parallel_execution_groups);
       const scoredTasks = computePriorityScores(
         readyFullTasks,
         depGraphNodes,
@@ -427,7 +468,7 @@ export function DailyWorkflowSummary({ tasks, sprint, onTaskClick }: DailyWorkfl
 
   // Kill active session
   const handleKillSession = useCallback(async () => {
-    if (!activeSession || !activeSession.sessionId) return;
+    if (!activeSession?.sessionId) return;
 
     try {
       // All session types (spec, plan, exec) use the same claude-session endpoint
@@ -568,14 +609,10 @@ export function DailyWorkflowSummary({ tasks, sprint, onTaskClick }: DailyWorkfl
           !optimisticUpdates.has(t.taskId) ||
           optimisticUpdates.get(t.taskId)?.expectedSession !== 'spec'
       ),
-      awaitingPlan: [
-        ...workflowData.awaitingPlan.filter((t) => !optimisticUpdates.has(t.taskId)),
-        // Tasks that just completed spec move here optimistically
-      ],
-      awaitingExec: [
-        ...workflowData.awaitingExec.filter((t) => !optimisticUpdates.has(t.taskId)),
-        // Tasks that just completed plan move here optimistically
-      ],
+      awaitingPlan: workflowData.awaitingPlan.filter((t) => !optimisticUpdates.has(t.taskId)),
+      // Tasks that just completed spec move here optimistically
+      awaitingExec: workflowData.awaitingExec.filter((t) => !optimisticUpdates.has(t.taskId)),
+      // Tasks that just completed plan move here optimistically
       completedToday: [
         ...workflowData.completedToday,
         ...tasksWithOptimistic.filter(
@@ -874,7 +911,7 @@ export function DailyWorkflowSummary({ tasks, sprint, onTaskClick }: DailyWorkfl
         <div className="mt-6 pt-4 border-t border-gray-200">
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-500">
-              Run <code className="bg-gray-100 px-1 py-0.5 rounded">/matop-execute TASK_ID</code>{' '}
+              Run{' '}<code className="bg-gray-100 px-1 py-0.5 rounded">/matop-execute TASK_ID</code>{' '}
               for full orchestration
             </p>
             <a
@@ -976,7 +1013,7 @@ function PriorityBucket({
   onTaskClick,
   allTasks,
   defaultExpanded,
-}: {
+}: Readonly<{
   bucket: 'now' | 'next' | 'wait';
   label: string;
   description: string;
@@ -989,7 +1026,7 @@ function PriorityBucket({
   onTaskClick?: (task: Task) => void;
   allTasks: Task[];
   defaultExpanded: boolean;
-}) {
+}>) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const colors = BUCKET_COLORS[colorScheme];
   // NOW bucket: no cap (sprint grouping provides natural visual boundaries)
@@ -1032,7 +1069,7 @@ function PriorityBucket({
             if (fullTask) onTaskClick?.(fullTask);
           }
         }}
-        role="button"
+        role="button" // NOSONAR typescript:S6819 — task card contains nested display elements; <button> cannot be block container
         tabIndex={0}
       >
         <div className="flex items-center justify-between gap-2">
@@ -1098,11 +1135,12 @@ function PriorityBucket({
 
       {expanded && (
         <div className="max-h-96 overflow-y-auto">
-          {scoredTasks.length === 0 ? (
+          {scoredTasks.length === 0 && (
             <div className="p-3 text-center text-gray-500 text-xs">
               {bucket === 'now' ? 'No urgent tasks' : 'No tasks in this bucket'}
             </div>
-          ) : bucket === 'now' && sprintGroups ? (
+          )}
+          {scoredTasks.length > 0 && bucket === 'now' && sprintGroups && (
             /* NOW bucket: grouped by sprint with sub-headers */
             Array.from(sprintGroups.entries()).map(([sprintNum, sprintTasks]) => (
               <div key={sprintNum}>
@@ -1115,7 +1153,8 @@ function PriorityBucket({
                 <div className="divide-y divide-gray-100">{sprintTasks.map(renderTaskRow)}</div>
               </div>
             ))
-          ) : (
+          )}
+          {scoredTasks.length > 0 && !(bucket === 'now' && sprintGroups) && (
             /* NEXT/WAIT: flat list with WSJF ordering */
             <div className="divide-y divide-gray-100">
               {scoredTasks.slice(0, MAX_VISIBLE).map((scored) => {
@@ -1133,7 +1172,7 @@ function PriorityBucket({
                         if (fullTask) onTaskClick?.(fullTask);
                       }
                     }}
-                    role="button"
+                    role="button" // NOSONAR typescript:S6819 — task card contains nested display elements; <button> cannot be block container
                     tabIndex={0}
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -1183,13 +1222,13 @@ function PipelineColumns({
   onRunSpec,
   onRunPlan,
   onRunExec,
-}: {
+}: Readonly<{
   scoredTasks: ScoredTask[];
   actionInProgress: string | null;
   onRunSpec: (e: React.MouseEvent, taskId: string) => void;
   onRunPlan: (e: React.MouseEvent, taskId: string) => void;
   onRunExec: (e: React.MouseEvent, taskId: string) => void;
-}) {
+}>) {
   const specTasks = scoredTasks.filter((s) => s.recommendedAction === 'spec');
   const planTasks = scoredTasks.filter((s) => s.recommendedAction === 'plan');
   const execTasks = scoredTasks.filter((s) => s.recommendedAction === 'exec');
@@ -1289,11 +1328,11 @@ function TaskRow({
   task,
   onTaskClick,
   tasks,
-}: {
+}: Readonly<{
   task: TaskWorkflowStatus;
   onTaskClick?: (task: Task) => void;
   tasks: Task[];
-}) {
+}>) {
   const fullTask = tasks.find((t) => t.id === task.taskId);
 
   return (
@@ -1306,7 +1345,7 @@ function TaskRow({
           if (fullTask) onTaskClick?.(fullTask);
         }
       }}
-      role="button"
+      role="button" // NOSONAR typescript:S6819 — task card contains nested display elements; <button> cannot be block container
       tabIndex={0}
     >
       <div className="flex items-center justify-between">

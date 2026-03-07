@@ -5,7 +5,7 @@ import { getSwarmLogPath, getAggregateSwarmLogPath } from '@/lib/paths';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const taskId = searchParams.get('taskId');
-  const lines = parseInt(searchParams.get('lines') || '100', 10);
+  const lines = Number.parseInt(searchParams.get('lines') || '100', 10);
 
   try {
     let logPath: string;

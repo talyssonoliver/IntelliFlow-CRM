@@ -79,43 +79,45 @@ function parseDependencies(depsStr: string): ScheduleDependency[] {
     }));
 }
 
-function createTaskInput(row: TaskRecord, jsonData: TaskJsonData | null): TaskScheduleInput {
-  let durationMinutes = 60;
+const TASK_PREFIX_DURATIONS: Array<[string, number]> = [
+  ['IFC-', 480],
+  ['ENV-', 240],
+  ['PG-', 360],
+];
 
-  if (jsonData?.target_duration_minutes) {
-    durationMinutes = jsonData.target_duration_minutes;
-  } else {
-    const section = (row['Section'] || '').toLowerCase();
-    const taskId = row['Task ID'] || '';
+const SECTION_KEYWORD_DURATIONS: Array<[string, number]> = [
+  ['ai', 480],
+  ['intelligence', 480],
+  ['security', 360],
+  ['testing', 240],
+  ['validation', 240],
+  ['documentation', 120],
+];
 
-    if (taskId.startsWith('IFC-')) {
-      durationMinutes = 480;
-    } else if (taskId.startsWith('ENV-')) {
-      durationMinutes = 240;
-    } else if (taskId.startsWith('PG-')) {
-      durationMinutes = 360;
-    } else if (section.includes('ai') || section.includes('intelligence')) {
-      durationMinutes = 480;
-    } else if (section.includes('security')) {
-      durationMinutes = 360;
-    } else if (section.includes('testing') || section.includes('validation')) {
-      durationMinutes = 240;
-    } else if (section.includes('documentation')) {
-      durationMinutes = 120;
-    }
+function estimateDuration(taskId: string, section: string): number {
+  for (const [prefix, dur] of TASK_PREFIX_DURATIONS) {
+    if (taskId.startsWith(prefix)) return dur;
   }
+  const lower = section.toLowerCase();
+  for (const [kw, dur] of SECTION_KEYWORD_DURATIONS) {
+    if (lower.includes(kw)) return dur;
+  }
+  return 60;
+}
+
+function derivePercentComplete(status: string, jsonStatus?: string): number {
+  if (status === 'Completed' || status === 'Done' || jsonStatus === 'DONE') return 100;
+  if (status === 'In Progress') return 50;
+  if (status === 'Blocked') return 25;
+  return 0;
+}
+
+function createTaskInput(row: TaskRecord, jsonData: TaskJsonData | null): TaskScheduleInput {
+  const durationMinutes = jsonData?.target_duration_minutes
+    ?? estimateDuration(row['Task ID'] || '', row['Section'] || '');
 
   const status = row['Status'] || 'Planned';
-  let percentComplete = 0;
-
-  if (status === 'Completed' || status === 'Done' || jsonData?.status === 'DONE') {
-    percentComplete = 100;
-  } else if (status === 'In Progress') {
-    percentComplete = 50;
-  } else if (status === 'Blocked') {
-    percentComplete = 25;
-  }
-
+  const percentComplete = derivePercentComplete(status, jsonData?.status);
   const dependencies = parseDependencies(row['Dependencies'] || '');
 
   return {
@@ -142,13 +144,84 @@ function findMetricsDir(): string {
   throw new Error('Metrics directory not found');
 }
 
+function readSprintDatesFromFile(summaryPath: string): { start: Date | null; end: Date | null } {
+  try {
+    const summary = JSON.parse(readFileSync(summaryPath, 'utf-8'));
+    return {
+      start: summary.started_at ? new Date(summary.started_at) : null,
+      end: summary.target_date ? new Date(summary.target_date) : null,
+    };
+  } catch {
+    return { start: null, end: null };
+  }
+}
+
+function resolveAllSprintDates(
+  tasks: TaskRecord[],
+  metricsDir: string,
+  now: Date
+): { sprintStart: Date; sprintEnd: Date } {
+  const sprintNumbers = [
+    ...new Set(tasks.map((t) => Number.parseInt(t['Target Sprint'] || '0', 10)).filter((n) => !Number.isNaN(n))),
+  ].sort((a, b) => a - b);
+
+  let earliestStart: Date | null = null;
+  let latestEnd: Date | null = null;
+
+  for (const sNum of sprintNumbers) {
+    const summaryPath = join(metricsDir, `sprint-${sNum}`, '_summary.json');
+    if (!existsSync(summaryPath)) continue;
+    const { start, end } = readSprintDatesFromFile(summaryPath);
+    if (start && (!earliestStart || start < earliestStart)) earliestStart = start;
+    if (end && (!latestEnd || end > latestEnd)) latestEnd = end;
+  }
+
+  const sprintStart = earliestStart ?? new Date();
+  let sprintEnd = latestEnd ?? (() => { const d = new Date(); d.setDate(d.getDate() + 14); return d; })();
+  if (sprintEnd < now) { sprintEnd = new Date(now); sprintEnd.setDate(sprintEnd.getDate() + 30); }
+  return { sprintStart, sprintEnd };
+}
+
+function resolveSprintDates(
+  tasks: TaskRecord[],
+  metricsDir: string,
+  isAllSprints: boolean,
+  sprintNum: number | undefined,
+  now: Date
+): { sprintStart: Date; sprintEnd: Date } {
+  if (isAllSprints) return resolveAllSprintDates(tasks, metricsDir, now);
+
+  let sprintStart = new Date();
+  let sprintEnd = new Date();
+  sprintEnd.setDate(sprintEnd.getDate() + 14);
+
+  const summaryPath = join(metricsDir, `sprint-${sprintNum}`, '_summary.json');
+  if (!existsSync(summaryPath)) return { sprintStart, sprintEnd };
+
+  try {
+    const summary = JSON.parse(readFileSync(summaryPath, 'utf-8'));
+    if (summary.started_at) sprintStart = new Date(summary.started_at);
+    if (summary.schedule?.sprint_start_date) sprintStart = new Date(summary.schedule.sprint_start_date);
+    if (summary.schedule?.sprint_end_date) {
+      sprintEnd = new Date(summary.schedule.sprint_end_date);
+    } else if (summary.target_date) {
+      sprintEnd = new Date(summary.target_date);
+    }
+    if (sprintEnd < now) { sprintEnd = new Date(now); sprintEnd.setDate(sprintEnd.getDate() + 7); }
+  } catch {
+    // Use defaults
+  }
+
+  return { sprintStart, sprintEnd };
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const sprintParam = searchParams.get('sprint');
     // 'all' or undefined means all sprints
     const isAllSprints = !sprintParam || sprintParam === 'all';
-    const sprintNum = isAllSprints ? undefined : parseInt(sprintParam, 10);
+    const sprintNum = isAllSprints ? undefined : Number.parseInt(sprintParam, 10);
 
     const metricsDir = findMetricsDir();
     const csvPath = join(metricsDir, '_global', 'Sprint_plan.csv');
@@ -166,87 +239,20 @@ export async function GET(request: NextRequest) {
 
     // Filter by sprint if specified
     const tasks =
-      sprintNum !== undefined
-        ? data.filter((t) => parseInt(t['Target Sprint'] || '0', 10) === sprintNum)
-        : data;
+      sprintNum === undefined
+        ? data
+        : data.filter((t) => Number.parseInt(t['Target Sprint'] || '0', 10) === sprintNum);
 
     if (tasks.length === 0) {
       return NextResponse.json(
-        { error: `No tasks found${sprintNum !== undefined ? ` for sprint ${sprintNum}` : ''}` },
+        { error: 'No tasks found' + (sprintNum === undefined ? '' : ` for sprint ${sprintNum}`) },
         { status: 404 }
       );
     }
 
     // Get sprint dates
     const now = new Date();
-    let sprintStart = new Date();
-    let sprintEnd = new Date();
-    sprintEnd.setDate(sprintEnd.getDate() + 14);
-
-    if (isAllSprints) {
-      // For "all sprints", find the full project date range
-      const sprintNumbers = [
-        ...new Set(
-          tasks.map((t) => parseInt(t['Target Sprint'] || '0', 10)).filter((n) => !isNaN(n))
-        ),
-      ].sort((a, b) => a - b);
-
-      let earliestStart: Date | null = null;
-      let latestEnd: Date | null = null;
-
-      for (const sNum of sprintNumbers) {
-        const summaryPath = join(metricsDir, `sprint-${sNum}`, '_summary.json');
-        if (existsSync(summaryPath)) {
-          try {
-            const summary = JSON.parse(readFileSync(summaryPath, 'utf-8'));
-            const start = summary.started_at ? new Date(summary.started_at) : null;
-            const end = summary.target_date ? new Date(summary.target_date) : null;
-
-            if (start && (!earliestStart || start < earliestStart)) {
-              earliestStart = start;
-            }
-            if (end && (!latestEnd || end > latestEnd)) {
-              latestEnd = end;
-            }
-          } catch {
-            // Skip invalid summaries
-          }
-        }
-      }
-
-      if (earliestStart) sprintStart = earliestStart;
-      if (latestEnd) sprintEnd = latestEnd;
-
-      if (sprintEnd < now) {
-        sprintEnd = new Date(now);
-        sprintEnd.setDate(sprintEnd.getDate() + 30);
-      }
-    } else {
-      const summaryPath = join(metricsDir, `sprint-${sprintNum}`, '_summary.json');
-      if (existsSync(summaryPath)) {
-        try {
-          const summary = JSON.parse(readFileSync(summaryPath, 'utf-8'));
-          if (summary.started_at) {
-            sprintStart = new Date(summary.started_at);
-          }
-          if (summary.schedule?.sprint_start_date) {
-            sprintStart = new Date(summary.schedule.sprint_start_date);
-          }
-          if (summary.schedule?.sprint_end_date) {
-            sprintEnd = new Date(summary.schedule.sprint_end_date);
-          } else if (summary.target_date) {
-            sprintEnd = new Date(summary.target_date);
-          }
-
-          if (sprintEnd < now) {
-            sprintEnd = new Date(now);
-            sprintEnd.setDate(sprintEnd.getDate() + 7);
-          }
-        } catch {
-          // Use defaults
-        }
-      }
-    }
+    const { sprintStart, sprintEnd } = resolveSprintDates(tasks, metricsDir, isAllSprints, sprintNum, now);
 
     // Calculate schedule - load actual data from task JSON files
     const taskInputs: TaskScheduleInput[] = tasks.map((row) => {

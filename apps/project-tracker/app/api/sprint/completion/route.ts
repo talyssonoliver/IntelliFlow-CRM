@@ -8,8 +8,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { existsSync, readFileSync, readdirSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import Papa from 'papaparse';
 import type { RawCSVRow } from '../../../../lib/types';
 
@@ -50,7 +50,7 @@ function getFallbackPath(sprintNumber: number): string {
 }
 
 // Load fallback data if exists
-function loadFallback(sprintNumber: number): any | null {
+function loadFallback(sprintNumber: number): any {
   const fallbackPath = getFallbackPath(sprintNumber);
   try {
     if (existsSync(fallbackPath)) {
@@ -73,7 +73,7 @@ function saveFallback(sprintNumber: number, data: any): void {
 }
 
 // Load attestation data for a task
-function loadTaskAttestation(taskId: string): any | null {
+function loadTaskAttestation(taskId: string): any {
   const projectRoot = getProjectRoot();
   const ackPath = join(projectRoot, 'artifacts', 'attestations', taskId, 'context_ack.json');
 
@@ -87,8 +87,43 @@ function loadTaskAttestation(taskId: string): any | null {
   return null;
 }
 
+interface RowAccumulator {
+  tasks: CompletedTask[];
+  totalTasks: number;
+  completedCount: number;
+  totalKpis: number;
+  metKpis: number;
+}
+
+// Process a single CSV row for a completed task and accumulate results
+function processCompletedRow(row: RawCSVRow, acc: RowAccumulator): void {
+  const attestation = row['Task ID'] ? loadTaskAttestation(row['Task ID']) : null;
+  const kpiResults = attestation?.kpi_results || [];
+  const kpisMet = kpiResults.filter((k: any) => k.met).length;
+  acc.totalKpis += kpiResults.length;
+  acc.metKpis += kpisMet;
+  acc.tasks.push({
+    taskId: row['Task ID'] || '',
+    description: row['Description'] || '',
+    section: row['Section'] || '',
+    completedAt: attestation?.attestation_timestamp || '',
+    verdict: attestation?.verdict || 'COMPLETE',
+    kpisMet,
+    kpisTotal: kpiResults.length,
+    artifacts: attestation?.artifact_hashes ? Object.keys(attestation.artifact_hashes) : [],
+  });
+}
+
+// Derive sprint completion status from percentage
+function deriveSprintStatus(percentage: number): SprintCompletion['status'] {
+  if (percentage === 0) return 'not-started';
+  if (percentage === 100) return 'completed';
+  if (percentage >= 80) return 'partial';
+  return 'in-progress';
+}
+
 // Load sprint completion data
-function loadSprintCompletion(sprintNumber: number): {
+function loadSprintCompletion(sprintNumber: number): { // NOSONAR typescript:S3776
   tasks: CompletedTask[];
   completion: SprintCompletion;
 } {
@@ -102,11 +137,7 @@ function loadSprintCompletion(sprintNumber: number): {
     '_global',
     'Sprint_plan.csv'
   );
-  const tasks: CompletedTask[] = [];
-  let totalTasks = 0;
-  let completedCount = 0;
-  let totalKpis = 0;
-  let metKpis = 0;
+  const acc: RowAccumulator = { tasks: [], totalTasks: 0, completedCount: 0, totalKpis: 0, metKpis: 0 };
 
   try {
     if (existsSync(csvPath)) {
@@ -115,68 +146,35 @@ function loadSprintCompletion(sprintNumber: number): {
 
       for (const row of results.data as RawCSVRow[]) {
         const targetSprint = row['Target Sprint'];
-        const sprintNum = targetSprint === 'Continuous' ? -1 : parseInt(String(targetSprint ?? ''));
+        const sprintNum = targetSprint === 'Continuous' ? -1 : Number.parseInt(String(targetSprint ?? ''));
+        if (sprintNum !== sprintNumber) continue;
 
-        if (sprintNum === sprintNumber) {
-          totalTasks++;
-          const status = (row['Status'] || '').toLowerCase();
-          const isCompleted = status === 'completed' || status === 'done';
+        acc.totalTasks++;
+        const status = (row['Status'] || '').toLowerCase();
+        if (status !== 'completed' && status !== 'done') continue;
 
-          if (isCompleted) {
-            completedCount++;
-
-            // Load attestation for completed tasks
-            const attestation = row['Task ID'] ? loadTaskAttestation(row['Task ID']) : null;
-            const kpiResults = attestation?.kpi_results || [];
-            const kpisMet = kpiResults.filter((k: any) => k.met).length;
-
-            totalKpis += kpiResults.length;
-            metKpis += kpisMet;
-
-            tasks.push({
-              taskId: row['Task ID'] || '',
-              description: row['Description'] || '',
-              section: row['Section'] || '',
-              completedAt: attestation?.attestation_timestamp || '',
-              verdict: attestation?.verdict || 'COMPLETE',
-              kpisMet,
-              kpisTotal: kpiResults.length,
-              artifacts: attestation?.artifact_hashes
-                ? Object.keys(attestation.artifact_hashes)
-                : [],
-            });
-          }
-        }
+        acc.completedCount++;
+        processCompletedRow(row, acc);
       }
     }
   } catch (error) {
     console.error('Error loading sprint completion:', error);
   }
 
-  const percentage = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
-  let status: SprintCompletion['status'];
-  if (percentage === 0) {
-    status = 'not-started';
-  } else if (percentage === 100) {
-    status = 'completed';
-  } else if (percentage >= 80) {
-    status = 'partial';
-  } else {
-    status = 'in-progress';
-  }
+  const percentage = acc.totalTasks > 0 ? Math.round((acc.completedCount / acc.totalTasks) * 100) : 0;
 
   return {
-    tasks: tasks.sort((a, b) => b.completedAt.localeCompare(a.completedAt)),
+    tasks: [...acc.tasks].sort((a, b) => b.completedAt.localeCompare(a.completedAt)),
     completion: {
       sprintNumber,
-      status,
+      status: deriveSprintStatus(percentage),
       completionPercentage: percentage,
-      completedTasks: completedCount,
-      totalTasks,
+      completedTasks: acc.completedCount,
+      totalTasks: acc.totalTasks,
       kpiSummary: {
-        totalKpis,
-        metKpis,
-        percentage: totalKpis > 0 ? Math.round((metKpis / totalKpis) * 100) : 0,
+        totalKpis: acc.totalKpis,
+        metKpis: acc.metKpis,
+        percentage: acc.totalKpis > 0 ? Math.round((acc.metKpis / acc.totalKpis) * 100) : 0,
       },
     },
   };
@@ -188,41 +186,33 @@ function getPhaseStatus(summary: any): string {
   return 'not-started';
 }
 
+function loadPhaseEntry(sprintDir: string, entryName: string): any | null {
+  const summaryPath = join(sprintDir, entryName, '_phase-summary.json');
+  if (!existsSync(summaryPath)) return null;
+  const summary = JSON.parse(readFileSync(summaryPath, 'utf8'));
+  return {
+    phase: entryName,
+    name: summary.phase_name || entryName,
+    total: summary.total_tasks || 0,
+    completed: summary.completed_tasks || 0,
+    percentage: summary.total_tasks > 0 ? Math.round((summary.completed_tasks / summary.total_tasks) * 100) : 0,
+    status: getPhaseStatus(summary),
+  };
+}
+
 // Load phase completion from phase summaries
 function loadPhaseCompletion(sprintNumber: number): any[] {
   const projectRoot = getProjectRoot();
-  const sprintDir = join(
-    projectRoot,
-    'apps',
-    'project-tracker',
-    'docs',
-    'metrics',
-    `sprint-${sprintNumber}`
-  );
+  const sprintDir = join(projectRoot, 'apps', 'project-tracker', 'docs', 'metrics', `sprint-${sprintNumber}`);
   const phases: any[] = [];
 
   try {
     if (existsSync(sprintDir)) {
       const entries = readdirSync(sprintDir, { withFileTypes: true });
-
       for (const entry of entries) {
-        if (entry.isDirectory() && entry.name.startsWith('phase-')) {
-          const summaryPath = join(sprintDir, entry.name, '_phase-summary.json');
-          if (existsSync(summaryPath)) {
-            const summary = JSON.parse(readFileSync(summaryPath, 'utf8'));
-            phases.push({
-              phase: entry.name,
-              name: summary.phase_name || entry.name,
-              total: summary.total_tasks || 0,
-              completed: summary.completed_tasks || 0,
-              percentage:
-                summary.total_tasks > 0
-                  ? Math.round((summary.completed_tasks / summary.total_tasks) * 100)
-                  : 0,
-              status: getPhaseStatus(summary),
-            });
-          }
-        }
+        if (!entry.isDirectory() || !entry.name.startsWith('phase-')) continue;
+        const phase = loadPhaseEntry(sprintDir, entry.name);
+        if (phase) phases.push(phase);
       }
     }
   } catch (error) {
@@ -287,7 +277,7 @@ function getCompletionRecommendation(completion: SprintCompletion): string {
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const sprintNumber = parseInt(searchParams.get('sprint') || '0');
+    const sprintNumber = Number.parseInt(searchParams.get('sprint') || '0');
     const format = searchParams.get('format') || 'json';
 
     const { tasks, completion } = loadSprintCompletion(sprintNumber);
@@ -342,7 +332,7 @@ export async function GET(request: NextRequest) {
         dateRange:
           uniqueDates.length > 0
             ? {
-                first: uniqueDates[uniqueDates.length - 1],
+                first: uniqueDates.at(-1),
                 last: uniqueDates[0],
               }
             : null,

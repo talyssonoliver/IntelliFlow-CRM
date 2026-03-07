@@ -6,8 +6,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { existsSync, readFileSync, statSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +24,7 @@ function getProjectRoot(): string {
 }
 
 // Load cached usage report if available
-function loadUsageReport(): any | null {
+function loadUsageReport(): any {
   const projectRoot = getProjectRoot();
   const reportPath = join(projectRoot, 'artifacts', 'reports', 'supabase-usage-report.json');
 
@@ -55,45 +55,43 @@ function estimateUsage(): UsageMetric[] {
   };
 
   // Estimated usage (would come from Supabase API in production)
-  metrics.push({
-    name: 'Database Storage',
-    used: 45, // Estimated MB
-    limit: freeTierLimits.database.limit,
-    unit: freeTierLimits.database.unit,
-    percentage: Math.round((45 / freeTierLimits.database.limit) * 100),
-  });
-
-  metrics.push({
-    name: 'File Storage',
-    used: 128, // Estimated MB
-    limit: freeTierLimits.storage.limit,
-    unit: freeTierLimits.storage.unit,
-    percentage: Math.round((128 / freeTierLimits.storage.limit) * 100),
-  });
-
-  metrics.push({
-    name: 'Bandwidth',
-    used: 256, // Estimated MB this month
-    limit: freeTierLimits.bandwidth.limit,
-    unit: freeTierLimits.bandwidth.unit,
-    percentage: Math.round((256 / freeTierLimits.bandwidth.limit) * 100),
-  });
-
-  metrics.push({
-    name: 'API Requests',
-    used: 15000, // Estimated requests this month
-    limit: freeTierLimits.apiRequests.limit,
-    unit: freeTierLimits.apiRequests.unit,
-    percentage: Math.round((15000 / freeTierLimits.apiRequests.limit) * 100),
-  });
-
-  metrics.push({
-    name: 'Auth Users (MAU)',
-    used: 5, // Estimated active users
-    limit: freeTierLimits.authUsers.limit,
-    unit: freeTierLimits.authUsers.unit,
-    percentage: Math.round((5 / freeTierLimits.authUsers.limit) * 100),
-  });
+  metrics.push(
+    {
+      name: 'Database Storage',
+      used: 45, // Estimated MB
+      limit: freeTierLimits.database.limit,
+      unit: freeTierLimits.database.unit,
+      percentage: Math.round((45 / freeTierLimits.database.limit) * 100),
+    },
+    {
+      name: 'File Storage',
+      used: 128, // Estimated MB
+      limit: freeTierLimits.storage.limit,
+      unit: freeTierLimits.storage.unit,
+      percentage: Math.round((128 / freeTierLimits.storage.limit) * 100),
+    },
+    {
+      name: 'Bandwidth',
+      used: 256, // Estimated MB this month
+      limit: freeTierLimits.bandwidth.limit,
+      unit: freeTierLimits.bandwidth.unit,
+      percentage: Math.round((256 / freeTierLimits.bandwidth.limit) * 100),
+    },
+    {
+      name: 'API Requests',
+      used: 15000, // Estimated requests this month
+      limit: freeTierLimits.apiRequests.limit,
+      unit: freeTierLimits.apiRequests.unit,
+      percentage: Math.round((15000 / freeTierLimits.apiRequests.limit) * 100),
+    },
+    {
+      name: 'Auth Users (MAU)',
+      used: 5, // Estimated active users
+      limit: freeTierLimits.authUsers.limit,
+      unit: freeTierLimits.authUsers.unit,
+      percentage: Math.round((5 / freeTierLimits.authUsers.limit) * 100),
+    },
+  );
 
   return metrics;
 }
@@ -141,7 +139,11 @@ export async function GET(_request: NextRequest) {
         },
         usage: {
           overall: Math.round(avgUsage),
-          status: avgUsage < 50 ? 'healthy' : avgUsage < 80 ? 'moderate' : 'high',
+          status: (() => {
+            if (avgUsage < 50) return 'healthy';
+            if (avgUsage < 80) return 'moderate';
+            return 'high';
+          })() as 'healthy' | 'moderate' | 'high',
           metrics,
         },
         warnings: warnings.length > 0 ? warnings : null,
@@ -149,12 +151,11 @@ export async function GET(_request: NextRequest) {
           withinLimits: avgUsage < 80,
           daysRemainingEstimate: Math.max(0, Math.round((1 - avgUsage / 100) * 30)),
         },
-        recommendation:
-          avgUsage >= 80
-            ? 'Consider upgrading to Supabase Pro plan ($25/month)'
-            : avgUsage >= 50
-              ? 'Usage is moderate - continue monitoring'
-              : 'Usage well within free tier limits',
+        recommendation: (() => {
+          if (avgUsage >= 80) return 'Consider upgrading to Supabase Pro plan ($25/month)';
+          if (avgUsage >= 50) return 'Usage is moderate - continue monitoring';
+          return 'Usage well within free tier limits';
+        })(),
         refreshCommand:
           'curl -X POST /api/infrastructure/supabase-usage to refresh from Supabase API',
       },

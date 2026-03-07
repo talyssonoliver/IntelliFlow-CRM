@@ -29,6 +29,42 @@ interface StatusHistoryProps {
   onBack?: () => void;
 }
 
+type TrendDirection = 'up' | 'down' | 'stable';
+interface TrendData {
+  direction: TrendDirection;
+  value: number;
+}
+
+function getTrendIcon(direction: Readonly<TrendDirection>): { name: string; className: string } {
+  if (direction === 'up') return { name: 'trending_up', className: 'text-green-600' };
+  if (direction === 'down') return { name: 'trending_down', className: 'text-red-600' };
+  return { name: 'remove', className: 'text-gray-500' };
+}
+
+function getTrendText(trend: Readonly<TrendData>): { content: string; className: string } {
+  if (trend.direction === 'stable') return { content: 'No change', className: 'text-gray-700' };
+  const label = trend.direction === 'up' ? 'completed' : 'regressed';
+  const content = `${trend.value} task${trend.value === 1 ? '' : 's'} ${label}`;
+  const className = trend.direction === 'up' ? 'text-green-600' : 'text-red-600';
+  return { content, className };
+}
+
+function TrendSummary({ trend }: Readonly<{ trend: TrendData }>) {
+  const icon = getTrendIcon(trend.direction);
+  const text = getTrendText(trend);
+  return (
+    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+      <div className="flex items-center gap-3">
+        <Icon name={icon.name} size="xl" className={icon.className} />
+        <div>
+          <p className="text-sm text-gray-500">Recent Trend</p>
+          <p className={`text-lg font-semibold ${text.className}`}>{text.content}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) {
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,17 +122,16 @@ export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) 
     });
   };
 
+  const getDeltaColorClass = (label: string, isPositive: boolean): string => {
+    if (label === 'completed') return isPositive ? 'text-green-600' : 'text-red-600';
+    if (label === 'blocked') return isPositive ? 'text-red-600' : 'text-green-600';
+    return 'text-gray-500';
+  };
+
   const renderDelta = (value: number, label: string) => {
     if (value === 0) return null;
     const isPositive = value > 0;
-    let colorClass: string;
-    if (label === 'completed') {
-      colorClass = isPositive ? 'text-green-600' : 'text-red-600';
-    } else if (label === 'blocked') {
-      colorClass = isPositive ? 'text-red-600' : 'text-green-600';
-    } else {
-      colorClass = 'text-gray-500';
-    }
+    const colorClass = getDeltaColorClass(label, isPositive);
 
     return (
       <span className={`text-xs font-medium ${colorClass}`}>
@@ -146,7 +181,7 @@ export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) 
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Status History</h3>
             <p className="text-sm text-gray-500">
-              {entries.length} snapshot{entries.length !== 1 ? 's' : ''} recorded
+              {entries.length} snapshot{entries.length === 1 ? '' : 's'} recorded
             </p>
           </div>
         </div>
@@ -160,33 +195,7 @@ export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) 
 
       {/* Trend Summary */}
       {trend && (
-        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-          <div className="flex items-center gap-3">
-            {(() => {
-              const downOrStableName = trend.direction === 'down' ? 'trending_down' : 'remove';
-              const trendIconName = trend.direction === 'up' ? 'trending_up' : downOrStableName;
-              const downOrStableIconClass =
-                trend.direction === 'down' ? 'text-red-600' : 'text-gray-500';
-              const trendIconClass =
-                trend.direction === 'up' ? 'text-green-600' : downOrStableIconClass;
-              return <Icon name={trendIconName} size="xl" className={trendIconClass} />;
-            })()}
-            <div>
-              <p className="text-sm text-gray-500">Recent Trend</p>
-              {(() => {
-                const downOrStableTrendClass =
-                  trend.direction === 'down' ? 'text-red-600' : 'text-gray-700';
-                const trendTextClass =
-                  trend.direction === 'up' ? 'text-green-600' : downOrStableTrendClass;
-                const trendContent =
-                  trend.direction === 'stable'
-                    ? 'No change'
-                    : `${trend.value} task${trend.value !== 1 ? 's' : ''} ${trend.direction === 'up' ? 'completed' : 'regressed'}`;
-                return <p className={`text-lg font-semibold ${trendTextClass}`}>{trendContent}</p>;
-              })()}
-            </div>
-          </div>
-        </div>
+        <TrendSummary trend={trend} />
       )}
 
       {/* History Timeline */}

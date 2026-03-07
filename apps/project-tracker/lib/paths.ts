@@ -10,8 +10,8 @@
  * - Ephemeral artifacts (artifacts/) -> GITIGNORED, never committed
  */
 
-import { join } from 'path';
-import { mkdir } from 'fs/promises';
+import { join } from 'node:path';
+import { mkdir } from 'node:fs/promises';
 
 // Monorepo root (2 levels up from apps/project-tracker/)
 export const MONOREPO_ROOT = join(process.cwd(), '..', '..');
@@ -250,5 +250,5 @@ export function sanitizeTaskId(taskId: string): string | null {
 
   // Additional sanitization - remove any characters that could be shell injection
   // Since we've already validated the pattern, this is just an extra safety layer
-  return taskId.replace(/[^A-Z0-9-]/g, '');
+  return taskId.replaceAll(/[^A-Z0-9-]/g, '');
 }

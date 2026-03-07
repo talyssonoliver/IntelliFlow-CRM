@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
 
 const execAsync = promisify(exec);
 
@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
         });
         results.debt = 'updated';
       } catch (e) {
-        results.debt = `failed: ${e}`;
+        results.debt = `failed: ${e instanceof Error ? e.message : String(e)}`;
       }
     }
 
@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
         });
         results.sonar = 'updated';
       } catch (e) {
-        results.sonar = `failed: ${e}`;
+        results.sonar = `failed: ${e instanceof Error ? e.message : String(e)}`;
       }
     }
 

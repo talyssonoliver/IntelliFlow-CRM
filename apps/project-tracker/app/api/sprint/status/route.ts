@@ -58,7 +58,7 @@ export async function GET(request: Request) {
 
     // If sprint number provided, get latest run for that sprint
     if (sprintNumber) {
-      const sprint = parseInt(sprintNumber, 10);
+      const sprint = Number.parseInt(sprintNumber, 10);
       const runs = Array.from(executionStateStore.entries())
         .filter(([, state]) => state.sprintNumber === sprint)
         .sort((a, b) => new Date(b[1].startedAt).getTime() - new Date(a[1].startedAt).getTime());

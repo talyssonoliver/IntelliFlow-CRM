@@ -106,18 +106,18 @@ export function getStatusColor(status: string): string {
 
 // ─── Status Normalization ────────────────────────────────────────────────────
 
-const VALID_STATUSES: RiskStatus[] = [
+const VALID_STATUSES = new Set<RiskStatus>([
   'Open',
   'In Progress',
   'Mitigated',
   'Monitoring',
   'Accepted',
   'Closed',
-];
+]);
 
 export function normalizeStatus(raw: string): RiskStatus {
   if (raw === 'Monitored') return 'Monitoring';
-  if (VALID_STATUSES.includes(raw as RiskStatus)) return raw as RiskStatus;
+  if (VALID_STATUSES.has(raw as RiskStatus)) return raw as RiskStatus;
   return 'Open';
 }
 
@@ -176,7 +176,7 @@ const CSV_HEADERS = [
 
 function escapeCSVValue(value: string): string {
   if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-    return `"${value.replace(/"/g, '""')}"`;
+    return `"${value.replaceAll('"', '""')}"`;
   }
   return value;
 }

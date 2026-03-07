@@ -171,7 +171,7 @@ export default function StatusTracker() {
           <h4 className="text-sm font-medium text-gray-700 mb-3">By Sprint</h4>
           <div className="space-y-2">
             {Object.entries(data.by_sprint)
-              .sort(([a], [b]) => parseInt(a) - parseInt(b))
+              .sort(([a], [b]) => Number.parseInt(a) - Number.parseInt(b))
               .slice(0, 6)
               .map(([sprint, stats]) => {
                 const pct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;

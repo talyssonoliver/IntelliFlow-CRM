@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, Fragment } from 'react';
+import React, { useState, useEffect, useCallback, Fragment } from 'react';
 import { Icon } from '@/lib/icons';
 
 interface APIInventory {
@@ -167,7 +167,143 @@ interface PerformanceReportData {
   last_updated: string;
 }
 
-export default function PerformanceReportView() {
+function getPerformanceStatusClass(status: string): string {
+  if (status === 'completed') return 'bg-green-500';
+  if (status === 'running') return 'bg-yellow-500';
+  if (status === 'failed') return 'bg-red-500';
+  return 'bg-gray-500';
+}
+
+function getValidatorComplexityClass(complexity: string): string {
+  if (complexity === 'complex') return 'bg-red-100 text-red-700';
+  if (complexity === 'moderate') return 'bg-yellow-100 text-yellow-700';
+  return 'bg-green-100 text-green-700';
+}
+
+function getEndpointTestStatusBadge(isK6Tested: boolean, hasBenchmark: unknown): React.ReactElement {
+  if (isK6Tested) {
+    return <span className="px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">TESTED</span>;
+  }
+  if (hasBenchmark) {
+    return <span className="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700">BENCHMARKED</span>;
+  }
+  return <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600">PENDING</span>;
+}
+
+function getRecommendationPriorityClass(priority: string): string {
+  if (priority === 'high') return 'bg-red-500';
+  if (priority === 'medium') return 'bg-amber-500';
+  if (priority === 'success') return 'bg-green-500';
+  if (priority === 'info') return 'bg-cyan-500';
+  return 'bg-blue-500';
+}
+
+function buildEndpointSectionData(
+  endpointMetrics: EndpointMetric[]
+): { name: string; p50: number; p95: number; p99: number; count: number }[] {
+  const sections: Record<string, { p50: number[]; p95: number[]; p99: number[]; count: number }> = {};
+  for (const endpoint of endpointMetrics) {
+    const section = endpoint.name.split('-')[0];
+    if (!sections[section]) {
+      sections[section] = { p50: [], p95: [], p99: [], count: 0 };
+    }
+    sections[section].p50.push(endpoint.p50);
+    sections[section].p95.push(endpoint.p95);
+    sections[section].p99.push(endpoint.p99);
+    sections[section].count++;
+  }
+  return Object.entries(sections)
+    .map(([name, d]) => ({
+      name,
+      p50: d.p50.reduce((a, b) => a + b, 0) / d.p50.length,
+      p95: d.p95.reduce((a, b) => a + b, 0) / d.p95.length,
+      p99: d.p99.reduce((a, b) => a + b, 0) / d.p99.length,
+      count: d.count,
+    }))
+    .sort((a, b) => a.p50 - b.p50);
+}
+
+interface K6Recommendation {
+  priority: string;
+  icon: string;
+  title: string;
+  desc: string;
+}
+
+function buildK6Recommendations(
+  p95: number | null | undefined,
+  errorRate: number,
+  rps: number | null | undefined,
+  vus: number,
+  testedEndpoints: number,
+  totalEndpoints: number
+): K6Recommendation[] {
+  const recommendations: K6Recommendation[] = [];
+
+  if (testedEndpoints < totalEndpoints * 0.1) {
+    recommendations.push({
+      priority: 'high',
+      icon: '!',
+      title: 'Expand Load Test Coverage',
+      desc: `Only ${testedEndpoints} of ${totalEndpoints} endpoints (${((testedEndpoints / totalEndpoints) * 100).toFixed(1)}%) are tested. Add more endpoints to quick-test.js for comprehensive performance coverage.`,
+    });
+  }
+
+  if (p95 && p95 > 100) {
+    recommendations.push({
+      priority: 'medium',
+      icon: '!',
+      title: 'Optimize p95 Response Time',
+      desc: `Current p95 is ${p95.toFixed(1)}ms. Consider database query optimization, response caching, or connection pooling to get under 100ms threshold.`,
+    });
+  }
+
+  if (errorRate > 1) {
+    recommendations.push({
+      priority: 'high',
+      icon: '!',
+      title: 'Investigate Error Rate',
+      desc: `Error rate of ${errorRate.toFixed(2)}% exceeds 1% threshold. Check server logs and increase connection limits if needed.`,
+    });
+  }
+
+  if (vus < 50) {
+    recommendations.push({
+      priority: 'low',
+      icon: 'i',
+      title: 'Increase Load Test Intensity',
+      desc: `Current test runs with ${vus} VUs. For production readiness, run stress tests with 100-500 VUs to identify scaling limits.`,
+    });
+  }
+
+  if (recommendations.length === 0 || (p95 && p95 < 100 && errorRate === 0)) {
+    recommendations.push({
+      priority: 'success',
+      icon: '✓',
+      title: 'Performance Metrics Within Targets',
+      desc: `p95 response time of ${p95?.toFixed(1) ?? '--'}ms is under 100ms target, with 0% error rate. System performing well under ${vus} concurrent users.`,
+    });
+  }
+
+  if (rps) {
+    recommendations.push({
+      priority: 'info',
+      icon: 'i',
+      title: 'Throughput Analysis',
+      desc: `Achieved ${rps.toFixed(1)} requests/second with ${vus} VUs. Extrapolating: ~${(rps * 5).toFixed(0)} rps possible with 50 VUs if linear scaling holds.`,
+    });
+  }
+
+  return recommendations;
+}
+
+function getK6ButtonClass(testType: 'quick' | 'comprehensive', isRunningTest: 'quick' | 'comprehensive' | null, baseColor: string, runningColor: string): string {
+  if (isRunningTest === testType) return `${runningColor} text-white cursor-wait`;
+  if (isRunningTest !== null) return 'bg-gray-300 text-gray-500 cursor-not-allowed';
+  return `${baseColor} text-white`;
+}
+
+export default function PerformanceReportView() { // NOSONAR typescript:S3776
   const [data, setData] = useState<PerformanceReportData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -249,11 +385,7 @@ export default function PerformanceReportView() {
   if (!data) return null;
 
   const performanceStatus = data.performance_metrics?.status || 'pending';
-  const failedOrPendingStatusClass = performanceStatus === 'failed' ? 'bg-red-500' : 'bg-gray-500';
-  const runningOrLowerStatusClass =
-    performanceStatus === 'running' ? 'bg-yellow-500' : failedOrPendingStatusClass;
-  const performanceStatusClass =
-    performanceStatus === 'completed' ? 'bg-green-500' : runningOrLowerStatusClass;
+  const performanceStatusClass = getPerformanceStatusClass(performanceStatus);
 
   return (
     <div className="space-y-6">
@@ -292,7 +424,7 @@ export default function PerformanceReportView() {
             onClick={loadData}
             className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors"
           >
-            <Icon name="refresh" size="sm" />
+            <Icon name="refresh" size="sm" />{' '}
             Refresh
           </button>
         </div>
@@ -309,47 +441,23 @@ export default function PerformanceReportView() {
             <button
               onClick={() => runK6Test('quick')}
               disabled={isRunningTest !== null}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                isRunningTest === 'quick'
-                  ? 'bg-blue-400 text-white cursor-wait'
-                  : isRunningTest !== null
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${getK6ButtonClass('quick', isRunningTest, 'bg-blue-600 hover:bg-blue-700', 'bg-blue-400')}`}
             >
               {isRunningTest === 'quick' ? (
-                <>
-                  <span className="animate-spin">⏳</span>
-                  Running Quick...
-                </>
+                <><span className="animate-spin">⏳</span>{' '}Running Quick...</>
               ) : (
-                <>
-                  <Icon name="bolt" size="sm" />
-                  Quick Test (8 endpoints)
-                </>
+                <><Icon name="bolt" size="sm" />{' '}Quick Test (8 endpoints)</>
               )}
             </button>
             <button
               onClick={() => runK6Test('comprehensive')}
               disabled={isRunningTest !== null}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                isRunningTest === 'comprehensive'
-                  ? 'bg-green-400 text-white cursor-wait'
-                  : isRunningTest !== null
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-green-600 hover:bg-green-700 text-white'
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${getK6ButtonClass('comprehensive', isRunningTest, 'bg-green-600 hover:bg-green-700', 'bg-green-400')}`}
             >
               {isRunningTest === 'comprehensive' ? (
-                <>
-                  <span className="animate-spin">⏳</span>
-                  Running Comprehensive...
-                </>
+                <><span className="animate-spin">⏳</span>{' '}Running Comprehensive...</>
               ) : (
-                <>
-                  <Icon name="science" size="sm" />
-                  Comprehensive Test (47 endpoints)
-                </>
+                <><Icon name="science" size="sm" />{' '}Comprehensive Test (47 endpoints)</>
               )}
             </button>
           </div>
@@ -359,7 +467,7 @@ export default function PerformanceReportView() {
           <div className="p-4 bg-gray-900 text-green-400 font-mono text-xs max-h-64 overflow-y-auto">
             {isRunningTest && !testOutput && (
               <div className="flex items-center gap-2">
-                <span className="animate-pulse">▶</span>
+                <span className="animate-pulse">▶</span>{' '}
                 Running {isRunningTest} test... This may take 30-60 seconds.
               </div>
             )}
@@ -370,7 +478,7 @@ export default function PerformanceReportView() {
         {data?.k6_test_config && (
           <div className="px-6 py-3 bg-gray-50 border-t text-sm text-gray-600 flex items-center justify-between">
             <span>
-              Last test: <strong>{data.k6_test_config.test_type}</strong> at{' '}
+              Last test:{' '}<strong>{data.k6_test_config.test_type}</strong>{' '}at{' '}
               {new Date(data.k6_test_config.timestamp).toLocaleString()}
             </span>
             <span>
@@ -428,9 +536,9 @@ export default function PerformanceReportView() {
             />
             <KPICard
               value={
-                data.performance_metrics?.error_rate != null
-                  ? formatNumber(data.performance_metrics.error_rate)
-                  : '--'
+                data.performance_metrics?.error_rate == null
+                  ? '--'
+                  : formatNumber(data.performance_metrics.error_rate)
               }
               label="Error Rate"
               target="< 1%"
@@ -729,21 +837,9 @@ export default function PerformanceReportView() {
                     <span className="text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">
                       {validator.schemas} schemas
                     </span>
-                    {(() => {
-                      const moderateOrSimpleComplexClass =
-                        validator.complexity === 'moderate'
-                          ? 'bg-yellow-100 text-yellow-700'
-                          : 'bg-green-100 text-green-700';
-                      const complexityClass =
-                        validator.complexity === 'complex'
-                          ? 'bg-red-100 text-red-700'
-                          : moderateOrSimpleComplexClass;
-                      return (
-                        <span className={`text-xs px-1.5 py-0.5 rounded ${complexityClass}`}>
-                          {validator.complexity}
-                        </span>
-                      );
-                    })()}
+                    <span className={`text-xs px-1.5 py-0.5 rounded ${getValidatorComplexityClass(validator.complexity)}`}>
+                      {validator.complexity}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -810,86 +906,54 @@ export default function PerformanceReportView() {
           data.endpoint_metrics &&
           data.endpoint_metrics.length > 0 ? (
             <>
-              {(() => {
-                // Group endpoints by section (router name)
-                const sections: Record<
-                  string,
-                  { p50: number[]; p95: number[]; p99: number[]; count: number }
-                > = {};
-                data.endpoint_metrics.forEach((endpoint) => {
-                  const section = endpoint.name.split('-')[0]; // e.g., "health-ping" -> "health"
-                  if (!sections[section]) {
-                    sections[section] = { p50: [], p95: [], p99: [], count: 0 };
-                  }
-                  sections[section].p50.push(endpoint.p50);
-                  sections[section].p95.push(endpoint.p95);
-                  sections[section].p99.push(endpoint.p99);
-                  sections[section].count++;
-                });
-
-                // Calculate averages for each section
-                const sectionData = Object.entries(sections)
-                  .map(([name, data]) => ({
-                    name,
-                    p50: data.p50.reduce((a, b) => a + b, 0) / data.p50.length,
-                    p95: data.p95.reduce((a, b) => a + b, 0) / data.p95.length,
-                    p99: data.p99.reduce((a, b) => a + b, 0) / data.p99.length,
-                    count: data.count,
-                  }))
-                  .sort((a, b) => a.p50 - b.p50); // Sort by fastest
-
-                const maxTime = 120; // Scale to 120ms max for sections
-
-                return (
-                  <div className="flex items-end justify-around gap-2 h-64 pb-8 overflow-x-auto">
-                    {sectionData.map((section) => {
-                      const p50Height = Math.min((section.p50 / maxTime) * 160, 160);
-                      const p95Height = Math.min((section.p95 / maxTime) * 160, 160);
-                      const p99Height = Math.min((section.p99 / maxTime) * 160, 160);
-                      return (
-                        <div
-                          key={section.name}
-                          className="flex flex-col items-center gap-2 min-w-[70px]"
-                        >
-                          <div className="flex items-end gap-1 h-40">
-                            <div className="flex flex-col items-center">
-                              <span className="text-xs text-gray-500 mb-1">
-                                {section.p50.toFixed(0)}
-                              </span>
-                              <div
-                                className="w-5 bg-green-500 rounded-t"
-                                style={{ height: `${p50Height}px` }}
-                              />
-                            </div>
-                            <div className="flex flex-col items-center">
-                              <span className="text-xs text-gray-500 mb-1">
-                                {section.p95.toFixed(0)}
-                              </span>
-                              <div
-                                className="w-5 bg-yellow-500 rounded-t"
-                                style={{ height: `${p95Height}px` }}
-                              />
-                            </div>
-                            <div className="flex flex-col items-center">
-                              <span className="text-xs text-gray-500 mb-1">
-                                {section.p99.toFixed(0)}
-                              </span>
-                              <div
-                                className="w-5 bg-orange-500 rounded-t"
-                                style={{ height: `${p99Height}px` }}
-                              />
-                            </div>
-                          </div>
-                          <span className="text-xs text-gray-700 font-medium text-center capitalize">
-                            {section.name}
+              <div className="flex items-end justify-around gap-2 h-64 pb-8 overflow-x-auto">
+                {buildEndpointSectionData(data.endpoint_metrics).map((section) => {
+                  const maxTime = 120;
+                  const p50Height = Math.min((section.p50 / maxTime) * 160, 160);
+                  const p95Height = Math.min((section.p95 / maxTime) * 160, 160);
+                  const p99Height = Math.min((section.p99 / maxTime) * 160, 160);
+                  return (
+                    <div
+                      key={section.name}
+                      className="flex flex-col items-center gap-2 min-w-[70px]"
+                    >
+                      <div className="flex items-end gap-1 h-40">
+                        <div className="flex flex-col items-center">
+                          <span className="text-xs text-gray-500 mb-1">
+                            {section.p50.toFixed(0)}
                           </span>
-                          <span className="text-xs text-gray-400">({section.count})</span>
+                          <div
+                            className="w-5 bg-green-500 rounded-t"
+                            style={{ height: `${p50Height}px` }}
+                          />
                         </div>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
+                        <div className="flex flex-col items-center">
+                          <span className="text-xs text-gray-500 mb-1">
+                            {section.p95.toFixed(0)}
+                          </span>
+                          <div
+                            className="w-5 bg-yellow-500 rounded-t"
+                            style={{ height: `${p95Height}px` }}
+                          />
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <span className="text-xs text-gray-500 mb-1">
+                            {section.p99.toFixed(0)}
+                          </span>
+                          <div
+                            className="w-5 bg-orange-500 rounded-t"
+                            style={{ height: `${p99Height}px` }}
+                          />
+                        </div>
+                      </div>
+                      <span className="text-xs text-gray-700 font-medium text-center capitalize">
+                        {section.name}
+                      </span>
+                      <span className="text-xs text-gray-400">({section.count})</span>
+                    </div>
+                  );
+                })}
+              </div>
               {/* Legend */}
               <div className="flex justify-center gap-6 mt-4 pt-4 border-t">
                 <div className="flex items-center gap-2">
@@ -1012,7 +1076,7 @@ export default function PerformanceReportView() {
                           </td>
                           <td></td>
                         </tr>
-                        {[...Array(router.endpoints)].map((_, i) => {
+                        {[...new Array(router.endpoints)].map((_, i) => {
                           const endpointName =
                             [
                               'list',
@@ -1107,19 +1171,7 @@ export default function PerformanceReportView() {
                                 )}
                               </td>
                               <td className="px-4 py-2 text-center">
-                                {isK6Tested ? (
-                                  <span className="px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">
-                                    TESTED
-                                  </span>
-                                ) : hasBenchmark ? (
-                                  <span className="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700">
-                                    BENCHMARKED
-                                  </span>
-                                ) : (
-                                  <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600">
-                                    PENDING
-                                  </span>
-                                )}
+                                {getEndpointTestStatusBadge(isK6Tested, hasBenchmark)}
                               </td>
                             </tr>
                           );
@@ -1232,7 +1284,7 @@ export default function PerformanceReportView() {
               </p>
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                 <p className="text-sm text-amber-800">
-                  <strong>To run load tests:</strong> Execute{' '}
+                  <strong>To run load tests:</strong>{' '}Execute{' '}
                   <code className="bg-amber-100 px-1 rounded">
                     .\artifacts\misc\k6\run-quick-test.ps1
                   </code>{' '}
@@ -1309,7 +1361,7 @@ export default function PerformanceReportView() {
                     <tr className="border-t hover:bg-gray-50">
                       <td className="px-4 py-3 font-medium">Test Type</td>
                       <td className="px-4 py-3 text-blue-600">
-                        {data.k6_test_config.test_type.replace(/_/g, ' ')}
+                        {data.k6_test_config.test_type.replaceAll('_', ' ')}
                       </td>
                       <td className="px-4 py-3 text-gray-600">Quick feedback load test</td>
                     </tr>
@@ -1385,7 +1437,7 @@ export default function PerformanceReportView() {
               </p>
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                 <p className="text-sm text-amber-800">
-                  <strong>To run load tests:</strong> Execute{' '}
+                  <strong>To run load tests:</strong>{' '}Execute{' '}
                   <code className="bg-amber-100 px-1 rounded">
                     .\artifacts\misc\k6\run-quick-test.ps1
                   </code>{' '}
@@ -1406,100 +1458,29 @@ export default function PerformanceReportView() {
           {data.k6_test_config ? (
             <div className="space-y-4">
               {/* Generate dynamic recommendations based on actual results */}
-              {(() => {
-                const recommendations = [];
-                const p95 = data.performance_metrics?.p95_response_time;
-                const errorRate = data.k6_error_analysis?.error_rate_percent ?? 0;
-                const rps = data.performance_metrics?.requests_per_second;
-                const vus = data.k6_test_config.target_vus;
-                const testedEndpoints = data.k6_tested_endpoints?.length ?? 0;
-                const totalEndpoints = data.api_inventory?.total_endpoints ?? 0;
-
-                // Coverage recommendation
-                if (testedEndpoints < totalEndpoints * 0.1) {
-                  recommendations.push({
-                    priority: 'high',
-                    icon: '!',
-                    title: 'Expand Load Test Coverage',
-                    desc: `Only ${testedEndpoints} of ${totalEndpoints} endpoints (${((testedEndpoints / totalEndpoints) * 100).toFixed(1)}%) are tested. Add more endpoints to quick-test.js for comprehensive performance coverage.`,
-                  });
-                }
-
-                // Performance recommendations based on actual metrics
-                if (p95 && p95 > 100) {
-                  recommendations.push({
-                    priority: 'medium',
-                    icon: '!',
-                    title: 'Optimize p95 Response Time',
-                    desc: `Current p95 is ${p95.toFixed(1)}ms. Consider database query optimization, response caching, or connection pooling to get under 100ms threshold.`,
-                  });
-                }
-
-                if (errorRate > 1) {
-                  recommendations.push({
-                    priority: 'high',
-                    icon: '!',
-                    title: 'Investigate Error Rate',
-                    desc: `Error rate of ${errorRate.toFixed(2)}% exceeds 1% threshold. Check server logs and increase connection limits if needed.`,
-                  });
-                }
-
-                // VU scaling recommendation
-                if (vus < 50) {
-                  recommendations.push({
-                    priority: 'low',
-                    icon: 'i',
-                    title: 'Increase Load Test Intensity',
-                    desc: `Current test runs with ${vus} VUs. For production readiness, run stress tests with 100-500 VUs to identify scaling limits.`,
-                  });
-                }
-
-                // Success message if all looks good
-                if (recommendations.length === 0 || (p95 && p95 < 100 && errorRate === 0)) {
-                  recommendations.push({
-                    priority: 'success',
-                    icon: '✓',
-                    title: 'Performance Metrics Within Targets',
-                    desc: `p95 response time of ${p95?.toFixed(1) ?? '--'}ms is under 100ms target, with 0% error rate. System performing well under ${vus} concurrent users.`,
-                  });
-                }
-
-                // Request rate observation
-                if (rps) {
-                  recommendations.push({
-                    priority: 'info',
-                    icon: 'i',
-                    title: 'Throughput Analysis',
-                    desc: `Achieved ${rps.toFixed(1)} requests/second with ${vus} VUs. Extrapolating: ~${(rps * 5).toFixed(0)} rps possible with 50 VUs if linear scaling holds.`,
-                  });
-                }
-
-                return recommendations.map((rec) => {
-                  const infoPriorityClass = rec.priority === 'info' ? 'bg-cyan-500' : 'bg-blue-500';
-                  const successOrLowerPriorityClass =
-                    rec.priority === 'success' ? 'bg-green-500' : infoPriorityClass;
-                  const mediumOrLowerPriorityClass =
-                    rec.priority === 'medium' ? 'bg-amber-500' : successOrLowerPriorityClass;
-                  const recPriorityClass =
-                    rec.priority === 'high' ? 'bg-red-500' : mediumOrLowerPriorityClass;
-                  return (
-                    <div
-                      key={rec.title}
-                      className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg"
-                    >
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${recPriorityClass}`}
-                      >
-                        {rec.icon}
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-gray-800">{rec.title}</h4>
-                        <p className="text-sm text-gray-600 mt-1">{rec.desc}</p>
-                      </div>
-                    </div>
-                  );
-                });
-              })()}
+              {buildK6Recommendations(
+                data.performance_metrics?.p95_response_time,
+                data.k6_error_analysis?.error_rate_percent ?? 0,
+                data.performance_metrics?.requests_per_second,
+                data.k6_test_config.target_vus,
+                data.k6_tested_endpoints?.length ?? 0,
+                data.api_inventory?.total_endpoints ?? 0
+              ).map((rec) => (
+                <div
+                  key={rec.title}
+                  className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg"
+                >
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${getRecommendationPriorityClass(rec.priority)}`}
+                  >
+                    {rec.icon}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-800">{rec.title}</h4>
+                    <p className="text-sm text-gray-600 mt-1">{rec.desc}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
             <>
@@ -1508,7 +1489,7 @@ export default function PerformanceReportView() {
               </p>
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                 <p className="text-sm text-amber-800">
-                  <strong>To get recommendations:</strong> Execute{' '}
+                  <strong>To get recommendations:</strong>{' '}Execute{' '}
                   <code className="bg-amber-100 px-1 rounded">
                     .\artifacts\misc\k6\run-quick-test.ps1
                   </code>{' '}
@@ -1571,9 +1552,9 @@ export default function PerformanceReportView() {
                     kpi: 'Error Rate',
                     target: '< 1%',
                     actual:
-                      data.performance_metrics?.error_rate !== undefined
-                        ? `${formatNumber(data.performance_metrics.error_rate)}%`
-                        : null,
+                      data.performance_metrics?.error_rate === undefined
+                        ? null
+                        : `${formatNumber(data.performance_metrics.error_rate)}%`,
                   },
                   {
                     kpi: 'Request Rate',
@@ -1628,13 +1609,13 @@ function KPICard({
   target,
   unit,
   status,
-}: {
+}: Readonly<{
   value: number | string | null | undefined;
   label: string;
   target: string;
   unit: string;
   status: string;
-}) {
+}>) {
   const formattedValue = formatNumber(value);
   const isPending = status === 'pending' || formattedValue === '--';
 
@@ -1662,12 +1643,12 @@ function SummaryCard({
   label,
   value,
   color,
-}: {
+}: Readonly<{
   icon: string;
   label: string;
   value: number | string;
   color: string;
-}) {
+}>) {
   const colorClasses: Record<string, string> = {
     blue: 'bg-blue-50 text-blue-600',
     purple: 'bg-purple-50 text-purple-600',
@@ -1703,7 +1684,7 @@ function InventorySection({
   isExpanded,
   onToggle,
   children,
-}: {
+}: Readonly<{
   title: string;
   icon: string;
   color: string;
@@ -1711,7 +1692,7 @@ function InventorySection({
   isExpanded: boolean;
   onToggle: () => void;
   children: React.ReactNode;
-}) {
+}>) {
   const colorClasses: Record<string, string> = {
     blue: 'bg-blue-600',
     purple: 'bg-purple-600',
