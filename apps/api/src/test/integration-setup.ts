@@ -24,18 +24,21 @@ import { PrismaAnalyticsRepository } from '@intelliflow/adapters';
  * Infrastructure availability flag
  * Set to false if Prisma client cannot be loaded
  */
-export let isInfrastructureAvailable = false;
+let _isInfrastructureAvailable = false;
+export function isInfrastructureAvailable(): boolean { return _isInfrastructureAvailable; }
 
 /**
  * Reason for infrastructure unavailability (for alerts)
  */
-export let infrastructureUnavailableReason = '';
+let _infrastructureUnavailableReason = '';
+export function getInfrastructureUnavailableReason(): string { return _infrastructureUnavailableReason; }
 
 /**
  * Real Prisma client for integration tests (may be null if unavailable)
  * Connected to test database
  */
-export let testPrisma: any = null;
+let _testPrisma: any = null;
+export function getTestPrisma(): any { return _testPrisma; }
 
 // Lazy-loaded services and adapters
 let _testServices: any = null;
@@ -69,13 +72,13 @@ function displayInfrastructureAlert(reason: string): void {
 try {
   // Check if DATABASE_URL is set first
   if (!process.env.DATABASE_URL) {
-    infrastructureUnavailableReason = 'DATABASE_URL environment variable not set';
-    displayInfrastructureAlert(infrastructureUnavailableReason);
+    _infrastructureUnavailableReason = 'DATABASE_URL environment variable not set';
+    displayInfrastructureAlert(_infrastructureUnavailableReason);
   } else {
     // Dynamic require to catch module not found errors
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { PrismaClient } = require('@prisma/client'); // NOSONAR
-    testPrisma = new PrismaClient({
+    _testPrisma = new PrismaClient({
       datasources: {
         db: {
           url: process.env.DATABASE_URL,
@@ -93,11 +96,11 @@ try {
 
     // Create adapters
     _testAdapters = {
-      leadRepository: new adapters.PrismaLeadRepository(testPrisma),
-      contactRepository: new adapters.PrismaContactRepository(testPrisma),
-      accountRepository: new adapters.PrismaAccountRepository(testPrisma),
-      opportunityRepository: new adapters.PrismaOpportunityRepository(testPrisma),
-      taskRepository: new adapters.PrismaTaskRepository(testPrisma),
+      leadRepository: new adapters.PrismaLeadRepository(_testPrisma),
+      contactRepository: new adapters.PrismaContactRepository(_testPrisma),
+      accountRepository: new adapters.PrismaAccountRepository(_testPrisma),
+      opportunityRepository: new adapters.PrismaOpportunityRepository(_testPrisma),
+      taskRepository: new adapters.PrismaTaskRepository(_testPrisma),
       eventBus: new adapters.InMemoryEventBus(),
       aiService: new adapters.MockAIService(),
     };
@@ -135,22 +138,22 @@ try {
         _testAdapters.opportunityRepository,
         _testAdapters.eventBus
       ),
-      ticket: new TicketService(testPrisma),
-      analytics: new AnalyticsAggregationService(new PrismaAnalyticsRepository(testPrisma)),
+      ticket: new TicketService(_testPrisma),
+      analytics: new AnalyticsAggregationService(new PrismaAnalyticsRepository(_testPrisma)),
     };
 
-    isInfrastructureAvailable = true;
+    _isInfrastructureAvailable = true;
   }
 } catch (error) {
   const errorMessage = error instanceof Error ? error.message : String(error);
   if (errorMessage.includes('Cannot find module') && errorMessage.includes('@prisma/client')) {
-    infrastructureUnavailableReason = '@prisma/client not generated. Run: pnpm run db:generate';
+    _infrastructureUnavailableReason = '@prisma/client not generated. Run: pnpm run db:generate';
   } else if (errorMessage.includes('Cannot find module')) {
-    infrastructureUnavailableReason = `Missing module: ${errorMessage}`;
+    _infrastructureUnavailableReason = `Missing module: ${errorMessage}`;
   } else {
-    infrastructureUnavailableReason = `Infrastructure initialization failed: ${errorMessage}`;
+    _infrastructureUnavailableReason = `Infrastructure initialization failed: ${errorMessage}`;
   }
-  displayInfrastructureAlert(infrastructureUnavailableReason);
+  displayInfrastructureAlert(_infrastructureUnavailableReason);
 }
 
 /**
@@ -173,11 +176,11 @@ export const testServices = _testServices;
  * Throws if infrastructure not available
  */
 export async function getDefaultTenantId(): Promise<string> {
-  if (!isInfrastructureAvailable || !testPrisma) {
-    throw new Error(`Infrastructure not available: ${infrastructureUnavailableReason}`);
+  if (!_isInfrastructureAvailable || !_testPrisma) {
+    throw new Error(`Infrastructure not available: ${_infrastructureUnavailableReason}`);
   }
 
-  const tenant = await testPrisma.tenant.findUnique({
+  const tenant = await _testPrisma.tenant.findUnique({
     where: { slug: 'default' },
   });
 
@@ -195,8 +198,8 @@ export async function getDefaultTenantId(): Promise<string> {
 export async function createIntegrationTestContext(
   overrides?: Partial<BaseContext>
 ): Promise<BaseContext & { tenant: TenantContext; prismaWithTenant: any }> {
-  if (!isInfrastructureAvailable) {
-    throw new Error(`Infrastructure not available: ${infrastructureUnavailableReason}`);
+  if (!_isInfrastructureAvailable) {
+    throw new Error(`Infrastructure not available: ${_infrastructureUnavailableReason}`);
   }
 
   const tenantId = await getDefaultTenantId();
@@ -212,8 +215,8 @@ export async function createIntegrationTestContext(
   };
 
   const defaultContext: BaseContext & { tenant: TenantContext; prismaWithTenant: any } = {
-    prisma: testPrisma,
-    prismaWithTenant: testPrisma, // For integration tests, use the same client
+    prisma: _testPrisma,
+    prismaWithTenant: _testPrisma, // For integration tests, use the same client
     tenant: tenantContext, // Required by lead router and other tenant-aware procedures
     container: {} as any, // Mock container for integration tests
     services: testServices,
@@ -245,8 +248,8 @@ export async function createIntegrationTestContext(
 export async function createIntegrationAdminContext(
   overrides?: Partial<BaseContext>
 ): Promise<BaseContext & { tenant: TenantContext; prismaWithTenant: any }> {
-  if (!isInfrastructureAvailable) {
-    throw new Error(`Infrastructure not available: ${infrastructureUnavailableReason}`);
+  if (!_isInfrastructureAvailable) {
+    throw new Error(`Infrastructure not available: ${_infrastructureUnavailableReason}`);
   }
 
   const tenantId = await getDefaultTenantId();
@@ -280,7 +283,7 @@ let isDatabaseConnectionVerified: boolean | null = null;
  * Returns true if database is reachable, false otherwise
  */
 async function checkDatabaseOnce(): Promise<boolean> {
-  if (!isInfrastructureAvailable || !testPrisma) {
+  if (!_isInfrastructureAvailable || !_testPrisma) {
     return false;
   }
 
@@ -289,7 +292,7 @@ async function checkDatabaseOnce(): Promise<boolean> {
   }
 
   try {
-    await testPrisma.$connect();
+    await _testPrisma.$connect();
     isDatabaseConnectionVerified = true;
     return true;
   } catch (error) {
@@ -306,7 +309,7 @@ async function checkDatabaseOnce(): Promise<boolean> {
  * If database is unavailable, logs warning but doesn't throw
  */
 beforeAll(async () => {
-  if (isInfrastructureAvailable) {
+  if (_isInfrastructureAvailable) {
     await checkDatabaseOnce();
   }
 });
@@ -315,8 +318,8 @@ beforeAll(async () => {
  * Disconnect from database after all tests
  */
 afterAll(async () => {
-  if (isDatabaseConnectionVerified === true && testPrisma) {
-    await testPrisma.$disconnect();
+  if (isDatabaseConnectionVerified === true && _testPrisma) {
+    await _testPrisma.$disconnect();
   }
 });
 
@@ -325,7 +328,7 @@ afterAll(async () => {
  * Returns false if infrastructure or database not available
  */
 export function isDatabaseReady(): boolean {
-  return isInfrastructureAvailable && isDatabaseConnectionVerified === true;
+  return _isInfrastructureAvailable && isDatabaseConnectionVerified === true;
 }
 
 /**
@@ -333,8 +336,8 @@ export function isDatabaseReady(): boolean {
  * Use this in beforeAll to skip tests when DB is unavailable
  */
 export async function requireDatabase(): Promise<void> {
-  if (!isInfrastructureAvailable) {
-    throw new Error(`SKIP: ${infrastructureUnavailableReason}`);
+  if (!_isInfrastructureAvailable) {
+    throw new Error(`SKIP: ${_infrastructureUnavailableReason}`);
   }
 
   const available = await checkDatabaseOnce();
@@ -355,9 +358,9 @@ export async function verifySeedData(): Promise<void> {
   // First check if infrastructure and database are available
   await requireDatabase();
 
-  const leadCount = await testPrisma.lead.count();
-  const contactCount = await testPrisma.contact.count();
-  const accountCount = await testPrisma.account.count();
+  const leadCount = await _testPrisma.lead.count();
+  const contactCount = await _testPrisma.contact.count();
+  const accountCount = await _testPrisma.account.count();
 
   if (leadCount === 0 || contactCount === 0 || accountCount === 0) {
     throw new Error('No seed data found in test database. Run: pnpm --filter @intelliflow/db seed');
@@ -368,8 +371,8 @@ export async function verifySeedData(): Promise<void> {
  * Helper to check infrastructure before query
  */
 function requireInfra(): void {
-  if (!isInfrastructureAvailable || !testPrisma) {
-    throw new Error(`Infrastructure not available: ${infrastructureUnavailableReason}`);
+  if (!_isInfrastructureAvailable || !_testPrisma) {
+    throw new Error(`Infrastructure not available: ${_infrastructureUnavailableReason}`);
   }
 }
 
@@ -383,7 +386,7 @@ export const getSeedData = {
    */
   async lead(seedId: string) {
     requireInfra();
-    const lead = await testPrisma.lead.findUnique({
+    const lead = await _testPrisma.lead.findUnique({
       where: { id: seedId },
       include: {
         owner: true,
@@ -403,7 +406,7 @@ export const getSeedData = {
    */
   async contact(seedId: string) {
     requireInfra();
-    const contact = await testPrisma.contact.findUnique({
+    const contact = await _testPrisma.contact.findUnique({
       where: { id: seedId },
       include: {
         owner: true,
@@ -423,7 +426,7 @@ export const getSeedData = {
    */
   async account(seedId: string) {
     requireInfra();
-    const account = await testPrisma.account.findUnique({
+    const account = await _testPrisma.account.findUnique({
       where: { id: seedId },
       include: {
         owner: true,
@@ -448,7 +451,7 @@ export const getSeedData = {
    */
   async opportunity(seedId: string) {
     requireInfra();
-    const opportunity = await testPrisma.opportunity.findUnique({
+    const opportunity = await _testPrisma.opportunity.findUnique({
       where: { id: seedId },
       include: {
         account: true,
@@ -469,7 +472,7 @@ export const getSeedData = {
    */
   async task(seedId: string) {
     requireInfra();
-    const task = await testPrisma.task.findUnique({
+    const task = await _testPrisma.task.findUnique({
       where: { id: seedId },
       include: {
         owner: true,
@@ -491,7 +494,7 @@ export const getSeedData = {
    */
   async user(seedId: string) {
     requireInfra();
-    const user = await testPrisma.user.findUnique({
+    const user = await _testPrisma.user.findUnique({
       where: { id: seedId },
     });
 

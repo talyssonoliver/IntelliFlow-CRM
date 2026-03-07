@@ -246,13 +246,13 @@ export class AuditLogger {
     if (this.flushTimer) return;
 
     if (this.buffer.length >= this.config.batchSize) {
-      void this.flush();
+      this.flush().catch(() => {});
       return;
     }
 
     this.flushTimer = setTimeout(() => {
       this.flushTimer = null;
-      void this.flush();
+      this.flush().catch(() => {});
     }, this.config.flushIntervalMs);
   }
 }

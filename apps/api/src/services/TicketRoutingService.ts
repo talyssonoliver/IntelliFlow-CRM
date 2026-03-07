@@ -224,7 +224,7 @@ export class TicketRoutingService {
       orderBy: { priority: 'desc' },
     });
 
-    if (rule && rule.assignToUserId) {
+    if (rule?.assignToUserId) {
       return {
         id: rule.id,
         assignToUserId: rule.assignToUserId,

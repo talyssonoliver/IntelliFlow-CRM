@@ -100,6 +100,45 @@ function buildRecommendationsJson(
   };
 }
 
+type ScoreTier = 'hot' | 'warm' | 'cold';
+
+function classifyScore(score: number): ScoreTier {
+  if (score >= 80) return 'hot';
+  if (score >= 50) return 'warm';
+  return 'cold';
+}
+
+function buildScoreTrends(
+  allScores: Array<{ score: number; createdAt: Date }>
+): Array<{ date: string; avgScore: number; hot: number; warm: number; cold: number; count: number }> {
+  const trendMap = new Map<
+    string,
+    { totalScore: number; hot: number; warm: number; cold: number; count: number }
+  >();
+
+  for (const s of allScores) {
+    const dateKey = s.createdAt.toISOString().split('T')[0];
+    if (!trendMap.has(dateKey)) {
+      trendMap.set(dateKey, { totalScore: 0, hot: 0, warm: 0, cold: 0, count: 0 });
+    }
+    const bucket = trendMap.get(dateKey)!;
+    bucket.totalScore += s.score;
+    bucket.count++;
+    bucket[classifyScore(s.score)]++;
+  }
+
+  return Array.from(trendMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, b]) => ({
+      date,
+      avgScore: b.count > 0 ? Math.round(b.totalScore / b.count) : 0,
+      hot: b.hot,
+      warm: b.warm,
+      cold: b.cold,
+      count: b.count,
+    }));
+}
+
 /**
  * Entity type for AI predictions
  */
@@ -297,6 +336,132 @@ function groupByDateKey<T extends { updatedAt: Date }, B extends Record<string, 
   return Array.from(trendMap.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([date, bucket]) => ({ date, bucket }));
+}
+
+type RagSearchResultRow = {
+  id: string;
+  source: string;
+  title: string;
+  snippet: string;
+  relevanceScore: number;
+  metadata: Record<string, unknown>;
+  citation: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/**
+ * Build all active Prisma search promises for ragSearch.
+ * Only sources included in `searchSources` are queried.
+ */
+function buildRagSearchPromises(
+  prisma: any,
+  searchSources: string[],
+  tenantId: string,
+  searchTerm: string,
+  dateFilter: { gte: Date } | undefined,
+  limit: number,
+  offset: number
+): Promise<RagSearchResultRow[]>[] {
+  const searches: Promise<RagSearchResultRow[]>[] = [];
+  const insensitive = 'insensitive' as const;
+
+  if (searchSources.includes('leads')) {
+    searches.push(
+      prisma.lead.findMany({
+        where: { tenantId, ...(dateFilter && { updatedAt: dateFilter }),
+          OR: [{ firstName: { contains: searchTerm, mode: insensitive } },
+               { lastName: { contains: searchTerm, mode: insensitive } },
+               { email: { contains: searchTerm, mode: insensitive } },
+               { company: { contains: searchTerm, mode: insensitive } }] },
+        take: limit, skip: offset, orderBy: { updatedAt: 'desc' },
+      }).then((rows: any[]) => rows.map((r: any) => ({
+        id: r.id, source: 'leads',
+        title: `${r.firstName} ${r.lastName}` + (r.company ? ` - ${r.company}` : ''),
+        snippet: `${r.email ?? ''}` + (r.company ? ` at ${r.company}` : '') + `. Status: ${r.status}`,
+        relevanceScore: 0.8,
+        metadata: { status: r.status, company: r.company } as Record<string, unknown>,
+        citation: 'Lead record',
+        createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString(),
+      })))
+    );
+  }
+
+  if (searchSources.includes('contacts')) {
+    searches.push(
+      prisma.contact.findMany({
+        where: { tenantId, ...(dateFilter && { updatedAt: dateFilter }),
+          OR: [{ firstName: { contains: searchTerm, mode: insensitive } },
+               { lastName: { contains: searchTerm, mode: insensitive } },
+               { email: { contains: searchTerm, mode: insensitive } }] },
+        take: limit, skip: offset, orderBy: { updatedAt: 'desc' },
+      }).then((rows: any[]) => rows.map((r: any) => ({
+        id: r.id, source: 'contacts',
+        title: `${r.firstName} ${r.lastName}`,
+        snippet: `${r.email ?? ''}. Status: ${r.status}`,
+        relevanceScore: 0.75,
+        metadata: { status: r.status } as Record<string, unknown>,
+        citation: 'Contact record',
+        createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString(),
+      })))
+    );
+  }
+
+  if (searchSources.includes('accounts')) {
+    searches.push(
+      prisma.account.findMany({
+        where: { tenantId, ...(dateFilter && { updatedAt: dateFilter }),
+          OR: [{ name: { contains: searchTerm, mode: insensitive } },
+               { industry: { contains: searchTerm, mode: insensitive } }] },
+        take: limit, skip: offset, orderBy: { updatedAt: 'desc' },
+      }).then((rows: any[]) => rows.map((r: any) => ({
+        id: r.id, source: 'accounts', title: r.name,
+        snippet: `Industry: ${r.industry ?? 'N/A'}`,
+        relevanceScore: 0.7,
+        metadata: { industry: r.industry } as Record<string, unknown>,
+        citation: 'Account record',
+        createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString(),
+      })))
+    );
+  }
+
+  if (searchSources.includes('opportunities')) {
+    searches.push(
+      prisma.opportunity.findMany({
+        where: { tenantId, ...(dateFilter && { updatedAt: dateFilter }),
+          OR: [{ name: { contains: searchTerm, mode: insensitive } },
+               { description: { contains: searchTerm, mode: insensitive } }] },
+        take: limit, skip: offset, orderBy: { updatedAt: 'desc' },
+      }).then((rows: any[]) => rows.map((r: any) => ({
+        id: r.id, source: 'opportunities', title: r.name,
+        snippet: r.description ?? `Stage: ${r.stage}`,
+        relevanceScore: 0.7,
+        metadata: { stage: r.stage, value: r.value } as Record<string, unknown>,
+        citation: 'Opportunity pipeline',
+        createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString(),
+      })))
+    );
+  }
+
+  if (searchSources.includes('tickets')) {
+    searches.push(
+      prisma.ticket.findMany({
+        where: { tenantId, ...(dateFilter && { updatedAt: dateFilter }),
+          OR: [{ subject: { contains: searchTerm, mode: insensitive } },
+               { description: { contains: searchTerm, mode: insensitive } }] },
+        take: limit, skip: offset, orderBy: { updatedAt: 'desc' },
+      }).then((rows: any[]) => rows.map((r: any) => ({
+        id: r.id, source: 'tickets', title: r.subject,
+        snippet: r.description ?? '',
+        relevanceScore: 0.65,
+        metadata: { status: r.status, priority: r.priority } as Record<string, unknown>,
+        citation: 'Support ticket',
+        createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString(),
+      })))
+    );
+  }
+
+  return searches;
 }
 
 export const intelligenceRouter = createTRPCRouter({
@@ -1008,8 +1173,9 @@ export const intelligenceRouter = createTRPCRouter({
       for (const s of allScores) {
         totalScore += s.score;
         totalConfidence += s.confidence;
-        if (s.score >= 80) hot++;
-        else if (s.score >= 50) warm++;
+        const tier = classifyScore(s.score);
+        if (tier === 'hot') hot++;
+        else if (tier === 'warm') warm++;
         else cold++;
       }
 
@@ -1024,8 +1190,7 @@ export const intelligenceRouter = createTRPCRouter({
       const scoredLeads = paginatedScores.map((s) => {
         const leadName =
           [s.lead.firstName, s.lead.lastName].filter(Boolean).join(' ') || 'Unknown Lead';
-        const tier: 'hot' | 'warm' | 'cold' =
-          s.score >= 80 ? 'hot' : s.score >= 50 ? 'warm' : 'cold';
+        const tier: ScoreTier = classifyScore(s.score);
 
         // Parse factors from Json field
         let factors: Array<{ name: string; impact: number; reasoning: string }> = [];
@@ -1053,33 +1218,7 @@ export const intelligenceRouter = createTRPCRouter({
       });
 
       // Trends grouped by date
-      const trendMap = new Map<
-        string,
-        { totalScore: number; hot: number; warm: number; cold: number; count: number }
-      >();
-
-      for (const s of allScores) {
-        const dateKey = s.createdAt.toISOString().split('T')[0];
-        if (!trendMap.has(dateKey)) {
-          trendMap.set(dateKey, { totalScore: 0, hot: 0, warm: 0, cold: 0, count: 0 });
-        }
-        const bucket = trendMap.get(dateKey)!;
-        bucket.totalScore += s.score;
-        bucket.count++;
-        if (s.score >= 80) bucket.hot++;
-        else if (s.score >= 50) bucket.warm++;
-        else bucket.cold++;
-      }
-
-      const trendEntries = Array.from(trendMap.entries()).sort(([a], [b]) => a.localeCompare(b));
-      const trends = trendEntries.map(([date, b]) => ({
-        date,
-        avgScore: b.count > 0 ? Math.round(b.totalScore / b.count) : 0,
-        hot: b.hot,
-        warm: b.warm,
-        cold: b.cold,
-        count: b.count,
-      }));
+      const trends = buildScoreTrends(allScores);
 
       return {
         stats: { total, hot, warm, cold, avgScore, avgConfidence },
@@ -1131,17 +1270,7 @@ export const intelligenceRouter = createTRPCRouter({
       }
 
       const searchTerm = input.query.trim();
-      const results: Array<{
-        id: string;
-        source: string;
-        title: string;
-        snippet: string;
-        relevanceScore: number;
-        metadata: Record<string, unknown>;
-        citation: string;
-        createdAt: string;
-        updatedAt: string;
-      }> = [];
+      const results: RagSearchResultRow[] = [];
 
       // Determine which sources to search
       const allSources = [
@@ -1161,170 +1290,15 @@ export const intelligenceRouter = createTRPCRouter({
       const dateFilter = since ? { gte: since } : undefined;
 
       try {
-        const searches = [];
-
-        if (searchSources.includes('leads')) {
-          searches.push(
-            ctx.prisma.lead
-              .findMany({
-                where: {
-                  tenantId,
-                  ...(dateFilter && { updatedAt: dateFilter }),
-                  OR: [
-                    { firstName: { contains: searchTerm, mode: 'insensitive' as const } },
-                    { lastName: { contains: searchTerm, mode: 'insensitive' as const } },
-                    { email: { contains: searchTerm, mode: 'insensitive' as const } },
-                    { company: { contains: searchTerm, mode: 'insensitive' as const } },
-                  ],
-                },
-                take: input.limit,
-                skip: input.offset,
-                orderBy: { updatedAt: 'desc' },
-              })
-              .then((rows) =>
-                rows.map((r) => ({
-                  id: r.id,
-                  source: 'leads' as const,
-                  title: `${r.firstName} ${r.lastName}${r.company ? ` - ${r.company}` : ''}`,
-                  snippet: `${r.email ?? ''}${r.company ? ` at ${r.company}` : ''}. Status: ${r.status}`,
-                  relevanceScore: 0.8,
-                  metadata: { status: r.status, company: r.company } as Record<string, unknown>,
-                  citation: 'Lead record',
-                  createdAt: r.createdAt.toISOString(),
-                  updatedAt: r.updatedAt.toISOString(),
-                }))
-              )
-          );
-        }
-
-        if (searchSources.includes('contacts')) {
-          searches.push(
-            ctx.prisma.contact
-              .findMany({
-                where: {
-                  tenantId,
-                  ...(dateFilter && { updatedAt: dateFilter }),
-                  OR: [
-                    { firstName: { contains: searchTerm, mode: 'insensitive' as const } },
-                    { lastName: { contains: searchTerm, mode: 'insensitive' as const } },
-                    { email: { contains: searchTerm, mode: 'insensitive' as const } },
-                  ],
-                },
-                take: input.limit,
-                skip: input.offset,
-                orderBy: { updatedAt: 'desc' },
-              })
-              .then((rows) =>
-                rows.map((r) => ({
-                  id: r.id,
-                  source: 'contacts' as const,
-                  title: `${r.firstName} ${r.lastName}`,
-                  snippet: `${r.email ?? ''}. Status: ${r.status}`,
-                  relevanceScore: 0.75,
-                  metadata: { status: r.status } as Record<string, unknown>,
-                  citation: 'Contact record',
-                  createdAt: r.createdAt.toISOString(),
-                  updatedAt: r.updatedAt.toISOString(),
-                }))
-              )
-          );
-        }
-
-        if (searchSources.includes('accounts')) {
-          searches.push(
-            ctx.prisma.account
-              .findMany({
-                where: {
-                  tenantId,
-                  ...(dateFilter && { updatedAt: dateFilter }),
-                  OR: [
-                    { name: { contains: searchTerm, mode: 'insensitive' as const } },
-                    { industry: { contains: searchTerm, mode: 'insensitive' as const } },
-                  ],
-                },
-                take: input.limit,
-                skip: input.offset,
-                orderBy: { updatedAt: 'desc' },
-              })
-              .then((rows) =>
-                rows.map((r) => ({
-                  id: r.id,
-                  source: 'accounts' as const,
-                  title: r.name,
-                  snippet: `Industry: ${r.industry ?? 'N/A'}`,
-                  relevanceScore: 0.7,
-                  metadata: { industry: r.industry } as Record<string, unknown>,
-                  citation: 'Account record',
-                  createdAt: r.createdAt.toISOString(),
-                  updatedAt: r.updatedAt.toISOString(),
-                }))
-              )
-          );
-        }
-
-        if (searchSources.includes('opportunities')) {
-          searches.push(
-            ctx.prisma.opportunity
-              .findMany({
-                where: {
-                  tenantId,
-                  ...(dateFilter && { updatedAt: dateFilter }),
-                  OR: [
-                    { name: { contains: searchTerm, mode: 'insensitive' as const } },
-                    { description: { contains: searchTerm, mode: 'insensitive' as const } },
-                  ],
-                },
-                take: input.limit,
-                skip: input.offset,
-                orderBy: { updatedAt: 'desc' },
-              })
-              .then((rows) =>
-                rows.map((r) => ({
-                  id: r.id,
-                  source: 'opportunities' as const,
-                  title: r.name,
-                  snippet: r.description ?? `Stage: ${r.stage}`,
-                  relevanceScore: 0.7,
-                  metadata: { stage: r.stage, value: r.value } as Record<string, unknown>,
-                  citation: 'Opportunity pipeline',
-                  createdAt: r.createdAt.toISOString(),
-                  updatedAt: r.updatedAt.toISOString(),
-                }))
-              )
-          );
-        }
-
-        if (searchSources.includes('tickets')) {
-          searches.push(
-            ctx.prisma.ticket
-              .findMany({
-                where: {
-                  tenantId,
-                  ...(dateFilter && { updatedAt: dateFilter }),
-                  OR: [
-                    { subject: { contains: searchTerm, mode: 'insensitive' as const } },
-                    { description: { contains: searchTerm, mode: 'insensitive' as const } },
-                  ],
-                },
-                take: input.limit,
-                skip: input.offset,
-                orderBy: { updatedAt: 'desc' },
-              })
-              .then((rows) =>
-                rows.map((r) => ({
-                  id: r.id,
-                  source: 'tickets' as const,
-                  title: r.subject,
-                  snippet: r.description ?? '',
-                  relevanceScore: 0.65,
-                  metadata: { status: r.status, priority: r.priority } as Record<string, unknown>,
-                  citation: 'Support ticket',
-                  createdAt: r.createdAt.toISOString(),
-                  updatedAt: r.updatedAt.toISOString(),
-                }))
-              )
-          );
-        }
+        const searches = buildRagSearchPromises(
+          ctx.prisma,
+          searchSources,
+          tenantId,
+          searchTerm,
+          dateFilter,
+          input.limit,
+          input.offset
+        );
 
         // Run all searches in parallel
         const allResults = await Promise.all(searches);

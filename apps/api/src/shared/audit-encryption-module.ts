@@ -28,7 +28,7 @@ import {
   createHmac,
   CipherGCM,
   DecipherGCM,
-} from 'crypto';
+} from 'node:crypto';
 
 /**
  * Audit log encryption configuration
@@ -90,7 +90,7 @@ export class AuditEncryption {
   private readonly algorithm: string;
   private readonly authTagLength: number;
   private readonly keyRotationDays: number;
-  private keyVersions: Map<number, KeyRotationMetadata> = new Map();
+  private readonly keyVersions: Map<number, KeyRotationMetadata> = new Map();
   private currentKeyVersion: number = 1;
 
   constructor(config: EncryptionConfig) {

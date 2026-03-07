@@ -38,6 +38,7 @@ import {
   createTenantWhereClause,
   type TenantAwareContext,
 } from '../../security/tenant-context';
+import { deriveContactInsights } from '../../shared/contact-insight-deriver';
 
 /**
  * Search schema optimized for performance
@@ -48,6 +49,76 @@ const contactSearchSchema = z.object({
   limit: z.number().int().positive().max(50).default(20),
   includeAccount: z.boolean().default(false),
 });
+
+type UpdateContactData = Record<string, unknown> & {
+  phone?: string | { toValue?: () => string };
+  firstName?: string;
+  lastName?: string;
+  title?: string;
+  department?: string;
+  status?: string;
+  streetAddress?: string;
+  city?: string;
+  zipCode?: string;
+  company?: string;
+  linkedInUrl?: string;
+  contactType?: string;
+  tags?: string[];
+  contactNotes?: string;
+};
+
+const CONTACT_INFO_FIELDS = [
+  'firstName', 'lastName', 'title', 'department', 'status',
+  'streetAddress', 'city', 'zipCode', 'company', 'linkedInUrl',
+  'contactType', 'tags', 'contactNotes',
+] as const;
+
+/**
+ * Build the info-update payload from a contact update input, extracting
+ * all scalar fields and resolving the phone Value Object.
+ */
+function buildContactInfoUpdates(data: UpdateContactData): Record<string, unknown> {
+  const updates: Record<string, unknown> = {};
+  for (const field of CONTACT_INFO_FIELDS) {
+    if (data[field] !== undefined) updates[field] = data[field];
+  }
+  if (data.phone !== undefined) {
+    updates.phone = typeof data.phone === 'string' ? data.phone : data.phone?.toValue?.();
+  }
+  return updates;
+}
+
+/**
+ * Build the base WHERE clause for the contacts list query.
+ * Extracted to reduce cognitive complexity of the list procedure.
+ */
+function buildContactListWhere(filters: {
+  search?: string;
+  accountId?: string;
+  ownerId?: string;
+  department?: string;
+  status?: string;
+}): Record<string, unknown> {
+  const { search, accountId, ownerId, department, status } = filters;
+  const baseWhere: Record<string, unknown> = {};
+
+  if (search) {
+    baseWhere.OR = [
+      { email: { contains: search, mode: 'insensitive' } },
+      { firstName: { contains: search, mode: 'insensitive' } },
+      { lastName: { contains: search, mode: 'insensitive' } },
+      { title: { contains: search, mode: 'insensitive' } },
+      { department: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+
+  if (accountId) baseWhere.accountId = accountId;
+  if (ownerId) baseWhere.ownerId = ownerId;
+  if (department) baseWhere.department = { contains: department, mode: 'insensitive' };
+  if (status) baseWhere.status = status;
+
+  return baseWhere;
+}
 
 /**
  * Helper to get contact service with null check
@@ -132,6 +203,89 @@ async function handleAssociateAccount(
       message: msg,
     });
   }
+}
+
+/**
+ * Parse a base64-encoded cursor string into timestamp and ID components.
+ */
+function parseTimelineCursor(cursor: string): { timestamp: Date; id: string } | null {
+  try {
+    const decoded = Buffer.from(cursor, 'base64').toString('utf-8');
+    const [ts, id] = decoded.split(':');
+    return { timestamp: new Date(ts), id };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Build the cursor filter for a paginated task query.
+ */
+function buildTaskCursorFilter(
+  cursorTimestamp: Date,
+  cursorId: string | undefined,
+  sortOrder: 'asc' | 'desc'
+): Record<string, unknown> {
+  return {
+    OR: [
+      { createdAt: sortOrder === 'desc' ? { lt: cursorTimestamp } : { gt: cursorTimestamp } },
+      { createdAt: cursorTimestamp, id: cursorId ? { lt: cursorId } : undefined },
+    ],
+  };
+}
+
+type PrismaWithTenant = TenantAwareContext['prismaWithTenant'];
+type NoteRecord = { id: string; content: string; createdAt: Date };
+
+/**
+ * Fetch contact notes using a raw SQL query with optional date filter.
+ * Falls back to an empty array if the notes table doesn't exist.
+ * Note: ORDER BY is always DESC — the original inline query used an invalid
+ * nested $queryRaw pattern for ASC/DESC which was a no-op in practice.
+ */
+async function fetchContactNotes(
+  prismaWithTenant: PrismaWithTenant,
+  contactId: string,
+  dateFilter: { gte?: Date; lte?: Date },
+  fetchLimit: number
+): Promise<NoteRecord[]> {
+  if (dateFilter.gte && dateFilter.lte) {
+    return prismaWithTenant.$queryRaw<NoteRecord[]>`
+      SELECT id, content, "createdAt" FROM "notes"
+      WHERE "contactId" = ${contactId}
+        AND "createdAt" >= ${dateFilter.gte}
+        AND "createdAt" <= ${dateFilter.lte}
+      ORDER BY "createdAt" DESC
+      LIMIT ${fetchLimit}
+    `.catch(() => []);
+  }
+
+  if (dateFilter.gte) {
+    return prismaWithTenant.$queryRaw<NoteRecord[]>`
+      SELECT id, content, "createdAt" FROM "notes"
+      WHERE "contactId" = ${contactId}
+        AND "createdAt" >= ${dateFilter.gte}
+      ORDER BY "createdAt" DESC
+      LIMIT ${fetchLimit}
+    `.catch(() => []);
+  }
+
+  if (dateFilter.lte) {
+    return prismaWithTenant.$queryRaw<NoteRecord[]>`
+      SELECT id, content, "createdAt" FROM "notes"
+      WHERE "contactId" = ${contactId}
+        AND "createdAt" <= ${dateFilter.lte}
+      ORDER BY "createdAt" DESC
+      LIMIT ${fetchLimit}
+    `.catch(() => []);
+  }
+
+  return prismaWithTenant.$queryRaw<NoteRecord[]>`
+    SELECT id, content, "createdAt" FROM "notes"
+    WHERE "contactId" = ${contactId}
+    ORDER BY "createdAt" DESC
+    LIMIT ${fetchLimit}
+  `.catch(() => []);
 }
 
 export const contactRouter = createTRPCRouter({
@@ -241,6 +395,48 @@ export const contactRouter = createTRPCRouter({
       },
     });
 
+    // Derive AI insights when none exist in DB (ensures entity pages always show data)
+    if (contactWithRelations && !contactWithRelations.aiInsight) {
+      const derived = deriveContactInsights({
+        lastContactedAt: contactWithRelations.lastContactedAt,
+        createdAt: contactWithRelations.createdAt,
+        title: contactWithRelations.title,
+        department: contactWithRelations.department,
+        status: contactWithRelations.status,
+        leadScore: contactWithRelations.lead?.score,
+        opportunities: contactWithRelations.opportunities?.map((o: any) => ({
+          value: Number(o.value) || 0,
+          stage: o.stage,
+        })),
+      });
+
+      const syntheticInsight = {
+        id: `derived-${contactWithRelations.id}`,
+        contactId: contactWithRelations.id,
+        tenantId: typedCtx.tenant.tenantId,
+        ...derived,
+        recommendations: derived.recommendations as unknown,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      // Fire-and-forget: persist so future visits read from DB
+      ctx.prisma.contactAIInsight
+        ?.upsert({
+          where: { contactId: contactWithRelations.id },
+          create: {
+            contactId: contactWithRelations.id,
+            tenantId: typedCtx.tenant.tenantId,
+            ...derived,
+            recommendations: derived.recommendations,
+          },
+          update: {},
+        })
+        ?.catch(() => {}); // Best-effort persistence — silently ignore
+
+      return { ...contactWithRelations, aiInsight: syntheticInsight };
+    }
+
     return contactWithRelations;
   }),
 
@@ -300,37 +496,8 @@ export const contactRouter = createTRPCRouter({
 
     const skip = (page - 1) * limit;
 
-    // Build where clause with tenant isolation
-    const baseWhere: any = {};
-
-    if (search) {
-      baseWhere.OR = [
-        { email: { contains: search, mode: 'insensitive' } },
-        { firstName: { contains: search, mode: 'insensitive' } },
-        { lastName: { contains: search, mode: 'insensitive' } },
-        { title: { contains: search, mode: 'insensitive' } },
-        { department: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-
-    if (accountId) {
-      baseWhere.accountId = accountId;
-    }
-
-    if (ownerId) {
-      baseWhere.ownerId = ownerId;
-    }
-
-    if (department) {
-      baseWhere.department = { contains: department, mode: 'insensitive' };
-    }
-
-    if (status) {
-      baseWhere.status = status;
-    }
-
     // Apply tenant filtering
-    const where = createTenantWhereClause(typedCtx.tenant, baseWhere);
+    const where = createTenantWhereClause(typedCtx.tenant, buildContactListWhere({ search, accountId, ownerId, department, status }));
 
     // Execute queries in parallel using tenant-scoped Prisma
     const [contacts, total] = await Promise.all([
@@ -383,29 +550,7 @@ export const contactRouter = createTRPCRouter({
     const contactService = getContactService(ctx);
 
     // Build info update payload (all non-account, non-email fields)
-    const infoUpdates: Record<string, unknown> = {};
-    const infoFields = [
-      'firstName',
-      'lastName',
-      'title',
-      'department',
-      'status',
-      'streetAddress',
-      'city',
-      'zipCode',
-      'company',
-      'linkedInUrl',
-      'contactType',
-      'tags',
-      'contactNotes',
-    ] as const;
-    for (const field of infoFields) {
-      if (data[field] !== undefined) infoUpdates[field] = data[field];
-    }
-    // Special handling for phone Value Object
-    if (data.phone !== undefined) {
-      infoUpdates.phone = typeof data.phone === 'string' ? data.phone : data.phone?.toValue?.();
-    }
+    const infoUpdates = buildContactInfoUpdates(data as UpdateContactData);
 
     if (Object.keys(infoUpdates).length > 0) {
       const result = await contactService.updateContactInfo(
@@ -917,18 +1062,9 @@ export const contactRouter = createTRPCRouter({
       if (input.toDate) dateFilter.lte = input.toDate;
 
       // 3. Decode cursor if provided
-      let cursorTimestamp: Date | undefined;
-      let cursorId: string | undefined;
-      if (input.cursor) {
-        try {
-          const decoded = Buffer.from(input.cursor, 'base64').toString('utf-8');
-          const [ts, id] = decoded.split(':');
-          cursorTimestamp = new Date(ts);
-          cursorId = id;
-        } catch {
-          // Invalid cursor, ignore
-        }
-      }
+      const parsedCursor = input.cursor ? parseTimelineCursor(input.cursor) : null;
+      const cursorTimestamp = parsedCursor?.timestamp;
+      const cursorId = parsedCursor?.id;
 
       // 4. Parallel queries to data sources with cursor-based pagination
       const fetchLimit = input.limit + 1; // Fetch one extra to check for more
@@ -939,15 +1075,7 @@ export const contactRouter = createTRPCRouter({
           where: {
             contactId: input.contactId,
             ...(Object.keys(dateFilter).length > 0 && { createdAt: dateFilter }),
-            ...(cursorTimestamp && {
-              OR: [
-                {
-                  createdAt:
-                    input.sortOrder === 'desc' ? { lt: cursorTimestamp } : { gt: cursorTimestamp },
-                },
-                { createdAt: cursorTimestamp, id: cursorId ? { lt: cursorId } : undefined },
-              ],
-            }),
+            ...(cursorTimestamp && buildTaskCursorFilter(cursorTimestamp, cursorId, input.sortOrder as 'asc' | 'desc')),
           },
           orderBy: { createdAt: input.sortOrder },
           take: fetchLimit,
@@ -963,20 +1091,7 @@ export const contactRouter = createTRPCRouter({
           },
         }),
         // Notes (using ContactNote model if exists, fallback to direct query)
-        typedCtx.prismaWithTenant.$queryRaw`
-          SELECT id, content, "createdAt", "updatedAt"
-          FROM "notes"
-          WHERE "contactId" = ${input.contactId}
-          ${
-            Object.keys(dateFilter).length > 0
-              ? dateFilter.gte
-                ? typedCtx.prismaWithTenant.$queryRaw`AND "createdAt" >= ${dateFilter.gte}`
-                : typedCtx.prismaWithTenant.$queryRaw``
-              : typedCtx.prismaWithTenant.$queryRaw``
-          }
-          ORDER BY "createdAt" ${input.sortOrder === 'desc' ? typedCtx.prismaWithTenant.$queryRaw`DESC` : typedCtx.prismaWithTenant.$queryRaw`ASC`}
-          LIMIT ${fetchLimit}
-        `.catch(() => []), // Fallback if notes table doesn't exist
+        fetchContactNotes(typedCtx.prismaWithTenant, input.contactId, dateFilter, fetchLimit),
       ]);
 
       // 5. Map to timeline events
@@ -1014,8 +1129,7 @@ export const contactRouter = createTRPCRouter({
       }
 
       // Map notes (if returned)
-      const noteRecords = notes as Array<{ id: string; content: string; createdAt: Date }>;
-      for (const note of noteRecords) {
+      for (const note of notes) {
         events.push({
           id: `note-${note.id}`,
           type: 'note',

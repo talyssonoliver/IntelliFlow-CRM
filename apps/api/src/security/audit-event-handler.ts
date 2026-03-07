@@ -396,8 +396,8 @@ const EVENT_AUDIT_MAPPINGS: Record<string, EventAuditMapping> = {
  * 4. Correlating with OpenTelemetry traces
  */
 export class AuditEventHandler {
-  private auditLogger: AuditLogger;
-  private customMappings: Map<string, EventAuditMapping> = new Map();
+  private readonly auditLogger: AuditLogger;
+  private readonly customMappings: Map<string, EventAuditMapping> = new Map();
 
   constructor(prisma: PrismaClient) {
     this.auditLogger = getAuditLogger(prisma);

@@ -1285,7 +1285,7 @@ describe('Home Router', () => {
         expect(result.insights[0].title).toContain('Jane Smith');
         expect(result.insights[0].description).toContain('40 days');
         expect(result.insights[0].entityType).toBe('contact');
-        expect(result.insights[0].actionUrl).toBe(`/contacts/${TEST_UUIDS.contact1}`);
+        expect(result.insights[0].actionUrl).toBe(`/contacts/${TEST_UUIDS.contact1}?tab=ai-insights`);
         expect(result.insights[0].priority).toBe('medium');
       });
 

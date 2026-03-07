@@ -179,6 +179,19 @@ vi.mock('@intelliflow/adapters', () => ({
       return { name: 'notificationPreferenceRepo' };
     }
   },
+  CalendarSyncServiceAdapter: class {
+    constructor() {
+      return { name: 'calendarSyncService' };
+    }
+  },
+}));
+
+vi.mock('../modules/calendar/calendar-webhook.service', () => ({
+  CalendarWebhookService: class {
+    constructor() {
+      return { name: 'calendarWebhookService' };
+    }
+  },
 }));
 
 vi.mock('@intelliflow/platform', () => ({
@@ -287,6 +300,14 @@ vi.mock('../services/TicketService', () => ({
   TicketService: class {
     constructor() {
       return { name: 'ticketService' };
+    }
+  },
+}));
+
+vi.mock('../services/LeadRoutingService', () => ({
+  LeadRoutingService: class {
+    constructor() {
+      return { name: 'leadRoutingService' };
     }
   },
 }));

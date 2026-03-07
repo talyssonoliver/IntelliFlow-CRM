@@ -197,10 +197,10 @@ async function runBenchmarks() {
 
     console.log('\n  Performance by Operation:');
     console.log('  ─────────────────────────────────────');
-    results.forEach((r) => {
+    for (const r of results) {
       const status = r.passed ? '✅' : '❌';
       console.log(`  ${status} ${r.operation.padEnd(25)} p95: ${r.p95.toFixed(2)}ms`);
-    });
+    }
 
     console.log('\n═══════════════════════════════════════════');
 
@@ -261,8 +261,12 @@ export type { BenchmarkResult };
  * Run if executed directly
  */
 if (require.main === module) {
-  runBenchmarks().catch((error) => {
-    console.error('Fatal error:', error);
-    process.exit(1);
-  });
+  (async () => {
+    try {
+      await runBenchmarks();
+    } catch (error) {
+      console.error('Fatal error:', error);
+      process.exit(1);
+    }
+  })();
 }

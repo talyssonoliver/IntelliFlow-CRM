@@ -30,8 +30,18 @@ import {
   createTenantWhereClause,
   type TenantAwareContext,
 } from '../../security/tenant-context';
-import { TaskNotInProgressError } from '@intelliflow/domain';
+import {
+  TaskNotInProgressError,
+  TaskAlreadyCompletedError,
+  TaskAlreadyCancelledError,
+  TaskCannotBeArchivedError,
+  canTransitionTaskTo,
+  type TaskStatus,
+} from '@intelliflow/domain';
 import { createNotification } from '../notifications/notifications.router';
+import { getAuditLogger } from '../../security/audit-logger';
+import { RBACService } from '../../security/rbac';
+import type { RoleName } from '../../security/types';
 
 /**
  * Helper to get task service from context
@@ -104,6 +114,76 @@ async function validateEntityReferences(
   }
 }
 
+/**
+ * Returns true when the update only modifies title/description (no entity reassignments).
+ */
+function isTextOnlyTaskUpdate(opts: {
+  title?: unknown;
+  description?: unknown;
+  leadId?: unknown;
+  contactId?: unknown;
+  opportunityId?: unknown;
+  otherData: Record<string, unknown>;
+}): boolean {
+  return (
+    (opts.title !== undefined || opts.description !== undefined) &&
+    opts.leadId === undefined &&
+    opts.contactId === undefined &&
+    opts.opportunityId === undefined &&
+    Object.keys(opts.otherData).length === 0
+  );
+}
+
+/**
+ * Throw appropriate TRPCError for task update service failures.
+ */
+function throwTaskUpdateInfoError(errorCode: string, message: string): never {
+  if (errorCode === 'VALIDATION_ERROR') {
+    throw new TRPCError({ code: 'BAD_REQUEST', message });
+  }
+  throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message });
+}
+
+function buildTaskListWhere(filters: {
+  search?: string;
+  status?: string[];
+  priority?: string[];
+  ownerId?: string;
+  leadId?: string;
+  contactId?: string;
+  opportunityId?: string;
+  dueDateFrom?: Date;
+  dueDateTo?: Date;
+  overdue?: boolean;
+}): Record<string, unknown> {
+  const where: Record<string, unknown> = {};
+  const { search, status, priority, ownerId, leadId, contactId, opportunityId,
+    dueDateFrom, dueDateTo, overdue } = filters;
+
+  if (search) {
+    where.OR = [
+      { title: { contains: search, mode: 'insensitive' } },
+      { description: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+  if (status && status.length > 0) where.status = { in: status };
+  if (priority && priority.length > 0) where.priority = { in: priority };
+  if (ownerId) where.ownerId = ownerId;
+  if (leadId) where.leadId = leadId;
+  if (contactId) where.contactId = contactId;
+  if (opportunityId) where.opportunityId = opportunityId;
+  if (overdue) {
+    where.dueDate = { lt: new Date() };
+    where.status = { notIn: ['COMPLETED', 'CANCELLED'] };
+  } else if (dueDateFrom || dueDateTo) {
+    const dueDate: Record<string, Date> = {};
+    if (dueDateFrom) dueDate.gte = dueDateFrom;
+    if (dueDateTo) dueDate.lte = dueDateTo;
+    where.dueDate = dueDate;
+  }
+  return where;
+}
+
 export const taskRouter = createTRPCRouter({
   /**
    * Create a new task
@@ -111,6 +191,23 @@ export const taskRouter = createTRPCRouter({
   create: tenantProcedure.input(createTaskSchema).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
     const taskService = getTaskService(ctx);
+    const rbac = new RBACService(ctx.prisma);
+    const auditLogger = getAuditLogger(ctx.prisma);
+
+    // RBAC check
+    const canWrite = await rbac.can({
+      userId: typedCtx.tenant.userId,
+      userRole: typedCtx.tenant.role as RoleName,
+      resourceType: 'task',
+      action: 'write',
+    });
+    if (!canWrite.granted) {
+      await auditLogger.logPermissionDenied('task', '', 'task:write', typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+      });
+      throw new TRPCError({ code: 'FORBIDDEN', message: canWrite.reason ?? 'Insufficient permissions' });
+    }
+
     const { calendarId, ...taskInput } = input;
 
     const result = await taskService.createTask({
@@ -125,11 +222,17 @@ export const taskRouter = createTRPCRouter({
 
     // Set calendarId if provided (not part of domain model)
     if (calendarId) {
-      await ctx.prisma.task.update({
+      await typedCtx.prismaWithTenant.task.update({
         where: { id: result.value.id.toString() },
         data: { calendarId },
       });
     }
+
+    // Audit log
+    auditLogger.logAction('CREATE', 'task', result.value.id.toString(), typedCtx.tenant.tenantId, {
+      actorId: typedCtx.tenant.userId,
+      resourceName: result.value.title,
+    }).catch(() => {}); // Non-blocking
 
     // Fire-and-forget: notification failure must not block the task creation response
     createNotification(ctx.prisma, {
@@ -200,49 +303,18 @@ export const taskRouter = createTRPCRouter({
     const skip = (page - 1) * limit;
 
     // Build where clause with tenant isolation
-    const baseWhere: any = {};
-
-    if (search) {
-      baseWhere.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-
-    if (status && status.length > 0) {
-      baseWhere.status = { in: status };
-    }
-
-    if (priority && priority.length > 0) {
-      baseWhere.priority = { in: priority };
-    }
-
-    if (ownerId) {
-      baseWhere.ownerId = ownerId;
-    }
-
-    if (leadId) {
-      baseWhere.leadId = leadId;
-    }
-
-    if (contactId) {
-      baseWhere.contactId = contactId;
-    }
-
-    if (opportunityId) {
-      baseWhere.opportunityId = opportunityId;
-    }
-
-    if (dueDateFrom || dueDateTo) {
-      baseWhere.dueDate = {};
-      if (dueDateFrom) baseWhere.dueDate.gte = dueDateFrom;
-      if (dueDateTo) baseWhere.dueDate.lte = dueDateTo;
-    }
-
-    if (overdue) {
-      baseWhere.dueDate = { lt: new Date() };
-      baseWhere.status = { notIn: ['COMPLETED', 'CANCELLED'] };
-    }
+    const baseWhere = buildTaskListWhere({
+      search,
+      status,
+      priority,
+      ownerId,
+      leadId,
+      contactId,
+      opportunityId,
+      dueDateFrom,
+      dueDateTo,
+      overdue,
+    });
 
     // Apply tenant filtering
     const where = createTenantWhereClause(typedCtx.tenant, baseWhere);
@@ -307,7 +379,23 @@ export const taskRouter = createTRPCRouter({
   update: tenantProcedure.input(updateTaskSchema).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
     const taskService = getTaskService(ctx);
+    const rbac = new RBACService(ctx.prisma);
+    const auditLogger = getAuditLogger(ctx.prisma);
     const { id, title, description, leadId, contactId, opportunityId, ...otherData } = input;
+
+    // RBAC check
+    const canWrite = await rbac.can({
+      userId: typedCtx.tenant.userId,
+      userRole: typedCtx.tenant.role as RoleName,
+      resourceType: 'task',
+      action: 'write',
+    });
+    if (!canWrite.granted) {
+      await auditLogger.logPermissionDenied('task', id, 'task:write', typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+      });
+      throw new TRPCError({ code: 'FORBIDDEN', message: canWrite.reason ?? 'Insufficient permissions' });
+    }
 
     // First check if task exists via service
     const getResult = await taskService.getTaskById(id);
@@ -318,28 +406,30 @@ export const taskRouter = createTRPCRouter({
       });
     }
 
-    // If only title/description, use service
-    if (
-      (title !== undefined || description !== undefined) &&
-      leadId === undefined &&
-      contactId === undefined &&
-      opportunityId === undefined &&
-      Object.keys(otherData).length === 0
-    ) {
-      const result = await taskService.updateTaskInfo(id, { title, description });
-      if (result.isFailure) {
-        const errorCode = result.error.code;
-        if (errorCode === 'VALIDATION_ERROR') {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: result.error.message,
-          });
-        }
+    // Validate status transitions through domain state machine (B-06)
+    if (otherData.status && otherData.status !== getResult.value.status) {
+      const currentStatus = getResult.value.status as TaskStatus;
+      const newStatus = otherData.status as TaskStatus;
+      if (!canTransitionTaskTo(currentStatus, newStatus)) {
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: result.error.message,
+          code: 'PRECONDITION_FAILED',
+          message: `Cannot transition task from ${currentStatus} to ${newStatus}`,
         });
       }
+    }
+
+    // If only title/description, use service
+    if (isTextOnlyTaskUpdate({ title, description, leadId, contactId, opportunityId, otherData })) {
+      const result = await taskService.updateTaskInfo(id, { title, description });
+      if (result.isFailure) {
+        throwTaskUpdateInfoError(result.error.code, result.error.message);
+      }
+
+      auditLogger.logAction('UPDATE', 'task', id, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        resourceName: result.value.title,
+      }).catch(() => {});
+
       return mapTaskToResponse(result.value);
     }
 
@@ -359,6 +449,11 @@ export const taskRouter = createTRPCRouter({
       },
     });
 
+    auditLogger.logAction('UPDATE', 'task', id, typedCtx.tenant.tenantId, {
+      actorId: typedCtx.tenant.userId,
+      resourceName: task.title,
+    }).catch(() => {});
+
     return task;
   }),
 
@@ -366,7 +461,24 @@ export const taskRouter = createTRPCRouter({
    * Delete a task
    */
   delete: tenantProcedure.input(z.object({ id: idSchema })).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
     const taskService = getTaskService(ctx);
+    const rbac = new RBACService(ctx.prisma);
+    const auditLogger = getAuditLogger(ctx.prisma);
+
+    // RBAC check
+    const canDelete = await rbac.can({
+      userId: typedCtx.tenant.userId,
+      userRole: typedCtx.tenant.role as RoleName,
+      resourceType: 'task',
+      action: 'delete',
+    });
+    if (!canDelete.granted) {
+      await auditLogger.logPermissionDenied('task', input.id, 'task:delete', typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+      });
+      throw new TRPCError({ code: 'FORBIDDEN', message: canDelete.reason ?? 'Insufficient permissions' });
+    }
 
     const result = await taskService.deleteTask(input.id);
 
@@ -391,6 +503,10 @@ export const taskRouter = createTRPCRouter({
       });
     }
 
+    auditLogger.logAction('DELETE', 'task', input.id, typedCtx.tenant.tenantId, {
+      actorId: typedCtx.tenant.userId,
+    }).catch(() => {});
+
     return { success: true, id: input.id };
   }),
 
@@ -398,7 +514,9 @@ export const taskRouter = createTRPCRouter({
    * Archive a completed or cancelled task
    */
   archive: tenantProcedure.input(z.object({ id: idSchema })).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
     const taskService = getTaskService(ctx);
+    const auditLogger = getAuditLogger(ctx.prisma);
 
     const result = await taskService.archiveTask(input.id);
 
@@ -411,7 +529,12 @@ export const taskRouter = createTRPCRouter({
           message,
         });
       }
-      if (errorCode === 'VALIDATION_ERROR') {
+      // TaskCannotBeArchivedError or VALIDATION_ERROR → PRECONDITION_FAILED
+      if (
+        result.error instanceof TaskCannotBeArchivedError ||
+        errorCode === 'TASK_CANNOT_BE_ARCHIVED' ||
+        errorCode === 'VALIDATION_ERROR'
+      ) {
         throw new TRPCError({
           code: 'PRECONDITION_FAILED',
           message,
@@ -423,6 +546,11 @@ export const taskRouter = createTRPCRouter({
       });
     }
 
+    auditLogger.logAction('UPDATE', 'task', input.id, typedCtx.tenant.tenantId, {
+      actorId: typedCtx.tenant.userId,
+      resourceName: 'task archived',
+    }).catch(() => {});
+
     return { success: true, id: input.id };
   }),
 
@@ -432,6 +560,7 @@ export const taskRouter = createTRPCRouter({
   complete: tenantProcedure.input(completeTaskSchema).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
     const taskService = getTaskService(ctx);
+    const auditLogger = getAuditLogger(ctx.prisma);
 
     const result = await taskService.completeTask(input.taskId, typedCtx.tenant.userId);
 
@@ -439,11 +568,15 @@ export const taskRouter = createTRPCRouter({
       const errorCode = result.error.code;
       const message = result.error.message;
 
-      // Handle specific domain error for task not in progress
-      if (result.error instanceof TaskNotInProgressError) {
+      // Handle specific domain errors
+      if (
+        result.error instanceof TaskNotInProgressError ||
+        result.error instanceof TaskAlreadyCompletedError ||
+        result.error instanceof TaskAlreadyCancelledError
+      ) {
         throw new TRPCError({
           code: 'PRECONDITION_FAILED',
-          message: 'Task must be in progress before it can be completed',
+          message,
         });
       }
 
@@ -464,6 +597,11 @@ export const taskRouter = createTRPCRouter({
         message,
       });
     }
+
+    auditLogger.logAction('UPDATE', 'task', input.taskId, typedCtx.tenant.tenantId, {
+      actorId: typedCtx.tenant.userId,
+      resourceName: result.value.title,
+    }).catch(() => {});
 
     // Fire-and-forget: notification failure must not block the task completion response
     createNotification(ctx.prisma, {
@@ -541,6 +679,7 @@ export const taskRouter = createTRPCRouter({
   assign: tenantProcedure.input(assignTaskSchema).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
     const taskService = getTaskService(ctx);
+    const auditLogger = getAuditLogger(ctx.prisma);
 
     let result;
     switch (input.entityType) {
@@ -575,6 +714,11 @@ export const taskRouter = createTRPCRouter({
       throw new TRPCError({ code: 'BAD_REQUEST', message });
     }
 
+    auditLogger.logAction('UPDATE', 'task', result.value.id.toString(), typedCtx.tenant.tenantId, {
+      actorId: typedCtx.tenant.userId,
+      resourceName: result.value.title,
+    }).catch(() => {});
+
     // Fire-and-forget: notification failure must not block the task assignment response
     createNotification(ctx.prisma, {
       userId: typedCtx.tenant.userId,
@@ -598,6 +742,7 @@ export const taskRouter = createTRPCRouter({
   reschedule: tenantProcedure.input(rescheduleTaskSchema).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
     const taskService = getTaskService(ctx);
+    const auditLogger = getAuditLogger(ctx.prisma);
 
     const result = await taskService.updateDueDate(
       input.taskId,
@@ -612,6 +757,11 @@ export const taskRouter = createTRPCRouter({
       }
       throw new TRPCError({ code: 'BAD_REQUEST', message });
     }
+
+    auditLogger.logAction('UPDATE', 'task', input.taskId, typedCtx.tenant.tenantId, {
+      actorId: typedCtx.tenant.userId,
+      resourceName: result.value.title,
+    }).catch(() => {});
 
     return mapTaskToResponse(result.value);
   }),
@@ -644,12 +794,14 @@ export const taskRouter = createTRPCRouter({
   getByEntity: tenantProcedure.input(getByEntitySchema).query(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
 
-    const entityFilter =
-      input.entityType === 'lead'
-        ? { leadId: input.entityId }
-        : input.entityType === 'contact'
-          ? { contactId: input.entityId }
-          : { opportunityId: input.entityId };
+    let entityFilter: { leadId: string } | { contactId: string } | { opportunityId: string };
+    if (input.entityType === 'lead') {
+      entityFilter = { leadId: input.entityId };
+    } else if (input.entityType === 'contact') {
+      entityFilter = { contactId: input.entityId };
+    } else {
+      entityFilter = { opportunityId: input.entityId };
+    }
 
     const where = createTenantWhereClause(typedCtx.tenant, entityFilter);
     const tasks = await typedCtx.prismaWithTenant.task.findMany({

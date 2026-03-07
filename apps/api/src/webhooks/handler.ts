@@ -75,8 +75,8 @@ export interface WebhookConfig {
  * HMAC-SHA256 signature verifier (common for most webhooks)
  */
 export class HmacSha256Verifier implements SignatureVerifier {
-  private prefix: string;
-  private headerName: string;
+  private readonly prefix: string;
+  private readonly headerName: string;
 
   constructor(options?: { prefix?: string; headerName?: string }) {
     this.prefix = options?.prefix || '';
@@ -103,7 +103,7 @@ export class HmacSha256Verifier implements SignatureVerifier {
  * Stripe webhook signature verifier
  */
 export class StripeSignatureVerifier implements SignatureVerifier {
-  private toleranceSeconds: number;
+  private readonly toleranceSeconds: number;
 
   constructor(toleranceSeconds = 300) {
     this.toleranceSeconds = toleranceSeconds;
@@ -201,8 +201,8 @@ export class SendGridSignatureVerifier implements SignatureVerifier {
  * Webhook event router
  */
 export class WebhookEventRouter {
-  private handlers: Map<string, Array<EventHandler<unknown>>> = new Map();
-  private globalHandlers: Array<EventHandler<unknown>> = [];
+  private readonly handlers: Map<string, Array<EventHandler<unknown>>> = new Map();
+  private readonly globalHandlers: Array<EventHandler<unknown>> = [];
 
   /**
    * Register a handler for a specific event type
@@ -386,6 +386,58 @@ export class WebhookHandler {
   }
 
   /**
+   * Validate source config and return early-exit result if invalid.
+   */
+  private validateSourceConfig(source: string): WebhookHandlerResult | null {
+    const config = this.configs.get(source);
+    if (!config) {
+      return { success: false, message: `Unknown webhook source: ${source}`, statusCode: 404, retryable: false };
+    }
+    if (!config.enabled) {
+      return { success: false, message: `Webhook source disabled: ${source}`, statusCode: 503, retryable: true };
+    }
+    return null;
+  }
+
+  /**
+   * Normalize all header keys to lowercase.
+   */
+  private normalizeHeaders(headers: Record<string, string>): Record<string, string> {
+    const normalized: Record<string, string> = {};
+    for (const [key, value] of Object.entries(headers)) {
+      normalized[key.toLowerCase()] = value;
+    }
+    return normalized;
+  }
+
+  /**
+   * Route event and return failure result on handler error, or null on success.
+   */
+  private async routeAndHandle(
+    event: WebhookEvent,
+    context: WebhookContext,
+    eventKey: string,
+    startTime: number
+  ): Promise<WebhookHandlerResult | null> {
+    try {
+      await this.router.route(event, context);
+      return null;
+    } catch (error) {
+      console.error(`Error processing webhook event ${event.id}:`, error);
+      const result: WebhookHandlerResult = {
+        success: false,
+        eventId: event.id,
+        message: error instanceof Error ? error.message : 'Handler error',
+        statusCode: 500,
+        retryable: true,
+        processingTime: Date.now() - startTime,
+      };
+      this.logEvent(eventKey, result);
+      return result;
+    }
+  }
+
+  /**
    * Handle incoming webhook request
    */
   async handleRequest(
@@ -400,48 +452,25 @@ export class WebhookHandler {
       .slice(0, 16);
 
     try {
-      // Get source configuration
-      const config = this.configs.get(source);
-      if (!config) {
-        return {
-          success: false,
-          message: `Unknown webhook source: ${source}`,
-          statusCode: 404,
-          retryable: false,
-        };
-      }
+      const configError = this.validateSourceConfig(source);
+      if (configError) return configError;
+      const config = this.configs.get(source)!;
 
-      if (!config.enabled) {
-        return {
-          success: false,
-          message: `Webhook source disabled: ${source}`,
-          statusCode: 503,
-          retryable: true,
-        };
-      }
+      const normalizedHeaders = this.normalizeHeaders(headers);
 
-      // Normalize headers to lowercase
-      const normalizedHeaders: Record<string, string> = {};
-      for (const [key, value] of Object.entries(headers)) {
-        normalizedHeaders[key.toLowerCase()] = value;
-      }
-
-      // Verify signature
       const signatureCheck = this.verifySignature(config, rawBody, normalizedHeaders);
       if (signatureCheck.result) return signatureCheck.result;
 
       const { verified, signature } = signatureCheck;
       const signatureHeader = config.signatureVerifier.getHeaderName();
 
-      // Parse event
       const parseResult = this.parseEvent(rawBody, source, requestId);
       if (parseResult.error) return parseResult.error;
       const event = parseResult.event;
 
-      // Check if event is allowed
       if (config.allowedEvents && !config.allowedEvents.includes(event.type)) {
         return {
-          success: true, // Acknowledge but don't process
+          success: true,
           eventId: event.id,
           message: `Event type not handled: ${event.type}`,
           statusCode: 200,
@@ -449,7 +478,6 @@ export class WebhookHandler {
         };
       }
 
-      // Check for duplicate (idempotency)
       const eventKey = `${source}:${event.id}`;
       if (this.eventLog.has(eventKey)) {
         return {
@@ -461,7 +489,6 @@ export class WebhookHandler {
         };
       }
 
-      // Build context
       const context: WebhookContext = {
         requestId,
         receivedAt: new Date(),
@@ -473,27 +500,9 @@ export class WebhookHandler {
         verified,
       };
 
-      // Route to handlers
-      try {
-        await this.router.route(event, context);
-      } catch (error) {
-        // Log error but still acknowledge receipt
-        console.error(`Error processing webhook event ${event.id}:`, error);
+      const handlerError = await this.routeAndHandle(event, context, eventKey, startTime);
+      if (handlerError) return handlerError;
 
-        const result: WebhookHandlerResult = {
-          success: false,
-          eventId: event.id,
-          message: error instanceof Error ? error.message : 'Handler error',
-          statusCode: 500,
-          retryable: true,
-          processingTime: Date.now() - startTime,
-        };
-
-        this.logEvent(eventKey, result);
-        return result;
-      }
-
-      // Success
       const result: WebhookHandlerResult = {
         success: true,
         eventId: event.id,
@@ -501,7 +510,6 @@ export class WebhookHandler {
         statusCode: 200,
         processingTime: Date.now() - startTime,
       };
-
       this.logEvent(eventKey, result);
       return result;
     } catch (error) {

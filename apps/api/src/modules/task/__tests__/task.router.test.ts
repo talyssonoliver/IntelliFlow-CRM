@@ -16,6 +16,15 @@ import { TEST_UUIDS } from '../../../test/setup';
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
+
+// Mock RBACService to always grant permissions in unit tests
+vi.mock('../../../security/rbac', () => ({
+  RBACService: class {
+    constructor(_prisma: any) {}
+    async can() { return { granted: true }; }
+  },
+}));
+
 import { taskRouter } from '../task.router';
 import {
   prismaMock,

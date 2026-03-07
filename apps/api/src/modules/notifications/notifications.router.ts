@@ -45,7 +45,7 @@ import {
 //       so that notifications published on one instance are received on all.
 // =============================================================================
 
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'node:events';
 
 const notificationEmitter = new EventEmitter();
 notificationEmitter.setMaxListeners(100);
@@ -144,6 +144,85 @@ function createSubscriptionHandler(
 }
 
 // =============================================================================
+// Preference Update Helpers
+// =============================================================================
+
+/** Build updated channel preferences by merging existing with input. */
+function buildUpdatedChannelPrefs(
+  current: Record<string, unknown>,
+  input: { defaultChannels?: string[]; emailDigest?: unknown }
+): Record<string, unknown> {
+  return {
+    ...current,
+    ...(input.defaultChannels ? { defaultChannels: input.defaultChannels } : {}),
+    ...(input.emailDigest ? { emailDigest: input.emailDigest } : {}),
+  };
+}
+
+/** Build updated category preferences by merging with the provided preference array. */
+function buildUpdatedCategoryPrefs(
+  current: Record<string, unknown>,
+  preferences?: Array<{ type: string; enabled?: boolean; channels?: string[]; frequency?: string }>
+): Record<string, unknown> {
+  if (!preferences) return current;
+  const updated = { ...current };
+  for (const pref of preferences) {
+    updated[pref.type] = {
+      ...(updated[pref.type] as Record<string, unknown>),
+      enabled: pref.enabled ?? true,
+      channels: pref.channels,
+      frequency: pref.frequency,
+    };
+  }
+  return updated;
+}
+
+/** Build the upsert data for notification preferences. */
+function buildPreferenceUpsertData(
+  tenantId: string,
+  userId: string,
+  input: {
+    globalEnabled?: boolean;
+    quietHours?: {
+      enabled: boolean;
+      start: string;
+      end: string;
+      timezone: string;
+    };
+  },
+  channelPrefs: Record<string, unknown>,
+  categoryPrefs: Record<string, unknown>
+) {
+  const createData = {
+    tenantId,
+    userId,
+    doNotDisturb: input.globalEnabled === false,
+    quietHoursEnabled: input.quietHours?.enabled ?? false,
+    quietHoursStart: input.quietHours?.start || '22:00',
+    quietHoursEnd: input.quietHours?.end || '08:00',
+    timezone: input.quietHours?.timezone || 'UTC',
+    channelPreferences: channelPrefs as any,
+    categoryPreferences: categoryPrefs as any,
+  };
+
+  const updateData: Record<string, unknown> = {
+    channelPreferences: channelPrefs as any,
+    categoryPreferences: categoryPrefs as any,
+  };
+  if (input.globalEnabled !== undefined) {
+    updateData.doNotDisturb = !input.globalEnabled;
+  }
+  if (input.quietHours) {
+    updateData.quietHoursEnabled = input.quietHours.enabled;
+    updateData.quietHoursStart = input.quietHours.start;
+    updateData.quietHoursEnd = input.quietHours.end;
+    updateData.timezone = input.quietHours.timezone;
+  }
+
+  return { createData, updateData };
+}
+
+// =============================================================================
 // Query Helpers
 // =============================================================================
 
@@ -151,6 +230,43 @@ function createSubscriptionHandler(
  * Build the Prisma WHERE clause for the notifications list query.
  * Extracts the sequential filter-building logic to reduce cognitive complexity.
  */
+/** Append a type-filter clause to and-clauses or set metadata directly. */
+function applyTypeFilter(
+  types: string[],
+  where: Record<string, unknown>
+): void {
+  where.metadata = { path: ['notificationType'], in: types };
+}
+
+/** Apply batch-action filter to an existing where clause. */
+function applyBatchFilter(
+  filter: { types?: string[]; olderThan?: Date; isRead?: boolean },
+  where: Record<string, unknown>
+): void {
+  const andClauses: unknown[] = Array.isArray(where.AND) ? (where.AND as unknown[]) : [];
+
+  if (filter.types && filter.types.length > 0) {
+    applyTypeFilter(filter.types, where);
+    if (andClauses.length > 0) where.AND = andClauses;
+  }
+
+  if (filter.olderThan) where.createdAt = { lt: filter.olderThan };
+  if (filter.isRead !== undefined) where.status = filter.isRead ? 'READ' : 'PENDING';
+}
+
+/** Apply date-range filter to where clause. */
+function applyDateRangeFilter(
+  where: Record<string, unknown>,
+  fromDate?: Date,
+  toDate?: Date
+): void {
+  if (!fromDate && !toDate) return;
+  const createdAt: Record<string, Date> = {};
+  if (fromDate) createdAt.gte = fromDate;
+  if (toDate) createdAt.lte = toDate;
+  where.createdAt = createdAt;
+}
+
 function buildNotificationListWhere(
   tenantId: string,
   userId: string,
@@ -166,50 +282,25 @@ function buildNotificationListWhere(
   }
 ): any {
   const { types, priorities, status, isRead, fromDate, toDate, search, cursor } = filters;
-  const where: any = { tenantId, recipientId: userId };
+  const where: Record<string, unknown> = { tenantId, recipientId: userId };
 
-  const andClauses: any[] = [];
+  if (types && types.length > 0) applyTypeFilter(types, where);
+  if (priorities && priorities.length > 0) where.priority = { in: priorities.map((p: string) => p.toUpperCase()) };
+  if (status) where.status = status.toUpperCase();
 
-  if (types && types.length > 0) {
-    if (types.length === 1) {
-      where.metadata = { path: ['notificationType'], equals: types[0] };
-    } else {
-      andClauses.push({
-        OR: types.map((t: string) => ({
-          metadata: { path: ['notificationType'], equals: t },
-        })),
-      });
-    }
-  }
-  if (priorities && priorities.length > 0) {
-    where.priority = { in: priorities.map((p: string) => p.toUpperCase()) };
-  }
-  if (status) {
-    where.status = status.toUpperCase();
-  }
-  if (fromDate || toDate) {
-    where.createdAt = {};
-    if (fromDate) where.createdAt.gte = fromDate;
-    if (toDate) where.createdAt.lte = toDate;
-  }
+  applyDateRangeFilter(where, fromDate, toDate);
+
   // isRead overrides status when both are supplied
-  if (isRead !== undefined) {
-    where.status = isRead ? 'READ' : 'PENDING';
-  }
+  if (isRead !== undefined) where.status = isRead ? 'READ' : 'PENDING';
+
   if (search) {
-    andClauses.push({
-      OR: [
-        { subject: { contains: search, mode: 'insensitive' } },
-        { body: { contains: search, mode: 'insensitive' } },
-      ],
-    });
+    where.OR = [
+      { subject: { contains: search, mode: 'insensitive' } },
+      { body: { contains: search, mode: 'insensitive' } },
+    ];
   }
-  if (cursor) {
-    where.id = { lt: cursor };
-  }
-  if (andClauses.length > 0) {
-    where.AND = andClauses;
-  }
+
+  if (cursor) where.id = { lt: cursor };
 
   return where;
 }
@@ -486,55 +577,30 @@ export const notificationsRouter = createTRPCRouter({
         where: { tenantId_userId: { tenantId, userId } },
       });
 
-      const currentChannelPrefs = (existing?.channelPreferences as any) || {};
-      const currentCategoryPrefs = (existing?.categoryPreferences as any) || {};
+      const currentChannelPrefs = (existing?.channelPreferences as Record<string, unknown>) || {};
+      const currentCategoryPrefs =
+        (existing?.categoryPreferences as Record<string, unknown>) || {};
 
-      // Build updated channel preferences
-      const updatedChannelPrefs = {
-        ...currentChannelPrefs,
-        ...(input.defaultChannels ? { defaultChannels: input.defaultChannels } : {}),
-        ...(input.emailDigest ? { emailDigest: input.emailDigest } : {}),
-      };
+      const updatedChannelPrefs = buildUpdatedChannelPrefs(currentChannelPrefs, input);
+      const updatedCategoryPrefs = buildUpdatedCategoryPrefs(
+        currentCategoryPrefs,
+        input.preferences as
+          | Array<{ type: string; enabled?: boolean; channels?: string[]; frequency?: string }>
+          | undefined
+      );
 
-      // Build updated category preferences
-      const updatedCategoryPrefs = { ...currentCategoryPrefs };
-      if (input.preferences) {
-        input.preferences.forEach((pref) => {
-          updatedCategoryPrefs[pref.type] = {
-            ...updatedCategoryPrefs[pref.type],
-            enabled: pref.enabled ?? true,
-            channels: pref.channels,
-            frequency: pref.frequency,
-          };
-        });
-      }
+      const { createData, updateData } = buildPreferenceUpsertData(
+        tenantId,
+        userId,
+        input,
+        updatedChannelPrefs,
+        updatedCategoryPrefs
+      );
 
       await ctx.prisma.notificationPreference.upsert({
         where: { tenantId_userId: { tenantId, userId } },
-        create: {
-          tenantId,
-          userId,
-          doNotDisturb: input.globalEnabled === false,
-          quietHoursEnabled: input.quietHours?.enabled ?? false,
-          quietHoursStart: input.quietHours?.start || '22:00',
-          quietHoursEnd: input.quietHours?.end || '08:00',
-          timezone: input.quietHours?.timezone || 'UTC',
-          channelPreferences: updatedChannelPrefs,
-          categoryPreferences: updatedCategoryPrefs,
-        },
-        update: {
-          ...(input.globalEnabled !== undefined ? { doNotDisturb: !input.globalEnabled } : {}),
-          ...(input.quietHours
-            ? {
-                quietHoursEnabled: input.quietHours.enabled,
-                quietHoursStart: input.quietHours.start,
-                quietHoursEnd: input.quietHours.end,
-                timezone: input.quietHours.timezone,
-              }
-            : {}),
-          channelPreferences: updatedChannelPrefs,
-          categoryPreferences: updatedCategoryPrefs,
-        },
+        create: createData,
+        update: updateData as any,
       });
 
       return { success: true, message: 'Preferences updated successfully' };
@@ -561,23 +627,7 @@ export const notificationsRouter = createTRPCRouter({
       }
 
       if (filter) {
-        if (filter.types && filter.types.length > 0) {
-          if (filter.types.length === 1) {
-            where.metadata = { path: ['notificationType'], equals: filter.types[0] };
-          } else {
-            where.AND = (where.AND || []).concat({
-              OR: filter.types.map((t: string) => ({
-                metadata: { path: ['notificationType'], equals: t },
-              })),
-            });
-          }
-        }
-        if (filter.olderThan) {
-          where.createdAt = { lt: filter.olderThan };
-        }
-        if (filter.isRead !== undefined) {
-          where.status = filter.isRead ? 'READ' : 'PENDING';
-        }
+        applyBatchFilter(filter, where);
       }
 
       let result;

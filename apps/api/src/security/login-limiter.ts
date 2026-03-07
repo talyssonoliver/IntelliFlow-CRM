@@ -370,7 +370,7 @@ export function cleanupExpiredEntries(
  * Login limiter class for dependency injection
  */
 export class LoginLimiter {
-  private config: LoginLimiterConfig;
+  private readonly config: LoginLimiterConfig;
 
   constructor(config: Partial<LoginLimiterConfig> = {}) {
     this.config = {

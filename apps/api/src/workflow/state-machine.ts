@@ -7,7 +7,7 @@
  * @implements IFC-028 (Workflow Engine with LangGraph)
  */
 
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import type {
   WorkflowDefinition,
   WorkflowState,
@@ -28,10 +28,10 @@ import type {
  */
 export class WorkflowStateMachine implements IWorkflowEngine {
   /** Registered workflow definitions */
-  private definitions: Map<string, WorkflowDefinition<Record<string, unknown>>> = new Map();
+  private readonly definitions: Map<string, WorkflowDefinition<Record<string, unknown>>> = new Map();
 
   /** In-memory state storage (replace with PostgreSQL in production) */
-  private states: Map<string, WorkflowState<Record<string, unknown>>> = new Map();
+  private readonly states: Map<string, WorkflowState<Record<string, unknown>>> = new Map();
 
   /**
    * Register a workflow definition

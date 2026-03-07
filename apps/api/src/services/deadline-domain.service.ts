@@ -119,7 +119,7 @@ export interface HolidayConfig {
  * - Generates reminder schedules
  */
 export class DeadlineDomainService {
-  private engine: DeadlineEngine;
+  private readonly engine: DeadlineEngine;
   private config: Partial<DeadlineEngineConfig>;
 
   constructor(config?: Partial<DeadlineEngineConfig>) {

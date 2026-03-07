@@ -494,9 +494,10 @@ export function createMockTimelineEvents(
     const timestamp = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000); // Add days
 
     switch (type) {
-      case 'task':
+      case 'task': {
+        const taskUuid = generateTestUUID('task-' + i);
         events.push({
-          id: `task-${generateTestUUID(`task-${i}`)}`,
+          id: `task-${taskUuid}`,
           type: 'task',
           title: `Task ${i + 1}`,
           description: `Task description ${i + 1}`,
@@ -504,9 +505,11 @@ export function createMockTimelineEvents(
           metadata: { status: 'PENDING', priority: 'MEDIUM', contactId },
         });
         break;
-      case 'note':
+      }
+      case 'note': {
+        const noteUuid = generateTestUUID('note-' + i);
         events.push({
-          id: `note-${generateTestUUID(`note-${i}`)}`,
+          id: `note-${noteUuid}`,
           type: 'note',
           title: 'Note added',
           description: `Note content ${i + 1}`,
@@ -514,9 +517,11 @@ export function createMockTimelineEvents(
           metadata: { contactId },
         });
         break;
-      case 'activity':
+      }
+      case 'activity': {
+        const activityUuid = generateTestUUID('activity-' + i);
         events.push({
-          id: `activity-${generateTestUUID(`activity-${i}`)}`,
+          id: `activity-${activityUuid}`,
           type: 'activity',
           title: `Activity ${i + 1}`,
           description: `Activity description ${i + 1}`,
@@ -524,6 +529,7 @@ export function createMockTimelineEvents(
           metadata: { contactId, activityType: 'call' },
         });
         break;
+      }
     }
   }
 

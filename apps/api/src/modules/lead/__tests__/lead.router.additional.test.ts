@@ -109,6 +109,9 @@ describe('Lead Router - Additional Coverage', () => {
             account: {
               createMany: vi.fn().mockResolvedValue({ count: 0 }),
             },
+            leadActivity: {
+              createMany: vi.fn().mockResolvedValue({ count: 2 }),
+            },
           };
           return fn(tx);
         });
@@ -216,6 +219,9 @@ describe('Lead Router - Additional Coverage', () => {
             account: {
               createMany: mockAccountCreateMany,
             },
+            leadActivity: {
+              createMany: vi.fn().mockResolvedValue({ count: 1 }),
+            },
           };
           return fn(tx);
         });
@@ -257,6 +263,9 @@ describe('Lead Router - Additional Coverage', () => {
             account: {
               createMany: mockAccountCreateMany,
             },
+            leadActivity: {
+              createMany: vi.fn().mockResolvedValue({ count: 1 }),
+            },
           };
           return fn(tx);
         });
@@ -294,6 +303,9 @@ describe('Lead Router - Additional Coverage', () => {
               updateMany: vi.fn().mockResolvedValue({ count: 1 }),
             },
             contact: {
+              createMany: vi.fn().mockResolvedValue({ count: 1 }),
+            },
+            leadActivity: {
               createMany: vi.fn().mockResolvedValue({ count: 1 }),
             },
           };

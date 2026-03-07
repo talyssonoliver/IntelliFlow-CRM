@@ -91,11 +91,11 @@ export interface KeyProvider {
  * Environment-based key provider (for development/testing)
  */
 export class EnvironmentKeyProvider implements KeyProvider {
-  private keyCache: Map<number, Buffer> = new Map();
+  private readonly keyCache: Map<number, Buffer> = new Map();
   private currentVersion: number;
 
   constructor(
-    private masterKeyEnvVar: string = 'ENCRYPTION_MASTER_KEY',
+    private readonly masterKeyEnvVar: string = 'ENCRYPTION_MASTER_KEY',
     initialVersion: number = 1
   ) {
     this.currentVersion = initialVersion;
@@ -147,10 +147,10 @@ export class EnvironmentKeyProvider implements KeyProvider {
  * Vault Transit backend key provider
  */
 export class VaultKeyProvider implements KeyProvider {
-  private keyCache: Map<number, Buffer> = new Map();
-  private vaultAddress: string;
-  private vaultToken: string;
-  private keyName: string;
+  private readonly keyCache: Map<number, Buffer> = new Map();
+  private readonly vaultAddress: string;
+  private readonly vaultToken: string;
+  private readonly keyName: string;
   private currentVersion: number;
 
   constructor(options?: {

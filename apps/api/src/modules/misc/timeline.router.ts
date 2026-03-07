@@ -251,6 +251,65 @@ export type TimelineEvent = z.infer<typeof timelineEventSchema>;
 type TimelineQueryInput = z.infer<typeof timelineQuerySchema>;
 type PrismaContext = { prisma: any; user: { userId: string } };
 
+/** Build the Prisma WHERE clause for task queries in the timeline. */
+function buildTaskTimelineWhere(opts: {
+  effectiveOpportunityId: string | undefined;
+  contactId: string | undefined;
+  dateFilter: { gte?: Date; lte?: Date };
+  search: string | undefined;
+  includeCompleted: boolean;
+  priorities: string[] | undefined;
+}): Record<string, unknown> {
+  const { effectiveOpportunityId, contactId, dateFilter, search, includeCompleted, priorities } = opts;
+  const taskWhere: Record<string, unknown> = {};
+
+  if (effectiveOpportunityId) taskWhere.opportunityId = effectiveOpportunityId;
+  if (contactId) taskWhere.contactId = contactId;
+
+  if (Object.keys(dateFilter).length > 0) {
+    taskWhere.OR = [
+      { createdAt: dateFilter },
+      { dueDate: dateFilter },
+      { completedAt: dateFilter },
+    ];
+  }
+
+  if (search) {
+    taskWhere.OR = [
+      { title: { contains: search, mode: 'insensitive' } },
+      { description: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+
+  if (!includeCompleted) taskWhere.status = { notIn: ['COMPLETED', 'CANCELLED'] };
+  if (priorities && priorities.length > 0) taskWhere.priority = { in: priorities.map((p) => p.toUpperCase()) };
+
+  return taskWhere;
+}
+
+/** Build the Prisma WHERE clause for audit event queries in the timeline. */
+function buildAuditTimelineWhere(opts: {
+  effectiveOpportunityId: string | undefined;
+  contactId: string | undefined;
+  dateFilter: { gte?: Date; lte?: Date };
+  search: string | undefined;
+}): Record<string, unknown> {
+  const { effectiveOpportunityId, contactId, dateFilter, search } = opts;
+  const auditWhere: Record<string, unknown> = {};
+
+  if (effectiveOpportunityId) auditWhere.opportunityId = effectiveOpportunityId;
+  if (contactId) auditWhere.entityId = contactId;
+  if (Object.keys(dateFilter).length > 0) auditWhere.createdAt = dateFilter;
+  if (search) {
+    auditWhere.OR = [
+      { action: { contains: search, mode: 'insensitive' } },
+      { details: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+
+  return auditWhere;
+}
+
 /** Returns true if the event type passes the include/exclude filters */
 function shouldIncludeType(
   type: string,
@@ -290,25 +349,14 @@ async function fetchTaskEvents(
   if (!shouldInclude('task') && !shouldInclude('task_completed') && !shouldInclude('task_overdue'))
     return;
 
-  const taskWhere: any = {};
-  if (effectiveOpportunityId) taskWhere.opportunityId = effectiveOpportunityId;
-  if (contactId) taskWhere.contactId = contactId;
-  if (Object.keys(dateFilter).length > 0) {
-    taskWhere.OR = [
-      { createdAt: dateFilter },
-      { dueDate: dateFilter },
-      { completedAt: dateFilter },
-    ];
-  }
-  if (search) {
-    taskWhere.OR = [
-      { title: { contains: search, mode: 'insensitive' } },
-      { description: { contains: search, mode: 'insensitive' } },
-    ];
-  }
-  if (!includeCompleted) taskWhere.status = { notIn: ['COMPLETED', 'CANCELLED'] };
-  if (priorities && priorities.length > 0)
-    taskWhere.priority = { in: priorities.map((p) => p.toUpperCase()) };
+  const taskWhere = buildTaskTimelineWhere({
+    effectiveOpportunityId,
+    contactId,
+    dateFilter,
+    search,
+    includeCompleted: includeCompleted ?? false,
+    priorities,
+  });
 
   const tasks = await ctx.prisma.task.findMany({
     where: taskWhere,
@@ -416,6 +464,30 @@ async function fetchAppointmentEvents(
   }
 }
 
+/** Build the audit log WHERE clause for fetchAuditEvents */
+function buildAuditLogWhere(
+  effectiveOpportunityId: string | undefined,
+  dateFilter: { gte?: Date; lte?: Date }
+): Record<string, unknown> {
+  const auditWhere: Record<string, unknown> = {};
+  if (effectiveOpportunityId) {
+    auditWhere.OR = [
+      { resourceType: 'Opportunity', resourceId: effectiveOpportunityId },
+      { resourceType: 'Deal', resourceId: effectiveOpportunityId },
+      { resourceType: 'Case', resourceId: effectiveOpportunityId },
+    ];
+  }
+  if (Object.keys(dateFilter).length > 0) auditWhere.timestamp = dateFilter;
+  return auditWhere;
+}
+
+/** Resolve the event type from an audit log entry's eventType string */
+function resolveAuditEventType(eventType: string): TimelineEventTypeValue {
+  if (eventType.toLowerCase().includes('stage')) return 'stage_change';
+  if (eventType.toLowerCase().includes('status')) return 'status_change';
+  return 'audit';
+}
+
 /** Fetch audit log events and push them into `events` */
 async function fetchAuditEvents(
   ctx: PrismaContext,
@@ -429,15 +501,7 @@ async function fetchAuditEvents(
   if (!shouldInclude('status_change') && !shouldInclude('stage_change') && !shouldInclude('audit'))
     return;
 
-  const auditWhere: any = {};
-  if (effectiveOpportunityId) {
-    auditWhere.OR = [
-      { resourceType: 'Opportunity', resourceId: effectiveOpportunityId },
-      { resourceType: 'Deal', resourceId: effectiveOpportunityId },
-      { resourceType: 'Case', resourceId: effectiveOpportunityId },
-    ];
-  }
-  if (Object.keys(dateFilter).length > 0) auditWhere.timestamp = dateFilter;
+  const auditWhere = buildAuditLogWhere(effectiveOpportunityId, dateFilter);
 
   const auditLogs = await ctx.prisma.auditLogEntry.findMany({
     where: auditWhere,
@@ -446,9 +510,7 @@ async function fetchAuditEvents(
   });
 
   for (const log of auditLogs) {
-    let eventType: TimelineEventTypeValue = 'audit';
-    if (log.eventType.toLowerCase().includes('stage')) eventType = 'stage_change';
-    else if (log.eventType.toLowerCase().includes('status')) eventType = 'status_change';
+    const eventType = resolveAuditEventType(log.eventType);
 
     if (shouldInclude(eventType)) {
       events.push({

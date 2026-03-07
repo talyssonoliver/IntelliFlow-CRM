@@ -70,6 +70,7 @@ describe('Entry Points', () => {
       expect(context.user).toEqual({
         userId: '00000000-0000-4000-8000-000000000103', // Sarah Johnson from SEED_IDS
         email: 'sarah.johnson@intelliflow.dev',
+        name: 'Sarah Johnson',
         role: 'SALES_REP',
         tenantId: '00000000-0000-4000-8000-000000000001',
       });

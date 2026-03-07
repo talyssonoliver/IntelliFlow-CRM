@@ -261,6 +261,28 @@ function computeConfidenceScore(
   return score;
 }
 
+function buildRangeFilter(
+  min: number | undefined,
+  max: number | undefined
+): Record<string, number> | undefined {
+  if (min === undefined && max === undefined) return undefined;
+  const filter: Record<string, number> = {};
+  if (min !== undefined) filter.gte = min;
+  if (max !== undefined) filter.lte = max;
+  return filter;
+}
+
+function buildDateRangeFilter(
+  from: Date | undefined,
+  to: Date | undefined
+): Record<string, Date> | undefined {
+  if (!from && !to) return undefined;
+  const filter: Record<string, Date> = {};
+  if (from) filter.gte = from;
+  if (to) filter.lte = to;
+  return filter;
+}
+
 function buildOpportunityWhereClause(input: {
   search?: string;
   stage?: string[];
@@ -287,21 +309,14 @@ function buildOpportunityWhereClause(input: {
   if (input.accountId) where.accountId = input.accountId;
   if (input.contactId) where.contactId = input.contactId;
 
-  if (input.minValue !== undefined || input.maxValue !== undefined) {
-    where.value = {};
-    if (input.minValue !== undefined) where.value.gte = input.minValue;
-    if (input.maxValue !== undefined) where.value.lte = input.maxValue;
-  }
-  if (input.minProbability !== undefined || input.maxProbability !== undefined) {
-    where.probability = {};
-    if (input.minProbability !== undefined) where.probability.gte = input.minProbability;
-    if (input.maxProbability !== undefined) where.probability.lte = input.maxProbability;
-  }
-  if (input.dateFrom || input.dateTo) {
-    where.expectedCloseDate = {};
-    if (input.dateFrom) where.expectedCloseDate.gte = input.dateFrom;
-    if (input.dateTo) where.expectedCloseDate.lte = input.dateTo;
-  }
+  const valueFilter = buildRangeFilter(input.minValue, input.maxValue);
+  if (valueFilter) where.value = valueFilter;
+
+  const probFilter = buildRangeFilter(input.minProbability, input.maxProbability);
+  if (probFilter) where.probability = probFilter;
+
+  const dateFilter = buildDateRangeFilter(input.dateFrom, input.dateTo);
+  if (dateFilter) where.expectedCloseDate = dateFilter;
 
   return where;
 }
@@ -353,6 +368,56 @@ function buildMonthlyRevenue(
     monthlyRevenue[month].deals += 1;
   }
   return monthlyRevenue;
+}
+
+// ── Forecast calculation helpers ──
+
+type WonDeal = { value: unknown; closedAt: Date | null; createdAt: Date };
+
+function computeWeightedValue(opps: { value: unknown; probability: number }[]): number {
+  return opps.reduce((sum, opp) => {
+    const value = Number(opp.value) || 0;
+    const probability = (opp.probability ?? 0) / 100;
+    return sum + value * probability;
+  }, 0);
+}
+
+function computeTotalPipelineValue(opps: { value: unknown }[]): number {
+  return opps.reduce((sum, opp) => sum + (Number(opp.value) || 0), 0);
+}
+
+function computeWinMetrics(
+  closedDeals: { stage: string; value: unknown; closedAt: Date | null; createdAt: Date }[]
+): { wonDeals: WonDeal[]; lostDeals: WonDeal[]; winRate: number } {
+  const wonDeals = closedDeals.filter((d) => d.stage === 'CLOSED_WON');
+  const lostDeals = closedDeals.filter((d) => d.stage === 'CLOSED_LOST');
+  const totalClosed = wonDeals.length + lostDeals.length;
+  const winRate = totalClosed > 0 ? Math.round((wonDeals.length / totalClosed) * 100) : 0;
+  return { wonDeals, lostDeals, winRate };
+}
+
+function computeAvgDealSize(wonDeals: WonDeal[]): number {
+  if (wonDeals.length === 0) return 0;
+  return wonDeals.reduce((sum, d) => sum + Number(d.value), 0) / wonDeals.length;
+}
+
+function computeAvgSalesCycle(wonDeals: WonDeal[]): number {
+  if (wonDeals.length === 0) return 0;
+  const totalDays = wonDeals.reduce((sum, d) => {
+    const created = new Date(d.createdAt);
+    const closed = new Date(d.closedAt!);
+    return sum + (closed.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
+  }, 0);
+  return Math.round(totalDays / wonDeals.length);
+}
+
+function buildOwnerAvatar(name: string | null | undefined): string {
+  if (!name) return 'NA';
+  return name
+    .split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .toUpperCase() || 'NA';
 }
 
 function buildWinRateTrend(
@@ -796,50 +861,22 @@ export const opportunityRouter = createTRPCRouter({
       },
     });
 
-    // Calculate weighted pipeline value
-    const weightedValue = (activeOpportunities ?? []).reduce((sum, opp) => {
-      const value = Number(opp.value) || 0;
-      const probability = (opp.probability ?? 0) / 100;
-      return sum + value * probability;
-    }, 0);
+    const activeOpps = activeOpportunities ?? [];
+    const closed = closedDeals ?? [];
 
-    // Calculate total pipeline value
-    const totalPipelineValue = (activeOpportunities ?? []).reduce((sum, opp) => {
-      return sum + (Number(opp.value) || 0);
-    }, 0);
+    const weightedValue = computeWeightedValue(activeOpps);
+    const totalPipelineValue = computeTotalPipelineValue(activeOpps);
+    const stageBreakdown = buildStageBreakdown(activeOpps);
 
-    const stageBreakdown = buildStageBreakdown(activeOpportunities ?? []);
-
-    // Calculate win rate
-    const wonDeals = (closedDeals ?? []).filter((d) => d.stage === 'CLOSED_WON');
-    const lostDeals = (closedDeals ?? []).filter((d) => d.stage === 'CLOSED_LOST');
-    const totalClosed = wonDeals.length + lostDeals.length;
-    const winRate = totalClosed > 0 ? Math.round((wonDeals.length / totalClosed) * 100) : 0;
-
-    // Calculate average deal size (from won deals)
-    const avgDealSize =
-      wonDeals.length > 0
-        ? wonDeals.reduce((sum, d) => sum + Number(d.value), 0) / wonDeals.length
-        : 0;
-
-    // Calculate average sales cycle (days from created to closed)
-    const avgSalesCycle =
-      wonDeals.length > 0
-        ? Math.round(
-            wonDeals.reduce((sum, d) => {
-              const created = new Date(d.createdAt);
-              const closed = new Date(d.closedAt!);
-              return sum + (closed.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
-            }, 0) / wonDeals.length
-          )
-        : 0;
+    const { wonDeals, lostDeals, winRate } = computeWinMetrics(closed);
+    const avgDealSize = computeAvgDealSize(wonDeals);
+    const avgSalesCycle = computeAvgSalesCycle(wonDeals);
 
     const monthlyRevenue = buildMonthlyRevenue(wonDeals);
-
-    const winRateTrend = buildWinRateTrend(closedDeals ?? [], winRate);
+    const winRateTrend = buildWinRateTrend(closed, winRate);
 
     // Map opportunities to forecast deals format
-    const forecastDeals = (activeOpportunities ?? []).map((opp) => ({
+    const forecastDeals = activeOpps.map((opp) => ({
       id: opp.id,
       name: opp.name,
       stage: opp.stage as
@@ -853,12 +890,7 @@ export const opportunityRouter = createTRPCRouter({
       expectedCloseDate: opp.expectedCloseDate?.toISOString().split('T')[0] || '',
       owner: {
         name: opp.owner?.name || 'Unassigned',
-        avatar:
-          opp.owner?.name
-            ?.split(' ')
-            .map((n: string) => n[0])
-            .join('')
-            .toUpperCase() || 'NA',
+        avatar: buildOwnerAvatar(opp.owner?.name),
       },
       riskLevel: getRiskLevel(opp.probability, Number(opp.value)),
       accountName: opp.account?.name || null,
@@ -869,7 +901,7 @@ export const opportunityRouter = createTRPCRouter({
 
     return {
       // Summary metrics
-      totalOpportunities: activeOpportunities.length,
+      totalOpportunities: activeOpps.length,
       weightedValue: Math.round(weightedValue).toString(),
       totalPipelineValue: Math.round(totalPipelineValue),
 

@@ -34,6 +34,7 @@ import {
 import type { Context } from '../../context';
 import { getTenantContext } from '../../security/tenant-context';
 import { mapErrorToTRPCError } from '../../shared/error-mapper';
+import { createNotification } from '../notifications/notifications.router';
 
 // Lazy-load the repository implementation to avoid workspace resolution issues
 let _repositoryClass: (new (prisma: any) => AutoResponseDraftRepository) | null = null;
@@ -230,6 +231,7 @@ export const autoResponseRouter = createTRPCRouter({
         id: d.id.toString(),
         leadId: d.leadId,
         subject: d.content.subject,
+        body: d.content.body,
         status: d.status,
         aiConfidence: d.aiConfidence,
         triggerType: d.triggerType,
@@ -430,6 +432,26 @@ export const autoResponseRouter = createTRPCRouter({
 
       await publishEvents(draft);
 
+      // Send notification to the escalation target
+      try {
+        await createNotification(ctx.prisma, {
+          userId: input.escalatedTo,
+          tenantId: typedCtx.tenant.tenantId,
+          type: 'ai_action_pending',
+          title: 'AI Draft Escalated for Your Review',
+          body: `An AI auto-response draft "${draft.content.subject}" has been escalated to you for review. Reason: ${input.reason}`,
+          priority: 'high',
+          entityType: 'auto_response_draft',
+          entityId: draft.id.toString(),
+          entityName: draft.content.subject,
+          actionUrl: '/agent-approvals?status=escalated',
+          actionLabel: 'Review Draft',
+        });
+      } catch (notifError) {
+        // Non-blocking — escalation still succeeds even if notification fails
+        console.error('[AutoResponse] Failed to send escalation notification:', notifError);
+      }
+
       return { success: true, status: draft.status };
     }),
 
@@ -581,6 +603,7 @@ export const autoResponseRouter = createTRPCRouter({
           id: d.id.toString(),
           leadId: d.leadId,
           subject: d.content.subject,
+          body: d.content.body,
           status: d.status,
           aiConfidence: d.aiConfidence,
           triggerType: d.triggerType,

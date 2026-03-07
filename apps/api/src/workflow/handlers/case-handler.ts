@@ -847,7 +847,7 @@ export class CaseApprovalRequiredHandler extends BaseCaseEventHandler {
  * Registry of all case event handlers
  */
 export class CaseEventHandlerRegistry {
-  private handlers: Map<string, ICaseEventHandler> = new Map();
+  private readonly handlers: Map<string, ICaseEventHandler> = new Map();
 
   constructor() {
     this.registerDefaultHandlers();

@@ -133,6 +133,46 @@ function isOwnershipViolation(
 }
 
 /**
+ * Evaluate a single ABAC condition against a context value.
+ * Returns true when the condition is satisfied.
+ */
+function evaluateSingleCondition(
+  condition: AttributeCondition,
+  value: unknown
+): boolean {
+  switch (condition.operator) {
+    case 'eq':
+      return value === condition.value;
+    case 'neq':
+      return value !== condition.value;
+    case 'in':
+      return Array.isArray(condition.value) && condition.value.includes(value as string);
+    case 'contains':
+      return typeof value === 'string' && value.includes(condition.value as string);
+    case 'startsWith':
+      return typeof value === 'string' && value.startsWith(condition.value as string);
+    default:
+      return true;
+  }
+}
+
+/**
+ * Populate a permissions set with the default permissions for a given role.
+ */
+function addDefaultRolePermissions(
+  permissions: Set<string>,
+  userRole: RoleName
+): void {
+  const defaultPerms = DEFAULT_PERMISSIONS[userRole];
+  if (!defaultPerms) return;
+  for (const [resource, actions] of Object.entries(defaultPerms)) {
+    for (const action of actions) {
+      permissions.add(`${resource}:${action}`);
+    }
+  }
+}
+
+/**
  * RBAC Service class
  */
 export class RBACService {
@@ -152,7 +192,7 @@ export class RBACService {
    * @returns Permission check result
    */
   async can(context: PermissionContext): Promise<PermissionCheckResult> {
-    const { userId, userRole, resourceType, action, resourceId, resourceOwnerId } = context;
+    const { userId, userRole, resourceType, action, resourceOwnerId } = context;
     const roleLevel = ROLE_LEVELS[userRole] ?? 0;
     const checkedPermissions: string[] = [];
 
@@ -468,14 +508,7 @@ export class RBACService {
     const permissions = new Set<string>();
 
     // 1. Start with default role permissions
-    const defaultPerms = DEFAULT_PERMISSIONS[userRole];
-    if (defaultPerms) {
-      for (const [resource, actions] of Object.entries(defaultPerms)) {
-        for (const action of actions) {
-          permissions.add(`${resource}:${action}`);
-        }
-      }
-    }
+    addDefaultRolePermissions(permissions, userRole);
 
     // 2. Add database RBAC roles permissions
     const dbRoles = await this.getUserRBACRoles(userId);
@@ -485,6 +518,27 @@ export class RBACService {
     }
 
     // 3. Apply user-specific overrides
+    await this.applyUserPermissionOverrides(permissions, userId);
+
+    const result = Array.from(permissions);
+
+
+    // Cache the result
+    this.permissionCache.set(cacheKey, {
+      permissions: result,
+      timestamp: Date.now(),
+    });
+
+    return result;
+  }
+
+  /**
+   * Apply user-specific permission overrides (grants and denials) to the permission set.
+   */
+  private async applyUserPermissionOverrides(
+    permissions: Set<string>,
+    userId: string
+  ): Promise<void> {
     try {
       const userOverrides = await this.prisma.userPermission.findMany({
         where: {
@@ -502,19 +556,8 @@ export class RBACService {
         }
       }
     } catch (error) {
-      // If table doesn't exist, skip overrides
       console.debug('[RBAC] User overrides check failed:', error);
     }
-
-    const result = Array.from(permissions);
-
-    // Cache the result
-    this.permissionCache.set(cacheKey, {
-      permissions: result,
-      timestamp: Date.now(),
-    });
-
-    return result;
   }
 
   /**
@@ -668,31 +711,9 @@ export class RBACService {
    * Evaluate ABAC conditions
    */
   evaluateConditions(conditions: AttributeCondition[], context: Record<string, unknown>): boolean {
-    for (const condition of conditions) {
-      const value = context[condition.field];
-
-      switch (condition.operator) {
-        case 'eq':
-          if (value !== condition.value) return false;
-          break;
-        case 'neq':
-          if (value === condition.value) return false;
-          break;
-        case 'in':
-          if (!Array.isArray(condition.value) || !condition.value.includes(value as string))
-            return false;
-          break;
-        case 'contains':
-          if (typeof value !== 'string' || !value.includes(condition.value as string)) return false;
-          break;
-        case 'startsWith':
-          if (typeof value !== 'string' || !value.startsWith(condition.value as string))
-            return false;
-          break;
-      }
-    }
-
-    return true;
+    return conditions.every((condition) =>
+      evaluateSingleCondition(condition, context[condition.field])
+    );
   }
 }
 

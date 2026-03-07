@@ -14,6 +14,15 @@ import { TEST_UUIDS } from '../../test/setup';
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { z } from 'zod';
+
+// Mock RBACService to always grant permissions in contract tests
+vi.mock('../../security/rbac', () => ({
+  RBACService: class {
+    constructor(_prisma: any) {}
+    async can() { return { granted: true }; }
+  },
+}));
+
 import { taskRouter } from '../../modules/task/task.router';
 import {
   prismaMock,
@@ -478,24 +487,32 @@ describe('Task Router Contract Tests', () => {
     });
 
     it('should allow status updates (complex update via Prisma)', async () => {
-      for (const status of taskStatuses) {
+      // Each target status needs a valid "from" status per domain state machine:
+      // PENDING→IN_PROGRESS, PENDING→CANCELLED, IN_PROGRESS→COMPLETED, same→same (no-op)
+      const transitions = [
+        { from: 'PENDING', to: 'PENDING' },           // same status — skips transition check
+        { from: 'PENDING', to: 'IN_PROGRESS' },       // valid transition
+        { from: 'IN_PROGRESS', to: 'COMPLETED' },     // valid transition
+        { from: 'PENDING', to: 'CANCELLED' },         // valid transition
+      ] as const;
+      for (const { from, to } of transitions) {
         // Complex updates (status, priority, etc.) go through Prisma with service validation
         ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
           isSuccess: true,
           isFailure: false,
-          value: createMockDomainTask(),
+          value: createMockDomainTask({ status: from }),
         });
         prismaMock.task.update.mockResolvedValue({
           ...mockTask,
-          status,
+          status: to,
         });
 
         const result = await caller.update({
           id: TEST_UUIDS.task1,
-          status,
+          status: to,
         });
 
-        expect(result.status).toBe(status);
+        expect(result.status).toBe(to);
       }
     });
 

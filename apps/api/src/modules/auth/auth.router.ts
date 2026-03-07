@@ -225,6 +225,18 @@ async function setupMfaByMethod(
   throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid MFA method' });
 }
 
+/**
+ * Extract userId from an MFA challenge, returning 'unknown' if unavailable.
+ */
+function resolveMfaChallengeUserId(
+  mfaService: ReturnType<typeof getMfaService>,
+  challengeId: string | undefined
+): string {
+  if (!challengeId) return 'unknown';
+  const info = mfaService.getChallengeInfo(challengeId);
+  return 'userId' in info && info.userId ? String(info.userId) : 'unknown';
+}
+
 // ============================================
 // Auth Router
 // ============================================
@@ -301,7 +313,7 @@ export const authRouter = createTRPCRouter({
 
       // Create application session
       const deviceInfo = sessionService.parseDeviceInfo(userAgent);
-      const appSession = await sessionService.createSession({
+      await sessionService.createSession({
         userId: user.id,
         tenantId: user.id, // For now, use user ID as tenant ID
         deviceInfo,
@@ -622,57 +634,28 @@ export const authRouter = createTRPCRouter({
     const mfaService = getMfaService(ctx.prisma);
 
     try {
+      const userId = resolveMfaChallengeUserId(mfaService, input.challengeId);
+
       if (input.method === 'sms' && input.phone) {
-        // Get user ID from challenge if available
-        const challengeInfo = input.challengeId
-          ? mfaService.getChallengeInfo(input.challengeId)
-          : { exists: false, userId: undefined };
-
-        // Extract userId safely from challenge info
-        const userId =
-          'userId' in challengeInfo && challengeInfo.userId
-            ? String(challengeInfo.userId)
-            : 'unknown';
         const result = await mfaService.sendSmsOtp(input.phone, userId);
-
         return {
           success: result.success,
-          message: result.success
-            ? 'SMS code sent successfully'
-            : result.error || 'Failed to send SMS',
+          message: result.success ? 'SMS code sent successfully' : result.error || 'Failed to send SMS',
         };
       }
 
       if (input.method === 'email' && input.email) {
-        const challengeInfo = input.challengeId
-          ? mfaService.getChallengeInfo(input.challengeId)
-          : { exists: false, userId: undefined };
-
-        // Extract userId safely from challenge info
-        const userId =
-          'userId' in challengeInfo && challengeInfo.userId
-            ? String(challengeInfo.userId)
-            : 'unknown';
         const result = await mfaService.sendEmailOtp(input.email, userId);
-
         return {
           success: result.success,
-          message: result.success
-            ? 'Email code sent successfully'
-            : result.error || 'Failed to send email',
+          message: result.success ? 'Email code sent successfully' : result.error || 'Failed to send email',
         };
       }
 
-      return {
-        success: false,
-        message: 'Invalid MFA method or missing contact information',
-      };
+      return { success: false, message: 'Invalid MFA method or missing contact information' };
     } catch (error) {
       console.error('[Auth] Resend MFA code error:', error);
-      return {
-        success: false,
-        message: 'Failed to resend MFA code. Please try again.',
-      };
+      return { success: false, message: 'Failed to resend MFA code. Please try again.' };
     }
   }),
 
@@ -1043,7 +1026,7 @@ export const authRouter = createTRPCRouter({
     }
 
     // If Supabase returns a user with identities=[] it means user already exists
-    if (data.user && data.user.identities && data.user.identities.length === 0) {
+    if (data.user?.identities?.length === 0) {
       throw new TRPCError({
         code: 'CONFLICT',
         message: 'An account with this email already exists.',

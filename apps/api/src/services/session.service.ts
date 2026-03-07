@@ -379,30 +379,39 @@ export class SessionService {
   }
 
   /**
+   * Load sessions for a user from database and populate in-memory stores.
+   * Returns true if sessions were loaded.
+   */
+  private async populateUserSessionsFromDb(userId: string): Promise<boolean> {
+    if (!this.prisma) return false;
+    const dbSessions = await this.loadUserSessionsFromDb(userId);
+    if (dbSessions.length === 0) return false;
+    for (const session of dbSessions) {
+      sessionStore.set(session.id, session);
+      let userSessionSet = sessionsByUser.get(userId);
+      if (!userSessionSet) {
+        userSessionSet = new Set();
+        sessionsByUser.set(userId, userSessionSet);
+      }
+      userSessionSet.add(session.id);
+    }
+    return true;
+  }
+
+  /**
    * Get all active sessions for a user
    */
   async getUserSessions(userId: string, currentSessionId?: string): Promise<SessionInfo[]> {
-    const userSessions = sessionsByUser.get(userId);
-    const sessions: SessionInfo[] = [];
+    let userSessions = sessionsByUser.get(userId);
 
     if (!userSessions) {
-      // Try loading from database
-      if (this.prisma) {
-        const dbSessions = await this.loadUserSessionsFromDb(userId);
-        for (const session of dbSessions) {
-          sessionStore.set(session.id, session);
-          let userSessionSet = sessionsByUser.get(userId);
-          if (!userSessionSet) {
-            userSessionSet = new Set();
-            sessionsByUser.set(userId, userSessionSet);
-          }
-          userSessionSet.add(session.id);
-        }
-        return this.getUserSessions(userId, currentSessionId);
-      }
-      return [];
+      const loaded = await this.populateUserSessionsFromDb(userId);
+      if (!loaded) return [];
+      userSessions = sessionsByUser.get(userId);
+      if (!userSessions) return [];
     }
 
+    const sessions: SessionInfo[] = [];
     for (const sessionId of userSessions) {
       const session = sessionStore.get(sessionId);
       if (session && this.isSessionValid(session)) {
@@ -418,9 +427,7 @@ export class SessionService {
       }
     }
 
-    // Sort by last active (most recent first)
     sessions.sort((a, b) => b.lastActiveAt.getTime() - a.lastActiveAt.getTime());
-
     return sessions;
   }
 
@@ -555,7 +562,7 @@ export class SessionService {
     parseOsInfo(userAgent, info);
 
     // Mobile detection
-    info.isMobile = /Mobile|Android|iPhone|iPad|iPod/i.test(userAgent);
+    info.isMobile = /Mobile|Android|iPhone|iPad|iPod|iOS/i.test(userAgent);
     info.device = info.isMobile ? 'Mobile' : 'Desktop';
 
     return info;

@@ -10,21 +10,21 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
-  testPrisma,
+  getTestPrisma,
   SEED_IDS,
   getSeedData,
   verifySeedData,
   isInfrastructureAvailable,
-  infrastructureUnavailableReason,
+  getInfrastructureUnavailableReason,
 } from '../../test/integration-setup';
 
 // Run integration tests only when infrastructure is available
 // The integration-setup module handles Prisma import gracefully
-const describeIntegration = isInfrastructureAvailable ? describe : describe.skip;
+const describeIntegration = isInfrastructureAvailable() ? describe : describe.skip;
 
 // Log skip reason if not available
-if (!isInfrastructureAvailable && infrastructureUnavailableReason) {
-  console.log(`⏭️  Skipping Lead Contract Integration Tests: ${infrastructureUnavailableReason}`);
+if (!isInfrastructureAvailable() && getInfrastructureUnavailableReason()) {
+  console.log(`⏭️  Skipping Lead Contract Integration Tests: ${getInfrastructureUnavailableReason()}`);
 }
 
 describeIntegration('Lead Contract - Integration Tests', () => {
@@ -74,7 +74,7 @@ describeIntegration('Lead Contract - Integration Tests', () => {
 
   describe('Relationships', () => {
     it('should load owner relation', async () => {
-      const lead = await testPrisma.lead.findUnique({
+      const lead = await getTestPrisma().lead.findUnique({
         where: { id: SEED_IDS.leads.sarahMiller },
         include: { owner: true },
       });
@@ -87,7 +87,7 @@ describeIntegration('Lead Contract - Integration Tests', () => {
 
     it('should load contact relation when converted', async () => {
       // Find a converted lead
-      const convertedLeads = await testPrisma.lead.findMany({
+      const convertedLeads = await getTestPrisma().lead.findMany({
         where: { status: 'CONVERTED' },
         include: { contact: true },
         take: 1,
@@ -104,11 +104,11 @@ describeIntegration('Lead Contract - Integration Tests', () => {
 
   describe('Tenant Isolation', () => {
     it('should only return leads for the default tenant', async () => {
-      const defaultTenant = await testPrisma.tenant.findUnique({
+      const defaultTenant = await getTestPrisma().tenant.findUnique({
         where: { slug: 'default' },
       });
 
-      const leads = await testPrisma.lead.findMany({
+      const leads = await getTestPrisma().lead.findMany({
         take: 10,
       });
 
@@ -121,13 +121,13 @@ describeIntegration('Lead Contract - Integration Tests', () => {
 
   describe('Validation', () => {
     it('should enforce unique email per tenant', async () => {
-      const tenant = await testPrisma.tenant.findUnique({
+      const tenant = await getTestPrisma().tenant.findUnique({
         where: { slug: 'default' },
       });
 
       // Try to create duplicate email (sarah@techcorp.com exists in seed data)
       await expect(
-        testPrisma.lead.create({
+        getTestPrisma().lead.create({
           data: {
             email: 'sarah@techcorp.com', // Exists in seed
             firstName: 'Duplicate',
@@ -145,13 +145,13 @@ describeIntegration('Lead Contract - Integration Tests', () => {
     });
 
     it('should enforce required fields', async () => {
-      const tenant = await testPrisma.tenant.findUnique({
+      const tenant = await getTestPrisma().tenant.findUnique({
         where: { slug: 'default' },
       });
 
       // Try to create without required field
       await expect(
-        testPrisma.lead.create({
+        getTestPrisma().lead.create({
           data: {
             // Missing email
             firstName: 'Test',
@@ -171,7 +171,7 @@ describeIntegration('Lead Contract - Integration Tests', () => {
 
   describe('Score Validation', () => {
     it('should have score between 0 and 100', async () => {
-      const leads = await testPrisma.lead.findMany({
+      const leads = await getTestPrisma().lead.findMany({
         take: 20,
       });
 
@@ -184,7 +184,7 @@ describeIntegration('Lead Contract - Integration Tests', () => {
 
   describe('Timestamps', () => {
     it('should have createdAt before or equal to updatedAt', async () => {
-      const leads = await testPrisma.lead.findMany({
+      const leads = await getTestPrisma().lead.findMany({
         take: 20,
       });
 
@@ -200,19 +200,19 @@ describeIntegration('Lead Contract - Integration Tests', () => {
       // Wait a moment then update
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      await testPrisma.lead.update({
+      await getTestPrisma().lead.update({
         where: { id: lead.id },
         data: { score: lead.score + 1 },
       });
 
-      const updatedLead = await testPrisma.lead.findUnique({
+      const updatedLead = await getTestPrisma().lead.findUnique({
         where: { id: lead.id },
       });
 
       expect(updatedLead!.updatedAt.getTime()).toBeGreaterThan(originalUpdatedAt.getTime());
 
       // Restore original score
-      await testPrisma.lead.update({
+      await getTestPrisma().lead.update({
         where: { id: lead.id },
         data: { score: lead.score },
       });

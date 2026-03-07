@@ -15,20 +15,20 @@ import {
   SEED_IDS,
   getSeedData,
   verifySeedData,
-  testPrisma,
+  getTestPrisma,
   isInfrastructureAvailable,
-  infrastructureUnavailableReason,
+  getInfrastructureUnavailableReason,
 } from '../../../test/integration-setup';
 
 // Import leadRouter directly - Vitest handles ESM imports properly
 import { leadRouter } from '../lead.router';
 
 // Run integration tests only when infrastructure is available
-const describeIntegration = isInfrastructureAvailable ? describe : describe.skip;
+const describeIntegration = isInfrastructureAvailable() ? describe : describe.skip;
 
 // Log skip reason if not available
-if (!isInfrastructureAvailable && infrastructureUnavailableReason) {
-  console.log(`⏭️  Skipping Lead Router Integration Tests: ${infrastructureUnavailableReason}`);
+if (!isInfrastructureAvailable() && getInfrastructureUnavailableReason()) {
+  console.log(`⏭️  Skipping Lead Router Integration Tests: ${getInfrastructureUnavailableReason()}`);
 }
 
 describeIntegration('Lead Router - Integration Tests', () => {
@@ -150,14 +150,14 @@ describeIntegration('Lead Router - Integration Tests', () => {
       expect(result.tenantId).toBeDefined();
 
       // Verify it exists in database
-      const dbLead = await testPrisma.lead.findUnique({
+      const dbLead = await getTestPrisma().lead.findUnique({
         where: { id: result.id },
       });
       expect(dbLead).toBeDefined();
       expect(dbLead?.email).toBe(input.email);
 
       // Cleanup: delete test lead
-      await testPrisma.lead.delete({ where: { id: result.id } });
+      await getTestPrisma().lead.delete({ where: { id: result.id } });
     });
 
     it('should throw for duplicate email', async () => {
@@ -197,13 +197,13 @@ describeIntegration('Lead Router - Integration Tests', () => {
       expect(result.company).toBe(updatedCompany);
 
       // Verify in database
-      const dbLead = await testPrisma.lead.findUnique({
+      const dbLead = await getTestPrisma().lead.findUnique({
         where: { id: SEED_IDS.leads.davidChen },
       });
       expect(dbLead?.company).toBe(updatedCompany);
 
       // Restore original value
-      await testPrisma.lead.update({
+      await getTestPrisma().lead.update({
         where: { id: SEED_IDS.leads.davidChen },
         data: { company: originalCompany },
       });
@@ -221,7 +221,7 @@ describeIntegration('Lead Router - Integration Tests', () => {
       const testLeadId = randomUUID();
 
       // Create a test lead first with explicit UUID
-      const testLead = await testPrisma.lead.create({
+      const testLead = await getTestPrisma().lead.create({
         data: {
           id: testLeadId,
           email: uniqueEmail,
@@ -239,7 +239,7 @@ describeIntegration('Lead Router - Integration Tests', () => {
 
       await caller.delete({ id: testLead.id });
 
-      const dbLead = await testPrisma.lead.findUnique({
+      const dbLead = await getTestPrisma().lead.findUnique({
         where: { id: testLead.id },
       });
       expect(dbLead).toBeNull();
@@ -271,7 +271,7 @@ describeIntegration('Lead Router - Integration Tests', () => {
       const testLeadId = randomUUID();
 
       // Always create a test lead with a score above the qualification threshold (>= 50)
-      const testLead = await testPrisma.lead.create({
+      const testLead = await getTestPrisma().lead.create({
         data: {
           id: testLeadId,
           email: uniqueEmail,
@@ -295,7 +295,7 @@ describeIntegration('Lead Router - Integration Tests', () => {
         expect(result.status).toBe('QUALIFIED');
       } finally {
         // Cleanup
-        await testPrisma.lead.delete({ where: { id: testLead.id } });
+        await getTestPrisma().lead.delete({ where: { id: testLead.id } });
       }
     });
   });

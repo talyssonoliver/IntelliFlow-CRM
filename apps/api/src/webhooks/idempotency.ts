@@ -57,8 +57,8 @@ const DEFAULT_CONFIG: IdempotencyConfig = {
  * For production, use Redis or database-backed store
  */
 export class InMemoryIdempotencyStore implements IdempotencyStore {
-  private entries: Map<string, IdempotencyEntry> = new Map();
-  private locks: Map<string, Date> = new Map();
+  private readonly entries: Map<string, IdempotencyEntry> = new Map();
+  private readonly locks: Map<string, Date> = new Map();
 
   async get(key: string): Promise<IdempotencyEntry | null> {
     return this.entries.get(key) || null;

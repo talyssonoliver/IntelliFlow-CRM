@@ -47,6 +47,34 @@ function makeChange(field: string, newValue: string): ChangeEntry {
 /**
  * Build case change list and warnings from UpdateCaseInput fields.
  */
+function applyCasePriorityChange(priority: string, changes: ChangeEntry[], warnings: string[]): void {
+  changes.push(makeChange('priority', priority));
+  if (priority === 'URGENT') {
+    warnings.push('Changing priority to URGENT will trigger immediate attention notifications');
+  }
+}
+
+function applyCaseStatusChange(status: string, changes: ChangeEntry[], warnings: string[]): void {
+  changes.push(makeChange('status', status));
+  if (status === 'CLOSED') {
+    warnings.push('Closing this case is a significant action that may affect related entities');
+  }
+  if (status === 'CANCELLED') {
+    warnings.push('Cancelling this case is irreversible in most workflows');
+  }
+}
+
+function applyCaseDeadlineChange(deadline: Date, changes: ChangeEntry[], warnings: string[]): void {
+  changes.push(makeChange('deadline', deadline.toISOString()));
+  if (deadline < new Date()) {
+    warnings.push('Warning: New deadline is in the past');
+  }
+  const hoursUntil = (deadline.getTime() - Date.now()) / (1000 * 60 * 60);
+  if (hoursUntil > 0 && hoursUntil < 24) {
+    warnings.push('Warning: New deadline is less than 24 hours away');
+  }
+}
+
 function buildCasePreviewParts(input: UpdateCaseInput): {
   changes: ChangeEntry[];
   warnings: string[];
@@ -56,34 +84,9 @@ function buildCasePreviewParts(input: UpdateCaseInput): {
 
   if (input.title !== undefined) changes.push(makeChange('title', input.title));
   if (input.description !== undefined) changes.push(makeChange('description', input.description));
-
-  if (input.priority !== undefined) {
-    changes.push(makeChange('priority', input.priority));
-    if (input.priority === 'URGENT') {
-      warnings.push('Changing priority to URGENT will trigger immediate attention notifications');
-    }
-  }
-
-  if (input.status !== undefined) {
-    changes.push(makeChange('status', input.status));
-    if (input.status === 'CLOSED') {
-      warnings.push('Closing this case is a significant action that may affect related entities');
-    }
-    if (input.status === 'CANCELLED') {
-      warnings.push('Cancelling this case is irreversible in most workflows');
-    }
-  }
-
-  if (input.deadline !== undefined) {
-    changes.push(makeChange('deadline', input.deadline.toISOString()));
-    if (input.deadline < new Date()) {
-      warnings.push('Warning: New deadline is in the past');
-    }
-    const hoursUntil = (input.deadline.getTime() - Date.now()) / (1000 * 60 * 60);
-    if (hoursUntil > 0 && hoursUntil < 24) {
-      warnings.push('Warning: New deadline is less than 24 hours away');
-    }
-  }
+  if (input.priority !== undefined) applyCasePriorityChange(input.priority, changes, warnings);
+  if (input.status !== undefined) applyCaseStatusChange(input.status, changes, warnings);
+  if (input.deadline !== undefined) applyCaseDeadlineChange(input.deadline, changes, warnings);
 
   if (input.assignedTo !== undefined) {
     changes.push(makeChange('assignedTo', input.assignedTo));
@@ -106,6 +109,20 @@ function computeCaseImpact(input: UpdateCaseInput): 'LOW' | 'MEDIUM' | 'HIGH' {
 /**
  * Build appointment change list and warnings from UpdateAppointmentInput fields.
  */
+function applyAppointmentStartTimeChange(
+  startTime: Date,
+  changes: ChangeEntry[],
+  warnings: string[]
+): void {
+  changes.push(makeChange('startTime', startTime.toISOString()));
+  if (startTime < new Date()) warnings.push('Warning: New start time is in the past');
+  const hour = startTime.getHours();
+  if (hour < 8 || hour > 19) warnings.push('New time is outside typical business hours (8am-7pm)');
+  const day = startTime.getDay();
+  if (day === 0 || day === 6) warnings.push('New appointment time is on a weekend');
+  warnings.push('Rescheduling will notify all attendees of the time change');
+}
+
 function buildAppointmentPreviewParts(input: UpdateAppointmentInput): {
   changes: ChangeEntry[];
   warnings: string[];
@@ -115,23 +132,9 @@ function buildAppointmentPreviewParts(input: UpdateAppointmentInput): {
 
   if (input.title !== undefined) changes.push(makeChange('title', input.title));
   if (input.description !== undefined) changes.push(makeChange('description', input.description));
-
   if (input.startTime !== undefined) {
-    changes.push(makeChange('startTime', input.startTime.toISOString()));
-    if (input.startTime < new Date()) {
-      warnings.push('Warning: New start time is in the past');
-    }
-    const hour = input.startTime.getHours();
-    if (hour < 8 || hour > 19) {
-      warnings.push('New time is outside typical business hours (8am-7pm)');
-    }
-    const day = input.startTime.getDay();
-    if (day === 0 || day === 6) {
-      warnings.push('New appointment time is on a weekend');
-    }
-    warnings.push('Rescheduling will notify all attendees of the time change');
+    applyAppointmentStartTimeChange(input.startTime, changes, warnings);
   }
-
   if (input.endTime !== undefined) changes.push(makeChange('endTime', input.endTime.toISOString()));
 
   if (input.location !== undefined) {
@@ -196,6 +199,28 @@ export interface UpdatedAppointmentResult {
 }
 
 /**
+ * Validate authorization guards for update tools.
+ * Returns an error message if a guard fails, or null if all pass.
+ */
+function validateUpdateGuards(
+  entityType: 'CASE' | 'APPOINTMENT',
+  context: AgentAuthContext,
+  extraCheck?: string | null
+): string | null {
+  if (!context.allowedEntityTypes.includes(entityType)) {
+    return `Not authorized to update ${entityType.toLowerCase()}s`;
+  }
+  if (!context.allowedActionTypes.includes('UPDATE')) {
+    return 'Not authorized to perform update actions';
+  }
+  if (extraCheck) return extraCheck;
+  if (context.actionCount >= context.maxActionsPerSession) {
+    return 'Maximum actions per session exceeded';
+  }
+  return null;
+}
+
+/**
  * Update Case Tool
  *
  * Updates an existing legal case in the system.
@@ -217,30 +242,11 @@ export const updateCaseTool: AgentToolDefinition<UpdateCaseInput, UpdatedCaseRes
     const startTime = performance.now();
 
     try {
-      // Validate authorization
-      if (!context.allowedEntityTypes.includes('CASE')) {
+      const guardError = validateUpdateGuards('CASE', context);
+      if (guardError) {
         return {
           success: false,
-          error: 'Not authorized to update cases',
-          requiresApproval: true,
-          executionTimeMs: performance.now() - startTime,
-        };
-      }
-
-      if (!context.allowedActionTypes.includes('UPDATE')) {
-        return {
-          success: false,
-          error: 'Not authorized to perform update actions',
-          requiresApproval: true,
-          executionTimeMs: performance.now() - startTime,
-        };
-      }
-
-      // Check action limit
-      if (context.actionCount >= context.maxActionsPerSession) {
-        return {
-          success: false,
-          error: 'Maximum actions per session exceeded',
+          error: guardError,
           requiresApproval: true,
           executionTimeMs: performance.now() - startTime,
         };
@@ -411,40 +417,15 @@ export const updateAppointmentTool: AgentToolDefinition<
     const startTime = performance.now();
 
     try {
-      // Validate authorization
-      if (!context.allowedEntityTypes.includes('APPOINTMENT')) {
+      const timeRangeError =
+        input.startTime && input.endTime && input.startTime >= input.endTime
+          ? 'Start time must be before end time'
+          : null;
+      const guardError = validateUpdateGuards('APPOINTMENT', context, timeRangeError);
+      if (guardError) {
         return {
           success: false,
-          error: 'Not authorized to update appointments',
-          requiresApproval: true,
-          executionTimeMs: performance.now() - startTime,
-        };
-      }
-
-      if (!context.allowedActionTypes.includes('UPDATE')) {
-        return {
-          success: false,
-          error: 'Not authorized to perform update actions',
-          requiresApproval: true,
-          executionTimeMs: performance.now() - startTime,
-        };
-      }
-
-      // Validate time range if both times provided
-      if (input.startTime && input.endTime && input.startTime >= input.endTime) {
-        return {
-          success: false,
-          error: 'Start time must be before end time',
-          requiresApproval: true,
-          executionTimeMs: performance.now() - startTime,
-        };
-      }
-
-      // Check action limit
-      if (context.actionCount >= context.maxActionsPerSession) {
-        return {
-          success: false,
-          error: 'Maximum actions per session exceeded',
+          error: guardError,
           requiresApproval: true,
           executionTimeMs: performance.now() - startTime,
         };

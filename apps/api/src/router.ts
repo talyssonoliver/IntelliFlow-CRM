@@ -24,6 +24,7 @@ import { casesRouter } from './modules/legal/cases.router';
 import { documentsRouter } from './modules/legal/documents.router';
 import { uploadRouter } from './modules/documents/upload.router';
 import { agentRouter } from './modules/agent/agent.router';
+import { conversationRouter } from './modules/agent/conversation.router';
 import { auditRouter } from './modules/security/audit.router';
 import { authRouter } from './modules/auth/auth.router';
 import { billingRouter } from './modules/billing/billing.router';
@@ -47,6 +48,7 @@ import { routingRouter } from './modules/routing';
 import { feedbackSurveyRouter } from './modules/feedback/feedbackSurvey.router';
 import { userRouter } from './modules/user/user.router';
 import { calendarRouter } from './modules/calendar/calendar.router';
+import { calendarWebhooksRouter } from './modules/calendar/calendar-webhook.router';
 
 /**
  * Main application router
@@ -69,6 +71,7 @@ import { calendarRouter } from './modules/calendar/calendar.router';
  *
  * AI & Automation:
  * - agent.*        - AI agent tools and approval workflow (IFC-139)
+ * - conversation.* - Conversation records, messages, tool call tracking (IFC-148)
  *
  * Security & Compliance:
  * - audit.*        - Audit logs and security events (IFC-098)
@@ -121,6 +124,7 @@ export const appRouter = createTRPCRouter({
 
   // AI & Automation
   agent: agentRouter,
+  conversation: conversationRouter, // IFC-148: Conversation records, messages, tool calls
   chainVersion: chainVersionRouter,
   zepBudget: zepBudgetRouter,
   intelligence: intelligenceRouter,
@@ -178,6 +182,9 @@ export const appRouter = createTRPCRouter({
 
   // Custom Calendars
   calendar: calendarRouter,
+
+  // Calendar Webhook Management (IFC-224)
+  calendarWebhooks: calendarWebhooksRouter,
 });
 
 /**

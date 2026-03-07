@@ -533,12 +533,14 @@ export const integrationsRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const status = await getConnectorStatus(input.connectorId);
       const success = status.status === 'healthy' || status.status === 'degraded';
-      const message =
-        status.status === 'unhealthy'
-          ? 'Connection failed: ' + (status.errorMessage || 'Unknown error')
-          : status.status === 'unknown'
-            ? 'Connection unavailable: health check is not configured'
-            : 'Connection successful';
+      let message: string;
+      if (status.status === 'unhealthy') {
+        message = 'Connection failed: ' + (status.errorMessage || 'Unknown error');
+      } else if (status.status === 'unknown') {
+        message = 'Connection unavailable: health check is not configured';
+      } else {
+        message = 'Connection successful';
+      }
 
       return {
         connectorId: input.connectorId,

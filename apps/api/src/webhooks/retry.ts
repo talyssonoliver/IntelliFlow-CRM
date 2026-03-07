@@ -162,8 +162,8 @@ export function isRetryableError(
  * In-memory retry queue implementation
  */
 export class InMemoryRetryQueue implements RetryQueue {
-  private entries: Map<string, RetryEntry> = new Map();
-  private deadLetter: Map<string, RetryEntry> = new Map();
+  private readonly entries: Map<string, RetryEntry> = new Map();
+  private readonly deadLetter: Map<string, RetryEntry> = new Map();
 
   async enqueue(entry: RetryEntry): Promise<void> {
     this.entries.set(entry.id, entry);
@@ -173,7 +173,7 @@ export class InMemoryRetryQueue implements RetryQueue {
     const now = new Date();
     const ready: RetryEntry[] = [];
 
-    for (const [id, entry] of this.entries) {
+    for (const entry of this.entries.values()) {
       if (entry.status === 'pending' && entry.nextAttemptAt <= now) {
         entry.status = 'processing';
         ready.push(entry);
@@ -326,8 +326,8 @@ const DEFAULT_CIRCUIT_BREAKER_CONFIG: CircuitBreakerConfig = {
  * Circuit breaker implementation
  */
 export class CircuitBreaker {
-  private state: CircuitBreakerState;
-  private config: CircuitBreakerConfig;
+  private readonly state: CircuitBreakerState;
+  private readonly config: CircuitBreakerConfig;
   private halfOpenRequests = 0;
 
   constructor(config?: Partial<CircuitBreakerConfig>) {

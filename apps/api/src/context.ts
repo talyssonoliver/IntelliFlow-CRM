@@ -105,38 +105,14 @@ export interface Context {
  * Extract Bearer token from Authorization header
  */
 function extractBearerToken(req?: Request): string | null {
-  if (!req) {
-    console.log('[Auth] No request object provided');
-    return null;
-  }
-
-  // Debug: Log all headers to see what we're receiving
-  if (process.env.NODE_ENV !== 'production') {
-    const headersList: string[] = [];
-    req.headers.forEach((value, key) => {
-      // Don't log sensitive header values, just the key
-      if (key.toLowerCase() === 'authorization') {
-        headersList.push(`${key}: Bearer ***`);
-      } else {
-        headersList.push(`${key}: ${value.substring(0, 50)}...`);
-      }
-    });
-    console.log('[Auth] Request headers:', headersList.join(', '));
-  }
+  if (!req) return null;
 
   const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
-  if (!authHeader) {
-    console.log('[Auth] No Authorization header found');
-    return null;
-  }
+  if (!authHeader) return null;
 
   const parts = authHeader.split(' ');
-  if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') {
-    console.log('[Auth] Invalid Authorization header format');
-    return null;
-  }
+  if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') return null;
 
-  console.log('[Auth] Token extracted successfully');
   return parts[1];
 }
 
@@ -222,6 +198,22 @@ async function resolveDbUser(supabaseId: string): Promise<UserSession | null> {
  * Auto-provision a new user (JIT — Just In Time user creation for OAuth).
  * Returns a minimal UserSession on failure.
  */
+function extractUserName(
+  meta: Record<string, unknown>,
+  email: string | undefined
+): string {
+  return (
+    (meta.name as string | undefined) ||
+    (meta.full_name as string | undefined) ||
+    email?.split('@')[0] ||
+    'User'
+  );
+}
+
+function extractAvatarUrl(meta: Record<string, unknown>): string | null {
+  return (meta.avatar_url as string | undefined) || (meta.picture as string | undefined) || null;
+}
+
 async function provisionNewUser(supabaseUser: {
   id: string;
   email?: string;
@@ -238,13 +230,8 @@ async function provisionNewUser(supabaseUser: {
     }
 
     const meta = supabaseUser.user_metadata ?? {};
-    const userName =
-      (meta.name as string | undefined) ||
-      (meta.full_name as string | undefined) ||
-      supabaseUser.email?.split('@')[0] ||
-      'User';
-    const avatarUrl =
-      (meta.avatar_url as string | undefined) || (meta.picture as string | undefined) || null;
+    const userName = extractUserName(meta, supabaseUser.email);
+    const avatarUrl = extractAvatarUrl(meta);
 
     const newUser = await apiPrisma.user.create({
       data: {
@@ -305,6 +292,42 @@ async function resolveUserFromToken(token: string): Promise<UserSession | null> 
 }
 
 /**
+ * Extract a raw bearer token from an Authorization header string.
+ * Returns null if the header is absent or not a valid Bearer scheme.
+ */
+function extractWsBearerToken(authHeader: string | undefined): string | null {
+  if (!authHeader) return null;
+  const parts = authHeader.split(' ');
+  if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') return null;
+  return parts[1] ?? null;
+}
+
+/**
+ * Resolve a UserSession for a WebSocket connection from a raw JWT.
+ * Returns null when the token is invalid or the DB user is absent.
+ */
+async function resolveWsUser(token: string): Promise<UserSession | null> {
+  const { user: supabaseUser, error } = await verifyToken(token);
+  if (error || !supabaseUser) return null;
+
+  const dbUser = await apiPrisma.user.findUnique({
+    where: { id: supabaseUser.id },
+    select: { id: true, email: true, name: true, role: true, tenantId: true, timezone: true },
+  });
+
+  if (!dbUser) return null;
+
+  return {
+    userId: dbUser.id,
+    email: dbUser.email,
+    name: dbUser.name ?? undefined,
+    role: dbUser.role,
+    tenantId: dbUser.tenantId,
+    timezone: dbUser.timezone ?? 'UTC',
+  };
+}
+
+/**
  * Create context for WebSocket connections
  *
  * Simplified context creation that takes auth header directly,
@@ -313,41 +336,13 @@ async function resolveUserFromToken(token: string): Promise<UserSession | null> 
 export const createWSContext = async (authHeader?: string): Promise<BaseContext> => {
   let user: UserSession | null = null;
   const hadBearerToken = Boolean(authHeader?.startsWith('Bearer '));
+  const token = extractWsBearerToken(authHeader);
 
-  if (authHeader) {
-    const parts = authHeader.split(' ');
-    if (parts.length === 2 && parts[0].toLowerCase() === 'bearer') {
-      const token = parts[1];
-      try {
-        const { user: supabaseUser, error } = await verifyToken(token);
-
-        if (!error && supabaseUser) {
-          const dbUser = await apiPrisma.user.findUnique({
-            where: { id: supabaseUser.id },
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              role: true,
-              tenantId: true,
-              timezone: true,
-            },
-          });
-
-          if (dbUser) {
-            user = {
-              userId: dbUser.id,
-              email: dbUser.email,
-              name: dbUser.name ?? undefined,
-              role: dbUser.role,
-              tenantId: dbUser.tenantId,
-              timezone: dbUser.timezone ?? 'UTC',
-            };
-          }
-        }
-      } catch (err) {
-        console.error('[WS Auth] Error verifying token:', err);
-      }
+  if (token) {
+    try {
+      user = await resolveWsUser(token);
+    } catch (err) {
+      console.error('[WS Auth] Error verifying token:', err);
     }
   }
 

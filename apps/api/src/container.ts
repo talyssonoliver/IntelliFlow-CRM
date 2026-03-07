@@ -32,7 +32,10 @@ import {
   SupabaseStorageAdapter,
   NoOpAVScanner,
   MockNotificationServiceAdapter,
+  RealNotificationServiceAdapter,
+  createEmailServiceAdapter,
   IcsGenerationService,
+  CalendarSyncServiceAdapter,
 } from '@intelliflow/adapters';
 import { InMemoryFeatureFlagProvider } from '@intelliflow/platform';
 import { TicketService } from './services/TicketService';
@@ -64,6 +67,7 @@ import {
   getAuditEventHandler,
 } from './security';
 import { loadFeatureFlagsConfig } from './config/feature-flags.config';
+import { CalendarWebhookService } from './modules/calendar/calendar-webhook.service';
 
 /**
  * Get the API Prisma client.
@@ -127,8 +131,22 @@ const createAdapters = (prismaClient: PrismaClient) => {
       : new MockAIService();
   const cache = new InMemoryCache();
 
-  // IFC-158: Notification service + ICS generation
-  const notificationService = new MockNotificationServiceAdapter();
+  // IFC-158/IFC-223: Notification service + ICS generation
+  const emailProvider = process.env.EMAIL_PROVIDER || 'mock';
+  let notificationService: MockNotificationServiceAdapter | RealNotificationServiceAdapter;
+  if (emailProvider === 'sendgrid') {
+    const sendgridApiKey = process.env.SENDGRID_API_KEY;
+    if (!sendgridApiKey) {
+      throw new Error('SENDGRID_API_KEY required when EMAIL_PROVIDER=sendgrid');
+    }
+    const emailAdapter = createEmailServiceAdapter({ sendgridApiKey });
+    notificationService = new RealNotificationServiceAdapter(emailAdapter, {
+      fromAddress: process.env.EMAIL_FROM_ADDRESS || 'noreply@intelliflow.com',
+      fromName: process.env.EMAIL_FROM_NAME,
+    });
+  } else {
+    notificationService = new MockNotificationServiceAdapter();
+  }
   const icsGenerationService = new IcsGenerationService();
 
   // IFC-125: Wrap AI service with guardrails + audit logging
@@ -304,6 +322,10 @@ const createServices = (prismaClient: PrismaClient) => {
     adapters.notificationService
   );
 
+  // IFC-224: Calendar Webhook Service + Sync Adapter (stub)
+  const calendarSyncService = new CalendarSyncServiceAdapter();
+  const calendarWebhookService = new CalendarWebhookService(calendarSyncService);
+
   // IFC-094: Signature Provider + Ingestion Orchestrator
   const signatureProvider = new InternalSignatureProvider();
   const ingestionOrchestrator = new IngestionOrchestrator(
@@ -335,6 +357,9 @@ const createServices = (prismaClient: PrismaClient) => {
     closeDealWonUseCase,
     // IFC-066: Deal Lost Closure
     closeDealLostUseCase,
+    // IFC-224: Calendar webhook processing
+    calendarSyncService,
+    calendarWebhookService,
     // IFC-094: Document services
     signatureProvider,
     ingestionOrchestrator,

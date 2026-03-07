@@ -932,14 +932,18 @@ describe('analyticsRouter', () => {
         totalRevenue: 500000,
         revenueDelta: 25000,
         openOpportunities: 42,
+        openOpportunitiesDelta: 5,
         newContacts: 18,
+        newContactsDelta: 3,
         winRate: 65,
+        winRateDelta: 2.1,
         recentActivity: [
           {
             id: '1',
             action: 'CREATE',
             icon: 'add_circle',
             description: 'New lead',
+            actorName: 'John Doe',
             createdAt: new Date(),
             metadata: {},
           },
@@ -965,8 +969,11 @@ describe('analyticsRouter', () => {
         totalRevenue: 0,
         revenueDelta: 0,
         openOpportunities: 0,
+        openOpportunitiesDelta: 0,
         newContacts: 0,
+        newContactsDelta: 0,
         winRate: 0,
+        winRateDelta: 0,
         recentActivity: [],
       });
 
@@ -1006,8 +1013,11 @@ describe('analyticsRouter', () => {
         totalRevenue: 0,
         revenueDelta: 0,
         openOpportunities: 0,
+        openOpportunitiesDelta: 0,
         newContacts: 0,
+        newContactsDelta: 0,
         winRate: 0,
+        winRateDelta: 0,
         recentActivity: [],
       });
 

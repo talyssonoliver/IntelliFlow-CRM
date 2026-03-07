@@ -85,6 +85,30 @@ export interface OpportunitySearchResult {
   createdAt: Date;
 }
 
+// ── Shared filter helpers ──
+
+function buildNumericRangeFilter(
+  min: number | undefined,
+  max: number | undefined
+): Record<string, number> | undefined {
+  if (min === undefined && max === undefined) return undefined;
+  const f: Record<string, number> = {};
+  if (min !== undefined) f.gte = min;
+  if (max !== undefined) f.lte = max;
+  return f;
+}
+
+function buildDateBoundFilter(
+  from: Date | undefined,
+  to: Date | undefined
+): Record<string, Date> | undefined {
+  if (!from && !to) return undefined;
+  const f: Record<string, Date> = {};
+  if (from) f.gte = from;
+  if (to) f.lte = to;
+  return f;
+}
+
 // ── Where-clause builders (extracted to reduce cognitive complexity) ──
 
 function buildLeadWhere(input: LeadSearchInput, tenantId?: string): Record<string, unknown> {
@@ -95,12 +119,8 @@ function buildLeadWhere(input: LeadSearchInput, tenantId?: string): Record<strin
   if (input.source && input.source.length > 0) where.source = { in: input.source };
   if (input.ownerId) where.ownerId = input.ownerId;
 
-  if (input.minScore !== undefined || input.maxScore !== undefined) {
-    const scoreFilter: Record<string, number> = {};
-    if (input.minScore !== undefined) scoreFilter.gte = input.minScore;
-    if (input.maxScore !== undefined) scoreFilter.lte = input.maxScore;
-    where.score = scoreFilter;
-  }
+  const scoreFilter = buildNumericRangeFilter(input.minScore, input.maxScore);
+  if (scoreFilter) where.score = scoreFilter;
 
   if (input.query) {
     where.OR = [
@@ -146,19 +166,11 @@ function buildOpportunityWhere(
   if (input.ownerId) where.ownerId = input.ownerId;
   if (input.accountId) where.accountId = input.accountId;
 
-  if (input.minValue !== undefined || input.maxValue !== undefined) {
-    const valueFilter: Record<string, number> = {};
-    if (input.minValue !== undefined) valueFilter.gte = input.minValue;
-    if (input.maxValue !== undefined) valueFilter.lte = input.maxValue;
-    where.value = valueFilter;
-  }
+  const valueFilter = buildNumericRangeFilter(input.minValue, input.maxValue);
+  if (valueFilter) where.value = valueFilter;
 
-  if (input.closeDateFrom || input.closeDateTo) {
-    const closeFilter: Record<string, Date> = {};
-    if (input.closeDateFrom) closeFilter.gte = input.closeDateFrom;
-    if (input.closeDateTo) closeFilter.lte = input.closeDateTo;
-    where.expectedCloseDate = closeFilter;
-  }
+  const closeFilter = buildDateBoundFilter(input.closeDateFrom, input.closeDateTo);
+  if (closeFilter) where.expectedCloseDate = closeFilter;
 
   if (input.query) {
     where.OR = [
@@ -605,6 +617,26 @@ export const searchOpportunitiesTool: AgentToolDefinition<
   },
 };
 
+type CombinedSearchResults = {
+  leads?: LeadSearchResult[];
+  contacts?: ContactSearchResult[];
+  opportunities?: OpportunitySearchResult[];
+};
+
+/** Execute a single entity-type search if the type is requested and allowed. */
+async function searchEntityIfAllowed<T>(
+  requestedTypes: string[],
+  allowedTypes: string[],
+  entityType: string,
+  searchFn: () => Promise<AgentToolResult<T>>
+): Promise<T | undefined> {
+  if (!requestedTypes.includes(entityType) || !allowedTypes.includes(entityType)) {
+    return undefined;
+  }
+  const result = await searchFn();
+  return result.success && result.data ? result.data : undefined;
+}
+
 /**
  * Combined Search Tool
  *
@@ -613,11 +645,7 @@ export const searchOpportunitiesTool: AgentToolDefinition<
  */
 export const combinedSearchTool: AgentToolDefinition<
   CombinedSearchInput,
-  {
-    leads?: LeadSearchResult[];
-    contacts?: ContactSearchResult[];
-    opportunities?: OpportunitySearchResult[];
-  }
+  CombinedSearchResults
 > = {
   name: 'search_crm',
   description:
@@ -630,55 +658,30 @@ export const combinedSearchTool: AgentToolDefinition<
   async execute(
     input: CombinedSearchInput,
     context: AgentAuthContext
-  ): Promise<
-    AgentToolResult<{
-      leads?: LeadSearchResult[];
-      contacts?: ContactSearchResult[];
-      opportunities?: OpportunitySearchResult[];
-    }>
-  > {
+  ): Promise<AgentToolResult<CombinedSearchResults>> {
     const startTime = performance.now();
+    const searchArgs = { query: input.query, limit: input.limit, offset: 0 };
 
     try {
-      const results: {
-        leads?: LeadSearchResult[];
-        contacts?: ContactSearchResult[];
-        opportunities?: OpportunitySearchResult[];
-      } = {};
+      const [leads, contacts, opportunities] = await Promise.all([
+        searchEntityIfAllowed(
+          input.entityTypes, context.allowedEntityTypes, 'LEAD',
+          () => searchLeadsTool.execute(searchArgs, context)
+        ),
+        searchEntityIfAllowed(
+          input.entityTypes, context.allowedEntityTypes, 'CONTACT',
+          () => searchContactsTool.execute(searchArgs, context)
+        ),
+        searchEntityIfAllowed(
+          input.entityTypes, context.allowedEntityTypes, 'OPPORTUNITY',
+          () => searchOpportunitiesTool.execute(searchArgs, context)
+        ),
+      ]);
 
-      // Search each requested entity type
-      if (input.entityTypes.includes('LEAD') && context.allowedEntityTypes.includes('LEAD')) {
-        const leadResult = await searchLeadsTool.execute(
-          { query: input.query, limit: input.limit, offset: 0 },
-          context
-        );
-        if (leadResult.success && leadResult.data) {
-          results.leads = leadResult.data;
-        }
-      }
-
-      if (input.entityTypes.includes('CONTACT') && context.allowedEntityTypes.includes('CONTACT')) {
-        const contactResult = await searchContactsTool.execute(
-          { query: input.query, limit: input.limit, offset: 0 },
-          context
-        );
-        if (contactResult.success && contactResult.data) {
-          results.contacts = contactResult.data;
-        }
-      }
-
-      if (
-        input.entityTypes.includes('OPPORTUNITY') &&
-        context.allowedEntityTypes.includes('OPPORTUNITY')
-      ) {
-        const oppResult = await searchOpportunitiesTool.execute(
-          { query: input.query, limit: input.limit, offset: 0 },
-          context
-        );
-        if (oppResult.success && oppResult.data) {
-          results.opportunities = oppResult.data;
-        }
-      }
+      const results: CombinedSearchResults = {};
+      if (leads) results.leads = leads;
+      if (contacts) results.contacts = contacts;
+      if (opportunities) results.opportunities = opportunities;
 
       // Log the combined search
       await agentLogger.log({

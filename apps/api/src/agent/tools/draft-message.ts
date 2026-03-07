@@ -136,6 +136,30 @@ function collectMessageWarnings(input: DraftMessageInput, warnings: string[]): v
 }
 
 /**
+ * Validate all guard conditions for draft message execution.
+ * Returns an error string if any guard fails, or null if all pass.
+ */
+function validateDraftMessageGuards(
+  input: DraftMessageInput,
+  context: AgentAuthContext
+): string | null {
+  if (!context.allowedActionTypes.includes('DRAFT')) {
+    return 'Not authorized to draft messages';
+  }
+  const recipientEntityType = input.recipientType as 'LEAD' | 'CONTACT' | 'ACCOUNT';
+  if (!context.allowedEntityTypes.includes(recipientEntityType)) {
+    return `Not authorized to send messages to ${input.recipientType}`;
+  }
+  if (input.type === 'EMAIL' && !input.subject) {
+    return 'Email messages require a subject';
+  }
+  if (context.actionCount >= context.maxActionsPerSession) {
+    return 'Maximum actions per session exceeded';
+  }
+  return null;
+}
+
+/**
  * Draft Message Tool
  *
  * Creates a draft message for a lead, contact, or account.
@@ -158,42 +182,11 @@ export const draftMessageTool: AgentToolDefinition<DraftMessageInput, DraftedMes
     const startTime = performance.now();
 
     try {
-      // Validate authorization for message drafting
-      if (!context.allowedActionTypes.includes('DRAFT')) {
+      const guardError = validateDraftMessageGuards(input, context);
+      if (guardError) {
         return {
           success: false,
-          error: 'Not authorized to draft messages',
-          requiresApproval: true,
-          executionTimeMs: performance.now() - startTime,
-        };
-      }
-
-      // Validate authorization for the recipient entity type
-      const recipientEntityType = input.recipientType as 'LEAD' | 'CONTACT' | 'ACCOUNT';
-      if (!context.allowedEntityTypes.includes(recipientEntityType)) {
-        return {
-          success: false,
-          error: `Not authorized to send messages to ${input.recipientType}`,
-          requiresApproval: true,
-          executionTimeMs: performance.now() - startTime,
-        };
-      }
-
-      // Validate email requires subject
-      if (input.type === 'EMAIL' && !input.subject) {
-        return {
-          success: false,
-          error: 'Email messages require a subject',
-          requiresApproval: true,
-          executionTimeMs: performance.now() - startTime,
-        };
-      }
-
-      // Check action limit
-      if (context.actionCount >= context.maxActionsPerSession) {
-        return {
-          success: false,
-          error: 'Maximum actions per session exceeded',
+          error: guardError,
           requiresApproval: true,
           executionTimeMs: performance.now() - startTime,
         };

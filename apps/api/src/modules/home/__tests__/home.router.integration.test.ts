@@ -13,16 +13,16 @@ import {
   SEED_IDS,
   verifySeedData,
   isInfrastructureAvailable,
-  infrastructureUnavailableReason,
+  getInfrastructureUnavailableReason,
 } from '../../../test/integration-setup';
 import { homeRouter } from '../home.router';
 
 // Run integration tests only when infrastructure is available
-const describeIntegration = isInfrastructureAvailable ? describe : describe.skip;
+const describeIntegration = isInfrastructureAvailable() ? describe : describe.skip;
 
 // Log skip reason if not available
-if (!isInfrastructureAvailable && infrastructureUnavailableReason) {
-  console.log(`⏭️  Skipping Home Router Integration Tests: ${infrastructureUnavailableReason}`);
+if (!isInfrastructureAvailable() && getInfrastructureUnavailableReason()) {
+  console.log(`⏭️  Skipping Home Router Integration Tests: ${getInfrastructureUnavailableReason()}`);
 }
 
 describeIntegration('Home Router - Integration Tests', () => {

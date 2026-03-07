@@ -36,50 +36,32 @@ const TEST_MOCK_KEY =
  * Validate and get Supabase configuration
  * Fails fast in production if not properly configured
  */
-function getSupabaseConfig(): {
-  url: string;
-  anonKey: string;
-  serviceRoleKey: string;
-  usingMockKeys: boolean;
-} {
-  const envUrl = process.env.SUPABASE_URL;
-  const envAnonKey = process.env.SUPABASE_ANON_KEY;
-  const envServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+type SupabaseConfig = { url: string; anonKey: string; serviceRoleKey: string; usingMockKeys: boolean };
 
-  // Production: MUST have all environment variables
-  if (IS_PRODUCTION) {
-    const missing: string[] = [];
-    if (!envUrl) missing.push('SUPABASE_URL');
-    if (!envAnonKey) missing.push('SUPABASE_ANON_KEY');
-    if (!envServiceRoleKey) missing.push('SUPABASE_SERVICE_ROLE_KEY');
+function getProductionSupabaseConfig(
+  envUrl: string | undefined,
+  envAnonKey: string | undefined,
+  envServiceRoleKey: string | undefined
+): SupabaseConfig {
+  const missing: string[] = [];
+  if (!envUrl) missing.push('SUPABASE_URL');
+  if (!envAnonKey) missing.push('SUPABASE_ANON_KEY');
+  if (!envServiceRoleKey) missing.push('SUPABASE_SERVICE_ROLE_KEY');
 
-    if (missing.length > 0 || !envUrl || !envAnonKey || !envServiceRoleKey) {
-      throw new Error(
-        `[CRITICAL] Supabase configuration error in production: Missing required environment variables: ${missing.join(', ')}. ` +
-          'Authentication will not work. Set these variables before deploying.'
-      );
-    }
-
-    // TypeScript now knows these are defined after the throw
-    return {
-      url: envUrl,
-      anonKey: envAnonKey,
-      serviceRoleKey: envServiceRoleKey,
-      usingMockKeys: false,
-    };
+  if (missing.length > 0 || !envUrl || !envAnonKey || !envServiceRoleKey) {
+    throw new Error(
+      `[CRITICAL] Supabase configuration error in production: Missing required environment variables: ${missing.join(', ')}. ` +
+        'Authentication will not work. Set these variables before deploying.'
+    );
   }
+  return { url: envUrl, anonKey: envAnonKey, serviceRoleKey: envServiceRoleKey, usingMockKeys: false };
+}
 
-  // Test environment: Allow mock keys silently
-  if (IS_TEST) {
-    return {
-      url: envUrl || 'http://127.0.0.1:54321',
-      anonKey: envAnonKey || TEST_MOCK_KEY,
-      serviceRoleKey: envServiceRoleKey || TEST_MOCK_KEY,
-      usingMockKeys: !envAnonKey || !envServiceRoleKey,
-    };
-  }
-
-  // Development: Allow fallback but warn clearly
+function getDevelopmentSupabaseConfig(
+  envUrl: string | undefined,
+  envAnonKey: string | undefined,
+  envServiceRoleKey: string | undefined
+): SupabaseConfig {
   const usingDefaultUrl = !envUrl;
   const usingMockAnonKey = !envAnonKey;
   const usingMockServiceKey = !envServiceRoleKey;
@@ -105,6 +87,26 @@ function getSupabaseConfig(): {
     serviceRoleKey: envServiceRoleKey || TEST_MOCK_KEY,
     usingMockKeys: usingMockAnonKey || usingMockServiceKey,
   };
+}
+
+function getSupabaseConfig(): SupabaseConfig {
+  const envUrl = process.env.SUPABASE_URL;
+  const envAnonKey = process.env.SUPABASE_ANON_KEY;
+  const envServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (IS_PRODUCTION) return getProductionSupabaseConfig(envUrl, envAnonKey, envServiceRoleKey);
+
+  // Test environment: Allow mock keys silently
+  if (IS_TEST) {
+    return {
+      url: envUrl || 'http://127.0.0.1:54321',
+      anonKey: envAnonKey || TEST_MOCK_KEY,
+      serviceRoleKey: envServiceRoleKey || TEST_MOCK_KEY,
+      usingMockKeys: !envAnonKey || !envServiceRoleKey,
+    };
+  }
+
+  return getDevelopmentSupabaseConfig(envUrl, envAnonKey, envServiceRoleKey);
 }
 
 // Get validated configuration
@@ -355,71 +357,30 @@ export async function getUser(): Promise<{ user: User | null; error: Error | nul
 export async function verifyToken(
   token: string
 ): Promise<{ user: User | null; error: Error | null }> {
-  console.log('[verifyToken] Attempting to verify token...');
-  console.log('[verifyToken] Using SUPABASE_URL:', SUPABASE_URL);
-  console.log('[verifyToken] Service key configured:', !!SUPABASE_SERVICE_ROLE_KEY);
-  console.log('[verifyToken] Using mock keys:', config.usingMockKeys);
-
-  if (config.usingMockKeys) {
-    console.error('[verifyToken] WARNING: Using mock keys - token verification will fail!');
-    return { user: null, error: new Error('Mock keys cannot verify real tokens') };
+  // Diagnostic: detect env var mismatch between module-load and call-time
+  const runtimeUrl = process.env.SUPABASE_URL;
+  if (runtimeUrl && runtimeUrl !== SUPABASE_URL) {
+    console.error(
+      '[verifyToken] SUPABASE_URL mismatch! Module loaded with:',
+      SUPABASE_URL,
+      '| Runtime:',
+      runtimeUrl
+    );
   }
 
-  // Decode and validate token structure
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) {
-      console.error('[verifyToken] Invalid token structure - expected 3 parts, got:', parts.length);
-      return { user: null, error: new Error('Invalid token structure') };
-    }
-
-    const payloadBase64 = parts[1];
-    const payload = JSON.parse(Buffer.from(payloadBase64, 'base64').toString());
-
-    console.log('[verifyToken] Token payload:', {
-      iss: payload.iss,
-      sub: payload.sub,
-      email: payload.email,
-      aud: payload.aud,
-      role: payload.role,
-      exp: payload.exp,
-      iat: payload.iat,
-      expDate: payload.exp ? new Date(payload.exp * 1000).toISOString() : 'N/A',
-      isExpired: payload.exp ? Date.now() > payload.exp * 1000 : 'N/A',
-    });
-
-    // Check if token is expired
-    if (payload.exp && Date.now() > payload.exp * 1000) {
-      console.error('[verifyToken] Token has expired');
-      return { user: null, error: new Error('Token has expired') };
-    }
-
-    // Verify issuer matches our Supabase URL
-    const expectedIssuer = `${SUPABASE_URL}/auth/v1`;
-    if (payload.iss && payload.iss !== expectedIssuer) {
-      console.error('[verifyToken] Issuer mismatch!');
-      console.error('[verifyToken] Token issuer:', payload.iss);
-      console.error('[verifyToken] Expected issuer:', expectedIssuer);
-    }
-  } catch (decodeErr) {
-    console.error('[verifyToken] Failed to decode token:', decodeErr);
-    // Don't return error here - let Supabase try to verify anyway
+  if (config.usingMockKeys) {
+    console.error('[verifyToken] Using mock keys — env vars missing at module load time.',
+      'SUPABASE_URL loaded as:', SUPABASE_URL,
+      '| Runtime SUPABASE_URL:', runtimeUrl ?? '(unset)');
+    return { user: null, error: new Error('Mock keys cannot verify real tokens') };
   }
 
   try {
     const { data, error } = await supabaseAdmin.auth.getUser(token);
 
-    console.log('[verifyToken] Supabase response:', {
-      hasData: !!data,
-      hasUser: !!data?.user,
-      userId: data?.user?.id,
-      userEmail: data?.user?.email,
-      errorMessage: error?.message,
-      errorName: error?.name,
-      errorCode: (error as Error & { code?: string })?.code,
-      errorStatus: (error as Error & { status?: number })?.status,
-      fullError: error ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : null,
-    });
+    if (error) {
+      console.error('[verifyToken] Supabase rejected token:', error.message);
+    }
 
     return { user: data.user, error };
   } catch (unexpectedError) {

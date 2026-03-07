@@ -387,11 +387,11 @@ export class TicketService {
     }
 
     // Find and link related tickets (non-blocking, best-effort)
-    void this.findAndLinkRelatedTickets({
+    this.findAndLinkRelatedTickets({
       id: ticket.id,
       subject: data.subject,
       tenantId: data.tenantId,
-    });
+    }).catch(() => {});
 
     return {
       ...ticket,
@@ -730,7 +730,7 @@ export class TicketService {
 
       if (matches.length === 0) return;
 
-      const topMatches = matches.sort((a, b) => b.similarity - a.similarity).slice(0, 5);
+      const topMatches = [...matches].sort((a, b) => b.similarity - a.similarity).slice(0, 5);
 
       await this.prisma.relatedTicket.createMany({
         data: topMatches.map((m) => ({

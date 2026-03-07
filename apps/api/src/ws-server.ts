@@ -8,7 +8,7 @@
  * @task IFC-016/IFC-150 Integration
  */
 
-import type { IncomingMessage } from 'http';
+import type { IncomingMessage } from 'node:http';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { appRouter } from './router';
@@ -89,7 +89,7 @@ export function createWebSocketServer(port: number = WS_PORT): WebSocketServer {
 
 // Run as standalone server if executed directly
 if (require.main === module) {
-  const wss = createWebSocketServer();
+  createWebSocketServer();
 
   console.log(`
   =========================================

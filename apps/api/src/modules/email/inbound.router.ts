@@ -25,8 +25,7 @@ const createOutboundEmailService = (adapters as any).createOutboundEmailService 
 }) => {
   sendEmail(email: any): Promise<{ status: string; error?: string; messageId: string }>;
 };
-type ParsedEmail = any;
-type ParsedAttachment = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- inbound email parsing returns untyped payloads
 
 // Singleton outbound email service — picks up SendGrid key if configured, falls back to mock
 const outboundEmailService = createOutboundEmailService({
@@ -917,7 +916,7 @@ async function resolveTenantForInboundEmail(toAddresses: string[], prisma: any):
  * callers can propagate tenantId to related records (e.g. attachments).
  */
 async function storeEmail(
-  parsed: ParsedEmail,
+  parsed: any,
   ctx: unknown
 ): Promise<{ emailId: string; tenantId: string }> {
   const prisma = (ctx as any).prisma;
@@ -970,7 +969,7 @@ async function storeEmail(
 async function processAttachments(
   emailId: string,
   tenantId: string,
-  attachments: ParsedAttachment[],
+  attachments: any[],
   ctx: unknown
 ): Promise<void> {
   const prisma = (ctx as any).prisma;

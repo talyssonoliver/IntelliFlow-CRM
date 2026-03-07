@@ -160,7 +160,18 @@ function mapDbPriority(dbPriority: string): 'low' | 'medium' | 'high' {
 /**
  * Constructs an action URL from entity type and ID
  */
-function buildActionUrl(entityType: string | null, entityId: string | null): string | null {
+function buildActionUrl(
+  entityType: string | null,
+  entityId: string | null,
+  title?: string
+): string | null {
+  // Aggregate insights (e.g. overdue tasks) have no entity or entityType 'task' with no entityId
+  if (entityType === 'task' && !entityId) return '/tasks?filter=overdue';
+  if (!entityType && !entityId) {
+    // Fallback: infer from title for known aggregate patterns
+    if (title && /overdue\s+task/i.test(title)) return '/tasks?filter=overdue';
+    return null;
+  }
   if (!entityType || !entityId) return null;
   const routeMap: Record<string, string> = {
     opportunity: 'deals',
@@ -170,7 +181,9 @@ function buildActionUrl(entityType: string | null, entityId: string | null): str
     account: 'accounts',
   };
   const route = routeMap[entityType];
-  return route ? `/${route}/${entityId}` : null;
+  if (!route) return null;
+  const tabSuffix = ['leads', 'contacts'].includes(route) ? '?tab=ai-insights' : '';
+  return `/${route}/${entityId}${tabSuffix}`;
 }
 
 /**
@@ -196,7 +209,7 @@ function mapAIInsightToResponse(row: {
     suggestedAction: actions.length > 0 ? String(actions[0]) : null,
     entityType: row.entityType,
     entityId: row.entityId,
-    actionUrl: buildActionUrl(row.entityType, row.entityId),
+    actionUrl: buildActionUrl(row.entityType, row.entityId, row.title),
     priority: mapDbPriority(row.priority),
     createdAt: row.createdAt,
   };
@@ -394,7 +407,7 @@ function buildHeuristicInsights(
       suggestedAction: 'Send personalized follow-up',
       entityType: 'lead',
       entityId: lead.id,
-      actionUrl: `/leads/${lead.id}`,
+      actionUrl: `/leads/${lead.id}?tab=ai-insights`,
       priority: 'high',
       createdAt: now,
     });
@@ -430,7 +443,7 @@ function buildHeuristicInsights(
       suggestedAction: 'Schedule a follow-up',
       entityType: 'contact',
       entityId: contact.id,
-      actionUrl: `/contacts/${contact.id}`,
+      actionUrl: `/contacts/${contact.id}?tab=ai-insights`,
       priority: 'medium',
       createdAt: now,
     });
@@ -581,7 +594,6 @@ export const homeRouter = createTRPCRouter({
 
     if (newLeadsSinceYesterday > 0) {
       newLeadsCount = newLeadsSinceYesterday;
-      newLeadsPeriod = 'yesterday';
     } else if (newLeadsThisWeek > 0) {
       newLeadsCount = newLeadsThisWeek;
       newLeadsPeriod = 'this_week';
@@ -603,10 +615,8 @@ export const homeRouter = createTRPCRouter({
       dealClosingRateTrend = Math.round(
         ((dealsClosedThisWeek - dealsClosedLastWeek) / dealsClosedLastWeek) * 100
       );
-      dealsTrendPeriod = 'this_week';
     } else if (dealsClosedThisWeek > 0) {
       dealClosingRateTrend = 100; // Infinite improvement from 0
-      dealsTrendPeriod = 'this_week';
     } else if (dealsClosedLastMonth > 0) {
       // Fall back to monthly comparison
       dealClosingRateTrend = Math.round(
@@ -718,7 +728,7 @@ export const homeRouter = createTRPCRouter({
     }
 
     // Step 3: Fire-and-forget — enqueue AI insight generation for next visit
-    void enqueueInsightGeneration(tenantId, userId, {
+    enqueueInsightGeneration(tenantId, userId, {
       dealsAtRisk: dealsAtRisk.map((d) => ({
         id: d.id,
         name: d.name,
@@ -742,7 +752,7 @@ export const homeRouter = createTRPCRouter({
             )
           : null,
       })),
-    });
+    }).catch(() => {});
 
     const duration = performance.now() - startTime;
     if (duration > 200) {
@@ -842,10 +852,8 @@ export const homeRouter = createTRPCRouter({
         });
         break;
       }
-      case 'custom': {
-        currentValue = 0;
+      case 'custom':
         break;
-      }
     }
 
     const progress = Math.min(100, Math.round((currentValue / targetValue) * 100));
@@ -1190,7 +1198,7 @@ export const homeRouter = createTRPCRouter({
       const nextCursor = hasMore ? Buffer.from(String(offset + limit)).toString('base64') : null;
 
       // Fire-and-forget: enqueue AI insight generation
-      void enqueueInsightGeneration(tenantId, userId, {
+      enqueueInsightGeneration(tenantId, userId, {
         dealsAtRisk: dealsAtRisk.map((d) => ({
           id: d.id,
           name: d.name,
@@ -1214,7 +1222,7 @@ export const homeRouter = createTRPCRouter({
               )
             : null,
         })),
-      });
+      }).catch(() => {});
 
       const duration = performance.now() - startTime;
       if (duration > 500) {

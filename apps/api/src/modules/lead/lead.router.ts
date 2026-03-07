@@ -40,6 +40,231 @@ import { detectScoreBias, type LeadScoringBiasCheck } from '@intelliflow/adapter
 import { createNotification } from '../notifications/notifications.router';
 import { deriveLeadInsights } from '../../shared/lead-insight-deriver';
 
+function buildNumberRange(
+  min: number | undefined,
+  max: number | undefined
+): Record<string, number> | undefined {
+  if (min === undefined && max === undefined) return undefined;
+  const r: Record<string, number> = {};
+  if (min !== undefined) r.gte = min;
+  if (max !== undefined) r.lte = max;
+  return r;
+}
+
+function buildDateRange(
+  from: Date | undefined,
+  to: Date | undefined
+): Record<string, Date> | undefined {
+  if (!from && !to) return undefined;
+  const r: Record<string, Date> = {};
+  if (from) r.gte = from;
+  if (to) r.lte = to;
+  return r;
+}
+
+/**
+ * Build the base WHERE clause for the leads list query.
+ * Extracted to reduce cognitive complexity of the list procedure.
+ */
+function buildLeadListWhere(filters: {
+  status?: string[];
+  source?: string[];
+  minScore?: number;
+  maxScore?: number;
+  search?: string;
+  ownerId?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
+}): Record<string, unknown> {
+  const { status, source, minScore, maxScore, search, ownerId, dateFrom, dateTo } = filters;
+  const baseWhere: Record<string, unknown> = {};
+
+  if (status && status.length > 0) baseWhere.status = { in: status };
+  if (source && source.length > 0) baseWhere.source = { in: source };
+
+  const scoreRange = buildNumberRange(minScore, maxScore);
+  if (scoreRange) baseWhere.score = scoreRange;
+
+  if (search) {
+    baseWhere.OR = [
+      { email: { contains: search, mode: 'insensitive' } },
+      { firstName: { contains: search, mode: 'insensitive' } },
+      { lastName: { contains: search, mode: 'insensitive' } },
+      { company: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+
+  if (ownerId) baseWhere.ownerId = ownerId;
+
+  const dateRange = buildDateRange(dateFrom, dateTo);
+  if (dateRange) baseWhere.createdAt = dateRange;
+
+  return baseWhere;
+}
+
+/**
+ * Mark IDs missing from existing set as failed.
+ */
+function collectMissingLeads(
+  ids: string[],
+  existingIds: Set<string>,
+  failed: Array<{ id: string; error: string }>
+): void {
+  for (const id of ids) {
+    if (!existingIds.has(id)) {
+      failed.push({ id, error: 'Lead not found' });
+    }
+  }
+}
+
+/**
+ * Mark already-converted leads as failed.
+ */
+function collectAlreadyConvertedLeads(
+  alreadyConverted: Array<{ id: string }>,
+  failed: Array<{ id: string; error: string }>
+): void {
+  for (const lead of alreadyConverted) {
+    failed.push({ id: lead.id, error: 'Lead already converted' });
+  }
+}
+
+/**
+ * Build activity log rows for bulk lead conversion.
+ */
+function buildConversionActivityData(
+  validLeads: Array<{ id: string; status: string; tenantId: string }>,
+  userId: string,
+  userEmail: string
+): Array<Record<string, unknown>> {
+  const now = new Date();
+  return validLeads.map((lead) => ({
+    type: 'STATUS_CHANGE' as const,
+    title: 'Lead Converted',
+    description: 'Status changed from non-CONVERTED to CONVERTED',
+    timestamp: now,
+    userId,
+    userName: userEmail,
+    leadId: lead.id,
+    tenantId: lead.tenantId,
+    metadata: { oldStatus: lead.status, newStatus: 'CONVERTED', bulk: true },
+  }));
+}
+
+/**
+ * Build contact creation data from valid leads.
+ */
+function buildContactDataFromLeads(
+  validLeads: Array<{
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+    phone: string | null;
+    company: string | null;
+    title: string | null;
+    tenantId: string;
+    ownerId: string | null;
+  }>,
+  fallbackUserId: string
+): Array<Record<string, unknown>> {
+  return validLeads.map((lead) => ({
+    firstName: lead.firstName || 'Unknown',
+    lastName: lead.lastName || 'Unknown',
+    email: lead.email,
+    phone: lead.phone,
+    company: lead.company,
+    title: lead.title,
+    tenantId: lead.tenantId,
+    ownerId: lead.ownerId || fallbackUserId,
+    createdBy: fallbackUserId,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }));
+}
+
+/**
+ * Build account creation data from leads that have a company name.
+ */
+function buildAccountDataFromLeads(
+  leads: Array<{ company: string | null; tenantId: string; ownerId: string | null }>,
+  fallbackUserId: string
+): Array<Record<string, unknown>> {
+  return leads
+    .filter((l) => l.company)
+    .map((lead) => ({
+      name: lead.company!,
+      tenantId: lead.tenantId,
+      ownerId: lead.ownerId || fallbackUserId,
+      createdBy: fallbackUserId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }));
+}
+
+/**
+ * Persist bulk status activity rows, logging failures without blocking.
+ */
+async function persistBulkStatusActivityRows(
+  prisma: { leadActivity: { createMany: (args: { data: any }) => Promise<unknown> } },
+  activityRows: Array<Record<string, unknown>>,
+  context: string
+): Promise<void> {
+  if (activityRows.length === 0) return;
+  try {
+    await prisma.leadActivity.createMany({ data: activityRows as any });
+  } catch (error) {
+    console.warn(`[lead.${context}] Failed to persist activity rows`, {
+      count: activityRows.length,
+      error,
+    });
+  }
+}
+
+/**
+ * Build activity rows for bulk status change operations.
+ */
+function buildBulkStatusActivityRows(
+  leads: Array<{ id: string; status: string }>,
+  idsToUpdate: string[],
+  newStatus: string,
+  tenantId: string,
+  userId: string,
+  userEmail: string,
+  title: string
+): Array<Record<string, unknown>> {
+  const now = new Date();
+  return leads
+    .filter((lead) => idsToUpdate.includes(lead.id) && lead.status !== newStatus)
+    .map((lead) => ({
+      type: 'STATUS_CHANGE' as const,
+      title,
+      description: `Status changed from ${lead.status} to ${newStatus}`,
+      timestamp: now,
+      userId,
+      userName: userEmail,
+      leadId: lead.id,
+      tenantId,
+      metadata: { oldStatus: lead.status, newStatus, bulk: true },
+    }));
+}
+
+/**
+ * Collect failures for IDs that were not yet processed.
+ */
+function collectBulkFailures(
+  ids: string[],
+  failed: Array<{ id: string; error: string }>,
+  successful: string[],
+  error: unknown
+): void {
+  const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+  for (const id of ids) {
+    if (!failed.find((f) => f.id === id) && !successful.includes(id)) {
+      failed.push({ id, error: errorMessage });
+    }
+  }
+}
+
 /**
  * Helper to get lead service with null check
  */
@@ -243,6 +468,47 @@ export const leadRouter = createTRPCRouter({
       });
     }
 
+    // Derive AI insights when none exist in DB (ensures entity pages always show data)
+    if (!lead.aiInsight) {
+      const derived = deriveLeadInsights({
+        score: lead.score ?? 0,
+        confidence: 0.5,
+        source: lead.source ?? 'OTHER',
+        title: lead.title,
+        company: lead.company,
+        estimatedValue: lead.estimatedValue,
+        status: lead.status,
+        lastContactedAt: lead.lastContactedAt,
+        createdAt: lead.createdAt,
+      });
+
+      const syntheticInsight = {
+        id: `derived-${lead.id}`,
+        leadId: lead.id,
+        tenantId: typedCtx.tenant.tenantId,
+        ...derived,
+        recommendations: derived.recommendations as unknown,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      // Fire-and-forget: persist so future visits read from DB
+      ctx.prisma.leadAIInsight
+        ?.upsert({
+          where: { leadId: lead.id },
+          create: {
+            leadId: lead.id,
+            tenantId: typedCtx.tenant.tenantId,
+            ...derived,
+            recommendations: derived.recommendations,
+          },
+          update: {},
+        })
+        ?.catch(() => {}); // Best-effort persistence — silently ignore
+
+      return { ...lead, aiInsight: syntheticInsight };
+    }
+
     return lead;
   }),
 
@@ -270,44 +536,8 @@ export const leadRouter = createTRPCRouter({
 
     const skip = (page - 1) * limit;
 
-    // Build where clause with tenant isolation
-    const baseWhere: Record<string, unknown> = {};
-
-    if (status && status.length > 0) {
-      baseWhere.status = { in: status };
-    }
-
-    if (source && source.length > 0) {
-      baseWhere.source = { in: source };
-    }
-
-    if (minScore !== undefined || maxScore !== undefined) {
-      baseWhere.score = {};
-      if (minScore !== undefined) (baseWhere.score as Record<string, number>).gte = minScore;
-      if (maxScore !== undefined) (baseWhere.score as Record<string, number>).lte = maxScore;
-    }
-
-    if (search) {
-      baseWhere.OR = [
-        { email: { contains: search, mode: 'insensitive' } },
-        { firstName: { contains: search, mode: 'insensitive' } },
-        { lastName: { contains: search, mode: 'insensitive' } },
-        { company: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-
-    if (ownerId) {
-      baseWhere.ownerId = ownerId;
-    }
-
-    if (dateFrom || dateTo) {
-      baseWhere.createdAt = {};
-      if (dateFrom) (baseWhere.createdAt as Record<string, Date>).gte = dateFrom;
-      if (dateTo) (baseWhere.createdAt as Record<string, Date>).lte = dateTo;
-    }
-
     // Apply tenant filtering
-    const where = createTenantWhereClause(typedCtx.tenant, baseWhere);
+    const where = createTenantWhereClause(typedCtx.tenant, buildLeadListWhere({ status, source, minScore, maxScore, search, ownerId, dateFrom, dateTo }));
 
     // Execute queries in parallel using tenant-scoped Prisma
     const [leads, total] = await Promise.all([
@@ -378,7 +608,6 @@ export const leadRouter = createTRPCRouter({
    * Delete a lead using LeadService
    */
   delete: tenantProcedure.input(z.object({ id: idSchema })).mutation(async ({ ctx, input }) => {
-    const typedCtx = getTenantContext(ctx);
     const leadService = getLeadService(ctx);
 
     const result = await leadService.deleteLead(input.id);
@@ -916,79 +1145,35 @@ export const leadRouter = createTRPCRouter({
       });
       const existingIds = new Set(leads.map((l) => l.id));
 
-      // Track non-existent leads
-      for (const id of ids) {
-        if (!existingIds.has(id)) {
-          failed.push({ id, error: 'Lead not found' });
-        }
-      }
+      collectMissingLeads(ids, existingIds, failed);
 
-      // Filter valid leads for conversion
       const validLeads = leads.filter((l) => l.status !== 'CONVERTED');
       const alreadyConverted = leads.filter((l) => l.status === 'CONVERTED');
-
-      for (const lead of alreadyConverted) {
-        failed.push({ id: lead.id, error: 'Lead already converted' });
-      }
+      collectAlreadyConvertedLeads(alreadyConverted, failed);
 
       if (validLeads.length === 0) {
         return { successful, failed, totalProcessed: ids.length };
       }
 
-      // Batch update lead statuses
       await tx.lead.updateMany({
         where: { id: { in: validLeads.map((l) => l.id) } },
         data: { status: 'CONVERTED', updatedAt: new Date() },
       });
 
-      const now = new Date();
-      await tx.leadActivity.createMany({
-        data: validLeads.map((lead) => ({
-          type: 'STATUS_CHANGE',
-          title: 'Lead Converted',
-          description: 'Status changed from non-CONVERTED to CONVERTED',
-          timestamp: now,
-          userId: typedCtx.tenant.userId,
-          userName: ctx.user?.email ?? 'System',
-          leadId: lead.id,
-          tenantId: typedCtx.tenant.tenantId,
-          metadata: { oldStatus: lead.status, newStatus: 'CONVERTED', bulk: true },
-        })),
-      });
+      const activityData = buildConversionActivityData(
+        validLeads,
+        typedCtx.tenant.userId,
+        ctx.user?.email ?? 'System'
+      );
+      await tx.leadActivity.createMany({ data: activityData as any });
 
-      // Batch create contacts
-      await tx.contact.createMany({
-        data: validLeads.map((lead) => ({
-          firstName: lead.firstName || 'Unknown',
-          lastName: lead.lastName || 'Unknown',
-          email: lead.email,
-          phone: lead.phone,
-          company: lead.company,
-          title: lead.title,
-          tenantId: lead.tenantId,
-          ownerId: lead.ownerId || typedCtx.tenant.userId,
-          createdBy: typedCtx.tenant.userId,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })),
-        skipDuplicates: true,
-      });
+      const contactData = buildContactDataFromLeads(validLeads, typedCtx.tenant.userId);
+      await tx.contact.createMany({ data: contactData as any, skipDuplicates: true });
 
-      // Optionally create accounts
       if (createAccounts) {
-        const leadsWithCompany = validLeads.filter((l) => l.company);
-        if (leadsWithCompany.length > 0) {
-          await tx.account.createMany({
-            data: leadsWithCompany.map((lead) => ({
-              name: lead.company!,
-              tenantId: lead.tenantId,
-              ownerId: lead.ownerId || typedCtx.tenant.userId,
-              createdBy: typedCtx.tenant.userId,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            })),
-            skipDuplicates: true,
-          });
+        const accountData = buildAccountDataFromLeads(validLeads, typedCtx.tenant.userId);
+        if (accountData.length > 0) {
+          await tx.account.createMany({ data: accountData as any, skipDuplicates: true });
         }
       }
 
@@ -1020,12 +1205,7 @@ export const leadRouter = createTRPCRouter({
         });
         const existingIds = new Set(existingLeads.map((l) => l.id));
 
-        // Track non-existent IDs
-        for (const id of ids) {
-          if (!existingIds.has(id)) {
-            failed.push({ id, error: 'Lead not found' });
-          }
-        }
+        collectMissingLeads(ids, existingIds, failed);
 
         // Batch update existing leads
         const idsToUpdate = ids.filter((id) => existingIds.has(id));
@@ -1036,42 +1216,20 @@ export const leadRouter = createTRPCRouter({
           });
           successful.push(...idsToUpdate);
 
-          const now = new Date();
-          const activityRows = existingLeads
-            .filter((lead) => idsToUpdate.includes(lead.id) && lead.status !== status)
-            .map((lead) => ({
-              type: 'STATUS_CHANGE' as const,
-              title: 'Lead Status Changed',
-              description: `Status changed from ${lead.status} to ${status}`,
-              timestamp: now,
-              userId: typedCtx.tenant.userId,
-              userName: ctx.user?.email ?? 'System',
-              leadId: lead.id,
-              tenantId: typedCtx.tenant.tenantId,
-              metadata: { oldStatus: lead.status, newStatus: status, bulk: true },
-            }));
+          const activityRows = buildBulkStatusActivityRows(
+            existingLeads,
+            idsToUpdate,
+            status,
+            typedCtx.tenant.tenantId,
+            typedCtx.tenant.userId,
+            ctx.user?.email ?? 'System',
+            'Lead Status Changed'
+          );
 
-          if (activityRows.length > 0) {
-            try {
-              await ctx.prisma.leadActivity.createMany({ data: activityRows });
-            } catch (error) {
-              console.warn('[lead.bulkUpdateStatus] Failed to persist activity rows', {
-                count: activityRows.length,
-                error,
-              });
-            }
-          }
+          await persistBulkStatusActivityRows(ctx.prisma, activityRows, 'bulkUpdateStatus');
         }
       } catch (error) {
-        // If batch update fails, all remaining IDs fail
-        for (const id of ids) {
-          if (!failed.find((f) => f.id === id) && !successful.includes(id)) {
-            failed.push({
-              id,
-              error: error instanceof Error ? error.message : 'Unknown error',
-            });
-          }
-        }
+        collectBulkFailures(ids, failed, successful, error);
       }
 
       return { successful, failed, totalProcessed: ids.length };
@@ -1113,24 +1271,19 @@ export const leadRouter = createTRPCRouter({
         });
         successful.push(...idsToUpdate);
 
-        const now = new Date();
-        const activityRows = existingLeads
-          .filter((lead) => idsToUpdate.includes(lead.id) && lead.status !== 'LOST')
-          .map((lead) => ({
-            type: 'STATUS_CHANGE' as const,
-            title: 'Lead Archived',
-            description: `Status changed from ${lead.status} to LOST`,
-            timestamp: now,
-            userId: typedCtx.tenant.userId,
-            userName: ctx.user?.email ?? 'System',
-            leadId: lead.id,
-            tenantId: typedCtx.tenant.tenantId,
-            metadata: { oldStatus: lead.status, newStatus: 'LOST', bulk: true },
-          }));
+        const activityRows = buildBulkStatusActivityRows(
+          existingLeads,
+          idsToUpdate,
+          'LOST',
+          typedCtx.tenant.tenantId,
+          typedCtx.tenant.userId,
+          ctx.user?.email ?? 'System',
+          'Lead Archived'
+        );
 
         if (activityRows.length > 0) {
           try {
-            await ctx.prisma.leadActivity.createMany({ data: activityRows });
+            await ctx.prisma.leadActivity.createMany({ data: activityRows as any });
           } catch (error) {
             console.warn('[lead.bulkArchive] Failed to persist activity rows', {
               count: activityRows.length,
@@ -1140,14 +1293,7 @@ export const leadRouter = createTRPCRouter({
         }
       }
     } catch (error) {
-      for (const id of ids) {
-        if (!failed.find((f) => f.id === id) && !successful.includes(id)) {
-          failed.push({
-            id,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          });
-        }
-      }
+      collectBulkFailures(ids, failed, successful, error);
     }
 
     return { successful, failed, totalProcessed: ids.length };

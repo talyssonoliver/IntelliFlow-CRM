@@ -158,7 +158,7 @@ export function buildAuthContext(user: UserInfo, agentSessionId: string): AgentA
  * 5. Entity-level ownership (where applicable)
  */
 export class AgentAuthorizationService {
-  private prisma: PrismaClient | null;
+  private readonly prisma: PrismaClient | null;
 
   constructor(prisma?: PrismaClient) {
     this.prisma = prisma ?? null;

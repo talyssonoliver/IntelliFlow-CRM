@@ -134,8 +134,8 @@ export interface KeyVersionStore {
  */
 export class InMemoryKeyVersionStore implements KeyVersionStore {
   private currentVersion = 1;
-  private versions: Map<number, KeyMetadata> = new Map();
-  private deprecated: Set<number> = new Set();
+  private readonly versions: Map<number, KeyMetadata> = new Map();
+  private readonly deprecated: Set<number> = new Set();
 
   constructor() {
     // Initialize with metadata for version 1
@@ -283,10 +283,10 @@ export class VaultKeyVersionStore implements KeyVersionStore {
  * Key Rotation Service
  */
 export class KeyRotationService {
-  private config: KeyRotationConfig;
-  private versionStore: KeyVersionStore;
-  private encryptionService: EncryptionService;
-  private auditLogger: AuditLogger | null = null;
+  private readonly config: KeyRotationConfig;
+  private readonly versionStore: KeyVersionStore;
+  private readonly encryptionService: EncryptionService;
+  private readonly auditLogger: AuditLogger | null = null;
   private lifecycleEvents: KeyLifecycleEventRecord[] = [];
 
   constructor(
@@ -321,64 +321,9 @@ export class KeyRotationService {
     const errors: string[] = [];
 
     try {
-      // Pre-rotation validation
-      if (this.config.preRotationValidation) {
-        const valid = await this.preRotationValidation(previousVersion);
-        if (!valid) {
-          throw new EncryptionError('PRE_ROTATION_FAILED', 'Pre-rotation validation failed');
-        }
-      }
-
-      // Create new key version
-      const newMetadata: KeyMetadata = {
-        version: newVersion,
-        createdAt: new Date(),
-        algorithm: 'aes-256-gcm',
-        keyId: `key-v${newVersion}-${randomBytes(4).toString('hex')}`,
-      };
-
-      await this.versionStore.saveVersionMetadata(newMetadata);
-      await this.versionStore.setCurrentVersion(newVersion);
-
-      // Log lifecycle event
-      this.recordLifecycleEvent({
-        eventType: 'KEY_ROTATED',
-        keyVersion: newVersion,
-        timestamp: new Date(),
-        details: { previousVersion },
-      });
-
-      // Post-rotation verification
-      if (this.config.postRotationVerification) {
-        const verified = await this.postRotationVerification(newVersion);
-        if (!verified) {
-          errors.push('Post-rotation verification failed but rotation completed');
-        }
-      }
-
-      // Deprecate old versions beyond retention
-      await this.cleanupOldVersions(newVersion);
-
-      // Send notification
-      if (this.config.notificationWebhook) {
-        await this.sendRotationNotification(newVersion, previousVersion);
-      }
-
-      // Audit log
-      if (this.auditLogger) {
-        await this.auditLogger.log({
-          tenantId: 'system',
-          eventType: 'KEY_ROTATION',
-          resourceType: 'system',
-          resourceId: 'encryption-keys',
-          action: 'CONFIGURE',
-          actionResult: 'SUCCESS',
-          metadata: {
-            previousVersion,
-            newVersion,
-          },
-        });
-      }
+      await this.runPreRotationValidation(previousVersion);
+      await this.createAndActivateNewKeyVersion(newVersion, previousVersion);
+      await this.runPostRotationSteps(newVersion, previousVersion, errors);
 
       return {
         success: true,
@@ -389,29 +334,63 @@ export class KeyRotationService {
         errors: errors.length > 0 ? errors : undefined,
       };
     } catch (error) {
-      if (this.auditLogger) {
-        await this.auditLogger.log({
-          tenantId: 'system',
-          eventType: 'KEY_ROTATION_FAILED',
-          resourceType: 'system',
-          resourceId: 'encryption-keys',
-          action: 'CONFIGURE',
-          actionResult: 'FAILURE',
-          metadata: {
-            error: error instanceof Error ? error.message : 'Unknown error',
-          },
-        });
-      }
-
+      await this.logRotationFailure(error);
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       return {
         success: false,
         previousVersion,
         newVersion,
         rotatedAt: new Date(),
         duration: Date.now() - startTime,
-        errors: [error instanceof Error ? error.message : 'Unknown error'],
+        errors: [errorMsg],
       };
     }
+  }
+
+  /** Run pre-rotation validation if enabled. Throws on failure. */
+  private async runPreRotationValidation(previousVersion: number): Promise<void> {
+    if (!this.config.preRotationValidation) return;
+    const valid = await this.preRotationValidation(previousVersion);
+    if (!valid) {
+      throw new EncryptionError('PRE_ROTATION_FAILED', 'Pre-rotation validation failed');
+    }
+  }
+
+  /** Create a new key version and set it as current. */
+  private async createAndActivateNewKeyVersion(
+    newVersion: number,
+    previousVersion: number
+  ): Promise<void> {
+    const newMetadata: KeyMetadata = {
+      version: newVersion,
+      createdAt: new Date(),
+      algorithm: 'aes-256-gcm',
+      keyId: `key-v${newVersion}-${randomBytes(4).toString('hex')}`,
+    };
+    await this.versionStore.saveVersionMetadata(newMetadata);
+    await this.versionStore.setCurrentVersion(newVersion);
+    this.recordLifecycleEvent({
+      eventType: 'KEY_ROTATED',
+      keyVersion: newVersion,
+      timestamp: new Date(),
+      details: { previousVersion },
+    });
+  }
+
+  /** Audit log a rotation failure (no-op if no audit logger). */
+  private async logRotationFailure(error: unknown): Promise<void> {
+    if (!this.auditLogger) return;
+    await this.auditLogger.log({
+      tenantId: 'system',
+      eventType: 'KEY_ROTATION_FAILED',
+      resourceType: 'system',
+      resourceId: 'encryption-keys',
+      action: 'CONFIGURE',
+      actionResult: 'FAILURE',
+      metadata: {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+    });
   }
 
   /**
@@ -568,6 +547,41 @@ export class KeyRotationService {
       rotationNeeded,
       nextRotationDue,
     };
+  }
+
+  /**
+   * Run all post-rotation steps: verification, cleanup, notification, audit.
+   * Errors are pushed into the provided array rather than thrown.
+   */
+  private async runPostRotationSteps(
+    newVersion: number,
+    previousVersion: number,
+    errors: string[]
+  ): Promise<void> {
+    if (this.config.postRotationVerification) {
+      const verified = await this.postRotationVerification(newVersion);
+      if (!verified) {
+        errors.push('Post-rotation verification failed but rotation completed');
+      }
+    }
+
+    await this.cleanupOldVersions(newVersion);
+
+    if (this.config.notificationWebhook) {
+      await this.sendRotationNotification(newVersion, previousVersion);
+    }
+
+    if (this.auditLogger) {
+      await this.auditLogger.log({
+        tenantId: 'system',
+        eventType: 'KEY_ROTATION',
+        resourceType: 'system',
+        resourceId: 'encryption-keys',
+        action: 'CONFIGURE',
+        actionResult: 'SUCCESS',
+        metadata: { previousVersion, newVersion },
+      });
+    }
   }
 
   /**

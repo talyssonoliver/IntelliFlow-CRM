@@ -22,6 +22,134 @@ import {
   AgentActionStatus,
 } from './timeline.router';
 
+// ─── Module-level helpers ───────────────────────────────────────────────────
+
+/** Map a Prisma ChatMessage (with nested conversation) to a TimelineEvent. */
+function mapChatMessageToTimelineEvent(msg: {
+  id: string;
+  content: string | null;
+  createdAt: Date;
+  senderType: string;
+  senderId: string | null;
+  senderName: string | null;
+  isRead: boolean;
+  readAt: Date | null;
+  attachments: unknown;
+  conversationId: string;
+  conversation: {
+    channel: string | null;
+    contactName: string | null;
+    contactEmail: string | null;
+  };
+}): TimelineEvent {
+  const msgChannel = msg.conversation.channel?.toLowerCase() || 'chat';
+  const contactName = msg.conversation.contactName || 'Contact';
+  const contactEmail = msg.conversation.contactEmail;
+  const isFromContact = msg.senderType === 'contact';
+  const isUserOrBot = msg.senderType === 'user' || msg.senderType === 'bot';
+
+  return {
+    id: `chat-${msg.id}`,
+    type: TimelineEventType.COMMUNICATION,
+    title: isFromContact ? `Message from ${contactName}` : `Message to ${contactName}`,
+    description: msg.content?.substring(0, 200) || null,
+    timestamp: msg.createdAt,
+    priority: null,
+    entityType: 'chat_message',
+    entityId: msg.id,
+    communication: {
+      channel: (msgChannel === 'whatsapp' ? 'whatsapp' : 'other') as 'whatsapp' | 'other',
+      direction: (isFromContact ? 'inbound' : 'outbound') as 'inbound' | 'outbound',
+      from: isFromContact ? contactEmail || undefined : undefined,
+      to: !isFromContact ? contactEmail || undefined : undefined,
+    },
+    actor: isUserOrBot
+      ? {
+          id: msg.senderId || 'system',
+          name: msg.senderName || null,
+          email: null,
+          avatarUrl: null,
+          isAgent: msg.senderType === 'bot',
+        }
+      : null,
+    metadata: {
+      senderType: msg.senderType,
+      channel: msgChannel,
+      isRead: msg.isRead,
+      readAt: msg.readAt,
+      attachments: msg.attachments,
+      conversationId: msg.conversationId,
+    },
+    isOverdue: false,
+    agentAction: null,
+    document: null,
+    appointment: null,
+    task: null,
+  };
+}
+
+/** Map a Prisma CallRecord to a TimelineEvent. */
+function mapCallRecordToTimelineEvent(call: {
+  id: string;
+  direction: string;
+  contactName: string | null;
+  fromNumber: string;
+  toNumber: string;
+  summary: string | null;
+  notes: string | null;
+  startedAt: Date;
+  userId: string | null;
+  userName: string | null;
+  duration: number | null;
+  outcome: string | null;
+  status: string;
+  recordingUrl: string | null;
+  transcription: string | null;
+  sentiment: string | null;
+}): TimelineEvent {
+  const isInbound = call.direction === 'inbound';
+  const contactLabel = call.contactName || (isInbound ? call.fromNumber : call.toNumber);
+
+  return {
+    id: `call-${call.id}`,
+    type: TimelineEventType.CALL,
+    title: isInbound ? `Incoming call from ${contactLabel}` : `Outgoing call to ${contactLabel}`,
+    description: call.summary || call.notes || null,
+    timestamp: call.startedAt,
+    priority: null,
+    entityType: 'call',
+    entityId: call.id,
+    communication: {
+      channel: 'phone' as const,
+      direction: call.direction as 'inbound' | 'outbound',
+      from: call.fromNumber,
+      to: call.toNumber,
+    },
+    actor: call.userId
+      ? {
+          id: call.userId,
+          name: call.userName,
+          email: null,
+          avatarUrl: null,
+          isAgent: false,
+        }
+      : null,
+    metadata: {
+      duration: call.duration,
+      outcome: call.outcome,
+      status: call.status,
+      hasRecording: !!call.recordingUrl,
+      transcription: call.transcription,
+      sentiment: call.sentiment,
+    },
+    isOverdue: false,
+    agentAction: null,
+    document: null,
+    appointment: null,
+    task: null,
+  };
+}
+
 // Communication channel mapping
 export const CommunicationChannel = {
   EMAIL: 'email',
@@ -41,7 +169,7 @@ export type CommunicationChannelValue =
  * Timeline service for communication events
  */
 export class TimelineCommunicationService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private readonly prisma: PrismaClient) {}
 
   /**
    * Get email events for a case
@@ -149,15 +277,10 @@ export class TimelineCommunicationService {
   }): Promise<TimelineEvent[]> {
     const { contactId, channel, fromDate, toDate, sortOrder = 'desc', limit = 50 } = options;
 
-    // Build conversation where clause
     const conversationWhere: any = {};
-
-    if (contactId) {
-      conversationWhere.contactId = contactId;
-    }
+    if (contactId) conversationWhere.contactId = contactId;
 
     if (channel) {
-      // Map our channel to ChatChannel enum
       const channelMap: Record<string, string> = {
         whatsapp: 'WHATSAPP',
         teams: 'TEAMS',
@@ -168,17 +291,13 @@ export class TimelineCommunicationService {
       conversationWhere.channel = channelMap[channel] || channel.toUpperCase();
     }
 
-    // Find conversations
     const conversations = await this.prisma.chatConversation.findMany({
       where: conversationWhere,
       select: { id: true },
     });
 
-    if (conversations.length === 0) {
-      return [];
-    }
+    if (conversations.length === 0) return [];
 
-    // Build message where clause
     const messageWhere: any = {
       conversationId: { in: conversations.map((c) => c.id) },
     };
@@ -205,56 +324,7 @@ export class TimelineCommunicationService {
       take: limit,
     });
 
-    return messages.map((msg) => {
-      // Determine channel from conversation
-      const msgChannel = msg.conversation.channel?.toLowerCase() || 'chat';
-
-      return {
-        id: `chat-${msg.id}`,
-        type: TimelineEventType.COMMUNICATION,
-        title:
-          msg.senderType === 'contact'
-            ? `Message from ${msg.conversation.contactName || 'Contact'}`
-            : `Message to ${msg.conversation.contactName || 'Contact'}`,
-        description: msg.content?.substring(0, 200) || null,
-        timestamp: msg.createdAt,
-        priority: null,
-        entityType: 'chat_message',
-        entityId: msg.id,
-        communication: {
-          channel: (msgChannel === 'whatsapp' ? 'whatsapp' : 'other') as 'whatsapp' | 'other',
-          direction: (msg.senderType === 'contact' ? 'inbound' : 'outbound') as
-            | 'inbound'
-            | 'outbound',
-          from:
-            msg.senderType === 'contact' ? msg.conversation.contactEmail || undefined : undefined,
-          to: msg.senderType !== 'contact' ? msg.conversation.contactEmail || undefined : undefined,
-        },
-        actor:
-          msg.senderType === 'user' || msg.senderType === 'bot'
-            ? {
-                id: msg.senderId || 'system',
-                name: msg.senderName || null,
-                email: null,
-                avatarUrl: null,
-                isAgent: msg.senderType === 'bot',
-              }
-            : null,
-        metadata: {
-          senderType: msg.senderType,
-          channel: msgChannel,
-          isRead: msg.isRead,
-          readAt: msg.readAt,
-          attachments: msg.attachments,
-          conversationId: msg.conversationId,
-        },
-        isOverdue: false,
-        agentAction: null,
-        document: null,
-        appointment: null,
-        task: null,
-      };
-    });
+    return messages.map((msg) => mapChatMessageToTimelineEvent(msg));
   }
 
   /**
@@ -310,47 +380,7 @@ export class TimelineCommunicationService {
       take: limit,
     });
 
-    return calls.map((call) => ({
-      id: `call-${call.id}`,
-      type: TimelineEventType.CALL,
-      title:
-        call.direction === 'inbound'
-          ? `Incoming call from ${call.contactName || call.fromNumber}`
-          : `Outgoing call to ${call.contactName || call.toNumber}`,
-      description: call.summary || call.notes || null,
-      timestamp: call.startedAt,
-      priority: null,
-      entityType: 'call',
-      entityId: call.id,
-      communication: {
-        channel: 'phone' as const,
-        direction: call.direction as 'inbound' | 'outbound',
-        from: call.fromNumber,
-        to: call.toNumber,
-      },
-      actor: call.userId
-        ? {
-            id: call.userId,
-            name: call.userName,
-            email: null,
-            avatarUrl: null,
-            isAgent: false,
-          }
-        : null,
-      metadata: {
-        duration: call.duration,
-        outcome: call.outcome,
-        status: call.status,
-        hasRecording: !!call.recordingUrl,
-        transcription: call.transcription,
-        sentiment: call.sentiment,
-      },
-      isOverdue: false,
-      agentAction: null,
-      document: null,
-      appointment: null,
-      task: null,
-    }));
+    return calls.map((call) => mapCallRecordToTimelineEvent(call));
   }
 
   /**

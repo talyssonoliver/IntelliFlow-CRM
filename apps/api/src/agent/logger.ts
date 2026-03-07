@@ -87,7 +87,7 @@ const LEVEL_HIERARCHY: Record<LogLevel, number> = {
  * - Performance metrics
  */
 export class AgentActionLogger {
-  private config: LoggerConfig;
+  private readonly config: LoggerConfig;
   private buffer: LogEntry[] = [];
   private flushInterval: NodeJS.Timeout | null = null;
   private readonly BUFFER_SIZE = 100;
