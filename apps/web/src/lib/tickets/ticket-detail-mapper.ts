@@ -572,14 +572,16 @@ export function mapTicketToDetailData(rawTicket: unknown): TicketDetailData {
   const firstResponseTarget = getResponseTarget(priority, policy);
   const resolutionTarget = getResolutionTarget(priority, policy);
   const firstResponseActual = minutesBetween(createdAt, inferredFirstResponseAt);
-  const firstResponseMet =
-    firstResponseActual !== null
-      ? responseDue
-        ? Boolean(
-            inferredFirstResponseAt && inferredFirstResponseAt.getTime() <= responseDue.getTime()
-          )
-        : firstResponseActual <= firstResponseTarget
-      : false;
+  let firstResponseMet: boolean;
+  if (firstResponseActual === null) {
+    firstResponseMet = false;
+  } else if (responseDue) {
+    firstResponseMet = Boolean(
+      inferredFirstResponseAt && inferredFirstResponseAt.getTime() <= responseDue.getTime()
+    );
+  } else {
+    firstResponseMet = firstResponseActual <= firstResponseTarget;
+  }
   const resolutionRemaining = minutesUntil(resolutionDue);
   const normalizedSlaStatus =
     toSlaStatus(ticket.slaStatus) ?? inferSlaStatus(status, resolutionRemaining, resolutionDue);

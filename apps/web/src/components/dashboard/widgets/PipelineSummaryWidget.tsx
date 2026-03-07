@@ -29,7 +29,7 @@ const stages: PipelineStage[] = [
   { name: 'Closed Won', value: '$40,000', deals: 2, percentage: 20, color: 'bg-stage-won' },
 ];
 
-export function PipelineSummaryWidget(_props: WidgetProps) {
+export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
   return (
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-6">

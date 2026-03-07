@@ -49,11 +49,11 @@ export class AuthBroadcast {
   private channel: BroadcastChannel | null = null;
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private lastBroadcast = 0;
-  private subscribers: Set<() => void> = new Set();
+  private readonly subscribers: Set<() => void> = new Set();
   private storageHandler: ((event: StorageEvent) => void) | null = null;
 
   constructor() {
-    if (typeof window === 'undefined') return;
+    if (typeof globalThis.window === 'undefined') return;
 
     this.initChannel();
     this.initStorageFallback();
@@ -64,7 +64,7 @@ export class AuthBroadcast {
    */
   private initChannel(): void {
     try {
-      if ('BroadcastChannel' in window) {
+      if ('BroadcastChannel' in globalThis) {
         this.channel = new BroadcastChannel(CHANNEL_NAME);
         this.channel.onmessage = (event: MessageEvent<AuthBroadcastMessage>) => {
           if (event.data?.type === 'LOGOUT_EVENT') {
@@ -86,7 +86,7 @@ export class AuthBroadcast {
         this.notifySubscribers();
       }
     };
-    window.addEventListener('storage', this.storageHandler);
+    globalThis.addEventListener('storage', this.storageHandler);
   }
 
   /**
@@ -107,7 +107,7 @@ export class AuthBroadcast {
    * Debounced to prevent rapid-fire events
    */
   broadcast(event: AuthEvent): void {
-    if (typeof window === 'undefined') return;
+    if (typeof globalThis.window === 'undefined') return;
 
     const now = Date.now();
 
@@ -167,7 +167,7 @@ export class AuthBroadcast {
     }
 
     if (this.storageHandler) {
-      window.removeEventListener('storage', this.storageHandler);
+      globalThis.removeEventListener('storage', this.storageHandler);
       this.storageHandler = null;
     }
 
@@ -200,4 +200,4 @@ export function createAuthBroadcast(): AuthBroadcast {
  * Singleton instance for app-wide use
  */
 export const authBroadcast: AuthBroadcast | null =
-  typeof window !== 'undefined' ? new AuthBroadcast() : null;
+  typeof globalThis.window === 'undefined' ? null : new AuthBroadcast();

@@ -58,7 +58,7 @@ export const REDIRECT_ALLOWLIST = ['/', '/dashboard', '/settings'] as const;
  * @returns SsoResolution - found with config, or not found with optional suggestion
  */
 export function resolveSsoProvider(email: string): SsoResolution {
-  if (!email?.includes('@')) {
+  if (!email.includes('@')) {
     return { found: false };
   }
 

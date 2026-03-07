@@ -21,6 +21,50 @@ import { cn } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 
 // ============================================
+// Helpers
+// ============================================
+
+type VerifyMutationFn = (args: { token_hash: string; type: 'email' | 'signup' }) => Promise<{ email?: string | null }>;
+
+async function runEmailVerification(
+  hash: string,
+  type: 'email' | 'signup',
+  verifyMutation: VerifyMutationFn,
+  callbacks: {
+    setStatus: (s: import('./email-verification').VerificationStatus) => void;
+    setMessage: (m: string) => void;
+    setVerifiedEmail: (e: string | null) => void;
+    onVerified?: () => void;
+    onError?: (e: string) => void;
+  }
+): Promise<void> {
+  const { setStatus, setMessage, setVerifiedEmail, onVerified, onError } = callbacks;
+  if (!hash || hash.length < 6) {
+    setStatus('invalid');
+    setMessage('This verification link is invalid.');
+    onError?.('Invalid verification link');
+    return;
+  }
+  try {
+    const result = await verifyMutation({ token_hash: hash, type });
+    setStatus('success');
+    setMessage('Your email has been verified successfully!');
+    setVerifiedEmail(result.email || null);
+    onVerified?.();
+  } catch (err: unknown) {
+    const trpcError = err as { data?: { code?: string }; message?: string };
+    if (trpcError.data?.code === 'BAD_REQUEST') {
+      setStatus('expired');
+      setMessage('This verification link has expired or is invalid.');
+    } else {
+      setStatus('error');
+      setMessage('Failed to verify email. Please try again.');
+    }
+    onError?.(trpcError.message || 'Verification failed');
+  }
+}
+
+// ============================================
 // Types
 // ============================================
 
@@ -54,7 +98,7 @@ interface StatusIconProps {
   status: VerificationStatus;
 }
 
-function StatusIcon({ status }: StatusIconProps) {
+function StatusIcon({ status }: Readonly<StatusIconProps>) {
   const iconMap: Record<VerificationStatus, { icon: string; color: string }> = {
     loading: { icon: 'sync', color: 'text-[#137fec]' },
     success: { icon: 'verified', color: 'text-green-500' },
@@ -94,6 +138,15 @@ function StatusIcon({ status }: StatusIconProps) {
 // Email Verification Component
 // ============================================
 
+const STATUS_TITLES: Record<VerificationStatus, string | null> = {
+  loading: 'Verifying Email',
+  success: 'Email Verified!',
+  expired: 'Link Expired',
+  invalid: 'Invalid Link',
+  already_verified: 'Already Verified',
+  error: 'Verification Failed',
+};
+
 export function EmailVerification({
   token,
   tokenHash,
@@ -103,7 +156,7 @@ export function EmailVerification({
   onError,
   redirectUrl = '/dashboard',
   className,
-}: EmailVerificationProps) {
+}: Readonly<EmailVerificationProps>) {
   const [status, setStatus] = useState<VerificationStatus>('loading');
   const [message, setMessage] = useState('Verifying your email...');
   const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
@@ -117,42 +170,15 @@ export function EmailVerification({
 
   // Verify token on mount via tRPC
   useEffect(() => {
-    const verifyToken = async () => {
-      // Resolve the actual token hash — prefer tokenHash prop, fallback to legacy token
-      const hash = tokenHash || token;
-
-      if (!hash || hash.length < 6) {
-        setStatus('invalid');
-        setMessage('This verification link is invalid.');
-        onError?.('Invalid verification link');
-        return;
-      }
-
-      try {
-        const result = await verifyEmailMutation.mutateAsync({
-          token_hash: hash,
-          type,
-        });
-
-        // Success!
-        setStatus('success');
-        setMessage('Your email has been verified successfully!');
-        setVerifiedEmail(result.email || null);
-        onVerified?.();
-      } catch (err: unknown) {
-        const trpcError = err as { data?: { code?: string }; message?: string };
-        if (trpcError.data?.code === 'BAD_REQUEST') {
-          setStatus('expired');
-          setMessage('This verification link has expired or is invalid.');
-        } else {
-          setStatus('error');
-          setMessage('Failed to verify email. Please try again.');
-        }
-        onError?.(trpcError.message || 'Verification failed');
-      }
-    };
-
-    verifyToken();
+    // Resolve the actual token hash — prefer tokenHash prop, fallback to legacy token
+    const hash = tokenHash || token;
+    runEmailVerification(hash || '', type, verifyEmailMutation.mutateAsync, {
+      setStatus,
+      setMessage,
+      setVerifiedEmail,
+      onVerified,
+      onError,
+    });
     // Run only once on mount — deps intentionally empty
   }, []);
 
@@ -168,11 +194,12 @@ export function EmailVerification({
       setResendMessage('A new verification link has been sent to your email.');
     } catch (err: unknown) {
       const trpcError = err as { data?: { code?: string }; message?: string };
-      if (trpcError.data?.code === 'TOO_MANY_REQUESTS') {
-        setResendMessage('Too many requests. Please try again in a few minutes.');
-      } else {
-        setResendMessage('Failed to send verification email. Please try again.');
-      }
+      const isTooManyRequests = trpcError.data?.code === 'TOO_MANY_REQUESTS';
+      setResendMessage(
+        isTooManyRequests
+          ? 'Too many requests. Please try again in a few minutes.'
+          : 'Failed to send verification email. Please try again.'
+      );
     } finally {
       setIsResending(false);
     }
@@ -194,7 +221,7 @@ export function EmailVerification({
             aria-label="Continue to dashboard"
           >
             Continue to Dashboard
-            <span className="material-symbols-outlined text-xl" aria-hidden="true">
+            {' '}<span className="material-symbols-outlined text-xl" aria-hidden="true">
               arrow_forward
             </span>
           </Link>
@@ -213,7 +240,7 @@ export function EmailVerification({
             aria-label="Go to login page"
           >
             Sign In
-            <span className="material-symbols-outlined text-xl" aria-hidden="true">
+            {' '}<span className="material-symbols-outlined text-xl" aria-hidden="true">
               login
             </span>
           </Link>
@@ -257,16 +284,14 @@ export function EmailVerification({
               </button>
             )}
             {resendMessage && (
-              <p
+              <output
                 className={cn(
                   'text-sm',
                   resendMessage.includes('sent') ? 'text-green-400' : 'text-amber-400'
                 )}
-                role="status"
-                aria-live="polite"
               >
                 {resendMessage}
-              </p>
+              </output>
             )}
           </div>
         );
@@ -284,7 +309,7 @@ export function EmailVerification({
             aria-label="Go to sign up page"
           >
             Sign Up
-            <span className="material-symbols-outlined text-xl" aria-hidden="true">
+            {' '}<span className="material-symbols-outlined text-xl" aria-hidden="true">
               person_add
             </span>
           </Link>
@@ -304,7 +329,7 @@ export function EmailVerification({
               aria-label="Try signing up again"
             >
               Try Again
-              <span className="material-symbols-outlined text-xl" aria-hidden="true">
+              {' '}<span className="material-symbols-outlined text-xl" aria-hidden="true">
                 refresh
               </span>
             </Link>
@@ -317,7 +342,7 @@ export function EmailVerification({
   };
 
   return (
-    <div className={cn('text-center', className)} data-testid="email-verification" role="main">
+    <main className={cn('text-center', className)} data-testid="email-verification">
       {/* Status Icon */}
       <div className="flex justify-center">
         <StatusIcon status={status} />
@@ -325,25 +350,13 @@ export function EmailVerification({
 
       {/* Title */}
       <h1 className="text-2xl font-bold text-white mb-2">
-        {status === 'loading'
-          ? 'Verifying Email'
-          : status === 'success'
-            ? 'Email Verified!'
-            : status === 'expired'
-              ? 'Link Expired'
-              : status === 'invalid'
-                ? 'Invalid Link'
-                : status === 'already_verified'
-                  ? 'Already Verified'
-                  : status === 'error'
-                    ? 'Verification Failed'
-                    : null}
+        {STATUS_TITLES[status]}
       </h1>
 
       {/* Message */}
-      <p className="text-slate-400 mb-8 max-w-md mx-auto" role="status" aria-live="polite">
+      <output className="text-slate-400 mb-8 max-w-md mx-auto block">
         {message}
-      </p>
+      </output>
 
       {/* Verified Email (on success) */}
       {verifiedEmail && status === 'success' && (
@@ -353,7 +366,7 @@ export function EmailVerification({
             aria-hidden="true"
           >
             check_circle
-          </span>
+          </span>{' '}
           {verifiedEmail}
         </p>
       )}
@@ -386,6 +399,6 @@ export function EmailVerification({
           </Link>
         </p>
       )}
-    </div>
+    </main>
   );
 }

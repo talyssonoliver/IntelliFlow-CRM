@@ -59,13 +59,13 @@ function SortableWidget({
   onDelete,
   onSettings,
   onResize,
-}: {
+}: Readonly<{
   widget: Widget;
   children: React.ReactNode;
   onDelete?: (id: string) => void;
   onSettings?: (widget: Widget) => void;
   onResize?: (id: string, colSpan: 1 | 2 | 3 | 4, rowSpan: 1 | 2) => void;
-}) {
+}>) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: widget.id,
   });
@@ -257,7 +257,7 @@ export default function CustomizeDashboardPage() {
                 onClick={handleSave}
                 className="flex items-center justify-center rounded-lg h-9 px-4 bg-ds-primary hover:bg-ds-primary-hover text-white text-sm font-bold shadow-sm shadow-ds-primary/30 transition-all"
               >
-                <span className="material-symbols-outlined text-[18px] mr-2">save</span>
+                <span className="material-symbols-outlined text-[18px] mr-2">save</span>{' '}
                 Save Changes
               </button>
             </div>

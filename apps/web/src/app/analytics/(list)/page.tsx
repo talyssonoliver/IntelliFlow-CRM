@@ -1,39 +1,57 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Card } from '@intelliflow/ui';
 import {
-  exportAnalyticsToCSV,
-  exportPipelineToCSV,
-  exportAnalyticsToPDF,
-  type AnalyticsMetric,
-  type PipelineStage,
-} from '@/lib/export';
-
-// Analytics data for display and export
-const analyticsMetrics: AnalyticsMetric[] = [
-  { name: 'Lead Conversion Rate', value: '32%', trend: '+5.2%', period: 'vs last period' },
-  { name: 'Average Deal Size', value: '$24,500', trend: '+12%', period: 'vs last period' },
-  { name: 'Sales Cycle', value: '28 days', trend: '-3 days', period: 'vs last period' },
-  { name: 'AI Score Accuracy', value: '94%', trend: '+2%', period: 'prediction accuracy' },
-];
-
-const pipelineStages: PipelineStage[] = [
-  { stage: 'Qualification', value: '$12,400', deals: 8, percentage: 15 },
-  { stage: 'Proposal', value: '$34,200', deals: 12, percentage: 40 },
-  { stage: 'Negotiation', value: '$120,000', deals: 4, percentage: 25 },
-  { stage: 'Closed Won', value: '$40,000', deals: 2, percentage: 20 },
-];
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
+import { Card } from '@intelliflow/ui';
+import { trpc } from '@/lib/trpc';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { downloadCSV } from '@/lib/export/csv';
+import { useAnalyticsDateRange, type PeriodKey } from '@/hooks/useAnalyticsDateRange';
 
 export default function AnalyticsPage() {
-  const [selectedPeriod, setSelectedPeriod] = useState('30d');
+  const [selectedPeriod, setSelectedPeriod] = useState<PeriodKey>('30d');
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const exportMenuRef = useRef<HTMLDivElement>(null);
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const dateRange = useAnalyticsDateRange(selectedPeriod);
+  const enabled = isAuthenticated && !authLoading;
+
+  // --- tRPC queries ---
+  const { data: overview, isLoading: overviewLoading } = trpc.analytics.getOverview.useQuery(
+    { startDate: dateRange.startDate, endDate: dateRange.endDate },
+    { enabled }
+  );
+
+  const { data: funnel, isLoading: funnelLoading } = trpc.analytics.getConversionFunnel.useQuery(
+    { startDate: dateRange.startDate, endDate: dateRange.endDate, includeLeads: true },
+    { enabled }
+  );
+
+  const { data: timeSeries, isLoading: timeSeriesLoading } =
+    trpc.analytics.getTimeSeriesData.useQuery(
+      {
+        metric: 'revenue',
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+        granularity: selectedPeriod === '7d' ? 'day' : 'month',
+      },
+      { enabled }
+    );
+
+  const { data: leadStats } = trpc.analytics.leadStats.useQuery(undefined, { enabled });
 
   // Close export menu when clicking outside
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    function handleClickOutside(event: Readonly<MouseEvent>) {
       if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
         setExportMenuOpen(false);
       }
@@ -42,35 +60,29 @@ export default function AnalyticsPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const getPeriodLabel = () => {
-    const labels: Record<string, string> = {
-      '7d': 'Last 7 days',
-      '30d': 'Last 30 days',
-      '90d': 'Last 90 days',
-      ytd: 'Year to date',
-    };
-    return labels[selectedPeriod] || 'Last 30 days';
-  };
+  const utils = trpc.useUtils();
 
-  const handleExportCSV = (type: 'metrics' | 'pipeline' | 'all') => {
-    const timestamp = new Date().toISOString().split('T')[0];
-    if (type === 'metrics' || type === 'all') {
-      exportAnalyticsToCSV(analyticsMetrics, `analytics-metrics-${timestamp}`);
-    }
-    if (type === 'pipeline' || type === 'all') {
-      exportPipelineToCSV(pipelineStages, `pipeline-report-${timestamp}`);
-    }
-    setExportMenuOpen(false);
-  };
+  const handleServerExport = useCallback(
+    async (reportType: 'overview' | 'funnel' | 'sales') => {
+      setExportMenuOpen(false);
+      try {
+        const result = await utils.analytics.exportReport.fetch({
+          format: 'csv',
+          reportType,
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate,
+        });
+        if (result && typeof result.data === 'string') {
+          downloadCSV(result.data, result.filename);
+        }
+      } catch {
+        // Fallback: if server export not available, silently fail
+      }
+    },
+    [dateRange, utils]
+  );
 
-  const handleExportPDF = () => {
-    exportAnalyticsToPDF({
-      metrics: analyticsMetrics,
-      pipeline: pipelineStages,
-      period: getPeriodLabel(),
-    });
-    setExportMenuOpen(false);
-  };
+  const isLoading = overviewLoading || authLoading;
 
   return (
     <>
@@ -96,7 +108,7 @@ export default function AnalyticsPage() {
         <div className="flex items-center gap-3">
           <select
             value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value)}
+            onChange={(e) => setSelectedPeriod(e.target.value as PeriodKey)}
             className="px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="7d">Last 7 days</option>
@@ -122,7 +134,6 @@ export default function AnalyticsPage() {
               </span>
             </button>
 
-            {/* Export Menu */}
             {exportMenuOpen && (
               <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border z-50 overflow-hidden">
                 <div className="py-1">
@@ -130,44 +141,31 @@ export default function AnalyticsPage() {
                     CSV Export
                   </div>
                   <button
-                    onClick={() => handleExportCSV('metrics')}
+                    onClick={() => handleServerExport('overview')}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
                   >
                     <span className="material-symbols-outlined text-lg text-muted-foreground">
                       table_chart
-                    </span>
-                    Metrics Only
+                    </span>{' '}
+                    Overview Metrics
                   </button>
                   <button
-                    onClick={() => handleExportCSV('pipeline')}
+                    onClick={() => handleServerExport('funnel')}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
                   >
                     <span className="material-symbols-outlined text-lg text-muted-foreground">
                       waterfall_chart
-                    </span>
-                    Pipeline Only
+                    </span>{' '}
+                    Pipeline Funnel
                   </button>
                   <button
-                    onClick={() => handleExportCSV('all')}
+                    onClick={() => handleServerExport('sales')}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
                   >
                     <span className="material-symbols-outlined text-lg text-muted-foreground">
                       download
-                    </span>
-                    All Data (CSV)
-                  </button>
-
-                  <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-t border-b border-border mt-1">
-                    PDF Export
-                  </div>
-                  <button
-                    onClick={handleExportPDF}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-lg text-destructive">
-                      picture_as_pdf
-                    </span>
-                    Full Report (PDF)
+                    </span>{' '}
+                    Sales Metrics
                   </button>
                 </div>
               </div>
@@ -178,188 +176,178 @@ export default function AnalyticsPage() {
 
       {/* Metrics Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-        <MetricCard
-          title="Lead Conversion Rate"
-          value="32%"
-          trend="+5.2%"
-          icon="trending_up"
-          description="vs last period"
-        />
-        <MetricCard
-          title="Average Deal Size"
-          value="$24,500"
-          trend="+12%"
-          icon="attach_money"
-          description="vs last period"
-        />
-        <MetricCard
-          title="Sales Cycle"
-          value="28 days"
-          trend="-3 days"
-          icon="schedule"
-          description="vs last period"
-          positive
-        />
-        <MetricCard
-          title="AI Score Accuracy"
-          value="94%"
-          trend="+2%"
-          icon="auto_awesome"
-          description="prediction accuracy"
-        />
+        {isLoading ? (
+          <>
+            <MetricCardSkeleton />
+            <MetricCardSkeleton />
+            <MetricCardSkeleton />
+            <MetricCardSkeleton />
+          </>
+        ) : (
+          <>
+            <MetricCard
+              title="Total Leads"
+              value={overview?.totalLeads ?? 0}
+              delta={overview?.leadDelta ?? 0}
+              icon="people"
+              formatValue={String}
+              badge={leadStats ? `${leadStats.newThisMonth} new this month` : undefined}
+            />
+            <MetricCard
+              title="Revenue"
+              value={overview?.totalRevenue ?? 0}
+              delta={overview?.revenueDelta ?? 0}
+              icon="attach_money"
+              formatValue={formatCurrency}
+            />
+            <MetricCard
+              title="Open Opportunities"
+              value={overview?.openOpportunities ?? 0}
+              delta={overview?.openOpportunitiesDelta ?? 0}
+              icon="handshake"
+              formatValue={String}
+            />
+            <MetricCard
+              title="Win Rate"
+              value={overview?.winRate ?? 0}
+              delta={overview?.winRateDelta ?? 0}
+              icon="emoji_events"
+              formatValue={(v) => `${v}%`}
+              suffix="pp"
+            />
+          </>
+        )}
       </div>
 
       {/* Charts Grid */}
       <div className="grid gap-6 lg:grid-cols-3 mb-6">
-        {/* Pipeline Overview */}
+        {/* Pipeline Funnel */}
         <Card className="lg:col-span-2 p-6 bg-card border-border">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-foreground">Pipeline Overview</h2>
-            <button className="p-1 text-muted-foreground hover:text-foreground transition-colors">
-              <span className="material-symbols-outlined">more_horiz</span>
-            </button>
+            <h2 className="text-lg font-semibold text-foreground">Pipeline Funnel</h2>
+            {funnel && (
+              <span className="text-sm text-muted-foreground">
+                {funnel.overallConversionRate}% overall conversion
+              </span>
+            )}
           </div>
 
-          {/* Pipeline Stages */}
-          <div className="space-y-4">
-            <PipelineStageBar
-              name="Qualification"
-              value="$12,400"
-              deals={8}
-              percentage={15}
-              color="bg-primary"
-            />
-            <PipelineStageBar
-              name="Proposal"
-              value="$34,200"
-              deals={12}
-              percentage={40}
-              color="bg-[#6366f1]"
-            />
-            <PipelineStageBar
-              name="Negotiation"
-              value="$120,000"
-              deals={4}
-              percentage={25}
-              color="bg-warning"
-            />
-            <PipelineStageBar
-              name="Closed Won"
-              value="$40,000"
-              deals={2}
-              percentage={20}
-              color="bg-success"
-            />
-          </div>
+          <PipelineFunnelContent loading={funnelLoading} funnel={funnel} />
         </Card>
 
-        {/* AI Recommendations */}
+        {/* Lead Stats + Quick Info */}
         <Card className="p-6 bg-card border-border">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-foreground">AI Recommendations</h2>
-            <Link href="/ai/insights" className="text-sm text-primary hover:underline">
-              View All
-            </Link>
+            <h2 className="text-lg font-semibold text-foreground">Lead Overview</h2>
           </div>
-
-          <div className="space-y-4">
-            <RecommendationItem
-              title="Follow up with TechCorp"
-              description="High-value opportunity showing engagement signals"
-              priority="high"
-              icon="priority_high"
-            />
-            <RecommendationItem
-              title="Re-engage Startup.io"
-              description="Lead score increased by 15 points"
-              priority="medium"
-              icon="trending_up"
-            />
-            <RecommendationItem
-              title="Schedule demo for DataCo"
-              description="Optimal time window detected"
-              priority="low"
-              icon="event"
-            />
-          </div>
+          {overview ? (
+            <div className="space-y-4">
+              <QuickStat
+                label="New Contacts"
+                value={overview.newContacts}
+                delta={overview.newContactsDelta}
+              />
+              <QuickStat
+                label="Win Rate"
+                value={`${overview.winRate}%`}
+                delta={overview.winRateDelta}
+                suffix="pp"
+              />
+              {leadStats && (
+                <>
+                  <QuickStat label="Total Leads (all time)" value={leadStats.total} />
+                  <QuickStat label="New This Month" value={leadStats.newThisMonth} />
+                </>
+              )}
+              {funnel && <QuickStat label="Total Leads (period)" value={funnel.totalLeads} />}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="animate-pulse h-10 bg-muted rounded" />
+              ))}
+            </div>
+          )}
         </Card>
       </div>
 
       {/* Bottom Row */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Revenue Chart Placeholder */}
+        {/* Revenue Trend Chart */}
         <Card className="p-6 bg-card border-border">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-foreground">Revenue Trend</h2>
-            <select className="px-2 py-1 text-sm border border-border rounded bg-background text-foreground">
-              <option>Last 6 months</option>
-              <option>Last 12 months</option>
-            </select>
           </div>
-          <div className="h-64 flex items-center justify-center border-2 border-dashed border-border rounded-lg">
-            <div className="text-center">
-              <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2">
-                bar_chart
-              </span>
-              <p className="text-muted-foreground">Chart visualization will be integrated here</p>
-            </div>
-          </div>
+          <RevenueTrendContent loading={timeSeriesLoading} timeSeries={timeSeries} />
         </Card>
 
         {/* Recent Activity */}
         <Card className="p-6 bg-card border-border">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-foreground">Recent Activity</h2>
-            <button className="p-1 text-muted-foreground hover:text-foreground transition-colors">
-              <span className="material-symbols-outlined">refresh</span>
-            </button>
           </div>
 
-          <div className="space-y-4">
-            <ActivityItem
-              type="note"
-              user="John Doe"
-              action="added a note to"
-              target="Deal #402"
-              time="2 hours ago"
-            />
-            <ActivityItem
-              type="email"
-              user="System"
-              action="Email sent to"
-              target="Mike Ross"
-              time="4 hours ago"
-            />
-            <ActivityItem
-              type="meeting"
-              user="System"
-              action="Meeting scheduled with"
-              target="Pearson Specter"
-              time="Yesterday at 2:00 PM"
-            />
-          </div>
+          <RecentActivityContent loading={overviewLoading} overview={overview} />
         </Card>
       </div>
     </>
   );
 }
 
+// --- Constants ---
+
+const STAGE_COLORS: Record<string, string> = {
+  PROSPECTING: 'bg-blue-400',
+  QUALIFICATION: 'bg-primary',
+  NEEDS_ANALYSIS: 'bg-indigo-500',
+  PROPOSAL: 'bg-violet-500',
+  NEGOTIATION: 'bg-warning',
+  CLOSED_WON: 'bg-success',
+};
+
+// --- Helpers ---
+
+function formatCurrency(value: number): string {
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `$${(value / 1_000).toFixed(1)}k`;
+  return `$${value.toLocaleString()}`;
+}
+
+function formatRelativeTime(date: Date | string): string {
+  const now = new Date();
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const diffMs = now.getTime() - d.getTime();
+  const diffMins = Math.floor(diffMs / 60_000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+// --- Sub-components ---
+
 function MetricCard({
   title,
   value,
-  trend,
+  delta,
   icon,
-  description,
-  positive = true,
-}: {
+  formatValue,
+  suffix,
+  badge,
+}: Readonly<{
   title: string;
-  value: string;
-  trend: string;
+  value: number;
+  delta: number;
   icon: string;
-  description: string;
-  positive?: boolean;
-}) {
-  const isPositiveTrend = trend.startsWith('+') || (trend.startsWith('-') && !positive);
+  formatValue: (v: number) => string;
+  suffix?: string;
+  badge?: string;
+}>) {
+  const isPositive = delta >= 0;
 
   return (
     <Card className="p-6 bg-card border-border">
@@ -369,20 +357,36 @@ function MetricCard({
           <span className="material-symbols-outlined text-primary">{icon}</span>
         </div>
       </div>
-      <p className="text-3xl font-bold text-foreground mb-1">{value}</p>
+      <p className="text-3xl font-bold text-foreground mb-1">{formatValue(value)}</p>
       <div className="flex items-center gap-1">
         <span
           className={`inline-flex items-center text-sm font-medium ${
-            isPositiveTrend ? 'text-success' : 'text-destructive'
+            isPositive ? 'text-success' : 'text-destructive'
           }`}
         >
           <span className="material-symbols-outlined text-sm">
-            {isPositiveTrend ? 'trending_up' : 'trending_down'}
+            {isPositive ? 'trending_up' : 'trending_down'}
           </span>{' '}
-          {trend}
+          {isPositive ? '+' : ''}
+          {delta}
+          {suffix ? ` ${suffix}` : ''}
         </span>
-        <span className="text-sm text-muted-foreground">{description}</span>
+        <span className="text-sm text-muted-foreground">vs prev period</span>
       </div>
+      {badge && <p className="text-xs text-muted-foreground mt-1">{badge}</p>}
+    </Card>
+  );
+}
+
+function MetricCardSkeleton() {
+  return (
+    <Card className="p-6 bg-card border-border animate-pulse">
+      <div className="flex items-center justify-between mb-3">
+        <div className="h-4 w-24 bg-muted rounded" />
+        <div className="w-10 h-10 rounded-lg bg-muted" />
+      </div>
+      <div className="h-8 w-20 bg-muted rounded mb-1" />
+      <div className="h-4 w-32 bg-muted rounded" />
     </Card>
   );
 }
@@ -393,19 +397,19 @@ function PipelineStageBar({
   deals,
   percentage,
   color,
-}: {
+}: Readonly<{
   name: string;
   value: string;
   deals: number;
   percentage: number;
   color: string;
-}) {
+}>) {
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-medium text-foreground">{name}</span>
         <span className="text-sm text-muted-foreground">
-          {value} ({deals} Deals)
+          {value} ({deals} {deals === 1 ? 'Deal' : 'Deals'})
         </span>
       </div>
       <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
@@ -415,75 +419,218 @@ function PipelineStageBar({
   );
 }
 
-function RecommendationItem({
-  title,
-  description,
-  priority,
+function ActivityItem({
   icon,
-}: {
-  title: string;
-  description: string;
-  priority: 'high' | 'medium' | 'low';
+  actorName,
+  description,
+  createdAt,
+}: Readonly<{
   icon: string;
-}) {
-  const priorityStyles = {
-    high: 'bg-destructive/10 border-destructive/20',
-    medium: 'bg-warning/10 border-warning/20',
-    low: 'bg-success/10 border-success/20',
-  };
-
-  const iconColors = {
-    high: 'text-destructive',
-    medium: 'text-warning',
-    low: 'text-success',
-  };
-
+  actorName: string | null;
+  description: string;
+  createdAt: Date | string;
+}>) {
   return (
-    <div className={`p-3 rounded-lg border ${priorityStyles[priority]}`}>
-      <div className="flex items-start gap-3">
-        <span className={`material-symbols-outlined ${iconColors[priority]}`}>{icon}</span>
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-foreground text-sm">{title}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-        </div>
+    <div className="flex items-start gap-3">
+      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <span className="material-symbols-outlined text-sm text-primary">{icon}</span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm text-foreground">
+          {actorName && <span className="font-medium">{actorName} — </span>}
+          {description}
+        </p>
+        <p className="text-xs text-muted-foreground mt-0.5">{formatRelativeTime(createdAt)}</p>
       </div>
     </div>
   );
 }
 
-function ActivityItem({
-  type,
-  user,
-  action,
-  target,
-  time,
-}: {
-  type: 'note' | 'email' | 'meeting';
-  user: string;
-  action: string;
-  target: string;
-  time: string;
-}) {
-  const typeIcons = {
-    note: { color: 'bg-primary' },
-    email: { color: 'bg-muted-foreground' },
-    meeting: { color: 'bg-success' },
-  };
-
-  const { color } = typeIcons[type];
-
+function QuickStat({
+  label,
+  value,
+  delta,
+  suffix,
+}: Readonly<{
+  label: string;
+  value: string | number;
+  delta?: number;
+  suffix?: string;
+}>) {
   return (
-    <div className="flex items-start gap-3">
-      <div className={`w-2 h-2 rounded-full ${color} mt-2`} />
-      <div className="flex-1 min-w-0">
-        <p className="text-sm text-foreground">
-          <span className="font-medium">{user}</span> {action}{' '}
-          <Link href="#" className="text-primary hover:underline">
-            {target}
-          </Link>
-        </p>
-        <p className="text-xs text-muted-foreground mt-0.5">{time}</p>
+    <div className="flex items-center justify-between py-2 border-b border-border last:border-0">
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-semibold text-foreground">{value}</span>
+        {delta !== undefined && (
+          <span
+            className={`text-xs font-medium ${delta >= 0 ? 'text-success' : 'text-destructive'}`}
+          >
+            {delta >= 0 ? '+' : ''}
+            {delta}
+            {suffix ? ` ${suffix}` : ''}
+          </span>
+        )}
       </div>
     </div>
   );
+}
+
+function EmptyState({ message }: Readonly<{ message: string }>) {
+  return (
+    <div className="h-64 flex items-center justify-center border-2 border-dashed border-border rounded-lg">
+      <div className="text-center">
+        <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2">
+          bar_chart
+        </span>
+        <p className="text-muted-foreground">{message}</p>
+      </div>
+    </div>
+  );
+}
+
+interface FunnelStage {
+  stage: string;
+  label: string;
+  value: number;
+  count: number;
+}
+
+interface FunnelData {
+  overallConversionRate: number;
+  totalLeads: number;
+  stages: FunnelStage[];
+}
+
+function PipelineFunnelContent({
+  loading,
+  funnel,
+}: Readonly<{ loading: boolean; funnel: FunnelData | undefined | null }>) {
+  if (loading) return (
+    <div className="space-y-4">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="animate-pulse">
+          <div className="h-4 w-32 bg-muted rounded mb-2" />
+          <div className="h-2 bg-muted rounded-full" />
+        </div>
+      ))}
+    </div>
+  );
+  if (funnel && funnel.stages.length > 0) {
+    const totalValue = funnel.stages.reduce((sum, s) => sum + s.value, 0);
+    return (
+      <div className="space-y-4">
+        {funnel.stages
+          .filter((s) => s.stage !== 'CLOSED_LOST')
+          .map((stage) => {
+            const percentage = totalValue > 0 ? Math.round((stage.value / totalValue) * 100) : 0;
+            return (
+              <PipelineStageBar
+                key={stage.stage}
+                name={stage.label}
+                value={formatCurrency(stage.value)}
+                deals={stage.count}
+                percentage={percentage}
+                color={STAGE_COLORS[stage.stage] || 'bg-primary/60'}
+              />
+            );
+          })}
+      </div>
+    );
+  }
+  return <EmptyState message="No pipeline data for this period" />;
+}
+
+interface TimeSeriesEntry {
+  periodLabel: string;
+  value: number;
+}
+
+function RevenueTrendContent({
+  loading,
+  timeSeries,
+}: Readonly<{ loading: boolean; timeSeries: TimeSeriesEntry[] | undefined | null }>) {
+  if (loading) return <div className="h-64 animate-pulse rounded-lg bg-muted" />;
+  if (timeSeries && timeSeries.length > 0) return (
+    <div className="h-64">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={timeSeries} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
+          <XAxis
+            dataKey="periodLabel"
+            tick={{ fontSize: 12 }}
+            className="fill-muted-foreground"
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis
+            tick={{ fontSize: 12 }}
+            className="fill-muted-foreground"
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
+          />
+          <Tooltip
+            formatter={(value) => {
+              const numValue = typeof value === 'number' ? value : 0;
+              return formatCurrency(numValue);
+            }}
+            contentStyle={{
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: '0.5rem',
+              color: 'hsl(var(--foreground))',
+            }}
+          />
+          <Bar dataKey="value" radius={[4, 4, 0, 0]} className="fill-primary" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+  return <EmptyState message="No revenue data for this period" />;
+}
+
+interface RecentActivityItem {
+  id: string;
+  icon: string;
+  actorName: string | null;
+  description: string;
+  createdAt: string;
+}
+
+interface OverviewForActivity {
+  recentActivity: RecentActivityItem[];
+}
+
+function RecentActivityContent({
+  loading,
+  overview,
+}: Readonly<{ loading: boolean; overview: OverviewForActivity | undefined | null }>) {
+  if (loading) return (
+    <div className="space-y-4">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="animate-pulse flex gap-3">
+          <div className="w-2 h-2 rounded-full bg-muted mt-2" />
+          <div className="flex-1">
+            <div className="h-4 w-3/4 bg-muted rounded mb-1" />
+            <div className="h-3 w-1/3 bg-muted rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+  if (overview && overview.recentActivity.length > 0) return (
+    <div className="space-y-4">
+      {overview.recentActivity.map((activity) => (
+        <ActivityItem
+          key={activity.id}
+          icon={activity.icon}
+          actorName={activity.actorName}
+          description={activity.description}
+          createdAt={activity.createdAt}
+        />
+      ))}
+    </div>
+  );
+  return <EmptyState message="No recent activity" />;
 }

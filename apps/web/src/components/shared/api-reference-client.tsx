@@ -10,7 +10,7 @@ interface ApiReferenceClientProps {
   specUrl: string;
 }
 
-export function ApiReferenceClient({ specUrl }: ApiReferenceClientProps) {
+export function ApiReferenceClient({ specUrl }: Readonly<ApiReferenceClientProps>) {
   const { resolvedTheme } = useTheme();
   const [spec, setSpec] = useState<object | null>(null);
   const [error, setError] = useState<string | null>(null);

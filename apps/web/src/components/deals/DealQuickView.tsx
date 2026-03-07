@@ -17,7 +17,7 @@ interface DealQuickViewProps {
   readonly onNavigateToDetail: (dealId: string) => void;
 }
 
-export function DealQuickView({ dealId, onClose, onNavigateToDetail }: DealQuickViewProps) {
+export function DealQuickView({ dealId, onClose, onNavigateToDetail }: Readonly<DealQuickViewProps>) {
   if (!dealId) return null;
 
   return (

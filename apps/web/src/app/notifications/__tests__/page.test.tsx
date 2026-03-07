@@ -87,10 +87,10 @@ vi.mock('@/components/shared', () => ({
     ({
       title,
       actions,
-    }: {
+    }: Readonly<{
       title: string;
       actions?: Array<{ label: string; onClick?: () => void }>;
-    }) => (
+    }>) => (
       <div data-testid="page-header">
         <h1>{title}</h1>
         {actions?.map((a, i) =>

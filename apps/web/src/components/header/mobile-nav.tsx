@@ -12,7 +12,7 @@ interface MobileNavProps {
   onClose: () => void;
 }
 
-export function MobileNav({ routes, isOpen, onClose }: MobileNavProps) {
+export function MobileNav({ routes, isOpen, onClose }: Readonly<MobileNavProps>) {
   const pathname = usePathname();
 
   if (!isOpen) return null;

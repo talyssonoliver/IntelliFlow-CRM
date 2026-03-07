@@ -5,6 +5,6 @@ export const metadata: Metadata = {
   title: 'Leads',
 };
 
-export default function LeadsLayout({ children }: { children: React.ReactNode }) {
+export default function LeadsLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <UnsavedChangesProvider>{children}</UnsavedChangesProvider>;
 }

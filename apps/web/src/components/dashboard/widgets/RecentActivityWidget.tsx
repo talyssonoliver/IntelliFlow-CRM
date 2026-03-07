@@ -34,7 +34,7 @@ function formatRelativeTime(timestamp: string): string {
 }
 
 // Connection status indicator
-function ConnectionStatus({ status, latency }: { status: string; latency: number | null }) {
+function ConnectionStatus({ status, latency }: Readonly<{ status: string; latency: number | null }>) {
   const statusConfig = {
     connected: { color: 'bg-success', label: 'Live' },
     connecting: { color: 'bg-warning animate-pulse', label: 'Connecting...' },
@@ -55,7 +55,7 @@ function ConnectionStatus({ status, latency }: { status: string; latency: number
   );
 }
 
-export function RecentActivityWidget(_props: WidgetProps) {
+export function RecentActivityWidget(_props: Readonly<WidgetProps>) {
   // Real-time subscription for activities (gracefully handles missing table)
   const {
     activities: realtimeActivities,

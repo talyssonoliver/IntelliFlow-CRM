@@ -4,7 +4,7 @@ import DeveloperAppDetailPage, { generateMetadata } from '../page';
 
 // Mock AppDashboard to isolate page shell tests
 vi.mock('@/components/developer/app-dashboard', () => ({
-  AppDashboard: ({ appId }: { appId: string }) => (
+  AppDashboard: ({ appId }: Readonly<{ appId: string }>) => (
     <div data-testid="app-dashboard" data-app-id={appId}>
       AppDashboard for {appId}
     </div>

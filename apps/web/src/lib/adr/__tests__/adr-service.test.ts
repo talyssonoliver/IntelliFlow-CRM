@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 // We need to spy on individual fs/path functions BEFORE importing the module under test.
 // Use vi.mock with factory to control what gets exported.

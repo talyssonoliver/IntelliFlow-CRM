@@ -6,7 +6,7 @@ interface DocsNavigationProps {
   categories: DocCategory[];
 }
 
-export function DocsNavigation({ categories }: DocsNavigationProps) {
+export function DocsNavigation({ categories }: Readonly<DocsNavigationProps>) {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {categories.map((category) => {

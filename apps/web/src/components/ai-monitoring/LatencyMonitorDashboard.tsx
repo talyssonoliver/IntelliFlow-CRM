@@ -43,13 +43,13 @@ function StatCard({
   icon,
   colorClass,
   isLoading,
-}: {
+}: Readonly<{
   label: string;
   value: string | number;
   icon: string;
   colorClass: string;
   isLoading: boolean;
-}) {
+}>) {
   return (
     <Card>
       <CardContent className="p-4">
@@ -174,7 +174,7 @@ export function LatencyMonitorDashboard() {
           <p className="text-sm text-amber-700 dark:text-amber-400 flex items-center gap-2">
             <span className="material-symbols-outlined text-base" aria-hidden="true">
               schedule
-            </span>
+            </span>{' '}
             Latency data may be stale. Last update was over 1 hour ago.
           </p>
         </div>

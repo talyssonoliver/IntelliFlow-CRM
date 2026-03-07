@@ -10,7 +10,7 @@ import { ForecastHeader } from '../forecast/ForecastHeader';
 
 // Mock next/link
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: { children: React.ReactNode; href: string }) => (
+  default: ({ children, href, ...props }: Readonly<{ children: React.ReactNode; href: string }>) => (
     <a href={href} {...props}>
       {children}
     </a>
@@ -19,7 +19,7 @@ vi.mock('next/link', () => ({
 
 // Mock @intelliflow/ui
 vi.mock('@intelliflow/ui', () => ({
-  Badge: ({ children, ...props }: { children: React.ReactNode }) => (
+  Badge: ({ children, ...props }: Readonly<{ children: React.ReactNode }>) => (
     <span data-testid="badge" {...props}>
       {children}
     </span>
@@ -29,7 +29,7 @@ vi.mock('@intelliflow/ui', () => ({
 // Mock EntityHeader — capture props to verify them
 const mockEntityHeader = vi.fn();
 vi.mock('@/components/shared', () => ({
-  EntityHeader: (props: Record<string, unknown>) => {
+  EntityHeader: (props: Readonly<Record<string, unknown>>) => {
     mockEntityHeader(props);
     return (
       <div data-testid="entity-header">

@@ -206,7 +206,7 @@ const REFRESH_TOKEN_KEY = 'refreshToken';
  * @param refreshToken - Optional refresh token to store
  */
 export function storeSessionTokens(accessToken: string, refreshToken?: string): void {
-  if (typeof window === 'undefined') {
+  if (typeof globalThis.window === 'undefined') {
     return;
   }
 
@@ -220,7 +220,7 @@ export function storeSessionTokens(accessToken: string, refreshToken?: string): 
  * Clear session tokens from localStorage
  */
 export function clearSessionTokens(): void {
-  if (typeof window === 'undefined') {
+  if (typeof globalThis.window === 'undefined') {
     return;
   }
 
@@ -234,7 +234,7 @@ export function clearSessionTokens(): void {
  * @returns Access token or null if not stored
  */
 export function getStoredAccessToken(): string | null {
-  if (typeof window === 'undefined') {
+  if (typeof globalThis.window === 'undefined') {
     return null;
   }
 

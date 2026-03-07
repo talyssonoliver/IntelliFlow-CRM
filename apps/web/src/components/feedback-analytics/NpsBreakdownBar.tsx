@@ -24,7 +24,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   Detractors: '#dc2626',
 };
 
-export default function NpsBreakdownBar({ distribution }: NpsBreakdownBarProps) {
+export default function NpsBreakdownBar({ distribution }: Readonly<NpsBreakdownBarProps>) {
   if (distribution.total === 0) {
     return (
       <div className="flex h-64 items-center justify-center rounded-lg border bg-card p-6">

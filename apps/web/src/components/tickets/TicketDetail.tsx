@@ -61,7 +61,7 @@ interface TicketDetailProps {
   onPriorityChange: (priority: string) => Promise<void>;
   onAssign: (userId: string) => Promise<void>;
   onAddResponse: (content: string, isInternal: boolean) => Promise<void>;
-  onResolve: (resolution: ResolutionInput) => Promise<void>;
+  onResolve: (resolution: Readonly<ResolutionInput>) => Promise<void>;
   onClose: () => Promise<void>;
   /** Called after confirmed deletion — parent should redirect away */
   onDelete?: () => Promise<void>;
@@ -78,6 +78,42 @@ const tabs: { id: TabId; label: string }[] = [
   { id: 'attachments', label: 'Attachments' },
   { id: 'ai-insights', label: 'AI Insights' },
 ];
+
+interface FirstResponseDisplay {
+  metricClass: string;
+  summaryClass: string;
+  summaryText: string;
+  barClass: string;
+}
+
+function resolveFirstResponseDisplay(
+  hasFirstResponse: boolean,
+  firstResponseMet: boolean,
+  firstResponseValue: number | null | undefined
+): FirstResponseDisplay {
+  if (!hasFirstResponse) {
+    return {
+      metricClass: 'text-amber-600',
+      summaryClass: 'text-amber-600 font-medium',
+      summaryText: 'Pending',
+      barClass: 'bg-amber-500',
+    };
+  }
+  if (firstResponseMet) {
+    return {
+      metricClass: 'text-green-600',
+      summaryClass: 'text-green-600 font-medium',
+      summaryText: `Met (${firstResponseValue ?? 0}m)`,
+      barClass: 'bg-green-500',
+    };
+  }
+  return {
+    metricClass: 'text-red-600',
+    summaryClass: 'text-red-600 font-medium',
+    summaryText: 'Missed',
+    barClass: 'bg-red-500',
+  };
+}
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
@@ -96,7 +132,7 @@ export function TicketDetail({
   onClose,
   onDelete,
   onArchive,
-}: TicketDetailProps) {
+}: Readonly<TicketDetailProps>) {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
   const [assignSidebarOpen, setAssignSidebarOpen] = useState(false);
@@ -119,18 +155,12 @@ export function TicketDetail({
   const hasFirstResponse = ticket.firstResponseAt !== null;
   const firstResponseValue = ticket.sla.firstResponse.actual;
   const firstResponseMet = ticket.sla.firstResponse.met;
-  const metOrMissedMetricClass = firstResponseMet ? 'text-green-600' : 'text-red-600';
-  const firstResponseMetricClass = hasFirstResponse ? metOrMissedMetricClass : 'text-amber-600';
-  const metOrMissedSummaryClass = firstResponseMet
-    ? 'text-green-600 font-medium'
-    : 'text-red-600 font-medium';
-  const firstResponseSummaryClass = hasFirstResponse
-    ? metOrMissedSummaryClass
-    : 'text-amber-600 font-medium';
-  const metOrMissedSummaryText = firstResponseMet ? `Met (${firstResponseValue ?? 0}m)` : 'Missed';
-  const firstResponseSummaryText = hasFirstResponse ? metOrMissedSummaryText : 'Pending';
-  const metOrMissedBarClass = firstResponseMet ? 'bg-green-500' : 'bg-red-500';
-  const firstResponseBarClass = hasFirstResponse ? metOrMissedBarClass : 'bg-amber-500';
+  const {
+    metricClass: firstResponseMetricClass,
+    summaryClass: firstResponseSummaryClass,
+    summaryText: firstResponseSummaryText,
+    barClass: firstResponseBarClass,
+  } = resolveFirstResponseDisplay(hasFirstResponse, firstResponseMet, firstResponseValue);
   const canOpenAssignSidebar =
     Boolean(currentUserId) || assigneeOptions.length > 0 || isAssigneeOptionsLoading;
 
@@ -159,7 +189,7 @@ export function TicketDetail({
     if (isLoading || ticket.priority === 'CRITICAL') {
       return;
     }
-    void _onPriorityChange('CRITICAL'); // NOSONAR typescript:S3735 — intentional fire-and-forget
+    _onPriorityChange('CRITICAL').catch(() => {});
   };
 
   const activityCount = ticket.activities.length;
@@ -177,7 +207,7 @@ export function TicketDetail({
                 href="/tickets"
                 className="hover:text-[#137fec] transition-colors flex items-center gap-1"
               >
-                <span className="material-symbols-outlined text-[16px]">arrow_back</span> Tickets
+                <span className="material-symbols-outlined text-[16px]">arrow_back</span>{' '}Tickets
               </Link>
               <span className="material-symbols-outlined text-[14px]">chevron_right</span>
               <span className="text-slate-900 dark:text-slate-200 font-medium">
@@ -210,7 +240,7 @@ export function TicketDetail({
               disabled={isLoading}
               className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
             >
-              <span className="material-symbols-outlined text-[18px]">edit</span>
+              <span className="material-symbols-outlined text-[18px]">edit</span>{' '}
               Change Status
             </button>
             <PinButton
@@ -251,11 +281,12 @@ export function TicketDetail({
               icon: 'report',
               onClick: () => {
                 setActionSheetOpen(false);
-                void _onStatusChange('SPAM'); // NOSONAR typescript:S3735 — intentional fire-and-forget
+                _onStatusChange('SPAM').catch(() => {});
               },
             },
-            ...(ticket.status === 'RESOLVED' || ticket.status === 'CLOSED'
-              ? [
+            ...((() => {
+              if (ticket.status === 'RESOLVED' || ticket.status === 'CLOSED') {
+                return [
                   {
                     label: 'Archive',
                     icon: 'archive',
@@ -271,27 +302,30 @@ export function TicketDetail({
                       }
                     },
                   },
-                ]
-              : ticket.status !== 'ARCHIVED'
-                ? [
-                    {
-                      label: 'Delete',
-                      icon: 'delete',
-                      onClick: () => {
-                        setActionSheetOpen(false);
-                        if (onDelete) {
-                          setDeleteConfirmOpen(true);
-                        } else {
-                          toast({
-                            title: 'Delete unavailable',
-                            description: 'Delete action is not wired for this view.',
-                          });
-                        }
-                      },
-                      destructive: true,
+                ];
+              }
+              if (ticket.status !== 'ARCHIVED') {
+                return [
+                  {
+                    label: 'Delete',
+                    icon: 'delete',
+                    onClick: () => {
+                      setActionSheetOpen(false);
+                      if (onDelete) {
+                        setDeleteConfirmOpen(true);
+                      } else {
+                        toast({
+                          title: 'Delete unavailable',
+                          description: 'Delete action is not wired for this view.',
+                        });
+                      }
                     },
-                  ]
-                : []),
+                    destructive: true,
+                  },
+                ];
+              }
+              return [];
+            })()),
           ]}
         />
         <TicketAssignSidebar
@@ -322,7 +356,7 @@ export function TicketDetail({
                 className="bg-red-600 hover:bg-red-700 text-white"
                 onClick={() => {
                   setDeleteConfirmOpen(false);
-                  void onDelete?.(); // NOSONAR typescript:S3735 — intentional fire-and-forget
+                  onDelete?.();
                 }}
               >
                 Delete
@@ -346,7 +380,7 @@ export function TicketDetail({
               <AlertDialogAction
                 onClick={() => {
                   setArchiveConfirmOpen(false);
-                  void onArchive?.(); // NOSONAR typescript:S3735 — intentional fire-and-forget
+                  onArchive?.();
                 }}
               >
                 Archive
@@ -461,7 +495,7 @@ export function TicketDetail({
                     href={`/accounts/${ticket.account.id}`}
                     className="flex items-center gap-1 text-[#137fec] text-sm font-medium mt-1 hover:underline"
                   >
-                    <span className="material-symbols-outlined text-[16px]">business</span>
+                    <span className="material-symbols-outlined text-[16px]">business</span>{' '}
                     {ticket.customer.company}
                   </Link>
                 </div>
@@ -491,16 +525,16 @@ export function TicketDetail({
                 </div>
                 <div className="flex gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                   <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-[#137fec]/10 text-[#137fec] text-xs font-semibold hover:bg-[#137fec]/20 transition-colors">
-                    <span className="material-symbols-outlined text-[16px]">mail</span> Email
+                    <span className="material-symbols-outlined text-[16px]">mail</span>{' '}Email
                   </button>
                   <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-[#137fec]/10 text-[#137fec] text-xs font-semibold hover:bg-[#137fec]/20 transition-colors">
-                    <span className="material-symbols-outlined text-[16px]">call</span> Call
+                    <span className="material-symbols-outlined text-[16px]">call</span>{' '}Call
                   </button>
                   <Link
                     href={`/contacts/${ticket.customer.id}`}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                   >
-                    <span className="material-symbols-outlined text-[16px]">person</span>
+                    <span className="material-symbols-outlined text-[16px]">person</span>{' '}
                     Profile
                   </Link>
                 </div>
@@ -561,12 +595,8 @@ export function TicketDetail({
               {/* Tabs */}
               <div className="flex border-b border-slate-200 dark:border-slate-800 px-2 overflow-x-auto">
                 {tabs.map((tab) => {
-                  const count =
-                    tab.id === 'activity'
-                      ? activityCount
-                      : tab.id === 'attachments'
-                        ? attachmentCount
-                        : undefined;
+                  const attachmentsOrUndefined = tab.id === 'attachments' ? attachmentCount : undefined;
+                  const count = tab.id === 'activity' ? activityCount : attachmentsOrUndefined;
                   return (
                     <button
                       key={tab.id}
@@ -605,7 +635,7 @@ export function TicketDetail({
                     <div className="grid grid-cols-3 gap-4">
                       <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg text-center">
                         <p className={`text-2xl font-bold ${firstResponseMetricClass}`}>
-                          {firstResponseValue !== null ? `${firstResponseValue}m` : 'Pending'}
+                          {firstResponseValue === null ? 'Pending' : `${firstResponseValue}m`}
                         </p>
                         <p className="text-xs text-slate-500 mt-1">First Response</p>
                         <p className="text-[10px] text-slate-400">
@@ -812,7 +842,7 @@ export function TicketDetail({
                                 className="px-4 py-1.5 bg-[#137fec] text-white text-xs font-bold rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-50"
                               >
                                 Send Reply
-                                <span className="material-symbols-outlined text-[16px]">send</span>
+                                {' '}<span className="material-symbols-outlined text-[16px]">send</span>
                               </button>
                             </div>
                           </div>
@@ -939,31 +969,43 @@ export function TicketDetail({
                           key={file.id}
                           className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
                         >
-                          <div
-                            className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                              file.type === 'pdf'
-                                ? 'bg-red-100 dark:bg-red-900/30'
-                                : file.type === 'image'
-                                  ? 'bg-blue-100 dark:bg-blue-900/30'
-                                  : 'bg-green-100 dark:bg-green-900/30'
-                            }`}
-                          >
-                            <span
-                              className={`material-symbols-outlined ${
-                                file.type === 'pdf'
-                                  ? 'text-red-600'
-                                  : file.type === 'image'
-                                    ? 'text-blue-600'
-                                    : 'text-green-600'
-                              }`}
-                            >
-                              {file.type === 'pdf'
-                                ? 'picture_as_pdf'
-                                : file.type === 'image'
-                                  ? 'image'
-                                  : 'description'}
-                            </span>
-                          </div>
+                          {(() => {
+                            const fileIsPdf = file.type === 'pdf';
+                            const fileIsImage = file.type === 'image';
+                            let fileBgClass: string;
+                            if (fileIsPdf) {
+                              fileBgClass = 'bg-red-100 dark:bg-red-900/30';
+                            } else if (fileIsImage) {
+                              fileBgClass = 'bg-blue-100 dark:bg-blue-900/30';
+                            } else {
+                              fileBgClass = 'bg-green-100 dark:bg-green-900/30';
+                            }
+                            let fileTextClass: string;
+                            if (fileIsPdf) {
+                              fileTextClass = 'text-red-600';
+                            } else if (fileIsImage) {
+                              fileTextClass = 'text-blue-600';
+                            } else {
+                              fileTextClass = 'text-green-600';
+                            }
+                            let fileIconName: string;
+                            if (fileIsPdf) {
+                              fileIconName = 'picture_as_pdf';
+                            } else if (fileIsImage) {
+                              fileIconName = 'image';
+                            } else {
+                              fileIconName = 'description';
+                            }
+                            return (
+                              <div
+                                className={`w-10 h-10 rounded-lg flex items-center justify-center ${fileBgClass}`}
+                              >
+                                <span className={`material-symbols-outlined ${fileTextClass}`}>
+                                  {fileIconName}
+                                </span>
+                              </div>
+                            );
+                          })()}
                           <div className="flex-1">
                             <p className="text-sm font-medium text-slate-900 dark:text-white">
                               {file.name}
@@ -984,31 +1026,39 @@ export function TicketDetail({
                 {/* AI Insights Tab */}
                 {activeTab === 'ai-insights' && (
                   <div className="space-y-6">
+                    {(() => {
+                      const riskIsHigh = ticket.aiInsights.escalationRisk === 'high';
+                      const riskIsMedium = ticket.aiInsights.escalationRisk === 'medium';
+                      let riskBgBorderClass: string;
+                      if (riskIsHigh) {
+                        riskBgBorderClass = 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800';
+                      } else if (riskIsMedium) {
+                        riskBgBorderClass = 'bg-yellow-50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-800';
+                      } else {
+                        riskBgBorderClass = 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800';
+                      }
+                      let riskIconColorClass: string;
+                      if (riskIsHigh) {
+                        riskIconColorClass = 'text-red-500';
+                      } else if (riskIsMedium) {
+                        riskIconColorClass = 'text-yellow-500';
+                      } else {
+                        riskIconColorClass = 'text-green-500';
+                      }
+                      return (
                     <div
-                      className={`p-4 rounded-lg border ${
-                        ticket.aiInsights.escalationRisk === 'high'
-                          ? 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800'
-                          : ticket.aiInsights.escalationRisk === 'medium'
-                            ? 'bg-yellow-50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-800'
-                            : 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800'
-                      }`}
+                      className={`p-4 rounded-lg border ${riskBgBorderClass}`}
                     >
                       <div className="flex items-center gap-3">
                         <span
-                          className={`material-symbols-outlined text-2xl ${
-                            ticket.aiInsights.escalationRisk === 'high'
-                              ? 'text-red-500'
-                              : ticket.aiInsights.escalationRisk === 'medium'
-                                ? 'text-yellow-500'
-                                : 'text-green-500'
-                          }`}
+                          className={`material-symbols-outlined text-2xl ${riskIconColorClass}`}
                         >
-                          {ticket.aiInsights.escalationRisk === 'high' ? 'warning' : 'insights'}
+                          {riskIsHigh ? 'warning' : 'insights'}
                         </span>
                         <div>
                           <p className="font-bold text-slate-900 dark:text-white">
-                            Escalation Risk:{' '}
-                            <span className="capitalize">{ticket.aiInsights.escalationRisk}</span>
+                            Escalation Risk:
+                            {' '}<span className="capitalize">{ticket.aiInsights.escalationRisk}</span>
                           </p>
                           <p className="text-sm text-slate-600 dark:text-slate-400">
                             Predicted resolution time: {ticket.aiInsights.predictedResolutionTime}
@@ -1016,18 +1066,20 @@ export function TicketDetail({
                         </div>
                       </div>
                     </div>
+                      );
+                    })()}
 
                     <div>
                       <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                         <span className="material-symbols-outlined text-[#137fec] text-[20px]">
                           lightbulb
-                        </span>
+                        </span>{' '}
                         Suggested Solutions
                       </h4>
                       <div className="space-y-2">
                         {ticket.aiInsights.suggestedSolutions.map((solution, i) => (
                           <div
-                            key={i}
+                            key={i} // NOSONAR typescript:S6479
                             className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
                           >
                             <span className="text-[#137fec] font-bold text-sm">{i + 1}.</span>
@@ -1041,7 +1093,7 @@ export function TicketDetail({
                       <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                         <span className="material-symbols-outlined text-purple-500 text-[20px]">
                           content_copy
-                        </span>
+                        </span>{' '}
                         Similar Resolved Tickets ({ticket.aiInsights.similarResolvedTickets})
                       </h4>
                       <div className="space-y-2">
@@ -1072,11 +1124,10 @@ export function TicketDetail({
                     <div className="grid grid-cols-2 gap-4">
                       <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg text-center">
                         <span className="text-3xl mb-2 block">
-                          {ticket.aiInsights.sentiment === 'positive'
-                            ? '😊'
-                            : ticket.aiInsights.sentiment === 'negative'
-                              ? '😟'
-                              : '😐'}
+                          {(() => {
+                            const sentimentNegativeEmoji = ticket.aiInsights.sentiment === 'negative' ? '😟' : '😐';
+                            return ticket.aiInsights.sentiment === 'positive' ? '😊' : sentimentNegativeEmoji;
+                          })()}
                         </span>
                         <p className="text-sm font-medium text-slate-900 dark:text-white capitalize">
                           {ticket.aiInsights.sentiment} Sentiment
@@ -1121,15 +1172,11 @@ export function TicketDetail({
                     <span className={`font-medium ${slaConfig.text}`}>{slaConfig.label}</span>
                   </div>
                   <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${
-                        ticket.sla.resolution.status === 'BREACHED'
-                          ? 'bg-red-500'
-                          : ticket.sla.resolution.status === 'AT_RISK'
-                            ? 'bg-yellow-500'
-                            : 'bg-green-500'
-                      } w-full`}
-                    />
+                    {(() => {
+                      const slaAtRiskOrGreenColor = ticket.sla.resolution.status === 'AT_RISK' ? 'bg-yellow-500' : 'bg-green-500';
+                      const slaBarColor = ticket.sla.resolution.status === 'BREACHED' ? 'bg-red-500' : slaAtRiskOrGreenColor;
+                      return <div className={`h-full ${slaBarColor} w-full`} />;
+                    })()}
                   </div>
                   <div className="flex justify-between text-[10px] text-slate-400 mt-1">
                     <span>Target: {ticket.sla.resolution.target}m</span>
@@ -1290,7 +1337,7 @@ export function TicketDetail({
 
 // ─── Activity Item Component ────────────────────────────────────────────────
 
-function ActivityItem({ activity }: { activity: TicketActivity }) {
+function ActivityItem({ activity }: Readonly<{ activity: TicketActivity }>) {
   return (
     <div className="relative pl-6">
       <div className="absolute -left-[25px] top-1 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-700 z-10">

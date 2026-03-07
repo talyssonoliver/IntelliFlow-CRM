@@ -93,11 +93,11 @@ vi.mock('next/link', () => ({
     children,
     href,
     ...props
-  }: {
+  }: Readonly<{
     children: React.ReactNode;
     href: string;
     [key: string]: unknown;
-  }) => (
+  }>) => (
     <a href={href} {...props}>
       {children}
     </a>
@@ -157,8 +157,10 @@ describe('BillingPortal', () => {
 
     it('renders BillingHistoryTable in left column', () => {
       const { container } = render(<BillingPortal />);
-      const leftCol = container.querySelector('.lg\\:col-span-2');
-      expect(within(leftCol as HTMLElement).getByText('Billing History')).toBeInTheDocument();
+      const leftCols = container.querySelectorAll('.lg\\:col-span-2');
+      // BillingHistoryTable is in the second lg:col-span-2 column
+      const secondLeftCol = leftCols[1];
+      expect(within(secondLeftCol as HTMLElement).getByText('Billing History')).toBeInTheDocument();
     });
 
     it('does NOT render UsageMetrics section', () => {
@@ -264,24 +266,13 @@ describe('BillingPortal', () => {
 
     it('renders Add New Payment Method button with dashed border', () => {
       render(<BillingPortal />);
-      expect(screen.getByText('+ Add New Payment Method')).toBeInTheDocument();
+      expect(screen.getByText('Add Payment Method')).toBeInTheDocument();
     });
 
     it('navigates to payment methods page when Add New Payment Method is clicked', () => {
-      // Mock window.location.href setter
-      const originalLocation = window.location;
-      Object.defineProperty(window, 'location', {
-        writable: true,
-        value: { ...originalLocation, href: '' },
-      });
       render(<BillingPortal />);
-      fireEvent.click(screen.getByText('+ Add New Payment Method'));
-      expect(window.location.href).toBe('/billing/payment-methods');
-      // Restore
-      Object.defineProperty(window, 'location', {
-        writable: true,
-        value: originalLocation,
-      });
+      const addBtn = screen.getByText('Add Payment Method');
+      expect(addBtn.closest('a')).toHaveAttribute('href', '/billing/payment-methods');
     });
 
     it('renders multiple payment methods', () => {
@@ -350,8 +341,8 @@ describe('BillingPortal', () => {
     it('shows loading skeleton during fetch', () => {
       mockGetBillingInformation.mockReturnValue({ data: undefined, isLoading: true, error: null });
       const { container } = render(<BillingPortal />);
-      // Skeleton elements should be present
-      const skeletons = container.querySelectorAll('[class*="h-5"][class*="w-5"]');
+      // Skeleton elements should be present via animate-pulse
+      const skeletons = container.querySelectorAll('[class*="animate-pulse"]');
       expect(skeletons.length).toBeGreaterThan(0);
     });
 
@@ -394,7 +385,7 @@ describe('BillingPortal', () => {
     it('shows Paid status badge in green', () => {
       render(<BillingPortal />);
       const paidBadge = screen.getByText('Paid');
-      expect(paidBadge.className).toContain('border-success');
+      expect(paidBadge.className).toContain('border-green-200');
     });
 
     it('shows Open/Pending status badge in amber', () => {
@@ -411,7 +402,7 @@ describe('BillingPortal', () => {
       });
       render(<BillingPortal />);
       const openBadge = screen.getByText('Open');
-      expect(openBadge.className).toContain('border-warning');
+      expect(openBadge.className).toContain('border-amber-200');
     });
 
     it('renders Download button when PDF available', () => {
@@ -534,7 +525,7 @@ describe('BillingPortal', () => {
     it('shows no subscription message', () => {
       mockGetSubscription.mockReturnValue({ data: null, isLoading: false, error: null });
       render(<BillingPortal />);
-      expect(screen.getByText('No Active Subscription')).toBeInTheDocument();
+      expect(screen.getByText('No active subscription')).toBeInTheDocument();
     });
 
     it('shows no payment methods message', () => {

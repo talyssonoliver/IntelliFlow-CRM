@@ -4,6 +4,6 @@ export const metadata: Metadata = {
   title: 'Tasks',
 };
 
-export default function TasksLayout({ children }: { children: React.ReactNode }) {
+export default function TasksLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <>{children}</>;
 }

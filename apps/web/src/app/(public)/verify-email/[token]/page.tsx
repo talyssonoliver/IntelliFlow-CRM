@@ -71,15 +71,14 @@ function LegacyVerifyContent() {
           )}
 
           {resendMessage && (
-            <p
+            <output
               className={cn(
                 'text-sm',
                 resendMessage.includes('sent') ? 'text-green-400' : 'text-amber-400'
               )}
-              role="status"
             >
               {resendMessage}
-            </p>
+            </output>
           )}
 
           <Link

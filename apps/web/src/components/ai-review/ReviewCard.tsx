@@ -98,7 +98,7 @@ export function ReviewCard({
   onReject,
   onEscalate,
   isMutating,
-}: ReviewCardProps) {
+}: Readonly<ReviewCardProps>) {
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [showEscalateForm, setShowEscalateForm] = useState(false);
   const [rejectNotes, setRejectNotes] = useState('');
@@ -116,11 +116,14 @@ export function ReviewCard({
   const isOtherClaim = review.lockedBy !== null && !isOwnClaim;
 
   // State-dependent border color
-  const borderColor = slaClock.isBreached
-    ? 'border-l-red-500'
-    : review.status === 'IN_REVIEW'
-      ? 'border-l-blue-400'
-      : 'border-l-slate-300 dark:border-l-slate-600';
+  let borderColor: string;
+  if (slaClock.isBreached) {
+    borderColor = 'border-l-red-500';
+  } else if (review.status === 'IN_REVIEW') {
+    borderColor = 'border-l-blue-400';
+  } else {
+    borderColor = 'border-l-slate-300 dark:border-l-slate-600';
+  }
 
   const handleReject = () => {
     if (!lockToken || !rejectNotes.trim()) return;
@@ -159,7 +162,7 @@ export function ReviewCard({
           >
             <span className="material-symbols-outlined text-sm" aria-hidden="true">
               {outputConfig.icon}
-            </span>
+            </span>{' '}
             {outputConfig.label}
           </Badge>
 
@@ -242,7 +245,7 @@ export function ReviewCard({
               >
                 <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                   check_circle
-                </span>
+                </span>{' '}
                 Approve
               </Button>
               <Button
@@ -258,7 +261,7 @@ export function ReviewCard({
               >
                 <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                   cancel
-                </span>
+                </span>{' '}
                 Reject
               </Button>
               <Button
@@ -274,7 +277,7 @@ export function ReviewCard({
               >
                 <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                   arrow_upward
-                </span>
+                </span>{' '}
                 Escalate
               </Button>
             </>
@@ -300,7 +303,7 @@ export function ReviewCard({
             >
               <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                 lock
-              </span>
+              </span>{' '}
               Claim
             </Button>
           )}
@@ -316,7 +319,7 @@ export function ReviewCard({
               >
                 <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                   visibility
-                </span>
+                </span>{' '}
                 View
               </Link>
             </Button>

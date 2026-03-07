@@ -4,7 +4,7 @@ import DeveloperAppEditPage, { generateMetadata } from '../page';
 
 // Mock AppEditor to isolate page shell tests
 vi.mock('@/components/developer/app-editor', () => ({
-  AppEditor: ({ appId }: { appId: string }) => (
+  AppEditor: ({ appId }: Readonly<{ appId: string }>) => (
     <div data-testid="app-editor" data-app-id={appId}>
       AppEditor for {appId}
     </div>

@@ -22,11 +22,11 @@ vi.mock('next/link', () => ({
     children,
     href,
     ...props
-  }: {
+  }: Readonly<{
     children: React.ReactNode;
     href: string;
     [key: string]: unknown;
-  }) => (
+  }>) => (
     <a href={href} {...props}>
       {children}
     </a>
@@ -35,18 +35,18 @@ vi.mock('next/link', () => ({
 
 // Mock UI components
 vi.mock('@intelliflow/ui', () => ({
-  Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  Card: ({ children, className }: Readonly<{ children: React.ReactNode; className?: string }>) => (
     <div className={className}>{children}</div>
   ),
   Tabs: ({
     children,
     value,
     onValueChange,
-  }: {
+  }: Readonly<{
     children: React.ReactNode;
     value: string;
     onValueChange: (v: string) => void;
-  }) => (
+  }>) => (
     <div
       data-testid="tabs"
       data-value={value}
@@ -62,11 +62,11 @@ vi.mock('@intelliflow/ui', () => ({
     children,
     className,
     'aria-label': ariaLabel,
-  }: {
+  }: Readonly<{
     children: React.ReactNode;
     className?: string;
     'aria-label'?: string;
-  }) => (
+  }>) => (
     <div className={className} role="tablist" aria-label={ariaLabel}>
       {children}
     </div>
@@ -75,11 +75,11 @@ vi.mock('@intelliflow/ui', () => ({
     children,
     value,
     className,
-  }: {
+  }: Readonly<{
     children: React.ReactNode;
     value: string;
     className?: string;
-  }) => (
+  }>) => (
     <button role="tab" data-value={value} className={className}>
       {children}
     </button>
@@ -88,20 +88,20 @@ vi.mock('@intelliflow/ui', () => ({
     children,
     value,
     className,
-  }: {
+  }: Readonly<{
     children: React.ReactNode;
     value: string;
     className?: string;
-  }) => (
+  }>) => (
     // Always render all tab panels - real component uses CSS to hide inactive ones
     <div role="tabpanel" data-value={value} className={className}>
       {children}
     </div>
   ),
-  ChurnRiskCard: ({ _data, title }: { _data?: unknown; title: string }) => (
+  ChurnRiskCard: ({ _data, title }: Readonly<{ _data?: unknown; title: string }>) => (
     <div data-testid="churn-risk-card">{title}</div>
   ),
-  NextBestActionCard: ({ _data, title }: { _data?: unknown; title: string }) => (
+  NextBestActionCard: ({ _data, title }: Readonly<{ _data?: unknown; title: string }>) => (
     <div data-testid="nba-card">{title}</div>
   ),
 }));
@@ -111,11 +111,11 @@ vi.mock('@/components/shared/app-avatar', () => ({
     name,
     fallbackText,
     maxInitials = 2,
-  }: {
+  }: Readonly<{
     name: string;
     fallbackText?: string;
     maxInitials?: number;
-  }) => {
+  }>) => {
     const initials = name
       .split(' ')
       .map((part) => part[0])

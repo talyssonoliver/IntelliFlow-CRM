@@ -19,7 +19,7 @@ export default function ForecastRevenueChart({
   data,
   formatCurrency,
   formatFullCurrency,
-}: ForecastRevenueChartProps) {
+}: Readonly<ForecastRevenueChartProps>) {
   const chartData = data.map((d) => ({
     month: d.month,
     actual: d.actual,

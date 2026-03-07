@@ -18,7 +18,7 @@
  * Pattern: Follows reset-token.ts implementation
  */
 
-import { randomBytes, createHash } from 'crypto';
+import { randomBytes, createHash } from 'node:crypto';
 
 // ============================================
 // Types

@@ -96,7 +96,7 @@ export function CheckoutForm({
   onSuccess,
   onError,
   className,
-}: CheckoutFormProps) {
+}: Readonly<CheckoutFormProps>) {
   const formId = useId();
   const stripe = useStripe();
   const elements = useElements();
@@ -120,7 +120,7 @@ export function CheckoutForm({
   // Handlers
   // ============================================
 
-  const handleCardNumberChange = useCallback((event: StripeCardNumberElementChangeEvent) => {
+  const handleCardNumberChange = useCallback((event: Readonly<StripeCardNumberElementChangeEvent>) => {
     if (event.brand) {
       setCardBrand(event.brand);
     }
@@ -407,14 +407,14 @@ export function CheckoutForm({
           <>
             <span className="material-symbols-outlined animate-spin text-lg" aria-hidden="true">
               progress_activity
-            </span>
+            </span>{' '}
             Processing...
           </>
         ) : (
           <>
             <span className="material-symbols-outlined text-lg" aria-hidden="true">
               lock
-            </span>
+            </span>{' '}
             Subscribe {priceFormatted}
             {periodLabel}
           </>

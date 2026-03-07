@@ -17,7 +17,7 @@ interface LatencyAlertsProps {
   alerts: LatencyAlert[];
 }
 
-export function LatencyAlerts({ alerts }: LatencyAlertsProps) {
+export function LatencyAlerts({ alerts }: Readonly<LatencyAlertsProps>) {
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -25,7 +25,7 @@ export function LatencyAlerts({ alerts }: LatencyAlertsProps) {
           <span className="material-symbols-outlined text-lg text-amber-500" aria-hidden="true">
             notifications_active
           </span>
-          Latency Alerts
+          {' '}Latency Alerts
           {alerts.length > 0 && (
             <Badge variant="destructive" className="ml-1" data-testid="alert-count">
               {alerts.length}

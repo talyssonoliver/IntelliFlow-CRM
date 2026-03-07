@@ -19,7 +19,7 @@ import { createMockFormData, createMockHandlers, resetAllMocks } from './contact
 
 // Mock Card component
 vi.mock('@intelliflow/ui', () => ({
-  Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  Card: ({ children, className }: Readonly<{ children: React.ReactNode; className?: string }>) => (
     <div className={className}>{children}</div>
   ),
 }));

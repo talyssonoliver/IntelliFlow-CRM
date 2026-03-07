@@ -81,7 +81,7 @@ export interface ContactDetailContact {
 export interface ContactDetailProps {
   contact: ContactDetailContact;
   activeTab: TabId;
-  onTabChange: (tab: TabId) => void;
+  onTabChange: (tab: Readonly<TabId>) => void;
   onEdit: () => void;
   onEmail: () => void;
   onCall: () => void;
@@ -154,27 +154,28 @@ function toChurnRiskData(insight: ContactDetailContact['aiInsight']): ChurnRiskD
     level,
     confidence: 0.85,
     slaHours: slaMap[level],
-    trend:
-      insight.sentimentTrend === 'IMPROVING'
-        ? 'IMPROVING'
-        : insight.sentimentTrend === 'DECLINING'
-          ? 'DECLINING'
-          : 'STABLE',
+    trend: (() => {
+      if (insight.sentimentTrend === 'IMPROVING') return 'IMPROVING';
+      if (insight.sentimentTrend === 'DECLINING') return 'DECLINING';
+      return 'STABLE';
+    })(),
     factors: [
       {
         factor: 'Engagement Score',
-        impact:
-          insight.engagementScore < 30 ? 'HIGH' : insight.engagementScore < 60 ? 'MEDIUM' : 'LOW',
+        impact: (() => {
+          if (insight.engagementScore < 30) return 'HIGH';
+          if (insight.engagementScore < 60) return 'MEDIUM';
+          return 'LOW';
+        })(),
         value: `${insight.engagementScore}%`,
       },
       {
         factor: 'Days Since Contact',
-        impact:
-          insight.lastEngagementDays > 30
-            ? 'HIGH'
-            : insight.lastEngagementDays > 14
-              ? 'MEDIUM'
-              : 'LOW',
+        impact: (() => {
+          if (insight.lastEngagementDays > 30) return 'HIGH';
+          if (insight.lastEngagementDays > 14) return 'MEDIUM';
+          return 'LOW';
+        })(),
         value: `${insight.lastEngagementDays} days`,
       },
     ],
@@ -215,7 +216,7 @@ export function ContactDetail({
   onCall,
   tabCounts = {},
   children,
-}: ContactDetailProps) {
+}: Readonly<ContactDetailProps>) {
   const fullName = `${contact.firstName} ${contact.lastName}`;
   const status = statusConfig[contact.status] || statusConfig.ACTIVE;
 
@@ -246,7 +247,7 @@ export function ContactDetail({
           >
             <span className="material-symbols-outlined text-lg" aria-hidden="true">
               edit
-            </span>
+            </span>{' '}
             Edit Profile
           </button>
           <button
@@ -256,7 +257,7 @@ export function ContactDetail({
           >
             <span className="material-symbols-outlined text-lg" aria-hidden="true">
               mail
-            </span>
+            </span>{' '}
             Email
           </button>
           <button
@@ -266,7 +267,7 @@ export function ContactDetail({
           >
             <span className="material-symbols-outlined text-lg" aria-hidden="true">
               phone
-            </span>
+            </span>{' '}
             Log Call
           </button>
         </div>

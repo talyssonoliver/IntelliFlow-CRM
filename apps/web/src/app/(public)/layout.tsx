@@ -19,7 +19,7 @@ const AUTH_PAGES_NO_FOOTER = [
   '/sso',
 ];
 
-export default function PublicLayout({ children }: { children: React.ReactNode }) {
+export default function PublicLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname();
   const { isAuthenticated, isLoading } = useAuth();
 

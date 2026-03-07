@@ -32,10 +32,10 @@ export const ACTIVITY_FEED_TYPE_FILTER_OPTIONS: Array<{
 
 interface ActivityFeedTypeFilterProps {
   value: ActivityFeedTypeFilterValue;
-  onChange: (value: ActivityFeedTypeFilterValue) => void;
+  onChange: (value: Readonly<ActivityFeedTypeFilterValue>) => void;
 }
 
-export function ActivityFeedTypeFilter({ value, onChange }: ActivityFeedTypeFilterProps) {
+export function ActivityFeedTypeFilter({ value, onChange }: Readonly<ActivityFeedTypeFilterProps>) {
   const [open, setOpen] = useState(false);
 
   const selectedLabel = useMemo(
@@ -61,18 +61,11 @@ export function ActivityFeedTypeFilter({ value, onChange }: ActivityFeedTypeFilt
       </button>
       {open && (
         <>
-          <div
-            className="fixed inset-0 z-10"
-            role="button"
-            tabIndex={0}
+          <button
+            type="button"
+            className="fixed inset-0 z-10 cursor-default"
             aria-label="Close filter menu"
             onClick={() => setOpen(false)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                setOpen(false);
-              }
-            }}
           />
           <div className="absolute right-0 top-full mt-1 z-20 bg-white dark:bg-[#1e2936] border border-[#e2e8f0] dark:border-[#334155] rounded-lg shadow-lg py-1 min-w-[180px] max-h-[320px] overflow-y-auto">
             {ACTIVITY_FEED_TYPE_FILTER_OPTIONS.map((option) => (

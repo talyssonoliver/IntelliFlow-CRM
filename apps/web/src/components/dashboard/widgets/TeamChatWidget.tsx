@@ -22,11 +22,11 @@ const messages: Message[] = [
   { id: '3', user: 'Emily', avatar: 'E', message: 'Meeting notes uploaded', time: '1h' },
 ];
 
-export function TeamChatWidget(_props: WidgetProps) {
+export function TeamChatWidget(_props: Readonly<WidgetProps>) {
   return (
     <div className="p-5 h-full flex flex-col">
       <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-        <span className="material-symbols-outlined text-slate-400">chat</span> Team Chat
+        <span className="material-symbols-outlined text-slate-400">chat</span>{' '}Team Chat
       </h3>
 
       <div className="flex flex-col gap-3 flex-1 overflow-y-auto">

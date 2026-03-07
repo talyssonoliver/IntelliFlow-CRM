@@ -106,7 +106,7 @@ export function ActivityTimeline({
   hasMore,
   onLoadMore,
   onSearch,
-}: ActivityTimelineProps) {
+}: Readonly<ActivityTimelineProps>) {
   const [typeFilter, setTypeFilter] = useState<ActivityType | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());

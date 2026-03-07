@@ -9,7 +9,7 @@ import {
 } from '@/components/sidebar';
 import { ModuleGate } from '@/components/ModuleGate';
 
-export default function AnalyticsListLayout({ children }: { children: React.ReactNode }) {
+export default function AnalyticsListLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <ModuleGate moduleId="ANALYTICS">
       <SidebarProvider>

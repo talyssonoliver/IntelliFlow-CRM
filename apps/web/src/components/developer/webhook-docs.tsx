@@ -280,7 +280,7 @@ const IDEMPOTENCY_OUTCOMES = [
   },
 ] as const;
 
-function CodeBlock({ code, label }: { code: string; label?: string }) {
+function CodeBlock({ code, label }: Readonly<{ code: string; label?: string }>) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -779,13 +779,17 @@ function RetryResilienceTab() {
           {IDEMPOTENCY_OUTCOMES.map((item) => (
             <div key={item.outcome} className="flex items-start gap-3 p-3 border rounded-lg">
               <span
-                className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-medium shrink-0 ${
-                  item.color === 'green'
-                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                    : item.color === 'blue'
-                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                      : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                }`}
+                className={(() => {
+                let colorCls: string;
+                if (item.color === 'green') {
+                  colorCls = 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+                } else if (item.color === 'blue') {
+                  colorCls = 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+                } else {
+                  colorCls = 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+                }
+                return `inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-medium shrink-0 ${colorCls}`;
+              })()}
               >
                 {item.outcome}
               </span>

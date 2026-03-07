@@ -53,7 +53,7 @@ export const agentApprovalsSidebarConfig: SidebarConfig = {
           id: 'all-insights',
           label: 'All Insights',
           icon: FEATURE_ICONS.insight,
-          href: '/insights',
+          href: '/agent-approvals/insights',
         },
         {
           id: 'lead-scoring',
@@ -79,6 +79,12 @@ export const agentApprovalsSidebarConfig: SidebarConfig = {
       id: 'ai-tools',
       title: 'AI Tools',
       items: [
+        {
+          id: 'agent-tools',
+          label: 'Agent Tools',
+          icon: 'build',
+          href: '/agent-approvals/tools',
+        },
         {
           id: 'ai-search',
           label: 'AI Search (RAG)',

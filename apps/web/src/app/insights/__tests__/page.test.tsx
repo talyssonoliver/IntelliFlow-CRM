@@ -37,7 +37,7 @@ vi.mock('@/lib/trpc', () => ({
 vi.mock('next/navigation', () => ({
   useSearchParams: vi.fn(() => new URLSearchParams()),
   useRouter: vi.fn(() => ({ push: vi.fn(), replace: vi.fn() })),
-  usePathname: vi.fn(() => '/insights'),
+  usePathname: vi.fn(() => '/agent-approvals/insights'),
 }));
 
 vi.mock('next/link', () => ({
@@ -128,10 +128,10 @@ beforeEach(() => {
   vi.restoreAllMocks();
 });
 
-// Lazy import so mocks are applied first
+// Lazy import so mocks are applied first — import component directly (page.tsx is now a redirect)
 async function importAndRender() {
-  const { default: InsightsPage } = await import('../page');
-  return render(<InsightsPage />);
+  const { InsightsListPage } = await import('@/components/insights/InsightsListPage');
+  return render(<InsightsListPage />);
 }
 
 describe('Insights Page', () => {
@@ -224,7 +224,7 @@ describe('Insights Page', () => {
     expect(lastCall[0].types).toBeUndefined();
   });
 
-  it('shows type-specific title when filtered', async () => {
+  it('shows AI Insights title when filtered', async () => {
     const { useSearchParams } = await import('next/navigation');
     (useSearchParams as ReturnType<typeof vi.fn>).mockReturnValue(
       new URLSearchParams('type=warning')
@@ -233,10 +233,10 @@ describe('Insights Page', () => {
     setupMockQuery();
     await importAndRender();
 
-    expect(screen.getByText('Warning Insights')).toBeInTheDocument();
+    expect(screen.getByText('AI Insights')).toBeInTheDocument();
   });
 
-  it('shows generic title when not filtered', async () => {
+  it('shows AI Insights title when not filtered', async () => {
     setupMockQuery();
     await importAndRender();
 
@@ -247,13 +247,11 @@ describe('Insights Page', () => {
   // Loading & Empty States
   // =========================================================================
 
-  it('loading skeleton displayed during fetch', async () => {
+  it('loading state displayed during fetch', async () => {
     setupMockQuery({ isLoading: true, data: undefined });
     await importAndRender();
 
-    // Should show skeleton elements (look for skeleton container)
-    const skeletons = document.querySelectorAll('[data-testid="insight-skeleton"]');
-    expect(skeletons.length).toBeGreaterThan(0);
+    expect(screen.getByText('Loading insights...')).toBeInTheDocument();
   });
 
   it('empty state displayed when no insights', async () => {
@@ -335,11 +333,12 @@ describe('Insights Page', () => {
     setupMockQuery();
     await importAndRender();
 
-    // Each insight should have a link with the actionUrl
+    // Each insight should have a link derived from the actionUrl (may have ?tab=ai-insights appended)
     const links = screen.getAllByRole('link');
-    const insightLinks = links.filter((l) =>
-      sampleInsights.some((i) => l.getAttribute('href') === i.actionUrl)
-    );
+    const insightLinks = links.filter((l) => {
+      const href = l.getAttribute('href') || '';
+      return sampleInsights.some((i) => i.actionUrl && href.startsWith(i.actionUrl));
+    });
     expect(insightLinks.length).toBeGreaterThanOrEqual(3);
   });
 

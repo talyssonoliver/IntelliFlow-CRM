@@ -19,6 +19,7 @@ const AGENT_TYPE_LABELS: Record<string, string> = {
   hallucination: 'Hallucination Check',
   indexer: 'Document Indexer',
   ocr: 'OCR Worker',
+  insights: 'Insight Generation',
 };
 
 const AGENT_TYPE_ICONS: Record<string, string> = {
@@ -36,6 +37,7 @@ const AGENT_TYPE_ICONS: Record<string, string> = {
   hallucination: 'fact_check',
   indexer: 'inventory_2',
   ocr: 'document_scanner',
+  insights: 'auto_awesome',
 };
 
 const STATUS_COLORS: Record<string, string> = {

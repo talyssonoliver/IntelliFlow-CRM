@@ -19,7 +19,7 @@ export default async function AccountsPage() {
   let initialStats: unknown = null;
   try {
     const raw = await fetchAccountStats(token);
-    initialStats = JSON.parse(JSON.stringify(raw));
+    initialStats = JSON.parse(JSON.stringify(raw)); // NOSONAR typescript:S7784 — intentional JSON roundtrip to serialize Date→string for RSC→client boundary
   } catch {
     // Silently fall through — client-side React Query will fetch
   }

@@ -30,7 +30,7 @@ export const LossReasonModal = React.memo(function LossReasonModal({
   onConfirm,
   onCancel,
   dealName,
-}: LossReasonModalProps) {
+}: Readonly<LossReasonModalProps>) {
   const [reason, setReason] = useState('');
 
   const isValid = reason.trim().length >= MIN_REASON_LENGTH;

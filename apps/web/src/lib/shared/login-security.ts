@@ -12,7 +12,7 @@
  * - Rate limit status checking
  */
 
-import { randomBytes } from 'crypto';
+import { randomBytes } from 'node:crypto';
 
 // ============================================
 // CSRF Protection
@@ -40,10 +40,10 @@ export function generateCsrfToken(): string {
   // Falls back to Web Crypto API for browser environment
   let token: string;
 
-  if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
+  if (typeof globalThis.window !== 'undefined' && globalThis.crypto?.getRandomValues) {
     // Browser environment - use Web Crypto API
     const array = new Uint8Array(CSRF_TOKEN_LENGTH);
-    window.crypto.getRandomValues(array);
+    globalThis.crypto.getRandomValues(array);
     token = Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
   } else {
     // Node.js environment (SSR)
@@ -51,7 +51,7 @@ export function generateCsrfToken(): string {
   }
 
   // Store in sessionStorage for validation
-  if (typeof window !== 'undefined') {
+  if (typeof globalThis.window !== 'undefined') {
     sessionStorage.setItem(CSRF_TOKEN_KEY, token);
   }
 
@@ -72,7 +72,7 @@ export function generateCsrfToken(): string {
  * ```
  */
 export function validateCsrf(token: string): boolean {
-  if (typeof window === 'undefined') {
+  if (typeof globalThis.window === 'undefined') {
     // Can't validate on server side without context
     return false;
   }
@@ -93,7 +93,7 @@ export function validateCsrf(token: string): boolean {
  * Should be called after successful form submission or when starting a new session.
  */
 export function clearCsrfToken(): void {
-  if (typeof window !== 'undefined') {
+  if (typeof globalThis.window !== 'undefined') {
     sessionStorage.removeItem(CSRF_TOKEN_KEY);
   }
 }
@@ -104,7 +104,7 @@ export function clearCsrfToken(): void {
  * @returns The stored token or null if none exists
  */
 export function getCsrfToken(): string | null {
-  if (typeof window === 'undefined') {
+  if (typeof globalThis.window === 'undefined') {
     return null;
   }
   return sessionStorage.getItem(CSRF_TOKEN_KEY);
@@ -173,11 +173,11 @@ export function getDeviceFingerprint(): DeviceFingerprint {
   const components: DeviceFingerprintComponents = {
     userAgent: navigator.userAgent,
     language: navigator.language,
-    platform: navigator.platform || 'unknown',
+    platform: (navigator.userAgentData?.platform ?? navigator.platform) || 'unknown', // NOSONAR typescript:S1874
     screenResolution: `${screen.width}x${screen.height}`,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     colorDepth: screen.colorDepth,
-    touchSupport: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
+    touchSupport: 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0,
     cookiesEnabled: navigator.cookieEnabled,
   };
 
@@ -221,15 +221,15 @@ export function sanitizeInput(input: string): string {
   return (
     input
       // Remove HTML tags
-      .replace(/<[^>]{0,2000}>/g, '')
+      .replaceAll(/<[^>]{0,2000}>/g, '')
       // Escape HTML entities
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;')
       // Remove null bytes
-      .replace(/\0/g, '')
+      .replaceAll('\0', '')
       // Trim whitespace
       .trim()
   );
@@ -251,9 +251,9 @@ export function sanitizeEmail(email: string): string {
     .toLowerCase()
     .trim()
     // Remove any HTML/script tags
-    .replace(/<[^>]{0,2000}>/g, '')
+    .replaceAll(/<[^>]{0,2000}>/g, '')
     // Remove null bytes
-    .replace(/\0/g, '');
+    .replaceAll('\0', '');
 
   // Validate email format
   const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
@@ -280,7 +280,7 @@ export function sanitizePassword(password: string): string {
   // Remove disallowed control characters while preserving the rest of the password verbatim.
   return Array.from(password)
     .filter((char) => {
-      const code = char.charCodeAt(0);
+      const code = char.codePointAt(0)!;
       return !(
         (code >= 0 && code <= 8) ||
         code === 11 ||
@@ -319,7 +319,7 @@ export interface RateLimitInfo {
  * @returns Rate limit info
  */
 export function checkRateLimitStatus(identifier: string): RateLimitInfo {
-  if (typeof window === 'undefined') {
+  if (typeof globalThis.window === 'undefined') {
     return {
       isLimited: false,
       remainingAttempts: 5,
@@ -388,7 +388,7 @@ export function checkRateLimitStatus(identifier: string): RateLimitInfo {
  * @param identifier - Email or other identifier
  */
 export function recordFailedAttempt(identifier: string): void {
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis.window === 'undefined') return;
 
   const key = `${RATE_LIMIT_KEY_PREFIX}${hashString(identifier)}`;
   const stored = localStorage.getItem(key);
@@ -421,7 +421,7 @@ export function recordFailedAttempt(identifier: string): void {
  * @param identifier - Email or other identifier
  */
 export function clearRateLimit(identifier: string): void {
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis.window === 'undefined') return;
 
   const key = `${RATE_LIMIT_KEY_PREFIX}${hashString(identifier)}`;
   localStorage.removeItem(key);
@@ -454,7 +454,7 @@ export function checkSecurityHeaders(): SecurityHeadersCheck {
   // In client-side code, we can't directly access response headers
   // This is mainly for verification during development
   const headers: Record<string, boolean> = {
-    'https-enabled': typeof window !== 'undefined' && window.location.protocol === 'https:',
+    'https-enabled': typeof globalThis.window !== 'undefined' && globalThis.location.protocol === 'https:',
   };
 
   const missingHeaders = Object.entries(headers)
@@ -484,7 +484,7 @@ export function checkSecurityHeaders(): SecurityHeadersCheck {
 function hashString(str: string): string {
   let hash = 5381;
   for (let i = 0; i < str.length; i++) {
-    hash = (hash * 33) ^ str.charCodeAt(i);
+    hash = (hash * 33) ^ str.codePointAt(i)!;
   }
   return (hash >>> 0).toString(16);
 }
@@ -505,7 +505,7 @@ function timingSafeEqual(a: string, b: string): boolean {
 
   let result = 0;
   for (let i = 0; i < a.length; i++) {
-    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    result |= a.codePointAt(i)! ^ b.codePointAt(i)!;
   }
   return result === 0;
 }
@@ -525,7 +525,7 @@ const SESSION_FINGERPRINT_KEY = 'intelliflow_session_fp';
  * @returns True if fingerprints match, false otherwise
  */
 export function verifySessionFingerprint(): boolean {
-  if (typeof window === 'undefined') return true;
+  if (typeof globalThis.window === 'undefined') return true;
 
   const storedFingerprint = sessionStorage.getItem(SESSION_FINGERPRINT_KEY);
   if (!storedFingerprint) return true; // No fingerprint stored yet
@@ -540,7 +540,7 @@ export function verifySessionFingerprint(): boolean {
  * Should be called after successful login.
  */
 export function storeSessionFingerprint(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis.window === 'undefined') return;
 
   const fingerprint = getDeviceFingerprintHash();
   sessionStorage.setItem(SESSION_FINGERPRINT_KEY, fingerprint);
@@ -550,7 +550,7 @@ export function storeSessionFingerprint(): void {
  * Clear the session fingerprint (on logout)
  */
 export function clearSessionFingerprint(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis.window === 'undefined') return;
 
   sessionStorage.removeItem(SESSION_FINGERPRINT_KEY);
 }

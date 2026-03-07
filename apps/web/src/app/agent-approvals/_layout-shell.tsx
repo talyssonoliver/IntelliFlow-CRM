@@ -11,9 +11,9 @@ import { ModuleGate } from '@/components/ModuleGate';
 
 export default function AgentApprovalsLayoutShell({
   children,
-}: {
+}: Readonly<{
   readonly children: React.ReactNode;
-}) {
+}>) {
   return (
     <ModuleGate moduleId="AI_INTELLIGENCE">
       <SidebarProvider>

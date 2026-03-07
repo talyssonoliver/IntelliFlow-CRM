@@ -13,7 +13,7 @@ interface ChurnTrendChartProps {
   trends: ChurnTrendPoint[];
 }
 
-function ChurnTrendChart({ trends }: ChurnTrendChartProps) {
+function ChurnTrendChart({ trends }: Readonly<ChurnTrendChartProps>) {
   if (trends.length === 0) {
     return (
       <p className="text-sm text-muted-foreground text-center py-8" data-testid="no-trends">

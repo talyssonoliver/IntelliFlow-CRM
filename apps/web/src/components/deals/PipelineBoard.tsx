@@ -60,7 +60,7 @@ export const PipelineBoard = React.memo(function PipelineBoard({
   onStageChange,
   onDealNavigate,
   pendingDealId,
-}: PipelineBoardProps) {
+}: Readonly<PipelineBoardProps>) {
   const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
 
   const sensors = useSensors(
@@ -103,7 +103,7 @@ export const PipelineBoard = React.memo(function PipelineBoard({
   }, []);
 
   const handleDragStart = useCallback(
-    (event: DragStartEvent) => {
+    (event: Readonly<DragStartEvent>) => {
       const deal = deals.find((d) => d.id === String(event.active.id));
       if (deal) setActiveDeal(deal);
     },
@@ -111,7 +111,7 @@ export const PipelineBoard = React.memo(function PipelineBoard({
   );
 
   const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
+    (event: Readonly<DragEndEvent>) => {
       const { active, over } = event;
       setActiveDeal(null);
 
@@ -150,7 +150,7 @@ export const PipelineBoard = React.memo(function PipelineBoard({
   }, []);
 
   return (
-    <div role="region" aria-label="Deal pipeline kanban board">
+    <section aria-label="Deal pipeline kanban board">
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -206,6 +206,6 @@ export const PipelineBoard = React.memo(function PipelineBoard({
           )}
         </DragOverlay>
       </DndContext>
-    </div>
+    </section>
   );
 });

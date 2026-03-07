@@ -33,7 +33,7 @@ export function FolderSidebar({
   onCompose,
   unreadCounts = {},
   className,
-}: FolderSidebarProps) {
+}: Readonly<FolderSidebarProps>) {
   const folderRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent, index: number) => {

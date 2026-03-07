@@ -25,7 +25,7 @@ export const NotificationItem = React.memo(function NotificationItem({
   notification,
   onMarkAsRead,
   onDismiss,
-}: NotificationItemProps) {
+}: Readonly<NotificationItemProps>) {
   const router = useRouter();
   const typeConfig = getTypeConfig(notification.type);
   const priorityConfig = getPriorityConfig(notification.priority);
@@ -125,7 +125,7 @@ export const NotificationItem = React.memo(function NotificationItem({
           </span>
           {actionLink && (
             <span className="text-xs text-primary flex items-center gap-1">
-              View details
+              View details{' '}
               <span className="material-symbols-outlined text-sm">arrow_forward</span>
             </span>
           )}

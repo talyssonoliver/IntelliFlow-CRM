@@ -37,7 +37,7 @@ interface PageParams {
 // Component
 // ============================================
 
-export default function ResetPasswordClientWrapper({ params }: PageParams) {
+export default function ResetPasswordClientWrapper({ params }: Readonly<PageParams>) {
   return (
     <Suspense
       fallback={
@@ -58,7 +58,7 @@ export default function ResetPasswordClientWrapper({ params }: PageParams) {
   );
 }
 
-function ResetPasswordPage({ params }: PageParams) {
+function ResetPasswordPage({ params }: Readonly<PageParams>) {
   // Redirect if already authenticated
   useRedirectIfAuthenticated('/dashboard');
 
@@ -131,7 +131,7 @@ function ResetPasswordPage({ params }: PageParams) {
           title={getPageTitle()}
           description={getPageDescription()}
           footer={
-            state !== 'success' ? (
+            state === 'success' ? undefined : (
               <p className="text-center text-sm text-slate-400">
                 Remember your password?{' '}
                 <Link
@@ -141,7 +141,7 @@ function ResetPasswordPage({ params }: PageParams) {
                   Back to sign in
                 </Link>
               </p>
-            ) : undefined
+            )
           }
         >
           {/* Validating State */}
@@ -154,7 +154,7 @@ function ResetPasswordPage({ params }: PageParams) {
 
           {/* Invalid/Expired/Used States */}
           {(state === 'invalid' || state === 'expired' || state === 'used') && (
-            <TokenInvalid reason={state as 'invalid' | 'expired' | 'used'} />
+            <TokenInvalid reason={state} />
           )}
 
           {/* Form State */}
@@ -197,7 +197,7 @@ function ResetPasswordPage({ params }: PageParams) {
           >
             <span className="material-symbols-outlined text-sm" aria-hidden="true">
               help
-            </span>
+            </span>{' '}
             Need help?
           </Link>
         </div>

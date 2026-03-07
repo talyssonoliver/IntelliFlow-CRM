@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import type { ComplianceEvent, ComplianceTimelineResponse } from '../types';
 
 // Find project root by looking for package.json
@@ -45,10 +45,10 @@ function filterEventsByMonth(events: ComplianceEvent[], month: string): Complian
 
 function filterEventsByQuarter(events: ComplianceEvent[], quarter: string): ComplianceEvent[] {
   // quarter format: "Q1-2026" or "Q2-2026"
-  const match = quarter.match(/Q(\d)-(\d{4})/);
+  const match = /Q(\d)-(\d{4})/.exec(quarter);
   if (!match) return events;
 
-  const q = parseInt(match[1], 10);
+  const q = Number.parseInt(match[1], 10);
   const year = match[2];
 
   const startMonth = (q - 1) * 3 + 1;

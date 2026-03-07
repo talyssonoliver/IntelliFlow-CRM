@@ -40,7 +40,7 @@ export function maskApiKey(key: string): string {
   if (key.length <= 4) {
     return key;
   }
-  const prefixMatch = key.match(/^(?:ifc_(?:live|test)|cs_(?:prod|test)|cli_(?:prod|test))_/);
+  const prefixMatch = /^(?:ifc_(?:live|test)|cs_(?:prod|test)|cli_(?:prod|test))_/.exec(key);
   if (prefixMatch) {
     const prefix = prefixMatch[0];
     const rest = key.slice(prefix.length);

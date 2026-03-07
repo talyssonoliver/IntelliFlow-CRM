@@ -54,7 +54,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: { children: React.ReactNode; href: string }) => (
+  default: ({ children, href, ...props }: Readonly<{ children: React.ReactNode; href: string }>) => (
     <a href={href} {...props}>
       {children}
     </a>
@@ -74,7 +74,7 @@ vi.mock('next/dynamic', () => ({
 }));
 
 vi.mock('@intelliflow/ui', () => ({
-  Card: ({ children, ...props }: { children: React.ReactNode }) => (
+  Card: ({ children, ...props }: Readonly<{ children: React.ReactNode }>) => (
     <div data-testid="card" {...props}>
       {children}
     </div>
@@ -83,24 +83,24 @@ vi.mock('@intelliflow/ui', () => ({
     children,
     onClick,
     ...props
-  }: {
+  }: Readonly<{
     children: React.ReactNode;
     onClick?: () => void;
-  }) => (
+  }>) => (
     <button onClick={onClick} {...props}>
       {children}
     </button>
   ),
-  Skeleton: ({ className, ...props }: { className?: string }) => (
+  Skeleton: ({ className, ...props }: Readonly<{ className?: string }>) => (
     <div data-testid="skeleton" className={className} {...props} />
   ),
-  Badge: ({ children, ...props }: { children: React.ReactNode }) => (
+  Badge: ({ children, ...props }: Readonly<{ children: React.ReactNode }>) => (
     <span {...props}>{children}</span>
   ),
 }));
 
 vi.mock('@/components/shared', () => ({
-  EntityHeader: ({ title, ...props }: { title: string }) => (
+  EntityHeader: ({ title, ...props }: Readonly<{ title: string }>) => (
     <div data-testid="entity-header" {...props}>
       <span data-testid="entity-title">{title}</span>
     </div>

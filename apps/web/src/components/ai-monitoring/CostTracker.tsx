@@ -27,29 +27,32 @@ function getTrendIcon(direction: string): string {
   }
 }
 
-export function CostTracker({ roi, isLoading }: CostTrackerProps) {
+export function CostTracker({ roi, isLoading }: Readonly<CostTrackerProps>) {
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
           <span className="material-symbols-outlined text-lg" aria-hidden="true">
             payments
-          </span>
+          </span>{' '}
           Cost & ROI
         </CardTitle>
       </CardHeader>
       <CardContent className="pb-4">
-        {isLoading ? (
+        {(() => {
+          if (isLoading) return (
           <div className="space-y-3">
             <Skeleton className="h-6 w-24" />
             <Skeleton className="h-4 w-32" />
             <Skeleton className="h-4 w-28" />
           </div>
-        ) : roi === null ? (
+          );
+          if (roi === null) return (
           <p className="text-sm text-muted-foreground text-center py-4" data-testid="no-cost-data">
             No cost data available
           </p>
-        ) : (
+          );
+          return (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">ROI</span>
@@ -109,7 +112,8 @@ export function CostTracker({ roi, isLoading }: CostTrackerProps) {
               </p>
             </div>
           </div>
-        )}
+          );
+        })()}
       </CardContent>
     </Card>
   );

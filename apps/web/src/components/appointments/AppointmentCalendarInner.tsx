@@ -24,8 +24,8 @@ export interface AppointmentCalendarInnerProps {
   onAppointmentClick: (id: string) => void;
   onTaskClick?: (id: string) => void;
   onCreateWithSlot: (startTime: Date, endTime: Date) => void;
-  onCreateWithDate?: (date: Date) => void;
-  onDateChange: (date: Date) => void;
+  onCreateWithDate?: (date: Readonly<Date>) => void;
+  onDateChange: (date: Readonly<Date>) => void;
 }
 
 const PRIORITY_CHIP_COLORS: Record<string, string> = {
@@ -41,13 +41,13 @@ const VIEW_NAME_MAP = {
   day: 'day',
 } as const;
 
-function toTemporalZonedDateTime(date: Date): Temporal.ZonedDateTime {
+function toTemporalZonedDateTime(date: Readonly<Date>): Temporal.ZonedDateTime {
   return Temporal.Instant.fromEpochMilliseconds(date.getTime()).toZonedDateTimeISO(
     Temporal.Now.timeZoneId()
   );
 }
 
-function toTemporalPlainDate(date: Date): Temporal.PlainDate {
+function toTemporalPlainDate(date: Readonly<Date>): Temporal.PlainDate {
   return Temporal.PlainDate.from({
     year: date.getFullYear(),
     month: date.getMonth() + 1,
@@ -89,7 +89,7 @@ function mapTasksToEvents(tasks: CalendarTask[]) {
   });
 }
 
-function TimeGridEvent({ calendarEvent }: { calendarEvent: Record<string, unknown> }) {
+function TimeGridEvent({ calendarEvent }: Readonly<{ calendarEvent: Record<string, unknown> }>) {
   const custom = calendarEvent._custom as
     | {
         appointmentType: string;
@@ -137,7 +137,7 @@ function TimeGridEvent({ calendarEvent }: { calendarEvent: Record<string, unknow
   );
 }
 
-function MonthGridEvent({ calendarEvent }: { calendarEvent: Record<string, unknown> }) {
+function MonthGridEvent({ calendarEvent }: Readonly<{ calendarEvent: Record<string, unknown> }>) {
   const custom = calendarEvent._custom as { _type?: string; [key: string]: unknown } | undefined;
 
   if (custom?._type === 'task') {

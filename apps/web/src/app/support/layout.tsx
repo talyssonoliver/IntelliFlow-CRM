@@ -4,6 +4,6 @@ export const metadata: Metadata = {
   title: 'Support',
 };
 
-export default function SupportLayout({ children }: { children: React.ReactNode }) {
+export default function SupportLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <>{children}</>;
 }

@@ -14,7 +14,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: BASE_URL,
       lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: 'weekly',
-      priority: 1.0,
+      priority: 1,
     },
     {
       url: `${BASE_URL}/features`,

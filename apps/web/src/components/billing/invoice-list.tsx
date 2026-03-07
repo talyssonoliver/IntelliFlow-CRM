@@ -67,7 +67,7 @@ export interface InvoiceListProps {
 
 // NOTE (R-002): Status values use Stripe's lowercase convention (draft, open, paid, void, uncollectible)
 // rather than the domain's UPPERCASE constants. This is intentional — the UI operates on Stripe's surface.
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status }: Readonly<{ status: string }>) {
   const { label, variant } = getInvoiceStatusDisplay(status);
 
   const variantClasses: Record<StatusVariant, string> = {
@@ -92,7 +92,7 @@ function InvoiceListSkeleton() {
   return (
     <div className="space-y-3" role="status" aria-busy="true" aria-live="polite">
       {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex items-center justify-between py-3">
+        <div key={i} className="flex items-center justify-between py-3"> {/* NOSONAR typescript:S6479 */}
           <div className="flex items-center gap-4">
             <Skeleton className="h-4 w-24" aria-hidden="true" />
             <Skeleton className="h-4 w-32" aria-hidden="true" />
@@ -132,7 +132,7 @@ function EmptyState() {
 // Invoice Row Actions
 // ============================================
 
-function InvoiceActions({ invoice }: { invoice: SerializedInvoice }) {
+function InvoiceActions({ invoice }: Readonly<{ invoice: SerializedInvoice }>) {
   const pdfInfo = getInvoicePdfInfo(invoice.invoicePdf, invoice.hostedInvoiceUrl);
 
   const handleDownload = async () => {
@@ -196,7 +196,7 @@ function InvoiceActions({ invoice }: { invoice: SerializedInvoice }) {
 // Invoice Table Row
 // ============================================
 
-function InvoiceRow({ invoice }: { invoice: SerializedInvoice }) {
+function InvoiceRow({ invoice }: Readonly<{ invoice: SerializedInvoice }>) {
   // Format invoice ID for display (show shortened version)
   const displayId = invoice.id.includes('_')
     ? invoice.id.split('_').pop()
@@ -248,7 +248,7 @@ export function InvoiceList({
   onLoadMore,
   total,
   isLoadingMore = false,
-}: InvoiceListProps) {
+}: Readonly<InvoiceListProps>) {
   if (isLoading) {
     return (
       <Card>
@@ -256,7 +256,7 @@ export function InvoiceList({
           <CardTitle className="flex items-center gap-2">
             <span className="material-symbols-outlined text-xl text-primary" aria-hidden="true">
               receipt_long
-            </span>
+            </span>{' '}
             Invoices
           </CardTitle>
           <CardDescription>Loading your invoice history...</CardDescription>
@@ -275,7 +275,7 @@ export function InvoiceList({
           <CardTitle className="flex items-center gap-2">
             <span className="material-symbols-outlined text-xl text-primary" aria-hidden="true">
               receipt_long
-            </span>
+            </span>{' '}
             Invoices
           </CardTitle>
         </CardHeader>
@@ -294,7 +294,7 @@ export function InvoiceList({
             <CardTitle className="flex items-center gap-2">
               <span className="material-symbols-outlined text-xl text-primary" aria-hidden="true">
                 receipt_long
-              </span>
+              </span>{' '}
               Invoices
             </CardTitle>
             <CardDescription>
@@ -339,14 +339,14 @@ export function InvoiceList({
                     aria-hidden="true"
                   >
                     progress_activity
-                  </span>
+                  </span>{' '}
                   Loading...
                 </>
               ) : (
                 <>
                   <span className="material-symbols-outlined mr-2 text-lg" aria-hidden="true">
                     expand_more
-                  </span>
+                  </span>{' '}
                   Load More
                 </>
               )}

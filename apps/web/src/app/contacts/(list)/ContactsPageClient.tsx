@@ -236,7 +236,7 @@ export default function ContactsPageClient({
         const result = await bulkEmailMutation.mutateAsync({ ids });
 
         if (result.mailtoUrl) {
-          window.open(result.mailtoUrl, '_blank');
+          globalThis.open(result.mailtoUrl, '_blank');
           toast({
             title: 'Email Client Opened',
             description: `Composing email to ${result.emails.length} contact(s).`,
@@ -269,14 +269,14 @@ export default function ContactsPageClient({
 
         // Create and download the CSV file
         const blob = new Blob([result.data as string], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `contacts-export-${new Date().toISOString().split('T')[0]}.csv`;
         document.body.appendChild(a);
         a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        globalThis.URL.revokeObjectURL(url);
+        a.remove();
 
         toast({
           title: 'Export Complete',
@@ -335,7 +335,7 @@ export default function ContactsPageClient({
       <PageHeader
         breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Contacts' }]}
         title="Contact List"
-        description={`View and manage your customer database efficiently.${totalItems > 0 ? ` (${totalItems} total)` : ''}`}
+        description={`View and manage your customer database efficiently.` + (totalItems > 0 ? ` (${totalItems} total)` : '')}
         actions={[
           {
             label: 'New Contact',
@@ -419,7 +419,7 @@ export default function ContactsPageClient({
           >
             <span className="material-symbols-outlined text-lg" aria-hidden="true">
               refresh
-            </span>
+            </span>{' '}
             Try Again
           </button>
         </div>

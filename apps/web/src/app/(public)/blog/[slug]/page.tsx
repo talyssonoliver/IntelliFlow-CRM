@@ -22,9 +22,9 @@ export function generateStaticParams() {
 // Generate metadata for SEO
 export async function generateMetadata({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ slug: string }>;
-}): Promise<Metadata> {
+}>): Promise<Metadata> {
   const { slug } = await params;
   const post = blogPosts[slug];
 
@@ -71,9 +71,9 @@ function getRelatedPosts(currentSlug: string, category: string): BlogPost[] {
 
 export default async function BlogPostPage({
   params,
-}: {
+}: Readonly<{
   readonly params: Promise<{ slug: string }>;
-}) {
+}>) {
   const { slug } = await params;
   const post = blogPosts[slug];
 

@@ -87,7 +87,7 @@ interface MethodCardProps {
   onSelect: () => void;
 }
 
-function MethodCard({ method, selected, onSelect }: MethodCardProps) {
+function MethodCard({ method, selected, onSelect }: Readonly<MethodCardProps>) {
   return (
     <button
       type="button"
@@ -160,7 +160,7 @@ interface VerificationInputProps {
   loading?: boolean;
 }
 
-function VerificationInput({ value, onChange, onSubmit, error, loading }: VerificationInputProps) {
+function VerificationInput({ value, onChange, onSubmit, error, loading }: Readonly<VerificationInputProps>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -174,7 +174,7 @@ function VerificationInput({ value, onChange, onSubmit, error, loading }: Verifi
           pattern="[0-9]*"
           maxLength={6}
           value={value}
-          onChange={(e) => onChange(e.target.value.replace(/\D/g, ''))}
+          onChange={(e) => onChange(e.target.value.replaceAll(/\D/g, ''))}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && value.length === 6) {
               onSubmit();
@@ -194,7 +194,7 @@ function VerificationInput({ value, onChange, onSubmit, error, loading }: Verifi
           <p id="verification-error" className="text-sm text-destructive flex items-center gap-1">
             <span className="material-symbols-outlined text-sm" aria-hidden="true">
               error
-            </span>
+            </span>{' '}
             {error}
           </p>
         )}
@@ -214,14 +214,14 @@ function VerificationInput({ value, onChange, onSubmit, error, loading }: Verifi
       >
         {loading ? (
           <>
-            <span className="w-5 h-5 border-2 border-muted-foreground border-t-primary-foreground rounded-full animate-spin" />
+            <span className="w-5 h-5 border-2 border-muted-foreground border-t-primary-foreground rounded-full animate-spin" />{' '}
             Verifying...
           </>
         ) : (
           <>
             <span className="material-symbols-outlined text-lg" aria-hidden="true">
               verified
-            </span>
+            </span>{' '}
             Verify Code
           </>
         )}
@@ -381,38 +381,40 @@ export default function MfaSetupPage() {
       {/* Progress Indicator */}
       <div className="mb-8">
         <div className="flex items-center justify-between max-w-md">
-          {['method', 'setup', 'verify', 'backup', 'complete'].map((s, i) => (
-            <div key={s} className="flex items-center">
-              <div
-                className={cn(
-                  'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium',
-                  step === s
-                    ? 'bg-primary text-primary-foreground'
-                    : ['method', 'setup', 'verify', 'backup', 'complete'].indexOf(step) > i
-                      ? 'bg-emerald-500 text-white dark:text-white'
-                      : 'bg-muted text-muted-foreground'
-                )}
-              >
-                {['method', 'setup', 'verify', 'backup', 'complete'].indexOf(step) > i ? (
-                  <span className="material-symbols-outlined text-sm" aria-hidden="true">
-                    check
-                  </span>
-                ) : (
-                  i + 1
-                )}
-              </div>
-              {i < 4 && (
+          {['method', 'setup', 'verify', 'backup', 'complete'].map((s, i) => {
+            const stepIndex = ['method', 'setup', 'verify', 'backup', 'complete'].indexOf(step);
+            const pastStepClass =
+              stepIndex > i ? 'bg-emerald-500 text-white dark:text-white' : 'bg-muted text-muted-foreground';
+            const stepCircleClass = step === s ? 'bg-primary text-primary-foreground' : pastStepClass;
+            return (
+              <div key={s} className="flex items-center">
                 <div
                   className={cn(
-                    'w-12 h-0.5 mx-1',
-                    ['method', 'setup', 'verify', 'backup', 'complete'].indexOf(step) > i
-                      ? 'bg-emerald-500'
-                      : 'bg-muted'
+                    'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium',
+                    stepCircleClass
                   )}
-                />
-              )}
-            </div>
-          ))}
+                >
+                  {['method', 'setup', 'verify', 'backup', 'complete'].indexOf(step) > i ? (
+                    <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                      check
+                    </span>
+                  ) : (
+                    i + 1
+                  )}
+                </div>
+                {i < 4 && (
+                  <div
+                    className={cn(
+                      'w-12 h-0.5 mx-1',
+                      ['method', 'setup', 'verify', 'backup', 'complete'].indexOf(step) > i
+                        ? 'bg-emerald-500'
+                        : 'bg-muted'
+                    )}
+                  />
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -467,7 +469,7 @@ export default function MfaSetupPage() {
                 <p className="text-sm text-destructive flex items-center gap-2">
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
                     error
-                  </span>
+                  </span>{' '}
                   {verificationError}
                 </p>
               </div>
@@ -488,14 +490,14 @@ export default function MfaSetupPage() {
             >
               {setupMfaMutation.isPending ? (
                 <>
-                  <span className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  <span className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />{' '}
                   Setting up...
                 </>
               ) : (
                 <>
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
                     arrow_forward
-                  </span>
+                  </span>{' '}
                   Continue with {MFA_METHODS.find((m) => m.id === selectedMethod)?.name}
                 </>
               )}
@@ -603,7 +605,7 @@ export default function MfaSetupPage() {
             >
               <span className="material-symbols-outlined text-lg" aria-hidden="true">
                 arrow_back
-              </span>
+              </span>{' '}
               Return to Account Settings
             </button>
           </div>

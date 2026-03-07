@@ -145,32 +145,32 @@ vi.mock('@intelliflow/ui', () => ({
     children,
     className,
     ...rest
-  }: {
+  }: Readonly<{
     children: React.ReactNode;
     className?: string;
     [key: string]: unknown;
-  }) => (
+  }>) => (
     <div data-testid="card" className={className} {...rest}>
       {children}
     </div>
   ),
   cn: (...args: (string | undefined | boolean)[]) => args.filter(Boolean).join(' '),
-  Skeleton: ({ className }: { className?: string }) => (
+  Skeleton: ({ className }: Readonly<{ className?: string }>) => (
     <div data-testid="skeleton" className={className} />
   ),
   toast: (...args: unknown[]) => mockToast(...args),
-  Dialog: ({ children, open }: { children: React.ReactNode; open: boolean }) =>
+  Dialog: ({ children, open }: Readonly<{ children: React.ReactNode; open: boolean }>) =>
     open ? <div data-testid="loss-reason-dialog">{children}</div> : null,
-  DialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
-  DialogDescription: ({ children }: { children: React.ReactNode }) => <p>{children}</p>,
-  DialogFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogContent: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
+  DialogHeader: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
+  DialogTitle: ({ children }: Readonly<{ children: React.ReactNode }>) => <h2>{children}</h2>,
+  DialogDescription: ({ children }: Readonly<{ children: React.ReactNode }>) => <p>{children}</p>,
+  DialogFooter: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
 }));
 
 // Mock @/components/shared
 vi.mock('@/components/shared', () => ({
-  PageHeader: ({ title, description }: { title: string; description?: string }) => (
+  PageHeader: ({ title, description }: Readonly<{ title: string; description?: string }>) => (
     <header data-testid="page-header">
       <h1>{title}</h1>
       {description && <p>{description}</p>}
@@ -186,12 +186,12 @@ vi.mock('@/components/deals', () => ({
     onConfirm,
     onCancel,
     dealName,
-  }: {
+  }: Readonly<{
     open: boolean;
     onConfirm: (reason: string) => void;
     onCancel: () => void;
     dealName: string;
-  }) =>
+  }>) =>
     open ? (
       <div data-testid="loss-reason-modal" data-deal-name={dealName}>
         <button
@@ -210,12 +210,12 @@ vi.mock('@/components/deals', () => ({
     onStageChange,
     onDealNavigate,
     pendingDealId,
-  }: {
+  }: Readonly<{
     deals: Array<{ id: string; name: string; stage: string }>;
     onStageChange: (id: string, stage: string) => void;
     onDealNavigate: (id: string) => void;
     pendingDealId?: string | null;
-  }) => (
+  }>) => (
     <div
       data-testid="pipeline-board"
       data-deal-count={deals.length}
@@ -256,9 +256,9 @@ vi.mock('@/components/deals', () => ({
   ),
   ValueSummary: ({
     stats,
-  }: {
+  }: Readonly<{
     stats: { totalDeals: number; totalValue: number; weightedValue: number; wonValue: number };
-  }) => (
+  }>) => (
     <div data-testid="value-summary">
       <span data-testid="total-deals">{stats.totalDeals}</span>
       <span data-testid="total-value">{stats.totalValue}</span>
@@ -269,10 +269,10 @@ vi.mock('@/components/deals', () => ({
   DealFilters: ({
     value,
     onChange,
-  }: {
+  }: Readonly<{
     value: Record<string, unknown>;
     onChange: (v: Record<string, unknown>) => void;
-  }) => (
+  }>) => (
     <div data-testid="deal-filters">
       <button data-testid="set-filter" onClick={() => onChange({ ...value, ownerId: 'me' })}>
         Set Filter
@@ -300,15 +300,15 @@ vi.mock('next/dynamic', () => ({
 
 // Mock recharts
 vi.mock('recharts', () => ({
-  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
+  ResponsiveContainer: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <div data-testid="responsive-container">{children}</div>
   ),
-  PieChart: ({ children }: { children: React.ReactNode }) => (
+  PieChart: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <div data-testid="pie-chart">{children}</div>
   ),
   Pie: () => <div data-testid="pie" />,
   Cell: () => <div data-testid="cell" />,
-  BarChart: ({ children }: { children: React.ReactNode }) => (
+  BarChart: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <div data-testid="bar-chart">{children}</div>
   ),
   Bar: () => <div data-testid="bar" />,

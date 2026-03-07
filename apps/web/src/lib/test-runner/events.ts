@@ -5,7 +5,7 @@
  * Enables real-time streaming of test results to the UI.
  */
 
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'node:events';
 import type { TestRunProgress } from './types';
 
 class TestRunnerEvents extends EventEmitter {

@@ -41,7 +41,7 @@ const COLOR_PALETTE = [
 ];
 
 // Protected stages that cannot be deactivated
-const PROTECTED_STAGES = ['CLOSED_WON', 'CLOSED_LOST'];
+const PROTECTED_STAGES = new Set(['CLOSED_WON', 'CLOSED_LOST']);
 
 export default function PipelineSettingsContent() {
   const router = useRouter();
@@ -122,7 +122,7 @@ export default function PipelineSettingsContent() {
 
   // Reset to defaults
   const handleReset = useCallback(() => {
-    if (window.confirm('Reset all pipeline settings to defaults? This cannot be undone.')) {
+    if (globalThis.confirm('Reset all pipeline settings to defaults? This cannot be undone.')) {
       resetToDefaults();
     }
   }, [resetToDefaults]);
@@ -189,7 +189,7 @@ export default function PipelineSettingsContent() {
         <div className="max-w-3xl">
           <Card className="p-6 border-destructive">
             <p className="text-destructive">Failed to load pipeline settings: {error.message}</p>
-            <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
+            <Button variant="outline" className="mt-4" onClick={() => globalThis.location.reload()}>
               Retry
             </Button>
           </Card>
@@ -232,7 +232,7 @@ export default function PipelineSettingsContent() {
         <Card className="p-6">
           <div className="space-y-4">
             {localStages.map((stage, index) => {
-              const isProtected = PROTECTED_STAGES.includes(stage.stageKey);
+              const isProtected = PROTECTED_STAGES.has(stage.stageKey);
               return (
                 <div
                   key={stage.stageKey}
@@ -339,7 +339,7 @@ export default function PipelineSettingsContent() {
                               handleUpdateStage(stage.stageKey, {
                                 probability: Math.min(
                                   100,
-                                  Math.max(0, parseInt(e.target.value) || 0)
+                                  Math.max(0, Number.parseInt(e.target.value) || 0)
                                 ),
                               })
                             }
@@ -388,7 +388,7 @@ export default function PipelineSettingsContent() {
                     {/* Color Picker */}
                     <div
                       className="flex flex-wrap gap-1 max-w-[140px]"
-                      role="group"
+                      role="group" // NOSONAR typescript:S6819 — ARIA group for color palette buttons; <fieldset> would require <legend> and changes layout
                       aria-label={`Color selection for ${stage.displayName}`}
                     >
                       {COLOR_PALETTE.map((color) => (
@@ -420,7 +420,7 @@ export default function PipelineSettingsContent() {
             <li>Default probability is auto-assigned when deals enter a stage</li>
             <li>Inactive stages are hidden from the pipeline view</li>
             <li>
-              <strong>Protected stages</strong> (Closed Won, Closed Lost) cannot be deactivated
+              <strong>Protected stages</strong>{' '}(Closed Won, Closed Lost) cannot be deactivated
             </li>
           </ul>
         </div>

@@ -7,10 +7,8 @@
  * Task: PG-013
  */
 
-export type VariantId = string;
-
 export interface Variant {
-  id: VariantId;
+  id: string;
   name: string;
   weight: number; // 0-100 percentage
 }
@@ -27,13 +25,13 @@ export interface Experiment {
 
 export interface ExperimentAssignment {
   experimentId: string;
-  variantId: VariantId;
+  variantId: string;
   assignedAt: number;
 }
 
 export interface ConversionEvent {
   experimentId: string;
-  variantId: VariantId;
+  variantId: string;
   eventType: string;
   metadata?: Record<string, unknown>;
   timestamp: number;
@@ -46,7 +44,7 @@ const CONVERSION_QUEUE_KEY = 'intelliflow_ab_conversions';
  * Get stored experiment assignments from localStorage
  */
 function getStoredAssignments(): Record<string, ExperimentAssignment> {
-  if (typeof window === 'undefined') return {};
+  if (typeof globalThis.window === 'undefined') return {};
 
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -60,7 +58,7 @@ function getStoredAssignments(): Record<string, ExperimentAssignment> {
  * Store experiment assignment in localStorage
  */
 function storeAssignment(assignment: ExperimentAssignment): void {
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis.window === 'undefined') return;
 
   try {
     const assignments = getStoredAssignments();
@@ -138,7 +136,7 @@ export function trackConversion(
   eventType: string,
   metadata?: Record<string, unknown>
 ): void {
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis.window === 'undefined') return;
 
   const assignments = getStoredAssignments();
   const assignment = assignments[experimentId];
@@ -182,8 +180,8 @@ function queueConversion(event: ConversionEvent): void {
 function sendConversion(event: ConversionEvent): void {
   // Integration with analytics providers
   // Google Analytics 4
-  if ('gtag' in window && typeof (window as { gtag?: Function }).gtag === 'function') {
-    (window as { gtag: Function }).gtag('event', 'ab_conversion', {
+  if ('gtag' in globalThis && typeof (globalThis as unknown as { gtag?: Function }).gtag === 'function') {
+    (globalThis as unknown as { gtag: Function }).gtag('event', 'ab_conversion', {
       experiment_id: event.experimentId,
       variant_id: event.variantId,
       event_type: event.eventType,
@@ -192,14 +190,14 @@ function sendConversion(event: ConversionEvent): void {
   }
 
   // Custom event for internal tracking
-  window.dispatchEvent(new CustomEvent('ab_conversion', { detail: event }));
+  globalThis.dispatchEvent(new CustomEvent('ab_conversion', { detail: event }));
 }
 
 /**
  * Clear all experiment assignments (useful for testing)
  */
 export function clearAssignments(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis.window === 'undefined') return;
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(CONVERSION_QUEUE_KEY);
 }

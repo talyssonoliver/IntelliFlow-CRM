@@ -10,7 +10,7 @@ interface DocsSearchProps {
   onFilter: (filtered: DocCategory[]) => void;
 }
 
-export function DocsSearch({ categories, onFilter }: DocsSearchProps) {
+export function DocsSearch({ categories, onFilter }: Readonly<DocsSearchProps>) {
   const [query, setQuery] = useState('');
   const [resultCount, setResultCount] = useState(categories.length);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -75,11 +75,11 @@ export function DocsSearch({ categories, onFilter }: DocsSearchProps) {
         aria-label="Search documentation"
       />
       <div aria-live="polite" className="sr-only">
-        {hasQuery && resultCount === 0
-          ? 'No results found'
-          : hasQuery
-            ? `${resultCount} result${resultCount === 1 ? '' : 's'} found`
-            : ''}
+        {(() => {
+          if (hasQuery && resultCount === 0) return 'No results found';
+          if (hasQuery) return `${resultCount} result${resultCount === 1 ? '' : 's'} found`;
+          return '';
+        })()}
       </div>
       {hasQuery && resultCount === 0 && (
         <p className="text-sm text-muted-foreground mt-4 text-center">

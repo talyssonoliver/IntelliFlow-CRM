@@ -7,7 +7,7 @@ interface SearchBarProps {
   className?: string;
 }
 
-export function SearchBar({ placeholder = 'Search...', className = '' }: SearchBarProps) {
+export function SearchBar({ placeholder = 'Search...', className = '' }: Readonly<SearchBarProps>) {
   const [searchQuery, setSearchQuery] = React.useState('');
 
   return (

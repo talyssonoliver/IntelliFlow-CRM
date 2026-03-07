@@ -16,7 +16,7 @@ export interface SettingsNavProps {
   className?: string;
 }
 
-export function SettingsNav({ searchQuery, className }: SettingsNavProps) {
+export function SettingsNav({ searchQuery, className }: Readonly<SettingsNavProps>) {
   const categories = getResolvedCategories(searchQuery);
 
   if (categories.length === 0) {

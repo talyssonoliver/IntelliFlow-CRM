@@ -4,6 +4,6 @@ export const metadata: Metadata = {
   title: 'Tickets',
 };
 
-export default function TicketsLayout({ children }: { children: React.ReactNode }) {
+export default function TicketsLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <>{children}</>;
 }

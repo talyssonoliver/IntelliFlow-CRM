@@ -5,6 +5,6 @@ export const metadata: Metadata = {
   title: 'AI Agent Approvals',
 };
 
-export default function AgentApprovalsLayout({ children }: { readonly children: React.ReactNode }) {
+export default function AgentApprovalsLayout({ children }: Readonly<{ readonly children: React.ReactNode }>) {
   return <AgentApprovalsLayoutShell>{children}</AgentApprovalsLayoutShell>;
 }

@@ -30,7 +30,7 @@ export function DeadlineTracker({
   onCompleteTask,
   onRemoveTask,
   disabled,
-}: DeadlineTrackerProps) {
+}: Readonly<DeadlineTrackerProps>) {
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -149,6 +149,7 @@ export function DeadlineTracker({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Task title..."
               className="w-full px-3 py-1.5 text-sm border rounded-md bg-background"
+              // eslint-disable-next-line jsx-a11y/no-autofocus
               autoFocus
               aria-label="Task title"
             />

@@ -60,7 +60,7 @@ export function ChainVersionEditor({
   onCreate,
   onUpdate,
   isLoading,
-}: ChainVersionEditorProps) {
+}: Readonly<ChainVersionEditorProps>) {
   const isEditMode = !!existingDraft;
 
   // Form state
@@ -120,17 +120,17 @@ export function ChainVersionEditor({
           model,
           description: description || undefined,
           prompt: prompt || undefined,
-          temperature: parseFloat(temperature),
-          maxTokens: parseInt(maxTokens, 10),
+          temperature: Number.parseFloat(temperature),
+          maxTokens: Number.parseInt(maxTokens, 10),
         };
         await onUpdate(existingDraft.id, updateInput);
       } else {
         const createInput: CreateChainVersionInput = {
-          chainType: chainType as ChainType,
+          chainType: chainType,
           model,
           prompt,
-          temperature: parseFloat(temperature),
-          maxTokens: parseInt(maxTokens, 10),
+          temperature: Number.parseFloat(temperature),
+          maxTokens: Number.parseInt(maxTokens, 10),
           description: description || undefined,
           rolloutStrategy: 'IMMEDIATE',
         };
@@ -265,7 +265,11 @@ export function ChainVersionEditor({
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={!canSubmit}>
-            {isLoading ? 'Saving...' : isEditMode ? 'Save Changes' : 'Create Draft'}
+            {(() => {
+              if (isLoading) return 'Saving...';
+              if (isEditMode) return 'Save Changes';
+              return 'Create Draft';
+            })()}
           </Button>
         </DialogFooter>
       </DialogContent>

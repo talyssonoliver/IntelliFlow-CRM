@@ -154,21 +154,21 @@ export default function StatusPage() {
       {/* Hero Section */}
       <section
         className={`py-12 ${
-          overall.color === 'green'
-            ? 'bg-green-600'
-            : overall.color === 'yellow'
-              ? 'bg-yellow-500'
-              : 'bg-red-600'
+          (() => {
+            if (overall.color === 'green') return 'bg-green-600';
+            if (overall.color === 'yellow') return 'bg-yellow-500';
+            return 'bg-red-600';
+          })()
         }`}
       >
         <div className="container px-4 lg:px-6 mx-auto max-w-4xl text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <span className={`material-symbols-outlined text-4xl text-white`} aria-hidden="true">
-              {overall.color === 'green'
-                ? 'check_circle'
-                : overall.color === 'yellow'
-                  ? 'warning'
-                  : 'error'}
+            <span className="material-symbols-outlined text-4xl text-white" aria-hidden="true">
+              {(() => {
+                if (overall.color === 'green') return 'check_circle';
+                if (overall.color === 'yellow') return 'warning';
+                return 'error';
+              })()}
             </span>
             <h1 className="text-3xl lg:text-4xl font-bold text-white">{overall.label}</h1>
           </div>
@@ -205,13 +205,12 @@ export default function StatusPage() {
                   <div className="flex items-center gap-3">
                     <span
                       className={`w-3 h-3 rounded-full ${
-                        service.status === 'operational'
-                          ? 'bg-green-500'
-                          : service.status === 'degraded'
-                            ? 'bg-yellow-500'
-                            : service.status === 'partial_outage'
-                              ? 'bg-orange-500'
-                              : 'bg-red-500'
+                        (() => {
+                          if (service.status === 'operational') return 'bg-green-500';
+                          if (service.status === 'degraded') return 'bg-yellow-500';
+                          if (service.status === 'partial_outage') return 'bg-orange-500';
+                          return 'bg-red-500';
+                        })()
                       }`}
                       aria-hidden="true"
                     />
@@ -225,11 +224,11 @@ export default function StatusPage() {
                   <div className="text-right">
                     <span
                       className={`text-sm font-medium capitalize ${
-                        service.status === 'operational'
-                          ? 'text-green-600 dark:text-green-400'
-                          : service.status === 'degraded'
-                            ? 'text-yellow-600 dark:text-yellow-400'
-                            : 'text-red-600 dark:text-red-400'
+                        (() => {
+                          if (service.status === 'operational') return 'text-green-600 dark:text-green-400';
+                          if (service.status === 'degraded') return 'text-yellow-600 dark:text-yellow-400';
+                          return 'text-red-600 dark:text-red-400';
+                        })()
                       }`}
                     >
                       {service.status.replace('_', ' ')}
@@ -272,13 +271,12 @@ export default function StatusPage() {
                       <div className="flex items-center gap-2 mb-1">
                         <span
                           className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                            incident.severity === 'maintenance'
-                              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                              : incident.severity === 'minor'
-                                ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                                : incident.severity === 'major'
-                                  ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-                                  : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            (() => {
+                              if (incident.severity === 'maintenance') return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+                              if (incident.severity === 'minor') return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+                              if (incident.severity === 'major') return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
+                              return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+                            })()
                           }`}
                         >
                           {incident.severity}
@@ -305,7 +303,7 @@ export default function StatusPage() {
 
                   <div className="border-l-2 border-slate-200 dark:border-slate-700 pl-4 space-y-3">
                     {incident.updates.map((update, idx) => (
-                      <div key={idx} className="text-sm">
+                      <div key={idx} className="text-sm"> {/* NOSONAR typescript:S6479 */}
                         <p className="text-slate-500 dark:text-slate-400 text-xs mb-1">
                           {formatDate(update.time)}
                         </p>

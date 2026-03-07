@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import HelpCenterPage from '../(list)/page';
 import { DEFAULT_HELP_CATEGORIES } from '@/lib/support/help-categories';
 
@@ -11,16 +11,16 @@ vi.mock('@/components/support', () => ({
     value,
     onChange,
     resultCount,
-  }: {
+  }: Readonly<{
     value: string;
     onChange: (v: string) => void;
     resultCount?: number;
-  }) => (
+  }>) => (
     <div data-testid="help-search" data-value={value} data-result-count={resultCount}>
       <input data-testid="search-input" value={value} onChange={(e) => onChange(e.target.value)} />
     </div>
   ),
-  HelpCategories: ({ categories }: { categories: unknown[] }) => (
+  HelpCategories: ({ categories }: Readonly<{ categories: unknown[] }>) => (
     <div data-testid="help-categories" data-count={categories.length}>
       {categories.map((c: any) => (
         <span key={c.id} data-testid={`category-${c.id}`}>
@@ -36,11 +36,11 @@ vi.mock('@/components/shared/page-header', () => ({
     title,
     description,
     breadcrumbs,
-  }: {
+  }: Readonly<{
     title: string;
     description?: string;
     breadcrumbs?: Array<{ label: string; href?: string }>;
-  }) => (
+  }>) => (
     <div data-testid="page-header" data-title={title}>
       <h1>{title}</h1>
       {description && <p>{description}</p>}

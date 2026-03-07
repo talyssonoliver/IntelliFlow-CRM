@@ -15,7 +15,7 @@ const COLORS = {
   Negative: '#dc2626',
 };
 
-export default function SentimentDistributionChart({ sentiment }: SentimentDistributionChartProps) {
+export default function SentimentDistributionChart({ sentiment }: Readonly<SentimentDistributionChartProps>) {
   if (sentiment.total === 0) {
     return (
       <div className="flex h-64 items-center justify-center rounded-lg border bg-card p-6">
@@ -43,7 +43,7 @@ export default function SentimentDistributionChart({ sentiment }: SentimentDistr
             outerRadius={100}
             paddingAngle={2}
             dataKey="value"
-            label={({ name, percent }: { name?: string; percent?: number }) =>
+            label={({ name, percent }: Readonly<{ name?: string; percent?: number }>) =>
               `${name ?? ''} ${((percent ?? 0) * 100).toFixed(0)}%`
             }
           >

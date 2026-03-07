@@ -69,7 +69,7 @@ export function RemindersProvider({
   children,
   autoStart = true,
   checkInterval = 60000,
-}: RemindersProviderProps) {
+}: Readonly<RemindersProviderProps>) {
   const [pendingReminders, setPendingReminders] = React.useState<Reminder[]>([]);
   const [recentNotifications, setRecentNotifications] = React.useState<ReminderNotification[]>([]);
   const [readNotifications, setReadNotifications] = React.useState<Set<string>>(new Set());

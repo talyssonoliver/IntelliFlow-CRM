@@ -29,15 +29,14 @@ export const StageColumn = React.memo(function StageColumn({
   deals,
   onDealNavigate,
   pendingDealId,
-}: StageColumnProps) {
+}: Readonly<StageColumnProps>) {
   const config = PIPELINE_STAGE_CONFIG[stage];
   const totalValue = deals.reduce((sum, deal) => sum + deal.value, 0);
   const { setNodeRef } = useDroppable({ id: stage });
 
   return (
-    <div
+    <section
       className="flex-1 min-w-[240px] sm:min-w-[280px] max-w-[300px]"
-      role="region"
       aria-label={`${config.label} stage - ${deals.length} deals, ${formatCurrencyCompact(totalValue)}`}
     >
       {/* Column Header */}
@@ -66,24 +65,24 @@ export const StageColumn = React.memo(function StageColumn({
         className="bg-muted/50 rounded-lg p-2 sm:p-2 h-[300px] sm:h-[500px] overflow-y-auto overscroll-contain scrollbar-thin"
       >
         <SortableContext items={deals.map((d) => d.id)} strategy={verticalListSortingStrategy}>
-          <div className="space-y-1.5" role="list" aria-label={`Deals in ${config.label}`}>
+          <ul className="space-y-1.5" aria-label={`Deals in ${config.label}`}>
             {deals.map((deal) => (
-              <div key={deal.id} role="listitem">
+              <li key={deal.id}>
                 <DealCard
                   deal={deal}
                   onNavigate={() => onDealNavigate(deal.id)}
                   isPending={deal.id === pendingDealId}
                 />
-              </div>
+              </li>
             ))}
             {deals.length === 0 ? (
               <div className="flex items-center justify-center h-[100px] border-2 border-dashed border-border rounded-lg">
                 <p className="text-sm text-muted-foreground">Drop deals here</p>
               </div>
             ) : null}
-          </div>
+          </ul>
         </SortableContext>
       </div>
-    </div>
+    </section>
   );
 });

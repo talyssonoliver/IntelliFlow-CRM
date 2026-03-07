@@ -120,7 +120,7 @@ export function PublicHomePage() {
                 >
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
                     rocket_launch
-                  </span>
+                  </span>{' '}
                   Start free trial
                 </Link>
                 <Link
@@ -129,7 +129,7 @@ export function PublicHomePage() {
                 >
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
                     forum
-                  </span>
+                  </span>{' '}
                   Talk to sales
                 </Link>
               </div>
@@ -138,19 +138,19 @@ export function PublicHomePage() {
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/10">
                   <span className="material-symbols-outlined text-base" aria-hidden="true">
                     bolt
-                  </span>
+                  </span>{' '}
                   AI playbooks with approvals
                 </span>
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/10">
                   <span className="material-symbols-outlined text-base" aria-hidden="true">
                     check_circle
-                  </span>
+                  </span>{' '}
                   Audit-matrix ready
                 </span>
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/10">
                   <span className="material-symbols-outlined text-base" aria-hidden="true">
                     visibility
-                  </span>
+                  </span>{' '}
                   Accessible by design
                 </span>
               </div>
@@ -391,7 +391,7 @@ export function PublicHomePage() {
             >
               <span className="material-symbols-outlined" aria-hidden="true">
                 trending_up
-              </span>
+              </span>{' '}
               Begin your trial
             </Link>
             <Link
@@ -400,7 +400,7 @@ export function PublicHomePage() {
             >
               <span className="material-symbols-outlined" aria-hidden="true">
                 forum
-              </span>
+              </span>{' '}
               Book a call with sales
             </Link>
           </div>

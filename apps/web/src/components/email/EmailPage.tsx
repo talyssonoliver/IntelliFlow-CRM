@@ -35,7 +35,7 @@ interface EmailRecord {
   status: string;
 }
 
-export function EmailPage({ initialEmailId, className }: EmailPageProps) {
+export function EmailPage({ initialEmailId, className }: Readonly<EmailPageProps>) {
   const [selectedFolder, setSelectedFolder] = useState('inbox');
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(initialEmailId ?? null);
   const [composeMode, setComposeMode] = useState<ComposeMode>(null);
@@ -93,7 +93,7 @@ export function EmailPage({ initialEmailId, className }: EmailPageProps) {
 
   // Keyboard shortcut: 'c' to compose
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
+    const handler = (e: Readonly<KeyboardEvent>) => {
       // Don't trigger if typing in an input or contenteditable
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {

@@ -52,7 +52,7 @@ interface BillingPortalProps {
 // ============================================
 
 /** Standard empty state following design system: 24px icon, sm text, centered. */
-function EmptyState({ icon, message }: { icon: string; message: string }) {
+function EmptyState({ icon, message }: Readonly<{ icon: string; message: string }>) {
   return (
     <div className="text-center py-6">
       <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-3">
@@ -69,7 +69,7 @@ function EmptyState({ icon, message }: { icon: string; message: string }) {
 }
 
 /** Standard error state following design system alert pattern. */
-function ErrorState({ message }: { message: string }) {
+function ErrorState({ message }: Readonly<{ message: string }>) {
   return (
     <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
       <span className="material-symbols-outlined text-red-600 dark:text-red-400" aria-hidden="true">
@@ -81,7 +81,7 @@ function ErrorState({ message }: { message: string }) {
 }
 
 /** Standard loading skeleton for card sections. */
-function CardSkeleton({ rows = 2 }: { rows?: number }) {
+function CardSkeleton({ rows = 2 }: Readonly<{ rows?: number }>) {
   return (
     <Card className="border border-slate-200 dark:border-slate-800">
       <CardHeader className="pb-4">
@@ -131,7 +131,7 @@ function SubscriptionOverviewCard() {
           <CardTitle className="text-lg font-semibold flex items-center gap-2">
             <span className="material-symbols-outlined text-primary" aria-hidden="true">
               auto_awesome
-            </span>
+            </span>{' '}
             Subscription Overview
           </CardTitle>
         </CardHeader>
@@ -145,7 +145,7 @@ function SubscriptionOverviewCard() {
               <Link href="/billing/plans">
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   rocket_launch
-                </span>
+                </span>{' '}
                 View Plans
               </Link>
             </Button>
@@ -166,7 +166,7 @@ function SubscriptionOverviewCard() {
           <CardTitle className="text-lg font-semibold flex items-center gap-2">
             <span className="material-symbols-outlined text-primary" aria-hidden="true">
               auto_awesome
-            </span>
+            </span>{' '}
             Subscription Overview
           </CardTitle>
           <Badge
@@ -269,7 +269,7 @@ function PaymentMethodSection() {
         <CardTitle className="text-lg font-semibold flex items-center gap-2">
           <span className="material-symbols-outlined" aria-hidden="true">
             credit_card
-          </span>
+          </span>{' '}
           Payment Methods
         </CardTitle>
       </CardHeader>
@@ -321,7 +321,7 @@ function PaymentMethodSection() {
           <Link href="/billing/payment-methods">
             <span className="material-symbols-outlined text-lg mr-2" aria-hidden="true">
               add
-            </span>
+            </span>{' '}
             Add Payment Method
           </Link>
         </Button>
@@ -361,7 +361,7 @@ function BillingInformationCard() {
           <CardTitle className="text-lg font-semibold flex items-center gap-2">
             <span className="material-symbols-outlined" aria-hidden="true">
               account_balance
-            </span>
+            </span>{' '}
             Billing Information
           </CardTitle>
         </CardHeader>
@@ -391,7 +391,7 @@ function BillingInformationCard() {
         <CardTitle className="text-lg font-semibold flex items-center gap-2">
           <span className="material-symbols-outlined" aria-hidden="true">
             account_balance
-          </span>
+          </span>{' '}
           Billing Information
         </CardTitle>
       </CardHeader>
@@ -452,7 +452,7 @@ function BillingInformationCard() {
         >
           <span className="material-symbols-outlined text-lg" aria-hidden="true">
             edit
-          </span>
+          </span>{' '}
           Update Info
         </Link>
       </CardFooter>
@@ -489,7 +489,7 @@ function BillingHistoryTable() {
           <CardTitle className="text-lg font-semibold flex items-center gap-2">
             <span className="material-symbols-outlined" aria-hidden="true">
               history
-            </span>
+            </span>{' '}
             Billing History
           </CardTitle>
           <Link
@@ -497,7 +497,7 @@ function BillingHistoryTable() {
             className="text-sm font-medium text-primary hover:text-primary-hover flex items-center gap-1"
           >
             View All
-            <span className="material-symbols-outlined text-sm" aria-hidden="true">
+            {' '}<span className="material-symbols-outlined text-sm" aria-hidden="true">
               arrow_forward
             </span>
           </Link>
@@ -589,7 +589,7 @@ function BillingHistoryTable() {
 // Main Component
 // ============================================
 
-export function BillingPortal({ className }: BillingPortalProps) {
+export function BillingPortal({ className }: Readonly<BillingPortalProps>) {
   return (
     <div className={cn('grid grid-cols-1 lg:grid-cols-3 gap-6', className)}>
       {/* Row 1: Subscription + Payment Methods */}

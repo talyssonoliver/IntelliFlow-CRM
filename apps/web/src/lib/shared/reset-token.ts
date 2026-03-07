@@ -16,7 +16,7 @@
  * - Security best practices
  */
 
-import { randomBytes, createHash } from 'crypto';
+import { randomBytes, createHash } from 'node:crypto';
 
 // ============================================
 // Types
@@ -279,7 +279,7 @@ function incrementRateLimit(email: string): void {
  * Build the password reset URL
  */
 export function buildResetUrl(token: string, baseUrl?: string): string {
-  const base = baseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
+  const base = baseUrl || (typeof globalThis.window === 'undefined' ? '' : globalThis.location.origin);
   return `${base}/reset-password/${token}`;
 }
 
@@ -288,7 +288,7 @@ export function buildResetUrl(token: string, baseUrl?: string): string {
  */
 export function extractTokenFromUrl(url: string): string | null {
   try {
-    const match = url.match(/\/reset-password\/([a-f0-9]+)/i);
+    const match = /\/reset-password\/([a-f0-9]+)/i.exec(url);
     return match ? match[1] : null;
   } catch {
     return null;

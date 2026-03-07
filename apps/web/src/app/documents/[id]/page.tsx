@@ -30,7 +30,101 @@ interface ACLEntry {
   expiresAt?: string | null;
 }
 
-export default function DocumentDetailPage() {
+// Audit trail types (simplified to avoid deep Prisma Json type instantiation)
+interface RawAuditEntry {
+  id: string;
+  document_id: string;
+  tenant_id: string;
+  event_type: string;
+  user_id: string;
+  ip_address: string | null;
+  user_agent: string | null;
+  changes: unknown;
+  metadata: unknown;
+  created_at: string | Date;
+}
+
+interface AuditEntry {
+  id: string;
+  versionMajor: number;
+  versionMinor: number;
+  versionPatch: number;
+  action: string;
+  timestamp: string;
+  performedBy: string;
+  changes: string | null;
+  metadata: { sizeBytes?: number } | null;
+}
+
+// Map a raw audit entry to the UI-friendly AuditEntry shape
+function mapAuditEntry(entry: RawAuditEntry, index: number, total: number): AuditEntry {
+  const metadata = entry.metadata as {
+    version?: { major?: number; minor?: number; patch?: number };
+    sizeBytes?: number;
+  } | null;
+  const version = metadata?.version;
+  const createdAt = typeof entry.created_at === 'string' ? entry.created_at : String(entry.created_at);
+  const changesStr = entry.changes == null ? null : JSON.stringify(entry.changes);
+  return {
+    id: entry.id,
+    versionMajor: version?.major ?? 1,
+    versionMinor: version?.minor ?? 0,
+    versionPatch: version?.patch ?? total - index - 1,
+    action: entry.event_type
+      .replaceAll('_', ' ')
+      .toLowerCase()
+      .replace(/^\w/, (c) => c.toUpperCase()),
+    timestamp: createdAt,
+    performedBy: entry.user_id,
+    changes: changesStr,
+    metadata: metadata ? { sizeBytes: metadata.sizeBytes } : null,
+  };
+}
+
+function formatDateTime(dateString: string): string {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return formatDateTime(dateString);
+}
+
+function getStatusConfig(status: DocumentStatus) {
+  const configs = {
+    DRAFT: { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-700 dark:text-slate-300', icon: 'edit_note' },
+    UNDER_REVIEW: { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-700 dark:text-amber-400', icon: 'rate_review' },
+    APPROVED: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', icon: 'check_circle' },
+    SIGNED: { bg: 'bg-[#137fec]/10', text: 'text-[#137fec]', icon: 'verified' },
+    ARCHIVED: { bg: 'bg-gray-100 dark:bg-gray-900/30', text: 'text-gray-600 dark:text-gray-400', icon: 'archive' },
+    SUPERSEDED: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-400', icon: 'history' },
+  };
+  return configs[status] || configs.DRAFT;
+}
+
+function getAccessLevelBadge(level: AccessLevel) {
+  const configs = {
+    NONE: { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-600 dark:text-slate-400' },
+    VIEW: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-400' },
+    COMMENT: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-400' },
+    EDIT: { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-700 dark:text-amber-400' },
+    ADMIN: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400' },
+  };
+  return configs[level] || configs.NONE;
+}
+
+export default function DocumentDetailPage() { // NOSONAR typescript:S3776
   const params = useParams();
   const router = useRouter();
   const documentId = params.id as string;
@@ -67,81 +161,22 @@ export default function DocumentDetailPage() {
   // Sign mutation (AC-003) — server extracts IP/UA from headers
   const signMutation = trpc.documents.sign.useMutation({
     onSuccess: () => {
-      void utils.documents.getById.invalidate({ id: documentId }); // NOSONAR typescript:S3735 — intentional fire-and-forget
+      utils.documents.getById.invalidate({ id: documentId });
     },
   });
 
   // Approve mutation
   const approveMutation = trpc.documents.approve.useMutation({
     onSuccess: () => {
-      void utils.documents.getById.invalidate({ id: documentId }); // NOSONAR typescript:S3735 — intentional fire-and-forget
+      utils.documents.getById.invalidate({ id: documentId });
     },
   });
 
-  // Map audit trail to UI-friendly format
-  // Prisma CaseDocumentAudit has: id, document_id, tenant_id, event_type, user_id, ip_address, user_agent, changes, metadata, created_at
-  // UI expects: versionMajor, versionMinor, versionPatch, action, timestamp, performedBy, changes, metadata
-
-  // Define simplified types to avoid deep type instantiation issues with Prisma's complex Json type
-  interface RawAuditEntry {
-    id: string;
-    document_id: string;
-    tenant_id: string;
-    event_type: string;
-    user_id: string;
-    ip_address: string | null;
-    user_agent: string | null;
-    changes: unknown;
-    metadata: unknown;
-    created_at: string | Date;
-  }
-
-  interface AuditEntry {
-    id: string;
-    versionMajor: number;
-    versionMinor: number;
-    versionPatch: number;
-    action: string;
-    timestamp: string;
-    performedBy: string;
-    changes: string | null;
-    metadata: { sizeBytes?: number } | null;
-  }
-
-  // Cast to simplified type to avoid deep type instantiation issues with Prisma's Json type
-  // The tRPC return type for caseDocumentAudit is complex; using explicit cast is safe since
-  // we're only accessing documented Prisma model fields
+  // Map audit trail to UI-friendly format using module-level mapAuditEntry helper
   const auditEntries: RawAuditEntry[] = rawAuditTrail ? (rawAuditTrail as RawAuditEntry[]) : [];
-  const auditTrail: AuditEntry[] = [];
-  for (let index = 0; index < auditEntries.length; index++) {
-    const entry = auditEntries[index];
-    // Extract version from metadata if available, otherwise use index as fallback
-    const metadata = entry.metadata as {
-      version?: { major?: number; minor?: number; patch?: number };
-      sizeBytes?: number;
-    } | null;
-    const version = metadata?.version;
-    // created_at comes as string from tRPC serialization
-    const createdAt =
-      typeof entry.created_at === 'string' ? entry.created_at : String(entry.created_at);
-    // changes field can be JSON object or null from Prisma
-    const changesStr = entry.changes != null ? JSON.stringify(entry.changes) : null;
-
-    auditTrail.push({
-      id: entry.id,
-      versionMajor: version?.major ?? 1,
-      versionMinor: version?.minor ?? 0,
-      versionPatch: version?.patch ?? auditEntries.length - index - 1,
-      action: entry.event_type
-        .replace(/_/g, ' ')
-        .toLowerCase()
-        .replace(/^\w/, (c) => c.toUpperCase()),
-      timestamp: createdAt,
-      performedBy: entry.user_id,
-      changes: changesStr,
-      metadata: metadata ? { sizeBytes: metadata.sizeBytes } : null,
-    });
-  }
+  const auditTrail: AuditEntry[] = auditEntries.map((entry, index) =>
+    mapAuditEntry(entry, index, auditEntries.length)
+  );
 
   // Check for auth errors
   const isAuthError =
@@ -247,11 +282,11 @@ export default function DocumentDetailPage() {
       level: acl.accessLevel as AccessLevel,
       grantedAt: typeof acl.grantedAt === 'string' ? acl.grantedAt : String(acl.grantedAt),
       grantedBy: acl.grantedBy,
-      expiresAt: acl.expiresAt
-        ? typeof acl.expiresAt === 'string'
-          ? acl.expiresAt
-          : String(acl.expiresAt)
-        : null,
+      expiresAt: (() => {
+        if (!acl.expiresAt) return null;
+        if (typeof acl.expiresAt === 'string') return acl.expiresAt;
+        return String(acl.expiresAt);
+      })(),
     })
   );
 
@@ -293,72 +328,6 @@ export default function DocumentDetailPage() {
     { id: 'comments', label: 'Comments', count: comments.length },
   ];
 
-  const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-  };
-
-  const formatRelativeTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    return formatDateTime(dateString);
-  };
-
-  const getStatusConfig = (status: DocumentStatus) => {
-    const configs = {
-      DRAFT: {
-        bg: 'bg-slate-100 dark:bg-slate-800',
-        text: 'text-slate-700 dark:text-slate-300',
-        icon: 'edit_note',
-      },
-      UNDER_REVIEW: {
-        bg: 'bg-amber-100 dark:bg-amber-900/30',
-        text: 'text-amber-700 dark:text-amber-400',
-        icon: 'rate_review',
-      },
-      APPROVED: {
-        bg: 'bg-green-100 dark:bg-green-900/30',
-        text: 'text-green-700 dark:text-green-400',
-        icon: 'check_circle',
-      },
-      SIGNED: { bg: 'bg-[#137fec]/10', text: 'text-[#137fec]', icon: 'verified' },
-      ARCHIVED: {
-        bg: 'bg-gray-100 dark:bg-gray-900/30',
-        text: 'text-gray-600 dark:text-gray-400',
-        icon: 'archive',
-      },
-      SUPERSEDED: {
-        bg: 'bg-purple-100 dark:bg-purple-900/30',
-        text: 'text-purple-700 dark:text-purple-400',
-        icon: 'history',
-      },
-    };
-    return configs[status] || configs.DRAFT;
-  };
-
-  const getAccessLevelBadge = (level: AccessLevel) => {
-    const configs = {
-      NONE: { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-600 dark:text-slate-400' },
-      VIEW: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-400' },
-      COMMENT: {
-        bg: 'bg-purple-100 dark:bg-purple-900/30',
-        text: 'text-purple-700 dark:text-purple-400',
-      },
-      EDIT: { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-700 dark:text-amber-400' },
-      ADMIN: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400' },
-    };
-    return configs[level] || configs.NONE;
-  };
-
   const statusConfig = getStatusConfig(document.status);
 
   return (
@@ -377,15 +346,15 @@ export default function DocumentDetailPage() {
         </div>
         <div className="flex gap-3">
           <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-            <span className="material-symbols-outlined text-[18px]">download</span>
+            <span className="material-symbols-outlined text-[18px]">download</span>{' '}
             Download
           </button>
           <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-            <span className="material-symbols-outlined text-[18px]">share</span>
+            <span className="material-symbols-outlined text-[18px]">share</span>{' '}
             Share
           </button>
           <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none">
-            <span className="material-symbols-outlined text-[18px]">edit</span>
+            <span className="material-symbols-outlined text-[18px]">edit</span>{' '}
             Edit
           </button>
         </div>
@@ -408,12 +377,12 @@ export default function DocumentDetailPage() {
                   <span
                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.bg} ${statusConfig.text}`}
                   >
-                    <span className="material-symbols-outlined text-sm">{statusConfig.icon}</span>
+                    <span className="material-symbols-outlined text-sm">{statusConfig.icon}</span>{' '}
                     {document.status.replace('_', ' ')}
                   </span>
                   {document.isLegalHold && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                      <span className="material-symbols-outlined text-sm">shield</span>
+                      <span className="material-symbols-outlined text-sm">shield</span>{' '}
                       Legal Hold
                     </span>
                   )}
@@ -802,11 +771,11 @@ export default function DocumentDetailPage() {
                                 <td className="px-4 py-3">
                                   <div className="flex items-center gap-2">
                                     <span className="material-symbols-outlined text-[20px] text-slate-400">
-                                      {acl.principalType === 'USER'
-                                        ? 'person'
-                                        : acl.principalType === 'ROLE'
-                                          ? 'group'
-                                          : 'business'}
+                                      {(() => {
+                                      if (acl.principalType === 'USER') return 'person';
+                                      if (acl.principalType === 'ROLE') return 'group';
+                                      return 'business';
+                                    })()}
                                     </span>
                                     <span className="text-sm font-medium text-slate-900 dark:text-white">
                                       {acl.principalName}
@@ -1014,7 +983,7 @@ export default function DocumentDetailPage() {
                                   <span className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
                                     <span className="material-symbols-outlined text-[14px]">
                                       check_circle
-                                    </span>
+                                    </span>{' '}
                                     Resolved
                                   </span>
                                 ) : (

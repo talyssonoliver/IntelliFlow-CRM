@@ -204,7 +204,7 @@ function FilterDropdown({
   value,
   onChange,
   hideOnMobile,
-}: FilterDropdownProps) {
+}: Readonly<FilterDropdownProps>) {
   const selectId = useId();
 
   return (
@@ -366,7 +366,7 @@ interface FilterChipButtonProps {
   readonly onClick: () => void;
 }
 
-function FilterChipButton({ chip, isActive, onClick }: FilterChipButtonProps) {
+function FilterChipButton({ chip, isActive, onClick }: Readonly<FilterChipButtonProps>) {
   return (
     <button
       type="button"
@@ -398,10 +398,10 @@ function FilterChipButton({ chip, isActive, onClick }: FilterChipButtonProps) {
  * const { value, onChange, reset } = useFilterState('');
  * ```
  */
-export function useFilterState<T>(initialValue: T) {
+export function useFilterState<T>(initialValue: Readonly<T>) {
   const [value, setValue] = useState<T>(initialValue);
 
-  const onChange = useCallback((newValue: T) => {
+  const onChange = useCallback((newValue: Readonly<T>) => {
     setValue(newValue);
   }, []);
 
@@ -425,7 +425,7 @@ export function useFilterState<T>(initialValue: T) {
  * // filters.values.status, filters.set('status', 'active'), filters.reset()
  * ```
  */
-export function useMultiFilterState<T extends Record<string, string>>(initialValues: T) {
+export function useMultiFilterState<T extends Record<string, string>>(initialValues: Readonly<T>) {
   const [values, setValues] = useState<T>(initialValues);
 
   const set = useCallback(<K extends keyof T>(key: K, value: T[K]) => {
@@ -437,7 +437,7 @@ export function useMultiFilterState<T extends Record<string, string>>(initialVal
   }, [initialValues]);
 
   const resetKey = useCallback(
-    <K extends keyof T>(key: K) => {
+    <K extends keyof T>(key: Readonly<K>) => {
       setValues((prev) => ({ ...prev, [key]: initialValues[key] }));
     },
     [initialValues]

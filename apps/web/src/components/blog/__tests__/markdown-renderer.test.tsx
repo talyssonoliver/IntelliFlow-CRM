@@ -390,9 +390,9 @@ describe('ReadingProgress', () => {
     render(<ReadingProgress />);
 
     const progressBar = screen.getByRole('progressbar');
-    expect(progressBar).toHaveAttribute('aria-valuenow');
-    expect(progressBar).toHaveAttribute('aria-valuemin', '0');
-    expect(progressBar).toHaveAttribute('aria-valuemax', '100');
+    // Native <progress> element uses value/max attributes rather than aria-valuenow/min/max
+    expect(progressBar).toHaveAttribute('value');
+    expect(progressBar).toHaveAttribute('max', '100');
     expect(progressBar).toHaveAttribute('aria-label', 'Reading progress');
   });
 
@@ -400,7 +400,8 @@ describe('ReadingProgress', () => {
     render(<ReadingProgress />);
 
     const progressBar = screen.getByRole('progressbar');
-    expect(progressBar).toHaveAttribute('aria-valuenow', '0');
+    // Native <progress> element exposes progress via the value attribute
+    expect(progressBar).toHaveAttribute('value', '0');
   });
 
   it('should respond to scroll events', async () => {

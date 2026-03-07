@@ -80,7 +80,7 @@ export function createMockDealFilters(overrides?: Partial<DealFiltersValue>): De
 // ─── DnD Test Helpers ────────────────────────────────────────────────────────
 
 // Mock DndContext for testing components that use @dnd-kit
-const MockDndContext = ({ children }: { children: React.ReactNode }) => (
+const MockDndContext = ({ children }: Readonly<{ children: React.ReactNode }>) => (
   <div data-testid="mock-dnd-context">{children}</div>
 );
 

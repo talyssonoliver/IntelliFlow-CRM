@@ -18,7 +18,7 @@ interface AccountContactsListProps {
   accountId: string;
 }
 
-export function AccountContactsList({ accountId }: AccountContactsListProps) {
+export function AccountContactsList({ accountId }: Readonly<AccountContactsListProps>) {
   const router = useRouter();
   const [cursor, setCursor] = useState<string | undefined>();
   const [statusFilter, setStatusFilter] = useState<ContactStatus | undefined>();
@@ -59,7 +59,7 @@ export function AccountContactsList({ accountId }: AccountContactsListProps) {
         </span>
         <p className="text-muted-foreground">No contacts linked to this account</p>
         <Button variant="outline" size="sm" className="mt-3">
-          <span className="material-symbols-outlined text-base mr-1">person_add</span>
+          <span className="material-symbols-outlined text-base mr-1">person_add</span>{' '}
           Add Contact
         </Button>
       </div>
@@ -83,7 +83,7 @@ export function AccountContactsList({ accountId }: AccountContactsListProps) {
           <option value="LEAD">Lead</option>
         </select>
         <Button variant="outline" size="sm">
-          <span className="material-symbols-outlined text-base mr-1">person_add</span>
+          <span className="material-symbols-outlined text-base mr-1">person_add</span>{' '}
           Add Contact
         </Button>
       </div>

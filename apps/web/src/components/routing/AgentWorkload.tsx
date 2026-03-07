@@ -122,27 +122,23 @@ export function AgentWorkload() {
 
               {/* Capacity Gauge */}
               <div>
-                <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                <div className="flex justify-between text-xs text-muted-foreground mb-1" id={`capacity-label-${agent.id}`}>
                   <span>Capacity</span>
                   <span>
                     {agent.currentCapacity}/{agent.maxCapacity}
                   </span>
                 </div>
-                <div
-                  role="progressbar"
-                  aria-label={`Capacity: ${capacity}%`}
-                  aria-valuenow={capacity}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                >
-                  <Progress value={capacity} className="h-2" />
-                </div>
+                <Progress
+                  value={capacity}
+                  className="h-2"
+                  aria-labelledby={`capacity-label-${agent.id}`}
+                />
               </div>
 
               {/* Skills */}
               {agent.skills && agent.skills.length > 0 && (
                 <div className="flex flex-wrap gap-1">
-                  {agent.skills.map((skill: AgentSkill) => (
+                  {agent.skills.map((skill: Readonly<AgentSkill>) => (
                     <span
                       key={skill.id}
                       className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs"

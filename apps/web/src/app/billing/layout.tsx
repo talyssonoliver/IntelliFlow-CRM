@@ -5,6 +5,6 @@ export const metadata: Metadata = {
   title: 'Billing',
 };
 
-export default function BillingLayout({ children }: { children: React.ReactNode }) {
+export default function BillingLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <BillingLayoutShell>{children}</BillingLayoutShell>;
 }

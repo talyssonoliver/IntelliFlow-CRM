@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { readFileSync, statSync, readdirSync } from 'fs';
-import { resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { readFileSync, statSync, readdirSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -194,10 +194,10 @@ describe('Content Audit Results Schema Validation', () => {
     }
   });
 
-  // TC-04: All 26 public routes have seo_score as integer 0-100 (AC-003)
+  // TC-04: All 27 public routes have seo_score as integer 0-100 (AC-003)
   it('TC-04: all public routes have integer seo_score 0-100', () => {
     const publicRoutes = auditData.routes.filter((r) => r.access_tier === 'public');
-    expect(publicRoutes.length).toBe(26);
+    expect(publicRoutes.length).toBe(27);
 
     for (const route of publicRoutes) {
       expect(typeof route.seo_score).toBe('number');
@@ -212,7 +212,7 @@ describe('Content Audit Results Schema Validation', () => {
     const nonPublicRoutes = auditData.routes.filter(
       (r) => r.access_tier === 'auth-gated' || r.access_tier === 'developer'
     );
-    expect(nonPublicRoutes.length).toBe(auditData.routes.length - 26);
+    expect(nonPublicRoutes.length).toBe(auditData.routes.length - 27);
 
     for (const route of nonPublicRoutes) {
       expect(route.seo_score).toBeNull();

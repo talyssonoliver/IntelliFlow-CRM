@@ -11,7 +11,7 @@ import { DealQuickView } from '../DealQuickView';
 
 // Mock @intelliflow/ui
 vi.mock('@intelliflow/ui', () => ({
-  Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  Card: ({ children, className }: Readonly<{ children: React.ReactNode; className?: string }>) => (
     <div data-testid="card" className={className}>
       {children}
     </div>

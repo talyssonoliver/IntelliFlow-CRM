@@ -17,11 +17,11 @@ vi.mock('next/link', () => ({
     children,
     href,
     ...props
-  }: {
+  }: Readonly<{
     children: React.ReactNode;
     href: string;
     [key: string]: unknown;
-  }) => (
+  }>) => (
     <a href={href} {...props}>
       {children}
     </a>
@@ -91,11 +91,11 @@ vi.mock('@/components/tasks/RelatedTasksCard', () => ({
 
 // Mock EntityActionSheet and MoreActionsButton to avoid tRPC context requirement
 vi.mock('@/components/shared/entity-action-sheet', () => ({
-  EntityActionSheet: ({ open }: { open: boolean }) =>
+  EntityActionSheet: ({ open }: Readonly<{ open: boolean }>) =>
     open ? <div data-testid="action-sheet">Action Sheet</div> : null,
 }));
 vi.mock('@/components/shared/more-actions-button', () => ({
-  MoreActionsButton: ({ onClick }: { onClick: () => void }) => (
+  MoreActionsButton: ({ onClick }: Readonly<{ onClick: () => void }>) => (
     <button onClick={onClick} data-testid="more-actions">
       More
     </button>
@@ -111,48 +111,48 @@ vi.mock('@/components/shared/activity-feed', () => ({
 }));
 
 vi.mock('@intelliflow/ui', () => ({
-  Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  Card: ({ children, className }: Readonly<{ children: React.ReactNode; className?: string }>) => (
     <div className={className}>{children}</div>
   ),
   Button: ({
     children,
     onClick,
     ...props
-  }: {
+  }: Readonly<{
     children?: React.ReactNode;
     onClick?: () => void;
     [key: string]: unknown;
-  }) => (
+  }>) => (
     <button onClick={onClick} {...props}>
       {children}
     </button>
   ),
-  Skeleton: ({ className }: { className?: string }) => (
+  Skeleton: ({ className }: Readonly<{ className?: string }>) => (
     <div className={`animate-pulse ${className ?? ''}`} />
   ),
-  Badge: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
+  Badge: ({ children }: Readonly<{ children: React.ReactNode }>) => <span>{children}</span>,
   toast: vi.fn(),
-  AlertDialog: ({ children, open }: { children: React.ReactNode; open?: boolean }) =>
+  AlertDialog: ({ children, open }: Readonly<{ children: React.ReactNode; open?: boolean }>) =>
     open ? <div>{children}</div> : null,
-  AlertDialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  AlertDialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  AlertDialogFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  AlertDialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
-  AlertDialogDescription: ({ children }: { children: React.ReactNode }) => <p>{children}</p>,
+  AlertDialogContent: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
+  AlertDialogHeader: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
+  AlertDialogFooter: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
+  AlertDialogTitle: ({ children }: Readonly<{ children: React.ReactNode }>) => <h2>{children}</h2>,
+  AlertDialogDescription: ({ children }: Readonly<{ children: React.ReactNode }>) => <p>{children}</p>,
   AlertDialogAction: ({
     children,
     onClick,
     ...props
-  }: {
+  }: Readonly<{
     children: React.ReactNode;
     onClick?: () => void;
     [key: string]: unknown;
-  }) => (
+  }>) => (
     <button onClick={onClick} {...props}>
       {children}
     </button>
   ),
-  AlertDialogCancel: ({ children }: { children: React.ReactNode }) => <button>{children}</button>,
+  AlertDialogCancel: ({ children }: Readonly<{ children: React.ReactNode }>) => <button>{children}</button>,
 }));
 
 const mockAccount = {

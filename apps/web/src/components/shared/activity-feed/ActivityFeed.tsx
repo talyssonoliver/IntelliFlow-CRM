@@ -85,7 +85,7 @@ function resolveDataSource(
   };
 }
 
-export function ActivityFeed(props: ActivityFeedProps) {
+export function ActivityFeed(props: Readonly<ActivityFeedProps>) {
   const { height = 400, className = '', emptyMessage = 'No recent activity' } = props;
 
   // Resolve data source: internal hook or external props
@@ -128,7 +128,7 @@ export function ActivityFeed(props: ActivityFeedProps) {
     return (
       <div className={`divide-y divide-[#e2e8f0] dark:divide-[#334155] ${className}`}>
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="animate-pulse flex gap-3 p-5">
+          <div key={i} className="animate-pulse flex gap-3 p-5"> {/* NOSONAR typescript:S6479 */}
             <div className="size-10 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
             <div className="flex-1 space-y-2">
               <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
@@ -220,7 +220,7 @@ export function ActivityFeed(props: ActivityFeedProps) {
           <span className="flex items-center gap-2 justify-center text-sm text-slate-500">
             <span className="material-symbols-outlined animate-spin text-sm">
               progress_activity
-            </span>
+            </span>{' '}
             Loading...
           </span>
         )}
@@ -244,7 +244,7 @@ export function ActivityFeed(props: ActivityFeedProps) {
  * Conditional hook: only fetches when in internal data mode.
  * When items are provided externally, returns no-op defaults.
  */
-function useActivityFeedConditional(props: ActivityFeedProps) {
+function useActivityFeedConditional(props: Readonly<ActivityFeedProps>) {
   const isExternal = 'items' in props && props.items !== undefined;
 
   // Always call the hook (React rules) but disable it when external data is provided

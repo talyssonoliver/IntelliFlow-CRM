@@ -79,14 +79,14 @@ function StatCard({
   iconBgClass,
   borderClass,
   isLoading,
-}: {
+}: Readonly<{
   label: string;
   value: number | string;
   icon: string;
   iconBgClass: string;
   borderClass?: string;
   isLoading: boolean;
-}) {
+}>) {
   return (
     <div
       className={cn(
@@ -135,7 +135,7 @@ const FILTER_CHIPS = [
 // Lead Card (internal) — matched to sentiment mockup pattern
 // ============================================
 
-function LeadCard({ lead }: { lead: ScoredLead }) {
+function LeadCard({ lead }: Readonly<{ lead: ScoredLead }>) {
   const tierConfig = getTierConfig(lead.tier);
 
   return (
@@ -486,13 +486,15 @@ export function LeadScoringDashboard() {
       </div>
 
       {/* Scored Leads List */}
-      {isLoading ? (
+      {(() => {
+        if (isLoading) return (
         <div className="space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-36 w-full rounded-xl" />
+            <Skeleton key={i} className="h-36 w-full rounded-xl" /> // NOSONAR typescript:S6479
           ))}
         </div>
-      ) : filteredLeads.length === 0 ? (
+        );
+        if (filteredLeads.length === 0) return (
         <div
           className="bg-white dark:bg-slate-900 p-8 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm text-center"
           data-testid="empty-state"
@@ -505,7 +507,8 @@ export function LeadScoringDashboard() {
           </span>
           <p className="text-sm text-slate-500">No lead scoring data available</p>
         </div>
-      ) : (
+        );
+        return (
         <div className="space-y-4">
           {filteredLeads.map((lead) => (
             <LeadCard key={lead.id} lead={lead} />
@@ -517,7 +520,7 @@ export function LeadScoringDashboard() {
                 onClick={handleLoadMore}
                 data-testid="load-more-button"
               >
-                Load More Leads
+                Load More Leads{' '}
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   expand_more
                 </span>
@@ -525,7 +528,8 @@ export function LeadScoringDashboard() {
             </div>
           )}
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

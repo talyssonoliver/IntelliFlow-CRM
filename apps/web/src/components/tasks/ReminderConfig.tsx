@@ -6,7 +6,7 @@ export interface ReminderConfigProps {
   readonly onFilter: (filter: 'overdue' | 'today') => void;
 }
 
-export function ReminderConfig({ overdueCount, dueTodayCount, onFilter }: ReminderConfigProps) {
+export function ReminderConfig({ overdueCount, dueTodayCount, onFilter }: Readonly<ReminderConfigProps>) {
   if (overdueCount === 0 && dueTodayCount === 0) return null;
 
   return (

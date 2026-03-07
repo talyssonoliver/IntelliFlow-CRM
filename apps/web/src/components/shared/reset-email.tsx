@@ -80,7 +80,7 @@ export function EmailInput({
   disabled = false,
   autoFocus = false,
   className,
-}: EmailInputProps) {
+}: Readonly<EmailInputProps>) {
   return (
     <div className={cn('space-y-1.5', className)}>
       <label htmlFor="reset-email" className="block text-sm font-medium text-slate-200">
@@ -100,6 +100,7 @@ export function EmailInput({
           onChange={(e) => onChange(e.target.value)}
           onBlur={onBlur}
           disabled={disabled}
+          // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus={autoFocus}
           autoComplete="email"
           placeholder="you@example.com"
@@ -121,7 +122,7 @@ export function EmailInput({
         <p id="reset-email-error" className="text-sm text-red-400 flex items-center gap-1">
           <span className="material-symbols-outlined text-sm" aria-hidden="true">
             error
-          </span>
+          </span>{' '}
           {error}
         </p>
       )}
@@ -138,7 +139,7 @@ export function ForgotPasswordForm({
   isLoading = false,
   initialEmail = '',
   className,
-}: ForgotPasswordFormProps) {
+}: Readonly<ForgotPasswordFormProps>) {
   const [email, setEmail] = useState(initialEmail);
   const [error, setError] = useState<string | undefined>();
   const [touched, setTouched] = useState(false);
@@ -194,6 +195,7 @@ export function ForgotPasswordForm({
         onBlur={handleBlur}
         error={touched ? error : undefined}
         disabled={isLoading}
+        // eslint-disable-next-line jsx-a11y/no-autofocus
         autoFocus
       />
 
@@ -210,12 +212,12 @@ export function ForgotPasswordForm({
       >
         {isLoading ? (
           <>
-            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />{' '}
             Sending reset link...
           </>
         ) : (
           <>
-            Send reset link
+            Send reset link{' '}
             <span className="material-symbols-outlined text-lg" aria-hidden="true">
               send
             </span>
@@ -237,7 +239,7 @@ export function ResetEmailSent({
   isResending = false,
   resendCooldown = 0,
   className,
-}: ResetEmailSentProps) {
+}: Readonly<ResetEmailSentProps>) {
   const [cooldown, setCooldown] = useState(resendCooldown);
 
   // Countdown timer
@@ -309,26 +311,30 @@ export function ResetEmailSent({
             'disabled:opacity-50 disabled:cursor-not-allowed'
           )}
         >
-          {isResending ? (
-            <>
-              <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Resending...
-            </>
-          ) : cooldown > 0 ? (
-            <>
-              <span className="material-symbols-outlined text-lg" aria-hidden="true">
-                schedule
-              </span>{' '}
-              Resend in {cooldown}s
-            </>
-          ) : (
-            <>
-              <span className="material-symbols-outlined text-lg" aria-hidden="true">
-                refresh
-              </span>{' '}
-              Resend email
-            </>
-          )}
+          {(() => {
+            if (isResending) return (
+              <>
+                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />{' '}
+                Resending...
+              </>
+            );
+            if (cooldown > 0) return (
+              <>
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                  schedule
+                </span>{' '}
+                Resend in {cooldown}s
+              </>
+            );
+            return (
+              <>
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                  refresh
+                </span>{' '}
+                Resend email
+              </>
+            );
+          })()}
         </button>
 
         <button
@@ -375,10 +381,10 @@ export function buildResetEmailPayload(options: {
 
   // Escape HTML in user-provided content
   const escapedName = name
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replaceAll(/&/g, '&amp;')
+    .replaceAll(/</g, '&lt;')
+    .replaceAll(/>/g, '&gt;')
+    .replaceAll(/"/g, '&quot;');
 
   const htmlBody = `
 <!DOCTYPE html>

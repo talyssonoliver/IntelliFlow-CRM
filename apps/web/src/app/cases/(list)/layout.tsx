@@ -11,7 +11,7 @@ import {
 } from '@/components/sidebar';
 import { ModuleGate } from '@/components/ModuleGate';
 
-export default function CasesListLayout({ children }: { children: React.ReactNode }) {
+export default function CasesListLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <ModuleGate moduleId="LEGAL">
       <SidebarPortalProvider>

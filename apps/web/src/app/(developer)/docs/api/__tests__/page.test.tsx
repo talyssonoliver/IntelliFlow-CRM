@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 
 // Mock the client component
 vi.mock('@/components/shared/api-reference-client', () => ({
-  ApiReferenceClient: ({ specUrl }: { specUrl: string }) => (
+  ApiReferenceClient: ({ specUrl }: Readonly<{ specUrl: string }>) => (
     <div data-testid="api-reference-client" data-spec-url={specUrl} />
   ),
 }));

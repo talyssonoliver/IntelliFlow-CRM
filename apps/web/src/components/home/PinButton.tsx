@@ -23,7 +23,7 @@ export function PinButton({
   icon,
   url,
   className,
-}: PinButtonProps) {
+}: Readonly<PinButtonProps>) {
   const { isPinned, isLoading, togglePin } = useEntityPin({
     entityType,
     entityId,

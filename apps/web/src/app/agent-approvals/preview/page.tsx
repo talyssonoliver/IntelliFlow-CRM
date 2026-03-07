@@ -1,23 +1,112 @@
 'use client';
 
+/**
+ * Agent Approvals Preview Page — IFC-149 + IFC-139 Integration
+ *
+ * Wired to backend tRPC endpoints (agent router):
+ * - agent.getPendingApprovals — pending tool actions
+ * - agent.getPendingCount — badge count
+ * - agent.approveAction — approve pending action
+ * - agent.rejectAction — reject pending action
+ */
+
 import Link from 'next/link';
 import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, Button } from '@intelliflow/ui';
+import { trpc } from '@/lib/trpc';
+import { useRequireAuth } from '@/lib/auth/AuthContext';
+import type { AgentAction, ActionStatus } from '@/lib/agent';
+
 // Material Symbols icon helper component
-const Icon = ({ name, className = '' }: { name: string; className?: string }) => (
+const Icon = ({ name, className = '' }: Readonly<{ name: string; className?: string }>) => (
   <span className={`material-symbols-outlined ${className}`} aria-hidden="true">
     {name}
   </span>
 );
-// IFC-149 Integration: Use barrel export for cleaner imports
-import { type ApprovalMetrics } from '@/lib/agent';
-
-// Import types used by mock data and functions
-import type { AgentAction, ActionStatus } from '@/lib/agent';
 
 // =============================================================================
-// Types
+// Backend → Frontend Data Mapping
+// =============================================================================
+
+interface PendingActionFromAPI {
+  id: string;
+  toolName: string;
+  actionType: string;
+  entityType: string;
+  preview: {
+    summary: string;
+    changes: Array<{
+      field: string;
+      previousValue: unknown;
+      newValue: unknown;
+      changeType: 'ADD' | 'MODIFY' | 'DELETE';
+    }>;
+    affectedEntities: Array<{ type: string; id: string; name: string; action: string }>;
+    warnings?: string[];
+    estimatedImpact?: 'LOW' | 'MEDIUM' | 'HIGH';
+  };
+  createdAt: Date | string;
+  expiresAt: Date | string;
+  status: string;
+}
+
+function formatToolName(toolName: string): string {
+  return toolName
+    .split('_')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+function mapPendingToAction(pending: PendingActionFromAPI): AgentAction {
+  const previousState: Record<string, unknown> = {};
+  const proposedState: Record<string, unknown> = {};
+  for (const change of pending.preview.changes) {
+    previousState[change.field] = change.previousValue;
+    proposedState[change.field] = change.newValue;
+  }
+
+  const statusMap: Record<string, ActionStatus> = {
+    PENDING: 'pending',
+    APPROVED: 'approved',
+    REJECTED: 'rejected',
+    EXPIRED: 'expired',
+  };
+
+  const impactToConfidence: Record<string, number> = {
+    HIGH: 90,
+    MEDIUM: 70,
+    LOW: 50,
+  };
+
+  const agentName = formatToolName(pending.toolName);
+  const primaryEntity = pending.preview.affectedEntities[0];
+
+  return {
+    id: pending.id,
+    actionType: pending.actionType.toLowerCase() as AgentAction['actionType'],
+    entityId: primaryEntity?.id || '',
+    entityType: pending.entityType.toLowerCase(),
+    entityName: primaryEntity?.name || `${pending.entityType} action`,
+    previousState,
+    proposedState,
+    description: pending.preview.summary,
+    aiReasoning: pending.preview.warnings?.length
+      ? pending.preview.warnings.join('. ')
+      : `Automated action via ${agentName}`,
+    confidenceScore: impactToConfidence[pending.preview.estimatedImpact || ''] || 0,
+    status: statusMap[pending.status] || 'pending',
+    agentId: pending.toolName,
+    agentName: agentName || 'AI Agent',
+    createdAt:
+      typeof pending.createdAt === 'string' ? new Date(pending.createdAt) : pending.createdAt,
+    expiresAt:
+      typeof pending.expiresAt === 'string' ? new Date(pending.expiresAt) : pending.expiresAt,
+  };
+}
+
+// =============================================================================
+// Utility Functions
 // =============================================================================
 
 interface DiffChange {
@@ -26,130 +115,6 @@ interface DiffChange {
   newValue: unknown;
   type: 'added' | 'removed' | 'changed';
 }
-
-// =============================================================================
-// Mock Data for Demo
-// =============================================================================
-
-const MOCK_ACTIONS: AgentAction[] = [
-  {
-    id: 'action-1',
-    actionType: 'lead_update',
-    entityId: 'lead-123',
-    entityType: 'lead',
-    entityName: 'John Smith - Acme Corp',
-    previousState: {
-      score: 45,
-      status: 'New',
-      nextFollowUp: null,
-      notes: 'Initial inquiry via website form',
-    },
-    proposedState: {
-      score: 72,
-      status: 'Qualified',
-      nextFollowUp: '2025-01-05',
-      notes:
-        'Initial inquiry via website form. AI Analysis: High engagement, enterprise company, decision-maker role.',
-    },
-    description: 'Update lead score and status based on engagement analysis',
-    aiReasoning:
-      'Lead opened 5 emails (100% open rate), visited pricing page 3 times, and downloaded enterprise whitepaper. Company size (500+ employees) matches ideal customer profile.',
-    confidenceScore: 85,
-    status: 'pending',
-    agentId: 'scoring-agent-v1',
-    agentName: 'Lead Scoring Agent',
-    createdAt: new Date(Date.now() - 1000 * 60 * 30), // 30 min ago
-    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 23), // 23 hours from now
-  },
-  {
-    id: 'action-2',
-    actionType: 'email_draft',
-    entityId: 'contact-456',
-    entityType: 'contact',
-    entityName: 'Sarah Johnson - TechStart Inc',
-    previousState: {
-      lastContactedAt: '2024-12-20',
-      emailsSent: 2,
-    },
-    proposedState: {
-      lastContactedAt: '2025-01-02',
-      emailsSent: 3,
-      pendingEmail: {
-        subject: 'Quick follow-up on your IntelliFlow demo',
-        body: 'Hi Sarah, I wanted to follow up on our demo last week...',
-      },
-    },
-    description: 'Send personalized follow-up email based on demo engagement',
-    aiReasoning:
-      'Contact attended 45-minute demo, asked 8 questions about API integrations, and requested pricing information. Optimal follow-up timing is 5 days post-demo based on historical conversion data.',
-    confidenceScore: 78,
-    status: 'pending',
-    agentId: 'outreach-agent-v1',
-    agentName: 'Outreach Agent',
-    createdAt: new Date(Date.now() - 1000 * 60 * 120), // 2 hours ago
-    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 22),
-  },
-  {
-    id: 'action-3',
-    actionType: 'deal_stage_change',
-    entityId: 'deal-789',
-    entityType: 'deal',
-    entityName: 'Enterprise License - GlobalTech',
-    previousState: {
-      stage: 'PROPOSAL',
-      probability: 60,
-      value: 85000,
-    },
-    proposedState: {
-      stage: 'NEGOTIATION',
-      probability: 75,
-      value: 92000,
-      notes: 'Verbal agreement on terms. Awaiting legal review.',
-    },
-    description: 'Advance deal to negotiation stage with updated probability',
-    aiReasoning:
-      "Prospect verbally agreed to terms in last meeting (sentiment analysis: positive). Legal team CC'd on latest email suggests contract review in progress. Similar deals at this stage have 75% close rate.",
-    confidenceScore: 92,
-    status: 'pending',
-    agentId: 'pipeline-agent-v1',
-    agentName: 'Pipeline Intelligence Agent',
-    createdAt: new Date(Date.now() - 1000 * 60 * 15), // 15 min ago
-    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 23.5),
-  },
-  {
-    id: 'action-4',
-    actionType: 'task_create',
-    entityId: 'lead-124',
-    entityType: 'lead',
-    entityName: 'Mike Chen - StartupXYZ',
-    previousState: {
-      tasks: [],
-    },
-    proposedState: {
-      tasks: [
-        {
-          title: 'Schedule discovery call',
-          dueDate: '2025-01-03',
-          priority: 'high',
-          assignee: 'current_user',
-        },
-      ],
-    },
-    description: 'Create follow-up task for high-intent lead',
-    aiReasoning:
-      'Lead visited pricing page 5 times in last 24 hours and spent 12 minutes on comparison chart. Urgency signals suggest ready for sales conversation.',
-    confidenceScore: 68,
-    status: 'pending',
-    agentId: 'task-agent-v1',
-    agentName: 'Task Automation Agent',
-    createdAt: new Date(Date.now() - 1000 * 60 * 45), // 45 min ago
-    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 22.5),
-  },
-];
-
-// =============================================================================
-// Utility Functions
-// =============================================================================
 
 function calculateDiff(
   oldState: Record<string, unknown>,
@@ -284,9 +249,15 @@ function getConfidenceBadge(score: number): {
       className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
     };
   }
+  if (score > 0) {
+    return {
+      label: 'Low Confidence',
+      className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+    };
+  }
   return {
-    label: 'Low Confidence',
-    className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+    label: '',
+    className: '',
   };
 }
 
@@ -350,41 +321,31 @@ interface ActionCardProps {
   readonly action: AgentAction;
   readonly onApprove: (id: string) => void;
   readonly onReject: (id: string, feedback: string) => void;
-  readonly onRollback: (id: string, reason: string) => void;
   readonly isExpanded: boolean;
   readonly onToggleExpand: () => void;
+  readonly isLoading: boolean;
 }
 
 function ActionCard({
   action,
   onApprove,
   onReject,
-  onRollback,
   isExpanded,
   onToggleExpand,
+  isLoading,
 }: ActionCardProps) {
   const [feedback, setFeedback] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
-  const [showRollbackForm, setShowRollbackForm] = useState(false);
 
   const statusBadge = getStatusBadge(action.status);
   const confidenceBadge = getConfidenceBadge(action.confidenceScore);
   const isPending = action.status === 'pending';
-  const canRollback = action.status === 'approved';
 
   const handleReject = () => {
     if (feedback.trim()) {
       onReject(action.id, feedback);
       setFeedback('');
       setShowRejectForm(false);
-    }
-  };
-
-  const handleRollback = () => {
-    if (feedback.trim()) {
-      onRollback(action.id, feedback);
-      setFeedback('');
-      setShowRollbackForm(false);
     }
   };
 
@@ -451,16 +412,20 @@ function ActionCard({
 
           {/* Confidence + Expand */}
           <div className="flex items-center gap-3 flex-shrink-0">
-            <div className="text-right">
-              <div className="text-lg font-bold text-slate-900 dark:text-white">
-                {action.confidenceScore}%
+            {action.confidenceScore > 0 && (
+              <div className="text-right">
+                <div className="text-lg font-bold text-slate-900 dark:text-white">
+                  {action.confidenceScore}%
+                </div>
+                {confidenceBadge.label && (
+                  <span
+                    className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${confidenceBadge.className}`}
+                  >
+                    {confidenceBadge.label}
+                  </span>
+                )}
               </div>
-              <span
-                className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${confidenceBadge.className}`}
-              >
-                {confidenceBadge.label}
-              </span>
-            </div>
+            )}
             {isExpanded ? (
               <Icon name="expand_less" className="text-xl text-slate-400" />
             ) : (
@@ -515,6 +480,7 @@ function ActionCard({
                     e.stopPropagation();
                     onApprove(action.id);
                   }}
+                  disabled={isLoading}
                   className="gap-2"
                 >
                   <Icon name="check" className="text-base" />
@@ -526,14 +492,11 @@ function ActionCard({
                     e.stopPropagation();
                     setShowRejectForm(true);
                   }}
+                  disabled={isLoading}
                   className="gap-2"
                 >
                   <Icon name="close" className="text-base" />
                   Reject
-                </Button>
-                <Button variant="ghost" className="gap-2 ml-auto">
-                  <Icon name="edit" className="text-base" />
-                  Modify
                 </Button>
               </div>
             )}
@@ -555,7 +518,7 @@ function ActionCard({
                       e.stopPropagation();
                       handleReject();
                     }}
-                    disabled={!feedback.trim()}
+                    disabled={!feedback.trim() || isLoading}
                     className="gap-2"
                   >
                     <Icon name="close" className="text-base" />
@@ -575,74 +538,23 @@ function ActionCard({
               </div>
             )}
 
-            {canRollback && !showRollbackForm && (
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowRollbackForm(true);
-                  }}
-                  className="gap-2"
-                >
-                  <Icon name="history" className="text-base" />
-                  Rollback
-                </Button>
-                <span className="text-sm text-slate-500 dark:text-slate-400">
-                  Action was approved {action.reviewedAt && formatTimeAgo(action.reviewedAt)}
-                </span>
+            {(action.status === 'rejected' || action.status === 'modified') && action.feedback && (
+              <div className="text-sm">
+                <span className="text-slate-500 dark:text-slate-400">Feedback: </span>
+                <span className="text-slate-700 dark:text-slate-300">{action.feedback}</span>
               </div>
             )}
-
-            {canRollback && showRollbackForm && (
-              <div className="space-y-3">
-                <textarea
-                  value={feedback}
-                  onChange={(e) => setFeedback(e.target.value)}
-                  placeholder="Please provide a reason for rollback..."
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] resize-none"
-                  rows={3}
-                  onClick={(e) => e.stopPropagation()}
-                />
-                <div className="flex items-center gap-2">
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRollback();
-                    }}
-                    disabled={!feedback.trim()}
-                    className="gap-2"
-                  >
-                    <Icon name="history" className="text-base" />
-                    Confirm Rollback
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowRollbackForm(false);
-                      setFeedback('');
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {(action.status === 'rejected' ||
-              action.status === 'rolled_back' ||
-              action.status === 'modified') &&
-              action.feedback && (
-                <div className="text-sm">
-                  <span className="text-slate-500 dark:text-slate-400">Feedback: </span>
-                  <span className="text-slate-700 dark:text-slate-300">{action.feedback}</span>
-                </div>
-              )}
 
             {action.status === 'expired' && (
               <div className="text-sm text-slate-500 dark:text-slate-400">
                 This action expired without review and was not applied.
+              </div>
+            )}
+
+            {action.status === 'approved' && (
+              <div className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
+                <Icon name="check_circle" className="text-base" />
+                Action approved{action.reviewedAt && ` ${formatTimeAgo(action.reviewedAt)}`}
               </div>
             )}
           </div>
@@ -652,56 +564,71 @@ function ActionCard({
   );
 }
 
-interface MetricsCardProps {
-  readonly metrics: ApprovalMetrics;
+// =============================================================================
+// Metrics
+// =============================================================================
+
+function MetricsLoadingSkeleton() {
+  return (
+    <div className="grid gap-4 md:grid-cols-4" data-testid="metrics-dashboard">
+      {[1, 2, 3, 4].map((i) => (
+        <Card key={i} className="p-4 animate-pulse">
+          <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-20 mb-2" />
+          <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-12" />
+        </Card>
+      ))}
+    </div>
+  );
 }
 
-function MetricsCard({ metrics }: MetricsCardProps) {
+interface MetricsSectionProps {
+  readonly actions: AgentAction[];
+  readonly pendingCount: number;
+  readonly isLoading: boolean;
+}
+
+function MetricsSection({ actions, pendingCount, isLoading }: MetricsSectionProps) {
+  if (isLoading) return <MetricsLoadingSkeleton />;
+
+  const expiringSoon = actions.filter((a) => {
+    if (a.status !== 'pending') return false;
+    const hoursLeft = (a.expiresAt.getTime() - Date.now()) / (1000 * 60 * 60);
+    return hoursLeft < 2;
+  }).length;
+
+  const highImpact = actions.filter((a) => a.confidenceScore >= 80).length;
+
   return (
-    <div className="grid gap-4 md:grid-cols-5" data-testid="metrics-dashboard">
-      <Card className="p-4" data-testid="metric-total">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Total Actions</div>
+    <div className="grid gap-4 md:grid-cols-4" data-testid="metrics-dashboard">
+      <Card className="p-4" data-testid="metric-pending">
+        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Pending Review</div>
+        <div className="text-2xl font-bold text-amber-600" data-testid="metric-value">
+          {pendingCount}
+        </div>
+      </Card>
+
+      <Card className="p-4" data-testid="metric-loaded">
+        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Actions Loaded</div>
         <div
           className="text-2xl font-bold text-slate-900 dark:text-white"
           data-testid="metric-value"
         >
-          {metrics.totalActions}
+          {actions.length}
         </div>
       </Card>
 
-      <Card className="p-4" data-testid="metric-approved">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Approved</div>
-        <div className="text-2xl font-bold text-green-600" data-testid="metric-value">
-          {metrics.approved}
-        </div>
-        <div className="text-xs text-slate-500 dark:text-slate-400">
-          {metrics.approvalRate}% approval rate
-        </div>
-      </Card>
-
-      <Card className="p-4" data-testid="metric-rejected">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Rejected</div>
+      <Card className="p-4" data-testid="metric-expiring">
+        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Expiring Soon</div>
         <div className="text-2xl font-bold text-red-600" data-testid="metric-value">
-          {metrics.rejected}
+          {expiringSoon}
         </div>
+        <div className="text-xs text-slate-500 dark:text-slate-400">Within 2 hours</div>
       </Card>
 
-      <Card className="p-4" data-testid="metric-rolledback">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Rolled Back</div>
-        <div className="text-2xl font-bold text-purple-600" data-testid="metric-value">
-          {metrics.rolledBack}
-        </div>
-      </Card>
-
-      <Card className="p-4" data-testid="metric-avgtime">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Avg Review Time</div>
-        <div
-          className="text-2xl font-bold text-slate-900 dark:text-white"
-          data-testid="metric-value"
-        >
-          {metrics.avgReviewTimeMs > 60000
-            ? `${Math.round(metrics.avgReviewTimeMs / 60000)}m`
-            : `${Math.round(metrics.avgReviewTimeMs / 1000)}s`}
+      <Card className="p-4" data-testid="metric-highimpact">
+        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">High Impact</div>
+        <div className="text-2xl font-bold text-[#137fec]" data-testid="metric-value">
+          {highImpact}
         </div>
       </Card>
     </div>
@@ -712,42 +639,73 @@ function MetricsCard({ metrics }: MetricsCardProps) {
 // Main Page Component
 // =============================================================================
 
-// Inner component that uses searchParams
 function AgentApprovalsPreviewContent() {
   const searchParams = useSearchParams();
   const actionIdFromUrl = searchParams.get('actionId');
+  const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
 
-  const [actions, setActions] = useState<AgentAction[]>(MOCK_ACTIONS);
-  const [expandedActionId, setExpandedActionId] = useState<string | null>(null);
+  const [expandedActionId, setExpandedActionId] = useState<string | null>(actionIdFromUrl);
   const [filterStatus, setFilterStatus] = useState<ActionStatus | 'all'>('all');
-  const [isLoading, setIsLoading] = useState(false);
   const [highlightedActionId, setHighlightedActionId] = useState<string | null>(null);
-  const [metrics, setMetrics] = useState<ApprovalMetrics>({
-    totalActions: MOCK_ACTIONS.length,
-    approved: 0,
-    rejected: 0,
-    modified: 0,
-    rolledBack: 0,
-    expired: 0,
-    avgReviewTimeMs: 0,
-    approvalRate: 0,
-    avgConfidenceApproved: 0,
-    avgConfidenceRejected: 0,
+
+  // ==========================================================================
+  // tRPC Queries — WIRED TO BACKEND
+  // ==========================================================================
+
+  const pendingQuery = trpc.agent.getPendingApprovals.useQuery(undefined, {
+    enabled: isAuthenticated && !authLoading,
+    refetchInterval: 30000,
   });
+
+  const countQuery = trpc.agent.getPendingCount.useQuery(undefined, {
+    enabled: isAuthenticated && !authLoading,
+    refetchInterval: 30000,
+  });
+
+  // ==========================================================================
+  // tRPC Mutations — WIRED TO BACKEND
+  // ==========================================================================
+
+  const approveMutation = trpc.agent.approveAction.useMutation({
+    onSuccess: () => {
+      pendingQuery.refetch();
+      countQuery.refetch();
+    },
+  });
+
+  const rejectMutation = trpc.agent.rejectAction.useMutation({
+    onSuccess: () => {
+      pendingQuery.refetch();
+      countQuery.refetch();
+    },
+  });
+
+  // ==========================================================================
+  // Transform API data → AgentAction[]
+  // ==========================================================================
+
+  const actions = useMemo(() => {
+    if (!pendingQuery.data) return [];
+    return (pendingQuery.data as PendingActionFromAPI[]).map(mapPendingToAction);
+  }, [pendingQuery.data]);
+
+  const filteredActions = useMemo(() => {
+    if (filterStatus === 'all') return actions;
+    return actions.filter((action) => action.status === filterStatus);
+  }, [actions, filterStatus]);
+
+  const pendingCount = countQuery.data?.count ?? actions.filter((a) => a.status === 'pending').length;
 
   // Auto-expand action if actionId is provided in URL (from timeline navigation)
   useEffect(() => {
     if (actionIdFromUrl) {
-      // Set the action as expanded and highlighted
       setExpandedActionId(actionIdFromUrl);
       setHighlightedActionId(actionIdFromUrl);
 
-      // Clear highlight after 3 seconds (keeps expanded)
       const timer = setTimeout(() => {
         setHighlightedActionId(null);
       }, 3000);
 
-      // Scroll to the action after a brief delay to ensure DOM is ready
       setTimeout(() => {
         const element = document.getElementById(`action-card-${actionIdFromUrl}`);
         if (element) {
@@ -759,115 +717,78 @@ function AgentApprovalsPreviewContent() {
     }
   }, [actionIdFromUrl]);
 
-  const filteredActions = useMemo(() => {
-    if (filterStatus === 'all') return actions;
-    return actions.filter((action) => action.status === filterStatus);
-  }, [actions, filterStatus]);
+  // ==========================================================================
+  // Handlers — WIRED TO tRPC MUTATIONS
+  // ==========================================================================
 
-  const pendingCount = useMemo(
-    () => actions.filter((a) => a.status === 'pending').length,
-    [actions]
+  const handleApprove = useCallback(
+    async (actionId: string) => {
+      try {
+        await approveMutation.mutateAsync({ actionId });
+      } catch (error) {
+        console.error('Failed to approve:', error);
+      }
+    },
+    [approveMutation]
   );
 
-  const handleApprove = useCallback(async (actionId: string) => {
-    setIsLoading(true);
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      setActions((prev) =>
-        prev.map((action) =>
-          action.id === actionId
-            ? {
-                ...action,
-                status: 'approved' as ActionStatus,
-                reviewedAt: new Date(),
-                reviewedBy: 'current-user',
-              }
-            : action
-        )
-      );
-
-      setMetrics((prev) => ({
-        ...prev,
-        approved: prev.approved + 1,
-        approvalRate: Math.round(((prev.approved + 1) / (prev.approved + prev.rejected + 1)) * 100),
-      }));
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const handleReject = useCallback(async (actionId: string, feedback: string) => {
-    setIsLoading(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      setActions((prev) =>
-        prev.map((action) =>
-          action.id === actionId
-            ? {
-                ...action,
-                status: 'rejected' as ActionStatus,
-                reviewedAt: new Date(),
-                reviewedBy: 'current-user',
-                feedback,
-              }
-            : action
-        )
-      );
-
-      setMetrics((prev) => ({
-        ...prev,
-        rejected: prev.rejected + 1,
-        approvalRate: Math.round((prev.approved / (prev.approved + prev.rejected + 1)) * 100),
-      }));
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const handleRollback = useCallback(async (actionId: string, reason: string) => {
-    setIsLoading(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      setActions((prev) =>
-        prev.map((action) =>
-          action.id === actionId
-            ? {
-                ...action,
-                status: 'rolled_back' as ActionStatus,
-                feedback: reason,
-                rollbackInfo: {
-                  rolledBackAt: new Date(),
-                  rolledBackBy: 'current-user',
-                  reason,
-                  restoredState: action.previousState,
-                },
-              }
-            : action
-        )
-      );
-
-      setMetrics((prev) => ({
-        ...prev,
-        rolledBack: prev.rolledBack + 1,
-      }));
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const handleReject = useCallback(
+    async (actionId: string, feedback: string) => {
+      try {
+        await rejectMutation.mutateAsync({ actionId, reason: feedback });
+      } catch (error) {
+        console.error('Failed to reject:', error);
+      }
+    },
+    [rejectMutation]
+  );
 
   const handleRefresh = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      // In production, refetch from API
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    await Promise.all([pendingQuery.refetch(), countQuery.refetch()]);
+  }, [pendingQuery, countQuery]);
+
+  // ==========================================================================
+  // Loading & Error States
+  // ==========================================================================
+
+  const isLoading = authLoading || pendingQuery.isLoading;
+  const isMutating = approveMutation.isPending || rejectMutation.isPending;
+
+  if (pendingQuery.error && !isLoading) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <h2 className="text-red-800 dark:text-red-200 font-medium">
+            Error loading pending actions
+          </h2>
+          <p className="text-red-600 dark:text-red-400 text-sm mt-1">
+            {pendingQuery.error.message}
+          </p>
+          <button
+            onClick={() => pendingQuery.refetch()}
+            className="mt-2 text-sm text-red-700 dark:text-red-300 underline"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (authLoading) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center justify-center py-12">
+          <Icon name="hourglass_empty" className="text-4xl text-slate-400 animate-spin" />
+          <p className="ml-3 text-slate-600 dark:text-slate-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ==========================================================================
+  // Render
+  // ==========================================================================
 
   return (
     <div className="flex flex-col gap-6">
@@ -877,23 +798,12 @@ function AgentApprovalsPreviewContent() {
           Dashboard
         </Link>
         <span>/</span>
-        {actionIdFromUrl ? (
-          <>
-            <Link href="/deals" className="hover:text-[#137fec]">
-              Deals
-            </Link>
-            <span>/</span>
-          </>
-        ) : (
-          <>
-            <Link href="/agent-approvals" className="hover:text-[#137fec]">
-              Agent Approvals
-            </Link>
-            <span>/</span>
-          </>
-        )}
+        <Link href="/agent-approvals" className="hover:text-[#137fec]">
+          Agent Approvals
+        </Link>
+        <span>/</span>
         <span className="text-slate-900 dark:text-white font-medium">
-          {actionIdFromUrl ? 'Review Action' : 'Preview'}
+          {actionIdFromUrl ? 'Review Action' : 'Tool Actions Preview'}
         </span>
       </nav>
 
@@ -901,10 +811,10 @@ function AgentApprovalsPreviewContent() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
           <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-            Agent Approvals
+            Agent Tool Actions
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-base">
-            Review and approve AI agent-initiated changes before they are applied
+            Review and approve AI agent-initiated tool actions before they are applied
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -914,7 +824,12 @@ function AgentApprovalsPreviewContent() {
               {pendingCount} pending
             </span>
           )}
-          <Button variant="outline" onClick={handleRefresh} disabled={isLoading} className="gap-2">
+          <Button
+            variant="outline"
+            onClick={handleRefresh}
+            disabled={isLoading}
+            className="gap-2"
+          >
             <Icon name="refresh" className={`text-base ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
@@ -922,7 +837,7 @@ function AgentApprovalsPreviewContent() {
       </div>
 
       {/* Metrics */}
-      <MetricsCard metrics={metrics} />
+      <MetricsSection actions={actions} pendingCount={pendingCount} isLoading={isLoading} />
 
       {/* Filters */}
       <Card className="p-4">
@@ -932,31 +847,35 @@ function AgentApprovalsPreviewContent() {
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Filter:</span>
           </div>
           <div className="flex flex-wrap gap-2" data-testid="filter-buttons">
-            {(['all', 'pending', 'approved', 'rejected', 'rolled_back', 'expired'] as const).map(
-              (status) => (
-                <button
-                  key={status}
-                  type="button"
-                  onClick={() => setFilterStatus(status)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    filterStatus === status
-                      ? 'bg-[#137fec] text-white'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  {status === 'all'
-                    ? 'All'
-                    : status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
-                </button>
-              )
-            )}
+            {(['all', 'pending', 'approved', 'rejected', 'expired'] as const).map((status) => (
+              <button
+                key={status}
+                type="button"
+                onClick={() => setFilterStatus(status)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  filterStatus === status
+                    ? 'bg-[#137fec] text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                {status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
+              </button>
+            ))}
           </div>
         </div>
       </Card>
 
       {/* Actions List */}
       <div className="space-y-4">
-        {filteredActions.length === 0 ? (
+        {isLoading && (
+          <Card className="p-12">
+            <div className="flex flex-col items-center justify-center">
+              <Icon name="hourglass_empty" className="text-4xl text-slate-400 animate-spin mb-4" />
+              <p className="text-slate-600 dark:text-slate-400">Loading pending actions...</p>
+            </div>
+          </Card>
+        )}
+        {!isLoading && filteredActions.length === 0 && (
           <Card className="p-12">
             <div className="flex flex-col items-center justify-center text-center">
               <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
@@ -967,12 +886,14 @@ function AgentApprovalsPreviewContent() {
               </h3>
               <p className="text-slate-500 dark:text-slate-400 max-w-sm">
                 {filterStatus === 'all'
-                  ? 'No agent actions to review at this time. Check back later.'
-                  : `No ${filterStatus.replace('_', ' ')} actions found. Try a different filter.`}
+                  ? 'No pending agent tool actions to review. Actions appear here when AI agents propose CRM changes that require human approval.'
+                  : `No ${filterStatus} actions found. Try a different filter.`}
               </p>
             </div>
           </Card>
-        ) : (
+        )}
+        {!isLoading &&
+          filteredActions.length > 0 &&
           filteredActions.map((action) => (
             <div
               key={action.id}
@@ -989,32 +910,40 @@ function AgentApprovalsPreviewContent() {
                 action={action}
                 onApprove={handleApprove}
                 onReject={handleReject}
-                onRollback={handleRollback}
                 isExpanded={expandedActionId === action.id}
                 onToggleExpand={() =>
                   setExpandedActionId(expandedActionId === action.id ? null : action.id)
                 }
+                isLoading={isMutating}
               />
             </div>
-          ))
-        )}
+          ))}
       </div>
 
-      {/* History Link */}
+      {/* Connection Status */}
       <Card className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Icon name="history" className="text-xl text-slate-400" />
+            <div
+              className={`w-2 h-2 rounded-full ${isAuthenticated ? 'bg-green-500' : 'bg-red-500'}`}
+            />
             <div>
-              <h3 className="text-sm font-medium text-slate-900 dark:text-white">Action History</h3>
+              <h3 className="text-sm font-medium text-slate-900 dark:text-white">
+                Backend Connection
+              </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                View full audit log of all agent actions and decisions
+                {isAuthenticated
+                  ? 'Connected to agent.getPendingApprovals • Auto-refresh every 30s'
+                  : 'Not authenticated'}
               </p>
             </div>
           </div>
-          <Button variant="outline" size="sm">
-            View History
-          </Button>
+          <Link href="/agent-approvals/history">
+            <Button variant="outline" size="sm" className="gap-2">
+              <Icon name="history" className="text-base" />
+              View History
+            </Button>
+          </Link>
         </div>
       </Card>
     </div>

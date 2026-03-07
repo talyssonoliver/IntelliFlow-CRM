@@ -6,8 +6,10 @@ import { Card, Skeleton, toast } from '@intelliflow/ui';
 import { api } from '@/lib/api';
 import { TaskCreateSheet } from './TaskCreateSheet';
 
+type TaskEntityType = 'lead' | 'contact' | 'opportunity' | 'account';
+
 export interface RelatedTasksCardProps {
-  readonly entityType: 'lead' | 'contact' | 'opportunity' | 'account';
+  readonly entityType: TaskEntityType;
   readonly entityId: string;
   readonly title?: string;
   readonly maxItems?: number;
@@ -51,7 +53,7 @@ export function RelatedTasksCard({
   viewAllHref,
   showAddButton = true,
   compact = false,
-}: RelatedTasksCardProps) {
+}: Readonly<RelatedTasksCardProps>) {
   const [createOpen, setCreateOpen] = useState(false);
 
   // account type not supported by API, skip query

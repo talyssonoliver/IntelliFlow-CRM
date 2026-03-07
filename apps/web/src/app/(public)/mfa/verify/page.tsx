@@ -90,7 +90,7 @@ function MfaVerifyContent() {
       <p className="mt-6 text-center text-xs text-slate-500">
         <span className="material-symbols-outlined text-xs align-middle mr-1" aria-hidden="true">
           schedule
-        </span>
+        </span>{' '}
         Verification codes expire after 5 minutes
       </p>
 
@@ -102,7 +102,7 @@ function MfaVerifyContent() {
         >
           <span className="material-symbols-outlined text-sm" aria-hidden="true">
             arrow_back
-          </span>
+          </span>{' '}
           Back to sign in
         </Link>
       </div>

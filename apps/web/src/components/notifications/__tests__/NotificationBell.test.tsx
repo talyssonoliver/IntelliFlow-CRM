@@ -20,6 +20,12 @@ vi.mock('@/lib/trpc', () => ({
         invalidate: mockInvalidate,
       },
       onNew: { useSubscription: mockUseSubscription },
+      markAsRead: {
+        useMutation: vi.fn(() => ({
+          mutate: vi.fn(),
+          isLoading: false,
+        })),
+      },
     },
     useUtils: vi.fn(() => ({
       notifications: {
@@ -62,14 +68,14 @@ vi.mock('@intelliflow/ui', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@intelliflow/ui');
   return {
     ...actual,
-    Popover: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    PopoverTrigger: ({ children }: { children: React.ReactNode }) => (
+    Popover: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
+    PopoverTrigger: ({ children }: Readonly<{ children: React.ReactNode }>) => (
       <div data-testid="popover-trigger">{children}</div>
     ),
-    PopoverContent: ({ children }: { children: React.ReactNode }) => (
+    PopoverContent: ({ children }: Readonly<{ children: React.ReactNode }>) => (
       <div data-testid="popover-content">{children}</div>
     ),
-    ScrollArea: ({ children }: { children: React.ReactNode }) => (
+    ScrollArea: ({ children }: Readonly<{ children: React.ReactNode }>) => (
       <div data-testid="scroll-area">{children}</div>
     ),
   };
@@ -77,7 +83,7 @@ vi.mock('@intelliflow/ui', async () => {
 
 // Mock next/link
 vi.mock('next/link', () => ({
-  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
+  default: ({ children, href }: Readonly<{ children: React.ReactNode; href: string }>) => (
     <a href={href}>{children}</a>
   ),
 }));
@@ -198,7 +204,7 @@ describe('NotificationBell', () => {
       isLoading: false,
     });
     render(<NotificationBell />);
-    expect(screen.getByText('No recent notifications')).toBeInTheDocument();
+    expect(screen.getByText('No unread notifications')).toBeInTheDocument();
   });
 
   it('subscription onData triggers cache invalidation', () => {

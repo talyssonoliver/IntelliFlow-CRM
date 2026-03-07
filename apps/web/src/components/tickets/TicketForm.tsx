@@ -25,7 +25,7 @@ interface TicketFormData {
 
 interface TicketFormProps {
   initialData?: Partial<TicketFormData>;
-  onSubmit: (data: Record<string, unknown>) => Promise<void>;
+  onSubmit: (data: Readonly<Record<string, unknown>>) => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
   mode: 'create' | 'edit';
@@ -46,7 +46,7 @@ export function TicketForm({
   onCancel,
   isSubmitting,
   mode,
-}: TicketFormProps) {
+}: Readonly<TicketFormProps>) {
   const [formData, setFormData] = useState<TicketFormData>({
     subject: initialData?.subject ?? '',
     description: initialData?.description ?? '',
@@ -233,7 +233,7 @@ export function TicketForm({
             <option value="">Select category...</option>
             {TICKET_CATEGORIES.map((c) => (
               <option key={c} value={c}>
-                {c.replace(/_/g, ' ')}
+                {c.replaceAll(/_/g, ' ')}
               </option>
             ))}
           </select>

@@ -17,7 +17,7 @@ vi.mock('next/navigation', () => ({
 
 // Mock next/link
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: { children: React.ReactNode; href: string }) => (
+  default: ({ children, href, ...props }: Readonly<{ children: React.ReactNode; href: string }>) => (
     <a href={href} {...props}>
       {children}
     </a>
@@ -72,7 +72,7 @@ vi.mock('@/hooks/useFocusTrap', () => ({
 
 // Mock shared components
 vi.mock('@/components/shared', () => ({
-  AuthBackground: ({ children }: { children: React.ReactNode }) => (
+  AuthBackground: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <div data-testid="auth-background">{children}</div>
   ),
   AuthCard: ({
@@ -80,12 +80,12 @@ vi.mock('@/components/shared', () => ({
     title,
     description,
     badge,
-  }: {
+  }: Readonly<{
     children: React.ReactNode;
     title: string;
     description: string;
     badge: string;
-  }) => (
+  }>) => (
     <div data-testid="auth-card">
       <h1>{title}</h1>
       <p>{description}</p>
@@ -100,10 +100,10 @@ vi.mock('@/components/auth', () => ({
   SsoEntryForm: ({
     onResolve,
     isLoading,
-  }: {
+  }: Readonly<{
     onResolve: (r: unknown) => void;
     isLoading?: boolean;
-  }) => (
+  }>) => (
     <div data-testid="sso-entry-form">
       <button
         onClick={() => onResolve({ found: true, config: { provider_name: 'Test SSO' } })}

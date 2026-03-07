@@ -178,16 +178,15 @@ export default function QualityReportDetailClient() {
                   <p className="text-sm text-muted-foreground">Score</p>
                   <p
                     className={`font-semibold text-2xl ${
-                      report.score !== undefined
-                        ? report.score >= 90
-                          ? 'text-emerald-500'
-                          : report.score >= 70
-                            ? 'text-amber-500'
-                            : 'text-red-500'
-                        : 'text-muted-foreground'
+                      (() => {
+                        if (report.score === undefined) return 'text-muted-foreground';
+                        if (report.score >= 90) return 'text-emerald-500';
+                        if (report.score >= 70) return 'text-amber-500';
+                        return 'text-red-500';
+                      })()
                     }`}
                   >
-                    {report.score !== undefined ? `${report.score}%` : 'N/A'}
+                    {report.score === undefined ? 'N/A' : `${report.score}%`}
                   </p>
                 </div>
               </div>
@@ -254,7 +253,7 @@ export default function QualityReportDetailClient() {
                     window.open(`/api/quality-reports/view?report=${reportId}`, '_blank')
                   }
                 >
-                  <span className="material-symbols-outlined text-base mr-1">open_in_new</span>
+                  <span className="material-symbols-outlined text-base mr-1">open_in_new</span>{' '}
                   Open in New Tab
                 </Button>
               </div>
@@ -292,7 +291,7 @@ export default function QualityReportDetailClient() {
             The requested quality report could not be found.
           </p>
           <Button onClick={() => router.push('/governance/quality-reports')}>
-            <span className="material-symbols-outlined text-base mr-1">arrow_back</span>
+            <span className="material-symbols-outlined text-base mr-1">arrow_back</span>{' '}
             Back to Quality Reports
           </Button>
         </Card>

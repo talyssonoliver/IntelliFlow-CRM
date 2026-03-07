@@ -11,15 +11,15 @@ import type { HistoryPoint } from '../forecast/types';
 // ─── Mock recharts ──────────────────────────────────────────────────────────
 
 vi.mock('recharts', () => ({
-  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
+  ResponsiveContainer: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <div data-testid="responsive-container">{children}</div>
   ),
-  LineChart: ({ children, data }: { children: React.ReactNode; data: unknown[] }) => (
+  LineChart: ({ children, data }: Readonly<{ children: React.ReactNode; data: unknown[] }>) => (
     <div data-testid="line-chart" data-count={data.length}>
       {children}
     </div>
   ),
-  Line: ({ type, dataKey }: { type: string; dataKey: string }) => (
+  Line: ({ type, dataKey }: Readonly<{ type: string; dataKey: string }>) => (
     <div data-testid="line" data-type={type} data-key={dataKey} />
   ),
   XAxis: ({ label }: { label?: { value: string } }) => (
@@ -62,7 +62,7 @@ vi.mock('recharts', () => ({
       </div>
     );
   },
-  ReferenceLine: ({ y }: { y: number }) => <div data-testid="reference-line" data-y={y} />,
+  ReferenceLine: ({ y }: Readonly<{ y: number }>) => <div data-testid="reference-line" data-y={y} />,
 }));
 
 // Import after mocks

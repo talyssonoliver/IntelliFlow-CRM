@@ -1,8 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Card } from '@intelliflow/ui';
-import { Badge } from '@intelliflow/ui';
+import { Card, Badge } from '@intelliflow/ui';
 
 interface GuideCategory {
   id: string;
@@ -248,7 +247,7 @@ const GUIDE_CATEGORIES: GuideCategory[] = [
   },
 ];
 
-function StatusBadge({ status }: { status: 'available' | 'coming-soon' }) {
+function StatusBadge({ status }: Readonly<{ status: 'available' | 'coming-soon' }>) {
   if (status === 'coming-soon') {
     return <Badge variant="warning">Coming Soon</Badge>;
   }
@@ -325,7 +324,7 @@ export function GuidesList() {
                   <Link
                     key={item.id}
                     href={item.href}
-                    {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                    {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : Readonly<{}>)}
                     className="group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
                   >
                     {cardContent}

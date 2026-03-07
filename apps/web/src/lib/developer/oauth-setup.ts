@@ -41,8 +41,7 @@ export function isValidWebhookUrl(
   }
 
   const lower = url.toLowerCase();
-  if (lower.startsWith('javascript:') || lower.startsWith('data:') || lower.startsWith('file:')) {
-    // NOSONAR — this is a security guard rejecting dangerous protocols, not using them
+  if (lower.startsWith('javascript:') || lower.startsWith('data:') || lower.startsWith('file:')) { // NOSONAR — security guard rejecting dangerous protocols, not using them
     return 'Invalid URL protocol';
   }
 
@@ -57,10 +56,8 @@ export function isValidWebhookUrl(
     if (parsed.protocol !== 'https:') {
       return 'Production webhooks require HTTPS';
     }
-  } else {
-    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
-      return 'Webhook URL must use HTTP or HTTPS';
-    }
+  } else if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+    return 'Webhook URL must use HTTP or HTTPS';
   }
 
   return null;

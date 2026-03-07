@@ -13,7 +13,7 @@ import { PinButton } from '@/components/home/PinButton';
 import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
 
 // Material Symbols icon helper component
-const Icon = ({ name, className = '' }: { name: string; className?: string }) => (
+const Icon = ({ name, className = '' }: Readonly<{ name: string; className?: string }>) => (
   <span className={`material-symbols-outlined ${className}`} aria-hidden="true">
     {name}
   </span>
@@ -215,7 +215,7 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-function getActivityIcon(type: ActivityType): React.ReactNode {
+function getActivityIcon(type: Readonly<ActivityType>): React.ReactNode {
   switch (type) {
     case 'email':
       return <Icon name="mail" className="text-xl text-primary" />;
@@ -234,7 +234,7 @@ function getActivityIcon(type: ActivityType): React.ReactNode {
   }
 }
 
-function getAgentStatusBadge(status: AgentActionStatus): { label: string; className: string } {
+function getAgentStatusBadge(status: Readonly<AgentActionStatus>): { label: string; className: string } {
   switch (status) {
     case 'pending_approval':
       return { label: 'Pending Review', className: 'bg-amber-100 text-amber-800' };
@@ -258,10 +258,10 @@ function getAgentStatusBadge(status: AgentActionStatus): { label: string; classN
 function StageProgress({
   currentStageIndex,
   probability,
-}: {
+}: Readonly<{
   currentStageIndex: number;
   probability: number;
-}) {
+}>) {
   const progressWidth = ((currentStageIndex + 1) / STAGES.length) * 100;
 
   return (
@@ -291,8 +291,8 @@ function StageProgress({
         />
         {/* Stage dividers */}
         <div className="absolute top-0 left-0 w-full h-full flex justify-between px-[10%]">
-          {[...Array(STAGES.length - 1)].map((_, i) => (
-            <div key={i} className="w-0.5 h-full bg-white dark:bg-slate-900 opacity-50" />
+          {[...new Array(STAGES.length - 1)].map((_, i) => (
+            <div key={i} className="w-0.5 h-full bg-white dark:bg-slate-900 opacity-50" /> // NOSONAR typescript:S6479
           ))}
         </div>
       </div>
@@ -309,7 +309,7 @@ function StageProgress({
   );
 }
 
-function AboutDealCard({ deal }: { deal: Deal }) {
+function AboutDealCard({ deal }: Readonly<{ deal: Deal }>) {
   return (
     <Card className="p-5">
       <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 border-b pb-2">
@@ -351,7 +351,7 @@ function AboutDealCard({ deal }: { deal: Deal }) {
   );
 }
 
-function StakeholdersCard({ deal }: { deal: Deal }) {
+function StakeholdersCard({ deal }: Readonly<{ deal: Deal }>) {
   return (
     <Card className="p-5">
       <div className="flex items-center justify-between mb-4 border-b pb-2">
@@ -405,13 +405,13 @@ function StakeholdersCard({ deal }: { deal: Deal }) {
   );
 }
 
-function _ActivityTimeline({
+function ActivityTimeline({
   activities,
   dealId,
-}: {
+}: Readonly<{
   activities: ActivityEvent[];
   dealId: string;
-}) {
+}>) {
   const [activeTab, setActiveTab] = useState<'activity' | 'notes' | 'emails'>('activity');
 
   const groupedActivities = useMemo(() => {
@@ -524,13 +524,11 @@ function _ActivityTimeline({
                         <div className="flex items-center gap-2">
                           {event.confidenceScore && (
                             <span
-                              className={`px-2 py-0.5 text-xs rounded-full ${
-                                event.confidenceScore >= 80
-                                  ? 'bg-green-100 text-green-700'
-                                  : event.confidenceScore >= 60
-                                    ? 'bg-amber-100 text-amber-700'
-                                    : 'bg-red-100 text-red-700'
-                              }`}
+                              className={`px-2 py-0.5 text-xs rounded-full ${(() => {
+                                if (event.confidenceScore >= 80) return 'bg-green-100 text-green-700';
+                                if (event.confidenceScore >= 60) return 'bg-amber-100 text-amber-700';
+                                return 'bg-red-100 text-red-700';
+                              })()}`}
                             >
                               {event.confidenceScore}% confidence
                             </span>
@@ -589,7 +587,7 @@ function _ActivityTimeline({
   );
 }
 
-function ProductsCard({ products, total }: { products: Deal['products']; total: number }) {
+function ProductsCard({ products, total }: Readonly<{ products: Deal['products']; total: number }>) {
   return (
     <Card className="p-5">
       <div className="flex items-center justify-between mb-4">
@@ -603,7 +601,7 @@ function ProductsCard({ products, total }: { products: Deal['products']; total: 
       <div className="space-y-3">
         {products.map((product, index) => (
           <div
-            key={index}
+            key={index} // NOSONAR typescript:S6479
             className={`flex justify-between items-start text-sm ${
               index > 0 ? 'border-t border-slate-50 pt-3' : ''
             }`}
@@ -628,7 +626,7 @@ function ProductsCard({ products, total }: { products: Deal['products']; total: 
 
 // NextStepsCard replaced by RelatedTasksCard
 
-function FilesCard({ files }: { files: Deal['files'] }) {
+function FilesCard({ files }: Readonly<{ files: Deal['files'] }>) {
   const getFileIcon = (type: string) => {
     switch (type) {
       case 'pdf':
@@ -655,7 +653,7 @@ function FilesCard({ files }: { files: Deal['files'] }) {
       <div className="space-y-2">
         {files.map((file, index) => (
           <a
-            key={index}
+            key={index} // NOSONAR typescript:S6479
             href="#"
             className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors group"
           >

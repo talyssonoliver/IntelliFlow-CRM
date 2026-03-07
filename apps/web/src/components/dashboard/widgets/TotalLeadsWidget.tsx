@@ -4,7 +4,7 @@ import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
 import type { WidgetProps } from './index';
 
-export function TotalLeadsWidget({ initialData }: WidgetProps) {
+export function TotalLeadsWidget({ initialData }: Readonly<WidgetProps>) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const {
     data: stats,
@@ -13,7 +13,7 @@ export function TotalLeadsWidget({ initialData }: WidgetProps) {
   } = trpc.lead.stats.useQuery(undefined, {
     enabled: isAuthenticated && !authLoading,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...(initialData != null ? { initialData: initialData as any } : {}),
+    ...(initialData != null ? { initialData: initialData as any } : Readonly<{}>),
   });
 
   if (isLoading || authLoading) {
@@ -40,7 +40,7 @@ export function TotalLeadsWidget({ initialData }: WidgetProps) {
           <span className="material-symbols-outlined text-2xl text-ds-primary">group</span>
         </div>
         <span className="inline-flex items-center gap-1 text-sm font-medium text-green-600">
-          <span className="material-symbols-outlined text-lg">trending_up</span>
+          <span className="material-symbols-outlined text-lg">trending_up</span>{' '}
           +12%
         </span>
       </div>

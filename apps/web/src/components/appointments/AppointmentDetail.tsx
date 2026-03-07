@@ -37,7 +37,7 @@ function formatReminder(minutes?: number): string {
   return `${Math.round(minutes / 60)} hours before`;
 }
 
-function formatTimelineDate(date: Date): string {
+function formatTimelineDate(date: Readonly<Date>): string {
   return date.toLocaleString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -59,7 +59,7 @@ export function AppointmentDetail({
   onRemoveAttendee,
   onLinkCase,
   onUnlinkCase,
-}: AppointmentDetailProps) {
+}: Readonly<AppointmentDetailProps>) {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [activeDialog, setActiveDialog] = useState<Dialog>(null);
   const [dialogInput, setDialogInput] = useState('');
@@ -69,7 +69,7 @@ export function AppointmentDetail({
   const [noteDraft, setNoteDraft] = useState(appointment.notes ?? '');
   const [isActionLoading, setIsActionLoading] = useState(false);
 
-  const dialogRef = useFocusTrap<HTMLDivElement>(!!activeDialog);
+  const dialogRef = useFocusTrap<HTMLDialogElement>(!!activeDialog);
 
   const typeConfig = getTypeConfig(appointment.appointmentType);
   const statusConfig = getStatusConfig(appointment.status);
@@ -207,12 +207,14 @@ export function AppointmentDetail({
             >
               {(['overview', 'attendees', 'cases'] as const).map((tab) => {
                 const isActive = activeTab === tab;
-                const label =
-                  tab === 'overview'
-                    ? 'Overview'
-                    : tab === 'attendees'
-                      ? `Attendees (${appointment.attendees.length})`
-                      : `Linked Cases (${appointment.linkedCases.length})`;
+                let label: string;
+                if (tab === 'overview') {
+                  label = 'Overview';
+                } else if (tab === 'attendees') {
+                  label = `Attendees (${appointment.attendees.length})`;
+                } else {
+                  label = `Linked Cases (${appointment.linkedCases.length})`;
+                }
 
                 return (
                   <button
@@ -290,7 +292,7 @@ export function AppointmentDetail({
                         }}
                         className="inline-flex items-center gap-1 rounded-md border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
                       >
-                        <span className="material-symbols-outlined text-base">add_link</span>
+                        <span className="material-symbols-outlined text-base">add_link</span>{' '}
                         Link Case
                       </button>
                     )}
@@ -313,7 +315,7 @@ export function AppointmentDetail({
                         }}
                         className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-hover"
                       >
-                        <span className="material-symbols-outlined text-base">person_add</span>
+                        <span className="material-symbols-outlined text-base">person_add</span>{' '}
                         Add Attendee
                       </button>
                     )}
@@ -346,7 +348,7 @@ export function AppointmentDetail({
                             className="inline-flex items-center gap-1 text-xs font-semibold text-destructive hover:text-destructive/80"
                             aria-label={`Remove ${attendee.name}`}
                           >
-                            <span className="material-symbols-outlined text-base">close</span>
+                            <span className="material-symbols-outlined text-base">close</span>{' '}
                             Remove
                           </button>
                         )}
@@ -371,7 +373,7 @@ export function AppointmentDetail({
                         }}
                         className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-hover"
                       >
-                        <span className="material-symbols-outlined text-base">add_link</span>
+                        <span className="material-symbols-outlined text-base">add_link</span>{' '}
                         Link Case
                       </button>
                     )}
@@ -403,7 +405,7 @@ export function AppointmentDetail({
                             className="inline-flex items-center gap-1 text-xs font-semibold text-destructive hover:text-destructive/80"
                             aria-label={`Unlink ${linkedCase.title}`}
                           >
-                            <span className="material-symbols-outlined text-base">link_off</span>
+                            <span className="material-symbols-outlined text-base">link_off</span>{' '}
                             Unlink
                           </button>
                         )}
@@ -431,7 +433,7 @@ export function AppointmentDetail({
                     disabled={isActionLoading}
                     className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
                   >
-                    <span className="material-symbols-outlined text-base">check_circle</span>
+                    <span className="material-symbols-outlined text-base">check_circle</span>{' '}
                     Confirm
                   </button>
                 )}
@@ -446,7 +448,7 @@ export function AppointmentDetail({
                     disabled={isActionLoading}
                     className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
                   >
-                    <span className="material-symbols-outlined text-base">task_alt</span>
+                    <span className="material-symbols-outlined text-base">task_alt</span>{' '}
                     Complete
                   </button>
                 )}
@@ -464,7 +466,7 @@ export function AppointmentDetail({
                   disabled={isActionLoading}
                   className="w-full inline-flex items-center gap-3 rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50"
                 >
-                  <span className="material-symbols-outlined text-base text-slate-400">update</span>
+                  <span className="material-symbols-outlined text-base text-slate-400">update</span>{' '}
                   Reschedule
                 </button>
 
@@ -477,7 +479,7 @@ export function AppointmentDetail({
                   disabled={isActionLoading}
                   className="w-full inline-flex items-center gap-3 rounded-lg px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 disabled:opacity-50"
                 >
-                  <span className="material-symbols-outlined text-base">cancel</span>
+                  <span className="material-symbols-outlined text-base">cancel</span>{' '}
                   Cancel
                 </button>
 
@@ -488,7 +490,7 @@ export function AppointmentDetail({
                     disabled={isActionLoading}
                     className="w-full inline-flex items-center gap-3 rounded-lg px-4 py-2 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50"
                   >
-                    <span className="material-symbols-outlined text-base">person_off</span>
+                    <span className="material-symbols-outlined text-base">person_off</span>{' '}
                     Mark No Show
                   </button>
                 )}
@@ -540,15 +542,18 @@ export function AppointmentDetail({
 
       {activeDialog && (
         <div
-          ref={dialogRef}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          role="dialog"
-          aria-modal="true"
+          aria-hidden="true"
           onKeyDown={(e) => {
             if (e.key === 'Escape') setActiveDialog(null);
           }}
         >
-          <div className="mx-4 w-full max-w-md rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-xl">
+          <dialog
+            ref={dialogRef}
+            open
+            aria-modal="true"
+            className="mx-4 w-full max-w-md rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-xl"
+          >
             {activeDialog === 'complete' && (
               <>
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
@@ -768,7 +773,7 @@ export function AppointmentDetail({
                 </div>
               </>
             )}
-          </div>
+          </dialog>
         </div>
       )}
     </div>

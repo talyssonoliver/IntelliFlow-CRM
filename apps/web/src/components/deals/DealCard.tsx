@@ -36,7 +36,7 @@ export const DealCard = React.memo(function DealCard({
   deal,
   onNavigate,
   isPending,
-}: DealCardProps) {
+}: Readonly<DealCardProps>) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: deal.id,
     data: { type: 'deal', deal },
@@ -55,7 +55,7 @@ export const DealCard = React.memo(function DealCard({
   };
 
   return (
-    <div
+    <div // NOSONAR — DnD draggable card with nested interactive elements (drag handle button); cannot be a native <button>
       ref={setNodeRef}
       style={style}
       role="button"

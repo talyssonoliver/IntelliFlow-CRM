@@ -33,7 +33,7 @@ export function ProbabilityGauge({
   isAtRisk,
   size = 'md',
   showLabel = true,
-}: ProbabilityGaugeProps) {
+}: Readonly<ProbabilityGaugeProps>) {
   const clamped = Math.max(0, Math.min(100, value));
   const dimension = SIZE_MAP[size];
   const strokeWidth = STROKE_WIDTH_MAP[size];
@@ -43,7 +43,7 @@ export function ProbabilityGauge({
   const colorClass = getGaugeColor(clamped, isAtRisk);
 
   return (
-    <div
+    <div // NOSONAR — SVG gauge; role="meter" is the correct ARIA pattern, no native HTML equivalent for SVG-based meters
       className="flex flex-col items-center gap-1"
       data-testid="probability-gauge"
       role="meter"

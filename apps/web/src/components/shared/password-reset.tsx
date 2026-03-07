@@ -78,7 +78,7 @@ export function PasswordStrengthIndicator({
   password,
   className,
   showRequirements = true,
-}: PasswordStrengthIndicatorProps) {
+}: Readonly<PasswordStrengthIndicatorProps>) {
   if (!password) return null;
 
   const result = calculatePasswordStrength(password);
@@ -119,7 +119,7 @@ export function PasswordStrengthIndicator({
 /**
  * Token Expiry Warning
  */
-export function TokenExpiryWarning({ expiresAt, className }: TokenExpiryWarningProps) {
+export function TokenExpiryWarning({ expiresAt, className }: Readonly<TokenExpiryWarningProps>) {
   const [timeRemaining, setTimeRemaining] = useState(() => {
     const diff = expiresAt.getTime() - Date.now();
     return Math.max(0, Math.floor(diff / 1000));
@@ -165,7 +165,7 @@ export function TokenExpiryWarning({ expiresAt, className }: TokenExpiryWarningP
 /**
  * Reset Success State
  */
-export function ResetSuccess({ onContinue, className }: ResetSuccessProps) {
+export function ResetSuccess({ onContinue, className }: Readonly<ResetSuccessProps>) {
   const router = useRouter();
   const [countdown, setCountdown] = useState(5);
 
@@ -231,7 +231,7 @@ export function ResetSuccess({ onContinue, className }: ResetSuccessProps) {
 /**
  * Token Invalid State
  */
-export function TokenInvalid({ reason, className }: TokenInvalidProps) {
+export function TokenInvalid({ reason, className }: Readonly<TokenInvalidProps>) {
   const messages = {
     invalid: {
       title: 'Invalid Reset Link',
@@ -280,7 +280,7 @@ export function TokenInvalid({ reason, className }: TokenInvalidProps) {
           'focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900'
         )}
       >
-        Request New Reset Link
+        Request New Reset Link{' '}
         <span className="material-symbols-outlined text-lg" aria-hidden="true">
           mail
         </span>
@@ -299,7 +299,7 @@ export function PasswordResetForm({
   expiresAt,
   onSuccess,
   className,
-}: PasswordResetFormProps) {
+}: Readonly<PasswordResetFormProps>) {
   const formId = useId();
   const resetPasswordMutation = trpc.auth.resetPassword.useMutation();
 
@@ -490,7 +490,7 @@ export function PasswordResetForm({
           </>
         ) : (
           <>
-            Reset Password
+            Reset Password{' '}
             <span className="material-symbols-outlined text-lg" aria-hidden="true">
               lock_reset
             </span>

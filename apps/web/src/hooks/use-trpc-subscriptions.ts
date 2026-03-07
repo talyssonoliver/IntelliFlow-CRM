@@ -88,7 +88,13 @@ function useSubscriptionMetrics() {
   const recordMessage = useCallback((latency?: number) => {
     const now = Date.now();
 
-    if (latency !== undefined) {
+    if (latency === undefined) {
+      setMetrics((prev) => ({
+        ...prev,
+        messagesReceived: prev.messagesReceived + 1,
+        lastMessageAt: now,
+      }));
+    } else {
       // Keep last 100 latency samples
       latencyHistory.current = [...latencyHistory.current.slice(-99), latency];
       const avgLatency =
@@ -98,12 +104,6 @@ function useSubscriptionMetrics() {
         ...prev,
         messagesReceived: prev.messagesReceived + 1,
         averageLatency: Math.round(avgLatency),
-        lastMessageAt: now,
-      }));
-    } else {
-      setMetrics((prev) => ({
-        ...prev,
-        messagesReceived: prev.messagesReceived + 1,
         lastMessageAt: now,
       }));
     }

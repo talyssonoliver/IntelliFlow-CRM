@@ -57,17 +57,17 @@ export function NotificationFilters({
   unreadCount = 0,
   highPriorityCount = 0,
   onClearFilters,
-}: NotificationFiltersProps) {
-  const typeOptions = useMemo(() => getTypeFilterOptions(), []);
+}: Readonly<NotificationFiltersProps>) {
+  const typeOptions = getTypeFilterOptions();
 
   const filterChips = useMemo(
     () => ({
       options: [
         { id: 'all', label: 'All' },
-        { id: 'unread', label: `Unread${unreadCount > 0 ? ` (${unreadCount})` : ''}` },
+        { id: 'unread', label: 'Unread' + (unreadCount > 0 ? ` (${unreadCount})` : '') },
         {
           id: 'high',
-          label: `High Priority${highPriorityCount > 0 ? ` (${highPriorityCount})` : ''}`,
+          label: 'High Priority' + (highPriorityCount > 0 ? ` (${highPriorityCount})` : ''),
           color: 'bg-red-500',
         },
       ],

@@ -51,11 +51,11 @@ function getSupabaseStorageKey(): string {
  * auto-recover a stale session on subsequent page loads.
  */
 export function clearSupabaseLocalStorage(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis.window === 'undefined') return;
   const key = getSupabaseStorageKey();
-  window.localStorage.removeItem(key);
-  window.localStorage.removeItem(`${key}-code-verifier`);
-  window.localStorage.removeItem(`${key}-user`);
+  globalThis.localStorage.removeItem(key);
+  globalThis.localStorage.removeItem(`${key}-code-verifier`);
+  globalThis.localStorage.removeItem(`${key}-user`);
 }
 
 /**
@@ -82,7 +82,7 @@ let browserClient: ReturnType<typeof createBrowserClient> | null = null;
  * Get the singleton browser client instance
  */
 export function getSupabaseBrowserClient() {
-  if (!browserClient && typeof window !== 'undefined') {
+  if (!browserClient && typeof globalThis.window !== 'undefined') {
     browserClient = createBrowserClient();
   }
   return browserClient;

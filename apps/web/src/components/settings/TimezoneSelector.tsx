@@ -63,6 +63,7 @@ function getTimezones(): string[] {
   let list: string[];
   try {
     if (typeof Intl !== 'undefined' && 'supportedValuesOf' in Intl) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       list = (Intl as any).supportedValuesOf('timeZone') as string[];
     } else {
       list = [...FALLBACK_TIMEZONES];
@@ -92,7 +93,7 @@ function groupByRegion(timezones: string[]): Record<string, string[]> {
 }
 
 function formatTimezoneLabel(tz: string): string {
-  const city = tz.includes('/') ? tz.split('/').slice(1).join('/').replace(/_/g, ' ') : tz;
+  const city = tz.includes('/') ? tz.split('/').slice(1).join('/').replaceAll(/_/g, ' ') : tz;
   try {
     const now = new Date();
     const offset = new Intl.DateTimeFormat('en-US', {
@@ -107,7 +108,7 @@ function formatTimezoneLabel(tz: string): string {
   }
 }
 
-export function TimezoneSelector({ value, onChange, disabled }: TimezoneSelectorProps) {
+export function TimezoneSelector({ value, onChange, disabled }: Readonly<TimezoneSelectorProps>) {
   const grouped = useMemo(() => {
     const tzList = getTimezones();
     return groupByRegion(tzList);

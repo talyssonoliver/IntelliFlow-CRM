@@ -19,7 +19,7 @@ export interface AppointmentListProps {
   onRowClick: (id: string) => void;
   pagination: { page: number; limit: number; onPageChange: (page: number) => void };
   filters: AppointmentFilters;
-  onFilterChange: (filters: Partial<AppointmentFilters>) => void;
+  onFilterChange: (filters: Readonly<Partial<AppointmentFilters>>) => void;
 }
 
 const STAT_CARDS = [
@@ -53,7 +53,7 @@ function SortableHeader({
   currentSortBy,
   currentSortOrder,
   onSort,
-}: {
+}: Readonly<{
   label: string;
   sortKey: AppointmentFilters['sortBy'];
   currentSortBy: AppointmentFilters['sortBy'];
@@ -62,14 +62,17 @@ function SortableHeader({
     sortBy: AppointmentFilters['sortBy'],
     sortOrder: AppointmentFilters['sortOrder']
   ) => void;
-}) {
+}>) {
   const isActive = currentSortBy === sortKey;
   const nextOrder = isActive && currentSortOrder === 'asc' ? 'desc' : 'asc';
-  const icon = isActive
-    ? currentSortOrder === 'asc'
-      ? 'arrow_upward'
-      : 'arrow_downward'
-    : 'swap_vert';
+  let icon: string;
+  if (!isActive) {
+    icon = 'swap_vert';
+  } else if (currentSortOrder === 'asc') {
+    icon = 'arrow_upward';
+  } else {
+    icon = 'arrow_downward';
+  }
 
   return (
     <th className="text-left px-4 py-3 font-medium text-gray-600">
@@ -100,7 +103,7 @@ export function AppointmentList({
   pagination,
   filters,
   onFilterChange,
-}: AppointmentListProps) {
+}: Readonly<AppointmentListProps>) {
   const totalPages = Math.ceil(total / pagination.limit);
 
   const getStatValue = (key: string): number => {
@@ -218,7 +221,7 @@ export function AppointmentList({
       {/* Date Range Filters */}
       <div className="flex flex-wrap gap-3 items-center">
         <label className="flex items-center gap-2 text-sm text-gray-600">
-          From
+          {'From'}
           <input
             type="date"
             value={filters.startTimeFrom ? toDateInputValue(filters.startTimeFrom) : ''}
@@ -232,7 +235,7 @@ export function AppointmentList({
           />
         </label>
         <label className="flex items-center gap-2 text-sm text-gray-600">
-          To
+          {'To'}
           <input
             type="date"
             value={filters.startTimeTo ? toDateInputValue(filters.startTimeTo) : ''}
@@ -394,7 +397,7 @@ export function AppointmentList({
   );
 }
 
-function toDateInputValue(date: Date): string {
+function toDateInputValue(date: Readonly<Date>): string {
   const d = new Date(date);
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');

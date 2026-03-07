@@ -30,23 +30,23 @@ export default function RoutingContent() {
       <Tabs defaultValue="rules" className="w-full">
         <TabsList aria-label="Routing settings tabs">
           <TabsTrigger value="rules" className="gap-2">
-            <span className="material-symbols-outlined text-[18px]">rule</span>
+            <span className="material-symbols-outlined text-[18px]">rule</span>{' '}
             Rules
           </TabsTrigger>
           <TabsTrigger value="assignments" className="gap-2">
-            <span className="material-symbols-outlined text-[18px]">assignment_turned_in</span>
+            <span className="material-symbols-outlined text-[18px]">assignment_turned_in</span>{' '}
             Assignments
           </TabsTrigger>
           <TabsTrigger value="sla" className="gap-2">
-            <span className="material-symbols-outlined text-[18px]">timer</span>
+            <span className="material-symbols-outlined text-[18px]">timer</span>{' '}
             SLA
           </TabsTrigger>
           <TabsTrigger value="queue" className="gap-2">
-            <span className="material-symbols-outlined text-[18px]">queue</span>
+            <span className="material-symbols-outlined text-[18px]">queue</span>{' '}
             Queue
           </TabsTrigger>
           <TabsTrigger value="workload" className="gap-2">
-            <span className="material-symbols-outlined text-[18px]">groups</span>
+            <span className="material-symbols-outlined text-[18px]">groups</span>{' '}
             Workload
           </TabsTrigger>
         </TabsList>

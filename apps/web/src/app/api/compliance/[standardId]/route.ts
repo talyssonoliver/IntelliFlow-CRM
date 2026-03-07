@@ -295,7 +295,7 @@ const COMPLIANCE_STANDARDS: Record<string, Omit<ComplianceDetailResponse, 'stand
   owasp: {
     standardName: 'OWASP Top 10',
     score: 96,
-    trend: 3.0,
+    trend: 3,
     status: 'compliant',
     controls: [
       { id: 'A01', name: 'Broken Access Control', status: 'passed', lastAssessed: '2025-11-01' },

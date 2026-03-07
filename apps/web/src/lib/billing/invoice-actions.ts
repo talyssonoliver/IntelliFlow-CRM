@@ -147,12 +147,12 @@ export function printInvoice(invoice: InvoiceData): InvoiceActionResult {
         iframe.contentWindow?.print();
       } catch {
         // If iframe print fails (CORS), open in new window
-        const printWindow = window.open(url, '_blank');
+        const printWindow = globalThis.open(url, '_blank');
         printWindow?.print();
       }
       // Clean up iframe after a delay
       setTimeout(() => {
-        document.body.removeChild(iframe);
+        iframe.remove();
       }, 1000);
     };
 
@@ -235,7 +235,7 @@ export function emailInvoice(invoice: InvoiceData, recipientEmail?: string): Inv
   const mailto = `mailto:${recipientEmail || ''}?subject=${subject}&body=${body}`;
 
   try {
-    window.location.href = mailto;
+    globalThis.location.href = mailto;
     return {
       success: true,
       message: 'Email client opened',

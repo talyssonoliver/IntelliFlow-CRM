@@ -22,6 +22,27 @@ import { trpc } from '@/lib/trpc';
 import { sanitizeCode, isValidTotpCode, isValidBackupCode } from '@/lib/shared/code-validator';
 
 // ============================================
+// Helpers
+// ============================================
+
+function resolveVerifyErrorMessage(
+  message: string,
+  setIsExpired: (v: boolean) => void
+): string {
+  if (message.includes('expired')) {
+    setIsExpired(true);
+    return 'This verification code has expired. Please request a new one.';
+  }
+  if (message.includes('invalid') || message.includes('incorrect')) {
+    return 'Invalid verification code. Please check and try again.';
+  }
+  if (message.includes('attempts')) {
+    return 'Too many failed attempts. Please wait and try again.';
+  }
+  return message;
+}
+
+// ============================================
 // Types
 // ============================================
 
@@ -104,7 +125,7 @@ export function MfaVerification({
   className,
   maskedPhone,
   maskedEmail,
-}: MfaVerificationProps) {
+}: Readonly<MfaVerificationProps>) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -170,19 +191,15 @@ export function MfaVerification({
     async (code: string, method: MfaMethod): Promise<boolean> => {
       setError(null);
 
-      // Validate code format
       const sanitized = sanitizeCode(code);
+      const isValidCode =
+        method === 'backup' ? isValidBackupCode(code) : isValidTotpCode(sanitized);
+      const invalidMsg =
+        method === 'backup' ? 'Invalid backup code format' : 'Please enter a valid 6-digit code';
 
-      if (method === 'backup') {
-        if (!isValidBackupCode(code)) {
-          setError('Invalid backup code format');
-          return false;
-        }
-      } else {
-        if (!isValidTotpCode(sanitized)) {
-          setError('Please enter a valid 6-digit code');
-          return false;
-        }
+      if (!isValidCode) {
+        setError(invalidMsg);
+        return false;
       }
 
       try {
@@ -193,14 +210,8 @@ export function MfaVerification({
         });
 
         if (result.success) {
-          // Call success callback
           onSuccess();
-
-          // Redirect if URL provided
-          if (urlRedirect) {
-            router.push(urlRedirect);
-          }
-
+          if (urlRedirect) router.push(urlRedirect);
           return true;
         }
 
@@ -208,19 +219,7 @@ export function MfaVerification({
         return false;
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Verification failed';
-
-        // Handle specific error types
-        if (message.includes('expired')) {
-          setIsExpired(true);
-          setError('This verification code has expired. Please request a new one.');
-        } else if (message.includes('invalid') || message.includes('incorrect')) {
-          setError('Invalid verification code. Please check and try again.');
-        } else if (message.includes('attempts')) {
-          setError('Too many failed attempts. Please wait and try again.');
-        } else {
-          setError(message);
-        }
-
+        setError(resolveVerifyErrorMessage(message, setIsExpired));
         return false;
       }
     },

@@ -345,42 +345,7 @@ export default function UploadDocumentPage() {
           <div className="p-6">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">File Upload</h2>
 
-            {!formData.file ? (
-              <div
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                  isDragging
-                    ? 'border-[#137fec] bg-[#137fec]/5'
-                    : 'border-slate-300 dark:border-slate-700 hover:border-[#137fec] hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[64px] text-slate-400 mb-4 block">
-                  cloud_upload
-                </span>
-                <p className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                  Drop your file here, or click to browse
-                </p>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-                  Supports PDF, Word, Excel, Text, and Image files up to 50MB
-                </p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  onChange={handleFileInputChange}
-                  className="hidden"
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.png,.jpg,.jpeg"
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="px-6 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors"
-                >
-                  Select File
-                </button>
-              </div>
-            ) : (
+            {formData.file ? (
               <div className="border border-slate-200 dark:border-slate-700 rounded-lg p-4">
                 <div className="flex items-start gap-4">
                   <div className="p-3 bg-[#137fec]/10 rounded-lg">
@@ -411,7 +376,7 @@ export default function UploadDocumentPage() {
                     )}
                     {uploadProgress === 100 && (
                       <div className="mt-2 flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
-                        <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                        <span className="material-symbols-outlined text-[16px]">check_circle</span>{' '}
                         Upload complete
                       </div>
                     )}
@@ -427,6 +392,43 @@ export default function UploadDocumentPage() {
                   )}
                 </div>
               </div>
+            ) : (
+              <button
+                type="button"
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                aria-label="Drop file here or press Enter to browse"
+                className={`w-full border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                  isDragging
+                    ? 'border-[#137fec] bg-[#137fec]/5'
+                    : 'border-slate-300 dark:border-slate-700 hover:border-[#137fec] hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[64px] text-slate-400 mb-4 block">
+                  cloud_upload
+                </span>
+                <p className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                  Drop your file here, or click to browse
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                  Supports PDF, Word, Excel, Text, and Image files up to 50MB
+                </p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  onChange={handleFileInputChange}
+                  className="hidden"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.png,.jpg,.jpeg"
+                  aria-label="Choose file to upload"
+                />
+                <span
+                  className="inline-block px-6 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors pointer-events-none"
+                >
+                  Select File
+                </span>
+              </button>
             )}
 
             {errors.file && (
@@ -449,7 +451,7 @@ export default function UploadDocumentPage() {
                   htmlFor="doc-title"
                   className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"
                 >
-                  Title <span className="text-red-500">*</span>
+                  Title{' '}<span className="text-red-500">*</span>
                 </label>
                 <input
                   id="doc-title"
@@ -492,7 +494,7 @@ export default function UploadDocumentPage() {
                     htmlFor="doc-document-type"
                     className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"
                   >
-                    Document Type <span className="text-red-500">*</span>
+                    Document Type{' '}<span className="text-red-500">*</span>
                   </label>
                   <select
                     id="doc-document-type"
@@ -686,12 +688,12 @@ export default function UploadDocumentPage() {
               <>
                 <span className="material-symbols-outlined text-[18px] animate-spin">
                   progress_activity
-                </span>
+                </span>{' '}
                 Uploading...
               </>
             ) : (
               <>
-                <span className="material-symbols-outlined text-[18px]">upload</span>
+                <span className="material-symbols-outlined text-[18px]">upload</span>{' '}
                 Upload Document
               </>
             )}

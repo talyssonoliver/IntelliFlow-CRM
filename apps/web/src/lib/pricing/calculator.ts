@@ -113,7 +113,7 @@ export async function redirectToCheckout(
     users: userCount.toString(),
   });
 
-  if (typeof window !== 'undefined') {
-    window.location.href = `/signup?${params}`;
+  if (typeof globalThis.window !== 'undefined') {
+    globalThis.location.href = `/signup?${params}`;
   }
 }

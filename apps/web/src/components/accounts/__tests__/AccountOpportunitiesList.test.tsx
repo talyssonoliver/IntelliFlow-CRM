@@ -27,16 +27,16 @@ vi.mock('@/lib/pricing/calculator', () => ({
 }));
 
 vi.mock('@intelliflow/ui', () => ({
-  Button: ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) => (
+  Button: ({ children, ...props }: Readonly<{ children?: React.ReactNode; [key: string]: unknown }>) => (
     <button {...props}>{children}</button>
   ),
-  Skeleton: ({ className }: { className?: string }) => (
+  Skeleton: ({ className }: Readonly<{ className?: string }>) => (
     <div className={`animate-pulse ${className ?? ''}`} />
   ),
-  Badge: ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) => (
+  Badge: ({ children, ...props }: Readonly<{ children?: React.ReactNode; [key: string]: unknown }>) => (
     <span {...props}>{children}</span>
   ),
-  Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  Card: ({ children, className }: Readonly<{ children: React.ReactNode; className?: string }>) => (
     <div className={className}>{children}</div>
   ),
 }));

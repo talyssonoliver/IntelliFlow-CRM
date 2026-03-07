@@ -79,7 +79,7 @@ export function PasswordInput({
   className,
   label,
   labelExtra,
-}: PasswordInputProps) {
+}: Readonly<PasswordInputProps>) {
   const [showPassword, setShowPassword] = React.useState(false);
 
   const resolvedErrorId = errorId || (error ? `${id}-error` : undefined);

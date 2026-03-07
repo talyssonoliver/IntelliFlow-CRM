@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@intelliflow/ui';
 
-function CodeBlock({ code, label }: { code: string; label?: string }) {
+function CodeBlock({ code, label }: Readonly<{ code: string; label?: string }>) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {

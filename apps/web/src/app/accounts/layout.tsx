@@ -4,6 +4,6 @@ export const metadata: Metadata = {
   title: 'Accounts',
 };
 
-export default function AccountsLayout({ children }: { children: React.ReactNode }) {
+export default function AccountsLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <>{children}</>;
 }

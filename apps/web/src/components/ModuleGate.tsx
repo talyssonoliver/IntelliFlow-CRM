@@ -17,7 +17,7 @@ interface ModuleGateProps {
   children: React.ReactNode;
 }
 
-export function ModuleGate({ moduleId, children }: ModuleGateProps) {
+export function ModuleGate({ moduleId, children }: Readonly<ModuleGateProps>) {
   const { isModuleEnabled, isLoading } = useEnabledModules();
 
   // Show loading skeleton while checking modules

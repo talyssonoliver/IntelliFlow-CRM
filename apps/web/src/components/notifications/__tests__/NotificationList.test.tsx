@@ -30,7 +30,7 @@ vi.mock('../hooks/useNotificationFeed', () => ({
 
 // Mock NotificationItem and Skeleton
 vi.mock('../NotificationItem', () => ({
-  NotificationItem: vi.fn(({ notification }: { notification: Record<string, unknown> }) => (
+  NotificationItem: vi.fn(({ notification }: Readonly<{ notification: Record<string, unknown> }>) => (
     <div data-testid={`notification-${notification.id}`}>{String(notification.title)}</div>
   )),
 }));
@@ -92,7 +92,7 @@ describe('NotificationList', () => {
 
     // Set up IntersectionObserver as a class (must be a constructor)
     globalThis.IntersectionObserver = class MockIntersectionObserver {
-      constructor(callback: IntersectionObserverCallback) {
+      constructor(callback: Readonly<IntersectionObserverCallback>) {
         intersectionCallback = callback as (entries: IntersectionObserverEntry[]) => void;
       }
       observe = mockObserve;

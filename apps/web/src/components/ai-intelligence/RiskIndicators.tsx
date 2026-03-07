@@ -22,7 +22,7 @@ const LEVEL_COLORS: Record<string, string> = {
   MINIMAL: 'bg-success',
 };
 
-export function RiskIndicators({ distribution, total }: RiskIndicatorsProps) {
+export function RiskIndicators({ distribution, total }: Readonly<RiskIndicatorsProps>) {
   return (
     <Card>
       <CardHeader className="pb-2">

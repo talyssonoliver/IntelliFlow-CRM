@@ -25,8 +25,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Card } from '@intelliflow/ui';
-import { cn } from '@intelliflow/ui';
+import { Card, cn } from '@intelliflow/ui';
 import { getSupabaseBrowserClient, clearSupabaseLocalStorage } from '@/lib/supabase-browser';
 import { storeSessionFingerprint } from '@/lib/shared/login-security';
 import { storeSessionTokens } from '@/lib/shared/token-exchange';
@@ -66,7 +65,7 @@ export function OAuthCallback({
   onError,
   redirectUrl = '/dashboard',
   className,
-}: OAuthCallbackProps) {
+}: Readonly<OAuthCallbackProps>) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<OAuthCallbackStatus>('loading');
@@ -182,12 +181,14 @@ export function OAuthCallback({
       }, 300);
     } catch (err) {
       setStatus('error');
-      const errorMsg =
-        err instanceof Error
-          ? err.message === 'TIMEOUT'
-            ? 'Authentication is taking too long. Please try again.'
-            : err.message
-          : 'An unexpected error occurred';
+      let errorMsg: string;
+      if (err instanceof Error) {
+        errorMsg = err.message === 'TIMEOUT'
+          ? 'Authentication is taking too long. Please try again.'
+          : err.message;
+      } else {
+        errorMsg = 'An unexpected error occurred';
+      }
       setErrorMessage(errorMsg);
       onError?.(errorMsg);
     }
@@ -311,7 +312,7 @@ export function OAuthCallback({
                 >
                   <span className="material-symbols-outlined text-xl" aria-hidden="true">
                     arrow_back
-                  </span>
+                  </span>{' '}
                   Back to Sign In
                 </button>
                 <button
@@ -320,7 +321,7 @@ export function OAuthCallback({
                 >
                   <span className="material-symbols-outlined text-xl" aria-hidden="true">
                     refresh
-                  </span>
+                  </span>{' '}
                   Try Again
                 </button>
               </div>
@@ -373,21 +374,21 @@ export function OAuthCallback({
           <div className="flex items-center gap-1">
             <span className="material-symbols-outlined text-sm text-[#7cc4ff]" aria-hidden="true">
               lock
-            </span>
+            </span>{' '}
             Secure
           </div>
           <div className="w-1 h-1 rounded-full bg-slate-600" aria-hidden="true" />
           <div className="flex items-center gap-1">
             <span className="material-symbols-outlined text-sm text-[#7cc4ff]" aria-hidden="true">
               shield_check
-            </span>
+            </span>{' '}
             Encrypted
           </div>
           <div className="w-1 h-1 rounded-full bg-slate-600" aria-hidden="true" />
           <div className="flex items-center gap-1">
             <span className="material-symbols-outlined text-sm text-[#7cc4ff]" aria-hidden="true">
               policy
-            </span>
+            </span>{' '}
             Protected
           </div>
         </div>

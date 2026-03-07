@@ -103,7 +103,7 @@ export default function SecurityPage() {
               >
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   mail
-                </span>
+                </span>{' '}
                 Security Inquiries
               </a>
             </div>
@@ -146,7 +146,7 @@ export default function SecurityPage() {
                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-500/10 text-emerald-600 text-sm font-medium rounded-full">
                   <span className="material-symbols-outlined text-sm" aria-hidden="true">
                     check_circle
-                  </span>
+                  </span>{' '}
                   {cert.status}
                 </span>
               </Card>
@@ -189,7 +189,7 @@ export default function SecurityPage() {
                         return 'smart_toy';
                       })()}
                     </span>
-                  </span>
+                  </span>{' '}
                   {category}
                 </h3>
 
@@ -230,7 +230,7 @@ export default function SecurityPage() {
                                   aria-hidden="true"
                                 >
                                   check
-                                </span>
+                                </span>{' '}
                                 {highlight}
                               </li>
                             ))}
@@ -307,7 +307,7 @@ export default function SecurityPage() {
               >
                 <span className="material-symbols-outlined" aria-hidden="true">
                   bug_report
-                </span>
+                </span>{' '}
                 Bug Bounty Program
               </a>
             </div>

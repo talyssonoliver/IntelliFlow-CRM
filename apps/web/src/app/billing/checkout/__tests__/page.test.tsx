@@ -41,7 +41,7 @@ vi.mock('next/navigation', () => ({
 vi.mock('@stripe/react-stripe-js', () => {
   const React = require('react');
   return {
-    Elements: ({ children }: { children: React.ReactNode }) =>
+    Elements: ({ children }: Readonly<{ children: React.ReactNode }>) =>
       React.createElement('div', { 'data-testid': 'stripe-elements-provider' }, children),
     CardNumberElement: (_props: any) =>
       React.createElement('div', { 'data-testid': 'card-number-element' }),
@@ -118,7 +118,7 @@ vi.mock('@/lib/billing/payment-processor', () => ({
 }));
 
 vi.mock('@/components/shared/page-header', () => ({
-  PageHeader: ({ title }: { title: string }) => {
+  PageHeader: ({ title }: Readonly<{ title: string }>) => {
     const React = require('react');
     return React.createElement('div', { 'data-testid': 'page-header' }, title);
   },

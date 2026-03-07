@@ -13,7 +13,7 @@ interface ApplicationFormProps {
   positions: Position[];
 }
 
-export function ApplicationForm({ positions }: ApplicationFormProps) {
+export function ApplicationForm({ positions }: Readonly<ApplicationFormProps>) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -240,14 +240,14 @@ export function ApplicationForm({ positions }: ApplicationFormProps) {
             <>
               <span className="material-symbols-outlined animate-spin text-lg" aria-hidden="true">
                 progress_activity
-              </span>
+              </span>{' '}
               Submitting...
             </>
           ) : (
             <>
               <span className="material-symbols-outlined text-lg" aria-hidden="true">
                 send
-              </span>
+              </span>{' '}
               Submit Application
             </>
           )}

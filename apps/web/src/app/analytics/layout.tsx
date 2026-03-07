@@ -4,6 +4,6 @@ export const metadata: Metadata = {
   title: 'Analytics',
 };
 
-export default function AnalyticsLayout({ children }: { children: React.ReactNode }) {
+export default function AnalyticsLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <>{children}</>;
 }

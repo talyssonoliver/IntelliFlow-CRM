@@ -3,7 +3,7 @@
 import type { WidgetProps } from './index';
 import { UpcomingEventsCard } from '@/components/shared';
 
-export function UpcomingEventsWidget(_props: WidgetProps) {
+export function UpcomingEventsWidget(_props: Readonly<WidgetProps>) {
   return (
     <UpcomingEventsCard
       title="Upcoming Events"

@@ -37,7 +37,7 @@ export function VersionHistory({
   currentVersionId,
   onVersionSelect,
   onRestoreVersion,
-}: VersionHistoryProps) {
+}: Readonly<VersionHistoryProps>) {
   const [restoreTarget, setRestoreTarget] = useState<string | null>(null);
 
   // Sort versions by date (newest first)
@@ -87,16 +87,19 @@ export function VersionHistory({
       {/* Restore Confirmation Dialog */}
       {restoreTarget && (
         <div
-          ref={restoreDialogRef}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Confirm restore"
+          aria-hidden="true"
           onKeyDown={(e) => {
             if (e.key === 'Escape') cancelRestore();
           }}
         >
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+          <div
+            ref={restoreDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Confirm restore"
+            className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
+          >
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
               Restore version?
             </h3>
@@ -186,13 +189,11 @@ export function VersionHistory({
                       <span>{formatFileSize(version.sizeBytes)}</span>
                       {sizeDelta && (
                         <span
-                          className={
-                            sizeDelta.startsWith('+')
-                              ? 'text-amber-500'
-                              : sizeDelta.startsWith('-')
-                                ? 'text-emerald-500'
-                                : 'text-slate-400'
-                          }
+                          className={(() => {
+                            if (sizeDelta.startsWith('+')) return 'text-amber-500';
+                            if (sizeDelta.startsWith('-')) return 'text-emerald-500';
+                            return 'text-slate-400';
+                          })()}
                         >
                           ({sizeDelta})
                         </span>

@@ -2,15 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader } from '@intelliflow/ui';
-import { Badge } from '@intelliflow/ui';
-import { Button } from '@intelliflow/ui';
+import { Card, CardContent, CardHeader, Badge, Button } from '@intelliflow/ui';
 import { generateApiKey } from '@/lib/developer/api-key-generator';
 import { DEMO_APPS, type DeveloperApp } from '@/lib/developer/demo-data';
 
 export type { DeveloperApp };
 
-function StatusBadge({ status }: { status: DeveloperApp['status'] }) {
+function StatusBadge({ status }: Readonly<{ status: DeveloperApp['status'] }>) {
   switch (status) {
     case 'active':
       return <Badge variant="default">Active</Badge>;
@@ -21,7 +19,7 @@ function StatusBadge({ status }: { status: DeveloperApp['status'] }) {
   }
 }
 
-function EnvironmentBadge({ environment }: { environment: DeveloperApp['environment'] }) {
+function EnvironmentBadge({ environment }: Readonly<{ environment: DeveloperApp['environment'] }>) {
   return (
     <Badge variant="secondary">{environment === 'production' ? 'Production' : 'Sandbox'}</Badge>
   );
@@ -137,7 +135,7 @@ export function AppList() {
                     >
                       <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                         add
-                      </span>
+                      </span>{' '}
                       Generate API Key
                     </Button>
                   </div>

@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@intelliflow/ui';
-import { Card } from '@intelliflow/ui';
-import { Badge } from '@intelliflow/ui';
+import { Tabs, TabsList, TabsTrigger, TabsContent, Card, Badge } from '@intelliflow/ui';
 import { AuthExamples } from '@/components/developer/auth-examples';
 
-function CodeBlock({ code, label }: { code: string; label?: string }) {
+function CodeBlock({ code, label }: Readonly<{ code: string; label?: string }>) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -38,14 +36,14 @@ function CodeBlock({ code, label }: { code: string; label?: string }) {
   );
 }
 
-function StatusBadge({ status }: { status: 'available' | 'coming-soon' }) {
+function StatusBadge({ status }: Readonly<{ status: 'available' | 'coming-soon' }>) {
   if (status === 'coming-soon') {
     return <Badge variant="warning">Coming Soon</Badge>;
   }
   return null;
 }
 
-function SecurityWarning({ children }: { children: React.ReactNode }) {
+function SecurityWarning({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <div className="border-l-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20 p-4 rounded-r-lg">
       <div className="flex items-start gap-2">

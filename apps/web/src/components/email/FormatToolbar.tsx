@@ -20,7 +20,7 @@ const BUTTONS = [
   { command: 'removeFormat', label: 'Clear formatting', icon: RemoveFormatting },
 ] as const;
 
-export function FormatToolbar({ onFormat, activeFormats = [], className }: FormatToolbarProps) {
+export function FormatToolbar({ onFormat, activeFormats = [], className }: Readonly<FormatToolbarProps>) {
   const [focusIndex, setFocusIndex] = useState(0);
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -59,7 +59,10 @@ export function FormatToolbar({ onFormat, activeFormats = [], className }: Forma
             type="button"
             tabIndex={i === focusIndex ? 0 : -1}
             aria-label={btn.label}
-            aria-pressed={isToggle ? (isActive ? 'true' : 'false') : undefined}
+            aria-pressed={(() => {
+              if (!isToggle) return undefined;
+              return isActive ? 'true' : 'false';
+            })()}
             title={'shortcut' in btn ? `${btn.label} (${btn.shortcut})` : btn.label}
             className={cn(
               'inline-flex h-8 w-8 items-center justify-center rounded-md text-sm',

@@ -15,12 +15,12 @@ interface Template {
 }
 
 interface TemplateSelectorProps {
-  onSelect: (template: Template) => void;
+  onSelect: (template: Readonly<Template>) => void;
   currentBody?: string;
   className?: string;
 }
 
-export function TemplateSelector({ onSelect, currentBody = '', className }: TemplateSelectorProps) {
+export function TemplateSelector({ onSelect, currentBody = '', className }: Readonly<TemplateSelectorProps>) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [pendingTemplate, setPendingTemplate] = useState<Template | null>(null);
@@ -39,7 +39,7 @@ export function TemplateSelector({ onSelect, currentBody = '', className }: Temp
   }, [templates, searchQuery]);
 
   const handleSelect = useCallback(
-    (template: Template) => {
+    (template: Readonly<Template>) => {
       if (currentBody.trim()) {
         setPendingTemplate(template);
       } else {
@@ -115,6 +115,7 @@ export function TemplateSelector({ onSelect, currentBody = '', className }: Temp
                 setHighlightIndex(-1);
               }}
               className="w-full rounded-md border border-input bg-transparent py-1.5 pl-7 pr-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              // eslint-disable-next-line jsx-a11y/no-autofocus
               autoFocus
             />
           </div>
@@ -154,7 +155,7 @@ export function TemplateSelector({ onSelect, currentBody = '', className }: Temp
                     </span>
                   </div>
                   <div className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
-                    {template.body.replace(/<[^<>]*>/g, '').slice(0, 60)}...
+                    {template.body.replaceAll(/<[^<>]*>/g, '').slice(0, 60)}...
                   </div>
                   {/* Merge variables */}
                   {template.variables.length > 0 && (

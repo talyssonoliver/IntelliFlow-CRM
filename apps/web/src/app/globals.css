@@ -306,8 +306,7 @@
 
 /* Calendar container — match IntelliFlow card style */
 .sx__calendar {
-  border-width: 0 !important;
-  border-style: none !important;
+  border: none !important;
   background-color: #fff !important;
   border-radius: 0 !important;
 }

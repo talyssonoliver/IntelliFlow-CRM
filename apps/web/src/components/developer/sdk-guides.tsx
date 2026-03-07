@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@intelliflow/ui';
-import { Card } from '@intelliflow/ui';
-import { Badge } from '@intelliflow/ui';
+import { Tabs, TabsList, TabsTrigger, TabsContent, Card, Badge } from '@intelliflow/ui';
 import { SDK_REGISTRY, type SdkPackage } from '@/lib/developer/sdk-downloads';
 
-function CodeBlock({ code, label }: { code: string; label?: string }) {
+function CodeBlock({ code, label }: Readonly<{ code: string; label?: string }>) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -38,7 +36,7 @@ function CodeBlock({ code, label }: { code: string; label?: string }) {
   );
 }
 
-function StatusBadge({ status }: { status: SdkPackage['status'] }) {
+function StatusBadge({ status }: Readonly<{ status: SdkPackage['status'] }>) {
   switch (status) {
     case 'beta':
       return <Badge variant="secondary">Beta</Badge>;
@@ -49,7 +47,7 @@ function StatusBadge({ status }: { status: SdkPackage['status'] }) {
   }
 }
 
-function SdkCard({ sdk }: { sdk: SdkPackage }) {
+function SdkCard({ sdk }: Readonly<{ sdk: SdkPackage }>) {
   const isDisabled = sdk.status === 'coming-soon';
 
   return (
@@ -133,9 +131,7 @@ function OverviewTab() {
           <li>Node.js 18 or later</li>
           <li>npm, pnpm, or yarn package manager</li>
           <li>
-            IntelliFlow CRM API key (
-            <code className="text-sm bg-muted px-1 py-0.5 rounded">ifc_live_*</code> or{' '}
-            <code className="text-sm bg-muted px-1 py-0.5 rounded">ifc_test_*</code>)
+            {'IntelliFlow CRM API key ('}<code className="text-sm bg-muted px-1 py-0.5 rounded">ifc_live_*</code>{' or '}<code className="text-sm bg-muted px-1 py-0.5 rounded">ifc_test_*</code>{')'}
           </li>
         </ul>
       </section>

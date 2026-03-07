@@ -8,7 +8,7 @@
  * Route: /agent-approvals/logs
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { Card, CardContent, Button, Skeleton, cn } from '@intelliflow/ui';
 import { PageHeader, SearchFilterBar, useMultiFilterState } from '@/components/shared';
 import { useAgentLogs } from '@/lib/ai-monitoring/hooks';
@@ -75,7 +75,32 @@ interface TranscriptViewProps {
   messages: AgentLogMessage[];
 }
 
-function TranscriptView({ messages }: TranscriptViewProps) {
+function makeSystemKeyDownHandler(idx: number, toggle: (i: number) => void) {
+  return (e: Readonly<ReactKeyboardEvent>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggle(idx);
+    }
+  };
+}
+
+function messageBubbleClass(
+  isUser: boolean,
+  isSystem: boolean,
+  isTool: boolean,
+  isExpanded: boolean
+): string {
+  return cn(
+    'rounded-lg px-3 py-2 text-sm max-w-[85%]',
+    isUser && 'ml-auto bg-blue-100 dark:bg-blue-900/30',
+    !isUser && !isSystem && !isTool && 'mr-auto bg-card border',
+    isSystem && 'mr-auto text-muted-foreground italic collapsed',
+    isTool && 'mr-auto font-mono text-xs bg-slate-50 dark:bg-slate-900 border',
+    isSystem && !isExpanded && 'opacity-50 cursor-pointer'
+  );
+}
+
+function TranscriptView({ messages }: Readonly<TranscriptViewProps>) {
   const [expandedMessages, setExpandedMessages] = useState<Set<number>>(new Set());
 
   const toggleMessage = useCallback((idx: number) => {
@@ -114,25 +139,9 @@ function TranscriptView({ messages }: TranscriptViewProps) {
             data-testid="message-bubble"
             role={isSystem ? 'button' : undefined}
             tabIndex={isSystem ? 0 : undefined}
-            className={cn(
-              'rounded-lg px-3 py-2 text-sm max-w-[85%]',
-              isUser && 'ml-auto bg-blue-100 dark:bg-blue-900/30',
-              !isUser && !isSystem && !isTool && 'mr-auto bg-card border',
-              isSystem && 'mr-auto text-muted-foreground italic collapsed',
-              isTool && 'mr-auto font-mono text-xs bg-slate-50 dark:bg-slate-900 border',
-              isSystem && !isExpanded && 'opacity-50 cursor-pointer'
-            )}
+            className={messageBubbleClass(isUser, isSystem, isTool, isExpanded)}
             onClick={isSystem ? () => toggleMessage(idx) : undefined}
-            onKeyDown={
-              isSystem
-                ? (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      toggleMessage(idx);
-                    }
-                  }
-                : undefined
-            }
+            onKeyDown={isSystem ? makeSystemKeyDownHandler(idx, toggleMessage) : undefined}
           >
             <span className="text-xs font-semibold uppercase text-muted-foreground block mb-0.5">
               {msg.role}
@@ -165,7 +174,7 @@ interface ToolCallListProps {
   toolCalls: AgentLogToolCall[];
 }
 
-function ToolCallList({ toolCalls }: ToolCallListProps) {
+function ToolCallList({ toolCalls }: Readonly<ToolCallListProps>) {
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
   if (toolCalls.length === 0) return null;
@@ -178,19 +187,12 @@ function ToolCallList({ toolCalls }: ToolCallListProps) {
         const colorClass = TOOL_STATUS_COLORS[tc.status] ?? 'bg-slate-100 text-slate-600';
 
         return (
-          <div key={`${tc.name}-${idx}`}>
-            <div
+          <div key={`${tc.name}-${tc.timestamp}`}>
+            <button
+              type="button"
               data-testid="tool-call-row"
-              role="button"
-              tabIndex={0}
-              className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5"
+              className="flex w-full items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-left"
               onClick={() => setExpandedIdx(isExpanded ? null : idx)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setExpandedIdx(isExpanded ? null : idx);
-                }
-              }}
             >
               <span className="text-sm font-medium">{tc.name}</span>
               <span
@@ -205,7 +207,7 @@ function ToolCallList({ toolCalls }: ToolCallListProps) {
               <span className="ml-auto text-xs text-muted-foreground">
                 {formatRelativeTime(tc.timestamp)}
               </span>
-            </div>
+            </button>
             {isExpanded && (
               <div data-testid="tool-call-detail" className="ml-4 mt-1 mb-2 space-y-2">
                 <div>
@@ -239,7 +241,7 @@ interface LogEntryCardProps {
   onToggle: () => void;
 }
 
-function LogEntryCard({ log, isExpanded, onToggle }: LogEntryCardProps) {
+function LogEntryCard({ log, isExpanded, onToggle }: Readonly<LogEntryCardProps>) {
   const messageCount = log.messages.length;
   const toolCallCount = log.toolCalls.length;
 
@@ -312,6 +314,35 @@ function LogsSkeleton() {
 }
 
 // ---------------------------------------------------------------------------
+// Empty State
+// ---------------------------------------------------------------------------
+
+interface LogsEmptyStateProps {
+  hasFilters: boolean;
+  onClearFilters: () => void;
+}
+
+function LogsEmptyState({ hasFilters, onClearFilters }: Readonly<LogsEmptyStateProps>) {
+  return (
+    <Card data-testid="empty-state">
+      <CardContent className="flex flex-col items-center justify-center p-8 text-center">
+        <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2">
+          description
+        </span>
+        <p className="text-sm text-muted-foreground mb-4">
+          {hasFilters ? 'No logs match your filters' : 'No logs recorded yet'}
+        </p>
+        {hasFilters && (
+          <Button variant="outline" onClick={onClearFilters}>
+            Clear filters
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main Component
 // ---------------------------------------------------------------------------
 
@@ -319,7 +350,7 @@ interface AgentLogsViewerProps {
   agentId?: string | null;
 }
 
-export function AgentLogsViewer({ agentId }: AgentLogsViewerProps) {
+export function AgentLogsViewer({ agentId }: Readonly<AgentLogsViewerProps>) {
   const filterState = useMultiFilterState({
     search: '',
     toolStatus: '',
@@ -426,27 +457,13 @@ export function AgentLogsViewer({ agentId }: AgentLogsViewerProps) {
       {/* Loading */}
       {isLoading && <LogsSkeleton />}
       {!isLoading && logs.length === 0 && (
-        <Card data-testid="empty-state">
-          <CardContent className="flex flex-col items-center justify-center p-8 text-center">
-            <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2">
-              description
-            </span>
-            <p className="text-sm text-muted-foreground mb-4">
-              {hasFilters ? 'No logs match your filters' : 'No logs recorded yet'}
-            </p>
-            {hasFilters && (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  filterState.set('search', '');
-                  filterState.set('toolStatus', '');
-                }}
-              >
-                Clear filters
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+        <LogsEmptyState
+          hasFilters={!!hasFilters}
+          onClearFilters={() => {
+            filterState.set('search', '');
+            filterState.set('toolStatus', '');
+          }}
+        />
       )}
       {!isLoading && logs.length > 0 && (
         <>

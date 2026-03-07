@@ -17,7 +17,7 @@ interface UserMenuProps {
   className?: string;
 }
 
-export function UserMenu({ user: propUser, className }: UserMenuProps) {
+export function UserMenu({ user: propUser, className }: Readonly<UserMenuProps>) {
   // IFC-007: Connect to auth context for real user data
   const { user: authUser } = useAuth();
   const { logout, isLoggingOut } = useLogout();
@@ -36,7 +36,7 @@ export function UserMenu({ user: propUser, className }: UserMenuProps) {
 
   // Close menu when clicking outside
   React.useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    function handleClickOutside(event: Readonly<MouseEvent>) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
@@ -48,7 +48,7 @@ export function UserMenu({ user: propUser, className }: UserMenuProps) {
 
   // Close menu on Escape key
   React.useEffect(() => {
-    function handleEscape(event: KeyboardEvent) {
+    function handleEscape(event: Readonly<KeyboardEvent>) {
       if (event.key === 'Escape') {
         setIsOpen(false);
       }
@@ -134,7 +134,7 @@ export function UserMenu({ user: propUser, className }: UserMenuProps) {
             >
               <span className="material-symbols-outlined text-lg text-muted-foreground">
                 settings
-              </span>
+              </span>{' '}
               Settings
             </Link>
 
@@ -145,7 +145,7 @@ export function UserMenu({ user: propUser, className }: UserMenuProps) {
             >
               <span className="material-symbols-outlined text-lg text-muted-foreground">
                 policy
-              </span>
+              </span>{' '}
               Governance
             </Link>
           </div>
@@ -164,7 +164,7 @@ export function UserMenu({ user: propUser, className }: UserMenuProps) {
               disabled={isLoggingOut}
               className="flex items-center gap-3 w-full px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
             >
-              <span className="material-symbols-outlined text-lg">logout</span>
+              <span className="material-symbols-outlined text-lg">logout</span>{' '}
               {isLoggingOut ? 'Signing out...' : 'Sign out'}
             </button>
           </div>

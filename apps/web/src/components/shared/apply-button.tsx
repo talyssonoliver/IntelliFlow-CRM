@@ -31,7 +31,7 @@ export function ApplyButton({
   fullWidth = false,
   className,
   showIcon = true,
-}: ApplyButtonProps) {
+}: Readonly<ApplyButtonProps>) {
   const handleClick = () => {
     // Track analytics event (in production, integrate with analytics service)
     if (typeof window !== 'undefined') {
@@ -92,7 +92,7 @@ interface SaveJobButtonProps {
   className?: string;
 }
 
-export function SaveJobButton({ jobId, jobTitle, className }: SaveJobButtonProps) {
+export function SaveJobButton({ jobId, jobTitle, className }: Readonly<SaveJobButtonProps>) {
   const [isSaved, setIsSaved] = React.useState(false);
 
   const handleSave = () => {
@@ -132,7 +132,7 @@ export function SaveJobButton({ jobId, jobTitle, className }: SaveJobButtonProps
         className
       )}
       aria-pressed={isSaved}
-      aria-label={isSaved ? `Remove ${jobTitle} from saved jobs` : `Save ${jobTitle} for later`}
+      aria-label={isSaved ? `Remove ${jobTitle} from saved jobs` : `Save ${jobTitle} for later`} // NOSONAR typescript:S4624 — ternary between two sibling template literals, not a nested template
     >
       <span className="material-symbols-outlined text-lg" aria-hidden="true">
         {isSaved ? 'bookmark' : 'bookmark_border'}
@@ -151,14 +151,22 @@ interface ShareJobButtonProps {
   className?: string;
 }
 
-export function ShareJobButton({ jobId, jobTitle, className }: ShareJobButtonProps) {
+export function ShareJobButton({ jobId, jobTitle, className }: Readonly<ShareJobButtonProps>) {
   const [showDropdown, setShowDropdown] = React.useState(false);
 
   const jobUrl =
-    typeof window !== 'undefined'
-      ? `${window.location.origin}/careers/${jobId}`
-      : `/careers/${jobId}`;
+    typeof window === 'undefined'
+      ? `/careers/${jobId}`
+      : `${window.location.origin}/careers/${jobId}`;
 
+  const linkedInTitle = `${jobTitle} at IntelliFlow`;
+  const twitterText = `Check out this opportunity: ${jobTitle} at IntelliFlow`;
+  const emailSubject = `Job Opportunity: ${jobTitle} at IntelliFlow`;
+  const emailBody = `I thought you might be interested in this role:
+
+${jobTitle}
+
+${jobUrl}`;
   const shareOptions = [
     {
       label: 'Copy Link',
@@ -173,7 +181,7 @@ export function ShareJobButton({ jobId, jobTitle, className }: ShareJobButtonPro
       icon: 'work',
       action: () => {
         window.open(
-          `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(jobUrl)}&title=${encodeURIComponent(`${jobTitle} at IntelliFlow`)}`,
+          `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(jobUrl)}&title=${encodeURIComponent(linkedInTitle)}`,
           '_blank'
         );
         setShowDropdown(false);
@@ -184,7 +192,7 @@ export function ShareJobButton({ jobId, jobTitle, className }: ShareJobButtonPro
       icon: 'share',
       action: () => {
         window.open(
-          `https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out this opportunity: ${jobTitle} at IntelliFlow`)}&url=${encodeURIComponent(jobUrl)}`,
+          `https://twitter.com/intent/tweet?text=${encodeURIComponent(twitterText)}&url=${encodeURIComponent(jobUrl)}`,
           '_blank'
         );
         setShowDropdown(false);
@@ -195,7 +203,7 @@ export function ShareJobButton({ jobId, jobTitle, className }: ShareJobButtonPro
       icon: 'mail',
       action: () => {
         window.open(
-          `mailto:?subject=${encodeURIComponent(`Job Opportunity: ${jobTitle} at IntelliFlow`)}&body=${encodeURIComponent(`I thought you might be interested in this role:\n\n${jobTitle}\n\n${jobUrl}`)}`,
+          `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`,
           '_blank'
         );
         setShowDropdown(false);
@@ -219,21 +227,17 @@ export function ShareJobButton({ jobId, jobTitle, className }: ShareJobButtonPro
       >
         <span className="material-symbols-outlined text-lg" aria-hidden="true">
           share
-        </span>
+        </span>{' '}
         Share
       </button>
 
       {showDropdown && (
         <>
-          <div
-            className="fixed inset-0 z-10"
-            role="button"
-            tabIndex={0}
+          <button
+            type="button"
+            className="fixed inset-0 z-10 cursor-default"
             aria-label="Close share menu"
             onClick={() => setShowDropdown(false)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') setShowDropdown(false);
-            }}
           />
           <div
             role="menu"

@@ -34,7 +34,7 @@ export default function TeamPage() {
               <p className="text-muted-foreground mt-1">Manage team members and roles</p>
             </div>
             <button className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium">
-              <span className="material-symbols-outlined text-lg">person_add</span> Invite Member
+              <span className="material-symbols-outlined text-lg">person_add</span>{' '}Invite Member
             </button>
           </div>
         </div>

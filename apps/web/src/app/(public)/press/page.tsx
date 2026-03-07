@@ -70,7 +70,7 @@ export default function PressPage() {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#7cc4ff] font-medium backdrop-blur mb-6">
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 newspaper
-              </span>
+              </span>{' '}
               Press & Media
             </div>
 
@@ -94,7 +94,7 @@ export default function PressPage() {
               >
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   download
-                </span>
+                </span>{' '}
                 Download Media Kit
               </a>
               <a
@@ -106,7 +106,7 @@ export default function PressPage() {
               >
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   mail
-                </span>
+                </span>{' '}
                 Media Inquiries
               </a>
             </div>
@@ -122,7 +122,7 @@ export default function PressPage() {
               <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#137fec]/10 text-[#137fec] text-sm font-medium rounded-full">
                 <span className="material-symbols-outlined text-base" aria-hidden="true">
                   star
-                </span>
+                </span>{' '}
                 Featured
               </span>
             </div>
@@ -156,7 +156,7 @@ export default function PressPage() {
                   href={`/press/${featuredRelease.id}`}
                   className="inline-flex items-center gap-2 text-[#137fec] font-semibold hover:underline"
                 >
-                  Read Full Release
+                  Read Full Release{' '}
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
                     arrow_forward
                   </span>
@@ -211,7 +211,7 @@ export default function PressPage() {
                   href={`/press/${release.id}`}
                   className="inline-flex items-center gap-1 text-[#137fec] text-sm font-medium hover:underline"
                 >
-                  Read more
+                  Read more{' '}
                   <span className="material-symbols-outlined text-base" aria-hidden="true">
                     arrow_forward
                   </span>
@@ -233,14 +233,14 @@ export default function PressPage() {
                   <span className="material-symbols-outlined text-[#137fec]" aria-hidden="true">
                     info
                   </span>
-                </span>
+                </span>{' '}
                 Company Facts
               </h2>
 
               <div className="grid grid-cols-2 gap-4">
                 {companyFacts.map((fact, index) => (
                   <Card
-                    key={index}
+                    key={index} // NOSONAR typescript:S6479
                     className="p-4 text-center border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900"
                   >
                     <p className="text-2xl font-bold text-[#137fec] mb-1">{fact.value}</p>
@@ -257,7 +257,7 @@ export default function PressPage() {
                   <span className="material-symbols-outlined text-amber-500" aria-hidden="true">
                     emoji_events
                   </span>
-                </span>
+                </span>{' '}
                 Awards & Recognition
               </h2>
 
@@ -304,7 +304,7 @@ export default function PressPage() {
               >
                 <span className="material-symbols-outlined" aria-hidden="true">
                   folder_zip
-                </span>
+                </span>{' '}
                 Download Media Kit
               </a>
             </div>
@@ -319,7 +319,7 @@ export default function PressPage() {
                 <p className="flex items-center gap-2 justify-center md:justify-start">
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
                     person
-                  </span>
+                  </span>{' '}
                   {pressContact.name}
                 </p>
                 <p className="flex items-center gap-2 justify-center md:justify-start">

@@ -22,11 +22,11 @@ export interface AppointmentCalendarProps {
   view: 'month' | 'week' | 'day';
   currentDate: Date;
   onViewChange: (view: 'month' | 'week' | 'day') => void;
-  onDateChange: (date: Date) => void;
+  onDateChange: (date: Readonly<Date>) => void;
   onAppointmentClick: (id: string) => void;
   onTaskClick?: (id: string) => void;
   onCreateWithSlot: (startTime: Date, endTime: Date) => void;
-  onCreateWithDate?: (date: Date) => void;
+  onCreateWithDate?: (date: Readonly<Date>) => void;
   isLoading?: boolean;
 }
 
@@ -143,7 +143,7 @@ export function AppointmentCalendar({
               type="button"
               onClick={() => onViewChange(v)}
               className={`px-3 py-1.5 text-sm capitalize transition-colors ${
-                v !== 'month' ? 'hidden sm:block' : ''
+                v === 'month' ? '' : 'hidden sm:block'
               } ${
                 view === v
                   ? 'bg-primary/10 text-primary font-medium'

@@ -5,8 +5,8 @@
  * Based on tools/scripts/adr-lifecycle.ts
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 // Configuration
 const ADR_PATHS = ['docs/planning/adr', 'docs/architecture/adr', 'docs/shared'];
@@ -54,29 +54,29 @@ export function parseADR(filePath: string): ADRMetadata | null {
     const content = fs.readFileSync(filePath, 'utf-8');
 
     // Extract title from first heading
-    const titleMatch = content.match(/^#\s+([^\r\n]{1,500})$/m);
+    const titleMatch = /^#\s+([^\r\n]{1,500})$/m.exec(content);
     const title = titleMatch ? titleMatch[1].trim() : 'Unknown';
 
     // Extract ID from filename or title
     const fileName = path.basename(filePath, '.md');
     const idMatch =
-      title.match(/ADR-(\d+)/) || fileName.match(/ADR-(\d+)/i) || fileName.match(/^(\d+)/);
+      /ADR-(\d+)/.exec(title) || /ADR-(\d+)/i.exec(fileName) || /^(\d+)/.exec(fileName);
     const id = idMatch ? `ADR-${idMatch[1].padStart(3, '0')}` : fileName;
 
     // Extract status
-    const statusMatch = content.match(/\*\*Status:\*\*\s*(.+)/i);
+    const statusMatch = /\*\*Status:\*\*\s*(.+)/i.exec(content);
     const status = statusMatch ? statusMatch[1].trim() : 'Unknown';
 
     // Extract date
-    const dateMatch = content.match(/\*\*Date:\*\*\s*(.+)/i);
+    const dateMatch = /\*\*Date:\*\*\s*(.+)/i.exec(content);
     const date = dateMatch ? dateMatch[1].trim() : 'Unknown';
 
     // Extract deciders
-    const decidersMatch = content.match(/\*\*Deciders:\*\*\s*(.+)/i);
+    const decidersMatch = /\*\*Deciders:\*\*\s*(.+)/i.exec(content);
     const deciders = decidersMatch ? decidersMatch[1].trim() : 'Unknown';
 
     // Extract technical story
-    const storyMatch = content.match(/\*\*Technical Story:\*\*\s*(.+)/i);
+    const storyMatch = /\*\*Technical Story:\*\*\s*(.+)/i.exec(content);
     const technicalStory = storyMatch ? storyMatch[1].trim() : '';
 
     // Extract related ADRs from links
@@ -89,7 +89,7 @@ export function parseADR(filePath: string): ADRMetadata | null {
     }
 
     // Extract sprint
-    const sprintMatch = content.match(/Sprint\s*(\d+)/i);
+    const sprintMatch = /Sprint\s*(\d+)/i.exec(content);
     const sprint = sprintMatch ? sprintMatch[1] : 'Unknown';
 
     return {
@@ -121,7 +121,7 @@ export function getAllADRFiles(): string[] {
     if (fs.existsSync(fullPath)) {
       const entries = fs.readdirSync(fullPath);
       for (const entry of entries) {
-        if (entry.endsWith('.md') && (entry.includes('ADR') || entry.match(/^\d{3}/))) {
+        if (entry.endsWith('.md') && (entry.includes('ADR') || /^\d{3}/.exec(entry))) {
           files.push(path.join(fullPath, entry));
         }
       }
@@ -204,7 +204,7 @@ export function validateADR(adr: ADRMetadata): ValidationResult {
 
     // Check date format
     if (
-      !adr.date.match(/^\d{4}-\d{2}-\d{2}$/) &&
+      !/^\d{4}-\d{2}-\d{2}$/.exec(adr.date) &&
       adr.date !== 'Unknown' &&
       !adr.date.includes('YYYY')
     ) {
@@ -227,7 +227,7 @@ export function validateADR(adr: ADRMetadata): ValidationResult {
       }
     }
   } catch (error) {
-    errors.push(`Failed to read file: ${error}`);
+    errors.push(`Failed to read file: ${error instanceof Error ? error.message : String(error)}`);
   }
 
   return {
@@ -266,15 +266,15 @@ export function createADR(
     // Get next ADR number
     const adrs = getAllADRs();
     const maxId = adrs.reduce((max, adr) => {
-      const num = parseInt(adr.id.replace('ADR-', ''), 10);
-      return isNaN(num) ? max : Math.max(max, num);
+      const num = Number.parseInt(adr.id.replace('ADR-', ''), 10);
+      return Number.isNaN(num) ? max : Math.max(max, num);
     }, 0);
 
     const nextId = (maxId + 1).toString().padStart(3, '0');
     const fileName = `ADR-${nextId}-${title
       .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '')}.md`;
+      .replaceAll(/\s+/g, '-')
+      .replaceAll(/[^a-z0-9-]/g, '')}.md`;
     const outputPath = path.resolve(baseDir, 'docs/planning/adr', fileName);
 
     // Ensure directory exists
@@ -287,13 +287,13 @@ export function createADR(
     let template = fs.readFileSync(templatePath, 'utf-8');
 
     // Replace placeholders
-    template = template.replace(/ADR-XXX/g, `ADR-${nextId}`);
-    template = template.replace(/\[Title of Decision\]/g, title);
-    template = template.replace(/YYYY-MM-DD/g, new Date().toISOString().split('T')[0]);
-    template = template.replace(/\[Proposed \| Accepted.*\]/g, 'Proposed');
+    template = template.replaceAll('ADR-XXX', `ADR-${nextId}`);
+    template = template.replaceAll('[Title of Decision]', title);
+    template = template.replaceAll('YYYY-MM-DD', new Date().toISOString().split('T')[0]);
+    template = template.replaceAll(/\[Proposed \| Accepted.*\]/g, 'Proposed');
 
     if (technicalStory) {
-      template = template.replace(/\[Link to relevant task\/issue.*\]/g, technicalStory);
+      template = template.replaceAll(/\[Link to relevant task\/issue.*\]/g, technicalStory);
     }
 
     // Remove guidelines section
@@ -403,10 +403,10 @@ export function getADRStats(): {
     (acc, v) => {
       if (v.validation.valid && v.validation.warnings.length === 0) {
         acc.valid++;
-      } else if (!v.validation.valid) {
-        acc.withErrors++;
-      } else {
+      } else if (v.validation.valid) {
         acc.withWarnings++;
+      } else {
+        acc.withErrors++;
       }
       return acc;
     },
@@ -419,6 +419,43 @@ export function getADRStats(): {
     bySprint,
     validationSummary,
   };
+}
+
+function appendADRSectionFull(lines: string[], adrs: ADRMetadata[]): void {
+  lines.push('| ID | Title | Date | Sprint | Story |', '|----|-------|------|--------|-------|');
+  for (const adr of adrs) {
+    lines.push(
+      `| ${adr.id} | ${adr.title} | ${adr.date} | ${adr.sprint} | ${adr.technicalStory || '-'} |`
+    );
+  }
+}
+
+function appendADRSectionDeprecated(lines: string[], adrs: ADRMetadata[]): void {
+  lines.push('| ID | Title | Status | Date |', '|----|-------|--------|------|');
+  for (const adr of adrs) {
+    lines.push(`| ${adr.id} | ${adr.title} | ${adr.status} | ${adr.date} |`);
+  }
+}
+
+function appendADRSectionRejected(lines: string[], adrs: ADRMetadata[]): void {
+  lines.push('| ID | Title | Date |', '|----|-------|------|');
+  for (const adr of adrs) {
+    lines.push(`| ${adr.id} | ${adr.title} | ${adr.date} |`);
+  }
+}
+
+function appendADRSection(
+  lines: string[],
+  heading: string,
+  adrs: ADRMetadata[],
+  mode: 'full' | 'deprecated' | 'rejected'
+): void {
+  if (adrs.length === 0) return;
+  lines.push(`## ${heading}`, '');
+  if (mode === 'full') appendADRSectionFull(lines, adrs);
+  else if (mode === 'deprecated') appendADRSectionDeprecated(lines, adrs);
+  else appendADRSectionRejected(lines, adrs);
+  lines.push('');
 }
 
 /**
@@ -452,75 +489,24 @@ export function generateADRIndex(): string {
     '',
   ];
 
-  // Accepted ADRs
-  if (accepted.length > 0) {
-    lines.push('## Accepted');
-    lines.push('');
-    lines.push('| ID | Title | Date | Sprint | Story |');
-    lines.push('|----|-------|------|--------|-------|');
-    for (const adr of accepted) {
-      lines.push(
-        `| ${adr.id} | ${adr.title} | ${adr.date} | ${adr.sprint} | ${adr.technicalStory || '-'} |`
-      );
-    }
-    lines.push('');
-  }
-
-  // Proposed ADRs
-  if (proposed.length > 0) {
-    lines.push('## Proposed');
-    lines.push('');
-    lines.push('| ID | Title | Date | Sprint | Story |');
-    lines.push('|----|-------|------|--------|-------|');
-    for (const adr of proposed) {
-      lines.push(
-        `| ${adr.id} | ${adr.title} | ${adr.date} | ${adr.sprint} | ${adr.technicalStory || '-'} |`
-      );
-    }
-    lines.push('');
-  }
-
-  // Deprecated/Superseded ADRs
-  if (deprecated.length > 0) {
-    lines.push('## Deprecated / Superseded');
-    lines.push('');
-    lines.push('| ID | Title | Status | Date |');
-    lines.push('|----|-------|--------|------|');
-    for (const adr of deprecated) {
-      lines.push(`| ${adr.id} | ${adr.title} | ${adr.status} | ${adr.date} |`);
-    }
-    lines.push('');
-  }
-
-  // Rejected ADRs
-  if (rejected.length > 0) {
-    lines.push('## Rejected');
-    lines.push('');
-    lines.push('| ID | Title | Date |');
-    lines.push('|----|-------|------|');
-    for (const adr of rejected) {
-      lines.push(`| ${adr.id} | ${adr.title} | ${adr.date} |`);
-    }
-    lines.push('');
-  }
+  appendADRSection(lines, 'Accepted', accepted, 'full');
+  appendADRSection(lines, 'Proposed', proposed, 'full');
+  appendADRSection(lines, 'Deprecated / Superseded', deprecated, 'deprecated');
+  appendADRSection(lines, 'Rejected', rejected, 'rejected');
 
   // Dependency Graph
-  lines.push('## Dependency Graph');
-  lines.push('');
-  lines.push('```mermaid');
-  lines.push(generateDependencyGraph());
-  lines.push('```');
-  lines.push('');
+  lines.push('## Dependency Graph', '', '```mermaid', generateDependencyGraph(), '```', '');
 
   // ADR Details
-  lines.push('## ADR Details');
-  lines.push('');
+  lines.push('## ADR Details', '');
   for (const adr of adrs) {
-    lines.push(`### ${adr.id}: ${adr.title}`);
-    lines.push('');
-    lines.push(`- **Status:** ${adr.status}`);
-    lines.push(`- **Date:** ${adr.date}`);
-    lines.push(`- **Sprint:** ${adr.sprint}`);
+    lines.push(
+      `### ${adr.id}: ${adr.title}`,
+      '',
+      `- **Status:** ${adr.status}`,
+      `- **Date:** ${adr.date}`,
+      `- **Sprint:** ${adr.sprint}`,
+    );
     if (adr.technicalStory) {
       lines.push(`- **Story:** ${adr.technicalStory}`);
     }
@@ -530,8 +516,7 @@ export function generateADRIndex(): string {
     if (adr.relatedADRs.length > 0) {
       lines.push(`- **Related:** ${adr.relatedADRs.join(', ')}`);
     }
-    lines.push(`- **File:** \`${adr.filePath}\``);
-    lines.push('');
+    lines.push(`- **File:** \`${adr.filePath}\``, '');
   }
 
   return lines.join('\n');

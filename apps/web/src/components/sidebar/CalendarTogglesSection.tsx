@@ -8,7 +8,7 @@ interface CalendarTogglesSectionProps {
   isExpanded: boolean;
 }
 
-export function CalendarTogglesSection({ isExpanded }: CalendarTogglesSectionProps) {
+export function CalendarTogglesSection({ isExpanded }: Readonly<CalendarTogglesSectionProps>) {
   const { calendars, toggle, addCalendar, removeCalendar } = useCalendarVisibility();
   const [addOpen, setAddOpen] = useState(false);
   const [newName, setNewName] = useState('');
@@ -17,7 +17,7 @@ export function CalendarTogglesSection({ isExpanded }: CalendarTogglesSectionPro
   const handleAdd = () => {
     const trimmed = newName.trim();
     if (!trimmed) return;
-    void addCalendar(trimmed, newColor);
+    addCalendar(trimmed, newColor);
     setNewName('');
     setNewColor(CALENDAR_COLOR_OPTIONS[0]);
     setAddOpen(false);
@@ -52,6 +52,7 @@ export function CalendarTogglesSection({ isExpanded }: CalendarTogglesSectionPro
                   }}
                   placeholder="Calendar name"
                   className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  // eslint-disable-next-line jsx-a11y/no-autofocus
                   autoFocus
                 />
                 <div>
@@ -137,7 +138,7 @@ export function CalendarTogglesSection({ isExpanded }: CalendarTogglesSectionPro
             {isExpanded && !cal.isDefault && (
               <button
                 onClick={() => {
-                  void removeCalendar(cal.id);
+                  removeCalendar(cal.id);
                 }}
                 className="p-0.5 rounded-sm text-muted-foreground/0 group-hover:text-muted-foreground hover:!text-destructive transition-colors"
                 aria-label={`Remove ${cal.label}`}

@@ -64,7 +64,7 @@ function createWrapper() {
     },
   });
 
-  return function Wrapper({ children }: { children: ReactNode }) {
+  return function Wrapper({ children }: Readonly<{ children: ReactNode }>) {
     return (
       <QueryClientProvider client={queryClient}>
         <UnsavedChangesProvider>{children}</UnsavedChangesProvider>

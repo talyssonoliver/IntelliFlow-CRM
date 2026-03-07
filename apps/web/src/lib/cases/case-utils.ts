@@ -89,14 +89,16 @@ export function getTaskStatusConfig(status: string): { label: string; color: str
   }
 }
 
-export function formatDeadline(deadline: Date | string | null): string {
+type DeadlineValue = Date | string | null;
+
+export function formatDeadline(deadline: DeadlineValue): string {
   if (!deadline) return 'No deadline';
   const d = new Date(deadline);
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 export function formatDeadlineShort(
-  deadline: Date | string | null
+  deadline: DeadlineValue
 ): { month: string; day: string } | null {
   if (!deadline) return null;
   const d = new Date(deadline);

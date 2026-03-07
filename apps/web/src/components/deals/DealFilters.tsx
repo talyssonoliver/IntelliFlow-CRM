@@ -13,7 +13,7 @@ import type { DealFiltersValue } from './types';
 
 interface DealFiltersProps {
   readonly value: DealFiltersValue;
-  readonly onChange: (filters: DealFiltersValue) => void;
+  readonly onChange: (filters: Readonly<DealFiltersValue>) => void;
   readonly viewMode?: 'kanban' | 'list';
   readonly onViewModeChange?: (mode: 'kanban' | 'list') => void;
 }
@@ -34,7 +34,7 @@ export const DealFilters = React.memo(function DealFilters({
   onChange,
   viewMode = 'kanban',
   onViewModeChange,
-}: DealFiltersProps) {
+}: Readonly<DealFiltersProps>) {
   const handleOwnerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const ownerId = e.target.value || undefined;
     onChange({ ...value, ownerId });
@@ -106,7 +106,7 @@ export const DealFilters = React.memo(function DealFilters({
         className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-sm font-medium py-2.5 px-4 hover:bg-slate-100 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
         aria-label="More filters"
       >
-        <span className="material-symbols-outlined text-[18px]">tune</span>
+        <span className="material-symbols-outlined text-[18px]">tune</span>{' '}
         More Filters
       </button>
 

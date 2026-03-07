@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 
-const ALLOWED_HOSTS = ['files.stripe.com', 'invoice.stripe.com', 'pay.stripe.com'];
+const ALLOWED_HOSTS = new Set(['files.stripe.com', 'invoice.stripe.com', 'pay.stripe.com']);
 
 /**
  * Proxies invoice/receipt PDF downloads from Stripe through our own origin.
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     return new Response('Only HTTPS URLs are allowed.', { status: 400 });
   }
 
-  if (!ALLOWED_HOSTS.includes(parsed.hostname)) {
+  if (!ALLOWED_HOSTS.has(parsed.hostname)) {
     return new Response('Host is not allowed.', { status: 403 });
   }
 
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
   }
 
   const body = await upstream.arrayBuffer();
-  const sanitizedFilename = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const sanitizedFilename = filename.replaceAll(/[^a-zA-Z0-9._-]/g, '_');
 
   return new Response(body, {
     status: 200,

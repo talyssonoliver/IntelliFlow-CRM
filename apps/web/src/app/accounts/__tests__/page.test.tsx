@@ -91,17 +91,17 @@ vi.mock('@/hooks/use-dynamic-filters', () => ({
 
 // Mock shared components
 vi.mock('@/components/shared', () => ({
-  PageHeader: ({ title }: { title: string }) => <div data-testid="page-header">{title}</div>,
+  PageHeader: ({ title }: Readonly<{ title: string }>) => <div data-testid="page-header">{title}</div>,
   SearchFilterBar: () => <div data-testid="search-filter-bar" />,
 }));
 
 // Mock @intelliflow/ui
 vi.mock('@intelliflow/ui', () => ({
-  DataTable: ({ data }: { data: unknown[] }) => (
+  DataTable: ({ data }: Readonly<{ data: unknown[] }>) => (
     <div data-testid="data-table">rows: {data.length}</div>
   ),
   Pagination: () => <div data-testid="pagination" />,
-  Skeleton: ({ className }: { className: string }) => (
+  Skeleton: ({ className }: Readonly<{ className: string }>) => (
     <div data-testid="skeleton" className={className} />
   ),
 }));

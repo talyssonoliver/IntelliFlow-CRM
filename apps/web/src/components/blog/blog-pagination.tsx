@@ -12,7 +12,7 @@ export function BlogPagination({
   currentPage,
   totalPages,
   basePath = '/blog',
-}: BlogPaginationProps) {
+}: Readonly<BlogPaginationProps>) {
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   const canGoPrev = currentPage > 1;

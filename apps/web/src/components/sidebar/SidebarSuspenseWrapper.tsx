@@ -8,7 +8,7 @@ function SidebarFallback() {
   return <div className="w-[var(--sidebar-width)] shrink-0" />;
 }
 
-export function SidebarWithSuspense({ config }: { config: SidebarConfig }) {
+export function SidebarWithSuspense({ config }: Readonly<{ config: SidebarConfig }>) {
   return (
     <>
       <Suspense fallback={<SidebarFallback />}>

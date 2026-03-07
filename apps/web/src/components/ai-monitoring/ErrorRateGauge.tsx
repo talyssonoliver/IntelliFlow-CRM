@@ -26,7 +26,7 @@ function getScoreTextColor(score: number): string {
   return 'text-red-600 dark:text-red-400';
 }
 
-export function ErrorRateGauge({ driftResult, isLoading }: ErrorRateGaugeProps) {
+export function ErrorRateGauge({ driftResult, isLoading }: Readonly<ErrorRateGaugeProps>) {
   const score = driftResult?.driftScore ?? 0;
   const clampedScore = Math.min(1, Math.max(0, score));
 

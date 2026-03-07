@@ -35,7 +35,7 @@ function formatOverdueSLA(minutes: number): string {
   return formatSLATime(minutes);
 }
 
-function getAriaLive(status: SLAStatus): 'assertive' | 'polite' | 'off' {
+function getAriaLive(status: Readonly<SLAStatus>): 'assertive' | 'polite' | 'off' {
   if (status === 'BREACHED') return 'assertive';
   if (status === 'AT_RISK') return 'polite';
   return 'off';
@@ -57,7 +57,7 @@ function SLATrack({
   slaStatus,
   timeRemaining,
   targetDue,
-}: SLATrackProps) {
+}: Readonly<SLATrackProps>) {
   const config = getSLAConfig(slaStatus);
   const ariaLive = getAriaLive(slaStatus);
   const timeText = formatOverdueSLA(timeRemaining);
@@ -80,7 +80,7 @@ function SLATrack({
         <span className="text-xs font-medium text-muted-foreground">{label}</span>
         <span
           className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${config.bg} ${config.text}`}
-          aria-live={ariaLive !== 'off' ? ariaLive : undefined}
+          aria-live={ariaLive === 'off' ? undefined : ariaLive}
         >
           <span className="material-symbols-outlined text-sm" aria-hidden="true">
             {config.icon}
@@ -99,17 +99,13 @@ function SLATrack({
           className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden"
         >
           <div
-            className={`h-full rounded-full transition-all ${
-              slaStatus === 'BREACHED'
-                ? 'bg-red-500'
-                : slaStatus === 'AT_RISK'
-                  ? 'bg-yellow-500'
-                  : slaStatus === 'MET'
-                    ? 'bg-green-500'
-                    : slaStatus === 'PAUSED'
-                      ? 'bg-slate-400'
-                      : 'bg-emerald-500'
-            }`}
+            className={`h-full rounded-full transition-all ${(() => {
+              if (slaStatus === 'BREACHED') return 'bg-red-500';
+              if (slaStatus === 'AT_RISK') return 'bg-yellow-500';
+              if (slaStatus === 'MET') return 'bg-green-500';
+              if (slaStatus === 'PAUSED') return 'bg-slate-400';
+              return 'bg-emerald-500';
+            })()}`}
             style={{ width: `${progressPct}%` }}
           />
         </div>
@@ -136,7 +132,7 @@ export function SLADisplay({
   ticketStatus: _ticketStatus,
   policyName,
   mode = 'card',
-}: SLADisplayProps) {
+}: Readonly<SLADisplayProps>) {
   // Derive which track is primary: if firstResponseAt is null, response track is primary
   const isResponsePrimary = !firstResponseAt;
 

@@ -311,7 +311,7 @@ function PinnedSection({
 
   const sortableIds = orderedItems.map((item) => `${item.entityType}-${item.entityId}`);
 
-  function handleDragEnd(event: DragEndEvent) {
+  function handleDragEnd(event: Readonly<DragEndEvent>) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -425,11 +425,11 @@ export function AuthenticatedHomePage() {
     [unpinMutation]
   );
 
-  const handleQuickActionsSave = useCallback((ids: Set<string>) => {
+  const handleQuickActionsSave = useCallback((ids: Readonly<Set<string>>) => {
     setEnabledActionIds(new Set(ids));
   }, []);
 
-  const handlePinnedNavSave = useCallback((ids: Set<string>) => {
+  const handlePinnedNavSave = useCallback((ids: Readonly<Set<string>>) => {
     setPinnedGroupIds(new Set(ids));
   }, []);
 
@@ -518,7 +518,7 @@ export function AuthenticatedHomePage() {
                   </h2>
                 </div>
                 <Link
-                  href="/insights"
+                  href="/agent-approvals/insights"
                   className="text-xs font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 hover:underline"
                 >
                   View All

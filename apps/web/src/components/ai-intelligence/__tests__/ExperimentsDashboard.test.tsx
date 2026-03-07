@@ -49,7 +49,7 @@ vi.mock('next/navigation', () => ({
 
 // Mock lazy-loaded ExperimentResultsPanel
 vi.mock('../ExperimentResultsPanel', () => ({
-  default: ({ experimentId }: { experimentId: string }) => (
+  default: ({ experimentId }: Readonly<{ experimentId: string }>) => (
     <div data-testid="results-panel">
       <span>Results for {experimentId}</span>
       <span>Control mean: 72.50</span>

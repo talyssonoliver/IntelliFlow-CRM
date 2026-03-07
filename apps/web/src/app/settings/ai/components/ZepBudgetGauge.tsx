@@ -26,7 +26,7 @@ interface ZepBudgetGaugeProps {
   className?: string;
 }
 
-export function ZepBudgetGauge({ className }: ZepBudgetGaugeProps) {
+export function ZepBudgetGauge({ className }: Readonly<ZepBudgetGaugeProps>) {
   const { budget, isLoading, percentUsed, budgetStatus } = useZepBudget();
 
   if (isLoading) {

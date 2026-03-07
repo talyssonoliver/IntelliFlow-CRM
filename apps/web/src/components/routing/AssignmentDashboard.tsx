@@ -26,7 +26,7 @@ interface RoutingRuleItem {
   isActive: boolean;
 }
 /** Format a date as relative time (e.g., "5 minutes ago") */
-function formatTimeAgo(date: Date): string {
+function formatTimeAgo(date: Readonly<Date>): string {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
   if (seconds < 60) return 'just now';
   const minutes = Math.floor(seconds / 60);
@@ -44,7 +44,7 @@ interface StatsCardProps {
   loading?: boolean;
 }
 
-function StatsCard({ icon, label, value, loading }: StatsCardProps) {
+function StatsCard({ icon, label, value, loading }: Readonly<StatsCardProps>) {
   if (loading) {
     return (
       <Card>
@@ -105,18 +105,21 @@ export function AssignmentDashboard() {
           <CardTitle className="text-lg">Recent Assignments</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          ) : !assignments || assignments.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <span className="material-symbols-outlined text-[36px] mb-2 block">inbox</span>
-              <p>No assignments yet</p>
-            </div>
-          ) : (
+          {(() => {
+            if (loading) return (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
+            );
+            if (!assignments || assignments.length === 0) return (
+              <div className="text-center py-8 text-muted-foreground">
+                <span className="material-symbols-outlined text-[36px] mb-2 block">inbox</span>
+                <p>No assignments yet</p>
+              </div>
+            );
+            return (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -149,7 +152,8 @@ export function AssignmentDashboard() {
                 </tbody>
               </table>
             </div>
-          )}
+            );
+          })()}
         </CardContent>
       </Card>
     </div>

@@ -262,7 +262,7 @@ function TicketDetailSkeleton() {
             <Card className="p-5 space-y-3">
               <Skeleton className="h-5 w-32" />
               {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={`left-meta-${i}`} className="h-4 w-full" />
+                <Skeleton key={`left-meta-${i}`} className="h-4 w-full" /> // NOSONAR typescript:S6479
               ))}
             </Card>
             <Card className="p-5 space-y-4">
@@ -284,7 +284,7 @@ function TicketDetailSkeleton() {
               <div className="border-b border-slate-200 dark:border-slate-800 px-4 py-4">
                 <div className="flex gap-3">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton key={`tab-${i}`} className="h-6 w-20" />
+                    <Skeleton key={`tab-${i}`} className="h-6 w-20" /> // NOSONAR typescript:S6479
                   ))}
                 </div>
               </div>

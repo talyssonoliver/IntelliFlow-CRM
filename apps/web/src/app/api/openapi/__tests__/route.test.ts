@@ -17,7 +17,7 @@ vi.mock('path', () => ({
 }));
 
 import { GET } from '../route';
-import fs from 'fs';
+import fs from 'node:fs';
 
 const mockSpec = {
   openapi: '3.0.3',

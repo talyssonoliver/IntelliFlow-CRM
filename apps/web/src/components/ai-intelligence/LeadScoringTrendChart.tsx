@@ -22,7 +22,7 @@ interface LeadScoringTrendChartProps {
   trends: ScoreTrendPoint[];
 }
 
-function LeadScoringTrendChart({ trends }: LeadScoringTrendChartProps) {
+function LeadScoringTrendChart({ trends }: Readonly<LeadScoringTrendChartProps>) {
   if (trends.length === 0) {
     return (
       <p className="text-sm text-muted-foreground text-center py-8" data-testid="no-trends">

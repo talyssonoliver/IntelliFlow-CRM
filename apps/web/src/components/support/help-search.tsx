@@ -15,7 +15,7 @@ export function HelpSearch({
   onChange,
   placeholder = 'Search help topics...',
   resultCount,
-}: HelpSearchProps) {
+}: Readonly<HelpSearchProps>) {
   const [localValue, setLocalValue] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -58,11 +58,11 @@ export function HelpSearch({
         aria-label="Search help topics"
         className="w-full"
       />
-      {resultCount !== undefined && (
-        <div aria-live="polite" className="mt-2 text-sm text-muted-foreground">
-          {resultCount} {resultCount === 1 ? 'result' : 'results'} found
-        </div>
-      )}
+      <div aria-live="polite" aria-atomic="true" className="mt-2 text-sm text-muted-foreground min-h-[1.25rem]">
+        {resultCount !== undefined
+          ? `${resultCount} ${resultCount === 1 ? 'result' : 'results'} found`
+          : ''}
+      </div>
     </div>
   );
 }

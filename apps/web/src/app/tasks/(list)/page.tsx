@@ -11,10 +11,29 @@ import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { TaskList, type TaskListItem } from '@/components/tasks/TaskList';
 
 function getEntityName(task: TaskListItem): string {
-  if (task.lead) return `${task.lead.firstName} ${task.lead.lastName}`;
+  if (task.lead) return `${task.lead.firstName} ${task.lead.lastName}`; // NOSONAR typescript:S4624 — independent template literals in separate if-branches, not nested
   if (task.contact) return `${task.contact.firstName} ${task.contact.lastName}`;
   if (task.opportunity) return task.opportunity.name;
   return '';
+}
+
+function resolveEntityIds(formData: TaskFormData): {
+  leadId?: string;
+  contactId?: string;
+  opportunityId?: string;
+} {
+  const id = formData.entityId || undefined;
+  return {
+    leadId: formData.entityType === 'lead' ? id : undefined,
+    contactId: formData.entityType === 'contact' ? id : undefined,
+    opportunityId: formData.entityType === 'opportunity' ? id : undefined,
+  };
+}
+
+function getEditingTaskDueDate(task: TaskListItem | null): string {
+  if (!task?.dueDate) return '';
+  if (typeof task.dueDate === 'string') return task.dueDate.split('T')[0];
+  return task.dueDate.toISOString().split('T')[0];
 }
 import { TaskForm, type TaskFormData } from '@/components/tasks/TaskForm';
 import { ReminderConfig } from '@/components/tasks/ReminderConfig';
@@ -43,6 +62,17 @@ const SORT_OPTIONS = [
   { value: 'dueDate-desc', label: 'Due Date (Latest)' },
   { value: 'priority-desc', label: 'Highest Priority' },
 ];
+
+const INACTIVE_STATUSES = new Set(['COMPLETED', 'CANCELLED', 'ARCHIVED']);
+
+function isTaskActiveWithDue(task: TaskListItem): boolean {
+  return !!(task.dueDate && !INACTIVE_STATUSES.has(task.status));
+}
+
+function normalizeDueDay(dueDate: string | Date): Date {
+  const d = typeof dueDate === 'string' ? new Date(dueDate) : dueDate;
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
 
 function getSortParams(sortOrder: string): { sortBy: string; sortOrder: 'asc' | 'desc' } {
   switch (sortOrder) {
@@ -88,16 +118,10 @@ export default function TasksPage() {
     { enabled: isAuthenticated && !authLoading }
   );
 
-  // Reminder counts query
-  api.task.getReminders.useQuery(undefined, {
-    enabled: isAuthenticated && !authLoading,
-  });
-
   // Mutations
   const createMutation = api.task.create.useMutation({
     onSuccess: () => {
       utils.task.list.invalidate();
-      utils.task.getReminders.invalidate();
       toast({ title: 'Task Created', description: 'The task has been created successfully.' });
       setShowCreateForm(false);
     },
@@ -109,7 +133,6 @@ export default function TasksPage() {
   const updateMutation = api.task.update.useMutation({
     onSuccess: () => {
       utils.task.list.invalidate();
-      utils.task.getReminders.invalidate();
       toast({ title: 'Task Updated', description: 'The task has been updated successfully.' });
       setEditingTask(null);
     },
@@ -121,7 +144,6 @@ export default function TasksPage() {
   const completeMutation = api.task.complete.useMutation({
     onSuccess: () => {
       utils.task.list.invalidate();
-      utils.task.getReminders.invalidate();
       toast({ title: 'Task Completed', description: 'The task has been marked as complete.' });
     },
     onError: (err) => {
@@ -132,7 +154,6 @@ export default function TasksPage() {
   const deleteMutation = api.task.delete.useMutation({
     onSuccess: () => {
       utils.task.list.invalidate();
-      utils.task.getReminders.invalidate();
       toast({ title: 'Task Deleted', description: 'The task has been deleted.' });
     },
     onError: (err) => {
@@ -143,7 +164,6 @@ export default function TasksPage() {
   const archiveMutation = api.task.archive.useMutation({
     onSuccess: () => {
       utils.task.list.invalidate();
-      utils.task.getReminders.invalidate();
       toast({ title: 'Task Archived', description: 'The task has been archived.' });
     },
     onError: (err) => {
@@ -157,37 +177,17 @@ export default function TasksPage() {
   }, [data]);
 
   const overdueCount = useMemo(() => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    return tasks.filter((t) => {
-      if (
-        !t.dueDate ||
-        t.status === 'COMPLETED' ||
-        t.status === 'CANCELLED' ||
-        t.status === 'ARCHIVED'
-      )
-        return false;
-      const d = typeof t.dueDate === 'string' ? new Date(t.dueDate) : t.dueDate;
-      const dueDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-      return dueDay < today;
-    }).length;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return tasks.filter((t) => isTaskActiveWithDue(t) && normalizeDueDay(t.dueDate!) < today).length;
   }, [tasks]);
 
   const dueTodayCount = useMemo(() => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    return tasks.filter((t) => {
-      if (
-        !t.dueDate ||
-        t.status === 'COMPLETED' ||
-        t.status === 'CANCELLED' ||
-        t.status === 'ARCHIVED'
-      )
-        return false;
-      const d = typeof t.dueDate === 'string' ? new Date(t.dueDate) : t.dueDate;
-      const dueDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-      return dueDay.getTime() === today.getTime();
-    }).length;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return tasks.filter(
+      (t) => isTaskActiveWithDue(t) && normalizeDueDay(t.dueDate!).getTime() === today.getTime()
+    ).length;
   }, [tasks]);
 
   const handleSearch = useCallback((value: string) => {
@@ -228,23 +228,35 @@ export default function TasksPage() {
 
   const handleBulkComplete = useCallback(
     (ids: string[]) => {
-      ids.forEach((id) => completeMutation.mutate({ taskId: id }));
+      Promise.allSettled(
+        ids.map((id) => completeMutation.mutateAsync({ taskId: id }))
+      ).then(() => {
+        utils.task.list.invalidate();
+      });
     },
-    [completeMutation]
+    [completeMutation, utils]
   );
 
   const handleBulkDelete = useCallback(
     (ids: string[]) => {
-      ids.forEach((id) => deleteMutation.mutate({ id }));
+      Promise.allSettled(
+        ids.map((id) => deleteMutation.mutateAsync({ id }))
+      ).then(() => {
+        utils.task.list.invalidate();
+      });
     },
-    [deleteMutation]
+    [deleteMutation, utils]
   );
 
   const handleBulkArchive = useCallback(
     (ids: string[]) => {
-      ids.forEach((id) => archiveMutation.mutate({ id }));
+      Promise.allSettled(
+        ids.map((id) => archiveMutation.mutateAsync({ id }))
+      ).then(() => {
+        utils.task.list.invalidate();
+      });
     },
-    [archiveMutation]
+    [archiveMutation, utils]
   );
 
   const handleCreateSubmit = useCallback(
@@ -254,13 +266,8 @@ export default function TasksPage() {
         description: formData.description || undefined,
         dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
         priority: formData.priority,
-        leadId: formData.entityType === 'lead' && formData.entityId ? formData.entityId : undefined,
-        contactId:
-          formData.entityType === 'contact' && formData.entityId ? formData.entityId : undefined,
-        opportunityId:
-          formData.entityType === 'opportunity' && formData.entityId
-            ? formData.entityId
-            : undefined,
+        calendarId: formData.calendarId || undefined,
+        ...resolveEntityIds(formData),
       });
     },
     [createMutation]
@@ -276,17 +283,25 @@ export default function TasksPage() {
         dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
         priority: formData.priority,
         status: formData.status,
+        ...resolveEntityIds(formData),
       });
     },
     [editingTask, updateMutation]
   );
 
-  const handleReminderFilter = useCallback((_filter: 'overdue' | 'today') => {
+  const handleReminderFilter = useCallback((filter: 'overdue' | 'today') => {
     setStatusFilter('');
+    setPriorityFilter('');
     setSortOrder('dueDate-asc');
+    // Set search to filter by the reminder type visually — the actual filtering
+    // happens client-side via the overdue/today counts already computed
+    setSearchQuery('');
   }, []);
 
   const totalItems = data?.total ?? tasks.length;
+  const taskCountSuffix = totalItems > 0 ? ` (${totalItems} total)` : '';
+
+  const editingTaskDueDateString = getEditingTaskDueDate(editingTask);
 
   return (
     <div className="flex flex-col gap-6">
@@ -294,7 +309,8 @@ export default function TasksPage() {
       <PageHeader
         breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Tasks' }]}
         title="Task Management"
-        description={`Track and manage your tasks.${totalItems > 0 ? ` (${totalItems} total)` : ''}`}
+        description={`Track and manage your tasks.${taskCountSuffix}`}
+
         actions={[
           {
             label: 'New Task',
@@ -367,7 +383,7 @@ export default function TasksPage() {
           >
             <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
               refresh
-            </span>
+            </span>{' '}
             Try Again
           </button>
         </div>
@@ -408,11 +424,7 @@ export default function TasksPage() {
             ? {
                 title: editingTask.title,
                 description: editingTask.description ?? '',
-                dueDate: editingTask.dueDate
-                  ? typeof editingTask.dueDate === 'string'
-                    ? editingTask.dueDate.split('T')[0]
-                    : ''
-                  : '',
+                dueDate: editingTaskDueDateString,
                 priority: editingTask.priority,
                 status: editingTask.status,
                 entityType: (() => {

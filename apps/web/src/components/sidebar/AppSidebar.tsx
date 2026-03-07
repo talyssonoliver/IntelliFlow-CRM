@@ -42,7 +42,7 @@ export function AppSidebar({
   className,
   announcement,
   onDismissAnnouncement,
-}: AppSidebarProps) {
+}: Readonly<AppSidebarProps>) {
   const { isExpanded, isPinned, togglePinned, setHovered } = useSidebar();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -68,7 +68,7 @@ export function AppSidebar({
 
   // Determine active item based on URL
   const isItemActive = React.useCallback(
-    (item: SidebarItem): boolean => {
+    (item: Readonly<SidebarItem>): boolean => {
       const itemUrl = new URL(item.href, 'http://localhost');
       const itemPath = itemUrl.pathname;
       const itemParams = itemUrl.searchParams;
@@ -97,7 +97,7 @@ export function AppSidebar({
   );
 
   return (
-    <aside
+    <nav
       className={cn(
         'fixed left-0 top-16 bottom-0 z-30 flex flex-col bg-card border-r border-border',
         'transition-all duration-300 ease-in-out',
@@ -107,7 +107,6 @@ export function AppSidebar({
       )}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      role="navigation"
       aria-label={`${config.moduleTitle} navigation`}
     >
       {/* Module Header */}
@@ -208,7 +207,7 @@ export function AppSidebar({
           </Link>
         </div>
       )}
-    </aside>
+    </nav>
   );
 }
 
@@ -220,7 +219,7 @@ interface ModuleColorTheme {
 interface SidebarSectionComponentProps {
   section: SidebarSection;
   isExpanded: boolean;
-  isItemActive: (item: SidebarItem) => boolean;
+  isItemActive: (item: Readonly<SidebarItem>) => boolean;
   moduleColor: ModuleColorTheme;
 }
 
@@ -229,7 +228,7 @@ function SidebarSectionComponent({
   isExpanded,
   isItemActive,
   moduleColor,
-}: SidebarSectionComponentProps) {
+}: Readonly<SidebarSectionComponentProps>) {
   return (
     <div>
       {isExpanded && (
@@ -266,14 +265,14 @@ function SidebarItemComponent({
   isExpanded,
   isActive,
   moduleColor,
-}: SidebarItemComponentProps) {
+}: Readonly<SidebarItemComponentProps>) {
   const isSegment = Boolean(item.color);
 
   return (
     <Link
       href={item.href}
       aria-current={isActive ? 'page' : undefined}
-      title={!isExpanded ? item.label : undefined}
+      title={isExpanded ? undefined : item.label}
       className={cn(
         'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors group relative',
         isActive
@@ -330,7 +329,7 @@ function SidebarItemComponent({
  * On mobile: opens mobile drawer
  * On desktop: toggles pinned state
  */
-export function SidebarTrigger({ className }: { className?: string }) {
+export function SidebarTrigger({ className }: Readonly<{ className?: string }>) {
   const { togglePinned, toggleMobile, isPinned, isMobileOpen } = useSidebar();
 
   const handleClick = () => {
@@ -367,10 +366,10 @@ export function SidebarTrigger({ className }: { className?: string }) {
 export function SidebarInset({
   children,
   className,
-}: {
+}: Readonly<{
   children: React.ReactNode;
   className?: string;
-}) {
+}>) {
   const { isExpanded, isPinned } = useSidebar();
 
   return (
@@ -398,7 +397,7 @@ interface AnnouncementCardProps {
   onDismiss?: (id: string) => void;
 }
 
-function AnnouncementCard({ announcement, onDismiss }: AnnouncementCardProps) {
+function AnnouncementCard({ announcement, onDismiss }: Readonly<AnnouncementCardProps>) {
   return (
     <div className="mx-2 mb-2 p-3 rounded-lg bg-muted/50 border border-border relative group">
       {/* Dismiss button */}
@@ -461,13 +460,13 @@ interface MobileSidebarProps {
   onDismissAnnouncement?: (id: string) => void;
 }
 
-export function MobileSidebar({ config, announcement, onDismissAnnouncement }: MobileSidebarProps) {
+export function MobileSidebar({ config, announcement, onDismissAnnouncement }: Readonly<MobileSidebarProps>) {
   const { isMobileOpen, closeMobile } = useSidebar();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user } = useAuth();
   const [mounted, setMounted] = React.useState(false);
-  const drawerRef = React.useRef<HTMLElement>(null);
+  const drawerRef = React.useRef<HTMLDialogElement>(null);
   const triggerRef = React.useRef<Element | null>(null);
 
   // Track pathname to close sidebar on navigation
@@ -504,7 +503,7 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: M
 
   // Determine active item based on URL
   const isItemActive = React.useCallback(
-    (item: SidebarItem): boolean => {
+    (item: Readonly<SidebarItem>): boolean => {
       const itemUrl = new URL(item.href, 'http://localhost');
       const itemPath = itemUrl.pathname;
       const itemParams = itemUrl.searchParams;
@@ -536,7 +535,7 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: M
 
   // Handle escape key
   React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = (e: Readonly<KeyboardEvent>) => {
       if (e.key === 'Escape' && isMobileOpen) {
         closeMobile();
       }
@@ -563,14 +562,14 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: M
       firstFocusable?.focus();
     });
 
-    const handleTab = (e: KeyboardEvent) => {
+    const handleTab = (e: Readonly<KeyboardEvent>) => {
       if (e.key !== 'Tab') return;
 
       const focusables = Array.from(drawer.querySelectorAll<HTMLElement>(focusableSelector));
       if (focusables.length === 0) return;
 
       const first = focusables[0];
-      const last = focusables[focusables.length - 1];
+      const last = focusables.at(-1);
 
       if (e.shiftKey && document.activeElement === first) {
         e.preventDefault();
@@ -596,27 +595,29 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: M
   return createPortal(
     <>
       {/* Backdrop */}
-      <div
+      <button
+        type="button"
         className={cn(
-          'fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300 lg:hidden',
+          'fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300 lg:hidden cursor-default',
           isMobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         )}
         onClick={closeMobile}
-        aria-hidden="true"
+        aria-label="Close navigation menu"
+        tabIndex={isMobileOpen ? 0 : -1}
       />
 
       {/* Drawer */}
-      <aside
+      <dialog
         ref={drawerRef}
+        open={isMobileOpen}
+        aria-modal="true"
+        aria-label={`${config.moduleTitle} navigation menu`}
         className={cn(
           'fixed top-0 left-0 bottom-0 z-50 w-72 bg-card border-r border-border',
           'transform transition-transform duration-300 ease-out lg:hidden',
-          'flex flex-col shadow-2xl',
+          'flex flex-col shadow-2xl m-0 p-0 max-h-none h-full',
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         )}
-        role="dialog"
-        aria-modal="true"
-        aria-label={`${config.moduleTitle} navigation menu`}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-border">
@@ -695,7 +696,7 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: M
             </Link>
           </div>
         )}
-      </aside>
+      </dialog>
     </>,
     document.body
   );
@@ -708,7 +709,7 @@ interface MobileSidebarItemProps {
   onClick: () => void;
 }
 
-function MobileSidebarItem({ item, isActive, moduleColor, onClick }: MobileSidebarItemProps) {
+function MobileSidebarItem({ item, isActive, moduleColor, onClick }: Readonly<MobileSidebarItemProps>) {
   const isSegment = Boolean(item.color);
 
   return (

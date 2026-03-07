@@ -12,7 +12,7 @@ import { SsoEntryForm } from '../SsoEntryForm';
 
 // Mock next/link
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: { children: React.ReactNode; href: string }) => (
+  default: ({ children, href, ...props }: Readonly<{ children: React.ReactNode; href: string }>) => (
     <a href={href} {...props}>
       {children}
     </a>
@@ -53,7 +53,7 @@ describe('SsoEntryForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Default: known domain returns found
-    mockResolveSsoFetch.mockImplementation(async ({ email }: { email: string }) => {
+    mockResolveSsoFetch.mockImplementation(async ({ email }: Readonly<{ email: string }>) => {
       if (email.includes('example-corp.com')) {
         return {
           found: true as const,

@@ -132,11 +132,11 @@ function formatDate(isoDate: string): string {
   return DISPLAY_DATES[isoDate] ?? isoDate;
 }
 
-function hasBreakingChanges(entry: ChangelogEntry): boolean {
+function hasBreakingChanges(entry: Readonly<ChangelogEntry>): boolean {
   return entry.changes.some((c) => c.type === 'breaking');
 }
 
-export function ChangelogDisplay({ entries = CHANGELOG_ENTRIES }: { entries?: ChangelogEntry[] }) {
+export function ChangelogDisplay({ entries = CHANGELOG_ENTRIES }: Readonly<{ entries?: ChangelogEntry[] }>) {
   if (entries.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
@@ -163,7 +163,7 @@ export function ChangelogDisplay({ entries = CHANGELOG_ENTRIES }: { entries?: Ch
         >
           <span className="material-symbols-outlined text-base" aria-hidden="true">
             rss_feed
-          </span>
+          </span>{' '}
           RSS Feed
         </a>
       </div>
@@ -201,7 +201,7 @@ export function ChangelogDisplay({ entries = CHANGELOG_ENTRIES }: { entries?: Ch
             <p className="text-sm text-muted-foreground mt-1 mb-3">{entry.title}</p>
             <ul className="flex flex-col gap-2">
               {entry.changes.map((change, ci) => (
-                <li key={ci} className="flex items-start gap-2">
+                <li key={ci} className="flex items-start gap-2"> {/* NOSONAR typescript:S6479 */}
                   <Badge variant={BADGE_VARIANT_MAP[change.type]} className="shrink-0 mt-0.5">
                     {change.type}
                   </Badge>

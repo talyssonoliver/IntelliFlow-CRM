@@ -20,7 +20,7 @@ vi.mock('fs', () => ({
   readFileSync: vi.fn(),
 }));
 
-import * as fs from 'fs';
+import * as fs from 'node:fs';
 
 // Mock risk data
 const mockRiskData = {

@@ -9,11 +9,11 @@ vi.mock('next/link', () => ({
     children,
     href,
     className,
-  }: {
+  }: Readonly<{
     children: React.ReactNode;
     href: string;
     className?: string;
-  }) => (
+  }>) => (
     <a href={href} className={className}>
       {children}
     </a>

@@ -119,7 +119,7 @@ function loadEnabledActions(): Set<string> {
   return new Set(DEFAULT_ENABLED);
 }
 
-function saveEnabledActions(ids: Set<string>): void {
+function saveEnabledActions(ids: Readonly<Set<string>>): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...ids]));
   } catch {
@@ -138,7 +138,7 @@ export type { QuickActionDef };
 // Toggle Switch component (matches mockup exactly)
 // =============================================================================
 
-function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ checked, onChange }: Readonly<{ checked: boolean; onChange: (v: boolean) => void }>) {
   return (
     <label
       aria-label={`Toggle ${checked ? 'off' : 'on'}`}
@@ -162,10 +162,10 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
 interface EditQuickActionsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (enabledIds: Set<string>) => void;
+  onSave: (enabledIds: Readonly<Set<string>>) => void;
 }
 
-export function EditQuickActionsSheet({ open, onOpenChange, onSave }: EditQuickActionsSheetProps) {
+export function EditQuickActionsSheet({ open, onOpenChange, onSave }: Readonly<EditQuickActionsSheetProps>) {
   const [draft, setDraft] = useState<Set<string>>(() => loadEnabledActions());
   const draftRef = useRef(draft);
   draftRef.current = draft;
@@ -430,7 +430,7 @@ function loadPinnedGroups(): Set<string> {
   return new Set(DEFAULT_PINNED_GROUPS);
 }
 
-function savePinnedGroups(ids: Set<string>): void {
+function savePinnedGroups(ids: Readonly<Set<string>>): void {
   try {
     localStorage.setItem(PINNED_GROUPS_STORAGE_KEY, JSON.stringify([...ids]));
   } catch {
@@ -448,7 +448,7 @@ export type { PinnedNavGroup };
 interface EditPinnedNavigationSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (enabledGroupIds: Set<string>) => void;
+  onSave: (enabledGroupIds: Readonly<Set<string>>) => void;
   pinnedItems?: PinnedItemDisplay[];
   onUnpin: (entityType: string, entityId: string) => void;
 }
@@ -463,7 +463,7 @@ export function EditPinnedNavigationSheet({
   onSave,
   pinnedItems,
   onUnpin,
-}: EditPinnedNavigationSheetProps) {
+}: Readonly<EditPinnedNavigationSheetProps>) {
   const [draft, setDraft] = useState<Set<string>>(() => loadPinnedGroups());
   const draftRef = useRef(draft);
   draftRef.current = draft;

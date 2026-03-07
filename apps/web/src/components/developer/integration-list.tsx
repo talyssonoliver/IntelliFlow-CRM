@@ -1,8 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Card } from '@intelliflow/ui';
-import { Badge } from '@intelliflow/ui';
+import { Card, Badge } from '@intelliflow/ui';
 
 interface IntegrationCategory {
   id: string;
@@ -181,7 +180,7 @@ const integrationCategories: IntegrationCategory[] = [
   },
 ];
 
-function StatusBadge({ status }: { status: IntegrationItem['status'] }) {
+function StatusBadge({ status }: Readonly<{ status: IntegrationItem['status'] }>) {
   switch (status) {
     case 'beta':
       return <Badge variant="secondary">Beta</Badge>;

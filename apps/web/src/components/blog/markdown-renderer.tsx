@@ -23,7 +23,7 @@ interface MarkdownRendererProps {
  * - Bold/Italic text
  * - Horizontal rules
  */
-export function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
+export function MarkdownRenderer({ content, className }: Readonly<MarkdownRendererProps>) {
   const renderedContent = React.useMemo(() => {
     return parseMarkdown(content);
   }, [content]);
@@ -71,38 +71,38 @@ function parseMarkdown(markdown: string): string {
   let html = markdown;
 
   // Escape HTML to prevent XSS
-  html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  html = html.replaceAll(/&/g, '&amp;').replaceAll(/</g, '&lt;').replaceAll(/>/g, '&gt;');
 
   // Code blocks (fenced)
-  html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
+  html = html.replaceAll(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
     const languageClass = lang ? ` class="language-${lang}"` : '';
     return `<pre><code${languageClass}>${code.trim()}</code></pre>`;
   });
 
   // Inline code
-  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  html = html.replaceAll(/`([^`]+)`/g, '<code>$1</code>');
 
   // Headers
-  html = html.replace(/^###### (.*)$/gm, '<h6>$1</h6>');
-  html = html.replace(/^##### (.*)$/gm, '<h5>$1</h5>');
-  html = html.replace(/^#### (.*)$/gm, '<h4>$1</h4>');
-  html = html.replace(/^### (.*)$/gm, '<h3>$1</h3>');
-  html = html.replace(/^## (.*)$/gm, '<h2>$1</h2>');
-  html = html.replace(/^# (.*)$/gm, '<h1>$1</h1>');
+  html = html.replaceAll(/^###### (.*)$/gm, '<h6>$1</h6>');
+  html = html.replaceAll(/^##### (.*)$/gm, '<h5>$1</h5>');
+  html = html.replaceAll(/^#### (.*)$/gm, '<h4>$1</h4>');
+  html = html.replaceAll(/^### (.*)$/gm, '<h3>$1</h3>');
+  html = html.replaceAll(/^## (.*)$/gm, '<h2>$1</h2>');
+  html = html.replaceAll(/^# (.*)$/gm, '<h1>$1</h1>');
 
   // Blockquotes
-  html = html.replace(/^> (.*)$/gm, '<blockquote><p>$1</p></blockquote>');
+  html = html.replaceAll(/^> (.*)$/gm, '<blockquote><p>$1</p></blockquote>');
 
   // Bold
-  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+  html = html.replaceAll(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  html = html.replaceAll(/__([^_]+)__/g, '<strong>$1</strong>');
 
   // Italic
-  html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-  html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
+  html = html.replaceAll(/\*([^*]+)\*/g, '<em>$1</em>');
+  html = html.replaceAll(/_([^_]+)_/g, '<em>$1</em>');
 
   // Images
-  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" loading="lazy" />');
+  html = html.replaceAll(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" loading="lazy" />');
 
   // Links
   html = html.replace(
@@ -111,16 +111,16 @@ function parseMarkdown(markdown: string): string {
   );
 
   // Horizontal rules
-  html = html.replace(/^---$/gm, '<hr />');
-  html = html.replace(/^\*\*\*$/gm, '<hr />');
+  html = html.replaceAll(/^---$/gm, '<hr />');
+  html = html.replaceAll(/^\*\*\*$/gm, '<hr />');
 
   // Unordered lists
-  html = html.replace(/^[\*\-] (.*)$/gm, '<li>$1</li>');
-  html = html.replace(/(<li>[^]*?<\/li>)(?=\s*<li>)/g, '<ul>$1');
-  html = html.replace(/(<li>[^]*?<\/li>)(?!\s*<li>)/g, '$1</ul>');
+  html = html.replaceAll(/^[\*\-] (.*)$/gm, '<li>$1</li>');
+  html = html.replaceAll(/(<li>[^]*?<\/li>)(?=\s*<li>)/g, '<ul>$1');
+  html = html.replaceAll(/(<li>[^]*?<\/li>)(?!\s*<li>)/g, '$1</ul>');
 
   // Ordered lists
-  html = html.replace(/^\d+\. (.*)$/gm, '<li>$1</li>');
+  html = html.replaceAll(/^\d+\. (.*)$/gm, '<li>$1</li>');
 
   // Paragraphs (wrap remaining text)
   html = html
@@ -137,7 +137,7 @@ function parseMarkdown(markdown: string): string {
         !block.startsWith('<hr') &&
         !block.startsWith('<li')
       ) {
-        return `<p>${block.replace(/\n/g, '<br />')}</p>`;
+        return `<p>${block.replaceAll(/\n/g, '<br />')}</p>`;
       }
       return block;
     })
@@ -149,13 +149,13 @@ function parseMarkdown(markdown: string): string {
 /**
  * TableOfContents - Auto-generated from markdown headings
  */
-export function TableOfContents({ content }: { content: string }) {
+export function TableOfContents({ content }: Readonly<{ content: string }>) {
   const headings = React.useMemo(() => {
     const matches = content.matchAll(/^(#{2,4}) (.*)$/gm);
     return Array.from(matches).map((match) => ({
       level: match[1].length,
       text: match[2],
-      id: match[2].toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      id: match[2].toLowerCase().replaceAll(/[^a-z0-9]+/g, '-'),
     }));
   }, [content]);
 
@@ -170,8 +170,8 @@ export function TableOfContents({ content }: { content: string }) {
         Contents
       </h2>
       <ul className="space-y-2">
-        {headings.map((heading, idx) => (
-          <li key={idx} style={{ paddingLeft: `${(heading.level - 2) * 16}px` }}>
+        {headings.map((heading) => (
+          <li key={heading.id} style={{ paddingLeft: `${(heading.level - 2) * 16}px` }}>
             <a
               href={`#${heading.id}`}
               className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
@@ -215,17 +215,12 @@ export function ReadingProgress() {
   }, []);
 
   return (
-    <div
-      className="fixed top-0 left-0 right-0 h-1 bg-slate-200 dark:bg-slate-700 z-50"
-      role="progressbar"
-      aria-valuenow={Math.round(progress)}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-label="Reading progress"
-    >
-      <div
-        className="h-full bg-[#137fec] transition-all duration-150"
-        style={{ width: `${progress}%` }}
+    <div className="fixed top-0 left-0 right-0 h-1 bg-slate-200 dark:bg-slate-700 z-50">
+      <progress
+        className="block h-full w-full appearance-none [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-[#137fec] transition-all duration-150"
+        value={Math.round(progress)}
+        max={100}
+        aria-label="Reading progress"
       />
     </div>
   );

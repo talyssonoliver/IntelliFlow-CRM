@@ -14,7 +14,7 @@ export interface RecommendedActionsProps {
   recommendations: Recommendation[];
   isLoading?: boolean;
   emptyMessage?: string;
-  onActionClick?: (recommendation: Recommendation) => void;
+  onActionClick?: (recommendation: Readonly<Recommendation>) => void;
 }
 
 const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
@@ -30,7 +30,7 @@ export function RecommendedActions({
   isLoading,
   emptyMessage = 'No actions recommended',
   onActionClick,
-}: RecommendedActionsProps) {
+}: Readonly<RecommendedActionsProps>) {
   if (isLoading) {
     return (
       <Card className="p-4" data-testid="recommended-actions">

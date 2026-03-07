@@ -4,6 +4,6 @@ export const metadata: Metadata = {
   title: 'Contacts',
 };
 
-export default function ContactsLayout({ children }: { children: React.ReactNode }) {
+export default function ContactsLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <>{children}</>;
 }

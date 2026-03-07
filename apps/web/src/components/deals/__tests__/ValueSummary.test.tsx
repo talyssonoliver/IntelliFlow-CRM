@@ -16,11 +16,11 @@ vi.mock('@intelliflow/ui', () => ({
     children,
     className,
     ...props
-  }: {
+  }: Readonly<{
     children: React.ReactNode;
     className?: string;
     [key: string]: unknown;
-  }) => (
+  }>) => (
     <div data-testid="card" className={className} {...props}>
       {children}
     </div>

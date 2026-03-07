@@ -19,7 +19,7 @@ function escapeCSVField(value: unknown, delimiter: string): string {
     return '';
   }
 
-  const stringValue = String(value);
+  const stringValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
 
   // Check if value needs to be quoted
   const needsQuoting =
@@ -30,7 +30,7 @@ function escapeCSVField(value: unknown, delimiter: string): string {
 
   if (needsQuoting) {
     // Escape double quotes by doubling them
-    const escaped = stringValue.replace(/"/g, '""');
+    const escaped = stringValue.replaceAll('"', '""');
     return `"${escaped}"`;
   }
 
@@ -100,7 +100,7 @@ export function downloadCSV(csvContent: string, filename: string): void {
 
   document.body.appendChild(link);
   link.click();
-  document.body.removeChild(link);
+  link.remove();
 
   // Clean up the URL object
   URL.revokeObjectURL(url);

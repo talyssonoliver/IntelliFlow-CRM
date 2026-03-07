@@ -4,6 +4,6 @@ export const metadata: Metadata = {
   title: 'Sign Up',
 };
 
-export default function SignupLayout({ children }: { children: React.ReactNode }) {
+export default function SignupLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <>{children}</>;
 }

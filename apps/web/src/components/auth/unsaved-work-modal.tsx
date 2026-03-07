@@ -63,7 +63,7 @@ export function UnsavedWorkModal({
   onSaveAndLogout,
   onLogoutWithoutSaving,
   onCancel,
-}: UnsavedWorkModalProps) {
+}: Readonly<UnsavedWorkModalProps>) {
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
 
   // Focus cancel button when modal opens for accessibility
@@ -91,7 +91,7 @@ export function UnsavedWorkModal({
     if (dirtyForms.length === 2) {
       return `${dirtyForms[0]} and ${dirtyForms[1]}`;
     }
-    const lastForm = dirtyForms[dirtyForms.length - 1];
+    const lastForm = dirtyForms.at(-1);
     const otherForms = dirtyForms.slice(0, -1).join(', ');
     return `${otherForms}, and ${lastForm}`;
   };

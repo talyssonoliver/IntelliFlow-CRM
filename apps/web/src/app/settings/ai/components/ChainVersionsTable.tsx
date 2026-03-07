@@ -97,7 +97,7 @@ export function ChainVersionsTable({
   onChainTypeChange,
   onStatusChange,
   isActioning = false,
-}: ChainVersionsTableProps) {
+}: Readonly<ChainVersionsTableProps>) {
   const [currentPage, setCurrentPage] = useState(0);
 
   // Pagination
@@ -115,7 +115,7 @@ export function ChainVersionsTable({
           </div>
           {/* Table skeletons */}
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 w-full" />
+            <Skeleton key={i} className="h-16 w-full" /> // NOSONAR typescript:S6479
           ))}
         </div>
       </Card>

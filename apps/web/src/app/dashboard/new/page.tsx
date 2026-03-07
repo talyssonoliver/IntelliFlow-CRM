@@ -339,7 +339,7 @@ export default function CreateNewRecordPage() {
                 className={`mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 text-xs font-medium text-slate-400 ${record.actionColor} transition-colors`}
               >
                 <span className="material-symbols-outlined text-sm">add</span>
-                Create {record.title.replace('New ', '')}
+                {' '}Create {record.title.replace('New ', '')}
               </div>
             </Link>
           ))}

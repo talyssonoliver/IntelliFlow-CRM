@@ -8,7 +8,7 @@ import {
 
 // Mock MarkdownRenderer to render content as plain text
 vi.mock('@/components/blog/markdown-renderer', () => ({
-  MarkdownRenderer: ({ content, className }: { content: string; className?: string }) => (
+  MarkdownRenderer: ({ content, className }: Readonly<{ content: string; className?: string }>) => (
     <div data-testid="markdown-renderer" className={className}>
       {content}
     </div>
@@ -17,7 +17,7 @@ vi.mock('@/components/blog/markdown-renderer', () => ({
 
 // Mock ShareButtons to verify props
 vi.mock('@/components/blog/share-buttons', () => ({
-  ShareButtons: ({ title, slug, url }: { title: string; slug: string; url?: string }) => (
+  ShareButtons: ({ title, slug, url }: Readonly<{ title: string; slug: string; url?: string }>) => (
     <div data-testid="share-buttons" data-title={title} data-slug={slug} data-url={url}>
       Share Buttons Mock
     </div>
@@ -30,11 +30,11 @@ vi.mock('next/link', () => ({
     href,
     children,
     ...props
-  }: {
+  }: Readonly<{
     href: string;
     children: React.ReactNode;
     [key: string]: unknown;
-  }) => (
+  }>) => (
     <a href={href} {...props}>
       {children}
     </a>

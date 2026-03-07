@@ -29,7 +29,7 @@ function SSOCallbackFallback() {
   return (
     <div
       className="flex items-center justify-center min-h-[400px]"
-      role="status"
+      aria-live="polite"
       aria-label="Loading authentication"
     >
       <div className="flex flex-col items-center gap-4">
@@ -63,7 +63,7 @@ function SSOCallbackContent() {
 
   // Hard navigation on success — prevents Back button replaying callback with used PKCE code
   const handleSuccess = () => {
-    window.location.href = '/dashboard';
+    globalThis.location.href = '/dashboard';
   };
 
   return <OAuthCallback onSuccess={handleSuccess} redirectUrl="/dashboard" />;

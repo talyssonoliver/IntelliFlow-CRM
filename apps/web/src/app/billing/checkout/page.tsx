@@ -115,7 +115,7 @@ function CheckoutContent() {
                   .filter((f) => f.included)
                   .slice(0, 5)
                   .map((feature, idx) => (
-                    <li key={idx} className="flex items-center gap-2 text-sm">
+                    <li key={idx} className="flex items-center gap-2 text-sm"> {/* NOSONAR typescript:S6479 */}
                       <span
                         className="material-symbols-outlined text-base text-green-500"
                         aria-hidden="true"
@@ -143,7 +143,14 @@ function CheckoutContent() {
       <div className="order-2 lg:order-1">
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <h2 className="mb-6 text-lg font-semibold">Payment Details</h2>
-          {stripePromise ? (
+          {stripePromise === null ? (
+            <div
+              className="rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive"
+              role="alert"
+            >
+              Payment processing is temporarily unavailable. Please try again later.
+            </div>
+          ) : (
             <Elements stripe={stripePromise}>
               <CheckoutForm
                 planId={plan.id}
@@ -154,13 +161,6 @@ function CheckoutContent() {
                 onSuccess={handleSuccess}
               />
             </Elements>
-          ) : (
-            <div
-              className="rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive"
-              role="alert"
-            >
-              Payment processing is temporarily unavailable. Please try again later.
-            </div>
           )}
         </div>
         <div className="mt-4 flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-4">

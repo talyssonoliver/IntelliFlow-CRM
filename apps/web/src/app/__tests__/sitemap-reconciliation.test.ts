@@ -4,8 +4,8 @@
  * AC-006, AC-007
  */
 import { describe, it, expect, vi } from 'vitest';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { findPageFiles } from './test-helpers/ia-fs-helpers';
 
 vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://test.intelliflow.com');
@@ -29,9 +29,9 @@ beforeAll(async () => {
 
 describe('Sitemap Reconciliation', () => {
   // TC-25
-  it('total page.tsx count equals 119 (regression guard)', () => {
+  it('total page.tsx count equals 124 (regression guard)', () => {
     const pageFiles = findPageFiles(APP_DIR);
-    expect(pageFiles.length).toBe(119);
+    expect(pageFiles.length).toBe(124);
   });
 
   // TC-26

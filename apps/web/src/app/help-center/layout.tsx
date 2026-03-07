@@ -4,6 +4,6 @@ export const metadata: Metadata = {
   title: 'Help Center',
 };
 
-export default function HelpCenterLayout({ children }: { children: React.ReactNode }) {
+export default function HelpCenterLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <>{children}</>;
 }

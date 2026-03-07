@@ -14,7 +14,7 @@ export interface CalendarTask {
 export interface TaskCalendarProps {
   readonly tasks: readonly CalendarTask[];
   readonly onTaskClick: (id: string) => void;
-  readonly onCreateWithDate: (date: Date) => void;
+  readonly onCreateWithDate: (date: Readonly<Date>) => void;
 }
 
 const TaskCalendarInner = dynamic(
@@ -29,7 +29,7 @@ const TaskCalendarInner = dynamic(
   }
 );
 
-export function TaskCalendar({ tasks, onTaskClick, onCreateWithDate }: TaskCalendarProps) {
+export function TaskCalendar({ tasks, onTaskClick, onCreateWithDate }: Readonly<TaskCalendarProps>) {
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();

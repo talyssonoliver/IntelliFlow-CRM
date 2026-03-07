@@ -31,7 +31,7 @@ export function VersionComparisonView({
   versions,
   onCompare,
   isLoading,
-}: VersionComparisonViewProps) {
+}: Readonly<VersionComparisonViewProps>) {
   const [selectedA, setSelectedA] = useState('');
   const [selectedB, setSelectedB] = useState('');
   const [comparison, setComparison] = useState<VersionComparison | null>(null);

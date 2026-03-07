@@ -19,7 +19,7 @@ interface AccountOpportunitiesListProps {
   accountId: string;
 }
 
-export function AccountOpportunitiesList({ accountId }: AccountOpportunitiesListProps) {
+export function AccountOpportunitiesList({ accountId }: Readonly<AccountOpportunitiesListProps>) {
   const router = useRouter();
   const [cursor, setCursor] = useState<string | undefined>();
   const [stageFilter, setStageFilter] = useState<OpportunityStage | undefined>();
@@ -66,7 +66,7 @@ export function AccountOpportunitiesList({ accountId }: AccountOpportunitiesList
         </span>
         <p className="text-muted-foreground">No opportunities for this account</p>
         <Button variant="outline" size="sm" className="mt-3">
-          <span className="material-symbols-outlined text-base mr-1">add</span>
+          <span className="material-symbols-outlined text-base mr-1">add</span>{' '}
           Create Opportunity
         </Button>
       </div>
@@ -114,7 +114,7 @@ export function AccountOpportunitiesList({ accountId }: AccountOpportunitiesList
           <option value="CLOSED_LOST">Closed Lost</option>
         </select>
         <Button variant="outline" size="sm">
-          <span className="material-symbols-outlined text-base mr-1">add</span>
+          <span className="material-symbols-outlined text-base mr-1">add</span>{' '}
           Create Opportunity
         </Button>
       </div>
@@ -133,7 +133,7 @@ export function AccountOpportunitiesList({ accountId }: AccountOpportunitiesList
               </p>
             </div>
             <Badge variant="outline" className="text-xs shrink-0">
-              {opp.stage.replace(/_/g, ' ')}
+              {opp.stage.replaceAll(/_/g, ' ')}
             </Badge>
           </button>
         ))}

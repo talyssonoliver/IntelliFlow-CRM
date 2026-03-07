@@ -16,7 +16,7 @@ interface MainNavProps {
   className?: string;
 }
 
-export function MainNav({ routes, className }: MainNavProps) {
+export function MainNav({ routes, className }: Readonly<MainNavProps>) {
   const pathname = usePathname();
 
   return (

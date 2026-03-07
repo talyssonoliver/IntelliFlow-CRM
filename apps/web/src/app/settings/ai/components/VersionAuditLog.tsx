@@ -56,7 +56,7 @@ const ACTION_CONFIG: Record<
 
 const PAGE_SIZE = 20;
 
-export function VersionAuditLog({ auditLog, isLoading }: VersionAuditLogProps) {
+export function VersionAuditLog({ auditLog, isLoading }: Readonly<VersionAuditLogProps>) {
   const [currentPage, setCurrentPage] = useState(0);
   const [actionFilter, setActionFilter] = useState<ChainVersionAuditAction | 'all'>('all');
 

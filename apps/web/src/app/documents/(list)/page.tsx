@@ -13,9 +13,13 @@ import {
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { PageHeader, SearchFilterBar } from '@/components/shared';
-import { DocumentStatusBadge } from '@/components/documents';
-import { formatFileSize, formatDate } from '@/components/documents';
-import type { DocumentRecord, DocumentStatus } from '@/components/documents';
+import {
+  DocumentStatusBadge,
+  formatFileSize,
+  formatDate,
+  type DocumentRecord,
+  type DocumentStatus,
+} from '@/components/documents';
 
 // =============================================================================
 // Filter Options
@@ -67,7 +71,7 @@ const columns: ColumnDef<DocumentRecord>[] = [
             )}
             {hasLegalHold && (
               <span className="inline-flex items-center gap-1 mt-1 text-xs text-amber-600 dark:text-amber-400">
-                <span className="material-symbols-outlined text-sm">shield</span>
+                <span className="material-symbols-outlined text-sm">shield</span>{' '}
                 Legal Hold
               </span>
             )}
@@ -227,8 +231,7 @@ export default function DocumentsPage() {
       (doc) =>
         searchQuery === '' ||
         doc.metadata.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (doc.metadata.description &&
-          doc.metadata.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        doc.metadata.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         doc.metadata.documentType.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
@@ -312,7 +315,7 @@ export default function DocumentsPage() {
     // (/documents/[id]) under the "Access Control" tab.
     // Directing users there is the correct workflow until the bulk share dialog ships.
     toast({
-      title: `Share ${documents.length} Document${documents.length !== 1 ? 's' : ''}`,
+      title: `Share ${documents.length} Document${documents.length === 1 ? '' : 's'}`,
       description: "Open each document's detail page to manage sharing and access control.",
     });
   }, []);

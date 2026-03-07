@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@intelliflow/ui';
-import type { ComplianceDetailResponse, ControlStatus } from '@/app/api/compliance/types';
+import type { ComplianceDetailResponse, ControlStatus, HistoricalScore } from '@/app/api/compliance/types';
 
 const STATUS_CONFIG: Record<ControlStatus, { color: string; icon: string; label: string }> = {
   passed: {
@@ -27,13 +27,162 @@ const STATUS_CONFIG: Record<ControlStatus, { color: string; icon: string; label:
   },
 };
 
+const STATUS_BADGE_CLASS: Record<'compliant' | 'critical' | 'attention', string> = {
+  compliant: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  critical: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  attention: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+};
+
+function getStatusBadgeClass(status: 'compliant' | 'critical' | 'attention'): string {
+  return STATUS_BADGE_CLASS[status];
+}
+
+function getTrendColor(trend: number): string {
+  if (trend > 0) return 'text-emerald-500';
+  if (trend < 0) return 'text-red-500';
+  return 'text-muted-foreground';
+}
+
+function getTrendIcon(trend: number): string {
+  if (trend > 0) return 'trending_up';
+  if (trend < 0) return 'trending_down';
+  return 'remove';
+}
+
+function getScoreColor(score: number): string {
+  if (score >= 90) return 'bg-emerald-500';
+  if (score >= 70) return 'bg-amber-500';
+  return 'bg-red-500';
+}
+
+function getScoreTextColor(score: number): string {
+  if (score >= 90) return 'text-emerald-500';
+  if (score >= 70) return 'text-amber-500';
+  return 'text-red-500';
+}
+
+interface ChartPoint {
+  x: number;
+  y: number;
+  score: number;
+  date: string;
+}
+
+function buildChartPoints(scores: HistoricalScore[]): ChartPoint[] {
+  const maxScore = 100;
+  const minScore = 0;
+  const chartHeight = 120;
+  const chartWidth = 400;
+  const padding = 20;
+  return scores.map((score, index) => {
+    const x = padding + (index * (chartWidth - padding * 2)) / (scores.length - 1);
+    const y =
+      chartHeight -
+      padding -
+      ((score.score - minScore) / (maxScore - minScore)) * (chartHeight - padding * 2);
+    return { x, y, score: score.score, date: score.date };
+  });
+}
+
+interface HistoryChartProps {
+  scores: HistoricalScore[];
+}
+
+function HistoryChart({ scores }: Readonly<HistoryChartProps>) {
+  if (!scores.length) return null;
+
+  const chartHeight = 120;
+  const chartWidth = 400;
+  const padding = 20;
+  const maxScore = 100;
+  const minScore = 0;
+
+  const points = buildChartPoints(scores);
+  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+
+  return (
+    <div className="mt-4">
+      <svg
+        viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+        className="w-full h-32"
+        preserveAspectRatio="xMidYMid meet"
+      >
+        {/* Grid lines */}
+        {[0, 25, 50, 75, 100].map((val) => {
+          const y =
+            chartHeight -
+            padding -
+            ((val - minScore) / (maxScore - minScore)) * (chartHeight - padding * 2);
+          return (
+            <g key={val}>
+              <line
+                x1={padding}
+                y1={y}
+                x2={chartWidth - padding}
+                y2={y}
+                stroke="currentColor"
+                strokeOpacity={0.1}
+              />
+              <text
+                x={padding - 5}
+                y={y + 4}
+                className="fill-muted-foreground text-[8px]"
+                textAnchor="end"
+              >
+                {val}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Line */}
+        <path
+          d={pathD}
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+
+        {/* Points */}
+        {points.map((p) => (
+          <g key={p.date}>
+            <circle
+              cx={p.x}
+              cy={p.y}
+              r={4}
+              fill="hsl(var(--primary))"
+              className="cursor-pointer"
+            />
+            <title>{`${p.date}: ${p.score}%`}</title>
+          </g>
+        ))}
+
+        {/* X-axis labels */}
+        {points.map((p) => (
+          <text
+            key={`label-${p.date}`}
+            x={p.x}
+            y={chartHeight - 5}
+            className="fill-muted-foreground text-[7px]"
+            textAnchor="middle"
+          >
+            {new Date(p.date).toLocaleDateString('en-US', { month: 'short' })}
+          </text>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
 interface ComplianceDetailPanelProps {
   standardId: string | null;
   open: boolean;
   onClose: () => void;
 }
 
-export function ComplianceDetailPanel({ standardId, open, onClose }: ComplianceDetailPanelProps) {
+export function ComplianceDetailPanel({ standardId, open, onClose }: Readonly<ComplianceDetailPanelProps>) {
   const [detail, setDetail] = useState<ComplianceDetailResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'controls' | 'history' | 'changes'>('controls');
@@ -68,38 +217,6 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: ComplianceD
     }
   }, [open]);
 
-  const STATUS_BADGE_CLASS: Record<'compliant' | 'critical' | 'attention', string> = {
-    compliant: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-    critical: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-    attention: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  };
-  const getStatusBadgeClass = (status: 'compliant' | 'critical' | 'attention') =>
-    STATUS_BADGE_CLASS[status];
-
-  const getTrendColor = (trend: number) => {
-    if (trend > 0) return 'text-emerald-500';
-    if (trend < 0) return 'text-red-500';
-    return 'text-muted-foreground';
-  };
-
-  const getTrendIcon = (trend: number) => {
-    if (trend > 0) return 'trending_up';
-    if (trend < 0) return 'trending_down';
-    return 'remove';
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 90) return 'bg-emerald-500';
-    if (score >= 70) return 'bg-amber-500';
-    return 'bg-red-500';
-  };
-
-  const getScoreTextColor = (score: number) => {
-    if (score >= 90) return 'text-emerald-500';
-    if (score >= 70) return 'text-amber-500';
-    return 'text-red-500';
-  };
-
   const controlStats = detail?.controls.reduce(
     (acc, control) => {
       acc[control.status]++;
@@ -109,114 +226,18 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: ComplianceD
     { passed: 0, failed: 0, in_progress: 0, not_applicable: 0, total: 0 }
   );
 
-  // Simple line chart for historical scores
-  const renderHistoryChart = () => {
-    if (!detail?.historicalScores.length) return null;
-
-    const scores = detail.historicalScores;
-    const maxScore = 100;
-    const minScore = 0;
-    const chartHeight = 120;
-    const chartWidth = 400;
-    const padding = 20;
-
-    const points = scores.map((score, index) => {
-      const x = padding + (index * (chartWidth - padding * 2)) / (scores.length - 1);
-      const y =
-        chartHeight -
-        padding -
-        ((score.score - minScore) / (maxScore - minScore)) * (chartHeight - padding * 2);
-      return { x, y, score: score.score, date: score.date };
-    });
-
-    const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-
-    return (
-      <div className="mt-4">
-        <svg
-          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-          className="w-full h-32"
-          preserveAspectRatio="xMidYMid meet"
-        >
-          {/* Grid lines */}
-          {[0, 25, 50, 75, 100].map((val) => {
-            const y =
-              chartHeight -
-              padding -
-              ((val - minScore) / (maxScore - minScore)) * (chartHeight - padding * 2);
-            return (
-              <g key={val}>
-                <line
-                  x1={padding}
-                  y1={y}
-                  x2={chartWidth - padding}
-                  y2={y}
-                  stroke="currentColor"
-                  strokeOpacity={0.1}
-                />
-                <text
-                  x={padding - 5}
-                  y={y + 4}
-                  className="fill-muted-foreground text-[8px]"
-                  textAnchor="end"
-                >
-                  {val}
-                </text>
-              </g>
-            );
-          })}
-
-          {/* Line */}
-          <path
-            d={pathD}
-            fill="none"
-            stroke="hsl(var(--primary))"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-
-          {/* Points */}
-          {points.map((p) => (
-            <g key={p.date}>
-              <circle
-                cx={p.x}
-                cy={p.y}
-                r={4}
-                fill="hsl(var(--primary))"
-                className="cursor-pointer"
-              />
-              <title>{`${p.date}: ${p.score}%`}</title>
-            </g>
-          ))}
-
-          {/* X-axis labels */}
-          {points.map((p) => (
-            <text
-              key={`label-${p.date}`}
-              x={p.x}
-              y={chartHeight - 5}
-              className="fill-muted-foreground text-[7px]"
-              textAnchor="middle"
-            >
-              {new Date(p.date).toLocaleDateString('en-US', { month: 'short' })}
-            </text>
-          ))}
-        </svg>
-      </div>
-    );
-  };
-
   return (
     <Sheet open={open} onOpenChange={onClose}>
       <SheetContent side="right" className="w-full sm:max-w-[500px] overflow-y-auto">
-        {loading ? (
+        {(() => {
+          if (loading) return (
           <div className="flex items-center justify-center h-full">
             <span className="material-symbols-outlined text-4xl text-muted-foreground animate-spin">
               progress_activity
             </span>
           </div>
-        ) : detail ? (
+          );
+          if (detail) return (
           <>
             <SheetHeader>
               <div className="flex items-center gap-3">
@@ -350,7 +371,7 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: ComplianceD
                   <p className="text-sm text-muted-foreground mb-2">
                     Score trend over the last 6 months
                   </p>
-                  {renderHistoryChart()}
+                  <HistoryChart scores={detail.historicalScores} />
                   <div className="mt-4 space-y-2">
                     {detail.historicalScores
                       .slice()
@@ -397,11 +418,13 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: ComplianceD
               )}
             </div>
           </>
-        ) : (
+          );
+          return (
           <div className="flex items-center justify-center h-full text-muted-foreground">
             Select a compliance standard to view details
           </div>
-        )}
+          );
+        })()}
       </SheetContent>
     </Sheet>
   );

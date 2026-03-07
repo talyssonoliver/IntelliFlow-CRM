@@ -2,7 +2,7 @@
 
 import type { WidgetProps } from './index';
 
-export function ActiveLeadsWidget(_props: WidgetProps) {
+export function ActiveLeadsWidget(_props: Readonly<WidgetProps>) {
   return (
     <div className="p-5 flex flex-col justify-between h-full">
       <div className="flex items-center gap-3">

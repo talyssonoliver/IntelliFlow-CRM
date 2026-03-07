@@ -43,13 +43,13 @@ function StatCard({
   icon,
   colorClass,
   isLoading,
-}: {
+}: Readonly<{
   label: string;
   value: string | number;
   icon: string;
   colorClass: string;
   isLoading: boolean;
-}) {
+}>) {
   return (
     <Card>
       <CardContent className="p-4">
@@ -136,7 +136,7 @@ export function DriftDashboard() {
           <p className="text-sm text-amber-700 dark:text-amber-400 flex items-center gap-2">
             <span className="material-symbols-outlined text-base" aria-hidden="true">
               schedule
-            </span>
+            </span>{' '}
             Monitoring data may be stale. Last check was over 1 hour ago.
           </p>
         </div>
@@ -243,20 +243,23 @@ export function DriftDashboard() {
             <CardTitle className="text-base">Drift History</CardTitle>
           </CardHeader>
           <CardContent className="pb-4">
-            {!isLoading && history.length === 0 ? (
+            {(() => {
+              if (!isLoading && history.length === 0) return (
               <p
                 className="text-sm text-muted-foreground text-center py-8"
                 data-testid="empty-state"
               >
                 No drift metrics tracked yet. Start using AI features to populate monitoring data.
               </p>
-            ) : isLoading ? (
+              );
+              if (isLoading) return (
               <div className="space-y-3">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <Skeleton key={i} className="h-20 w-full rounded-lg" /> // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
                 ))}
               </div>
-            ) : (
+              );
+              return (
               <div className="space-y-2">
                 {history.map((item, idx) => {
                   const key = `${item.metric}-${idx}`;
@@ -308,8 +311,8 @@ export function DriftDashboard() {
                             <div className="mb-2">
                               <p className="text-xs font-medium mb-1">Recommendations:</p>
                               <ul className="text-xs space-y-0.5 text-muted-foreground">
-                                {item.recommendations.map((rec, ridx) => (
-                                  <li key={ridx}>• {rec}</li>
+                                {item.recommendations.map((rec) => (
+                                  <li key={rec}>• {rec}</li>
                                 ))}
                               </ul>
                             </div>
@@ -320,7 +323,8 @@ export function DriftDashboard() {
                   );
                 })}
               </div>
-            )}
+              );
+            })()}
           </CardContent>
         </Card>
       </div>

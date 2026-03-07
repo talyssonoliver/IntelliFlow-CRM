@@ -27,7 +27,7 @@ interface LatencyTrendChartProps {
   p99Target: number;
 }
 
-export default function LatencyTrendChart({ trend, p95Target, p99Target }: LatencyTrendChartProps) {
+export default function LatencyTrendChart({ trend, p95Target, p99Target }: Readonly<LatencyTrendChartProps>) {
   if (trend.length === 0) {
     return (
       <Card>

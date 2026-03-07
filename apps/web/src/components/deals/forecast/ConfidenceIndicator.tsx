@@ -44,7 +44,7 @@ export function ConfidenceIndicator({
   lastUpdatedAt,
   showDescription = false,
   size = 'md',
-}: ConfidenceIndicatorProps) {
+}: Readonly<ConfidenceIndicatorProps>) {
   const clamped = Math.max(0, Math.min(1, confidence));
   const percentage = Math.round(clamped * 100);
   const colorClass = getConfidenceColor(clamped);

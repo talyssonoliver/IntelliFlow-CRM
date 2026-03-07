@@ -30,7 +30,7 @@ export function AttachmentManager({
   maxFileSize = 25 * 1024 * 1024,
   maxTotalSize = 50 * 1024 * 1024,
   className,
-}: AttachmentManagerProps) {
+}: Readonly<AttachmentManagerProps>) {
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -126,7 +126,7 @@ export function AttachmentManager({
         <div className="space-y-1">
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Paperclip className="h-3 w-3" />
-            <span>{files.length}</span> file{files.length !== 1 ? 's' : ''} attached
+            <span>{files.length}</span> file{files.length === 1 ? '' : 's'} attached
           </div>
           {files.map((file, i) => {
             const Icon = getFileIcon(file.type);

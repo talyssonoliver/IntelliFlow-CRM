@@ -71,7 +71,7 @@ interface CountdownProps {
   onComplete: () => void;
 }
 
-function Countdown({ seconds, onComplete }: CountdownProps) {
+function Countdown({ seconds, onComplete }: Readonly<CountdownProps>) {
   const [remaining, setRemaining] = useState(seconds);
 
   useEffect(() => {
@@ -98,7 +98,7 @@ function Countdown({ seconds, onComplete }: CountdownProps) {
 // Status Icon Component
 // ============================================
 
-function StatusIcon({ status }: { status: LogoutStatus }) {
+function StatusIcon({ status }: Readonly<{ status: LogoutStatus }>) {
   if (status === 'processing') {
     return (
       <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
@@ -146,16 +146,13 @@ function LogoutContent() {
 
   // Perform logout
   useEffect(() => {
-    const performLogout = async () => {
-      if (status !== 'pending') return;
+    if (status !== 'pending') return;
 
-      setStatus('processing');
+    setStatus('processing');
 
+    const run = async () => {
       try {
-        // Call auth context logout (clears state, calls API)
         await auth.logout();
-
-        // Perform additional session cleanup
         const cleanupResult = await cleanupSession({
           clearLocalStorage: true,
           clearSessionStorage: true,
@@ -164,23 +161,19 @@ function LogoutContent() {
           broadcastLogout: true,
           preservePreferences: true,
         });
-
         if (!cleanupResult.success) {
           console.warn('[Logout] Some cleanup operations failed:', cleanupResult.errors);
         }
-
         setStatus('complete');
       } catch (err) {
         console.error('[Logout] Error during logout:', err);
         setError(err instanceof Error ? err.message : 'An error occurred during logout');
         setStatus('error');
-
-        // Even on error, try to clean up local state
         await cleanupSession({ broadcastLogout: true });
       }
     };
 
-    performLogout();
+    run();
   }, [status, auth]);
 
   // Handle redirect
@@ -192,8 +185,7 @@ function LogoutContent() {
     });
   }, [reason, returnUrl]);
 
-  // Get message based on status and reason
-  const getMessage = () => {
+  const getMessage = (): string => {
     if (status === 'error') return error || 'An error occurred during logout.';
     if (status === 'processing') return 'Signing you out...';
     return getLogoutMessage(reason);
@@ -266,7 +258,7 @@ function LogoutContent() {
                   )}
                 >
                   Sign in again
-                  <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                  {' '}<span className="material-symbols-outlined text-lg" aria-hidden="true">
                     arrow_forward
                   </span>
                 </Link>

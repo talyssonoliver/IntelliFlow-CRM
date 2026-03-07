@@ -19,7 +19,7 @@ const ForecastRevenueChart = dynamic(() => import('@/components/deals/ForecastRe
 });
 
 // Material Symbols icon helper component
-const Icon = ({ name, className = '' }: { name: string; className?: string }) => (
+const Icon = ({ name, className = '' }: Readonly<{ name: string; className?: string }>) => (
   <span className={`material-symbols-outlined ${className}`} aria-hidden="true">
     {name}
   </span>
@@ -114,11 +114,11 @@ function ForecastAccuracyCard({
   accuracy,
   isAtRisk,
   target,
-}: {
+}: Readonly<{
   accuracy: number;
   isAtRisk: boolean;
   target: number;
-}) {
+}>) {
   return (
     <Card className="p-5 relative overflow-hidden">
       <div className="flex items-center justify-between">
@@ -177,7 +177,7 @@ function ForecastAccuracyCard({
   );
 }
 
-function PipelineValueCard({ value, trend }: { value: number; trend: number }) {
+function PipelineValueCard({ value, trend }: Readonly<{ value: number; trend: number }>) {
   const isPositive = trend >= 0;
 
   return (
@@ -205,7 +205,7 @@ function PipelineValueCard({ value, trend }: { value: number; trend: number }) {
   );
 }
 
-function WeightedForecastCard({ value, trend }: { value: number; trend: number }) {
+function WeightedForecastCard({ value, trend }: Readonly<{ value: number; trend: number }>) {
   const isPositive = trend >= 0;
 
   return (
@@ -233,7 +233,7 @@ function WeightedForecastCard({ value, trend }: { value: number; trend: number }
   );
 }
 
-function RevenueProjectionChart({ data }: { data: MonthlyProjection[] }) {
+function RevenueProjectionChart({ data }: Readonly<{ data: MonthlyProjection[] }>) {
   return (
     <ForecastRevenueChart
       data={data}
@@ -243,7 +243,7 @@ function RevenueProjectionChart({ data }: { data: MonthlyProjection[] }) {
   );
 }
 
-function WinRateTrendCard({ data }: { data: WinRateData[] }) {
+function WinRateTrendCard({ data }: Readonly<{ data: WinRateData[] }>) {
   const avgRate = Math.round(data.reduce((sum, d) => sum + d.rate, 0) / data.length);
 
   return (
@@ -258,13 +258,11 @@ function WinRateTrendCard({ data }: { data: WinRateData[] }) {
         {data.map((item, index) => (
           <div
             key={`${item.month}-${index}`}
-            className={`flex-1 rounded-t transition-all hover:opacity-80 ${
-              item.isProjected
-                ? 'bg-slate-200 dark:bg-slate-700 border-t-2 border-dashed border-slate-400'
-                : index === data.length - 2
-                  ? 'bg-primary'
-                  : 'bg-primary/30'
-            }`}
+            className={`flex-1 rounded-t transition-all hover:opacity-80 ${(() => {
+              if (item.isProjected) return 'bg-slate-200 dark:bg-slate-700 border-t-2 border-dashed border-slate-400';
+              if (index === data.length - 2) return 'bg-primary';
+              return 'bg-primary/30';
+            })()}`}
             style={{ height: `${item.rate * 2.5}%` }}
             title={`${item.month}: ${item.rate}%`}
           />
@@ -279,7 +277,7 @@ function WinRateTrendCard({ data }: { data: WinRateData[] }) {
   );
 }
 
-function PipelineByStageCard({ stages }: { stages: StageData[] }) {
+function PipelineByStageCard({ stages }: Readonly<{ stages: StageData[] }>) {
   const maxValue = Math.max(...stages.map((s) => s.value));
 
   return (
@@ -308,7 +306,7 @@ function PipelineByStageCard({ stages }: { stages: StageData[] }) {
   );
 }
 
-function OpportunitiesAtRiskTable({ deals }: { deals: ForecastDeal[] }) {
+function OpportunitiesAtRiskTable({ deals }: Readonly<{ deals: ForecastDeal[] }>) {
   // Filter and sort by risk level and value
   const riskyDeals = deals
     .filter((d) => d.riskLevel === 'medium' || d.riskLevel === 'high' || d.probability < 60)
@@ -372,7 +370,7 @@ function OpportunitiesAtRiskTable({ deals }: { deals: ForecastDeal[] }) {
               <tr
                 key={deal.id}
                 className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer"
-                onClick={() => (window.location.href = `/deals/${deal.id}`)}
+                onClick={() => (globalThis.location.href = `/deals/${deal.id}`)}
               >
                 <td className="px-6 py-4">
                   <p className="text-sm font-medium text-slate-900 dark:text-white">{deal.name}</p>
@@ -499,21 +497,23 @@ function buildForecastCSV(
 ): string {
   const lines: string[] = [];
 
-  lines.push(`IntelliFlow Forecast Report — ${quarterLabel}`);
-  lines.push(`Total Pipeline Value,${totalPipelineValue}`);
-  lines.push(`Weighted Forecast,${weightedForecast}`);
-  lines.push('');
-  lines.push('Deal Name,Stage,Value,Probability (%),Expected Close,Owner,Risk Level');
+  lines.push(
+    `IntelliFlow Forecast Report — ${quarterLabel}`,
+    `Total Pipeline Value,${totalPipelineValue}`,
+    `Weighted Forecast,${weightedForecast}`,
+    '',
+    'Deal Name,Stage,Value,Probability (%),Expected Close,Owner,Risk Level',
+  );
 
   for (const deal of deals) {
     const closeDate = new Date(deal.expectedCloseDate).toLocaleDateString('en-US');
     const row = [
-      `"${deal.name.replace(/"/g, '""')}"`,
+      `"${deal.name.replaceAll('"', '""')}"`,
       STAGE_LABELS[deal.stage] || deal.stage,
       deal.value,
       deal.probability,
       closeDate,
-      `"${deal.owner.name.replace(/"/g, '""')}"`,
+      `"${deal.owner.name.replaceAll('"', '""')}"`,
       deal.riskLevel,
     ].join(',');
     lines.push(row);
@@ -600,7 +600,7 @@ export default function DealForecastPage() {
         : 0;
 
     projectedMonths.forEach((month, i) => {
-      if (!projections.find((p) => p.month === month)) {
+      if (!projections.some((p) => p.month === month)) {
         projections.push({
           month,
           actual: null,
@@ -645,7 +645,7 @@ export default function DealForecastPage() {
             Failed to load forecast data
           </h2>
           <p className="text-slate-500 dark:text-slate-400 mb-4">{error.message}</p>
-          <Button onClick={() => window.location.reload()}>
+          <Button onClick={() => globalThis.location.reload()}>
             <Icon name="refresh" className="text-base mr-2" />
             Retry
           </Button>

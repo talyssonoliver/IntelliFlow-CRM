@@ -102,7 +102,7 @@ function PaymentMethodCard({
   onRemove,
   isSettingDefault,
   isRemoving,
-}: PaymentMethodCardProps) {
+}: Readonly<PaymentMethodCardProps>) {
   const displayInfo = getCardDisplayInfo(paymentMethod);
 
   if (!displayInfo) {
@@ -218,7 +218,7 @@ function PaymentMethodCard({
 /**
  * Empty State Component
  */
-function EmptyState({ onAddCard }: { onAddCard: () => void }) {
+function EmptyState({ onAddCard }: Readonly<{ onAddCard: () => void }>) {
   return (
     <div className="text-center py-12">
       <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
@@ -273,7 +273,7 @@ interface AddCardFormProps {
   setIsAdding: (v: boolean) => void;
 }
 
-function AddCardForm({ onSuccess, onClose, isAdding, setIsAdding }: AddCardFormProps) {
+function AddCardForm({ onSuccess, onClose, isAdding, setIsAdding }: Readonly<AddCardFormProps>) {
   const stripe = useStripe();
   const elements = useElements();
   const [cardholderName, setCardholderName] = useState('');
@@ -327,7 +327,7 @@ function AddCardForm({ onSuccess, onClose, isAdding, setIsAdding }: AddCardFormP
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 error
-              </span>
+              </span>{' '}
               {formError}
             </div>
           </div>
@@ -386,14 +386,14 @@ function AddCardForm({ onSuccess, onClose, isAdding, setIsAdding }: AddCardFormP
                 aria-hidden="true"
               >
                 progress_activity
-              </span>
+              </span>{' '}
               Adding...
             </>
           ) : (
             <>
               <span className="material-symbols-outlined text-lg mr-2" aria-hidden="true">
                 add
-              </span>
+              </span>{' '}
               Add Card
             </>
           )}
@@ -420,7 +420,7 @@ function AddCardDialog({
   onAddSuccess,
   isAdding,
   setIsAdding,
-}: AddCardDialogProps) {
+}: Readonly<AddCardDialogProps>) {
   const handleClose = () => {
     if (!isAdding) {
       onClose();
@@ -436,7 +436,7 @@ function AddCardDialog({
             Enter your card details below. Your information is encrypted and secure.
           </DialogDescription>
         </DialogHeader>
-        {stripePromise ? (
+        {stripePromise !== null ? (
           <Elements stripe={stripePromise}>
             <AddCardForm
               onSuccess={onAddSuccess}
@@ -476,7 +476,7 @@ function RemoveCardDialog({
   isRemoving,
   warningMessage,
   canRemove = true,
-}: RemoveCardDialogProps) {
+}: Readonly<RemoveCardDialogProps>) {
   if (!card?.card) return null;
 
   const displayString = formatCardDisplayString(card.card.brand, card.card.last4);
@@ -529,7 +529,7 @@ function RemoveCardDialog({
                   aria-hidden="true"
                 >
                   progress_activity
-                </span>
+                </span>{' '}
                 Removing...
               </>
             ) : (
@@ -546,7 +546,7 @@ function RemoveCardDialog({
 // Main Component
 // ============================================
 
-export function PaymentMethods({ className }: PaymentMethodsProps) {
+export function PaymentMethods({ className }: Readonly<PaymentMethodsProps>) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const utils = trpc.useUtils();
 

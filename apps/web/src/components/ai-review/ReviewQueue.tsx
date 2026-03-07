@@ -38,13 +38,13 @@ function StatCard({
   icon,
   colorClass,
   isLoading,
-}: {
+}: Readonly<{
   label: string;
   value: number;
   icon: string;
   colorClass: string;
   isLoading: boolean;
-}) {
+}>) {
   return (
     <Card>
       <CardContent className="p-4">
@@ -74,15 +74,15 @@ function StatCard({
 
 const STATUS_OPTIONS = REVIEW_STATUSES.map((s) => ({
   value: s,
-  label: s.replace(/_/g, ' '),
+  label: s.replaceAll(/_/g, ' '),
 }));
 
 const OUTPUT_TYPE_OPTIONS = AI_OUTPUT_TYPES.map((t) => ({
   value: t,
   label: t
-    .replace(/_/g, ' ')
+    .replaceAll(/_/g, ' ')
     .toLowerCase()
-    .replace(/\b\w/g, (c) => c.toUpperCase()),
+    .replaceAll(/\b\w/g, (c) => c.toUpperCase()),
 }));
 
 const SORT_OPTIONS = [
@@ -125,8 +125,8 @@ export function ReviewQueue() {
 
   // Sync search-filter-bar state to query filters
   const updateQueryFilters = useCallback(
-    (partial: Partial<ReviewListFilter>) => {
-      setFilters((prev: Partial<ReviewListFilter>) => ({ ...prev, ...partial, page: 1 }));
+    (partial: Readonly<Partial<ReviewListFilter>>) => {
+      setFilters((prev: Readonly<Partial<ReviewListFilter>>) => ({ ...prev, ...partial, page: 1 }));
     },
     [setFilters]
   );
@@ -181,7 +181,7 @@ export function ReviewQueue() {
   );
 
   const handleLoadMore = useCallback(() => {
-    setFilters((prev: Partial<ReviewListFilter>) => ({ ...prev, page: (prev.page ?? 1) + 1 }));
+    setFilters((prev: Readonly<Partial<ReviewListFilter>>) => ({ ...prev, page: (prev.page ?? 1) + 1 }));
   }, [setFilters]);
 
   // Mutation handlers
@@ -328,13 +328,15 @@ export function ReviewQueue() {
       )}
 
       {/* Review cards or empty/loading state */}
-      {isLoading ? (
+      {(() => {
+        if (isLoading) return (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-36 w-full rounded-lg" />
+            <Skeleton key={i} className="h-36 w-full rounded-lg" /> // NOSONAR typescript:S6479
           ))}
         </div>
-      ) : reviews.length === 0 ? (
+        );
+        if (reviews.length === 0) return (
         <EmptyState
           icon="inbox"
           title="No pending reviews"
@@ -348,9 +350,10 @@ export function ReviewQueue() {
             icon: 'filter_list_off',
           }}
         />
-      ) : (
+        );
+        return (
         <div className="space-y-3">
-          {reviews.map((review: ReviewResponse) => (
+          {reviews.map((review: Readonly<ReviewResponse>) => (
             <ReviewCard
               key={review.id}
               review={review}
@@ -364,7 +367,8 @@ export function ReviewQueue() {
             />
           ))}
         </div>
-      )}
+        );
+      })()}
 
       {/* Load more */}
       {hasMore && !isLoading && (

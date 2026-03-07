@@ -6,7 +6,7 @@
 
 import { maskApiKey, type ApiKey, type ApiKeyScope } from '@/lib/developer/api-key-generator';
 
-export type { ApiKey, ApiKeyScope };
+export type { ApiKey, ApiKeyScope } from '@/lib/developer/api-key-generator';
 
 export interface DeveloperApp {
   id: string;

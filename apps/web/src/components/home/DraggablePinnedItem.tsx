@@ -14,7 +14,7 @@ interface DraggablePinnedItemProps {
   onUnpin?: (entityType: string, entityId: string) => void;
 }
 
-export function DraggablePinnedItem({ item, isDragDisabled, onUnpin }: DraggablePinnedItemProps) {
+export function DraggablePinnedItem({ item, isDragDisabled, onUnpin }: Readonly<DraggablePinnedItemProps>) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `${item.entityType}-${item.entityId}`,
     disabled: isDragDisabled,

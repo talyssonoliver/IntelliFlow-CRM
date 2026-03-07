@@ -11,9 +11,9 @@ function isValidId(id: string): boolean {
 
 export async function generateMetadata({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ id: string }>;
-}): Promise<Metadata> {
+}>): Promise<Metadata> {
   const { id } = await params;
 
   if (!isValidId(id)) {
@@ -30,9 +30,9 @@ export async function generateMetadata({
 
 export default async function DeveloperAppDetailPage({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ id: string }>;
-}) {
+}>) {
   const { id } = await params;
 
   if (!isValidId(id)) {

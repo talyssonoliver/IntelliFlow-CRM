@@ -109,7 +109,7 @@ vi.mock('@dnd-kit/core', () => ({
 }));
 
 vi.mock('@dnd-kit/sortable', () => ({
-  SortableContext: ({ children, items }: { children: React.ReactNode; items: string[] }) => {
+  SortableContext: ({ children, items }: Readonly<{ children: React.ReactNode; items: string[] }>) => {
     capturedSortableItems = items;
     return <div data-testid="sortable-context">{children}</div>;
   },
@@ -211,10 +211,10 @@ vi.mock('@/components/shared/activity-feed', () => ({
   ActivityFeedTypeFilter: ({
     value,
     onChange,
-  }: {
+  }: Readonly<{
     value: string;
     onChange: (value: string) => void;
-  }) => {
+  }>) => {
     const [open, setOpen] = React.useState(false);
     const options = [
       { value: 'all', label: 'All Activity', icon: 'list' },
@@ -541,7 +541,7 @@ describe('AuthenticatedHomePage', () => {
     it('renders View All link', () => {
       render(<AuthenticatedHomePage />);
       const viewAll = screen.getByRole('link', { name: /View All/i });
-      expect(viewAll).toHaveAttribute('href', '/insights');
+      expect(viewAll).toHaveAttribute('href', '/agent-approvals/insights');
     });
 
     it('renders insight cards with titles', () => {
@@ -987,7 +987,7 @@ describe('AuthenticatedHomePage', () => {
     it('configures reorderMutation with onSuccess that refetches', () => {
       render(<AuthenticatedHomePage />);
       // The mockReorderMutation was called with a config object that has onSuccess/onError
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const calls = mockReorderMutation.mock.calls as any[][];
       const mutationConfig = calls[0]?.[0] as
         | { onSuccess?: unknown; onError?: unknown }
@@ -1000,7 +1000,7 @@ describe('AuthenticatedHomePage', () => {
     // T-008: onError calls refetchPinned (rollback)
     it('invokes onSuccess and onError callbacks without throwing', () => {
       render(<AuthenticatedHomePage />);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const calls = mockReorderMutation.mock.calls as any[][];
       const mutationConfig = calls[0]?.[0] as {
         onSuccess?: () => void;

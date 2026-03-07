@@ -30,7 +30,7 @@ interface EmailListProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onEmailSelect: (emailId: string) => void;
-  onFilterChange: (filters: EmailFilters) => void;
+  onFilterChange: (filters: Readonly<EmailFilters>) => void;
   onRetry: () => void;
   filters: EmailFilters;
   className?: string;
@@ -49,7 +49,7 @@ export function EmailList({
   onRetry,
   filters,
   className,
-}: EmailListProps) {
+}: Readonly<EmailListProps>) {
   const listRef = useRef<HTMLDivElement>(null);
 
   const handleListKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -74,7 +74,7 @@ export function EmailList({
         </div>
         <div className="space-y-1 p-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex gap-3 rounded-lg p-3">
+            <div key={i} className="flex gap-3 rounded-lg p-3"> {/* NOSONAR typescript:S6479 */}
               <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
               <div className="flex-1 space-y-1.5">
                 <div className="h-4 w-3/4 rounded bg-muted animate-pulse" />
@@ -105,7 +105,7 @@ export function EmailList({
           className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
           onClick={onRetry}
         >
-          <RotateCcw className="h-3.5 w-3.5" /> Retry
+          <RotateCcw className="h-3.5 w-3.5" />{' '}Retry
         </button>
       </div>
     );
@@ -140,7 +140,7 @@ export function EmailList({
               checked={filters.unread}
               onChange={() => onFilterChange({ ...filters, unread: !filters.unread })}
               className="sr-only"
-            />
+            />{' '}
             Unread
           </label>
           <label
@@ -160,7 +160,7 @@ export function EmailList({
                 })
               }
               className="sr-only"
-            />
+            />{' '}
             Has Attachments
           </label>
         </div>
@@ -175,7 +175,7 @@ export function EmailList({
           </p>
         </div>
       ) : (
-        <div
+        <div // NOSONAR — custom keyboard-navigable email list widget; role="listbox" is the correct ARIA pattern; replacing with <select multiple> would break the rich visual design
           ref={listRef}
           role="listbox"
           aria-label="Email list"

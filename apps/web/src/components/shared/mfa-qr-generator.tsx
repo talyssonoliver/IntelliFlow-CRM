@@ -43,7 +43,7 @@ interface CopyButtonProps {
   'aria-label': string;
 }
 
-function CopyButton({ text, 'aria-label': ariaLabel }: CopyButtonProps) {
+function CopyButton({ text, 'aria-label': ariaLabel }: Readonly<CopyButtonProps>) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
@@ -69,7 +69,7 @@ function CopyButton({ text, 'aria-label': ariaLabel }: CopyButtonProps) {
     >
       <span className="material-symbols-outlined text-sm" aria-hidden="true">
         {copied ? 'check' : 'content_copy'}
-      </span>
+      </span>{' '}
       {copied ? 'Copied!' : 'Copy'}
     </button>
   );
@@ -85,11 +85,11 @@ export function MfaQrGenerator({
   accountName,
   onConfirm,
   className,
-}: MfaQrGeneratorProps) {
+}: Readonly<MfaQrGeneratorProps>) {
   const [showManual, setShowManual] = useState(false);
 
   // Format secret for display (add spaces every 4 chars)
-  const formattedSecret = secret.replace(/(.{4})/g, '$1 ').trim();
+  const formattedSecret = secret.replaceAll(/(.{4})/g, '$1 ').trim();
 
   return (
     <div className={cn('space-y-6', className)}>
@@ -124,7 +124,7 @@ export function MfaQrGenerator({
           <span className="flex items-center gap-2">
             <span className="material-symbols-outlined text-lg" aria-hidden="true">
               keyboard
-            </span>
+            </span>{' '}
             Can&apos;t scan? Enter code manually
           </span>
           <span
@@ -179,7 +179,7 @@ export function MfaQrGenerator({
         <h4 className="text-sm font-medium text-slate-300 flex items-center gap-2">
           <span className="material-symbols-outlined text-lg text-[#137fec]" aria-hidden="true">
             info
-          </span>
+          </span>{' '}
           Setup Instructions
         </h4>
         <ol className="text-xs text-slate-400 space-y-1 list-decimal list-inside">
@@ -205,7 +205,7 @@ export function MfaQrGenerator({
       >
         <span className="material-symbols-outlined text-lg" aria-hidden="true">
           check_circle
-        </span>
+        </span>{' '}
         I&apos;ve scanned it
       </button>
     </div>

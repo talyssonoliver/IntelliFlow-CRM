@@ -64,11 +64,11 @@ function getBillingClient(): ReturnType<typeof createTRPCClient> {
   if (!_billingClient) {
     _billingClient = createTRPCClient({
       url:
-        typeof window !== 'undefined'
-          ? '/api/trpc'
-          : `http://localhost:${process.env.PORT ?? 3000}/api/trpc`,
+        typeof globalThis.window === 'undefined'
+          ? `http://localhost:${process.env.PORT ?? 3000}/api/trpc`
+          : '/api/trpc',
       headers: (): Record<string, string> => {
-        if (typeof window === 'undefined') return {};
+        if (typeof globalThis.window === 'undefined') return {};
         const token = localStorage.getItem('accessToken');
         if (token) return { Authorization: `Bearer ${token}` };
         return {};

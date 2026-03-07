@@ -55,13 +55,13 @@ function StatCard({
   icon,
   colorClass,
   isLoading,
-}: {
+}: Readonly<{
   label: string;
   value: number;
   icon: string;
   colorClass: string;
   isLoading: boolean;
-}) {
+}>) {
   return (
     <Card>
       <CardContent className="p-4">
@@ -100,9 +100,9 @@ const SENTIMENT_OPTIONS = [
   ...SENTIMENT_LABELS.map((s) => ({
     value: s,
     label: s
-      .replace(/_/g, ' ')
+      .replaceAll(/_/g, ' ')
       .toLowerCase()
-      .replace(/\b\w/g, (c) => c.toUpperCase()),
+      .replaceAll(/\b\w/g, (c) => c.toUpperCase()),
   })),
 ];
 
@@ -133,7 +133,7 @@ const FILTER_CHIPS = [
 // Analysis Card (internal)
 // ============================================
 
-function AnalysisCard({ analysis }: { analysis: SentimentAnalysis }) {
+function AnalysisCard({ analysis }: Readonly<{ analysis: SentimentAnalysis }>) {
   const topEmotions = analysis.emotions.slice(0, 3);
 
   return (
@@ -152,7 +152,7 @@ function AnalysisCard({ analysis }: { analysis: SentimentAnalysis }) {
                 <span className="material-symbols-outlined text-sm" aria-hidden="true">
                   {getSentimentIcon(analysis.sentiment)}
                 </span>
-                {analysis.sentiment.replace(/_/g, ' ')}
+                {analysis.sentiment.replaceAll(/_/g, ' ')}
               </span>
               <span
                 className={cn(
@@ -204,11 +204,11 @@ function AnalysisCard({ analysis }: { analysis: SentimentAnalysis }) {
                   key={kp.phrase}
                   className={cn(
                     'inline-block px-2 py-0.5 rounded-full text-xs truncate max-w-[200px]',
-                    kp.sentiment === 'positive'
-                      ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
-                      : kp.sentiment === 'negative'
-                        ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400'
-                        : 'bg-slate-50 text-slate-600 dark:bg-slate-800/50 dark:text-slate-400'
+                    (() => {
+                      if (kp.sentiment === 'positive') return 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400';
+                      if (kp.sentiment === 'negative') return 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400';
+                      return 'bg-slate-50 text-slate-600 dark:bg-slate-800/50 dark:text-slate-400';
+                    })()
                   )}
                   title={kp.phrase}
                 >
@@ -228,7 +228,7 @@ function AnalysisCard({ analysis }: { analysis: SentimentAnalysis }) {
               >
                 <span className="material-symbols-outlined text-sm" aria-hidden="true">
                   warning
-                </span>
+                </span>{' '}
                 Low confidence
               </span>
             ) : null}
@@ -407,7 +407,7 @@ export function SentimentDashboard() {
 
       {/* Date Range + SearchFilterBar */}
       <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-2" role="group" aria-label="Date range">
+        <fieldset className="flex items-center gap-2 border-0 p-0 m-0"><legend className="sr-only">Date range</legend>
           {DATE_RANGES.map((dr) => (
             <Button
               key={dr}
@@ -418,7 +418,7 @@ export function SentimentDashboard() {
               {dr}
             </Button>
           ))}
-        </div>
+        </fieldset>
 
         <SearchFilterBar
           searchValue={filterState.values.search}
@@ -474,13 +474,15 @@ export function SentimentDashboard() {
       </Card>
 
       {/* Recent Analyses */}
-      {isLoading ? (
+      {(() => {
+        if (isLoading) return (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-36 w-full rounded-lg" />
+            <Skeleton key={i} className="h-36 w-full rounded-lg" /> // NOSONAR typescript:S6479
           ))}
         </div>
-      ) : filteredAnalyses.length === 0 ? (
+        );
+        if (filteredAnalyses.length === 0) return (
         <Card>
           <CardContent className="p-8 text-center" data-testid="empty-state">
             <span
@@ -492,7 +494,8 @@ export function SentimentDashboard() {
             <p className="text-sm text-muted-foreground">No sentiment analyses found</p>
           </CardContent>
         </Card>
-      ) : (
+        );
+        return (
         <div className="space-y-3">
           {filteredAnalyses.map((analysis) => (
             <AnalysisCard key={analysis.id} analysis={analysis} />
@@ -505,7 +508,8 @@ export function SentimentDashboard() {
             </div>
           ) : null}
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

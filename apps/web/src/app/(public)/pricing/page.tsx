@@ -2,8 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Button, Card } from '@intelliflow/ui';
-import { cn } from '@intelliflow/ui';
+import { Button, Card, cn } from '@intelliflow/ui';
 import pricingData from '@/data/pricing-data.json';
 
 export default function PricingPage() {
@@ -45,7 +44,7 @@ export default function PricingPage() {
                 )}
                 onClick={() => setBilling('annual')}
               >
-                Annual
+                Annual{' '}
                 <span className="text-xs bg-[#10b981] text-white px-2 py-0.5 rounded">
                   Save 17%
                 </span>
@@ -125,7 +124,7 @@ export default function PricingPage() {
                   <ul className="space-y-3 mb-8 flex-1">
                     {tier.features.map((feature, index) => (
                       <li
-                        key={index}
+                        key={index} // NOSONAR typescript:S6479
                         className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400"
                       >
                         <span className="material-symbols-outlined text-[#137fec] text-base mt-0.5 flex-shrink-0">
@@ -208,7 +207,7 @@ export default function PricingPage() {
               </thead>
               <tbody>
                 {pricingData.comparisonFeatures.map((category, catIndex) => (
-                  <React.Fragment key={catIndex}>
+                  <React.Fragment key={catIndex}> {/* NOSONAR typescript:S6479 */}
                     {/* Category Header */}
                     <tr className="bg-slate-50 dark:bg-slate-900">
                       <td colSpan={5} className="p-4 font-semibold text-slate-900 dark:text-white">
@@ -219,7 +218,7 @@ export default function PricingPage() {
                     {/* Features */}
                     {category.features.map((feature, featIndex) => (
                       <tr
-                        key={featIndex}
+                        key={featIndex} // NOSONAR typescript:S6479
                         className="border-t border-slate-200 dark:border-slate-700"
                       >
                         <td className="p-4 text-slate-600 dark:text-slate-400">{feature.name}</td>
@@ -256,7 +255,7 @@ export default function PricingPage() {
           <div className="space-y-4">
             {pricingData.faqs.map((faq, index) => (
               <div
-                key={index}
+                key={index} // NOSONAR typescript:S6479
                 className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden"
               >
                 <button

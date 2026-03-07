@@ -17,7 +17,7 @@ interface DriftAlertsProps {
   alerts: DriftHistoryItem[];
 }
 
-export function DriftAlerts({ alerts }: DriftAlertsProps) {
+export function DriftAlerts({ alerts }: Readonly<DriftAlertsProps>) {
   const urgentAlerts = alerts.filter((a) => a.severity === 'high' || a.severity === 'critical');
 
   return (
@@ -27,7 +27,7 @@ export function DriftAlerts({ alerts }: DriftAlertsProps) {
           <span className="material-symbols-outlined text-lg text-amber-500" aria-hidden="true">
             notifications_active
           </span>
-          Drift Alerts
+          {' '}Drift Alerts
           {urgentAlerts.length > 0 && (
             <Badge variant="destructive" className="ml-1">
               {urgentAlerts.length}
@@ -80,7 +80,7 @@ export function DriftAlerts({ alerts }: DriftAlertsProps) {
                 {alert.recommendations.length > 0 && (
                   <ul className="text-xs space-y-1" data-testid="alert-recommendations">
                     {alert.recommendations.map((rec, ridx) => (
-                      <li key={ridx} className="flex items-start gap-1.5">
+                      <li key={ridx} className="flex items-start gap-1.5"> {/* NOSONAR typescript:S6479 */}
                         <span
                           className="material-symbols-outlined text-xs mt-0.5"
                           aria-hidden="true"

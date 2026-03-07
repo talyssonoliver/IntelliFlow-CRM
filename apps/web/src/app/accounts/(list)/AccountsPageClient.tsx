@@ -88,7 +88,7 @@ interface StatCardProps {
   isLoading?: boolean;
 }
 
-function StatCard({ title, value, detail, isLoading }: StatCardProps) {
+function StatCard({ title, value, detail, isLoading }: Readonly<StatCardProps>) {
   if (isLoading) {
     return (
       <div className="rounded-lg border border-border bg-card p-5">
@@ -107,6 +107,82 @@ function StatCard({ title, value, detail, isLoading }: StatCardProps) {
       <p className="text-2xl font-bold text-foreground mt-1">{value}</p>
       {detail && <p className="text-xs text-muted-foreground mt-1">{detail}</p>}
     </div>
+  );
+}
+
+// =============================================================================
+// Accounts Content Sub-Component
+// =============================================================================
+
+interface AccountsContentProps {
+  isLoading: boolean;
+  accounts: AccountRow[];
+  columns: ReturnType<typeof createAccountColumns>;
+  handleRowClick: (row: AccountRow) => void;
+  pageSize: number;
+  currentPage: number;
+  totalItems: number;
+  onPageChange: (page: number) => void;
+  hasFilters: boolean;
+}
+
+function AccountsContent({
+  isLoading,
+  accounts,
+  columns,
+  handleRowClick,
+  pageSize,
+  currentPage,
+  totalItems,
+  onPageChange,
+  hasFilters,
+}: Readonly<AccountsContentProps>) {
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <Skeleton key={i} className="h-14 w-full" /> // NOSONAR typescript:S6479
+        ))}
+      </div>
+    );
+  }
+  if (accounts.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <span className="material-symbols-outlined text-5xl text-muted-foreground mb-3">
+          domain
+        </span>
+        <h3 className="text-lg font-semibold text-foreground mb-1">No accounts found</h3>
+        <p className="text-muted-foreground text-sm">
+          {hasFilters
+            ? 'Try adjusting your search or filters.'
+            : 'Create your first account to get started.'}
+        </p>
+      </div>
+    );
+  }
+  return (
+    <>
+      <DataTable
+        columns={columns}
+        data={accounts}
+        onRowClick={handleRowClick}
+        hidePagination
+        pageSize={pageSize}
+        emptyMessage="No accounts found."
+        emptyIcon="domain"
+      />
+      <Pagination
+        currentPage={currentPage}
+        totalPages={Math.ceil(totalItems / pageSize)}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={onPageChange}
+        showSummary
+        showNavLabels
+        hideWhenSinglePage
+      />
+    </>
   );
 }
 
@@ -153,7 +229,7 @@ export default function AccountsPageClient({
   const { data: stats, isLoading: statsLoading } = api.account.stats.useQuery(undefined, {
     enabled: isAuthenticated && !authLoading,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...(serverStats != null ? { initialData: serverStats as any } : {}),
+    ...(serverStats == null ? {} : { initialData: serverStats as any }),
   });
 
   // Reset to page 1 when filters change
@@ -249,7 +325,7 @@ export default function AccountsPageClient({
         />
         <StatCard
           title="With Opportunities"
-          value={withOpportunities != null ? withOpportunities.toLocaleString('en-US') : '\u2014'}
+          value={withOpportunities == null ? '\u2014' : withOpportunities.toLocaleString('en-US')}
           detail={oppShare > 0 ? `${oppShare}% share` : undefined}
           isLoading={statsLoading}
         />
@@ -305,57 +381,24 @@ export default function AccountsPageClient({
           >
             <span className="material-symbols-outlined text-lg" aria-hidden="true">
               refresh
-            </span>
+            </span>{' '}
             Try Again
           </button>
         </div>
       )}
 
       {!error && (
-        <>
-          {isLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <Skeleton key={i} className="h-14 w-full" />
-              ))}
-            </div>
-          ) : accounts.length === 0 ? (
-            <div className="text-center py-16">
-              <span className="material-symbols-outlined text-5xl text-muted-foreground mb-3">
-                domain
-              </span>
-              <h3 className="text-lg font-semibold text-foreground mb-1">No accounts found</h3>
-              <p className="text-muted-foreground text-sm">
-                {searchQuery || industryFilter || ownerFilter
-                  ? 'Try adjusting your search or filters.'
-                  : 'Create your first account to get started.'}
-              </p>
-            </div>
-          ) : (
-            <DataTable
-              columns={columns}
-              data={accounts}
-              onRowClick={handleRowClick}
-              hidePagination
-              pageSize={pageSize}
-              emptyMessage="No accounts found."
-              emptyIcon="domain"
-            />
-          )}
-
-          {!isLoading && (
-            <Pagination
-              currentPage={currentPage}
-              totalPages={Math.ceil(totalItems / pageSize)}
-              totalItems={totalItems}
-              pageSize={pageSize}
-              onPageChange={setCurrentPage}
-              showSummary
-              showNavLabels
-              hideWhenSinglePage
-            />
-          )}
-        </>
+        <AccountsContent
+          isLoading={isLoading}
+          accounts={accounts}
+          columns={columns}
+          handleRowClick={handleRowClick}
+          pageSize={pageSize}
+          currentPage={currentPage}
+          totalItems={totalItems}
+          onPageChange={setCurrentPage}
+          hasFilters={!!(searchQuery || industryFilter || ownerFilter)}
+        />
       )}
     </div>
   );

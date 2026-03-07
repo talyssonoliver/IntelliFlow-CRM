@@ -45,7 +45,7 @@ vi.mock('@/components/shared/oauth-callback', () => ({
 
 // Mock AuthBackground — render children
 vi.mock('@/components/shared/auth-background', () => ({
-  AuthBackground: ({ children }: { children: React.ReactNode }) => (
+  AuthBackground: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <div data-testid="mock-auth-background">{children}</div>
   ),
 }));

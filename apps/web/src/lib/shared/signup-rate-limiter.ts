@@ -83,7 +83,7 @@ export function checkSignupRateLimit(
 ): SignupRateLimitResult {
   const cfg = { ...DEFAULT_CONFIG, ...config };
 
-  if (typeof window === 'undefined') {
+  if (typeof globalThis.window === 'undefined') {
     return createSuccessResult(cfg.maxAttempts);
   }
 
@@ -138,10 +138,11 @@ export function checkSignupRateLimit(
     attemptsRemaining,
     lockedUntil: null,
     secondsRemaining: 0,
-    message:
-      attemptsRemaining <= 2
-        ? `Warning: ${attemptsRemaining} attempt${attemptsRemaining === 1 ? '' : 's'} remaining before lockout.`
-        : '',
+    message: (() => {
+      if (attemptsRemaining > 2) return '';
+      const plural = attemptsRemaining === 1 ? '' : 's';
+      return `Warning: ${attemptsRemaining} attempt${plural} remaining before lockout.`;
+    })(),
   };
 }
 
@@ -166,7 +167,7 @@ export function recordSignupAttempt(
 ): void {
   const cfg = { ...DEFAULT_CONFIG, ...config };
 
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis.window === 'undefined') return;
 
   const key = getStorageKey(email);
   const data = loadData(key);
@@ -205,7 +206,7 @@ export function recordSignupAttempt(
  * ```
  */
 export function clearSignupRateLimit(email: string): void {
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis.window === 'undefined') return;
 
   const key = getStorageKey(email);
   clearData(key);
@@ -313,7 +314,7 @@ function formatTimeRemaining(seconds: number): string {
 function simpleHash(str: string): string {
   let hash = 5381;
   for (let i = 0; i < str.length; i++) {
-    hash = (hash * 33) ^ str.charCodeAt(i);
+    hash = (hash * 33) ^ str.codePointAt(i)!;
   }
   return (hash >>> 0).toString(16);
 }

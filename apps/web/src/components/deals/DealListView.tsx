@@ -120,8 +120,14 @@ function StageBadge({ stage }: Readonly<{ stage: OpportunityStage }>) {
 }
 
 function ProbabilityBar({ probability }: Readonly<{ probability: number }>) {
-  const color =
-    probability >= 70 ? 'bg-green-500' : probability >= 40 ? 'bg-amber-500' : 'bg-red-500';
+  let color: string;
+  if (probability >= 70) {
+    color = 'bg-green-500';
+  } else if (probability >= 40) {
+    color = 'bg-amber-500';
+  } else {
+    color = 'bg-red-500';
+  }
 
   return (
     <div className="flex items-center gap-2">
@@ -166,12 +172,12 @@ function DealAvatar({ deal }: Readonly<{ deal: Deal }>) {
 // =============================================================================
 
 interface RowActionHandlers {
-  onEdit: (deal: Deal) => void;
-  onMoveStage: (deal: Deal) => void;
-  onDelete: (deal: Deal) => void;
+  onEdit: (deal: Readonly<Deal>) => void;
+  onMoveStage: (deal: Readonly<Deal>) => void;
+  onDelete: (deal: Readonly<Deal>) => void;
 }
 
-function createColumns(handlers: RowActionHandlers): ColumnDef<Deal>[] {
+function createColumns(handlers: Readonly<RowActionHandlers>): ColumnDef<Deal>[] {
   return [
     {
       accessorKey: 'name',
@@ -373,7 +379,7 @@ export const DealListView = React.memo(function DealListView() {
   );
 
   // Handlers
-  const handleRowClick = useCallback((deal: Deal) => router.push(`/deals/${deal.id}`), [router]);
+  const handleRowClick = useCallback((deal: Readonly<Deal>) => router.push(`/deals/${deal.id}`), [router]);
 
   const handleSearch = useCallback((value: string) => setSearchQuery(value), []);
 
@@ -545,7 +551,7 @@ export const DealListView = React.memo(function DealListView() {
         <div className="space-y-3">
           {[...Array(5)].map((_, i) => (
             <div
-              key={`skeleton-${i}`}
+              key={`skeleton-${i}`} // NOSONAR typescript:S6479
               className="flex items-center gap-4 p-4 bg-card rounded-lg border border-border"
             >
               <Skeleton className="size-9 rounded-lg" />
@@ -572,7 +578,7 @@ export const DealListView = React.memo(function DealListView() {
             onClick={() => refetch()}
             className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors"
           >
-            <span className="material-symbols-outlined text-[16px]">refresh</span>
+            <span className="material-symbols-outlined text-[16px]">refresh</span>{' '}
             Try Again
           </button>
         </div>

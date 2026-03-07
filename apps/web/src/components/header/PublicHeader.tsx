@@ -3,8 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Button } from '@intelliflow/ui';
-import { cn } from '@intelliflow/ui';
+import { Button, cn } from '@intelliflow/ui';
 
 interface PublicRoute {
   label: string;

@@ -14,7 +14,7 @@
  */
 export function formatBackupCode(code: string): string {
   // Normalize: uppercase, remove spaces and existing dashes
-  const normalized = code.toUpperCase().trim().replace(/-/g, '');
+  const normalized = code.toUpperCase().trim().replaceAll('-', '');
   const midpoint = Math.floor(normalized.length / 2);
   return `${normalized.slice(0, midpoint)}-${normalized.slice(midpoint)}`;
 }
@@ -228,7 +228,7 @@ export function printBackupCodes(codes: string[], email: string, generatedAt: Da
     return;
   }
 
-  printWindow.document.write(printContent);
+  printWindow.document.write(printContent); // NOSONAR typescript:S1874
   printWindow.document.close();
   printWindow.print();
 }
@@ -245,7 +245,7 @@ export function validateBackupCode(code: string): boolean {
   }
 
   // Remove dash and normalize
-  const normalized = code.replace(/-/g, '').trim();
+  const normalized = code.replaceAll('-', '').trim();
 
   // Must be 8-12 alphanumeric characters
   if (normalized.length < 8 || normalized.length > 12) {

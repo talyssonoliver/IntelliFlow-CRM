@@ -39,7 +39,7 @@ export function DocumentSearch({
   onFilterChange,
   activeFilters,
   resultCount,
-}: DocumentSearchProps) {
+}: Readonly<DocumentSearchProps>) {
   const [searchValue, setSearchValue] = useState(activeFilters.query ?? '');
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -75,7 +75,7 @@ export function DocumentSearch({
   // ─── Close dropdown on outside click ──────────────────────────────────────
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleClickOutside = (e: Readonly<MouseEvent>) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setOpenDropdown(null);
       }
@@ -87,7 +87,7 @@ export function DocumentSearch({
   // ─── Close dropdown on Escape ─────────────────────────────────────────────
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = (e: Readonly<KeyboardEvent>) => {
       if (e.key === 'Escape') setOpenDropdown(null);
     };
     document.addEventListener('keydown', handleKeyDown);
@@ -97,7 +97,7 @@ export function DocumentSearch({
   // ─── Filter Toggles ──────────────────────────────────────────────────────
 
   const toggleStatusFilter = useCallback(
-    (status: DocumentStatus) => {
+    (status: Readonly<DocumentStatus>) => {
       const current = activeFilters.status ?? [];
       const updated = current.includes(status)
         ? current.filter((s) => s !== status)
@@ -108,7 +108,7 @@ export function DocumentSearch({
   );
 
   const toggleClassificationFilter = useCallback(
-    (classification: DocumentClassification) => {
+    (classification: Readonly<DocumentClassification>) => {
       const current = activeFilters.classification ?? [];
       const updated = current.includes(classification)
         ? current.filter((c) => c !== classification)
@@ -319,9 +319,10 @@ export function DocumentSearch({
 
         {resultCount !== undefined && (
           <span className="ml-auto text-sm text-slate-500" data-testid="result-count">
-            {resultCount === 0
-              ? 'No results'
-              : `${resultCount} result${resultCount === 1 ? '' : 's'}`}
+            {(() => {
+              if (resultCount === 0) return 'No results';
+              return `${resultCount} result${resultCount === 1 ? '' : 's'}`;
+            })()}
           </span>
         )}
       </div>

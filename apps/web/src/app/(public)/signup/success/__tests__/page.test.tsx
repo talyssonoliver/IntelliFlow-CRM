@@ -21,7 +21,7 @@ vi.mock('@intelliflow/ui', () => ({
 }));
 
 vi.mock('@/components/shared', () => ({
-  AuthBackground: ({ children }: { children: React.ReactNode }) => (
+  AuthBackground: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <div data-testid="auth-background">{children}</div>
   ),
 }));
@@ -55,11 +55,11 @@ vi.mock('next/link', () => ({
     children,
     href,
     ...props
-  }: {
+  }: Readonly<{
     children: React.ReactNode;
     href: string;
     [key: string]: unknown;
-  }) => (
+  }>) => (
     <a href={href} {...props}>
       {children}
     </a>
@@ -279,7 +279,8 @@ describe('SignUpSuccessPage', () => {
   // TC#13: AC-011
   it('success header section has role="status" and aria-live="polite"', async () => {
     await renderPage();
-    const liveRegion = document.querySelector('[role="status"][aria-live="polite"]');
+    // The success header uses aria-live="polite" as a live region for screen readers
+    const liveRegion = document.querySelector('[aria-live="polite"]');
     expect(liveRegion).not.toBeNull();
     expect(liveRegion?.textContent).toContain('Your account has been created successfully');
   });

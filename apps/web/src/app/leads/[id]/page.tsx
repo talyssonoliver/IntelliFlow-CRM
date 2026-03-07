@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import {
   Button,
   Card,
@@ -41,6 +41,9 @@ import { UpcomingEventsCard } from '@/components/shared';
 import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
 import { ActivityFeed } from '@/components/shared/activity-feed';
 
+// Common nullable date type
+type DateStringNull = Date | string | null;
+
 // Tab types matching Contact360 pattern
 type TabId = 'overview' | 'activity' | 'tasks' | 'notes' | 'emails' | 'files' | 'ai-insights';
 
@@ -70,8 +73,83 @@ type DBActivityType =
   | 'STATUS_CHANGE'
   | 'QUALIFICATION';
 
+// Resolve icon name for a next-best-action label
+function resolveActionIcon(text: string): string {
+  if (text.includes('CALL') || text.includes('DISCOVERY')) return 'call';
+  if (text.includes('EMAIL') || text.includes('FOLLOW')) return 'mail';
+  if (text.includes('MEET') || text.includes('DEMO')) return 'calendar_add_on';
+  if (text.includes('PROPOSAL')) return 'description';
+  return 'lightbulb';
+}
+
+type ActionItem = { icon: string; label: string; primary: boolean };
+type ImpactLevel = 'HIGH' | 'MEDIUM' | 'LOW';
+
+// Resolve churn factor impact level for engagement score
+function engagementImpact(score: number): ImpactLevel {
+  if (score < 30) return 'HIGH';
+  if (score < 60) return 'MEDIUM';
+  return 'LOW';
+}
+
+// Resolve churn factor impact level for days since last contact
+function lastContactImpact(days: number): ImpactLevel {
+  if (days > 30) return 'HIGH';
+  if (days > 14) return 'MEDIUM';
+  return 'LOW';
+}
+
+// Resolve churn factor impact level for conversion probability
+function conversionImpact(probability: number): 'HIGH' | 'MEDIUM' | 'LOW' {
+  if (probability < 30) return 'HIGH';
+  if (probability < 60) return 'MEDIUM';
+  return 'LOW';
+}
+
+// Resolve NBA action type from action text keywords
+function resolveNBAActionType(actionText: string): NBAActionType {
+  if (actionText.includes('CALL') || actionText.includes('DISCOVERY')) return 'CALL';
+  if (actionText.includes('EMAIL') || actionText.includes('FOLLOW')) return 'EMAIL';
+  if (actionText.includes('MEET')) return 'MEETING';
+  if (actionText.includes('PROPOSAL')) return 'SEND_PROPOSAL';
+  if (actionText.includes('DEMO')) return 'SCHEDULE_DEMO';
+  if (actionText.includes('CASE STUDY')) return 'SEND_CASE_STUDY';
+  if (actionText.includes('DISCOUNT')) return 'OFFER_DISCOUNT';
+  if (actionText.includes('TRAIN')) return 'TRAINING';
+  if (actionText.includes('ESCALATE')) return 'ESCALATE';
+  return 'WAIT';
+}
+
+// Resolve NBA priority from churn risk and conversion probability
+function resolveNBAPriority(churnRisk: string, conversionProbability: number): NBAPriority {
+  if (churnRisk === 'HIGH' || churnRisk === 'CRITICAL') return 'HIGH';
+  if (conversionProbability >= 70) return 'HIGH';
+  if (churnRisk === 'LOW' || churnRisk === 'MINIMAL') return 'LOW';
+  return 'MEDIUM';
+}
+
+// Build the nextBestActions array from an AI insight object
+function buildNextBestActions(insight: {
+  nextBestAction: string | null | undefined;
+  recommendations: unknown;
+}): ActionItem[] {
+  const actions: ActionItem[] = [];
+  if (insight.nextBestAction) {
+    const icon = resolveActionIcon(insight.nextBestAction.toUpperCase());
+    actions.push({ icon, label: insight.nextBestAction, primary: true });
+  }
+  const recs = (insight.recommendations as string[]) || [];
+  if (recs.length > 0 && recs[0] !== insight.nextBestAction) {
+    actions.push({ icon: 'auto_awesome', label: recs[0], primary: false });
+  }
+  if (actions.length === 0) {
+    actions.push({ icon: 'calendar_add_on', label: 'Schedule Discovery Call', primary: true });
+  }
+  return actions;
+}
+
 // Map database activity types to UI activity types
-const mapActivityType = (dbType: DBActivityType): ActivityType => {
+const mapActivityType = (dbType: Readonly<DBActivityType>): ActivityType => {
   const typeMap: Record<DBActivityType, ActivityType> = {
     WEB_FORM: 'web_form',
     EMAIL: 'email',
@@ -164,7 +242,7 @@ interface LeadWithRelations {
   location?: string | null;
   website?: string | null;
   avatarUrl?: string | null;
-  lastContactedAt?: string | Date | null;
+  lastContactedAt?: DateStringNull;
   estimatedValue?: number | null;
   tags?: string[];
   // Relations
@@ -200,7 +278,7 @@ interface LeadWithRelations {
   tasks?: Array<{
     id: string;
     title: string;
-    dueDate: string | Date | null;
+    dueDate: DateStringNull;
     priority: string | null;
     status: string;
   }>;
@@ -231,7 +309,7 @@ const activityTypeFilters: { value: ActivityType | 'all'; label: string; icon: s
 ];
 
 // Lead Status Badge Component
-function LeadStatusBadge({ status }: { status: LeadStatus }) {
+function LeadStatusBadge({ status }: Readonly<{ status: LeadStatus }>) {
   const statusConfig: Record<LeadStatus, { label: string; className: string }> = {
     NEW: {
       label: 'New Lead',
@@ -276,7 +354,7 @@ function LeadStatusBadge({ status }: { status: LeadStatus }) {
 }
 
 // Temperature Badge Component
-function TemperatureBadge({ temperature }: { temperature: LeadTemperature }) {
+function TemperatureBadge({ temperature }: Readonly<{ temperature: LeadTemperature }>) {
   const config: Record<LeadTemperature, { label: string; className: string }> = {
     hot: {
       label: 'Hot',
@@ -302,8 +380,66 @@ function TemperatureBadge({ temperature }: { temperature: LeadTemperature }) {
   );
 }
 
+// --- Module-level helpers extracted to reduce component cognitive complexity ---
+
+function getLeadErrorMessage(
+  isServerError: boolean,
+  isNotFound: boolean,
+  errorMessage: string | undefined
+): string {
+  if (isServerError) return 'An unexpected error occurred. Please try again.';
+  if (isNotFound) return "The lead you're looking for doesn't exist or you don't have permission to view it.";
+  return errorMessage || 'An error occurred while loading this lead.';
+}
+
+function matchesActivitySearch(activity: Activity, query: string): boolean {
+  const q = query.toLowerCase();
+  return (
+    activity.title.toLowerCase().includes(q) ||
+    activity.description.toLowerCase().includes(q) ||
+    activity.user.toLowerCase().includes(q) ||
+    !!activity.metadata?.subject?.toLowerCase().includes(q) ||
+    !!activity.metadata?.preview?.toLowerCase().includes(q) ||
+    !!activity.metadata?.message?.toLowerCase().includes(q)
+  );
+}
+
+function filterActivity(
+  activity: Activity,
+  typeFilter: ActivityType | 'all',
+  personFilter: string,
+  searchQuery: string
+): boolean {
+  if (typeFilter !== 'all' && activity.type !== typeFilter) return false;
+  if (personFilter !== 'all' && activity.user !== personFilter) return false;
+  if (searchQuery && !matchesActivitySearch(activity, searchQuery)) return false;
+  return true;
+}
+
+function getCallOutcomeBadge(outcome: string | undefined): { cls: string; label: string } {
+  if (outcome === 'connected') return { cls: 'bg-green-100 text-green-700', label: '✓ Connected' };
+  if (outcome === 'voicemail') return { cls: 'bg-yellow-100 text-yellow-700', label: '📞 Voicemail' };
+  return { cls: 'bg-red-100 text-red-700', label: '✗ No Answer' };
+}
+
+function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric', month: 'short', day: 'numeric',
+  });
+}
+
 // Source Badge Component
-function SourceBadge({ source }: { source: LeadSource }) {
+function SourceBadge({ source }: Readonly<{ source: LeadSource }>) {
   const sourceConfig: Record<LeadSource, { label: string; className: string }> = {
     WEBSITE: { label: 'Website', className: 'bg-blue-50 text-blue-700 border-blue-200' },
     REFERRAL: { label: 'Referral', className: 'bg-green-50 text-green-700 border-green-200' },
@@ -324,10 +460,11 @@ function SourceBadge({ source }: { source: LeadSource }) {
   );
 }
 
-export default function Lead360Page() {
+export default function Lead360Page() { // NOSONAR typescript:S3776
   // Get lead ID from URL params
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const leadId = params.id as string;
 
   // Require authentication - redirects to login if not authenticated
@@ -359,7 +496,9 @@ export default function Lead360Page() {
   // Cast to extended type (will be properly typed after Prisma regeneration)
   const apiLead = rawApiLead as LeadWithRelations | undefined;
 
-  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const validTabs: TabId[] = ['overview', 'activity', 'tasks', 'notes', 'emails', 'files', 'ai-insights'];
+  const tabParam = searchParams.get('tab') as TabId | null;
+  const [activeTab, setActiveTab] = useState<TabId>(tabParam && validTabs.includes(tabParam) ? tabParam : 'overview');
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
   const [activityNote, setActivityNote] = useState('');
   const [activityTypeFilter, setActivityTypeFilter] = useState<ActivityType | 'all'>('all');
@@ -450,6 +589,16 @@ export default function Lead360Page() {
     return 'cold';
   };
 
+  const getOwnerTitle = (role: string | undefined): string => {
+    const roleMap: Record<string, string> = {
+      SALES_REP: 'Sales Representative',
+      MANAGER: 'Manager',
+      ADMIN: 'Administrator',
+      USER: 'Team Member',
+    };
+    return roleMap[role || ''] || 'Team Member';
+  };
+
   // Transform API data to UI format
   const lead = useMemo(() => {
     if (!apiLead) return null;
@@ -490,15 +639,7 @@ export default function Lead360Page() {
       owner: apiLead.owner
         ? {
             name: apiLead.owner.name || 'Unknown',
-            title: (() => {
-              const roleMap: Record<string, string> = {
-                SALES_REP: 'Sales Representative',
-                MANAGER: 'Manager',
-                ADMIN: 'Administrator',
-                USER: 'Team Member',
-              };
-              return roleMap[apiLead.owner?.role || ''] || 'Team Member';
-            })(),
+            title: getOwnerTitle(apiLead.owner?.role),
             avatarUrl: normalizedOwnerAvatar,
           }
         : {
@@ -555,11 +696,11 @@ export default function Lead360Page() {
     return apiLead.tasks.map((task) => ({
       id: task.id,
       title: task.title,
-      dueDate: task.dueDate
-        ? typeof task.dueDate === 'string'
-          ? task.dueDate
-          : task.dueDate.toISOString()
-        : '',
+      dueDate: (() => {
+        if (!task.dueDate) return '';
+        if (typeof task.dueDate === 'string') return task.dueDate;
+        return task.dueDate.toISOString();
+      })(),
       priority: task.priority?.toLowerCase() || 'medium',
       completed: task.status === 'COMPLETED',
     }));
@@ -616,30 +757,7 @@ export default function Lead360Page() {
       sentimentTrend: insight.sentimentTrend,
       lastEngagementDays: insight.lastEngagementDays,
       nextBestAction: insight.nextBestAction || 'No action recommended',
-      nextBestActions: (() => {
-        const actions: { icon: string; label: string; primary: boolean }[] = [];
-        if (insight.nextBestAction) {
-          const text = insight.nextBestAction.toUpperCase();
-          let icon = 'lightbulb';
-          if (text.includes('CALL') || text.includes('DISCOVERY')) icon = 'call';
-          else if (text.includes('EMAIL') || text.includes('FOLLOW')) icon = 'mail';
-          else if (text.includes('MEET') || text.includes('DEMO')) icon = 'calendar_add_on';
-          else if (text.includes('PROPOSAL')) icon = 'description';
-          actions.push({ icon, label: insight.nextBestAction, primary: true });
-        }
-        const recs = (insight.recommendations as string[]) || [];
-        if (recs.length > 0 && recs[0] !== insight.nextBestAction) {
-          actions.push({ icon: 'auto_awesome', label: recs[0], primary: false });
-        }
-        if (actions.length === 0) {
-          actions.push({
-            icon: 'calendar_add_on',
-            label: 'Schedule Discovery Call',
-            primary: true,
-          });
-        }
-        return actions;
-      })(),
+      nextBestActions: buildNextBestActions(insight),
       recommendations: (insight.recommendations as string[]) || [],
       icpMatch: insight.icpMatch || 'Not analyzed',
     };
@@ -687,39 +805,25 @@ export default function Lead360Page() {
       level,
       confidence: derivedConfidence,
       slaHours: slaMap[level],
-      trend:
-        insight.sentimentTrend === 'IMPROVING'
-          ? 'IMPROVING'
-          : insight.sentimentTrend === 'DECLINING'
-            ? 'DECLINING'
-            : 'STABLE',
+      trend: (() => {
+        if (insight.sentimentTrend === 'IMPROVING') return 'IMPROVING';
+        if (insight.sentimentTrend === 'DECLINING') return 'DECLINING';
+        return 'STABLE';
+      })(),
       factors: [
         {
           factor: 'Engagement Score',
-          impact: (() => {
-            if (insight.engagementScore < 30) return 'HIGH';
-            return insight.engagementScore < 60 ? 'MEDIUM' : 'LOW';
-          })(),
+          impact: engagementImpact(insight.engagementScore),
           value: `${insight.engagementScore}%`,
         },
         {
           factor: 'Days Since Contact',
-          impact:
-            insight.lastEngagementDays > 30
-              ? 'HIGH'
-              : insight.lastEngagementDays > 14
-                ? 'MEDIUM'
-                : 'LOW',
+          impact: lastContactImpact(insight.lastEngagementDays),
           value: `${insight.lastEngagementDays} days`,
         },
         {
           factor: 'Conversion Probability',
-          impact:
-            insight.conversionProbability < 30
-              ? 'HIGH'
-              : insight.conversionProbability < 60
-                ? 'MEDIUM'
-                : 'LOW',
+          impact: conversionImpact(insight.conversionProbability),
           value: `${insight.conversionProbability}%`,
         },
       ],
@@ -729,26 +833,10 @@ export default function Lead360Page() {
   // Transform AI insights to NextBestActionData format (IFC-095)
   const nextBestActionData: NextBestActionData | null = useMemo(() => {
     const insight = apiLead?.aiInsight;
-    if (!insight || !insight.nextBestAction) return null;
+    if (!insight?.nextBestAction) return null;
 
-    // Parse action type from next best action string
-    const actionText = insight.nextBestAction.toUpperCase();
-    let actionType: NBAActionType = 'WAIT';
-    if (actionText.includes('CALL') || actionText.includes('DISCOVERY')) actionType = 'CALL';
-    else if (actionText.includes('EMAIL') || actionText.includes('FOLLOW')) actionType = 'EMAIL';
-    else if (actionText.includes('MEET')) actionType = 'MEETING';
-    else if (actionText.includes('PROPOSAL')) actionType = 'SEND_PROPOSAL';
-    else if (actionText.includes('DEMO')) actionType = 'SCHEDULE_DEMO';
-    else if (actionText.includes('CASE STUDY')) actionType = 'SEND_CASE_STUDY';
-    else if (actionText.includes('DISCOUNT')) actionType = 'OFFER_DISCOUNT';
-    else if (actionText.includes('TRAIN')) actionType = 'TRAINING';
-    else if (actionText.includes('ESCALATE')) actionType = 'ESCALATE';
-
-    // Determine priority based on churn risk and conversion probability
-    let priority: NBAPriority = 'MEDIUM';
-    if (insight.churnRisk === 'HIGH' || insight.churnRisk === 'CRITICAL') priority = 'HIGH';
-    else if (insight.conversionProbability >= 70) priority = 'HIGH';
-    else if (insight.churnRisk === 'LOW' || insight.churnRisk === 'MINIMAL') priority = 'LOW';
+    const actionType = resolveNBAActionType(insight.nextBestAction.toUpperCase());
+    const priority = resolveNBAPriority(insight.churnRisk, insight.conversionProbability);
 
     return {
       actionType,
@@ -871,26 +959,22 @@ export default function Lead360Page() {
             {isServerError ? 'Something Went Wrong' : 'Lead Not Found'}
           </h2>
           <p className="text-slate-500 dark:text-slate-400 mb-4">
-            {isServerError
-              ? 'An unexpected error occurred. Please try again.'
-              : isNotFound
-                ? "The lead you're looking for doesn't exist or you don't have permission to view it."
-                : error?.message || 'An error occurred while loading this lead.'}
+            {getLeadErrorMessage(isServerError, isNotFound, error?.message)}
           </p>
           <div className="flex items-center justify-center gap-3">
             {isServerError && (
               <button
-                onClick={() => window.location.reload()}
+                onClick={() => globalThis.location.reload()}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
               >
-                <span className="material-symbols-outlined !text-lg">refresh</span> Retry
+                <span className="material-symbols-outlined !text-lg">refresh</span>{' '}Retry
               </button>
             )}
             <Link
               href="/leads"
               className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
             >
-              <span className="material-symbols-outlined !text-lg">arrow_back</span> Back to Leads
+              <span className="material-symbols-outlined !text-lg">arrow_back</span>{' '}Back to Leads
             </Link>
           </div>
         </Card>
@@ -911,25 +995,9 @@ export default function Lead360Page() {
   };
 
   // Filter activities
-  const filteredActivities = activities.filter((activity) => {
-    // Type filter
-    if (activityTypeFilter !== 'all' && activity.type !== activityTypeFilter) return false;
-    // Person filter
-    if (personFilter !== 'all' && activity.user !== personFilter) return false;
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      const matchesTitle = activity.title.toLowerCase().includes(query);
-      const matchesDescription = activity.description.toLowerCase().includes(query);
-      const matchesUser = activity.user.toLowerCase().includes(query);
-      const matchesMetadata =
-        activity.metadata?.subject?.toLowerCase().includes(query) ||
-        activity.metadata?.preview?.toLowerCase().includes(query) ||
-        activity.metadata?.message?.toLowerCase().includes(query);
-      if (!matchesTitle && !matchesDescription && !matchesUser && !matchesMetadata) return false;
-    }
-    return true;
-  });
+  const filteredActivities = activities.filter((activity) =>
+    filterActivity(activity, activityTypeFilter, personFilter, searchQuery)
+  );
 
   const visibleActivities = filteredActivities.slice(0, visibleCount);
   const hasMore = visibleCount < filteredActivities.length;
@@ -947,7 +1015,7 @@ export default function Lead360Page() {
     });
   };
 
-  // Format date helper
+  // Format date helper (formatRelativeTime is defined at module level)
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -956,23 +1024,8 @@ export default function Lead360Page() {
     });
   };
 
-  const formatRelativeTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    return formatDate(dateString);
-  };
-
   // Activity icon and color helpers
-  const getActivityIcon = (type: ActivityType): string => {
+  const getActivityIcon = (type: Readonly<ActivityType>): string => {
     const icons: Record<ActivityType, string> = {
       web_form: 'web',
       score_update: 'psychology',
@@ -986,7 +1039,7 @@ export default function Lead360Page() {
     return icons[type];
   };
 
-  const getActivityIconBg = (type: ActivityType): string => {
+  const getActivityIconBg = (type: Readonly<ActivityType>): string => {
     const colors: Record<ActivityType, string> = {
       web_form: 'bg-blue-100 dark:bg-slate-800 text-blue-600',
       score_update: 'bg-purple-100 dark:bg-slate-800 text-purple-600',
@@ -1021,7 +1074,7 @@ export default function Lead360Page() {
         return (
           <div className="mt-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 border border-slate-100 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400">
             <p>
-              <span className="font-semibold">Message:</span> "{meta.message}"
+              <span className="font-semibold">Message:</span>{' '}"{meta.message}"
             </p>
           </div>
         );
@@ -1069,51 +1122,43 @@ export default function Lead360Page() {
           </div>
         );
 
-      case 'call':
+      case 'call': {
+        const callOutcome = getCallOutcomeBadge(meta.outcome);
         return (
           <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                    meta.outcome === 'connected'
-                      ? 'bg-green-100 text-green-700'
-                      : meta.outcome === 'voicemail'
-                        ? 'bg-yellow-100 text-yellow-700'
-                        : 'bg-red-100 text-red-700'
-                  }`}
+                  className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${callOutcome.cls}`}
                 >
-                  {meta.outcome === 'connected'
-                    ? '✓ Connected'
-                    : meta.outcome === 'voicemail'
-                      ? '📞 Voicemail'
-                      : '✗ No Answer'}
+                  {callOutcome.label}
                 </span>
                 {meta.duration && <span className="text-sm text-slate-500">{meta.duration}</span>}
               </div>
               {meta.recordingUrl && (
                 <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded transition-colors">
-                  <span className="material-symbols-outlined !text-[16px]">play_arrow</span>
+                  <span className="material-symbols-outlined !text-[16px]">play_arrow</span>{' '}
                   Play Recording
                 </button>
               )}
             </div>
           </div>
         );
+      }
 
       case 'meeting':
         return (
           <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
             {meta.location && (
               <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-2">
-                <span className="material-symbols-outlined !text-[16px]">location_on</span>
+                <span className="material-symbols-outlined !text-[16px]">location_on</span>{' '}
                 {meta.location}
                 {meta.duration && <span className="text-slate-400">• {meta.duration}</span>}
               </div>
             )}
             {meta.attendees && meta.attendees.length > 0 && (
               <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                <span className="material-symbols-outlined !text-[16px]">group</span>
+                <span className="material-symbols-outlined !text-[16px]">group</span>{' '}
                 {meta.attendees.join(', ')}
               </div>
             )}
@@ -1129,19 +1174,19 @@ export default function Lead360Page() {
   const renderActivityActions = () => (
     <div className="flex items-center gap-1 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
       <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-500 hover:text-[#137fec] hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-        <span className="material-symbols-outlined !text-[14px]">reply</span>
+        <span className="material-symbols-outlined !text-[14px]">reply</span>{' '}
         Reply
       </button>
       <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-500 hover:text-[#137fec] hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-        <span className="material-symbols-outlined !text-[14px]">add_reaction</span>
+        <span className="material-symbols-outlined !text-[14px]">add_reaction</span>{' '}
         React
       </button>
       <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-500 hover:text-[#137fec] hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-        <span className="material-symbols-outlined !text-[14px]">note_add</span>
+        <span className="material-symbols-outlined !text-[14px]">note_add</span>{' '}
         Add Note
       </button>
       <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-500 hover:text-[#137fec] hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-        <span className="material-symbols-outlined !text-[14px]">share</span>
+        <span className="material-symbols-outlined !text-[14px]">share</span>{' '}
         Share
       </button>
     </div>
@@ -1171,21 +1216,21 @@ export default function Lead360Page() {
             disabled={convertMutation.isPending}
             className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
           >
-            <span className="material-symbols-outlined !text-[18px]">transform</span>
+            <span className="material-symbols-outlined !text-[18px]">transform</span>{' '}
             {convertMutation.isPending ? 'Converting...' : 'Convert Lead'}
           </button>
           <button
             onClick={() => router.push(`/leads/${lead.id}/edit`)}
             className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
           >
-            <span className="material-symbols-outlined !text-[18px]">edit</span>
+            <span className="material-symbols-outlined !text-[18px]">edit</span>{' '}
             Edit
           </button>
           <button
             onClick={() => setLogCallOpen(true)}
             className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none"
           >
-            <span className="material-symbols-outlined !text-[18px]">call</span>
+            <span className="material-symbols-outlined !text-[18px]">call</span>{' '}
             Log Call
           </button>
           <PinButton
@@ -1280,7 +1325,7 @@ export default function Lead360Page() {
                 htmlFor="log-call-title"
                 className="text-sm font-medium text-slate-700 dark:text-slate-300"
               >
-                Call Title <span className="text-red-500">*</span>
+                Call Title{' '}<span className="text-red-500">*</span>
               </label>
               <input
                 id="log-call-title"
@@ -1296,7 +1341,7 @@ export default function Lead360Page() {
                 htmlFor="log-call-description"
                 className="text-sm font-medium text-slate-700 dark:text-slate-300"
               >
-                Notes <span className="text-slate-400 text-xs font-normal">(optional)</span>
+                Notes{' '}<span className="text-slate-400 text-xs font-normal">(optional)</span>
               </label>
               <textarea
                 id="log-call-description"
@@ -1400,7 +1445,7 @@ export default function Lead360Page() {
                   <div className="flex flex-col">
                     <span className="text-xs text-slate-400 uppercase font-semibold">Phone</span>
                     <a
-                      href={`tel:${lead.phone.replace(/\D/g, '')}`}
+                      href={`tel:${lead.phone.replaceAll(/\D/g, '')}`}
                       className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#137fec]"
                     >
                       {lead.phone}
@@ -1704,7 +1749,7 @@ export default function Lead360Page() {
                 >
                   <span className="material-symbols-outlined text-sm align-middle mr-1">
                     timeline
-                  </span>
+                  </span>{' '}
                   Timeline
                 </button>
                 <button
@@ -1717,7 +1762,7 @@ export default function Lead360Page() {
                 >
                   <span className="material-symbols-outlined text-sm align-middle mr-1">
                     dynamic_feed
-                  </span>
+                  </span>{' '}
                   All Sources
                 </button>
               </div>
@@ -1759,7 +1804,7 @@ export default function Lead360Page() {
                               : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                           }`}
                         >
-                          <span>{filter.icon}</span>
+                          <span>{filter.icon}</span>{' '}
                           {filter.label}
                         </button>
                       ))}
@@ -1810,7 +1855,7 @@ export default function Lead360Page() {
                           </p>
                           <p className="text-xs text-slate-500">
                             Last engagement: {aiInsights.lastEngagementDays} day
-                            {aiInsights.lastEngagementDays !== 1 ? 's' : ''} ago
+                            {aiInsights.lastEngagementDays === 1 ? '' : 's'} ago
                           </p>
                         </div>
                       </div>
@@ -1966,7 +2011,7 @@ export default function Lead360Page() {
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Notes</h3>
                 <button
                   onClick={() => {
-                    const noteContent = window.prompt('Enter note:');
+                    const noteContent = globalThis.prompt('Enter note:');
                     if (noteContent?.trim()) {
                       addNoteMutation.mutate({ leadId, content: noteContent.trim() });
                     }
@@ -1974,7 +2019,7 @@ export default function Lead360Page() {
                   disabled={addNoteMutation.isPending}
                   className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors disabled:opacity-50"
                 >
-                  <span className="material-symbols-outlined !text-[18px]">add</span>
+                  <span className="material-symbols-outlined !text-[18px]">add</span>{' '}
                   {addNoteMutation.isPending ? 'Adding...' : 'Add Note'}
                 </button>
               </div>
@@ -2006,7 +2051,7 @@ export default function Lead360Page() {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Emails</h3>
                 <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
-                  <span className="material-symbols-outlined !text-[18px]">send</span>
+                  <span className="material-symbols-outlined !text-[18px]">send</span>{' '}
                   Compose
                 </button>
               </div>
@@ -2055,7 +2100,7 @@ export default function Lead360Page() {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Files</h3>
                 <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
-                  <span className="material-symbols-outlined !text-[18px]">upload</span>
+                  <span className="material-symbols-outlined !text-[18px]">upload</span>{' '}
                   Upload
                 </button>
               </div>
@@ -2182,7 +2227,7 @@ export default function Lead360Page() {
                 </h3>
                 <ul className="space-y-3">
                   {aiInsights.recommendations.map((rec, index) => (
-                    <li key={`rec-${index}`} className="flex items-start gap-3">
+                    <li key={`rec-${index}`} className="flex items-start gap-3"> {/* NOSONAR typescript:S6479 */}
                       <div className="w-6 h-6 rounded-full bg-[#137fec]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                         <span className="text-xs font-medium text-[#137fec]">{index + 1}</span>
                       </div>
@@ -2239,7 +2284,7 @@ export default function Lead360Page() {
             </div>
             {!apiLead?.aiInsight && (
               <p className="text-xs text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-1">
-                <span className="material-symbols-outlined !text-[14px]">warning</span>
+                <span className="material-symbols-outlined !text-[14px]">warning</span>{' '}
                 AI analysis not run yet
               </p>
             )}

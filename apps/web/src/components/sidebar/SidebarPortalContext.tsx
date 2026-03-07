@@ -39,7 +39,7 @@ interface SidebarPortalProviderProps {
  * Place this in a shared layout to enable dynamic sidebar injection.
  * Pages can then use useSidebarConfig() to set their sidebar content.
  */
-export function SidebarPortalProvider({ children }: SidebarPortalProviderProps) {
+export function SidebarPortalProvider({ children }: Readonly<SidebarPortalProviderProps>) {
   const [config, setConfig] = React.useState<SidebarConfig | null>(null);
   const portalTargetRef = React.useRef<HTMLDivElement>(null);
 
@@ -96,7 +96,7 @@ export function useSidebarPortalOptional(): SidebarPortalContextValue | null {
  * }
  * ```
  */
-export function useSidebarConfig(config: SidebarConfig): void {
+export function useSidebarConfig(config: Readonly<SidebarConfig>): void {
   const { setConfig } = useSidebarPortal();
 
   React.useEffect(() => {
@@ -122,7 +122,7 @@ export function useSidebarConfig(config: SidebarConfig): void {
  * </SidebarPortal>
  * ```
  */
-export function SidebarPortal({ children }: { children: React.ReactNode }) {
+export function SidebarPortal({ children }: Readonly<{ children: React.ReactNode }>) {
   const { portalTargetRef } = useSidebarPortal();
   const [mounted, setMounted] = React.useState(false);
 

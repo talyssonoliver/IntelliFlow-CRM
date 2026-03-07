@@ -10,9 +10,9 @@ import {
 
 export default function NotificationsLayoutShell({
   children,
-}: {
+}: Readonly<{
   readonly children: React.ReactNode;
-}) {
+}>) {
   return (
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)]">

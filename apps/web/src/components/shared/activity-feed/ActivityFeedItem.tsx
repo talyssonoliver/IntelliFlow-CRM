@@ -192,6 +192,56 @@ function getFileIcon(filename: string) {
   return FILE_TYPE_ICONS[ext] || FILE_TYPE_ICONS.default;
 }
 
+const TYPE_FALLBACK_LABELS: Record<string, string> = {
+  STATUS_CHANGE: 'Status updated',
+  STAGE_CHANGE: 'Stage changed',
+  SCORE_UPDATE: 'Score updated',
+  QUALIFICATION: 'Qualification changed',
+  ASSIGNMENT: 'Assignment updated',
+};
+
+function buildCallParts(metadata: Readonly<Record<string, unknown>>): string[] {
+  const parts: string[] = [];
+  const duration = metadata.duration as number | undefined;
+  const outcome = metadata.outcome as string | undefined;
+  const sentiment = metadata.sentiment as string | undefined;
+  if (duration) {
+    const mins = Math.floor(duration / 60);
+    const secs = duration % 60;
+    parts.push(`Duration: ${mins}m ${secs.toString().padStart(2, '0')}s`);
+  }
+  if (outcome) parts.push(outcome);
+  if (sentiment) parts.push(`Sentiment: ${sentiment}`);
+  return parts;
+}
+
+function buildEmailParts(metadata: Readonly<Record<string, unknown>>): string[] {
+  const parts: string[] = [];
+  const openCount = metadata.openCount as number | undefined;
+  const clickCount = metadata.clickCount as number | undefined;
+  if (openCount && openCount > 0) parts.push(`Opened ${openCount}x`);
+  if (clickCount && clickCount > 0) parts.push(`${clickCount} clicks`);
+  return parts;
+}
+
+function buildOpportunityParts(metadata: Readonly<Record<string, unknown>>): string[] {
+  const stageFrom = metadata.stageFrom as string | undefined;
+  const stageTo = metadata.stageTo as string | undefined;
+  if (stageFrom && stageTo) return [`${stageFrom} → ${stageTo}`];
+  return [];
+}
+
+function buildSourceParts(
+  source: string,
+  metadata: Record<string, unknown> | null | undefined
+): string[] {
+  if (!metadata) return [];
+  if (source === 'CALL') return buildCallParts(metadata);
+  if (source === 'EMAIL') return buildEmailParts(metadata);
+  if (source === 'OPPORTUNITY_EVENT') return buildOpportunityParts(metadata);
+  return [];
+}
+
 /**
  * Build a context-rich description that always includes the entity name
  * so users can see WHERE the activity happened (e.g., "on lead John Doe").
@@ -203,51 +253,54 @@ function buildDescription(
   type: string,
   source: string
 ): string | null {
-  const parts: string[] = [];
+  const parts: string[] = buildSourceParts(source, metadata);
 
-  // Source-specific rich descriptions from metadata
-  if (source === 'CALL' && metadata) {
-    const duration = metadata.duration as number | undefined;
-    const outcome = metadata.outcome as string | undefined;
-    const sentiment = metadata.sentiment as string | undefined;
-    if (duration) {
-      const mins = Math.floor(duration / 60);
-      const secs = duration % 60;
-      parts.push(`Duration: ${mins}m ${secs.toString().padStart(2, '0')}s`);
-    }
-    if (outcome) parts.push(outcome);
-    if (sentiment) parts.push(`Sentiment: ${sentiment}`);
-  } else if (source === 'EMAIL' && metadata) {
-    const openCount = metadata.openCount as number | undefined;
-    const clickCount = metadata.clickCount as number | undefined;
-    if (openCount && openCount > 0) parts.push(`Opened ${openCount}x`);
-    if (clickCount && clickCount > 0) parts.push(`${clickCount} clicks`);
-  } else if (source === 'OPPORTUNITY_EVENT' && metadata) {
-    const stageFrom = metadata.stageFrom as string | undefined;
-    const stageTo = metadata.stageTo as string | undefined;
-    if (stageFrom && stageTo) {
-      parts.push(`${stageFrom} → ${stageTo}`);
-    }
-  }
-
-  // Original description (if not redundant with metadata)
   if (description && !parts.some((p) => description.includes(p))) {
     parts.unshift(description);
   }
 
-  // If no description, provide type context
-  if (parts.length === 0) {
-    const typeLabels: Record<string, string> = {
-      STATUS_CHANGE: 'Status updated',
-      STAGE_CHANGE: 'Stage changed',
-      SCORE_UPDATE: 'Score updated',
-      QUALIFICATION: 'Qualification changed',
-      ASSIGNMENT: 'Assignment updated',
-    };
-    if (typeLabels[type]) parts.push(typeLabels[type]);
+  if (parts.length === 0 && TYPE_FALLBACK_LABELS[type]) {
+    parts.push(TYPE_FALLBACK_LABELS[type]);
   }
 
   return parts.length > 0 ? parts.join('. ') + '.' : null;
+}
+
+type TagVariant = 'green' | 'slate' | 'amber' | 'red' | 'blue';
+type AutoTag = { label: string; variant: TagVariant };
+
+function sentimentVariant(sentiment: string): TagVariant {
+  const lower = sentiment.toLowerCase();
+  if (lower === 'positive') return 'green';
+  if (lower === 'negative') return 'red';
+  return 'slate';
+}
+
+function emailStatusVariant(status: string): TagVariant {
+  if (status === 'opened') return 'green';
+  if (status === 'bounced') return 'red';
+  return 'slate';
+}
+
+function buildSourceTags(source: string, type: string, metadata: Record<string, unknown>): AutoTag[] {
+  if (source === 'CALL') {
+    const tags: AutoTag[] = [];
+    const sentiment = metadata.sentiment as string | undefined;
+    const status = metadata.status as string | undefined;
+    if (sentiment) tags.push({ label: sentiment, variant: sentimentVariant(sentiment) });
+    if (status && status !== 'completed') tags.push({ label: status, variant: 'slate' });
+    return tags;
+  }
+  if (source === 'EMAIL') {
+    const status = metadata.status as string | undefined;
+    if (status) return [{ label: status, variant: emailStatusVariant(status) }];
+    return [];
+  }
+  if (type === 'STATUS_CHANGE' || type === 'STAGE_CHANGE') {
+    const stageTo = metadata.stageTo as string | undefined;
+    if (stageTo) return [{ label: stageTo, variant: 'blue' }];
+  }
+  return [];
 }
 
 /**
@@ -257,41 +310,13 @@ function buildAutoTags(
   metadata: Record<string, unknown> | null | undefined,
   source: string,
   type: string
-): Array<{ label: string; variant: 'green' | 'slate' | 'amber' | 'red' | 'blue' }> {
-  const tags: Array<{ label: string; variant: 'green' | 'slate' | 'amber' | 'red' | 'blue' }> = [];
-  if (!metadata) return tags;
+): AutoTag[] {
+  if (!metadata) return [];
 
-  if (source === 'CALL') {
-    const sentiment = metadata.sentiment as string | undefined;
-    const status = metadata.status as string | undefined;
-    if (sentiment) {
-      const variant =
-        sentiment.toLowerCase() === 'positive'
-          ? 'green'
-          : sentiment.toLowerCase() === 'negative'
-            ? 'red'
-            : 'slate';
-      tags.push({ label: sentiment, variant });
-    }
-    if (status && status !== 'completed') {
-      tags.push({ label: status, variant: 'slate' });
-    }
-  } else if (source === 'EMAIL') {
-    const status = metadata.status as string | undefined;
-    if (status) {
-      const variant = status === 'opened' ? 'green' : status === 'bounced' ? 'red' : 'slate';
-      tags.push({ label: status, variant });
-    }
-  } else if (type === 'STATUS_CHANGE' || type === 'STAGE_CHANGE') {
-    const stageTo = metadata.stageTo as string | undefined;
-    if (stageTo) {
-      tags.push({ label: stageTo, variant: 'blue' });
-    }
-  }
+  const tags: AutoTag[] = buildSourceTags(source, type, metadata);
 
-  // Manual tags from metadata (if explicitly provided)
   const manualTags = metadata.tags as
-    | Array<{ label: string; variant?: 'green' | 'slate' | 'amber' | 'red' | 'blue' }>
+    | Array<{ label: string; variant?: TagVariant }>
     | undefined;
   if (manualTags) {
     for (const t of manualTags) {
@@ -319,7 +344,7 @@ interface ActivityFeedAvatarProps {
   actorInitials: string | null;
 }
 
-function ActivityFeedAvatar({ style, actorInitials }: ActivityFeedAvatarProps) {
+function ActivityFeedAvatar({ style, actorInitials }: Readonly<ActivityFeedAvatarProps>) {
   const baseClass = `shrink-0 size-10 rounded-full ${style.bg} flex items-center justify-center ${style.color}`;
 
   if (actorInitials && !style.initials) {
@@ -345,7 +370,7 @@ interface EntityDescriptionProps {
   entityUrl: string | null;
 }
 
-function EntityDescription({ richDescription, entity, entityUrl }: EntityDescriptionProps) {
+function EntityDescription({ richDescription, entity, entityUrl }: Readonly<EntityDescriptionProps>) {
   if (!richDescription && !entity) return null;
 
   return (
@@ -386,7 +411,7 @@ export function ActivityFeedItem({
   actor,
   entity,
   metadata,
-}: ActivityFeedItemProps) {
+}: Readonly<ActivityFeedItemProps>) {
   const style = TYPE_ICON_STYLES[type] || DEFAULT_ICON_STYLE;
   const actorInitials = actor ? getInitials(actor.name) : null;
   const entityUrl = entity ? getEntityRoute(entity.type, entity.id) : null;

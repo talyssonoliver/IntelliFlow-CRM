@@ -22,7 +22,7 @@ export type SupportTicketListProps = Omit<TicketListProps, 'onBulkAction'> & {
   ) => Promise<void>;
 };
 
-export function SupportTicketList({ onBulkAction, ...props }: SupportTicketListProps) {
+export function SupportTicketList({ onBulkAction, ...props }: Readonly<SupportTicketListProps>) {
   const filteredHandler = useCallback(
     async (action: BulkActionType, ticketIds: string[], params?: Record<string, unknown>) => {
       if (!ALLOWED_ACTIONS.has(action)) return;

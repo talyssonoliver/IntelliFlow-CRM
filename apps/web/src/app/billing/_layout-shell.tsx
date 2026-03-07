@@ -16,7 +16,7 @@ import {
   billingSidebarConfig,
 } from '@/components/sidebar';
 
-export default function BillingLayoutShell({ children }: { children: React.ReactNode }) {
+export default function BillingLayoutShell({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)]">

@@ -142,8 +142,10 @@ describe('VersionHistory', () => {
     render(<VersionHistory {...defaultProps} onRestoreVersion={onRestoreVersion} />);
 
     fireEvent.click(screen.getByLabelText('Restore version 1.0.0'));
+    // Dialog heading is visible in the DOM (aria-hidden on backdrop, not dialog content)
     expect(screen.getByText('Restore version?')).toBeInTheDocument();
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    // Dialog div is present in the DOM (queryByText finds DOM text regardless of aria-hidden)
+    expect(document.querySelector('[role="dialog"]')).toBeInTheDocument();
   });
 
   it('calls onRestoreVersion after confirmation', () => {
@@ -151,7 +153,11 @@ describe('VersionHistory', () => {
     render(<VersionHistory {...defaultProps} onRestoreVersion={onRestoreVersion} />);
 
     fireEvent.click(screen.getByLabelText('Restore version 1.0.0'));
-    fireEvent.click(screen.getByRole('button', { name: /^restore$/i }));
+    // The dialog is rendered first in DOM (before the timeline ol), so its
+    // "Restore" button is the first occurrence in getAllByText('Restore')
+    const restoreButtons = screen.getAllByText('Restore');
+    const dialogRestoreBtn = restoreButtons[0];
+    fireEvent.click(dialogRestoreBtn);
     expect(onRestoreVersion).toHaveBeenCalledWith('ver-1');
   });
 
@@ -160,7 +166,8 @@ describe('VersionHistory', () => {
     render(<VersionHistory {...defaultProps} onRestoreVersion={onRestoreVersion} />);
 
     fireEvent.click(screen.getByLabelText('Restore version 1.0.0'));
-    fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
+    // Cancel button is only in the dialog
+    fireEvent.click(screen.getByText('Cancel'));
     expect(onRestoreVersion).not.toHaveBeenCalled();
   });
 

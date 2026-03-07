@@ -72,7 +72,7 @@ function escapeHtml(text: string): string {
     '"': '&quot;',
     "'": '&#039;',
   };
-  return text.replace(/[&<>"']/g, (char) => map[char] || char);
+  return text.replaceAll(/[&<>"']/g, (char) => map[char] || char);
 }
 
 // ============================================
@@ -428,7 +428,7 @@ export async function sendWelcomeEmail(
     return {
       ok: true,
       value: {
-        messageId: `welcome-${Date.now()}-${crypto.randomUUID().replace(/-/g, '')}`,
+        messageId: `welcome-${Date.now()}-${crypto.randomUUID().replaceAll('-', '')}`,
         status: 'sent',
         timestamp: new Date().toISOString(),
       },
@@ -458,13 +458,13 @@ export async function sendWelcomeEmail(
  */
 export function generateVerificationToken(): string {
   // Use Web Crypto API for browser, crypto for Node
-  if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
+  if (typeof globalThis.window !== 'undefined' && globalThis.crypto?.getRandomValues) {
     const array = new Uint8Array(32);
-    window.crypto.getRandomValues(array);
+    globalThis.crypto.getRandomValues(array);
     return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
   }
 
   // Fallback for server-side
-  const { randomBytes } = require('crypto');
+  const { randomBytes } = require('node:crypto');
   return randomBytes(32).toString('hex');
 }

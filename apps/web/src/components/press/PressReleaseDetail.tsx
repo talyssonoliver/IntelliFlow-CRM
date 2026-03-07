@@ -50,7 +50,7 @@ export function PressReleaseDetail({
   release,
   relatedReleases,
   pressContact,
-}: PressReleaseDetailProps) {
+}: Readonly<PressReleaseDetailProps>) {
   if (!release) {
     return null;
   }
@@ -105,7 +105,7 @@ export function PressReleaseDetail({
           >
             <span className="material-symbols-outlined text-base" aria-hidden="true">
               arrow_back
-            </span>
+            </span>{' '}
             Back to Press Releases
           </Link>
         </div>
@@ -158,7 +158,7 @@ export function PressReleaseDetail({
             </h2>
             <div className="space-y-6">
               {release.quotes.map((quote, index) => (
-                <blockquote key={index} className="border-l-4 border-[#137fec] pl-6 py-2">
+                <blockquote key={index} className="border-l-4 border-[#137fec] pl-6 py-2"> {/* NOSONAR typescript:S6479 */}
                   <p className="text-lg text-slate-700 dark:text-slate-300 italic mb-2">
                     &ldquo;{quote.text}&rdquo;
                   </p>
@@ -203,7 +203,7 @@ export function PressReleaseDetail({
               <span>{pressContact.email}</span>
             </a>
             <a
-              href={`tel:${pressContact.phone.replace(/[^+\d]/g, '')}`}
+              href={`tel:${pressContact.phone.replaceAll(/[^+\d]/g, '')}`}
               className="flex items-center gap-2 text-[#137fec] hover:text-[#0e6ac7] transition-colors"
             >
               <span className="material-symbols-outlined text-base" aria-hidden="true">

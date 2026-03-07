@@ -31,7 +31,7 @@ export interface CaseListProps {
   isLoading: boolean;
   stats: CaseStats;
   filterOptions: CaseFilterOptions;
-  onRowClick: (caseItem: CaseListItem) => void;
+  onRowClick: (caseItem: Readonly<CaseListItem>) => void;
   pagination: {
     page: number;
     limit: number;
@@ -45,9 +45,9 @@ export interface CaseListProps {
   onPriorityChange: (value: string) => void;
   sortValue: string;
   onSortChange: (value: string) => void;
-  onEdit?: (caseItem: CaseListItem) => void;
-  onDelete?: (caseItem: CaseListItem) => void;
-  onAssign?: (caseItem: CaseListItem) => void;
+  onEdit?: (caseItem: Readonly<CaseListItem>) => void;
+  onDelete?: (caseItem: Readonly<CaseListItem>) => void;
+  onAssign?: (caseItem: Readonly<CaseListItem>) => void;
   onBulkAssign?: (ids: string[]) => void;
   onBulkClose?: (ids: string[]) => void;
   onBulkDelete?: (ids: string[]) => void;
@@ -68,7 +68,7 @@ const SORT_OPTIONS = [
 // Stats Cards
 // =============================================================================
 
-function TrendIndicator({ value, label }: { value?: number; label: string }) {
+function TrendIndicator({ value, label }: Readonly<{ value?: number; label: string }>) {
   if (value === undefined || value === null) return null;
   const isPositive = value >= 0;
   return (
@@ -87,7 +87,7 @@ function TrendIndicator({ value, label }: { value?: number; label: string }) {
   );
 }
 
-function StatsBar({ stats, isLoading }: { stats: CaseStats; isLoading: boolean }) {
+function StatsBar({ stats, isLoading }: Readonly<{ stats: CaseStats; isLoading: boolean }>) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -138,7 +138,7 @@ function StatsBar({ stats, isLoading }: { stats: CaseStats; isLoading: boolean }
         <p className="text-red-700 text-3xl font-bold leading-tight relative">{stats.overdue}</p>
         {stats.overdue > 0 && (
           <p className="text-red-600 text-sm font-medium flex items-center gap-1 relative">
-            <span className="material-symbols-outlined text-[16px]">warning</span>
+            <span className="material-symbols-outlined text-[16px]">warning</span>{' '}
             Action required
           </p>
         )}
@@ -185,7 +185,7 @@ export function CaseList({
   onBulkAssign,
   onBulkClose,
   onBulkDelete,
-}: CaseListProps) {
+}: Readonly<CaseListProps>) {
   // ── Filter options for SearchFilterBar ───────────────────────────────────
   const statusOptions = useMemo(
     () => [
@@ -335,16 +335,17 @@ export function CaseList({
           const c = row.original;
           const isClosed = c.status === 'CLOSED' || c.status === 'CANCELLED';
           const isOverdue = c.isOverdue && !isClosed;
+          let deadlineCls: string;
+          if (isOverdue) {
+            deadlineCls = 'text-red-600 font-semibold';
+          } else if (isClosed) {
+            deadlineCls = 'text-muted-foreground';
+          } else {
+            deadlineCls = 'text-foreground';
+          }
           return (
             <span
-              className={cn(
-                'text-sm',
-                isOverdue
-                  ? 'text-red-600 font-semibold'
-                  : isClosed
-                    ? 'text-muted-foreground'
-                    : 'text-foreground'
-              )}
+              className={cn('text-sm', deadlineCls)}
             >
               {isClosed ? 'Completed' : formatDeadline(c.deadline)}
             </span>
@@ -500,7 +501,7 @@ export function CaseList({
         <div className="space-y-3" data-testid="case-list-loading">
           {[...Array(6)].map((_, idx) => (
             <div
-              key={`case-row-skeleton-${idx}`}
+              key={`case-row-skeleton-${idx}`} // NOSONAR typescript:S6479
               className="flex items-center gap-4 p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
             >
               <Skeleton className="h-5 w-24" />

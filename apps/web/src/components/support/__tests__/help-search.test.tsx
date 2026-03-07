@@ -65,9 +65,12 @@ describe('HelpSearch', () => {
     expect(screen.getByText('3 results found')).toBeInTheDocument();
   });
 
-  it('hides result count when resultCount is undefined', () => {
+  it('hides result count text when resultCount is undefined', () => {
     render(<HelpSearch value="test" onChange={vi.fn()} />);
     expect(screen.queryByText(/results? found/)).not.toBeInTheDocument();
+    // But the live region container is still present (unconditional mount)
+    const liveRegion = document.querySelector('[aria-live="polite"]');
+    expect(liveRegion).toBeInTheDocument();
   });
 
   it('has role="search" for accessibility', () => {

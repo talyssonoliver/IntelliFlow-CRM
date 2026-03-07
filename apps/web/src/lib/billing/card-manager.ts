@@ -256,12 +256,12 @@ export function getNextDefaultCard(
   }
 
   // Prefer non-expired cards
-  const validCards = remaining.filter((pm) => {
+  const validCard = remaining.find((pm) => {
     if (!pm.card) return false;
     return !isCardExpired(pm.card.expMonth, pm.card.expYear);
   });
 
-  return validCards[0] ?? remaining[0];
+  return validCard ?? remaining[0];
 }
 
 // ============================================
@@ -298,4 +298,4 @@ export function sortPaymentMethods(paymentMethods: BillingPaymentMethod[]): Bill
 // ============================================
 
 // Re-export from stripe-portal for convenience
-export { getCardBrandDisplay, getCardBrandIcon };
+export { getCardBrandDisplay, getCardBrandIcon } from './stripe-portal';

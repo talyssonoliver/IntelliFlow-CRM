@@ -68,7 +68,7 @@ export function Navigation() {
         {modulesLoading ? (
           <nav className="hidden lg:flex items-center gap-1">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-8 w-20 rounded-lg bg-muted animate-pulse" />
+              <div key={i} className="h-8 w-20 rounded-lg bg-muted animate-pulse" /> // NOSONAR typescript:S6479
             ))}
           </nav>
         ) : (

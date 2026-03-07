@@ -57,7 +57,7 @@ export function OpenTicketsWidget(_props: Readonly<WidgetProps>) {
       <p className="text-3xl font-bold text-foreground mt-1">{metrics.total}</p>
       {metrics.breached > 0 && (
         <p className="text-xs text-destructive mt-2">
-          {metrics.breached} SLA breach{metrics.breached !== 1 ? 'es' : ''}
+          {metrics.breached} SLA breach{metrics.breached === 1 ? '' : 'es'}
         </p>
       )}
     </div>

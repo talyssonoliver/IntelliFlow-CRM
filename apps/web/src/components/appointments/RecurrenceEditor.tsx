@@ -29,10 +29,12 @@ const FREQUENCIES = [
 
 type EndCondition = 'never' | 'date' | 'count';
 
-export function RecurrenceEditor({ value, onChange, disabled }: RecurrenceEditorProps) {
-  const [endCondition, setEndCondition] = useState<EndCondition>(
-    value?.endDate ? 'date' : value?.occurrenceCount ? 'count' : 'never'
-  );
+export function RecurrenceEditor({ value, onChange, disabled }: Readonly<RecurrenceEditorProps>) {
+  const [endCondition, setEndCondition] = useState<EndCondition>(() => {
+    if (value?.endDate) return 'date';
+    if (value?.occurrenceCount) return 'count';
+    return 'never';
+  });
 
   if (!value) {
     return (
@@ -43,14 +45,14 @@ export function RecurrenceEditor({ value, onChange, disabled }: RecurrenceEditor
           disabled={disabled}
           className="text-sm text-blue-600 hover:text-blue-800 hover:underline disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
         >
-          <span className="material-symbols-outlined text-base">repeat</span>
+          <span className="material-symbols-outlined text-base">repeat</span>{' '}
           Add recurrence
         </button>
       </div>
     );
   }
 
-  const update = (patch: Partial<RecurrencePattern>) => {
+  const update = (patch: Readonly<Partial<RecurrencePattern>>) => {
     onChange({ ...value, ...patch });
   };
 
@@ -63,14 +65,14 @@ export function RecurrenceEditor({ value, onChange, disabled }: RecurrenceEditor
     onChange(base);
   };
 
-  const handleEndConditionChange = (condition: EndCondition) => {
+  const handleEndConditionChange = (condition: Readonly<EndCondition>) => {
     setEndCondition(condition);
     const patch: Partial<RecurrencePattern> = { endDate: undefined, occurrenceCount: undefined };
     if (condition === 'count') patch.occurrenceCount = 10;
     update(patch);
   };
 
-  const toggleDay = (day: DayOfWeek) => {
+  const toggleDay = (day: Readonly<DayOfWeek>) => {
     const current = value.daysOfWeek || [];
     const next = current.includes(day) ? current.filter((d) => d !== day) : [...current, day];
     update({ daysOfWeek: next });
@@ -131,20 +133,19 @@ export function RecurrenceEditor({ value, onChange, disabled }: RecurrenceEditor
           max={99}
           value={value.interval}
           onChange={(e) => {
-            const v = parseInt(e.target.value, 10);
+            const v = Number.parseInt(e.target.value, 10);
             if (v > 0) update({ interval: v });
           }}
           disabled={disabled}
           className="w-16 rounded-md border border-gray-300 px-2 py-1 text-sm text-center disabled:opacity-50"
         />
         <span className="text-sm text-gray-700">
-          {value.frequency === 'DAILY'
-            ? 'day(s)'
-            : value.frequency === 'WEEKLY'
-              ? 'week(s)'
-              : value.frequency === 'MONTHLY'
-                ? 'month(s)'
-                : 'year(s)'}
+          {(() => {
+            if (value.frequency === 'DAILY') return 'day(s)';
+            if (value.frequency === 'WEEKLY') return 'week(s)';
+            if (value.frequency === 'MONTHLY') return 'month(s)';
+            return 'year(s)';
+          })()}
         </span>
       </div>
 
@@ -184,7 +185,7 @@ export function RecurrenceEditor({ value, onChange, disabled }: RecurrenceEditor
           <select
             id="day-of-month"
             value={value.dayOfMonth || 1}
-            onChange={(e) => update({ dayOfMonth: parseInt(e.target.value, 10) })}
+            onChange={(e) => update({ dayOfMonth: Number.parseInt(e.target.value, 10) })}
             disabled={disabled}
             className="rounded-md border border-gray-300 px-2 py-1 text-sm disabled:opacity-50"
           >
@@ -206,7 +207,7 @@ export function RecurrenceEditor({ value, onChange, disabled }: RecurrenceEditor
           <select
             id="month-of-year"
             value={value.monthOfYear || 1}
-            onChange={(e) => update({ monthOfYear: parseInt(e.target.value, 10) })}
+            onChange={(e) => update({ monthOfYear: Number.parseInt(e.target.value, 10) })}
             disabled={disabled}
             className="rounded-md border border-gray-300 px-2 py-1 text-sm disabled:opacity-50"
           >
@@ -235,7 +236,7 @@ export function RecurrenceEditor({ value, onChange, disabled }: RecurrenceEditor
           <select
             id="yearly-day"
             value={value.dayOfMonth || 1}
-            onChange={(e) => update({ dayOfMonth: parseInt(e.target.value, 10) })}
+            onChange={(e) => update({ dayOfMonth: Number.parseInt(e.target.value, 10) })}
             disabled={disabled}
             className="rounded-md border border-gray-300 px-2 py-1 text-sm disabled:opacity-50"
           >
@@ -303,7 +304,7 @@ export function RecurrenceEditor({ value, onChange, disabled }: RecurrenceEditor
                   max={365}
                   value={value.occurrenceCount || 10}
                   onChange={(e) => {
-                    const v = parseInt(e.target.value, 10);
+                    const v = Number.parseInt(e.target.value, 10);
                     if (v > 0) update({ occurrenceCount: v });
                   }}
                   className="w-16 rounded-md border border-gray-300 px-2 py-1 text-sm text-center"

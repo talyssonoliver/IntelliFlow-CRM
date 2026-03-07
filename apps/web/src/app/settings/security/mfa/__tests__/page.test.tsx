@@ -84,10 +84,10 @@ vi.mock('@/components/shared/page-header', () => ({
   PageHeader: ({
     title,
     breadcrumbs,
-  }: {
+  }: Readonly<{
     title: string;
     breadcrumbs?: Array<{ label: string; href?: string }>;
-  }) => (
+  }>) => (
     <div data-testid="page-header">
       <h1>{title}</h1>
       <nav aria-label="Breadcrumb">
@@ -105,12 +105,12 @@ vi.mock('@/components/shared/mfa-qr-generator', () => ({
     secret,
     accountName,
     onConfirm,
-  }: {
+  }: Readonly<{
     otpauthUrl: string;
     secret: string;
     accountName: string;
     onConfirm: () => void;
-  }) => (
+  }>) => (
     <div data-testid="mfa-qr-generator">
       <span data-testid="qr-url">{otpauthUrl}</span>
       <span data-testid="qr-secret">{secret}</span>
@@ -127,11 +127,11 @@ vi.mock('@/components/shared/backup-codes-display', () => ({
     codes,
     email,
     onAcknowledge,
-  }: {
+  }: Readonly<{
     codes: string[];
     email: string;
     onAcknowledge: () => void;
-  }) => (
+  }>) => (
     <div data-testid="backup-codes-display">
       <span data-testid="backup-codes-count">{codes?.length}</span>
       <span data-testid="backup-email">{email}</span>

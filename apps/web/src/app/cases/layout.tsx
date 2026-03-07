@@ -4,6 +4,6 @@ export const metadata: Metadata = {
   title: 'Cases',
 };
 
-export default function CasesLayout({ children }: { children: React.ReactNode }) {
+export default function CasesLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <>{children}</>;
 }

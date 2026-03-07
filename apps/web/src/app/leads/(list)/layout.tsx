@@ -8,7 +8,7 @@ import {
   leadsSidebarConfig,
 } from '@/components/sidebar';
 
-export default function LeadsListLayout({ children }: { readonly children: React.ReactNode }) {
+export default function LeadsListLayout({ children }: Readonly<{ readonly children: React.ReactNode }>) {
   return (
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)]">

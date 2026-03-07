@@ -277,13 +277,13 @@ export default function ADRRegistryPage() {
         {/* Messages */}
         {successMessage && (
           <div className="mb-4 p-4 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-400 rounded-lg flex items-center gap-2">
-            <span className="material-symbols-outlined">check_circle</span>
+            <span className="material-symbols-outlined">check_circle</span>{' '}
             {successMessage}
           </div>
         )}
         {error && (
           <div className="mb-4 p-4 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 rounded-lg flex items-center gap-2">
-            <span className="material-symbols-outlined">error</span>
+            <span className="material-symbols-outlined">error</span>{' '}
             {error}
           </div>
         )}
@@ -302,14 +302,14 @@ export default function ADRRegistryPage() {
                 onClick={handleValidate}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg text-foreground text-sm font-medium hover:bg-accent transition-colors"
               >
-                <span className="material-symbols-outlined text-lg">checklist</span>
+                <span className="material-symbols-outlined text-lg">checklist</span>{' '}
                 Validate
               </button>
               <button
                 onClick={() => setShowCreateModal(true)}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
               >
-                <span className="material-symbols-outlined text-lg">add</span>
+                <span className="material-symbols-outlined text-lg">add</span>{' '}
                 New ADR
               </button>
             </div>
@@ -325,7 +325,7 @@ export default function ADRRegistryPage() {
                   : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
-              <span className="material-symbols-outlined text-lg align-middle mr-1">list</span>
+              <span className="material-symbols-outlined text-lg align-middle mr-1">list</span>{' '}
               List
             </button>
             <button
@@ -336,7 +336,7 @@ export default function ADRRegistryPage() {
                   : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
-              <span className="material-symbols-outlined text-lg align-middle mr-1">article</span>
+              <span className="material-symbols-outlined text-lg align-middle mr-1">article</span>{' '}
               Index
             </button>
             <button
@@ -349,7 +349,7 @@ export default function ADRRegistryPage() {
             >
               <span className="material-symbols-outlined text-lg align-middle mr-1">
                 account_tree
-              </span>
+              </span>{' '}
               Graph
             </button>
           </div>
@@ -424,9 +424,11 @@ export default function ADRRegistryPage() {
 
             {/* ADR List */}
             <Card>
-              {loading ? (
+              {(() => {
+              if (loading) return (
                 <div className="p-8 text-center text-muted-foreground">Loading ADRs...</div>
-              ) : adrs.length === 0 ? (
+              );
+              if (adrs.length === 0) return (
                 <div className="p-8 text-center">
                   <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2">
                     architecture
@@ -435,7 +437,8 @@ export default function ADRRegistryPage() {
                     {searchQuery ? 'No ADRs found matching your search' : 'No ADRs found'}
                   </p>
                 </div>
-              ) : (
+              );
+              return (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
@@ -495,7 +498,7 @@ export default function ADRRegistryPage() {
                                 {VALID_STATUSES.map((status) => (
                                   <button
                                     key={status}
-                                    onClick={() => handleStatusUpdate(adr.id, status)}
+                                    onClick={() => handleStatusUpdate(adr.id, status)} // NOSONAR typescript:S2004 — inline callback is idiomatic React; extracted named function adds complexity for trivial use
                                     disabled={statusUpdating === adr.id}
                                     className={`text-left px-2 py-1 text-xs rounded hover:bg-accent transition-colors ${
                                       adr.status.includes(status) ? 'font-bold' : ''
@@ -533,7 +536,8 @@ export default function ADRRegistryPage() {
                     </tbody>
                   </table>
                 </div>
-              )}
+              );
+            })()}
             </Card>
           </>
         )}
@@ -547,7 +551,7 @@ export default function ADRRegistryPage() {
                   onClick={() => copyToClipboard(indexContent)}
                   className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <span className="material-symbols-outlined text-lg">content_copy</span>
+                  <span className="material-symbols-outlined text-lg">content_copy</span>{' '}
                   Copy
                 </button>
                 <button
@@ -557,7 +561,7 @@ export default function ADRRegistryPage() {
                 >
                   <span className="material-symbols-outlined text-lg">
                     {generatingIndex ? 'sync' : 'save'}
-                  </span>
+                  </span>{' '}
                   {generatingIndex ? 'Generating...' : 'Save to File'}
                 </button>
               </div>
@@ -584,7 +588,7 @@ export default function ADRRegistryPage() {
                 onClick={() => copyToClipboard('```mermaid\n' + graphContent + '\n```')}
                 className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
-                <span className="material-symbols-outlined text-lg">content_copy</span>
+                <span className="material-symbols-outlined text-lg">content_copy</span>{' '}
                 Copy Mermaid
               </button>
             </div>
@@ -687,29 +691,25 @@ export default function ADRRegistryPage() {
                     {validations.map((v) => (
                       <div
                         key={v.id}
-                        className={`p-4 rounded-lg border ${
-                          !v.validation.valid
-                            ? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20'
-                            : v.validation.warnings.length > 0
-                              ? 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20'
-                              : 'border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20'
-                        }`}
+                        className={`p-4 rounded-lg border ${(() => {
+                          if (v.validation.valid === false) return 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20';
+                          if (v.validation.warnings.length > 0) return 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20';
+                          return 'border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20';
+                        })()}`}
                       >
                         <div className="flex items-center gap-2 mb-2">
                           <span
-                            className={`material-symbols-outlined ${
-                              !v.validation.valid
-                                ? 'text-red-500'
-                                : v.validation.warnings.length > 0
-                                  ? 'text-amber-500'
-                                  : 'text-emerald-500'
-                            }`}
+                            className={`material-symbols-outlined ${(() => {
+                              if (v.validation.valid === false) return 'text-red-500';
+                              if (v.validation.warnings.length > 0) return 'text-amber-500';
+                              return 'text-emerald-500';
+                            })()}`}
                           >
-                            {!v.validation.valid
-                              ? 'error'
-                              : v.validation.warnings.length > 0
-                                ? 'warning'
-                                : 'check_circle'}
+                            {(() => {
+                              if (v.validation.valid === false) return 'error';
+                              if (v.validation.warnings.length > 0) return 'warning';
+                              return 'check_circle';
+                            })()}
                           </span>
                           <span className="font-medium text-foreground">
                             {v.id}: {v.title}

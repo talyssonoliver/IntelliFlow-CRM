@@ -64,7 +64,7 @@ export interface AppMetricsProps {
   app: DeveloperApp;
 }
 
-export function AppMetrics({ app }: AppMetricsProps) {
+export function AppMetrics({ app }: Readonly<AppMetricsProps>) {
   const usage = DEMO_USAGE[app.id];
 
   if (

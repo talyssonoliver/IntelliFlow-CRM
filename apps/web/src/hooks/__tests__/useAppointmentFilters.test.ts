@@ -128,6 +128,6 @@ describe('useAppointmentFilters', () => {
       result.current.setStatusFilter('CONFIRMED');
     });
     expect(result.current.queryParams).toHaveProperty('search', 'test');
-    expect(result.current.queryParams).toHaveProperty('status', 'CONFIRMED');
+    expect(result.current.queryParams).toHaveProperty('status', ['CONFIRMED']);
   });
 });

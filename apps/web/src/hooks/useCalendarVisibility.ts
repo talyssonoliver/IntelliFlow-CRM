@@ -66,7 +66,7 @@ export const CALENDAR_COLOR_OPTIONS = [
 ];
 
 function loadJson<T>(key: string): T | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof globalThis.window === 'undefined') return null;
   try {
     const stored = localStorage.getItem(key);
     return stored ? (JSON.parse(stored) as T) : null;
@@ -101,7 +101,7 @@ interface CalendarApiEscape {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- tRPC TS2589 workaround
+ 
 const calendarApi = api as CalendarApiEscape;
 
 const CalendarVisibilityContext = createContext<CalendarVisibilityContextValue | null>(null);
@@ -149,7 +149,7 @@ export function CalendarVisibilityProvider({ children }: { children: ReactNode }
 
   // Persist visibility toggles to localStorage
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof globalThis.window === 'undefined') return;
     localStorage.setItem(VISIBILITY_KEY, JSON.stringify(visibility));
   }, [visibility]);
 
@@ -160,32 +160,36 @@ export function CalendarVisibilityProvider({ children }: { children: ReactNode }
   const isVisible = useCallback((id: string): boolean => visibility[id] ?? true, [visibility]);
 
   const addCalendar = useCallback(
-    async (label: string, color: string) => {
-      try {
-        const result = await createMutation?.mutateAsync({ name: label, color });
-        if (result) {
-          const created = result as DbCalendar;
-          setVisibility((prev) => ({ ...prev, [created.id]: true }));
-        }
-      } catch {
-        // Silently fail — the UI can retry
-      }
+    (label: string, color: string): Promise<void> => {
+      return createMutation
+        ?.mutateAsync({ name: label, color })
+        .then((result) => {
+          if (result) {
+            const created = result as DbCalendar;
+            setVisibility((prev) => ({ ...prev, [created.id]: true }));
+          }
+        })
+        .catch(() => {
+          // Silently fail — the UI can retry
+        }) ?? Promise.resolve();
     },
     [createMutation]
   );
 
   const removeCalendar = useCallback(
-    async (id: string) => {
-      try {
-        await deleteMutation?.mutateAsync({ id });
-        setVisibility((prev) => {
-          const next = { ...prev };
-          delete next[id];
-          return next;
-        });
-      } catch {
-        // Silently fail
-      }
+    (id: string): Promise<void> => {
+      return deleteMutation
+        ?.mutateAsync({ id })
+        .then(() => {
+          setVisibility((prev) => {
+            const next = { ...prev };
+            delete next[id];
+            return next;
+          });
+        })
+        .catch(() => {
+          // Silently fail
+        }) ?? Promise.resolve();
     },
     [deleteMutation]
   );

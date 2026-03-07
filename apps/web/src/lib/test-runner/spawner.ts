@@ -5,9 +5,9 @@
  * Handles Windows/Unix compatibility and process lifecycle.
  */
 
-import { spawn, ChildProcess } from 'child_process';
-import { join } from 'path';
-import { platform } from 'os';
+import { spawn, ChildProcess } from 'node:child_process';
+import { join } from 'node:path';
+import { platform } from 'node:os';
 import { testRunnerEvents } from './events';
 import { parseVitestLine, parseCoverageSummary } from './parser';
 import type { TestRunConfig, TestRunState, TestRunProgress, TestScope } from './types';

@@ -111,7 +111,7 @@ export interface InvoiceDetailProps {
 // Status Badge Component
 // ============================================
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status }: Readonly<{ status: string }>) {
   const { label, variant } = getInvoiceStatusDisplay(status);
 
   const variantClasses: Record<StatusVariant, string> = {
@@ -162,7 +162,7 @@ function ActionButton({
   disabled = false,
   loading = false,
   variant = 'outline',
-}: ActionButtonProps) {
+}: Readonly<ActionButtonProps>) {
   return (
     <Button
       variant={variant}
@@ -204,9 +204,7 @@ function InvoiceDetailSkeleton() {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="space-y-2">
-                {' '}
-                {/* NOSONAR typescript:S6479 — static skeleton placeholder, no data identity */}
+              <div key={i} className="space-y-2"> {/* NOSONAR typescript:S6479 */}
                 <Skeleton className="h-4 w-20" />
                 <Skeleton className="h-6 w-28" />
               </div>
@@ -223,9 +221,7 @@ function InvoiceDetailSkeleton() {
         <CardContent>
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex justify-between py-3">
-                {' '}
-                {/* NOSONAR typescript:S6479 — static skeleton placeholder, no data identity */}
+              <div key={i} className="flex justify-between py-3"> {/* NOSONAR typescript:S6479 */}
                 <Skeleton className="h-4 w-48" />
                 <Skeleton className="h-4 w-24" />
               </div>
@@ -241,7 +237,7 @@ function InvoiceDetailSkeleton() {
 // Error State
 // ============================================
 
-function ErrorState({ error }: { error: string }) {
+function ErrorState({ error }: Readonly<{ error: string }>) {
   return (
     <Card className="border-red-200 dark:border-red-800/50">
       <CardContent className="py-12">
@@ -296,7 +292,7 @@ function NotFoundState() {
 // Line Items Table
 // ============================================
 
-function LineItemsTable({ items, currency }: { items: InvoiceLineItem[]; currency: string }) {
+function LineItemsTable({ items, currency }: Readonly<{ items: InvoiceLineItem[]; currency: string }>) {
   if (items.length === 0) {
     return (
       <div className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
@@ -344,10 +340,10 @@ function LineItemsTable({ items, currency }: { items: InvoiceLineItem[]; currenc
 function TaxBreakdownSection({
   taxBreakdown,
   currency,
-}: {
+}: Readonly<{
   taxBreakdown: NonNullable<InvoiceDetailData['taxBreakdown']>;
   currency: string;
-}) {
+}>) {
   if (taxBreakdown.type === 'NONE' || taxBreakdown.rate === 0) {
     return null;
   }
@@ -379,7 +375,7 @@ function TaxBreakdownSection({
 // Totals Section
 // ============================================
 
-function TotalsSection({ invoice }: { invoice: InvoiceDetailData }) {
+function TotalsSection({ invoice }: Readonly<{ invoice: InvoiceDetailData }>) {
   const { currency, subtotal, tax, discount, amountDue, amountPaid, totalAmount } = invoice;
 
   // Total = totalAmount if provided, else compute from subtotal + tax - discount, else amountDue
@@ -447,7 +443,7 @@ function TotalsSection({ invoice }: { invoice: InvoiceDetailData }) {
 // Main Component
 // ============================================
 
-export function InvoiceDetail({ invoice, isLoading, error, onPayNow }: InvoiceDetailProps) {
+export function InvoiceDetail({ invoice, isLoading, error, onPayNow }: Readonly<InvoiceDetailProps>) {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<{
     type: 'success' | 'error';
@@ -558,7 +554,7 @@ export function InvoiceDetail({ invoice, isLoading, error, onPayNow }: InvoiceDe
         href="/billing/invoices"
         className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
       >
-        <span className="material-symbols-outlined text-lg">arrow_back</span>
+        <span className="material-symbols-outlined text-lg">arrow_back</span>{' '}
         Back to Invoices
       </Link>
 
@@ -570,7 +566,7 @@ export function InvoiceDetail({ invoice, isLoading, error, onPayNow }: InvoiceDe
               <CardTitle className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-2xl text-primary">
                   receipt_long
-                </span>
+                </span>{' '}
                 Invoice #{displayId}
               </CardTitle>
               <CardDescription className="mt-1">

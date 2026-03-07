@@ -61,7 +61,7 @@ const TYPE_ICONS: Record<string, { icon: string; color: string }> = {
 
 const DEFAULT_ICON = { icon: 'event', color: 'text-slate-500 bg-slate-100 dark:bg-slate-800' };
 
-function formatEventDate(date: Date) {
+function formatEventDate(date: Readonly<Date>) {
   return {
     month: date.toLocaleDateString('en-US', { month: 'short' }),
     day: date.getDate().toString(),
@@ -90,7 +90,7 @@ export function UpcomingEventsCard({
   onViewAll,
   viewAllHref,
   standalone = true,
-}: UpcomingEventsCardProps) {
+}: Readonly<UpcomingEventsCardProps>) {
   // Stable reference for "now" — prevents infinite re-fetch loop.
   // new Date() in the query input would create a different value every render,
   // making React Query treat it as a new query key each time.
@@ -104,7 +104,7 @@ export function UpcomingEventsCard({
       sortOrder: 'asc' as const,
       limit: maxItems + 1, // fetch one extra to detect "has more"
       startTimeFrom: now,
-      ...(entityType === 'case' && entityId ? { caseId: entityId } : {}),
+      ...(entityType === 'case' && entityId ? { caseId: entityId } : Readonly<{}>),
     },
     { enabled: true }
   );
@@ -143,7 +143,7 @@ export function UpcomingEventsCard({
         </div>
         <div className="space-y-3">
           {Array.from({ length: Math.min(maxItems, 3) }).map((_, i) => (
-            <Skeleton key={i} className="h-14 w-full rounded-lg" />
+            <Skeleton key={i} className="h-14 w-full rounded-lg" /> // NOSONAR typescript:S6479
           ))}
         </div>
       </Wrapper>
@@ -259,7 +259,7 @@ export function UpcomingEventsCard({
                       <div className="flex -space-x-1.5">
                         {attendeeAvatars.map((avatar, idx) => (
                           <AppAvatar
-                            key={idx}
+                            key={idx} // NOSONAR typescript:S6479
                             name={avatar.name}
                             src={avatar.src}
                             fallbackText={avatar.name.charAt(0)}

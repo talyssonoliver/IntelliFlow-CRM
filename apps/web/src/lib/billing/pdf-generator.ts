@@ -39,7 +39,7 @@ export function generateInvoiceFilename(invoiceId: string, date: Date): string {
     day: '2-digit',
   })
     .format(date)
-    .replace(/\//g, '-');
+    .replaceAll('/', '-');
 
   // Extract last part of invoice ID for cleaner filename
   const shortId = invoiceId.includes('_') ? invoiceId.split('_').pop() || invoiceId : invoiceId;
@@ -88,7 +88,7 @@ export async function downloadInvoicePdf(url: string, filename: string): Promise
   link.download = filename;
   document.body.appendChild(link);
   link.click();
-  document.body.removeChild(link);
+  link.remove();
 
   // Clean up blob URL after browser starts the download
   setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
@@ -118,8 +118,8 @@ export function getInvoicePdfInfo(
   return {
     canDownload: pdfValid,
     canView: pdfValid || hostedValid,
-    pdfUrl: pdfValid ? invoicePdf! : null,
-    hostedUrl: hostedValid ? hostedInvoiceUrl! : null,
+    pdfUrl: pdfValid ? (invoicePdf ?? null) : null,
+    hostedUrl: hostedValid ? (hostedInvoiceUrl ?? null) : null,
   };
 }
 

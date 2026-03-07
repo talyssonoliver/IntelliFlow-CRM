@@ -34,7 +34,7 @@ export function SLAIndicator({
   size = 'md',
   showTimer = true,
   showProgress = false,
-}: SLAIndicatorProps) {
+}: Readonly<SLAIndicatorProps>) {
   const [remaining, setRemaining] = useState(slaTimeRemaining);
   const [currentStatus, setCurrentStatus] = useState<SLAStatus>(slaStatus);
 
@@ -135,17 +135,13 @@ export function SLAIndicator({
       {showProgress && (
         <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
           <div
-            className={`h-full transition-all ${
-              currentStatus === 'BREACHED'
-                ? 'bg-red-500'
-                : currentStatus === 'AT_RISK'
-                  ? 'bg-yellow-500'
-                  : currentStatus === 'MET'
-                    ? 'bg-green-500'
-                    : currentStatus === 'PAUSED'
-                      ? 'bg-slate-400'
-                      : 'bg-emerald-500'
-            }`}
+            className={`h-full transition-all ${(() => {
+              if (currentStatus === 'BREACHED') return 'bg-red-500';
+              if (currentStatus === 'AT_RISK') return 'bg-yellow-500';
+              if (currentStatus === 'MET') return 'bg-green-500';
+              if (currentStatus === 'PAUSED') return 'bg-slate-400';
+              return 'bg-emerald-500';
+            })()}`}
             style={{
               width: `${Math.max(0, Math.min(100, (remaining / Math.max(remaining, 1)) * 100))}%`,
             }}

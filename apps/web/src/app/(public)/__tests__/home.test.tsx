@@ -1,13 +1,23 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import HomePage from '../page';
+
+// Mock next/link to render a plain <a>
+vi.mock('next/link', () => ({
+  default: ({ children, href, ...props }: any) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
+
+import { PublicHomePage } from '@/components/home/PublicHomePage';
 
 describe('PublicHomePage', () => {
   it('renders the hero with the primary value proposition', () => {
-    render(<HomePage />);
+    render(<PublicHomePage />);
 
     expect(
       screen.getByRole('heading', { level: 1, name: /move faster, stay governed/i })
@@ -16,7 +26,7 @@ describe('PublicHomePage', () => {
   });
 
   it('includes primary and secondary calls to action with correct destinations', () => {
-    render(<HomePage />);
+    render(<PublicHomePage />);
 
     const startTrial = screen.getByRole('link', { name: /start free trial/i });
     const talkToSales = screen.getByRole('link', { name: /talk to sales/i });
@@ -26,7 +36,7 @@ describe('PublicHomePage', () => {
   });
 
   it('shows headline metrics that reinforce the value proposition', () => {
-    render(<HomePage />);
+    render(<PublicHomePage />);
 
     const stats = screen.getAllByTestId('hero-stat');
     expect(stats).toHaveLength(3);
@@ -37,7 +47,7 @@ describe('PublicHomePage', () => {
   });
 
   it('renders the core value pillars with supporting copy', () => {
-    render(<HomePage />);
+    render(<PublicHomePage />);
 
     const pillars = screen.getAllByTestId('value-pillar');
     expect(pillars).toHaveLength(3);
@@ -47,7 +57,7 @@ describe('PublicHomePage', () => {
   });
 
   it('highlights guided flows tied to sprint tracker flows', () => {
-    render(<HomePage />);
+    render(<PublicHomePage />);
 
     const flows = screen.getAllByTestId('flow-card');
     expect(flows).toHaveLength(3);
@@ -57,7 +67,7 @@ describe('PublicHomePage', () => {
   });
 
   it('lists security and accessibility guarantees', () => {
-    render(<HomePage />);
+    render(<PublicHomePage />);
 
     expect(screen.getByText(/wcag 2.1 aa/i)).toBeInTheDocument();
     expect(screen.getAllByText(/audit-matrix gates/i).length).toBeGreaterThan(0);
@@ -65,7 +75,7 @@ describe('PublicHomePage', () => {
   });
 
   it('uses brand styling and Material Symbols icons', () => {
-    const { container } = render(<HomePage />);
+    const { container } = render(<PublicHomePage />);
 
     expect(
       container.querySelector('[class*="#137fec"]') || container.querySelector('[class*="primary"]')
@@ -74,7 +84,7 @@ describe('PublicHomePage', () => {
   });
 
   it('exposes a main landmark for skip links and accessibility tooling', () => {
-    render(<HomePage />);
+    render(<PublicHomePage />);
 
     expect(screen.getByRole('main')).toBeInTheDocument();
     expect(screen.getByTestId('cta-section')).toBeInTheDocument();

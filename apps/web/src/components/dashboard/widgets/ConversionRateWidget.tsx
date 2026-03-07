@@ -2,7 +2,7 @@
 
 import type { WidgetProps } from './index';
 
-export function ConversionRateWidget(_props: WidgetProps) {
+export function ConversionRateWidget(_props: Readonly<WidgetProps>) {
   const conversionRate = 3.2;
   const progress = 65;
 

@@ -51,7 +51,7 @@ export interface TicketListProps {
   isLoading: boolean;
   stats: TicketStats;
   filterOptions: TicketFilterOptions;
-  onRowClick: (ticket: TicketListItem) => void;
+  onRowClick: (ticket: Readonly<TicketListItem>) => void;
   onBulkAction: (
     action: BulkActionType,
     ticketIds: string[],
@@ -164,7 +164,7 @@ const ASSIGNEE_OPTIONS: StatusOption[] = [
 // Priority Badge Component
 // =============================================================================
 
-function PriorityBadge({ priority }: { priority: string }) {
+function PriorityBadge({ priority }: Readonly<{ priority: string }>) {
   const config = getPriorityConfig(priority as TicketPriority);
 
   return (
@@ -203,7 +203,7 @@ export function TicketList({
   onSLAChange,
   sortValue = 'updated',
   onSortChange,
-}: TicketListProps) {
+}: Readonly<TicketListProps>) {
   // Dialog state for bulk actions
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
@@ -361,30 +361,30 @@ export function TicketList({
   // Single Action Handlers
   // =============================================================================
 
-  const handleSingleResolve = useCallback((ticket: TicketListItem) => {
+  const handleSingleResolve = useCallback((ticket: Readonly<TicketListItem>) => {
     selectedTicketsRef.current = [ticket];
     setShowResolveDialog(true);
   }, []);
 
-  const handleSingleEscalate = useCallback((ticket: TicketListItem) => {
+  const handleSingleEscalate = useCallback((ticket: Readonly<TicketListItem>) => {
     selectedTicketsRef.current = [ticket];
     setShowEscalateDialog(true);
   }, []);
 
-  const handleSingleAssign = useCallback((ticket: TicketListItem) => {
+  const handleSingleAssign = useCallback((ticket: Readonly<TicketListItem>) => {
     selectedTicketsRef.current = [ticket];
     setShowAssignDialog(true);
   }, []);
 
-  const handleSingleChangePriority = useCallback((ticket: TicketListItem) => {
+  const handleSingleChangePriority = useCallback((ticket: Readonly<TicketListItem>) => {
     console.log('Change priority:', ticket.id);
   }, []);
 
-  const handleViewHistory = useCallback((ticket: TicketListItem) => {
+  const handleViewHistory = useCallback((ticket: Readonly<TicketListItem>) => {
     console.log('View history:', ticket.id);
   }, []);
 
-  const handleSingleDelete = useCallback((ticket: TicketListItem) => {
+  const handleSingleDelete = useCallback((ticket: Readonly<TicketListItem>) => {
     console.log('Delete ticket:', ticket.id);
   }, []);
 
@@ -538,7 +538,7 @@ export function TicketList({
         {/* Stats Cards Skeleton */}
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i} className="p-4">
+            <Card key={i} className="p-4"> {/* NOSONAR typescript:S6479 */}
               <div className="flex items-center gap-3">
                 <Skeleton className="w-10 h-10 rounded-lg" />
                 <div className="space-y-2 flex-1">
@@ -555,7 +555,7 @@ export function TicketList({
           <Skeleton className="h-10 w-full" />
           <div className="flex gap-2">
             {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-8 w-20" />
+              <Skeleton key={i} className="h-8 w-20" /> // NOSONAR typescript:S6479
             ))}
           </div>
         </div>
@@ -564,7 +564,7 @@ export function TicketList({
         <Card className="p-6">
           <div className="space-y-3">
             {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full" />
+              <Skeleton key={i} className="h-16 w-full" /> // NOSONAR typescript:S6479
             ))}
           </div>
         </Card>

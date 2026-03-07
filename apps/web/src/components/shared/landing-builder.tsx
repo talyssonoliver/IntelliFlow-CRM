@@ -151,7 +151,7 @@ export interface LandingPageConfig {
 // Section Components
 // ============================================================================
 
-export function LandingHero({ section, pageSlug }: { section: HeroSection; pageSlug: string }) {
+export function LandingHero({ section, pageSlug }: Readonly<{ section: HeroSection; pageSlug: string }>) {
   const variant = section.experiment ? getVariant(section.experiment) : null;
   const ctaText = variant?.name || section.primaryCta.text;
 
@@ -209,7 +209,7 @@ export function LandingHero({ section, pageSlug }: { section: HeroSection; pageS
   );
 }
 
-export function LandingFeatures({ section }: { section: FeaturesSection }) {
+export function LandingFeatures({ section }: Readonly<{ section: FeaturesSection }>) {
   const columns = section.columns || 3;
   const gridCols = {
     2: 'md:grid-cols-2',
@@ -254,7 +254,7 @@ export function LandingFeatures({ section }: { section: FeaturesSection }) {
   );
 }
 
-export function LandingTestimonials({ section }: { section: TestimonialsSection }) {
+export function LandingTestimonials({ section }: Readonly<{ section: TestimonialsSection }>) {
   return (
     <section className="py-16 lg:py-20 bg-slate-50 dark:bg-slate-900">
       <div className="container px-4 lg:px-6 mx-auto max-w-auto">
@@ -301,7 +301,7 @@ export function LandingTestimonials({ section }: { section: TestimonialsSection 
   );
 }
 
-export function LandingStats({ section }: { section: StatsSection }) {
+export function LandingStats({ section }: Readonly<{ section: StatsSection }>) {
   const bgClass = {
     light: 'bg-white dark:bg-slate-800',
     dark: 'bg-slate-900 dark:bg-slate-950',
@@ -338,7 +338,7 @@ export function LandingStats({ section }: { section: StatsSection }) {
   );
 }
 
-export function LandingPricing({ section }: { section: PricingSection }) {
+export function LandingPricing({ section }: Readonly<{ section: PricingSection }>) {
   return (
     <section className="py-16 lg:py-20 bg-white dark:bg-slate-800">
       <div className="container px-4 lg:px-6 mx-auto max-w-auto">
@@ -377,9 +377,9 @@ export function LandingPricing({ section }: { section: PricingSection }) {
               </div>
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">{tier.description}</p>
               <ul className="space-y-3 mb-6">
-                {tier.features.map((feature, fIndex) => (
+                {tier.features.map((feature) => (
                   <li
-                    key={fIndex}
+                    key={feature}
                     className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400"
                   >
                     <span
@@ -407,7 +407,7 @@ export function LandingPricing({ section }: { section: PricingSection }) {
   );
 }
 
-export function LandingFaq({ section }: { section: FaqSection }) {
+export function LandingFaq({ section }: Readonly<{ section: FaqSection }>) {
   return (
     <section className="py-16 lg:py-20 bg-slate-50 dark:bg-slate-900">
       <div className="container px-4 lg:px-6 mx-auto max-w-4xl">
@@ -448,7 +448,7 @@ export function LandingFaq({ section }: { section: FaqSection }) {
   );
 }
 
-export function LandingCta({ section, pageSlug }: { section: CtaSection; pageSlug: string }) {
+export function LandingCta({ section, pageSlug }: Readonly<{ section: CtaSection; pageSlug: string }>) {
   const handleCtaClick = () => {
     trackConversion(`lp_${pageSlug}`, 'footer_cta_click');
   };
@@ -484,7 +484,7 @@ export function LandingCta({ section, pageSlug }: { section: CtaSection; pageSlu
   );
 }
 
-export function LandingLogoCloud({ section }: { section: LogoCloudSection }) {
+export function LandingLogoCloud({ section }: Readonly<{ section: LogoCloudSection }>) {
   return (
     <section className="py-12 lg:py-16 bg-slate-50 dark:bg-slate-900">
       <div className="container px-4 lg:px-6 mx-auto max-w-auto">
@@ -512,7 +512,7 @@ export function LandingLogoCloud({ section }: { section: LogoCloudSection }) {
 // Main Landing Builder Component
 // ============================================================================
 
-export function LandingBuilder({ config }: { config: LandingPageConfig }) {
+export function LandingBuilder({ config }: Readonly<{ config: LandingPageConfig }>) {
   React.useEffect(() => {
     // Track page view
     trackConversion(`lp_${config.slug}`, 'page_view');
@@ -520,36 +520,45 @@ export function LandingBuilder({ config }: { config: LandingPageConfig }) {
 
   return (
     <>
-      {config.sections.map((section, index) => {
+      {config.sections.map((section) => {
+        let sectionLabel: string;
+        if (section.type === 'hero') {
+          sectionLabel = section.headline;
+        } else if ('title' in section && section.title) {
+          sectionLabel = section.title;
+        } else {
+          sectionLabel = section.type;
+        }
+        const sectionKey = `${section.type}-${sectionLabel}`;
         switch (section.type) {
           case 'hero':
             return (
               <LandingHero
-                key={`${section.type}-${index}`}
+                key={sectionKey}
                 section={section}
                 pageSlug={config.slug}
               />
             );
           case 'features':
-            return <LandingFeatures key={`${section.type}-${index}`} section={section} />;
+            return <LandingFeatures key={sectionKey} section={section} />;
           case 'testimonials':
-            return <LandingTestimonials key={`${section.type}-${index}`} section={section} />;
+            return <LandingTestimonials key={sectionKey} section={section} />;
           case 'stats':
-            return <LandingStats key={`${section.type}-${index}`} section={section} />;
+            return <LandingStats key={sectionKey} section={section} />;
           case 'pricing':
-            return <LandingPricing key={`${section.type}-${index}`} section={section} />;
+            return <LandingPricing key={sectionKey} section={section} />;
           case 'faq':
-            return <LandingFaq key={`${section.type}-${index}`} section={section} />;
+            return <LandingFaq key={sectionKey} section={section} />;
           case 'cta':
             return (
               <LandingCta
-                key={`${section.type}-${index}`}
+                key={sectionKey}
                 section={section}
                 pageSlug={config.slug}
               />
             );
           case 'logo-cloud':
-            return <LandingLogoCloud key={`${section.type}-${index}`} section={section} />;
+            return <LandingLogoCloud key={sectionKey} section={section} />;
           default:
             return null;
         }

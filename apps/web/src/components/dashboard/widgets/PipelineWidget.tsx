@@ -29,11 +29,11 @@ const stages: PipelineStage[] = [
   { name: 'Closed Won', value: '$40,000', deals: 2, percentage: 20, color: 'bg-stage-won' },
 ];
 
-export function PipelineWidget(_props: WidgetProps) {
+export function PipelineWidget(_props: Readonly<WidgetProps>) {
   return (
     <div className="p-5 h-full flex flex-col">
       <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
-        <span className="material-symbols-outlined text-muted-foreground">filter_alt</span>
+        <span className="material-symbols-outlined text-muted-foreground">filter_alt</span>{' '}
         Sales Pipeline
       </h3>
 

@@ -78,10 +78,10 @@ export function isValidRedirectUrl(url: string): boolean {
     }
 
     // Parse absolute URLs
-    const parsed = new URL(url, window.location.origin);
+    const parsed = new URL(url, globalThis.location.origin);
 
     // Only allow same-origin or explicitly allowed hosts
-    if (parsed.origin === window.location.origin) {
+    if (parsed.origin === globalThis.location.origin) {
       return true;
     }
 
@@ -184,7 +184,7 @@ export function getSsoLogoutUrl(
   provider: 'google' | 'microsoft' | 'azure',
   postLogoutRedirectUri?: string
 ): string | null {
-  const redirectUri = postLogoutRedirectUri || `${window.location.origin}/login`;
+  const redirectUri = postLogoutRedirectUri || `${globalThis.location.origin}/login`;
 
   switch (provider) {
     case 'google':
@@ -236,7 +236,7 @@ export function getLogoutRedirect(options: LogoutRedirectOptions = {}): LogoutRe
       showMessage: options.showMessage,
     });
     ssoLogoutUrl =
-      getSsoLogoutUrl(options.ssoProvider, `${window.location.origin}${loginUrl}`) || undefined;
+      getSsoLogoutUrl(options.ssoProvider, `${globalThis.location.origin}${loginUrl}`) || undefined;
   }
 
   const queryString = params.toString();
@@ -254,7 +254,7 @@ export function getLogoutRedirect(options: LogoutRedirectOptions = {}): LogoutRe
  * Perform the logout redirect
  */
 export function performLogoutRedirect(options: LogoutRedirectOptions = {}): void {
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis.window === 'undefined') return;
 
   const { url, requiresSsoLogout, ssoLogoutUrl } = getLogoutRedirect(options);
   const delay = options.delay ?? 0;
@@ -262,10 +262,10 @@ export function performLogoutRedirect(options: LogoutRedirectOptions = {}): void
   const redirect = () => {
     if (requiresSsoLogout && ssoLogoutUrl) {
       // Redirect to SSO logout first
-      window.location.href = ssoLogoutUrl;
+      globalThis.location.href = ssoLogoutUrl;
     } else {
       // Redirect to login page
-      window.location.href = url;
+      globalThis.location.href = url;
     }
   };
 
@@ -280,10 +280,10 @@ export function performLogoutRedirect(options: LogoutRedirectOptions = {}): void
  * Navigate to logout page (for programmatic logout)
  */
 export function navigateToLogout(options: LogoutRedirectOptions = {}): void {
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis.window === 'undefined') return;
 
   const url = buildLogoutUrl(options);
-  window.location.href = url;
+  globalThis.location.href = url;
 }
 
 // ============================================
@@ -294,9 +294,9 @@ export function navigateToLogout(options: LogoutRedirectOptions = {}): void {
  * Parse logout reason from URL
  */
 export function parseLogoutReason(url?: string): LogoutReason | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof globalThis.window === 'undefined') return null;
 
-  const searchParams = new URLSearchParams(url || window.location.search);
+  const searchParams = new URLSearchParams(url || globalThis.location.search);
   const reason = searchParams.get('reason');
 
   if (reason && reason in LOGOUT_MESSAGES) {
@@ -310,9 +310,9 @@ export function parseLogoutReason(url?: string): LogoutReason | null {
  * Parse return URL from current location
  */
 export function parseReturnUrl(url?: string): string | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof globalThis.window === 'undefined') return null;
 
-  const searchParams = new URLSearchParams(url || window.location.search);
+  const searchParams = new URLSearchParams(url || globalThis.location.search);
   return sanitizeReturnUrl(searchParams.get('returnUrl'));
 }
 
@@ -330,14 +330,14 @@ export function getLogoutMessage(reason?: LogoutReason | null): string {
  * Check if current page is the logout page
  */
 export function isLogoutPage(): boolean {
-  if (typeof window === 'undefined') return false;
-  return window.location.pathname === DEFAULT_LOGOUT_PATH;
+  if (typeof globalThis.window === 'undefined') return false;
+  return globalThis.location.pathname === DEFAULT_LOGOUT_PATH;
 }
 
 /**
  * Check if current page is the login page
  */
 export function isLoginPage(): boolean {
-  if (typeof window === 'undefined') return false;
-  return window.location.pathname === DEFAULT_LOGIN_PATH;
+  if (typeof globalThis.window === 'undefined') return false;
+  return globalThis.location.pathname === DEFAULT_LOGIN_PATH;
 }

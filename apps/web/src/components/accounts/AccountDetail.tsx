@@ -66,14 +66,16 @@ function getInitials(name: string): string {
 function resolveWebsite(website: unknown): { href: string; display: string } | null {
   if (!website) return null;
   // API may return WebsiteUrl value object or a plain string
-  const raw =
-    typeof website === 'string'
-      ? website
-      : typeof website === 'object' && website !== null && 'normalized' in website
-        ? (website as { normalized: string }).normalized
-        : typeof website === 'object' && website !== null && 'value' in website
-          ? (website as { value: string }).value
-          : null;
+  let raw: string | null;
+  if (typeof website === 'string') {
+    raw = website;
+  } else if (typeof website === 'object' && website !== null && 'normalized' in website) {
+    raw = (website as { normalized: string }).normalized;
+  } else if (typeof website === 'object' && website !== null && 'value' in website) {
+    raw = (website as { value: string }).value;
+  } else {
+    raw = null;
+  }
   if (!raw) return null;
   const href = raw.startsWith('http') ? raw : `https://${raw}`;
   const display = raw.replace(/^https?:\/\//, '');
@@ -82,11 +84,11 @@ function resolveWebsite(website: unknown): { href: string; display: string } | n
 
 function formatDate(date: string | Date): string {
   const d = typeof date === 'string' ? new Date(date) : date;
-  if (isNaN(d.getTime())) return '—';
+  if (Number.isNaN(d.getTime())) return '—';
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps) {
+export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDetailProps>) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
@@ -194,7 +196,7 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
             href="/accounts"
             className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
-            <span className="material-symbols-outlined !text-lg">arrow_back</span>
+            <span className="material-symbols-outlined !text-lg">arrow_back</span>{' '}
             Back to Accounts
           </Link>
         </Card>
@@ -223,15 +225,15 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
             className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
             onClick={() => router.push(`/accounts/${accountId}?edit=true`)}
           >
-            <span className="material-symbols-outlined !text-[18px]">edit</span>
+            <span className="material-symbols-outlined !text-[18px]">edit</span>{' '}
             Edit
           </button>
           <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-            <span className="material-symbols-outlined !text-[18px]">handshake</span>
+            <span className="material-symbols-outlined !text-[18px]">handshake</span>{' '}
             Create Deal
           </button>
           <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none">
-            <span className="material-symbols-outlined !text-[18px]">person_add</span>
+            <span className="material-symbols-outlined !text-[18px]">person_add</span>{' '}
             Add Contact
           </button>
           <PinButton

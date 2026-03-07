@@ -42,7 +42,7 @@ export function RollbackConfirmDialog({
   targetVersion,
   onConfirm,
   isLoading,
-}: RollbackConfirmDialogProps) {
+}: Readonly<RollbackConfirmDialogProps>) {
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -80,7 +80,7 @@ export function RollbackConfirmDialog({
           <DialogTitle>Rollback to Version?</DialogTitle>
           <DialogDescription>
             This will create a new version based on{' '}
-            <span className="font-mono text-foreground">{targetVersion.id.slice(0, 8)}...</span> and
+            <span className="font-mono text-foreground">{targetVersion.id.slice(0, 8)}...</span>{' '}and
             activate it. The current active version will be deprecated.
           </DialogDescription>
         </DialogHeader>
@@ -128,11 +128,11 @@ export function RollbackConfirmDialog({
             />
             <div className="flex justify-between text-xs">
               <span id="reason-hint" className="text-muted-foreground">
-                {characterCount < MIN_REASON_LENGTH
-                  ? `Minimum ${MIN_REASON_LENGTH} characters required`
-                  : characterCount > MAX_REASON_LENGTH
-                    ? `Maximum ${MAX_REASON_LENGTH} characters allowed`
-                    : 'Reason will be recorded in the audit log'}
+                {(() => {
+                if (characterCount < MIN_REASON_LENGTH) return `Minimum ${MIN_REASON_LENGTH} characters required`;
+                if (characterCount > MAX_REASON_LENGTH) return `Maximum ${MAX_REASON_LENGTH} characters allowed`;
+                return 'Reason will be recorded in the audit log';
+              })()}
               </span>
               <span
                 id="reason-count"

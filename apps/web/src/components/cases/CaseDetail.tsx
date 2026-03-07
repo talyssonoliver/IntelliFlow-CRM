@@ -40,7 +40,7 @@ interface CaseDetailProps {
   onPriorityChange: (priority: string) => void;
   onAssign: (userId: string) => void;
   onClose: (resolution: string) => void;
-  onAddTask: (task: Omit<AddCaseTaskInput, 'caseId'>) => void;
+  onAddTask: (task: Readonly<Omit<AddCaseTaskInput, 'caseId'>>) => void;
   onCompleteTask: (taskId: string) => void;
   onRemoveTask: (taskId: string) => void;
   onUpdateParties: (parties: PartyData[]) => void;
@@ -56,7 +56,7 @@ const tabs: { id: TabId; label: string }[] = [
 
 // ─── Timeline Icon ──────────────────────────────────────────────────────────
 
-function TimelineIcon({ type }: { type: TimelineEntry['type'] }) {
+function TimelineIcon({ type }: Readonly<{ type: TimelineEntry['type'] }>) {
   const config: Record<string, { bg: string; text: string; icon: string }> = {
     meeting: { bg: 'bg-blue-100', text: 'text-primary', icon: 'schedule' },
     document: { bg: 'bg-green-100', text: 'text-green-600', icon: 'check_circle' },
@@ -80,7 +80,7 @@ function TimelineIcon({ type }: { type: TimelineEntry['type'] }) {
 
 // ─── Avatar helpers ─────────────────────────────────────────────────────────
 
-function Avatar({ name, url, size = 'sm' }: { name: string; url?: string; size?: 'sm' | 'md' }) {
+function Avatar({ name, url, size = 'sm' }: Readonly<{ name: string; url?: string; size?: 'sm' | 'md' }>) {
   const sizeClass = size === 'md' ? 'size-8' : 'size-5';
   const textSize = size === 'md' ? 'text-[10px]' : 'text-[8px]';
   if (url) {
@@ -123,7 +123,7 @@ export function CaseDetail({
   onRemoveTask,
   onUpdateParties,
   onLogActivity,
-}: CaseDetailProps) {
+}: Readonly<CaseDetailProps>) {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [activityText, setActivityText] = useState('');
   const [showCloseDialog, setShowCloseDialog] = useState(false);
@@ -169,17 +169,18 @@ export function CaseDetail({
   const openItems = caseData.openItems ?? caseData.pendingTaskCount ?? 0;
   const timeline = caseData.timeline ?? [];
   const rawParties = caseData.parties;
-  const parsedParties: PartyData[] = Array.isArray(rawParties)
-    ? rawParties
-    : typeof rawParties === 'string'
-      ? (() => {
-          try {
-            return JSON.parse(rawParties);
-          } catch {
-            return [];
-          }
-        })()
-      : [];
+  let parsedParties: PartyData[];
+  if (Array.isArray(rawParties)) {
+    parsedParties = rawParties;
+  } else if (typeof rawParties === 'string') {
+    try {
+      parsedParties = JSON.parse(rawParties);
+    } catch {
+      parsedParties = [];
+    }
+  } else {
+    parsedParties = [];
+  }
   // Ensure every party has a stable unique id (DB-stored JSON may omit it)
   const parties: PartyData[] = parsedParties.map((p, i) => ({
     ...p,
@@ -490,7 +491,7 @@ export function CaseDetail({
                         <span className="material-symbols-outlined text-3xl mb-2 block">
                           timeline
                         </span>
-                        No timeline entries yet. Log an activity above to get started.
+                        {' '}No timeline entries yet. Log an activity above to get started.
                       </div>
                     </div>
                   )}

@@ -79,7 +79,7 @@ export interface AccountRowHandlers {
 
 function formatDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
-  if (isNaN(d.getTime())) return 'Invalid date';
+  if (Number.isNaN(d.getTime())) return 'Invalid date';
   return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
 }
 
@@ -105,7 +105,7 @@ function getInitials(name: string): string {
     .slice(0, 2);
 }
 
-export function createAccountColumns(handlers: AccountRowHandlers): ColumnDef<AccountRow>[] {
+export function createAccountColumns(handlers: Readonly<AccountRowHandlers>): ColumnDef<AccountRow>[] {
   return [
     {
       accessorKey: 'name',
@@ -113,7 +113,7 @@ export function createAccountColumns(handlers: AccountRowHandlers): ColumnDef<Ac
       size: 260,
       cell: ({ row }) => {
         const account = row.original;
-        const rawRevenue = account.revenue != null ? Number(account.revenue) : null;
+        const rawRevenue = account.revenue == null ? null : Number(account.revenue);
         const tier = getAccountTier(rawRevenue);
         const config = TIER_CONFIG[tier];
         const initials = getInitials(account.name);
@@ -158,14 +158,14 @@ export function createAccountColumns(handlers: AccountRowHandlers): ColumnDef<Ac
       size: 130,
       cell: ({ row }) => {
         const rawRevenue = row.original.revenue;
-        const revenue = rawRevenue != null ? Number(rawRevenue) : null;
+        const revenue = rawRevenue == null ? null : Number(rawRevenue);
         const tier = getAccountTier(revenue);
         const config = TIER_CONFIG[tier];
         return (
           <div className="flex items-center gap-2">
             <span className={`w-2 h-2 rounded-full shrink-0 ${config.dot}`} />
             <span className="text-sm text-foreground">
-              {revenue != null ? formatCompactCurrency(revenue) : '—'}
+              {revenue == null ? '—' : formatCompactCurrency(revenue)}
             </span>
           </div>
         );
@@ -177,7 +177,7 @@ export function createAccountColumns(handlers: AccountRowHandlers): ColumnDef<Ac
       size: 110,
       cell: ({ row }) => (
         <span className="text-sm text-foreground">
-          {row.original.employees != null ? formatEmployees(row.original.employees) : '—'}
+          {row.original.employees == null ? '—' : formatEmployees(row.original.employees)}
         </span>
       ),
     },

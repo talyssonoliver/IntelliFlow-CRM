@@ -67,7 +67,7 @@ interface ActionButtonProps {
   action: PageAction;
 }
 
-function ActionButton({ action }: ActionButtonProps) {
+function ActionButton({ action }: Readonly<ActionButtonProps>) {
   const {
     label,
     onClick,
@@ -94,15 +94,19 @@ function ActionButton({ action }: ActionButtonProps) {
 
   const content = (
     <>
-      {loading ? (
-        <span className="material-symbols-outlined text-[20px] animate-spin">
-          progress_activity
-        </span>
-      ) : icon ? (
-        <span className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform">
-          {icon}
-        </span>
-      ) : null}
+      {(() => {
+        if (loading) return (
+          <span className="material-symbols-outlined text-[20px] animate-spin">
+            progress_activity
+          </span>
+        );
+        if (icon) return (
+          <span className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform">
+            {icon}
+          </span>
+        );
+        return null;
+      })()}
       <span className={cn(hideOnMobile && 'hidden sm:inline')}>{label}</span>
     </>
   );
@@ -171,7 +175,7 @@ export function EntityHeader({
   endContent,
   children,
   className,
-}: EntityHeaderProps) {
+}: Readonly<EntityHeaderProps>) {
   return (
     <div
       className={cn('flex flex-col sm:flex-row sm:items-center justify-between gap-4', className)}

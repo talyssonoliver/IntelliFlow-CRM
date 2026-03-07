@@ -52,7 +52,7 @@ function generateUptimeBars(
   return bars;
 }
 
-function getStatusColor(status: ServiceStatus): string {
+function getStatusColor(status: Readonly<ServiceStatus>): string {
   switch (status) {
     case 'operational':
       return 'bg-green-500';
@@ -65,7 +65,7 @@ function getStatusColor(status: ServiceStatus): string {
   }
 }
 
-export function StatusMonitor({ services, refreshInterval = 30000 }: StatusMonitorProps) {
+export function StatusMonitor({ services, refreshInterval = 30000 }: Readonly<StatusMonitorProps>) {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -121,7 +121,7 @@ export function StatusMonitor({ services, refreshInterval = 30000 }: StatusMonit
                 >
                   {bars.map((bar, idx) => (
                     <div
-                      key={idx}
+                      key={idx} // NOSONAR typescript:S6479
                       className={`h-8 w-1 rounded-sm ${getStatusColor(bar.status)} opacity-80 hover:opacity-100 transition-opacity`}
                       title={`Day ${90 - idx}: ${bar.status.replace('_', ' ')}`}
                     />

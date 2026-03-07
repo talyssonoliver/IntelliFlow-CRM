@@ -45,7 +45,7 @@ export function AppAvatar({
   imageClassName,
   fallbackClassName,
   ...props
-}: AppAvatarProps) {
+}: Readonly<AppAvatarProps>) {
   const normalizedSrc = React.useMemo(() => normalizeAvatarSource(src), [src]);
   const initialImageSource = React.useMemo(() => {
     if (!normalizedSrc || !isAvatarImageSource(normalizedSrc)) {
@@ -92,7 +92,7 @@ export function AppAvatar({
           }}
         />
       ) : null}
-      {!showImage ? <span className="font-semibold">{fallbackLabel}</span> : null}
+      {showImage ? null : <span className="font-semibold">{fallbackLabel}</span>}
     </div>
   );
 }

@@ -24,19 +24,19 @@ const _mocks = vi.hoisted(() => ({
 // ============================================================
 
 vi.mock('@intelliflow/ui', () => ({
-  Sheet: ({ children, open }: { children: React.ReactNode; open: boolean }) =>
+  Sheet: ({ children, open }: Readonly<{ children: React.ReactNode; open: boolean }>) =>
     open ? <div data-testid="sheet">{children}</div> : null,
-  SheetContent: ({ children }: { children: React.ReactNode }) => (
+  SheetContent: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <div data-testid="sheet-content">{children}</div>
   ),
   SheetTitle: ({
     children,
     className: _className,
-  }: {
+  }: Readonly<{
     children: React.ReactNode;
     className?: string;
-  }) => <h2 data-testid="sheet-title">{children}</h2>,
-  SheetDescription: ({ children }: { children: React.ReactNode }) => (
+  }>) => <h2 data-testid="sheet-title">{children}</h2>,
+  SheetDescription: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <p data-testid="sheet-description">{children}</p>
   ),
 }));

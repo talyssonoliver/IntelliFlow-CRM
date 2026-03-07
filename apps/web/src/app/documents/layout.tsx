@@ -4,6 +4,6 @@ export const metadata: Metadata = {
   title: 'Documents',
 };
 
-export default function DocumentsLayout({ children }: { children: React.ReactNode }) {
+export default function DocumentsLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <>{children}</>;
 }

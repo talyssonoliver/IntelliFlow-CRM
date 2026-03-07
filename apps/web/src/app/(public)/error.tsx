@@ -9,7 +9,7 @@ type PublicErrorProps = {
   reset: () => void;
 };
 
-export default function PublicHomeError({ error, reset }: PublicErrorProps) {
+export default function PublicHomeError({ error, reset }: Readonly<PublicErrorProps>) {
   useEffect(() => {
     console.error('Public home page error:', error);
   }, [error]);
@@ -46,7 +46,7 @@ export default function PublicHomeError({ error, reset }: PublicErrorProps) {
           >
             <span className="material-symbols-outlined text-lg" aria-hidden="true">
               refresh
-            </span>
+            </span>{' '}
             Try again
           </button>
           <Link
@@ -55,7 +55,7 @@ export default function PublicHomeError({ error, reset }: PublicErrorProps) {
           >
             <span className="material-symbols-outlined text-lg" aria-hidden="true">
               support_agent
-            </span>
+            </span>{' '}
             Contact support
           </Link>
         </div>

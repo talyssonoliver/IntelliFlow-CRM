@@ -25,7 +25,6 @@ import type { AtRiskCustomer } from '@/lib/churn-risk/types';
 import { CHURN_RISK_LEVELS } from '@intelliflow/domain';
 import {
   getRiskBadgeClass,
-  getRiskColor as _getRiskColor,
   getEngagementColor,
   getEngagementBgClass,
   formatSlaCountdown,
@@ -52,13 +51,13 @@ function StatCard({
   icon,
   colorClass,
   isLoading,
-}: {
+}: Readonly<{
   label: string;
   value: number;
   icon: string;
   colorClass: string;
   isLoading: boolean;
-}) {
+}>) {
   return (
     <Card>
       <CardContent className="p-4">
@@ -120,7 +119,7 @@ const FILTER_CHIPS = [
 // Customer Card (internal)
 // ============================================
 
-function CustomerCard({ customer }: { customer: AtRiskCustomer }) {
+function CustomerCard({ customer }: Readonly<{ customer: AtRiskCustomer }>) {
   const sla = formatSlaCountdown(customer.slaDeadline);
 
   return (
@@ -449,7 +448,7 @@ export function ChurnDashboard() {
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-36 w-full rounded-lg" />
+            <Skeleton key={i} className="h-36 w-full rounded-lg" /> // NOSONAR typescript:S6479
           ))}
         </div>
       ) : filteredCustomers.length === 0 ? (

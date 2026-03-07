@@ -22,11 +22,11 @@ import {
   StatusBadge,
   ConfidenceIndicator,
   cn,
+  useToast,
 } from '@intelliflow/ui';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useReviewDetail } from '@/lib/ai-review/hooks';
 import { api } from '@/lib/api';
-import { useToast } from '@intelliflow/ui';
 import { formatSlaClock, formatTimeAgo } from '@/lib/shared/date-utils';
 
 // Output type display config (shared with ReviewCard)
@@ -288,13 +288,13 @@ export default function AIReviewDetailPage() {
               </p>
               {review.reviewerId && (
                 <p>
-                  <span className="font-medium text-foreground">Reviewer:</span> {review.reviewerId}
+                  <span className="font-medium text-foreground">Reviewer:</span>{' '}{review.reviewerId}
                 </p>
               )}
               {review.reviewDecision && (
                 <p>
                   <span className="font-medium text-foreground">Decision:</span>{' '}
-                  {review.reviewDecision.replace(/_/g, ' ')}
+                  {review.reviewDecision.replaceAll('_', ' ')}
                 </p>
               )}
               {review.reviewNotes && (
@@ -352,7 +352,7 @@ export default function AIReviewDetailPage() {
                 >
                   <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                     cancel
-                  </span>
+                  </span>{' '}
                   Reject
                 </Button>
                 <Button
@@ -366,7 +366,7 @@ export default function AIReviewDetailPage() {
                 >
                   <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                     arrow_upward
-                  </span>
+                  </span>{' '}
                   Escalate
                 </Button>
               </>
@@ -377,7 +377,7 @@ export default function AIReviewDetailPage() {
               <Button onClick={handleClaim} disabled={isMutating}>
                 <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                   lock
-                </span>
+                </span>{' '}
                 Claim Escalated Review
               </Button>
             )}
@@ -390,7 +390,7 @@ export default function AIReviewDetailPage() {
             >
               <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                 arrow_back
-              </span>
+              </span>{' '}
               Back to Queue
             </Button>
           </div>

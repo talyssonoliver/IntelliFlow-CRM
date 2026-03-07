@@ -45,7 +45,16 @@ vi.mock('@intelliflow/ui', () => ({
   CardContent: ({ children, ...props }: any) => <div {...props}>{children}</div>,
   CardHeader: ({ children }: any) => <div>{children}</div>,
   CardTitle: ({ children }: any) => <h3>{children}</h3>,
-  Progress: ({ value }: any) => <div data-testid="progress" data-value={value} />,
+  Progress: ({ value, ...props }: any) => (
+    <div
+      role="progressbar"
+      data-testid="progress"
+      aria-valuenow={value ?? 0}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      {...props}
+    />
+  ),
   Skeleton: ({ className }: any) => <div className={className} data-testid="skeleton" />,
   cn: (...args: any[]) => args.filter(Boolean).join(' '),
 }));

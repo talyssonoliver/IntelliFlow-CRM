@@ -35,7 +35,7 @@ export async function generateStaticParams() {
 /**
  * Generate metadata for the landing page
  */
-export async function generateMetadata({ params }: LandingPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: Readonly<LandingPageProps>): Promise<Metadata> {
   const { slug } = await params;
   const pages = landingPagesData.pages as PagesData;
   const pageConfig = pages[slug];
@@ -71,7 +71,7 @@ export async function generateMetadata({ params }: LandingPageProps): Promise<Me
 /**
  * Landing Page Component
  */
-export default async function LandingPage({ params }: LandingPageProps) {
+export default async function LandingPage({ params }: Readonly<LandingPageProps>) {
   const { slug } = await params;
   const pages = landingPagesData.pages as PagesData;
   const pageConfig = pages[slug];

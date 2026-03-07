@@ -11,7 +11,7 @@ import {
 } from '@/components/sidebar';
 import { CalendarVisibilityProvider } from '@/hooks/useCalendarVisibility';
 
-export default function CalendarLayoutShell({ children }: { children: React.ReactNode }) {
+export default function CalendarLayoutShell({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <CalendarVisibilityProvider>
       <SidebarPortalProvider>

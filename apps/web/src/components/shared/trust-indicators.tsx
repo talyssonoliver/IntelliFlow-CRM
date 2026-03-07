@@ -66,7 +66,7 @@ export function TrustIndicators({
   items = DEFAULT_TRUST_ITEMS,
   variant = 'inline',
   className,
-}: TrustIndicatorsProps) {
+}: Readonly<TrustIndicatorsProps>) {
   if (variant === 'stacked') {
     return (
       <div className={cn('flex flex-col gap-2 text-xs text-slate-400', className)}>

@@ -12,7 +12,7 @@ interface InterventionAlertsProps {
   customers: AtRiskCustomer[];
 }
 
-export function InterventionAlerts({ customers }: InterventionAlertsProps) {
+export function InterventionAlerts({ customers }: Readonly<InterventionAlertsProps>) {
   // Show customers whose SLA deadline is within 24h or already overdue
   const urgentCustomers = customers.filter((c) => {
     const deadline = new Date(c.slaDeadline).getTime();
@@ -27,7 +27,7 @@ export function InterventionAlerts({ customers }: InterventionAlertsProps) {
           <span className="material-symbols-outlined text-lg text-amber-500" aria-hidden="true">
             notifications_active
           </span>
-          Urgent Interventions
+          {' '}Urgent Interventions
           {urgentCustomers.length > 0 && (
             <Badge variant="destructive" className="ml-1">
               {urgentCustomers.length}

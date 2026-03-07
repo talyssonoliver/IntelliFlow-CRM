@@ -22,7 +22,7 @@ function getScoreLabel(score: number): string {
   return 'Critical';
 }
 
-export default function NpsGauge({ score, distribution }: NpsGaugeProps) {
+export default function NpsGauge({ score, distribution }: Readonly<NpsGaugeProps>) {
   const colorClass = getScoreColor(score);
   const label = getScoreLabel(score);
 

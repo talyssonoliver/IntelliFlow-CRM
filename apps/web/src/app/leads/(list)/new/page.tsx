@@ -262,7 +262,7 @@ export default function CreateNewLeadPage() {
       // Convert annualRevenue (string like "1000000") to estimatedValue (integer cents)
       // if provided; field is schema-supported as an integer in cents.
       const estimatedValueCents = formData.annualRevenue
-        ? Math.round(parseFloat(formData.annualRevenue) * 100) || undefined
+        ? Math.round(Number.parseFloat(formData.annualRevenue) * 100) || undefined
         : undefined;
 
       const leadData = {
@@ -387,12 +387,14 @@ export default function CreateNewLeadPage() {
               {steps.map((step) => {
                 const status = getStepStatus(step);
                 const isClickable = status === 'completed' || status === 'current';
-                const stepCircleClass =
-                  status === 'current'
-                    ? 'bg-[#137fec] text-white'
-                    : status === 'completed'
-                      ? 'bg-[#137fec] text-white hover:bg-[#0e6ac7]'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-2 border-slate-200 dark:border-slate-700';
+                let stepCircleClass: string;
+                if (status === 'current') {
+                  stepCircleClass = 'bg-[#137fec] text-white';
+                } else if (status === 'completed') {
+                  stepCircleClass = 'bg-[#137fec] text-white hover:bg-[#0e6ac7]';
+                } else {
+                  stepCircleClass = 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-2 border-slate-200 dark:border-slate-700';
+                }
                 return (
                   <button
                     key={step.id}
@@ -413,13 +415,11 @@ export default function CreateNewLeadPage() {
                       )}
                     </div>
                     <span
-                      className={`text-sm font-medium ${
-                        status === 'current'
-                          ? 'font-bold text-slate-900 dark:text-white'
-                          : status === 'completed'
-                            ? 'font-bold text-slate-900 dark:text-white hover:text-[#137fec]'
-                            : 'text-slate-500 dark:text-slate-400'
-                      }`}
+                      className={`text-sm font-medium ${(() => {
+                        if (status === 'current') return 'font-bold text-slate-900 dark:text-white';
+                        if (status === 'completed') return 'font-bold text-slate-900 dark:text-white hover:text-[#137fec]';
+                        return 'text-slate-500 dark:text-slate-400';
+                      })()}`}
                     >
                       {step.label}
                     </span>

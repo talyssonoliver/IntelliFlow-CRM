@@ -27,7 +27,7 @@ export const defaultAppointmentFilters: AppointmentFilters = {
 };
 
 function loadFromStorage<T>(key: string, fallback: T): T {
-  if (typeof window === 'undefined') return fallback;
+  if (typeof globalThis.window === 'undefined') return fallback;
   try {
     const stored = localStorage.getItem(key);
     return stored ? (JSON.parse(stored) as T) : fallback;
@@ -45,7 +45,7 @@ export function useAppointmentFilters() {
 
   // Persist view preferences to localStorage
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof globalThis.window === 'undefined') return;
     localStorage.setItem('appointment-viewMode', JSON.stringify(filters.viewMode));
     localStorage.setItem('appointment-calendarView', JSON.stringify(filters.calendarView));
   }, [filters.viewMode, filters.calendarView]);

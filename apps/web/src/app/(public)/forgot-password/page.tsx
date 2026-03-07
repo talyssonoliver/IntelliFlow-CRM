@@ -193,7 +193,7 @@ export default function ForgotPasswordPage() {
               aria-hidden="true"
             >
               security
-            </span>
+            </span>{' '}
             Your password reset link is valid for 1 hour and can only be used once.
           </p>
         </div>
@@ -209,7 +209,7 @@ export default function ForgotPasswordPage() {
           >
             <span className="material-symbols-outlined text-sm" aria-hidden="true">
               help
-            </span>
+            </span>{' '}
             Need help?
           </Link>
         </div>

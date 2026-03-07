@@ -46,13 +46,13 @@ function StatCard({
   icon,
   colorClass,
   isLoading,
-}: {
+}: Readonly<{
   label: string;
   value: string | number;
   icon: string;
   colorClass: string;
   isLoading: boolean;
-}) {
+}>) {
   return (
     <Card>
       <CardContent className="p-4">
@@ -197,7 +197,7 @@ export function AISearchPage() {
     }
   }, []);
 
-  const handleSourceToggle = useCallback((source: SearchSource) => {
+  const handleSourceToggle = useCallback((source: Readonly<SearchSource>) => {
     setSources((prev) =>
       prev.includes(source) ? prev.filter((s) => s !== source) : [...prev, source]
     );
@@ -262,7 +262,7 @@ export function AISearchPage() {
             <div className="flex flex-wrap items-center gap-2">
               {/* Search type */}
               <div className="flex items-center gap-1">
-                <span className="text-xs text-muted-foreground">Mode:</span>
+                <span className="text-xs text-muted-foreground">Mode:</span>{' '}
                 {SEARCH_TYPE_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
@@ -286,7 +286,7 @@ export function AISearchPage() {
 
               {/* Date range */}
               <div className="flex items-center gap-1">
-                <span className="text-xs text-muted-foreground">Period:</span>
+                <span className="text-xs text-muted-foreground">Period:</span>{' '}
                 {DATE_RANGE_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
@@ -310,7 +310,7 @@ export function AISearchPage() {
 
               {/* Sort */}
               <div className="flex items-center gap-1">
-                <span className="text-xs text-muted-foreground">Sort:</span>
+                <span className="text-xs text-muted-foreground">Sort:</span>{' '}
                 {SORT_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
@@ -361,7 +361,7 @@ export function AISearchPage() {
                 >
                   <span className="material-symbols-outlined text-sm" aria-hidden="true">
                     {getSourceIcon(opt.value)}
-                  </span>
+                  </span>{' '}
                   {opt.label}
                 </button>
               ))}
@@ -433,7 +433,7 @@ export function AISearchPage() {
       {hasQuery && isLoading && (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i}>
+            <Card key={i}> {/* NOSONAR typescript:S6479 */}
               <CardContent className="p-4 space-y-3">
                 <Skeleton className="h-5 w-2/3" />
                 <Skeleton className="h-4 w-full" />
@@ -453,7 +453,7 @@ export function AISearchPage() {
               {error.message || 'An unexpected error occurred'}
             </p>
             <Button onClick={() => refetch()} variant="outline">
-              <span className="material-symbols-outlined mr-2 text-sm">refresh</span> Retry
+              <span className="material-symbols-outlined mr-2 text-sm">refresh</span>{' '}Retry
             </Button>
           </CardContent>
         </Card>
@@ -475,18 +475,20 @@ export function AISearchPage() {
 
       {/* Results List */}
       {hasQuery && !isLoading && !error && sortedResults.length > 0 && (
-        <div className="space-y-3" role="list" aria-label="Search results">
+        <ul className="space-y-3" aria-label="Search results">
           {sortedResults.map((result) => (
-            <SearchResultCard key={result.id} result={result} query={debouncedQuery} />
+            <li key={result.id}>
+              <SearchResultCard result={result} query={debouncedQuery} />
+            </li>
           ))}
-        </div>
+        </ul>
       )}
 
       {/* Load More */}
       {hasMore && !isLoading && (
         <div className="flex justify-center">
           <Button onClick={handleLoadMore} variant="outline">
-            <span className="material-symbols-outlined mr-2 text-sm">expand_more</span>
+            <span className="material-symbols-outlined mr-2 text-sm">expand_more</span>{' '}
             Load More
           </Button>
         </div>
@@ -499,7 +501,7 @@ export function AISearchPage() {
 // Search Result Card
 // ============================================
 
-function SearchResultCard({ result, query }: { result: SearchResultItem; query: string }) {
+function SearchResultCard({ result, query }: Readonly<{ result: SearchResultItem; query: string }>) {
   const href = getSourceHref(result.source, result.id);
   const sourceColor = getSourceColor(result.source);
   const isLinked = href !== '#';
@@ -517,7 +519,7 @@ function SearchResultCard({ result, query }: { result: SearchResultItem; query: 
               <Badge className={cn('text-xs shrink-0', sourceColor)}>
                 <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                   {getSourceIcon(result.source)}
-                </span>
+                </span>{' '}
                 {getSourceLabel(result.source)}
               </Badge>
               <h3 className="font-medium text-foreground truncate">{result.title}</h3>

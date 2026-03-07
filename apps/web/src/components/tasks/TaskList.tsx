@@ -24,7 +24,7 @@ export interface TaskListProps {
   readonly isLoading: boolean;
   readonly onRowClick: (id: string) => void;
   readonly onComplete: (id: string) => void;
-  readonly onEdit: (task: TaskListItem) => void;
+  readonly onEdit: (task: Readonly<TaskListItem>) => void;
   readonly onDelete: (id: string) => void;
   readonly onArchive: (id: string) => void;
   readonly onBulkComplete: (ids: string[]) => void;
@@ -71,7 +71,7 @@ function formatDueDate(date: Date | string | null): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-function getEntityInfo(task: TaskListItem): { type: string; name: string; href: string } | null {
+function getEntityInfo(task: Readonly<TaskListItem>): { type: string; name: string; href: string } | null {
   if (task.lead)
     return {
       type: 'lead',
@@ -91,7 +91,7 @@ function getEntityInfo(task: TaskListItem): { type: string; name: string; href: 
 
 function createColumns(handlers: {
   onComplete: (id: string) => void;
-  onEdit: (task: TaskListItem) => void;
+  onEdit: (task: Readonly<TaskListItem>) => void;
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
 }): ColumnDef<TaskListItem>[] {
@@ -215,24 +215,28 @@ function createColumns(handlers: {
             }
             dropdownActions={[
               { icon: 'edit', label: 'Edit', onClick: () => handlers.onEdit(task) },
-              ...(task.status === 'COMPLETED' || task.status === 'CANCELLED'
-                ? [
+              ...((() => {
+                if (task.status === 'COMPLETED' || task.status === 'CANCELLED') {
+                  return [
                     {
                       icon: 'archive',
                       label: 'Archive',
                       onClick: () => handlers.onArchive(task.id),
                     },
-                  ]
-                : task.status !== 'ARCHIVED'
-                  ? [
-                      {
-                        icon: 'delete',
-                        label: 'Delete',
-                        onClick: () => handlers.onDelete(task.id),
-                        variant: 'destructive' as const,
-                      },
-                    ]
-                  : []),
+                  ];
+                }
+                if (task.status !== 'ARCHIVED') {
+                  return [
+                    {
+                      icon: 'delete',
+                      label: 'Delete',
+                      onClick: () => handlers.onDelete(task.id),
+                      variant: 'destructive' as const,
+                    },
+                  ];
+                }
+                return [];
+              })()),
             ]}
           />
         );
@@ -252,7 +256,7 @@ export function TaskList({
   onBulkComplete,
   onBulkDelete,
   onBulkArchive,
-}: TaskListProps) {
+}: Readonly<TaskListProps>) {
   const columns = useMemo(
     () => createColumns({ onComplete, onEdit, onDelete, onArchive }),
     [onComplete, onEdit, onDelete, onArchive]
@@ -297,7 +301,7 @@ export function TaskList({
     return (
       <div className="space-y-3" data-testid="task-list-skeleton">
         {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full rounded" />
+          <Skeleton key={i} className="h-12 w-full rounded" /> // NOSONAR typescript:S6479
         ))}
       </div>
     );

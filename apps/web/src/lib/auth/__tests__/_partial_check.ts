@@ -6,7 +6,7 @@ function decodeJwtPayload(token: string): { exp?: number; sub?: string } | null 
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
-    return JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return JSON.parse(atob(parts[1].replaceAll('-', '+').replaceAll('_', '/')));
   } catch {
     return null;
   }

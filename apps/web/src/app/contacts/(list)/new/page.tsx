@@ -29,6 +29,40 @@ const steps: Step[] = [
   { id: 'additional', number: 3, label: 'Additional Info' },
 ];
 
+function validatePersonalStep(
+  formData: Pick<ContactFormData, 'firstName' | 'lastName' | 'email'>
+): Partial<Record<keyof ContactFormData, string>> {
+  const errors: Partial<Record<keyof ContactFormData, string>> = {};
+  if (!formData.firstName.trim()) errors.firstName = 'First name is required';
+  if (!formData.lastName.trim()) errors.lastName = 'Last name is required';
+  if (!formData.email.trim()) {
+    errors.email = 'Email is required';
+  } else if (!/^[^\s@]+@[^\s@.]+\.[^\s@.]+$/.test(formData.email)) {
+    errors.email = 'Please enter a valid email address';
+  }
+  return errors;
+}
+
+function validateCompanyStep(
+  formData: Pick<ContactFormData, 'department' | 'departmentOther'>
+): Partial<Record<keyof ContactFormData, string>> {
+  const errors: Partial<Record<keyof ContactFormData, string>> = {};
+  if (formData.department === 'other' && !formData.departmentOther.trim()) {
+    errors.departmentOther = 'Please specify the department';
+  }
+  return errors;
+}
+
+function validateAdditionalStep(
+  formData: Pick<ContactFormData, 'contactType' | 'contactTypeOther'>
+): Partial<Record<keyof ContactFormData, string>> {
+  const errors: Partial<Record<keyof ContactFormData, string>> = {};
+  if (formData.contactType === 'other' && !formData.contactTypeOther.trim()) {
+    errors.contactTypeOther = 'Please specify the contact type';
+  }
+  return errors;
+}
+
 // Contact status type - aligned with domain CONTACT_STATUSES
 type ContactStatus = 'ACTIVE' | 'INACTIVE' | 'PROSPECT' | 'CUSTOMER' | 'FORMER_CUSTOMER';
 
@@ -171,32 +205,10 @@ export default function CreateNewContactPage() {
 
   // Validate current step
   const validateStep = (): boolean => {
-    const newErrors: Partial<Record<keyof ContactFormData, string>> = {};
-
-    if (currentStep === 'personal') {
-      if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
-      if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
-      if (!formData.email.trim()) {
-        newErrors.email = 'Email is required';
-      } else if (!/^[^\s@]+@[^\s@.]+\.[^\s@.]+$/.test(formData.email)) {
-        newErrors.email = 'Please enter a valid email address';
-      }
-    }
-
-    if (currentStep === 'company') {
-      // Validate departmentOther when 'Other' is selected
-      if (formData.department === 'other' && !formData.departmentOther.trim()) {
-        newErrors.departmentOther = 'Please specify the department';
-      }
-    }
-
-    if (currentStep === 'additional') {
-      // Validate contactTypeOther when 'Other' is selected
-      if (formData.contactType === 'other' && !formData.contactTypeOther.trim()) {
-        newErrors.contactTypeOther = 'Please specify the contact type';
-      }
-    }
-
+    let newErrors: Partial<Record<keyof ContactFormData, string>> = {};
+    if (currentStep === 'personal') newErrors = validatePersonalStep(formData);
+    else if (currentStep === 'company') newErrors = validateCompanyStep(formData);
+    else if (currentStep === 'additional') newErrors = validateAdditionalStep(formData);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -367,13 +379,11 @@ export default function CreateNewContactPage() {
                     className={`flex flex-col items-center gap-2 ${isClickable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
                   >
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white dark:ring-slate-900 shadow-sm transition-all ${
-                        status === 'current'
-                          ? 'bg-[#137fec] text-white'
-                          : status === 'completed'
-                            ? 'bg-[#137fec] text-white hover:bg-[#0e6ac7]'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-2 border-slate-200 dark:border-slate-700'
-                      }`}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white dark:ring-slate-900 shadow-sm transition-all ${(() => {
+                        if (status === 'current') return 'bg-[#137fec] text-white';
+                        if (status === 'completed') return 'bg-[#137fec] text-white hover:bg-[#0e6ac7]';
+                        return 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-2 border-slate-200 dark:border-slate-700';
+                      })()}`}
                     >
                       {status === 'completed' ? (
                         <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -384,13 +394,11 @@ export default function CreateNewContactPage() {
                       )}
                     </div>
                     <span
-                      className={`text-sm font-medium ${
-                        status === 'current'
-                          ? 'font-bold text-slate-900 dark:text-white'
-                          : status === 'completed'
-                            ? 'font-bold text-slate-900 dark:text-white hover:text-[#137fec]'
-                            : 'text-slate-500 dark:text-slate-400'
-                      }`}
+                      className={`text-sm font-medium ${(() => {
+                        if (status === 'current') return 'font-bold text-slate-900 dark:text-white';
+                        if (status === 'completed') return 'font-bold text-slate-900 dark:text-white hover:text-[#137fec]';
+                        return 'text-slate-500 dark:text-slate-400';
+                      })()}`}
                     >
                       {step.label}
                     </span>
@@ -427,7 +435,7 @@ export default function CreateNewContactPage() {
                         htmlFor="firstName"
                         className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
                       >
-                        First Name <span className="text-red-500">*</span>
+                        First Name{' '}<span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -452,7 +460,7 @@ export default function CreateNewContactPage() {
                         htmlFor="lastName"
                         className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
                       >
-                        Last Name <span className="text-red-500">*</span>
+                        Last Name{' '}<span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -475,7 +483,7 @@ export default function CreateNewContactPage() {
                         htmlFor="email"
                         className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
                       >
-                        Email Address <span className="text-red-500">*</span>
+                        Email Address{' '}<span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
@@ -676,7 +684,7 @@ export default function CreateNewContactPage() {
                           htmlFor="departmentOther"
                           className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
                         >
-                          Please specify the department <span className="text-red-500">*</span>
+                          Please specify the department{' '}<span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -834,7 +842,7 @@ export default function CreateNewContactPage() {
                           htmlFor="contactTypeOther"
                           className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
                         >
-                          Please specify the contact type <span className="text-red-500">*</span>
+                          Please specify the contact type{' '}<span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"

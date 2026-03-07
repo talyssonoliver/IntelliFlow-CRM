@@ -24,7 +24,10 @@ function VerifyCallbackLoading() {
   return (
     <AuthBackground>
       <AuthCard badge="INTELLIFLOW" badgeIcon="mark_email_read" title="">
-        <div className="flex flex-col items-center justify-center py-8 space-y-4" role="status">
+        <div
+          className="flex flex-col items-center justify-center py-8 space-y-4"
+          role="status" // NOSONAR typescript:S6819 — loading state indicator; <output> is for form computation results, not loading spinners
+        >
           <div
             className="w-8 h-8 border-2 border-slate-600 border-t-[#137fec] rounded-full animate-spin"
             aria-hidden="true"

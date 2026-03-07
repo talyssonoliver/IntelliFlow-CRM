@@ -3,14 +3,21 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader } from '@intelliflow/ui';
-import { Button } from '@intelliflow/ui';
-import { Input } from '@intelliflow/ui';
-import { Textarea } from '@intelliflow/ui';
-import { Label } from '@intelliflow/ui';
-import { Separator } from '@intelliflow/ui';
-import { Badge } from '@intelliflow/ui';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@intelliflow/ui';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  Button,
+  Input,
+  Textarea,
+  Label,
+  Separator,
+  Badge,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from '@intelliflow/ui';
 import type { ApiKeyScope } from '@/lib/developer/api-key-generator';
 import { findAppById } from '@/lib/developer/demo-data';
 import { isValidWebhookUrl } from '@/lib/developer/oauth-setup';
@@ -28,7 +35,7 @@ export interface AppEditFormData {
   webhookUrl: string;
 }
 
-function CopyButton({ text, label }: { text: string; label: string }) {
+function CopyButton({ text, label }: Readonly<{ text: string; label: string }>) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -55,7 +62,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
   );
 }
 
-export function AppEditor({ appId }: AppEditorProps) {
+export function AppEditor({ appId }: Readonly<AppEditorProps>) {
   const router = useRouter();
   const app = appId ? findAppById(appId) : undefined;
 
@@ -103,7 +110,7 @@ export function AppEditor({ appId }: AppEditorProps) {
     });
   };
 
-  const toggleScope = (scope: ApiKeyScope) => {
+  const toggleScope = (scope: Readonly<ApiKeyScope>) => {
     setFormData((prev) => {
       const scopes = prev.scopes.includes(scope)
         ? prev.scopes.filter((s) => s !== scope)
@@ -153,8 +160,14 @@ export function AppEditor({ appId }: AppEditorProps) {
     router.push(`/developers/apps/${appId}`);
   };
 
-  const statusVariant =
-    app.status === 'active' ? 'default' : app.status === 'inactive' ? 'secondary' : 'outline';
+  let statusVariant: 'default' | 'secondary' | 'outline';
+  if (app.status === 'active') {
+    statusVariant = 'default';
+  } else if (app.status === 'inactive') {
+    statusVariant = 'secondary';
+  } else {
+    statusVariant = 'outline';
+  }
 
   return (
     <div data-testid="app-editor">

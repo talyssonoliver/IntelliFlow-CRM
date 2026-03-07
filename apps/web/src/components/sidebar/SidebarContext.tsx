@@ -17,7 +17,7 @@ export function SidebarProvider({
   children,
   defaultPinned = false,
   storageKey = 'intelliflow-sidebar-pinned',
-}: SidebarProviderProps) {
+}: Readonly<SidebarProviderProps>) {
   // Start with default value to avoid hydration mismatch
   const [isPinned, setIsPinned] = React.useState(defaultPinned);
   const [isHovered, setIsHovered] = React.useState(false);

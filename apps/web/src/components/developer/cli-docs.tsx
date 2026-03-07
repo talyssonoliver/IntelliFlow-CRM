@@ -1,12 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@intelliflow/ui';
-import { Card } from '@intelliflow/ui';
+import { Tabs, TabsList, TabsTrigger, TabsContent, Card } from '@intelliflow/ui';
 import { CLI_COMMAND_GROUPS, getCommandsByGroup } from '@/lib/developer/cli-commands';
 import { CliExamples } from '@/components/developer/cli-examples';
 
-function CodeBlock({ code, label }: { code: string; label?: string }) {
+function CodeBlock({ code, label }: Readonly<{ code: string; label?: string }>) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -114,7 +113,7 @@ function OverviewTab() {
                   <span className="font-medium text-foreground">{group.title}</span>
                   <p className="text-sm text-muted-foreground mt-0.5">{group.description}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {group.commands.length} command{group.commands.length !== 1 ? 's' : ''}
+                    {group.commands.length} command{group.commands.length === 1 ? '' : 's'}
                   </p>
                 </div>
               </div>

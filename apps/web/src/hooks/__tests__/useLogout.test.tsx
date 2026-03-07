@@ -77,7 +77,7 @@ function createWrapper() {
     },
   });
 
-  return function Wrapper({ children }: { children: ReactNode }) {
+  return function Wrapper({ children }: Readonly<{ children: ReactNode }>) {
     return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
   };
 }
@@ -126,7 +126,7 @@ describe('useLogout', () => {
       const queryClient = new QueryClient();
       const clearSpy = vi.spyOn(queryClient, 'clear');
 
-      function Wrapper({ children }: { children: ReactNode }) {
+      function Wrapper({ children }: Readonly<{ children: ReactNode }>) {
         return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
       }
 

@@ -27,7 +27,7 @@ export interface ActivityFeedFiltersProps {
   /** Current filter values */
   values?: Partial<ActivityFeedFilterValues>;
   /** Called when any filter changes */
-  onChange: (filters: ActivityFeedFilterValues) => void;
+  onChange: (filters: Readonly<ActivityFeedFilterValues>) => void;
   /** Show search input. Defaults to true. */
   showSearch?: boolean;
   /** Show source filter chips. Defaults to false. */
@@ -83,7 +83,7 @@ export function ActivityFeedFilters({
   showSources = false,
   showDateRange = false,
   className = '',
-}: ActivityFeedFiltersProps) {
+}: Readonly<ActivityFeedFiltersProps>) {
   const current = useMemo(() => ({ ...DEFAULT_VALUES, ...values }), [values]);
 
   const [searchInput, setSearchInput] = useState(current.search);
@@ -98,7 +98,7 @@ export function ActivityFeedFilters({
   );
 
   const toggleType = useCallback(
-    (type: ActivityFeedType) => {
+    (type: Readonly<ActivityFeedType>) => {
       const next = current.types.includes(type)
         ? current.types.filter((t) => t !== type)
         : [...current.types, type];
@@ -108,7 +108,7 @@ export function ActivityFeedFilters({
   );
 
   const toggleSource = useCallback(
-    (source: ActivityFeedSource) => {
+    (source: Readonly<ActivityFeedSource>) => {
       const next = current.sources.includes(source)
         ? current.sources.filter((s) => s !== source)
         : [...current.sources, source];

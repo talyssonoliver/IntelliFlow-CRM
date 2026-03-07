@@ -13,15 +13,15 @@
 
 import Link from 'next/link';
 import { useState, useMemo, useCallback, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Card, Button } from '@intelliflow/ui';
-import { useRouter } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Card, Button, toast } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
+import { AssignSheet } from '@/components/shared/assign-sheet';
 import type { AgentAction, ActionStatus } from '@/lib/agent';
 
 // Material Symbols icon helper component
-const Icon = ({ name, className = '' }: { name: string; className?: string }) => (
+const Icon = ({ name, className = '' }: Readonly<{ name: string; className?: string }>) => (
   <span className={`material-symbols-outlined ${className}`} aria-hidden="true">
     {name}
   </span>
@@ -87,7 +87,7 @@ function mapDraftToAction(draft: AutoResponseDraftFromAPI): AgentAction {
     PENDING_APPROVAL: 'pending',
     APPROVED: 'approved',
     REJECTED: 'rejected',
-    ESCALATED: 'pending', // Escalated items still need review
+    ESCALATED: 'escalated',
     SENT: 'approved',
     FAILED: 'rejected',
     INVALIDATED: 'expired',
@@ -118,6 +118,15 @@ function mapDraftToAction(draft: AutoResponseDraftFromAPI): AgentAction {
       : undefined,
     reviewedBy: draft.approvalDecision?.decidedBy,
     feedback: draft.approvalDecision?.reason,
+    escalation: draft.escalation
+      ? {
+          escalatedBy: draft.escalation.escalatedBy,
+          escalatedTo: draft.escalation.escalatedTo,
+          reason: draft.escalation.reason,
+          escalatedAt: new Date(draft.escalation.escalatedAt as string),
+          slaExpiresAt: new Date(draft.escalation.expiresAt as string),
+        }
+      : undefined,
   };
 }
 
@@ -183,6 +192,11 @@ const STATUS_BADGE_CONFIG: Record<
     className: 'bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-400',
     iconName: 'warning',
   },
+  escalated: {
+    label: 'Escalated',
+    className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+    iconName: 'arrow_upward',
+  },
 };
 
 function getStatusBadge(status: ActionStatus): {
@@ -232,7 +246,7 @@ interface ActionCardProps {
   readonly action: AgentAction;
   readonly onApprove: (id: string) => void;
   readonly onReject: (id: string, feedback: string) => void;
-  readonly onEscalate: (id: string, reason: string) => void;
+  readonly onEscalate: (id: string) => void;
   readonly onRollback: (id: string, reason: string) => void;
   readonly isExpanded: boolean;
   readonly onToggleExpand: () => void;
@@ -251,12 +265,12 @@ function ActionCard({
 }: ActionCardProps) {
   const [feedback, setFeedback] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
-  const [showEscalateForm, setShowEscalateForm] = useState(false);
   const [showRollbackForm, setShowRollbackForm] = useState(false);
 
   const statusBadge = getStatusBadge(action.status);
   const confidenceBadge = getConfidenceBadge(action.confidenceScore);
-  const isPending = action.status === 'pending';
+  const isPending = action.status === 'pending' || action.status === 'escalated';
+  const isEscalated = action.status === 'escalated';
   const canRollback = action.status === 'approved';
 
   const handleReject = () => {
@@ -264,14 +278,6 @@ function ActionCard({
       onReject(action.id, feedback);
       setFeedback('');
       setShowRejectForm(false);
-    }
-  };
-
-  const handleEscalate = () => {
-    if (feedback.trim()) {
-      onEscalate(action.id, feedback);
-      setFeedback('');
-      setShowEscalateForm(false);
     }
   };
 
@@ -420,9 +426,44 @@ function ActionCard({
             </div>
           </div>
 
+          {/* Escalation Banner */}
+          {isEscalated && (
+            <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border-b border-slate-200 dark:border-slate-700">
+              <div className="flex items-start gap-2">
+                <Icon name="arrow_upward" className="text-base text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <h3 className="text-sm font-medium text-orange-900 dark:text-orange-200">
+                    Escalated for Manager Review
+                  </h3>
+                  {action.escalation ? (
+                    <div className="space-y-1.5">
+                      <p className="text-sm text-orange-800 dark:text-orange-300">
+                        <span className="font-medium">Reason:</span>{' '}{action.escalation.reason}
+                      </p>
+                      <div className="flex items-center gap-4 text-xs text-orange-700 dark:text-orange-400">
+                        <span className="flex items-center gap-1">
+                          <Icon name="schedule" className="text-xs" />
+                          SLA: {formatTimeRemaining(action.escalation.slaExpiresAt)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Icon name="calendar_today" className="text-xs" />
+                          Escalated {formatTimeAgo(action.escalation.escalatedAt)}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-orange-800 dark:text-orange-300">
+                      This item was escalated and requires a manager&apos;s decision.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="p-4 bg-slate-50 dark:bg-slate-800/30">
-            {isPending && !showRejectForm && !showEscalateForm && (
+            {isPending && !showRejectForm && (
               <div className="flex items-center gap-3">
                 <Button
                   onClick={(e) => {
@@ -447,18 +488,20 @@ function ActionCard({
                   <Icon name="close" className="text-base" />
                   Reject
                 </Button>
-                <Button
-                  variant="ghost"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowEscalateForm(true);
-                  }}
-                  disabled={isLoading}
-                  className="gap-2 ml-auto"
-                >
-                  <Icon name="arrow_upward" className="text-base" />
-                  Escalate
-                </Button>
+                {!isEscalated && (
+                  <Button
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEscalate(action.id);
+                    }}
+                    disabled={isLoading}
+                    className="gap-2 ml-auto"
+                  >
+                    <Icon name="arrow_upward" className="text-base" />
+                    Escalate
+                  </Button>
+                )}
               </div>
             )}
 
@@ -490,42 +533,6 @@ function ActionCard({
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowRejectForm(false);
-                      setFeedback('');
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {isPending && showEscalateForm && (
-              <div className="space-y-3">
-                <textarea
-                  value={feedback}
-                  onChange={(e) => setFeedback(e.target.value)}
-                  placeholder="Please provide a reason for escalation..."
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] resize-none"
-                  rows={3}
-                  onClick={(e) => e.stopPropagation()}
-                />
-                <div className="flex items-center gap-2">
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEscalate();
-                    }}
-                    disabled={!feedback.trim() || isLoading}
-                    className="gap-2"
-                  >
-                    <Icon name="arrow_upward" className="text-base" />
-                    Confirm Escalation
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowEscalateForm(false);
                       setFeedback('');
                     }}
                   >
@@ -601,8 +608,16 @@ function ActionCard({
             )}
 
             {action.status === 'expired' && (
-              <div className="text-sm text-slate-500 dark:text-slate-400">
-                This action expired without review and was not applied.
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-slate-100 dark:bg-slate-800/50">
+                <Icon name="timer_off" className="text-base text-slate-400 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Draft Expired
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    This draft was not reviewed within its approval window and has been automatically invalidated. The email was not sent.
+                  </p>
+                </div>
               </div>
             )}
           </div>
@@ -617,26 +632,34 @@ interface MetricsCardProps {
   readonly isLoading: boolean;
 }
 
+function MetricsLoadingSkeleton() {
+  return (
+    <div className="grid gap-4 md:grid-cols-5" data-testid="metrics-dashboard">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Card key={i} className="p-4 animate-pulse">
+          <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-20 mb-2" />
+          <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-12" />
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function computeMetricsValues(stats: Record<string, number>) {
+  const total = Object.values(stats).reduce((a, b) => a + b, 0);
+  const approved = (stats['APPROVED'] ?? 0) + (stats['SENT'] ?? 0);
+  const rejected = (stats['REJECTED'] ?? 0) + (stats['FAILED'] ?? 0);
+  const pending = (stats['DRAFT'] ?? 0) + (stats['PENDING_APPROVAL'] ?? 0) + (stats['ESCALATED'] ?? 0);
+  const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 0;
+  return { total, approved, rejected, pending, approvalRate };
+}
+
 function MetricsCard({ stats, isLoading }: MetricsCardProps) {
   if (isLoading || !stats) {
-    return (
-      <div className="grid gap-4 md:grid-cols-5" data-testid="metrics-dashboard">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Card key={i} className="p-4 animate-pulse">
-            <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-20 mb-2" />
-            <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-12" />
-          </Card>
-        ))}
-      </div>
-    );
+    return <MetricsLoadingSkeleton />;
   }
 
-  const total = Object.values(stats).reduce((a, b) => a + b, 0);
-  const approved = (stats['APPROVED'] || 0) + (stats['SENT'] || 0);
-  const rejected = (stats['REJECTED'] || 0) + (stats['FAILED'] || 0);
-  const pending =
-    (stats['DRAFT'] || 0) + (stats['PENDING_APPROVAL'] || 0) + (stats['ESCALATED'] || 0);
-  const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 0;
+  const { total, approved, rejected, pending, approvalRate } = computeMetricsValues(stats);
 
   return (
     <div className="grid gap-4 md:grid-cols-5" data-testid="metrics-dashboard">
@@ -685,6 +708,27 @@ function MetricsCard({ stats, isLoading }: MetricsCardProps) {
 }
 
 // =============================================================================
+// Helpers
+// =============================================================================
+
+interface QueryErrorState {
+  error: { message: string; data?: { code?: string | null } | null } | null;
+  isAuth: boolean;
+}
+
+type AnyQueryError = { message: string; data?: { code?: string | null } | null } | null | undefined;
+
+function detectQueryError(pendingError: AnyQueryError, listError: AnyQueryError): QueryErrorState {
+  const error = pendingError || listError || null;
+  if (!error) return { error: null, isAuth: false };
+  const isAuth =
+    error.data?.code === 'UNAUTHORIZED' ||
+    error.message?.toLowerCase().includes('authentication') ||
+    error.message?.toLowerCase().includes('unauthorized');
+  return { error, isAuth };
+}
+
+// =============================================================================
 // Main Page Component
 // =============================================================================
 
@@ -695,7 +739,14 @@ function AgentApprovalsContent() {
   const { user, isAuthenticated, isLoading: authLoading } = useRequireAuth();
 
   const [expandedActionId, setExpandedActionId] = useState<string | null>(actionIdFromUrl);
-  const [filterStatus, setFilterStatus] = useState<ActionStatus | 'all'>('all');
+  const [filterStatus, setFilterStatus] = useState<ActionStatus | 'all'>(
+    searchParams.get('status') === 'escalated' ? 'escalated' : 'all'
+  );
+
+  // Escalation sheet state
+  const [escalatingActionId, setEscalatingActionId] = useState<string | null>(null);
+  const [escalateReason, setEscalateReason] = useState('');
+  const [escalateSlaHours, setEscalateSlaHours] = useState(48);
 
   // Get user ID for queries - use a fallback for demo purposes
   const userId = user?.id || '00000000-0000-4000-8000-000000000001';
@@ -708,6 +759,13 @@ function AgentApprovalsContent() {
   // ==========================================================================
   // tRPC Queries & Mutations - WIRED TO BACKEND
   // ==========================================================================
+
+  // Cross-system: agent tool action count
+  const toolActionCountQuery = trpc.agent.getPendingCount.useQuery(undefined, {
+    enabled: isAuthenticated && !authLoading,
+    refetchInterval: 30000,
+  });
+  const toolActionCount = toolActionCountQuery.data?.count ?? 0;
 
   // Fetch pending approvals for current user
   const pendingQuery = trpc.autoResponse.getPendingForApprover.useQuery(
@@ -735,6 +793,11 @@ function AgentApprovalsContent() {
       refetchInterval: 60000,
     }
   );
+
+  // Team members for escalation assignment
+  const assigneesQuery = trpc.ticket.assignees.useQuery(undefined, {
+    enabled: isAuthenticated && !authLoading,
+  });
 
   // Mutations
   const approveMutation = trpc.autoResponse.approve.useMutation({
@@ -809,8 +872,10 @@ function AgentApprovalsContent() {
           decision: 'APPROVED',
           decidedBy: userId,
         });
+        toast({ title: 'Draft Approved', description: 'The AI draft has been approved and will be sent.' });
       } catch (error) {
         console.error('Failed to approve:', error);
+        toast({ title: 'Approval Failed', description: String(error instanceof Error ? error.message : 'Unknown error'), variant: 'destructive' });
       }
     },
     [approveMutation, userId]
@@ -824,30 +889,42 @@ function AgentApprovalsContent() {
           decidedBy: userId,
           reason: feedback,
         });
+        toast({ title: 'Draft Rejected', description: 'The AI draft has been rejected.' });
       } catch (error) {
         console.error('Failed to reject:', error);
+        toast({ title: 'Rejection Failed', description: String(error instanceof Error ? error.message : 'Unknown error'), variant: 'destructive' });
       }
     },
     [rejectMutation, userId]
   );
 
-  const handleEscalate = useCallback(
-    async (actionId: string, reason: string) => {
+  const openEscalateSheet = useCallback((actionId: string) => {
+    setEscalatingActionId(actionId);
+    setEscalateReason('');
+    setEscalateSlaHours(48);
+  }, []);
+
+  const handleEscalateConfirm = useCallback(
+    async (escalateToId: string) => {
+      if (!escalatingActionId || !escalateReason.trim()) return;
       try {
-        // For now, escalate to a manager (this would come from org hierarchy)
-        const managerId = '00000000-0000-4000-8000-000000000101';
         await escalateMutation.mutateAsync({
-          draftId: actionId,
+          draftId: escalatingActionId,
           escalatedBy: userId,
-          escalatedTo: managerId,
-          reason,
-          escalationExpiryHours: 48,
+          escalatedTo: escalateToId,
+          reason: escalateReason,
+          escalationExpiryHours: escalateSlaHours,
         });
+        toast({ title: 'Escalated', description: `Draft escalated for manager review (${escalateSlaHours}h SLA).` });
+        setEscalatingActionId(null);
+        setEscalateReason('');
+        setEscalateSlaHours(48);
       } catch (error) {
         console.error('Failed to escalate:', error);
+        toast({ title: 'Escalation Failed', description: String(error instanceof Error ? error.message : 'Unknown error'), variant: 'destructive' });
       }
     },
-    [escalateMutation, userId]
+    [escalateMutation, userId, escalatingActionId, escalateReason, escalateSlaHours]
   );
 
   const handleRollback = useCallback(
@@ -858,8 +935,10 @@ function AgentApprovalsContent() {
           rolledBackBy: userId,
           reason,
         });
+        toast({ title: 'Rolled Back', description: 'The approved action has been rolled back.' });
       } catch (error) {
         console.error('Failed to rollback:', error);
+        toast({ title: 'Rollback Failed', description: String(error instanceof Error ? error.message : 'Unknown error'), variant: 'destructive' });
       }
     },
     [rollbackMutation, userId]
@@ -894,11 +973,10 @@ function AgentApprovalsContent() {
   });
 
   // Show error state if queries failed (but redirect for auth errors)
-  const queryError = pendingQuery.error || listQuery.error;
-  const isAuthError =
-    queryError?.data?.code === 'UNAUTHORIZED' ||
-    queryError?.message?.toLowerCase().includes('authentication') ||
-    queryError?.message?.toLowerCase().includes('unauthorized');
+  const { error: queryError, isAuth: isAuthError } = detectQueryError(
+    pendingQuery.error,
+    listQuery.error
+  );
 
   // Redirect to login for auth errors
   if (queryError && isAuthError && !isLoading) {
@@ -967,7 +1045,7 @@ function AgentApprovalsContent() {
             Agent Approvals
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-base">
-            Review and approve AI auto-response drafts before they are sent
+            Unified approval hub for all AI-generated actions
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -981,13 +1059,57 @@ function AgentApprovalsContent() {
             <Icon name="refresh" className={`text-base ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Link href="/agent-approvals">
+          <Link href="/agent-approvals/preview">
             <Button variant="ghost" className="gap-2">
               <Icon name="visibility" className="text-base" />
               Preview Mode
             </Button>
           </Link>
         </div>
+      </div>
+
+      {/* Approval Sources */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <Card className="p-4 border-l-4 border-l-[#137fec] bg-[#137fec]/5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Icon name="mail" className="text-lg text-[#137fec]" />
+              <div>
+                <h3 className="text-sm font-medium text-slate-900 dark:text-white">Email Drafts</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Auto-response emails pending review</p>
+              </div>
+            </div>
+            <span className="text-lg font-bold text-[#137fec]">{pendingCount}</span>
+          </div>
+        </Card>
+        <Link href="/agent-approvals/preview">
+          <Card className="p-4 border-l-4 border-l-amber-500 hover:shadow-md transition-shadow cursor-pointer">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Icon name="build" className="text-lg text-amber-600" />
+                <div>
+                  <h3 className="text-sm font-medium text-slate-900 dark:text-white">Tool Actions</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">AI agent CRM changes awaiting approval</p>
+                </div>
+              </div>
+              <span className="text-lg font-bold text-amber-600">{toolActionCount}</span>
+            </div>
+          </Card>
+        </Link>
+        <Link href="/agent-approvals/ai-review">
+          <Card className="p-4 border-l-4 border-l-purple-500 hover:shadow-md transition-shadow cursor-pointer">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Icon name="rate_review" className="text-lg text-purple-600" />
+                <div>
+                  <h3 className="text-sm font-medium text-slate-900 dark:text-white">AI Review</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">AI output quality checks</p>
+                </div>
+              </div>
+              <Icon name="chevron_right" className="text-base text-slate-400" />
+            </div>
+          </Card>
+        </Link>
       </div>
 
       {/* Metrics */}
@@ -1001,7 +1123,7 @@ function AgentApprovalsContent() {
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Filter:</span>
           </div>
           <div className="flex flex-wrap gap-2" data-testid="filter-buttons">
-            {(['all', 'pending', 'approved', 'rejected', 'expired'] as const).map((status) => (
+            {(['all', 'pending', 'escalated', 'approved', 'rejected', 'expired'] as const).map((status) => (
               <button
                 key={status}
                 type="button"
@@ -1059,7 +1181,7 @@ function AgentApprovalsContent() {
                 action={action}
                 onApprove={handleApprove}
                 onReject={handleReject}
-                onEscalate={handleEscalate}
+                onEscalate={openEscalateSheet}
                 onRollback={handleRollback}
                 isExpanded={expandedActionId === action.id}
                 onToggleExpand={() =>
@@ -1094,6 +1216,96 @@ function AgentApprovalsContent() {
           </div>
         </div>
       </Card>
+
+      {/* Escalation Assign Sheet */}
+      {(() => {
+        const escalatingAction = escalatingActionId
+          ? actions.find((a) => a.id === escalatingActionId)
+          : null;
+        const teamMembers = (assigneesQuery.data ?? []).map((m) => ({
+          id: m.id,
+          name: m.name,
+          title: m.title,
+          avatar: m.avatar ?? null,
+        }));
+
+        return (
+          <AssignSheet
+            open={!!escalatingActionId}
+            onOpenChange={(open) => {
+              if (!open) {
+                setEscalatingActionId(null);
+                setEscalateReason('');
+                setEscalateSlaHours(48);
+              }
+            }}
+            title="Escalate to Manager"
+            description={
+              escalatingAction
+                ? `Select who should review "${escalatingAction.description}"`
+                : 'Select a manager for escalation'
+            }
+            currentUserId={userId}
+            currentUserName={user?.name ?? user?.email ?? null}
+            assignees={teamMembers}
+            isAssigning={escalateMutation.isPending}
+            isLoadingOptions={assigneesQuery.isLoading}
+            onAssign={handleEscalateConfirm}
+            showSelfAssign={false}
+            teamSectionLabel="Managers & Team Leads"
+            canAssign={!!escalateReason.trim()}
+          >
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label
+                  htmlFor="escalate-reason"
+                  className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+                >
+                  Reason for Escalation *
+                </label>
+                <textarea
+                  id="escalate-reason"
+                  value={escalateReason}
+                  onChange={(e) => setEscalateReason(e.target.value)}
+                  placeholder="Explain why this needs manager review..."
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] resize-none text-sm"
+                  rows={3}
+                />
+                {!escalateReason.trim() && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400">
+                    A reason is required before selecting a reviewer.
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <label
+                  htmlFor="escalate-sla"
+                  className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+                >
+                  Review SLA (hours)
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    id="escalate-sla"
+                    type="number"
+                    min={1}
+                    max={168}
+                    value={escalateSlaHours}
+                    onChange={(e) => setEscalateSlaHours(Math.max(1, Math.min(168, Number(e.target.value) || 48)))}
+                    className="w-24 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#137fec] text-sm"
+                  />
+                  <span className="text-sm text-slate-500 dark:text-slate-400">
+                    hours ({Math.floor(escalateSlaHours / 24)}d {escalateSlaHours % 24}h)
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Time limit for the reviewer to take action. Default: 48 hours.
+                </p>
+              </div>
+            </div>
+          </AssignSheet>
+        );
+      })()}
     </div>
   );
 }

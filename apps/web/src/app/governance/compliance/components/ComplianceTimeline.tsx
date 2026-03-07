@@ -55,12 +55,12 @@ interface CalendarDayProps {
   onEventClick: (event: ComplianceEvent) => void;
 }
 
-function CalendarDay({ date, events, isCurrentMonth, isToday, onEventClick }: CalendarDayProps) {
+function CalendarDay({ date, events, isCurrentMonth, isToday, onEventClick }: Readonly<CalendarDayProps>) {
   return (
     <div
       className={`
         min-h-[70px] p-1 border border-border rounded-lg
-        ${!isCurrentMonth ? 'opacity-40' : ''}
+        ${isCurrentMonth ? '' : 'opacity-40'}
         ${isToday ? 'ring-2 ring-primary' : ''}
       `}
     >
@@ -100,7 +100,7 @@ interface EventDetailModalProps {
   onClose: () => void;
 }
 
-function EventDetailModal({ event, onClose }: EventDetailModalProps) {
+function EventDetailModal({ event, onClose }: Readonly<EventDetailModalProps>) {
   const typeColors = EVENT_TYPE_COLORS[event.type];
   const statusInfo = EVENT_STATUS_ICONS[event.status];
 
@@ -222,7 +222,7 @@ export function ComplianceTimeline() {
     return days;
   };
 
-  const getEventsForDate = (date: Date): ComplianceEvent[] => {
+  const getEventsForDate = (date: Readonly<Date>): ComplianceEvent[] => {
     if (!data?.events) return [];
     const dateStr = date.toISOString().split('T')[0];
     return data.events.filter((event) => event.date === dateStr);

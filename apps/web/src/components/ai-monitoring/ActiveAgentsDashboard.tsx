@@ -49,6 +49,7 @@ const TYPE_CHIPS = [
   { id: 'hallucination', label: 'Hallucination Check' },
   { id: 'indexer', label: 'Document Indexer' },
   { id: 'ocr', label: 'OCR Worker' },
+  { id: 'insights', label: 'Insights' },
 ];
 
 const SORT_OPTIONS = [
@@ -78,7 +79,7 @@ interface StatCardProps {
   ariaLabel?: string;
 }
 
-function StatCard({ label, value, icon, colorClass, isLoading, testId, ariaLabel }: StatCardProps) {
+function StatCard({ label, value, icon, colorClass, isLoading, testId, ariaLabel }: Readonly<StatCardProps>) {
   return (
     <Card>
       <CardContent className="p-4" data-testid={testId} aria-label={ariaLabel}>
@@ -110,7 +111,7 @@ interface AgentCardProps {
   agent: ActiveAgent;
 }
 
-function AgentCard({ agent }: AgentCardProps) {
+function AgentCard({ agent }: Readonly<AgentCardProps>) {
   return (
     <article data-testid="agent-card" className="rounded-lg border bg-card p-4">
       <div className="flex items-start justify-between gap-4">
@@ -164,14 +165,14 @@ function DashboardSkeleton() {
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-20 rounded-lg animate-pulse" data-testid="skeleton" />
+          <Skeleton key={i} className="h-20 rounded-lg animate-pulse" data-testid="skeleton" /> // NOSONAR typescript:S6479
         ))}
       </div>
       <Skeleton className="h-10 w-full rounded-lg animate-pulse" data-testid="skeleton" />
       <div className="space-y-3">
         {Array.from({ length: 3 }).map((_, i) => (
           <Skeleton
-            key={i}
+            key={i} // NOSONAR typescript:S6479
             className="h-24 w-full rounded-lg animate-pulse"
             data-testid="skeleton"
           />

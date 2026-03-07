@@ -32,7 +32,7 @@ interface DealsChartsProps {
   readonly barChartData: BarEntry[];
 }
 
-export default function DealsCharts({ pieChartData, barChartData }: DealsChartsProps) {
+export default function DealsCharts({ pieChartData, barChartData }: Readonly<DealsChartsProps>) {
   return (
     <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 mt-4">
       <Card className="p-4 sm:p-6 bg-card border-border">

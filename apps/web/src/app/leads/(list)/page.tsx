@@ -21,7 +21,7 @@ export default async function LeadsPage() {
   let initialData: unknown = null;
   try {
     const raw = await fetchLeadsFirstPage(token);
-    initialData = JSON.parse(JSON.stringify(raw));
+    initialData = JSON.parse(JSON.stringify(raw)); // NOSONAR typescript:S7784 — intentional JSON roundtrip to serialize Date→string for RSC→client boundary
   } catch {
     // Silently fall through — client-side React Query will fetch
   }

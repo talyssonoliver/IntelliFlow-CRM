@@ -24,11 +24,11 @@ export interface AppointmentFormProps {
   appointment?: AppointmentDetailData;
   defaultStartTime?: Date;
   defaultEndTime?: Date;
-  onSubmit: (data: AppointmentFormInput) => Promise<void>;
+  onSubmit: (data: Readonly<AppointmentFormInput>) => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
   conflicts?: ConflictInfo;
-  onConflictCheck: (params: ConflictCheckParams) => void;
+  onConflictCheck: (params: Readonly<ConflictCheckParams>) => void;
 }
 
 export function AppointmentForm({
@@ -40,7 +40,7 @@ export function AppointmentForm({
   isSubmitting,
   conflicts,
   onConflictCheck,
-}: AppointmentFormProps) {
+}: Readonly<AppointmentFormProps>) {
   const isEdit = !!appointment;
   const router = useRouter();
   const conflictCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -51,20 +51,16 @@ export function AppointmentForm({
   const [appointmentType, setAppointmentType] = useState<AppointmentType>(
     appointment?.appointmentType || 'MEETING'
   );
-  const [startTime, setStartTime] = useState(
-    appointment?.startTime
-      ? toLocalDateTimeString(appointment.startTime)
-      : defaultStartTime
-        ? toLocalDateTimeString(defaultStartTime)
-        : ''
-  );
-  const [endTime, setEndTime] = useState(
-    appointment?.endTime
-      ? toLocalDateTimeString(appointment.endTime)
-      : defaultEndTime
-        ? toLocalDateTimeString(defaultEndTime)
-        : ''
-  );
+  const [startTime, setStartTime] = useState(() => {
+    if (appointment?.startTime) return toLocalDateTimeString(appointment.startTime);
+    if (defaultStartTime) return toLocalDateTimeString(defaultStartTime);
+    return '';
+  });
+  const [endTime, setEndTime] = useState(() => {
+    if (appointment?.endTime) return toLocalDateTimeString(appointment.endTime);
+    if (defaultEndTime) return toLocalDateTimeString(defaultEndTime);
+    return '';
+  });
   const [location, setLocation] = useState(appointment?.location || '');
   const [attendeeIds] = useState<string[]>(appointment?.attendees?.map((a) => a.userId) || []);
   const [linkedCaseIds] = useState<string[]>(appointment?.linkedCases?.map((c) => c.caseId) || []);
@@ -298,7 +294,7 @@ export function AppointmentForm({
           <select
             id="appt-buffer-before"
             value={bufferMinutesBefore}
-            onChange={(e) => setBufferMinutesBefore(parseInt(e.target.value, 10))}
+            onChange={(e) => setBufferMinutesBefore(Number.parseInt(e.target.value, 10))}
             disabled={isSubmitting}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"
           >
@@ -319,7 +315,7 @@ export function AppointmentForm({
           <select
             id="appt-buffer-after"
             value={bufferMinutesAfter}
-            onChange={(e) => setBufferMinutesAfter(parseInt(e.target.value, 10))}
+            onChange={(e) => setBufferMinutesAfter(Number.parseInt(e.target.value, 10))}
             disabled={isSubmitting}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"
           >
@@ -340,7 +336,7 @@ export function AppointmentForm({
         <select
           id="appt-reminder"
           value={reminderMinutes}
-          onChange={(e) => setReminderMinutes(parseInt(e.target.value, 10))}
+          onChange={(e) => setReminderMinutes(Number.parseInt(e.target.value, 10))}
           disabled={isSubmitting}
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"
         >

@@ -40,7 +40,7 @@ function isTokenValid(token: string | null): boolean {
     if (parts.length !== 3) return false;
 
     // Decode payload (base64url)
-    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    const payload = JSON.parse(atob(parts[1].replaceAll('-', '+').replaceAll('_', '/')));
 
     // Check expiry (exp is in seconds)
     if (!payload.exp) return false;
@@ -71,25 +71,25 @@ function isTokenValid(token: string | null): boolean {
  * Returns null if token is missing or expired
  */
 function getValidAccessToken(): string | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof globalThis.window === 'undefined') return null;
 
   const token = localStorage.getItem('accessToken');
   return isTokenValid(token) ? token : null;
 }
 
 function getBaseUrl() {
-  if (typeof window !== 'undefined') return '';
+  if (typeof globalThis.window !== 'undefined') return '';
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
   return `http://localhost:${process.env.PORT ?? 3000}`;
 }
 
 function getWsUrl() {
-  if (typeof window === 'undefined') return null;
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  if (typeof globalThis.window === 'undefined') return null;
+  const protocol = globalThis.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const wsPort = process.env.NEXT_PUBLIC_WS_PORT ?? '3001';
   // In production, use same host; in dev, use localhost with WS_PORT
   if (process.env.NODE_ENV === 'production') {
-    return `${protocol}//${window.location.host}/ws`;
+    return `${protocol}//${globalThis.location.host}/ws`;
   }
   return `${protocol}//localhost:${wsPort}`;
 }
@@ -98,7 +98,7 @@ function getWsUrl() {
 let wsClient: ReturnType<typeof createWSClient> | null = null;
 
 function getWsClient() {
-  if (typeof window === 'undefined') return null;
+  if (typeof globalThis.window === 'undefined') return null;
 
   if (!wsClient) {
     const wsUrl = getWsUrl();
@@ -125,7 +125,7 @@ function getWsClient() {
   return wsClient;
 }
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ children }: Readonly<{ children: React.ReactNode }>) {
   // Track if we've already triggered a redirect to prevent multiple redirects
   const isRedirectingRef = useRef(false);
 
@@ -135,10 +135,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
    */
   const handleAuthError = useCallback(() => {
     if (isRedirectingRef.current) return;
-    if (typeof window === 'undefined') return;
+    if (typeof globalThis.window === 'undefined') return;
 
     // Check if we're already on the login page
-    if (window.location.pathname === '/login') return;
+    if (globalThis.location.pathname === '/login') return;
 
     console.log('[QueryClient] Auth error detected, redirecting to login...');
     isRedirectingRef.current = true;
@@ -148,7 +148,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
 
     // Redirect to login
-    window.location.href = '/login';
+    globalThis.location.href = '/login';
   }, []);
 
   const [queryClient] = useState(

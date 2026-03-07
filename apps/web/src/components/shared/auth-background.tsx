@@ -38,7 +38,7 @@ export interface AuthBackgroundProps {
 // Component
 // ============================================================
 
-export function AuthBackground({ children, className }: AuthBackgroundProps) {
+export function AuthBackground({ children, className }: Readonly<AuthBackgroundProps>) {
   return (
     <main
       className={cn(

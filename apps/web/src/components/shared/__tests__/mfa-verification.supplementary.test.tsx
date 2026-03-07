@@ -78,7 +78,7 @@ vi.mock('@/components/auth/mfa-challenge', () => ({
     defaultMethod,
     maskedPhone,
     maskedEmail,
-  }: {
+  }: Readonly<{
     onVerify: (code: string, method: string) => Promise<boolean>;
     onResend?: (method: 'sms' | 'email') => Promise<boolean>;
     onCancel?: () => void;
@@ -88,7 +88,7 @@ vi.mock('@/components/auth/mfa-challenge', () => ({
     defaultMethod?: string;
     maskedPhone?: string;
     maskedEmail?: string;
-  }) => (
+  }>) => (
     <div data-testid="mfa-challenge-mock">
       {error && <div data-testid="mfa-error">{error}</div>}
       {isLoading && <div data-testid="mfa-loading">Loading...</div>}

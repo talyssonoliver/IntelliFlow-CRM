@@ -14,9 +14,9 @@ export function generateStaticParams() {
 // Generate metadata for SEO
 export async function generateMetadata({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ id: string }>;
-}): Promise<Metadata> {
+}>): Promise<Metadata> {
   const { id } = await params;
   const job = jobListings[id];
 

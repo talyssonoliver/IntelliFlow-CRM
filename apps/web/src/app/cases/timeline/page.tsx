@@ -6,7 +6,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@intelliflow/ui';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 // Material Symbols icon helper component
-const Icon = ({ name, className = '' }: { name: string; className?: string }) => (
+const Icon = ({ name, className = '' }: Readonly<{ name: string; className?: string }>) => (
   <span className={`material-symbols-outlined ${className}`} aria-hidden="true">
     {name}
   </span>
@@ -347,7 +347,7 @@ function TimelineEventCard({
       />
 
       {/* Event card */}
-      <div
+      <div // NOSONAR — contains nested interactive elements; converting to <button> would create invalid nested buttons
         role="button"
         tabIndex={0}
         className={`
@@ -863,7 +863,6 @@ function transformApiEvent(apiEvent: any): TimelineEvent {
   else if (apiEvent.type === 'status_change' || apiEvent.type === 'stage_change')
     type = 'status_change';
   else if (apiEvent.type === 'note') type = 'note';
-  else if (apiEvent.type.includes('task')) type = 'task';
 
   // Map status
   let status: DeadlineStatus | TaskStatus | AppointmentStatus | AgentActionStatus = 'pending';
@@ -949,7 +948,7 @@ function CaseTimelinePageContent() {
     refetch,
   } = trpc.timeline.getEvents.useQuery(
     {
-      dealId: caseId !== 'demo-case-1' ? caseId : undefined,
+      dealId: caseId === 'demo-case-1' ? undefined : caseId,
       limit: 50,
       sortOrder: 'desc',
       includeCompleted: true,
@@ -995,7 +994,11 @@ function CaseTimelinePageContent() {
         description: e.description,
         timestamp: e.date,
         priority: mapPriority(e.priority),
-        entityType: e.type === 'task' ? 'task' : e.type === 'appointment' ? 'appointment' : 'case',
+        entityType: (() => {
+          if (e.type === 'task') return 'task';
+          if (e.type === 'appointment') return 'appointment';
+          return 'case';
+        })(),
         entityId: e.linkedCaseId,
       }));
       reminders.createFromTimelineEvents(reminderEvents);

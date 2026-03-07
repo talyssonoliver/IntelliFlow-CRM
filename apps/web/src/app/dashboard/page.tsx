@@ -21,7 +21,7 @@ export default async function DashboardPage() {
   let initialLeadStats: unknown = null;
   try {
     const raw = await fetchLeadStats(token);
-    initialLeadStats = JSON.parse(JSON.stringify(raw));
+    initialLeadStats = JSON.parse(JSON.stringify(raw)); // NOSONAR typescript:S7784 — intentional JSON roundtrip to serialize Date→string for RSC→client boundary; structuredClone preserves Date objects
   } catch {
     // Silently fall through — client-side React Query will fetch
   }

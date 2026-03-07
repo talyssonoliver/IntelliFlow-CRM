@@ -18,7 +18,7 @@ vi.mock('@/components/ai-intelligence/ExperimentsDashboard', () => ({
 
 // Mock Skeleton from ui package
 vi.mock('@intelliflow/ui', () => ({
-  Skeleton: ({ className }: { className?: string }) => (
+  Skeleton: ({ className }: Readonly<{ className?: string }>) => (
     <div data-testid="skeleton" className={className} />
   ),
 }));

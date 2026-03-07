@@ -22,7 +22,7 @@ export interface TaskFormData {
 export interface TaskFormProps {
   readonly open: boolean;
   readonly onClose: () => void;
-  readonly onSubmit: (data: TaskFormData) => void;
+  readonly onSubmit: (data: Readonly<TaskFormData>) => void;
   readonly initialData?: Partial<TaskFormData> | null;
   readonly mode: 'create' | 'edit';
 }
@@ -39,7 +39,7 @@ const DEFAULT_FORM: TaskFormData = {
   calendarId: '',
 };
 
-export function TaskForm({ open, onClose, onSubmit, initialData, mode }: TaskFormProps) {
+export function TaskForm({ open, onClose, onSubmit, initialData, mode }: Readonly<TaskFormProps>) {
   const [form, setForm] = useState<TaskFormData>(DEFAULT_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { dbCalendars } = useCalendarVisibilityOptional();

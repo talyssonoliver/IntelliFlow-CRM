@@ -12,6 +12,7 @@ export const helpCenterSidebarConfig: SidebarConfig = {
       title: 'Browse',
       items: [
         { id: 'all', label: 'All Topics', icon: VIEW_ICONS.all, href: '/help-center' },
+        { id: 'search', label: 'Search', icon: 'search', href: '/help-center/search' },
         {
           id: 'popular',
           label: 'Popular',

@@ -17,11 +17,11 @@ const performers: Performer[] = [
   { id: '4', name: 'James Wilson', avatar: 'JW', deals: 7, revenue: '$28,900' },
 ];
 
-export function TopPerformersWidget(_props: WidgetProps) {
+export function TopPerformersWidget(_props: Readonly<WidgetProps>) {
   return (
     <div className="p-5 h-full flex flex-col">
       <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-        <span className="material-symbols-outlined text-slate-400">leaderboard</span>
+        <span className="material-symbols-outlined text-slate-400">leaderboard</span>{' '}
         Top Performers
       </h3>
 

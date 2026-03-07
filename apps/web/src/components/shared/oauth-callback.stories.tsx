@@ -10,7 +10,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 // Wrapper for auth background styling
-const AuthBackgroundWrapper = ({ children }: { children: React.ReactNode }) => (
+const AuthBackgroundWrapper = ({ children }: Readonly<{ children: React.ReactNode }>) => (
   <div className="min-h-screen bg-[#0f172a] relative overflow-hidden">
     {/* Animated background gradients */}
     <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#0d1b2a] to-[#0b1f37]" />
@@ -42,11 +42,11 @@ const MockOAuthCallback = ({
   status = 'loading',
   errorMessage = '',
   className,
-}: {
+}: Readonly<{
   status: 'loading' | 'exchanging' | 'success' | 'error';
   errorMessage?: string;
   className?: string;
-}) => {
+}>) => {
   const statusConfig = {
     loading: {
       icon: 'progress_activity',
@@ -115,13 +115,13 @@ const MockOAuthCallback = ({
                 <button className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#137fec] text-white font-semibold hover:bg-[#0e6ac7] transition-all focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-[#0f172a] shadow-lg shadow-[#137fec]/20">
                   <span className="material-symbols-outlined text-xl" aria-hidden="true">
                     arrow_back
-                  </span>
+                  </span>{' '}
                   Back to Sign In
                 </button>
                 <button className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-white/10 bg-white/5 text-slate-200 font-medium hover:bg-white/10 transition-all focus:outline-none focus:ring-2 focus:ring-[#7cc4ff]">
                   <span className="material-symbols-outlined text-xl" aria-hidden="true">
                     refresh
-                  </span>
+                  </span>{' '}
                   Try Again
                 </button>
               </div>
@@ -170,21 +170,21 @@ const MockOAuthCallback = ({
           <div className="flex items-center gap-1">
             <span className="material-symbols-outlined text-sm text-[#7cc4ff]" aria-hidden="true">
               lock
-            </span>
+            </span>{' '}
             Secure
           </div>
           <div className="w-1 h-1 rounded-full bg-slate-600" aria-hidden="true" />
           <div className="flex items-center gap-1">
             <span className="material-symbols-outlined text-sm text-[#7cc4ff]" aria-hidden="true">
               shield_check
-            </span>
+            </span>{' '}
             Encrypted
           </div>
           <div className="w-1 h-1 rounded-full bg-slate-600" aria-hidden="true" />
           <div className="flex items-center gap-1">
             <span className="material-symbols-outlined text-sm text-[#7cc4ff]" aria-hidden="true">
               policy
-            </span>
+            </span>{' '}
             Protected
           </div>
         </div>

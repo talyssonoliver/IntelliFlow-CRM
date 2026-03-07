@@ -183,7 +183,7 @@ const mockCreatePaymentMethod = vi.hoisted(() =>
 );
 
 vi.mock('@stripe/react-stripe-js', () => ({
-  Elements: ({ children }: { children: React.ReactNode }) => (
+  Elements: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <div data-testid="stripe-elements">{children}</div>
   ),
   CardNumberElement: () => <div data-testid="card-number-element" />,

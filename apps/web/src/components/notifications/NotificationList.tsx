@@ -11,7 +11,7 @@ interface NotificationListProps {
   onDismiss: (id: string) => void;
 }
 
-export function NotificationList({ filters, onMarkAsRead, onDismiss }: NotificationListProps) {
+export function NotificationList({ filters, onMarkAsRead, onDismiss }: Readonly<NotificationListProps>) {
   const {
     items,
     isLoading,

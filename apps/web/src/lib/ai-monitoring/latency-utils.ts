@@ -48,7 +48,7 @@ export function formatPhaseLabel(phase: LatencyPhase): string {
 export function getP95ComplianceColor(actual: number, target: number): string {
   if (target <= 0) return 'text-muted-foreground';
   const ratio = actual / target;
-  if (ratio <= 1.0) return 'text-green-600 dark:text-green-400';
+  if (ratio <= 1) return 'text-green-600 dark:text-green-400';
   if (ratio <= 1.5) return 'text-amber-600 dark:text-amber-400';
   return 'text-red-600 dark:text-red-400';
 }

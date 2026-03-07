@@ -23,14 +23,14 @@ export default function NotFound() {
             href="/dashboard"
             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#137fec] text-white font-medium rounded-lg hover:bg-[#0e6ac7] transition-colors"
           >
-            <span className="material-symbols-outlined text-lg">dashboard</span>
+            <span className="material-symbols-outlined text-lg">dashboard</span>{' '}
             Go to Dashboard
           </Link>
           <Link
             href="/"
             className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-[#e2e8f0] dark:border-[#334155] text-slate-700 dark:text-slate-300 font-medium rounded-lg hover:bg-slate-100 dark:hover:bg-[#2d3a4a] transition-colors"
           >
-            <span className="material-symbols-outlined text-lg">home</span>
+            <span className="material-symbols-outlined text-lg">home</span>{' '}
             Home
           </Link>
         </div>

@@ -109,7 +109,7 @@ export default function CaseDetailPage() {
   };
 
   const handleUpdateParties = (parties: PartyData[]) => {
-    updateMutation.mutate({ id: caseId, ...{ parties } } as never);
+    updateMutation.mutate({ id: caseId, parties } as never);
   };
 
   const detailData = useMemo((): CaseDetailData | null => {

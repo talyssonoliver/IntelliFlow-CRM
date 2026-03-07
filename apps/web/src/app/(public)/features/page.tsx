@@ -107,7 +107,7 @@ export default function FeaturesPage() {
                     <ul className="space-y-2 mb-4">
                       {feature.benefits.map((benefit, index) => (
                         <li
-                          key={index}
+                          key={index} // NOSONAR typescript:S6479
                           className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400"
                         >
                           <span className="material-symbols-outlined text-[#137fec] text-base mt-0.5 flex-shrink-0">
@@ -125,7 +125,7 @@ export default function FeaturesPage() {
                       aria-label={`Learn more about ${feature.title}`}
                     >
                       Learn more
-                      <span className="material-symbols-outlined text-base">arrow_forward</span>
+                      {' '}<span className="material-symbols-outlined text-base">arrow_forward</span>
                     </Link>
                   </Card>
                 ))}

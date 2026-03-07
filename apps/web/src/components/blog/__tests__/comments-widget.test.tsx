@@ -9,11 +9,11 @@ vi.mock('@/components/shared/app-avatar', () => ({
     name,
     fallbackText,
     maxInitials = 2,
-  }: {
+  }: Readonly<{
     name: string;
     fallbackText?: string;
     maxInitials?: number;
-  }) => {
+  }>) => {
     const initials = name
       .split(' ')
       .map((part) => part[0])

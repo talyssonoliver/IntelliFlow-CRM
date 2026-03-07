@@ -2,6 +2,7 @@
 
 import { Card, Skeleton, ConfirmationDialog } from '@intelliflow/ui';
 import { useState } from 'react';
+import Link from 'next/link';
 import type { TaskStatus, TaskPriority } from '@intelliflow/domain';
 
 export interface TaskDetailData {
@@ -26,9 +27,12 @@ export interface TaskDetailProps {
   readonly isLoading: boolean;
   readonly isNotFound?: boolean;
   readonly onComplete: (id: string) => void;
-  readonly onEdit: (task: TaskDetailData) => void;
+  readonly onEdit: (task: Readonly<TaskDetailData>) => void;
   readonly onDelete: (id: string) => void;
   readonly onArchive: (id: string) => void;
+  readonly isCompleting?: boolean;
+  readonly isDeleting?: boolean;
+  readonly isArchiving?: boolean;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -65,7 +69,7 @@ function getDueDateStatus(date: Date | string | null): 'overdue' | 'today' | 'no
 }
 
 function getEntityInfo(
-  task: TaskDetailData
+  task: Readonly<TaskDetailData>
 ): { type: string; name: string; href: string; icon: string } | null {
   if (task.lead)
     return {
@@ -99,7 +103,10 @@ export function TaskDetail({
   onEdit,
   onDelete,
   onArchive,
-}: TaskDetailProps) {
+  isCompleting = false,
+  isDeleting = false,
+  isArchiving = false,
+}: Readonly<TaskDetailProps>) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
 
@@ -134,12 +141,14 @@ export function TaskDetail({
   const priority = PRIORITY_STYLES[task.priority] ?? PRIORITY_STYLES.MEDIUM;
   const entity = getEntityInfo(task);
   const dueStatus = getDueDateStatus(task.dueDate);
-  const dueDateColor =
-    dueStatus === 'overdue'
-      ? 'text-red-600 dark:text-red-400'
-      : dueStatus === 'today'
-        ? 'text-amber-600 dark:text-amber-400'
-        : 'text-foreground';
+  let dueDateColor: string;
+  if (dueStatus === 'overdue') {
+    dueDateColor = 'text-red-600 dark:text-red-400';
+  } else if (dueStatus === 'today') {
+    dueDateColor = 'text-amber-600 dark:text-amber-400';
+  } else {
+    dueDateColor = 'text-foreground';
+  }
 
   return (
     <div className="space-y-6">
@@ -158,7 +167,7 @@ export function TaskDetail({
             >
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 {priority.icon}
-              </span>
+              </span>{' '}
               {task.priority}
             </span>
           </div>
@@ -202,6 +211,14 @@ export function TaskDetail({
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Updated</p>
             <p className="text-sm text-muted-foreground mt-0.5">{formatDate(task.updatedAt)}</p>
           </div>
+          {task.completedAt && (
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider">Completed</p>
+              <p className="text-sm text-green-600 dark:text-green-400 mt-0.5">
+                {formatDate(task.completedAt)}
+              </p>
+            </div>
+          )}
         </div>
       </Card>
 
@@ -211,15 +228,15 @@ export function TaskDetail({
           <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">
             Linked {entity.type}
           </p>
-          <a
+          <Link
             href={entity.href}
             className="inline-flex items-center gap-2 text-primary hover:underline"
           >
             <span className="material-symbols-outlined text-base" aria-hidden="true">
               {entity.icon}
-            </span>
+            </span>{' '}
             {entity.name}
-          </a>
+          </Link>
         </Card>
       )}
 
@@ -239,14 +256,15 @@ export function TaskDetail({
             <button
               type="button"
               onClick={() => onComplete(task.id)}
-              className="px-4 py-2 text-sm rounded-md bg-green-600 text-white hover:bg-green-700"
+              disabled={isCompleting}
+              className="px-4 py-2 text-sm rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Complete task"
             >
               <span className="inline-flex items-center gap-1">
                 <span className="material-symbols-outlined text-base" aria-hidden="true">
-                  check_circle
+                  {isCompleting ? 'hourglass_empty' : 'check_circle'}
                 </span>{' '}
-                Complete
+                {isCompleting ? 'Completing...' : 'Complete'}
               </span>
             </button>
           )}
@@ -254,14 +272,15 @@ export function TaskDetail({
           <button
             type="button"
             onClick={() => setShowArchiveConfirm(true)}
-            className="px-4 py-2 text-sm rounded-md border border-muted-foreground text-muted-foreground hover:bg-accent"
+            disabled={isArchiving}
+            className="px-4 py-2 text-sm rounded-md border border-muted-foreground text-muted-foreground hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Archive task"
           >
             <span className="inline-flex items-center gap-1">
               <span className="material-symbols-outlined text-base" aria-hidden="true">
-                archive
+                {isArchiving ? 'hourglass_empty' : 'archive'}
               </span>{' '}
-              Archive
+              {isArchiving ? 'Archiving...' : 'Archive'}
             </span>
           </button>
         )}
@@ -271,14 +290,15 @@ export function TaskDetail({
             <button
               type="button"
               onClick={() => setShowDeleteConfirm(true)}
-              className="px-4 py-2 text-sm rounded-md border border-destructive text-destructive hover:bg-destructive/10"
+              disabled={isDeleting}
+              className="px-4 py-2 text-sm rounded-md border border-destructive text-destructive hover:bg-destructive/10 disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Delete task"
             >
               <span className="inline-flex items-center gap-1">
                 <span className="material-symbols-outlined text-base" aria-hidden="true">
-                  delete
-                </span>
-                Delete
+                  {isDeleting ? 'hourglass_empty' : 'delete'}
+                </span>{' '}
+                {isDeleting ? 'Deleting...' : 'Delete'}
               </span>
             </button>
           )}

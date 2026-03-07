@@ -33,7 +33,7 @@ interface DashboardClientProps {
   initialLeadStats?: unknown;
 }
 
-export default function DashboardClient({ initialLeadStats }: DashboardClientProps) {
+export default function DashboardClient({ initialLeadStats }: Readonly<DashboardClientProps>) {
   const { isLoading: authLoading } = useRequireAuth();
   const [widgets, setWidgets] = useState<Widget[]>(defaultWidgets);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -111,7 +111,7 @@ export default function DashboardClient({ initialLeadStats }: DashboardClientPro
           >
             <span className="material-symbols-outlined text-base transition-transform group-hover:rotate-90">
               tune
-            </span>
+            </span>{' '}
             Customize
           </Link>
           <Link

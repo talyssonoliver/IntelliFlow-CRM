@@ -82,7 +82,7 @@ export async function checkPasswordBreach(password: string): Promise<BreachCheck
     for (const line of lines) {
       const [hashSuffix, countStr] = line.split(':');
       if (hashSuffix === suffix) {
-        const count = parseInt(countStr, 10);
+        const count = Number.parseInt(countStr, 10);
         return { breached: true, count };
       }
     }

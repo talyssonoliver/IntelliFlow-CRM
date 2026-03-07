@@ -59,7 +59,7 @@ interface UTMData {
 // Error Fallback Component
 // ============================================
 
-function SignUpErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
+function SignUpErrorFallback({ error, resetErrorBoundary }: Readonly<FallbackProps>) {
   const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
 
   return (
@@ -101,8 +101,8 @@ function useUTMCapture() {
       utm_campaign: searchParams.get('utm_campaign'),
       utm_content: searchParams.get('utm_content'),
       utm_term: searchParams.get('utm_term'),
-      referrer: typeof document !== 'undefined' ? document.referrer : '',
-      landing_page: typeof window !== 'undefined' ? window.location.pathname : '',
+      referrer: typeof document === 'undefined' ? '' : document.referrer,
+      landing_page: typeof globalThis.window === 'undefined' ? '' : globalThis.location.pathname,
       captured_at: new Date().toISOString(),
     };
 

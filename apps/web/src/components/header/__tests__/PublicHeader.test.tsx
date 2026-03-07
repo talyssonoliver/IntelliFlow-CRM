@@ -28,12 +28,12 @@ vi.mock('next/link', () => ({
     href,
     onClick,
     className,
-  }: {
+  }: Readonly<{
     children: React.ReactNode;
     href: string;
     onClick?: () => void;
     className?: string;
-  }) => (
+  }>) => (
     <a href={href} onClick={onClick} className={className}>
       {children}
     </a>

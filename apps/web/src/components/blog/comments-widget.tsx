@@ -1,8 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Button, Card } from '@intelliflow/ui';
-import { cn } from '@intelliflow/ui';
+import { Button, Card, cn } from '@intelliflow/ui';
 import { AppAvatar } from '@/components/shared/app-avatar';
 
 interface Comment {
@@ -54,6 +53,15 @@ const sampleComments: Comment[] = [
   },
 ];
 
+/** Get initials from a full name (max 2 characters) */
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .slice(0, 2);
+}
+
 /** Toggle like on a comment or its reply */
 function toggleLikeOnComment(
   comment: Comment,
@@ -81,7 +89,7 @@ function toggleLikeOnComment(
   return comment;
 }
 
-export function CommentsWidget({ postSlug: _postSlug, className }: CommentsWidgetProps) {
+export function CommentsWidget({ postSlug: _postSlug, className }: Readonly<CommentsWidgetProps>) {
   const [comments, setComments] = React.useState<Comment[]>(sampleComments);
   const [newComment, setNewComment] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -242,7 +250,7 @@ function CommentCard({
   onSubmitReply,
   onCancelReply,
   isSubmitting,
-}: CommentCardProps) {
+}: Readonly<CommentCardProps>) {
   const formattedDate = new Date(comment.createdAt).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -294,7 +302,7 @@ function CommentCard({
             >
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 reply
-              </span>
+              </span>{' '}
               Reply
             </button>
           </div>
@@ -336,11 +344,7 @@ function CommentCard({
                 <div key={reply.id} className="flex gap-3">
                   <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
                     <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
-                      {reply.author.name
-                        .split(' ')
-                        .map((n) => n[0])
-                        .join('')
-                        .slice(0, 2)}
+                      {getInitials(reply.author.name)}
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">

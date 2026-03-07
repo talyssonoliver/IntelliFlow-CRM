@@ -69,7 +69,7 @@ export function syncTokenToCookie(token: string | null): void {
     // Set cookie with the token
     // HttpOnly is false so JavaScript can read/write it
     // Secure only in production
-    const isSecure = window.location.protocol === 'https:';
+    const isSecure = globalThis.location.protocol === 'https:';
     const cookieValue = `accessToken=${token}; path=/; max-age=${60 * 60 * 24}; samesite=lax${isSecure ? '; secure' : ''}`;
     document.cookie = cookieValue;
   } else {
@@ -103,7 +103,7 @@ const LOGOUT_CHANNEL = 'intelliflow-logout';
  * Clear auth-related items from localStorage
  */
 export function clearLocalStorage(preservePreferences = false): string[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof globalThis.window === 'undefined') return [];
 
   const clearedItems: string[] = [];
 
@@ -122,7 +122,7 @@ export function clearLocalStorage(preservePreferences = false): string[] {
 
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('intelliflow_')) {
+        if (key?.startsWith('intelliflow_')) {
           keysToRemove.push(key);
         }
       }
@@ -147,7 +147,7 @@ export function clearLocalStorage(preservePreferences = false): string[] {
  * Clear all sessionStorage data
  */
 export function clearSessionStorage(): string[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof globalThis.window === 'undefined') return [];
 
   const clearedItems: string[] = [];
 
@@ -201,8 +201,8 @@ function deleteCookie(name: string, paths: string[] = ['/', '/api']): void {
 
   const domains = [
     '', // Current domain
-    window.location.hostname,
-    `.${window.location.hostname}`,
+    globalThis.location.hostname,
+    `.${globalThis.location.hostname}`,
   ];
 
   for (const path of paths) {
@@ -246,7 +246,7 @@ export function clearAuthCookies(): string[] {
  * Clear IndexedDB databases related to auth/session
  */
 export async function clearIndexedDB(): Promise<string[]> {
-  if (typeof window === 'undefined' || !window.indexedDB) return [];
+  if (typeof globalThis.window === 'undefined' || !globalThis.indexedDB) return [];
 
   const clearedDatabases: string[] = [];
 
@@ -263,7 +263,7 @@ export async function clearIndexedDB(): Promise<string[]> {
               clearedDatabases.push(db.name!);
               resolve();
             };
-            request.onerror = () => reject(request.error);
+            request.onerror = () => reject(request.error ?? new Error('Failed to delete IndexedDB database'));
             request.onblocked = () => {
               console.warn(`[SessionCleanup] IndexedDB ${db.name} deletion blocked`);
               resolve();
@@ -287,11 +287,11 @@ export async function clearIndexedDB(): Promise<string[]> {
  * Broadcast logout event to other tabs
  */
 export function broadcastLogout(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis.window === 'undefined') return;
 
   try {
     // Use BroadcastChannel if available
-    if ('BroadcastChannel' in window) {
+    if ('BroadcastChannel' in globalThis) {
       const channel = new BroadcastChannel(LOGOUT_CHANNEL);
       channel.postMessage({ type: 'logout', timestamp: Date.now() });
       channel.close();
@@ -310,7 +310,7 @@ export function broadcastLogout(): void {
  */
 export function onLogoutBroadcast(callback: () => void): () => void {
   // SSR guard: return a no-op unsubscribe function when running outside the browser
-  if (typeof window === 'undefined')
+  if (typeof globalThis.window === 'undefined')
     return () => {
       /* no-op: no listeners were registered outside the browser */
     };
@@ -318,7 +318,7 @@ export function onLogoutBroadcast(callback: () => void): () => void {
   const cleanupFunctions: (() => void)[] = [];
 
   // BroadcastChannel listener
-  if ('BroadcastChannel' in window) {
+  if ('BroadcastChannel' in globalThis) {
     const channel = new BroadcastChannel(LOGOUT_CHANNEL);
     const handler = (event: MessageEvent) => {
       if (event.data?.type === 'logout') {
@@ -338,8 +338,8 @@ export function onLogoutBroadcast(callback: () => void): () => void {
       callback();
     }
   };
-  window.addEventListener('storage', storageHandler);
-  cleanupFunctions.push(() => window.removeEventListener('storage', storageHandler));
+  globalThis.addEventListener('storage', storageHandler);
+  cleanupFunctions.push(() => globalThis.removeEventListener('storage', storageHandler));
 
   // Return cleanup function
   return () => {
@@ -357,11 +357,11 @@ export function onLogoutBroadcast(callback: () => void): () => void {
  * Unregister service workers and clear caches
  */
 export async function clearServiceWorkerCaches(): Promise<void> {
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis.window === 'undefined') return;
 
   try {
     // Clear Cache Storage
-    if ('caches' in window) {
+    if ('caches' in globalThis) {
       const cacheNames = await caches.keys();
       await Promise.all(
         cacheNames
@@ -468,7 +468,7 @@ export async function cleanupSession(options: CleanupOptions = {}): Promise<Clea
  * Check if there's an active session
  */
 export function hasActiveSession(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof globalThis.window === 'undefined') return false;
 
   // Check for access token in localStorage
   const hasToken = localStorage.getItem('accessToken') !== null;
@@ -491,7 +491,7 @@ export function getSessionInfo(): {
   lastActivity: string | null;
   cookies: string[];
 } {
-  if (typeof window === 'undefined') {
+  if (typeof globalThis.window === 'undefined') {
     return {
       hasToken: false,
       tokenExpiry: null,

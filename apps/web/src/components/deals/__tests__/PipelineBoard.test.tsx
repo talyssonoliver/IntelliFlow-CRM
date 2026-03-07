@@ -35,7 +35,7 @@ vi.mock('@dnd-kit/core', () => ({
     capturedDndProps = { onDragEnd, onDragStart, onDragCancel, accessibility, ...props };
     return <div data-testid="dnd-context">{children as React.ReactNode}</div>;
   },
-  DragOverlay: ({ children }: { children: React.ReactNode }) => (
+  DragOverlay: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <div data-testid="drag-overlay">{children}</div>
   ),
   closestCorners: vi.fn(),
@@ -48,7 +48,7 @@ vi.mock('@dnd-kit/core', () => ({
 
 // Mock @dnd-kit/sortable
 vi.mock('@dnd-kit/sortable', () => ({
-  SortableContext: ({ children }: { children: React.ReactNode }) => (
+  SortableContext: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <div data-testid="sortable-context">{children}</div>
   ),
   sortableKeyboardCoordinates: vi.fn(),
@@ -177,7 +177,7 @@ describe('PipelineBoard', () => {
       />
     );
 
-    const onDragEnd = capturedDndProps.onDragEnd as (event: Record<string, unknown>) => void;
+    const onDragEnd = capturedDndProps.onDragEnd as (event: Readonly<Record<string, unknown>>) => void;
     onDragEnd({
       active: { id: 'deal-1', data: { current: {} } },
       over: { id: 'QUALIFICATION' },
@@ -197,7 +197,7 @@ describe('PipelineBoard', () => {
     );
 
     // PROSPECTING cannot go directly to NEGOTIATION
-    const onDragEnd = capturedDndProps.onDragEnd as (event: Record<string, unknown>) => void;
+    const onDragEnd = capturedDndProps.onDragEnd as (event: Readonly<Record<string, unknown>>) => void;
     onDragEnd({
       active: { id: 'deal-1', data: { current: {} } },
       over: { id: 'NEGOTIATION' },
@@ -219,7 +219,7 @@ describe('PipelineBoard', () => {
       />
     );
 
-    const onDragEnd = capturedDndProps.onDragEnd as (event: Record<string, unknown>) => void;
+    const onDragEnd = capturedDndProps.onDragEnd as (event: Readonly<Record<string, unknown>>) => void;
     onDragEnd({
       active: { id: 'deal-1', data: { current: {} } },
       over: { id: 'deal-2' },
@@ -238,7 +238,7 @@ describe('PipelineBoard', () => {
       />
     );
 
-    const onDragEnd = capturedDndProps.onDragEnd as (event: Record<string, unknown>) => void;
+    const onDragEnd = capturedDndProps.onDragEnd as (event: Readonly<Record<string, unknown>>) => void;
     onDragEnd({
       active: { id: 'deal-1', data: { current: {} } },
       over: null,
@@ -257,7 +257,7 @@ describe('PipelineBoard', () => {
       />
     );
 
-    const onDragEnd = capturedDndProps.onDragEnd as (event: Record<string, unknown>) => void;
+    const onDragEnd = capturedDndProps.onDragEnd as (event: Readonly<Record<string, unknown>>) => void;
     onDragEnd({
       active: { id: 'deal-1', data: { current: {} } },
       over: { id: 'CLOSED_WON' },
@@ -277,7 +277,7 @@ describe('PipelineBoard', () => {
       />
     );
 
-    const onDragEnd = capturedDndProps.onDragEnd as (event: Record<string, unknown>) => void;
+    const onDragEnd = capturedDndProps.onDragEnd as (event: Readonly<Record<string, unknown>>) => void;
     onDragEnd({
       active: { id: 'deal-1', data: { current: {} } },
       over: { id: 'CLOSED_WON' },
@@ -305,7 +305,7 @@ describe('PipelineBoard', () => {
       />
     );
 
-    const onDragStart = capturedDndProps.onDragStart as (event: Record<string, unknown>) => void;
+    const onDragStart = capturedDndProps.onDragStart as (event: Readonly<Record<string, unknown>>) => void;
     await act(async () => {
       onDragStart({ active: { id: 'deal-1' } });
     });
@@ -327,7 +327,7 @@ describe('PipelineBoard', () => {
       />
     );
 
-    const onDragStart = capturedDndProps.onDragStart as (event: Record<string, unknown>) => void;
+    const onDragStart = capturedDndProps.onDragStart as (event: Readonly<Record<string, unknown>>) => void;
     await act(async () => {
       onDragStart({ active: { id: 'deal-1' } });
     });
@@ -431,7 +431,7 @@ describe('PipelineBoard', () => {
       />
     );
 
-    const onDragEnd = capturedDndProps.onDragEnd as (event: Record<string, unknown>) => void;
+    const onDragEnd = capturedDndProps.onDragEnd as (event: Readonly<Record<string, unknown>>) => void;
     onDragEnd({
       active: { id: 'deal-1', data: { current: {} } },
       over: { id: 'deal-2' }, // Dropping on another deal, not a stage
@@ -451,7 +451,7 @@ describe('PipelineBoard', () => {
       />
     );
 
-    const onDragEnd = capturedDndProps.onDragEnd as (event: Record<string, unknown>) => void;
+    const onDragEnd = capturedDndProps.onDragEnd as (event: Readonly<Record<string, unknown>>) => void;
     onDragEnd({
       active: { id: 'deal-1', data: { current: {} } },
       over: { id: 'CLOSED_LOST' },

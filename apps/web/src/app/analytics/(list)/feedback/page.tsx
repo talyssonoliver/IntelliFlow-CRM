@@ -52,7 +52,11 @@ export default function FeedbackAnalyticsPage() {
     dateFrom: PERIOD_MAP[period](),
     dateTo: new Date(),
     surveyType: surveyTab === 'All' ? undefined : surveyTab,
-    granularity: period === '7d' ? 'day' : period === '30d' ? 'week' : 'month',
+    granularity: (() => {
+      if (period === '7d') return 'day';
+      if (period === '30d') return 'week';
+      return 'month';
+    })() as 'day' | 'week' | 'month',
   };
 
   const { data, isLoading } = useFeedbackSurveyDashboard(filters);

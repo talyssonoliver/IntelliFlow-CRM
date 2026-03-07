@@ -5,6 +5,6 @@ export const metadata: Metadata = {
   title: 'Calendar',
 };
 
-export default function CalendarLayout({ children }: { children: React.ReactNode }) {
+export default function CalendarLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <CalendarLayoutShell>{children}</CalendarLayoutShell>;
 }

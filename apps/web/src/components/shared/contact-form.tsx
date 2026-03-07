@@ -395,7 +395,7 @@ export function ContactForm() {
           <>
             <span className="material-symbols-outlined text-lg" aria-hidden="true">
               send
-            </span>
+            </span>{' '}
             Send Message
           </>
         )}

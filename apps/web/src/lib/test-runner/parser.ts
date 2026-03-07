@@ -5,8 +5,8 @@
  * Handles different output formats from vitest reporter.
  */
 
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 import type { TestRunProgress, CoverageMetrics } from './types';
 
 // Vitest output patterns
@@ -24,135 +24,122 @@ const PATTERNS = {
   coverageTable: /^\s*All files\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)/,
   // Test counts: "Tests  12 passed | 2 failed (14)"
   testCounts:
-    /Tests?\s+(\d+)\s+passed(?:\s*\|\s*(\d+)\s+failed)?(?:\s*\|\s*(\d+)\s+skipped)?\s*\((\d+)\)/,
+    /Tests?\s+(\d+)\s+passed(?:\s*\|\s*(\d+)\s+failed)?(?:\s*\|\s*(\d+)\s+skipped)?\s*\((\d+)\)/, // NOSONAR typescript:S5843 — complexity required to parse optional fail/skip fields in Vitest output
   // Duration: "Duration  1.23s"
   duration: /Duration\s+([\d.]+)s/,
   // File running: "RUN  packages/domain/src/__tests__/Lead.test.ts"
   fileStart: /^\s*(?:RUN|Running)\s+([^\s]{1,500}\.(?:test|spec)\.[jt]sx?)$/,
 };
 
+function parseSuiteComplete(line: string, runId: string): TestRunProgress | null {
+  const m = PATTERNS.suiteComplete.exec(line);
+  if (!m) return null;
+  const [, status, file, testCount, duration] = m;
+  return {
+    runId,
+    type: 'suite_complete',
+    timestamp: new Date().toISOString(),
+    data: {
+      file,
+      suiteName: file.split('/').pop() || file,
+      testsRun: Number.parseInt(testCount, 10),
+      duration: Number.parseInt(duration, 10),
+      passed: status === '✓' || status === '✔',
+    },
+  };
+}
+
+function parseTestPassOrFail(
+  line: string,
+  runId: string,
+  type: 'test_pass' | 'test_fail'
+): TestRunProgress | null {
+  const pattern = type === 'test_pass' ? PATTERNS.testPass : PATTERNS.testFail;
+  const m = pattern.exec(line);
+  if (!m) return null;
+  const [, testName, duration] = m;
+  return {
+    runId,
+    type,
+    timestamp: new Date().toISOString(),
+    data: { testName, duration: duration ? Number.parseInt(duration, 10) : undefined },
+  };
+}
+
+function parseTestSkip(line: string, runId: string): TestRunProgress | null {
+  const m = PATTERNS.testSkip.exec(line);
+  if (!m) return null;
+  return {
+    runId,
+    type: 'test_skip',
+    timestamp: new Date().toISOString(),
+    data: { testName: m[1] },
+  };
+}
+
+function parseFileStart(line: string, runId: string): TestRunProgress | null {
+  const m = PATTERNS.fileStart.exec(line);
+  if (!m) return null;
+  const file = m[1];
+  return {
+    runId,
+    type: 'suite_start',
+    timestamp: new Date().toISOString(),
+    data: { file, suiteName: file.split('/').pop() || file },
+  };
+}
+
+function parseCoverageTable(line: string, runId: string): TestRunProgress | null {
+  const m = PATTERNS.coverageTable.exec(line);
+  if (!m) return null;
+  const [, stmts, branches, funcs, lines] = m;
+  return {
+    runId,
+    type: 'coverage_complete',
+    timestamp: new Date().toISOString(),
+    data: {
+      coverage: {
+        statements: { total: 0, covered: 0, pct: Number.parseFloat(stmts) },
+        branches: { total: 0, covered: 0, pct: Number.parseFloat(branches) },
+        functions: { total: 0, covered: 0, pct: Number.parseFloat(funcs) },
+        lines: { total: 0, covered: 0, pct: Number.parseFloat(lines) },
+      },
+    },
+  };
+}
+
+function parseTestCounts(line: string, runId: string): TestRunProgress | null {
+  const m = PATTERNS.testCounts.exec(line);
+  if (!m) return null;
+  const [, passed, failed, skipped, total] = m;
+  return {
+    runId,
+    type: 'complete',
+    timestamp: new Date().toISOString(),
+    data: {
+      testsPassed: Number.parseInt(passed, 10),
+      testsFailed: failed ? Number.parseInt(failed, 10) : 0,
+      testsSkipped: skipped ? Number.parseInt(skipped, 10) : 0,
+      testsRun: Number.parseInt(total, 10),
+    },
+  };
+}
+
 /**
  * Parse a single line of vitest output
  */
 export function parseVitestLine(line: string, runId: string): TestRunProgress | null {
-  const trimmed = line.trim();
-  if (!trimmed) return null;
-
-  // Check for suite completion (file with test count)
-  const suiteMatch = line.match(PATTERNS.suiteComplete);
-  if (suiteMatch) {
-    const [, status, file, testCount, duration] = suiteMatch;
-    const passed = status === '✓' || status === '✔';
-    return {
-      runId,
-      type: 'suite_complete',
-      timestamp: new Date().toISOString(),
-      data: {
-        file,
-        suiteName: file.split('/').pop() || file,
-        testsRun: parseInt(testCount, 10),
-        duration: parseInt(duration, 10),
-        passed,
-      },
-    };
-  }
-
-  // Check for individual test pass
-  const passMatch = line.match(PATTERNS.testPass);
-  if (passMatch) {
-    const [, testName, duration] = passMatch;
-    return {
-      runId,
-      type: 'test_pass',
-      timestamp: new Date().toISOString(),
-      data: {
-        testName,
-        duration: duration ? parseInt(duration, 10) : undefined,
-      },
-    };
-  }
-
-  // Check for individual test fail
-  const failMatch = line.match(PATTERNS.testFail);
-  if (failMatch) {
-    const [, testName, duration] = failMatch;
-    return {
-      runId,
-      type: 'test_fail',
-      timestamp: new Date().toISOString(),
-      data: {
-        testName,
-        duration: duration ? parseInt(duration, 10) : undefined,
-      },
-    };
-  }
-
-  // Check for test skip
-  const skipMatch = line.match(PATTERNS.testSkip);
-  if (skipMatch) {
-    const [, testName] = skipMatch;
-    return {
-      runId,
-      type: 'test_skip',
-      timestamp: new Date().toISOString(),
-      data: {
-        testName,
-      },
-    };
-  }
-
-  // Check for file start
-  const fileStartMatch = line.match(PATTERNS.fileStart);
-  if (fileStartMatch) {
-    const [, file] = fileStartMatch;
-    return {
-      runId,
-      type: 'suite_start',
-      timestamp: new Date().toISOString(),
-      data: {
-        file,
-        suiteName: file.split('/').pop() || file,
-      },
-    };
-  }
-
-  // Check for coverage table
-  const coverageMatch = line.match(PATTERNS.coverageTable);
-  if (coverageMatch) {
-    const [, stmts, branches, funcs, lines] = coverageMatch;
-    return {
-      runId,
-      type: 'coverage_complete',
-      timestamp: new Date().toISOString(),
-      data: {
-        coverage: {
-          statements: { total: 0, covered: 0, pct: parseFloat(stmts) },
-          branches: { total: 0, covered: 0, pct: parseFloat(branches) },
-          functions: { total: 0, covered: 0, pct: parseFloat(funcs) },
-          lines: { total: 0, covered: 0, pct: parseFloat(lines) },
-        },
-      },
-    };
-  }
-
-  // Check for test counts
-  const countsMatch = line.match(PATTERNS.testCounts);
-  if (countsMatch) {
-    const [, passed, failed, skipped, total] = countsMatch;
-    return {
-      runId,
-      type: 'complete',
-      timestamp: new Date().toISOString(),
-      data: {
-        testsPassed: parseInt(passed, 10),
-        testsFailed: failed ? parseInt(failed, 10) : 0,
-        testsSkipped: skipped ? parseInt(skipped, 10) : 0,
-        testsRun: parseInt(total, 10),
-      },
-    };
-  }
-
-  return null;
+  if (!line.trim()) return null;
+  return (
+    parseSuiteComplete(line, runId) ??
+    parseTestPassOrFail(line, runId, 'test_pass') ??
+    parseTestPassOrFail(line, runId, 'test_fail') ??
+    parseTestSkip(line, runId) ??
+    parseFileStart(line, runId) ??
+    parseCoverageTable(line, runId) ??
+    parseTestCounts(line, runId) ??
+    null
+  );
 }
 
 /**

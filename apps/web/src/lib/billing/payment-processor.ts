@@ -8,7 +8,7 @@
  * (no card data storage or logging).
  */
 
-import type { CardBrand, PaymentErrorCode } from '@intelliflow/validators';
+import type { CardBrand } from '@intelliflow/validators';
 
 // ============================================
 // Types
@@ -40,7 +40,7 @@ export interface CardValidationResult {
 // Constants
 // ============================================
 
-const ERROR_MESSAGES: Record<PaymentErrorCode | string, string> = {
+const ERROR_MESSAGES: Record<string, string> = {
   CARD_DECLINED: 'Your card was declined. Please try a different card.',
   EXPIRED_CARD: 'Your card has expired. Please use a valid card.',
   INSUFFICIENT_FUNDS: 'Insufficient funds. Please try a different card.',
@@ -66,7 +66,7 @@ const DECLINE_CODE_MESSAGES: Record<string, string> = {
 // ============================================
 
 function luhnCheck(cardNumber: string): boolean {
-  const digits = cardNumber.replace(/\D/g, '');
+  const digits = cardNumber.replaceAll(/\D/g, '');
 
   if (digits.length === 0) return false;
 
@@ -77,7 +77,7 @@ function luhnCheck(cardNumber: string): boolean {
   let isSecond = false;
 
   for (let i = digits.length - 1; i >= 0; i--) {
-    let digit = parseInt(digits[i], 10);
+    let digit = Number.parseInt(digits[i], 10);
 
     if (isSecond) {
       digit *= 2;
@@ -102,7 +102,7 @@ export function validateCardNumber(cardNumber: string): ValidationResult {
     return { valid: false, error: 'Card number is required' };
   }
 
-  const digits = cardNumber.replace(/[\s-]/g, '');
+  const digits = cardNumber.replaceAll(/[\s-]/g, '');
 
   if (!/^\d+$/.test(digits)) {
     return { valid: false, error: 'Card number must contain only digits' };
@@ -129,7 +129,7 @@ export function validateExpiry(expiry: string): ValidationResult {
   }
 
   // Remove non-numeric except /
-  const cleaned = expiry.replace(/[^\d/-]/g, '').replaceAll('-', '/');
+  const cleaned = expiry.replaceAll(/[^\d/-]/g, '').replaceAll('-', '/');
 
   // Extract month and year
   let month: number;
@@ -140,16 +140,16 @@ export function validateExpiry(expiry: string): ValidationResult {
     if (parts.length !== 2 || parts[0].length !== 2 || parts[1].length !== 2) {
       return { valid: false, error: 'Invalid expiry format (MM/YY)' };
     }
-    month = parseInt(parts[0], 10);
-    year = parseInt(parts[1], 10);
+    month = Number.parseInt(parts[0], 10);
+    year = Number.parseInt(parts[1], 10);
   } else if (cleaned.length === 4) {
-    month = parseInt(cleaned.slice(0, 2), 10);
-    year = parseInt(cleaned.slice(2, 4), 10);
+    month = Number.parseInt(cleaned.slice(0, 2), 10);
+    year = Number.parseInt(cleaned.slice(2, 4), 10);
   } else {
     return { valid: false, error: 'Invalid expiry format (MM/YY)' };
   }
 
-  if (isNaN(month) || isNaN(year)) {
+  if (Number.isNaN(month) || Number.isNaN(year)) {
     return { valid: false, error: 'Invalid expiry format (MM/YY)' };
   }
 
@@ -203,7 +203,7 @@ export function validateCVC(cvc: string, brand: CardBrand): ValidationResult {
 export function formatCardNumber(value: string): string {
   if (!value) return '';
 
-  const digits = value.replace(/\D/g, '');
+  const digits = value.replaceAll(/\D/g, '');
   const brand = detectCardBrand(digits);
 
   // Amex: 4-6-5
@@ -233,17 +233,17 @@ export function formatExpiry(value: string): string {
   if (!value) return '';
 
   // Remove non-numeric
-  let digits = value.replace(/\D/g, '');
+  let digits = value.replaceAll(/\D/g, '');
 
   // Handle single digit month > 1 (e.g., "5" could be "05" or start of "12")
-  if (digits.length === 1 && parseInt(digits, 10) > 1) {
+  if (digits.length === 1 && Number.parseInt(digits, 10) > 1) {
     // Could be month like 5, but wait for more input
     return digits;
   }
 
   // Handle month validation during typing
   if (digits.length >= 2) {
-    const potentialMonth = parseInt(digits.slice(0, 2), 10);
+    const potentialMonth = Number.parseInt(digits.slice(0, 2), 10);
     if (potentialMonth > 12) {
       // Invalid 2-digit month - return single digit
       return digits.slice(0, 1);
@@ -252,7 +252,7 @@ export function formatExpiry(value: string): string {
 
   // Handle 3-digit input like '125' → interpret as month 1, year 25
   if (digits.length === 3) {
-    const firstDigit = parseInt(digits[0], 10);
+    const firstDigit = Number.parseInt(digits[0], 10);
     // If first digit alone could be a month (1-9), and next two could be year
     if (firstDigit >= 1 && firstDigit <= 9) {
       return `0${digits[0]}/${digits.slice(1)}`;
@@ -275,50 +275,51 @@ export function formatExpiry(value: string): string {
 // ============================================
 
 export function detectCardBrand(cardNumber: string): CardBrand {
-  const digits = cardNumber.replace(/\D/g, '');
+  const digits = cardNumber.replaceAll(/\D/g, '');
 
   if (!digits || digits.length < 2) {
     return 'unknown';
   }
 
   // Visa: starts with 4
-  if (/^4/.test(digits)) {
+  if (digits.startsWith('4')) {
     return 'visa';
   }
 
   // Mastercard: starts with 51-55 or 2221-2720
-  if (/^5[1-5]/.test(digits)) {
+  const firstTwo = digits.slice(0, 2);
+  if (firstTwo >= '51' && firstTwo <= '55') {
     return 'mastercard';
   }
   if (digits.length >= 4) {
-    const prefix4 = parseInt(digits.slice(0, 4), 10);
+    const prefix4 = Number.parseInt(digits.slice(0, 4), 10);
     if (prefix4 >= 2221 && prefix4 <= 2720) {
       return 'mastercard';
     }
   }
 
   // Amex: starts with 34 or 37
-  if (/^3[47]/.test(digits)) {
+  if (digits.startsWith('34') || digits.startsWith('37')) {
     return 'amex';
   }
 
   // Discover: starts with 6011 or 65
-  if (/^6011/.test(digits) || /^65/.test(digits)) {
+  if (digits.startsWith('6011') || digits.startsWith('65')) {
     return 'discover';
   }
 
   // Diners Club: starts with 36 or 38
-  if (/^3[68]/.test(digits)) {
+  if (digits.startsWith('36') || digits.startsWith('38')) {
     return 'diners';
   }
 
   // JCB: starts with 35
-  if (/^35/.test(digits)) {
+  if (digits.startsWith('35')) {
     return 'jcb';
   }
 
   // UnionPay: starts with 62
-  if (/^62/.test(digits)) {
+  if (digits.startsWith('62')) {
     return 'unionpay';
   }
 

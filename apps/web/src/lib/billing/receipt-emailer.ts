@@ -81,7 +81,7 @@ export async function sendReceiptEmail(
 
   // Fallback: no sender provided (development / unit test context).
   // Returns a synthetic message ID without making a network call.
-  const messageId = `msg_${Date.now()}_${crypto.randomUUID().replace(/-/g, '')}`;
+  const messageId = `msg_${Date.now()}_${crypto.randomUUID().replaceAll('-', '')}`;
   return { success: true, messageId };
 }
 

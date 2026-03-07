@@ -390,7 +390,7 @@ export function getPriorityConfig(priority: string): PriorityConfig | undefined 
 /** Format a date string into relative time (e.g., "5 min ago") */
 export function formatRelativeTime(dateInput: string | Date): string {
   const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
-  if (isNaN(date.getTime())) return 'Unknown';
+  if (Number.isNaN(date.getTime())) return 'Unknown';
 
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();

@@ -32,7 +32,7 @@ export function EntityActionSheet({
   onOpenChange,
   entity,
   extraActions,
-}: EntityActionSheetProps) {
+}: Readonly<EntityActionSheetProps>) {
   const { isPinned, isLoading, togglePin } = useEntityPin({
     entityType: entity.type,
     entityId: entity.id,
@@ -73,7 +73,7 @@ export function EntityActionSheet({
             onClick={() => onOpenChange(false)}
             className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-left text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
-            <span className="material-symbols-outlined text-[20px]">share</span>
+            <span className="material-symbols-outlined text-[20px]">share</span>{' '}
             Share
           </button>
 
@@ -83,7 +83,7 @@ export function EntityActionSheet({
             onClick={() => onOpenChange(false)}
             className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-left text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
-            <span className="material-symbols-outlined text-[20px]">download</span>
+            <span className="material-symbols-outlined text-[20px]">download</span>{' '}
             Export
           </button>
 
@@ -105,7 +105,7 @@ export function EntityActionSheet({
                       : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[20px]">{action.icon}</span>
+                  <span className="material-symbols-outlined text-[20px]">{action.icon}</span>{' '}
                   {action.label}
                 </button>
               ))}

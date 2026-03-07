@@ -46,7 +46,7 @@ export function TaskCreateSheet({
   defaultEntityName = '',
   defaultDueDate = '',
   onSuccess,
-}: TaskCreateSheetProps) {
+}: Readonly<TaskCreateSheetProps>) {
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
 

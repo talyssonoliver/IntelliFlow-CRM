@@ -12,7 +12,7 @@ import { MfaQrGenerator } from '../mfa-qr-generator';
 
 // Mock qrcode.react
 vi.mock('qrcode.react', () => ({
-  QRCodeSVG: ({ value, size }: { value: string; size: number }) => (
+  QRCodeSVG: ({ value, size }: Readonly<{ value: string; size: number }>) => (
     <svg data-testid="qr-code" data-value={value} width={size} height={size}>
       <rect width={size} height={size} fill="white" />
     </svg>

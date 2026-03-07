@@ -18,7 +18,7 @@ function formatDate(dateStr: string): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export default function SentimentTrend({ trends }: SentimentTrendProps) {
+export default function SentimentTrend({ trends }: Readonly<SentimentTrendProps>) {
   if (!trends.length) {
     return (
       <div className="flex items-center justify-center h-48 text-muted-foreground text-sm">

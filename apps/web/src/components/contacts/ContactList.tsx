@@ -28,15 +28,15 @@ export interface ContactListProps {
   contacts: Contact[];
   total: number;
   isLoading: boolean;
-  onRowClick: (contact: Contact) => void;
-  onDelete: (contact: Contact) => void;
+  onRowClick: (contact: Readonly<Contact>) => void;
+  onDelete: (contact: Readonly<Contact>) => void;
   onBulkDelete: (ids: string[]) => void;
   onBulkEmail: (ids: string[]) => void;
   onBulkExport: (ids: string[], format: 'csv' | 'json') => void;
-  onEdit?: (contact: Contact) => void;
-  onCreateDeal?: (contact: Contact) => void;
-  onCreateTicket?: (contact: Contact) => void;
-  onScheduleMeeting?: (contact: Contact) => void;
+  onEdit?: (contact: Readonly<Contact>) => void;
+  onCreateDeal?: (contact: Readonly<Contact>) => void;
+  onCreateTicket?: (contact: Readonly<Contact>) => void;
+  onScheduleMeeting?: (contact: Readonly<Contact>) => void;
   pageSize?: number;
 }
 
@@ -54,9 +54,13 @@ function getAvatarColor(name: string) {
   return colors[hash % colors.length];
 }
 
+const noActivityCell = (
+  <span className="text-sm text-muted-foreground italic">No activity</span>
+);
+
 function formatDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
-  if (isNaN(d.getTime())) return 'Invalid date';
+  if (Number.isNaN(d.getTime())) return 'Invalid date';
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
@@ -83,7 +87,7 @@ export function ContactList({
   onCreateTicket,
   onScheduleMeeting,
   pageSize = 10,
-}: ContactListProps) {
+}: Readonly<ContactListProps>) {
   const columns: ColumnDef<Contact>[] = useMemo(
     () => [
       {
@@ -172,7 +176,7 @@ export function ContactList({
           const opp = row.original._count?.opportunities ?? 0;
           const tasks = row.original._count?.tasks ?? 0;
           if (opp === 0 && tasks === 0)
-            return <span className="text-sm text-muted-foreground italic">No activity</span>;
+            return noActivityCell;
           return (
             <div className="flex flex-col gap-1">
               {opp > 0 && (
@@ -279,11 +283,11 @@ export function ContactList({
 
   if (isLoading) {
     return (
-      <div role="status" aria-busy="true" className="space-y-3">
+      <div aria-live="polite" aria-busy="true" className="space-y-3">
         <span className="sr-only">Loading contacts...</span>
         {[...Array(5)].map((_, i) => (
           <div
-            key={i}
+            key={i} // NOSONAR typescript:S6479
             className="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"
           >
             <Skeleton className="size-10 rounded-full" />
@@ -324,9 +328,9 @@ export function ContactList({
         aria-label="Contact list"
       />
       {total > 0 ? (
-        <div role="status" aria-live="polite" className="mt-2 text-sm text-slate-500">
+        <output aria-live="polite" className="mt-2 text-sm text-slate-500">
           Showing {contacts.length} of {total}
-        </div>
+        </output>
       ) : null}
     </div>
   );

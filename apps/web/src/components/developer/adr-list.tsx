@@ -2,8 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import Link from 'next/link';
-import { Card } from '@intelliflow/ui';
-import { Badge } from '@intelliflow/ui';
+import { Card, Badge } from '@intelliflow/ui';
 import type { ADRMetadata } from '@/lib/adr/adr-service';
 
 interface AdrCategory {
@@ -82,9 +81,9 @@ const STATUS_BADGE_MAP: Record<string, 'success' | 'warning' | 'destructive' | '
  * ADR-020 to ADR-024: Domain & Features
  * ADR-025+: Process & Tooling
  */
-function getCategoryForAdr(adr: ADRMetadata): string {
-  const num = parseInt(adr.id.replace('ADR-', ''), 10);
-  if (isNaN(num)) return 'process-tooling';
+function getCategoryForAdr(adr: Readonly<ADRMetadata>): string {
+  const num = Number.parseInt(adr.id.replace('ADR-', ''), 10);
+  if (Number.isNaN(num)) return 'process-tooling';
   if (num <= 4) return 'architecture-patterns';
   if (num <= 9) return 'data-security';
   if (num <= 14) return 'ai-automation';
@@ -100,12 +99,12 @@ const DDD_CONTEXTS = [
   { name: 'Shared Kernel', entities: 'AuditLog, DomainEvent, ValueObject' },
 ];
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status }: Readonly<{ status: string }>) {
   const variant = STATUS_BADGE_MAP[status] ?? 'secondary';
   return <Badge variant={variant}>{status}</Badge>;
 }
 
-export function AdrList({ adrs, stats }: AdrListProps) {
+export function AdrList({ adrs, stats }: Readonly<AdrListProps>) {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');

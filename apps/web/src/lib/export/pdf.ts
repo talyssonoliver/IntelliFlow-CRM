@@ -155,7 +155,11 @@ function generatePDFHTML(sections: ReportSection[], options: PDFExportOptions = 
             <div class="metric-card">
               <div class="label">${escapeHTML(m.name)}</div>
               <div class="value">${escapeHTML(String(m.value))}</div>
-              ${m.trend ? `<div class="trend ${m.trend.startsWith('+') ? 'positive' : 'negative'}">${escapeHTML(m.trend)}</div>` : ''}
+              ${(() => {
+                if (!m.trend) return '';
+                const trendCls = m.trend.startsWith('+') ? 'positive' : 'negative';
+                return `<div class="trend ${trendCls}">${escapeHTML(m.trend)}</div>`;
+              })()}
             </div>
           `
             )
@@ -175,7 +179,7 @@ function generatePDFHTML(sections: ReportSection[], options: PDFExportOptions = 
               ${rows
                 .map(
                   (row) => `
-                <tr>${headers.map((h) => `<td>${escapeHTML(String(row[h] ?? ''))}</td>`).join('')}</tr>
+                <tr>${headers.map((h) => `<td>${escapeHTML((row[h] as string | null | undefined) ?? '')}</td>`).join('')}</tr>
               `
                 )
                 .join('')}
@@ -230,7 +234,7 @@ function escapeHTML(str: string): string {
     '"': '&quot;',
     "'": '&#39;',
   };
-  return str.replace(/[&<>"']/g, (char) => htmlEntities[char]);
+  return str.replaceAll(/[&<>"']/g, (char) => htmlEntities[char]);
 }
 
 /**
@@ -246,7 +250,7 @@ export function exportToPDF(sections: ReportSection[], options: PDFExportOptions
     return;
   }
 
-  printWindow.document.write(html);
+  printWindow.document.write(html); // NOSONAR typescript:S1874
   printWindow.document.close();
 
   // Wait for content to load, then trigger print

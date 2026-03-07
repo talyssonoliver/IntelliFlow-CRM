@@ -47,7 +47,7 @@ export interface RegistrationFormErrors {
 }
 
 export interface RegistrationFormProps {
-  onSubmit: (data: RegistrationFormData) => Promise<void>;
+  onSubmit: (data: Readonly<RegistrationFormData>) => Promise<void>;
   isLoading?: boolean;
   className?: string;
   initialEmail?: string;
@@ -107,7 +107,7 @@ interface PasswordStrengthIndicatorProps {
   className?: string;
 }
 
-function PasswordStrengthIndicator({ password, className }: PasswordStrengthIndicatorProps) {
+function PasswordStrengthIndicator({ password, className }: Readonly<PasswordStrengthIndicatorProps>) {
   if (!password) return null;
 
   const { strength, feedback } = calculatePasswordStrength(password);
@@ -170,6 +170,42 @@ function PasswordStrengthIndicator({ password, className }: PasswordStrengthIndi
 }
 
 // ============================================
+// Field Validators
+// ============================================
+
+function validateFullName(value: string | boolean): string | undefined {
+  if (!value || (typeof value === 'string' && value.trim().length < 2)) {
+    return 'Full name is required (at least 2 characters)';
+  }
+  return undefined;
+}
+
+function validateEmail(value: string | boolean): string | undefined {
+  if (!value || typeof value !== 'string') return 'Email is required';
+  if (!/^[^\s@]+@[^\s@.]+\.[^\s@.]+$/.test(value)) {
+    return 'Please enter a valid email address';
+  }
+  return undefined;
+}
+
+function validatePassword(value: string | boolean): string | undefined {
+  if (!value || typeof value !== 'string') return 'Password is required';
+  if (value.length < 8) return 'Password must be at least 8 characters';
+  return undefined;
+}
+
+function validateConfirmPassword(value: string | boolean, password: string): string | undefined {
+  if (!value || typeof value !== 'string') return 'Please confirm your password';
+  if (value !== password) return 'Passwords do not match';
+  return undefined;
+}
+
+function validateAcceptTerms(value: string | boolean): string | undefined {
+  if (!value) return 'You must accept the terms and conditions';
+  return undefined;
+}
+
+// ============================================
 // Registration Form Component
 // ============================================
 
@@ -178,7 +214,7 @@ export function RegistrationForm({
   isLoading = false,
   className,
   initialEmail = '',
-}: RegistrationFormProps) {
+}: Readonly<RegistrationFormProps>) {
   const formId = useId();
 
   // Form state
@@ -247,42 +283,11 @@ export function RegistrationForm({
   // Validation
   const validateField = useCallback(
     (name: keyof RegistrationFormData, value: string | boolean): string | undefined => {
-      switch (name) {
-        case 'fullName':
-          if (!value || (typeof value === 'string' && value.trim().length < 2)) {
-            return 'Full name is required (at least 2 characters)';
-          }
-          break;
-        case 'email':
-          if (!value || typeof value !== 'string') {
-            return 'Email is required';
-          }
-          if (!/^[^\s@]+@[^\s@.]+\.[^\s@.]+$/.test(value)) {
-            return 'Please enter a valid email address';
-          }
-          break;
-        case 'password':
-          if (!value || typeof value !== 'string') {
-            return 'Password is required';
-          }
-          if (value.length < 8) {
-            return 'Password must be at least 8 characters';
-          }
-          break;
-        case 'confirmPassword':
-          if (!value || typeof value !== 'string') {
-            return 'Please confirm your password';
-          }
-          if (value !== formData.password) {
-            return 'Passwords do not match';
-          }
-          break;
-        case 'acceptTerms':
-          if (!value) {
-            return 'You must accept the terms and conditions';
-          }
-          break;
-      }
+      if (name === 'fullName') return validateFullName(value);
+      if (name === 'email') return validateEmail(value);
+      if (name === 'password') return validatePassword(value);
+      if (name === 'confirmPassword') return validateConfirmPassword(value, formData.password);
+      if (name === 'acceptTerms') return validateAcceptTerms(value);
       return undefined;
     },
     [formData.password]
@@ -331,7 +336,7 @@ export function RegistrationForm({
       // Also revalidate confirm password if it was touched
       if (touched.confirmPassword && formData.confirmPassword) {
         const confirmError =
-          formData.confirmPassword !== value ? 'Passwords do not match' : undefined;
+          formData.confirmPassword === value ? undefined : 'Passwords do not match';
         setErrors((prev) => ({ ...prev, confirmPassword: confirmError }));
       }
       // Trigger debounced breach check
@@ -344,7 +349,7 @@ export function RegistrationForm({
     (value: string) => {
       setFormData((prev) => ({ ...prev, confirmPassword: value }));
       if (touched.confirmPassword) {
-        const error = value !== formData.password ? 'Passwords do not match' : undefined;
+        const error = value === formData.password ? undefined : 'Passwords do not match';
         setErrors((prev) => ({ ...prev, confirmPassword: error }));
       }
     },
@@ -502,7 +507,7 @@ export function RegistrationForm({
           <div className="mt-2 flex items-center gap-2 text-xs text-slate-400">
             <span className="material-symbols-outlined animate-spin text-sm" aria-hidden="true">
               progress_activity
-            </span>
+            </span>{' '}
             Checking password security...
           </div>
         )}
@@ -533,7 +538,7 @@ export function RegistrationForm({
           onBlur={() => {
             setTouched((prev) => ({ ...prev, confirmPassword: true }));
             const error =
-              formData.confirmPassword !== formData.password ? 'Passwords do not match' : undefined;
+              formData.confirmPassword === formData.password ? undefined : 'Passwords do not match';
             setErrors((prev) => ({ ...prev, confirmPassword: error }));
           }}
           error={errors.confirmPassword}
@@ -613,7 +618,7 @@ export function RegistrationForm({
           <>
             <span className="material-symbols-outlined animate-spin text-xl" aria-hidden="true">
               progress_activity
-            </span>
+            </span>{' '}
             Creating account...
           </>
         ) : (

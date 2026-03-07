@@ -18,7 +18,7 @@ vi.mock('@intelliflow/ui', () => ({
 
 // Mock @dnd-kit/sortable
 vi.mock('@dnd-kit/sortable', () => ({
-  SortableContext: ({ children }: { children: React.ReactNode }) => (
+  SortableContext: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <div data-testid="sortable-context">{children}</div>
   ),
   verticalListSortingStrategy: {},

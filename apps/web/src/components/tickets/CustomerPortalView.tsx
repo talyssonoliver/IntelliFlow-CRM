@@ -21,7 +21,7 @@ interface CustomerPortalViewProps {
   customerName: string;
 }
 
-function isPublicActivity(activity: TicketActivity): boolean {
+function isPublicActivity(activity: Readonly<TicketActivity>): boolean {
   return activity.type === 'customer_message' || activity.type === 'agent_reply';
 }
 
@@ -30,7 +30,7 @@ export function CustomerPortalView({
   isLoading,
   onReply,
   customerName,
-}: CustomerPortalViewProps) {
+}: Readonly<CustomerPortalViewProps>) {
   const [replyContent, setReplyContent] = useState('');
   const [isSending, setIsSending] = useState(false);
 

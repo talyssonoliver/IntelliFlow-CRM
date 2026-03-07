@@ -69,7 +69,7 @@ export function EmailCompose({
   onDiscard,
   onSent,
   className,
-}: EmailComposeProps) {
+}: Readonly<EmailComposeProps>) {
   // Forward mode: set initial body with quoted content
   // Must be computed before useState so it can be used as the initial value
   const initialBody =
@@ -110,7 +110,7 @@ export function EmailCompose({
       newErrors.push('At least one recipient is required');
     }
     const body = getBodyHtml();
-    if (!body || body === '<br>' || body.replace(/<[^<>]*>/g, '').trim() === '') {
+    if (!body || body === '<br>' || body.replaceAll(/<[^<>]*>/g, '').trim() === '') {
       newErrors.push('Message body is required');
     }
     setErrors(newErrors);
@@ -210,7 +210,7 @@ export function EmailCompose({
     const hasContent =
       toRecipients.length > 0 ||
       subject.trim().length > 0 ||
-      debouncedBody.replace(/<[^<>]*>/g, '').trim().length > 0;
+      debouncedBody.replaceAll(/<[^<>]*>/g, '').trim().length > 0;
     if (!hasContent) return;
 
     draftMutation
@@ -235,7 +235,7 @@ export function EmailCompose({
     const hasContent =
       toRecipients.length > 0 ||
       subject.trim().length > 0 ||
-      body.replace(/<[^<>]*>/g, '').trim().length > 0;
+      body.replaceAll(/<[^<>]*>/g, '').trim().length > 0;
 
     if (hasContent) {
       try {
@@ -348,12 +348,13 @@ export function EmailCompose({
         <label className="sr-only" htmlFor="compose-body">
           Message body
         </label>
-        <div
+        <div // NOSONAR — contentEditable rich-text editor; role="textbox" is the correct ARIA pattern
           ref={bodyRef}
           id="compose-body"
           role="textbox"
           tabIndex={0}
           aria-label="Message body"
+          aria-multiline="true"
           contentEditable
           suppressContentEditableWarning
           className="min-h-[120px] text-sm focus:outline-none"

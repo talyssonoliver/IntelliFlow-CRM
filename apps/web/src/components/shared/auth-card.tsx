@@ -72,7 +72,7 @@ export function AuthCard({
   securityBadge,
   className,
   animate = true,
-}: AuthCardProps) {
+}: Readonly<AuthCardProps>) {
   return (
     <div
       className={cn(

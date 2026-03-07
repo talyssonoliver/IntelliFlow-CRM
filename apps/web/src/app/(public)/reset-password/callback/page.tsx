@@ -11,13 +11,12 @@
  * URL: /reset-password/callback?access_token=...&type=recovery
  */
 
-import { Suspense } from 'react';
+import { Suspense, useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useRedirectIfAuthenticated } from '@/lib/auth/AuthContext';
 import { AuthBackground, AuthCard } from '@/components/shared';
 import { PasswordResetForm, ResetSuccess } from '@/components/shared/password-reset';
-import { useState, useCallback, useEffect } from 'react';
 
 // ============================================
 // Loading Fallback
@@ -53,8 +52,8 @@ function ResetCallbackContent() {
 
   // Clear tokens from URL for security (R-002 mitigation)
   useEffect(() => {
-    if (accessToken && typeof window !== 'undefined') {
-      window.history.replaceState({}, '', '/reset-password/callback');
+    if (accessToken && typeof globalThis.window !== 'undefined') {
+      globalThis.history.replaceState({}, '', '/reset-password/callback');
     }
   }, [accessToken]);
 
@@ -149,7 +148,7 @@ function ResetCallbackContent() {
               aria-hidden="true"
             >
               security
-            </span>
+            </span>{' '}
             This link can only be used once and expires in 1 hour.
           </p>
         </div>

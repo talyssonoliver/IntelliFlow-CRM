@@ -90,7 +90,7 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 }));
 
 vi.mock('@dnd-kit/core', () => ({
-  DndContext: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DndContext: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
   closestCenter: vi.fn(),
   PointerSensor: vi.fn(),
   KeyboardSensor: vi.fn(),
@@ -99,7 +99,7 @@ vi.mock('@dnd-kit/core', () => ({
 }));
 
 vi.mock('@dnd-kit/sortable', () => ({
-  SortableContext: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SortableContext: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
   verticalListSortingStrategy: 'vertical',
   arrayMove: vi.fn((arr: unknown[]) => arr),
   sortableKeyboardCoordinates: vi.fn(),
@@ -115,17 +115,17 @@ vi.mock('@dnd-kit/sortable', () => ({
 
 vi.mock('@intelliflow/ui', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
-  Sheet: ({ children, open }: { children: React.ReactNode; open: boolean }) =>
+  Sheet: ({ children, open }: Readonly<{ children: React.ReactNode; open: boolean }>) =>
     open ? <div data-testid="sheet">{children}</div> : null,
-  SheetContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  SheetTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
-  SheetDescription: ({ children }: { children: React.ReactNode }) => <p>{children}</p>,
-  RadioGroup: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SheetContent: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
+  SheetTitle: ({ children }: Readonly<{ children: React.ReactNode }>) => <h2>{children}</h2>,
+  SheetDescription: ({ children }: Readonly<{ children: React.ReactNode }>) => <p>{children}</p>,
+  RadioGroup: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
   RadioGroupItem: () => <input type="radio" />,
-  Input: (props: Record<string, unknown>) => (
+  Input: (props: Readonly<Record<string, unknown>>) => (
     <input {...(props as React.InputHTMLAttributes<HTMLInputElement>)} />
   ),
-  Label: ({ children }: { children: React.ReactNode }) => <label>{children}</label>,
+  Label: ({ children }: Readonly<{ children: React.ReactNode }>) => <label>{children}</label>,
 }));
 
 vi.mock('@/components/insights/InsightCard', () => ({

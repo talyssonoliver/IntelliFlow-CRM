@@ -21,10 +21,10 @@ export interface TaskCalendarInnerProps {
   tasks: readonly CalendarTask[];
   currentDate: Date;
   onTaskClick: (id: string) => void;
-  onCreateWithDate: (date: Date) => void;
+  onCreateWithDate: (date: Readonly<Date>) => void;
 }
 
-function toTemporalPlainDate(date: Date): Temporal.PlainDate {
+function toTemporalPlainDate(date: Readonly<Date>): Temporal.PlainDate {
   return Temporal.PlainDate.from({
     year: date.getFullYear(),
     month: date.getMonth() + 1,
@@ -46,14 +46,14 @@ function mapTasksToEvents(tasks: readonly CalendarTask[]) {
   });
 }
 
-function MonthGridEvent({ calendarEvent }: { calendarEvent: Record<string, unknown> }) {
+function MonthGridEvent({ calendarEvent }: Readonly<{ calendarEvent: Record<string, unknown> }>) {
   const custom = calendarEvent._custom as { priority: string } | undefined;
   const chipColor =
     PRIORITY_CHIP_COLORS[custom?.priority ?? 'MEDIUM'] ?? PRIORITY_CHIP_COLORS.MEDIUM;
 
   return (
     <div
-      className={`w-full text-left rounded px-1 py-0.5 text-[10px] truncate ${chipColor}`}
+      className={`w-full text-left rounded px-1 py-0.5 text-[10px] truncate ${chipColor}`} // NOSONAR typescript:S4624 — single template literal with variable interpolation, not nested
       data-testid="calendar-task-chip"
     >
       {calendarEvent.title as string}

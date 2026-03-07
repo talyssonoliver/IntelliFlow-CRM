@@ -8,7 +8,7 @@ import { TaskCreateSheet } from '@/components/tasks/TaskCreateSheet';
 import type { WidgetProps } from './index';
 import type { TaskStatus } from '@intelliflow/domain';
 
-export function PendingTasksWidget(_props: WidgetProps) {
+export function PendingTasksWidget(_props: Readonly<WidgetProps>) {
   const [createOpen, setCreateOpen] = useState(false);
 
   const { data, isLoading } = api.task.list.useQuery({
@@ -31,7 +31,7 @@ export function PendingTasksWidget(_props: WidgetProps) {
     <div className="p-5 flex flex-col h-full">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-bold text-foreground flex items-center gap-2">
-          <span className="material-symbols-outlined text-muted-foreground">check_circle</span>
+          <span className="material-symbols-outlined text-muted-foreground">check_circle</span>{' '}
           Pending Tasks
         </h3>
         <button

@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(body.headers ?? {}),
+        ...body.headers,
       },
       body: JSON.stringify(body.payload),
       signal: AbortSignal.timeout(10_000),

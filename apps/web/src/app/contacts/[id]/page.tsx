@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import {
   Card,
   Skeleton,
@@ -25,6 +25,9 @@ import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
 import { UpcomingEventsCard } from '@/components/shared';
 import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
 import { ActivityFeed } from '@/components/shared/activity-feed';
+
+// Common nullable date type
+type DateStringNull = string | Date | null;
 
 // Tab types
 type TabId =
@@ -97,7 +100,7 @@ type DBActivityType =
   | 'NOTE';
 
 // Map database activity types to UI activity types
-const mapActivityType = (dbType: DBActivityType): ActivityType => {
+const mapActivityType = (dbType: Readonly<DBActivityType>): ActivityType => {
   const typeMap: Record<DBActivityType, ActivityType> = {
     EMAIL: 'email',
     CALL: 'call',
@@ -197,12 +200,12 @@ interface ContactWithRelations {
     value: number;
     stage: string;
     probability: number;
-    closeDate: string | Date | null;
+    closeDate: DateStringNull;
   }>;
   tasks?: Array<{
     id: string;
     title: string;
-    dueDate: string | Date | null;
+    dueDate: DateStringNull;
     priority: string | null;
     status: string;
   }>;
@@ -216,7 +219,7 @@ interface ContactWithRelations {
     id: string;
     title: string;
     startTime: string | Date;
-    endTime: string | Date | null;
+    endTime: DateStringNull;
     attendees: string[] | null;
   }>;
 }
@@ -235,7 +238,7 @@ const activityTypeFilters: { value: ActivityType | 'all'; label: string; icon: s
 ];
 
 // Contact Status Badge Component
-function ContactStatusBadge({ status }: { status: ContactStatus }) {
+function ContactStatusBadge({ status }: Readonly<{ status: ContactStatus }>) {
   const statusConfig = {
     ACTIVE: {
       label: 'Active',
@@ -315,6 +318,7 @@ export default function Contact360Page() {
   // Get contact ID from URL params
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const contactId = params.id as string;
 
   // Require authentication - redirects to login if not authenticated
@@ -346,7 +350,9 @@ export default function Contact360Page() {
   // Cast to extended type
   const apiContact = rawApiContact as ContactWithRelations | undefined;
 
-  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const validTabs: TabId[] = ['overview', 'activity', 'tasks', 'deals', 'tickets', 'documents', 'notes', 'ai-insights'];
+  const tabParam = searchParams.get('tab') as TabId | null;
+  const [activeTab, setActiveTab] = useState<TabId>(tabParam && validTabs.includes(tabParam) ? tabParam : 'overview');
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
   const [activityNote, setActivityNote] = useState('');
   const [expandedActivities, setExpandedActivities] = useState<Set<string>>(new Set());
@@ -454,34 +460,34 @@ export default function Contact360Page() {
   // Transform deals (opportunities) from API
   const deals = useMemo(() => {
     if (!apiContact?.opportunities) return [];
-    return apiContact.opportunities.map((opp) => ({
-      id: opp.id,
-      name: opp.name,
-      value: opp.value,
-      stage: opp.stage,
-      probability: opp.probability,
-      closeDate: opp.closeDate
-        ? typeof opp.closeDate === 'string'
-          ? opp.closeDate
-          : opp.closeDate.toISOString()
-        : '',
-    }));
+    return apiContact.opportunities.map((opp) => {
+      const closeDateIso = opp.closeDate instanceof Date ? opp.closeDate.toISOString() : '';
+      const closeDateStr = typeof opp.closeDate === 'string' ? opp.closeDate : closeDateIso;
+      return {
+        id: opp.id,
+        name: opp.name,
+        value: opp.value,
+        stage: opp.stage,
+        probability: opp.probability,
+        closeDate: closeDateStr,
+      };
+    });
   }, [apiContact?.opportunities]);
 
   // Transform tasks from API
   const _tasks = useMemo(() => {
     if (!apiContact?.tasks) return [];
-    return apiContact.tasks.map((task) => ({
-      id: task.id,
-      title: task.title,
-      dueDate: task.dueDate
-        ? typeof task.dueDate === 'string'
-          ? task.dueDate
-          : task.dueDate.toISOString()
-        : '',
-      priority: task.priority?.toLowerCase() || 'medium',
-      completed: task.status === 'COMPLETED',
-    }));
+    return apiContact.tasks.map((task) => {
+      const dueDateIso = task.dueDate instanceof Date ? task.dueDate.toISOString() : '';
+      const dueDateStr = typeof task.dueDate === 'string' ? task.dueDate : dueDateIso;
+      return {
+        id: task.id,
+        title: task.title,
+        dueDate: dueDateStr,
+        priority: task.priority?.toLowerCase() || 'medium',
+        completed: task.status === 'COMPLETED',
+      };
+    });
   }, [apiContact?.tasks]);
 
   // Transform AI insights from API
@@ -554,12 +560,11 @@ export default function Contact360Page() {
       level,
       confidence: 0.85, // Default confidence
       slaHours: slaMap[level],
-      trend:
-        insight.sentimentTrend === 'IMPROVING'
-          ? 'IMPROVING'
-          : insight.sentimentTrend === 'DECLINING'
-            ? 'DECLINING'
-            : 'STABLE',
+      trend: (() => {
+        if (insight.sentimentTrend === 'IMPROVING') return 'IMPROVING';
+        if (insight.sentimentTrend === 'DECLINING') return 'DECLINING';
+        return 'STABLE';
+      })(),
       factors: [
         {
           factor: 'Engagement Score',
@@ -571,12 +576,10 @@ export default function Contact360Page() {
         },
         {
           factor: 'Days Since Contact',
-          impact:
-            insight.lastEngagementDays > 30
-              ? 'HIGH'
-              : insight.lastEngagementDays > 14
-                ? 'MEDIUM'
-                : 'LOW',
+          impact: (() => {
+            if (insight.lastEngagementDays > 30) return 'HIGH';
+            return insight.lastEngagementDays > 14 ? 'MEDIUM' : 'LOW';
+          })(),
           value: `${insight.lastEngagementDays} days`,
         },
       ],
@@ -586,7 +589,7 @@ export default function Contact360Page() {
   // Transform AI insights to NextBestActionData format (IFC-095)
   const nextBestActionData: NextBestActionData | null = useMemo(() => {
     const insight = apiContact?.aiInsight;
-    if (!insight || !insight.nextBestAction) return null;
+    if (!insight?.nextBestAction) return null;
 
     // Parse action type from next best action string
     const actionText = insight.nextBestAction.toUpperCase();
@@ -718,7 +721,7 @@ export default function Contact360Page() {
             href="/contacts"
             className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
-            <span className="material-symbols-outlined text-sm">arrow_back</span>
+            <span className="material-symbols-outlined text-sm">arrow_back</span>{' '}
             Back to Contacts
           </Link>
         </Card>
@@ -952,7 +955,7 @@ export default function Contact360Page() {
               <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
                 <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
-                </svg>
+                </svg>{' '}
                 Opened {meta.openCount} times
               </p>
             )}
@@ -975,7 +978,7 @@ export default function Contact360Page() {
                 <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded transition-colors">
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M8 5v14l11-7z" />
-                  </svg>
+                  </svg>{' '}
                   Play Recording
                 </button>
               )}
@@ -1082,25 +1085,25 @@ export default function Contact360Page() {
       <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-500 hover:text-[#137fec] hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
           <path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z" />
-        </svg>
+        </svg>{' '}
         Reply
       </button>
       <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-500 hover:text-[#137fec] hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-        </svg>
+        </svg>{' '}
         React
       </button>
       <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-500 hover:text-[#137fec] hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
           <path d="M5 21q-.825 0-1.412-.587Q3 19.825 3 19V5q0-.825.588-1.413Q4.175 3 5 3h14q.825 0 1.413.587Q21 4.175 21 5v10l-6 6Zm0-2h9v-5h5V5H5v14Z" />
-        </svg>
+        </svg>{' '}
         Add Note
       </button>
       <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-500 hover:text-[#137fec] hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
           <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z" />
-        </svg>
+        </svg>{' '}
         Share
       </button>
     </div>
@@ -1133,19 +1136,19 @@ export default function Contact360Page() {
           >
             <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="currentColor">
               <path d="M5 19h1.4l8.625-8.625-1.4-1.4L5 17.6ZM19.3 8.925l-4.25-4.2 1.4-1.4q.575-.575 1.413-.575.837 0 1.412.575l1.4 1.4q.575.575.6 1.388.025.812-.55 1.387Z" />
-            </svg>
+            </svg>{' '}
             Edit Profile
           </button>
           <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
             <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="currentColor">
               <path d="M4 20q-.825 0-1.412-.587Q2 18.825 2 18V6q0-.825.588-1.412Q3.175 4 4 4h16q.825 0 1.413.588Q22 5.175 22 6v12q0 .825-.587 1.413Q20.825 20 20 20Zm8-7 8-5V6l-8 5-8-5v2Z" />
-            </svg>
+            </svg>{' '}
             Email
           </button>
           <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none">
             <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="currentColor">
               <path d="M19.95 21q-3.125 0-6.175-1.362-3.05-1.363-5.55-3.863-2.5-2.5-3.862-5.55Q3 7.175 3 4.05q0-.45.3-.75t.75-.3H8.1q.35 0 .625.238.275.237.325.562l.65 3.5q.05.4-.025.675-.075.275-.275.475L6.65 11.2q.7 1.3 1.65 2.475.95 1.175 2.1 2.175l2.65-2.65q.225-.225.525-.325.3-.1.625-.025l3.3.7q.35.1.563.363.212.262.212.587v4.05q0 .45-.3.75t-.75.3Z" />
-            </svg>
+            </svg>{' '}
             Log Call
           </button>
           <PinButton
@@ -1456,7 +1459,7 @@ export default function Contact360Page() {
                 >
                   <span className="material-symbols-outlined text-sm align-middle mr-1">
                     timeline
-                  </span>
+                  </span>{' '}
                   Timeline
                 </button>
                 <button
@@ -1469,7 +1472,7 @@ export default function Contact360Page() {
                 >
                   <span className="material-symbols-outlined text-sm align-middle mr-1">
                     dynamic_feed
-                  </span>
+                  </span>{' '}
                   All Sources
                 </button>
               </div>
@@ -1515,7 +1518,7 @@ export default function Contact360Page() {
                               : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                           }`}
                         >
-                          <span>{filter.icon}</span>
+                          <span>{filter.icon}</span>{' '}
                           {filter.label}
                         </button>
                       ))}
@@ -1885,7 +1888,7 @@ export default function Contact360Page() {
                 <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M11 13H5v-2h6V5h2v6h6v2h-6v6h-2Z" />
-                  </svg>
+                  </svg>{' '}
                   Add Deal
                 </button>
               </div>
@@ -1930,7 +1933,7 @@ export default function Contact360Page() {
                 <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M11 13H5v-2h6V5h2v6h6v2h-6v6h-2Z" />
-                  </svg>
+                  </svg>{' '}
                   Create Ticket
                 </button>
               </div>
@@ -1971,7 +1974,7 @@ export default function Contact360Page() {
                 <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M11 13H5v-2h6V5h2v6h6v2h-6v6h-2Z" />
-                  </svg>
+                  </svg>{' '}
                   Upload
                 </button>
               </div>
@@ -2020,7 +2023,7 @@ export default function Contact360Page() {
                 <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M11 13H5v-2h6V5h2v6h6v2h-6v6h-2Z" />
-                  </svg>
+                  </svg>{' '}
                   Add Note
                 </button>
               </div>

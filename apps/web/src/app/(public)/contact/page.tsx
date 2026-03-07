@@ -46,7 +46,7 @@ export default function ContactPage() {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#7cc4ff] font-medium backdrop-blur mb-6">
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 forum
-              </span>
+              </span>{' '}
               We're here to help
             </div>
 

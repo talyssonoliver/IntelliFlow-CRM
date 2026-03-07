@@ -33,7 +33,7 @@ vi.mock('@intelliflow/ui', () => ({
 }));
 
 vi.mock('@/components/shared/app-avatar', () => ({
-  AppAvatar: ({ name, fallbackText }: { name: string; fallbackText?: string }) => (
+  AppAvatar: ({ name, fallbackText }: Readonly<{ name: string; fallbackText?: string }>) => (
     <div>{fallbackText || name}</div>
   ),
 }));

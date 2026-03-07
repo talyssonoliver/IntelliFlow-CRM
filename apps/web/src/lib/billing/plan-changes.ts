@@ -346,7 +346,7 @@ export function getRecommendedPlan(currentUsers: number, currentContacts: number
       const limit =
         limitStr.toLowerCase() === 'unlimited'
           ? Infinity
-          : parseInt(limitStr.replace(/,/g, ''), 10);
+          : Number.parseInt(limitStr.replaceAll(',', ''), 10);
 
       if (currentContacts > limit) continue;
     }
@@ -355,7 +355,7 @@ export function getRecommendedPlan(currentUsers: number, currentContacts: number
   }
 
   // Return enterprise as fallback
-  return PLANS[PLANS.length - 1];
+  return PLANS.at(-1) ?? null;
 }
 
 // ============================================

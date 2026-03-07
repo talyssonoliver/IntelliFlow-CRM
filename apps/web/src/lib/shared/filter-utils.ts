@@ -102,7 +102,7 @@ export function formatLabel(value: string): string {
  * Simple label formatter - keeps original casing
  */
 export function formatLabelSimple(value: string): string {
-  return value.replace(/_/g, ' ');
+  return value.replaceAll('_', ' ');
 }
 
 // =============================================================================

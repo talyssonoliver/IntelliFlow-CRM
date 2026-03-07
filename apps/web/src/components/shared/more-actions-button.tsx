@@ -7,7 +7,7 @@ interface MoreActionsButtonProps {
   className?: string;
 }
 
-export function MoreActionsButton({ onClick, className = '' }: MoreActionsButtonProps) {
+export function MoreActionsButton({ onClick, className = '' }: Readonly<MoreActionsButtonProps>) {
   return (
     <button
       type="button"

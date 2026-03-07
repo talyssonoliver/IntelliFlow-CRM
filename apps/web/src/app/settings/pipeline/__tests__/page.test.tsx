@@ -61,7 +61,7 @@ vi.mock('@/hooks/usePipelineConfig', () => ({
 
 // Mock Next.js Link
 vi.mock('next/link', () => ({
-  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
+  default: ({ children, href }: Readonly<{ children: React.ReactNode; href: string }>) => (
     <a href={href}>{children}</a>
   ),
 }));

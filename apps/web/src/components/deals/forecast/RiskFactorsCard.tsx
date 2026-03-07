@@ -34,7 +34,7 @@ export function RiskFactorsCard({
   factors,
   isLoading,
   emptyMessage = 'No risk factors identified',
-}: RiskFactorsCardProps) {
+}: Readonly<RiskFactorsCardProps>) {
   if (isLoading) {
     return (
       <Card className="p-4" data-testid="risk-factors-card">

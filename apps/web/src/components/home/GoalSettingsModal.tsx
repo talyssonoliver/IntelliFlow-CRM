@@ -59,7 +59,7 @@ export function GoalSettingsModal({
     updateGoal.mutate({
       type: goalType as 'revenue' | 'calls' | 'meetings' | 'tasks' | 'custom',
       targetValue,
-      ...(goalType === 'custom' && customUnit ? { customUnit } : {}),
+      ...(goalType === 'custom' && customUnit ? { customUnit } : Readonly<{}>),
     });
   }, [goalType, targetValue, customUnit, updateGoal]);
 
@@ -132,7 +132,7 @@ export function GoalSettingsModal({
                 type="number"
                 min={1}
                 value={targetValue || ''}
-                onChange={(e) => setTargetValue(parseInt(e.target.value, 10) || 0)}
+                onChange={(e) => setTargetValue(Number.parseInt(e.target.value, 10) || 0)}
                 data-testid="target-value-input"
                 className="max-w-[200px]"
               />

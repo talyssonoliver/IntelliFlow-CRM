@@ -40,7 +40,7 @@ interface CaseFormData {
 
 interface CaseFormProps {
   initialData?: Partial<CaseFormData>;
-  onSubmit: (data: Record<string, unknown>) => Promise<void>;
+  onSubmit: (data: Readonly<Record<string, unknown>>) => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
   mode: 'create' | 'edit';
@@ -66,7 +66,7 @@ const PRIORITY_LABELS: Record<CasePriority, string> = {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }: CaseFormProps) {
+export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }: Readonly<CaseFormProps>) {
   const [formData, setFormData] = useState<CaseFormData>({
     subject: initialData?.subject ?? '',
     description: initialData?.description ?? '',
@@ -98,7 +98,7 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
 
   // Close dropdown on outside click
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
+    function handleClick(e: Readonly<MouseEvent>) {
       if (clientContainerRef.current && !clientContainerRef.current.contains(e.target as Node)) {
         setClientDropdownOpen(false);
       }
@@ -375,7 +375,7 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
                       aria-hidden="true"
                     >
                       progress_activity
-                    </span>
+                    </span>{' '}
                     Searching...
                   </div>
                 )}

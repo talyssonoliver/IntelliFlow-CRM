@@ -8,7 +8,7 @@ import {
   documentsSidebarConfig,
 } from '@/components/sidebar';
 
-export default function DocumentsListLayout({ children }: { readonly children: React.ReactNode }) {
+export default function DocumentsListLayout({ children }: Readonly<{ readonly children: React.ReactNode }>) {
   return (
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)]">

@@ -50,11 +50,11 @@ export function EmailThread({
   onDelete,
   onMarkUnread,
   className,
-}: EmailThreadProps) {
+}: Readonly<EmailThreadProps>) {
   // Track which messages are expanded. By default, last message is expanded.
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
     if (!thread?.emails.length) return new Set();
-    const lastId = thread.emails[thread.emails.length - 1].id;
+    const lastId = thread.emails.at(-1)!.id;
     return new Set([lastId]);
   });
 

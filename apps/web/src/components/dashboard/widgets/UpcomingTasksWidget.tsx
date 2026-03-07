@@ -40,7 +40,7 @@ function getDueDateColor(date: Date | string | null): string {
   return 'text-slate-500 dark:text-slate-400';
 }
 
-export function UpcomingTasksWidget(_props: WidgetProps) {
+export function UpcomingTasksWidget(_props: Readonly<WidgetProps>) {
   const [createOpen, setCreateOpen] = useState(false);
 
   const { data, isLoading } = api.task.list.useQuery({

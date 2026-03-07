@@ -109,6 +109,56 @@ interface StepItemProps {
   variant: 'vertical' | 'horizontal';
 }
 
+function stepCircleClass(isCompleted: boolean, isActive: boolean): string {
+  let stateCls: string;
+  if (isCompleted) {
+    stateCls = 'bg-green-500 border-green-500 text-white';
+  } else if (isActive) {
+    stateCls = 'bg-[#137fec] border-[#137fec] text-white';
+  } else {
+    stateCls = 'bg-slate-800 border-slate-600 text-slate-400';
+  }
+  return cn(
+    'relative z-10 flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all',
+    stateCls
+  );
+}
+
+function stepActionClass(isActive: boolean): string {
+  return cn(
+    'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
+    'focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900',
+    isActive
+      ? 'bg-[#137fec] text-white hover:bg-[#137fec]/90'
+      : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+  );
+}
+
+interface StepActionProps {
+  action: OnboardingStep['action'];
+  isActive: boolean;
+  onActionClick: () => void;
+}
+
+function StepAction({ action, isActive, onActionClick }: Readonly<StepActionProps>) {
+  if (!action) return null;
+  if (action.href) {
+    return (
+      <Link href={action.href} onClick={onActionClick} className={stepActionClass(isActive)}>
+        {action.label}
+        <span className="material-symbols-outlined text-lg" aria-hidden="true">
+          arrow_forward
+        </span>
+      </Link>
+    );
+  }
+  return (
+    <button type="button" onClick={onActionClick} className={stepActionClass(isActive)}>
+      {action.label}
+    </button>
+  );
+}
+
 function StepItem({
   step,
   index: _index,
@@ -117,7 +167,7 @@ function StepItem({
   isLast,
   onComplete,
   variant,
-}: StepItemProps) {
+}: Readonly<StepItemProps>) {
   const handleActionClick = useCallback(() => {
     step.action?.onClick?.();
     if (!step.action?.href) {
@@ -145,25 +195,10 @@ function StepItem({
       )}
 
       {/* Step Number/Icon */}
-      <div
-        className={cn(
-          'relative z-10 flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all',
-          isCompleted
-            ? 'bg-green-500 border-green-500 text-white'
-            : isActive
-              ? 'bg-[#137fec] border-[#137fec] text-white'
-              : 'bg-slate-800 border-slate-600 text-slate-400'
-        )}
-      >
-        {isCompleted ? (
-          <span className="material-symbols-outlined text-xl" aria-hidden="true">
-            check
-          </span>
-        ) : (
-          <span className="material-symbols-outlined text-xl" aria-hidden="true">
-            {step.icon}
-          </span>
-        )}
+      <div className={stepCircleClass(isCompleted, isActive)}>
+        <span className="material-symbols-outlined text-xl" aria-hidden="true">
+          {isCompleted ? 'check' : step.icon}
+        </span>
       </div>
 
       {/* Step Content */}
@@ -186,7 +221,7 @@ function StepItem({
             <span className="text-xs text-green-400 flex items-center gap-1">
               <span className="material-symbols-outlined text-sm" aria-hidden="true">
                 check_circle
-              </span>
+              </span>{' '}
               Done
             </span>
           )}
@@ -194,42 +229,9 @@ function StepItem({
         <p className="text-sm text-slate-300 mb-3">{step.description}</p>
 
         {/* Action Button */}
-        {step.action && !isCompleted ? (
-          <>
-            {step.action.href ? (
-              <Link
-                href={step.action.href}
-                onClick={handleActionClick}
-                className={cn(
-                  'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
-                  'focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900',
-                  isActive
-                    ? 'bg-[#137fec] text-white hover:bg-[#137fec]/90'
-                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                )}
-              >
-                {step.action.label}
-                <span className="material-symbols-outlined text-lg" aria-hidden="true">
-                  arrow_forward
-                </span>
-              </Link>
-            ) : (
-              <button
-                type="button"
-                onClick={handleActionClick}
-                className={cn(
-                  'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
-                  'focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900',
-                  isActive
-                    ? 'bg-[#137fec] text-white hover:bg-[#137fec]/90'
-                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                )}
-              >
-                {step.action.label}
-              </button>
-            )}
-          </>
-        ) : null}
+        {!isCompleted && (
+          <StepAction action={step.action} isActive={isActive} onActionClick={handleActionClick} />
+        )}
       </div>
     </div>
   );
@@ -245,7 +247,7 @@ interface ProgressBarProps {
   className?: string;
 }
 
-function ProgressBar({ current, total, className }: ProgressBarProps) {
+function ProgressBar({ current, total, className }: Readonly<ProgressBarProps>) {
   const percentage = Math.round((current / total) * 100);
 
   return (
@@ -257,13 +259,10 @@ function ProgressBar({ current, total, className }: ProgressBarProps) {
         <span className="text-[#137fec] font-medium">{percentage}%</span>
       </div>
       <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-        <div
-          className="h-full bg-gradient-to-r from-[#137fec] to-[#7cc4ff] rounded-full transition-all duration-500"
-          style={{ width: `${percentage}%` }}
-          role="progressbar"
-          aria-valuenow={percentage}
-          aria-valuemin={0}
-          aria-valuemax={100}
+        <progress
+          className="h-full w-full bg-gradient-to-r from-[#137fec] to-[#7cc4ff] rounded-full transition-all duration-500 appearance-none [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-gradient-to-r [&::-webkit-progress-value]:from-[#137fec] [&::-webkit-progress-value]:to-[#7cc4ff]"
+          value={percentage}
+          max={100}
           aria-label={`Onboarding progress: ${percentage}%`}
         />
       </div>
@@ -283,7 +282,7 @@ export function OnboardingFlow({
   variant = 'vertical',
   showProgress = true,
   className,
-}: OnboardingFlowProps) {
+}: Readonly<OnboardingFlowProps>) {
   const [completedSteps, setCompletedSteps] = useState<Set<string>>(
     new Set(steps.filter((s) => s.completed).map((s) => s.id))
   );
@@ -330,7 +329,7 @@ export function OnboardingFlow({
   const completedCount = completedSteps.size;
 
   return (
-    <div className={cn('space-y-6', className)} role="region" aria-label="Onboarding steps">
+    <section className={cn('space-y-6', className)} aria-label="Onboarding steps">
       {/* Progress Bar */}
       {showProgress && <ProgressBar current={completedCount} total={steps.length} />}
 
@@ -362,12 +361,12 @@ export function OnboardingFlow({
             className="text-sm text-slate-300 hover:text-white transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900 rounded"
           >
             Skip for now and go to dashboard
-            <span className="material-symbols-outlined text-lg" aria-hidden="true">
+            {' '}<span className="material-symbols-outlined text-lg" aria-hidden="true">
               arrow_forward
             </span>
           </Link>
         </div>
       )}
-    </div>
+    </section>
   );
 }

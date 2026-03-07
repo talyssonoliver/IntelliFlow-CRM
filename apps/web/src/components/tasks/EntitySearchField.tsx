@@ -32,7 +32,7 @@ export function EntitySearchField({
   valueName,
   onChange,
   disabled,
-}: EntitySearchFieldProps) {
+}: Readonly<EntitySearchFieldProps>) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
@@ -41,7 +41,7 @@ export function EntitySearchField({
 
   // Close on outside click
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
+    function handleClick(e: Readonly<MouseEvent>) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
@@ -95,12 +95,14 @@ export function EntitySearchField({
   }, [entityType, leadQuery.data, contactQuery.data, opportunityQuery.data]);
 
   const results = getResults();
-  const isLoading =
-    entityType === 'lead'
-      ? leadQuery.isLoading
-      : entityType === 'contact'
-        ? contactQuery.isLoading
-        : opportunityQuery.isLoading;
+  let isLoading: boolean;
+  if (entityType === 'lead') {
+    isLoading = leadQuery.isLoading;
+  } else if (entityType === 'contact') {
+    isLoading = contactQuery.isLoading;
+  } else {
+    isLoading = opportunityQuery.isLoading;
+  }
 
   function handleSelect(id: string, name: string) {
     onChange(id, name);

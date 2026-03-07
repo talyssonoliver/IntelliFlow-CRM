@@ -18,7 +18,7 @@ interface TicketCardProps {
   compact?: boolean;
 }
 
-export function TicketCard({ ticket, onClick, onQuickAction, compact = false }: TicketCardProps) {
+export function TicketCard({ ticket, onClick, onQuickAction, compact = false }: Readonly<TicketCardProps>) {
   const priorityConfig = getPriorityConfig(ticket.priority);
 
   return (

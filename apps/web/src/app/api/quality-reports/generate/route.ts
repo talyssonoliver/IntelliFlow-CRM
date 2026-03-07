@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import path from 'path';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
+import path from 'node:path';
 
 const execAsync = promisify(exec);
 
@@ -32,97 +32,111 @@ async function getProjectRoot(): Promise<string> {
   return possibleRoots[0];
 }
 
+const TEST_COMMANDS: Record<string, string> = {
+  quick:
+    'vitest run --reporter=verbose --passWithNoTests packages/validators packages/domain --coverage',
+  standard: 'vitest run --reporter=verbose --passWithNoTests --coverage',
+  comprehensive: 'vitest run --reporter=verbose --coverage',
+};
+
+async function runCoverageTests(
+  testCommand: string,
+  projectRoot: string,
+  coverageDir: string,
+  fs: typeof import('node:fs')
+): Promise<{ testOutput: string; testSucceeded: boolean; coverageGenerated: boolean }> {
+  let testOutput = '';
+  let testSucceeded = false;
+  const coverageSummaryPath = path.join(coverageDir, 'coverage-summary.json');
+  let coverageGenerated = false;
+
+  try {
+    const { stdout } = await execAsync(testCommand, {
+      cwd: projectRoot,
+      timeout: 300000,
+      env: { ...process.env, CI: 'true', FORCE_COLOR: '0' },
+    });
+    testOutput = stdout;
+    testSucceeded = true;
+  } catch (testError) {
+    testOutput = testError instanceof Error ? testError.message : String(testError);
+    coverageGenerated = fs.existsSync(coverageSummaryPath);
+  }
+
+  return { testOutput, testSucceeded, coverageGenerated };
+}
+
+function tryCopyToMiscDir(
+  coverageSummaryPath: string,
+  miscCoverageDir: string,
+  fs: typeof import('node:fs')
+): void {
+  try {
+    const coverageData = fs.readFileSync(coverageSummaryPath, 'utf8');
+    fs.writeFileSync(path.join(miscCoverageDir, 'coverage-summary.json'), coverageData);
+  } catch {
+    // Non-fatal: couldn't copy to misc directory
+  }
+}
+
+async function tryGenerateHtmlReport(projectRoot: string, fs: typeof import('node:fs')): Promise<void> {
+  const reportScriptPath = path.join(projectRoot, 'scripts', 'ci', 'generate-coverage-report.js');
+  if (!fs.existsSync(reportScriptPath)) return;
+  try {
+    await execAsync('node scripts/ci/generate-coverage-report.js', {
+      cwd: projectRoot,
+      timeout: 60000,
+      env: { ...process.env, PR_NUMBER: 'local-' + new Date().toISOString().slice(0, 10) },
+    });
+  } catch {
+    // Non-fatal: HTML generation failed but JSON may still be valid
+  }
+}
+
+function findExistingCoverage(projectRoot: string, fs: typeof import('node:fs')): boolean {
+  const existingPaths = [
+    path.join(projectRoot, 'artifacts', 'misc', 'coverage', 'coverage-summary.json'),
+    path.join(projectRoot, 'coverage', 'coverage-summary.json'),
+  ];
+  return existingPaths.some((p) => fs.existsSync(p));
+}
+
 async function generateCoverageReport(
   projectRoot: string,
   scope: string = 'standard'
 ): Promise<GenerateResult> {
   const start = Date.now();
-  const fs = await import('fs');
-
-  // Determine test command based on scope
-  const testCommands: Record<string, string> = {
-    quick:
-      'vitest run --reporter=verbose --passWithNoTests packages/validators packages/domain --coverage',
-    standard: 'vitest run --reporter=verbose --passWithNoTests --coverage',
-    comprehensive: 'vitest run --reporter=verbose --coverage',
-  };
-  const testCommand = testCommands[scope] || testCommands.standard;
+  const fs = await import('node:fs');
+  const testCommand = TEST_COMMANDS[scope] || TEST_COMMANDS.standard;
+  const coverageDir = path.join(projectRoot, 'artifacts', 'coverage');
+  const miscCoverageDir = path.join(projectRoot, 'artifacts', 'misc', 'coverage');
 
   try {
-    // Ensure coverage directories exist
-    const coverageDir = path.join(projectRoot, 'artifacts', 'coverage');
-    const miscCoverageDir = path.join(projectRoot, 'artifacts', 'misc', 'coverage');
+    if (!fs.existsSync(coverageDir)) fs.mkdirSync(coverageDir, { recursive: true });
+    if (!fs.existsSync(miscCoverageDir)) fs.mkdirSync(miscCoverageDir, { recursive: true });
 
-    if (!fs.existsSync(coverageDir)) {
-      fs.mkdirSync(coverageDir, { recursive: true });
-    }
-    if (!fs.existsSync(miscCoverageDir)) {
-      fs.mkdirSync(miscCoverageDir, { recursive: true });
-    }
+    const { testOutput, testSucceeded, coverageGenerated: initialCoverageGenerated } =
+      await runCoverageTests(testCommand, projectRoot, coverageDir, fs);
 
-    let testOutput = '';
-    let testSucceeded = false;
-    let coverageGenerated = false;
-
-    // Try running tests with coverage
-    try {
-      const { stdout } = await execAsync(testCommand, {
-        cwd: projectRoot,
-        timeout: 300000, // 5 minute timeout
-        env: { ...process.env, CI: 'true', FORCE_COLOR: '0' },
-      });
-      testOutput = stdout;
-      testSucceeded = true;
-    } catch (testError) {
-      // Tests may have failed but coverage might still have been generated
-      const errOutput = testError instanceof Error ? testError.message : String(testError);
-      testOutput = errOutput;
-
-      // Check if coverage files were created despite test failures
-      const coverageSummaryPath = path.join(coverageDir, 'coverage-summary.json');
-      coverageGenerated = fs.existsSync(coverageSummaryPath);
-    }
-
-    // Check if coverage summary was generated
     const coverageSummaryPath = path.join(coverageDir, 'coverage-summary.json');
+    let coverageGenerated = initialCoverageGenerated;
+
     if (fs.existsSync(coverageSummaryPath)) {
       coverageGenerated = true;
-
-      // Copy to misc/coverage for consistency
-      try {
-        const coverageData = fs.readFileSync(coverageSummaryPath, 'utf8');
-        fs.writeFileSync(path.join(miscCoverageDir, 'coverage-summary.json'), coverageData);
-      } catch {
-        // Non-fatal: couldn't copy to misc directory
-      }
+      tryCopyToMiscDir(coverageSummaryPath, miscCoverageDir, fs);
     }
 
-    // Parse coverage from output if available
-    const coverageMatch = testOutput.match(
-      /All files\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)/
+    const coverageMatch = /All files\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)/.exec(
+      testOutput
     );
 
-    // Try to generate HTML report if the script exists
-    const reportScriptPath = path.join(projectRoot, 'scripts', 'ci', 'generate-coverage-report.js');
-    if (fs.existsSync(reportScriptPath)) {
-      try {
-        await execAsync('node scripts/ci/generate-coverage-report.js', {
-          cwd: projectRoot,
-          timeout: 60000,
-          env: { ...process.env, PR_NUMBER: 'local-' + new Date().toISOString().slice(0, 10) },
-        });
-      } catch {
-        // Non-fatal: HTML generation failed but JSON may still be valid
-      }
-    }
+    await tryGenerateHtmlReport(projectRoot, fs);
 
     if (coverageGenerated) {
       const coverageInfo = coverageMatch
         ? ` (Stmts: ${coverageMatch[1]}%, Branch: ${coverageMatch[2]}%, Funcs: ${coverageMatch[3]}%, Lines: ${coverageMatch[4]}%)`
         : '';
-
       const statusNote = testSucceeded ? 'passing' : 'with some test failures';
-
       return {
         report: 'coverage',
         success: true,
@@ -131,24 +145,15 @@ async function generateCoverageReport(
       };
     }
 
-    // If no coverage was generated, try to read existing coverage data
-    const existingPaths = [
-      path.join(projectRoot, 'artifacts', 'misc', 'coverage', 'coverage-summary.json'),
-      path.join(projectRoot, 'coverage', 'coverage-summary.json'),
-    ];
-
-    for (const existingPath of existingPaths) {
-      if (fs.existsSync(existingPath)) {
-        return {
-          report: 'coverage',
-          success: true,
-          message: 'Using existing coverage data (test execution failed, showing cached data)',
-          duration: Date.now() - start,
-        };
-      }
+    if (findExistingCoverage(projectRoot, fs)) {
+      return {
+        report: 'coverage',
+        success: true,
+        message: 'Using existing coverage data (test execution failed, showing cached data)',
+        duration: Date.now() - start,
+      };
     }
 
-    // Nothing worked - return error with actionable guidance
     return {
       report: 'coverage',
       success: false,
@@ -173,7 +178,7 @@ async function generateLighthouseReport(
   _scope: string = 'standard'
 ): Promise<GenerateResult> {
   const start = Date.now();
-  const fs = await import('fs');
+  const fs = await import('node:fs');
 
   // Ensure output directory exists (cross-platform)
   const lighthouseDir = path.join(projectRoot, 'artifacts', 'lighthouse');
@@ -356,7 +361,7 @@ async function generatePerformanceReport(
   _scope: string = 'standard'
 ): Promise<GenerateResult> {
   const start = Date.now();
-  const fs = await import('fs');
+  const fs = await import('node:fs');
 
   // Ensure output directory exists
   const benchmarkDir = path.join(projectRoot, 'artifacts', 'benchmarks');
@@ -586,93 +591,105 @@ function generatePerformanceHtml(data: {
 </html>`;
 }
 
+type UpdateProgressFn = (updates: { currentReport?: string; progress?: number }) => void;
+
+async function initJobTracking(
+  jobId: string | undefined,
+  reports: string[]
+): Promise<UpdateProgressFn | null> {
+  if (!jobId) return null;
+  try {
+    const { setJob, updateJobProgress } = await import('../job-storage');
+    setJob({
+      id: jobId,
+      reports,
+      status: 'running',
+      progress: 0,
+      results: [],
+      startedAt: new Date().toISOString(),
+    });
+    return (updates) => updateJobProgress(jobId, updates);
+  } catch {
+    return null;
+  }
+}
+
+async function finalizeJobTracking(
+  jobId: string | undefined,
+  body: Record<string, unknown>,
+  reports: string[],
+  allSuccess: boolean,
+  results: GenerateResult[]
+): Promise<void> {
+  if (!jobId) return;
+  try {
+    const { setJob } = await import('../job-storage');
+    setJob({
+      id: jobId,
+      reports,
+      status: allSuccess ? 'completed' : 'failed',
+      progress: 100,
+      results,
+      startedAt: (body.startedAt as string) || new Date().toISOString(),
+      completedAt: new Date().toISOString(),
+    });
+  } catch {
+    // Continue without updating status
+  }
+}
+
+function buildReportPromise(
+  report: string,
+  projectRoot: string,
+  lighthouseUrl: string,
+  scope: string
+): Promise<GenerateResult> {
+  switch (report) {
+    case 'coverage':
+      return generateCoverageReport(projectRoot, scope);
+    case 'lighthouse':
+      return generateLighthouseReport(projectRoot, lighthouseUrl, scope);
+    case 'performance':
+      return generatePerformanceReport(projectRoot, scope);
+    default:
+      return Promise.resolve({
+        report,
+        success: false,
+        message: `Unknown report type: ${report}`,
+        duration: 0,
+      });
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
-    const reports = body.reports || ['coverage']; // Default to coverage only
-    const lighthouseUrl = body.url || 'http://localhost:3000';
-    const scope = body.scope || 'standard'; // quick, standard, comprehensive
-    const jobId = body.jobId;
+    const reports: string[] = body.reports || ['coverage'];
+    const lighthouseUrl: string = body.url || 'http://localhost:3000';
+    const scope: string = body.scope || 'standard';
+    const jobId: string | undefined = body.jobId;
 
     const projectRoot = await getProjectRoot();
-    const results: GenerateResult[] = [];
+    const updateProgress = await initJobTracking(jobId, reports);
 
-    // Import job storage for progress updates (if jobId provided)
-    let updateProgress: ((updates: { currentReport?: string; progress?: number }) => void) | null =
-      null;
-    if (jobId) {
-      try {
-        const { setJob, updateJobProgress } = await import('../job-storage');
-        setJob({
-          id: jobId,
-          reports,
-          status: 'running',
-          progress: 0,
-          results: [],
-          startedAt: new Date().toISOString(),
-        });
-        updateProgress = (updates) => {
-          updateJobProgress(jobId, updates);
-        };
-      } catch {
-        // Job storage module not available, continue without progress tracking
-      }
-    }
+    const reportPromises = reports.map((report: string) =>
+      buildReportPromise(report, projectRoot, lighthouseUrl, scope)
+    );
 
-    const reportPromises = reports.map((report: string) => {
-      switch (report) {
-        case 'coverage':
-          return generateCoverageReport(projectRoot, scope);
-        case 'lighthouse':
-          return generateLighthouseReport(projectRoot, lighthouseUrl, scope);
-        case 'performance':
-          return generatePerformanceReport(projectRoot, scope);
-        default:
-          return Promise.resolve({
-            report,
-            success: false,
-            message: `Unknown report type: ${report}`,
-            duration: 0,
-          });
-      }
-    });
-
-    const settled = await Promise.all(reportPromises);
-    results.push(...settled);
+    const results = await Promise.all(reportPromises);
 
     if (updateProgress) {
-      updateProgress({ currentReport: reports[reports.length - 1], progress: 100 });
+      updateProgress({ currentReport: reports.at(-1), progress: 100 });
     }
 
     const allSuccess = results.every((r) => r.success);
     const totalDuration = results.reduce((sum, r) => sum + r.duration, 0);
 
-    // Update final status
-    if (jobId && updateProgress) {
-      try {
-        const { setJob } = await import('../job-storage');
-        setJob({
-          id: jobId,
-          reports,
-          status: allSuccess ? 'completed' : 'failed',
-          progress: 100,
-          results,
-          startedAt: body.startedAt || new Date().toISOString(),
-          completedAt: new Date().toISOString(),
-        });
-      } catch {
-        // Continue without updating status
-      }
-    }
+    await finalizeJobTracking(jobId, body, reports, allSuccess, results);
 
     return NextResponse.json({
       success: allSuccess,
-      data: {
-        results,
-        totalDuration,
-        generatedAt: new Date().toISOString(),
-        scope,
-      },
+      data: { results, totalDuration, generatedAt: new Date().toISOString(), scope },
     });
   } catch (error) {
     console.error('Generate reports error:', error);

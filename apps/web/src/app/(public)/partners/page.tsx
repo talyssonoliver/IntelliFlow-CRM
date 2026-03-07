@@ -50,7 +50,7 @@ export default function PartnersPage() {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#7cc4ff] font-medium backdrop-blur mb-6">
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 handshake
-              </span>
+              </span>{' '}
               Partner Ecosystem
             </div>
 
@@ -86,7 +86,7 @@ export default function PartnersPage() {
               >
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   info
-                </span>
+                </span>{' '}
                 Learn More
               </Link>
             </div>
@@ -191,13 +191,13 @@ export default function PartnersPage() {
                   <span className="material-symbols-outlined text-[#137fec]" aria-hidden="true">
                     integration_instructions
                   </span>
-                </span>
+                </span>{' '}
                 Technology Partners
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {benefits.technology.map((benefit, index) => (
                   <Card
-                    key={index}
+                    key={index} // NOSONAR typescript:S6479
                     className="p-6 border border-slate-200 dark:border-slate-700 bg-slate-50
                       dark:bg-slate-900"
                   >
@@ -234,13 +234,13 @@ export default function PartnersPage() {
                   <span className="material-symbols-outlined text-green-600" aria-hidden="true">
                     storefront
                   </span>
-                </span>
+                </span>{' '}
                 Reseller Partners
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {benefits.reseller.map((benefit, index) => (
                   <Card
-                    key={index}
+                    key={index} // NOSONAR typescript:S6479
                     className="p-6 border border-slate-200 dark:border-slate-700 bg-slate-50
                       dark:bg-slate-900"
                   >
@@ -277,13 +277,13 @@ export default function PartnersPage() {
                   <span className="material-symbols-outlined text-indigo-600" aria-hidden="true">
                     psychology
                   </span>
-                </span>
+                </span>{' '}
                 Consultant Partners
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {benefits.consultant.map((benefit, index) => (
                   <Card
-                    key={index}
+                    key={index} // NOSONAR typescript:S6479
                     className="p-6 border border-slate-200 dark:border-slate-700 bg-slate-50
                       dark:bg-slate-900"
                   >
@@ -334,7 +334,7 @@ export default function PartnersPage() {
             >
               <span className="material-symbols-outlined" aria-hidden="true">
                 send
-              </span>
+              </span>{' '}
               Apply Now
             </Link>
             <Link
@@ -346,7 +346,7 @@ export default function PartnersPage() {
             >
               <span className="material-symbols-outlined" aria-hidden="true">
                 help
-              </span>
+              </span>{' '}
               View FAQ
             </Link>
           </div>
@@ -363,7 +363,7 @@ export default function PartnersPage() {
           <div className="space-y-4">
             {faqs.map((faq, index) => (
               <details
-                key={index}
+                key={index} // NOSONAR typescript:S6479
                 className="group bg-white dark:bg-slate-800 rounded-lg border border-slate-200
                   dark:border-slate-700"
               >

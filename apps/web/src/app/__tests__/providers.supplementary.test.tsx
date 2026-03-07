@@ -47,7 +47,7 @@ vi.mock('@tanstack/react-query', () => {
   }
   return {
     QueryClient,
-    QueryClientProvider: ({ children }: { children: React.ReactNode }) => (
+    QueryClientProvider: ({ children }: Readonly<{ children: React.ReactNode }>) => (
       <div data-testid="query-client-provider">{children}</div>
     ),
     QueryCache,
@@ -64,7 +64,7 @@ vi.mock('@trpc/client', () => ({
 
 vi.mock('@/lib/trpc', () => ({
   trpc: {
-    Provider: ({ children }: { children: React.ReactNode }) => (
+    Provider: ({ children }: Readonly<{ children: React.ReactNode }>) => (
       <div data-testid="trpc-provider">{children}</div>
     ),
     createClient: vi.fn(() => ({})),
@@ -72,13 +72,13 @@ vi.mock('@/lib/trpc', () => ({
 }));
 
 vi.mock('@/lib/auth/AuthContext', () => ({
-  AuthProvider: ({ children }: { children: React.ReactNode }) => (
+  AuthProvider: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <div data-testid="auth-provider">{children}</div>
   ),
 }));
 
 vi.mock('@/lib/cases/reminders-context', () => ({
-  RemindersProvider: ({ children }: { children: React.ReactNode }) => (
+  RemindersProvider: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <div data-testid="reminders-provider">{children}</div>
   ),
 }));

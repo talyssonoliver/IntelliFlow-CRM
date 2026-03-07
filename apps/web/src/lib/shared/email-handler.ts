@@ -141,7 +141,7 @@ export function buildContactEmailPayload(formData: ContactFormInput): ContactEma
     <div class="field">
       <div class="label">Message</div>
       <div class="message-box">
-        ${escapeHtml(message).replace(/\n/g, '<br>')}
+        ${escapeHtml(message).replaceAll('\n', '<br>')}
       </div>
     </div>
 
@@ -275,5 +275,5 @@ function escapeHtml(text: string): string {
     '"': '&quot;',
     "'": '&#039;',
   };
-  return text.replace(/[&<>"']/g, (char) => map[char] || char);
+  return text.replaceAll(/[&<>"']/g, (char) => map[char] || char);
 }

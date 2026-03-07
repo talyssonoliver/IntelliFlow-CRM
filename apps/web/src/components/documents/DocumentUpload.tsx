@@ -31,7 +31,7 @@ export function DocumentUpload({
   onUploadComplete,
   onCancel,
   maxFileSizeMB = MAX_FILE_SIZE_MB,
-}: DocumentUploadProps) {
+}: Readonly<DocumentUploadProps>) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -49,7 +49,7 @@ export function DocumentUpload({
   // ─── File Validation ──────────────────────────────────────────────────────
 
   const validateFile = useCallback(
-    (file: File): string | null => {
+    (file: Readonly<File>): string | null => {
       const extension = '.' + file.name.split('.').pop()?.toLowerCase();
       if (!ACCEPTED_EXTENSIONS.includes(extension) && !ACCEPTED_FILE_TYPES.includes(file.type)) {
         return `File type "${extension}" is not supported. Accepted: ${ACCEPTED_EXTENSIONS.join(', ')}`;
@@ -65,7 +65,7 @@ export function DocumentUpload({
 
   // ─── SHA-256 Hash ─────────────────────────────────────────────────────────
 
-  const computeHash = useCallback(async (file: File): Promise<string> => {
+  const computeHash = useCallback(async (file: Readonly<File>): Promise<string> => {
     const buffer = await file.arrayBuffer();
     const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -75,7 +75,7 @@ export function DocumentUpload({
   // ─── File Selection ───────────────────────────────────────────────────────
 
   const handleFileSelect = useCallback(
-    async (file: File) => {
+    async (file: Readonly<File>) => {
       const error = validateFile(file);
       if (error) {
         toast({ title: 'Invalid file', description: error, variant: 'destructive' });
@@ -162,13 +162,18 @@ export function DocumentUpload({
         // Derive a documentType from the file MIME type for the required API field.
         // The full document type selector UI is tracked in IFC-152.
         const mimeType = selectedFile.type || 'application/octet-stream';
-        const documentType = mimeType.startsWith('image/')
-          ? 'EVIDENCE'
-          : mimeType.includes('pdf') ||
-              mimeType.includes('msword') ||
-              mimeType.includes('officedocument')
-            ? 'CONTRACT'
-            : 'OTHER';
+        let documentType: string;
+        if (mimeType.startsWith('image/')) {
+          documentType = 'EVIDENCE';
+        } else if (
+          mimeType.includes('pdf') ||
+          mimeType.includes('msword') ||
+          mimeType.includes('officedocument')
+        ) {
+          documentType = 'CONTRACT';
+        } else {
+          documentType = 'OTHER';
+        }
 
         const contentHash = fileHash ?? '';
         if (!contentHash) {
@@ -236,7 +241,7 @@ export function DocumentUpload({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Drop Zone */}
-      <div
+      <div // NOSONAR — file drop zone with nested interactive elements (Remove button); drag events require div wrapper
         role="button"
         tabIndex={0}
         aria-label="Drop files here or click to browse"

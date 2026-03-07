@@ -31,13 +31,13 @@ vi.mock('@intelliflow/ui', () => ({
     onRowClick,
     emptyMessage,
     emptyIcon,
-  }: {
+  }: Readonly<{
     columns: unknown[];
     data: unknown[];
     onRowClick: (row: unknown) => void;
     emptyMessage: string;
     emptyIcon: string;
-  }) => {
+  }>) => {
     if (data.length === 0) {
       return (
         <div>
@@ -110,7 +110,7 @@ vi.mock('@intelliflow/ui', () => ({
         ))}
     </div>
   ),
-  Skeleton: ({ className }: { className?: string }) => (
+  Skeleton: ({ className }: Readonly<{ className?: string }>) => (
     <div className={`skeleton ${className ?? ''}`} />
   ),
 }));
@@ -201,7 +201,7 @@ describe('ContactList', () => {
     });
 
     it('has aria-busy attribute when loading', () => {
-      render(
+      const { container } = render(
         <ContactList
           contacts={[]}
           total={0}
@@ -214,7 +214,10 @@ describe('ContactList', () => {
         />
       );
 
-      expect(screen.getByRole('status')).toHaveAttribute('aria-busy', 'true');
+      // The loading container uses aria-live="polite" aria-busy="true" (semantic <div> without explicit role)
+      const loadingContainer = container.querySelector('[aria-busy="true"]');
+      expect(loadingContainer).toBeInTheDocument();
+      expect(loadingContainer).toHaveAttribute('aria-busy', 'true');
     });
   });
 

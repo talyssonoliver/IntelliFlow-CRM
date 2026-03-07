@@ -32,7 +32,7 @@ export function ACLManager({
   onGrantAccess,
   onRevokeAccess,
   isLegalHold = false,
-}: ACLManagerProps) {
+}: Readonly<ACLManagerProps>) {
   const [isGrantFormOpen, setIsGrantFormOpen] = useState(false);
   const [grantUserId, setGrantUserId] = useState('');
   const [grantLevel, setGrantLevel] = useState<AccessLevel>('VIEW');
@@ -115,7 +115,7 @@ export function ACLManager({
             aria-label="Grant access"
             data-testid="grant-access-button"
           >
-            <span className="material-symbols-outlined text-[18px] mr-1">person_add</span>
+            <span className="material-symbols-outlined text-[18px] mr-1">person_add</span>{' '}
             Grant Access
           </Button>
         </div>

@@ -57,7 +57,7 @@ interface BreadcrumbsProps {
   className?: string;
 }
 
-export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
+export function Breadcrumbs({ items, className }: Readonly<BreadcrumbsProps>) {
   if (!items.length) return null;
 
   return (
@@ -102,7 +102,7 @@ interface ActionButtonProps {
   action: PageAction;
 }
 
-function ActionButton({ action }: ActionButtonProps) {
+function ActionButton({ action }: Readonly<ActionButtonProps>) {
   const {
     label,
     onClick,
@@ -129,15 +129,19 @@ function ActionButton({ action }: ActionButtonProps) {
 
   const content = (
     <>
-      {loading ? (
-        <span className="material-symbols-outlined text-[20px] animate-spin">
-          progress_activity
-        </span>
-      ) : icon ? (
-        <span className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform">
-          {icon}
-        </span>
-      ) : null}
+      {(() => {
+        if (loading) return (
+          <span className="material-symbols-outlined text-[20px] animate-spin">
+            progress_activity
+          </span>
+        );
+        if (icon) return (
+          <span className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform">
+            {icon}
+          </span>
+        );
+        return null;
+      })()}
       <span className={cn(hideOnMobile && 'hidden sm:inline')}>{label}</span>
     </>
   );
@@ -206,7 +210,7 @@ export function PageHeader({
   actions,
   children,
   className,
-}: PageHeaderProps) {
+}: Readonly<PageHeaderProps>) {
   return (
     <div
       className={cn('flex flex-col sm:flex-row sm:items-center justify-between gap-4', className)}

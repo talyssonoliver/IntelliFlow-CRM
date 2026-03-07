@@ -2,7 +2,7 @@
 
 import type { WidgetProps } from './index';
 
-export function ActiveDealsWidget(_props: WidgetProps) {
+export function ActiveDealsWidget(_props: Readonly<WidgetProps>) {
   return (
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-start justify-between">

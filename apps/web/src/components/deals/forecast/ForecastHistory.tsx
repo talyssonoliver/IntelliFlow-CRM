@@ -29,7 +29,7 @@ export function ForecastHistory({
   mode,
   isLoading,
   emptyMessage = 'No history data available yet',
-}: ForecastHistoryProps) {
+}: Readonly<ForecastHistoryProps>) {
   if (isLoading) {
     return (
       <Card className="p-4" data-testid="forecast-history">

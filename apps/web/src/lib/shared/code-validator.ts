@@ -51,7 +51,7 @@ export function sanitizeCode(input: string): string {
   }
 
   // Remove all non-digit characters
-  return input.replace(/\D/g, '');
+  return input.replaceAll(/\D/g, '');
 }
 
 /**
@@ -117,7 +117,7 @@ export function isValidBackupCode(code: string): boolean {
   }
 
   // Remove dashes for validation
-  const normalized = code.replace(/-/g, '');
+  const normalized = code.replaceAll('-', '');
 
   // Must be exactly 10 alphanumeric characters
   if (normalized.length !== BACKUP_CODE_LENGTH) {

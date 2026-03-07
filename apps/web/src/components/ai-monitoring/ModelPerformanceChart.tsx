@@ -26,7 +26,7 @@ function formatDate(timestamp: string): string {
   return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
-export default function ModelPerformanceChart({ history }: ModelPerformanceChartProps) {
+export default function ModelPerformanceChart({ history }: Readonly<ModelPerformanceChartProps>) {
   const chartData = [...history]
     .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
     .map((h) => ({

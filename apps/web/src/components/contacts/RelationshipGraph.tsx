@@ -35,7 +35,7 @@ export function RelationshipGraph({
   opportunityCount = 0,
   taskCount = 0,
   linkedLead,
-}: RelationshipGraphProps) {
+}: Readonly<RelationshipGraphProps>) {
   const fullName = `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 'Unknown';
   const hasRelationships =
     contact.account ||
@@ -48,9 +48,7 @@ export function RelationshipGraph({
     <div aria-label={`Relationships for ${fullName}`} className="space-y-4">
       <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Relationships</h3>
 
-      {!hasRelationships ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400 py-4">No relationships yet</p>
-      ) : (
+      {hasRelationships ? (
         <ul className="space-y-3">
           {/* Linked Account */}
           {contact.account && (
@@ -160,6 +158,8 @@ export function RelationshipGraph({
             </li>
           )}
         </ul>
+      ) : (
+        <p className="text-sm text-slate-500 dark:text-slate-400 py-4">No relationships yet</p>
       )}
     </div>
   );

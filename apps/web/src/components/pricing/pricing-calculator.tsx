@@ -29,11 +29,11 @@ interface PricingCalculatorProps {
   tiers: PricingTier[];
 }
 
-export function PricingCalculator({ tiers }: PricingCalculatorProps) {
+export function PricingCalculator({ tiers }: Readonly<PricingCalculatorProps>) {
   const [userCount, setUserCount] = useState(5);
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
 
-  const handleCheckout = async (tier: PricingTier) => {
+  const handleCheckout = async (tier: Readonly<PricingTier>) => {
     if (tier.price.custom) {
       window.location.href = '/contact?ref=pricing';
       return;
@@ -58,7 +58,7 @@ export function PricingCalculator({ tiers }: PricingCalculatorProps) {
           min="1"
           max="100"
           value={userCount}
-          onChange={(e) => setUserCount(parseInt(e.target.value))}
+          onChange={(e) => setUserCount(Number.parseInt(e.target.value))}
           className="w-full"
         />
       </div>

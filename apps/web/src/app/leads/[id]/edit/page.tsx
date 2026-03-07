@@ -90,9 +90,9 @@ export default function EditLeadPage() {
         location: ((lead as Record<string, unknown>).location as string) ?? '',
         website: ((lead as Record<string, unknown>).website as string) ?? '',
         estimatedValue:
-          (lead as Record<string, unknown>).estimatedValue != null
-            ? String(((lead as Record<string, unknown>).estimatedValue as number) / 100)
-            : '',
+          (lead as Record<string, unknown>).estimatedValue == null
+            ? ''
+            : String(((lead as Record<string, unknown>).estimatedValue as number) / 100),
         tags: Array.isArray((lead as Record<string, unknown>).tags)
           ? ((lead as Record<string, unknown>).tags as string[]).join(', ')
           : '',
@@ -169,12 +169,13 @@ export default function EditLeadPage() {
 
     // Convert dollars to cents for estimatedValue
     if (formData.estimatedValue.trim()) {
-      const cents = Math.round(parseFloat(formData.estimatedValue) * 100);
-      if (!isNaN(cents) && cents >= 0) {
+      const cents = Math.round(Number.parseFloat(formData.estimatedValue) * 100);
+      if (!Number.isNaN(cents) && cents >= 0) {
         payload.estimatedValue = cents;
       }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await updateLead.mutateAsync(payload as any);
   };
 
@@ -185,7 +186,7 @@ export default function EditLeadPage() {
         <Skeleton className="h-8 w-48 mb-6" />
         <Card className="p-6 space-y-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="space-y-2">
+            <div key={i} className="space-y-2"> {/* NOSONAR typescript:S6479 */}
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-10 w-full" />
             </div>
@@ -468,7 +469,7 @@ export default function EditLeadPage() {
                 <>
                   <span className="material-symbols-outlined !text-[18px] animate-spin">
                     progress_activity
-                  </span>
+                  </span>{' '}
                   Saving...
                 </>
               ) : (

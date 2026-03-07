@@ -60,7 +60,7 @@ export function LogoutButton({
   onLogoutComplete,
   children,
   ...buttonProps
-}: LogoutButtonProps) {
+}: Readonly<LogoutButtonProps>) {
   const { logout, isLoggingOut } = useLogout();
   const { hasUnsavedChanges, dirtyForms, clearAll } = useUnsavedChanges();
   const [showModal, setShowModal] = useState(false);
@@ -89,27 +89,14 @@ export function LogoutButton({
     }
   };
 
-  /**
-   * Handle "Logout Without Saving" from modal
-   */
-  const handleLogoutWithoutSaving = () => {
-    setShowModal(false);
-    clearAll(); // Clear the unsaved changes registry
-    handleLogout();
-  };
-
-  /**
-   * Handle "Save & Logout" from modal
-   * Note: Actual save implementation would need to be provided by the app
-   */
-  const handleSaveAndLogout = async () => {
-    // Note: Individual form saves are the responsibility of each form component.
-    // The useUnsavedChanges hook tracks dirty state; clearAll() discards it on logout.
-    // Forms that need save-before-logout should register a save handler via that hook.
+  const dismissAndLogout = () => {
     setShowModal(false);
     clearAll();
     handleLogout();
   };
+
+  const handleLogoutWithoutSaving = dismissAndLogout;
+  const handleSaveAndLogout = dismissAndLogout;
 
   /**
    * Handle modal cancel

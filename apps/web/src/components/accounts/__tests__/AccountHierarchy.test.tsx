@@ -27,7 +27,7 @@ vi.mock('@/lib/api', () => ({
         useQuery: (...args: unknown[]) => useQueryMock(...args),
       },
       setParent: {
-        useMutation: (opts: Record<string, unknown>) => {
+        useMutation: (opts: Readonly<Record<string, unknown>>) => {
           useMutationMock(opts);
           return {
             mutate: vi.fn(),
@@ -62,20 +62,20 @@ vi.mock('@intelliflow/ui', () => ({
     children,
     onClick,
     ...props
-  }: {
+  }: Readonly<{
     children?: React.ReactNode;
     onClick?: () => void;
     [key: string]: unknown;
-  }) => (
+  }>) => (
     <button onClick={onClick} {...props}>
       {children}
     </button>
   ),
-  Skeleton: ({ className }: { className?: string }) => (
+  Skeleton: ({ className }: Readonly<{ className?: string }>) => (
     <div className={`animate-pulse ${className ?? ''}`} />
   ),
-  Badge: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
-  Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  Badge: ({ children }: Readonly<{ children: React.ReactNode }>) => <span>{children}</span>,
+  Card: ({ children, className }: Readonly<{ children: React.ReactNode; className?: string }>) => (
     <div className={className}>{children}</div>
   ),
 }));

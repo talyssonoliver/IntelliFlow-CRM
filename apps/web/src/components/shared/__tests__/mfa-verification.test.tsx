@@ -83,12 +83,12 @@ vi.mock('@/components/auth/mfa-challenge', () => ({
     onCancel,
     error,
     isLoading,
-  }: {
+  }: Readonly<{
     onVerify: (code: string, method: string) => Promise<boolean>;
     onCancel?: () => void;
     error?: string | null;
     isLoading?: boolean;
-  }) => (
+  }>) => (
     <div data-testid="mfa-challenge-mock">
       {/* Single input with aria-label satisfies the accessibility assertion */}
       <input type="text" aria-label="Digit 1 of 6" data-testid="code-input-1" />

@@ -40,14 +40,14 @@ function StatCard({
   iconBgClass,
   borderClass,
   isLoading,
-}: {
+}: Readonly<{
   label: string;
   value: number | string;
   icon: string;
   iconBgClass: string;
   borderClass?: string;
   isLoading: boolean;
-}) {
+}>) {
   return (
     <div
       className={cn(
@@ -111,7 +111,7 @@ export function ExperimentsDashboard() {
   const statusFilter = statusChip === 'all' ? null : statusChip;
 
   // Filter experiments
-  const filtered = experiments.filter((exp: ExperimentSummary) => {
+  const filtered = experiments.filter((exp: Readonly<ExperimentSummary>) => {
     if (statusFilter && exp.status !== statusFilter) return false;
     if (searchValue) {
       const q = searchValue.toLowerCase();
@@ -169,13 +169,13 @@ export function ExperimentsDashboard() {
         <PageHeader breadcrumbs={BREADCRUMBS} title="A/B Experiments" />
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mt-6">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-xl" />
+            <Skeleton key={i} className="h-24 rounded-xl" /> // NOSONAR typescript:S6479
           ))}
         </div>
         <Skeleton className="h-14 w-full rounded-xl mt-6" />
         <div className="space-y-3 mt-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-36 w-full rounded-lg" />
+            <Skeleton key={i} className="h-36 w-full rounded-lg" /> // NOSONAR typescript:S6479
           ))}
         </div>
       </div>
@@ -309,7 +309,7 @@ export function ExperimentsDashboard() {
 
       {/* Experiment Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        {paginated.map((exp: ExperimentSummary) => {
+        {paginated.map((exp: Readonly<ExperimentSummary>) => {
           const actions = getExperimentActions(exp.status);
           const isExpanded = expandedId === exp.id;
 

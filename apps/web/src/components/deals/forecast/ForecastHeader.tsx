@@ -8,8 +8,7 @@
  */
 
 import { EntityHeader } from '@/components/shared';
-import type { ForecastMode } from './types';
-import { PIPELINE_STAGE_CONFIG, type OpportunityStage } from './types';
+import { PIPELINE_STAGE_CONFIG, type ForecastMode, type OpportunityStage } from './types';
 
 export interface ForecastHeaderProps {
   mode: ForecastMode;
@@ -31,7 +30,7 @@ export function ForecastHeader({
   liveCount,
   winRate,
   onExport,
-}: ForecastHeaderProps) {
+}: Readonly<ForecastHeaderProps>) {
   const breadcrumbs =
     mode === 'portfolio'
       ? [{ label: 'Deals', href: '/deals' }, { label: 'Forecast' }]
@@ -43,17 +42,14 @@ export function ForecastHeader({
 
   const title = mode === 'portfolio' ? 'Deal Forecast' : `${dealName ?? 'Deal'} Forecast`;
 
-  const badges =
-    mode === 'portfolio'
-      ? [{ label: quarter, variant: 'info' as const }]
-      : dealStage
-        ? [
-            {
-              label: PIPELINE_STAGE_CONFIG[dealStage]?.label ?? dealStage,
-              variant: 'status' as const,
-            },
-          ]
-        : [];
+  let badges: { label: string; variant: 'info' | 'status' }[];
+  if (mode === 'portfolio') {
+    badges = [{ label: quarter, variant: 'info' as const }];
+  } else if (dealStage) {
+    badges = [{ label: PIPELINE_STAGE_CONFIG[dealStage]?.label ?? dealStage, variant: 'status' as const }];
+  } else {
+    badges = [];
+  }
 
   const actions = onExport ? [{ label: 'Export', onClick: onExport }] : [];
 

@@ -9,7 +9,7 @@ export interface ConflictWarningProps {
   onOverride?: () => void;
 }
 
-export function ConflictWarning({ conflicts, onViewConflict, onOverride }: ConflictWarningProps) {
+export function ConflictWarning({ conflicts, onViewConflict, onOverride }: Readonly<ConflictWarningProps>) {
   if (conflicts.length === 0) return null;
 
   return (
@@ -21,7 +21,7 @@ export function ConflictWarning({ conflicts, onViewConflict, onOverride }: Confl
       <div className="flex items-center gap-2 mb-3">
         <span className="material-symbols-outlined text-red-600 text-xl">warning</span>
         <h4 className="font-semibold text-red-800">
-          {conflicts.length} Scheduling Conflict{conflicts.length !== 1 ? 's' : ''}
+          {conflicts.length} Scheduling Conflict{conflicts.length === 1 ? '' : 's'}
         </h4>
       </div>
 
@@ -60,7 +60,7 @@ export function ConflictWarning({ conflicts, onViewConflict, onOverride }: Confl
                   onClick={() => onViewConflict(conflict.id)}
                   className="text-sm text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 shrink-0"
                 >
-                  <span className="material-symbols-outlined text-base">visibility</span>
+                  <span className="material-symbols-outlined text-base">visibility</span>{' '}
                   View
                 </button>
               </div>

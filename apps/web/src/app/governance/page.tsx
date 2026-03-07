@@ -187,7 +187,7 @@ export default function GovernancePage() {
           </div>
           <div className="space-y-4">
             {recentActivity.map((activity, index) => (
-              <div key={index} className="flex items-start gap-4">
+              <div key={index} className="flex items-start gap-4"> {/* NOSONAR typescript:S6479 */}
                 <div className="flex-shrink-0 mt-0.5">
                   <span className={`material-symbols-outlined ${activity.iconColor}`}>
                     {activity.icon}

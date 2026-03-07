@@ -117,7 +117,7 @@ export function MfaChallenge({
   isLoading = false,
   maskedPhone,
   maskedEmail,
-}: MfaChallengeProps) {
+}: Readonly<MfaChallengeProps>) {
   // State
   const [selectedMethod, setSelectedMethod] = useState<MfaMethod>(
     defaultMethod || availableMethods[0] || 'totp'
@@ -207,9 +207,9 @@ export function MfaChallenge({
   );
 
   const handlePaste = useCallback(
-    (e: ClipboardEvent<HTMLInputElement>) => {
+    (e: Readonly<ClipboardEvent<HTMLInputElement>>) => {
       e.preventDefault();
-      const pastedData = e.clipboardData.getData('text').replace(/\D/g, '');
+      const pastedData = e.clipboardData.getData('text').replaceAll(/\D/g, '');
 
       if (pastedData.length === 0) return;
 
@@ -355,7 +355,7 @@ export function MfaChallenge({
           <div className="flex justify-center gap-2">
             {code.map((digit, index) => (
               <input
-                key={index}
+                key={index} // NOSONAR typescript:S6479
                 ref={(el) => {
                   inputRefs.current[index] = el;
                 }}
@@ -418,14 +418,14 @@ export function MfaChallenge({
             <>
               <span className="material-symbols-outlined animate-spin text-xl" aria-hidden="true">
                 progress_activity
-              </span>
+              </span>{' '}
               Verifying...
             </>
           ) : (
             <>
               <span className="material-symbols-outlined text-xl" aria-hidden="true">
                 verified
-              </span>
+              </span>{' '}
               Verify
             </>
           )}
@@ -473,7 +473,7 @@ export function InlineMfaChallenge({
   isLoading = false,
   maskedPhone,
   maskedEmail,
-}: InlineMfaChallengeProps) {
+}: Readonly<InlineMfaChallengeProps>) {
   return (
     <div className="space-y-6">
       {/* Back button */}
@@ -484,7 +484,7 @@ export function InlineMfaChallenge({
       >
         <span className="material-symbols-outlined text-lg" aria-hidden="true">
           arrow_back
-        </span>
+        </span>{' '}
         Back to login
       </button>
 

@@ -18,8 +18,7 @@
 
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { Input } from '@intelliflow/ui';
-import { Button } from '@intelliflow/ui';
+import { Input, Button } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import type { SsoResolution } from '@/lib/auth/sso-handler';
 
@@ -29,7 +28,7 @@ import type { SsoResolution } from '@/lib/auth/sso-handler';
 
 export interface SsoEntryFormProps {
   /** Called when SSO provider is resolved */
-  onResolve: (resolution: SsoResolution) => void;
+  onResolve: (resolution: Readonly<SsoResolution>) => void;
   /** Whether the form is in a loading state (e.g., during SSO redirect) */
   isLoading?: boolean;
 }
@@ -51,7 +50,7 @@ export function SsoEntryForm({ onResolve, isLoading = false }: Readonly<SsoEntry
     return emailRegex.test(value);
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: Readonly<FormEvent>) => {
     e.preventDefault();
     setError(null);
 
@@ -119,6 +118,7 @@ export function SsoEntryForm({ onResolve, isLoading = false }: Readonly<SsoEntry
           disabled={isDisabled}
           className="w-full bg-white/5 border-white/10 text-white placeholder:text-slate-400 focus:ring-[#7cc4ff] focus:border-transparent"
           autoComplete="email"
+          // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
         />
         <p id="sso-help-text" className="text-xs text-slate-400">

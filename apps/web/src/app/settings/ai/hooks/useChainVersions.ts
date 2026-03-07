@@ -389,8 +389,14 @@ export function useZepBudget(): UseZepBudgetReturn {
   const percentUsed =
     budget && budget.total > 0 ? Math.round((budget.used / budget.total) * 100) : 0;
 
-  const budgetStatus: 'normal' | 'warning' | 'critical' =
-    percentUsed >= 95 ? 'critical' : percentUsed >= 80 ? 'warning' : 'normal';
+  let budgetStatus: 'normal' | 'warning' | 'critical';
+  if (percentUsed >= 95) {
+    budgetStatus = 'critical';
+  } else if (percentUsed >= 80) {
+    budgetStatus = 'warning';
+  } else {
+    budgetStatus = 'normal';
+  }
 
   return {
     budget,

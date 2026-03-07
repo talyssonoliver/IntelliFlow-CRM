@@ -109,13 +109,13 @@ function SortableRule({
   onDelete,
   onDuplicate,
   onToggle,
-}: {
+}: Readonly<{
   rule: RoutingRule;
-  onEdit: (rule: RoutingRule) => void;
+  onEdit: (rule: Readonly<RoutingRule>) => void;
   onDelete: (id: string) => void;
-  onDuplicate: (rule: RoutingRule) => void;
+  onDuplicate: (rule: Readonly<RoutingRule>) => void;
   onToggle: (id: string, isActive: boolean) => void;
-}) {
+}>) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: rule.id,
   });
@@ -133,7 +133,7 @@ function SortableRule({
     .join(' AND ');
 
   const actionsSummary = actions
-    .map((a) => `${a.type}${a.target ? `: ${a.target}` : ''}`)
+    .map((a) => { const targetPart = a.target ? `: ${a.target}` : ''; return `${a.type}${targetPart}`; }) // NOSONAR typescript:S4624 — two sibling template literals on one line, not nested
     .join(' → ');
 
   return (
@@ -215,7 +215,7 @@ export function RoutingRulesEditor() {
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
 
   const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
+    (event: Readonly<DragEndEvent>) => {
       const { active, over } = event;
       if (!over || active.id === over.id || !rules) return;
 
@@ -242,7 +242,7 @@ export function RoutingRulesEditor() {
     setIsSheetOpen(true);
   };
 
-  const openEdit = (rule: RoutingRule) => {
+  const openEdit = (rule: Readonly<RoutingRule>) => {
     setEditingRule(rule);
     setFormData({
       name: rule.name,
@@ -253,7 +253,7 @@ export function RoutingRulesEditor() {
     setIsSheetOpen(true);
   };
 
-  const openDuplicate = (rule: RoutingRule) => {
+  const openDuplicate = (rule: Readonly<RoutingRule>) => {
     setEditingRule(null);
     setFormData({
       name: `Copy of ${rule.name}`,
@@ -343,7 +343,7 @@ export function RoutingRulesEditor() {
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
           <SheetTrigger asChild>
             <Button onClick={openCreate} className="gap-2">
-              <span className="material-symbols-outlined text-[18px]">add</span> Add Rule
+              <span className="material-symbols-outlined text-[18px]">add</span>{' '}Add Rule
             </Button>
           </SheetTrigger>
           <SheetContent className="sm:max-w-lg overflow-y-auto">
@@ -379,9 +379,7 @@ export function RoutingRulesEditor() {
                 <Label>Conditions</Label>
                 <div className="space-y-2 mt-2">
                   {formData.conditions.map((condition, i) => (
-                    <div key={`condition-${i}`} className="flex gap-2 items-start">
-                      {' '}
-                      {/* NOSONAR typescript:S6479 — mutable form builder array, index is positional identifier */}
+                    <div key={`condition-${i}`} className="flex gap-2 items-start"> {/* NOSONAR typescript:S6479 */}
                       <Select
                         value={condition.field}
                         onValueChange={(v) => updateCondition(i, 'field', v)}
@@ -407,7 +405,7 @@ export function RoutingRulesEditor() {
                         <SelectContent>
                           {ROUTING_CONDITION_OPERATORS.map((o) => (
                             <SelectItem key={o} value={o}>
-                              {o.replace(/_/g, ' ')}
+                              {o.replaceAll(/_/g, ' ')}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -432,7 +430,7 @@ export function RoutingRulesEditor() {
                     </div>
                   ))}
                   <Button variant="outline" size="sm" onClick={addCondition} className="gap-1">
-                    <span className="material-symbols-outlined text-[16px]">add</span>
+                    <span className="material-symbols-outlined text-[16px]">add</span>{' '}
                     Add Condition
                   </Button>
                 </div>
@@ -443,9 +441,7 @@ export function RoutingRulesEditor() {
                 <Label>Actions</Label>
                 <div className="space-y-2 mt-2">
                   {formData.actions.map((action, i) => (
-                    <div key={`action-${i}`} className="flex gap-2 items-start">
-                      {' '}
-                      {/* NOSONAR typescript:S6479 — mutable form builder array, index is positional identifier */}
+                    <div key={`action-${i}`} className="flex gap-2 items-start"> {/* NOSONAR typescript:S6479 */}
                       <Select value={action.type} onValueChange={(v) => updateAction(i, 'type', v)}>
                         <SelectTrigger className="w-[160px]" aria-label="Action type">
                           <SelectValue />
@@ -453,7 +449,7 @@ export function RoutingRulesEditor() {
                         <SelectContent>
                           {ROUTING_ACTION_TYPES.map((t) => (
                             <SelectItem key={t} value={t}>
-                              {t.replace(/_/g, ' ')}
+                              {t.replaceAll(/_/g, ' ')}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -478,7 +474,7 @@ export function RoutingRulesEditor() {
                     </div>
                   ))}
                   <Button variant="outline" size="sm" onClick={addAction} className="gap-1">
-                    <span className="material-symbols-outlined text-[16px]">add</span>
+                    <span className="material-symbols-outlined text-[16px]">add</span>{' '}
                     Add Action
                   </Button>
                 </div>

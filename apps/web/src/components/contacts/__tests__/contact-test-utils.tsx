@@ -157,11 +157,11 @@ export function createMockLink() {
       children,
       href,
       ...props
-    }: {
+    }: Readonly<{
       children: React.ReactNode;
       href: string;
       [key: string]: unknown;
-    }) => (
+    }>) => (
       // @ts-ignore - simplified mock
       <a href={href} {...props}>
         {children}
@@ -296,7 +296,7 @@ export function createMockRelationshipData() {
 
 // ─── Reset All Mocks ────────────────────────────────────────────────────────
 
-export function resetAllMocks(handlers: ReturnType<typeof createMockHandlers>) {
+export function resetAllMocks(handlers: Readonly<ReturnType<typeof createMockHandlers>>) {
   Object.values(handlers).forEach((mock) => mock.mockReset());
   mockRouter.push.mockReset();
   mockRouter.replace.mockReset();

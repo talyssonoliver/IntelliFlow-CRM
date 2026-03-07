@@ -34,7 +34,7 @@ function useReducedMotion(): boolean {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useEffect(() => {
-    const mql = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const mql = globalThis.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(mql.matches);
 
     const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
@@ -120,7 +120,7 @@ function ConfettiAnimation() {
 // Error Fallback Component
 // ============================================
 
-function SuccessErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
+function SuccessErrorFallback({ error, resetErrorBoundary }: Readonly<FallbackProps>) {
   const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
 
   return (
@@ -196,11 +196,14 @@ function SuccessContent() {
     : 'your email';
 
   // Resend button text based on mutation state
-  const resendButtonText = resendMutation.isPending
-    ? 'Sending...'
-    : resendMutation.isSuccess
-      ? 'Email sent!'
-      : 'Resend verification';
+  let resendButtonText: string;
+  if (resendMutation.isPending) {
+    resendButtonText = 'Sending...';
+  } else if (resendMutation.isSuccess) {
+    resendButtonText = 'Email sent!';
+  } else {
+    resendButtonText = 'Resend verification';
+  }
 
   return (
     <>
@@ -214,7 +217,6 @@ function SuccessContent() {
             {/* Success Header — live region for screen readers */}
             <div
               className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-b border-green-500/20 p-8 text-center"
-              role="status"
               aria-live="polite"
             >
               {/* Success Icon */}
@@ -243,8 +245,8 @@ function SuccessContent() {
                 <div>
                   <p className="text-sm text-slate-200 font-medium">Verification email sent</p>
                   <p className="text-sm text-slate-300 mt-0.5">
-                    We sent a verification link to <span className="text-white">{maskedEmail}</span>
-                    . Please check your inbox.
+                    We sent a verification link to{' '}<span className="text-white">{maskedEmail}</span>
+                    {'. Please check your inbox.'}
                   </p>
                 </div>
               </div>
@@ -309,7 +311,7 @@ function SuccessContent() {
               )}
             >
               Go to Dashboard
-              <span className="material-symbols-outlined text-lg" aria-hidden="true">
+              {' '}<span className="material-symbols-outlined text-lg" aria-hidden="true">
                 arrow_forward
               </span>
             </Link>
@@ -323,7 +325,7 @@ function SuccessContent() {
               )}
             >
               Complete Profile
-              <span className="material-symbols-outlined text-lg" aria-hidden="true">
+              {' '}<span className="material-symbols-outlined text-lg" aria-hidden="true">
                 person
               </span>
             </Link>
@@ -345,9 +347,8 @@ export default function SignUpSuccessPage() {
         fallback={
           <AuthBackground>
             <div className="flex items-center justify-center min-h-screen">
-              <div
+              <output
                 className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#137fec]"
-                role="status"
                 aria-label="Loading"
               />
             </div>

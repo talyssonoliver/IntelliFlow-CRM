@@ -18,7 +18,7 @@ interface PartyManagerProps {
   disabled?: boolean;
 }
 
-export function PartyManager({ parties, onUpdate, disabled }: PartyManagerProps) {
+export function PartyManager({ parties, onUpdate, disabled }: Readonly<PartyManagerProps>) {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
@@ -62,7 +62,7 @@ export function PartyManager({ parties, onUpdate, disabled }: PartyManagerProps)
     resetForm();
   };
 
-  const handleEdit = (party: PartyData) => {
+  const handleEdit = (party: Readonly<PartyData>) => {
     setName(party.name);
     setRole(party.role);
     setOrganization(party.organization || '');
@@ -77,7 +77,7 @@ export function PartyManager({ parties, onUpdate, disabled }: PartyManagerProps)
     onUpdate(parties.filter((p) => p.id !== partyId));
   };
 
-  const getRoleBadgeColor = (r: PartyRole) => {
+  const getRoleBadgeColor = (r: Readonly<PartyRole>) => {
     switch (r) {
       case 'CLIENT':
         return 'bg-blue-100 text-blue-700';
@@ -157,6 +157,7 @@ export function PartyManager({ parties, onUpdate, disabled }: PartyManagerProps)
               onChange={(e) => setName(e.target.value)}
               placeholder="Name *"
               className="w-full px-3 py-1.5 text-sm border rounded-md bg-background"
+              // eslint-disable-next-line jsx-a11y/no-autofocus
               autoFocus
               required
               aria-label="Party name"

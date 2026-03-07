@@ -754,7 +754,7 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
       <PageHeader
         breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Leads' }]}
         title="Lead List"
-        description={`Manage and track your potential customers effectively.${totalItems > 0 ? ` (${totalItems} total)` : ''}`}
+        description={`Manage and track your potential customers effectively.` + (totalItems > 0 ? ` (${totalItems} total)` : '')}
         actions={[
           {
             label: 'New Lead',
@@ -799,9 +799,9 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
       {/* Loading State */}
       {isLoading && (
         <div className="space-y-3">
-          {[...Array(5)].map((_, i) => (
+          {[...new Array(5)].map((_, i) => (
             <div
-              key={i}
+              key={i} // NOSONAR typescript:S6479
               className="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"
             >
               <Skeleton className="size-10 rounded-full" />
@@ -840,7 +840,7 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
             onClick={() => refetch()}
             className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
           >
-            <span className="material-symbols-outlined text-[16px]">refresh</span>
+            <span className="material-symbols-outlined text-[16px]">refresh</span>{' '}
             Try Again
           </button>
         </div>

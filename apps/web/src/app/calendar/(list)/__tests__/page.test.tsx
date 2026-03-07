@@ -184,7 +184,7 @@ vi.mock('@/hooks/useAppointmentFilters', () => ({
 
 // ─── 5. @intelliflow/ui ───────────────────────────────────────────
 vi.mock('@intelliflow/ui', () => ({
-  Skeleton: ({ className }: { className?: string }) => (
+  Skeleton: ({ className }: Readonly<{ className?: string }>) => (
     <div data-testid="skeleton" className={className} />
   ),
 }));
@@ -194,10 +194,10 @@ vi.mock('@/components/shared', () => ({
   PageHeader: ({
     title,
     actions,
-  }: {
+  }: Readonly<{
     title: string;
     actions?: Array<{ label: string; onClick?: () => void; href?: string }>;
-  }) => (
+  }>) => (
     <header data-testid="page-header">
       <h1>{title}</h1>
       {actions?.map((a) =>
@@ -217,7 +217,7 @@ vi.mock('@/components/shared', () => ({
 
 // ─── 7a. @/components/tasks/TaskForm ─────────────────────────────
 vi.mock('@/components/tasks/TaskForm', () => ({
-  TaskForm: ({ open }: { open: boolean; [key: string]: unknown }) =>
+  TaskForm: ({ open }: Readonly<{ open: boolean; [key: string]: unknown }>) =>
     open ? <div data-testid="task-form">Task Form</div> : null,
 }));
 
@@ -227,12 +227,12 @@ vi.mock('@/components/appointments', () => ({
     appointments,
     onAppointmentClick,
     onCreateWithSlot,
-  }: {
+  }: Readonly<{
     appointments: Array<{ id: string }>;
     onAppointmentClick: (id: string) => void;
     onCreateWithSlot: (start: Date, end: Date) => void;
     [key: string]: unknown;
-  }) => (
+  }>) => (
     <div data-testid="appointment-calendar" data-appointment-count={appointments.length}>
       <button
         data-testid="calendar-appt-click"
@@ -251,11 +251,11 @@ vi.mock('@/components/appointments', () => ({
   AppointmentList: ({
     onRowClick,
     onFilterChange,
-  }: {
+  }: Readonly<{
     onRowClick: (id: string) => void;
     onFilterChange?: (partial: Record<string, unknown>) => void;
     [key: string]: unknown;
-  }) => (
+  }>) => (
     <div data-testid="appointment-list">
       <button data-testid="list-row-click" onClick={() => onRowClick('appt-1')}>
         Row Click

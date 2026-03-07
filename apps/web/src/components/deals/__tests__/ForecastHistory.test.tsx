@@ -10,10 +10,10 @@ import { createMockHistoryPoint } from './deal-test-utils';
 
 // Mock @intelliflow/ui
 vi.mock('@intelliflow/ui', () => ({
-  Card: ({ children, ...props }: { children: React.ReactNode; className?: string }) => (
+  Card: ({ children, ...props }: Readonly<{ children: React.ReactNode; className?: string }>) => (
     <div {...props}>{children}</div>
   ),
-  Skeleton: ({ className, ...props }: { className?: string }) => (
+  Skeleton: ({ className, ...props }: Readonly<{ className?: string }>) => (
     <div data-testid="skeleton" className={className} {...props} />
   ),
 }));
@@ -22,7 +22,7 @@ vi.mock('@intelliflow/ui', () => ({
 vi.mock('next/dynamic', () => ({
   default: (_importFn: () => Promise<{ default: React.ComponentType<unknown> }>) => {
     // For test purposes, just render a placeholder representing the chart
-    const DynamicComponent = (props: Record<string, unknown>) => (
+    const DynamicComponent = (props: Readonly<Record<string, unknown>>) => (
       <div
         data-testid="history-chart"
         data-mode={String(props.mode)}

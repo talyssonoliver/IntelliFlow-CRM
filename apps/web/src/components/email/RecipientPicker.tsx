@@ -27,7 +27,7 @@ interface RecipientPickerProps {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@.]+\.[^\s@.]+$/;
 
-export function RecipientPicker({ label, value, onChange, className }: RecipientPickerProps) {
+export function RecipientPicker({ label, value, onChange, className }: Readonly<RecipientPickerProps>) {
   const [inputValue, setInputValue] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [highlightIndex, setHighlightIndex] = useState(-1);
@@ -48,7 +48,7 @@ export function RecipientPicker({ label, value, onChange, className }: Recipient
   const suggestions = contacts.filter((c) => !value.some((r) => r.email === c.email));
 
   const addRecipient = useCallback(
-    (recipient: Recipient) => {
+    (recipient: Readonly<Recipient>) => {
       onChange([...value, recipient]);
       setInputValue('');
       setIsOpen(false);
@@ -91,32 +91,30 @@ export function RecipientPicker({ label, value, onChange, className }: Recipient
     }
   }, [highlightIndex, suggestions, inputValue, addRecipient]);
 
+  const openDropdownIfNeeded = useCallback(() => {
+    if (!isOpen && inputValue) setIsOpen(true);
+  }, [isOpen, inputValue]);
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      switch (e.key) {
-        case 'Enter':
-          e.preventDefault();
-          handleEnterKey();
-          break;
-        case 'Backspace':
-          if (!inputValue && value.length > 0) onChange(value.slice(0, -1));
-          break;
-        case 'ArrowDown':
-          e.preventDefault();
-          if (!isOpen && inputValue) setIsOpen(true);
-          setHighlightIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : prev));
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          setHighlightIndex((prev) => (prev > 0 ? prev - 1 : 0));
-          break;
-        case 'Escape':
-          setIsOpen(false);
-          setHighlightIndex(-1);
-          break;
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleEnterKey();
+      } else if (e.key === 'Backspace') {
+        if (!inputValue && value.length > 0) onChange(value.slice(0, -1));
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        openDropdownIfNeeded();
+        setHighlightIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : prev));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setHighlightIndex((prev) => (prev > 0 ? prev - 1 : 0));
+      } else if (e.key === 'Escape') {
+        setIsOpen(false);
+        setHighlightIndex(-1);
       }
     },
-    [handleEnterKey, inputValue, value, onChange, isOpen, suggestions.length]
+    [handleEnterKey, inputValue, value, onChange, openDropdownIfNeeded, suggestions.length]
   );
 
   const highlightedId = highlightIndex >= 0 ? `${listboxId}-option-${highlightIndex}` : undefined;

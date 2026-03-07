@@ -22,7 +22,7 @@ interface ForecastHistoryChartProps {
   mode: ForecastMode;
 }
 
-export default function ForecastHistoryChart({ data, mode }: ForecastHistoryChartProps) {
+export default function ForecastHistoryChart({ data, mode }: Readonly<ForecastHistoryChartProps>) {
   const yLabel = mode === 'portfolio' ? 'Win Rate (%)' : 'Probability (%)';
 
   return (

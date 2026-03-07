@@ -27,11 +27,23 @@ interface InsightCardProps {
   insight: SerializedAIInsight;
 }
 
+function resolveInsightHref(actionUrl: string | null | undefined, title?: string): string {
+  if (!actionUrl) {
+    // Fallback for aggregate insights with no actionUrl
+    if (title && /overdue\s+task/i.test(title)) return '/tasks?filter=overdue';
+    return '#';
+  }
+  if (actionUrl.includes('tab=')) return actionUrl;
+  const entityMatch = actionUrl.match(/^\/(leads|contacts)\/[^?]+$/);
+  if (entityMatch) return `${actionUrl}?tab=ai-insights`;
+  return actionUrl;
+}
+
 export function InsightCard({ insight }: Readonly<InsightCardProps>) {
   const iconStyle = getInsightIcon(insight.type);
   return (
     <Link
-      href={insight.actionUrl || '#'}
+      href={resolveInsightHref(insight.actionUrl, insight.title)}
       className="flex gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer border border-transparent hover:border-slate-100 dark:hover:border-slate-700"
     >
       <div className={`shrink-0 ${iconStyle.iconBg} ${iconStyle.iconColor} rounded-lg p-2 h-fit`}>

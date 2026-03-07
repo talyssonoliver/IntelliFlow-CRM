@@ -42,20 +42,20 @@ function getInitial(name?: string, email?: string): string {
   return '?';
 }
 
-function getPreview(email: EmailItemData): string {
+function getPreview(email: Readonly<EmailItemData>): string {
   if (email.textBody) return email.textBody.slice(0, 80);
-  if (email.htmlBody) return email.htmlBody.replace(/<[^<>]*>/g, '').slice(0, 80);
+  if (email.htmlBody) return email.htmlBody.replaceAll(/<[^<>]*>/g, '').slice(0, 80);
   return '';
 }
 
-export function EmailListItem({ email, isSelected, onSelect }: EmailListItemProps) {
+export function EmailListItem({ email, isSelected, onSelect }: Readonly<EmailListItemProps>) {
   return (
-    <div
+    <li // NOSONAR — custom listbox option item; role="option" is the correct ARIA pattern for items in a listbox widget; replacing with <option> would require a <select> parent and lose rich visual design
       role="option"
       aria-selected={isSelected}
       tabIndex={-1}
       className={cn(
-        'flex cursor-pointer gap-3 rounded-lg px-3 py-2.5 transition-colors',
+        'flex cursor-pointer gap-3 rounded-lg px-3 py-2.5 transition-colors list-none',
         'hover:bg-accent/50',
         'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1',
         isSelected && 'bg-primary/5 border-l-2 border-l-primary'
@@ -101,6 +101,6 @@ export function EmailListItem({ email, isSelected, onSelect }: EmailListItemProp
           ) : null}
         </div>
       </div>
-    </div>
+    </li>
   );
 }

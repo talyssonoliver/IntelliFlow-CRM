@@ -24,19 +24,19 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 
 // Mock AccountDetail component
 vi.mock('@/components/accounts/AccountDetail', () => ({
-  AccountDetail: ({ accountId }: { accountId: string }) => (
+  AccountDetail: ({ accountId }: Readonly<{ accountId: string }>) => (
     <div data-testid="account-detail">Account: {accountId}</div>
   ),
 }));
 
 // Mock @intelliflow/ui
 vi.mock('@intelliflow/ui', () => ({
-  Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  Card: ({ children, className }: Readonly<{ children: React.ReactNode; className?: string }>) => (
     <div data-testid="card" className={className}>
       {children}
     </div>
   ),
-  Skeleton: ({ className }: { className: string }) => (
+  Skeleton: ({ className }: Readonly<{ className: string }>) => (
     <div data-testid="skeleton" className={className} />
   ),
 }));
@@ -92,12 +92,12 @@ describe('AccountDetailPage - loading state', () => {
     }));
 
     vi.doMock('@intelliflow/ui', () => ({
-      Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
+      Card: ({ children, className }: Readonly<{ children: React.ReactNode; className?: string }>) => (
         <div data-testid="card" className={className}>
           {children}
         </div>
       ),
-      Skeleton: ({ className }: { className: string }) => (
+      Skeleton: ({ className }: Readonly<{ className: string }>) => (
         <div data-testid="skeleton" className={className} />
       ),
     }));

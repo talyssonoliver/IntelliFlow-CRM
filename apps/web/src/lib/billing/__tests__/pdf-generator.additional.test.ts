@@ -18,7 +18,7 @@ const mocks = vi.hoisted(() => ({
 
 // We must set up globals in beforeEach because unstubGlobals: true cleans them
 function setupGlobals() {
-  mocks.createElement.mockReturnValue({ href: '', download: '', click: mocks.click });
+  mocks.createElement.mockReturnValue({ href: '', download: '', click: mocks.click, remove: vi.fn() });
 
   (globalThis as any).fetch = mocks.fetch;
   (globalThis as any).URL = class MockURL {

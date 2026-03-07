@@ -4,8 +4,8 @@
  * Covers: Total Pages, API Router count, Procedure count self-consistency
  */
 import { describe, it, expect, beforeAll } from 'vitest';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { findPageFiles } from './test-helpers/ia-fs-helpers';
 
 const APP_DIR = path.resolve(__dirname, '..');

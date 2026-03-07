@@ -25,14 +25,14 @@ export default function NewAppointmentPage() {
     const raw = searchParams.get('start');
     if (!raw) return undefined;
     const d = new Date(raw);
-    return isNaN(d.getTime()) ? undefined : d;
+    return Number.isNaN(d.getTime()) ? undefined : d;
   }, [searchParams]);
 
   const defaultEndTime = useMemo(() => {
     const raw = searchParams.get('end');
     if (!raw) return undefined;
     const d = new Date(raw);
-    return isNaN(d.getTime()) ? undefined : d;
+    return Number.isNaN(d.getTime()) ? undefined : d;
   }, [searchParams]);
 
   const utils = api.useUtils();

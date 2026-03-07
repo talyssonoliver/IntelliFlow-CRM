@@ -20,9 +20,9 @@ interface ContactCardContact {
 
 export interface ContactCardProps {
   contact: ContactCardContact;
-  onClick?: (contact: ContactCardContact) => void;
-  onCall?: (contact: ContactCardContact) => void;
-  onEmail?: (contact: ContactCardContact) => void;
+  onClick?: (contact: Readonly<ContactCardContact>) => void;
+  onCall?: (contact: Readonly<ContactCardContact>) => void;
+  onEmail?: (contact: Readonly<ContactCardContact>) => void;
   compact?: boolean;
 }
 
@@ -63,7 +63,7 @@ const statusConfig: Record<ContactStatus, { label: string; className: string; ic
 
 // ─── Component ──────────────────────────────────────────────────────────────────
 
-export function ContactCard({ contact, onClick, onCall, onEmail, compact }: ContactCardProps) {
+export function ContactCard({ contact, onClick, onCall, onEmail, compact }: Readonly<ContactCardProps>) {
   const fullName = `${contact.firstName} ${contact.lastName}`;
   const initials =
     `${contact.firstName?.[0] || ''}${contact.lastName?.[0] || ''}`.toUpperCase() || '?';
@@ -71,106 +71,111 @@ export function ContactCard({ contact, onClick, onCall, onEmail, compact }: Cont
   const opportunities = contact._count?.opportunities ?? 0;
   const tasks = contact._count?.tasks ?? 0;
 
-  return (
-    <div
-      role={onClick ? 'button' : 'article'}
-      aria-label={`Contact card for ${fullName}`}
-      tabIndex={onClick ? 0 : undefined}
-      className={`bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:border-slate-300 dark:hover:border-slate-600 transition-colors ${onClick ? 'cursor-pointer' : ''}`}
-      onClick={onClick ? () => onClick(contact) : undefined}
-      onKeyDown={
-        onClick
-          ? (e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onClick(contact);
-              }
-            }
-          : undefined
-      }
-    >
-      <div className="flex items-start gap-3">
-        {/* Avatar */}
+  const cardClassName = `bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:border-slate-300 dark:hover:border-slate-600 transition-colors ${onClick ? 'cursor-pointer' : ''}`;
+
+  const cardContent = (
+    <div className="flex items-start gap-3">
+      {/* Avatar */}
+      <span
+        className={`size-10 rounded-full shrink-0 flex items-center justify-center font-bold text-sm border ${getAvatarColor(fullName)}`}
+        aria-hidden="true"
+      >
+        {initials}
+      </span>
+
+      <div className="flex-1 min-w-0">
+        {/* Name & Title */}
+        <p className="font-medium text-slate-900 dark:text-white truncate">{fullName}</p>
+        {contact.title && !compact && (
+          <p className="text-sm text-slate-500 dark:text-slate-400 truncate">{contact.title}</p>
+        )}
+        {contact.account && !compact && (
+          <p className="text-xs text-slate-400 mt-0.5">{contact.account.name}</p>
+        )}
+
+        {/* Status Badge */}
         <span
-          className={`size-10 rounded-full shrink-0 flex items-center justify-center font-bold text-sm border ${getAvatarColor(fullName)}`}
-          aria-hidden="true"
+          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-xs font-semibold mt-2 ${status.className}`}
         >
-          {initials}
+          <span className="material-symbols-outlined text-xs" aria-hidden="true">
+            {status.icon}
+          </span>
+          {status.label}
         </span>
 
-        <div className="flex-1 min-w-0">
-          {/* Name & Title */}
-          <p className="font-medium text-slate-900 dark:text-white truncate">{fullName}</p>
-          {contact.title && !compact && (
-            <p className="text-sm text-slate-500 dark:text-slate-400 truncate">{contact.title}</p>
-          )}
-          {contact.account && !compact && (
-            <p className="text-xs text-slate-400 mt-0.5">{contact.account.name}</p>
-          )}
-
-          {/* Status Badge */}
-          <span
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-xs font-semibold mt-2 ${status.className}`}
-          >
-            <span className="material-symbols-outlined text-xs" aria-hidden="true">
-              {status.icon}
-            </span>
-            {status.label}
-          </span>
-
-          {/* Activity Badges */}
-          {!compact && (opportunities > 0 || tasks > 0) && (
-            <div className="flex gap-2 mt-2">
-              {opportunities > 0 && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                  <span className="material-symbols-outlined text-xs" aria-hidden="true">
-                    handshake
-                  </span>
-                  {opportunities} {opportunities === 1 ? 'Deal' : 'Deals'}
+        {/* Activity Badges */}
+        {!compact && (opportunities > 0 || tasks > 0) && (
+          <div className="flex gap-2 mt-2">
+            {opportunities > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                <span className="material-symbols-outlined text-xs" aria-hidden="true">
+                  handshake
                 </span>
-              )}
-              {tasks > 0 && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                  <span className="material-symbols-outlined text-xs" aria-hidden="true">
-                    task_alt
-                  </span>
-                  {tasks} {tasks === 1 ? 'Task' : 'Tasks'}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Quick Actions */}
-        {(onEmail || onCall) && (
-          <div className="flex gap-1">
-            {onEmail && (
-              <button
-                aria-label={`Send email to ${fullName}`}
-                className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEmail(contact);
-                }}
-              >
-                <span className="material-symbols-outlined text-lg">mail</span>
-              </button>
+                {opportunities} {opportunities === 1 ? 'Deal' : 'Deals'}
+              </span>
             )}
-            {onCall && contact.phone && (
-              <button
-                aria-label={`Call ${fullName}`}
-                className="p-1.5 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCall(contact);
-                }}
-              >
-                <span className="material-symbols-outlined text-lg">phone</span>
-              </button>
+            {tasks > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                <span className="material-symbols-outlined text-xs" aria-hidden="true">
+                  task_alt
+                </span>
+                {tasks} {tasks === 1 ? 'Task' : 'Tasks'}
+              </span>
             )}
           </div>
         )}
       </div>
+
+      {/* Quick Actions */}
+      {(onEmail || onCall) && (
+        <div className="flex gap-1">
+          {onEmail && (
+            <button
+              type="button"
+              aria-label={`Send email to ${fullName}`}
+              className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEmail(contact);
+              }}
+            >
+              <span className="material-symbols-outlined text-lg">mail</span>
+            </button>
+          )}
+          {onCall && contact.phone && (
+            <button
+              type="button"
+              aria-label={`Call ${fullName}`}
+              className="p-1.5 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onCall(contact);
+              }}
+            >
+              <span className="material-symbols-outlined text-lg">phone</span>
+            </button>
+          )}
+        </div>
+      )}
     </div>
+  );
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        aria-label={`Contact card for ${fullName}`}
+        className={cardClassName}
+        onClick={() => onClick(contact)}
+      >
+        {cardContent}
+      </button>
+    );
+  }
+
+  return (
+    <article aria-label={`Contact card for ${fullName}`} className={cardClassName}>
+      {cardContent}
+    </article>
   );
 }

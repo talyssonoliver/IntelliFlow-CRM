@@ -5,6 +5,6 @@ export const metadata: Metadata = {
   title: 'Notifications',
 };
 
-export default function NotificationsLayout({ children }: { readonly children: React.ReactNode }) {
+export default function NotificationsLayout({ children }: Readonly<{ readonly children: React.ReactNode }>) {
   return <NotificationsLayoutShell>{children}</NotificationsLayoutShell>;
 }

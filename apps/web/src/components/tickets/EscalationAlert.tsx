@@ -26,7 +26,7 @@ export function EscalationAlert({
   ticketPriority,
   onEscalate,
   onDismiss,
-}: EscalationAlertProps) {
+}: Readonly<EscalationAlertProps>) {
   const [dismissed, setDismissed] = useState(false);
 
   // Only show for BREACHED or AT_RISK
@@ -35,6 +35,7 @@ export function EscalationAlert({
 
   const config = getSLAConfig(slaStatus);
   const isBreached = slaStatus === 'BREACHED';
+  const metricLabel = breachedMetric === 'response' ? 'Response' : 'Resolution';
 
   const handleDismiss = () => {
     setDismissed(true);
@@ -54,8 +55,8 @@ export function EscalationAlert({
         <p className={`font-bold ${config.text}`}>{isBreached ? 'SLA Breached' : 'SLA At Risk'}</p>
         <p className="text-sm text-slate-600 dark:text-slate-400">
           {isBreached
-            ? `${breachedMetric === 'response' ? 'Response' : 'Resolution'} time exceeded by ${breachedDuration}. Immediate action required.`
-            : `${breachedMetric === 'response' ? 'Response' : 'Resolution'} SLA approaching breach. ${breachedDuration} remaining.`}
+            ? `${metricLabel} time exceeded by ${breachedDuration}. Immediate action required.`
+            : `${metricLabel} SLA approaching breach. ${breachedDuration} remaining.`}
           {ticketPriority === 'CRITICAL' && ' This is a CRITICAL priority ticket.'}
         </p>
       </div>

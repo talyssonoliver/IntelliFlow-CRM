@@ -10,7 +10,7 @@ interface EmailDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function EmailDetailPage({ params }: EmailDetailPageProps) {
+export default async function EmailDetailPage({ params }: Readonly<EmailDetailPageProps>) {
   const { id } = await params;
   return <EmailPage initialEmailId={id} />;
 }

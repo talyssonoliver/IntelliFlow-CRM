@@ -23,11 +23,11 @@ vi.mock('next/link', () => ({
     children,
     href,
     className,
-  }: {
+  }: Readonly<{
     children: React.ReactNode;
     href: string;
     className?: string;
-  }) => (
+  }>) => (
     <a href={href} className={className}>
       {children}
     </a>
@@ -335,7 +335,7 @@ describe('AppSidebar', () => {
       );
 
       const sidebar = screen.getByRole('navigation', { name: /test module navigation/i });
-      expect(sidebar.tagName).toBe('ASIDE');
+      expect(sidebar.tagName).toBe('NAV');
     });
 
     it('should have navigation role for sections', async () => {
@@ -358,7 +358,7 @@ describe('AppSidebar', () => {
   describe('afterContent', () => {
     it('should render afterContent component when provided in config', async () => {
       const user = userEvent.setup();
-      const AfterContent = ({ isExpanded }: { isExpanded: boolean }) => (
+      const AfterContent = ({ isExpanded }: Readonly<{ isExpanded: boolean }>) => (
         <div data-testid="after-content" data-expanded={isExpanded}>
           Custom Content
         </div>

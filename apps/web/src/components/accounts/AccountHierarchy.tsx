@@ -53,7 +53,7 @@ function TreeNode({
   onFocus,
   onNavigate,
   nodeRefs,
-}: TreeNodeProps) {
+}: Readonly<TreeNodeProps>) {
   const isExpanded = expandedNodes.has(node.id);
   const isCurrent = node.id === currentId;
   const isFocused = node.id === focusedNodeId;
@@ -73,10 +73,10 @@ function TreeNode({
       className={`outline-none ${level > 0 ? 'ml-6 border-l border-border pl-3' : ''}`}
       onFocus={() => onFocus(node.id)}
     >
-      <div
-        role="button"
+      <button
+        type="button"
         tabIndex={0}
-        className={`flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors
+        className={`flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors w-full text-left
           ${isCurrent ? 'bg-primary/10 ring-1 ring-primary/30' : 'hover:bg-muted/50'}
           ${isFocused ? 'ring-2 ring-ring' : ''}`}
         onClick={() => {
@@ -136,7 +136,7 @@ function TreeNode({
         <span className="text-[10px] text-muted-foreground shrink-0">
           {node._count.contacts}C &middot; {node._count.opportunities}O
         </span>
-      </div>
+      </button>
 
       {hasChildren && isExpanded ? (
         <ul role="group" className="mt-0.5">
@@ -188,7 +188,7 @@ function findNode(root: HierarchyNode, id: string): HierarchyNode | null {
   return null;
 }
 
-export function AccountHierarchy({ accountId }: AccountHierarchyProps) {
+export function AccountHierarchy({ accountId }: Readonly<AccountHierarchyProps>) {
   const router = useRouter();
   const utils = api.useUtils();
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set([accountId]));
@@ -256,10 +256,10 @@ export function AccountHierarchy({ accountId }: AccountHierarchyProps) {
     (nodeId: string, currentRoot: HierarchyNode) => {
       const node = findNode(currentRoot, nodeId);
       if (!node || node.children.length === 0) return;
-      if (!expandedNodes.has(nodeId)) {
-        onToggle(nodeId);
-      } else {
+      if (expandedNodes.has(nodeId)) {
         focusNode(node.children[0].id);
+      } else {
+        onToggle(nodeId);
       }
     },
     [expandedNodes, onToggle, focusNode]
@@ -278,41 +278,20 @@ export function AccountHierarchy({ accountId }: AccountHierarchyProps) {
   );
 
   const handleKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLUListElement>) => {
+    (e: Readonly<KeyboardEvent<HTMLUListElement>>) => {
       if (!focusedNodeId || !data?.current) return;
       const idx = visibleNodes.indexOf(focusedNodeId);
       if (idx === -1) return;
-
-      switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault();
-          handleArrowDown(idx);
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          handleArrowUp(idx);
-          break;
-        case 'ArrowRight':
-          e.preventDefault();
-          handleArrowRight(focusedNodeId, data.current);
-          break;
-        case 'ArrowLeft':
-          e.preventDefault();
-          handleArrowLeft(focusedNodeId, data.current);
-          break;
-        case 'Enter':
-          e.preventDefault();
-          onNavigate(focusedNodeId);
-          break;
-        case 'Home':
-          e.preventDefault();
-          if (visibleNodes.length > 0) focusNode(visibleNodes[0]);
-          break;
-        case 'End':
-          e.preventDefault();
-          if (visibleNodes.length > 0) focusNode(visibleNodes[visibleNodes.length - 1]);
-          break;
-      }
+      const ARROW_KEYS = new Set(['ArrowDown', 'ArrowUp', 'ArrowRight', 'ArrowLeft', 'Enter', 'Home', 'End']);
+      if (!ARROW_KEYS.has(e.key)) return;
+      e.preventDefault();
+      if (e.key === 'ArrowDown') handleArrowDown(idx);
+      else if (e.key === 'ArrowUp') handleArrowUp(idx);
+      else if (e.key === 'ArrowRight') handleArrowRight(focusedNodeId, data.current);
+      else if (e.key === 'ArrowLeft') handleArrowLeft(focusedNodeId, data.current);
+      else if (e.key === 'Enter') onNavigate(focusedNodeId);
+      else if (e.key === 'Home' && visibleNodes.length > 0) focusNode(visibleNodes[0]);
+      else if (e.key === 'End' && visibleNodes.length > 0) focusNode(visibleNodes.at(-1));
     },
     [
       focusedNodeId,
@@ -331,7 +310,7 @@ export function AccountHierarchy({ accountId }: AccountHierarchyProps) {
     return (
       <div className="space-y-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full" />
+          <Skeleton key={i} className="h-10 w-full" /> // NOSONAR typescript:S6479
         ))}
       </div>
     );
@@ -402,7 +381,7 @@ export function AccountHierarchy({ accountId }: AccountHierarchyProps) {
 
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" onClick={() => setShowPicker(true)}>
-          <span className="material-symbols-outlined text-base mr-1">link</span>
+          <span className="material-symbols-outlined text-base mr-1">link</span>{' '}
           Set Parent Account
         </Button>
         {data.ancestors.length > 0 ? (
@@ -412,7 +391,7 @@ export function AccountHierarchy({ accountId }: AccountHierarchyProps) {
             onClick={() => setParentMutation.mutate({ accountId, parentAccountId: null })}
             disabled={setParentMutation.isPending}
           >
-            <span className="material-symbols-outlined text-base mr-1">link_off</span>
+            <span className="material-symbols-outlined text-base mr-1">link_off</span>{' '}
             Remove Parent
           </Button>
         ) : null}
@@ -432,6 +411,7 @@ export function AccountHierarchy({ accountId }: AccountHierarchyProps) {
             placeholder="Search accounts..."
             value={pickerSearch}
             onChange={(e) => setPickerSearch(e.target.value)}
+            // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
           />
           {pickerQuery.isLoading ? <Skeleton className="h-8 w-full" /> : null}

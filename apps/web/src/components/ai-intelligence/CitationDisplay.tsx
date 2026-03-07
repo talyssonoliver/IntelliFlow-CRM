@@ -42,7 +42,7 @@ export function CitationDisplay({
   relevanceScore,
   createdAt,
   disableLink = false,
-}: CitationDisplayProps) {
+}: Readonly<CitationDisplayProps>) {
   const icon = getSourceIcon(source);
   const label = getSourceLabel(source);
   const href = getSourceHref(source, sourceId);

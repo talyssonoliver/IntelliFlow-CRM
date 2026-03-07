@@ -8,10 +8,10 @@ vi.mock('@/components/shared/docs-search', () => ({
   DocsSearch: ({
     categories,
     onFilter,
-  }: {
+  }: Readonly<{
     categories: unknown[];
     onFilter: (f: unknown[]) => void;
-  }) => (
+  }>) => (
     <div data-testid="docs-search">
       <input
         data-testid="search-input"
@@ -35,7 +35,7 @@ vi.mock('@/components/shared/docs-search', () => ({
 }));
 
 vi.mock('@/components/shared/docs-navigation', () => ({
-  DocsNavigation: ({ categories }: { categories: Array<{ title: string }> }) => (
+  DocsNavigation: ({ categories }: Readonly<{ categories: Array<{ title: string }> }>) => (
     <div data-testid="docs-navigation">
       {categories.map((c) => (
         <div key={c.title} data-testid="category-card">

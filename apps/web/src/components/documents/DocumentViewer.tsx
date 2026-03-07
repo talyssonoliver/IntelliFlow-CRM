@@ -16,7 +16,7 @@ export function DocumentViewer({
   fileName,
   onClose,
   className = '',
-}: DocumentViewerProps) {
+}: Readonly<DocumentViewerProps>) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -102,7 +102,7 @@ export function DocumentViewer({
             download={fileName}
             className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
           >
-            <span className="material-symbols-outlined text-sm">download</span>
+            <span className="material-symbols-outlined text-sm">download</span>{' '}
             Download {fileName}
           </a>
         </div>
@@ -202,7 +202,7 @@ export function DocumentViewer({
           className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
           aria-label={`Download ${fileName}`}
         >
-          <span className="material-symbols-outlined text-sm">download</span>
+          <span className="material-symbols-outlined text-sm">download</span>{' '}
           Download
         </a>
       </div>
@@ -246,6 +246,7 @@ export function DocumentViewer({
             </span>
           </Button>
           {onClose && (
+            // eslint-disable-next-line jsx-a11y/no-autofocus
             <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close viewer" autoFocus>
               <span className="material-symbols-outlined text-[18px]">close</span>
             </Button>

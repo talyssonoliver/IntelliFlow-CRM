@@ -77,19 +77,21 @@ const ENTITY_ICONS: Record<string, string> = {
   deal: 'handshake',
 };
 
-export function TaskCard({ task, onClick }: TaskCardProps) {
+export function TaskCard({ task, onClick }: Readonly<TaskCardProps>) {
   const priority = PRIORITY_STYLES[task.priority] ?? PRIORITY_STYLES.MEDIUM;
   const statusStyle = STATUS_STYLES[task.status] ?? STATUS_STYLES.PENDING;
   const dueDisplay = formatDueDate(task.dueDate);
   const dueStatus = getDueDateStatus(task.dueDate);
   const entity = getEntityInfo(task);
 
-  const dueDateColor =
-    dueStatus === 'overdue'
-      ? 'text-red-600 dark:text-red-400'
-      : dueStatus === 'today'
-        ? 'text-amber-600 dark:text-amber-400'
-        : 'text-muted-foreground';
+  let dueDateColor: string;
+  if (dueStatus === 'overdue') {
+    dueDateColor = 'text-red-600 dark:text-red-400';
+  } else if (dueStatus === 'today') {
+    dueDateColor = 'text-amber-600 dark:text-amber-400';
+  } else {
+    dueDateColor = 'text-muted-foreground';
+  }
 
   return (
     <Card

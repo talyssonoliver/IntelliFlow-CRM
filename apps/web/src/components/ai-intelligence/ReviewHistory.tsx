@@ -46,9 +46,9 @@ const OUTPUT_TYPE_OPTIONS = [
   ...AI_OUTPUT_TYPES.map((t) => ({
     value: t,
     label: t
-      .replace(/_/g, ' ')
+      .replaceAll(/_/g, ' ')
       .toLowerCase()
-      .replace(/\b\w/g, (c) => c.toUpperCase()),
+      .replaceAll(/\b\w/g, (c) => c.toUpperCase()),
   })),
 ];
 
@@ -119,13 +119,13 @@ function HistoryStatCard({
   icon,
   colorClass,
   isLoading,
-}: {
+}: Readonly<{
   label: string;
   value: number;
   icon: string;
   colorClass: string;
   isLoading: boolean;
-}) {
+}>) {
   return (
     <Card>
       <CardContent className="p-4">
@@ -154,12 +154,12 @@ function TimelineGroup({
   count,
   children,
   defaultOpen = true,
-}: {
+}: Readonly<{
   label: string;
   count: number;
   children: React.ReactNode;
   defaultOpen?: boolean;
-}) {
+}>) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const headingId = useId();
   const contentId = useId();
@@ -198,7 +198,7 @@ function TimelineGroup({
   );
 }
 
-function AuditTrailSummary({ review }: { review: ReviewResponse }) {
+function AuditTrailSummary({ review }: Readonly<{ review: ReviewResponse }>) {
   const [isOpen, setIsOpen] = useState(false);
   const trailId = useId();
 
@@ -216,7 +216,7 @@ function AuditTrailSummary({ review }: { review: ReviewResponse }) {
       >
         <span className="material-symbols-outlined text-sm" aria-hidden="true">
           {isOpen ? 'expand_less' : 'expand_more'}
-        </span>
+        </span>{' '}
         Audit Trail Details
       </button>
       {isOpen && (
@@ -253,7 +253,7 @@ function AuditTrailSummary({ review }: { review: ReviewResponse }) {
             <>
               <dt className="text-muted-foreground font-medium">Escalations</dt>
               <dd className="text-foreground">
-                {review.escalationDepth} escalation{review.escalationDepth !== 1 ? 's' : ''}
+                {review.escalationDepth} escalation{review.escalationDepth === 1 ? '' : 's'}
               </dd>
             </>
           )}
@@ -284,7 +284,7 @@ export function ReviewHistory() {
   // Client-side date filtering
   const filteredReviews = useMemo(() => {
     if (!afterDate && !beforeDate) return reviews;
-    return reviews.filter((r: ReviewResponse) => {
+    return reviews.filter((r: Readonly<ReviewResponse>) => {
       const updated = new Date(r.updatedAt);
       if (afterDate && updated < new Date(afterDate)) return false;
       if (beforeDate) {
@@ -379,7 +379,7 @@ export function ReviewHistory() {
   }, [setFilters]);
 
   // No-op handlers for ReviewCard (read-only mode)
-  const noop = useCallback(() => {}, []);
+  const noop = () => {};
 
   // Computed stats
   const approvedCount = stats?.approved ?? 0;
@@ -394,13 +394,13 @@ export function ReviewHistory() {
         <Skeleton className="h-8 w-64" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 rounded-lg" data-testid="skeleton" />
+            <Skeleton key={i} className="h-20 rounded-lg" data-testid="skeleton" /> // NOSONAR typescript:S6479
           ))}
         </div>
         <Skeleton className="h-12 w-full rounded-lg" data-testid="skeleton" />
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-32 w-full rounded-lg" data-testid="skeleton" />
+            <Skeleton key={i} className="h-32 w-full rounded-lg" data-testid="skeleton" /> // NOSONAR typescript:S6479
           ))}
         </div>
       </div>
@@ -558,7 +558,7 @@ export function ReviewHistory() {
         >
           <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
             filter_list_off
-          </span>
+          </span>{' '}
           Reset Filters
         </Button>
       </div>

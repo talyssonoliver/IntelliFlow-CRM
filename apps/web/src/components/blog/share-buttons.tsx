@@ -6,7 +6,7 @@ interface ShareButtonsProps {
   url?: string;
 }
 
-export function ShareButtons({ title, slug, url }: ShareButtonsProps) {
+export function ShareButtons({ title, slug, url }: Readonly<ShareButtonsProps>) {
   const postUrl = url ? `https://intelliflow.com${url}` : `https://intelliflow.com/blog/${slug}`;
 
   const handleCopyLink = async () => {

@@ -69,7 +69,7 @@ function formatDate(date: Date | string): string {
   });
 }
 
-export function DocumentLinks({ caseId }: DocumentLinksProps) {
+export function DocumentLinks({ caseId }: Readonly<DocumentLinksProps>) {
   const { data, isLoading } = api.documents.list.useQuery({ caseId, limit: 20 } as never, {
     staleTime: 60_000,
     refetchOnWindowFocus: false,

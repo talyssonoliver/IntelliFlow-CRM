@@ -10,7 +10,7 @@ interface TrafficSourceData {
   color: string;
 }
 
-export function TrafficSourcesWidget(_props: WidgetProps) {
+export function TrafficSourcesWidget(_props: Readonly<WidgetProps>) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { data: sources, isLoading } = trpc.analytics.trafficSources.useQuery(undefined, {
     enabled: isAuthenticated && !authLoading,
@@ -39,7 +39,7 @@ export function TrafficSourcesWidget(_props: WidgetProps) {
   return (
     <div className="p-5 h-full flex flex-col">
       <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-        <span className="material-symbols-outlined text-slate-400">pie_chart</span>
+        <span className="material-symbols-outlined text-slate-400">pie_chart</span>{' '}
         Traffic Sources
       </h3>
 
@@ -54,7 +54,7 @@ export function TrafficSourcesWidget(_props: WidgetProps) {
       </div>
 
       <div className="space-y-2">
-        {sources.map((source: TrafficSourceData) => (
+        {sources.map((source: Readonly<TrafficSourceData>) => (
           <div key={source.name} className="flex items-center gap-2">
             <div className={`size-3 rounded-full ${source.color}`} />
             <span className="text-sm text-slate-600 dark:text-slate-400 flex-1">{source.name}</span>

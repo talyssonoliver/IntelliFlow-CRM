@@ -16,7 +16,7 @@ import type {
 // DocumentStatusBadge Sub-Component
 // =============================================================================
 
-export function DocumentStatusBadge({ status }: { status: DocumentStatus }) {
+export function DocumentStatusBadge({ status }: Readonly<{ status: DocumentStatus }>) {
   const config = getStatusConfig(status);
   return (
     <span
@@ -42,7 +42,7 @@ export function DocumentList({
   initialDocuments,
   onDocumentSelect,
   onBulkAction,
-}: DocumentListProps) {
+}: Readonly<DocumentListProps>) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [filters, _setFilters] = useState<DocumentFilters>(initialFilters ?? {});
   const [sortField, setSortField] = useState<string>('createdAt');
@@ -100,7 +100,7 @@ export function DocumentList({
           comparison = a.status.localeCompare(b.status);
           break;
         default:
-          comparison = 0;
+          break;
       }
       return sortDirection === 'desc' ? -comparison : comparison;
     });
@@ -136,7 +136,7 @@ export function DocumentList({
   // ─── Bulk Actions ─────────────────────────────────────────────────────────
 
   const handleBulkAction = useCallback(
-    (action: BulkAction) => {
+    (action: Readonly<BulkAction>) => {
       const ids = Array.from(selectedIds);
       if (ids.length === 0) return;
       setConfirmAction({ action, ids });
@@ -275,7 +275,7 @@ export function DocumentList({
     return (
       <div className="space-y-4" role="status" aria-label="Loading documents">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-16 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
+          <div key={i} className="h-16 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" /> // NOSONAR typescript:S6479
         ))}
       </div>
     );

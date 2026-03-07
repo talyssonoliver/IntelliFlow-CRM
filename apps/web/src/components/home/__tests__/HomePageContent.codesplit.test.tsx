@@ -42,7 +42,7 @@ vi.mock('next/dynamic', () => ({
     dynamicCalls.push({ loader, options });
 
     // Return a component that resolves the loader via useEffect
-    const DynamicComponent = (props: Record<string, unknown>) => {
+    const DynamicComponent = (props: Readonly<Record<string, unknown>>) => {
       const [Comp, setComp] = React.useState<React.ComponentType<any> | null>(null);
 
       React.useEffect(() => {

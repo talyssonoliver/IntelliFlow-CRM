@@ -65,7 +65,7 @@ export function ChainVersionsDashboard({
   activeVersions,
   isLoading,
   onViewVersion,
-}: ChainVersionsDashboardProps) {
+}: Readonly<ChainVersionsDashboardProps>) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -98,7 +98,11 @@ export function ChainVersionsDashboard({
           >
             {/* Header */}
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-2xl" role="img" aria-label={config.label}>
+              <span
+                className="text-2xl"
+                role="img" // NOSONAR typescript:S6819 — emoji icon in span; <img> cannot render emoji characters
+                aria-label={config.label}
+              >
                 {config.icon}
               </span>
               <div>

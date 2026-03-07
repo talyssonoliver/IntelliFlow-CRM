@@ -12,8 +12,7 @@ import { useState, useDeferredValue, useCallback } from 'react';
 import { SearchInput } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared';
 import { SettingsNav } from '@/components/shared/settings-nav';
-import { SETTINGS_ITEMS } from '@/lib/shared/settings-search';
-import { filterSettings } from '@/lib/shared/settings-search';
+import { SETTINGS_ITEMS, filterSettings } from '@/lib/shared/settings-search';
 
 export default function SettingsPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -55,7 +54,11 @@ export default function SettingsPage() {
           aria-label="Search settings"
         />
         <div aria-live="polite" className="sr-only">
-          {debouncedQuery ? `${filteredCount} setting${filteredCount !== 1 ? 's' : ''} found` : ''}
+          {(() => {
+            if (!debouncedQuery) return '';
+            const plural = filteredCount === 1 ? '' : 's';
+            return `${filteredCount} setting${plural} found`;
+          })()}
         </div>
       </div>
 

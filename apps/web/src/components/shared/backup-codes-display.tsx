@@ -56,7 +56,7 @@ function ActionButton({
   onClick,
   success,
   'aria-label': ariaLabel,
-}: ActionButtonProps) {
+}: Readonly<ActionButtonProps>) {
   return (
     <button
       type="button"
@@ -88,7 +88,7 @@ export function BackupCodesDisplay({
   generatedAt,
   onAcknowledge,
   className,
-}: BackupCodesDisplayProps) {
+}: Readonly<BackupCodesDisplayProps>) {
   const [acknowledged, setAcknowledged] = useState(false);
   const [copied, setCopied] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
@@ -244,7 +244,7 @@ export function BackupCodesDisplay({
       >
         <span className="material-symbols-outlined text-lg" aria-hidden="true">
           arrow_forward
-        </span>
+        </span>{' '}
         Continue
       </button>
     </div>

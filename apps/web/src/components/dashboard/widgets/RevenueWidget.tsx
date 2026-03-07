@@ -2,7 +2,7 @@
 
 import type { WidgetProps } from './index';
 
-export function RevenueWidget({ config }: WidgetProps) {
+export function RevenueWidget({ config }: Readonly<WidgetProps>) {
   const timeRange = (config?.timeRange as string) || 'month';
 
   return (
@@ -41,23 +41,27 @@ export function RevenueWidget({ config }: WidgetProps) {
 
       {/* Bar Chart */}
       <div className="flex-1 flex items-end justify-between gap-1 w-full px-2">
-        {[40, 65, 50, 75, 60, 85, 95].map((height, i) => (
-          <div
-            key={height}
-            className={`w-full rounded-t-sm transition-all ${
-              i === 6
-                ? 'bg-ds-primary'
-                : `bg-blue-${100 + i * 100} dark:bg-blue-${900 - i * 100}/${30 + i * 10}`
-            }`}
-            style={{ height: `${height}%` }}
-          >
-            {i === 6 && (
-              <div className="relative">
-                <div className="absolute top-2 right-2 size-2 bg-white rounded-full animate-pulse" />
-              </div>
-            )}
-          </div>
-        ))}
+        {(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const).map((day, i) => {
+          const barHeights = [40, 65, 50, 75, 60, 85, 95] as const;
+          const height = barHeights[i];
+          return (
+            <div
+              key={day}
+              className={`w-full rounded-t-sm transition-all ${
+                i === 6
+                  ? 'bg-ds-primary'
+                  : `bg-blue-${100 + i * 100} dark:bg-blue-${900 - i * 100}/${30 + i * 10}`
+              }`}
+              style={{ height: `${height}%` }}
+            >
+              {i === 6 && (
+                <div className="relative">
+                  <div className="absolute top-2 right-2 size-2 bg-white rounded-full animate-pulse" />
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* X-axis labels */}

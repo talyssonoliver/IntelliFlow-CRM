@@ -42,7 +42,7 @@ export function EmailMessage({
   onReply,
   onReplyAll,
   onForward,
-}: EmailMessageProps) {
+}: Readonly<EmailMessageProps>) {
   const headingId = useId();
   const contentId = useId();
 
@@ -92,9 +92,8 @@ export function EmailMessage({
 
       {/* Content — only when expanded */}
       {isExpanded && (
-        <div
+        <section
           id={contentId}
-          role="region"
           aria-labelledby={headingId}
           className="border-t border-border"
         >
@@ -161,7 +160,7 @@ export function EmailMessage({
               Forward
             </button>
           </div>
-        </div>
+        </section>
       )}
     </article>
   );

@@ -16,7 +16,7 @@ interface ModulePaywallProps {
   className?: string;
 }
 
-export function ModulePaywall({ moduleId, className }: ModulePaywallProps) {
+export function ModulePaywall({ moduleId, className }: Readonly<ModulePaywallProps>) {
   const meta = MODULE_METADATA[moduleId];
   const minPlan = getMinimumPlanForModule(moduleId);
 

@@ -67,7 +67,7 @@ interface UnsavedChangesProviderProps {
  * Provider component for unsaved changes tracking.
  * Wrap your app or authenticated layout with this provider.
  */
-export function UnsavedChangesProvider({ children }: UnsavedChangesProviderProps) {
+export function UnsavedChangesProvider({ children }: Readonly<UnsavedChangesProviderProps>) {
   const [dirtyFormsSet, setDirtyFormsSet] = useState<Set<string>>(new Set());
 
   const register = useCallback((formName: string) => {
@@ -149,7 +149,7 @@ interface UseFormUnsavedChangesOptions {
  * });
  * ```
  */
-export function useFormUnsavedChanges({ formName, isDirty }: UseFormUnsavedChangesOptions): void {
+export function useFormUnsavedChanges({ formName, isDirty }: Readonly<UseFormUnsavedChangesOptions>): void {
   const { register, unregister } = useUnsavedChanges();
 
   // Register/unregister based on dirty state

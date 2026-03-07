@@ -28,7 +28,7 @@ export interface ContactFormData {
 export interface ContactFormProps {
   mode: 'create' | 'edit';
   contact?: Partial<ContactFormData>;
-  onSubmit: (data: ContactFormData) => Promise<void>;
+  onSubmit: (data: Readonly<ContactFormData>) => Promise<void>;
   onCancel: () => void;
   isSubmitting?: boolean;
   onDirtyChange?: (isDirty: boolean) => void;
@@ -98,7 +98,7 @@ export function ContactForm({
   onCancel,
   isSubmitting = false,
   onDirtyChange,
-}: ContactFormProps) {
+}: Readonly<ContactFormProps>) {
   const [currentStep, setCurrentStep] = useState<StepId>('personal');
   const initialData = useMemo(() => ({ ...initialFormData, ...contact }), []);
   const [formData, setFormData] = useState<ContactFormData>(initialData);
@@ -159,7 +159,7 @@ export function ContactForm({
   }, [currentStepIndex]);
 
   const handleStepClick = useCallback(
-    (step: Step) => {
+    (step: Readonly<Step>) => {
       const targetIndex = steps.findIndex((s) => s.id === step.id);
       if (targetIndex <= currentStepIndex) {
         setCurrentStep(step.id);
@@ -173,7 +173,7 @@ export function ContactForm({
     await onSubmit(formData);
   }, [validateStep, formData, onSubmit]);
 
-  const getStepStatus = (step: Step): 'completed' | 'current' | 'upcoming' => {
+  const getStepStatus = (step: Readonly<Step>): 'completed' | 'current' | 'upcoming' => {
     const idx = steps.findIndex((s) => s.id === step.id);
     if (idx < currentStepIndex) return 'completed';
     if (idx === currentStepIndex) return 'current';
@@ -207,12 +207,12 @@ export function ContactForm({
           {steps.map((step) => {
             const status = getStepStatus(step);
             const isClickable = status === 'completed' || status === 'current';
-            const stepCircleClass =
-              status === 'current'
-                ? 'bg-primary text-white'
-                : status === 'completed'
-                  ? 'bg-primary text-white hover:bg-blue-600'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-2 border-slate-200 dark:border-slate-700';
+            const completedOrDefaultCircleClass = status === 'completed'
+              ? 'bg-primary text-white hover:bg-blue-600'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-2 border-slate-200 dark:border-slate-700';
+            const stepCircleClass = status === 'current'
+              ? 'bg-primary text-white'
+              : completedOrDefaultCircleClass;
             return (
               <button
                 key={step.id}
@@ -234,7 +234,7 @@ export function ContactForm({
                   )}
                 </div>
                 <span
-                  className={`text-sm font-medium ${status !== 'upcoming' ? 'font-bold text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}
+                  className={`text-sm font-medium ${status === 'upcoming' ? 'text-slate-500 dark:text-slate-400' : 'font-bold text-slate-900 dark:text-white'}`}
                 >
                   {step.label}
                 </span>
@@ -461,7 +461,7 @@ export function ContactForm({
                 className="flex items-center gap-2 bg-primary hover:bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg transition-all"
               >
                 Next Step
-                <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                {' '}<span className="material-symbols-outlined text-lg" aria-hidden="true">
                   arrow_forward
                 </span>
               </button>
@@ -496,13 +496,13 @@ function FormField({
   required,
   error,
   children,
-}: {
+}: Readonly<{
   label: string;
   id: string;
   required?: boolean;
   error?: string;
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <div className="space-y-1.5">
       <label

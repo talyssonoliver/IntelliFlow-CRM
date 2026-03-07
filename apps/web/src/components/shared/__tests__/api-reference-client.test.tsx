@@ -11,7 +11,7 @@ vi.mock('next-themes', () => ({
 
 // Mock @scalar/api-reference-react
 const MockApiReferenceReact = vi.fn(
-  ({ configuration }: { configuration: Record<string, unknown> }) => (
+  ({ configuration }: Readonly<{ configuration: Record<string, unknown> }>) => (
     <div data-testid="scalar-reference" data-config={JSON.stringify(configuration)} />
   )
 );
@@ -29,7 +29,7 @@ describe('ApiReferenceClient', () => {
   beforeEach(() => {
     mockUseTheme.mockReturnValue({ resolvedTheme: 'light' });
     MockApiReferenceReact.mockImplementation(
-      ({ configuration }: { configuration: Record<string, unknown> }) => (
+      ({ configuration }: Readonly<{ configuration: Record<string, unknown> }>) => (
         <div data-testid="scalar-reference" data-config={JSON.stringify(configuration)} />
       )
     );

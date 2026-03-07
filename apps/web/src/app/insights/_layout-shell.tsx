@@ -9,7 +9,7 @@ import {
 } from '@/components/sidebar';
 import { ModuleGate } from '@/components/ModuleGate';
 
-export default function InsightsLayoutShell({ children }: { readonly children: React.ReactNode }) {
+export default function InsightsLayoutShell({ children }: Readonly<{ readonly children: React.ReactNode }>) {
   return (
     <ModuleGate moduleId="AI_INTELLIGENCE">
       <SidebarProvider>

@@ -22,6 +22,7 @@ import {
   useEffect,
   useCallback,
   useRef,
+  useMemo,
   ReactNode,
 } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -30,6 +31,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getSupabaseBrowserClient } from '../supabase-browser';
 import type { OAuthProvider } from '@intelliflow/domain';
 import { getSupabaseProviderName } from './sso-handler';
+
+export type AuthMfaMethod = 'totp' | 'sms' | 'email' | 'backup';
 
 // ============================================
 // Token Refresh Utilities
@@ -42,7 +45,7 @@ function decodeJwtPayload(token: string): { exp?: number; sub?: string } | null 
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
-    return JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return JSON.parse(atob(parts[1].replaceAll('-', '+').replaceAll('_', '/')));
   } catch {
     return null;
   }
@@ -91,7 +94,7 @@ export interface AuthSession {
 export interface MfaState {
   required: boolean;
   challengeId: string | null;
-  methods: ('totp' | 'sms' | 'email' | 'backup')[];
+  methods: (AuthMfaMethod)[];
 }
 
 export interface AuthState {
@@ -108,7 +111,7 @@ export interface AuthContextType extends AuthState {
   login: (email: string, password: string, rememberMe?: boolean) => Promise<boolean>;
   loginWithOAuth: (provider: OAuthProvider) => Promise<void>;
   loginWithSso: (providerId: string) => Promise<void>;
-  verifyMfa: (code: string, method: 'totp' | 'sms' | 'email' | 'backup') => Promise<boolean>;
+  verifyMfa: (code: string, method: AuthMfaMethod) => Promise<boolean>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
   // State methods
@@ -155,7 +158,7 @@ const AuthContext = createContext<AuthContextType>({
 // Provider
 // ============================================
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [state, setState] = useState<AuthState>(initialState);
@@ -168,7 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Check if we just logged out (prevents redirect loop)
   const isLoggedOutPage =
-    typeof window !== 'undefined' && window.location.search.includes('logged_out=true');
+    typeof globalThis.window !== 'undefined' && globalThis.location.search.includes('logged_out=true');
 
   // tRPC queries - skip fetching if we just logged out
   const statusQuery = trpc.auth.getStatus.useQuery(undefined, {
@@ -191,7 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * This ensures users don't get logged out while actively using the app.
    */
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof globalThis.window === 'undefined') return;
     if (isLoggedOutPage) return;
 
     const supabase = getSupabaseBrowserClient();
@@ -317,7 +320,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Debug: Log token status on mount
-    if (typeof window !== 'undefined') {
+    if (typeof globalThis.window !== 'undefined') {
       const token = localStorage.getItem('accessToken');
       console.log(
         '[AuthContext] Token in localStorage:',
@@ -455,7 +458,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // SECURITY NOTE: localStorage is vulnerable to XSS attacks.
           // For enhanced security, consider HttpOnly cookies via Supabase Auth.
           // Trade-off: localStorage enables SPA auth without server-side sessions.
-          if (typeof window !== 'undefined') {
+          if (typeof globalThis.window !== 'undefined') {
             localStorage.setItem('accessToken', result.session.accessToken);
             // Sync to cookie for middleware access
             const { syncTokenToCookie } = await import('@/lib/shared/session-cleanup');
@@ -488,7 +491,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * Login with OAuth provider
    * Uses the Supabase browser client directly for proper session handling
    */
-  const loginWithOAuth = useCallback(async (provider: OAuthProvider): Promise<void> => {
+  const loginWithOAuth = useCallback(async (provider: Readonly<OAuthProvider>): Promise<void> => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
@@ -502,9 +505,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sessionStorage.setItem('intelliflow_oauth_nonce', nonce);
 
       const redirectTo =
-        typeof window !== 'undefined'
-          ? `${window.location.origin}/auth/callback?nonce=${nonce}`
-          : undefined;
+        typeof globalThis.window === 'undefined'
+          ? undefined
+          : `${globalThis.location.origin}/auth/callback?nonce=${nonce}`;
 
       // Map our provider names to Supabase provider names (e.g., 'linkedin' → 'linkedin_oidc')
       const supabaseProvider = getSupabaseProviderName(provider);
@@ -535,7 +538,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data?.url) {
         // Redirect to OAuth provider
         console.log('[OAuth] Redirecting to:', data.url);
-        window.location.href = data.url;
+        globalThis.location.href = data.url;
       } else {
         console.error('[OAuth] No URL returned from Supabase');
         setState((prev) => ({
@@ -573,9 +576,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sessionStorage.setItem('intelliflow_oauth_nonce', nonce);
 
       const redirectTo =
-        typeof window !== 'undefined'
-          ? `${window.location.origin}/auth/callback?nonce=${nonce}`
-          : undefined;
+        typeof globalThis.window === 'undefined'
+          ? undefined
+          : `${globalThis.location.origin}/auth/callback?nonce=${nonce}`;
 
       const { data, error } = await supabase.auth.signInWithSSO({
         providerId,
@@ -588,7 +591,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (data?.url) {
         console.log('[SSO] Redirecting to SSO provider:', providerId);
-        window.location.href = data.url;
+        globalThis.location.href = data.url;
       } else {
         setState((prev) => ({
           ...prev,
@@ -611,7 +614,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * Verify MFA code
    */
   const verifyMfa = useCallback(
-    async (code: string, method: 'totp' | 'sms' | 'email' | 'backup'): Promise<boolean> => {
+    async (code: string, method: AuthMfaMethod): Promise<boolean> => {
       if (!state.mfa.challengeId) {
         setState((prev) => ({ ...prev, error: 'No MFA challenge pending' }));
         return false;
@@ -640,7 +643,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             mfa: initialMfaState,
           }));
 
-          if (typeof window !== 'undefined') {
+          if (typeof globalThis.window !== 'undefined') {
             localStorage.setItem('accessToken', result.session.accessToken);
             // Sync to cookie for middleware access
             const { syncTokenToCookie } = await import('@/lib/shared/session-cleanup');
@@ -683,7 +686,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Logout error:', error);
     } finally {
       // Import and run comprehensive cleanup (PG-018)
-      if (typeof window !== 'undefined') {
+      if (typeof globalThis.window !== 'undefined') {
         try {
           const { cleanupSession, clearTokenCookie } = await import('@/lib/shared/session-cleanup');
           const { authBroadcast } = await import('@/lib/broadcast');
@@ -804,7 +807,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Context Value
   // ==========================================
 
-  const contextValue: AuthContextType = {
+  const contextValue: AuthContextType = useMemo(() => ({
     ...state,
     login,
     loginWithOAuth,
@@ -814,7 +817,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshSession,
     clearError,
     setMfaRequired,
-  };
+  }), [state, login, loginWithOAuth, loginWithSso, verifyMfa, logout, refreshSession, clearError, setMfaRequired]);
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 }
@@ -832,6 +835,51 @@ export function useAuth(): AuthContextType {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+}
+
+interface AuthRedirectFlags {
+  hasLocalToken: boolean;
+  isRecentRedirect: boolean | null;
+  isRecentOAuthLogin: boolean;
+  isOAuthFlow: boolean;
+}
+
+function readAuthRedirectFlags(hasOAuthParam: boolean): AuthRedirectFlags {
+  const hasLocalToken = typeof globalThis.window !== 'undefined' && !!localStorage.getItem('accessToken');
+  const lastRedirectTime =
+    typeof globalThis.window === 'undefined' ? null : sessionStorage.getItem('auth_redirect_time');
+  const isRecentRedirect = lastRedirectTime
+    ? Date.now() - Number.parseInt(lastRedirectTime, 10) < 2000
+    : null;
+  const oauthLoginTime =
+    typeof globalThis.window === 'undefined' ? null : sessionStorage.getItem('oauth_login_success');
+  const isRecentOAuthLogin = !!(oauthLoginTime && Date.now() - Number.parseInt(oauthLoginTime, 10) < 10000);
+  const isOAuthFlow = isRecentOAuthLogin || hasOAuthParam;
+  return { hasLocalToken, isRecentRedirect, isRecentOAuthLogin, isOAuthFlow };
+}
+
+function clearAuthSession(): void {
+  if (typeof globalThis.window === 'undefined') return;
+  sessionStorage.removeItem('auth_redirect_time');
+  sessionStorage.removeItem('oauth_login_success');
+}
+
+function cleanOAuthParam(): void {
+  if (typeof globalThis.window === 'undefined') return;
+  const url = new URL(globalThis.location.href);
+  url.searchParams.delete('oauth');
+  globalThis.history.replaceState({}, '', url.pathname + url.search);
+}
+
+function clearExpiredToken(): void {
+  if (typeof globalThis.window !== 'undefined') localStorage.removeItem('accessToken');
+}
+
+function stampRedirectTime(hasRedirectedRef: React.RefObject<boolean>): void {
+  hasRedirectedRef.current = true;
+  if (typeof globalThis.window !== 'undefined') {
+    sessionStorage.setItem('auth_redirect_time', Date.now().toString());
+  }
 }
 
 /**
@@ -856,24 +904,8 @@ export function useRequireAuth(): AuthContextType {
       return;
     }
 
-    // Check if there's a token in localStorage - if so, wait for auth to complete
-    const hasLocalToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
-
-    // Check for recent redirect to prevent loops (within last 2 seconds)
-    const lastRedirectTime =
-      typeof window !== 'undefined' ? sessionStorage.getItem('auth_redirect_time') : null;
-    const isRecentRedirect = lastRedirectTime && Date.now() - parseInt(lastRedirectTime, 10) < 2000;
-
-    // Check for recent OAuth login success (OAuth callback sets this flag)
-    // This prevents redirect during the brief moment when token is stored but auth query hasn't completed
-    const oauthLoginTime =
-      typeof window !== 'undefined' ? sessionStorage.getItem('oauth_login_success') : null;
-    const isRecentOAuthLogin = !!(
-      oauthLoginTime && Date.now() - parseInt(oauthLoginTime, 10) < 10000
-    );
-
-    // Also check URL param as backup (in case sessionStorage doesn't work)
-    const isOAuthFlow = isRecentOAuthLogin || hasOAuthParam;
+    const { hasLocalToken, isRecentRedirect, isRecentOAuthLogin, isOAuthFlow } =
+      readAuthRedirectFlags(hasOAuthParam);
 
     console.log('[useRequireAuth] Checking auth:', {
       isLoading: auth.isLoading,
@@ -900,17 +932,8 @@ export function useRequireAuth(): AuthContextType {
 
     if (auth.isAuthenticated) {
       console.log('[useRequireAuth] User is authenticated, no redirect needed');
-      // Clear any redirect timestamp and OAuth flag since auth is now confirmed
-      if (typeof window !== 'undefined') {
-        sessionStorage.removeItem('auth_redirect_time');
-        sessionStorage.removeItem('oauth_login_success');
-      }
-      // Clean up OAuth param from URL if present
-      if (hasOAuthParam) {
-        const url = new URL(window.location.href);
-        url.searchParams.delete('oauth');
-        window.history.replaceState({}, '', url.pathname + url.search);
-      }
+      clearAuthSession();
+      if (hasOAuthParam) cleanOAuthParam();
       return;
     }
 
@@ -919,43 +942,31 @@ export function useRequireAuth(): AuthContextType {
       return;
     }
 
-    // If OAuth flow is in progress and we have a token, wait for auth to complete
     if (isOAuthFlow && hasLocalToken) {
-      console.log(
-        '[useRequireAuth] OAuth flow detected with token, waiting for auth to complete...'
-      );
+      console.log('[useRequireAuth] OAuth flow detected with token, waiting for auth to complete...');
       return;
     }
 
-    // If a token exists but auth already determined we're unauthenticated, treat it as expired/invalid.
     if (hasLocalToken && !auth.isAuthenticated && !auth.isLoading) {
-      console.log(
-        '[useRequireAuth] Token present but auth failed; clearing token and redirecting to login'
-      );
-      localStorage.removeItem('accessToken');
-      sessionStorage.removeItem('oauth_login_success');
-      sessionStorage.removeItem('auth_redirect_time');
-      hasRedirectedRef.current = true;
-      sessionStorage.setItem('auth_redirect_time', Date.now().toString());
+      console.log('[useRequireAuth] Token present but auth failed; clearing token and redirecting to login');
+      clearExpiredToken();
+      clearAuthSession();
+      stampRedirectTime(hasRedirectedRef);
       router.replace('/login');
       return;
     }
 
-    // No token in localStorage - redirect to login
     console.log('[useRequireAuth] No token in localStorage, redirecting to login...');
-    hasRedirectedRef.current = true;
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('auth_redirect_time', Date.now().toString());
-    }
+    stampRedirectTime(hasRedirectedRef);
     router.replace('/login');
   }, [auth.isLoading, auth.isAuthenticated, auth.user, auth.error, router, hasOAuthParam]);
 
   // Check for recent OAuth login to extend loading state
-  const hasLocalToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
+  const hasLocalToken = typeof globalThis.window !== 'undefined' && !!localStorage.getItem('accessToken');
   const oauthLoginTime =
-    typeof window !== 'undefined' ? sessionStorage.getItem('oauth_login_success') : null;
+    typeof globalThis.window === 'undefined' ? null : sessionStorage.getItem('oauth_login_success');
   const isRecentOAuthLogin = !!(
-    oauthLoginTime && Date.now() - parseInt(oauthLoginTime, 10) < 10000
+    oauthLoginTime && Date.now() - Number.parseInt(oauthLoginTime, 10) < 10000
   );
   const isOAuthFlow = isRecentOAuthLogin || hasOAuthParam;
 
@@ -993,13 +1004,13 @@ export function useRedirectIfAuthenticated(redirectTo: string = '/dashboard'): A
   const hasRedirectedRef = useRef(false);
 
   // Check for token in localStorage
-  const hasLocalToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
+  const hasLocalToken = typeof globalThis.window !== 'undefined' && !!localStorage.getItem('accessToken');
 
   // Check for recent OAuth login - if set, we know auth should be valid
   const oauthLoginTime =
-    typeof window !== 'undefined' ? sessionStorage.getItem('oauth_login_success') : null;
+    typeof globalThis.window === 'undefined' ? null : sessionStorage.getItem('oauth_login_success');
   const isRecentOAuthLogin = !!(
-    oauthLoginTime && Date.now() - parseInt(oauthLoginTime, 10) < 10000
+    oauthLoginTime && Date.now() - Number.parseInt(oauthLoginTime, 10) < 10000
   );
 
   // Debug: Log current state
@@ -1036,7 +1047,7 @@ export function useRedirectIfAuthenticated(redirectTo: string = '/dashboard'): A
       );
       hasRedirectedRef.current = true;
       // Use window.location.href because router.replace doesn't work reliably
-      window.location.href = finalRedirectTo;
+      globalThis.location.href = finalRedirectTo;
       return;
     }
 
@@ -1055,7 +1066,7 @@ export function useRedirectIfAuthenticated(redirectTo: string = '/dashboard'): A
       );
       hasRedirectedRef.current = true;
       // Use window.location.href because router.replace doesn't seem to work reliably
-      window.location.href = finalRedirectTo;
+      globalThis.location.href = finalRedirectTo;
     }
   }, [
     auth.isLoading,

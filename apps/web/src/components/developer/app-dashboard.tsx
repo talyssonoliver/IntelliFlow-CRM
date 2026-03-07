@@ -2,10 +2,17 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader } from '@intelliflow/ui';
-import { Badge } from '@intelliflow/ui';
-import { Button } from '@intelliflow/ui';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@intelliflow/ui';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  Badge,
+  Button,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@intelliflow/ui';
 import { generateApiKey } from '@/lib/developer/api-key-generator';
 import { findAppById, type DeveloperApp, type ApiKey } from '@/lib/developer/demo-data';
 import { AppMetrics } from '@/components/developer/app-metrics';
@@ -117,7 +124,7 @@ const DEMO_LOGS: Record<string, RequestLogEntry[]> = {
   ],
 };
 
-function StatusBadge({ status }: { status: DeveloperApp['status'] }) {
+function StatusBadge({ status }: Readonly<{ status: DeveloperApp['status'] }>) {
   switch (status) {
     case 'active':
       return <Badge variant="default">Active</Badge>;
@@ -128,7 +135,7 @@ function StatusBadge({ status }: { status: DeveloperApp['status'] }) {
   }
 }
 
-function EnvironmentBadge({ environment }: { environment: DeveloperApp['environment'] }) {
+function EnvironmentBadge({ environment }: Readonly<{ environment: DeveloperApp['environment'] }>) {
   return (
     <Badge variant="secondary">{environment === 'production' ? 'Production' : 'Sandbox'}</Badge>
   );
@@ -164,7 +171,7 @@ export interface AppDashboardProps {
   appId: string;
 }
 
-export function AppDashboard({ appId }: AppDashboardProps) {
+export function AppDashboard({ appId }: Readonly<AppDashboardProps>) {
   const app = findAppById(appId);
   const [keys, setKeys] = useState<ApiKey[]>(app?.apiKeys ?? []);
   const [revealedKeyId, setRevealedKeyId] = useState<string | null>(null);
@@ -346,7 +353,7 @@ export function AppDashboard({ appId }: AppDashboardProps) {
                   >
                     <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                       add
-                    </span>
+                    </span>{' '}
                     Generate API Key
                   </Button>
                 </div>

@@ -20,7 +20,7 @@ interface ExperimentResultsPanelProps {
   experimentId: string;
 }
 
-export default function ExperimentResultsPanel({ experimentId }: ExperimentResultsPanelProps) {
+export default function ExperimentResultsPanel({ experimentId }: Readonly<ExperimentResultsPanelProps>) {
   const { data: result, isLoading, error } = useExperimentResults(experimentId);
 
   if (isLoading) {

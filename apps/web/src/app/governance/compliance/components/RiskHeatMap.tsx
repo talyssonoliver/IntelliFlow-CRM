@@ -45,7 +45,7 @@ function getRiskLevel(probability: RiskProbability, impact: RiskImpact): string 
   return 'low';
 }
 
-function getStatusColor(status: RiskStatus): string {
+function getStatusColor(status: Readonly<RiskStatus>): string {
   switch (status) {
     case 'accepted':
       return 'text-emerald-600 dark:text-emerald-400';
@@ -63,7 +63,7 @@ interface HeatMapCellProps {
   onCellClick: (risks: Risk[]) => void;
 }
 
-function HeatMapCell({ probability, impact, risks, onCellClick }: HeatMapCellProps) {
+function HeatMapCell({ probability, impact, risks, onCellClick }: Readonly<HeatMapCellProps>) {
   const cellColor = getCellColor(probability, impact);
   const hasRisks = risks.length > 0;
 
@@ -102,7 +102,7 @@ interface RiskDetailTooltipProps {
   onClose: () => void;
 }
 
-function RiskDetailTooltip({ risks, onClose }: RiskDetailTooltipProps) {
+function RiskDetailTooltip({ risks, onClose }: Readonly<RiskDetailTooltipProps>) {
   if (risks.length === 0) return null;
 
   return (
@@ -121,13 +121,11 @@ function RiskDetailTooltip({ risks, onClose }: RiskDetailTooltipProps) {
           {risks.map((risk) => (
             <div
               key={risk.id}
-              className={`p-3 rounded-lg border ${
-                risk.status === 'requires_action'
-                  ? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20'
-                  : risk.status === 'mitigated'
-                    ? 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20'
-                    : 'border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20'
-              }`}
+              className={`p-3 rounded-lg border ${(() => {
+                if (risk.status === 'requires_action') return 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20';
+                if (risk.status === 'mitigated') return 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20';
+                return 'border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20';
+              })()}`}
             >
               <div className="flex items-start justify-between">
                 <div>

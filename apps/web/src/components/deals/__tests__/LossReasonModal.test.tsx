@@ -17,27 +17,27 @@ vi.mock('@intelliflow/ui', () => ({
     children,
     open,
     onOpenChange,
-  }: {
+  }: Readonly<{
     children: React.ReactNode;
     open: boolean;
     onOpenChange?: (open: boolean) => void;
-  }) => {
+  }>) => {
     capturedOnOpenChange = onOpenChange;
     return open ? <div data-testid="dialog">{children}</div> : null;
   },
-  DialogContent: ({ children }: { children: React.ReactNode }) => (
+  DialogContent: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <div data-testid="dialog-content">{children}</div>
   ),
-  DialogHeader: ({ children }: { children: React.ReactNode }) => (
+  DialogHeader: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <div data-testid="dialog-header">{children}</div>
   ),
-  DialogTitle: ({ children }: { children: React.ReactNode }) => (
+  DialogTitle: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <h2 data-testid="dialog-title">{children}</h2>
   ),
-  DialogDescription: ({ children }: { children: React.ReactNode }) => (
+  DialogDescription: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <p data-testid="dialog-description">{children}</p>
   ),
-  DialogFooter: ({ children }: { children: React.ReactNode }) => (
+  DialogFooter: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <div data-testid="dialog-footer">{children}</div>
   ),
 }));

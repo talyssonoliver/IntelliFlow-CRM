@@ -173,7 +173,7 @@ export default function DealForecastDetailPage() {
             </div>
             <div>
               <dt className="text-muted-foreground">Stage</dt>
-              <dd className="font-medium">{data.deal.stage.replace(/_/g, ' ')}</dd>
+              <dd className="font-medium">{data.deal.stage.replaceAll('_', ' ')}</dd>
             </div>
             <div>
               <dt className="text-muted-foreground">Owner</dt>

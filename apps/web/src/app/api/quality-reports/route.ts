@@ -1,16 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import { z } from 'zod';
+
+type ReportStatus = 'passing' | 'failing' | 'unknown';
+type ReportSource = 'ci' | 'manual' | 'placeholder' | 'dynamic';
+type StaticReportSource = 'ci' | 'manual' | 'placeholder';
+type HealthStatus = 'good' | 'warning' | 'critical';
 
 interface QualityReport {
   id: string;
   name: string;
   type: 'lighthouse' | 'coverage' | 'performance' | 'debt' | 'sonarqube';
-  status: 'passing' | 'failing' | 'unknown';
+  status: ReportStatus;
   score?: number;
   generatedAt: string;
-  source: 'ci' | 'manual' | 'placeholder' | 'dynamic';
+  source: ReportSource;
   htmlPath?: string;
   details?: Record<string, unknown>;
   isPlaceholder?: boolean;
@@ -20,68 +25,66 @@ interface QualityReport {
 interface QualityReportsSummary {
   reports: QualityReport[];
   lastUpdated: string;
-  overallHealth: 'good' | 'warning' | 'critical';
+  overallHealth: HealthStatus;
+}
+
+const PROJECT_ROOT_MARKERS = ['package.json', 'turbo.json', 'pnpm-workspace.yaml'];
+
+function isProjectRoot(dir: string): boolean {
+  const hasMarker = PROJECT_ROOT_MARKERS.some((m) => fs.existsSync(path.join(dir, m)));
+  return hasMarker && fs.existsSync(path.join(dir, 'apps'));
+}
+
+function detectProjectRoot(cwd: string): string {
+  let current = cwd;
+  for (let i = 0; i < 5; i++) {
+    if (isProjectRoot(current)) return current;
+    const parent = path.dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  return cwd;
+}
+
+function buildBaseLocations(cwd: string, projectRoot: string): string[] {
+  const locations = [
+    projectRoot,
+    path.resolve(cwd, '..', '..'),
+    cwd,
+    path.resolve(cwd, '..'),
+    path.resolve(cwd, '..', '..', '..'),
+  ];
+  if (process.platform === 'win32') {
+    locations.push(
+      String.raw`C:\taly\intelliFlow-CRM`,
+      'C:/taly/intelliFlow-CRM',
+      path.join(process.env.USERPROFILE || '', 'intelliFlow-CRM')
+    );
+  }
+  return [...new Set(locations.map((p) => path.normalize(p)))];
+}
+
+function tryFindInBase(base: string, relativePath: string): string | null {
+  try {
+    const fullPath = path.join(base, relativePath);
+    return fs.existsSync(fullPath) ? fullPath : null;
+  } catch {
+    return null;
+  }
 }
 
 function findFile(relativePaths: string[]): string | null {
-  // Check multiple possible locations for each path
-  // The web app runs from apps/web, so we need to navigate to project root
   const cwd = process.cwd();
-
-  // Detect project root by looking for common markers
-  let projectRoot = cwd;
-  const markers = ['package.json', 'turbo.json', 'pnpm-workspace.yaml'];
-  let current = cwd;
-
-  for (let i = 0; i < 5; i++) {
-    const hasMarkers = markers.some((m) => fs.existsSync(path.join(current, m)));
-    if (hasMarkers && fs.existsSync(path.join(current, 'apps'))) {
-      projectRoot = current;
-      break;
-    }
-    const parent = path.dirname(current);
-    if (parent === current) break; // Reached root
-    current = parent;
-  }
-
-  // Build list of base locations to check
-  const baseLocations = [
-    projectRoot, // Detected project root (most reliable)
-    path.resolve(cwd, '..', '..'), // apps/web -> root
-    cwd, // Current directory
-    path.resolve(cwd, '..'), // One level up
-    path.resolve(cwd, '..', '..', '..'), // Three levels up
-  ];
-
-  // Add Windows-specific absolute paths as fallback
-  const isWindows = process.platform === 'win32';
-  if (isWindows) {
-    // Try common development paths
-    const windowsPaths = [
-      'C:\\taly\\intelliFlow-CRM',
-      'C:/taly/intelliFlow-CRM',
-      path.join(process.env.USERPROFILE || '', 'intelliFlow-CRM'),
-    ];
-    baseLocations.push(...windowsPaths);
-  }
-
-  // Remove duplicates
-  const uniqueBases = [...new Set(baseLocations.map((p) => path.normalize(p)))];
+  const projectRoot = detectProjectRoot(cwd);
+  const uniqueBases = buildBaseLocations(cwd, projectRoot);
 
   for (const relativePath of relativePaths) {
     for (const base of uniqueBases) {
-      try {
-        const fullPath = path.join(base, relativePath);
-        if (fs.existsSync(fullPath)) {
-          return fullPath;
-        }
-      } catch {
-        // Continue to next base
-      }
+      const found = tryFindInBase(base, relativePath);
+      if (found) return found;
     }
   }
 
-  // Debug: log what we tried (only in development)
   if (process.env.NODE_ENV === 'development') {
     console.log('[Quality Reports] File not found. Searched paths:', relativePaths);
     console.log('[Quality Reports] CWD:', cwd);
@@ -210,7 +213,7 @@ function getLighthouseReport(): QualityReport {
 }
 
 interface CoverageMetaStatus {
-  status: 'passing' | 'failing' | 'unknown';
+  status: ReportStatus;
   statusMessage?: string;
 }
 
@@ -275,51 +278,59 @@ function parseCoverageData(
   throw new Error('Unknown coverage report format');
 }
 
+function resolveCoverageSource(
+  dataSource: unknown
+): StaticReportSource {
+  if (dataSource === 'placeholder') return 'placeholder';
+  if (dataSource === 'manual') return 'manual';
+  return 'ci';
+}
+
+function buildCoverageDetails(
+  baseDetails: Record<string, unknown>,
+  meta: Record<string, unknown>,
+  statusMessage: string | undefined
+): Record<string, unknown> {
+  const hasTddMetadata = meta.lastRunAt !== undefined;
+  let details = baseDetails;
+  if (hasTddMetadata && (meta.testsTotal as number) > 0) {
+    details = {
+      ...details,
+      testsTotal: meta.testsTotal,
+      testsPassed: meta.testsPassed,
+      testsFailed: meta.testsFailed,
+      thresholdsMet: meta.thresholdsMet,
+    };
+  }
+  return {
+    ...details,
+    ...(statusMessage && { statusMessage }),
+    ...((meta.failingTests as unknown[])?.length > 0 && { failingTests: meta.failingTests }),
+  };
+}
+
 function getCoverageReport(): QualityReport {
-  // DRY: Single source of truth for coverage data
   const filePath = findFile([
-    'artifacts/coverage/coverage-summary.json', // Primary location (vitest output)
-    'artifacts/misc/coverage/coverage-summary.json', // Backward compatibility
+    'artifacts/coverage/coverage-summary.json',
+    'artifacts/misc/coverage/coverage-summary.json',
   ]);
 
   try {
     if (filePath) {
       const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-
-      // TDD-friendly metadata from our coverage script
       const meta = (data.meta || {}) as Record<string, unknown>;
       const hasTddMetadata = meta.lastRunAt !== undefined;
-
       const { overall, details: baseDetails, generatedAt } = parseCoverageData(data, meta);
 
-      // TDD-friendly status: Use metadata status if available
-      let details = baseDetails;
-      let status: 'passing' | 'failing' | 'unknown';
+      let status: ReportStatus;
       let statusMessage: string | undefined;
-
       if (hasTddMetadata) {
         const metaStatus = resolveCoverageMetaStatus(meta, overall);
         status = metaStatus.status;
         statusMessage = metaStatus.statusMessage;
-
-        // Add test results to details
-        if ((meta.testsTotal as number) > 0) {
-          details = {
-            ...details,
-            testsTotal: meta.testsTotal,
-            testsPassed: meta.testsPassed,
-            testsFailed: meta.testsFailed,
-            thresholdsMet: meta.thresholdsMet,
-          };
-        }
       } else {
-        // Fallback: determine status from coverage score
         status = overall >= 90 ? 'passing' : 'failing';
       }
-
-      // Source determination
-      const source: 'ci' | 'manual' | 'placeholder' =
-        data.source === 'placeholder' ? 'placeholder' : data.source === 'manual' ? 'manual' : 'ci';
 
       return {
         id: 'coverage',
@@ -328,14 +339,10 @@ function getCoverageReport(): QualityReport {
         status,
         score: Math.round(overall),
         generatedAt,
-        source,
+        source: resolveCoverageSource(data.source),
         htmlPath: '/api/quality-reports/view?report=coverage',
-        details: {
-          ...details,
-          ...(statusMessage && { statusMessage }),
-          ...((meta.failingTests as unknown[])?.length > 0 && { failingTests: meta.failingTests }),
-        },
-        isPlaceholder: false, // TDD: Never show placeholder, always show real data
+        details: buildCoverageDetails(baseDetails, meta, statusMessage),
+        isPlaceholder: false,
         placeholderReason: undefined,
       };
     }
@@ -343,7 +350,6 @@ function getCoverageReport(): QualityReport {
     console.error('Failed to read coverage report:', error);
   }
 
-  // No coverage data found
   return {
     id: 'coverage',
     name: 'Test Coverage',
@@ -381,9 +387,9 @@ function parsePerformanceBenchmarkFormat(data: Record<string, unknown>): ParsedP
   const dbBench = benchmarks.find((b) => b.operation.toLowerCase().includes('database'));
 
   const tRPCScore =
-    tRPCBench?.p95Time !== undefined ? Math.max(0, 100 - (tRPCBench.p95Time / 50) * 100) : 80;
+    tRPCBench?.p95Time === undefined ? 80 : Math.max(0, 100 - (tRPCBench.p95Time / 50) * 100);
   const dbScore =
-    dbBench?.p95Time !== undefined ? Math.max(0, 100 - (dbBench.p95Time / 20) * 100) : 80;
+    dbBench?.p95Time === undefined ? 80 : Math.max(0, 100 - (dbBench.p95Time / 20) * 100);
 
   const score = Math.min(100, Math.max(0, Math.round((tRPCScore + dbScore) / 2)));
 
@@ -392,8 +398,8 @@ function parsePerformanceBenchmarkFormat(data: Record<string, unknown>): ParsedP
     score,
     generatedAt: (data.timestamp as string) || new Date().toISOString(),
     details: {
-      tRPC_p95: tRPCBench?.p95Time !== undefined ? `${tRPCBench.p95Time.toFixed(3)}ms` : 'N/A',
-      database_p95: dbBench?.p95Time !== undefined ? `${dbBench.p95Time.toFixed(3)}ms` : 'N/A',
+      tRPC_p95: tRPCBench?.p95Time === undefined ? 'N/A' : `${tRPCBench.p95Time.toFixed(3)}ms`,
+      database_p95: dbBench?.p95Time === undefined ? 'N/A' : `${dbBench.p95Time.toFixed(3)}ms`,
       all_targets_met: passed,
       benchmarks: benchmarks.length,
     },
@@ -430,7 +436,7 @@ function getPerformanceReport(): QualityReport {
       // Synthetic benchmarks (type: 'synthetic') are still valid - just locally generated
       const isSynthetic = data.type === 'synthetic';
       const nonPlaceholderSource: 'ci' | 'manual' = isSynthetic ? 'manual' : data.source || 'ci';
-      const performanceSource: 'ci' | 'manual' | 'placeholder' = isPlaceholder
+      const performanceSource: StaticReportSource = isPlaceholder
         ? 'placeholder'
         : nonPlaceholderSource;
 
@@ -464,6 +470,15 @@ function getPerformanceReport(): QualityReport {
   };
 }
 
+function resolveDebtStatus(
+  summary: Record<string, number> | undefined
+): ReportStatus {
+  if (!summary) return 'unknown';
+  if (summary.critical === 0 && summary.overdue === 0) return 'passing';
+  if (summary.critical > 0 || summary.overdue > 0) return 'failing';
+  return 'unknown';
+}
+
 /**
  * Get Technical Debt report from dynamic analysis
  * RSI: Auto-updated from debt-ledger.yaml on each request
@@ -485,13 +500,7 @@ function getDebtReport(): QualityReport {
         // Health score: 100 = no debt, 0 = critical debt load
         const healthScore = summary?.healthScore ?? debt.healthScore ?? 50;
 
-        // Status based on critical items and overdue
-        let status: 'passing' | 'failing' | 'unknown' = 'unknown';
-        if (summary?.critical === 0 && summary?.overdue === 0) {
-          status = 'passing';
-        } else if (summary?.critical > 0 || summary?.overdue > 0) {
-          status = 'failing';
-        }
+        const status: ReportStatus = resolveDebtStatus(summary);
 
         return {
           id: 'debt',
@@ -568,12 +577,12 @@ function getSonarQubeReport(): QualityReport {
 
         // Status based on quality gate
         const gateStatus = summary?.gateStatus ?? sonar.qualityGate?.status ?? 'UNKNOWN';
-        const GATE_STATUS_MAP: Record<string, 'passing' | 'failing' | 'unknown'> = {
+        const GATE_STATUS_MAP: Record<string, ReportStatus> = {
           OK: 'passing',
           ERROR: 'failing',
           WARN: 'failing',
         };
-        const status: 'passing' | 'failing' | 'unknown' = GATE_STATUS_MAP[gateStatus] ?? 'unknown';
+        const status: ReportStatus = GATE_STATUS_MAP[gateStatus] ?? 'unknown';
 
         return {
           id: 'sonarqube',
@@ -616,7 +625,7 @@ function getSonarQubeReport(): QualityReport {
   };
 }
 
-function getOverallHealth(reports: QualityReport[]): 'good' | 'warning' | 'critical' {
+function getOverallHealth(reports: QualityReport[]): HealthStatus {
   const passingCount = reports.filter((r) => r.status === 'passing').length;
   const failingCount = reports.filter((r) => r.status === 'failing').length;
 
@@ -625,50 +634,51 @@ function getOverallHealth(reports: QualityReport[]): 'good' | 'warning' | 'criti
   return 'warning';
 }
 
+function getAllReports(): QualityReport[] {
+  return [
+    getLighthouseReport(),
+    getCoverageReport(),
+    getPerformanceReport(),
+    getDebtReport(),
+    getSonarQubeReport(),
+  ];
+}
+
+function handleSummaryAction(reports: QualityReport[]) {
+  const summary: QualityReportsSummary = {
+    reports,
+    lastUpdated: new Date().toISOString(),
+    overallHealth: getOverallHealth(reports),
+  };
+  return NextResponse.json({ success: true, data: summary });
+}
+
+function handleDetailAction(reports: QualityReport[], reportId: string | null) {
+  if (!reportId) {
+    return NextResponse.json({ success: false, error: 'Report ID is required' }, { status: 400 });
+  }
+  const report = reports.find((r) => r.id === reportId);
+  if (!report) {
+    return NextResponse.json({ success: false, error: 'Report not found' }, { status: 404 });
+  }
+  return NextResponse.json({ success: true, data: report });
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action') || 'summary';
   const reportId = searchParams.get('id');
 
   try {
-    const reports = [
-      getLighthouseReport(),
-      getCoverageReport(),
-      getPerformanceReport(),
-      getDebtReport(),
-      getSonarQubeReport(),
-    ];
+    const reports = getAllReports();
 
-    switch (action) {
-      case 'summary': {
-        const summary: QualityReportsSummary = {
-          reports,
-          lastUpdated: new Date().toISOString(),
-          overallHealth: getOverallHealth(reports),
-        };
-        return NextResponse.json({ success: true, data: summary });
-      }
+    if (action === 'summary') return handleSummaryAction(reports);
+    if (action === 'detail') return handleDetailAction(reports, reportId);
 
-      case 'detail': {
-        if (!reportId) {
-          return NextResponse.json(
-            { success: false, error: 'Report ID is required' },
-            { status: 400 }
-          );
-        }
-        const report = reports.find((r) => r.id === reportId);
-        if (!report) {
-          return NextResponse.json({ success: false, error: 'Report not found' }, { status: 404 });
-        }
-        return NextResponse.json({ success: true, data: report });
-      }
-
-      default:
-        return NextResponse.json(
-          { success: false, error: `Unknown action: ${action}` },
-          { status: 400 }
-        );
-    }
+    return NextResponse.json(
+      { success: false, error: `Unknown action: ${action}` },
+      { status: 400 }
+    );
   } catch (error) {
     console.error('Quality Reports API error:', error);
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });

@@ -5,6 +5,6 @@ export const metadata: Metadata = {
   title: 'Governance',
 };
 
-export default function GovernanceLayout({ children }: { children: React.ReactNode }) {
+export default function GovernanceLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <GovernanceLayoutShell>{children}</GovernanceLayoutShell>;
 }

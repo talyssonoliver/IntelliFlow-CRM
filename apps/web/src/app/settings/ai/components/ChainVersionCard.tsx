@@ -92,7 +92,7 @@ export function ChainVersionCard({
   onSelect,
   isSelected = false,
   isLoading = false,
-}: ChainVersionCardProps) {
+}: Readonly<ChainVersionCardProps>) {
   const statusConfig = STATUS_CONFIG[status];
   const chainLabel = CHAIN_TYPE_LABELS[chainType];
   const dateStr = typeof createdAt === 'string' ? createdAt : createdAt.toLocaleDateString();

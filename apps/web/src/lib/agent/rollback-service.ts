@@ -38,7 +38,8 @@ export type ActionStatus =
   | 'rejected'
   | 'rolled_back'
   | 'expired'
-  | 'modified';
+  | 'modified'
+  | 'escalated';
 
 export interface AgentAction {
   /** Unique identifier for the action */
@@ -77,6 +78,14 @@ export interface AgentAction {
   expiresAt: Date;
   /** User-provided feedback on rejection/modification */
   feedback?: string;
+  /** Escalation metadata if action was escalated */
+  escalation?: {
+    escalatedBy: string;
+    escalatedTo: string;
+    reason: string;
+    escalatedAt: Date;
+    slaExpiresAt: Date;
+  };
   /** Rollback metadata if action was rolled back */
   rollbackInfo?: RollbackInfo;
 }
@@ -307,7 +316,7 @@ export async function getActionHistory(
   return {
     entityId,
     entityType: entityType || actions[0]?.entityType || 'unknown',
-    actions: actions.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
+    actions: [...actions].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
     totalActions: actions.length,
     approvedCount,
     rejectedCount,
@@ -347,7 +356,7 @@ export async function getPendingActions(): Promise<AgentAction[]> {
 export async function approveAction(actionId: string, userId: string): Promise<AgentAction | null> {
   const action = actionStore.get(actionId);
 
-  if (!action || action.status !== 'pending') {
+  if (action?.status !== 'pending') {
     return null;
   }
 
@@ -402,7 +411,7 @@ export async function rejectAction(
 ): Promise<AgentAction | null> {
   const action = actionStore.get(actionId);
 
-  if (!action || action.status !== 'pending') {
+  if (action?.status !== 'pending') {
     return null;
   }
 
@@ -458,7 +467,7 @@ export async function modifyAndApproveAction(
 ): Promise<AgentAction | null> {
   const action = actionStore.get(actionId);
 
-  if (!action || action.status !== 'pending') {
+  if (action?.status !== 'pending') {
     return null;
   }
 

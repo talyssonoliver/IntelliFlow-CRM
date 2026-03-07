@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { ChainVersionsDashboard } from './ChainVersionsDashboard';
 import type { ChainVersionSummary } from '@intelliflow/validators';
 
+type ChainType = 'SCORING' | 'QUALIFICATION' | 'EMAIL_WRITER' | 'FOLLOWUP';
+
 const baseVersion: ChainVersionSummary = {
   id: 'v1',
   chainType: 'SCORING',
@@ -14,10 +16,7 @@ const baseVersion: ChainVersionSummary = {
   createdBy: 'admin@intelliflow.com',
 };
 
-const mockAllActive: Record<
-  'SCORING' | 'QUALIFICATION' | 'EMAIL_WRITER' | 'FOLLOWUP',
-  ChainVersionSummary | null
-> = {
+const mockAllActive: Record<ChainType, ChainVersionSummary | null> = {
   SCORING: {
     ...baseVersion,
     id: 'v1',
@@ -47,20 +46,14 @@ const mockAllActive: Record<
   },
 };
 
-const mockPartialActive: Record<
-  'SCORING' | 'QUALIFICATION' | 'EMAIL_WRITER' | 'FOLLOWUP',
-  ChainVersionSummary | null
-> = {
+const mockPartialActive: Record<ChainType, ChainVersionSummary | null> = {
   SCORING: mockAllActive.SCORING,
   QUALIFICATION: null,
   EMAIL_WRITER: mockAllActive.EMAIL_WRITER,
   FOLLOWUP: null,
 };
 
-const mockNoneActive: Record<
-  'SCORING' | 'QUALIFICATION' | 'EMAIL_WRITER' | 'FOLLOWUP',
-  ChainVersionSummary | null
-> = {
+const mockNoneActive: Record<ChainType, ChainVersionSummary | null> = {
   SCORING: null,
   QUALIFICATION: null,
   EMAIL_WRITER: null,

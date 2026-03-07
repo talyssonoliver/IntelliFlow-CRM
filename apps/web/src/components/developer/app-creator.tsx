@@ -2,12 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader } from '@intelliflow/ui';
-import { Button } from '@intelliflow/ui';
-import { Input } from '@intelliflow/ui';
-import { Textarea } from '@intelliflow/ui';
-import { Label } from '@intelliflow/ui';
-import { Separator } from '@intelliflow/ui';
+import { Card, CardContent, CardHeader, Button, Input, Textarea, Label, Separator } from '@intelliflow/ui';
 import type { ApiKeyScope } from '@/lib/developer/api-key-generator';
 import type { DeveloperApp } from '@/lib/developer/demo-data';
 import {
@@ -43,7 +38,7 @@ export const SCOPE_OPTIONS: { value: ApiKeyScope; label: string }[] = [
   { value: 'admin', label: 'Admin' },
 ];
 
-function CopyButton({ text, label }: { text: string; label: string }) {
+function CopyButton({ text, label }: Readonly<{ text: string; label: string }>) {
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
 
@@ -59,7 +54,14 @@ function CopyButton({ text, label }: { text: string; label: string }) {
     }
   };
 
-  const icon = copyFailed ? 'error_outline' : copied ? 'check' : 'content_copy';
+  let icon: string;
+  if (copyFailed) {
+    icon = 'error_outline';
+  } else if (copied) {
+    icon = 'check';
+  } else {
+    icon = 'content_copy';
+  }
 
   return (
     <span className="inline-flex items-center gap-1">
@@ -74,9 +76,9 @@ function CopyButton({ text, label }: { text: string; label: string }) {
         </span>
       </button>
       {copyFailed && (
-        <span className="text-xs text-destructive" role="status">
+        <output className="text-xs text-destructive">
           Copy failed
-        </span>
+        </output>
       )}
     </span>
   );
@@ -98,7 +100,7 @@ export function AppCreator() {
     });
   };
 
-  const toggleScope = (scope: ApiKeyScope) => {
+  const toggleScope = (scope: Readonly<ApiKeyScope>) => {
     setFormData((prev) => {
       const scopes = prev.scopes.includes(scope)
         ? prev.scopes.filter((s) => s !== scope)
@@ -206,7 +208,7 @@ export function AppCreator() {
                 aria-hidden="true"
               >
                 warning
-              </span>
+              </span>{' '}
               Save your credentials
             </p>
             <p className="text-sm text-yellow-700 dark:text-yellow-300">
