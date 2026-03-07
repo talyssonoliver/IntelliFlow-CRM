@@ -107,6 +107,7 @@ const DEFAULT_RATE_LIMITS: RateLimitConfig = {
   maxPerDay: 50000,
 };
 
+// MVP: in-memory rate limiter — ineffective across pods. Replace with Redis-backed limiter in follow-up task.
 /**
  * Simple in-memory rate limiter
  * In production, use Redis-based rate limiting
@@ -177,7 +178,7 @@ export class EmailRateLimiter {
  * Email template renderer
  */
 export class EmailTemplateRenderer {
-  private templates: Map<string, { subject: string; html: string; text?: string }> = new Map();
+  private readonly templates: Map<string, { subject: string; html: string; text?: string }> = new Map();
 
   registerTemplate(name: string, template: { subject: string; html: string; text?: string }): void {
     this.templates.set(name, template);
@@ -208,7 +209,7 @@ export class EmailTemplateRenderer {
  * Mock SMTP provider for development
  */
 export class MockEmailProvider implements EmailProvider {
-  name = 'mock';
+  readonly name = 'mock';
   private sentEmails: Array<{ email: OutboundEmail; result: EmailSendResult }> = [];
 
   async send(email: OutboundEmail): Promise<EmailSendResult> {
@@ -271,11 +272,17 @@ export class MockEmailProvider implements EmailProvider {
  * SendGrid email provider
  */
 export class SendGridProvider implements EmailProvider {
-  name = 'sendgrid';
+  readonly name = 'sendgrid';
   private readonly apiKey: string;
   private readonly baseUrl = 'https://api.sendgrid.com/v3';
 
   constructor(apiKey: string) {
+    if (!apiKey) {
+      throw new Error('SendGrid API key is required');
+    }
+    if (!apiKey.startsWith('SG.')) {
+      throw new Error('SendGrid API key format invalid (expected SG. prefix)');
+    }
     this.apiKey = apiKey;
   }
 
@@ -323,6 +330,9 @@ export class SendGridProvider implements EmailProvider {
       send_at: email.scheduledAt ? Math.floor(email.scheduledAt.getTime() / 1000) : undefined,
     };
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10_000);
+
     try {
       const response = await fetch(`${this.baseUrl}/mail/send`, {
         method: 'POST',
@@ -331,11 +341,11 @@ export class SendGridProvider implements EmailProvider {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`SendGrid API error: ${response.status} - ${error}`);
+        throw new Error(`Email delivery failed (provider error ${response.status})`);
       }
 
       return {
@@ -348,13 +358,19 @@ export class SendGridProvider implements EmailProvider {
         },
       };
     } catch (error) {
+      let errorMessage = 'Unknown error';
+      if (error instanceof Error) {
+        errorMessage = error.message.replace(this.apiKey, '[REDACTED]');
+      }
       return {
         messageId,
         provider: this.name,
         status: 'failed',
         timestamp: new Date(),
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: errorMessage,
       };
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
@@ -513,12 +529,10 @@ export function createOutboundEmailService(
 ): OutboundEmailService {
   const providers: EmailProvider[] = [];
 
-  if (config.useMock || process.env.NODE_ENV === 'development') {
-    providers.push(new MockEmailProvider());
-  }
-
   if (config.sendgridApiKey) {
     providers.push(new SendGridProvider(config.sendgridApiKey));
+  } else if (config.useMock || process.env.NODE_ENV === 'development') {
+    providers.push(new MockEmailProvider());
   }
 
   if (providers.length === 0) {

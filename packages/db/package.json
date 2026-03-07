@@ -38,6 +38,7 @@
     "db:cleanup-legacy": "tsx --env-file=.env prisma/cleanup-legacy-seed-ids.ts",
     "db:cleanup-legacy:dry-run": "tsx --env-file=.env prisma/cleanup-legacy-seed-ids.ts --dry-run",
     "db:reset": "prisma migrate reset --force",
+    "pretypecheck": "node -e \"try{require('fs').unlinkSync('generated/prisma/package.json')}catch(e){}\"",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --fix",

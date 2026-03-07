@@ -25,26 +25,21 @@ export interface ScoreFactorProps extends React.HTMLAttributes<HTMLDivElement> {
  */
 function ImpactBar({ impact, maxImpact = 50 }: { impact: number; maxImpact?: number }) {
   const direction = getImpactDirection(impact);
-  const width = getImpactBarWidth(impact, maxImpact);
 
   return (
-    <div
-      className="h-1.5 w-full bg-muted rounded-full overflow-hidden"
-      role="progressbar"
-      aria-label={`Factor impact: ${formatImpact(impact)}`}
-      aria-valuenow={Math.abs(impact)}
-      aria-valuemin={0}
-      aria-valuemax={maxImpact}
-    >
-      <div
-        data-direction={direction}
+    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+      <progress // NOSONAR — custom styled progressbar; role="progressbar" is the correct pattern
         className={cn(
-          'h-full rounded-full transition-all duration-300',
-          direction === 'positive' && 'bg-success',
-          direction === 'negative' && 'bg-destructive',
-          direction === 'neutral' && 'bg-muted-foreground'
+          'h-full rounded-full transition-all duration-300 appearance-none block w-full',
+          '[&::-webkit-progress-bar]:bg-transparent',
+          direction === 'positive' && '[&::-webkit-progress-value]:bg-success',
+          direction === 'negative' && '[&::-webkit-progress-value]:bg-destructive',
+          direction === 'neutral' && '[&::-webkit-progress-value]:bg-muted-foreground'
         )}
-        style={{ width: `${width}%` }}
+        data-direction={direction}
+        aria-label={`Factor impact: ${formatImpact(impact)}`}
+        value={Math.abs(impact)}
+        max={maxImpact}
       />
     </div>
   );

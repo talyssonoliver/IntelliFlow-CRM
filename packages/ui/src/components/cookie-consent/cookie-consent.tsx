@@ -487,18 +487,21 @@ export function CookieConsentBanner({
 
       {/* Settings Panel (Modal) */}
       {settingsOpen ? (
-        <div
-          className="fixed inset-0 z-50 overflow-y-auto"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="cookie-settings-title"
-        >
+        <div className="fixed inset-0 z-50 overflow-y-auto">
           {/* Backdrop */}
-          <div className="fixed inset-0 bg-black/50" onClick={closeSettings} aria-hidden="true" />
+          <button
+            type="button"
+            className="fixed inset-0 bg-black/50 cursor-default"
+            onClick={closeSettings}
+            aria-label="Close cookie settings"
+          />
 
           {/* Modal */}
           <div className="relative min-h-screen flex items-center justify-center p-4">
-            <div
+            <dialog
+              open
+              aria-modal="true"
+              aria-labelledby="cookie-settings-title"
               className="relative bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               data-testid="cookie-settings-modal"
             >
@@ -595,7 +598,7 @@ export function CookieConsentBanner({
                   </button>
                 </div>
               </div>
-            </div>
+            </dialog>
           </div>
         </div>
       ) : null}

@@ -351,6 +351,7 @@ describe('Webhook Framework - Supplementary', () => {
 
   describe('Header Normalization', () => {
     it('should normalize headers to lowercase for signature lookup', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const crypto = require('crypto');
       const secret = 'normalize-test';
       const payload = jsonPayload({ id: 'h1', type: 'test.event', data: {} });

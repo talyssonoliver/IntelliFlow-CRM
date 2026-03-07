@@ -19,7 +19,8 @@ export * from './antivirus/NoOpAVScanner';
 // ICS Generation Service (IFC-158)
 export * from './ics/IcsGenerationService';
 
-// Calendar Adapters (IFC-138)
+// Calendar Adapters (IFC-138, IFC-224)
+export * from './calendar/google/client';
 export * from './calendar/microsoft/client';
 export * from './calendar/shared';
 

@@ -119,6 +119,61 @@ export class OutboundWebhookClient {
     this.config = OutboundWebhookConfigSchema.parse(config || {});
   }
 
+  private buildRequestHeaders(
+    request: WebhookRequest,
+    requestId: string,
+    payload: string
+  ): Record<string, string> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'User-Agent': this.config.userAgent,
+      'X-Request-ID': requestId,
+      'X-Timestamp': new Date().toISOString(),
+      ...request.headers,
+    };
+    if (request.idempotencyKey) headers['Idempotency-Key'] = request.idempotencyKey;
+    if (this.config.signingSecret) {
+      headers['X-Webhook-Signature'] = generateWebhookSignature(payload, this.config.signingSecret);
+    }
+    return headers;
+  }
+
+  private buildFailureResponse(
+    requestId: string,
+    statusCode: number | undefined,
+    error: string,
+    attempts: number,
+    durationMs: number
+  ): WebhookResponse {
+    return {
+      success: false,
+      requestId,
+      statusCode,
+      error,
+      attempts,
+      durationMs,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  private buildSuccessResponse(
+    requestId: string,
+    statusCode: number,
+    responseBody: string,
+    attempts: number,
+    durationMs: number
+  ): WebhookResponse {
+    return {
+      success: true,
+      requestId,
+      statusCode,
+      responseBody: responseBody.slice(0, 1000),
+      attempts,
+      durationMs,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   /**
    * Send a webhook with retry logic
    */
@@ -136,26 +191,7 @@ export class OutboundWebhookClient {
       attempts++;
 
       try {
-        const headers: Record<string, string> = {
-          'Content-Type': 'application/json',
-          'User-Agent': this.config.userAgent,
-          'X-Request-ID': requestId,
-          'X-Timestamp': new Date().toISOString(),
-          ...request.headers,
-        };
-
-        // Add idempotency key if provided
-        if (request.idempotencyKey) {
-          headers['Idempotency-Key'] = request.idempotencyKey;
-        }
-
-        // Add signature if secret is configured
-        if (this.config.signingSecret) {
-          headers['X-Webhook-Signature'] = generateWebhookSignature(
-            payload,
-            this.config.signingSecret
-          );
-        }
+        const headers = this.buildRequestHeaders(request, requestId, payload);
 
         // Create abort controller for timeout
         const controller = new AbortController();
@@ -182,13 +218,14 @@ export class OutboundWebhookClient {
             continue;
           }
 
+          const errorMsg = `HTTP ${response.status}: ${response.statusText}`;
           this.logDelivery({
             requestId,
             url: request.url,
             method,
             statusCode: response.status,
             success: false,
-            error: `HTTP ${response.status}: ${response.statusText}`,
+            error: errorMsg,
             attempts,
             durationMs,
             timestamp: new Date().toISOString(),
@@ -197,14 +234,8 @@ export class OutboundWebhookClient {
           });
 
           return {
-            success: false,
-            requestId,
-            statusCode: response.status,
+            ...this.buildFailureResponse(requestId, response.status, errorMsg, attempts, durationMs),
             responseBody: responseBody.slice(0, 1000),
-            error: `HTTP ${response.status}: ${response.statusText}`,
-            attempts,
-            durationMs,
-            timestamp: new Date().toISOString(),
           };
         }
 
@@ -221,15 +252,7 @@ export class OutboundWebhookClient {
           responseSize: responseBody.length,
         });
 
-        return {
-          success: true,
-          requestId,
-          statusCode: response.status,
-          responseBody: responseBody.slice(0, 1000),
-          attempts,
-          durationMs,
-          timestamp: new Date().toISOString(),
-        };
+        return this.buildSuccessResponse(requestId, response.status, responseBody, attempts, durationMs);
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
 

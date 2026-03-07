@@ -28,13 +28,15 @@ describe('cn utility function', () => {
 
   describe('Conditional classes', () => {
     it('should handle conditional classes with boolean true', () => {
-      const result = cn('base-class', true && 'conditional-class');
+      const show = true;
+      const result = cn('base-class', show && 'conditional-class');
       expect(result).toContain('base-class');
       expect(result).toContain('conditional-class');
     });
 
     it('should handle conditional classes with boolean false', () => {
-      const result = cn('base-class', false && 'conditional-class');
+      const show = false;
+      const result = cn('base-class', show && 'conditional-class');
       expect(result).toBe('base-class');
       expect(result).not.toContain('conditional-class');
     });
@@ -71,7 +73,8 @@ describe('cn utility function', () => {
     });
 
     it('should handle mixed undefined, null, and valid classes', () => {
-      const result = cn('base', undefined, null, 'valid-class', false && 'not-included');
+      const include = false;
+      const result = cn('base', undefined, null, 'valid-class', include && 'not-included');
       expect(result).toContain('base');
       expect(result).toContain('valid-class');
     });

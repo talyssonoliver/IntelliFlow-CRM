@@ -746,12 +746,13 @@ describe('Task Aggregate', () => {
       expect(task.description).toBe('Updated description');
     });
 
-    it('should not emit domain event for info update', () => {
+    it('should emit TaskUpdatedEvent for info update', () => {
       task.clearDomainEvents();
       task.updateTaskInfo({ title: 'New title' });
 
       const events = task.getDomainEvents();
-      expect(events).toHaveLength(0);
+      expect(events).toHaveLength(1);
+      expect(events[0].eventType).toBe('task.updated');
     });
   });
 

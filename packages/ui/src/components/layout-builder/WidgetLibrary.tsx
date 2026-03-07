@@ -143,19 +143,12 @@ export function WidgetLibraryItem({
   isDragging = false,
 }: WidgetLibraryItemProps) {
   return (
-    <div
+    <button
+      type="button"
       onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick?.();
-        }
-      }}
-      role="button"
-      tabIndex={0}
       className={`
         bg-white dark:bg-[#1a2632] p-3 rounded-lg border border-border-light dark:border-border-dark shadow-sm
-        cursor-grab hover:border-ds-primary hover:shadow-md transition-all flex items-center gap-3 group
+        cursor-grab hover:border-ds-primary hover:shadow-md transition-all flex items-center gap-3 group w-full text-left
         ${isDragging ? 'opacity-50 shadow-lg border-ds-primary' : ''}
       `}
     >
@@ -169,7 +162,7 @@ export function WidgetLibraryItem({
         <p className="text-xs text-slate-500 truncate">{template.description}</p>
       </div>
       <span className="material-symbols-outlined text-slate-300">drag_indicator</span>
-    </div>
+    </button>
   );
 }
 

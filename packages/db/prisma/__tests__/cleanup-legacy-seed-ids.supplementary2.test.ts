@@ -457,12 +457,7 @@ describe('cleanup-legacy-seed-ids - supplementary2', () => {
 
       try {
         // Simulate cleanup that throws on a non-ignorable error
-        try {
-          await mockDeleteMany({});
-        } catch (err: any) {
-          // Re-throw non-table errors
-          throw err;
-        }
+        await mockDeleteMany({});
       } catch (error) {
         console.error('Error:', error);
         process.exit(1);

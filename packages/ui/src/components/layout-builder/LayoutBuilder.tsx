@@ -155,7 +155,7 @@ export function LayoutBuilderHeader({
           disabled={!isDirty}
           className="flex items-center justify-center rounded-lg h-9 px-4 bg-ds-primary hover:bg-ds-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold shadow-sm shadow-ds-primary/30 transition-all"
         >
-          <span className="material-symbols-outlined text-[18px] mr-2">save</span>
+          <span className="material-symbols-outlined text-[18px] mr-2">save</span>{' '}
           Save Changes
         </button>
       </div>

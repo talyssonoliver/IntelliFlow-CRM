@@ -345,28 +345,30 @@ export class Invoice extends AggregateRoot<InvoiceId> {
     return Result.ok({ subtotal, totalTax, totalAmount: totalResult.value, taxRate });
   }
 
-  private static resolvePaymentTerms(
+  private static resolveTermsFromExplicitDueDate(
     props: CreateInvoiceProps,
     issueDate: Date
   ): Result<{ paymentTerms: PaymentTerms; dueDate: Date }, InvalidInvoiceError> {
-    if (props.dueDate) {
-      if (props.dueDate < issueDate) {
-        return Result.fail(new InvalidInvoiceError('Due date cannot be before issue date'));
-      }
-      const daysDiff = Math.ceil(
-        (props.dueDate.getTime() - issueDate.getTime()) / (1000 * 60 * 60 * 24)
-      );
-      const desc =
-        props.paymentTermsDescription ?? (daysDiff === 0 ? 'Due on Receipt' : `Net ${daysDiff}`);
-      const termsResult = PaymentTerms.create(daysDiff, desc);
-      if (termsResult.isFailure) {
-        return Result.fail(
-          new InvalidInvoiceError(`Invalid payment terms: ${termsResult.error.message}`)
-        );
-      }
-      return Result.ok({ paymentTerms: termsResult.value, dueDate: props.dueDate });
+    const dueDate = props.dueDate!;
+    if (dueDate < issueDate) {
+      return Result.fail(new InvalidInvoiceError('Due date cannot be before issue date'));
     }
+    const daysDiff = Math.ceil((dueDate.getTime() - issueDate.getTime()) / (1000 * 60 * 60 * 24));
+    const desc =
+      props.paymentTermsDescription ?? (daysDiff === 0 ? 'Due on Receipt' : `Net ${daysDiff}`);
+    const termsResult = PaymentTerms.create(daysDiff, desc);
+    if (termsResult.isFailure) {
+      return Result.fail(
+        new InvalidInvoiceError(`Invalid payment terms: ${termsResult.error.message}`)
+      );
+    }
+    return Result.ok({ paymentTerms: termsResult.value, dueDate });
+  }
 
+  private static resolveTermsFromDays(
+    props: CreateInvoiceProps,
+    issueDate: Date
+  ): Result<{ paymentTerms: PaymentTerms; dueDate: Date }, InvalidInvoiceError> {
     const days = props.paymentTermsDays ?? 30;
     const desc = props.paymentTermsDescription ?? (days === 0 ? 'Due on Receipt' : `Net ${days}`);
     const termsResult = PaymentTerms.create(days, desc);
@@ -379,6 +381,16 @@ export class Invoice extends AggregateRoot<InvoiceId> {
       paymentTerms: termsResult.value,
       dueDate: termsResult.value.calculateDueDate(issueDate),
     });
+  }
+
+  private static resolvePaymentTerms(
+    props: CreateInvoiceProps,
+    issueDate: Date
+  ): Result<{ paymentTerms: PaymentTerms; dueDate: Date }, InvalidInvoiceError> {
+    if (props.dueDate) {
+      return Invoice.resolveTermsFromExplicitDueDate(props, issueDate);
+    }
+    return Invoice.resolveTermsFromDays(props, issueDate);
   }
 
   static reconstitute(id: InvoiceId, props: InvoiceProps): Invoice {

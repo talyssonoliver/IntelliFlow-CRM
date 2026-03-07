@@ -43,6 +43,53 @@ export interface RescheduleAppointmentOutput {
 export class RescheduleAppointmentUseCase {
   constructor(private readonly appointmentRepository: AppointmentRepository) {}
 
+  private applyBufferUpdate(
+    appointment: Appointment,
+    updateBuffer: { bufferMinutesBefore: number; bufferMinutesAfter: number }
+  ): DomainError | null {
+    const bufferResult = Buffer.create(
+      updateBuffer.bufferMinutesBefore,
+      updateBuffer.bufferMinutesAfter
+    );
+    if (bufferResult.isFailure) return bufferResult.error;
+    const updateBufferResult = appointment.updateBuffer(bufferResult.value);
+    return updateBufferResult.isFailure ? updateBufferResult.error : null;
+  }
+
+  private mapConflictWarnings(
+    conflicts: Array<{ conflictingAppointmentId: { value: string }; overlapMinutes: number }>
+  ): Array<{ appointmentId: string; overlapMinutes: number }> {
+    return conflicts.map((c) => ({
+      appointmentId: c.conflictingAppointmentId.value,
+      overlapMinutes: c.overlapMinutes,
+    }));
+  }
+
+  private async fetchConflicts(
+    appointment: Appointment,
+    appointmentId: ReturnType<typeof AppointmentId.create> extends Result<infer V, unknown> ? V : never,
+    input: RescheduleAppointmentInput
+  ): Promise<Result<Appointment[], DomainError>> {
+    try {
+      const allAttendees = [appointment.organizerId, ...appointment.attendeeIds];
+      const appointments = await this.appointmentRepository.findForConflictCheck(
+        allAttendees,
+        {
+          startTime: appointment.buffer.adjustStartTime(input.newStartTime),
+          endTime: appointment.buffer.adjustEndTime(input.newEndTime),
+        },
+        appointmentId
+      );
+      return Result.ok(appointments);
+    } catch (error) {
+      return Result.fail(
+        new ConflictDetectionError(
+          `Failed to fetch appointments for conflict check: ${error instanceof Error ? error.message : 'Unknown error'}`
+        )
+      );
+    }
+  }
+
   async execute(
     input: RescheduleAppointmentInput
   ): Promise<Result<RescheduleAppointmentOutput, DomainError>> {
@@ -68,44 +115,19 @@ export class RescheduleAppointmentUseCase {
 
       // Update buffer if provided
       if (input.updateBuffer) {
-        const bufferResult = Buffer.create(
-          input.updateBuffer.bufferMinutesBefore,
-          input.updateBuffer.bufferMinutesAfter
-        );
-        if (bufferResult.isFailure) {
-          return Result.fail(bufferResult.error);
-        }
-        const updateBufferResult = appointment.updateBuffer(bufferResult.value);
-        if (updateBufferResult.isFailure) {
-          return Result.fail(updateBufferResult.error);
-        }
+        const bufferError = this.applyBufferUpdate(appointment, input.updateBuffer);
+        if (bufferError) return Result.fail(bufferError);
       }
 
       // Check for conflicts at new time
-      const allAttendees = [appointment.organizerId, ...appointment.attendeeIds];
       const newTimeSlotResult = TimeSlot.create(input.newStartTime, input.newEndTime);
       if (newTimeSlotResult.isFailure) {
         return Result.fail(newTimeSlotResult.error);
       }
 
-      let existingAppointments: Appointment[];
-      try {
-        existingAppointments = await this.appointmentRepository.findForConflictCheck(
-          allAttendees,
-          {
-            startTime: appointment.buffer.adjustStartTime(input.newStartTime),
-            endTime: appointment.buffer.adjustEndTime(input.newEndTime),
-          },
-          appointmentId // Exclude self
-        );
-      } catch (error) {
-        // Wrap repository errors as ConflictDetectionError
-        return Result.fail(
-          new ConflictDetectionError(
-            `Failed to fetch appointments for conflict check: ${error instanceof Error ? error.message : 'Unknown error'}`
-          )
-        );
-      }
+      const conflictsResult = await this.fetchConflicts(appointment, appointmentId, input);
+      if (conflictsResult.isFailure) return Result.fail(conflictsResult.error);
+      const existingAppointments = conflictsResult.value;
 
       const conflictResult = ConflictDetector.checkTimeSlotConflicts(
         newTimeSlotResult.value,
@@ -114,17 +136,12 @@ export class RescheduleAppointmentUseCase {
       );
 
       // If conflicts exist and not forcing override
-      if (conflictResult.hasConflicts && !input.forceOverrideConflicts) {
-        const conflictWarnings = conflictResult.conflicts.map((c) => ({
-          appointmentId: c.conflictingAppointmentId.value,
-          overlapMinutes: c.overlapMinutes,
-        }));
+      const conflictWarnings = conflictResult.hasConflicts
+        ? this.mapConflictWarnings(conflictResult.conflicts)
+        : undefined;
 
-        return Result.ok({
-          appointment,
-          previousTimeSlot,
-          conflictWarnings,
-        });
+      if (conflictResult.hasConflicts && !input.forceOverrideConflicts) {
+        return Result.ok({ appointment, previousTimeSlot, conflictWarnings });
       }
 
       // Perform the reschedule
@@ -142,16 +159,7 @@ export class RescheduleAppointmentUseCase {
       // Save changes
       await this.appointmentRepository.save(appointment);
 
-      return Result.ok({
-        appointment,
-        previousTimeSlot,
-        conflictWarnings: conflictResult.hasConflicts
-          ? conflictResult.conflicts.map((c) => ({
-              appointmentId: c.conflictingAppointmentId.value,
-              overlapMinutes: c.overlapMinutes,
-            }))
-          : undefined,
-      });
+      return Result.ok({ appointment, previousTimeSlot, conflictWarnings });
     } catch (error) {
       return Result.fail(
         new PersistenceError(

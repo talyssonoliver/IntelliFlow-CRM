@@ -68,7 +68,7 @@ const IconBadge = React.forwardRef<HTMLDivElement, IconBadgeProps>(
     const iconSize = iconSizeMap[size || 'md'];
 
     return (
-      <div
+      <div // NOSONAR — icon font badge; role="img" with aria-label is the correct ARIA pattern for labelled icon fonts, no native <img> equivalent
         ref={ref}
         className={cn(iconBadgeVariants({ variant, size, shape }), className)}
         role={label ? 'img' : undefined}

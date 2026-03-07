@@ -297,6 +297,7 @@ describe('AnalyticsAggregationService', () => {
           action: 'CREATE',
           icon: 'add_circle',
           description: 'New item: Test',
+          actorName: 'Test User',
           createdAt: new Date(),
         },
       ];

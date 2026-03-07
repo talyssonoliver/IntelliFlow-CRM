@@ -226,6 +226,52 @@ export class OpportunityService {
     };
   }
 
+  private async validateAccountId(accountId: string): Promise<DomainError | null> {
+    const accountIdResult = AccountId.create(accountId);
+    if (accountIdResult.isFailure) return accountIdResult.error;
+    const account = await this.accountRepository.findById(accountIdResult.value);
+    if (!account) return new NotFoundError(`Account not found: ${accountId}`);
+    return null;
+  }
+
+  private async validateContactId(contactId: string): Promise<DomainError | null> {
+    const contactIdResult = ContactId.create(contactId);
+    if (contactIdResult.isFailure) return contactIdResult.error;
+    const contact = await this.contactRepository.findById(contactIdResult.value);
+    if (!contact) return new NotFoundError(`Contact not found: ${contactId}`);
+    return null;
+  }
+
+  private applyValueUpdate(
+    opportunity: Opportunity,
+    value: number | undefined,
+    updatedBy: string
+  ): DomainError | null {
+    if (value === undefined) return null;
+    const result = opportunity.updateValue(value, updatedBy);
+    return result.isFailure ? result.error : null;
+  }
+
+  private applyProbabilityUpdate(
+    opportunity: Opportunity,
+    probability: number | undefined,
+    updatedBy: string
+  ): DomainError | null {
+    if (probability === undefined) return null;
+    const result = opportunity.updateProbability(probability, updatedBy);
+    return result.isFailure ? result.error : null;
+  }
+
+  private applyExpectedCloseDateUpdate(
+    opportunity: Opportunity,
+    expectedCloseDate: Date | null | undefined,
+    updatedBy: string
+  ): DomainError | null {
+    if (expectedCloseDate === undefined || expectedCloseDate === null) return null;
+    const result = opportunity.updateExpectedCloseDate(expectedCloseDate, updatedBy);
+    return result.isFailure ? result.error : null;
+  }
+
   /**
    * Update opportunity with validation
    */
@@ -252,61 +298,30 @@ export class OpportunityService {
       return Result.fail(new NotFoundError(`Opportunity not found: ${opportunityId}`));
     }
 
-    // Validate accountId if provided
     if (data.accountId !== undefined) {
-      const accountIdResult = AccountId.create(data.accountId);
-      if (accountIdResult.isFailure) {
-        return Result.fail(accountIdResult.error);
-      }
-      const account = await this.accountRepository.findById(accountIdResult.value);
-      if (!account) {
-        return Result.fail(new NotFoundError(`Account not found: ${data.accountId}`));
-      }
+      const accountError = await this.validateAccountId(data.accountId);
+      if (accountError) return Result.fail(accountError);
     }
 
-    // Validate contactId if provided
     if (data.contactId !== undefined && data.contactId !== null) {
-      const contactIdResult = ContactId.create(data.contactId);
-      if (contactIdResult.isFailure) {
-        return Result.fail(contactIdResult.error);
-      }
-      const contact = await this.contactRepository.findById(contactIdResult.value);
-      if (!contact) {
-        return Result.fail(new NotFoundError(`Contact not found: ${data.contactId}`));
-      }
+      const contactError = await this.validateContactId(data.contactId);
+      if (contactError) return Result.fail(contactError);
     }
 
-    // Apply updates using domain methods
-    if (data.value !== undefined) {
-      const valueResult = opportunity.updateValue(data.value, updatedBy);
-      if (valueResult.isFailure) {
-        return Result.fail(valueResult.error);
-      }
-    }
+    // Apply scalar updates using extracted helpers
+    const valueError = this.applyValueUpdate(opportunity, data.value, updatedBy);
+    if (valueError) return Result.fail(valueError);
 
-    if (data.probability !== undefined) {
-      const probResult = opportunity.updateProbability(data.probability, updatedBy);
-      if (probResult.isFailure) {
-        return Result.fail(probResult.error);
-      }
-    }
+    const probError = this.applyProbabilityUpdate(opportunity, data.probability, updatedBy);
+    if (probError) return Result.fail(probError);
 
     if (data.stage !== undefined) {
       const stageError = this.applyStageChange(opportunity, data.stage, updatedBy);
       if (stageError) return Result.fail(stageError);
     }
 
-    if (data.expectedCloseDate !== undefined) {
-      if (data.expectedCloseDate === null) {
-        // Clear expected close date - need to handle this case
-        // For now, we'll skip if null (domain may not support clearing)
-      } else {
-        const dateResult = opportunity.updateExpectedCloseDate(data.expectedCloseDate, updatedBy);
-        if (dateResult.isFailure) {
-          return Result.fail(dateResult.error);
-        }
-      }
-    }
+    const dateError = this.applyExpectedCloseDateUpdate(opportunity, data.expectedCloseDate, updatedBy);
+    if (dateError) return Result.fail(dateError);
 
     // Name update - domain entity may need a method for this
     // For now, we assume it's handled at persistence layer

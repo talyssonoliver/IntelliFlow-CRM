@@ -419,6 +419,7 @@ describe('Tracing Module', () => {
     });
 
     it('should support custom span kind', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { SpanKind } = require('@opentelemetry/api');
 
       await trace('test-operation', async () => {}, { kind: SpanKind.SERVER });
@@ -431,6 +432,7 @@ describe('Tracing Module', () => {
     }, 10000);
 
     it('should default to INTERNAL span kind', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { SpanKind } = require('@opentelemetry/api');
 
       await trace('test-operation', async () => {});
@@ -504,6 +506,7 @@ describe('Tracing Module', () => {
     });
 
     it('should support custom span kind', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { SpanKind } = require('@opentelemetry/api');
 
       createSpan('manual-span', { kind: SpanKind.CLIENT });
@@ -820,7 +823,7 @@ describe('Tracing Module', () => {
     it('should preserve this context', async () => {
       let capturedThis: any = null;
       const originalMethod = vi.fn(async function (this: any) {
-        capturedThis = this;
+        capturedThis = this; // eslint-disable-line @typescript-eslint/no-this-alias
         return this.value;
       });
 

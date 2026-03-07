@@ -2,6 +2,22 @@ import { DomainEvent } from '../../shared/DomainEvent';
 import { TicketId } from './TicketId';
 import type { TicketStatus, TicketPriority } from '../../support/TicketConstants';
 
+function slaBreachPayload(
+  ticketId: TicketId,
+  slaType: string,
+  dueAt: Date,
+  breachedAt: Date,
+  slaPolicyId: string
+): Record<string, unknown> {
+  return {
+    ticketId: ticketId.value,
+    slaType,
+    dueAt: dueAt.toISOString(),
+    breachedAt: breachedAt.toISOString(),
+    slaPolicyId,
+  };
+}
+
 /**
  * Event: Ticket was created
  */
@@ -215,12 +231,7 @@ export class TicketResponseSlaBreachedEvent extends DomainEvent {
   }
 
   toPayload(): Record<string, unknown> {
-    return {
-      ticketId: this.ticketId.value,
-      dueAt: this.dueAt.toISOString(),
-      breachedAt: this.breachedAt.toISOString(),
-      slaPolicyId: this.slaPolicyId,
-    };
+    return slaBreachPayload(this.ticketId, 'response', this.dueAt, this.breachedAt, this.slaPolicyId);
   }
 }
 
@@ -240,13 +251,7 @@ export class TicketResolutionSlaBreachedEvent extends DomainEvent {
   }
 
   toPayload(): Record<string, unknown> {
-    return {
-      ticketId: this.ticketId.value,
-      slaType: 'resolution',
-      dueAt: this.dueAt.toISOString(),
-      breachedAt: this.breachedAt.toISOString(),
-      slaPolicyId: this.slaPolicyId,
-    };
+    return slaBreachPayload(this.ticketId, 'resolution', this.dueAt, this.breachedAt, this.slaPolicyId);
   }
 }
 

@@ -176,6 +176,50 @@ export class TaskDueDateChangedEvent extends DomainEvent {
 }
 
 /**
+ * Event: Task info (title/description) was updated
+ */
+export class TaskUpdatedEvent extends DomainEvent {
+  readonly eventType = 'task.updated';
+
+  constructor(
+    public readonly taskId: TaskId,
+    public readonly changedFields: string[],
+    public readonly updatedBy: string
+  ) {
+    super();
+  }
+
+  toPayload(): Record<string, unknown> {
+    return {
+      taskId: this.taskId.value,
+      changedFields: this.changedFields,
+      updatedBy: this.updatedBy,
+    };
+  }
+}
+
+/**
+ * Event: Task was deleted
+ */
+export class TaskDeletedEvent extends DomainEvent {
+  readonly eventType = 'task.deleted';
+
+  constructor(
+    public readonly taskId: TaskId,
+    public readonly deletedBy: string
+  ) {
+    super();
+  }
+
+  toPayload(): Record<string, unknown> {
+    return {
+      taskId: this.taskId.value,
+      deletedBy: this.deletedBy,
+    };
+  }
+}
+
+/**
  * Event: Task was assigned to entity
  */
 export class TaskAssignedEvent extends DomainEvent {

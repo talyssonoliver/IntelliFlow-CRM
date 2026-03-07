@@ -49,7 +49,7 @@ export class JobMetricsCollector {
   private failedInWindow: TimestampedValue[] = [];
 
   // Error tracking
-  private errorCounts: Map<string, number> = new Map();
+  private readonly errorCounts: Map<string, number> = new Map();
 
   constructor(queueName: string, windowMs = 60000, maxSamples = 1000) {
     this.queueName = queueName;

@@ -92,12 +92,12 @@ export function initTracing(config: TracingConfig): void {
   });
 
   // Type assertions needed due to OTel package version mismatches across dependencies
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const traceExporter = new OTLPTraceExporter({
     url: config.endpoint || process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4317',
   }) as any;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const spanProcessor = new BatchSpanProcessor(traceExporter) as any;
 
   sdk = new NodeSDK({

@@ -18,6 +18,7 @@ describe('Webhook Framework', () => {
         const signature = '3f4fc4c4c1c6a4b6e4f8a4c8c3f4c4c4c1c6a4b6e4f8a4c8c3f4c4c4c1c6a4b6';
 
         // For this test, we'll use the actual verifier
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const crypto = require('crypto');
         const correctSignature = crypto.createHmac('sha256', secret).update(payload).digest('hex');
 
@@ -41,6 +42,7 @@ describe('Webhook Framework', () => {
         const secret = 'whsec_test';
         const timestamp = Math.floor(Date.now() / 1000);
 
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const crypto = require('crypto');
         const v1 = crypto
           .createHmac('sha256', secret)
@@ -58,6 +60,7 @@ describe('Webhook Framework', () => {
         const secret = 'whsec_test';
         const oldTimestamp = Math.floor(Date.now() / 1000) - 400; // 6+ minutes ago
 
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const crypto = require('crypto');
         const v1 = crypto
           .createHmac('sha256', secret)
@@ -76,6 +79,7 @@ describe('Webhook Framework', () => {
         const payload = '{"action":"opened"}';
         const secret = 'github-secret';
 
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const crypto = require('crypto');
         const signature =
           'sha256=' + crypto.createHmac('sha256', secret).update(payload).digest('hex');

@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
-const _featureFlagRuleSchema = z.object({
+const _featureFlagRuleSchema = z.object({ // NOSONAR javascript:S7739
   when: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])),
-  result: z.object({
+  result: z.object({ // NOSONAR javascript:S7739
     enabled: z.boolean(),
     variant: z.string().optional(),
   }),

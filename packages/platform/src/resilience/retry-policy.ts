@@ -269,6 +269,34 @@ export interface RetryOptions<T> {
  * );
  * ```
  */
+async function executeAttempt<T>(
+  fn: () => Promise<T>,
+  parsedConfig: RetryPolicyConfig,
+  context: RetryContext,
+  options: RetryOptions<T>,
+  attemptStart: number
+): Promise<{ result: T } | { error: Error }> {
+  try {
+    const result = await withTimeout(fn, parsedConfig.attemptTimeoutMs);
+    options.onEvent?.({
+      type: 'attempt_success',
+      context,
+      duration: Date.now() - attemptStart,
+      timestamp: Date.now(),
+    });
+    return { result };
+  } catch (error) {
+    const lastError = error instanceof Error ? error : new Error(String(error));
+    options.onEvent?.({
+      type: 'attempt_failure',
+      context: { ...context, lastError },
+      error: lastError,
+      timestamp: Date.now(),
+    });
+    return { error: lastError };
+  }
+}
+
 export async function withRetry<T>(
   fn: () => Promise<T>,
   config: Partial<RetryPolicyConfig> = {},
@@ -291,83 +319,73 @@ export async function withRetry<T>(
       nextDelayMs: attempt < parsedConfig.maxRetries ? calculateBackoff(attempt, parsedConfig) : 0,
     };
 
-    options.onEvent?.({
-      type: 'attempt_start',
-      context,
-      timestamp: Date.now(),
-    });
+    options.onEvent?.({ type: 'attempt_start', context, timestamp: Date.now() });
 
     const attemptStart = Date.now();
+    const outcome = await executeAttempt(fn, parsedConfig, context, options, attemptStart);
 
-    try {
-      const result = await withTimeout(fn, parsedConfig.attemptTimeoutMs);
+    if ('result' in outcome) return outcome.result;
 
+    lastError = outcome.error;
+
+    // Check if we've exhausted retries
+    if (attempt >= parsedConfig.maxRetries) {
       options.onEvent?.({
-        type: 'attempt_success',
-        context,
-        duration: Date.now() - attemptStart,
-        timestamp: Date.now(),
-      });
-
-      return result;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-
-      options.onEvent?.({
-        type: 'attempt_failure',
+        type: 'max_retries_exceeded',
         context: { ...context, lastError },
-        error: lastError,
         timestamp: Date.now(),
       });
-
-      // Check if we've exhausted retries
-      if (attempt >= parsedConfig.maxRetries) {
-        options.onEvent?.({
-          type: 'max_retries_exceeded',
-          context: { ...context, lastError },
-          timestamp: Date.now(),
-        });
-        break;
-      }
-
-      // Check if error is retryable
-      const shouldRetry = options.shouldRetry
-        ? options.shouldRetry(lastError, context)
-        : isRetryableError(lastError, parsedConfig);
-
-      if (!shouldRetry) {
-        break;
-      }
-
-      // Calculate delay
-      const rateLimitDelay =
-        lastError instanceof RateLimitError ? lastError.retryAfterMs : undefined;
-      const delayMs = calculateBackoff(attempt, parsedConfig, rateLimitDelay);
-
-      options.onEvent?.({
-        type: 'retry_scheduled',
-        context: { ...context, nextDelayMs: delayMs },
-        delayMs,
-        timestamp: Date.now(),
-      });
-
-      // Call onRetry callback
-      options.onRetry?.({ ...context, nextDelayMs: delayMs }, lastError);
-
-      // Wait before retry
-      await sleep(delayMs);
+      break;
     }
+
+    // Check if error is retryable
+    const shouldRetry = options.shouldRetry
+      ? options.shouldRetry(lastError, context)
+      : isRetryableError(lastError, parsedConfig);
+
+    if (!shouldRetry) break;
+
+    await scheduleRetry(attempt, parsedConfig, lastError, context, options);
   }
 
-  // All retries exhausted or non-retryable error
+  return resolveRetryFallback(options, parsedConfig, lastError!);
+}
+
+function resolveRetryFallback<T>(
+  options: RetryOptions<T>,
+  parsedConfig: RetryPolicyConfig,
+  lastError: Error
+): T | Promise<T> {
   if (options.fallback !== undefined) {
     if (typeof options.fallback === 'function') {
-      return (options.fallback as (error: Error) => T | Promise<T>)(lastError!);
+      return (options.fallback as (error: Error) => T | Promise<T>)(lastError);
     }
     return options.fallback;
   }
+  throw new MaxRetriesExceededError(parsedConfig.maxRetries + 1, lastError);
+}
 
-  throw new MaxRetriesExceededError(parsedConfig.maxRetries + 1, lastError!);
+async function scheduleRetry<T>(
+  attempt: number,
+  parsedConfig: RetryPolicyConfig,
+  lastError: Error,
+  context: RetryContext,
+  options: RetryOptions<T>
+): Promise<void> {
+  const rateLimitDelay =
+    lastError instanceof RateLimitError ? lastError.retryAfterMs : undefined;
+  const delayMs = calculateBackoff(attempt, parsedConfig, rateLimitDelay);
+
+  options.onEvent?.({
+    type: 'retry_scheduled',
+    context: { ...context, nextDelayMs: delayMs },
+    delayMs,
+    timestamp: Date.now(),
+  });
+
+  options.onRetry?.({ ...context, nextDelayMs: delayMs }, lastError);
+
+  await sleep(delayMs);
 }
 
 /**

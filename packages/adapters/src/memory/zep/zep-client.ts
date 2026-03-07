@@ -146,7 +146,7 @@ export class ZepMemoryAdapter {
   private isInitializedFlag = false;
 
   // In-memory fallback when approaching limit
-  private inMemoryFallback: Map<string, ZepMemory> = new Map();
+  private readonly inMemoryFallback: Map<string, ZepMemory> = new Map();
   private useFallback = false;
 
   // Prisma persistence

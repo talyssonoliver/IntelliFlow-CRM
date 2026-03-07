@@ -11,6 +11,7 @@ import {
   TaskPriorityChangedEvent,
   TaskDueDateChangedEvent,
   TaskAssignedEvent,
+  TaskUpdatedEvent,
 } from './TaskEvents';
 
 export class TaskAlreadyCompletedError extends DomainError {
@@ -325,14 +326,21 @@ export class Task extends AggregateRoot<TaskId> {
     this.addDomainEvent(new TaskAssignedEvent(this.id, 'opportunity', opportunityId, assignedBy));
   }
 
-  updateTaskInfo(updates: Partial<Pick<TaskProps, 'title' | 'description'>>): void {
+  updateTaskInfo(updates: Partial<Pick<TaskProps, 'title' | 'description'>>, updatedBy?: string): void {
+    const changedFields: string[] = [];
     if (updates.title !== undefined) {
       this.props.title = updates.title;
+      changedFields.push('title');
     }
     if (updates.description !== undefined) {
       this.props.description = updates.description;
+      changedFields.push('description');
     }
     this.props.updatedAt = new Date();
+
+    if (changedFields.length > 0) {
+      this.addDomainEvent(new TaskUpdatedEvent(this.id, changedFields, updatedBy ?? 'system'));
+    }
   }
 
   // Serialization

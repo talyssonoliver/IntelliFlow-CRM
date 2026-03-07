@@ -717,6 +717,22 @@ export class TaskService {
     return Result.ok(undefined);
   }
 
+  private selectValidationPromise(
+    entityType: 'lead' | 'contact' | 'opportunity',
+    entityId: string
+  ): Promise<TaskAssignmentValidation> | null {
+    switch (entityType) {
+      case 'lead':
+        return this.validateLeadAssignment(entityId);
+      case 'contact':
+        return this.validateContactAssignment(entityId);
+      case 'opportunity':
+        return this.validateOpportunityAssignment(entityId);
+      default:
+        return null;
+    }
+  }
+
   /**
    * Validate entity assignment
    */
@@ -724,23 +740,11 @@ export class TaskService {
     entityType: 'lead' | 'contact' | 'opportunity',
     entityId: string
   ): Promise<TaskAssignmentValidation> {
+    const validationPromise = this.selectValidationPromise(entityType, entityId);
+    if (!validationPromise) {
+      return { entityType, entityId, isValid: false, reason: 'Unknown entity type' };
+    }
     try {
-      let validationPromise: Promise<TaskAssignmentValidation>;
-
-      switch (entityType) {
-        case 'lead':
-          validationPromise = this.validateLeadAssignment(entityId);
-          break;
-        case 'contact':
-          validationPromise = this.validateContactAssignment(entityId);
-          break;
-        case 'opportunity':
-          validationPromise = this.validateOpportunityAssignment(entityId);
-          break;
-        default:
-          return { entityType, entityId, isValid: false, reason: 'Unknown entity type' };
-      }
-
       return await validationPromise;
     } catch (error) {
       return {

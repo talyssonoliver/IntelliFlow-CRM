@@ -9,3 +9,4 @@ export * from './MockAIService';
 export * from './OllamaAIService';
 export * from './GuardrailsAIService';
 export * from './MockNotificationServiceAdapter';
+export * from './RealNotificationServiceAdapter';

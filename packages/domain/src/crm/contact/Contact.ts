@@ -342,82 +342,11 @@ export class Contact extends AggregateRoot<ContactId> {
   ): Result<void, DomainError> {
     const updatedFields: string[] = [];
 
-    if (updates.firstName !== undefined && updates.firstName !== this.props.firstName) {
-      this.props.firstName = updates.firstName;
-      updatedFields.push('firstName');
-    }
-
-    if (updates.lastName !== undefined && updates.lastName !== this.props.lastName) {
-      this.props.lastName = updates.lastName;
-      updatedFields.push('lastName');
-    }
-
-    if (updates.title !== undefined && updates.title !== this.props.title) {
-      this.props.title = updates.title;
-      updatedFields.push('title');
-    }
+    this.applyScalarUpdates(updates, updatedFields);
 
     if (updates.phone !== undefined) {
-      const resolvedPhone = this.resolvePhone(updates.phone);
-      if (resolvedPhone.isFailure) {
-        return Result.fail(resolvedPhone.error);
-      }
-      const newPhone = resolvedPhone.value;
-      if (!this.props.phone?.equals(newPhone)) {
-        this.props.phone = newPhone;
-        updatedFields.push('phone');
-      }
-    }
-
-    if (updates.department !== undefined && updates.department !== this.props.department) {
-      this.props.department = updates.department;
-      updatedFields.push('department');
-    }
-
-    if (updates.status !== undefined && updates.status !== this.props.status) {
-      this.props.status = updates.status;
-      updatedFields.push('status');
-    }
-
-    // Extended field updates
-    if (updates.streetAddress !== undefined && updates.streetAddress !== this.props.streetAddress) {
-      this.props.streetAddress = updates.streetAddress;
-      updatedFields.push('streetAddress');
-    }
-
-    if (updates.city !== undefined && updates.city !== this.props.city) {
-      this.props.city = updates.city;
-      updatedFields.push('city');
-    }
-
-    if (updates.zipCode !== undefined && updates.zipCode !== this.props.zipCode) {
-      this.props.zipCode = updates.zipCode;
-      updatedFields.push('zipCode');
-    }
-
-    if (updates.company !== undefined && updates.company !== this.props.company) {
-      this.props.company = updates.company;
-      updatedFields.push('company');
-    }
-
-    if (updates.linkedInUrl !== undefined && updates.linkedInUrl !== this.props.linkedInUrl) {
-      this.props.linkedInUrl = updates.linkedInUrl;
-      updatedFields.push('linkedInUrl');
-    }
-
-    if (updates.contactType !== undefined && updates.contactType !== this.props.contactType) {
-      this.props.contactType = updates.contactType;
-      updatedFields.push('contactType');
-    }
-
-    if (updates.tags !== undefined) {
-      this.props.tags = updates.tags;
-      updatedFields.push('tags');
-    }
-
-    if (updates.contactNotes !== undefined && updates.contactNotes !== this.props.contactNotes) {
-      this.props.contactNotes = updates.contactNotes;
-      updatedFields.push('contactNotes');
+      const phoneError = this.applyPhoneUpdate(updates.phone, updatedFields);
+      if (phoneError) return Result.fail(phoneError);
     }
 
     if (updatedFields.length > 0) {
@@ -426,6 +355,47 @@ export class Contact extends AggregateRoot<ContactId> {
     }
 
     return Result.ok(undefined);
+  }
+
+  private applyPhoneUpdate(phone: string | PhoneNumber, updatedFields: string[]): DomainError | null {
+    const resolvedPhone = this.resolvePhone(phone);
+    if (resolvedPhone.isFailure) return resolvedPhone.error;
+    const newPhone = resolvedPhone.value;
+    if (!this.props.phone?.equals(newPhone)) {
+      this.props.phone = newPhone;
+      updatedFields.push('phone');
+    }
+    return null;
+  }
+
+  private applyScalarUpdates(
+    updates: Partial<{
+      firstName: string; lastName: string; title: string; department: string;
+      status: ContactStatus; streetAddress: string; city: string; zipCode: string;
+      company: string; linkedInUrl: string; contactType: ContactType;
+      tags: string[]; contactNotes: string;
+    }>,
+    updatedFields: string[]
+  ): void {
+    const simpleFields = [
+      'firstName', 'lastName', 'title', 'department', 'status',
+      'streetAddress', 'city', 'zipCode', 'company', 'linkedInUrl',
+      'contactType', 'contactNotes',
+    ] as const;
+
+    for (const field of simpleFields) {
+      const val = updates[field];
+      const propsAsMap = this.props as unknown as Record<string, unknown>;
+      if (val !== undefined && val !== propsAsMap[field]) {
+        propsAsMap[field] = val;
+        updatedFields.push(field);
+      }
+    }
+
+    if (updates.tags !== undefined) {
+      this.props.tags = updates.tags;
+      updatedFields.push('tags');
+    }
   }
 
   private resolvePhone(phone: string | PhoneNumber): Result<PhoneNumber, DomainError> {

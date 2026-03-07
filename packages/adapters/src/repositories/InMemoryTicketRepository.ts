@@ -23,6 +23,30 @@ const PRIORITY_ORDER: Record<TicketPriority, number> = {
   LOW: 3,
 };
 
+/** Returns true if the ticket matches all given filters */
+function ticketMatchesFilters(ticket: TicketDTO, filters: TicketFilters): boolean {
+  if (ticket.tenantId !== filters.tenantId) return false;
+  if (filters.status && ticket.status !== filters.status) return false;
+  if (filters.priority && ticket.priority !== filters.priority) return false;
+  if (filters.assigneeId && ticket.assigneeId !== filters.assigneeId) return false;
+  if (filters.slaStatus && ticket.slaStatus !== filters.slaStatus) return false;
+  if (filters.contactId && ticket.contactId !== filters.contactId) return false;
+  return true;
+}
+
+/** Sort comparator that tries each orderBy field in sequence */
+function multiFieldComparator(
+  a: TicketDTO,
+  b: TicketDTO,
+  orderBy: Array<{ field: keyof TicketDTO; direction: 'asc' | 'desc' }>
+): number {
+  for (const order of orderBy) {
+    const result = compareFieldValues(a[order.field], b[order.field], order.field, order.direction);
+    if (result !== 0) return result;
+  }
+  return 0;
+}
+
 /** Compare two TicketDTO values for a single sort field */
 function compareFieldValues(
   aVal: TicketDTO[keyof TicketDTO],
@@ -57,38 +81,12 @@ export class InMemoryTicketRepository implements TicketRepository {
    * Find tickets with filters, pagination, and optional relations
    */
   async findMany(filters: TicketFilters, options?: TicketQueryOptions): Promise<TicketListResult> {
-    let tickets = Array.from(this.tickets.values());
-
-    // Apply filters
-    tickets = tickets.filter((ticket) => {
-      if (ticket.tenantId !== filters.tenantId) return false;
-      if (filters.status && ticket.status !== filters.status) return false;
-      if (filters.priority && ticket.priority !== filters.priority) return false;
-      if (filters.assigneeId && ticket.assigneeId !== filters.assigneeId) return false;
-      if (filters.slaStatus && ticket.slaStatus !== filters.slaStatus) return false;
-      if (filters.contactId && ticket.contactId !== filters.contactId) return false;
-      return true;
-    });
-
-    // Get total before pagination
+    let tickets = Array.from(this.tickets.values()).filter((t) => ticketMatchesFilters(t, filters));
     const total = tickets.length;
 
-    // Apply sorting
     if (options?.orderBy && options.orderBy.length > 0) {
-      tickets.sort((a, b) => {
-        for (const order of options.orderBy!) {
-          const result = compareFieldValues(
-            a[order.field],
-            b[order.field],
-            order.field,
-            order.direction
-          );
-          if (result !== 0) return result;
-        }
-        return 0;
-      });
+      tickets.sort((a, b) => multiFieldComparator(a, b, options.orderBy!));
     } else {
-      // Default sort by createdAt desc
       tickets.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     }
 

@@ -100,13 +100,7 @@ export function TableRowActions<T>({
     <div
       className="flex items-center justify-end gap-1"
       onClick={(e) => e.stopPropagation()}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      }}
-      role="presentation"
+      onKeyDown={(e) => e.stopPropagation()}
     >
       {/* Quick action buttons (icon only) */}
       {quickActions?.map((action, index) => (
@@ -210,16 +204,15 @@ export function ConfirmationDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      role="button"
+      tabIndex={0}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 cursor-default"
       onClick={() => onOpenChange(false)}
       onKeyDown={(e) => {
         if (e.key === 'Escape') onOpenChange(false);
       }}
-      role="presentation"
-      aria-hidden="true"
+      aria-label="Close dialog"
     >
-      {' '}
-      {/* NOSONAR */}
       <div
         role="dialog"
         aria-modal="true"
@@ -227,9 +220,6 @@ export function ConfirmationDialog({
         aria-describedby={description ? 'confirmation-dialog-desc' : undefined}
         className="bg-white dark:bg-slate-900 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
         onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => {
-          if (e.key === 'Escape') onOpenChange(false);
-        }}
       >
         <div className="flex items-start gap-4">
           {icon && (
@@ -318,19 +308,17 @@ export function StatusSelectDialog({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    <button
+      type="button"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 cursor-default"
       onClick={() => onOpenChange(false)}
       onKeyDown={(e) => {
         if (e.key === 'Escape') onOpenChange(false);
       }}
-      role="presentation"
-      aria-hidden="true"
+      aria-label="Close dialog"
     >
-      {' '}
-      {/* NOSONAR */}
-      <div
-        role="dialog"
+      <dialog
+        open
         aria-modal="true"
         aria-labelledby="status-dialog-title"
         aria-describedby={description ? 'status-dialog-desc' : undefined}
@@ -348,31 +336,37 @@ export function StatusSelectDialog({
             {description}
           </p>
         )}
-        <div className="mt-4 space-y-2" role="radiogroup" aria-label={title}>
+        <fieldset className="mt-4 space-y-2 border-0 p-0 m-0">
+          <legend className="sr-only">{title}</legend>
           {options.map((option) => (
-            <button
+            <label
               key={option.value}
-              role="radio"
-              aria-checked={selectedValue === option.value}
-              className={`w-full text-left px-4 py-2 rounded ${
+              className={`flex items-center w-full px-4 py-2 rounded cursor-pointer ${
                 selectedValue === option.value
                   ? 'bg-primary text-primary-foreground'
                   : 'hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
-              onClick={() => setSelectedValue(option.value)}
             >
+              <input
+                type="radio"
+                name="status-select"
+                value={option.value}
+                checked={selectedValue === option.value}
+                onChange={() => setSelectedValue(option.value)}
+                className="sr-only"
+              />
               {option.label}
-            </button>
+            </label>
           ))}
-        </div>
+        </fieldset>
         <div className="mt-6 flex justify-end gap-3">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button onClick={handleConfirm}>Confirm</Button>
         </div>
-      </div>
-    </div>
+      </dialog>
+    </button>
   );
 }
 
@@ -402,6 +396,7 @@ function BulkActionsBar<T>({
           {selectedCount} item{selectedCount > 1 ? 's' : ''} selected
         </span>
         <button
+          type="button"
           onClick={onClearSelection}
           className="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
         >

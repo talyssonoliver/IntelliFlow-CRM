@@ -169,6 +169,41 @@ export class ScheduleAppointmentUseCase {
     }));
   }
 
+  private createWeeklyRecurrence(
+    recurrenceInput: NonNullable<ScheduleAppointmentInput['recurrence']>,
+    options: { endDate?: Date; occurrenceCount?: number }
+  ): Result<Recurrence, DomainError> {
+    if (!recurrenceInput.daysOfWeek || recurrenceInput.daysOfWeek.length === 0) {
+      return Result.fail(new ValidationError('Days of week required for weekly recurrence'));
+    }
+    return Recurrence.createWeekly(recurrenceInput.daysOfWeek, recurrenceInput.interval, options);
+  }
+
+  private createMonthlyRecurrence(
+    recurrenceInput: NonNullable<ScheduleAppointmentInput['recurrence']>,
+    options: { endDate?: Date; occurrenceCount?: number }
+  ): Result<Recurrence, DomainError> {
+    if (recurrenceInput.dayOfMonth === undefined) {
+      return Result.fail(new ValidationError('Day of month required for monthly recurrence'));
+    }
+    return Recurrence.createMonthly(recurrenceInput.dayOfMonth, recurrenceInput.interval, options);
+  }
+
+  private createYearlyRecurrence(
+    recurrenceInput: NonNullable<ScheduleAppointmentInput['recurrence']>,
+    options: { endDate?: Date; occurrenceCount?: number }
+  ): Result<Recurrence, DomainError> {
+    if (recurrenceInput.monthOfYear === undefined || recurrenceInput.dayOfMonth === undefined) {
+      return Result.fail(new ValidationError('Month and day required for yearly recurrence'));
+    }
+    return Recurrence.createYearly(
+      recurrenceInput.monthOfYear,
+      recurrenceInput.dayOfMonth,
+      recurrenceInput.interval,
+      options
+    );
+  }
+
   private createRecurrence(
     recurrenceInput: NonNullable<ScheduleAppointmentInput['recurrence']>
   ): Result<Recurrence, DomainError> {
@@ -180,38 +215,12 @@ export class ScheduleAppointmentUseCase {
     switch (recurrenceInput.frequency) {
       case 'DAILY':
         return Recurrence.createDaily(recurrenceInput.interval, options);
-
       case 'WEEKLY':
-        if (!recurrenceInput.daysOfWeek || recurrenceInput.daysOfWeek.length === 0) {
-          return Result.fail(new ValidationError('Days of week required for weekly recurrence'));
-        }
-        return Recurrence.createWeekly(
-          recurrenceInput.daysOfWeek,
-          recurrenceInput.interval,
-          options
-        );
-
+        return this.createWeeklyRecurrence(recurrenceInput, options);
       case 'MONTHLY':
-        if (recurrenceInput.dayOfMonth === undefined) {
-          return Result.fail(new ValidationError('Day of month required for monthly recurrence'));
-        }
-        return Recurrence.createMonthly(
-          recurrenceInput.dayOfMonth,
-          recurrenceInput.interval,
-          options
-        );
-
+        return this.createMonthlyRecurrence(recurrenceInput, options);
       case 'YEARLY':
-        if (recurrenceInput.monthOfYear === undefined || recurrenceInput.dayOfMonth === undefined) {
-          return Result.fail(new ValidationError('Month and day required for yearly recurrence'));
-        }
-        return Recurrence.createYearly(
-          recurrenceInput.monthOfYear,
-          recurrenceInput.dayOfMonth,
-          recurrenceInput.interval,
-          options
-        );
-
+        return this.createYearlyRecurrence(recurrenceInput, options);
       default:
         return Result.fail(
           new ValidationError(`Unknown recurrence frequency: ${recurrenceInput.frequency}`)

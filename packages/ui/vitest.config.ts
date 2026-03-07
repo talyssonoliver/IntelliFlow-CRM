@@ -5,7 +5,7 @@ import path from 'node:path';
 export default defineConfig({
   // Type assertion needed due to vite version mismatch between
   // @vitejs/plugin-react (vite@6.x) and vitest (vite@7.x)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   plugins: [react() as any],
   test: {
     name: 'ui',

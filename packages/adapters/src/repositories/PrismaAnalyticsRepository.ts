@@ -128,6 +128,9 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
             }
           : {}),
       },
+      include: {
+        user: { select: { name: true } },
+      },
       orderBy: {
         timestamp: 'desc',
       },
@@ -140,6 +143,7 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
       eventType: activity.eventType,
       icon: this.getIconForAction(activity.action),
       description: this.getDescriptionForAction(activity.action, activity.metadata),
+      actorName: activity.user?.name ?? null,
       createdAt: activity.timestamp,
       metadata:
         typeof activity.metadata === 'object' && activity.metadata !== null

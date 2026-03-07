@@ -74,6 +74,7 @@ export function WidgetCard({
             <div className="flex gap-1">
               {onSettings && (
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     onSettings(widget);
@@ -86,6 +87,7 @@ export function WidgetCard({
               )}
               {onDelete && (
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDelete(widget.id);
@@ -106,6 +108,7 @@ export function WidgetCard({
         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-10">
           {onSettings && (
             <button
+              type="button"
               onClick={() => onSettings(widget)}
               className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-400"
             >
@@ -114,6 +117,7 @@ export function WidgetCard({
           )}
           {onDelete && (
             <button
+              type="button"
               onClick={() => onDelete(widget.id)}
               className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded text-slate-400 hover:text-red-500"
             >
@@ -169,7 +173,7 @@ interface ResizeHandleProps {
 }
 
 function ResizeHandle({ widget, position, onResize, isResizing }: ResizeHandleProps) {
-  const handleRef = React.useRef<HTMLDivElement>(null);
+  const handleRef = React.useRef<HTMLButtonElement>(null);
   const startPosRef = React.useRef({ x: 0, y: 0 });
   const startSpanRef = React.useRef({ colSpan: widget.colSpan, rowSpan: widget.rowSpan });
 
@@ -230,11 +234,38 @@ function ResizeHandle({ widget, position, onResize, isResizing }: ResizeHandlePr
     document.body.style.userSelect = 'none';
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    const { colSpan, rowSpan } = widget;
+    let newColSpan = colSpan as 1 | 2 | 3 | 4;
+    let newRowSpan = rowSpan as 1 | 2;
+
+    if (e.key === 'ArrowRight' && (position === 'right' || position === 'bottom-right')) {
+      e.preventDefault();
+      newColSpan = Math.min(4, colSpan + 1) as 1 | 2 | 3 | 4;
+    } else if (e.key === 'ArrowLeft' && (position === 'right' || position === 'bottom-right')) {
+      e.preventDefault();
+      newColSpan = Math.max(1, colSpan - 1) as 1 | 2 | 3 | 4;
+    } else if (e.key === 'ArrowDown' && (position === 'bottom' || position === 'bottom-right')) {
+      e.preventDefault();
+      newRowSpan = Math.min(2, rowSpan + 1) as 1 | 2;
+    } else if (e.key === 'ArrowUp' && (position === 'bottom' || position === 'bottom-right')) {
+      e.preventDefault();
+      newRowSpan = Math.max(1, rowSpan - 1) as 1 | 2;
+    } else {
+      return;
+    }
+
+    onResize(widget.id, newColSpan, newRowSpan);
+  };
+
   return (
-    <div // NOSONAR
+    <button
+      type="button"
       ref={handleRef}
       onMouseDown={handleMouseDown}
-      className={`absolute z-20 rounded transition-colors ${positionClasses[position]} ${
+      onKeyDown={handleKeyDown}
+      aria-label={`Resize widget ${position}`}
+      className={`absolute z-20 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-ds-primary ${positionClasses[position]} ${
         isResizing ? 'bg-ds-primary/40' : 'bg-transparent group-hover:bg-ds-primary/20'
       }`}
     >
@@ -243,7 +274,7 @@ function ResizeHandle({ widget, position, onResize, isResizing }: ResizeHandlePr
           drag_handle
         </span>
       )}
-    </div>
+    </button>
   );
 }
 

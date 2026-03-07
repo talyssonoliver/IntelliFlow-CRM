@@ -17,5 +17,8 @@ export type { IdempotencyStore, IdempotencyRecord } from '../../common/idempoten
 // Calendar-specific utilities
 export * from './ConflictResolver';
 
+// Calendar Sync Service Stub (IFC-224)
+export * from './CalendarSyncServiceAdapter';
+
 // Legacy re-exports for calculateAppointmentHash
 export { calculateContentHash as calculateAppointmentHash } from '../../common/idempotency';

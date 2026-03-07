@@ -36,6 +36,54 @@ function createCaseId(id: string): CaseId {
   return result.value;
 }
 
+/** Build the Prisma WHERE clause for findWithFilters */
+function buildTimeRangeFilter(from?: Date, to?: Date): { gte?: Date; lte?: Date } | undefined {
+  if (!from && !to) return undefined;
+  const filter: { gte?: Date; lte?: Date } = {};
+  if (from) filter.gte = from;
+  if (to) filter.lte = to;
+  return filter;
+}
+
+function buildAppointmentFilterWhere(filter: AppointmentFilter): Prisma.AppointmentWhereInput {
+  const where: Prisma.AppointmentWhereInput = {};
+
+  if (filter.organizerId) where.organizerId = filter.organizerId;
+
+  if (filter.attendeeId) {
+    where.OR = [
+      { organizerId: filter.attendeeId },
+      { attendees: { some: { userId: filter.attendeeId } } },
+    ];
+  }
+
+  if (filter.caseId) where.linkedCases = { some: { caseId: filter.caseId.value } };
+
+  if (filter.status) {
+    where.status = Array.isArray(filter.status) ? { in: filter.status } : filter.status;
+  }
+
+  if (filter.appointmentType) {
+    where.appointmentType = Array.isArray(filter.appointmentType)
+      ? { in: filter.appointmentType }
+      : filter.appointmentType;
+  }
+
+  const startTimeFilter = buildTimeRangeFilter(filter.startTimeFrom, filter.startTimeTo);
+  if (startTimeFilter) where.startTime = startTimeFilter;
+
+  const endTimeFilter = buildTimeRangeFilter(filter.endTimeFrom, filter.endTimeTo);
+  if (endTimeFilter) where.endTime = endTimeFilter;
+
+  if (filter.isRecurring !== undefined) {
+    where.recurrence = filter.isRecurring
+      ? ({ not: Prisma.JsonNull } as Prisma.JsonNullableFilter<'Appointment'>)
+      : ({ equals: Prisma.JsonNull } as Prisma.JsonNullableFilter<'Appointment'>);
+  }
+
+  return where;
+}
+
 /**
  * Prisma Appointment Repository
  * Implements AppointmentRepository port using Prisma ORM
@@ -348,50 +396,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
     filter: AppointmentFilter,
     options?: PaginationOptions
   ): Promise<PaginatedResult<Appointment>> {
-    const where: Prisma.AppointmentWhereInput = {};
-
-    if (filter.organizerId) {
-      where.organizerId = filter.organizerId;
-    }
-
-    if (filter.attendeeId) {
-      where.OR = [
-        { organizerId: filter.attendeeId },
-        { attendees: { some: { userId: filter.attendeeId } } },
-      ];
-    }
-
-    if (filter.caseId) {
-      where.linkedCases = { some: { caseId: filter.caseId.value } };
-    }
-
-    if (filter.status) {
-      where.status = Array.isArray(filter.status) ? { in: filter.status } : filter.status;
-    }
-
-    if (filter.appointmentType) {
-      where.appointmentType = Array.isArray(filter.appointmentType)
-        ? { in: filter.appointmentType }
-        : filter.appointmentType;
-    }
-
-    if (filter.startTimeFrom || filter.startTimeTo) {
-      where.startTime = {};
-      if (filter.startTimeFrom) where.startTime.gte = filter.startTimeFrom;
-      if (filter.startTimeTo) where.startTime.lte = filter.startTimeTo;
-    }
-
-    if (filter.endTimeFrom || filter.endTimeTo) {
-      where.endTime = {};
-      if (filter.endTimeFrom) where.endTime.gte = filter.endTimeFrom;
-      if (filter.endTimeTo) where.endTime.lte = filter.endTimeTo;
-    }
-
-    if (filter.isRecurring !== undefined) {
-      where.recurrence = filter.isRecurring
-        ? ({ not: Prisma.JsonNull } as Prisma.JsonNullableFilter<'Appointment'>)
-        : ({ equals: Prisma.JsonNull } as Prisma.JsonNullableFilter<'Appointment'>);
-    }
+    const where: Prisma.AppointmentWhereInput = buildAppointmentFilterWhere(filter);
 
     const [records, total] = await Promise.all([
       this.prisma.appointment.findMany({

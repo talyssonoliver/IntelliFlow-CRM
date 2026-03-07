@@ -25,6 +25,28 @@ function applyLifecycleTimestamp(
   else if (status === 'ARCHIVED') updateData.archivedAt = now;
 }
 
+/** Build the updateData object from a partial ChainVersionRecord */
+function buildChainVersionUpdateData(data: Partial<ChainVersionRecord>): Record<string, unknown> {
+  const updateData: Record<string, unknown> = {};
+  if (data.prompt !== undefined) {
+    updateData.prompt = data.prompt;
+    updateData.promptHash = createHash('sha256').update(data.prompt).digest('hex');
+  }
+  if (data.model !== undefined) updateData.model = data.model;
+  if (data.temperature !== undefined) updateData.temperature = data.temperature;
+  if (data.maxTokens !== undefined) updateData.maxTokens = data.maxTokens;
+  if (data.additionalParams !== undefined) updateData.config = data.additionalParams;
+  if (data.description !== undefined) updateData.description = data.description;
+  if (data.rolloutStrategy !== undefined) updateData.rolloutStrategy = data.rolloutStrategy;
+  if (data.rolloutPercent !== undefined) updateData.rolloutPercent = data.rolloutPercent;
+  if (data.experimentId !== undefined) updateData.experimentId = data.experimentId;
+  if (data.status !== undefined) {
+    updateData.status = data.status;
+    applyLifecycleTimestamp(data.status as ChainVersionStatus, updateData);
+  }
+  return updateData;
+}
+
 export class PrismaChainVersionRepository implements ChainVersionRepositoryPort {
   constructor(private readonly prisma: PrismaClient) {}
 
@@ -125,30 +147,11 @@ export class PrismaChainVersionRepository implements ChainVersionRepositoryPort 
   }
 
   async update(id: string, data: Partial<ChainVersionRecord>): Promise<ChainVersionRecord> {
-    const updateData: Record<string, unknown> = {};
-
-    if (data.prompt !== undefined) {
-      updateData.prompt = data.prompt;
-      updateData.promptHash = createHash('sha256').update(data.prompt).digest('hex');
-    }
-    if (data.model !== undefined) updateData.model = data.model;
-    if (data.temperature !== undefined) updateData.temperature = data.temperature;
-    if (data.maxTokens !== undefined) updateData.maxTokens = data.maxTokens;
-    if (data.additionalParams !== undefined) updateData.config = data.additionalParams;
-    if (data.description !== undefined) updateData.description = data.description;
-    if (data.rolloutStrategy !== undefined) updateData.rolloutStrategy = data.rolloutStrategy;
-    if (data.rolloutPercent !== undefined) updateData.rolloutPercent = data.rolloutPercent;
-    if (data.experimentId !== undefined) updateData.experimentId = data.experimentId;
-    if (data.status !== undefined) {
-      updateData.status = data.status;
-      applyLifecycleTimestamp(data.status as ChainVersionStatus, updateData);
-    }
-
+    const updateData = buildChainVersionUpdateData(data);
     const row = await this.prisma.chainVersion.update({
       where: { id },
       data: updateData as any,
     });
-
     return this.toRecord(row);
   }
 

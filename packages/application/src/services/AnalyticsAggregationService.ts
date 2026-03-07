@@ -323,9 +323,13 @@ export class AnalyticsAggregationService {
       totalRevenue,
       prevRevenue,
       openOpportunities,
+      prevOpenOpportunities,
       newContacts,
+      prevNewContacts,
       closedWon,
       closedLost,
+      prevClosedWon,
+      prevClosedLost,
       recentActivity,
     ] = await Promise.all([
       this.analyticsRepository.countLeadsInRange(tenantId, range),
@@ -333,14 +337,22 @@ export class AnalyticsAggregationService {
       this.analyticsRepository.getRevenueInRange(tenantId, range),
       this.analyticsRepository.getRevenueInRange(tenantId, prevRange),
       this.analyticsRepository.countOpportunitiesInRange(tenantId, range),
+      this.analyticsRepository.countOpportunitiesInRange(tenantId, prevRange),
       this.analyticsRepository.countContactsInRange(tenantId, range),
+      this.analyticsRepository.countContactsInRange(tenantId, prevRange),
       this.analyticsRepository.countClosedWonInRange(tenantId, range),
       this.analyticsRepository.countClosedLostInRange(tenantId, range),
+      this.analyticsRepository.countClosedWonInRange(tenantId, prevRange),
+      this.analyticsRepository.countClosedLostInRange(tenantId, prevRange),
       this.analyticsRepository.getRecentAuditLogs(tenantId, 5),
     ]);
 
     const totalDeals = closedWon + closedLost;
     const winRate = totalDeals > 0 ? Math.round((closedWon / totalDeals) * 100 * 10) / 10 : 0;
+
+    const prevTotalDeals = prevClosedWon + prevClosedLost;
+    const prevWinRate =
+      prevTotalDeals > 0 ? Math.round((prevClosedWon / prevTotalDeals) * 100 * 10) / 10 : 0;
 
     return {
       totalLeads,
@@ -348,8 +360,11 @@ export class AnalyticsAggregationService {
       totalRevenue,
       revenueDelta: totalRevenue - prevRevenue,
       openOpportunities,
+      openOpportunitiesDelta: openOpportunities - prevOpenOpportunities,
       newContacts,
+      newContactsDelta: newContacts - prevNewContacts,
       winRate,
+      winRateDelta: Math.round((winRate - prevWinRate) * 10) / 10,
       recentActivity,
     };
   }

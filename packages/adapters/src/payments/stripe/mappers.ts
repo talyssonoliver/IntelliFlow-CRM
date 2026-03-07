@@ -130,11 +130,32 @@ export function mapToSubscription(data: Record<string, unknown>): StripeSubscrip
   };
 }
 
-export function mapToInvoice(data: Record<string, unknown>): StripeInvoice {
-  // Map line items from Stripe lines.data array
+function extractChargeCard(charge: unknown): Record<string, unknown> | undefined {
+  if (typeof charge !== 'object' || charge === null) return undefined;
+  const pmDetails = (charge as Record<string, unknown>).payment_method_details as
+    | Record<string, unknown>
+    | undefined;
+  return pmDetails?.card as Record<string, unknown> | undefined;
+}
+
+function extractCardDetails(charge: unknown): {
+  paymentMethodBrand: string | undefined;
+  paymentMethodLast4: string | undefined;
+} {
+  const card = extractChargeCard(charge);
+  if (!card) return { paymentMethodBrand: undefined, paymentMethodLast4: undefined };
+  return {
+    paymentMethodBrand: card.brand ? String(card.brand) : undefined,
+    paymentMethodLast4: card.last4 ? String(card.last4) : undefined,
+  };
+}
+
+function mapInvoiceLineItems(
+  data: Record<string, unknown>
+): StripeInvoiceLineItem[] {
   const linesObj = data.lines as Record<string, unknown> | undefined;
   const linesData = (linesObj?.data as Array<Record<string, unknown>>) ?? [];
-  const lineItems: StripeInvoiceLineItem[] = linesData.map((item) => ({
+  return linesData.map((item) => ({
     id: String(item.id ?? ''),
     description: String(item.description ?? ''),
     quantity: Number(item.quantity ?? 1),
@@ -142,36 +163,40 @@ export function mapToInvoice(data: Record<string, unknown>): StripeInvoice {
     amount: Number(item.amount ?? 0),
     currency: String(item.currency ?? data.currency ?? 'usd'),
   }));
+}
 
-  // Map billing address from customer_address
+function mapInvoiceBillingAddress(
+  data: Record<string, unknown>
+):
+  | {
+      line1?: string;
+      line2?: string;
+      city?: string;
+      state?: string;
+      postalCode?: string;
+      country?: string;
+    }
+  | undefined {
   const customerAddress = data.customer_address as Record<string, unknown> | undefined;
-  const billingAddress = customerAddress
-    ? {
-        line1: customerAddress.line1 ? String(customerAddress.line1) : undefined,
-        line2: customerAddress.line2 ? String(customerAddress.line2) : undefined,
-        city: customerAddress.city ? String(customerAddress.city) : undefined,
-        state: customerAddress.state ? String(customerAddress.state) : undefined,
-        postalCode: customerAddress.postal_code ? String(customerAddress.postal_code) : undefined,
-        country: customerAddress.country ? String(customerAddress.country) : undefined,
-      }
-    : undefined;
+  if (!customerAddress) return undefined;
+  return {
+    line1: customerAddress.line1 ? String(customerAddress.line1) : undefined,
+    line2: customerAddress.line2 ? String(customerAddress.line2) : undefined,
+    city: customerAddress.city ? String(customerAddress.city) : undefined,
+    state: customerAddress.state ? String(customerAddress.state) : undefined,
+    postalCode: customerAddress.postal_code ? String(customerAddress.postal_code) : undefined,
+    country: customerAddress.country ? String(customerAddress.country) : undefined,
+  };
+}
+
+export function mapToInvoice(data: Record<string, unknown>): StripeInvoice {
+  const lineItems = mapInvoiceLineItems(data);
+  const billingAddress = mapInvoiceBillingAddress(data);
 
   // Extract payment method details from the expanded charge object.
   // Stripe returns `charge` as either a string ID or an expanded object
   // containing `payment_method_details.card.{brand, last4}`.
-  let paymentMethodBrand: string | undefined;
-  let paymentMethodLast4: string | undefined;
-  const charge = data.charge;
-  if (typeof charge === 'object' && charge !== null) {
-    const pmDetails = (charge as Record<string, unknown>).payment_method_details as
-      | Record<string, unknown>
-      | undefined;
-    const card = pmDetails?.card as Record<string, unknown> | undefined;
-    if (card) {
-      paymentMethodBrand = card.brand ? String(card.brand) : undefined;
-      paymentMethodLast4 = card.last4 ? String(card.last4) : undefined;
-    }
-  }
+  const { paymentMethodBrand, paymentMethodLast4 } = extractCardDetails(data.charge);
 
   return {
     id: String(data.id ?? ''),

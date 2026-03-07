@@ -67,13 +67,13 @@ describe('ScoreFactor', () => {
     it('should show positive impact bar with success color', () => {
       render(<ScoreFactorComponent factor={defaultFactor} showImpactBar />);
       const bar = screen.getByRole('progressbar');
-      expect(bar.querySelector('[data-direction="positive"]')).toBeInTheDocument();
+      expect(bar).toHaveAttribute('data-direction', 'positive');
     });
 
     it('should show negative impact bar with destructive color', () => {
       render(<ScoreFactorComponent factor={{ ...defaultFactor, impact: -10 }} showImpactBar />);
       const bar = screen.getByRole('progressbar');
-      expect(bar.querySelector('[data-direction="negative"]')).toBeInTheDocument();
+      expect(bar).toHaveAttribute('data-direction', 'negative');
     });
   });
 

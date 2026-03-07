@@ -113,6 +113,29 @@ export function mapToItem(data: Record<string, unknown>): PayPalItem {
   };
 }
 
+function mapPayerPhone(
+  phone: Record<string, unknown>
+): { phoneType?: string; phoneNumber?: { nationalNumber?: string } } {
+  const phoneNumberObj = phone.phone_number as Record<string, unknown> | undefined;
+  const nationalNumber = phoneNumberObj?.national_number
+    ? String(phoneNumberObj.national_number)
+    : undefined;
+  return {
+    phoneType: phone.phone_type ? String(phone.phone_type) : undefined,
+    phoneNumber: phoneNumberObj ? { nationalNumber } : undefined,
+  };
+}
+
+function mapPayerName(
+  name: Record<string, unknown> | undefined
+): { givenName?: string; surname?: string } | undefined {
+  if (!name) return undefined;
+  return {
+    givenName: name.given_name ? String(name.given_name) : undefined,
+    surname: name.surname ? String(name.surname) : undefined,
+  };
+}
+
 export function mapToPayer(data: Record<string, unknown>): PayPalPayer {
   const name = data.name as Record<string, unknown> | undefined;
   const phone = data.phone as Record<string, unknown> | undefined;
@@ -120,25 +143,9 @@ export function mapToPayer(data: Record<string, unknown>): PayPalPayer {
 
   return {
     payerId: data.payer_id ? String(data.payer_id) : undefined,
-    name: name
-      ? {
-          givenName: name.given_name ? String(name.given_name) : undefined,
-          surname: name.surname ? String(name.surname) : undefined,
-        }
-      : undefined,
+    name: mapPayerName(name),
     emailAddress: data.email_address ? String(data.email_address) : undefined,
-    phone: phone
-      ? {
-          phoneType: phone.phone_type ? String(phone.phone_type) : undefined,
-          phoneNumber: phone.phone_number
-            ? {
-                nationalNumber: (phone.phone_number as Record<string, unknown>).national_number
-                  ? String((phone.phone_number as Record<string, unknown>).national_number)
-                  : undefined,
-              }
-            : undefined,
-        }
-      : undefined,
+    phone: phone ? mapPayerPhone(phone) : undefined,
     birthDate: data.birth_date ? String(data.birth_date) : undefined,
     address: address ? mapToAddress(address) : undefined,
   };

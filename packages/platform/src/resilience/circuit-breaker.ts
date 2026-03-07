@@ -154,6 +154,45 @@ export class CircuitBreaker {
     this.config = parsed.data;
   }
 
+  private throwOrFallback<T>(error: CircuitBreakerOpenError, fallback?: FallbackFn<T>): Promise<T> {
+    if (fallback) return Promise.resolve(fallback(error));
+    return Promise.reject(error);
+  }
+
+  private maybeTransitionToHalfOpen(): void {
+    if (this.state !== CircuitState.OPEN) return;
+    const timeSinceLastFailure = this.lastFailureTime
+      ? Date.now() - this.lastFailureTime
+      : Infinity;
+    if (timeSinceLastFailure >= this.config.resetTimeoutMs) {
+      this.transitionTo(CircuitState.HALF_OPEN);
+    }
+  }
+
+  private rejectOpenCircuit<T>(fallback?: FallbackFn<T>): Promise<T> {
+    const retryAfterMs = this.lastFailureTime
+      ? this.config.resetTimeoutMs - (Date.now() - this.lastFailureTime)
+      : this.config.resetTimeoutMs;
+    this.emit({ type: 'rejected', state: this.state, timestamp: Date.now() });
+    const error = new CircuitBreakerOpenError(
+      `Circuit breaker is OPEN${this.config.name ? ` (${this.config.name})` : ''} - service is unhealthy`,
+      Math.max(0, retryAfterMs)
+    );
+    return this.throwOrFallback(error, fallback);
+  }
+
+  private checkHalfOpenLimit<T>(fallback?: FallbackFn<T>): Promise<T> | null {
+    if (this.halfOpenCalls < this.config.halfOpenMaxCalls) {
+      this.halfOpenCalls++;
+      return null;
+    }
+    const error = new CircuitBreakerOpenError(
+      'Circuit breaker HALF_OPEN limit reached - waiting for test calls to complete',
+      1000
+    );
+    return this.throwOrFallback(error, fallback);
+  }
+
   /**
    * Execute a function with circuit breaker protection
    */
@@ -161,56 +200,17 @@ export class CircuitBreaker {
     // Clean up old failures outside the window
     this.cleanupFailures();
 
-    // Check if we should transition from OPEN to HALF_OPEN
-    if (this.state === CircuitState.OPEN) {
-      const timeSinceLastFailure = this.lastFailureTime
-        ? Date.now() - this.lastFailureTime
-        : Infinity;
-
-      if (timeSinceLastFailure >= this.config.resetTimeoutMs) {
-        this.transitionTo(CircuitState.HALF_OPEN);
-      }
-    }
+    this.maybeTransitionToHalfOpen();
 
     // Reject if circuit is OPEN
     if (this.state === CircuitState.OPEN) {
-      const retryAfterMs = this.lastFailureTime
-        ? this.config.resetTimeoutMs - (Date.now() - this.lastFailureTime)
-        : this.config.resetTimeoutMs;
-
-      this.emit({
-        type: 'rejected',
-        state: this.state,
-        timestamp: Date.now(),
-      });
-
-      const error = new CircuitBreakerOpenError(
-        `Circuit breaker is OPEN${this.config.name ? ` (${this.config.name})` : ''} - service is unhealthy`,
-        Math.max(0, retryAfterMs)
-      );
-
-      if (fallback) {
-        return fallback(error);
-      }
-
-      throw error;
+      return this.rejectOpenCircuit(fallback);
     }
 
     // Check HALF_OPEN limit
     if (this.state === CircuitState.HALF_OPEN) {
-      if (this.halfOpenCalls >= this.config.halfOpenMaxCalls) {
-        const error = new CircuitBreakerOpenError(
-          'Circuit breaker HALF_OPEN limit reached - waiting for test calls to complete',
-          1000
-        );
-
-        if (fallback) {
-          return fallback(error);
-        }
-
-        throw error;
-      }
-      this.halfOpenCalls++;
+      const limitResult = this.checkHalfOpenLimit(fallback);
+      if (limitResult !== null) return limitResult;
     }
 
     const startTime = Date.now();

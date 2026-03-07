@@ -154,6 +154,7 @@ export class InMemoryAnalyticsRepository implements AnalyticsRepository {
       eventType: log.eventType,
       icon: this.getIconForAction(log.action),
       description: this.getDescriptionForAction(log.action, log.metadata),
+      actorName: null,
       createdAt: log.timestamp,
       metadata: log.metadata,
     }));

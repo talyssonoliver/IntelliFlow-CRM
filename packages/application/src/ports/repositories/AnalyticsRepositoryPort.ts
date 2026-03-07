@@ -61,6 +61,7 @@ export interface ActivityItem {
   eventType?: string; // Specific event type
   icon: string; // Material icon name
   description: string; // Human-readable description
+  actorName: string | null; // User display name (null for system actions)
   createdAt: Date;
   metadata?: Record<string, unknown>;
 }
@@ -151,8 +152,11 @@ export interface OverviewResult {
   totalRevenue: number;
   revenueDelta: number;
   openOpportunities: number;
+  openOpportunitiesDelta: number;
   newContacts: number;
+  newContactsDelta: number;
   winRate: number;
+  winRateDelta: number;
   recentActivity: ActivityItem[];
 }
 

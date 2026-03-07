@@ -258,7 +258,7 @@ export class FeedbackService {
     );
 
     // Check if retraining is recommended
-    const retrainingCheck = await this.evaluateRetrainingNeed(
+    const retrainingCheck = this.evaluateRetrainingNeed(
       feedback,
       negativeRatio,
       averageCorrectionMagnitude

@@ -113,6 +113,7 @@ describe('OutboundEmailService', () => {
     });
 
     it('should reset limits after time window', async () => {
+      vi.useFakeTimers();
       const limiter = new EmailRateLimiter({
         maxPerSecond: 1,
         maxPerMinute: 10,
@@ -122,11 +123,12 @@ describe('OutboundEmailService', () => {
 
       await limiter.acquire('example.com');
 
-      // Wait for window to reset (simulate)
-      await new Promise((resolve) => setTimeout(resolve, 1100));
+      // Advance past the 1-second window
+      vi.advanceTimersByTime(1100);
 
       const allowed = await limiter.acquire('example.com');
       expect(allowed).toBe(true);
+      vi.useRealTimers();
     });
 
     it('should track limits per domain', async () => {
@@ -340,6 +342,24 @@ describe('OutboundEmailService', () => {
   });
 
   describe('SendGridProvider', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('should throw when API key is empty string', () => {
+      expect(() => new SendGridProvider('')).toThrow('SendGrid API key is required');
+    });
+
+    it('should throw when API key does not start with SG.', () => {
+      expect(() => new SendGridProvider('invalid-key')).toThrow(
+        'SendGrid API key format invalid (expected SG. prefix)'
+      );
+    });
+
+    it('should accept valid SG. prefixed key', () => {
+      expect(() => new SendGridProvider('SG.test-key')).not.toThrow();
+    });
+
     it('should construct proper payload', async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
@@ -347,7 +367,7 @@ describe('OutboundEmailService', () => {
         text: async () => '',
       });
 
-      const provider = new SendGridProvider('fake-api-key');
+      const provider = new SendGridProvider('SG.test-api-key');
       const email: OutboundEmail = {
         from: { email: 'sender@example.com', name: 'Sender', type: 'to' },
         recipients: [
@@ -370,21 +390,21 @@ describe('OutboundEmailService', () => {
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({
-            Authorization: 'Bearer fake-api-key',
+            Authorization: 'Bearer SG.test-api-key',
             'Content-Type': 'application/json',
           }),
         })
       );
     });
 
-    it('should handle API errors gracefully', async () => {
+    it('should handle API errors without exposing response body (AC-004)', async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 400,
-        text: async () => 'Bad Request',
+        text: async () => JSON.stringify({ errors: [{ message: 'sensitive data' }] }),
       });
 
-      const provider = new SendGridProvider('fake-api-key');
+      const provider = new SendGridProvider('SG.test-key');
       const email: OutboundEmail = {
         from: { email: 'sender@example.com', type: 'to' },
         recipients: [{ email: 'recipient@example.com', type: 'to' }],
@@ -395,7 +415,78 @@ describe('OutboundEmailService', () => {
       const result = await provider.send(email);
 
       expect(result.status).toBe('failed');
-      expect(result.error).toContain('SendGrid API error');
+      expect(result.error).toContain('provider error 400');
+      expect(result.error).not.toContain('sensitive data');
+    });
+
+    it('should not expose API key in error messages on 401 (NF-002)', async () => {
+      const apiKey = 'SG.secret-key-value';
+      global.fetch = vi.fn().mockRejectedValue(new Error(`Auth failed with key ${apiKey}`));
+
+      const provider = new SendGridProvider(apiKey);
+      const email: OutboundEmail = {
+        from: { email: 'sender@example.com', type: 'to' },
+        recipients: [{ email: 'recipient@example.com', type: 'to' }],
+        subject: 'Test',
+        textBody: 'Test',
+      };
+
+      const result = await provider.send(email);
+
+      expect(result.status).toBe('failed');
+      expect(result.error).not.toContain(apiKey);
+      expect(result.error).toContain('[REDACTED]');
+    });
+
+    it('should not expose API key in error messages on 403 (NF-002)', async () => {
+      const apiKey = 'SG.forbidden-key';
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 403,
+        text: async () => `Forbidden for key ${apiKey}`,
+      });
+
+      const provider = new SendGridProvider(apiKey);
+      const email: OutboundEmail = {
+        from: { email: 'sender@example.com', type: 'to' },
+        recipients: [{ email: 'recipient@example.com', type: 'to' }],
+        subject: 'Test',
+        textBody: 'Test',
+      };
+
+      const result = await provider.send(email);
+
+      expect(result.status).toBe('failed');
+      expect(result.error).not.toContain(apiKey);
+    });
+
+    it('should respect 10s AbortController timeout (AC-005)', async () => {
+      vi.useFakeTimers();
+      global.fetch = vi.fn().mockImplementation(
+        (_url: string, init: { signal: AbortSignal }) =>
+          new Promise((_resolve, reject) => {
+            init.signal.addEventListener('abort', () => {
+              reject(new DOMException('The operation was aborted.', 'AbortError'));
+            });
+          })
+      );
+
+      const provider = new SendGridProvider('SG.timeout-test');
+      const email: OutboundEmail = {
+        from: { email: 'sender@example.com', type: 'to' },
+        recipients: [{ email: 'recipient@example.com', type: 'to' }],
+        subject: 'Test',
+        textBody: 'Test',
+      };
+
+      const sendPromise = provider.send(email);
+      vi.advanceTimersByTime(10_000);
+
+      const result = await sendPromise;
+
+      expect(result.status).toBe('failed');
+      expect(result.error).toContain('aborted');
+      vi.useRealTimers();
     });
   });
 
@@ -409,16 +500,39 @@ describe('OutboundEmailService', () => {
 
     it('should create service with SendGrid provider when API key provided', () => {
       const service = createOutboundEmailService({
-        sendgridApiKey: 'fake-api-key',
+        sendgridApiKey: 'SG.test-key',
       });
 
       expect(service).toBeInstanceOf(OutboundEmailService);
     });
 
-    it('should use mock provider when useMock is true', () => {
+    it('should NOT include MockEmailProvider when sendgridApiKey is provided (AC-010)', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 202,
+        text: async () => '',
+      });
+
+      const service = createOutboundEmailService({
+        sendgridApiKey: 'SG.test-key',
+      });
+
+      const email: OutboundEmail = {
+        from: { email: 'sender@example.com', type: 'to' },
+        recipients: [{ email: 'recipient@example.com', type: 'to' }],
+        subject: 'Test',
+        textBody: 'Test',
+      };
+
+      const result = await service.sendEmail(email);
+      // Should use SendGrid (queued), NOT mock (sent)
+      expect(result.provider).toBe('sendgrid');
+      vi.restoreAllMocks();
+    });
+
+    it('should use mock provider when useMock is true and no sendgrid key', () => {
       const service = createOutboundEmailService({
         useMock: true,
-        sendgridApiKey: 'fake-api-key', // Should be ignored
       });
 
       expect(service).toBeInstanceOf(OutboundEmailService);
