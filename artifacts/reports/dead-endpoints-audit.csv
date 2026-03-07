@@ -105,4 +105,7 @@ subscription.subscription,getPlans,0,0,0,DEAD_FEATURE,Get plans — no pricing/u
 subscription.subscription,toggleModule,0,0,0,DEAD_FEATURE,Toggle module — no settings page uses it
 ticket.ticket-routing,autoRoute,0,0,1,DEAD_FEATURE,Ticket auto-route — same pattern as IFC-030
 ticket.ticket-routing,suggestAssignee,0,0,1,DEAD_FEATURE,Ticket suggest assignee — same pattern as IFC-030
+task.task,stats,0,0,1,DEAD_FEATURE,Task stats — no dashboard widget uses it
+task.task,assign,0,0,1,DEAD_FEATURE,Task assign — no UI button calls it
+task.task,reschedule,0,0,1,DEAD_FEATURE,Task reschedule — no UI button calls it
 zep.zep-budget,getAuditHistory,0,0,1,DEAD_FEATURE,Zep audit history — no AI settings page uses it

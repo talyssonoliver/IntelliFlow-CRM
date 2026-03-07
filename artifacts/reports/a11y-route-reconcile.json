@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-06T19:20:34.861Z",
+  "timestamp": "2026-03-07T17:20:01.843Z",
   "docRoutes": [
     "/",
     "/about",
@@ -97,11 +97,13 @@
     "/agent-approvals/drift",
     "/agent-approvals/experiments",
     "/agent-approvals/history",
+    "/agent-approvals/insights",
     "/agent-approvals/latency",
     "/agent-approvals/lead-scoring",
     "/agent-approvals/logs",
     "/agent-approvals/preview",
     "/agent-approvals/sentiment",
+    "/agent-approvals/tools",
     "/analytics",
     "/analytics/feedback",
     "/auth/callback",
@@ -149,6 +151,7 @@
     "/governance/policies",
     "/governance/quality-reports",
     "/help-center",
+    "/help-center/search",
     "/insights",
     "/leads",
     "/leads/new",
@@ -269,6 +272,8 @@
   "docOnlyRoutes": [],
   "fsOnlyRoutes": [
     "/activity",
+    "/agent-approvals/insights",
+    "/agent-approvals/tools",
     "/deals/all/forecast",
     "/developers/apps",
     "/developers/apps/new",
@@ -281,6 +286,7 @@
     "/docs/integrations",
     "/docs/sdk",
     "/docs/webhooks",
+    "/help-center/search",
     "/support/tickets"
   ],
   "gates": [
@@ -292,7 +298,7 @@
     {
       "name": "COUNT_MATCH",
       "severity": "PASS",
-      "message": "Doc routes: 82, FS routes: 96"
+      "message": "Doc routes: 82, FS routes: 99"
     },
     {
       "name": "STATEMENT_COVERS_DISK",
@@ -302,9 +308,11 @@
     {
       "name": "DISK_COVERED_BY_STATEMENT",
       "severity": "WARN",
-      "message": "14 route(s) on disk not in conformance statement",
+      "message": "17 route(s) on disk not in conformance statement",
       "details": [
         "/activity",
+        "/agent-approvals/insights",
+        "/agent-approvals/tools",
         "/deals/all/forecast",
         "/developers/apps",
         "/developers/apps/new",
@@ -317,13 +325,14 @@
         "/docs/integrations",
         "/docs/sdk",
         "/docs/webhooks",
+        "/help-center/search",
         "/support/tickets"
       ]
     },
     {
       "name": "TOTAL_COUNT",
       "severity": "INFO",
-      "message": "Total: 82 matched, 0 doc-only, 14 fs-only"
+      "message": "Total: 82 matched, 0 doc-only, 17 fs-only"
     }
   ],
   "exitCode": 0

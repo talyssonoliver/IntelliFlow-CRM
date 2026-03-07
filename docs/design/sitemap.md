@@ -1,7 +1,7 @@
 # IntelliFlow CRM - Sitemap
 
 > **Location**: `docs/design/sitemap.md` **Last Updated**: 2026-03-01 **Total
-> Pages**: 119 **Total Flows**: 42 (linked) **Layouts**: 37 **API Routers**: 25
+> Pages**: 124 **Total Flows**: 42 (linked) **Layouts**: 37 **API Routers**: 25
 > (232 procedures)
 
 ---
@@ -267,7 +267,7 @@ intelliflow.com
 | Profile               | 1       | User profile                                   |
 | Support Portal        | 1       | Support-agent ticket queue                     |
 | Support / Help Center | 1       | Self-service help center                       |
-| **Total**             | **119** |                                                |
+| **Total**             | **124** |                                                |
 
 ---
 
@@ -351,7 +351,7 @@ resolve to sidebar/navigation links but have no `page.tsx` yet:
 
 ## Implementation Status
 
-### Implemented Pages (118 total)
+### Implemented Pages (124 total)
 
 | Category      | Route                                                                                                                                                                                                                                                            | Status      | Flow               |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ------------------ |

@@ -2,8 +2,8 @@
 
 > **Location**: `docs/design/ui-flow-mapping.md` **Last Updated**: 2026-02-24
 > **Purpose**: Cross-reference document linking Flows, Sitemap Routes, Style
-> Guide Components **Total Pages**: 118 implemented **Total Flows**: 42 **API
-> Routers**: 41 (366 procedures)
+> Guide Components **Total Pages**: 124 implemented **Total Flows**: 42 **API
+> Routers**: 43 (366 procedures)
 
 This document provides a comprehensive mapping between user flows, UI routes,
 and design system components to ensure consistent implementation across the

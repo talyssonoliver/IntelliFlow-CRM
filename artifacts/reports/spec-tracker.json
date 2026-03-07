@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-03-06T23:11:47.841Z",
+  "generated_at": "2026-03-07T15:00:31.547Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 320,
-    "completed": 316,
-    "partially_done": 2,
-    "spec_only": 1,
+    "total_specs_analyzed": 323,
+    "completed": 319,
+    "partially_done": 1,
+    "spec_only": 2,
     "uncertain": 1
   },
   "status_legend": {
@@ -347,7 +347,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 1,
+      "acceptance_criteria_count": 0,
       "dependencies": [
         "DOC-008"
       ],
@@ -366,6 +366,22 @@
       "acceptance_criteria_count": 0,
       "dependencies": [
         "DOC-008"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "DOC-014",
+      "title": "Automated content audit script - TypeScript CLI that scans page.tsx files, resolves metadata chains, calculates SEO scores, detects ghost links, and regenerates content-audit-results.json; integrates as CI check on PR modifying app routes",
+      "sprint": 15,
+      "spec_path": ".specify/sprints/sprint-15/specifications/DOC-014-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "DOC-009"
       ],
       "real_status": "COMPLETED"
     },
@@ -1029,7 +1045,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 9,
+      "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-004",
         "IFC-005"
@@ -1062,7 +1078,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 10,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-001",
         "IFC-005"
@@ -1079,7 +1095,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 10,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-001",
         "IFC-002",
@@ -1106,7 +1122,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 2,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-000"
       ],
@@ -1122,7 +1138,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 10,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-010"
       ],
@@ -1154,7 +1170,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 16,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-013"
       ],
@@ -1186,7 +1202,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 2,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-014"
       ],
@@ -1202,7 +1218,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 11,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-012",
         "IFC-013"
@@ -1219,7 +1235,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 16,
+      "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-014",
         "IFC-015",
@@ -1253,7 +1269,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 2,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-019"
       ],
@@ -1349,7 +1365,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 1,
+      "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-022",
         "IFC-024"
@@ -1366,7 +1382,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 1,
+      "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-026"
       ],
@@ -1382,7 +1398,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 6,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-027"
       ],
@@ -1430,7 +1446,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 2,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-025"
       ],
@@ -1709,7 +1725,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 12,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-089",
         "IFC-091",
@@ -1728,7 +1744,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 9,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-017"
       ],
@@ -1842,7 +1858,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 2,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-012"
       ],
@@ -1922,7 +1938,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 11,
+      "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-005"
       ],
@@ -2271,7 +2287,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 0,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-101",
         "IFC-102",
@@ -2425,7 +2441,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 7,
+      "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-005",
         "AUTOMATION-002"
@@ -2723,7 +2739,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 0,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-002",
         "IFC-003"
@@ -2864,7 +2880,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 15,
+      "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-137",
         "IFC-003",
@@ -2969,7 +2985,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 11,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-002",
         "IFC-106",
@@ -3056,7 +3072,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 9,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-154",
         "IFC-127",
@@ -3219,7 +3235,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 8,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-006"
       ],
@@ -3349,7 +3365,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 9,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-128"
       ],
@@ -3365,7 +3381,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 12,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-177",
         "IFC-178"
@@ -3382,7 +3398,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 3,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-179"
       ],
@@ -3398,7 +3414,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 22,
+      "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-180",
         "IFC-149"
@@ -3485,7 +3501,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 16,
+      "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-104",
         "IFC-107",
@@ -3521,7 +3537,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 13,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-002",
         "IFC-003"
@@ -3538,7 +3554,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 14,
+      "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-188",
         "IFC-107",
@@ -3767,15 +3783,31 @@
       "sprint": 14,
       "spec_path": ".specify/sprints/sprint-14/specifications/IFC-223-spec.md",
       "has_spec": true,
-      "has_plan": false,
+      "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Spec Complete",
-      "metric_status": "PLANNED",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-157"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-224",
+      "title": "Implement Calendar Webhook Ingestion Routes (Resolves R-008)",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/IFC-224-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-138"
+      ],
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-001",
@@ -4057,7 +4089,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 26,
+      "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-015",
         "IFC-006"
@@ -4107,7 +4139,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 14,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "PG-015",
         "IFC-006"
@@ -4140,7 +4172,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 14,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "PG-015",
         "IFC-006",
@@ -4209,7 +4241,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 14,
+      "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-099",
         "IFC-198"
@@ -4328,7 +4360,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 7,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-079"
       ],
@@ -4440,7 +4472,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 11,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "PG-032"
       ],
@@ -4511,6 +4543,22 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "PG-044",
+      "title": "Help Search",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/PG-044-spec.md",
+      "has_spec": true,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Spec Complete",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-043"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
       "task_id": "PG-046",
       "title": "Support Tickets",
       "sprint": 16,
@@ -4536,7 +4584,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 2,
+      "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-076"
       ],
@@ -4637,7 +4685,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 20,
+      "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-030"
       ],
@@ -4653,7 +4701,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 3,
+      "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-184"
       ],
@@ -4669,7 +4717,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 32,
+      "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-185"
       ],
@@ -4685,7 +4733,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 31,
+      "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-186"
       ],
@@ -4717,7 +4765,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 21,
+      "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-189"
       ],
@@ -4733,7 +4781,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 15,
+      "acceptance_criteria_count": 1,
       "dependencies": [
         "IFC-136"
       ],
@@ -4798,7 +4846,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 22,
+      "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-039",
         "IFC-181"
@@ -4832,7 +4880,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 23,
+      "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-156",
         "IFC-155",
@@ -4885,7 +4933,7 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 11,
+      "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-025",
         "IFC-181"

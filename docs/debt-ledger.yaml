@@ -3796,10 +3796,10 @@ items:
     origin_task: IFC-139
     owner: Frontend Dev
     severity: medium
-    description: "11 dead agent/conversation router endpoints: agent.executeTool, agent.getPendingCount, agent.getTool, agent.listTools, conversation.addMessage, conversation.approveToolCall, conversation.archiveOld, conversation.endConversation, conversation.getBySessionId, conversation.recordToolCall, conversation.updateToolCall. Backend built (IFC-139, IFC-148), zero web callers — no agent chat UI or tool management page exists."
+    description: "17 dead agent/conversation router endpoints (13 conversation.* + 4 agent.*). All 13 conversation endpoints have zero production callers — frontend uses autoResponse.* (IFC-029), aiReview.* (IFC-180/181), and aiMonitoring.* (IFC-197) which query the same DB tables (conversationRecord, messageRecord, toolCallRecord) directly. Dead conversation endpoints: create, getById, getBySessionId, search, addMessage, recordToolCall, updateToolCall, approveToolCall, endConversation, escalate, getPendingApprovals, getAnalytics, archiveOld. Dead agent endpoints: executeTool, getPendingCount, getTool, listTools. Only consumers are k6 load test (conversation.search, conversation.getPendingApprovals) — no production traffic."
     created_at: 2026-03-06T00:00:00.000Z
     expiry_date: 2026-04-05
-    remediation_plan: IFC-289
+    remediation_plan: "IFC-289: wire all 17 endpoints to frontend consumers (chat panel, agent-approvals, AI Search, admin dashboard) and refactor aiMonitoring to delegate to conversation router instead of duplicating DB queries"
     remediation_sprint: 22
     status: open
   DEAD-INTEGRATIONS-001:

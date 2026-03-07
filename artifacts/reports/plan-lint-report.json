@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-03-03T02:42:11.660Z",
+    "generated_at": "2026-03-07T15:45:44.256Z",
     "schema_version": "1.0.0",
     "sprint_scope": 0
   },
@@ -11,7 +11,7 @@
       "B": 8,
       "C": 7
     },
-    "error_count": 0,
+    "error_count": 194,
     "warning_count": 36,
     "review_queue_size": 29,
     "validation_coverage": {
@@ -20,7 +20,1754 @@
       "coverage_percentage": 100
     }
   },
-  "errors": [],
+  "errors": [
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-015 missing gate_profile",
+      "tasks": [
+        "IFC-015"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-015 missing acceptance_owner",
+      "tasks": [
+        "IFC-015"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-015 missing evidence_required",
+      "tasks": [
+        "IFC-015"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-138 missing gate_profile",
+      "tasks": [
+        "IFC-138"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-138 missing acceptance_owner",
+      "tasks": [
+        "IFC-138"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-138 missing evidence_required",
+      "tasks": [
+        "IFC-138"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-225 missing gate_profile",
+      "tasks": [
+        "IFC-225"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-225 missing acceptance_owner",
+      "tasks": [
+        "IFC-225"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-225 missing evidence_required",
+      "tasks": [
+        "IFC-225"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-226 missing gate_profile",
+      "tasks": [
+        "IFC-226"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-226 missing acceptance_owner",
+      "tasks": [
+        "IFC-226"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-226 missing evidence_required",
+      "tasks": [
+        "IFC-226"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-227 missing gate_profile",
+      "tasks": [
+        "IFC-227"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-227 missing acceptance_owner",
+      "tasks": [
+        "IFC-227"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-227 missing evidence_required",
+      "tasks": [
+        "IFC-227"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-229 missing gate_profile",
+      "tasks": [
+        "IFC-229"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-229 missing acceptance_owner",
+      "tasks": [
+        "IFC-229"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-229 missing evidence_required",
+      "tasks": [
+        "IFC-229"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-230 missing gate_profile",
+      "tasks": [
+        "IFC-230"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-230 missing acceptance_owner",
+      "tasks": [
+        "IFC-230"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-230 missing evidence_required",
+      "tasks": [
+        "IFC-230"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-231 missing gate_profile",
+      "tasks": [
+        "IFC-231"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-231 missing acceptance_owner",
+      "tasks": [
+        "IFC-231"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-231 missing evidence_required",
+      "tasks": [
+        "IFC-231"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-232 missing gate_profile",
+      "tasks": [
+        "IFC-232"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-232 missing acceptance_owner",
+      "tasks": [
+        "IFC-232"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-232 missing evidence_required",
+      "tasks": [
+        "IFC-232"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-233 missing gate_profile",
+      "tasks": [
+        "IFC-233"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-233 missing acceptance_owner",
+      "tasks": [
+        "IFC-233"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-233 missing evidence_required",
+      "tasks": [
+        "IFC-233"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-234 missing gate_profile",
+      "tasks": [
+        "IFC-234"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-234 missing acceptance_owner",
+      "tasks": [
+        "IFC-234"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-234 missing evidence_required",
+      "tasks": [
+        "IFC-234"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-236 missing gate_profile",
+      "tasks": [
+        "IFC-236"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-236 missing acceptance_owner",
+      "tasks": [
+        "IFC-236"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-236 missing evidence_required",
+      "tasks": [
+        "IFC-236"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-237 missing gate_profile",
+      "tasks": [
+        "IFC-237"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-237 missing acceptance_owner",
+      "tasks": [
+        "IFC-237"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-237 missing evidence_required",
+      "tasks": [
+        "IFC-237"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-238 missing gate_profile",
+      "tasks": [
+        "IFC-238"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-238 missing acceptance_owner",
+      "tasks": [
+        "IFC-238"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-238 missing evidence_required",
+      "tasks": [
+        "IFC-238"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-239 missing gate_profile",
+      "tasks": [
+        "IFC-239"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-239 missing acceptance_owner",
+      "tasks": [
+        "IFC-239"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-239 missing evidence_required",
+      "tasks": [
+        "IFC-239"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-240 missing gate_profile",
+      "tasks": [
+        "IFC-240"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-240 missing acceptance_owner",
+      "tasks": [
+        "IFC-240"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-240 missing evidence_required",
+      "tasks": [
+        "IFC-240"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-241 missing gate_profile",
+      "tasks": [
+        "IFC-241"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-241 missing acceptance_owner",
+      "tasks": [
+        "IFC-241"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-241 missing evidence_required",
+      "tasks": [
+        "IFC-241"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-242 missing gate_profile",
+      "tasks": [
+        "IFC-242"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-242 missing acceptance_owner",
+      "tasks": [
+        "IFC-242"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-242 missing evidence_required",
+      "tasks": [
+        "IFC-242"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-243 missing gate_profile",
+      "tasks": [
+        "IFC-243"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-243 missing acceptance_owner",
+      "tasks": [
+        "IFC-243"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-243 missing evidence_required",
+      "tasks": [
+        "IFC-243"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-244 missing gate_profile",
+      "tasks": [
+        "IFC-244"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-244 missing acceptance_owner",
+      "tasks": [
+        "IFC-244"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-244 missing evidence_required",
+      "tasks": [
+        "IFC-244"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-246 missing gate_profile",
+      "tasks": [
+        "IFC-246"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-246 missing acceptance_owner",
+      "tasks": [
+        "IFC-246"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-246 missing evidence_required",
+      "tasks": [
+        "IFC-246"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-247 missing gate_profile",
+      "tasks": [
+        "IFC-247"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-247 missing acceptance_owner",
+      "tasks": [
+        "IFC-247"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-247 missing evidence_required",
+      "tasks": [
+        "IFC-247"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-248 missing gate_profile",
+      "tasks": [
+        "IFC-248"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-248 missing acceptance_owner",
+      "tasks": [
+        "IFC-248"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-248 missing evidence_required",
+      "tasks": [
+        "IFC-248"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-249 missing gate_profile",
+      "tasks": [
+        "IFC-249"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-249 missing acceptance_owner",
+      "tasks": [
+        "IFC-249"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-249 missing evidence_required",
+      "tasks": [
+        "IFC-249"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-250 missing gate_profile",
+      "tasks": [
+        "IFC-250"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-250 missing acceptance_owner",
+      "tasks": [
+        "IFC-250"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-250 missing evidence_required",
+      "tasks": [
+        "IFC-250"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-251 missing gate_profile",
+      "tasks": [
+        "IFC-251"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-251 missing acceptance_owner",
+      "tasks": [
+        "IFC-251"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-251 missing evidence_required",
+      "tasks": [
+        "IFC-251"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-252 missing gate_profile",
+      "tasks": [
+        "IFC-252"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-252 missing acceptance_owner",
+      "tasks": [
+        "IFC-252"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-252 missing evidence_required",
+      "tasks": [
+        "IFC-252"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-253 missing gate_profile",
+      "tasks": [
+        "IFC-253"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-253 missing acceptance_owner",
+      "tasks": [
+        "IFC-253"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-253 missing evidence_required",
+      "tasks": [
+        "IFC-253"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-254 missing gate_profile",
+      "tasks": [
+        "IFC-254"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-254 missing acceptance_owner",
+      "tasks": [
+        "IFC-254"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-254 missing evidence_required",
+      "tasks": [
+        "IFC-254"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-255 missing gate_profile",
+      "tasks": [
+        "IFC-255"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-255 missing acceptance_owner",
+      "tasks": [
+        "IFC-255"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-255 missing evidence_required",
+      "tasks": [
+        "IFC-255"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-256 missing gate_profile",
+      "tasks": [
+        "IFC-256"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-256 missing acceptance_owner",
+      "tasks": [
+        "IFC-256"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-256 missing evidence_required",
+      "tasks": [
+        "IFC-256"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-257 missing gate_profile",
+      "tasks": [
+        "IFC-257"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-257 missing acceptance_owner",
+      "tasks": [
+        "IFC-257"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-257 missing evidence_required",
+      "tasks": [
+        "IFC-257"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-258 missing gate_profile",
+      "tasks": [
+        "IFC-258"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-258 missing acceptance_owner",
+      "tasks": [
+        "IFC-258"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-258 missing evidence_required",
+      "tasks": [
+        "IFC-258"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-259 missing gate_profile",
+      "tasks": [
+        "IFC-259"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-259 missing acceptance_owner",
+      "tasks": [
+        "IFC-259"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-259 missing evidence_required",
+      "tasks": [
+        "IFC-259"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-260 missing gate_profile",
+      "tasks": [
+        "IFC-260"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-260 missing acceptance_owner",
+      "tasks": [
+        "IFC-260"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-260 missing evidence_required",
+      "tasks": [
+        "IFC-260"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-261 missing gate_profile",
+      "tasks": [
+        "IFC-261"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-261 missing acceptance_owner",
+      "tasks": [
+        "IFC-261"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-261 missing evidence_required",
+      "tasks": [
+        "IFC-261"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-262 missing gate_profile",
+      "tasks": [
+        "IFC-262"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-262 missing acceptance_owner",
+      "tasks": [
+        "IFC-262"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-262 missing evidence_required",
+      "tasks": [
+        "IFC-262"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-263 missing gate_profile",
+      "tasks": [
+        "IFC-263"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-263 missing acceptance_owner",
+      "tasks": [
+        "IFC-263"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-263 missing evidence_required",
+      "tasks": [
+        "IFC-263"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-264 missing gate_profile",
+      "tasks": [
+        "IFC-264"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-264 missing acceptance_owner",
+      "tasks": [
+        "IFC-264"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-264 missing evidence_required",
+      "tasks": [
+        "IFC-264"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-265 missing gate_profile",
+      "tasks": [
+        "IFC-265"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-265 missing acceptance_owner",
+      "tasks": [
+        "IFC-265"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-265 missing evidence_required",
+      "tasks": [
+        "IFC-265"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-266 missing gate_profile",
+      "tasks": [
+        "IFC-266"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-266 missing acceptance_owner",
+      "tasks": [
+        "IFC-266"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-266 missing evidence_required",
+      "tasks": [
+        "IFC-266"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-267 missing gate_profile",
+      "tasks": [
+        "IFC-267"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-267 missing acceptance_owner",
+      "tasks": [
+        "IFC-267"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-267 missing evidence_required",
+      "tasks": [
+        "IFC-267"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-268 missing gate_profile",
+      "tasks": [
+        "IFC-268"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-268 missing acceptance_owner",
+      "tasks": [
+        "IFC-268"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-268 missing evidence_required",
+      "tasks": [
+        "IFC-268"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-269 missing gate_profile",
+      "tasks": [
+        "IFC-269"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-269 missing acceptance_owner",
+      "tasks": [
+        "IFC-269"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-269 missing evidence_required",
+      "tasks": [
+        "IFC-269"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-270 missing gate_profile",
+      "tasks": [
+        "IFC-270"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-270 missing acceptance_owner",
+      "tasks": [
+        "IFC-270"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-270 missing evidence_required",
+      "tasks": [
+        "IFC-270"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-271 missing gate_profile",
+      "tasks": [
+        "IFC-271"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-271 missing acceptance_owner",
+      "tasks": [
+        "IFC-271"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-271 missing evidence_required",
+      "tasks": [
+        "IFC-271"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-273 missing gate_profile",
+      "tasks": [
+        "IFC-273"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-273 missing acceptance_owner",
+      "tasks": [
+        "IFC-273"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-273 missing evidence_required",
+      "tasks": [
+        "IFC-273"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-274 missing gate_profile",
+      "tasks": [
+        "IFC-274"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-274 missing acceptance_owner",
+      "tasks": [
+        "IFC-274"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-274 missing evidence_required",
+      "tasks": [
+        "IFC-274"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-277 missing gate_profile",
+      "tasks": [
+        "IFC-277"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-277 missing acceptance_owner",
+      "tasks": [
+        "IFC-277"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-277 missing evidence_required",
+      "tasks": [
+        "IFC-277"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-278 missing gate_profile",
+      "tasks": [
+        "IFC-278"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-278 missing acceptance_owner",
+      "tasks": [
+        "IFC-278"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-278 missing evidence_required",
+      "tasks": [
+        "IFC-278"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-279 missing gate_profile",
+      "tasks": [
+        "IFC-279"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-279 missing acceptance_owner",
+      "tasks": [
+        "IFC-279"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-279 missing evidence_required",
+      "tasks": [
+        "IFC-279"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-281 missing gate_profile",
+      "tasks": [
+        "IFC-281"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-281 missing acceptance_owner",
+      "tasks": [
+        "IFC-281"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-281 missing evidence_required",
+      "tasks": [
+        "IFC-281"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-282 missing gate_profile",
+      "tasks": [
+        "IFC-282"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-282 missing acceptance_owner",
+      "tasks": [
+        "IFC-282"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-282 missing evidence_required",
+      "tasks": [
+        "IFC-282"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-283 missing gate_profile",
+      "tasks": [
+        "IFC-283"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-283 missing acceptance_owner",
+      "tasks": [
+        "IFC-283"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-283 missing evidence_required",
+      "tasks": [
+        "IFC-283"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-284 missing gate_profile",
+      "tasks": [
+        "IFC-284"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-284 missing acceptance_owner",
+      "tasks": [
+        "IFC-284"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-284 missing evidence_required",
+      "tasks": [
+        "IFC-284"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-285 missing gate_profile",
+      "tasks": [
+        "IFC-285"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-285 missing acceptance_owner",
+      "tasks": [
+        "IFC-285"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-285 missing evidence_required",
+      "tasks": [
+        "IFC-285"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-287 missing gate_profile",
+      "tasks": [
+        "IFC-287"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-287 missing acceptance_owner",
+      "tasks": [
+        "IFC-287"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-287 missing evidence_required",
+      "tasks": [
+        "IFC-287"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-290 missing gate_profile",
+      "tasks": [
+        "IFC-290"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-290 missing acceptance_owner",
+      "tasks": [
+        "IFC-290"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-290 missing evidence_required",
+      "tasks": [
+        "IFC-290"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-295 missing gate_profile",
+      "tasks": [
+        "IFC-295"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-295 missing acceptance_owner",
+      "tasks": [
+        "IFC-295"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-295 missing evidence_required",
+      "tasks": [
+        "IFC-295"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "DEPS_RESOLVE",
+      "severity": "error",
+      "message": "Task IFC-245 has unresolved dependency: IFC-069:FS",
+      "tasks": [
+        "IFC-245"
+      ],
+      "fix": "Fix typo in dependency or add missing task to Sprint_plan.csv"
+    },
+    {
+      "rule": "DEPS_RESOLVE",
+      "severity": "error",
+      "message": "Task IFC-272 has unresolved dependency: IFC-271:FS",
+      "tasks": [
+        "IFC-272"
+      ],
+      "fix": "Fix typo in dependency or add missing task to Sprint_plan.csv"
+    },
+    {
+      "rule": "DEPS_RESOLVE",
+      "severity": "error",
+      "message": "Task IFC-275 has unresolved dependency: IFC-270:FS",
+      "tasks": [
+        "IFC-275"
+      ],
+      "fix": "Fix typo in dependency or add missing task to Sprint_plan.csv"
+    },
+    {
+      "rule": "DEPS_RESOLVE",
+      "severity": "error",
+      "message": "Task IFC-276 has unresolved dependency: IFC-267:FS",
+      "tasks": [
+        "IFC-276"
+      ],
+      "fix": "Fix typo in dependency or add missing task to Sprint_plan.csv"
+    },
+    {
+      "rule": "DEPS_RESOLVE",
+      "severity": "error",
+      "message": "Task IFC-276 has unresolved dependency: IFC-268:FS",
+      "tasks": [
+        "IFC-276"
+      ],
+      "fix": "Fix typo in dependency or add missing task to Sprint_plan.csv"
+    },
+    {
+      "rule": "DEPS_RESOLVE",
+      "severity": "error",
+      "message": "Task IFC-280 has unresolved dependency: IFC-278:FS",
+      "tasks": [
+        "IFC-280"
+      ],
+      "fix": "Fix typo in dependency or add missing task to Sprint_plan.csv"
+    },
+    {
+      "rule": "DEPS_RESOLVE",
+      "severity": "error",
+      "message": "Task IFC-286 has unresolved dependency: IFC-278:FS",
+      "tasks": [
+        "IFC-286"
+      ],
+      "fix": "Fix typo in dependency or add missing task to Sprint_plan.csv"
+    },
+    {
+      "rule": "DEPS_RESOLVE",
+      "severity": "error",
+      "message": "Task IFC-286 has unresolved dependency: IFC-280:FS",
+      "tasks": [
+        "IFC-286"
+      ],
+      "fix": "Fix typo in dependency or add missing task to Sprint_plan.csv"
+    },
+    {
+      "rule": "DEPS_RESOLVE",
+      "severity": "error",
+      "message": "Task IFC-288 has unresolved dependency: IFC-037:FS",
+      "tasks": [
+        "IFC-288"
+      ],
+      "fix": "Fix typo in dependency or add missing task to Sprint_plan.csv"
+    },
+    {
+      "rule": "DEPS_RESOLVE",
+      "severity": "error",
+      "message": "Task IFC-289 has unresolved dependency: IFC-139:FS",
+      "tasks": [
+        "IFC-289"
+      ],
+      "fix": "Fix typo in dependency or add missing task to Sprint_plan.csv"
+    },
+    {
+      "rule": "DEPS_RESOLVE",
+      "severity": "error",
+      "message": "Task IFC-289 has unresolved dependency: IFC-148:FS",
+      "tasks": [
+        "IFC-289"
+      ],
+      "fix": "Fix typo in dependency or add missing task to Sprint_plan.csv"
+    },
+    {
+      "rule": "DEPS_RESOLVE",
+      "severity": "error",
+      "message": "Task IFC-291 has unresolved dependency: IFC-068:FS",
+      "tasks": [
+        "IFC-291"
+      ],
+      "fix": "Fix typo in dependency or add missing task to Sprint_plan.csv"
+    },
+    {
+      "rule": "DEPS_RESOLVE",
+      "severity": "error",
+      "message": "Task IFC-292 has unresolved dependency: IFC-140:FS",
+      "tasks": [
+        "IFC-292"
+      ],
+      "fix": "Fix typo in dependency or add missing task to Sprint_plan.csv"
+    },
+    {
+      "rule": "DEPS_RESOLVE",
+      "severity": "error",
+      "message": "Task IFC-292 has unresolved dependency: IFC-152:FS",
+      "tasks": [
+        "IFC-292"
+      ],
+      "fix": "Fix typo in dependency or add missing task to Sprint_plan.csv"
+    },
+    {
+      "rule": "DEPS_RESOLVE",
+      "severity": "error",
+      "message": "Task IFC-293 has unresolved dependency: IFC-157:FS",
+      "tasks": [
+        "IFC-293"
+      ],
+      "fix": "Fix typo in dependency or add missing task to Sprint_plan.csv"
+    },
+    {
+      "rule": "DEPS_RESOLVE",
+      "severity": "error",
+      "message": "Task IFC-294 has unresolved dependency: IFC-025:FS",
+      "tasks": [
+        "IFC-294"
+      ],
+      "fix": "Fix typo in dependency or add missing task to Sprint_plan.csv"
+    },
+    {
+      "rule": "DEPS_RESOLVE",
+      "severity": "error",
+      "message": "Task IFC-294 has unresolved dependency: IFC-095:FS",
+      "tasks": [
+        "IFC-294"
+      ],
+      "fix": "Fix typo in dependency or add missing task to Sprint_plan.csv"
+    }
+  ],
   "warnings": [
     {
       "rule": "AI_TASKS_MVP",
@@ -198,7 +1945,7 @@
         "AI-SETUP-003"
       ],
       "priority": "critical",
-      "days_until_expiry": -32
+      "days_until_expiry": -36
     },
     {
       "rule": "WAIVER_USED",
@@ -218,7 +1965,7 @@
         "ENV-008-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -4
+      "days_until_expiry": -8
     },
     {
       "rule": "WAIVER_USED",
@@ -238,7 +1985,7 @@
         "ENV-010-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -32
+      "days_until_expiry": -36
     },
     {
       "rule": "WAIVER_USED",
@@ -258,7 +2005,7 @@
         "ENV-011-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -32
+      "days_until_expiry": -36
     },
     {
       "rule": "WAIVER_USED",
@@ -278,7 +2025,7 @@
         "ENV-012-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -4
+      "days_until_expiry": -8
     },
     {
       "rule": "WAIVER_USED",
@@ -298,7 +2045,7 @@
         "ENV-014-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -4
+      "days_until_expiry": -8
     },
     {
       "rule": "WAIVER_USED",
@@ -318,7 +2065,7 @@
         "ENV-015-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -4
+      "days_until_expiry": -8
     },
     {
       "rule": "WAIVER_USED",
@@ -338,7 +2085,7 @@
         "ENV-016-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -4
+      "days_until_expiry": -8
     },
     {
       "rule": "WAIVER_USED",
@@ -358,7 +2105,7 @@
         "AUTOMATION-001"
       ],
       "priority": "critical",
-      "days_until_expiry": -4
+      "days_until_expiry": -8
     },
     {
       "rule": "WAIVER_USED",
@@ -378,7 +2125,7 @@
         "AUTOMATION-002"
       ],
       "priority": "critical",
-      "days_until_expiry": -4
+      "days_until_expiry": -8
     }
   ],
   "review_queue": [

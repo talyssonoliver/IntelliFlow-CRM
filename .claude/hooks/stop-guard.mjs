@@ -17,10 +17,10 @@ function getStateDir() {
 }
 
 async function main() {
-  let input = '';
   process.stdin.setEncoding('utf8');
-  for await (const chunk of process.stdin) {
-    input += chunk;
+  // Drain stdin (content not used by this hook)
+  for await (const _chunk of process.stdin) {
+    // consume
   }
 
   // Load exec phase state

@@ -5,6 +5,25 @@ import securityPlugin from 'eslint-plugin-security';
 import sonarjsPlugin from 'eslint-plugin-sonarjs';
 import prettierConfig from 'eslint-config-prettier';
 
+// Inject tsconfigRootDir into typescript-eslint parser config.
+// The monorepo has multiple tsconfig.json files (root + apps/project-tracker)
+// and the parser cannot auto-detect which to use without this.
+const tsRecommended = tseslint.configs.recommended.map((config) => {
+  if (config.languageOptions?.parser) {
+    return {
+      ...config,
+      languageOptions: {
+        ...config.languageOptions,
+        parserOptions: {
+          ...config.languageOptions.parserOptions,
+          tsconfigRootDir: import.meta.dirname,
+        },
+      },
+    };
+  }
+  return config;
+});
+
 export default [
   // Global ignores
   {
@@ -23,12 +42,12 @@ export default [
 
   // Base config for all files
   js.configs.recommended,
-  ...tseslint.configs.recommended,
+  ...tsRecommended,
   prettierConfig,
 
   // General TypeScript/JavaScript files
   {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.mjs', '**/*.cjs'],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
@@ -230,14 +249,17 @@ export default [
     },
   },
 
-  // Config files and CJS scripts
+  // Config files, CJS scripts, and plain JS/MJS utilities
   {
     files: [
       '**/next.config.js',
       '**/*.config.js',
       '**/*.config.mjs',
       '**/*.config.cjs',
-      'scripts/*.js',
+      '**/*.cjs',
+      'scripts/**/*.js',
+      'tools/**/*.js',
+      'lighthouserc.js',
     ],
     rules: {
       '@typescript-eslint/no-var-requires': 'off',

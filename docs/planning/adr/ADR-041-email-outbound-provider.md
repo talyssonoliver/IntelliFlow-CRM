@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Date
 
@@ -64,3 +64,8 @@ and register in container.
   to `EmailServiceAdapter` for the email channel
 - Wire `NotificationService` → `RealNotificationServiceAdapter` → `EmailServiceAdapter` → `SendGridProvider`
 - Keep `MockNotificationServiceAdapter` for test/dev environments
+
+## Known Gaps
+
+- `NotificationService.processRetries()` polling is not scheduled in the API container. This is a known gap deferred to a follow-up task.
+- In-memory rate limiter (`EmailRateLimiter`) is ineffective across pods. Replace with Redis-backed limiter in follow-up task.

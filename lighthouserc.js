@@ -47,6 +47,9 @@ module.exports = {
         'http://localhost:3000/settings/ai', // AI settings
         'http://localhost:3000/settings/team', // Team settings
         'http://localhost:3000/billing', // Billing
+        // Support
+        'http://localhost:3000/help-center', // Help Center index
+        'http://localhost:3000/help-center/search', // Help Search
       ],
 
       // Number of runs per URL (for statistical reliability)

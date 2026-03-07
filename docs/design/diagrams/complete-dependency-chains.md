@@ -493,7 +493,12 @@ Dependency Chain:
 
 Dependency Chain:
   IFC-137 (Domain) ──┬──► appointment.ts (Val) ──► IFC-138 (Calendar) ──► IFC-172 (MS) ──► appointments.router ✅ ──┬──► PG-139 (UI) ✅ ──► PG-154 (Coverage) ✅
-                     │                                                                                               │
+                     │                                │                                                              │
+                     │                                └──► IFC-224 (Webhook Ingestion):
+                     │                                       Google route handler → GoogleCalendarAdapter.parseWebhookPayload → CalendarWebhookService
+                     │                                       Microsoft route handler → MicrosoftCalendarAdapter.parseWebhookPayload → CalendarWebhookService
+                     │                                       CalendarWebhookService → CalendarSyncServicePort → CalendarSyncServiceAdapter (stub)
+                     │                                                                                                │
                      └──► IFC-017 (Database) ────────────────────────────────────────────────────────────────────────┴──► IFC-158 (ICS) ✅
 ```
 
@@ -1993,7 +1998,7 @@ PG-039 (Dev Apps) ✅ ──► PG-040 (New Dev App) ✅
 ### Help Center Chain
 
 ```
-PG-043 (Help Center Index) ✅ ──► PG-044 (Category Detail) ⬜
+PG-043 (Help Center Index) ✅ ──► PG-044 (Help Search) ✅
                              └──► PG-045 (Article Detail) ⬜
 ```
 
@@ -2044,6 +2049,15 @@ DOC-002 (Sitemap Update) ─── COMPLETE
 ```
 
 ---
+
+## Notifications Dependency Chain
+
+```
+IFC-137 (NotificationService MVP)
+  └── IFC-157 (MockNotificationServiceAdapter) ✅
+        └── IFC-223 (Email Outbound Adapter — RealNotificationServiceAdapter) ✅
+              Wire SendGridProvider to container.ts via env-based selection
+```
 
 ## Critical Blockers
 

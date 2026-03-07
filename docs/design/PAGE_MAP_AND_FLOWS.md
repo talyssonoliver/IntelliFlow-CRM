@@ -35,7 +35,7 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 | Category        | Count |
 | --------------- | ----- |
-| Total Pages     | 119   |
+| Total Pages     | 124   |
 | Public Pages    | 27    |
 | Developer Pages | 14    |
 | Protected Pages | 78    |
@@ -339,6 +339,7 @@ developer sidebar. These pages are accessible through the Settings sidebar
 | Route          | Page              | Description                                       |
 | -------------- | ----------------- | ------------------------------------------------- |
 | `/help-center` | Help Center Index | Searchable category grid for self-service support |
+| `/help-center/search` | Help Search | URL-driven search with scoring, filters, and category results |
 
 ---
 
