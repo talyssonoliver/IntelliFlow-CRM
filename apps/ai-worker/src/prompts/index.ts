@@ -62,10 +62,7 @@ Analyze leads using the following weighted factors:
 
 Be objective and data-driven in your analysis.`;
 
-/**
- * Build a lead scoring user prompt with provided data
- */
-export function buildScoringPrompt(lead: {
+type ScoringLeadInput = {
   email: string;
   firstName?: string;
   lastName?: string;
@@ -80,7 +77,41 @@ export function buildScoringPrompt(lead: {
     location?: string;
   };
   recentActivities?: string[];
-}): string {
+};
+
+function appendBasicLeadFields(lines: string[], lead: ScoringLeadInput): void {
+  if (lead.firstName) lines.push(`- **First Name**: ${lead.firstName}`);
+  if (lead.lastName) lines.push(`- **Last Name**: ${lead.lastName}`);
+  if (lead.company) lines.push(`- **Company**: ${lead.company}`);
+  if (lead.title) lines.push(`- **Title**: ${lead.title}`);
+  if (lead.phone) lines.push(`- **Phone**: Available`);
+  if (lead.source) lines.push(`- **Source**: ${lead.source}`);
+}
+
+function appendCompanyDataSection(
+  lines: string[],
+  companyData: ScoringLeadInput['companyData']
+): void {
+  if (!companyData) return;
+  lines.push('', '### Company Data');
+  if (companyData.industry) lines.push(`- Industry: ${companyData.industry}`);
+  if (companyData.size) lines.push(`- Size: ${companyData.size}`);
+  if (companyData.revenue) lines.push(`- Revenue: ${companyData.revenue}`);
+  if (companyData.location) lines.push(`- Location: ${companyData.location}`);
+}
+
+function appendActivitiesSection(lines: string[], activities: string[] | undefined): void {
+  if (!activities || activities.length === 0) return;
+  lines.push('', '### Recent Activities');
+  activities.forEach((activity, index) => {
+    lines.push(`${index + 1}. ${activity}`);
+  });
+}
+
+/**
+ * Build a lead scoring user prompt with provided data
+ */
+export function buildScoringPrompt(lead: ScoringLeadInput): string {
   const lines: string[] = [
     'Please analyze the following lead and provide a score:',
     '',
@@ -89,27 +120,9 @@ export function buildScoringPrompt(lead: {
     `- **Email**: ${lead.email}`,
   ];
 
-  if (lead.firstName) lines.push(`- **First Name**: ${lead.firstName}`);
-  if (lead.lastName) lines.push(`- **Last Name**: ${lead.lastName}`);
-  if (lead.company) lines.push(`- **Company**: ${lead.company}`);
-  if (lead.title) lines.push(`- **Title**: ${lead.title}`);
-  if (lead.phone) lines.push(`- **Phone**: Available`);
-  if (lead.source) lines.push(`- **Source**: ${lead.source}`);
-
-  if (lead.companyData) {
-    lines.push('', '### Company Data');
-    if (lead.companyData.industry) lines.push(`- Industry: ${lead.companyData.industry}`);
-    if (lead.companyData.size) lines.push(`- Size: ${lead.companyData.size}`);
-    if (lead.companyData.revenue) lines.push(`- Revenue: ${lead.companyData.revenue}`);
-    if (lead.companyData.location) lines.push(`- Location: ${lead.companyData.location}`);
-  }
-
-  if (lead.recentActivities && lead.recentActivities.length > 0) {
-    lines.push('', '### Recent Activities');
-    lead.recentActivities.forEach((activity, index) => {
-      lines.push(`${index + 1}. ${activity}`);
-    });
-  }
+  appendBasicLeadFields(lines, lead);
+  appendCompanyDataSection(lines, lead.companyData);
+  appendActivitiesSection(lines, lead.recentActivities);
 
   lines.push(
     '',

@@ -2,29 +2,27 @@ import '../src/env';
 import { prisma } from '@intelliflow/db';
 
 async function main() {
-  try {
-    const insights = await prisma.aIInsight.findMany({
-      select: {
-        id: true,
-        type: true,
-        category: true,
-        title: true,
-        confidence: true,
-        priority: true,
-        entityType: true,
-        status: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 10,
-    });
-    console.log(`Found ${insights.length} insights:`);
-    for (const i of insights) {
-      console.log(`  [${i.priority}] ${i.type}/${i.category}: "${i.title}" (${i.confidence}% confidence, entity: ${i.entityType})`);
-    }
-  } catch (err) {
-    console.error('Error:', (err as Error).message.substring(0, 300));
+  // Check userIds stored in insight metadata
+  const insights = await prisma.aIInsight.findMany({
+    select: { id: true, metadata: true, title: true },
+    take: 5,
+  });
+  console.log('=== Insight userIds ===');
+  for (const i of insights) {
+    const meta = i.metadata as Record<string, unknown> | null;
+    console.log(`  "${i.title}" -> userId: ${meta?.userId}`);
   }
+
+  // Check real users in DB
+  const users = await prisma.user.findMany({
+    select: { id: true, email: true },
+    take: 5,
+  });
+  console.log('\n=== Real users ===');
+  for (const u of users) {
+    console.log(`  ${u.id} (${u.email})`);
+  }
+
   await prisma.$disconnect();
   process.exit(0);
 }

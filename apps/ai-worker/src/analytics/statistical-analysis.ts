@@ -603,11 +603,11 @@ function incompleteBeta(x: number, a: number, b: number): number {
   if (x < (a + 1) / (a + b + 2)) {
     return (bt * betaCF(x, a, b)) / a;
   } else {
-    // Use symmetry: I(x;a,b) = 1 - I(1-x;b,a)
+    // Use symmetry: I(x;a,b) = 1 - I(1-x;b,a) — arguments are intentionally swapped here
     const mirrorX = 1 - x;
-    const mirrorA = b;
-    const mirrorB = a;
-    return 1 - (bt * betaCF(mirrorX, mirrorA, mirrorB)) / b;
+    const mirrorA = b; // intentional swap: symmetry requires b as the first shape parameter
+    const mirrorB = a; // intentional swap: symmetry requires a as the second shape parameter
+    return 1 - (bt * betaCF(mirrorX, mirrorA, mirrorB)) / b; // NOSONAR javascript:S2234
   }
 }
 

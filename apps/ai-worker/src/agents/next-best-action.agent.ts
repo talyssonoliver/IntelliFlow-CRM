@@ -181,6 +181,72 @@ export class NextBestActionAgent extends BaseAgent<NBAContext, NBAResult> {
   }
 
   /**
+   * Retrieve RAG context for the NBA task. Returns { ragContextUsed, ragContent }.
+   */
+  private async retrieveRAGContext(
+    context: NBAContext
+  ): Promise<{ ragContextUsed: boolean; ragContent: string }> {
+    try {
+      const ragResult = await this.ragChain.retrieveContext({
+        query: this.buildContextQuery(context),
+        tenantId: context.tenantId,
+        userId: context.userId,
+        userRoles: [],
+        sources: ['documents', 'notes', 'conversations'],
+        maxResults: 3,
+        minRelevance: 0.7,
+        contextWindow: '7d',
+        searchType: 'hybrid',
+      });
+      if (ragResult.success && ragResult.context.length > 0) {
+        return { ragContextUsed: true, ragContent: this.ragChain.formatContextForPrompt(ragResult.context) };
+      }
+    } catch (error) {
+      logger.warn(
+        { error: error instanceof Error ? error.message : String(error) },
+        'RAG context retrieval failed, proceeding without'
+      );
+    }
+    return { ragContextUsed: false, ragContent: '' };
+  }
+
+  /**
+   * Analyze sentiment from the most recent message. Returns undefined if no messages or on error.
+   */
+  private async analyzeSentiment(
+    context: NBAContext
+  ): Promise<NBAResult['sentimentAnalysis'] | undefined> {
+    if (!context.recentMessages || context.recentMessages.length === 0) return undefined;
+    try {
+      if (!this.sentimentChain) {
+        this.sentimentChain = getSentimentChain();
+      }
+      const latestMessage = context.recentMessages[0];
+      const source =
+        latestMessage.channel === 'email'
+          ? 'email'
+          : latestMessage.channel === 'chat'
+            ? 'chat'
+            : 'other';
+      const sentimentResult = await this.sentimentChain.analyze({
+        text: latestMessage.content,
+        source,
+      });
+      return {
+        sentiment: sentimentResult.sentiment,
+        urgency: sentimentResult.urgency,
+        primaryEmotion: sentimentResult.primaryEmotion,
+      };
+    } catch (error) {
+      logger.warn(
+        { error: error instanceof Error ? error.message : String(error) },
+        'Sentiment analysis failed, proceeding without'
+      );
+      return undefined;
+    }
+  }
+
+  /**
    * Execute the NBA task
    */
   protected async executeTask(task: AgentTask<NBAContext, NBAResult>): Promise<NBAResult> {
@@ -196,65 +262,10 @@ export class NextBestActionAgent extends BaseAgent<NBAContext, NBAResult> {
     );
 
     // Step 1: Retrieve relevant context via RAG
-    let ragContextUsed = false;
-    let ragContent = '';
-
-    try {
-      const ragResult = await this.ragChain.retrieveContext({
-        query: this.buildContextQuery(context),
-        tenantId: context.tenantId,
-        userId: context.userId,
-        userRoles: [],
-        sources: ['documents', 'notes', 'conversations'],
-        maxResults: 3,
-        minRelevance: 0.7,
-        contextWindow: '7d',
-        searchType: 'hybrid',
-      });
-
-      if (ragResult.success && ragResult.context.length > 0) {
-        ragContextUsed = true;
-        ragContent = this.ragChain.formatContextForPrompt(ragResult.context);
-      }
-    } catch (error) {
-      logger.warn(
-        { error: error instanceof Error ? error.message : String(error) },
-        'RAG context retrieval failed, proceeding without'
-      );
-    }
+    const { ragContextUsed, ragContent } = await this.retrieveRAGContext(context);
 
     // Step 2: Analyze sentiment from recent messages
-    let sentimentAnalysis: NBAResult['sentimentAnalysis'] | undefined;
-
-    if (context.recentMessages && context.recentMessages.length > 0) {
-      try {
-        if (!this.sentimentChain) {
-          this.sentimentChain = getSentimentChain();
-        }
-
-        const latestMessage = context.recentMessages[0];
-        const sentimentResult = await this.sentimentChain.analyze({
-          text: latestMessage.content,
-          source:
-            latestMessage.channel === 'email'
-              ? 'email'
-              : latestMessage.channel === 'chat'
-                ? 'chat'
-                : 'other',
-        });
-
-        sentimentAnalysis = {
-          sentiment: sentimentResult.sentiment,
-          urgency: sentimentResult.urgency,
-          primaryEmotion: sentimentResult.primaryEmotion,
-        };
-      } catch (error) {
-        logger.warn(
-          { error: error instanceof Error ? error.message : String(error) },
-          'Sentiment analysis failed, proceeding without'
-        );
-      }
-    }
+    const sentimentAnalysis = await this.analyzeSentiment(context);
 
     // Step 3: Generate recommendations using LLM
     const recommendations = await this.generateRecommendations(
@@ -409,7 +420,7 @@ Valid ACTION_TYPES: ${ACTION_TYPES.join(', ')}
   private parseRecommendations(response: string, context: NBAContext): RecommendedAction[] {
     try {
       // Try to extract JSON from response
-      const jsonMatch = response.match(/\[[^[\]]{0,50000}\]/);
+      const jsonMatch = response.match(/\[[^\[\]]{0,50000}\]/); // NOSONAR javascript:S6535
       if (!jsonMatch) {
         throw new Error('No JSON array found in response');
       }

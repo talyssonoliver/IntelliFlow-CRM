@@ -337,7 +337,7 @@ const worker = new IngestionWorker({
 if (require.main === module) {
   const logger = pino({ name: 'ingestion-worker-main' });
 
-  void worker
+  worker
     .start()
     .then(() => {
       logger.info('Ingestion worker is running. Press Ctrl+C to stop.');

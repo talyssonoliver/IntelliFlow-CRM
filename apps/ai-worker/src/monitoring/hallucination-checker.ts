@@ -114,6 +114,29 @@ export class HallucinationChecker {
   }
 
   /**
+   * Accumulate results from an individual check into running totals.
+   * Returns 1 (check performed) or 0 (skipped).
+   */
+  private accumulateCheck(
+    condition: boolean,
+    hallucinationTypes: HallucinationType[],
+    evidence: string[],
+    scoreTotals: { value: number },
+    type: HallucinationType,
+    newEvidence: string[],
+    checkScore: number,
+    hasHallucination: boolean
+  ): number {
+    if (!condition) return 0;
+    if (hasHallucination) {
+      hallucinationTypes.push(type);
+      evidence.push(...newEvidence);
+      scoreTotals.value += checkScore;
+    }
+    return 1;
+  }
+
+  /**
    * Check an AI output for hallucinations
    */
   async checkOutput(params: {
@@ -127,68 +150,78 @@ export class HallucinationChecker {
 
     const hallucinationTypes: HallucinationType[] = [];
     const evidence: string[] = [];
-    let totalScore = 0;
+    const scoreTotal = { value: 0 };
     let checksPerformed = 0;
 
     // 1. Check for fabricated entities
-    if (this.config.enableEntityValidation) {
-      const entityCheck = this.checkForFabricatedEntities(params.output);
-      if (entityCheck.fabricated.length > 0) {
-        hallucinationTypes.push('fabricated_entity');
-        evidence.push(`Fabricated entities: ${entityCheck.fabricated.join(', ')}`);
-        totalScore += entityCheck.score;
-      }
-      checksPerformed++;
-    }
+    const entityCheck = this.checkForFabricatedEntities(params.output);
+    checksPerformed += this.accumulateCheck(
+      this.config.enableEntityValidation,
+      hallucinationTypes, evidence, scoreTotal,
+      'fabricated_entity',
+      [`Fabricated entities: ${entityCheck.fabricated.join(', ')}`],
+      entityCheck.score,
+      entityCheck.fabricated.length > 0
+    );
 
     // 2. Check for factual errors against ground truth
-    if (this.config.enableFactChecking && params.groundTruth) {
-      const factCheck = this.checkFactualAccuracy(params.output, params.groundTruth);
-      if (factCheck.errors.length > 0) {
-        hallucinationTypes.push('factual_error');
-        evidence.push(...factCheck.errors.map((e) => `Factual error: ${e}`));
-        totalScore += factCheck.score;
-      }
-      checksPerformed++;
-    }
+    const factCheck = this.config.enableFactChecking && params.groundTruth
+      ? this.checkFactualAccuracy(params.output, params.groundTruth)
+      : null;
+    checksPerformed += this.accumulateCheck(
+      !!(this.config.enableFactChecking && params.groundTruth),
+      hallucinationTypes, evidence, scoreTotal,
+      'factual_error',
+      (factCheck?.errors ?? []).map((e) => `Factual error: ${e}`),
+      factCheck?.score ?? 0,
+      (factCheck?.errors.length ?? 0) > 0
+    );
 
     // 3. Check for logical consistency
-    if (this.config.enableLogicChecking) {
-      const logicCheck = this.checkLogicalConsistency(params.output);
-      if (!logicCheck.consistent) {
-        hallucinationTypes.push('inconsistent_logic');
-        evidence.push(...logicCheck.contradictions.map((c) => `Contradiction: ${c}`));
-        totalScore += logicCheck.score;
-      }
-      checksPerformed++;
-    }
+    const logicCheck = this.checkLogicalConsistency(params.output);
+    checksPerformed += this.accumulateCheck(
+      this.config.enableLogicChecking,
+      hallucinationTypes, evidence, scoreTotal,
+      'inconsistent_logic',
+      logicCheck.contradictions.map((c) => `Contradiction: ${c}`),
+      logicCheck.score,
+      !logicCheck.consistent
+    );
 
-    // 4. Check for unsupported claims
+    // 4. Check for unsupported claims (always performed)
     const claimCheck = this.checkClaimSupport(params.output, params.inputContext);
-    if (claimCheck.unsupportedClaims.length > 0) {
-      hallucinationTypes.push('unsupported_claim');
-      evidence.push(...claimCheck.unsupportedClaims.map((c) => `Unsupported: ${c}`));
-      totalScore += claimCheck.score;
-    }
-    checksPerformed++;
+    checksPerformed += this.accumulateCheck(
+      true,
+      hallucinationTypes, evidence, scoreTotal,
+      'unsupported_claim',
+      claimCheck.unsupportedClaims.map((c) => `Unsupported: ${c}`),
+      claimCheck.score,
+      claimCheck.unsupportedClaims.length > 0
+    );
 
-    // 5. Check for context drift
+    // 5. Check for context drift (always performed)
     const driftCheck = this.checkContextDrift(params.inputContext, params.output);
-    if (driftCheck.drifted) {
-      hallucinationTypes.push('context_drift');
-      evidence.push(`Context drift detected: ${driftCheck.reason}`);
-      totalScore += driftCheck.score;
-    }
-    checksPerformed++;
+    checksPerformed += this.accumulateCheck(
+      true,
+      hallucinationTypes, evidence, scoreTotal,
+      'context_drift',
+      [`Context drift detected: ${driftCheck.reason}`],
+      driftCheck.score,
+      driftCheck.drifted
+    );
 
-    // 6. Check for numerical errors
+    // 6. Check for numerical errors (always performed)
     const numCheck = this.checkNumericalAccuracy(params.output);
-    if (numCheck.errors.length > 0) {
-      hallucinationTypes.push('numerical_error');
-      evidence.push(...numCheck.errors.map((e) => `Numerical error: ${e}`));
-      totalScore += numCheck.score;
-    }
-    checksPerformed++;
+    checksPerformed += this.accumulateCheck(
+      true,
+      hallucinationTypes, evidence, scoreTotal,
+      'numerical_error',
+      numCheck.errors.map((e) => `Numerical error: ${e}`),
+      numCheck.score,
+      numCheck.errors.length > 0
+    );
+
+    const totalScore = scoreTotal.value;
 
     // Calculate final score
     const score = checksPerformed > 0 ? totalScore / checksPerformed : 0;

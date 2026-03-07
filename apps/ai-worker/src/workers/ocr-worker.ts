@@ -207,8 +207,8 @@ export class OCRWorker extends EventEmitter {
         // Remove control characters
         // eslint-disable-next-line no-control-regex
         .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
-        // Normalize quotes
-        .replace(/[""]/g, '"')
+        // Normalize quotes (U+201C left and U+201D right double quotation marks — distinct chars)
+        .replace(/[""]/g, '"') // NOSONAR javascript:S5869
         .replace(/'/g, "'")
         // Normalize dashes
         .replace(/[–—]/g, '-')

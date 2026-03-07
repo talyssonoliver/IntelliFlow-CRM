@@ -210,9 +210,8 @@ export class LatencyMonitor {
       previousTime = timestamp;
     }
 
-    // Apply sampling
-    if (Math.random() <= this.config.samplingRate) {
-      // NOSONAR - non-security: probabilistic sampling decision, not used for auth or tokens
+    // Apply sampling (non-security: probabilistic sampling decision, not used for auth or tokens)
+    if (Math.random() <= this.config.samplingRate) { // NOSONAR
       this.measurements.push(...measurements);
     }
 
@@ -245,8 +244,7 @@ export class LatencyMonitor {
       timestamp: new Date(),
     };
 
-    if (Math.random() <= this.config.samplingRate) {
-      // NOSONAR - non-security: probabilistic sampling decision, not used for auth or tokens
+    if (Math.random() <= this.config.samplingRate) { // NOSONAR
       this.measurements.push(entry);
     }
 
@@ -620,59 +618,73 @@ function getBucketRatio(bucket: number, percentiles: LatencyPercentiles): number
   return 1.0;
 }
 
+function buildHistogramMetrics(
+  stats: ReturnType<LatencyMonitor['getStats']>
+): string {
+  const buckets = [100, 250, 500, 1000, 2000, 5000, 10000];
+  const totalMeasurements = stats.sampleCount;
+  let out = `# HELP intelliflow_ai_latency_seconds AI operation latency in seconds\n`;
+  out += `# TYPE intelliflow_ai_latency_seconds histogram\n`;
+  for (const bucket of buckets) {
+    const ratio = getBucketRatio(bucket, stats.percentiles);
+    const count = Math.round(totalMeasurements * ratio);
+    out += `intelliflow_ai_latency_seconds_bucket{le="${(bucket / 1000).toFixed(3)}"} ${count}\n`;
+  }
+  out += `intelliflow_ai_latency_seconds_bucket{le="+Inf"} ${totalMeasurements}\n`;
+  out += `intelliflow_ai_latency_seconds_count ${totalMeasurements}\n`;
+  out += `intelliflow_ai_latency_seconds_sum ${((totalMeasurements * stats.percentiles.mean) / 1000).toFixed(3)}\n`;
+  return out;
+}
+
+function buildPercentileGauges(
+  stats: ReturnType<LatencyMonitor['getStats']>
+): string {
+  let out = `# HELP intelliflow_ai_latency_p95_ms P95 latency in milliseconds\n`;
+  out += `# TYPE intelliflow_ai_latency_p95_ms gauge\n`;
+  out += `intelliflow_ai_latency_p95_ms ${stats.percentiles.p95.toFixed(1)}\n`;
+  out += `# HELP intelliflow_ai_latency_p99_ms P99 latency in milliseconds\n`;
+  out += `# TYPE intelliflow_ai_latency_p99_ms gauge\n`;
+  out += `intelliflow_ai_latency_p99_ms ${stats.percentiles.p99.toFixed(1)}\n`;
+  return out;
+}
+
+function buildSloAndRateMetrics(
+  stats: ReturnType<LatencyMonitor['getStats']>
+): string {
+  const p95Flag = stats.sloCompliance.p95Compliant ? 1 : 0;
+  const p99Flag = stats.sloCompliance.p99Compliant ? 1 : 0;
+  let out = `# HELP intelliflow_ai_slo_compliant SLO compliance status (1=compliant, 0=not)\n`;
+  out += `# TYPE intelliflow_ai_slo_compliant gauge\n`;
+  out += `intelliflow_ai_slo_compliant{slo="p95"} ${p95Flag}\n`;
+  out += `intelliflow_ai_slo_compliant{slo="p99"} ${p99Flag}\n`;
+  out += `# HELP intelliflow_ai_success_rate AI operation success rate (0-1)\n`;
+  out += `# TYPE intelliflow_ai_success_rate gauge\n`;
+  out += `intelliflow_ai_success_rate ${stats.successRate.toFixed(4)}\n`;
+  return out;
+}
+
+function buildPerModelMetrics(
+  stats: ReturnType<LatencyMonitor['getStats']>
+): string {
+  let out = `# HELP intelliflow_ai_latency_by_model_p95_ms P95 latency by model in milliseconds\n`;
+  out += `# TYPE intelliflow_ai_latency_by_model_p95_ms gauge\n`;
+  for (const [model, p] of Object.entries(stats.byModel)) {
+    out += `intelliflow_ai_latency_by_model_p95_ms{model="${model}"} ${p.p95.toFixed(1)}\n`;
+  }
+  return out;
+}
+
 /**
  * Prometheus metrics format for latency monitoring
  */
 export function getLatencyMetrics(): string {
   const stats = latencyMonitor.getStats();
-
-  let metrics = '';
-
-  // Histogram buckets
-  const buckets = [100, 250, 500, 1000, 2000, 5000, 10000];
-
-  metrics += `# HELP intelliflow_ai_latency_seconds AI operation latency in seconds\n`;
-  metrics += `# TYPE intelliflow_ai_latency_seconds histogram\n`;
-
-  // Approximate bucket counts from percentiles
-  const totalMeasurements = stats.sampleCount;
-  for (const bucket of buckets) {
-    const ratio = getBucketRatio(bucket, stats.percentiles);
-    const count = Math.round(totalMeasurements * ratio);
-    metrics += `intelliflow_ai_latency_seconds_bucket{le="${(bucket / 1000).toFixed(3)}"} ${count}\n`;
-  }
-  metrics += `intelliflow_ai_latency_seconds_bucket{le="+Inf"} ${totalMeasurements}\n`;
-  metrics += `intelliflow_ai_latency_seconds_count ${totalMeasurements}\n`;
-  metrics += `intelliflow_ai_latency_seconds_sum ${((totalMeasurements * stats.percentiles.mean) / 1000).toFixed(3)}\n`;
-
-  // Percentile gauges
-  metrics += `# HELP intelliflow_ai_latency_p95_ms P95 latency in milliseconds\n`;
-  metrics += `# TYPE intelliflow_ai_latency_p95_ms gauge\n`;
-  metrics += `intelliflow_ai_latency_p95_ms ${stats.percentiles.p95.toFixed(1)}\n`;
-
-  metrics += `# HELP intelliflow_ai_latency_p99_ms P99 latency in milliseconds\n`;
-  metrics += `# TYPE intelliflow_ai_latency_p99_ms gauge\n`;
-  metrics += `intelliflow_ai_latency_p99_ms ${stats.percentiles.p99.toFixed(1)}\n`;
-
-  // SLO compliance
-  metrics += `# HELP intelliflow_ai_slo_compliant SLO compliance status (1=compliant, 0=not)\n`;
-  metrics += `# TYPE intelliflow_ai_slo_compliant gauge\n`;
-  metrics += `intelliflow_ai_slo_compliant{slo="p95"} ${stats.sloCompliance.p95Compliant ? 1 : 0}\n`;
-  metrics += `intelliflow_ai_slo_compliant{slo="p99"} ${stats.sloCompliance.p99Compliant ? 1 : 0}\n`;
-
-  // Success rate
-  metrics += `# HELP intelliflow_ai_success_rate AI operation success rate (0-1)\n`;
-  metrics += `# TYPE intelliflow_ai_success_rate gauge\n`;
-  metrics += `intelliflow_ai_success_rate ${stats.successRate.toFixed(4)}\n`;
-
-  // Per-model latencies
-  metrics += `# HELP intelliflow_ai_latency_by_model_p95_ms P95 latency by model in milliseconds\n`;
-  metrics += `# TYPE intelliflow_ai_latency_by_model_p95_ms gauge\n`;
-  for (const [model, p] of Object.entries(stats.byModel)) {
-    metrics += `intelliflow_ai_latency_by_model_p95_ms{model="${model}"} ${p.p95.toFixed(1)}\n`;
-  }
-
-  return metrics;
+  return (
+    buildHistogramMetrics(stats) +
+    buildPercentileGauges(stats) +
+    buildSloAndRateMetrics(stats) +
+    buildPerModelMetrics(stats)
+  );
 }
 
 /**

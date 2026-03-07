@@ -520,7 +520,7 @@ const worker = new EventsWorker({
 if (require.main === module) {
   const logger = pino({ name: 'events-worker-main' });
 
-  void worker
+  worker
     .start()
     .then(() => {
       logger.info('Events worker is running. Press Ctrl+C to stop.');

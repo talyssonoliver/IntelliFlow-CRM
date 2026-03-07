@@ -111,6 +111,108 @@ function mapEntityTypeToCategory(entityType: GeneratedInsight['entityType']): st
 }
 
 // ============================================================================
+// Entity-Level Insight Population
+// ============================================================================
+
+/**
+ * Populate entity-level insight tables (LeadAIInsight / ContactAIInsight)
+ * so that entity 360 pages display rich AI-derived data.
+ *
+ * Uses job input data (scores, recency) for numeric fields and
+ * LLM-generated insights for text fields (nextBestAction, recommendations).
+ */
+async function populateEntityInsights(
+  prisma: any,
+  jobData: InsightJobData,
+  generatedInsights: GeneratedInsight[],
+  tenantId: string
+): Promise<{ leads: number; contacts: number }> {
+  const insightMap = new Map<string, GeneratedInsight>();
+  for (const insight of generatedInsights) {
+    if (insight.entityId) insightMap.set(insight.entityId, insight);
+  }
+
+  let leads = 0;
+  let contacts = 0;
+
+  for (const lead of jobData.hotLeads) {
+    try {
+      const llm = insightMap.get(lead.id);
+      const score = lead.score;
+
+      await prisma.leadAIInsight.upsert({
+        where: { leadId: lead.id },
+        create: {
+          leadId: lead.id,
+          tenantId,
+          engagementScore: Math.min(100, score),
+          conversionProbability: Math.min(100, Math.round(score * 0.8)),
+          estimatedValue: 0,
+          churnRisk: score >= 75 ? 'MINIMAL' : score >= 60 ? 'LOW' : score >= 40 ? 'MEDIUM' : 'HIGH',
+          nextBestAction: llm?.suggestedActions[0] || 'Send personalized follow-up',
+          sentiment: score >= 65 ? 'POSITIVE' : score >= 35 ? 'NEUTRAL' : 'NEGATIVE',
+          sentimentTrend: lead.status?.toUpperCase() === 'QUALIFIED' ? 'improving' : 'stable',
+          recommendations: llm?.suggestedActions || ['Send personalized follow-up', 'Schedule a discovery call'],
+          lastEngagementDays: 0,
+          icpMatch: score >= 80 && lead.company ? 'Strong Match' : score >= 65 ? 'Good Match' : 'Partial Match',
+        },
+        update: {
+          ...(llm
+            ? {
+                nextBestAction: llm.suggestedActions[0],
+                recommendations: llm.suggestedActions,
+              }
+            : {}),
+        },
+      });
+      leads++;
+    } catch {
+      // Entity may have been deleted between enqueue and processing
+    }
+  }
+
+  for (const contact of jobData.staleContacts) {
+    try {
+      const llm = insightMap.get(contact.id);
+      const daysSince = contact.daysSinceContact ?? 90;
+      const engScore = Math.max(0, 100 - daysSince * 2);
+
+      await prisma.contactAIInsight.upsert({
+        where: { contactId: contact.id },
+        create: {
+          contactId: contact.id,
+          tenantId,
+          engagementScore: engScore,
+          conversionProbability: contact.hasOpenOpportunities ? Math.max(10, 50 - daysSince) : 10,
+          lifetimeValue: 0,
+          churnRisk: daysSince > 30 ? 'HIGH' : daysSince > 14 ? 'MEDIUM' : 'LOW',
+          nextBestAction: llm?.suggestedActions[0] || 'Schedule a follow-up',
+          sentiment: engScore >= 65 ? 'POSITIVE' : engScore >= 35 ? 'NEUTRAL' : 'NEGATIVE',
+          sentimentTrend: daysSince > 30 ? 'declining' : 'stable',
+          recommendations: llm?.suggestedActions || ['Schedule a follow-up', 'Review open opportunities'],
+          lastEngagementDays: daysSince,
+        },
+        update: {
+          lastEngagementDays: daysSince,
+          churnRisk: daysSince > 30 ? 'HIGH' : daysSince > 14 ? 'MEDIUM' : 'LOW',
+          ...(llm
+            ? {
+                nextBestAction: llm.suggestedActions[0],
+                recommendations: llm.suggestedActions,
+              }
+            : {}),
+        },
+      });
+      contacts++;
+    } catch {
+      // Entity may have been deleted between enqueue and processing
+    }
+  }
+
+  return { leads, contacts };
+}
+
+// ============================================================================
 // Job Handler
 // ============================================================================
 
@@ -189,6 +291,11 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
     insightsCreated++;
   }
 
+  await job.updateProgress(80);
+
+  // Populate entity-level insight tables for lead/contact 360 pages
+  const entityStats = await populateEntityInsights(prisma, validatedData, insights, tenantId);
+
   await job.updateProgress(100);
 
   const processingTimeMs = Date.now() - startTime;
@@ -197,6 +304,7 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
     {
       jobId: job.id,
       insightsCreated,
+      entityInsights: entityStats,
       processingTimeMs,
     },
     'Insight generation job completed'

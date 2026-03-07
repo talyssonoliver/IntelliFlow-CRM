@@ -111,7 +111,7 @@ export interface IEmbeddingProvider {
  * Adapter to use EmbeddingChain as IEmbeddingProvider
  */
 export class EmbeddingChainAdapter implements IEmbeddingProvider {
-  constructor(private chain: EmbeddingChain) {}
+  constructor(private readonly chain: EmbeddingChain) {}
 
   async generateEmbedding(text: string): Promise<EmbeddingResult> {
     const result = await this.chain.generateEmbedding({ text });
@@ -153,10 +153,10 @@ function simpleHash(str: string): number {
 export class DocumentIndexer {
   private readonly config: IndexerConfig;
   private readonly embeddingChain: EmbeddingChain;
-  private embeddingProvider: IEmbeddingProvider | null = null;
+  private readonly embeddingProvider: IEmbeddingProvider | null = null;
 
   constructor(
-    private prisma: PrismaClient,
+    private readonly prisma: PrismaClient,
     config: Partial<IndexerConfig> = {},
     embeddingChain?: EmbeddingChain
   ) {

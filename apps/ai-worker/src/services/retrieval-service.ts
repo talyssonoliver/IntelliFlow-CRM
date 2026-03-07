@@ -534,8 +534,6 @@ export class RetrievalService {
     // IFC-020: Inject EmbeddingChain for pgvector semantic search
     // GATE:no-null-fallback - Must use actual embeddings, not null fallback
     this.embeddingChain = embeddingChain || new EmbeddingChain();
-    // Reserved for IFC-155 document search - suppress unused warning
-    void this._searchDocuments; // NOSONAR javascript:S3735
   }
 
   /**
@@ -1218,6 +1216,7 @@ export class RetrievalService {
    * Search documents with ACL check (reserved for IFC-155 - document search)
    * @internal Reserved for future implementation
    */
+  // @ts-expect-error -- Reserved for IFC-155; method intentionally unused until document search is implemented
   private async _searchDocuments(
     config: SearchConfig,
     aclFilter: Record<string, unknown>,

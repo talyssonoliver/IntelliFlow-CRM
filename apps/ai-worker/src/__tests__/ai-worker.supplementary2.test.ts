@@ -41,6 +41,7 @@ vi.mock('@intelliflow/worker-shared', () => ({
   BaseWorker: class MockBaseWorker {
     logger = { info: mocks.mockLoggerInfo, error: vi.fn(), warn: vi.fn() };
     constructor(_opts: any) {}
+    getQueue(_name: string) { return {}; }
     async start() {
       await (this as any).onStart?.();
       mocks.mockStart();
@@ -89,11 +90,51 @@ vi.mock('../utils/cost-tracker', () => ({
 }));
 
 // ============================================================
+// Mock agent-status (used by processJob)
+// ============================================================
+vi.mock('../services/agent-status', () => ({
+  extractJobContext: vi.fn().mockReturnValue(null),
+  markAgentActive: vi.fn().mockResolvedValue(undefined),
+  markAgentIdle: vi.fn().mockResolvedValue(undefined),
+  markAgentError: vi.fn().mockResolvedValue(undefined),
+}));
+
+// ============================================================
 // Mock bullmq
 // ============================================================
 vi.mock('bullmq', () => ({
   Job: class {},
 }));
+
+// ============================================================
+// Mock Bull Board + Express (used by startDashboard)
+// ============================================================
+vi.mock('@bull-board/api', () => ({
+  createBullBoard: vi.fn(),
+}));
+
+vi.mock('@bull-board/api/bullMQAdapter', () => ({
+  BullMQAdapter: class { constructor(_q: any) {} },
+}));
+
+vi.mock('@bull-board/express', () => ({
+  ExpressAdapter: class {
+    setBasePath = vi.fn();
+    getRouter = vi.fn().mockReturnValue(vi.fn());
+  },
+}));
+
+vi.mock('express', () => {
+  const app = {
+    use: vi.fn(),
+    get: vi.fn(),
+    listen: vi.fn((_port: number, cb?: () => void) => {
+      cb?.();
+      return { close: vi.fn() };
+    }),
+  };
+  return { default: vi.fn(() => app) };
+});
 
 // ============================================================
 // Import after mocks

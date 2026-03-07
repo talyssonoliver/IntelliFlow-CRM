@@ -209,18 +209,14 @@ async function initializeWorker() {
     // Validate configuration
     const { aiConfig } = await import('./config/ai.config.js');
 
-    const modelName =
-      aiConfig.provider === 'openai'
-        ? aiConfig.openai.model
-        : aiConfig.provider === 'ollama'
-          ? aiConfig.ollama.model
-          : 'mock';
+    const ollamaModelName = aiConfig.provider === 'ollama' ? aiConfig.ollama.model : 'mock';
+    const modelName = aiConfig.provider === 'openai' ? aiConfig.openai.model : ollamaModelName;
+    const ollamaEndpointUrl =
+      aiConfig.provider === 'ollama' ? aiConfig.ollama.baseUrl : 'mock';
     const endpointUrl =
       aiConfig.provider === 'openai'
         ? aiConfig.openai.baseUrl || 'https://api.openai.com'
-        : aiConfig.provider === 'ollama'
-          ? aiConfig.ollama.baseUrl
-          : 'mock';
+        : ollamaEndpointUrl;
     logger.info(
       {
         provider: aiConfig.provider,
@@ -384,7 +380,7 @@ async function main() {
 // Run the worker if this file is executed directly
 // NOSONAR: S7785 - Top-level await not available in CommonJS modules
 if (require.main === module) {
-  void (async () => {
+  (async () => {
     // NOSONAR
     try {
       await main();
@@ -392,7 +388,7 @@ if (require.main === module) {
       console.error('Fatal error:', error);
       process.exit(1);
     }
-  })();
+  })().catch(() => {});
 }
 
 // Export initialize function for programmatic use

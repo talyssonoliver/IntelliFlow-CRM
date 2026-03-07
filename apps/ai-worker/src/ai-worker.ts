@@ -13,6 +13,11 @@
  */
 
 import { Job } from 'bullmq';
+import express from 'express';
+import type { Server } from 'node:http';
+import { createBullBoard } from '@bull-board/api';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+import { ExpressAdapter } from '@bull-board/express';
 import { BaseWorker } from '@intelliflow/worker-shared';
 import type { ComponentHealth } from '@intelliflow/worker-shared';
 import {
@@ -32,6 +37,12 @@ import {
 } from './jobs';
 import { costTracker } from './utils/cost-tracker';
 import { aiConfig, loadAIConfig } from './config/ai.config';
+import {
+  extractJobContext,
+  markAgentActive,
+  markAgentIdle,
+  markAgentError,
+} from './services/agent-status';
 
 // ============================================================================
 // Types
@@ -49,6 +60,7 @@ type AIJobResult = ScoringJobResult | PredictionJobResult | InsightJobResult;
 
 export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   private configLoaded = false;
+  private dashboardServer: Server | null = null;
 
   constructor() {
     super({
@@ -84,6 +96,26 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     this.logger.info('Cost tracker initialized');
 
     this.logger.info({ queues: AI_WORKER_QUEUES }, 'AI Worker ready to process jobs');
+
+    // Start Bull Board dashboard
+    await this.startDashboard();
+  }
+
+  private async startDashboard(): Promise<void> {
+    const port = parseInt(process.env.BULL_BOARD_PORT || '3003', 10);
+    const serverAdapter = new ExpressAdapter();
+    serverAdapter.setBasePath('/queues');
+
+    const queues = AI_WORKER_QUEUES.map((name) => new BullMQAdapter(this.getQueue(name)));
+    createBullBoard({ queues, serverAdapter });
+
+    const app = express();
+    app.use('/queues', serverAdapter.getRouter());
+    app.get('/', (_req, res) => { res.redirect('/queues'); });
+
+    this.dashboardServer = app.listen(port, () => {
+      this.logger.info({ url: `http://localhost:${port}/queues` }, 'Bull Board dashboard started');
+    });
   }
 
   /**
@@ -91,6 +123,12 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
    */
   protected async onStop(): Promise<void> {
     this.logger.info('Shutting down AI Worker...');
+
+    // Close dashboard server
+    if (this.dashboardServer) {
+      this.dashboardServer.close();
+      this.dashboardServer = null;
+    }
 
     // Generate final cost report
     const report = costTracker.generateReport();
@@ -100,18 +138,45 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   }
 
   /**
-   * Route jobs to appropriate handler based on queue
+   * Route jobs to appropriate handler based on queue.
+   * Wraps each job with agent status tracking so the Active Agents
+   * dashboard (/agent-approvals/agents) shows live data.
    */
   protected async processJob(job: Job<AIJobData>): Promise<AIJobResult> {
-    switch (job.queueName) {
-      case SCORING_QUEUE:
-        return processScoringJob(job as Job<ScoringJobData>); // NOSONAR
-      case PREDICTION_QUEUE:
-        return processPredictionJob(job as Job<PredictionJobData>); // NOSONAR
-      case INSIGHT_QUEUE:
-        return processInsightJob(job as Job<InsightJobData>); // NOSONAR
-      default:
-        throw new Error(`Unknown queue: ${job.queueName}`);
+    const ctx = extractJobContext(job.queueName, job.data);
+
+    if (ctx) {
+      await markAgentActive(ctx);
+    }
+
+    try {
+      let result: AIJobResult;
+
+      switch (job.queueName) {
+        case SCORING_QUEUE:
+          result = await processScoringJob(job as Job<ScoringJobData>); // NOSONAR
+          break;
+        case PREDICTION_QUEUE:
+          result = await processPredictionJob(job as Job<PredictionJobData>); // NOSONAR
+          break;
+        case INSIGHT_QUEUE:
+          result = await processInsightJob(job as Job<InsightJobData>); // NOSONAR
+          break;
+        default:
+          throw new Error(`Unknown queue: ${job.queueName}`);
+      }
+
+      if (ctx) {
+        await markAgentIdle(ctx);
+      }
+
+      return result;
+    } catch (error) {
+      if (ctx) {
+        const message = error instanceof Error ? error.message : String(error);
+        await markAgentError(ctx, message);
+      }
+      throw error;
     }
   }
 
@@ -163,29 +228,23 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     };
   }
 
-  private async getProviderHealth(lastCheck: string): Promise<ComponentHealth> {
-    if (!this.configLoaded) {
-      return { status: 'error', latency: 0, lastCheck, message: 'AI configuration not loaded' };
-    }
-
-    if (aiConfig.provider === 'mock') {
-      return this.getMockProviderHealth(lastCheck);
-    }
-
-    if (aiConfig.provider === 'openai') {
-      return this.getOpenAIProviderHealth(lastCheck);
-    }
-
-    if (aiConfig.provider === 'ollama') {
-      return this.checkOllamaHealth(lastCheck);
-    }
-
+  private getConfiguredProviderHealth(lastCheck: string): Promise<ComponentHealth> | ComponentHealth {
+    if (aiConfig.provider === 'mock') return this.getMockProviderHealth(lastCheck);
+    if (aiConfig.provider === 'openai') return this.getOpenAIProviderHealth(lastCheck);
+    if (aiConfig.provider === 'ollama') return this.checkOllamaHealth(lastCheck);
     return {
       status: 'error',
       latency: 0,
       lastCheck,
       message: `Unsupported provider: ${aiConfig.provider}`,
     };
+  }
+
+  private async getProviderHealth(lastCheck: string): Promise<ComponentHealth> {
+    if (!this.configLoaded) {
+      return { status: 'error', latency: 0, lastCheck, message: 'AI configuration not loaded' };
+    }
+    return this.getConfiguredProviderHealth(lastCheck);
   }
 
   private async checkOllamaHealth(lastCheck: string): Promise<ComponentHealth> {
@@ -237,26 +296,25 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     }
   }
 
+  private errorHealth(error: unknown): ComponentHealth {
+    return {
+      status: 'error',
+      latency: 0,
+      lastCheck: new Date().toISOString(),
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
+
   /**
    * Check AI-specific dependencies
    */
   protected async getDependencyHealth(): Promise<Record<string, ComponentHealth>> {
     const health: Record<string, ComponentHealth> = {};
 
-    // Check AI provider connectivity
     try {
       const lastCheck = new Date().toISOString();
-
-      // Simple config check as health indicator
-      health.ai_config = {
-        status: this.configLoaded ? 'ok' : 'error',
-        latency: 0,
-        lastCheck,
-      };
-
+      health.ai_config = { status: this.configLoaded ? 'ok' : 'error', latency: 0, lastCheck };
       health.ai_provider = await this.getProviderHealth(lastCheck);
-
-      // Cost tracker health
       const stats = costTracker.getStatistics();
       health.cost_tracker = {
         status: 'ok',
@@ -265,12 +323,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
         message: `ops=${stats.totalOperations}, cost=$${stats.totalCost.toFixed(2)}`,
       };
     } catch (error) {
-      health.ai_provider = {
-        status: 'error',
-        latency: 0,
-        lastCheck: new Date().toISOString(),
-        message: error instanceof Error ? error.message : String(error),
-      };
+      health.ai_provider = this.errorHealth(error);
     }
 
     return health;

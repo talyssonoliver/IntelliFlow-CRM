@@ -515,6 +515,19 @@ export class ROITracker {
   }
 
   /**
+   * Ensure an operation entry exists in operationData, then return it.
+   */
+  private getOrInitOperation(
+    operationData: Record<string, { cost: number; value: number }>,
+    operationType: string
+  ): { cost: number; value: number } {
+    if (!operationData[operationType]) {
+      operationData[operationType] = { cost: 0, value: 0 };
+    }
+    return operationData[operationType];
+  }
+
+  /**
    * Calculate ROI per operation type
    */
   private calculateOperationROIs(): Record<string, number> {
@@ -522,10 +535,7 @@ export class ROITracker {
 
     // Aggregate costs by operation
     for (const cost of this.costs) {
-      if (!operationData[cost.operationType]) {
-        operationData[cost.operationType] = { cost: 0, value: 0 };
-      }
-      operationData[cost.operationType].cost += cost.cost;
+      this.getOrInitOperation(operationData, cost.operationType).cost += cost.cost;
     }
 
     // Map values to operations via related costs
@@ -533,10 +543,8 @@ export class ROITracker {
       for (const costId of value.relatedCostIds) {
         const relatedCost = this.costs.find((c) => c.id === costId);
         if (relatedCost) {
-          if (!operationData[relatedCost.operationType]) {
-            operationData[relatedCost.operationType] = { cost: 0, value: 0 };
-          }
-          operationData[relatedCost.operationType].value += value.estimatedValue;
+          this.getOrInitOperation(operationData, relatedCost.operationType).value +=
+            value.estimatedValue;
         }
       }
     }
@@ -551,6 +559,65 @@ export class ROITracker {
   }
 
   /**
+   * Returns the set of operation types that have at least one value record linked to them.
+   */
+  private resolveOperationTypesWithValues(): Set<string | undefined> {
+    return new Set(
+      this.values
+        .flatMap((v) =>
+          v.relatedCostIds.map((id) => this.costs.find((c) => c.id === id)?.operationType)
+        )
+        .filter(Boolean)
+    );
+  }
+
+  private addRoiRecommendation(recommendations: string[], roi: number, targetROI: number): void {
+    if (roi < targetROI) {
+      recommendations.push(
+        `ROI is ${(targetROI - roi).toFixed(1)}% below target. Review high-cost operations.`
+      );
+    }
+  }
+
+  private addModelCostRecommendation(
+    recommendations: string[],
+    costByModel: Record<string, number>
+  ): void {
+    const modelEntries = Object.entries(costByModel).sort((a, b) => b[1] - a[1]);
+    if (modelEntries.length > 0 && modelEntries[0][1] > 0.1) {
+      recommendations.push(
+        `Consider using cheaper model alternatives for '${modelEntries[0][0]}' operations.`
+      );
+    }
+  }
+
+  private addUnvaluedOperationRecommendations(
+    recommendations: string[],
+    costByOperation: Record<string, number>
+  ): void {
+    const opValues = this.resolveOperationTypesWithValues();
+    for (const op of Object.keys(costByOperation)) {
+      if (!opValues.has(op)) {
+        recommendations.push(
+          `Operation '${op}' has costs but no recorded value. Review or add value tracking.`
+        );
+      }
+    }
+  }
+
+  private addHighValueRecommendation(
+    recommendations: string[],
+    valueBreakdown: Record<string, number>
+  ): void {
+    const valueEntries = Object.entries(valueBreakdown).sort((a, b) => b[1] - a[1]);
+    if (valueEntries.length > 0) {
+      recommendations.push(
+        `'${valueEntries[0][0]}' generates most value ($${valueEntries[0][1].toFixed(2)}). Consider expanding.`
+      );
+    }
+  }
+
+  /**
    * Generate actionable recommendations
    */
   private generateRecommendations(
@@ -562,48 +629,11 @@ export class ROITracker {
     const recommendations: string[] = [];
     const targetROI = this.config.minROITarget * 100;
 
-    // ROI below target
-    if (roi < targetROI) {
-      recommendations.push(
-        `ROI is ${(targetROI - roi).toFixed(1)}% below target. Review high-cost operations.`
-      );
-    }
+    this.addRoiRecommendation(recommendations, roi, targetROI);
+    this.addModelCostRecommendation(recommendations, costByModel);
+    this.addUnvaluedOperationRecommendations(recommendations, costByOperation);
+    this.addHighValueRecommendation(recommendations, valueBreakdown);
 
-    // Find highest cost model
-    const modelEntries = Object.entries(costByModel).sort((a, b) => b[1] - a[1]);
-    if (modelEntries.length > 0 && modelEntries[0][1] > 0.1) {
-      recommendations.push(
-        `Consider using cheaper model alternatives for '${modelEntries[0][0]}' operations.`
-      );
-    }
-
-    // Find operations with no recorded value
-    const opCosts = new Set(Object.keys(costByOperation));
-    const opValues = new Set(
-      this.values
-        .flatMap((v) =>
-          v.relatedCostIds.map((id) => this.costs.find((c) => c.id === id)?.operationType)
-        )
-        .filter(Boolean)
-    );
-
-    for (const op of opCosts) {
-      if (!opValues.has(op)) {
-        recommendations.push(
-          `Operation '${op}' has costs but no recorded value. Review or add value tracking.`
-        );
-      }
-    }
-
-    // Find high-value operations
-    const valueEntries = Object.entries(valueBreakdown).sort((a, b) => b[1] - a[1]);
-    if (valueEntries.length > 0) {
-      recommendations.push(
-        `'${valueEntries[0][0]}' generates most value ($${valueEntries[0][1].toFixed(2)}). Consider expanding.`
-      );
-    }
-
-    // General recommendations
     if (this.costs.length < 10) {
       recommendations.push('Limited data available. Continue tracking for better insights.');
     }
