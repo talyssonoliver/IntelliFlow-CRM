@@ -167,7 +167,7 @@ are data-driven, time-sensitive, and include clear reasoning.`,
  * Generates personalized, context-aware action recommendations for sales teams.
  */
 export class NextBestActionAgent extends BaseAgent<NBAContext, NBAResult> {
-  private ragChain: RAGContextChain;
+  private readonly ragChain: RAGContextChain;
   private sentimentChain: SentimentAnalysisChain | null = null;
 
   constructor(customRagChain?: RAGContextChain, customSentimentChain?: SentimentAnalysisChain) {
@@ -218,16 +218,16 @@ export class NextBestActionAgent extends BaseAgent<NBAContext, NBAResult> {
   ): Promise<NBAResult['sentimentAnalysis'] | undefined> {
     if (!context.recentMessages || context.recentMessages.length === 0) return undefined;
     try {
-      if (!this.sentimentChain) {
-        this.sentimentChain = getSentimentChain();
-      }
+      this.sentimentChain ??= getSentimentChain();
       const latestMessage = context.recentMessages[0];
-      const source =
-        latestMessage.channel === 'email'
-          ? 'email'
-          : latestMessage.channel === 'chat'
-            ? 'chat'
-            : 'other';
+      let source: 'email' | 'chat' | 'other';
+      if (latestMessage.channel === 'email') {
+        source = 'email';
+      } else if (latestMessage.channel === 'chat') {
+        source = 'chat';
+      } else {
+        source = 'other';
+      }
       const sentimentResult = await this.sentimentChain.analyze({
         text: latestMessage.content,
         source,
@@ -544,7 +544,7 @@ Valid ACTION_TYPES: ${ACTION_TYPES.join(', ')}
 
     // Sort by priority and limit to 3
     const priorityOrder = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
-    return recommendations
+    return [...recommendations]
       .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
       .slice(0, 3);
   }
@@ -553,7 +553,7 @@ Valid ACTION_TYPES: ${ACTION_TYPES.join(', ')}
    * Validate and normalize action type
    */
   private validateActionType(action: string): ActionType {
-    const normalized = action?.toUpperCase()?.replace(/[^A-Z_]/g, '');
+    const normalized = action?.toUpperCase()?.replaceAll(/[^A-Z_]/g, '');
     return ACTION_TYPES.includes(normalized as ActionType)
       ? (normalized as ActionType)
       : 'FOLLOW_UP';

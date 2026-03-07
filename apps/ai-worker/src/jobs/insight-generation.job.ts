@@ -111,6 +111,127 @@ function mapEntityTypeToCategory(entityType: GeneratedInsight['entityType']): st
 }
 
 // ============================================================================
+// Entity-Level Insight Population — helpers
+// ============================================================================
+
+/** Derive churn-risk label from a lead engagement score */
+function leadChurnRisk(score: number): string {
+  if (score >= 75) return 'MINIMAL';
+  if (score >= 60) return 'LOW';
+  if (score >= 40) return 'MEDIUM';
+  return 'HIGH';
+}
+
+/** Derive sentiment label from a 0-100 score */
+function scoreSentiment(score: number): string {
+  if (score >= 65) return 'POSITIVE';
+  if (score >= 35) return 'NEUTRAL';
+  return 'NEGATIVE';
+}
+
+/** Derive ICP-match label for a lead */
+function leadIcpMatch(score: number, company: string | undefined): string {
+  if (score >= 80 && company) return 'Strong Match';
+  if (score >= 65) return 'Good Match';
+  return 'Partial Match';
+}
+
+/** Derive churn-risk label from days since last contact */
+function contactChurnRisk(daysSince: number): string {
+  if (daysSince > 30) return 'HIGH';
+  if (daysSince > 14) return 'MEDIUM';
+  return 'LOW';
+}
+
+/** Build the LLM-derived update fields (empty object when no LLM insight) */
+function llmUpdateFields(llm: GeneratedInsight | undefined): Record<string, unknown> {
+  if (!llm) return {};
+  return {
+    nextBestAction: llm.suggestedActions[0],
+    recommendations: llm.suggestedActions,
+  };
+}
+
+/**
+ * Upsert a single LeadAIInsight row.
+ * Returns true on success, false if the entity no longer exists.
+ */
+async function upsertLeadInsight(
+  prisma: any,
+  lead: InsightJobData['hotLeads'][number],
+  llm: GeneratedInsight | undefined,
+  tenantId: string
+): Promise<boolean> {
+  try {
+    const score = lead.score;
+    await prisma.leadAIInsight.upsert({
+      where: { leadId: lead.id },
+      create: {
+        leadId: lead.id,
+        tenantId,
+        engagementScore: Math.min(100, score),
+        conversionProbability: Math.min(100, Math.round(score * 0.8)),
+        estimatedValue: 0,
+        churnRisk: leadChurnRisk(score),
+        nextBestAction: llm?.suggestedActions[0] ?? 'Send personalized follow-up',
+        sentiment: scoreSentiment(score),
+        sentimentTrend: lead.status?.toUpperCase() === 'QUALIFIED' ? 'improving' : 'stable',
+        recommendations: llm?.suggestedActions ?? ['Send personalized follow-up', 'Schedule a discovery call'],
+        lastEngagementDays: 0,
+        icpMatch: leadIcpMatch(score, lead.company),
+      },
+      update: llmUpdateFields(llm),
+    });
+    return true;
+  } catch {
+    // Entity may have been deleted between enqueue and processing
+    return false;
+  }
+}
+
+/**
+ * Upsert a single ContactAIInsight row.
+ * Returns true on success, false if the entity no longer exists.
+ */
+async function upsertContactInsight(
+  prisma: any,
+  contact: InsightJobData['staleContacts'][number],
+  llm: GeneratedInsight | undefined,
+  tenantId: string
+): Promise<boolean> {
+  try {
+    const daysSince = contact.daysSinceContact ?? 90;
+    const engScore = Math.max(0, 100 - daysSince * 2);
+    const churnRisk = contactChurnRisk(daysSince);
+    await prisma.contactAIInsight.upsert({
+      where: { contactId: contact.id },
+      create: {
+        contactId: contact.id,
+        tenantId,
+        engagementScore: engScore,
+        conversionProbability: contact.hasOpenOpportunities ? Math.max(10, 50 - daysSince) : 10,
+        lifetimeValue: 0,
+        churnRisk,
+        nextBestAction: llm?.suggestedActions[0] ?? 'Schedule a follow-up',
+        sentiment: scoreSentiment(engScore),
+        sentimentTrend: daysSince > 30 ? 'declining' : 'stable',
+        recommendations: llm?.suggestedActions ?? ['Schedule a follow-up', 'Review open opportunities'],
+        lastEngagementDays: daysSince,
+      },
+      update: {
+        lastEngagementDays: daysSince,
+        churnRisk,
+        ...llmUpdateFields(llm),
+      },
+    });
+    return true;
+  } catch {
+    // Entity may have been deleted between enqueue and processing
+    return false;
+  }
+}
+
+// ============================================================================
 // Entity-Level Insight Population
 // ============================================================================
 
@@ -132,84 +253,19 @@ async function populateEntityInsights(
     if (insight.entityId) insightMap.set(insight.entityId, insight);
   }
 
-  let leads = 0;
-  let contacts = 0;
+  const leadResults = await Promise.all(
+    jobData.hotLeads.map((lead) => upsertLeadInsight(prisma, lead, insightMap.get(lead.id), tenantId))
+  );
+  const contactResults = await Promise.all(
+    jobData.staleContacts.map((contact) =>
+      upsertContactInsight(prisma, contact, insightMap.get(contact.id), tenantId)
+    )
+  );
 
-  for (const lead of jobData.hotLeads) {
-    try {
-      const llm = insightMap.get(lead.id);
-      const score = lead.score;
-
-      await prisma.leadAIInsight.upsert({
-        where: { leadId: lead.id },
-        create: {
-          leadId: lead.id,
-          tenantId,
-          engagementScore: Math.min(100, score),
-          conversionProbability: Math.min(100, Math.round(score * 0.8)),
-          estimatedValue: 0,
-          churnRisk: score >= 75 ? 'MINIMAL' : score >= 60 ? 'LOW' : score >= 40 ? 'MEDIUM' : 'HIGH',
-          nextBestAction: llm?.suggestedActions[0] || 'Send personalized follow-up',
-          sentiment: score >= 65 ? 'POSITIVE' : score >= 35 ? 'NEUTRAL' : 'NEGATIVE',
-          sentimentTrend: lead.status?.toUpperCase() === 'QUALIFIED' ? 'improving' : 'stable',
-          recommendations: llm?.suggestedActions || ['Send personalized follow-up', 'Schedule a discovery call'],
-          lastEngagementDays: 0,
-          icpMatch: score >= 80 && lead.company ? 'Strong Match' : score >= 65 ? 'Good Match' : 'Partial Match',
-        },
-        update: {
-          ...(llm
-            ? {
-                nextBestAction: llm.suggestedActions[0],
-                recommendations: llm.suggestedActions,
-              }
-            : {}),
-        },
-      });
-      leads++;
-    } catch {
-      // Entity may have been deleted between enqueue and processing
-    }
-  }
-
-  for (const contact of jobData.staleContacts) {
-    try {
-      const llm = insightMap.get(contact.id);
-      const daysSince = contact.daysSinceContact ?? 90;
-      const engScore = Math.max(0, 100 - daysSince * 2);
-
-      await prisma.contactAIInsight.upsert({
-        where: { contactId: contact.id },
-        create: {
-          contactId: contact.id,
-          tenantId,
-          engagementScore: engScore,
-          conversionProbability: contact.hasOpenOpportunities ? Math.max(10, 50 - daysSince) : 10,
-          lifetimeValue: 0,
-          churnRisk: daysSince > 30 ? 'HIGH' : daysSince > 14 ? 'MEDIUM' : 'LOW',
-          nextBestAction: llm?.suggestedActions[0] || 'Schedule a follow-up',
-          sentiment: engScore >= 65 ? 'POSITIVE' : engScore >= 35 ? 'NEUTRAL' : 'NEGATIVE',
-          sentimentTrend: daysSince > 30 ? 'declining' : 'stable',
-          recommendations: llm?.suggestedActions || ['Schedule a follow-up', 'Review open opportunities'],
-          lastEngagementDays: daysSince,
-        },
-        update: {
-          lastEngagementDays: daysSince,
-          churnRisk: daysSince > 30 ? 'HIGH' : daysSince > 14 ? 'MEDIUM' : 'LOW',
-          ...(llm
-            ? {
-                nextBestAction: llm.suggestedActions[0],
-                recommendations: llm.suggestedActions,
-              }
-            : {}),
-        },
-      });
-      contacts++;
-    } catch {
-      // Entity may have been deleted between enqueue and processing
-    }
-  }
-
-  return { leads, contacts };
+  return {
+    leads: leadResults.filter(Boolean).length,
+    contacts: contactResults.filter(Boolean).length,
+  };
 }
 
 // ============================================================================
@@ -225,6 +281,18 @@ async function populateEntityInsights(
 export async function processInsightJob(job: Job<InsightJobData>): Promise<InsightJobResult> {
   const startTime = Date.now();
   const { tenantId, userId } = job.data;
+
+  // Scheduled jobs use __scheduled__ sentinel — skip processing (the API
+  // enqueues real insight jobs on the next home-page load per tenant).
+  // This cron entry ensures the worker stays warm and the queue stays healthy.
+  if (tenantId === '__scheduled__') {
+    logger.info({ jobId: job.id }, 'Scheduled sentinel job — skipping (insights generated on-demand per tenant)');
+    return {
+      insightsCreated: 0,
+      processingTimeMs: Date.now() - startTime,
+      processedAt: new Date().toISOString(),
+    };
+  }
 
   logger.info(
     {
@@ -323,7 +391,7 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
 
 /** Default job options for insight generation jobs */
 export const DEFAULT_INSIGHT_JOB_OPTIONS = {
-  attempts: 2,
+  attempts: 3,
   backoff: {
     type: 'exponential' as const,
     delay: 5000,

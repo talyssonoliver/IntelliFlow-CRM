@@ -187,7 +187,7 @@ export function validateContextAck(
   const warnings: string[] = [];
 
   // Paths - sprint-based structure: .specify/sprints/sprint-{N}/attestations/{taskId}/
-  let contextDir = join(
+  const contextDir = join(
     repoRoot,
     '.specify',
     'sprints',
@@ -231,7 +231,6 @@ export function validateContextAck(
         const altAck = join(altDir, 'context_ack.json');
         if (existsSync(altAck)) {
           // Found at alternative sprint path — use it but warn
-          contextDir = altDir;
           ackPath = altAck;
           manifestPath = join(altDir, 'context_pack.manifest.json');
           foundAlternative = true;

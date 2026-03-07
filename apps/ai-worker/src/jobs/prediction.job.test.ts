@@ -407,7 +407,7 @@ describe('PredictionJob', () => {
   // ============================================
 
   describe('processPredictionJob - QUALIFICATION', () => {
-    it('should process qualification prediction', async () => {
+    it('should propagate chain errors for retry (mock provider unsupported)', async () => {
       const jobData: PredictionJobData = {
         entityType: 'lead',
         entityId: TEST_UUIDS.lead1,
@@ -416,39 +416,9 @@ describe('PredictionJob', () => {
       };
 
       const job = createMockJob(jobData);
-      const result = await processPredictionJob(job);
-
-      expect(result.entityType).toBe('lead');
-      expect(result.entityId).toBe(TEST_UUIDS.lead1);
-      expect(result.predictionType).toBe('QUALIFICATION');
-      // Real AI chain returns dynamic values - check valid structure
-      expect(typeof result.prediction.value).toBe('string');
-      expect(result.prediction.value.length).toBeGreaterThan(0);
-      expect(result.prediction.confidence).toBeGreaterThanOrEqual(0);
-      expect(result.prediction.confidence).toBeLessThanOrEqual(1);
-      expect(typeof result.prediction.explanation).toBe('string');
-      expect(result.prediction.explanation.length).toBeGreaterThan(0);
-      expect(result.recommendations.length).toBeGreaterThan(0);
-    });
-
-    it('should return qualification-specific recommendations', async () => {
-      const jobData: PredictionJobData = {
-        entityType: 'lead',
-        entityId: TEST_UUIDS.lead1,
-        predictionType: 'QUALIFICATION',
-        priority: 5,
-      };
-
-      const job = createMockJob(jobData);
-      const result = await processPredictionJob(job);
-
-      // Real AI chain returns dynamic recommendations - verify they are actionable strings
-      expect(Array.isArray(result.recommendations)).toBe(true);
-      expect(result.recommendations.length).toBeGreaterThan(0);
-      result.recommendations.forEach((rec: string) => {
-        expect(typeof rec).toBe('string');
-        expect(rec.length).toBeGreaterThan(0);
-      });
+      // Qualification uses LeadScoringChain which doesn't support mock provider
+      // Errors propagate for BullMQ retry instead of returning silent fallbacks
+      await expect(processPredictionJob(job)).rejects.toThrow('Unsupported AI provider');
     });
   });
 
@@ -525,9 +495,9 @@ describe('PredictionJob', () => {
 
     it('should preserve entityType and entityId from input', async () => {
       const jobData: PredictionJobData = {
-        entityType: 'opportunity',
-        entityId: TEST_UUIDS.opportunity1,
-        predictionType: 'QUALIFICATION',
+        entityType: 'contact',
+        entityId: TEST_UUIDS.contact1,
+        predictionType: 'CHURN_RISK',
         priority: 5,
       };
 
@@ -607,7 +577,7 @@ describe('PredictionJob', () => {
       }
     });
 
-    it('should handle all prediction types', async () => {
+    it('should handle all prediction types (QUALIFICATION throws without real provider)', async () => {
       for (const predictionType of PredictionTypes) {
         const jobData: PredictionJobData = {
           entityType: 'lead',
@@ -619,11 +589,16 @@ describe('PredictionJob', () => {
         };
 
         const job = createMockJob(jobData);
-        const result = await processPredictionJob(job);
 
-        expect(result.predictionType).toBe(predictionType);
-        expect(result.prediction).toBeDefined();
-        expect(result.recommendations).toBeDefined();
+        if (predictionType === 'QUALIFICATION') {
+          // LeadScoringChain doesn't support mock provider — errors propagate for retry
+          await expect(processPredictionJob(job)).rejects.toThrow();
+        } else {
+          const result = await processPredictionJob(job);
+          expect(result.predictionType).toBe(predictionType);
+          expect(result.prediction).toBeDefined();
+          expect(result.recommendations).toBeDefined();
+        }
       }
     });
   });

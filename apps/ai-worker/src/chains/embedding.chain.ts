@@ -57,7 +57,7 @@ export class EmbeddingChain {
     if (aiConfig.provider === 'ollama') {
       // Ollama local embeddings (free, no API key needed)
       this.modelName = process.env.OLLAMA_EMBEDDING_MODEL || 'nomic-embed-text';
-      this.dimensions = parseInt(process.env.EMBEDDING_DIMENSIONS || '768', 10);
+      this.dimensions = Number.parseInt(process.env.EMBEDDING_DIMENSIONS || '768', 10);
 
       this.embeddings = new OllamaEmbeddings({
         baseUrl: aiConfig.ollama.baseUrl,
@@ -71,7 +71,7 @@ export class EmbeddingChain {
     } else {
       // OpenAI embeddings (production)
       this.modelName = process.env.EMBEDDING_MODEL || 'text-embedding-3-small';
-      this.dimensions = parseInt(process.env.EMBEDDING_DIMENSIONS || '1536', 10);
+      this.dimensions = Number.parseInt(process.env.EMBEDDING_DIMENSIONS || '1536', 10);
       const openAIClientSettings = getOpenAIClientSettings();
 
       this.embeddings = new OpenAIEmbeddings({
@@ -312,13 +312,13 @@ export class EmbeddingChain {
     }));
 
     // Sort by similarity (descending) and take top K
-    const topResults = similarities.sort((a, b) => b.similarity - a.similarity).slice(0, topK);
+    const topResults = [...similarities].sort((a, b) => b.similarity - a.similarity).slice(0, topK);
 
     logger.info(
       {
         topK,
         highestSimilarity: topResults[0]?.similarity,
-        lowestSimilarity: topResults[topResults.length - 1]?.similarity,
+        lowestSimilarity: topResults.at(-1)?.similarity,
       },
       'Most similar documents found'
     );
@@ -371,8 +371,8 @@ export class EmbeddingChain {
    */
   parseFromPgvector(pgvectorString: string): number[] {
     // Remove brackets and split by comma
-    const cleaned = pgvectorString.replace(/[[\]]/g, '');
-    return cleaned.split(',').map((val) => parseFloat(val.trim()));
+    const cleaned = pgvectorString.replaceAll(/[[\]]/g, '');
+    return cleaned.split(',').map((val) => Number.parseFloat(val.trim()));
   }
 }
 

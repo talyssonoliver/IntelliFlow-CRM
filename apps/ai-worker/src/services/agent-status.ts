@@ -50,9 +50,7 @@ function getModelName(): string {
 let prismaPromise: Promise<any> | null = null;
 
 async function getPrisma() {
-  if (!prismaPromise) {
-    prismaPromise = import('@intelliflow/db').then((m) => m.prisma);
-  }
+  prismaPromise ??= import('@intelliflow/db').then((m) => m.prisma);
   return prismaPromise;
 }
 
@@ -208,7 +206,10 @@ export async function markAgentError(
       data: {
         status: 'ERROR',
         contextName: `${ctx.agentType} failed — ${errorMessage}`.slice(0, 500),
+        endReason: 'JOB_FAILED',
+        summary: `Error: ${errorMessage}`.slice(0, 2000),
         lastMessageAt: now,
+        endedAt: now,
       },
     });
     logger.debug({ agentType: ctx.agentType, errorMessage }, 'Agent marked ERROR');

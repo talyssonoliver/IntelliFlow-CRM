@@ -504,7 +504,7 @@ class ArtifactPathLinter {
    * Convert glob pattern to regex
    */
   private globToRegex(pattern: string): RegExp {
-    let regex = pattern
+    const regex = pattern
       .replace(/\./g, '\\.')
       .replace(/\*\*/g, '§§') // Temporary placeholder
       .replace(/\*/g, '[^/]*')

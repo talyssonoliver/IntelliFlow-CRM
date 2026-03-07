@@ -13,14 +13,14 @@ import { z } from 'zod';
  * Source weight configuration schema
  */
 export const SourceWeightSchema = z.object({
-  leads: z.number().min(0).max(2).default(1.0),
-  contacts: z.number().min(0).max(2).default(1.0),
-  accounts: z.number().min(0).max(2).default(1.0),
+  leads: z.number().min(0).max(2).default(1),
+  contacts: z.number().min(0).max(2).default(1),
+  accounts: z.number().min(0).max(2).default(1),
   opportunities: z.number().min(0).max(2).default(1.2),
   documents: z.number().min(0).max(2).default(1.5),
   conversations: z.number().min(0).max(2).default(0.8),
   messages: z.number().min(0).max(2).default(0.6),
-  tickets: z.number().min(0).max(2).default(1.0),
+  tickets: z.number().min(0).max(2).default(1),
 });
 
 export type SourceWeights = z.infer<typeof SourceWeightSchema>;
@@ -58,7 +58,7 @@ export const RelevanceConfigSchema = z.object({
   /**
    * Boost multiplier for title/name matches
    */
-  titleBoost: z.number().min(1).max(5).default(2.0),
+  titleBoost: z.number().min(1).max(5).default(2),
 
   /**
    * Boost multiplier for exact phrase matches
@@ -85,14 +85,14 @@ export const RelevanceConfigSchema = z.object({
    * Source-specific weight multipliers
    */
   sourceWeights: SourceWeightSchema.default({
-    leads: 1.0,
-    contacts: 1.0,
-    accounts: 1.0,
+    leads: 1,
+    contacts: 1,
+    accounts: 1,
     opportunities: 1.2,
     documents: 1.5,
     conversations: 0.8,
     messages: 0.6,
-    tickets: 1.0,
+    tickets: 1,
   }),
 
   /**
@@ -216,20 +216,20 @@ export const DEFAULT_RELEVANCE_CONFIG: RelevanceConfig = {
   semanticWeight: 0.4,
   recencyWeight: 0.2,
   timeDecayFactor: 0.1,
-  titleBoost: 2.0,
+  titleBoost: 2,
   exactMatchBoost: 1.5,
   freshnessThresholdDays: 90,
   maxPerSource: 20,
   defaultLimit: 10,
   sourceWeights: {
-    leads: 1.0,
-    contacts: 1.0,
-    accounts: 1.0,
+    leads: 1,
+    contacts: 1,
+    accounts: 1,
     opportunities: 1.2,
     documents: 1.5,
     conversations: 0.8,
     messages: 0.6,
-    tickets: 1.0,
+    tickets: 1,
   },
   features: {
     enableTimeDecay: true,
@@ -326,13 +326,13 @@ export const AGENT_CONFIG: RelevanceConfig = {
   defaultLimit: 20,
   sourceWeights: {
     leads: 1.2,
-    contacts: 1.0,
-    accounts: 1.0,
+    contacts: 1,
+    accounts: 1,
     opportunities: 1.5,
     documents: 1.3,
     conversations: 1.2,
     messages: 0.8,
-    tickets: 1.0,
+    tickets: 1,
   },
   semantic: {
     ...DEFAULT_RELEVANCE_CONFIG.semantic,

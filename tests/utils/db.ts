@@ -282,7 +282,7 @@ export async function waitForDatabase(
       return;
     } catch (error) {
       if (attempt === maxAttempts) {
-        throw new Error('Database is not ready after maximum attempts');
+        throw new Error('Database is not ready after maximum attempts', { cause: error });
       }
       await new Promise((resolve) => setTimeout(resolve, delayMs));
     }

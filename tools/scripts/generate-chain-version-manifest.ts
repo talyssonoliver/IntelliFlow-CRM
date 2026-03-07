@@ -406,7 +406,7 @@ async function cleanupOldFiles(dir: string, prefix: string): Promise<number> {
   const files = await fs.promises.readdir(dir);
   const timestampedFiles = files
     .filter((f) => f.startsWith(prefix) && !f.endsWith('-latest.json'))
-    .sort()
+    .sort((a, b) => a.localeCompare(b))
     .reverse(); // newest first
 
   let deleted = 0;

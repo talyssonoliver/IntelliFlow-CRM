@@ -152,7 +152,7 @@ function runBaselineGate(): GateResult[] {
 
   for (const check of BASELINE_CHECKS) {
     const fullPath = path.join(repoRoot, check.path);
-    let exists = false;
+    let exists: boolean;
 
     try {
       if (check.type === 'file') {
@@ -1076,7 +1076,7 @@ function runContextAckGate(targetSprint: string): GateResult[] {
     // Check for context_ack files in artifacts/context/*/
     const contextDir = path.join(repoRoot, 'artifacts', 'context');
     let foundAcks = 0;
-    let missingAcks: string[] = [];
+    const missingAcks: string[] = [];
 
     for (const taskId of tasksRequiringAck) {
       // Look for any run directory containing this task's context_ack

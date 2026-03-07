@@ -204,7 +204,7 @@ function findLatestMatopEvidence(
       const runPath = join(auditDir, f);
       return statSync(runPath).isDirectory();
     })
-    .sort()
+    .sort((a, b) => a.localeCompare(b))
     .reverse(); // Most recent first
 
   for (const runId of runs) {
@@ -776,6 +776,7 @@ export function saveAttestationReport(
   repoRoot: string
 ): { jsonPath: string; mdPath: string } {
   const dir = join(repoRoot, 'artifacts', 'reports', 'attestation');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { mkdirSync } = require('node:fs');
   mkdirSync(dir, { recursive: true });
 

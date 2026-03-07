@@ -309,9 +309,7 @@ export function createQualificationTask(
 let _qualificationAgent: LeadQualificationAgent | null = null;
 
 export function getQualificationAgent(): LeadQualificationAgent {
-  if (!_qualificationAgent) {
-    _qualificationAgent = new LeadQualificationAgent();
-  }
+  _qualificationAgent ??= new LeadQualificationAgent();
   return _qualificationAgent;
 }
 
@@ -325,4 +323,4 @@ export const qualificationAgent = new Proxy({} as LeadQualificationAgent, {
     const value = Reflect.get(agent, prop, receiver);
     return typeof value === 'function' ? value.bind(agent) : value;
   },
-}) as LeadQualificationAgent;
+});

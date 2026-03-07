@@ -28,7 +28,6 @@ import { z } from 'zod';
 import { EmbeddingChain } from '../chains/embedding.chain';
 import {
   DEFAULT_RELEVANCE_CONFIG as CANONICAL_RELEVANCE_CONFIG,
-  RELEVANCE_PRESETS,
 } from '../config/relevance-config';
 import type { ConversationRecordData, MessageRecordWithConversation } from '@intelliflow/domain';
 
@@ -278,7 +277,7 @@ export interface ACLContext {
 // ============================================
 
 export class ACLService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private readonly prisma: PrismaClient) {}
 
   /**
    * Build ACL context for a user
@@ -432,10 +431,10 @@ export const DEFAULT_RELEVANCE_CONFIG: RelevanceConfig = {
 };
 
 /** Re-export canonical presets for consumer convenience */
-export { RELEVANCE_PRESETS };
+export { RELEVANCE_PRESETS } from '../config/relevance-config';
 
 export class RelevanceEvaluator {
-  constructor(private config: RelevanceConfig = DEFAULT_RELEVANCE_CONFIG) {}
+  constructor(private readonly config: RelevanceConfig = DEFAULT_RELEVANCE_CONFIG) {}
 
   /**
    * Combine full-text and semantic scores
@@ -517,12 +516,12 @@ export class RelevanceEvaluator {
 // ============================================
 
 export class RetrievalService {
-  private aclService: ACLService;
-  private relevanceEvaluator: RelevanceEvaluator;
-  private embeddingChain: EmbeddingChain;
+  private readonly aclService: ACLService;
+  private readonly relevanceEvaluator: RelevanceEvaluator;
+  private readonly embeddingChain: EmbeddingChain;
 
   constructor(
-    private prisma: PrismaClient,
+    private readonly prisma: PrismaClient,
     relevanceConfig?: Partial<RelevanceConfig>,
     embeddingChain?: EmbeddingChain
   ) {

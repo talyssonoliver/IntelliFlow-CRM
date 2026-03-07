@@ -33,8 +33,6 @@ import {
 } from '@intelliflow/domain';
 
 import {
-  ticketRoutingInputSchema,
-  ticketRoutingResultSchema,
   type TicketRoutingInput,
   type TicketRoutingResult,
   type AgentCandidate,
@@ -328,9 +326,7 @@ IMPORTANT: The assigneeId MUST be one of the agent IDs listed above.
 let _ticketRoutingChain: TicketRoutingChain | null = null;
 
 export function getTicketRoutingChain(): TicketRoutingChain {
-  if (!_ticketRoutingChain) {
-    _ticketRoutingChain = new TicketRoutingChain();
-  }
+  _ticketRoutingChain ??= new TicketRoutingChain();
   return _ticketRoutingChain;
 }
 
@@ -348,5 +344,5 @@ function createLazyTicketRoutingProxy(): TicketRoutingChain {
 export const ticketRoutingChain = createLazyTicketRoutingProxy();
 
 // Re-export types and schemas for convenience
-export { ticketRoutingInputSchema, ticketRoutingResultSchema };
-export type { TicketRoutingInput, TicketRoutingResult, AgentCandidate };
+export { ticketRoutingInputSchema, ticketRoutingResultSchema } from '@intelliflow/validators';
+export type { TicketRoutingInput, TicketRoutingResult, AgentCandidate } from '@intelliflow/validators';

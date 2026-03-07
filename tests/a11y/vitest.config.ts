@@ -11,7 +11,7 @@ const webRoot = path.resolve(__dirname, '../../apps/web');
 export default defineConfig({
   // Type assertion needed due to vite version mismatch between
   // @vitejs/plugin-react (vite@6.x) and vitest (vite@7.x)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   plugins: [react.default ? react.default() : react()],
   test: {
     name: 'a11y',
@@ -55,6 +55,7 @@ export default defineConfig({
         find: /^@scalar\/api-reference-react$/,
         replacement: path.resolve(webRoot, 'src/test/__mocks__/scalar-stub.ts'),
       },
+      { find: 'next/navigation', replacement: path.resolve(__dirname, './mocks/next-navigation.ts') },
       { find: '@intelliflow/ui', replacement: path.resolve(__dirname, '../../packages/ui/src') },
       {
         find: '@intelliflow/domain',

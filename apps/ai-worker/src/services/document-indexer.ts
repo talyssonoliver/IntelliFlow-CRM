@@ -19,7 +19,6 @@
 import { PrismaClient } from '@intelliflow/db';
 import { z } from 'zod';
 import { EmbeddingChain } from '../chains/embedding.chain';
-import { REINDEX_QUEUE_NAME } from '../workers/reindex-worker';
 
 // ============================================
 // Configuration
@@ -139,7 +138,7 @@ export class EmbeddingChainAdapter implements IEmbeddingProvider {
 function simpleHash(str: string): number {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
+    const char = str.codePointAt(i)!;
     hash = (hash << 5) - hash + char;
     hash = hash & hash;
   }
@@ -701,6 +700,6 @@ export function createDocumentIndexer(
 }
 
 /** Re-export the queue name constant so indexer consumers have easy access */
-export { REINDEX_QUEUE_NAME };
+export { REINDEX_QUEUE_NAME } from '../workers/reindex-worker';
 
 export default DocumentIndexer;

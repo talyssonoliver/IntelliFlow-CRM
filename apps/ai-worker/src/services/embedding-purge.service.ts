@@ -45,7 +45,7 @@ export class LegalHoldError extends Error {
 // ============================================
 
 export class EmbeddingPurgeService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private readonly prisma: PrismaClient) {}
 
   /**
    * Purge all search indexes and embeddings for a data subject.

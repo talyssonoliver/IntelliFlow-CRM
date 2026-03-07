@@ -69,8 +69,10 @@ function stripAnsi(input: string): string {
   return (
     input
       // CSI sequences
+      // eslint-disable-next-line no-control-regex
       .replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, '')
       // OSC sequences
+      // eslint-disable-next-line no-control-regex
       .replace(/\x1b\][^\x07]*(\x07|\x1b\\)/g, '')
   );
 }
@@ -85,9 +87,10 @@ function downlevelUnicodeToAscii(input: string): string {
   output = output.replace(/🎉/g, '[OK]');
 
   // Section icons (remove)
-  output = output.replace(/[📦⚙🧪📁📚📖🔧🌳🔷📊🔍📄🎯📋🔄⛔]/g, '');
+  output = output.replace(/[📦⚙🧪📁📚📖🔧🌳🔷📊🔍📄🎯📋🔄⛔]/gu, '');
 
   // Remove remaining non-ASCII characters (keep CR/LF/TAB)
+  // eslint-disable-next-line no-control-regex
   output = output.replace(/[^\x09\x0A\x0D\x20-\x7E]/g, '');
 
   return output;

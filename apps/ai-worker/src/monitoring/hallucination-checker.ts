@@ -84,7 +84,7 @@ function computeExpected(operator: string | undefined, num1: number, num2: numbe
     case '*':
       return num1 * num2;
     case '/':
-      return num2 !== 0 ? num1 / num2 : NaN;
+      return num2 === 0 ? Number.NaN : num1 / num2;
     default:
       return null;
   }
@@ -546,14 +546,14 @@ export class HallucinationChecker {
     let match;
 
     while ((match = calcPattern.exec(output)) !== null) {
-      const num1 = parseFloat(match[1]);
-      const operator = match[0].match(/[+\-*/]/)?.[0];
-      const num2 = parseFloat(match[2]);
-      const result = parseFloat(match[3]);
+      const num1 = Number.parseFloat(match[1]);
+      const operator = /[+\-*/]/.exec(match[0])?.[0];
+      const num2 = Number.parseFloat(match[2]);
+      const result = Number.parseFloat(match[3]);
       const expected = computeExpected(operator, num1, num2);
 
       if (expected === null) continue;
-      if (!isNaN(expected) && Math.abs(expected - result) > 0.001) {
+      if (!Number.isNaN(expected) && Math.abs(expected - result) > 0.001) {
         errors.push(`${num1} ${operator} ${num2} = ${result} (should be ${expected})`);
       }
     }
@@ -565,9 +565,9 @@ export class HallucinationChecker {
     let match;
 
     while ((match = percentPattern.exec(output)) !== null) {
-      const percent = parseFloat(match[1]) / 100;
-      const total = parseFloat(match[2]);
-      const result = parseFloat(match[3]);
+      const percent = Number.parseFloat(match[1]) / 100;
+      const total = Number.parseFloat(match[2]);
+      const result = Number.parseFloat(match[3]);
       const expected = percent * total;
 
       if (Math.abs(expected - result) > 0.01) {

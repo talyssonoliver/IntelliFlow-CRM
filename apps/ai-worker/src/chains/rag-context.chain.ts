@@ -141,9 +141,9 @@ export interface IRetrievalService {
  * Uses RetrievalService for real pgvector semantic search with ACL enforcement.
  */
 export class RAGContextChain {
-  private embeddingChain: EmbeddingChain;
+  private readonly embeddingChain: EmbeddingChain;
   private retrievalService: IRetrievalService | null;
-  private useMockFallback: boolean;
+  private readonly useMockFallback: boolean;
 
   constructor(
     customEmbeddingChain?: EmbeddingChain,
@@ -340,11 +340,14 @@ export class RAGContextChain {
     const sourceLabel = result.source.charAt(0).toUpperCase() + result.source.slice(1);
 
     // Add context from metadata if available
-    const context = result.metadata.accountName
-      ? `, ${result.metadata.accountName}`
-      : result.metadata.contactName
-        ? `, ${result.metadata.contactName}`
-        : '';
+    let context: string;
+    if (result.metadata.accountName) {
+      context = `, ${result.metadata.accountName as string}`;
+    } else if (result.metadata.contactName) {
+      context = `, ${result.metadata.contactName as string}`;
+    } else {
+      context = '';
+    }
 
     return `[${result.title}${context}, ${sourceLabel}, ${date}]`;
   }

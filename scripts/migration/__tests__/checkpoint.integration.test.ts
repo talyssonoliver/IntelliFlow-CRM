@@ -14,7 +14,7 @@ describe('checkpoint/resume mechanism', () => {
       return;
     }
 
-    const { readFileSync, unlinkSync } = await import('fs');
+    const { readFileSync, unlinkSync } = await import('node:fs');
     const path = '/tmp/test-checkpoint-integration.json';
 
     const state = {
@@ -47,7 +47,7 @@ describe('checkpoint/resume mechanism', () => {
       return;
     }
 
-    const { writeFileSync, unlinkSync } = await import('fs');
+    const { writeFileSync, unlinkSync } = await import('node:fs');
     const path = '/tmp/test-checkpoint-load.json';
 
     const state = {

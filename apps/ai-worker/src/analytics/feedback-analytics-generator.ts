@@ -11,8 +11,8 @@
  */
 
 import pino from 'pino';
-import { writeFile, mkdir } from 'fs/promises';
-import { dirname, join } from 'path';
+import { writeFile, mkdir } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 import {
   RETRAINING_THRESHOLDS,
   CORRECTION_MAGNITUDE_BUCKETS,

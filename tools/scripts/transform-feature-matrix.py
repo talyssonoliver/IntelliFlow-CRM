@@ -13,12 +13,14 @@ INPUT = Path("docs/company/product/feature-matrix.md")
 ORIGINAL = Path("tools/scripts/feature-matrix-original.md")  # Extracted from git HEAD for clean transform
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Audit data — from entity detail wiring audits (2026-03-03 to 2026-03-06)
+# Audit data — from entity detail wiring audits (2026-03-03 to 2026-03-07)
 # ──────────────────────────────────────────────────────────────────────────────
 
 AUDITED_GROUPS = {'Lead', 'Contact', 'Account', 'Deal'}
 
 # (group, feature_name_prefix) -> wiring_status for features with status=done
+# NOTE: Entries are checked BEFORE the AUDITED_GROUPS filter, so features in
+# non-audited groups (e.g. Calendar, Platform) can still get per-feature status.
 WIRING_AUDIT = {
     # Lead (2 done features)
     ('Lead', 'Lead to Contact Conversion Logic'): 'verified',
@@ -58,6 +60,15 @@ WIRING_AUDIT = {
     ('Deal', 'Pipeline filtering'): 'issues',
     ('Deal', 'Pipeline Stage Customization'): 'verified',
     ('Deal', 'Ticket Stats Enhancement'): 'issues',
+
+    # Task (7 done features — audit 2026-03-07, cross-group: Calendar + Platform)
+    ('Calendar', 'Task calendar view'): 'issues',
+    ('Calendar', 'Task tRPC Router'): 'issues',
+    ('Platform', 'Task Aggregate and Value Objects'): 'verified',
+    ('Platform', 'Task assignments'): 'issues',
+    ('Platform', 'Task entity linking'): 'issues',
+    ('Platform', 'Task list view'): 'issues',
+    ('Platform', 'Task reminders'): 'issues',
 }
 
 # Group-level event handler coverage (from wiring audits)
@@ -68,12 +79,32 @@ GROUP_EVENTS = {
     'Deal': 'partial (1/4 handlers)',
 }
 
+# Per-feature event overrides for features in non-audited groups
+FEATURE_EVENTS = {
+    ('Calendar', 'Task calendar view'): 'partial (1/7 handlers)',
+    ('Calendar', 'Task tRPC Router'): 'partial (1/7 handlers)',
+    ('Platform', 'Task assignments'): 'partial (1/7 handlers)',
+    ('Platform', 'Task entity linking'): 'partial (1/7 handlers)',
+    ('Platform', 'Task list view'): 'partial (1/7 handlers)',
+    ('Platform', 'Task reminders'): 'partial (1/7 handlers)',
+}
+
 # Group-level security assessment (from wiring audits)
 GROUP_SECURITY = {
     'Lead': 'issues (no audit logging)',
     'Contact': 'issues (raw ctx.prisma, no audit logging)',
     'Account': 'critical (no tenantId, no audit logging)',
     'Deal': 'critical (no tenantId, no audit logging)',
+}
+
+# Per-feature security overrides for features in non-audited groups
+FEATURE_SECURITY = {
+    ('Calendar', 'Task calendar view'): 'issues (RBAC not enforced, no audit logging)',
+    ('Calendar', 'Task tRPC Router'): 'issues (RBAC not enforced, no audit logging)',
+    ('Platform', 'Task assignments'): 'issues (RBAC not enforced, no audit logging)',
+    ('Platform', 'Task entity linking'): 'issues (RBAC not enforced, no audit logging)',
+    ('Platform', 'Task list view'): 'issues (RBAC not enforced, no audit logging)',
+    ('Platform', 'Task reminders'): 'issues (RBAC not enforced, no audit logging)',
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -131,22 +162,28 @@ def get_wiring_status(group: str, feature: str, status: str) -> str:
     if status != 'done':
         return '-'
 
-    if group not in AUDITED_GROUPS:
-        return '-'
-
-    # Check audit mapping (prefix match)
+    # Check per-feature audit mapping FIRST (prefix match) — allows features
+    # in non-audited groups (e.g. Task in Calendar/Platform) to get status
     for (g, f_prefix), ws in WIRING_AUDIT.items():
         if g == group and feature.strip().startswith(f_prefix):
             return ws
+
+    # Then check group-level audited status
+    if group not in AUDITED_GROUPS:
+        return '-'
 
     # In audited group, done, but no specific audit entry
     return 'unaudited'
 
 
-def get_events_status(group: str, adapter_val: str, router_val: str, domain_val: str) -> str:
+def get_events_status(group: str, feature: str, adapter_val: str, router_val: str, domain_val: str) -> str:
     """Determine Events quality gate status."""
     if all(v in ('not_required', 'missing', '') for v in (adapter_val, router_val, domain_val)):
         return 'not_required'
+    # Check per-feature override first (for cross-group features like Task)
+    for (g, f_prefix), ev in FEATURE_EVENTS.items():
+        if g == group and feature.strip().startswith(f_prefix):
+            return ev
     if group in GROUP_EVENTS:
         return GROUP_EVENTS[group]
     if group not in AUDITED_GROUPS:
@@ -154,10 +191,14 @@ def get_events_status(group: str, adapter_val: str, router_val: str, domain_val:
     return 'unaudited'
 
 
-def get_security_status(group: str, adapter_val: str, router_val: str) -> str:
+def get_security_status(group: str, feature: str, adapter_val: str, router_val: str) -> str:
     """Determine Security quality gate status."""
     if all(v in ('not_required', 'missing', '') for v in (adapter_val, router_val)):
         return 'not_required'
+    # Check per-feature override first (for cross-group features like Task)
+    for (g, f_prefix), sec in FEATURE_SECURITY.items():
+        if g == group and feature.strip().startswith(f_prefix):
+            return sec
     if group in GROUP_SECURITY:
         return GROUP_SECURITY[group]
     if group not in AUDITED_GROUPS:
@@ -214,8 +255,8 @@ def transform_data_row(cells: list) -> list:
 
     wiring = get_wiring_status(group, feature, status)
     fe_list, fe_detail = classify_frontend(feature, frontend_val)
-    events = get_events_status(group, adapter_val, router_val, domain_val)
-    security = get_security_status(group, adapter_val, router_val)
+    events = get_events_status(group, feature, adapter_val, router_val, domain_val)
+    security = get_security_status(group, feature, adapter_val, router_val)
 
     # Build new array: insert Wiring Status after Status (idx 2),
     # replace Frontend (idx 20) with FE-List + FE-Detail + Events + Security
@@ -273,8 +314,8 @@ def transform_separator(cells: list) -> list:
 WIRING_STATUS_RUBRIC = """
 ### Wiring Status (Audit Overlay)
 
-Wiring status is determined by entity detail wiring audits (2026-03-03 to 2026-03-06).
-Audited entities: Lead, Contact, Account, Deal.
+Wiring status is determined by entity detail wiring audits (2026-03-03 to 2026-03-07).
+Audited entities: Lead, Contact, Account, Deal, Task.
 
 | Wiring Status | Definition |
 |---|---|
@@ -283,7 +324,7 @@ Audited entities: Lead, Contact, Account, Deal.
 | `unaudited` | Feature is `done` but has not yet been audited for wiring correctness |
 | `-` | Not applicable (feature is `planned` or `in_progress`) |
 
-Audit documents: `docs/audit/{lead,contact,account,deal}-detail-wiring-audit.md`
+Audit documents: `docs/audit/{lead,contact,account,deal,task}-detail-wiring-audit.md`
 Cross-reference: `docs/audit/feature-matrix-vs-audit-comparison.md`
 """
 

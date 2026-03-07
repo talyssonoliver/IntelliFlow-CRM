@@ -95,9 +95,9 @@ export interface ValidationResult {
  * IFC-029: All user inputs are sanitized before prompt construction.
  */
 export class AutoResponseChain {
-  private llm: BaseChatModel;
-  private modelVersion: string;
-  private chainMonitor = createChainMonitor({ latencyThresholdMs: 1000 });
+  private readonly llm: BaseChatModel;
+  private readonly modelVersion: string;
+  private readonly chainMonitor = createChainMonitor({ latencyThresholdMs: 1000 });
 
   // Content limits (from ResponseContent value object)
   private static readonly MAX_SUBJECT_LENGTH = 100;
@@ -208,7 +208,7 @@ export class AutoResponseChain {
       return JSON.parse(content);
     } catch {
       // Fallback: extract JSON from markdown code blocks
-      const match = content.match(/```(?:json)?[ \t\r\n]{0,10}([^`]{0,20000})```/);
+      const match = /```(?:json)?[ \t\r\n]{0,10}([^`]{0,20000})```/.exec(content);
       if (match) {
         try {
           return JSON.parse(match[1].trim());
@@ -320,7 +320,7 @@ Requirements:
 - Include a clear call to action
 - Match the specified tone
 - Be personalized to the lead's context
-${tenantSettings.signatureTemplate ? `- End with signature: ${tenantSettings.signatureTemplate.replace('{companyName}', tenantSettings.companyName)}` : ''}`;
+${tenantSettings.signatureTemplate ? '- End with signature: ' + tenantSettings.signatureTemplate.replace('{companyName}', tenantSettings.companyName) : ''}`;
   }
 
   /**

@@ -237,8 +237,8 @@ export function verifyDefinitionOfDone(
   const details: DefinitionOfDoneResult['details'] = [];
 
   for (const criterion of criteria) {
-    let verified = false;
-    let evidence = '';
+    let verified: boolean;
+    let evidence: string;
 
     // Try to verify common DoD patterns
     const lowerCriterion = criterion.toLowerCase();

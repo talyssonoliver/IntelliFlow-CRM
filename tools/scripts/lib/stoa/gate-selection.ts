@@ -190,9 +190,9 @@ export function selectGates(
   }
 
   return {
-    execute: execute.sort(),
-    waiverRequired: waiverRequired.sort(),
-    skipped: skipped.sort(),
+    execute: execute.sort((a, b) => a.localeCompare(b)),
+    waiverRequired: waiverRequired.sort((a, b) => a.localeCompare(b)),
+    skipped: skipped.sort((a, b) => a.localeCompare(b)),
   };
 }
 

@@ -224,6 +224,7 @@ describe('StripeAdapter', () => {
       });
 
       // Create valid signature
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const crypto = require('crypto');
       const signedPayload = `${timestamp}.${payload}`;
       const signature = crypto

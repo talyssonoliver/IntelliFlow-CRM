@@ -49,6 +49,7 @@ vitest.stdout.on('data', (data) => {
 
   // Parse test results from output
   // Strip ANSI codes for parsing
+  // eslint-disable-next-line no-control-regex
   const stripped = text.replace(/\x1b\[[0-9;]*m/g, '');
 
   // Format: "Tests  X passed | Y skipped (Z)"
@@ -71,6 +72,7 @@ vitest.stderr.on('data', (data) => {
 // Handle process exit
 vitest.on('close', (code) => {
   // Strip ANSI codes from full output for checking
+  // eslint-disable-next-line no-control-regex
   const strippedOutput = output.replace(/\x1b\[[0-9;]*m/g, '');
 
   // Check if we saw test results in the output

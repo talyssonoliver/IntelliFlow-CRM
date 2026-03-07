@@ -32,7 +32,7 @@ describe('Database Integration Tests', () => {
   // In a real implementation, use actual Prisma client
   // const prisma = new PrismaClient();
   const dbAvailable = process.env.TEST_DATABASE_URL !== undefined;
-  let db = mockDbClient;
+  const db = mockDbClient;
 
   beforeAll(async () => {
     if (!dbAvailable) {

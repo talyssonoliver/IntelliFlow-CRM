@@ -9,6 +9,8 @@
 
 import pino from 'pino';
 
+export type ROITrend = 'improving' | 'stable' | 'declining';
+
 const logger = pino({
   name: 'roi-tracker',
   level: process.env.LOG_LEVEL || 'info',
@@ -75,7 +77,7 @@ export interface ROIResult {
   };
   valueBreakdown: Record<ValueType, number>;
   efficiency: number; // Value per dollar spent
-  trendDirection: 'improving' | 'stable' | 'declining';
+  trendDirection: ROITrend;
   recommendations: string[];
 }
 
@@ -110,7 +112,7 @@ export interface ROIStats {
 export class ROITracker {
   private costs: AICost[] = [];
   private values: AIValue[] = [];
-  private dailySnapshots: Map<string, ROIResult> = new Map();
+  private readonly dailySnapshots: Map<string, ROIResult> = new Map();
 
   constructor(private readonly config: ROITrackerConfig) {
     logger.info({ config }, 'ROITracker initialized');
@@ -204,7 +206,7 @@ export class ROITracker {
     metadata?: Record<string, unknown>;
   }): AIValue {
     const baseValue = this.config.valueEstimates[params.valueType] || 0;
-    const confidence = params.confidenceMultiplier ?? 1.0;
+    const confidence = params.confidenceMultiplier ?? 1;
 
     return this.recordValue({
       id: params.id,
@@ -260,7 +262,7 @@ export class ROITracker {
     const efficiency = totalCost > 0 ? totalValue / totalCost : 0;
 
     // Determine trend (skip if already in recursive call to prevent stack overflow)
-    let trendDirection: 'improving' | 'stable' | 'declining' = 'stable';
+    let trendDirection: ROITrend = 'stable';
     if (!skipTrend) {
       const previousPeriod = this.calculatePreviousPeriodROI(start, end);
       trendDirection = this.determineTrend(roi, previousPeriod);
@@ -493,7 +495,7 @@ export class ROITracker {
    */
   private calculatePreviousPeriodROI(currentStart: Date, currentEnd: Date): number {
     const periodLength = currentEnd.getTime() - currentStart.getTime();
-    const prevEnd = new Date(currentStart.getTime());
+    const prevEnd = new Date(currentStart);
     const prevStart = new Date(currentStart.getTime() - periodLength);
 
     // Pass skipTrend=true to prevent infinite recursion
@@ -507,7 +509,7 @@ export class ROITracker {
   private determineTrend(
     currentROI: number,
     previousROI: number
-  ): 'improving' | 'stable' | 'declining' {
+  ): ROITrend {
     const change = currentROI - previousROI;
     if (change > 5) return 'improving';
     if (change < -5) return 'declining';
@@ -666,14 +668,14 @@ export class ROITracker {
 export const defaultROIConfig: ROITrackerConfig = {
   valueEstimates: {
     lead_scored: 0.5, // Value of automated lead scoring
-    lead_qualified: 2.0, // Value of lead qualification
-    email_generated: 1.0, // Value of email generation
+    lead_qualified: 2, // Value of lead qualification
+    email_generated: 1, // Value of email generation
     response_automated: 1.5, // Value of automated response
-    insight_generated: 3.0, // Value of business insight
+    insight_generated: 3, // Value of business insight
     document_processed: 0.75, // Value of document analysis
     task_automated: 2.5, // Value of task automation
-    prediction_made: 5.0, // Value of prediction
-    recommendation_made: 4.0, // Value of recommendation
+    prediction_made: 5, // Value of prediction
+    recommendation_made: 4, // Value of recommendation
     // IFC-024: Human-in-the-Loop Feedback values
     feedback_positive: 0.1, // Confirmation of score accuracy
     feedback_negative: -0.2, // Error signal (negative value - cost of poor scoring)
@@ -689,7 +691,7 @@ export const defaultROIConfig: ROITrackerConfig = {
     'llama-3': { input: 0, output: 0 }, // Local model
     mistral: { input: 0, output: 0 }, // Local model
   },
-  minROITarget: 2.0, // 200% ROI target
+  minROITarget: 2, // 200% ROI target
   trackingPeriodDays: 30,
 };
 

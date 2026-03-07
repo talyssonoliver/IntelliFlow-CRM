@@ -158,11 +158,11 @@ Key considerations:
  * Falls back to default configs when no versioned config is available.
  */
 export class VersionLoader {
-  private cache: Map<string, VersionCache> = new Map();
-  private config: VersionLoaderConfig;
+  private readonly cache: Map<string, VersionCache> = new Map();
+  private readonly config: VersionLoaderConfig;
 
   // ChainVersionService is injected but optional for fallback scenarios
-  private versionService: {
+  private readonly versionService: {
     getActiveVersion: (
       chainType: ChainType,
       context: VersionContext

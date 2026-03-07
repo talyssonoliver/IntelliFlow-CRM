@@ -187,6 +187,7 @@ export function getMetricsFilePath(taskId: string, repoRoot?: string): string {
   );
 
   // Look for existing task file in any phase directory
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { readdirSync } = require('node:fs');
   if (existsSync(metricsBase)) {
     try {

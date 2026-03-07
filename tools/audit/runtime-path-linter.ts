@@ -206,7 +206,7 @@ function loadPolicy(): PolicyConfig {
  * Convert glob pattern to regex
  */
 function globToRegex(pattern: string): RegExp {
-  let regex = pattern
+  const regex = pattern
     .replace(/\./g, '\\.')
     .replace(/\*\*/g, '§§')
     .replace(/\*/g, '[^/]*')

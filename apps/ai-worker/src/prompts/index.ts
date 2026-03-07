@@ -5,8 +5,8 @@
  * Templates use Handlebars-style syntax for variable interpolation.
  */
 
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 // Prompt file paths
 const PROMPTS_DIR = __dirname;

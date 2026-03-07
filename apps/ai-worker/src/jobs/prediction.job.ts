@@ -119,6 +119,14 @@ export async function processPredictionJob(
 
   await job.updateProgress(90);
 
+  // Persist prediction results to entity insight tables
+  const tenantId = context?.tenantId as string | undefined;
+  if (tenantId) {
+    await persistPredictionResult(entityType, entityId, tenantId, predictionType, prediction, recommendations);
+  } else {
+    logger.warn({ jobId: job.id, entityId }, 'No tenantId in context — skipping DB persistence');
+  }
+
   // Transform to job result
   const processingTimeMs = Date.now() - startTime;
   const jobResult: PredictionJobResult = {
@@ -143,6 +151,113 @@ export async function processPredictionJob(
   );
 
   return jobResult;
+}
+
+// ============================================================================
+// Prediction Result Persistence
+// ============================================================================
+
+/**
+ * Persist prediction results to entity-level insight tables.
+ * Uses the same LeadAIInsight / ContactAIInsight tables as the insight job,
+ * closing the loop so entity 360 pages show prediction data.
+ */
+async function persistPredictionResult(
+  entityType: string,
+  entityId: string,
+  tenantId: string,
+  predictionType: string,
+  prediction: PredictionJobResult['prediction'],
+  recommendations: string[]
+): Promise<void> {
+  try {
+    const { prisma } = await import('@intelliflow/db');
+
+    if (entityType === 'lead') {
+      const updateData: Record<string, unknown> = {
+        recommendations,
+      };
+
+      if (predictionType === 'CHURN_RISK') {
+        const score = typeof prediction.value === 'number' ? prediction.value : 0.5;
+        const riskLevel = score >= 0.7 ? 'HIGH' : score >= 0.4 ? 'MEDIUM' : 'LOW';
+        updateData.churnRisk = riskLevel;
+        updateData.nextBestAction = recommendations[0] || 'Review churn risk assessment';
+      } else if (predictionType === 'QUALIFICATION') {
+        const status = typeof prediction.value === 'string' ? prediction.value : 'NEEDS_REVIEW';
+        updateData.nextBestAction = recommendations[0] || `Qualification: ${status}`;
+      } else if (predictionType === 'NEXT_BEST_ACTION') {
+        updateData.nextBestAction = typeof prediction.value === 'string'
+          ? prediction.value
+          : recommendations[0] || 'Follow up';
+      }
+
+      await prisma.leadAIInsight.upsert({
+        where: { leadId: entityId },
+        create: {
+          leadId: entityId,
+          tenantId,
+          engagementScore: 50,
+          conversionProbability: 50,
+          estimatedValue: 0,
+          churnRisk: ((updateData.churnRisk as string) || 'MEDIUM') as any,
+          nextBestAction: (updateData.nextBestAction as string) || 'Review prediction results',
+          sentiment: 'NEUTRAL',
+          sentimentTrend: 'stable',
+          recommendations,
+          lastEngagementDays: 0,
+          icpMatch: 'Partial Match',
+        },
+        update: updateData,
+      });
+
+      logger.info({ entityId, predictionType }, 'Persisted prediction to LeadAIInsight');
+    } else if (entityType === 'contact') {
+      const updateData: Record<string, unknown> = {
+        recommendations,
+      };
+
+      if (predictionType === 'CHURN_RISK') {
+        const score = typeof prediction.value === 'number' ? prediction.value : 0.5;
+        updateData.churnRisk = score >= 0.7 ? 'HIGH' : score >= 0.4 ? 'MEDIUM' : 'LOW';
+        updateData.nextBestAction = recommendations[0] || 'Review churn risk';
+      } else if (predictionType === 'NEXT_BEST_ACTION') {
+        updateData.nextBestAction = typeof prediction.value === 'string'
+          ? prediction.value
+          : recommendations[0] || 'Follow up';
+      }
+
+      await prisma.contactAIInsight.upsert({
+        where: { contactId: entityId },
+        create: {
+          contactId: entityId,
+          tenantId,
+          engagementScore: 50,
+          conversionProbability: 50,
+          lifetimeValue: 0,
+          churnRisk: ((updateData.churnRisk as string) || 'MEDIUM') as any,
+          nextBestAction: (updateData.nextBestAction as string) || 'Review prediction results',
+          sentiment: 'NEUTRAL',
+          sentimentTrend: 'stable',
+          recommendations,
+          lastEngagementDays: 0,
+        },
+        update: updateData,
+      });
+
+      logger.info({ entityId, predictionType }, 'Persisted prediction to ContactAIInsight');
+    }
+  } catch (error) {
+    // Log but don't fail the job — the prediction was computed successfully
+    logger.error(
+      {
+        entityType,
+        entityId,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      'Failed to persist prediction result to DB'
+    );
+  }
 }
 
 // ============================================================================
@@ -210,22 +325,9 @@ async function processChurnRisk(
         entityId,
         error: error instanceof Error ? error.message : String(error),
       },
-      'Churn risk prediction failed, using fallback'
+      'Churn risk prediction failed — propagating for retry'
     );
-
-    // Return a safe fallback with low confidence
-    return {
-      prediction: {
-        value: 0.5, // Medium risk as fallback
-        confidence: 0.3, // Low confidence indicates unreliable result
-        explanation: `Churn risk analysis encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}. Defaulting to medium risk.`,
-      },
-      recommendations: [
-        'Manual review recommended due to analysis error',
-        'Schedule customer health check',
-        'Review recent interaction history',
-      ],
-    };
+    throw error;
   }
 }
 
@@ -311,22 +413,9 @@ async function processNextBestAction(
         entityId,
         error: error instanceof Error ? error.message : String(error),
       },
-      'Next best action prediction failed, using fallback'
+      'Next best action prediction failed — propagating for retry'
     );
-
-    // Return a safe fallback with low confidence
-    return {
-      prediction: {
-        value: 'FOLLOW_UP',
-        confidence: 0.3,
-        explanation: `NBA analysis encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}. Recommending standard follow-up.`,
-      },
-      recommendations: [
-        'Manual review recommended due to analysis error',
-        'Consider scheduling a check-in call',
-        'Review entity history before taking action',
-      ],
-    };
+    throw error;
   }
 }
 
@@ -427,23 +516,9 @@ async function processQualification(
         entityId,
         error: error instanceof Error ? error.message : String(error),
       },
-      'Qualification prediction failed, using fallback'
+      'Qualification prediction failed — propagating for retry'
     );
-
-    // Return a safe fallback with low confidence
-    return {
-      prediction: {
-        value: 'NEEDS_REVIEW',
-        confidence: 0.3,
-        explanation: `Qualification analysis encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}. Manual review recommended.`,
-      },
-      recommendations: [
-        'Manual qualification review required',
-        'Verify lead data completeness',
-        'Check for missing contact information',
-        'Re-run qualification after data enrichment',
-      ],
-    };
+    throw error;
   }
 }
 

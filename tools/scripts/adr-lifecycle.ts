@@ -135,7 +135,7 @@ function getAllADRFiles(): string[] {
     }
   }
 
-  return files.sort();
+  return files.sort((a, b) => a.localeCompare(b));
 }
 
 /**

@@ -296,7 +296,9 @@ ANALYSIS INSTRUCTIONS:
           ? validatedInput.dealsAtRisk
               .map(
                 (d) =>
-                  `- ${d.name} (ID: ${d.id}): ${d.daysSinceUpdate} days since last update${d.stage ? `, stage: ${d.stage}` : ''}${d.value ? `, value: $${d.value.toLocaleString()}` : ''}`
+                  `- ${d.name} (ID: ${d.id}): ${d.daysSinceUpdate} days since last update` +
+                  (d.stage ? `, stage: ${d.stage}` : '') +
+                  (d.value ? `, value: $${d.value.toLocaleString()}` : '')
               )
               .join('\n')
           : 'No deals at risk';
@@ -306,7 +308,9 @@ ANALYSIS INSTRUCTIONS:
           ? validatedInput.hotLeads
               .map(
                 (l) =>
-                  `- ${l.name} (ID: ${l.id}): score ${l.score}${l.company ? `, company: ${l.company}` : ''}${l.status ? `, status: ${l.status}` : ''}`
+                  `- ${l.name} (ID: ${l.id}): score ${l.score}` +
+                  (l.company ? `, company: ${l.company}` : '') +
+                  (l.status ? `, status: ${l.status}` : '')
               )
               .join('\n')
           : 'No hot leads';
@@ -316,7 +320,8 @@ ANALYSIS INSTRUCTIONS:
           ? validatedInput.staleContacts
               .map(
                 (c) =>
-                  `- ${c.name} (ID: ${c.id}): ${c.daysSinceContact !== null ? `${c.daysSinceContact} days since last contact` : 'never contacted'}`
+                  `- ${c.name} (ID: ${c.id}): ` +
+                  (c.daysSinceContact === null ? 'never contacted' : `${c.daysSinceContact} days since last contact`)
               )
               .join('\n')
           : 'No stale contacts';
@@ -439,9 +444,9 @@ ANALYSIS INSTRUCTIONS:
         type: 'warning',
         title: `Stale Contact: ${contact.name}`,
         description:
-          contact.daysSinceContact !== null
-            ? `No interaction in ${contact.daysSinceContact} days. This contact has open opportunities.`
-            : `Never contacted. This contact has open opportunities.`,
+          contact.daysSinceContact === null
+            ? `Never contacted. This contact has open opportunities.`
+            : `No interaction in ${contact.daysSinceContact} days. This contact has open opportunities.`,
         suggestedActions: [
           'Schedule a follow-up',
           'Send a re-engagement email',
@@ -521,9 +526,7 @@ ANALYSIS INSTRUCTIONS:
 let _insightGenerationChain: InsightGenerationChain | null = null;
 
 export function getInsightGenerationChain(): InsightGenerationChain {
-  if (!_insightGenerationChain) {
-    _insightGenerationChain = new InsightGenerationChain();
-  }
+  _insightGenerationChain ??= new InsightGenerationChain();
   return _insightGenerationChain;
 }
 

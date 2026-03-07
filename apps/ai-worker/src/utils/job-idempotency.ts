@@ -7,7 +7,7 @@
  * @module utils/job-idempotency
  */
 
-import { createHash } from 'crypto';
+import { createHash } from 'node:crypto';
 import pino from 'pino';
 
 const logger = pino({
@@ -38,7 +38,7 @@ export interface IdempotencyStore {
  * Production should use Redis or similar distributed cache
  */
 export class InMemoryIdempotencyStore implements IdempotencyStore {
-  private store = new Map<string, IdempotencyEntry>();
+  private readonly store = new Map<string, IdempotencyEntry>();
 
   async get(key: string): Promise<IdempotencyEntry | null> {
     const entry = this.store.get(key);
@@ -95,8 +95,8 @@ export function generateIdempotencyKey(
  * Prevents duplicate processing by tracking job status with TTL
  */
 export class PredictionJobIdempotency {
-  private store: IdempotencyStore;
-  private config: IdempotencyConfig;
+  private readonly store: IdempotencyStore;
+  private readonly config: IdempotencyConfig;
 
   constructor(store: IdempotencyStore, config?: Partial<IdempotencyConfig>) {
     this.store = store;
@@ -108,7 +108,7 @@ export class PredictionJobIdempotency {
    *
    * @returns null if new job, 'PROCESSING' if in progress, or cached result if completed
    */
-  async checkDuplicate(key: string): Promise<unknown | 'PROCESSING' | null> {
+  async checkDuplicate(key: string): Promise<unknown> {
     const entry = await this.store.get(this.config.keyPrefix + key);
 
     if (!entry) {

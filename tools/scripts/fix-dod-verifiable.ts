@@ -358,7 +358,7 @@ function escapeField(value: string): string {
   if (!value) return '""';
   const needsQuotes =
     value.includes(',') || value.includes('"') || value.includes('\n') || value.includes(';');
-  const escaped = value.replace(/\"/g, '""');
+  const escaped = value.replace(/"/g, '""');
   return needsQuotes ? `"${escaped}"` : escaped;
 }
 
@@ -387,7 +387,6 @@ async function main() {
   // Analyze and fix
   let dodEnhanced = 0;
   let validationEnhanced = 0;
-  let issuesFound = 0;
 
   const issues: { taskId: string; issue: string }[] = [];
 
@@ -430,7 +429,7 @@ async function main() {
     }
   }
 
-  issuesFound = issues.length;
+  const issuesFound = issues.length;
 
   console.log(`DOD enhanced: ${dodEnhanced}`);
   console.log(`Validation enhanced: ${validationEnhanced}`);

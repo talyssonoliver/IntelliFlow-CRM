@@ -9,8 +9,14 @@
 
 import type { Job } from 'bullmq';
 import { z } from 'zod';
+import pino from 'pino';
 import { leadScoringChain } from '../chains/scoring.chain';
 import type { LeadInput, ScoringResult } from '../chains/scoring.chain';
+
+const logger = pino({
+  name: 'scoring-job',
+  level: process.env.LOG_LEVEL || 'info',
+});
 
 // ============================================================================
 // Types
@@ -25,6 +31,7 @@ export type LeadTier = 'HOT' | 'WARM' | 'COLD' | 'UNQUALIFIED';
 /** Schema for scoring job data */
 export const ScoringJobDataSchema = z.object({
   leadId: z.string().uuid(),
+  tenantId: z.string().optional(),
   lead: z.object({
     email: z.string().email(),
     firstName: z.string().optional(),
@@ -145,6 +152,47 @@ export async function processScoringJob(job: Job<ScoringJobData>): Promise<Scori
   // Compute tier and recommendations
   const tier = computeTier(result.score);
   const recommendations = generateRecommendations(tier, result.score);
+
+  // Persist scoring result to LeadAIInsight
+  const tenantId = job.data.tenantId;
+  if (tenantId) {
+    try {
+      const { prisma } = await import('@intelliflow/db');
+      const churnRisk = tier === 'HOT' ? 'MINIMAL' : tier === 'WARM' ? 'LOW' : tier === 'COLD' ? 'MEDIUM' : 'HIGH';
+
+      await prisma.leadAIInsight.upsert({
+        where: { leadId },
+        create: {
+          leadId,
+          tenantId,
+          engagementScore: Math.min(100, result.score),
+          conversionProbability: Math.min(100, Math.round(result.score * 0.8)),
+          estimatedValue: 0,
+          churnRisk,
+          nextBestAction: recommendations[0] || 'Review lead',
+          sentiment: result.score >= 65 ? 'POSITIVE' : result.score >= 35 ? 'NEUTRAL' : 'NEGATIVE',
+          sentimentTrend: 'stable',
+          recommendations,
+          lastEngagementDays: 0,
+          icpMatch: result.score >= 80 ? 'Strong Match' : result.score >= 60 ? 'Good Match' : 'Partial Match',
+        },
+        update: {
+          engagementScore: Math.min(100, result.score),
+          conversionProbability: Math.min(100, Math.round(result.score * 0.8)),
+          churnRisk,
+          nextBestAction: recommendations[0] || 'Review lead',
+          recommendations,
+        },
+      });
+
+      logger.info({ leadId, score: result.score, tier }, 'Persisted scoring result to LeadAIInsight');
+    } catch (error) {
+      logger.error(
+        { leadId, error: error instanceof Error ? error.message : String(error) },
+        'Failed to persist scoring result'
+      );
+    }
+  }
 
   // Transform to job result
   const processingTimeMs = Date.now() - startTime;

@@ -807,7 +807,7 @@ export function writeDiscussionLog(
  * Generate specification markdown
  */
 export function generateSpecificationMarkdown(spec: SpecificationDocument): string {
-  let md = `# Specification: ${spec.taskId}
+  const md = `# Specification: ${spec.taskId}
 
 **Session ID:** ${spec.sessionId}
 **Generated:** ${spec.generatedAt}

@@ -8,7 +8,7 @@
  * @task IFC-154
  */
 
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'node:events';
 
 // ============================================================================
 // Types
@@ -203,15 +203,15 @@ export class OCRWorker extends EventEmitter {
     return (
       text
         // Normalize whitespace
-        .replace(/\s+/g, ' ')
+        .replaceAll(/\s+/g, ' ')
         // Remove control characters
         // eslint-disable-next-line no-control-regex
-        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
+        .replaceAll(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
         // Normalize quotes (U+201C left and U+201D right double quotation marks — distinct chars)
-        .replace(/[""]/g, '"') // NOSONAR javascript:S5869
-        .replace(/'/g, "'")
+        .replaceAll(/[""]/g, '"') // NOSONAR javascript:S5869
+        .replaceAll("'", "'")
         // Normalize dashes
-        .replace(/[–—]/g, '-')
+        .replaceAll(/[–—]/g, '-')
         // Trim
         .trim()
     );
@@ -312,7 +312,7 @@ export class OCRWorker extends EventEmitter {
     };
 
     const expectedMagic = magicBytes[format];
-    const bufferStart = Array.from(buffer.slice(0, 8));
+    const bufferStart = Array.from(buffer.subarray(0, 8));
 
     const isValid = expectedMagic.some((magic) =>
       magic.every((byte, idx) => bufferStart[idx] === byte)

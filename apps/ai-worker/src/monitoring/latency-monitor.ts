@@ -595,10 +595,10 @@ export const defaultLatencyConfig: LatencyMonitorConfig = {
   },
   alertThresholds: {
     p95MultiplierWarning: 1.5, // Alert at 1.5x P95 target
-    p95MultiplierCritical: 2.0, // Critical at 2x P95 target
+    p95MultiplierCritical: 2, // Critical at 2x P95 target
   },
   retentionHours: 72, // Keep 3 days of data
-  samplingRate: 1.0, // 100% sampling
+  samplingRate: 1, // 100% sampling
 };
 
 /**
@@ -615,7 +615,7 @@ function getBucketRatio(bucket: number, percentiles: LatencyPercentiles): number
   if (bucket <= percentiles.p90) return 0.9;
   if (bucket <= percentiles.p95) return 0.95;
   if (bucket <= percentiles.p99) return 0.99;
-  return 1.0;
+  return 1;
 }
 
 function buildHistogramMetrics(

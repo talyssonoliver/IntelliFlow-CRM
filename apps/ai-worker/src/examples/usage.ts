@@ -291,7 +291,7 @@ async function runAllExamples() {
 
 // Run examples if this file is executed directly
 if (require.main === module) {
-  runAllExamples().catch((error) => {
+  runAllExamples().catch((error) => { // NOSONAR typescript:S7785 — top-level await unavailable in CJS modules
     console.error('Fatal error:', error);
     process.exit(1);
   });

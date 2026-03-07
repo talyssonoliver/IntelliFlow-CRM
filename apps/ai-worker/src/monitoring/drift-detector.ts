@@ -99,9 +99,9 @@ export interface FeedbackDriftSignal {
  * and Population Stability Index (PSI).
  */
 export class DriftDetector {
-  private samples: Map<string, DriftSample[]> = new Map();
-  private baselines: Map<string, DriftWindow> = new Map();
-  private driftHistory: DriftResult[] = [];
+  private readonly samples: Map<string, DriftSample[]> = new Map();
+  private readonly baselines: Map<string, DriftWindow> = new Map();
+  private readonly driftHistory: DriftResult[] = [];
 
   constructor(private readonly config: DriftDetectorConfig) {
     logger.info({ config }, 'DriftDetector initialized');
@@ -244,7 +244,7 @@ export class DriftDetector {
       metric,
       baselineWindow: baseline ?? this.emptyWindow(),
       currentWindow: this.emptyWindow(),
-      pValue: 1.0,
+      pValue: 1,
       driftScore: 0,
       timestamp: new Date(),
       recommendations: [],
@@ -374,7 +374,7 @@ export class DriftDetector {
       highSeverityCount: highSeverity.length,
       lastCheck:
         this.driftHistory.length > 0
-          ? this.driftHistory[this.driftHistory.length - 1].timestamp
+          ? this.driftHistory.at(-1)!.timestamp
           : null,
     };
   }
@@ -405,7 +405,7 @@ export class DriftDetector {
 
     return {
       startTime: samples.length > 0 ? samples[0].timestamp : new Date(),
-      endTime: samples.length > 0 ? samples[samples.length - 1].timestamp : new Date(),
+      endTime: samples.length > 0 ? samples.at(-1)!.timestamp : new Date(),
       sampleCount: n,
       mean,
       variance,
@@ -499,23 +499,28 @@ export class DriftDetector {
 
     switch (severity) {
       case 'critical':
-        recommendations.push('URGENT: Immediately investigate model performance');
-        recommendations.push('Consider rolling back to previous model version');
-        recommendations.push('Alert on-call team');
+        recommendations.push(
+          'URGENT: Immediately investigate model performance',
+          'Consider rolling back to previous model version',
+          'Alert on-call team',
+        );
         break;
       case 'high':
-        recommendations.push('Review recent model inputs for anomalies');
-        recommendations.push('Compare model outputs with human evaluations');
-        recommendations.push('Schedule model retraining if drift persists');
+        recommendations.push(
+          'Review recent model inputs for anomalies',
+          'Compare model outputs with human evaluations',
+          'Schedule model retraining if drift persists',
+        );
         break;
       case 'medium':
-        recommendations.push('Monitor closely over next 24 hours');
-        recommendations.push('Review input data quality');
-        recommendations.push('Check for seasonal patterns');
+        recommendations.push(
+          'Monitor closely over next 24 hours',
+          'Review input data quality',
+          'Check for seasonal patterns',
+        );
         break;
       case 'low':
-        recommendations.push('Continue monitoring');
-        recommendations.push('Document observation for trend analysis');
+        recommendations.push('Continue monitoring', 'Document observation for trend analysis');
         break;
     }
 
@@ -524,8 +529,7 @@ export class DriftDetector {
     }
 
     if (metric === 'error_rate') {
-      recommendations.push('Review error logs for patterns');
-      recommendations.push('Check API provider status');
+      recommendations.push('Review error logs for patterns', 'Check API provider status');
     }
 
     return recommendations;

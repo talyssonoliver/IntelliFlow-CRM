@@ -45,7 +45,7 @@ console.log(`Found ${oldArtifactCount} EVIDENCE:artifacts/attestations/ referenc
 // Replace old flat structure with sprint-based structure
 // EVIDENCE:.specify/{TASK_ID}/attestations/file -> EVIDENCE:.specify/sprints/sprint-{N}/attestations/{TASK_ID}/file
 for (const [taskId, sprint] of taskSprintMap) {
-  const oldPattern = new RegExp(`EVIDENCE:\\.specify/${taskId}/attestations/([^;\"]+)`, 'g');
+  const oldPattern = new RegExp(`EVIDENCE:\\.specify/${taskId}/attestations/([^;"]+)`, 'g');
   content = content.replace(
     oldPattern,
     `EVIDENCE:.specify/sprints/sprint-${sprint}/attestations/${taskId}/$1`
@@ -54,7 +54,7 @@ for (const [taskId, sprint] of taskSprintMap) {
 
 // Also replace artifacts/attestations/ paths
 content = content.replace(
-  /EVIDENCE:artifacts\/attestations\/([^\/]+)\/([^;\"]+)/g,
+  /EVIDENCE:artifacts\/attestations\/([^/]+)\/([^;"]+)/g,
   (_, taskId, file) => {
     const sprint = taskSprintMap.get(taskId) || '0';
     return `EVIDENCE:.specify/sprints/sprint-${sprint}/attestations/${taskId}/${file}`;

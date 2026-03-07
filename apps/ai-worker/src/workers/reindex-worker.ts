@@ -71,11 +71,11 @@ export class ReindexWorker {
   private worker: Worker<ReindexJobData, ReindexJobResult> | null = null;
   private queue: Queue<ReindexJobData, ReindexJobResult> | null = null;
   private queueEvents: QueueEvents | null = null;
-  private indexer: DocumentIndexer;
+  private readonly indexer: DocumentIndexer;
 
   constructor(
-    private prisma: PrismaClient,
-    private redisConnection: { host: string; port: number; password?: string }
+    private readonly prisma: PrismaClient,
+    private readonly redisConnection: { host: string; port: number; password?: string }
   ) {
     this.indexer = createDocumentIndexer(prisma);
   }
@@ -335,7 +335,7 @@ export class ReindexWorker {
     return {
       state,
       progress: (job.progress as ReindexJobProgress) || null,
-      result: state === 'completed' ? (job.returnvalue as ReindexJobResult) : null,
+      result: state === 'completed' ? job.returnvalue : null,
       error: state === 'failed' ? job.failedReason || null : null,
     };
   }

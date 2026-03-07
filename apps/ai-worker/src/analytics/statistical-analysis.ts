@@ -428,14 +428,14 @@ export function analyzeExperiment(
   let winner: 'control' | 'treatment' | null = null;
   let recommendation: string;
 
-  if (!tTest.isSignificant) {
-    recommendation = `No statistically significant difference detected between control (M=${controlStats.mean.toFixed(1)}) and treatment (M=${treatmentStats.mean.toFixed(1)}) groups. The p-value of ${tTest.pValue.toFixed(4)} exceeds the significance threshold of ${alpha}.`;
-  } else {
+  if (tTest.isSignificant) {
     winner = controlStats.mean > treatmentStats.mean ? 'control' : 'treatment';
     const better = winner === 'control' ? 'Control (manual)' : 'Treatment (AI)';
     const improvement = Math.abs(controlStats.mean - treatmentStats.mean);
 
     recommendation = `${better} scoring shows a statistically significant improvement of ${improvement.toFixed(1)} points (p=${tTest.pValue.toFixed(4)}). Effect size is ${effectSizeInterpretation.toLowerCase()} (d=${effectSize.toFixed(2)}). Recommend adopting ${better.toLowerCase()} scoring approach.`;
+  } else {
+    recommendation = `No statistically significant difference detected between control (M=${controlStats.mean.toFixed(1)}) and treatment (M=${treatmentStats.mean.toFixed(1)}) groups. The p-value of ${tTest.pValue.toFixed(4)} exceeds the significance threshold of ${alpha}.`;
   }
 
   return {

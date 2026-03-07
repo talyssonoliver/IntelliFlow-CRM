@@ -81,7 +81,7 @@ export function parseConformanceRoutes(content: string): string[] {
   }
 
   // Filter to route-shaped tokens only
-  const routeFilter = /^\/[\w\-\/]*$/;
+  const routeFilter = /^\/[\w\-/]*$/;
   const routes = tokens
     .filter((token) => routeFilter.test(token))
     .map((route) => {
@@ -108,7 +108,7 @@ export function parseConformanceRoutes(content: string): string[] {
  * Returns null for dynamic route segments (excluded from comparison).
  */
 export function normalizeAppRoute(relPath: string): string | null {
-  let rel = relPath
+  const rel = relPath
     .replace(/\\/g, '/') // Windows path normalization
     .replace(/\/page\.tsx$/, '') // Strip page.tsx suffix
     .replace(/\/\([^)]+\)/g, '') // Strip route groups: (public), (list), (developer)
@@ -313,11 +313,11 @@ export function runReconciliation(options?: ReconcileOptions): void {
     }
     const report = {
       timestamp: new Date().toISOString(),
-      docRoutes: [...new Set(docRoutes)].sort(),
-      fsRoutes: [...new Set(fsRoutes)].sort(),
-      matchedRoutes: result.matchedRoutes.sort(),
-      docOnlyRoutes: result.docOnlyRoutes.sort(),
-      fsOnlyRoutes: result.fsOnlyRoutes.sort(),
+      docRoutes: [...new Set(docRoutes)].sort((a, b) => a.localeCompare(b)),
+      fsRoutes: [...new Set(fsRoutes)].sort((a, b) => a.localeCompare(b)),
+      matchedRoutes: result.matchedRoutes.sort((a, b) => a.localeCompare(b)),
+      docOnlyRoutes: result.docOnlyRoutes.sort((a, b) => a.localeCompare(b)),
+      fsOnlyRoutes: result.fsOnlyRoutes.sort((a, b) => a.localeCompare(b)),
       gates: result.gates,
       exitCode: getExitCode(summary),
     };

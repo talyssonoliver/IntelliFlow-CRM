@@ -134,7 +134,7 @@ function validateCoverage(tranche: 'T2' | 'T3'): ValidationResult {
       '│'
   );
 
-  let domainStatus = 'N/A';
+  let domainStatus: string;
   if (domain !== null) {
     domainStatus = domain >= thresholds.domain ? '✓ MET' : '✗ NOT MET';
     console.log(
@@ -149,7 +149,7 @@ function validateCoverage(tranche: 'T2' | 'T3'): ValidationResult {
     );
   }
 
-  let appStatus = 'N/A';
+  let appStatus: string;
   if (application !== null) {
     appStatus = application >= thresholds.application ? '✓ MET' : '✗ NOT MET';
     console.log(

@@ -165,8 +165,8 @@ class DependencyValidator {
    */
   private checkPnpmVersion(): DependencyCheck {
     const requiredVersion = '8.0.0';
-    let currentVersion = '';
-    let installed = false;
+    let currentVersion: string;
+    let installed: boolean;
 
     try {
       currentVersion = this.exec('pnpm --version');

@@ -142,7 +142,7 @@ function collectGatesForStoas(stoas: StoaRole[]): string[] {
     }
   }
 
-  return Array.from(gates).sort();
+  return Array.from(gates).sort((a, b) => a.localeCompare(b));
 }
 
 // ============================================================================

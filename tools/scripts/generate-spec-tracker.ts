@@ -299,7 +299,7 @@ function countAcceptanceCriteria(specPath: string): number {
   const content = readFileSync(specPath, 'utf-8');
 
   // Find the Acceptance Criteria section
-  const acMatch = content.match(/##\s*Acceptance\s*Criteria\s*\n([\s\S]*?)(?=\n##\s|\n---|\Z)/i);
+  const acMatch = content.match(/##\s*Acceptance\s*Criteria\s*\n([\s\S]*?)(?=\n##\s|\n---|$)/im);
   if (!acMatch) return 0;
 
   const acSection = acMatch[1];

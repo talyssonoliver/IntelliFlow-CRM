@@ -52,7 +52,7 @@ import {
   type FeedbackRecord,
   type FeedbackAnalytics,
 } from '../feedback-analytics-generator';
-import { writeFile, mkdir } from 'fs/promises';
+import { writeFile, mkdir } from 'node:fs/promises';
 
 // =============================================
 // Helpers

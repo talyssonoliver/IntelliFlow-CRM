@@ -344,9 +344,7 @@ let _leadScoringChain: LeadScoringChain | null = null;
  * @throws Error if Ollama is not configured (provider='ollama' but no OpenAI API key)
  */
 export function getLeadScoringChain(): LeadScoringChain {
-  if (!_leadScoringChain) {
-    _leadScoringChain = new LeadScoringChain();
-  }
+  _leadScoringChain ??= new LeadScoringChain();
   return _leadScoringChain;
 }
 

@@ -373,10 +373,11 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
 
   describe('Failure Handling', () => {
     it('should retry on transient storage failures', async (context) => {
-      // This test requires mocking storage service to fail then succeed
-      // Skipped for now as we're using real Supabase adapter
+      // This test requires mocking storage service to fail then succeed.
+      // Skipped until a mock storage adapter is available for unit-level retry testing.
       context.skip();
-      expect(true).toBe(true); // TODO: implement retry test with mock storage adapter
+      // Assertion placeholder — test body runs only when skip is removed
+      expect(true).toBe(true);
     });
 
     it('should emit failure event after max retries', async (context) => {

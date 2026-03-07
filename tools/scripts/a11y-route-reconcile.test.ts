@@ -361,7 +361,9 @@ describe('runReconciliation', () => {
 Routes: \`/dashboard\`, \`/nonexistent-route-xyz\`
 `;
     // Use vi.mock or create temp file approach
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { mkdtempSync, writeFileSync } = require('node:fs');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { tmpdir } = require('node:os');
     const tmpDir = mkdtempSync(resolve(tmpdir(), 'a11y-test-'));
     const tmpFile = resolve(tmpDir, 'conformance.md');

@@ -56,7 +56,7 @@ export const DEFAULT_SENTIMENT_RESPONSE = {
  * Default embedding response (1536 dimensions for text-embedding-ada-002)
  */
 export const DEFAULT_EMBEDDING_RESPONSE = {
-  embedding: Array(1536)
+  embedding: new Array(1536)
     .fill(0)
     .map((_, i) => Math.sin(i / 100)),
 };

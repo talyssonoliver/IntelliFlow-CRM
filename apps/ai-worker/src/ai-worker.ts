@@ -97,12 +97,73 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
 
     this.logger.info({ queues: AI_WORKER_QUEUES }, 'AI Worker ready to process jobs');
 
+    // Register scheduled/repeatable jobs
+    await this.registerScheduledJobs();
+
     // Start Bull Board dashboard
     await this.startDashboard();
   }
 
+  /**
+   * Register repeatable (cron) jobs for periodic AI processing.
+   *
+   * - ai-insights: Refresh insights every 6 hours for all active tenants
+   * - ai-scoring: Re-score unscored/stale leads every 4 hours
+   *
+   * Jobs are added with a repeatJobKey so BullMQ deduplicates across restarts.
+   */
+  private async registerScheduledJobs(): Promise<void> {
+    const insightsCron = process.env.AI_INSIGHTS_CRON || '0 */6 * * *'; // every 6 hours
+    const scoringCron = process.env.AI_SCORING_CRON || '0 */4 * * *';   // every 4 hours
+
+    try {
+      const insightQueue = this.getQueue(INSIGHT_QUEUE);
+      await insightQueue.upsertJobScheduler(
+        'scheduled-insight-refresh',
+        { pattern: insightsCron },
+        {
+          name: 'scheduled-insight-refresh',
+          data: {
+            tenantId: '__scheduled__',
+            userId: 'system',
+            dealsAtRisk: [],
+            hotLeads: [],
+            overdueTasksCount: 0,
+            staleContacts: [],
+            correlationId: `scheduled-insights-${Date.now()}`,
+          },
+        }
+      );
+      this.logger.info({ cron: insightsCron }, 'Scheduled insight refresh job registered');
+
+      const scoringQueue = this.getQueue(SCORING_QUEUE);
+      await scoringQueue.upsertJobScheduler(
+        'scheduled-lead-scoring',
+        { pattern: scoringCron },
+        {
+          name: 'scheduled-lead-scoring',
+          data: {
+            leadId: '00000000-0000-0000-0000-000000000000',
+            tenantId: '__scheduled__',
+            lead: {
+              email: 'scheduled@system.internal',
+              source: 'cron',
+            },
+            correlationId: `scheduled-scoring-${Date.now()}`,
+          },
+        }
+      );
+      this.logger.info({ cron: scoringCron }, 'Scheduled lead scoring job registered');
+    } catch (error) {
+      this.logger.warn(
+        { error: error instanceof Error ? error.message : String(error) },
+        'Failed to register scheduled jobs — will rely on on-demand triggers'
+      );
+    }
+  }
+
   private async startDashboard(): Promise<void> {
-    const port = parseInt(process.env.BULL_BOARD_PORT || '3003', 10);
+    const port = Number.parseInt(process.env.BULL_BOARD_PORT || '3003', 10);
     const serverAdapter = new ExpressAdapter();
     serverAdapter.setBasePath('/queues');
 
@@ -110,6 +171,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     createBullBoard({ queues, serverAdapter });
 
     const app = express();
+    app.disable('x-powered-by');
     app.use('/queues', serverAdapter.getRouter());
     app.get('/', (_req, res) => { res.redirect('/queues'); });
 

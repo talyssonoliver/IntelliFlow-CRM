@@ -23,9 +23,9 @@ export let isInfrastructureAvailable = false;
 export let infrastructureUnavailableReason = '';
 
 // Lazy-loaded modules (may not be available)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 let PostgreSqlContainer: any = null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 let PrismaClient: any = null;
 
 // Try to load optional dependencies
@@ -52,9 +52,9 @@ try {
 }
 
 // Container and client state
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 let postgresContainer: any = null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 let testPrismaClient: any = null;
 let databaseUrl: string | null = null;
 
@@ -228,7 +228,7 @@ export async function teardownTestDatabase(): Promise<void> {
  * Get or create Prisma client for tests
  * Returns null if infrastructure not available
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export function getTestPrismaClient(): any {
   if (!isInfrastructureAvailable || !PrismaClient) {
     return null;

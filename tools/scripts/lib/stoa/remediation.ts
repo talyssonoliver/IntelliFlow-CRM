@@ -377,7 +377,7 @@ export function processVerdictRemediation(
       result.actions.push(`Closed review queue items for ${verdict.taskId}`);
       break;
 
-    case 'FAIL':
+    case 'FAIL': {
       // Create blocking Review Queue item
       result.reviewQueueItem = createReviewQueueItem(verdict, runId, true);
       appendToReviewQueue(repoRoot, result.reviewQueueItem);
@@ -397,8 +397,9 @@ export function processVerdictRemediation(
       addBlocker(repoRoot, result.blocker);
       result.actions.push(`Added blocker for ${verdict.taskId}`);
       break;
+    }
 
-    case 'NEEDS_HUMAN':
+    case 'NEEDS_HUMAN': {
       // Create Human Packet
       result.humanPacket = generateHumanPacket(verdict, runId, evidenceDir, gateResults);
       const packetPath = saveHumanPacket(repoRoot, result.humanPacket);
@@ -421,6 +422,7 @@ export function processVerdictRemediation(
       addBlocker(repoRoot, result.blocker);
       result.actions.push(`Added needs-human blocker for ${verdict.taskId}`);
       break;
+    }
   }
 
   return result;

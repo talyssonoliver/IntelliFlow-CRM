@@ -184,7 +184,7 @@ export function createActionsFromAttestation(
   // Placeholders found
   if (attestation.evidence_summary.placeholders_found > 0) {
     actions.push({
-      id: generateActionId(attestation.task_id, 'placeholder', index++),
+      id: generateActionId(attestation.task_id, 'placeholder', index),
       origin_task: attestation.task_id,
       type: 'placeholder',
       severity: 'medium',

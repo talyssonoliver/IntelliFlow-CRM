@@ -60,7 +60,7 @@ async function loadTiktoken(): Promise<GetEncodingFn | null> {
 }
 
 // Pre-load tiktoken module on initialization
-const loadPromise = loadTiktoken();
+const loadPromise = loadTiktoken(); // NOSONAR typescript:S7785 — top-level await unavailable in CJS; async function call is required
 
 /**
  * Model to encoding name mapping for OpenAI models

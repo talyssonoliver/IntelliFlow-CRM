@@ -54,7 +54,7 @@ export interface MonitoredResult<T> {
 export function sanitizeMetricLabel(input: string): string {
   return input
     .toLowerCase()
-    .replace(/[^a-z0-9_]/g, '_')
+    .replaceAll(/[^a-z0-9_]/g, '_')
     .slice(0, 64);
 }
 
@@ -156,7 +156,7 @@ export async function withMonitoring<T>(
       confidenceScore:
         result && typeof result === 'object' && 'confidence' in result
           ? (result as { confidence: number }).confidence
-          : 1.0,
+          : 1,
     };
 
     logger.info(

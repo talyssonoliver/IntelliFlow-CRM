@@ -128,6 +128,7 @@ vi.mock('express', () => {
   const app = {
     use: vi.fn(),
     get: vi.fn(),
+    disable: vi.fn(),
     listen: vi.fn((_port: number, cb?: () => void) => {
       cb?.();
       return { close: vi.fn() };

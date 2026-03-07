@@ -216,6 +216,7 @@ export function generateDeprecationPlan(runId: string, repoRoot?: string): Depre
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { tasks, errors } = parseSprintCsv(require('fs').readFileSync(csvPath, 'utf-8'));
 
   if (errors.length > 0) {

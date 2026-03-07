@@ -306,6 +306,7 @@ describe('SlackAdapter', () => {
       const timestamp = String(Math.floor(Date.now() / 1000));
       const body = '{"test": "data"}';
 
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const crypto = require('crypto');
       const sigBasestring = `v0:${timestamp}:${body}`;
       const signature = `v0=${crypto

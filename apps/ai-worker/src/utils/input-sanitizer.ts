@@ -107,7 +107,7 @@ export function sanitizeStringField(value: string, maxLength = 500): string {
     value
       .trim()
       // eslint-disable-next-line no-control-regex -- Intentional: sanitizing control characters from user input
-      .replace(/[\x00-\x1F\x7F]/g, '')
+      .replaceAll(/[\x00-\x1F\x7F]/g, '')
       .slice(0, maxLength)
   );
 }

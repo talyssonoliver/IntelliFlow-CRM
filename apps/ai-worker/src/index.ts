@@ -388,7 +388,7 @@ if (require.main === module) {
       console.error('Fatal error:', error);
       process.exit(1);
     }
-  })().catch(() => {});
+  })().catch(() => {}); // NOSONAR typescript:S7785 — top-level await unavailable in CJS modules; async IIFE is the correct pattern
 }
 
 // Export initialize function for programmatic use

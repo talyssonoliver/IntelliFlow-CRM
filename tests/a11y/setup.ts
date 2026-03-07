@@ -7,6 +7,9 @@ import * as vitestAxeMatchers from 'vitest-axe/matchers';
 expect.extend(matchers);
 expect.extend(vitestAxeMatchers);
 
+// next/navigation is mocked via resolve alias in vitest.config.ts
+// (vi.mock() doesn't reliably intercept CJS re-exports in forks pool)
+
 // Store original implementations for cleanup
 let originalHasPointerCapture: typeof Element.prototype.hasPointerCapture | undefined;
 let originalSetPointerCapture: typeof Element.prototype.setPointerCapture | undefined;

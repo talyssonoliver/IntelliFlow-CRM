@@ -2,9 +2,6 @@
  * Common types for AI Worker
  */
 
-// Import domain constants - single source of truth
-import type { TaskPriority, TaskStatus } from '@intelliflow/domain';
-
 /**
  * LLM Provider types
  */
@@ -21,7 +18,7 @@ export type AgentRole =
   | 'data_enricher';
 
 // Re-export task types from domain
-export type { TaskPriority, TaskStatus };
+export type { TaskPriority, TaskStatus } from '@intelliflow/domain';
 
 /**
  * Human-in-the-loop decision
@@ -38,7 +35,7 @@ export interface HumanDecision {
  * Confidence levels
  */
 export enum ConfidenceLevel {
-  VERY_LOW = 0.0,
+  VERY_LOW = 0,
   LOW = 0.3,
   MEDIUM = 0.5,
   HIGH = 0.7,

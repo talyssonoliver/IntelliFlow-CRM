@@ -172,8 +172,8 @@ export function formatForPgvector(vector: number[]): string {
  */
 export function parseFromPgvector(pgvectorString: string): number[] {
   // Remove brackets and split by comma
-  const cleaned = pgvectorString.replace(/[[\]]/g, '');
-  return cleaned.split(',').map((val) => parseFloat(val.trim()));
+  const cleaned = pgvectorString.replaceAll(/[[\]]/g, '');
+  return cleaned.split(',').map((val) => Number.parseFloat(val.trim()));
 }
 
 // =============================================================================

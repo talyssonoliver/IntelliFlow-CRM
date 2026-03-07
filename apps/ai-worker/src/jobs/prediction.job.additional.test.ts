@@ -38,18 +38,15 @@ function j(ov: Partial<PredictionJobData> = {}): Job<PredictionJobData> {
   } as any;
 }
 
-describe('churn fallback', () => {
+describe('churn error propagation', () => {
   beforeEach(() => vi.clearAllMocks());
-  it('Error fallback', async () => {
+  it('propagates Error for retry', async () => {
     mockChurn.mockRejectedValue(new Error('t'));
-    const r = await processPredictionJob(j());
-    expect(r.prediction.value).toBe(0.5);
-    expect(r.prediction.confidence).toBe(0.3);
+    await expect(processPredictionJob(j())).rejects.toThrow('t');
   });
-  it('non-Error fallback', async () => {
+  it('propagates non-Error for retry', async () => {
     mockChurn.mockRejectedValue('s');
-    const r = await processPredictionJob(j());
-    expect(r.prediction.explanation).toContain('Unknown error');
+    await expect(processPredictionJob(j())).rejects.toBe('s');
   });
 });
 
@@ -65,26 +62,29 @@ describe('NBA fallback', () => {
       processPredictionJob(j({ predictionType: 'NEXT_BEST_ACTION', context: { tenantId: 't' } }))
     ).rejects.toThrow('userId');
   });
-  it('Error fallback', async () => {
+  it('propagates Error for retry', async () => {
     mockNBA.mockRejectedValue(new Error('f'));
-    const r = await processPredictionJob(
-      j({ predictionType: 'NEXT_BEST_ACTION', context: { tenantId: 't', userId: 'u' } })
-    );
-    expect(r.prediction.value).toBe('FOLLOW_UP');
+    await expect(
+      processPredictionJob(
+        j({ predictionType: 'NEXT_BEST_ACTION', context: { tenantId: 't', userId: 'u' } })
+      )
+    ).rejects.toThrow('f');
   });
-  it('success=false fallback', async () => {
+  it('throws on success=false', async () => {
     mockNBA.mockResolvedValue({ success: false, output: null, error: 'x' });
-    const r = await processPredictionJob(
-      j({ predictionType: 'NEXT_BEST_ACTION', context: { tenantId: 't', userId: 'u' } })
-    );
-    expect(r.prediction.value).toBe('FOLLOW_UP');
+    await expect(
+      processPredictionJob(
+        j({ predictionType: 'NEXT_BEST_ACTION', context: { tenantId: 't', userId: 'u' } })
+      )
+    ).rejects.toThrow('x');
   });
-  it('null output fallback', async () => {
+  it('throws on null output', async () => {
     mockNBA.mockResolvedValue({ success: true, output: null });
-    const r = await processPredictionJob(
-      j({ predictionType: 'NEXT_BEST_ACTION', context: { tenantId: 't', userId: 'u' } })
-    );
-    expect(r.prediction.value).toBe('FOLLOW_UP');
+    await expect(
+      processPredictionJob(
+        j({ predictionType: 'NEXT_BEST_ACTION', context: { tenantId: 't', userId: 'u' } })
+      )
+    ).rejects.toThrow('NBA agent returned no output');
   });
   it('extract top rec', async () => {
     mockNBA.mockResolvedValue({
@@ -149,19 +149,19 @@ describe('qualification tiers', () => {
   });
 });
 
-describe('qualification error', () => {
+describe('qualification error propagation', () => {
   beforeEach(() => vi.clearAllMocks());
-  it('NEEDS_REVIEW on Error', async () => {
+  it('propagates Error for retry', async () => {
     mockScore.mockRejectedValue(new Error('m'));
-    expect(
-      (await processPredictionJob(j({ predictionType: 'QUALIFICATION' }))).prediction.value
-    ).toBe('NEEDS_REVIEW');
+    await expect(
+      processPredictionJob(j({ predictionType: 'QUALIFICATION' }))
+    ).rejects.toThrow('m');
   });
-  it('NEEDS_REVIEW on non-Error', async () => {
+  it('propagates non-Error for retry', async () => {
     mockScore.mockRejectedValue('f');
-    expect(
-      (await processPredictionJob(j({ predictionType: 'QUALIFICATION' }))).prediction.explanation
-    ).toContain('Unknown error');
+    await expect(
+      processPredictionJob(j({ predictionType: 'QUALIFICATION' }))
+    ).rejects.toBe('f');
   });
 });
 

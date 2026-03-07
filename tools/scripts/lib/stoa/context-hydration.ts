@@ -210,7 +210,7 @@ export function resolveDependencyArtifacts(
                 return false;
               }
             })
-            .sort()
+            .sort((a, b) => a.localeCompare(b))
             .reverse();
 
           if (runs.length > 0) {

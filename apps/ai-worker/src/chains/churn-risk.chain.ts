@@ -65,8 +65,8 @@ function validateProviderForProduction(): void {
 // =============================================================================
 
 // Re-export domain types for backward compatibility
-export { CHURN_RISK_LEVELS };
-export type { ChurnRiskLevel };
+export { CHURN_RISK_LEVELS } from '@intelliflow/domain';
+export type { ChurnRiskLevel } from '@intelliflow/domain';
 
 // Note: LLM output parsing uses lowercase risk levels internally,
 // but final results use uppercase domain constants (CRITICAL, HIGH, etc.)
@@ -80,7 +80,7 @@ export const RISK_LEVEL_CONFIG: Record<ChurnRiskLevel, { threshold: number; slaH
   HIGH: { threshold: 0.6, slaHours: 48 },
   MEDIUM: { threshold: 0.4, slaHours: 168 }, // 7 days
   LOW: { threshold: 0.2, slaHours: 336 }, // 14 days
-  MINIMAL: { threshold: 0.0, slaHours: 720 }, // 30 days
+  MINIMAL: { threshold: 0, slaHours: 720 }, // 30 days
 };
 
 /**
@@ -515,21 +515,25 @@ ANALYSIS INSTRUCTIONS:
     const parts: string[] = [];
 
     if (input.usageTrendSlope !== undefined) {
-      const trend =
-        input.usageTrendSlope > 0
-          ? 'increasing'
-          : input.usageTrendSlope < 0
-            ? 'decreasing'
-            : 'stable';
+      let trend: string;
+      if (input.usageTrendSlope > 0) {
+        trend = 'increasing';
+      } else if (input.usageTrendSlope < 0) {
+        trend = 'decreasing';
+      } else {
+        trend = 'stable';
+      }
       parts.push(`Usage trend: ${trend} (slope: ${input.usageTrendSlope.toFixed(2)})`);
     }
     if (input.sessionTimeTrend !== undefined) {
-      const trend =
-        input.sessionTimeTrend > 0
-          ? 'increasing'
-          : input.sessionTimeTrend < 0
-            ? 'decreasing'
-            : 'stable';
+      let trend: string;
+      if (input.sessionTimeTrend > 0) {
+        trend = 'increasing';
+      } else if (input.sessionTimeTrend < 0) {
+        trend = 'decreasing';
+      } else {
+        trend = 'stable';
+      }
       parts.push(`Session time trend: ${trend}`);
     }
 
@@ -741,9 +745,7 @@ ANALYSIS INSTRUCTIONS:
 let _churnRiskChain: ChurnRiskChain | null = null;
 
 export function getChurnRiskChain(): ChurnRiskChain {
-  if (!_churnRiskChain) {
-    _churnRiskChain = new ChurnRiskChain();
-  }
+  _churnRiskChain ??= new ChurnRiskChain();
   return _churnRiskChain;
 }
 

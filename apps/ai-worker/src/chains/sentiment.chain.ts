@@ -38,13 +38,11 @@ import {
   EMOTION_LABELS,
   URGENCY_LEVELS,
   type SentimentLabel,
-  type EmotionLabel,
-  type UrgencyLevel,
 } from '@intelliflow/domain';
 
 // Re-export for consumers
-export { SENTIMENT_LABELS, EMOTION_LABELS, URGENCY_LEVELS };
-export type { SentimentLabel, EmotionLabel, UrgencyLevel };
+export { SENTIMENT_LABELS, EMOTION_LABELS, URGENCY_LEVELS } from '@intelliflow/domain';
+export type { SentimentLabel, EmotionLabel, UrgencyLevel } from '@intelliflow/domain';
 
 const logger = pino({
   name: 'sentiment-chain',
@@ -462,9 +460,7 @@ ANALYSIS INSTRUCTIONS:
 let _sentimentChain: SentimentAnalysisChain | null = null;
 
 export function getSentimentChain(): SentimentAnalysisChain {
-  if (!_sentimentChain) {
-    _sentimentChain = new SentimentAnalysisChain();
-  }
+  _sentimentChain ??= new SentimentAnalysisChain();
   return _sentimentChain;
 }
 

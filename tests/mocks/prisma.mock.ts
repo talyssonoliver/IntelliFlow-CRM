@@ -29,7 +29,7 @@ import type { PrismaClient } from '@intelliflow/db';
 export type MockPrismaClient = {
   [K in keyof PrismaClient]: PrismaClient[K] extends object
     ? {
-        [M in keyof PrismaClient[K]]: PrismaClient[K][M] extends Function
+        [M in keyof PrismaClient[K]]: PrismaClient[K][M] extends (...args: unknown[]) => unknown
           ? ReturnType<typeof vi.fn>
           : PrismaClient[K][M];
       }
