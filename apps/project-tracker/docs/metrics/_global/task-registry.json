@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-03-08T11:58:37.484Z",
+  "last_updated": "2026-03-08T14:31:51.494Z",
   "total_tasks": 381,
   "current_sprint": 14,
   "active_sprint": "sprint-14",
@@ -287,7 +287,9 @@
       "PG-042",
       "PG-043",
       "PG-044",
+      "PG-045",
       "PG-046",
+      "PG-047",
       "DOC-001",
       "BRAND-001",
       "BRAND-002",
@@ -464,16 +466,14 @@
       "IFC-213",
       "IFC-222",
       "IFC-223",
-      "IFC-224"
+      "IFC-224",
+      "IFC-296"
     ],
-    "IN_PROGRESS": [
-      "PG-047"
-    ],
+    "IN_PROGRESS": [],
     "VALIDATING": [],
     "BLOCKED": [],
     "PLANNED": [
-      "PG-045",
-      "IFC-296"
+      "PG-048"
     ],
     "BACKLOG": [
       "IFC-031",
@@ -501,7 +501,6 @@
       "IFC-083",
       "IFC-084",
       "IFC-087",
-      "PG-048",
       "PG-049",
       "PG-050",
       "PG-051",
@@ -3938,7 +3937,7 @@
       "section": "Support Pages",
       "description": "Help Article",
       "owner": "Support Eng (STOA-Domain)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [
         "PG-043"
@@ -3974,7 +3973,7 @@
       "section": "Support Pages",
       "description": "New Ticket",
       "owner": "Support Eng (STOA-Domain)",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [
         "PG-046"
@@ -3992,7 +3991,7 @@
       "section": "Support Pages",
       "description": "Ticket Detail",
       "owner": "Support Eng (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "sprint": 16,
       "dependencies": [
         "PG-046"
@@ -10664,7 +10663,7 @@
       "section": "AI Foundation",
       "description": "Queue Scheduler Administration — Implement queuesAdmin tRPC router with live BullMQ stats and scheduler CRUD (list/pause/resume/retry/delete), wire to /agent-approvals/agents page. Replace stub router with live Redis/BullMQ data. Add queue health panel to ActiveAgentsDashboard showing scheduler cron patterns, queue counts, and action buttons.",
       "owner": "Backend Dev + Frontend Dev (STOA-Domain)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 15,
       "dependencies": [
         "IFC-015",
@@ -10672,7 +10671,7 @@
         "PG-151"
       ],
       "artifacts": [
-        "ARTIFACT:apps/api/src/modules/admin/queues.router.ts;ARTIFACT:apps/web/src/components/ai-monitoring/QueueSchedulerPanel.tsx;EVIDENCE:.specify/sprints/sprint-15/attestations/IFC-296/context_ack.json"
+        "ARTIFACT:apps/api/src/modules/admin/queues.router.ts;ARTIFACT:apps/web/src/components/ai-monitoring/QueueSchedulerPanel.tsx;ARTIFACT:apps/web/src/lib/ai-monitoring/queue-scheduler-hooks.ts;EVIDENCE:.specify/sprints/sprint-15/attestations/IFC-296/context_ack.json;SPEC:.specify/sprints/sprint-15/specifications/IFC-296-spec.md;PLAN:.specify/sprints/sprint-15/planning/IFC-296-plan.md;EVIDENCE:.specify/sprints/sprint-15/attestations/IFC-296/attestation.json"
       ],
       "kpis": "Coverage >90%, API response <200ms, All 3 queues visible, Scheduler CRUD functional",
       "definition_of_done": "queuesAdmin router returns live queue stats from Redis; scheduler list/pause/resume/retry/delete endpoints functional; ActiveAgentsDashboard displays queue health panel with cron patterns and action buttons; stub router fully replaced; artifacts: queues.router.ts, QueueSchedulerPanel.tsx; targets: response <200ms, coverage >90%; verified by: pnpm test",
