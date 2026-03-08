@@ -1,8 +1,8 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-03-07T15:00:26.652Z",
-  "total_tasks": 380,
+  "last_updated": "2026-03-08T11:58:37.484Z",
+  "total_tasks": 381,
   "current_sprint": 14,
   "active_sprint": "sprint-14",
   "sprints": {
@@ -131,6 +131,13 @@
         "IFC-277",
         "IFC-285"
       ]
+    },
+    "sprint-15": {
+      "total": 1,
+      "completed": 0,
+      "in_progress": 0,
+      "backlog": 1,
+      "blocked": 0
     }
   },
   "tasks_by_status": {
@@ -279,6 +286,7 @@
       "PG-041",
       "PG-042",
       "PG-043",
+      "PG-044",
       "PG-046",
       "DOC-001",
       "BRAND-001",
@@ -432,6 +440,7 @@
       "PG-159",
       "PG-160",
       "PG-163",
+      "PG-164",
       "PG-165",
       "PG-169",
       "PG-170",
@@ -457,11 +466,14 @@
       "IFC-223",
       "IFC-224"
     ],
-    "IN_PROGRESS": [],
+    "IN_PROGRESS": [
+      "PG-047"
+    ],
     "VALIDATING": [],
     "BLOCKED": [],
     "PLANNED": [
-      "PG-044"
+      "PG-045",
+      "IFC-296"
     ],
     "BACKLOG": [
       "IFC-031",
@@ -489,8 +501,6 @@
       "IFC-083",
       "IFC-084",
       "IFC-087",
-      "PG-045",
-      "PG-047",
       "PG-048",
       "PG-049",
       "PG-050",
@@ -587,7 +597,6 @@
       "IFC-204",
       "PG-161",
       "PG-162",
-      "PG-164",
       "PG-166",
       "PG-167",
       "PG-168",
@@ -3911,13 +3920,13 @@
       "section": "Support Pages",
       "description": "Help Search",
       "owner": "Support Eng (STOA-Domain)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [
         "PG-043"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/help-center/search/page.tsx;ARTIFACT:apps/web/src/components/support/search-algorithm.tsx;ARTIFACT:apps/web/src/components/support/search-filters.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-044/context_ack.json;SPEC:.specify/sprints/sprint-16/specifications/PG-044-spec.md"
+        "ARTIFACT:apps/web/src/app/help-center/search/page.tsx;ARTIFACT:apps/web/src/components/support/search-algorithm.tsx;ARTIFACT:apps/web/src/components/support/search-filters.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-044/context_ack.json;SPEC:.specify/sprints/sprint-16/specifications/PG-044-spec.md;PLAN:.specify/sprints/sprint-16/planning/PG-044-plan.md"
       ],
       "kpis": "Search working, results relevant, filters functional",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, results relevant; artifacts: page.tsx, search-algorithm.tsx, search-filters.tsx",
@@ -3929,13 +3938,13 @@
       "section": "Support Pages",
       "description": "Help Article",
       "owner": "Support Eng (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "sprint": 16,
       "dependencies": [
         "PG-043"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/help-center/[article]/page.tsx;ARTIFACT:apps/web/src/components/support/article-renderer.tsx;ARTIFACT:apps/web/src/components/support/feedback-widget.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-045/context_ack.json"
+        "ARTIFACT:apps/web/src/app/help-center/[article]/page.tsx;ARTIFACT:apps/web/src/components/support/article-renderer.tsx;ARTIFACT:apps/web/src/components/support/feedback-widget.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-045/context_ack.json;SPEC:.specify/sprints/sprint-16/specifications/PG-045-spec.md;PLAN:.specify/sprints/sprint-16/planning/PG-045-plan.md"
       ],
       "kpis": "Articles rendered, feedback collected, related shown",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, articles displayed; artifacts: page.tsx, article-renderer.tsx, feedback-widget.tsx",
@@ -3965,13 +3974,13 @@
       "section": "Support Pages",
       "description": "New Ticket",
       "owner": "Support Eng (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "IN_PROGRESS",
       "sprint": 16,
       "dependencies": [
         "PG-046"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/support/tickets/new/page.tsx;ARTIFACT:apps/web/src/components/tickets/ticket-form.tsx;ARTIFACT:apps/web/src/components/tickets/file-uploader.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-047/context_ack.json"
+        "ARTIFACT:apps/web/src/app/support/tickets/new/page.tsx;ARTIFACT:apps/web/src/components/tickets/ticket-form.tsx;ARTIFACT:apps/web/src/components/tickets/file-uploader.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-047/context_ack.json;SPEC:.specify/sprints/sprint-16/specifications/PG-047-spec.md;PLAN:.specify/sprints/sprint-16/planning/PG-047-plan.md"
       ],
       "kpis": "Tickets created, categories working, attachments uploaded",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, tickets created; artifacts: page.tsx, ticket-form.tsx, file-uploader.tsx",
@@ -8590,14 +8599,14 @@
       "section": "Core CRM",
       "description": "Home page E2E tests - 5 Playwright scenarios: public page auth redirect insight click quick action pin/unpin flow",
       "owner": "QA (STOA-Quality)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 15,
       "dependencies": [
         "PG-129",
         "PG-155"
       ],
       "artifacts": [
-        "ARTIFACT:tests/e2e/home/home-page.spec.ts"
+        "ARTIFACT:tests/e2e/home/home-page.spec.ts;SPEC:.specify/sprints/sprint-15/specifications/PG-164-spec.md;PLAN:.specify/sprints/sprint-15/planning/PG-164-plan.md"
       ],
       "kpis": "5 E2E scenarios passing, <60s runtime, CI integrated",
       "definition_of_done": "5 Playwright E2E scenarios passing; covers auth, navigation, interactions; CI integrated; screenshots on failure; <60s total",
@@ -9101,7 +9110,7 @@
       "description": "Lighthouse SEO CI enforcement and og:image - change lighthouserc.js SEO assertion from warn to error and add og:image meta tag to root layout (content audit findings F-005 F-006)",
       "owner": "DevOps (STOA-Foundation)",
       "status": "BACKLOG",
-      "sprint": 15,
+      "sprint": 21,
       "dependencies": [
         "DOC-009"
       ],
@@ -10649,6 +10658,26 @@
       "definition_of_done": "All 8 miscellaneous endpoints wired to appropriate UI pages; zero dead endpoints in billing/auth/subscription/autoresponse/admin routers; tests >=90%",
       "validation": "VALIDATE:pnpm test --filter @intelliflow/api --filter @intelliflow/web",
       "prerequisites": "FILE:artifacts/reports/dead-endpoints-audit.csv",
+      "cadence": ""
+    },
+    "IFC-296": {
+      "section": "AI Foundation",
+      "description": "Queue Scheduler Administration — Implement queuesAdmin tRPC router with live BullMQ stats and scheduler CRUD (list/pause/resume/retry/delete), wire to /agent-approvals/agents page. Replace stub router with live Redis/BullMQ data. Add queue health panel to ActiveAgentsDashboard showing scheduler cron patterns, queue counts, and action buttons.",
+      "owner": "Backend Dev + Frontend Dev (STOA-Domain)",
+      "status": "PLANNED",
+      "sprint": 15,
+      "dependencies": [
+        "IFC-015",
+        "IFC-197",
+        "PG-151"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/api/src/modules/admin/queues.router.ts;ARTIFACT:apps/web/src/components/ai-monitoring/QueueSchedulerPanel.tsx;EVIDENCE:.specify/sprints/sprint-15/attestations/IFC-296/context_ack.json"
+      ],
+      "kpis": "Coverage >90%, API response <200ms, All 3 queues visible, Scheduler CRUD functional",
+      "definition_of_done": "queuesAdmin router returns live queue stats from Redis; scheduler list/pause/resume/retry/delete endpoints functional; ActiveAgentsDashboard displays queue health panel with cron patterns and action buttons; stub router fully replaced; artifacts: queues.router.ts, QueueSchedulerPanel.tsx; targets: response <200ms, coverage >90%; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm typecheck;VALIDATE:pnpm test;VALIDATE:pnpm lint;VALIDATE:pnpm build",
+      "prerequisites": "FILE:apps/api/src/modules/admin/queues.router.ts;FILE:apps/web/src/components/ai-monitoring/ActiveAgentsDashboard.tsx;FILE:packages/platform/src/queues/queue-factory.ts;ENV:Redis running;ENV:BullMQ configured",
       "cadence": ""
     }
   }

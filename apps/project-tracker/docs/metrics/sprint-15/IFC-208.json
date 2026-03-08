@@ -4,7 +4,7 @@
   "section": "SEO",
   "description": "Lighthouse SEO CI enforcement and og:image - change lighthouserc.js SEO assertion from warn to error and add og:image meta tag to root layout (content audit findings F-005 F-006)",
   "owner": "DevOps (STOA-Foundation)",
-  "sprint": "sprint-15",
+  "sprint": "sprint-21",
   "phase": null,
   "stream": null,
   "status": "BACKLOG",
@@ -13,7 +13,7 @@
       "DOC-009"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-03-07T15:00:27.243Z"
+    "verified_at": "2026-03-07T22:02:09.239Z"
   },
   "dependencies_resolved": [
     "DOC-009"

@@ -269,6 +269,21 @@
       "Artifacts To Track": "packages/domain/src/crm/lead/Lead.ts; packages/domain/src/crm/lead/LeadScore.ts; apps/ai-worker/src/chains/",
       "Validation Method": "Domain model tests + scoring chain tests",
       "Cadence": "Continuous"
+    },
+    {
+      "Task ID": "IFC-296",
+      "Section": "AI Foundation",
+      "Description": "Queue Scheduler Administration — Implement queuesAdmin tRPC router with live BullMQ stats and scheduler CRUD (list/pause/resume/retry/delete), wire to /agent-approvals/agents page. Replace stub router with live Redis/BullMQ data. Add queue health panel to ActiveAgentsDashboard showing scheduler cron patterns, queue counts, and action buttons.",
+      "Owner": "Backend Dev + Frontend Dev (STOA-Domain)",
+      "Dependencies": "IFC-015,IFC-197,PG-151",
+      "Pre-requisites": "FILE:apps/api/src/modules/admin/queues.router.ts;FILE:apps/web/src/components/ai-monitoring/ActiveAgentsDashboard.tsx;FILE:packages/platform/src/queues/queue-factory.ts;ENV:Redis running;ENV:BullMQ configured",
+      "Definition of Done": "queuesAdmin router returns live queue stats from Redis; scheduler list/pause/resume/retry/delete endpoints functional; ActiveAgentsDashboard displays queue health panel with cron patterns and action buttons; stub router fully replaced; artifacts: queues.router.ts, QueueSchedulerPanel.tsx; targets: response <200ms, coverage >90%; verified by: pnpm test",
+      "Status": "Planning",
+      "KPIs": "Coverage >90%, API response <200ms, All 3 queues visible, Scheduler CRUD functional",
+      "Target Sprint": "15",
+      "Artifacts To Track": "ARTIFACT:apps/api/src/modules/admin/queues.router.ts;ARTIFACT:apps/web/src/components/ai-monitoring/QueueSchedulerPanel.tsx;EVIDENCE:.specify/sprints/sprint-15/attestations/IFC-296/context_ack.json",
+      "Validation Method": "VALIDATE:pnpm typecheck;VALIDATE:pnpm test;VALIDATE:pnpm lint;VALIDATE:pnpm build",
+      "Cadence": ""
     }
   ],
   "Foundation Setup": [
@@ -3582,10 +3597,10 @@
       "Dependencies": "PG-129,PG-155",
       "Pre-requisites": "FILE:tests/e2e;FILE:apps/web/src/components/home",
       "Definition of Done": "5 Playwright E2E scenarios passing; covers auth, navigation, interactions; CI integrated; screenshots on failure; <60s total",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "5 E2E scenarios passing, <60s runtime, CI integrated",
       "Target Sprint": "15",
-      "Artifacts To Track": "ARTIFACT:tests/e2e/home/home-page.spec.ts",
+      "Artifacts To Track": "ARTIFACT:tests/e2e/home/home-page.spec.ts;SPEC:.specify/sprints/sprint-15/specifications/PG-164-spec.md;PLAN:.specify/sprints/sprint-15/planning/PG-164-plan.md",
       "Validation Method": "VALIDATE:pnpm test:e2e -- --grep home",
       "Cadence": ""
     },
@@ -6656,10 +6671,10 @@
       "Dependencies": "PG-043",
       "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Search algorithm;ENV:relevance ranking;FILE:apps/web/src/app/help-center/(list)/page.tsx",
       "Definition of Done": "Response <200ms, Lighthouse ≥90, results relevant; artifacts: page.tsx, search-algorithm.tsx, search-filters.tsx",
-      "Status": "Spec Complete",
+      "Status": "Completed",
       "KPIs": "Search working, results relevant, filters functional",
       "Target Sprint": "16",
-      "Artifacts To Track": "ARTIFACT:apps/web/src/app/help-center/search/page.tsx;ARTIFACT:apps/web/src/components/support/search-algorithm.tsx;ARTIFACT:apps/web/src/components/support/search-filters.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-044/context_ack.json;SPEC:.specify/sprints/sprint-16/specifications/PG-044-spec.md",
+      "Artifacts To Track": "ARTIFACT:apps/web/src/app/help-center/search/page.tsx;ARTIFACT:apps/web/src/components/support/search-algorithm.tsx;ARTIFACT:apps/web/src/components/support/search-filters.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-044/context_ack.json;SPEC:.specify/sprints/sprint-16/specifications/PG-044-spec.md;PLAN:.specify/sprints/sprint-16/planning/PG-044-plan.md",
       "Validation Method": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
       "Cadence": ""
     },
@@ -6671,10 +6686,10 @@
       "Dependencies": "PG-043",
       "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Article template;ENV:feedback widget;FILE:apps/web/src/app/(support)/help-center/page.tsx",
       "Definition of Done": "Response <200ms, Lighthouse ≥90, articles displayed; artifacts: page.tsx, article-renderer.tsx, feedback-widget.tsx",
-      "Status": "Backlog",
+      "Status": "Plan Complete",
       "KPIs": "Articles rendered, feedback collected, related shown",
       "Target Sprint": "16",
-      "Artifacts To Track": "ARTIFACT:apps/web/src/app/help-center/[article]/page.tsx;ARTIFACT:apps/web/src/components/support/article-renderer.tsx;ARTIFACT:apps/web/src/components/support/feedback-widget.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-045/context_ack.json",
+      "Artifacts To Track": "ARTIFACT:apps/web/src/app/help-center/[article]/page.tsx;ARTIFACT:apps/web/src/components/support/article-renderer.tsx;ARTIFACT:apps/web/src/components/support/feedback-widget.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-045/context_ack.json;SPEC:.specify/sprints/sprint-16/specifications/PG-045-spec.md;PLAN:.specify/sprints/sprint-16/planning/PG-045-plan.md",
       "Validation Method": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
       "Cadence": ""
     },
@@ -6701,10 +6716,10 @@
       "Dependencies": "PG-046",
       "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Ticket form;ENV:category selection;FILE:apps/web/src/app/(support)/support/tickets/page.tsx",
       "Definition of Done": "Response <200ms, Lighthouse ≥90, tickets created; artifacts: page.tsx, ticket-form.tsx, file-uploader.tsx",
-      "Status": "Backlog",
+      "Status": "In Progress",
       "KPIs": "Tickets created, categories working, attachments uploaded",
       "Target Sprint": "16",
-      "Artifacts To Track": "ARTIFACT:apps/web/src/app/support/tickets/new/page.tsx;ARTIFACT:apps/web/src/components/tickets/ticket-form.tsx;ARTIFACT:apps/web/src/components/tickets/file-uploader.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-047/context_ack.json",
+      "Artifacts To Track": "ARTIFACT:apps/web/src/app/support/tickets/new/page.tsx;ARTIFACT:apps/web/src/components/tickets/ticket-form.tsx;ARTIFACT:apps/web/src/components/tickets/file-uploader.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-047/context_ack.json;SPEC:.specify/sprints/sprint-16/specifications/PG-047-spec.md;PLAN:.specify/sprints/sprint-16/planning/PG-047-plan.md",
       "Validation Method": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
       "Cadence": ""
     },
@@ -8201,7 +8216,7 @@
       "Definition of Done": "lighthouserc.js SEO assertions use level error not warn; og:image meta tag defined in root layout metadata; all 25 public pages inherit og:image for social sharing previews; Lighthouse CI blocks on SEO regression; verified by: pnpm test && pnpm run lighthouse",
       "Status": "Backlog",
       "KPIs": "SEO assertion level = error; og:image present on all 25 public routes; Lighthouse SEO >=0.9",
-      "Target Sprint": "15",
+      "Target Sprint": "21",
       "Artifacts To Track": "ARTIFACT:lighthouserc.js;ARTIFACT:apps/web/src/app/layout.tsx;ARTIFACT:public/og-image.png",
       "Validation Method": "VALIDATE:pnpm test;VALIDATE:pnpm run lighthouse;GATE:lighthouse-gte-90",
       "Cadence": ""
