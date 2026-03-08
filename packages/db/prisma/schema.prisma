@@ -214,12 +214,35 @@ model User {
 
   // Custom calendars owned by this user
   calendars           Calendar[]
+  mfaSettings         UserMfaSettings?
 
   @@index([email])
   @@index([role])
   @@index([tenantId])
   @@index([stripeCustomerId])
   @@map("users")
+}
+
+model UserMfaSettings {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenantId        String
+  totpEnabled     Boolean  @default(false)
+  totpSecret      String?
+  smsEnabled      Boolean  @default(false)
+  smsPhone        String?
+  emailEnabled    Boolean  @default(false)
+  backupCodes     String[] @default([])
+  backupCodesGeneratedAt DateTime?
+  enabledAt       DateTime?
+  lastVerifiedAt  DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([tenantId])
+  @@map("user_mfa_settings")
 }
 
 enum UserRole {

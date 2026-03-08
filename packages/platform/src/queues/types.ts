@@ -48,7 +48,7 @@ export type AIScoringResult = z.infer<typeof aiScoringResultSchema>;
  * Email Notification Job Data
  */
 export const emailNotificationJobDataSchema = z.object({
-  to: z.string().email(),
+  to: z.email(),
   subject: z.string().min(1).max(200),
   template: z.string(),
   data: z.record(z.string(), z.unknown()),

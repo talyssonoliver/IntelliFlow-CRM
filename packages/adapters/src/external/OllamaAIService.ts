@@ -84,13 +84,13 @@ export class OllamaAIService implements AIServicePort {
 
   async scoreLead(input: LeadScoringInput): Promise<Result<LeadScoringResult, DomainError>> {
     try {
-      const prompt = SCORE_LEAD_PROMPT.replace('{email}', input.email)
-        .replace('{firstName}', input.firstName ?? 'N/A')
-        .replace('{lastName}', input.lastName ?? 'N/A')
-        .replace('{company}', input.company ?? 'N/A')
-        .replace('{title}', input.title ?? 'N/A')
-        .replace('{phone}', input.phone ?? 'N/A')
-        .replace('{source}', input.source);
+      const prompt = SCORE_LEAD_PROMPT.replaceAll('{email}', input.email)
+        .replaceAll('{firstName}', input.firstName ?? 'N/A')
+        .replaceAll('{lastName}', input.lastName ?? 'N/A')
+        .replaceAll('{company}', input.company ?? 'N/A')
+        .replaceAll('{title}', input.title ?? 'N/A')
+        .replaceAll('{phone}', input.phone ?? 'N/A')
+        .replaceAll('{source}', input.source);
 
       const response = await this.model.invoke(prompt);
       const content =
@@ -134,7 +134,7 @@ export class OllamaAIService implements AIServicePort {
 
   async generateEmail(leadId: string, template: string): Promise<Result<string, DomainError>> {
     try {
-      const prompt = GENERATE_EMAIL_PROMPT.replace('{leadId}', leadId).replace(
+      const prompt = GENERATE_EMAIL_PROMPT.replaceAll('{leadId}', leadId).replaceAll(
         '{template}',
         template
       );

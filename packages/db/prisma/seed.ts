@@ -2526,6 +2526,119 @@ The IntelliFlow Team`,
 }
 
 // =============================================================================
+// AI Output Reviews (IFC-179: AI Review Queue)
+// =============================================================================
+
+async function seedAIOutputReviews(tenantId: string) {
+  console.log('🔍 Seeding AI output reviews...');
+  const now = new Date();
+  const oneDayFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+  const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+
+  const reviews = [
+    {
+      id: SEED_IDS.aiOutputReviews.pendingScoring,
+      tenantId,
+      outputType: 'LEAD_SCORING' as const,
+      outputPayload: { leadId: SEED_IDS.leads.sarahMiller, score: 87, factors: ['website_visit', 'email_open', 'form_submit'] },
+      confidence: 0.87,
+      status: 'PENDING' as const,
+      slaDeadline: oneDayFromNow,
+      escalationDepth: 0,
+      version: 1,
+      createdAt: oneHourAgo,
+      updatedAt: oneHourAgo,
+    },
+    {
+      id: SEED_IDS.aiOutputReviews.pendingSentiment,
+      tenantId,
+      outputType: 'SENTIMENT_ANALYSIS' as const,
+      outputPayload: { ticketId: SEED_IDS.tickets.systemOutage, sentiment: 'NEGATIVE', confidence: 0.62 },
+      confidence: 0.62,
+      status: 'PENDING' as const,
+      slaDeadline: oneDayFromNow,
+      escalationDepth: 0,
+      version: 1,
+      createdAt: oneHourAgo,
+      updatedAt: oneHourAgo,
+    },
+    {
+      id: SEED_IDS.aiOutputReviews.inReviewResponse,
+      tenantId,
+      outputType: 'AUTO_RESPONSE' as const,
+      outputPayload: { leadId: SEED_IDS.leads.davidChen, subject: 'Follow-up on your inquiry', body: 'Thank you for reaching out...' },
+      confidence: 0.78,
+      status: 'IN_REVIEW' as const,
+      slaDeadline: oneDayFromNow,
+      escalationDepth: 0,
+      lockedBy: SEED_IDS.users.sarahJohnson,
+      lockedAt: now,
+      lockExpiresAt: new Date(now.getTime() + 5 * 60 * 1000),
+      version: 2,
+      createdAt: twoDaysAgo,
+      updatedAt: now,
+    },
+    {
+      id: SEED_IDS.aiOutputReviews.approvedChurn,
+      tenantId,
+      outputType: 'CHURN_PREDICTION' as const,
+      outputPayload: { accountId: SEED_IDS.accounts.techCorp, risk: 'HIGH', probability: 0.73 },
+      confidence: 0.73,
+      status: 'APPROVED' as const,
+      slaDeadline: oneDayFromNow,
+      escalationDepth: 0,
+      reviewerId: SEED_IDS.users.manager,
+      reviewDecision: 'APPROVED' as const,
+      reviewNotes: 'Churn prediction verified against account activity.',
+      version: 2,
+      createdAt: twoDaysAgo,
+      updatedAt: oneHourAgo,
+    },
+    {
+      id: SEED_IDS.aiOutputReviews.rejectedEmail,
+      tenantId,
+      outputType: 'EMAIL_GENERATION' as const,
+      outputPayload: { leadId: SEED_IDS.leads.amandaSmith, subject: 'Special offer', body: 'Dear customer...' },
+      confidence: 0.45,
+      status: 'REJECTED' as const,
+      slaDeadline: oneDayFromNow,
+      escalationDepth: 0,
+      reviewerId: SEED_IDS.users.mikeDavis,
+      reviewDecision: 'REJECTED_QUALITY' as const,
+      reviewNotes: 'Email tone is too generic. Needs personalization.',
+      version: 2,
+      createdAt: twoDaysAgo,
+      updatedAt: oneHourAgo,
+    },
+    {
+      id: SEED_IDS.aiOutputReviews.escalatedNba,
+      tenantId,
+      outputType: 'NEXT_BEST_ACTION' as const,
+      outputPayload: { leadId: SEED_IDS.leads.jamesWilson, action: 'SCHEDULE_DEMO', reason: 'High engagement score' },
+      confidence: 0.55,
+      status: 'ESCALATED' as const,
+      // SLA breached — deadline in the past (for SLA alert testing)
+      slaDeadline: twoDaysAgo,
+      escalationDepth: 1,
+      version: 2,
+      createdAt: twoDaysAgo,
+      updatedAt: oneHourAgo,
+    },
+  ];
+
+  for (const review of reviews) {
+    await (prisma.aIOutputReview as any).upsert({
+      where: { id: review.id },
+      update: review,
+      create: review,
+    });
+  }
+
+  console.log(`✅ Created ${reviews.length} AI output reviews`);
+}
+
+// =============================================================================
 // AI Conversation Records (PG-151: Active Agents Dashboard)
 // =============================================================================
 
@@ -9335,6 +9448,12 @@ async function main() {
     await seedLeadAIInsights(tenantId);
     // Auto-Response Drafts for IFC-029 (Agent Approvals page)
     await seedAutoResponseDrafts(tenantId);
+    // AI Output Reviews for IFC-179 (AI Review Queue)
+    try {
+      await seedAIOutputReviews(tenantId);
+    } catch (e) {
+      console.warn('⚠️  seedAIOutputReviews failed:', (e as Error).message?.slice(0, 100));
+    }
     // AI Conversation Records for PG-151 (Active Agents Dashboard)
     await seedConversationRecords(tenantId);
     await seedContacts(tenantId);

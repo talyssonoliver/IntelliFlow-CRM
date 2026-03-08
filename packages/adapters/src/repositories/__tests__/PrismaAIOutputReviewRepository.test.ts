@@ -87,7 +87,8 @@ describe('PrismaAIOutputReviewRepository', () => {
       (data.lockExpiresAt as Date | null) ?? undefined,
       (data.reviewerId as string | null) ?? undefined,
       (data.reviewDecision as ReviewDecision | null) ?? undefined,
-      (data.reviewNotes as string | null) ?? undefined
+      (data.reviewNotes as string | null) ?? undefined,
+      data.version as number
     );
   };
 

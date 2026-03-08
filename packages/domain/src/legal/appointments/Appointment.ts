@@ -547,7 +547,7 @@ export class Appointment extends AggregateRoot<AppointmentId> {
    * Unlink from a case
    */
   unlinkFromCase(caseId: CaseId, unlinkedBy: string): Result<void, DomainError> {
-    const index = this.props.linkedCaseIds.findIndex((id) => id.value === caseId.value);
+    const index = this.props.linkedCaseIds.indexOf((id) => id.value === caseId.value);
     if (index === -1) {
       return Result.fail(new AppointmentCaseNotLinkedError(caseId.value));
     }

@@ -169,7 +169,7 @@ export const stripeVerify: SignatureVerifyFn = (payload, signature, secret) => {
 
   // Check timestamp (5 minute tolerance)
   const now = Math.floor(Date.now() / 1000);
-  if (Math.abs(now - parseInt(timestamp)) > 300) return false;
+  if (Math.abs(now - Number.parseInt(timestamp)) > 300) return false;
 
   const expected = createHmac('sha256', secret).update(`${timestamp}.${payload}`).digest('hex');
 
@@ -379,7 +379,7 @@ class DeadLetterQueue {
   }
 
   remove(eventId: string): boolean {
-    const index = this.entries.findIndex((e) => e.event.id === eventId);
+    const index = this.entries.indexOf((e) => e.event.id === eventId);
     if (index >= 0) {
       this.entries.splice(index, 1);
       return true;

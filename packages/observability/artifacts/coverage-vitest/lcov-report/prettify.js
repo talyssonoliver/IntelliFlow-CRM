@@ -63,7 +63,7 @@ window.PR_SHOULD_USE_CONTINUATION = true;
       if (ae.ignoreCase) {
         ac = true;
       } else {
-        if (/[a-z]/i.test(ae.source.replace(/\\u[0-9a-f]{4}|\\x[0-9a-f]{2}|\\[^ux]/gi, ''))) {
+        if (/[a-z]/i.test(ae.source.replaceAll(/\\u[0-9a-f]{4}|\\x[0-9a-f]{2}|\\[^ux]/gi, ''))) {
           S = true;
           ac = false;
           break;
@@ -82,10 +82,10 @@ window.PR_SHOULD_USE_CONTINUATION = true;
         return ag;
       } else {
         if ('0' <= af && af <= '7') {
-          return parseInt(ah.substring(1), 8);
+          return Number.parseInt(ah.substring(1), 8);
         } else {
           if (af === 'u' || af === 'x') {
-            return parseInt(ah.substring(2), 16);
+            return Number.parseInt(ah.substring(2), 16);
           } else {
             return ah.charCodeAt(1);
           }
@@ -225,7 +225,7 @@ window.PR_SHOULD_USE_CONTINUATION = true;
             aj[ak] = X(ag);
           } else {
             if (ai !== '\\') {
-              aj[ak] = ag.replace(/[a-zA-Z]/g, function (ao) {
+              aj[ak] = ag.replaceAll(/[a-zA-Z]/g, function (ao) {
                 var ap = ao.charCodeAt(0);
                 return '[' + String.fromCharCode(ap & ~32, ap | 32) + ']';
               });
@@ -281,9 +281,9 @@ window.PR_SHOULD_USE_CONTINUATION = true;
           var ac = ab.nodeValue;
           if (ac.length) {
             if (!Y) {
-              ac = ac.replace(/[ \t\r\n]+/g, ' ');
+              ac = ac.replaceAll(/[ \t\r\n]+/g, ' ');
             } else {
-              ac = ac.replace(/\r\n?/g, '\n');
+              ac = ac.replaceAll(/\r\n?/g, '\n');
             }
             X[W] = ac;
             Z[W << 1] = T;
@@ -294,7 +294,7 @@ window.PR_SHOULD_USE_CONTINUATION = true;
       }
     }
     aa(V);
-    return { sourceCode: X.join('').replace(/\n$/, ''), spans: Z };
+    return { sourceCode: X.join('').replaceAll(/\n$/, ''), spans: Z };
   }
   function B(S, U, W, T) {
     if (!U) {
@@ -463,9 +463,9 @@ window.PR_SHOULD_USE_CONTINUATION = true;
     if (V) {
       S.push([O, V]);
     }
-    var U = ('' + T.keywords).replace(/^ | $/g, '');
+    var U = ('' + T.keywords).replaceAll(/^ | $/g, '');
     if (U.length) {
-      S.push([z, new RegExp('^(?:' + U.replace(/[\s,]+/g, '|') + ')\\b'), null]);
+      S.push([z, new RegExp('^(?:' + U.replaceAll(/[\s,]+/g, '|') + ')\\b'), null]);
     }
     W.push([F, /^\s+/, null, ' \r\n\t\xA0']);
     S.push(
@@ -642,7 +642,7 @@ window.PR_SHOULD_USE_CONTINUATION = true;
       var U;
       if (ak.nodeType !== 1 && (U = al.substring(V, W))) {
         if (aj) {
-          U = U.replace(am, '\r');
+          U = U.replaceAll(am, '\r');
         }
         ak.nodeValue = U;
         var ai = ak.ownerDocument;

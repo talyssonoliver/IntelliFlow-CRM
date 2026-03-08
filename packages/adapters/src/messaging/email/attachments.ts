@@ -386,7 +386,7 @@ export class AttachmentHandler {
     if (this.rules.allowedMimeTypes.length === 0) return true;
     return this.rules.allowedMimeTypes.some(
       (allowed) =>
-        effectiveMimeType === allowed || effectiveMimeType.startsWith(allowed.replace('*', ''))
+        effectiveMimeType === allowed || effectiveMimeType.startsWith(allowed.replaceAll('*', ''))
     );
   }
 

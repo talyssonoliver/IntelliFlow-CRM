@@ -170,12 +170,12 @@ export function sanitizeContent(content: string): string {
   for (const pattern of INJECTION_PATTERNS) {
     if (pattern.test(sanitized)) {
       // Replace the suspicious pattern with the sentinel token
-      sanitized = sanitized.replace(pattern, FILTERED_PLACEHOLDER);
+      sanitized = sanitized.replaceAll(pattern, FILTERED_PLACEHOLDER);
     }
   }
 
   // 2. Remove or escape dangerous characters AFTER pattern matching
-  sanitized = sanitized.replace(DANGEROUS_CHARS_PATTERN, (char) => {
+  sanitized = sanitized.replaceAll(DANGEROUS_CHARS_PATTERN, (char) => {
     const escapeMap: Record<string, string> = {
       '<': '&lt;',
       '>': '&gt;',
@@ -193,7 +193,7 @@ export function sanitizeContent(content: string): string {
   sanitized = sanitized.replaceAll(FILTERED_PLACEHOLDER, FILTERED_MARKER);
 
   // 4. Limit consecutive newlines to prevent structure manipulation
-  sanitized = sanitized.replace(/\n{4,}/g, '\n\n\n');
+  sanitized = sanitized.replaceAll(/\n{4,}/g, '\n\n\n');
 
   // 5. Truncate excessively long content
   const MAX_CONTENT_LENGTH = 10000;

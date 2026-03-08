@@ -559,7 +559,7 @@ export class AccountService {
     // Apply cursor-based pagination
     let startIndex = 0;
     if (options.cursor) {
-      const cursorIndex = filteredContacts.findIndex((c) => c.id.toString() === options.cursor);
+      const cursorIndex = filteredContacts.indexOf((c) => c.id.toString() === options.cursor);
       if (cursorIndex !== -1) {
         startIndex = cursorIndex + 1;
       }
@@ -662,7 +662,7 @@ export class AccountService {
     // Apply cursor-based pagination
     let startIndex = 0;
     if (options.cursor) {
-      const cursorIndex = filteredOpportunities.findIndex(
+      const cursorIndex = filteredOpportunities.indexOf(
         (o) => o.id.toString() === options.cursor
       );
       if (cursorIndex !== -1) {
@@ -797,7 +797,7 @@ export class AccountService {
     let startIndex = 0;
     if (options.cursor) {
       const cursorDate = new Date(options.cursor);
-      const cursorIndex = filteredActivities.findIndex((a) => a.createdAt < cursorDate);
+      const cursorIndex = filteredActivities.indexOf((a) => a.createdAt < cursorDate);
       if (cursorIndex !== -1) {
         startIndex = cursorIndex;
       }

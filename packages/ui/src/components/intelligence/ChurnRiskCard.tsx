@@ -269,7 +269,7 @@ function ChurnRiskCard({
           <div
             className={cn(
               'h-full rounded-full transition-all duration-500',
-              config.bgColor.replace('/30', '')
+              config.bgColor.replaceAll('/30', '')
             )}
             style={{ width: `${data.score}%` }}
           />

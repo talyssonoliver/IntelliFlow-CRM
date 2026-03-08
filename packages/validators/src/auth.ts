@@ -172,6 +172,60 @@ export const resendMfaCodeResponseSchema = z.object({
 export type ResendMfaCodeResponse = z.infer<typeof resendMfaCodeResponseSchema>;
 
 // ============================================
+// MFA MANAGEMENT SCHEMAS (PG-125)
+// ============================================
+
+/**
+ * Disable MFA schema
+ * Requires re-authentication via TOTP code or password
+ */
+export const disableMfaSchema = z
+  .object({
+    totpCode: z
+      .string()
+      .length(6)
+      .regex(/^\d{6}$/)
+      .optional(),
+    password: z.string().min(8).max(128).optional(),
+  })
+  .refine((data) => !!(data.totpCode || data.password), {
+    message: 'Either TOTP code or password required',
+  });
+
+export type DisableMfaInput = z.infer<typeof disableMfaSchema>;
+
+/**
+ * Regenerate backup codes schema
+ * Requires TOTP code for proof of possession
+ */
+export const regenerateBackupCodesSchema = z.object({
+  totpCode: z
+    .string()
+    .length(6)
+    .regex(/^\d{6}$/),
+});
+
+export type RegenerateBackupCodesInput = z.infer<typeof regenerateBackupCodesSchema>;
+
+/**
+ * MFA status response schema
+ * Shape returned by getMfaStatus endpoint
+ */
+export const mfaStatusResponseSchema = z.object({
+  enabled: z.boolean(),
+  methods: z.object({
+    totp: z.boolean(),
+    sms: z.boolean(),
+    email: z.boolean(),
+  }),
+  backupCodesRemaining: z.number().int().min(0),
+  lastVerifiedAt: z.coerce.date().nullable(),
+  enabledAt: z.coerce.date().nullable(),
+});
+
+export type MfaStatusResponse = z.infer<typeof mfaStatusResponseSchema>;
+
+// ============================================
 // OAUTH SCHEMAS
 // ============================================
 
@@ -207,7 +261,7 @@ export type OAuthCallbackInput = z.infer<typeof oauthCallbackSchema>;
  * IMPLEMENTS: PG-124 (SSO/OAuth social login providers)
  */
 export const ssoResolveSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
 });
 
 export type SsoResolveInput = z.infer<typeof ssoResolveSchema>;

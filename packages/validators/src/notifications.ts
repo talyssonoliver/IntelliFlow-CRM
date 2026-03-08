@@ -68,6 +68,7 @@ export const NOTIFICATION_TYPES = [
   'document_approval_needed',
   // Ticket notifications
   'ticket_assigned',
+  'ticket_created',
   'ticket_escalated',
   // Case notifications
   'case_assigned',

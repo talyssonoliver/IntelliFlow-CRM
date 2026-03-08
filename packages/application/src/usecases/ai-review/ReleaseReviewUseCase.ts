@@ -109,7 +109,7 @@ export class ReleaseReviewUseCase {
     }
 
     // 6. Save
-    const saved = await this.repository.saveWithOptimisticLock(review, 0);
+    const saved = await this.repository.saveWithOptimisticLock(review, review.version);
     if (!saved) {
       return Result.fail(new ConcurrentModificationError());
     }

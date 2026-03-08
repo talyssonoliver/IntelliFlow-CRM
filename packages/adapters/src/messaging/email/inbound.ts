@@ -15,7 +15,7 @@ import { createHash } from 'node:crypto';
 
 // Parsed email address schema
 export const ParsedEmailAddressSchema = z.object({
-  address: z.string().email(),
+  address: z.email(),
   name: z.string().optional(),
   raw: z.string(),
 });

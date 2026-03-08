@@ -102,7 +102,8 @@ export class PrismaAIOutputReviewRepository implements IAIOutputReviewRepository
       record.lockExpiresAt ?? undefined,
       record.reviewerId ?? undefined,
       (record.reviewDecision as ReviewDecision | undefined) ?? undefined,
-      record.reviewNotes ?? undefined
+      record.reviewNotes ?? undefined,
+      record.version
     );
   }
 

@@ -49,7 +49,8 @@ describe('AIOutputReview additional coverage', () => {
         lockExp,
         REVIEWER1,
         ReviewDecision.APPROVED,
-        'Good'
+        'Good',
+        3
       );
       expect(review.lockedBy).toBe(REVIEWER1);
       expect(review.lockedAt).toBe(lockedAt);
@@ -58,6 +59,7 @@ describe('AIOutputReview additional coverage', () => {
       expect(review.reviewDecision).toBe(ReviewDecision.APPROVED);
       expect(review.reviewNotes).toBe('Good');
       expect(review.escalationDepth).toBe(1);
+      expect(review.version).toBe(3);
     });
     it('without optional fields', () => {
       const review = AIOutputReview.reconstitute(
@@ -72,6 +74,7 @@ describe('AIOutputReview additional coverage', () => {
       );
       expect(review.lockedBy).toBeUndefined();
       expect(review.reviewerId).toBeUndefined();
+      expect(review.version).toBe(0);
     });
   });
 

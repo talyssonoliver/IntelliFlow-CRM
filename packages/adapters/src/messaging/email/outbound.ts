@@ -15,7 +15,7 @@ import { createHash, randomUUID } from 'node:crypto';
 
 // Email recipient schema
 export const EmailRecipientSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   name: z.string().optional(),
   type: z.enum(['to', 'cc', 'bcc']).default('to'),
 });
@@ -360,7 +360,7 @@ export class SendGridProvider implements EmailProvider {
     } catch (error) {
       let errorMessage = 'Unknown error';
       if (error instanceof Error) {
-        errorMessage = error.message.replace(this.apiKey, '[REDACTED]');
+        errorMessage = error.message.replaceAll(this.apiKey, '[REDACTED]');
       }
       return {
         messageId,

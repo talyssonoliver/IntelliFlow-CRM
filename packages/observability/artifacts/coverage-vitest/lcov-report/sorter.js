@@ -149,7 +149,7 @@ var addSorting = (function () {
     var col = getNthColumn(currentSort.index),
       cls = col.className;
 
-    cls = cls.replace(/ sorted$/, '').replace(/ sorted-desc$/, '');
+    cls = cls.replaceAll(/ sorted$/, '').replaceAll(/ sorted-desc$/, '');
     col.className = cls;
   }
   // adds sort indicators for current column being sorted

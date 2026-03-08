@@ -129,6 +129,9 @@ export * from './activity-feed';
 // Not to be confused with AI FeedbackType in ai/AIConstants.ts
 export * from './crm/feedback';
 
+// CRM Domain - Activity Type Registry (IFC-193)
+export * from './crm/activity';
+
 // CRM Domain - Billing (IFC-198)
 export * from './crm/billing';
 

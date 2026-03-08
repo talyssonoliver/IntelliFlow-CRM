@@ -101,7 +101,7 @@ export class ApproveReviewUseCase {
     }
 
     // 7. Save with optimistic locking
-    const saved = await this.repository.saveWithOptimisticLock(review, 0);
+    const saved = await this.repository.saveWithOptimisticLock(review, review.version);
     if (!saved) {
       return Result.fail(new ConcurrentModificationError());
     }

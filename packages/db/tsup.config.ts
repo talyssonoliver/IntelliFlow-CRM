@@ -24,7 +24,7 @@ export default defineConfig({
       if (!file.endsWith('.mjs')) continue;
       const filePath = join(distDir, file);
       const content = readFileSync(filePath, 'utf8');
-      const fixed = content.replace(
+      const fixed = content.replaceAll(
         /from "(\.\.\/generated\/prisma\/[^"]+?)(?<!\.js)"/g,
         'from "$1.js"',
       );

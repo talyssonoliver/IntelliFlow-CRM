@@ -25,8 +25,8 @@ export const REINDEX_QUEUE_NAME = 'intelliflow:document-reindex';
 export const ReindexJobDataSchema = z.object({
   // Target scope
   tenantId: z.uuid().optional(),
-  documentIds: z.array(z.string().uuid()).optional(),
-  noteIds: z.array(z.string().uuid()).optional(),
+  documentIds: z.array(z.uuid()).optional(),
+  noteIds: z.array(z.uuid()).optional(),
 
   // Processing options
   indexType: z.enum(['documents', 'notes', 'all']).default('all'),

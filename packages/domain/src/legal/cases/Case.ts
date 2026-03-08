@@ -352,7 +352,7 @@ export class Case extends AggregateRoot<CaseId> {
       return Result.fail(new CaseAlreadyClosedError());
     }
 
-    const taskIndex = this.props.tasks.findIndex((t) => t.id.value === taskId.value);
+    const taskIndex = this.props.tasks.indexOf((t) => t.id.value === taskId.value);
     if (taskIndex === -1) {
       return Result.fail(new CaseTaskNotFoundError(taskId.value));
     }

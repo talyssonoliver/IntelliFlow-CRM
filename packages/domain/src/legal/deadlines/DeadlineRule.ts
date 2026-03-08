@@ -208,7 +208,7 @@ export class DeadlineRule extends ValueObject<DeadlineRuleProps> {
   static businessDays(name: string, days: number, trigger: DeadlineTrigger): DeadlineRule {
     return DeadlineRule.create({
       name,
-      description: `${days} business days from ${trigger.toLowerCase().replace('_', ' ')}`,
+      description: `${days} business days from ${trigger.toLowerCase().replaceAll('_', ' ')}`,
       daysCount: days,
       dayCountType: 'BUSINESS',
       trigger,
@@ -223,7 +223,7 @@ export class DeadlineRule extends ValueObject<DeadlineRuleProps> {
   static calendarDays(name: string, days: number, trigger: DeadlineTrigger): DeadlineRule {
     return DeadlineRule.create({
       name,
-      description: `${days} calendar days from ${trigger.toLowerCase().replace('_', ' ')}`,
+      description: `${days} calendar days from ${trigger.toLowerCase().replaceAll('_', ' ')}`,
       daysCount: days,
       dayCountType: 'CALENDAR',
       trigger,

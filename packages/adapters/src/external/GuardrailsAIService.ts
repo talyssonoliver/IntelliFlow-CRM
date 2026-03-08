@@ -469,13 +469,13 @@ export class GuardrailsAIService implements AIServicePort {
     // For full sanitization, use the async sanitizeOutput from prompt-sanitizer
 
     // Redact emails
-    const emailRedacted = text.replace(
+    const emailRedacted = text.replaceAll(
       /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
       '[EMAIL_REDACTED]'
     );
 
     // Redact UK phone numbers
-    const phoneRedacted = emailRedacted.replace(
+    const phoneRedacted = emailRedacted.replaceAll(
       /(\+44\s?7\d{3}|\(?07\d{3}\)?)\s?\d{3}\s?\d{3}/g,
       '[PHONE_REDACTED]'
     );

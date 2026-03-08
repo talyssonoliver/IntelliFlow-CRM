@@ -732,6 +732,15 @@ export const SEED_IDS = {
     tc2: seedUUID('5f', 2),
     tc3: seedUUID('5f', 3),
   },
+  // AI Output Reviews for IFC-179 (AI Review Queue)
+  aiOutputReviews: {
+    pendingScoring: seedUUID('61', 1),     // PENDING - lead scoring
+    pendingSentiment: seedUUID('61', 2),    // PENDING - sentiment analysis
+    inReviewResponse: seedUUID('61', 3),    // IN_REVIEW - auto response
+    approvedChurn: seedUUID('61', 4),       // APPROVED - churn prediction
+    rejectedEmail: seedUUID('61', 5),       // REJECTED - email generation
+    escalatedNba: seedUUID('61', 6),        // ESCALATED - next best action
+  },
   // Auto-Response Drafts for IFC-029 (Agent Approvals page)
   autoResponseDrafts: {
     pendingEmail: seedUUID('57', 1), // 00000000-0000-4000-8000-000000005701
