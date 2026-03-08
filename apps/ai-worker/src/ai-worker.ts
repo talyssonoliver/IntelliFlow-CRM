@@ -77,6 +77,14 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
           maxStalledCount: 3,
           concurrency: 2,
         },
+        healthCheck: {
+          port: Number.parseInt(process.env.HEALTH_PORT || '5000', 10),
+          path: process.env.HEALTH_PATH || '/health',
+          readyPath: process.env.HEALTH_READY_PATH || '/health/ready',
+          livePath: process.env.HEALTH_LIVE_PATH || '/health/live',
+          detailedPath: process.env.HEALTH_DETAILED_PATH || '/health/detailed',
+          metricsPath: process.env.METRICS_PATH || '/metrics',
+        },
       },
     });
   }

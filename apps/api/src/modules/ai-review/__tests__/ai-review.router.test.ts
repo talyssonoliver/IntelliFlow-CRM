@@ -126,20 +126,21 @@ describe('aiReviewRouter', () => {
       expect(typeof aiReviewRouter).toBe('object');
     });
 
-    it('should have all 7 required endpoints', () => {
+    it('should have all 8 required endpoints', () => {
       // Verify router has the expected procedure keys
       const routerDef = aiReviewRouter._def;
       expect(routerDef).toBeDefined();
       const procedures = routerDef.procedures;
       expect(procedures).toBeDefined();
 
-      // Check for all 7 endpoints
+      // Check for all 8 endpoints
       expect(procedures.list).toBeDefined();
       expect(procedures.get).toBeDefined();
       expect(procedures.claim).toBeDefined();
       expect(procedures.approve).toBeDefined();
       expect(procedures.reject).toBeDefined();
       expect(procedures.escalate).toBeDefined();
+      expect(procedures.release).toBeDefined();
       expect(procedures.stats).toBeDefined();
     });
   });

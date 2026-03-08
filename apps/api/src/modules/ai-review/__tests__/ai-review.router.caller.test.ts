@@ -2,8 +2,8 @@
  * AI Review Router Caller Tests - IFC-180
  *
  * Supplementary tests that use createCaller to test router procedures
- * directly through the tRPC layer. Tests all 7 endpoints:
- * list, get, claim, approve, reject, escalate, stats.
+ * directly through the tRPC layer. Tests all 8 endpoints:
+ * list, get, claim, approve, reject, escalate, release, stats.
  *
  * These tests supplement the existing ai-review.router.test.ts
  * which tests error mapping and mock object structures.
@@ -58,6 +58,7 @@ const mockClaimUseCase = { execute: vi.fn().mockResolvedValue(mockClaimResult) }
 const mockApproveUseCase = { execute: vi.fn().mockResolvedValue(mockSuccessResult) };
 const mockRejectUseCase = { execute: vi.fn().mockResolvedValue(mockSuccessResult) };
 const mockEscalateUseCase = { execute: vi.fn().mockResolvedValue(mockEscalateResult) };
+const mockReleaseUseCase = { execute: vi.fn().mockResolvedValue(mockSuccessResult) };
 
 // Mock application module with use case constructors
 vi.mock('@intelliflow/application', () => ({
@@ -72,6 +73,9 @@ vi.mock('@intelliflow/application', () => ({
   },
   EscalateReviewUseCase: function EscalateReviewUseCase() {
     return mockEscalateUseCase;
+  },
+  ReleaseReviewUseCase: function ReleaseReviewUseCase() {
+    return mockReleaseUseCase;
   },
   // Error classes needed by mapDomainErrorToTRPCError
   ReviewNotFoundError: class extends Error {
@@ -816,6 +820,44 @@ describe('aiReviewRouter (caller tests)', () => {
           targetUserId: undefined,
         })
       );
+    });
+  });
+
+  describe('release', () => {
+    it('should release a claimed review successfully', async () => {
+      mockRepository.findById.mockResolvedValue(null);
+      mockReleaseUseCase.execute.mockResolvedValue(mockSuccessResult);
+
+      const result = await caller.release({
+        reviewId: TEST_REVIEW_ID,
+        lockToken: 'mock-lock-token',
+      });
+
+      expect(result.success).toBe(true);
+      expect(mockReleaseUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          reviewId: TEST_REVIEW_ID,
+          tenantId: TEST_TENANT_ID,
+          userId: TEST_USER_ID,
+          lockToken: 'mock-lock-token',
+        })
+      );
+    });
+
+    it('should throw on domain error', async () => {
+      const { NotLockHolderError } = (await import('@intelliflow/application')) as any;
+      const errorResult = {
+        isFailure: true,
+        error: new NotLockHolderError(),
+      };
+      mockReleaseUseCase.execute.mockResolvedValue(errorResult);
+
+      await expect(
+        caller.release({
+          reviewId: TEST_REVIEW_ID,
+          lockToken: 'bad-token',
+        })
+      ).rejects.toThrow(TRPCError);
     });
   });
 

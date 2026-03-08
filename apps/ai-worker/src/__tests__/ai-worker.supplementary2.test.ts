@@ -32,6 +32,7 @@ const mocks = vi.hoisted(() => ({
   }),
   mockStart: vi.fn().mockResolvedValue(undefined),
   mockLoggerInfo: vi.fn(),
+  mockBaseWorkerCtor: vi.fn(),
 }));
 
 // ============================================================
@@ -40,7 +41,9 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@intelliflow/worker-shared', () => ({
   BaseWorker: class MockBaseWorker {
     logger = { info: mocks.mockLoggerInfo, error: vi.fn(), warn: vi.fn() };
-    constructor(_opts: any) {}
+    constructor(opts: any) {
+      mocks.mockBaseWorkerCtor(opts);
+    }
     getQueue(_name: string) { return {}; }
     async start() {
       await (this as any).onStart?.();
@@ -181,6 +184,25 @@ describe('AIWorker', () => {
     it('creates an AIWorker instance', () => {
       const worker = new AIWorker();
       expect(worker).toBeDefined();
+    });
+
+    it('pins the AI worker health server to port 5000 by default', () => {
+      new AIWorker();
+
+      expect(mocks.mockBaseWorkerCtor).toHaveBeenCalledWith(
+        expect.objectContaining({
+          config: expect.objectContaining({
+            healthCheck: expect.objectContaining({
+              port: 5000,
+              path: '/health',
+              readyPath: '/health/ready',
+              livePath: '/health/live',
+              detailedPath: '/health/detailed',
+              metricsPath: '/metrics',
+            }),
+          }),
+        })
+      );
     });
   });
 

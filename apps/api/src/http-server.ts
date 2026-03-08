@@ -208,8 +208,6 @@ async function handleHealthRoute(
     return true;
   }
 
-  const ctx = await Promise.resolve(createContextFn({ req: webRequest }));
-
   switch (pathname) {
     case '/health':
     case '/api/health':
@@ -221,18 +219,21 @@ async function handleHealthRoute(
       return true;
     case '/health/ready':
     case '/api/health/ready': {
+      const ctx = await Promise.resolve(createContextFn({ req: webRequest }));
       const readiness = await getReadinessHealth(ctx);
       sendJson(res, readiness.ready ? 200 : 503, readiness, headOnly);
       return true;
     }
     case '/health/detailed':
     case '/api/health/detailed': {
+      const ctx = await Promise.resolve(createContextFn({ req: webRequest }));
       const health = await getDetailedHealth(ctx, { includeDatabaseStats: true });
       sendJson(res, toHealthStatusCode(health.status), health, headOnly);
       return true;
     }
     case '/health/db':
     case '/api/health/db': {
+      const ctx = await Promise.resolve(createContextFn({ req: webRequest }));
       const dbStats = await getDatabaseStats(ctx);
       sendJson(res, toDatabaseStatsStatusCode(dbStats.status), dbStats, headOnly);
       return true;

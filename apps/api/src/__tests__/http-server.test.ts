@@ -90,6 +90,24 @@ describe('HTTP API Server', () => {
     expect(body.pid).toBe(process.pid);
   });
 
+  it('does not build request context for lightweight health probes', async () => {
+    const createContext = vi.fn(() => {
+      throw new Error('createContext should not be called');
+    });
+
+    const { server, baseUrl } = await startTestServer({
+      createContext,
+    });
+    servers.push(server);
+
+    const response = await fetch(`${baseUrl}/health`);
+    const body = await readJson<{ status: string }>(response);
+
+    expect(response.status).toBe(200);
+    expect(body.status).toBe('healthy');
+    expect(createContext).not.toHaveBeenCalled();
+  });
+
   it('returns 503 for readiness when database connectivity fails', async () => {
     prismaMock.$queryRaw.mockRejectedValue(new Error('Database unavailable'));
 

@@ -118,11 +118,36 @@ export default function TaskDetailPage() {
     onSuccess: () => {
       utils.task.getById.invalidate({ id: params.id });
       utils.task.list.invalidate();
+      utils.task.stats.invalidate();
       toast({ title: 'Task Archived', description: 'The task has been archived.' });
       router.push('/tasks');
     },
     onError: (err) => {
       toast({ title: 'Archive Failed', description: err.message, variant: 'destructive' });
+    },
+  });
+
+  const assignMutation = api.task.assign.useMutation({
+    onSuccess: () => {
+      utils.task.getById.invalidate({ id: params.id });
+      utils.task.list.invalidate();
+      utils.task.stats.invalidate();
+      toast({ title: 'Task Assigned', description: 'The task has been assigned to the entity.' });
+    },
+    onError: (err) => {
+      toast({ title: 'Assign Failed', description: err.message, variant: 'destructive' });
+    },
+  });
+
+  const rescheduleMutation = api.task.reschedule.useMutation({
+    onSuccess: () => {
+      utils.task.getById.invalidate({ id: params.id });
+      utils.task.list.invalidate();
+      utils.task.stats.invalidate();
+      toast({ title: 'Task Rescheduled', description: 'The due date has been updated.' });
+    },
+    onError: (err) => {
+      toast({ title: 'Reschedule Failed', description: err.message, variant: 'destructive' });
     },
   });
 
@@ -156,6 +181,20 @@ export default function TaskDetailPage() {
       archiveMutation.mutate({ id });
     },
     [archiveMutation]
+  );
+
+  const handleAssign = useCallback(
+    (id: string, entityType: 'lead' | 'contact' | 'opportunity', entityId: string) => {
+      assignMutation.mutate({ taskId: id, entityType, entityId });
+    },
+    [assignMutation]
+  );
+
+  const handleReschedule = useCallback(
+    (id: string, newDueDate: Date) => {
+      rescheduleMutation.mutate({ taskId: id, newDueDate });
+    },
+    [rescheduleMutation]
   );
 
   const handleEditSubmit = useCallback(
@@ -201,10 +240,14 @@ export default function TaskDetailPage() {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onArchive={handleArchive}
+        onAssign={handleAssign}
+        onReschedule={handleReschedule}
         isCompleting={completeMutation.isPending}
         isStarting={startMutation.isPending}
         isDeleting={deleteMutation.isPending}
         isArchiving={archiveMutation.isPending}
+        isAssigning={assignMutation.isPending}
+        isRescheduling={rescheduleMutation.isPending}
       />
 
       {/* Activity Timeline */}

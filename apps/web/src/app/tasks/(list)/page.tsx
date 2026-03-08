@@ -37,6 +37,7 @@ function getEditingTaskDueDate(task: TaskListItem | null): string {
 }
 import { TaskForm, type TaskFormData } from '@/components/tasks/TaskForm';
 import { ReminderConfig } from '@/components/tasks/ReminderConfig';
+import { TaskStatsBar } from '@/components/tasks/TaskStatsBar';
 
 // Custom hook for debounced value
 function useDebounce<T>(value: T, delay: number): T {
@@ -62,17 +63,6 @@ const SORT_OPTIONS = [
   { value: 'dueDate-desc', label: 'Due Date (Latest)' },
   { value: 'priority-desc', label: 'Highest Priority' },
 ];
-
-const INACTIVE_STATUSES = new Set(['COMPLETED', 'CANCELLED', 'ARCHIVED']);
-
-function isTaskActiveWithDue(task: TaskListItem): boolean {
-  return !!(task.dueDate && !INACTIVE_STATUSES.has(task.status));
-}
-
-function normalizeDueDay(dueDate: string | Date): Date {
-  const d = typeof dueDate === 'string' ? new Date(dueDate) : dueDate;
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-}
 
 function getSortParams(sortOrder: string): { sortBy: string; sortOrder: 'asc' | 'desc' } {
   switch (sortOrder) {
@@ -149,6 +139,7 @@ export default function TasksPage() {
   const createMutation = api.task.create.useMutation({
     onSuccess: () => {
       utils.task.list.invalidate();
+      utils.task.stats.invalidate();
       toast({ title: 'Task Created', description: 'The task has been created successfully.' });
       setShowCreateForm(false);
     },
@@ -160,6 +151,7 @@ export default function TasksPage() {
   const updateMutation = api.task.update.useMutation({
     onSuccess: () => {
       utils.task.list.invalidate();
+      utils.task.stats.invalidate();
       toast({ title: 'Task Updated', description: 'The task has been updated successfully.' });
       setEditingTask(null);
     },
@@ -171,6 +163,7 @@ export default function TasksPage() {
   const completeMutation = api.task.complete.useMutation({
     onSuccess: () => {
       utils.task.list.invalidate();
+      utils.task.stats.invalidate();
       toast({ title: 'Task Completed', description: 'The task has been marked as complete.' });
     },
     onError: (err) => {
@@ -181,6 +174,7 @@ export default function TasksPage() {
   const deleteMutation = api.task.delete.useMutation({
     onSuccess: () => {
       utils.task.list.invalidate();
+      utils.task.stats.invalidate();
       toast({ title: 'Task Deleted', description: 'The task has been deleted.' });
     },
     onError: (err) => {
@@ -191,6 +185,7 @@ export default function TasksPage() {
   const archiveMutation = api.task.archive.useMutation({
     onSuccess: () => {
       utils.task.list.invalidate();
+      utils.task.stats.invalidate();
       toast({ title: 'Task Archived', description: 'The task has been archived.' });
     },
     onError: (err) => {
@@ -203,19 +198,12 @@ export default function TasksPage() {
     return data.tasks;
   }, [data]);
 
-  const overdueCount = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return tasks.filter((t) => isTaskActiveWithDue(t) && normalizeDueDay(t.dueDate!) < today).length;
-  }, [tasks]);
-
-  const dueTodayCount = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return tasks.filter(
-      (t) => isTaskActiveWithDue(t) && normalizeDueDay(t.dueDate!).getTime() === today.getTime()
-    ).length;
-  }, [tasks]);
+  // Server-authoritative counts from task.stats
+  const { data: statsData } = api.task.stats.useQuery(undefined, {
+    enabled: isAuthenticated && !authLoading,
+  });
+  const overdueCount = statsData?.overdue ?? 0;
+  const dueTodayCount = statsData?.dueToday ?? 0;
 
   const handleSearch = useCallback((value: string) => {
     setSearchQuery(value);
@@ -259,6 +247,7 @@ export default function TasksPage() {
         ids.map((id) => completeMutation.mutateAsync({ taskId: id }))
       ).then(() => {
         utils.task.list.invalidate();
+        utils.task.stats.invalidate();
       });
     },
     [completeMutation, utils]
@@ -270,6 +259,7 @@ export default function TasksPage() {
         ids.map((id) => deleteMutation.mutateAsync({ id }))
       ).then(() => {
         utils.task.list.invalidate();
+        utils.task.stats.invalidate();
       });
     },
     [deleteMutation, utils]
@@ -281,6 +271,7 @@ export default function TasksPage() {
         ids.map((id) => archiveMutation.mutateAsync({ id }))
       ).then(() => {
         utils.task.list.invalidate();
+        utils.task.stats.invalidate();
       });
     },
     [archiveMutation, utils]
@@ -352,6 +343,9 @@ export default function TasksPage() {
           },
         ]}
       />
+
+      {/* Stats Bar */}
+      <TaskStatsBar />
 
       {/* Reminder Banner */}
       <ReminderConfig

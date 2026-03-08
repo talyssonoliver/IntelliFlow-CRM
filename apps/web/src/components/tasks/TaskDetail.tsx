@@ -4,6 +4,7 @@ import { Card, Skeleton, ConfirmationDialog } from '@intelliflow/ui';
 import { useState } from 'react';
 import Link from 'next/link';
 import type { TaskStatus, TaskPriority } from '@intelliflow/domain';
+import { EntitySearchField } from './EntitySearchField';
 
 type DateStringNull = Date | string | null;
 
@@ -33,10 +34,14 @@ export interface TaskDetailProps {
   readonly onEdit: (task: TaskDetailData) => void;
   readonly onDelete: (id: string) => void;
   readonly onArchive: (id: string) => void;
+  readonly onAssign?: (id: string, entityType: 'lead' | 'contact' | 'opportunity', entityId: string) => void;
+  readonly onReschedule?: (id: string, newDueDate: Date) => void;
   readonly isCompleting?: boolean;
   readonly isStarting?: boolean;
   readonly isDeleting?: boolean;
   readonly isArchiving?: boolean;
+  readonly isAssigning?: boolean;
+  readonly isRescheduling?: boolean;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -108,13 +113,22 @@ export function TaskDetail({
   onEdit,
   onDelete,
   onArchive,
+  onAssign,
+  onReschedule,
   isCompleting = false,
   isStarting = false,
   isDeleting = false,
   isArchiving = false,
+  isAssigning = false,
+  isRescheduling = false,
 }: Readonly<TaskDetailProps>) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+  const [showAssignPanel, setShowAssignPanel] = useState(false);
+  const [assignEntityType, setAssignEntityType] = useState<'lead' | 'contact' | 'opportunity'>('lead');
+  const [assignEntityId, setAssignEntityId] = useState('');
+  const [assignEntityName, setAssignEntityName] = useState('');
+  const [showReschedule, setShowReschedule] = useState(false);
 
   if (isLoading) {
     return (
@@ -195,13 +209,42 @@ export function TaskDetail({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Due Date</p>
-            <p
-              className={`text-sm font-medium mt-0.5 ${dueDateColor}`}
-              data-testid={`due-${dueStatus}`}
-            >
-              {formatDate(task.dueDate)}
-              {dueStatus === 'overdue' && <span className="ml-1 text-xs">(overdue)</span>}
-            </p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <p
+                className={`text-sm font-medium ${dueDateColor}`}
+                data-testid={`due-${dueStatus}`}
+              >
+                {formatDate(task.dueDate)}
+                {dueStatus === 'overdue' && <span className="ml-1 text-xs">(overdue)</span>}
+              </p>
+              {onReschedule && task.status !== 'COMPLETED' && task.status !== 'CANCELLED' && task.status !== 'ARCHIVED' && (
+                <button
+                  type="button"
+                  onClick={() => setShowReschedule((v) => !v)}
+                  disabled={isRescheduling}
+                  className="text-muted-foreground hover:text-foreground disabled:opacity-50"
+                  aria-label="Reschedule task"
+                >
+                  <span className="material-symbols-outlined text-base" aria-hidden="true">
+                    {isRescheduling ? 'hourglass_empty' : 'calendar_month'}
+                  </span>
+                </button>
+              )}
+            </div>
+            {showReschedule && onReschedule && (
+              <input
+                type="date"
+                defaultValue={task.dueDate ? (typeof task.dueDate === 'string' ? task.dueDate.split('T')[0] : task.dueDate.toISOString().split('T')[0]) : ''}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    onReschedule(task.id, new Date(e.target.value));
+                    setShowReschedule(false);
+                  }
+                }}
+                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+                aria-label="New due date"
+              />
+            )}
           </div>
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Owner</p>
@@ -255,7 +298,23 @@ export function TaskDetail({
       )}
 
       {/* Actions */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
+        {onAssign && (task.status === 'PENDING' || task.status === 'IN_PROGRESS') && (
+          <button
+            type="button"
+            onClick={() => setShowAssignPanel((v) => !v)}
+            disabled={isAssigning}
+            className="px-4 py-2 text-sm rounded-md border hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Assign to entity"
+          >
+            <span className="inline-flex items-center gap-1">
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                {isAssigning ? 'hourglass_empty' : 'link'}
+              </span>{' '}
+              {isAssigning ? 'Assigning...' : 'Assign'}
+            </span>
+          </button>
+        )}
         {task.status === 'PENDING' && (
           <button
             type="button"
@@ -323,6 +382,70 @@ export function TaskDetail({
             </button>
           )}
       </div>
+
+      {/* Assign Panel */}
+      {showAssignPanel && onAssign && (
+        <Card className="p-4 space-y-3">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">Assign to Entity</p>
+          <div className="flex gap-2">
+            {(['lead', 'contact', 'opportunity'] as const).map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => {
+                  setAssignEntityType(type);
+                  setAssignEntityId('');
+                  setAssignEntityName('');
+                }}
+                className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${
+                  assignEntityType === type
+                    ? 'bg-primary text-primary-foreground'
+                    : 'hover:bg-accent'
+                }`}
+              >
+                {type === 'opportunity' ? 'Deal' : type.charAt(0).toUpperCase() + type.slice(1)}
+              </button>
+            ))}
+          </div>
+          <EntitySearchField
+            entityType={assignEntityType}
+            value={assignEntityId}
+            valueName={assignEntityName}
+            onChange={(id, name) => {
+              setAssignEntityId(id);
+              setAssignEntityName(name);
+            }}
+          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (assignEntityId) {
+                  onAssign(task.id, assignEntityType, assignEntityId);
+                  setShowAssignPanel(false);
+                  setAssignEntityId('');
+                  setAssignEntityName('');
+                }
+              }}
+              disabled={!assignEntityId || isAssigning}
+              className="px-4 py-2 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Confirm
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowAssignPanel(false);
+                setAssignEntityId('');
+                setAssignEntityName('');
+              }}
+              className="px-4 py-2 text-sm rounded-md border hover:bg-accent"
+            >
+              Cancel
+            </button>
+          </div>
+        </Card>
+      )}
 
       <ConfirmationDialog
         open={showDeleteConfirm}
