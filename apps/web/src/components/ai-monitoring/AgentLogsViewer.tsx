@@ -11,9 +11,9 @@
 import { useState, useCallback, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { Card, CardContent, Button, Skeleton, cn } from '@intelliflow/ui';
 import { PageHeader, SearchFilterBar, useMultiFilterState } from '@/components/shared';
-import { useAgentLogs } from '@/lib/ai-monitoring/hooks';
+import { useAgentLogs, useFailedJobs } from '@/lib/ai-monitoring/hooks';
 import { getAgentTypeIcon, getAgentTypeLabel } from '@/lib/active-agents/agent-utils';
-import type { AgentLog, AgentLogMessage, AgentLogToolCall } from '@/lib/ai-monitoring/types';
+import type { AgentLog, AgentLogMessage, AgentLogToolCall, FailedJob, FailedJobQueue } from '@/lib/ai-monitoring/types';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -27,9 +27,9 @@ const SORT_OPTIONS = [
 ];
 
 const STATUS_FILTER_OPTIONS = [
-  { value: '', label: 'All Statuses' },
   { value: 'SUCCESS', label: 'Success' },
   { value: 'FAILED', label: 'Failed' },
+  { value: 'QUEUE_FAILURES', label: 'Queue Failures' },
 ];
 
 const TOOL_STATUS_COLORS: Record<string, string> = {
@@ -343,6 +343,71 @@ function LogsEmptyState({ hasFilters, onClearFilters }: Readonly<LogsEmptyStateP
 }
 
 // ---------------------------------------------------------------------------
+// Failed Job Card (BullMQ DLQ visibility)
+// ---------------------------------------------------------------------------
+
+const QUEUE_LABELS: Record<string, string> = {
+  'ai-scoring': 'Scoring',
+  'ai-prediction': 'Prediction',
+  'ai-insights': 'Insights',
+};
+
+function FailedJobCard({ job }: Readonly<{ job: FailedJob }>) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <article data-testid="failed-job-card" className="rounded-lg border bg-card overflow-hidden">
+      <div className="flex items-start justify-between gap-4 p-4">
+        <div className="flex items-start gap-3 min-w-0">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+            <span className="material-symbols-outlined text-lg">error</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-medium">{job.name}</h3>
+              <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
+                {QUEUE_LABELS[job.queue] ?? job.queue}
+              </span>
+            </div>
+            <p className="text-sm text-red-600 dark:text-red-400 mt-0.5 line-clamp-2">
+              {job.failedReason}
+            </p>
+            <div className="flex items-center gap-3 mt-1">
+              <span className="text-xs text-muted-foreground">
+                {job.attemptsMade} {job.attemptsMade === 1 ? 'attempt' : 'attempts'}
+              </span>
+              <span className="text-xs text-muted-foreground font-mono">{job.id}</span>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col items-end gap-2 shrink-0">
+          <span className="text-xs text-muted-foreground">{formatRelativeTime(job.timestamp)}</span>
+          <button
+            data-testid="expand-failed-job"
+            aria-expanded={expanded}
+            onClick={() => setExpanded(!expanded)}
+            className="text-xs text-primary hover:underline flex items-center gap-1"
+          >
+            <span className="material-symbols-outlined text-sm">
+              {expanded ? 'expand_less' : 'expand_more'}
+            </span>
+            {expanded ? 'Hide Data' : 'Show Data'}
+          </button>
+        </div>
+      </div>
+      {expanded && (
+        <div className="border-t px-4 py-3">
+          <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">Job Data</p>
+          <pre className="text-xs bg-muted/50 rounded p-2 overflow-auto max-h-48">
+            {JSON.stringify(job.data, null, 2)}
+          </pre>
+        </div>
+      )}
+    </article>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main Component
 // ---------------------------------------------------------------------------
 
@@ -360,14 +425,30 @@ export function AgentLogsViewer({ agentId }: Readonly<AgentLogsViewerProps>) {
   const [expandedLogIds, setExpandedLogIds] = useState<Set<string>>(new Set());
   const [offset, setOffset] = useState(0);
 
+  const isQueueFailuresView = filterState.values.toolStatus === 'QUEUE_FAILURES';
+
+  // Agent logs query — skip when viewing queue failures
   const { logs, total, hasMore, isLoading, error, refetch } = useAgentLogs({
     agentId: agentId ?? undefined,
-    search: filterState.values.search || undefined,
-    toolStatus: filterState.values.toolStatus || undefined,
+    search: isQueueFailuresView ? undefined : (filterState.values.search || undefined),
+    toolStatus: isQueueFailuresView ? undefined : (filterState.values.toolStatus || undefined),
     sort: (filterState.values.sort as 'newest' | 'oldest') || 'newest',
     limit: DEFAULT_LIMIT,
-    offset,
+    offset: isQueueFailuresView ? 0 : offset,
   });
+
+  // Failed jobs query — only active when queue failures filter is selected
+  const failedJobs = useFailedJobs({
+    limit: DEFAULT_LIMIT,
+    offset: isQueueFailuresView ? offset : 0,
+    enabled: isQueueFailuresView,
+  });
+
+  const activeTotal = isQueueFailuresView ? failedJobs.total : total;
+  const activeHasMore = isQueueFailuresView ? failedJobs.hasMore : hasMore;
+  const activeLoading = isQueueFailuresView ? failedJobs.isLoading : isLoading;
+  const activeError = isQueueFailuresView ? failedJobs.error : error;
+  const activeRefetch = isQueueFailuresView ? failedJobs.refetch : refetch;
 
   const toggleExpand = useCallback((logId: string) => {
     setExpandedLogIds((prev) => {
@@ -383,20 +464,24 @@ export function AgentLogsViewer({ agentId }: Readonly<AgentLogsViewerProps>) {
   }, []);
 
   // Error state
-  if (error && !isLoading) {
+  if (activeError && !activeLoading) {
     return (
       <div className="flex flex-col gap-6">
         <PageHeader
           breadcrumbs={BREADCRUMBS}
           title="Agent Logs"
           description="View AI agent conversation transcripts and tool call records"
-          actions={[{ label: 'Refresh', icon: 'refresh', variant: 'secondary', onClick: refetch }]}
+          actions={[{ label: 'Refresh', icon: 'refresh', variant: 'secondary', onClick: activeRefetch }]}
         />
         <Card data-testid="error-message">
           <CardContent className="flex flex-col items-center justify-center p-8 text-center">
             <span className="material-symbols-outlined text-4xl text-red-500 mb-2">error</span>
-            <p className="text-sm text-muted-foreground mb-4">Failed to load agent logs</p>
-            <Button data-testid="retry-button" onClick={refetch} variant="outline">
+            <p className="text-sm text-muted-foreground mb-4">
+              {isQueueFailuresView
+                ? 'Failed to load queue failures — Redis may be unavailable'
+                : 'Failed to load agent logs'}
+            </p>
+            <Button data-testid="retry-button" onClick={activeRefetch} variant="outline">
               Try again
             </Button>
           </CardContent>
@@ -413,21 +498,24 @@ export function AgentLogsViewer({ agentId }: Readonly<AgentLogsViewerProps>) {
         breadcrumbs={BREADCRUMBS}
         title="Agent Logs"
         description="View AI agent conversation transcripts and tool call records"
-        actions={[{ label: 'Refresh', icon: 'refresh', variant: 'secondary', onClick: refetch }]}
+        actions={[{ label: 'Refresh', icon: 'refresh', variant: 'secondary', onClick: activeRefetch }]}
       />
 
       {/* Filters */}
       <SearchFilterBar
         searchValue={filterState.values.search}
         onSearchChange={(v) => filterState.set('search', v)}
-        searchPlaceholder="Search logs..."
+        searchPlaceholder={isQueueFailuresView ? 'Search disabled for queue view' : 'Search logs...'}
         filters={[
           {
             id: 'toolStatus',
-            label: 'Tool Status',
+            label: 'All Statuses',
             options: STATUS_FILTER_OPTIONS,
             value: filterState.values.toolStatus,
-            onChange: (v) => filterState.set('toolStatus', v),
+            onChange: (v) => {
+              filterState.set('toolStatus', v);
+              setOffset(0);
+            },
           },
         ]}
         sort={{
@@ -438,7 +526,7 @@ export function AgentLogsViewer({ agentId }: Readonly<AgentLogsViewerProps>) {
       />
 
       {/* Agent ID chip */}
-      {agentId && (
+      {agentId && !isQueueFailuresView && (
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">Filtering by agent:</span>
           <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
@@ -448,15 +536,48 @@ export function AgentLogsViewer({ agentId }: Readonly<AgentLogsViewerProps>) {
       )}
 
       {/* Total count */}
-      {!isLoading && (
+      {!activeLoading && (
         <p className="text-sm text-muted-foreground">
-          {total} {total === 1 ? 'log' : 'logs'} found
+          {activeTotal} {isQueueFailuresView
+            ? (activeTotal === 1 ? 'failed job' : 'failed jobs')
+            : (activeTotal === 1 ? 'log' : 'logs')}{' '}
+          found
         </p>
       )}
 
       {/* Loading */}
-      {isLoading && <LogsSkeleton />}
-      {!isLoading && logs.length === 0 && (
+      {activeLoading && <LogsSkeleton />}
+
+      {/* Queue Failures view */}
+      {!activeLoading && isQueueFailuresView && failedJobs.jobs.length === 0 && (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center p-8 text-center">
+            <span className="material-symbols-outlined text-4xl text-green-500 mb-2">
+              check_circle
+            </span>
+            <p className="text-sm text-muted-foreground">No failed jobs in the queues</p>
+          </CardContent>
+        </Card>
+      )}
+      {!activeLoading && isQueueFailuresView && failedJobs.jobs.length > 0 && (
+        <>
+          <div className="space-y-3">
+            {failedJobs.jobs.map((job) => (
+              <FailedJobCard key={`${job.queue}-${job.id}`} job={job} />
+            ))}
+          </div>
+          {activeHasMore && (
+            <div className="flex justify-center">
+              <Button data-testid="load-more" variant="outline" onClick={handleLoadMore}>
+                Load More
+              </Button>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Agent Logs view */}
+      {!activeLoading && !isQueueFailuresView && logs.length === 0 && (
         <LogsEmptyState
           hasFilters={!!hasFilters}
           onClearFilters={() => {
@@ -465,7 +586,7 @@ export function AgentLogsViewer({ agentId }: Readonly<AgentLogsViewerProps>) {
           }}
         />
       )}
-      {!isLoading && logs.length > 0 && (
+      {!activeLoading && !isQueueFailuresView && logs.length > 0 && (
         <>
           <div className="space-y-3">
             {logs.map((log) => (
@@ -478,7 +599,7 @@ export function AgentLogsViewer({ agentId }: Readonly<AgentLogsViewerProps>) {
             ))}
           </div>
 
-          {hasMore && (
+          {activeHasMore && (
             <div className="flex justify-center">
               <Button data-testid="load-more" variant="outline" onClick={handleLoadMore}>
                 Load More

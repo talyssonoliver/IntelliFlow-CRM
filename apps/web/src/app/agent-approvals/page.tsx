@@ -248,6 +248,7 @@ interface ActionCardProps {
   readonly onReject: (id: string, feedback: string) => void;
   readonly onEscalate: (id: string) => void;
   readonly onRollback: (id: string, reason: string) => void;
+  readonly onRegenerate: (id: string) => void;
   readonly isExpanded: boolean;
   readonly onToggleExpand: () => void;
   readonly isLoading: boolean;
@@ -259,6 +260,7 @@ function ActionCard({
   onReject,
   onEscalate,
   onRollback,
+  onRegenerate,
   isExpanded,
   onToggleExpand,
   isLoading,
@@ -600,7 +602,7 @@ function ActionCard({
               </div>
             )}
 
-            {action.status !== 'pending' && action.feedback && (
+            {action.status !== 'pending' && action.status !== 'rejected' && action.status !== 'expired' && action.feedback && (
               <div className="text-sm">
                 <span className="text-slate-500 dark:text-slate-400">Feedback: </span>
                 <span className="text-slate-700 dark:text-slate-300">{action.feedback}</span>
@@ -608,16 +610,63 @@ function ActionCard({
             )}
 
             {action.status === 'expired' && (
-              <div className="flex items-start gap-2 p-3 rounded-lg bg-slate-100 dark:bg-slate-800/50">
-                <Icon name="timer_off" className="text-base text-slate-400 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Draft Expired
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    This draft was not reviewed within its approval window and has been automatically invalidated. The email was not sent.
-                  </p>
+              <div className="space-y-3">
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-slate-100 dark:bg-slate-800/50">
+                  <Icon name="timer_off" className="text-base text-slate-400 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Draft Expired / Invalidated
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      This draft was not reviewed within its approval window and has been automatically invalidated. The email was not sent.
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      You can regenerate a new draft with the same content and a fresh approval window.
+                    </p>
+                  </div>
                 </div>
+                <Button
+                  variant="outline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRegenerate(action.id);
+                  }}
+                  disabled={isLoading}
+                  className="gap-2"
+                >
+                  <Icon name="refresh" className="text-base" />
+                  Regenerate Draft
+                </Button>
+              </div>
+            )}
+
+            {action.status === 'rejected' && (
+              <div className="space-y-3">
+                {action.feedback && (
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/20">
+                    <Icon name="feedback" className="text-base text-red-400 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-red-700 dark:text-red-300">
+                        Rejection Reason
+                      </p>
+                      <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                        {action.feedback}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRegenerate(action.id);
+                  }}
+                  disabled={isLoading}
+                  className="gap-2"
+                >
+                  <Icon name="refresh" className="text-base" />
+                  Regenerate Draft
+                </Button>
               </div>
             )}
           </div>
@@ -832,6 +881,14 @@ function AgentApprovalsContent() {
     },
   });
 
+  const regenerateMutation = trpc.autoResponse.regenerate.useMutation({
+    onSuccess: () => {
+      pendingQuery.refetch();
+      listQuery.refetch();
+      statsQuery.refetch();
+    },
+  });
+
   // ==========================================================================
   // Transform API data to AgentAction format
   // ==========================================================================
@@ -944,6 +1001,21 @@ function AgentApprovalsContent() {
     [rollbackMutation, userId]
   );
 
+  const handleRegenerate = useCallback(
+    async (actionId: string) => {
+      try {
+        const result = await regenerateMutation.mutateAsync({ draftId: actionId });
+        toast({ title: 'Draft Regenerated', description: `A new draft has been created with a fresh approval window. New ID: ${result.draftId.substring(0, 8)}...` });
+        // Expand the new draft card
+        setExpandedActionId(result.draftId);
+      } catch (error) {
+        console.error('Failed to regenerate:', error);
+        toast({ title: 'Regeneration Failed', description: String(error instanceof Error ? error.message : 'Unknown error'), variant: 'destructive' });
+      }
+    },
+    [regenerateMutation]
+  );
+
   const handleRefresh = useCallback(async () => {
     await Promise.all([pendingQuery.refetch(), listQuery.refetch(), statsQuery.refetch()]);
   }, [pendingQuery, listQuery, statsQuery]);
@@ -957,7 +1029,8 @@ function AgentApprovalsContent() {
     approveMutation.isPending ||
     rejectMutation.isPending ||
     escalateMutation.isPending ||
-    rollbackMutation.isPending;
+    rollbackMutation.isPending ||
+    regenerateMutation.isPending;
 
   // Debug: Log query states
   console.log('[AgentApprovals] Query states:', {
@@ -1183,6 +1256,7 @@ function AgentApprovalsContent() {
                 onReject={handleReject}
                 onEscalate={openEscalateSheet}
                 onRollback={handleRollback}
+                onRegenerate={handleRegenerate}
                 isExpanded={expandedActionId === action.id}
                 onToggleExpand={() =>
                   setExpandedActionId(expandedActionId === action.id ? null : action.id)

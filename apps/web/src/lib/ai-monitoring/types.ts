@@ -163,3 +163,35 @@ export interface LatencyDashboardData {
   error: Error | null;
   refetch: () => void;
 }
+
+// ---------------------------------------------------------------------------
+// Failed Jobs Types (BullMQ DLQ visibility)
+// ---------------------------------------------------------------------------
+
+export type FailedJobQueue = 'ai-scoring' | 'ai-prediction' | 'ai-insights';
+
+export interface FailedJob {
+  id: string;
+  queue: string;
+  name: string;
+  failedReason: string;
+  attemptsMade: number;
+  timestamp: string;
+  data: Record<string, unknown>;
+}
+
+export interface FailedJobsParams {
+  queue?: FailedJobQueue;
+  limit?: number;
+  offset?: number;
+  enabled?: boolean;
+}
+
+export interface FailedJobsData {
+  jobs: FailedJob[];
+  total: number;
+  hasMore: boolean;
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => void;
+}

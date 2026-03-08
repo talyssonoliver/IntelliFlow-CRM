@@ -9,8 +9,6 @@ import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { TaskDetail, type TaskDetailData } from '@/components/tasks/TaskDetail';
 import { TaskForm, type TaskFormData } from '@/components/tasks/TaskForm';
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 function getEntityName(task: TaskDetailData): string {
   if (task.lead) return `${task.lead.firstName} ${task.lead.lastName}`;
   if (task.contact) return `${task.contact.firstName} ${task.contact.lastName}`;
@@ -47,10 +45,9 @@ function buildEditInitialData(task: TaskDetailData) {
 function isTaskNotFound(
   isLoading: boolean,
   task: unknown,
-  error: { data?: { code?: string | null } | null } | null | undefined,
-  isValidId: boolean
+  error: { data?: { code?: string | null } | null } | null | undefined
 ): boolean {
-  return !isLoading && !task && (!error || !isValidId || error.data?.code === 'NOT_FOUND');
+  return !isLoading && !task && (!error || error.data?.code === 'NOT_FOUND');
 }
 
 export default function TaskDetailPage() {
@@ -62,15 +59,13 @@ export default function TaskDetailPage() {
 
   const utils = api.useUtils();
 
-  const isValidId = UUID_REGEX.test(params.id ?? '');
-
   const {
     data: task,
     isLoading,
     error,
   } = api.task.getById.useQuery(
     { id: params.id },
-    { enabled: isAuthenticated && !authLoading && !!params.id && isValidId }
+    { enabled: isAuthenticated && !authLoading && !!params.id }
   );
 
   const completeMutation = api.task.complete.useMutation({
@@ -183,7 +178,7 @@ export default function TaskDetailPage() {
     [editingTask, updateMutation]
   );
 
-  const isNotFound = isTaskNotFound(isLoading, task, error, isValidId);
+  const isNotFound = isTaskNotFound(isLoading, task, error);
 
   return (
     <div className="flex flex-col gap-6">

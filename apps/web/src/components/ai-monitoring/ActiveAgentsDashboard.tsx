@@ -145,7 +145,7 @@ function AgentCard({ agent }: Readonly<AgentCardProps>) {
             {formatLastActive(agent.lastActive)}
           </span>
           <Link
-            href={`/agent-approvals/logs?agentId=${agent.agentId ?? agent.id}`}
+            href={`/agent-approvals/logs/${agent.agentId ?? agent.id}`}
             className="text-xs text-primary hover:underline"
           >
             View Logs

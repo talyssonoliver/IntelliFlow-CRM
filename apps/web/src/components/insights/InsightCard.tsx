@@ -19,6 +19,7 @@ export type SerializedAIInsight = {
   entityType?: string | null;
   entityId?: string | null;
   actionUrl?: string | null;
+  requiresApproval?: boolean;
   priority: 'low' | 'medium' | 'high';
   createdAt: string;
 };
@@ -27,23 +28,35 @@ interface InsightCardProps {
   insight: SerializedAIInsight;
 }
 
-function resolveInsightHref(actionUrl: string | null | undefined, title?: string): string {
+function resolveInsightHref(
+  actionUrl: string | null | undefined,
+  insightId: string,
+  title?: string
+): string {
   if (!actionUrl) {
     // Fallback for aggregate insights with no actionUrl
     if (title && /overdue\s+task/i.test(title)) return '/tasks?filter=overdue';
     return '#';
   }
-  if (actionUrl.includes('tab=')) return actionUrl;
-  const entityMatch = /^\/(leads|contacts)\/[^?]+$/.exec(actionUrl);
-  if (entityMatch) return `${actionUrl}?tab=ai-insights`;
-  return actionUrl;
+
+  const [path, rawQuery = ''] = actionUrl.split('?', 2);
+  const params = new URLSearchParams(rawQuery);
+  const isLeadOrContactRoute = /^\/(leads|contacts)\/[^?]+$/.test(path);
+
+  if (isLeadOrContactRoute && !params.has('tab')) {
+    params.set('tab', 'ai-insights');
+  }
+  params.set('insightId', insightId);
+  return params.size > 0 ? `${path}?${params.toString()}` : path;
 }
 
 export function InsightCard({ insight }: Readonly<InsightCardProps>) {
   const iconStyle = getInsightIcon(insight.type);
+  const href = resolveInsightHref(insight.actionUrl, insight.id, insight.title);
+
   return (
     <Link
-      href={resolveInsightHref(insight.actionUrl, insight.title)}
+      href={href}
       className="flex gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer border border-transparent hover:border-slate-100 dark:hover:border-slate-700"
     >
       <div className={`shrink-0 ${iconStyle.iconBg} ${iconStyle.iconColor} rounded-lg p-2 h-fit`}>

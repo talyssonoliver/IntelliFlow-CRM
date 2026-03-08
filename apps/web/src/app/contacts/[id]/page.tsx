@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -320,6 +320,7 @@ export default function Contact360Page() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const contactId = params.id as string;
+  const insightIdParam = searchParams.get('insightId');
 
   // Require authentication - redirects to login if not authenticated
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
@@ -333,6 +334,15 @@ export default function Contact360Page() {
     { id: contactId },
     { enabled: isAuthenticated && !authLoading && !!contactId }
   );
+  const { data: linkedInsightResponse } = api.home.getInsightById.useQuery(
+    { insightId: insightIdParam ?? '' },
+    { enabled: isAuthenticated && !authLoading && !!insightIdParam }
+  );
+  const linkedInsight = linkedInsightResponse?.insight;
+  const linkedInsightRequiresApproval =
+    (linkedInsight as { requiresApproval?: boolean } | undefined)?.requiresApproval === true;
+  const ensureInsightReviewMutation = api.home.ensureInsightReview.useMutation();
+  const reviewRequestedInsightRef = useRef<string | null>(null);
 
   // Check for auth errors
   const isAuthError =
@@ -346,6 +356,14 @@ export default function Contact360Page() {
       router.replace('/login');
     }
   }, [error, isAuthError, isLoading, authLoading, router]);
+
+  useEffect(() => {
+    if (!insightIdParam || !linkedInsightRequiresApproval) return;
+    if (reviewRequestedInsightRef.current === insightIdParam) return;
+    reviewRequestedInsightRef.current = insightIdParam;
+
+    ensureInsightReviewMutation.mutate({ insightId: insightIdParam });
+  }, [insightIdParam, linkedInsightRequiresApproval, ensureInsightReviewMutation]);
 
   // Cast to extended type
   const apiContact = rawApiContact as ContactWithRelations | undefined;
@@ -588,11 +606,16 @@ export default function Contact360Page() {
 
   // Transform AI insights to NextBestActionData format (IFC-095)
   const nextBestActionData: NextBestActionData | null = useMemo(() => {
-    const insight = apiContact?.aiInsight;
-    if (!insight?.nextBestAction) return null;
+    const contactInsight = apiContact?.aiInsight;
+    const linkedSuggestedAction =
+      linkedInsight?.entityType === 'contact' && linkedInsight?.entityId === contactId
+        ? linkedInsight.suggestedAction
+        : null;
+    const selectedAction = linkedSuggestedAction || contactInsight?.nextBestAction;
+    if (!selectedAction) return null;
 
     // Parse action type from next best action string
-    const actionText = insight.nextBestAction.toUpperCase();
+    const actionText = selectedAction.toUpperCase();
     let actionType: NBAActionType = 'WAIT';
     if (actionText.includes('CALL')) actionType = 'CALL';
     else if (actionText.includes('EMAIL')) actionType = 'EMAIL';
@@ -605,17 +628,26 @@ export default function Contact360Page() {
 
     // Determine priority based on churn risk
     let priority: NBAPriority = 'MEDIUM';
-    if (insight.churnRisk === 'HIGH' || insight.churnRisk === 'CRITICAL') priority = 'HIGH';
-    else if (insight.churnRisk === 'LOW' || insight.churnRisk === 'MINIMAL') priority = 'LOW';
+    if (linkedInsight?.priority === 'high') {
+      priority = 'HIGH';
+    } else if (linkedInsight?.priority === 'low') {
+      priority = 'LOW';
+    } else if (contactInsight?.churnRisk === 'HIGH' || contactInsight?.churnRisk === 'CRITICAL') {
+      priority = 'HIGH';
+    } else if (contactInsight?.churnRisk === 'LOW' || contactInsight?.churnRisk === 'MINIMAL') {
+      priority = 'LOW';
+    }
 
     return {
       actionType,
-      title: insight.nextBestAction,
+      title: selectedAction,
       priority,
-      rationale: `Based on ${insight.engagementScore}% engagement score and ${insight.churnRisk} churn risk level.`,
+      rationale: linkedSuggestedAction
+        ? `Opened from insight: ${linkedInsight?.title || 'AI insight'}.`
+        : `Based on ${contactInsight?.engagementScore || 0}% engagement score and ${contactInsight?.churnRisk || 'unknown'} churn risk level.`,
       confidence: 0.85,
     };
-  }, [apiContact?.aiInsight]);
+  }, [apiContact?.aiInsight, contactId, linkedInsight]);
 
   // Person filter options derived from activities
   const personFilters = useMemo(() => {

@@ -23,6 +23,8 @@ import type {
   LatencyAlert,
   LatencyTrendPoint,
   LatencyPhase,
+  FailedJobsParams,
+  FailedJobsData,
 } from './types';
 
 const SEVERITY_WEIGHT: Record<string, number> = {
@@ -130,8 +132,6 @@ export function useDriftDashboard(filters?: DriftFilters): DriftDashboardData {
 // Agent Logs Hook (PG-152)
 // ---------------------------------------------------------------------------
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 function filterAndSortLogs(
   logs: AgentLog[],
   search?: string,
@@ -163,12 +163,9 @@ function filterAndSortLogs(
 }
 
 export function useAgentLogs(params: AgentLogsParams): AgentLogsData {
-  const validAgentId =
-    params.agentId && UUID_REGEX.test(params.agentId) ? params.agentId : undefined;
-
   const query = api.aiMonitoring.getAgentLogs.useQuery(
     {
-      agentId: validAgentId,
+      agentId: params.agentId || undefined,
       limit: params.limit ?? 20,
       offset: params.offset ?? 0,
     },
@@ -290,6 +287,42 @@ export function useLatencyDashboard(filters?: LatencyFilters): LatencyDashboardD
     refetch: () => {
       metricsQuery.refetch();
       trendQuery.refetch();
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Failed Jobs Hook (BullMQ DLQ visibility)
+// ---------------------------------------------------------------------------
+
+export function useFailedJobs(params: FailedJobsParams): FailedJobsData {
+  const enabled = params.enabled ?? true;
+
+  const query = api.aiMonitoring.getFailedJobs.useQuery(
+    {
+      queue: params.queue,
+      limit: params.limit ?? 20,
+      offset: params.offset ?? 0,
+    },
+    {
+      enabled,
+      staleTime: 30_000,
+      refetchInterval: enabled ? 60_000 : false,
+    }
+  );
+
+  const data = query.data as
+    | { jobs: FailedJobsData['jobs']; total: number; hasMore: boolean }
+    | undefined;
+
+  return {
+    jobs: data?.jobs ?? [],
+    total: data?.total ?? 0,
+    hasMore: data?.hasMore ?? false,
+    isLoading: query.isLoading,
+    error: query.error as Error | null,
+    refetch: () => {
+      query.refetch();
     },
   };
 }

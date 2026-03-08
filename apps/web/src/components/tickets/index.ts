@@ -32,3 +32,5 @@ export { TicketAssignSidebar } from './TicketAssignSidebar';
 export { EscalationAlert } from './EscalationAlert';
 export { TicketForm } from './TicketForm';
 export { CustomerPortalView } from './CustomerPortalView';
+export { SupportTicketForm } from './ticket-form';
+export { FileUploader } from './file-uploader';

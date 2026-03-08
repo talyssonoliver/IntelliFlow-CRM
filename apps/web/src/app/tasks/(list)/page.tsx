@@ -9,6 +9,7 @@ import { taskStatusOptions, taskPriorityOptions } from '@/lib/shared/filter-util
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { TaskList, type TaskListItem } from '@/components/tasks/TaskList';
+import { TaskCalendar, type CalendarTask } from '@/components/tasks/TaskCalendar';
 
 function getEntityName(task: TaskListItem): string {
   if (task.lead) return `${task.lead.firstName} ${task.lead.lastName}`; // NOSONAR typescript:S4624 — independent template literals in separate if-branches, not nested
@@ -101,6 +102,7 @@ export default function TasksPage() {
   const [editingTask, setEditingTask] = useState<TaskListItem | null>(null);
   const [createDefaultDate, setCreateDefaultDate] = useState<string>('');
   const [page, setPage] = useState(1);
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
 
   // F-11: Read sidebar URL filter params on mount
   useEffect(() => {
@@ -116,7 +118,9 @@ export default function TasksPage() {
     if (urlPriority) {
       setPriorityFilter(urlPriority);
     }
-    if (urlView === 'my') {
+    if (urlView === 'calendar') {
+      setViewMode('calendar');
+    } else if (urlView === 'my') {
       // "My tasks" view — no additional filter needed, ownerId is already the current user
     }
   }, [searchParams]);
@@ -331,6 +335,19 @@ export default function TasksPage() {
     }
   }, [router]);
 
+  // F-13: Map tasks for calendar view (only those with due dates)
+  const calendarTasks = useMemo<CalendarTask[]>(() => {
+    return tasks
+      .filter((t): t is TaskListItem & { dueDate: Date | string } => !!t.dueDate)
+      .map((t) => ({ id: t.id, title: t.title, dueDate: t.dueDate, priority: t.priority }));
+  }, [tasks]);
+
+  // F-19: Wire createDefaultDate from calendar date click
+  const handleCreateWithDate = useCallback((date: Date) => {
+    setCreateDefaultDate(date.toISOString().split('T')[0]);
+    setShowCreateForm(true);
+  }, []);
+
   const totalItems = data?.total ?? tasks.length;
   const taskCountSuffix = totalItems > 0 ? ` (${totalItems} total)` : '';
 
@@ -395,6 +412,30 @@ export default function TasksPage() {
         }}
       />
 
+      {/* View Toggle */}
+      <div className="flex items-center gap-1 border rounded-lg p-0.5 w-fit">
+        <button
+          type="button"
+          onClick={() => setViewMode('list')}
+          className={`px-3 py-1.5 text-sm rounded-md transition-colors ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
+          aria-label="List view"
+          aria-pressed={viewMode === 'list'}
+        >
+          <span className="material-symbols-outlined text-base align-middle" aria-hidden="true">view_list</span>{' '}
+          List
+        </button>
+        <button
+          type="button"
+          onClick={() => setViewMode('calendar')}
+          className={`px-3 py-1.5 text-sm rounded-md transition-colors ${viewMode === 'calendar' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
+          aria-label="Calendar view"
+          aria-pressed={viewMode === 'calendar'}
+        >
+          <span className="material-symbols-outlined text-base align-middle" aria-hidden="true">calendar_month</span>{' '}
+          Calendar
+        </button>
+      </div>
+
       {/* Error State */}
       {error && !isLoading && (
         <div className="flex flex-col items-center justify-center p-8 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
@@ -423,7 +464,7 @@ export default function TasksPage() {
       )}
 
       {/* Content */}
-      {!error && (
+      {!error && viewMode === 'list' && (
         <TaskList
           tasks={tasks}
           isLoading={isLoading}
@@ -438,8 +479,17 @@ export default function TasksPage() {
         />
       )}
 
-      {/* Pagination */}
-      {!error && data && data.total > data.limit && (
+      {/* F-13: Calendar View */}
+      {!error && viewMode === 'calendar' && (
+        <TaskCalendar
+          tasks={calendarTasks}
+          onTaskClick={handleRowClick}
+          onCreateWithDate={handleCreateWithDate}
+        />
+      )}
+
+      {/* Pagination (list view only) */}
+      {!error && viewMode === 'list' && data && data.total > data.limit && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
             Showing {(page - 1) * data.limit + 1}–{Math.min(page * data.limit, data.total)} of {data.total}

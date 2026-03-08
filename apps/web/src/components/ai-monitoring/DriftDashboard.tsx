@@ -8,7 +8,7 @@
 import { useState, Suspense, lazy } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Button, Skeleton, cn } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared';
-import { useDriftDashboard } from '@/lib/ai-monitoring/hooks';
+import { useDriftDashboard, useFailedJobs } from '@/lib/ai-monitoring/hooks';
 import type { DriftFilters } from '@/lib/ai-monitoring/types';
 import {
   getSeverityBadgeClass,
@@ -80,6 +80,7 @@ export function DriftDashboard() {
 
   const filters: DriftFilters = { severity: severityFilter, sortBy };
   const { status, history, roi, isLoading, error, refetch } = useDriftDashboard(filters);
+  const failedJobs = useFailedJobs({ limit: 1 });
 
   const errorRateItem = history.find((h) => h.metric === 'error_rate') ?? null;
 
@@ -143,7 +144,7 @@ export function DriftDashboard() {
       )}
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mt-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mt-6">
         <StatCard
           label="Tracked Metrics"
           value={status.trackedMetrics}
@@ -175,6 +176,19 @@ export function DriftDashboard() {
           icon="analytics"
           colorClass="bg-blue-100 dark:bg-blue-900/30"
           isLoading={isLoading}
+        />
+        <StatCard
+          label="Failed Jobs"
+          value={failedJobs.error ? '—' : failedJobs.total}
+          icon="report_problem"
+          colorClass={
+            failedJobs.error
+              ? 'bg-slate-100 dark:bg-slate-800'
+              : failedJobs.total > 0
+                ? 'bg-red-100 dark:bg-red-900/30'
+                : 'bg-green-100 dark:bg-green-900/30'
+          }
+          isLoading={failedJobs.isLoading}
         />
         <StatCard
           label="Last Check"
