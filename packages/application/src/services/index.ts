@@ -42,3 +42,6 @@ export * from './InternalSignatureProvider';
 
 // Feedback Survey Analytics Service (IFC-068)
 export * from './FeedbackSurveyAnalyticsService';
+
+// Experiment Service (IFC-025)
+export * from './ExperimentService';

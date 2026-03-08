@@ -43,7 +43,7 @@ export const SearchConfigSchema = z.object({
     .optional(),
 
   // Document-specific filters (IFC-155)
-  caseId: z.string().uuid().optional(),
+  caseId: z.uuid().optional(),
   classification: z.array(z.string()).optional(),
   documentTypes: z.array(z.string()).optional(),
   semanticThreshold: z.number().min(0).max(1).default(0.7),

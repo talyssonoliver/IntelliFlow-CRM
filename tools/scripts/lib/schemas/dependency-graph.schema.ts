@@ -66,7 +66,7 @@ export const dependencyViolationSchema = z.object({
 export const dependencyGraphSchema = z.object({
   $schema: z.string().optional(),
   version: z.string().regex(versionPattern),
-  last_updated: z.string().datetime(),
+  last_updated: z.iso.datetime(),
   description: z.string().optional(),
   nodes: z.record(z.string(), graphNodeSchema),
   critical_paths: z.array(criticalPathSchema),

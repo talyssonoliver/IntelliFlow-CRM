@@ -25,7 +25,7 @@ const languagePattern = /^[a-z]{2}(-[A-Z]{2})?$/;
 
 // Metadata
 export const extractedTextMetadataSchema = z.object({
-  sourceUrl: z.string().url().describe('Original document URL'),
+  sourceUrl: z.url().describe('Original document URL'),
   format: documentFormatSchema.describe('Source document format'),
   language: z.string().regex(languagePattern).describe('ISO 639-1 language code'),
   pageCount: z.number().int().min(1).describe('Number of pages processed'),
@@ -64,7 +64,7 @@ export const qualityMetricsSchema = z.object({
 
 // Main extracted text schema
 export const extractedTextSchema = z.object({
-  documentId: z.string().uuid().describe('Unique identifier of the source document'),
+  documentId: z.uuid().describe('Unique identifier of the source document'),
   text: z.string().describe('Raw extracted text from OCR'),
   normalizedText: z.string().describe('Normalized text with cleaned whitespace and characters'),
   metadata: extractedTextMetadataSchema,

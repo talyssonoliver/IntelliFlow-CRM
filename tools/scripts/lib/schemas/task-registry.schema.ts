@@ -71,7 +71,7 @@ export const taskDetailSchema = z.object({
 export const taskRegistrySchema = z.object({
   $schema: z.string().optional(),
   version: z.string().regex(versionPattern),
-  last_updated: z.string().datetime(),
+  last_updated: z.iso.datetime(),
   total_tasks: z.number().int().min(0),
   sprints: z.record(z.string(), sprintEntrySchema),
   tasks_by_status: tasksByStatusSchema,

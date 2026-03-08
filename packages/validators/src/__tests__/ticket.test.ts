@@ -31,6 +31,7 @@ import {
   slaPauseSchema,
   slaResumeSchema,
   statsInputSchema,
+  addAttachmentSchema,
   type TicketStatus,
   type TicketPriority,
   type SLAStatus,
@@ -683,6 +684,84 @@ describe('Ticket Validators', () => {
 
     it('should reject missing required fields', () => {
       const result = slaPauseSchema.safeParse({});
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('addAttachmentSchema', () => {
+    const validInput = {
+      ticketId: uuidv4(),
+      name: 'document.pdf',
+      size: '1.5 KB',
+      sizeBytes: 1536,
+      fileType: 'application/pdf',
+      content: 'dGVzdCBjb250ZW50', // base64 encoded
+    };
+
+    it('should accept valid input', () => {
+      const result = addAttachmentSchema.safeParse(validInput);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.name).toBe('document.pdf');
+        expect(result.data.sizeBytes).toBe(1536);
+      }
+    });
+
+    it('should reject missing ticketId', () => {
+      const { ticketId: _, ...input } = validInput;
+      const result = addAttachmentSchema.safeParse(input);
+      expect(result.success).toBe(false);
+    });
+
+    it('should reject empty name', () => {
+      const input = { ...validInput, name: '' };
+      const result = addAttachmentSchema.safeParse(input);
+      expect(result.success).toBe(false);
+    });
+
+    it('should reject sizeBytes exceeding 10MB (10_485_760)', () => {
+      const input = { ...validInput, sizeBytes: 10_485_761 };
+      const result = addAttachmentSchema.safeParse(input);
+      expect(result.success).toBe(false);
+    });
+
+    it('should accept sizeBytes at exactly 10MB', () => {
+      const input = { ...validInput, sizeBytes: 10_485_760 };
+      const result = addAttachmentSchema.safeParse(input);
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject sizeBytes <= 0', () => {
+      const input = { ...validInput, sizeBytes: 0 };
+      const result = addAttachmentSchema.safeParse(input);
+      expect(result.success).toBe(false);
+
+      const negInput = { ...validInput, sizeBytes: -1 };
+      const negResult = addAttachmentSchema.safeParse(negInput);
+      expect(negResult.success).toBe(false);
+    });
+
+    it('should reject missing content', () => {
+      const { content: _, ...input } = validInput;
+      const result = addAttachmentSchema.safeParse(input);
+      expect(result.success).toBe(false);
+    });
+
+    it('should reject name exceeding 255 characters', () => {
+      const input = { ...validInput, name: 'x'.repeat(256) };
+      const result = addAttachmentSchema.safeParse(input);
+      expect(result.success).toBe(false);
+    });
+
+    it('should reject invalid ticketId format', () => {
+      const input = { ...validInput, ticketId: 'invalid' };
+      const result = addAttachmentSchema.safeParse(input);
+      expect(result.success).toBe(false);
+    });
+
+    it('should reject non-integer sizeBytes', () => {
+      const input = { ...validInput, sizeBytes: 1.5 };
+      const result = addAttachmentSchema.safeParse(input);
       expect(result.success).toBe(false);
     });
   });

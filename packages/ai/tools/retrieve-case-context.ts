@@ -63,7 +63,7 @@ export interface CaseAccessResult {
  * Input schema for the retrieve_case_context tool
  */
 export const retrieveCaseContextInputSchema = z.object({
-  caseId: z.string().uuid().describe('The ID of the case to retrieve context for'),
+  caseId: z.uuid().describe('The ID of the case to retrieve context for'),
   query: z.string().min(1).max(1000).describe('The search query or question about the case'),
   includeDocuments: z.boolean().default(true).describe('Include case documents in retrieval'),
   includeTasks: z.boolean().default(true).describe('Include case tasks in retrieval'),
@@ -859,8 +859,8 @@ export function createSendCaseEmailTool(
     description: `Send an email related to a case. This action requires human approval before the email is sent.
 Use this tool when you need to send communication about a case to external parties.`,
     schema: z.object({
-      caseId: z.string().uuid().describe('The case ID this email relates to'),
-      to: z.string().email().describe('Recipient email address'),
+      caseId: z.uuid().describe('The case ID this email relates to'),
+      to: z.email().describe('Recipient email address'),
       subject: z.string().min(1).max(200).describe('Email subject'),
       body: z.string().min(1).max(10000).describe('Email body content'),
     }),

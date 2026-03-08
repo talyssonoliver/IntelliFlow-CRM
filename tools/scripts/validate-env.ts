@@ -60,7 +60,7 @@ interface ValidationWarning {
 }
 
 // Define validation schemas for different variable types
-const urlSchema = z.string().url();
+const urlSchema = z.url();
 const portSchema = z.coerce.number().int().min(1).max(65535);
 const booleanSchema = z.enum(['true', 'false', 'TRUE', 'FALSE', '1', '0']);
 const emailSchema = z.string().email();

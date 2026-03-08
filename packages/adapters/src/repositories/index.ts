@@ -39,6 +39,9 @@ export * from './PrismaAnalyticsRepository';
 // Feedback Survey Repository (IFC-068)
 export * from './PrismaFeedbackSurveyRepository';
 
+// Experiment Repository (IFC-025)
+export * from './PrismaExperimentRepository';
+
 // In-memory implementations (testing)
 export * from './InMemoryLeadRepository';
 export * from './InMemoryContactRepository';

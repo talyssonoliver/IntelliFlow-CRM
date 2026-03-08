@@ -81,7 +81,7 @@ export class InMemoryTicketRepository implements TicketRepository {
    * Find tickets with filters, pagination, and optional relations
    */
   async findMany(filters: TicketFilters, options?: TicketQueryOptions): Promise<TicketListResult> {
-    let tickets = Array.from(this.tickets.values()).filter((t) => ticketMatchesFilters(t, filters));
+    const tickets = Array.from(this.tickets.values()).filter((t) => ticketMatchesFilters(t, filters));
     const total = tickets.length;
 
     if (options?.orderBy && options.orderBy.length > 0) {

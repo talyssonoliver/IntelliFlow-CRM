@@ -32,6 +32,9 @@ export type {
   AppointmentCase,
   Calendar,
   SecurityEvent,
+  Experiment,
+  ExperimentAssignment,
+  ExperimentResult,
 } from '../generated/prisma/client';
 
 // Re-export performance tracking utilities

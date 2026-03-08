@@ -36,7 +36,7 @@ let agentStatusFns: AgentStatusFns | null = null;
 
 async function getAgentStatusFns(): Promise<AgentStatusFns> {
   if (agentStatusFns) return agentStatusFns;
-  const m = await import('@intelliflow/ai-worker') as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  const m = await import('@intelliflow/ai-worker') as any;
   if (m.markAgentActive) {
     agentStatusFns = {
       markAgentActive: m.markAgentActive,

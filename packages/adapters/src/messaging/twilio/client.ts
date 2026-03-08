@@ -21,7 +21,7 @@ export const TwilioConfigSchema = z.object({
   accountSid: z.string().min(1),
   authToken: z.string().min(1),
   fromNumber: z.string().min(10),
-  statusCallbackUrl: z.string().url().optional(),
+  statusCallbackUrl: z.url().optional(),
   messagingServiceSid: z.string().optional(),
 });
 

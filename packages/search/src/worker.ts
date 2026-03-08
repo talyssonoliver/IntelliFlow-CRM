@@ -24,7 +24,7 @@ export const REINDEX_QUEUE_NAME = 'intelliflow:document-reindex';
 
 export const ReindexJobDataSchema = z.object({
   // Target scope
-  tenantId: z.string().uuid().optional(),
+  tenantId: z.uuid().optional(),
   documentIds: z.array(z.string().uuid()).optional(),
   noteIds: z.array(z.string().uuid()).optional(),
 
@@ -34,7 +34,7 @@ export const ReindexJobDataSchema = z.object({
   forceRegenerate: z.boolean().default(false),
 
   // Job metadata
-  requestedBy: z.string().uuid().optional(),
+  requestedBy: z.uuid().optional(),
   reason: z.string().optional(),
 });
 

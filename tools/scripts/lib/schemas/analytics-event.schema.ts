@@ -28,7 +28,7 @@ export const eventContextSchema = z
 // Main analytics event schema
 export const analyticsEventSchema = z.object({
   eventId: z.string().describe('UUIDv4'),
-  occurredAt: z.string().datetime(),
+  occurredAt: z.iso.datetime(),
   eventName: z.string(),
   context: eventContextSchema,
   properties: z

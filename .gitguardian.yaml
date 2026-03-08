@@ -43,31 +43,13 @@ paths-ignore:
   - 'out/**'
   - 'coverage/**'
 
-# Allow specific patterns that are false positives
-# This is useful for test fixtures that look like secrets but aren't
-exclude:
-  # Test JWT tokens
-  - name: 'Test JWT tokens'
-    match: "eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+"
-    paths:
-      - '**/*.test.*'
-      - '**/tests/**'
-      - '**/__tests__/**'
-
-  # Test passwords
-  - name: 'Test passwords'
-    match: '(password|Password|PASSWORD)'
-    paths:
-      - '**/*.test.*'
-      - '**/tests/**'
-      - '**/__tests__/**'
-      - '**/*.stories.*'
-
-  # Generic high entropy in test/story files
-  - name: 'Test/Story high entropy strings'
-    match: '.*'
-    paths:
-      - '**/*.test.*'
-      - '**/*.stories.*'
-      - '**/fixtures/**'
-      - '**/mocks/**'
+# Ignore specific false-positive patterns in the scanned files.
+# Note: test/story/fixture/mock paths are already fully excluded above via paths-ignore.
+secret:
+  ignored_matches:
+    # Test JWT tokens (not real secrets)
+    - name: 'Test JWT tokens'
+      match: "eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+"
+    # Literal placeholder passwords used in test fixtures
+    - name: 'Test passwords'
+      match: '(password|Password|PASSWORD)'

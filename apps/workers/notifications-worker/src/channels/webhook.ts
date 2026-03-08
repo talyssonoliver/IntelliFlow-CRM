@@ -18,7 +18,7 @@ import { z } from 'zod';
 // ============================================================================
 
 export const WebhookPayloadSchema = z.object({
-  url: z.string().url(),
+  url: z.url(),
   method: z.enum(['POST', 'PUT', 'PATCH']).default('POST'),
   body: z.union([z.string(), z.record(z.string(), z.unknown())]),
   headers: z.record(z.string(), z.string()).optional(),

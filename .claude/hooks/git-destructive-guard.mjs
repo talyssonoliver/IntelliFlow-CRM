@@ -12,7 +12,7 @@
  *   - git push --force / -f (without --force-with-lease)
  *   - git reset --hard
  *   - git clean -f / -fd / -fx
- *   - git checkout . / git checkout -- <path> (discard changes)
+ *   - git checkout . / git checkout -- <path> / git checkout <ref> -- <path> (discard changes)
  *   - git restore <path> / git restore --worktree / --source (discard changes)
  *   - git branch -D (force delete branch)
  *   - git rebase with --no-edit or -i (interactive/unsafe rebase)
@@ -40,6 +40,10 @@ const DESTRUCTIVE_PATTERNS = [
   {
     pattern: /\bgit\s+checkout\s+--\s/,
     reason: 'git checkout -- <path> is blocked — it permanently discards uncommitted changes to the specified files. Ask the user to handle this manually.',
+  },
+  {
+    pattern: /\bgit\s+checkout\s+\S+\s+--\s/,
+    reason: 'git checkout <ref> -- <path> is blocked — it overwrites working tree files with content from another commit. Ask the user to handle this manually.',
   },
   {
     pattern: /\bgit\s+restore\s+\.\s*$/,

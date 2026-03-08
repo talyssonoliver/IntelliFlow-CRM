@@ -38,15 +38,15 @@ const NotificationPrioritySchema = z.enum(['LOW', 'NORMAL', 'HIGH', 'URGENT']);
 const NotificationChannelSchema = z.enum(['EMAIL', 'SMS', 'WEBHOOK', 'PUSH']);
 
 export const NotificationJobSchema = z.object({
-  notificationId: z.string().uuid(),
-  tenantId: z.string().uuid(),
+  notificationId: z.uuid(),
+  tenantId: z.uuid(),
   channel: NotificationChannelSchema,
   priority: NotificationPrioritySchema.default('NORMAL'),
   recipient: z.object({
-    id: z.string().uuid().optional(),
-    email: z.string().email().optional(),
+    id: z.uuid().optional(),
+    email: z.email().optional(),
     phone: z.string().optional(),
-    webhookUrl: z.string().url().optional(),
+    webhookUrl: z.url().optional(),
     deviceToken: z.string().optional(),
   }),
   content: z.object({
@@ -57,8 +57,8 @@ export const NotificationJobSchema = z.object({
     templateData: z.record(z.string(), z.unknown()).optional(),
   }),
   metadata: z.record(z.string(), z.unknown()).optional(),
-  scheduledAt: z.string().datetime().optional(),
-  expiresAt: z.string().datetime().optional(),
+  scheduledAt: z.iso.datetime().optional(),
+  expiresAt: z.iso.datetime().optional(),
   retryCount: z.number().int().min(0).default(0),
   maxRetries: z.number().int().min(0).default(3),
 });
@@ -258,6 +258,16 @@ export class NotificationsWorker extends BaseWorker<NotificationJob, Notificatio
     }
   }
 
+  /** Derive health status for a notification channel from its circuit breaker state. */
+  private channelHealthStatus(
+    channel: unknown,
+    stats: { circuitState?: string } | undefined
+  ): 'ok' | 'degraded' {
+    if (!channel) return 'degraded';
+    if (stats?.circuitState === 'OPEN') return 'degraded';
+    return 'ok';
+  }
+
   /**
    * Get additional health check dependencies
    */
@@ -270,22 +280,14 @@ export class NotificationsWorker extends BaseWorker<NotificationJob, Notificatio
 
     return {
       email: {
-        status: this.emailChannel
-          ? emailStats?.circuitState === 'OPEN'
-            ? 'degraded'
-            : 'ok'
-          : 'degraded',
+        status: this.channelHealthStatus(this.emailChannel, emailStats),
         message: this.emailChannel
           ? `Sent: ${emailStats?.sent || 0}, Failed: ${emailStats?.failed || 0}, Circuit: ${emailStats?.circuitState || 'N/A'}`
           : 'Email channel disabled',
         lastCheck: new Date().toISOString(),
       },
       sms: {
-        status: this.smsChannel
-          ? smsStats?.circuitState === 'OPEN'
-            ? 'degraded'
-            : 'ok'
-          : 'degraded',
+        status: this.channelHealthStatus(this.smsChannel, smsStats),
         message: this.smsChannel
           ? `Sent: ${smsStats?.sent || 0}, Failed: ${smsStats?.failed || 0}, Circuit: ${smsStats?.circuitState || 'N/A'}`
           : 'SMS channel disabled',
@@ -640,7 +642,7 @@ async function main(): Promise<void> {
 
 // Run if executed directly
 if (require.main === module) {
-  main().catch((error) => {
+  main().catch((error) => { // NOSONAR typescript:S7785 — CJS entry point, top-level await requires ESM migration
     console.error('Fatal error:', error);
     process.exit(1);
   });

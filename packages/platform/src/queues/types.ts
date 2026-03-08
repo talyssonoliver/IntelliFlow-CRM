@@ -15,13 +15,13 @@ import { z } from 'zod';
  * AI Lead Scoring Job Data
  */
 export const aiScoringJobDataSchema = z.object({
-  leadId: z.string().uuid(),
-  userId: z.string().uuid(),
+  leadId: z.uuid(),
+  userId: z.uuid(),
   priority: z.enum(['low', 'normal', 'high', 'critical']).default('normal'),
   metadata: z
     .object({
       source: z.string().optional(),
-      requestedAt: z.string().datetime(),
+      requestedAt: z.iso.datetime(),
       retryCount: z.number().int().min(0).default(0),
     })
     .optional(),
@@ -33,13 +33,13 @@ export type AIScoringJobData = z.infer<typeof aiScoringJobDataSchema>;
  * AI Scoring Result
  */
 export const aiScoringResultSchema = z.object({
-  leadId: z.string().uuid(),
+  leadId: z.uuid(),
   score: z.number().int().min(0).max(100),
   confidence: z.number().min(0).max(1),
   factors: z.record(z.string(), z.number()),
   modelVersion: z.string(),
   processingTimeMs: z.number(),
-  scoredAt: z.string().datetime(),
+  scoredAt: z.iso.datetime(),
 });
 
 export type AIScoringResult = z.infer<typeof aiScoringResultSchema>;
@@ -61,7 +61,7 @@ export type EmailNotificationJobData = z.infer<typeof emailNotificationJobDataSc
  * Webhook Delivery Job Data
  */
 export const webhookDeliveryJobDataSchema = z.object({
-  url: z.string().url(),
+  url: z.url(),
   payload: z.record(z.string(), z.unknown()),
   headers: z.record(z.string(), z.string()).optional(),
   method: z.enum(['POST', 'PUT', 'PATCH']).default('POST'),

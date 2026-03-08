@@ -20,8 +20,8 @@ import { z } from 'zod';
 // ============================================================================
 
 export const TextExtractionInputSchema = z.object({
-  documentId: z.string().uuid(),
-  sourceUrl: z.string().url(),
+  documentId: z.uuid(),
+  sourceUrl: z.url(),
   format: z.enum(['pdf', 'docx', 'txt', 'html', 'rtf', 'md']),
   tenantId: z.string(),
   userId: z.string().optional(),

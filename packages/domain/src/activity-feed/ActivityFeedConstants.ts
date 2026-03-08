@@ -49,6 +49,7 @@ export const ACTIVITY_FEED_ENTITY_TYPES = [
   'OPPORTUNITY',
   'TICKET',
   'ACCOUNT',
+  'TASK',
 ] as const;
 
 export type ActivityFeedEntityType = (typeof ACTIVITY_FEED_ENTITY_TYPES)[number];

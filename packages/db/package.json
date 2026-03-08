@@ -24,7 +24,7 @@
     }
   },
   "scripts": {
-    "build": "tsup && node scripts/postbuild-esm.mjs",
+    "build": "node -e \"try{require('fs').unlinkSync('generated/prisma/package.json')}catch(e){}\" && tsup && node scripts/postbuild-esm.mjs",
     "dev": "tsup --watch",
     "clean": "rm -rf dist .turbo",
     "db:generate": "prisma generate && node scripts/fix-prisma-esm.mjs",
@@ -38,8 +38,7 @@
     "db:cleanup-legacy": "tsx --env-file=.env prisma/cleanup-legacy-seed-ids.ts",
     "db:cleanup-legacy:dry-run": "tsx --env-file=.env prisma/cleanup-legacy-seed-ids.ts --dry-run",
     "db:reset": "prisma migrate reset --force",
-    "pretypecheck": "node -e \"try{require('fs').unlinkSync('generated/prisma/package.json')}catch(e){}\"",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "node -e \"try{require('fs').unlinkSync('generated/prisma/package.json')}catch(e){}\" && tsc --noEmit",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
     "test": "vitest run",

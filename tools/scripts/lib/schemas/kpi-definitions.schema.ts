@@ -52,7 +52,7 @@ export const measurementScheduleSchema = z.object({
 export const kpiDefinitionsSchema = z.object({
   $schema: z.string().optional(),
   version: z.string().regex(versionPattern),
-  last_updated: z.string().datetime(),
+  last_updated: z.iso.datetime(),
   description: z.string().optional(),
   categories: z.record(z.string(), kpiCategorySchema),
   measurement_schedule: measurementScheduleSchema,

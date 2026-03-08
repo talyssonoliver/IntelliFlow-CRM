@@ -58,7 +58,7 @@ export type WorkflowDefinition = z.infer<typeof workflowDefinitionSchema>;
  * Workflow instance (running or completed workflow)
  */
 export const workflowInstanceSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   definitionId: z.string(),
   status: z.enum(['pending', 'running', 'completed', 'failed', 'cancelled', 'waiting_for_input']),
   input: z.record(z.string(), z.unknown()).optional(),

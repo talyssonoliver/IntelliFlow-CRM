@@ -30,7 +30,7 @@ export const EmailPayloadSchema = z.object({
   subject: z.string().min(1).max(998), // RFC 2822 limit
   body: z.string(),
   htmlBody: z.string().optional(),
-  replyTo: z.string().email().optional(),
+  replyTo: z.email().optional(),
   attachments: z
     .array(
       z.object({

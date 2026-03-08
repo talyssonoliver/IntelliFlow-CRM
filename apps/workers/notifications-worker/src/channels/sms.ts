@@ -22,7 +22,7 @@ export const SMSPayloadSchema = z.object({
   to: z.string().min(10).max(15), // E.164 format
   body: z.string().min(1).max(1600), // SMS limit
   from: z.string().optional(),
-  mediaUrls: z.array(z.string().url()).optional(), // MMS
+  mediaUrls: z.array(z.url()).optional(), // MMS
 });
 
 export type SMSPayload = z.infer<typeof SMSPayloadSchema>;
