@@ -7,8 +7,8 @@
  * Injects additionalContext reminding agent of remaining mandatory phases.
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
-import { join } from 'path';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 const TRACKED_SKILLS = ['exec-gates', 'exec-attestation', 'exec-metrics', 'compliance-check'];
 

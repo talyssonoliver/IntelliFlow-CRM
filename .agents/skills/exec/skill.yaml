@@ -1,0 +1,90 @@
+name: exec
+description: Execute task implementation (TDD) with MATOP validation - SESSION 3 of STOA workflow
+version: 1.0.0
+type: project
+
+aliases:
+  - execute
+  - exec-task
+
+capabilities:
+  - code-generation
+  - tdd-workflow
+  - matop-validation
+  - sub-agents
+  - file-operations
+
+config:
+  max_concurrent_agents: 5
+  enable_tdd: true
+  enable_matop: true
+  require_spec: true
+  require_plan: true
+
+sub_agents:
+  - name: stoa-foundation
+    description: Build, typecheck, lint validation
+    skill: stoa-foundation
+  - name: stoa-security
+    description: Security gate validation
+    skill: stoa-security
+  - name: stoa-quality
+    description: Test coverage and a11y validation
+    skill: stoa-quality
+  - name: stoa-domain
+    description: Business logic and flow validation
+    skill: stoa-domain
+  - name: stoa-intelligence
+    description: AI feature validation
+    skill: stoa-intelligence
+  - name: stoa-automation
+    description: CI/CD and infrastructure validation
+    skill: stoa-automation
+
+parameters:
+  - name: task_id
+    type: string
+    description: The task ID from Sprint_plan.csv (e.g., PG-015, IFC-101)
+    required: true
+
+  - name: skip_tdd
+    type: boolean
+    description: Skip TDD phases (use for remediation after WARN)
+    default: false
+
+  - name: matop_only
+    type: boolean
+    description: Only run MATOP validation (no implementation)
+    default: false
+
+outputs:
+  - type: delivery-report
+    path: .specify/sprints/sprint-{N}/execution/{task_id}/{run_id}/{task_id}-delivery.md
+  - type: summary
+    path: .specify/sprints/sprint-{N}/execution/{task_id}/{run_id}/summary.json
+  - type: implementation-log
+    path: .specify/sprints/sprint-{N}/execution/{task_id}/{run_id}/implementation/steps-completed.json
+  - type: matop-evidence
+    path: .specify/sprints/sprint-{N}/execution/{task_id}/{run_id}/matop/
+
+validation:
+  - run: pnpm run typecheck
+    description: Verify TypeScript compilation
+  - run: pnpm run build
+    description: Verify build succeeds
+  - run: pnpm run lint
+    description: Verify linting rules
+  - run: pnpm run test
+    description: Ensure all tests pass
+
+success_criteria:
+  - all_plan_steps_completed: true
+  - matop_verdict: PASS
+  - test_coverage_maintained: true
+  - build_successful: true
+
+status_transitions:
+  on_start: In Progress
+  on_pass: Completed
+  on_warn: In Progress
+  on_fail: Failed

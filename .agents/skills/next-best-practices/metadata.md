@@ -213,7 +213,7 @@ export default async function Image({ params }: Props) {
 
 ```tsx
 import { ImageResponse } from 'next/og';
-import { join } from 'path';
+import { join } from 'node:path';
 import { readFile } from 'fs/promises';
 
 export default async function Image() {

@@ -7,8 +7,8 @@
  * User can always Ctrl+C to force quit.
  */
 
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 const REQUIRED_PHASES = ['exec-gates', 'exec-attestation', 'compliance-check', 'exec-metrics'];
 

@@ -13,8 +13,8 @@
  * Completed        | exec-phase-state.json has gates + attestation + compliance-check
  */
 
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 // Status patterns and their prerequisites
 const TRANSITIONS = {
@@ -68,13 +68,13 @@ function extractSprintNumber(taskId) {
         // Target Sprint is typically the column after several others
         // Parse the CSV properly — find column index
         const headerLine = csv.split('\n')[0];
-        const headers = headerLine.split(',').map(h => h.trim().replace(/"/g, ''));
-        const sprintIdx = headers.findIndex(h => h === 'Target Sprint');
+        const headers = headerLine.split(',').map(h => h.trim().replaceAll(/"/g, ''));
+        const sprintIdx = headers.indexOf(h => h === 'Target Sprint');
         if (sprintIdx >= 0) {
           const cols = line.split(',');
           if (cols[sprintIdx]) {
-            const n = parseInt(cols[sprintIdx].replace(/"/g, '').trim(), 10);
-            if (!isNaN(n)) return n;
+            const n = Number.parseInt(cols[sprintIdx].replaceAll(/"/g, '').trim(), 10);
+            if (!Number.isNaN(n)) return n;
           }
         }
       }
