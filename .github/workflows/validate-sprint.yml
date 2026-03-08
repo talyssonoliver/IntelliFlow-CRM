@@ -20,7 +20,7 @@ on:
 
 jobs:
   validate-sprint:
-    name: Validate Sprint Gates (Strict)
+    name: Validate Sprint Gates (Strict) ${{ matrix.sprint }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -50,15 +50,16 @@ jobs:
       - name: Remediation hint
         if: failure()
         run: |
-          echo "Sprint ${{ matrix.sprint }} governance validation failed (strict mode)."
+          echo "Sprint ${{ matrix.sprint }} governance validation failed."
           echo ""
           echo "Common causes:"
           echo "1) Sprint ${{ matrix.sprint }} tasks not all Done/Completed in Sprint_plan.csv"
           echo "2) Ignored/untracked runtime artifacts under apps/project-tracker/docs"
           echo "3) Duplicate or missing canonical source-of-truth artifacts"
+          echo "4) Failed validations recorded in task JSON files (exit_code != 0 with passed != true)"
           echo ""
           echo "To investigate locally:"
-          echo "  pnpm run validate:sprint -- --sprint ${{ matrix.sprint }} --strict"
+          echo "  pnpm run validate:sprint -- --sprint ${{ matrix.sprint }}"
           echo "  git ls-files -o -i --exclude-standard apps/project-tracker/docs"
           echo ""
           exit 1

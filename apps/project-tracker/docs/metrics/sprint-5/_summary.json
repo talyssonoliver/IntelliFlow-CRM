@@ -13,8 +13,13 @@
     "not_started": 0,
     "failed": 0
   },
-  "notes": "16/16 tasks DONE (100%). Last synced: 2026-03-08T17:54:49.303Z",
+  "notes": "16/16 tasks DONE (100%). Last synced: 2026-03-08T20:59:05.613Z",
   "completed_tasks": [
+    {
+      "task_id": "IFC-150",
+      "completed_at": "2026-02-01T20:30:00.000Z",
+      "duration_minutes": 15
+    },
     {
       "task_id": "IFC-179",
       "completed_at": "2026-02-04T22:45:00.000Z",
@@ -47,52 +52,47 @@
     },
     {
       "task_id": "IFC-089",
-      "completed_at": "2026-03-08T17:54:49.303Z",
+      "completed_at": "2026-03-08T20:59:05.613Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-098",
-      "completed_at": "2026-03-08T17:54:49.303Z",
+      "completed_at": "2026-03-08T20:59:05.613Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-111",
-      "completed_at": "2026-03-08T17:54:49.303Z",
+      "completed_at": "2026-03-08T20:59:05.613Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-112",
-      "completed_at": "2026-03-08T17:54:49.303Z",
+      "completed_at": "2026-03-08T20:59:05.613Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-127",
-      "completed_at": "2026-03-08T17:54:49.303Z",
+      "completed_at": "2026-03-08T20:59:05.613Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-130",
-      "completed_at": "2026-03-08T17:54:49.303Z",
+      "completed_at": "2026-03-08T20:59:05.613Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-138",
-      "completed_at": "2026-03-08T17:54:49.303Z",
+      "completed_at": "2026-03-08T20:59:05.613Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-147",
-      "completed_at": "2026-03-08T17:54:49.303Z",
-      "duration_minutes": 15
-    },
-    {
-      "task_id": "IFC-150",
-      "completed_at": "2026-03-08T17:54:49.303Z",
+      "completed_at": "2026-03-08T20:59:05.613Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-189",
-      "completed_at": "2026-03-08T17:54:49.303Z",
+      "completed_at": "2026-03-08T20:59:05.613Z",
       "duration_minutes": 15
     }
   ],
@@ -115,6 +115,6 @@
       "spi": 1,
       "status": "on_track"
     },
-    "calculated_at": "2026-03-08T17:54:49.351Z"
+    "calculated_at": "2026-03-08T20:59:05.668Z"
   }
 }

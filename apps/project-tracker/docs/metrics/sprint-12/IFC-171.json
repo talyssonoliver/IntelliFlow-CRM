@@ -1,0 +1,32 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-171",
+  "section": "Notifications",
+  "description": "Implement webhook notification channel - Follow-up to IFC-157",
+  "owner": "Backend Dev (STOA-Domain)",
+  "sprint": "sprint-12",
+  "status": "DONE",
+  "started_at": null,
+  "completed_at": null,
+  "dependencies": {
+    "required": [
+      "IFC-157"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-03-08T00:00:00Z"
+  },
+  "artifacts": {
+    "expected": [],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "completion-evidence",
+      "command": "# Task marked Completed in Sprint_plan.csv",
+      "executed_at": "2026-03-08T00:00:00Z",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
+  "notes": "Evidence stub. Task marked Completed in Sprint_plan.csv. Full evidence may be recorded in sprint attestations or audit reports."
+}

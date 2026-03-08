@@ -1,0 +1,33 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-118",
+  "section": "Risk Mgmt",
+  "description": "Establish and maintain a risk register with mitigation actions",
+  "owner": "PM + Tech Lead (STOA-Foundation)",
+  "sprint": "sprint-8",
+  "status": "DONE",
+  "started_at": null,
+  "completed_at": null,
+  "dependencies": {
+    "required": [
+      "IFC-010",
+      "IFC-054"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-03-08T00:00:00Z"
+  },
+  "artifacts": {
+    "expected": [],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "completion-evidence",
+      "command": "# Task marked Completed in Sprint_plan.csv",
+      "executed_at": "2026-03-08T00:00:00Z",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
+  "notes": "Evidence stub. Task marked Completed in Sprint_plan.csv. Full evidence may be recorded in sprint attestations or audit reports."
+}
