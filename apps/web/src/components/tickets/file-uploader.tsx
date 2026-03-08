@@ -147,7 +147,7 @@ export function FileUploader({
 
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-medium text-foreground">Attachments</label>
+      <label htmlFor="file-upload-input" className="block text-sm font-medium text-foreground">Attachments</label>
 
       {/* Drop zone */}
       <div
@@ -182,6 +182,7 @@ export function FileUploader({
           Max {maxSizeMB}MB per file, up to {maxFiles} files
         </p>
         <input
+          id="file-upload-input"
           ref={inputRef}
           type="file"
           multiple

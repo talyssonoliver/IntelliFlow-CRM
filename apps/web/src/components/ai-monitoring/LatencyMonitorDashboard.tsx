@@ -28,6 +28,7 @@ import {
 } from '@/lib/ai-monitoring/latency-utils';
 import { LatencyAlerts } from './LatencyAlerts';
 
+
 const LatencyTrendChart = lazy(() => import('./LatencyTrendChart'));
 
 const BREADCRUMBS = [
@@ -92,6 +93,7 @@ export function LatencyMonitorDashboard() {
     isLoading,
     error,
     refetch,
+    available,
   } = useLatencyDashboard(filters);
 
   const toggleModelExpand = (model: string) => {
@@ -136,25 +138,41 @@ export function LatencyMonitorDashboard() {
     );
   }
 
-  // Empty state
+  // Empty state — distinguish between "no data" and "process isolated"
   if (!isLoading && sampleCount === 0) {
     return (
       <div>
         <PageHeader title="Latency Monitor" breadcrumbs={BREADCRUMBS} />
-        <Card className="mt-6">
-          <CardContent className="p-6 text-center" data-testid="empty-state">
-            <span
-              className="material-symbols-outlined text-4xl text-muted-foreground mb-2"
-              aria-hidden="true"
-            >
-              speed
-            </span>
-            <p className="text-lg font-medium text-muted-foreground">No latency data yet</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Start using AI features to populate monitoring data.
+  
+        {!available ? (
+          <div
+            className="mt-4 p-3 rounded-lg bg-blue-50 border border-blue-200 dark:bg-blue-900/20 dark:border-blue-800"
+            data-testid="unavailable-banner"
+          >
+            <p className="text-sm text-blue-700 dark:text-blue-400 flex items-center gap-2">
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                info
+              </span>
+              Monitoring data unavailable — AI worker runs in a separate process. Data will appear
+              when both services are colocated or Redis-backed persistence is enabled.
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        ) : (
+          <Card className="mt-6">
+            <CardContent className="p-6 text-center" data-testid="empty-state">
+              <span
+                className="material-symbols-outlined text-4xl text-muted-foreground mb-2"
+                aria-hidden="true"
+              >
+                speed
+              </span>
+              <p className="text-lg font-medium text-muted-foreground">No latency data yet</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Start using AI features to populate monitoring data.
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     );
   }
@@ -164,6 +182,7 @@ export function LatencyMonitorDashboard() {
   return (
     <div>
       <PageHeader title="Latency Monitor" breadcrumbs={BREADCRUMBS} />
+
 
       {/* Stale data warning */}
       {isStaleLatencyData(latestTimestamp) && (

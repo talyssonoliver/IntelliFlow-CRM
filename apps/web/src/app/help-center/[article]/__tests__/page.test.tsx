@@ -48,7 +48,7 @@ vi.mock('@/components/shared/page-header', () => ({
 }));
 
 import { useParams } from 'next/navigation';
-import type { HelpArticle } from '@/lib/support/help-articles';
+import type { HelpArticle as _HelpArticle } from '@/lib/support/help-articles';
 
 // We need to import the page component after the mocks
 let ArticlePage: () => React.JSX.Element;
@@ -84,10 +84,7 @@ describe('ArticlePage', () => {
 
   it('renders related articles section when article has related', () => {
     render(<ArticlePage />);
-    // Related articles should appear (if the article has any)
-    const relatedSection = screen.queryByText(/related articles/i);
-    // This may or may not exist depending on the article data
-    // The component should handle both cases
+    // Related articles may or may not exist depending on the article data
     expect(screen.getByTestId('article-renderer')).toBeInTheDocument();
   });
 
@@ -129,17 +126,6 @@ describe('ArticlePage', () => {
     render(<ArticlePage />);
     // Article renderer should have the current article's id
     const renderer = screen.getByTestId('article-renderer');
-    const currentId = renderer.getAttribute('data-article-id');
-
-    // Related article links should not link to the current article
-    const relatedLinks = screen.queryAllByRole('link');
-    for (const link of relatedLinks) {
-      const href = link.getAttribute('href');
-      if (href?.startsWith('/help-center/')) {
-        // The current article slug should not appear as a related link
-        // (This is a best-effort check via the rendered output)
-      }
-    }
     expect(renderer).toBeInTheDocument();
   });
 

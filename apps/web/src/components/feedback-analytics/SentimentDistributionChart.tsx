@@ -48,7 +48,7 @@ export default function SentimentDistributionChart({ sentiment }: Readonly<Senti
             }
           >
             {data.map((entry) => (
-              <Cell key={entry.name} fill={COLORS[entry.name as keyof typeof COLORS]} /> {/* NOSONAR typescript:S1874 */}
+              <Cell key={entry.name} fill={COLORS[entry.name as keyof typeof COLORS]} />
             ))}
           </Pie>
           <Tooltip />

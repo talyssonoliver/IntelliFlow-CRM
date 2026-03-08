@@ -61,6 +61,7 @@ export default [
       '.next/**',
       'dist/**',
       'build/**',
+      'coverage/**',
     ],
   },
 ];

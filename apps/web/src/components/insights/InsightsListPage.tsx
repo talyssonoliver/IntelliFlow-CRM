@@ -16,6 +16,7 @@ import { Card } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { InsightCard, type SerializedAIInsight } from './InsightCard';
 import { InsightTypeBadge } from './InsightTypeBadge';
+
 import type { AIInsightType } from '@intelliflow/validators';
 
 // Material Symbols icon helper (same pattern as agent-approvals)
@@ -149,6 +150,7 @@ export function InsightsListPage() {
         <span>/</span>
         <span className="text-slate-900 dark:text-white font-medium">All Insights</span>
       </nav>
+
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">

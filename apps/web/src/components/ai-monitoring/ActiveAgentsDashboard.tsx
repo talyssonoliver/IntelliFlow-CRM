@@ -13,6 +13,9 @@ import Link from 'next/link';
 import { Card, CardContent, Button, Skeleton, cn } from '@intelliflow/ui';
 import { PageHeader, SearchFilterBar, useMultiFilterState } from '@/components/shared';
 import { useActiveAgentsDashboard } from '@/lib/active-agents/hooks';
+import { api } from '@/lib/api';
+import { QueueSchedulerPanel } from './QueueSchedulerPanel';
+import { useQueueScheduler, useQueueMutations } from '@/lib/ai-monitoring/queue-scheduler-hooks';
 import {
   getAgentTypeLabel,
   getAgentTypeIcon,
@@ -23,6 +26,7 @@ import {
   filterAgents,
 } from '@/lib/active-agents/agent-utils';
 import type { ActiveAgent, ActiveAgentFilters } from '@/lib/active-agents/types';
+
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -109,9 +113,14 @@ function StatCard({ label, value, icon, colorClass, isLoading, testId, ariaLabel
 
 interface AgentCardProps {
   agent: ActiveAgent;
+  onReset: (agentId: string) => void;
+  onDelete: (agentId: string) => void;
+  isActing: boolean;
 }
 
-function AgentCard({ agent }: Readonly<AgentCardProps>) {
+function AgentCard({ agent, onReset, onDelete, isActing }: Readonly<AgentCardProps>) {
+  const agentId = agent.agentId ?? agent.id;
+
   return (
     <article data-testid="agent-card" className="rounded-lg border bg-card p-4">
       <div className="flex items-start justify-between gap-4">
@@ -144,12 +153,38 @@ function AgentCard({ agent }: Readonly<AgentCardProps>) {
           <span className="text-xs text-muted-foreground">
             {formatLastActive(agent.lastActive)}
           </span>
-          <Link
-            href={`/agent-approvals/logs/${agent.agentId ?? agent.id}`}
-            className="text-xs text-primary hover:underline"
-          >
-            View Logs
-          </Link>
+          <div className="flex items-center gap-1.5">
+            <Link
+              href={`/agent-approvals/logs/${agentId}`}
+              className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs hover:bg-muted transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm">description</span>
+              Logs
+            </Link>
+            {agent.status === 'error' && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                disabled={isActing}
+                onClick={() => onReset(agentId)}
+                aria-label={`Reset ${getAgentTypeLabel(agent.type)}`}
+              >
+                <span className="material-symbols-outlined text-sm mr-1">restart_alt</span>
+                Reset
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0 text-muted-foreground hover:text-red-600"
+              disabled={isActing}
+              onClick={() => onDelete(agentId)}
+              aria-label={`Remove ${getAgentTypeLabel(agent.type)}`}
+            >
+              <span className="material-symbols-outlined text-sm">close</span>
+            </Button>
+          </div>
         </div>
       </div>
     </article>
@@ -188,8 +223,31 @@ function DashboardSkeleton() {
 
 export function ActiveAgentsDashboard() {
   const { agents, healthStatus, isLoading, error, refetch } = useActiveAgentsDashboard();
+  const queueScheduler = useQueueScheduler();
+  const queueMutations = useQueueMutations();
 
   const [activeChip, setActiveChip] = useState('all');
+  const [actingAgentId, setActingAgentId] = useState<string | null>(null);
+
+  const resetMutation = api.aiMonitoring.resetAgentStatus.useMutation({
+    onSuccess: () => { setActingAgentId(null); refetch(); },
+    onError: () => { setActingAgentId(null); },
+  });
+
+  const deleteMutation = api.aiMonitoring.deleteAgent.useMutation({
+    onSuccess: () => { setActingAgentId(null); refetch(); },
+    onError: () => { setActingAgentId(null); },
+  });
+
+  const handleReset = useCallback((agentId: string) => {
+    setActingAgentId(agentId);
+    resetMutation.mutate({ agentId });
+  }, [resetMutation]);
+
+  const handleDelete = useCallback((agentId: string) => {
+    setActingAgentId(agentId);
+    deleteMutation.mutate({ agentId });
+  }, [deleteMutation]);
 
   const filterState = useMultiFilterState({
     status: '',
@@ -259,6 +317,7 @@ export function ActiveAgentsDashboard() {
           },
         ]}
       />
+
 
       {/* Stat Cards */}
       {isLoading ? (
@@ -348,10 +407,29 @@ export function ActiveAgentsDashboard() {
           ) : (
             <div className="space-y-3">
               {filteredAgents.map((agent) => (
-                <AgentCard key={agent.id} agent={agent} />
+                <AgentCard
+                  key={agent.id}
+                  agent={agent}
+                  onReset={handleReset}
+                  onDelete={handleDelete}
+                  isActing={actingAgentId === (agent.agentId ?? agent.id)}
+                />
               ))}
             </div>
           )}
+
+          {/* Queue Scheduler Panel — IFC-296 */}
+          <QueueSchedulerPanel
+            data={queueScheduler.data}
+            isLoading={queueScheduler.isLoading}
+            isUnavailable={queueScheduler.isUnavailable}
+            isPending={queueMutations.isPending}
+            onPause={queueMutations.pause}
+            onResume={queueMutations.resume}
+            onRetryFailed={queueMutations.retryFailed}
+            onDeleteScheduler={queueMutations.deleteScheduler}
+            onRefresh={queueScheduler.refetch}
+          />
         </>
       )}
     </div>

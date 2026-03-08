@@ -20,6 +20,7 @@ import {
   ScoreBadge,
 } from '@intelliflow/ui';
 import { PageHeader, SearchFilterBar, useMultiFilterState } from '@/components/shared';
+
 import { useLeadScoringDashboard } from '@/lib/lead-scoring/hooks';
 import type { LeadScoringFilters } from '@/lib/lead-scoring/hooks';
 import type { ScoredLead } from '@/lib/lead-scoring/types';

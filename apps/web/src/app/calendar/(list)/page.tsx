@@ -22,6 +22,8 @@ import { AppointmentList, AppointmentCalendar } from '@/components/appointments'
 import type {
   AppointmentStats,
   AppointmentListItem,
+  AppointmentType,
+  AppointmentStatus,
   CalendarAppointment,
   CalendarTask,
 } from '@/components/appointments/types';
@@ -60,8 +62,9 @@ export default function CalendarPage() {
   const [showTaskCreate, setShowTaskCreate] = useState(false);
   const [taskCreateDefaultDate, setTaskCreateDefaultDate] = useState<string>('');
 
-  // tRPC queries — using typed client directly
-  const { data, isLoading } = api.appointments.list.useQuery(queryParams, { staleTime: 30_000 });
+  // tRPC queries — cast to simplified type to avoid TS2589 (excessively deep instantiation)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, isLoading } = api.appointments.list.useQuery(queryParams, { staleTime: 30_000 }) as any as { data: { appointments?: Record<string, unknown>[]; total?: number } | undefined; isLoading: boolean };
 
   const { data: rawStats } = api.appointments.stats.useQuery(undefined, {
     staleTime: 5 * 60_000,
@@ -70,27 +73,29 @@ export default function CalendarPage() {
   });
 
   const appointments: AppointmentListItem[] = useMemo(() => {
-    if (!data?.appointments) return [];
-    return data.appointments.map((a) => ({
-      id: a.id,
-      title: a.title,
-      startTime: new Date(a.startTime),
-      endTime: new Date(a.endTime),
-      appointmentType: a.appointmentType,
-      status: a.status,
-      location: a.location,
-      attendeeCount: a.attendees?.length ?? 0,
-      hasConflict: false,
-      linkedCaseCount: a.linkedCases?.length ?? 0,
-      isRecurring: Boolean(a.recurrencePattern),
-      calendarId: a.calendarId as string | null | undefined,
-      organizer: a.organizer ?? { id: '', name: 'Unknown' },
-      attendeeNames:
-        a.attendees?.map(
-          (att: Record<string, unknown>) =>
-            ((att.user as Record<string, unknown>)?.name as string) ?? 'Unknown'
-        ) ?? [],
-    }));
+    const rawAppointments: Record<string, unknown>[] | undefined = data?.appointments;
+    if (!rawAppointments) return [];
+    return rawAppointments.map((a) => {
+      const organizer = a.organizer as { id?: string; name?: string | null } | null;
+      const attendees = a.attendees as Array<{ user?: { name?: string | null } }> | undefined;
+      const linkedCases = a.linkedCases as unknown[] | undefined;
+      return {
+        id: a.id as string,
+        title: a.title as string,
+        startTime: new Date(a.startTime as string),
+        endTime: new Date(a.endTime as string),
+        appointmentType: a.appointmentType as AppointmentType,
+        status: a.status as AppointmentStatus,
+        location: (a.location as string) ?? undefined,
+        attendeeCount: attendees?.length ?? 0,
+        hasConflict: false,
+        linkedCaseCount: linkedCases?.length ?? 0,
+        isRecurring: Boolean(a.recurrencePattern),
+        calendarId: a.calendarId as string | null | undefined,
+        organizer: { id: organizer?.id ?? '', name: organizer?.name ?? 'Unknown' },
+        attendeeNames: attendees?.map((att) => att.user?.name ?? 'Unknown') ?? [],
+      };
+    });
   }, [data]);
 
   const total = data?.total ?? 0;

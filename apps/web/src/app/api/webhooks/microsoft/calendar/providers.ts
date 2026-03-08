@@ -22,6 +22,7 @@ let serviceOverride: CalendarWebhookService | null = null;
 
 export function getMicrosoftAdapter(): MicrosoftAdapter {
   if (adapterOverride) return adapterOverride;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic require returns untyped module
   const { MicrosoftCalendarAdapter } = require('@intelliflow/adapters') as Record<string, any>;
   return new MicrosoftCalendarAdapter({
     clientId: '',

@@ -1,9 +1,18 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import HelpCenterPage from '../(list)/page';
 import { DEFAULT_HELP_CATEGORIES } from '@/lib/support/help-categories';
+
+// Mock next/navigation
+const mockReplace = vi.fn();
+const mockSearchParams = new URLSearchParams();
+
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => mockSearchParams,
+  useRouter: () => ({ replace: mockReplace }),
+}));
 
 // Mock child components to isolate page logic
 vi.mock('@/components/support', () => ({
@@ -27,6 +36,16 @@ vi.mock('@/components/support', () => ({
           {c.title}
         </span>
       ))}
+    </div>
+  ),
+  SearchFilters: (props: any) => (
+    <div
+      data-testid="search-filters"
+      data-category={props.categoryFilter}
+      data-sort={props.sortBy}
+      data-popular={props.popularOnly}
+    >
+      SearchFilters
     </div>
   ),
 }));
@@ -53,7 +72,18 @@ vi.mock('@/components/shared/page-header', () => ({
   ),
 }));
 
+function setSearchParams(params: Record<string, string>) {
+  const keys = Array.from(mockSearchParams.keys());
+  keys.forEach((k) => mockSearchParams.delete(k));
+  Object.entries(params).forEach(([k, v]) => mockSearchParams.set(k, v));
+}
+
 describe('HelpCenterPage', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setSearchParams({});
+  });
+
   it('renders PageHeader with "Help Center" title', () => {
     render(<HelpCenterPage />);
 
@@ -67,46 +97,25 @@ describe('HelpCenterPage', () => {
     expect(screen.getByTestId('help-search')).toBeInTheDocument();
   });
 
+  it('renders SearchFilters component', () => {
+    render(<HelpCenterPage />);
+    expect(screen.getByTestId('search-filters')).toBeInTheDocument();
+  });
+
   it('renders HelpCategories component', () => {
     render(<HelpCenterPage />);
     expect(screen.getByTestId('help-categories')).toBeInTheDocument();
   });
 
-  it('passes DEFAULT_HELP_CATEGORIES to HelpCategories initially', () => {
+  it('passes all 8 categories on empty query', () => {
     render(<HelpCenterPage />);
 
     const categories = screen.getByTestId('help-categories');
     expect(categories).toHaveAttribute('data-count', String(DEFAULT_HELP_CATEGORIES.length));
 
-    // All 8 category names should be present
     DEFAULT_HELP_CATEGORIES.forEach((cat) => {
       expect(screen.getByTestId(`category-${cat.id}`)).toBeInTheDocument();
     });
-  });
-
-  it('search state updates filtered categories', async () => {
-    render(<HelpCenterPage />);
-
-    const input = screen.getByTestId('search-input');
-    // Simulate onChange with a value that matches one category title
-    const { userEvent } = await import('@testing-library/user-event');
-    const user = userEvent.setup();
-    await user.clear(input);
-    await user.type(input, 'Billing');
-
-    // After typing, the page should filter categories
-    // The mocked HelpSearch calls onChange directly (no debounce in mock)
-    const categories = screen.getByTestId('help-categories');
-    expect(Number(categories.getAttribute('data-count'))).toBeLessThan(
-      DEFAULT_HELP_CATEGORIES.length
-    );
-  });
-
-  it('renders all 8 categories on initial load (no loading state)', () => {
-    render(<HelpCenterPage />);
-
-    const categories = screen.getByTestId('help-categories');
-    expect(categories).toHaveAttribute('data-count', '8');
   });
 
   it('PageHeader breadcrumbs: Dashboard > Help Center', () => {
@@ -132,5 +141,54 @@ describe('HelpCenterPage', () => {
     const filePath = resolve(__dirname, '../(list)/page.tsx');
     const source = readFileSync(filePath, 'utf-8');
     expect(source.trimStart().startsWith("'use client'")).toBe(true);
+  });
+
+  it('?q=billing pre-populates HelpSearch value', () => {
+    setSearchParams({ q: 'billing' });
+    render(<HelpCenterPage />);
+    const search = screen.getByTestId('help-search');
+    expect(search).toHaveAttribute('data-value', 'billing');
+  });
+
+  it('result count is undefined when query is empty', () => {
+    setSearchParams({});
+    render(<HelpCenterPage />);
+    const search = screen.getByTestId('help-search');
+    expect(search.getAttribute('data-result-count')).toBeNull();
+  });
+
+  it('?category=billing propagates to SearchFilters', () => {
+    setSearchParams({ category: 'billing' });
+    render(<HelpCenterPage />);
+    const filters = screen.getByTestId('search-filters');
+    expect(filters).toHaveAttribute('data-category', 'billing');
+  });
+
+  it('?sort=a-z propagates to SearchFilters', () => {
+    setSearchParams({ sort: 'a-z' });
+    render(<HelpCenterPage />);
+    const filters = screen.getByTestId('search-filters');
+    expect(filters).toHaveAttribute('data-sort', 'a-z');
+  });
+
+  it('?popular=true propagates to SearchFilters', () => {
+    setSearchParams({ popular: 'true' });
+    render(<HelpCenterPage />);
+    const filters = screen.getByTestId('search-filters');
+    expect(filters).toHaveAttribute('data-popular', 'true');
+  });
+
+  it('?q=xyznonexistent passes 0 categories', () => {
+    setSearchParams({ q: 'xyznonexistent' });
+    render(<HelpCenterPage />);
+    const categories = screen.getByTestId('help-categories');
+    expect(categories).toHaveAttribute('data-count', '0');
+  });
+
+  it('popular-only reduces to popular subset', () => {
+    setSearchParams({ popular: 'true' });
+    render(<HelpCenterPage />);
+    const categories = screen.getByTestId('help-categories');
+    expect(Number(categories.getAttribute('data-count'))).toBe(3);
   });
 });

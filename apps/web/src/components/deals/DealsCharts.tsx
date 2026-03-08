@@ -51,7 +51,7 @@ export default function DealsCharts({ pieChartData, barChartData }: Readonly<Dea
               labelLine={false}
             >
               {pieChartData.map((entry) => (
-                <Cell key={`pie-${entry.name}`} fill={entry.color} /> {/* NOSONAR typescript:S1874 */}
+                <Cell key={`pie-${entry.name}`} fill={entry.color} />
               ))}
             </Pie>
             <Tooltip />
@@ -99,7 +99,7 @@ export default function DealsCharts({ pieChartData, barChartData }: Readonly<Dea
             />
             <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
               {barChartData.map((entry) => (
-                <Cell key={`bar-${entry.name}`} fill={entry.color} /> {/* NOSONAR typescript:S1874 */}
+                <Cell key={`bar-${entry.name}`} fill={entry.color} />
               ))}
             </Bar>
           </BarChart>

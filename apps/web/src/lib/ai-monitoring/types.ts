@@ -195,3 +195,30 @@ export interface FailedJobsData {
   error: Error | null;
   refetch: () => void;
 }
+
+// ---------------------------------------------------------------------------
+// Queue Scheduler Types (IFC-296)
+// ---------------------------------------------------------------------------
+
+export type SchedulerQueueName = FailedJobQueue;
+
+export interface QueueSchedulerData {
+  queues: Array<{
+    name: SchedulerQueueName;
+    isPaused: boolean;
+    counts: { waiting: number; active: number; completed: number; failed: number; delayed: number };
+    schedulers: Array<{ id: string; name: string; pattern?: string; next?: number }>;
+  }>;
+}
+
+export interface QueueSchedulerPanelProps {
+  data: QueueSchedulerData | null;
+  isLoading: boolean;
+  isUnavailable: boolean;
+  isPending: Partial<Record<SchedulerQueueName, boolean>>;
+  onPause: (queue: SchedulerQueueName) => void;
+  onResume: (queue: SchedulerQueueName) => void;
+  onRetryFailed: (queue: SchedulerQueueName) => void;
+  onDeleteScheduler: (queue: SchedulerQueueName, schedulerId: string) => void;
+  onRefresh: () => void;
+}

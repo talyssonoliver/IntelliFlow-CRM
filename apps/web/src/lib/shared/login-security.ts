@@ -12,8 +12,6 @@
  * - Rate limit status checking
  */
 
-import { randomBytes } from 'node:crypto';
-
 // ============================================
 // CSRF Protection
 // ============================================
@@ -25,7 +23,7 @@ const CSRF_TOKEN_LENGTH = 32;
  * Generate a cryptographically secure CSRF token
  *
  * Creates a new token and stores it in sessionStorage for later validation.
- * Uses Node.js crypto for secure random generation.
+ * Uses the Web Crypto API (available in both browser and Node.js 19+).
  *
  * @returns The generated CSRF token
  *
@@ -36,19 +34,9 @@ const CSRF_TOKEN_LENGTH = 32;
  * ```
  */
 export function generateCsrfToken(): string {
-  // Use crypto.randomBytes for cryptographically secure random values
-  // Falls back to Web Crypto API for browser environment
-  let token: string;
-
-  if (typeof globalThis.window !== 'undefined' && globalThis.crypto?.getRandomValues) {
-    // Browser environment - use Web Crypto API
-    const array = new Uint8Array(CSRF_TOKEN_LENGTH);
-    globalThis.crypto.getRandomValues(array);
-    token = Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
-  } else {
-    // Node.js environment (SSR)
-    token = randomBytes(CSRF_TOKEN_LENGTH).toString('hex');
-  }
+  const array = new Uint8Array(CSRF_TOKEN_LENGTH);
+  globalThis.crypto.getRandomValues(array);
+  const token = Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
 
   // Store in sessionStorage for validation
   if (typeof globalThis.window !== 'undefined') {
@@ -173,7 +161,7 @@ export function getDeviceFingerprint(): DeviceFingerprint {
   const components: DeviceFingerprintComponents = {
     userAgent: navigator.userAgent,
     language: navigator.language,
-    platform: (navigator.userAgentData?.platform ?? navigator.platform) || 'unknown', // NOSONAR typescript:S1874
+    platform: ((navigator as unknown as Record<string, { platform?: string }>).userAgentData?.platform ?? navigator.platform) || 'unknown',
     screenResolution: `${screen.width}x${screen.height}`,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     colorDepth: screen.colorDepth,

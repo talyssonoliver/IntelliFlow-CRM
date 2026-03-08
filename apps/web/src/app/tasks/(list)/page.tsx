@@ -338,8 +338,8 @@ export default function TasksPage() {
   // F-13: Map tasks for calendar view (only those with due dates)
   const calendarTasks = useMemo<CalendarTask[]>(() => {
     return tasks
-      .filter((t): t is TaskListItem & { dueDate: Date | string } => !!t.dueDate)
-      .map((t) => ({ id: t.id, title: t.title, dueDate: t.dueDate, priority: t.priority }));
+      .filter((t) => !!t.dueDate)
+      .map((t) => ({ id: t.id, title: t.title, dueDate: t.dueDate as string, priority: t.priority }));
   }, [tasks]);
 
   // F-19: Wire createDefaultDate from calendar date click

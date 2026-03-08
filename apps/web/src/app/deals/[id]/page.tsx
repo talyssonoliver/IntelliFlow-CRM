@@ -405,7 +405,7 @@ function StakeholdersCard({ deal }: Readonly<{ deal: Deal }>) {
   );
 }
 
-function ActivityTimeline({
+function _ActivityTimeline({
   activities,
   dealId,
 }: Readonly<{

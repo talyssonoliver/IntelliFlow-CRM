@@ -31,6 +31,12 @@ export const agentApprovalsSidebarConfig: SidebarConfig = {
           icon: VIEW_ICONS.my,
           href: '/agent-approvals?view=my',
         },
+        {
+          id: 'tool-actions',
+          label: 'Tool Actions',
+          icon: 'pending_actions',
+          href: '/agent-approvals/preview',
+        },
       ],
     },
     {

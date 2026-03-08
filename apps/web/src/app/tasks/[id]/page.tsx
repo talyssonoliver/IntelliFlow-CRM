@@ -8,6 +8,7 @@ import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { TaskDetail, type TaskDetailData } from '@/components/tasks/TaskDetail';
 import { TaskForm, type TaskFormData } from '@/components/tasks/TaskForm';
+import { ActivityFeed } from '@/components/shared/activity-feed';
 
 function getEntityName(task: TaskDetailData): string {
   if (task.lead) return `${task.lead.firstName} ${task.lead.lastName}`;
@@ -205,6 +206,14 @@ export default function TaskDetailPage() {
         isDeleting={deleteMutation.isPending}
         isArchiving={archiveMutation.isPending}
       />
+
+      {/* Activity Timeline */}
+      {task && (
+        <section aria-label="Activity timeline">
+          <h2 className="text-lg font-semibold mb-3">Activity</h2>
+          <ActivityFeed entityType="TASK" entityId={params.id} height={320} />
+        </section>
+      )}
 
       {/* Edit Form */}
       <TaskForm

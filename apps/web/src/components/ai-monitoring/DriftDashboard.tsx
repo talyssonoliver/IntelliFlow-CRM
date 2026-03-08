@@ -79,7 +79,7 @@ export function DriftDashboard() {
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
 
   const filters: DriftFilters = { severity: severityFilter, sortBy };
-  const { status, history, roi, isLoading, error, refetch } = useDriftDashboard(filters);
+  const { status, history, roi, isLoading, error, refetch, available } = useDriftDashboard(filters);
   const failedJobs = useFailedJobs({ limit: 1 });
 
   const errorRateItem = history.find((h) => h.metric === 'error_rate') ?? null;
@@ -127,6 +127,23 @@ export function DriftDashboard() {
   return (
     <div>
       <PageHeader title="Drift Detection" breadcrumbs={BREADCRUMBS} />
+
+
+      {/* Process isolation banner */}
+      {!isLoading && !available && (
+        <div
+          className="mt-4 p-3 rounded-lg bg-blue-50 border border-blue-200 dark:bg-blue-900/20 dark:border-blue-800"
+          data-testid="unavailable-banner"
+        >
+          <p className="text-sm text-blue-700 dark:text-blue-400 flex items-center gap-2">
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
+              info
+            </span>
+            Monitoring data unavailable — AI worker runs in a separate process. Data will appear when
+            both services are colocated or Redis-backed persistence is enabled.
+          </p>
+        </div>
+      )}
 
       {/* Stale data warning */}
       {isStaleData(status.lastCheck) && (

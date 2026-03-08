@@ -1,145 +1,164 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen, act } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, act } from '@testing-library/react';
+
+// Mock next/navigation
+const mockReplace = vi.fn();
+let mockParams = new URLSearchParams();
+
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => mockParams,
+  useRouter: () => ({ replace: mockReplace }),
+}));
+
+// Import real components (no mocks for integration test)
 import HelpCenterPage from '../(list)/page';
 
-// Integration tests — render the full page with real components (no mocks)
+function setSearchParams(params: Record<string, string>) {
+  mockParams = new URLSearchParams(params);
+}
+
+/** Get only category card links (not breadcrumb links) */
+function getCategoryLinks() {
+  return screen.getAllByRole('link').filter(
+    (el) => el.getAttribute('href')?.startsWith('/help-center/') &&
+      !el.closest('nav[aria-label="Breadcrumb"]')
+  );
+}
 
 describe('HelpCenter Integration', () => {
-  it('renders search and categories together', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.clearAllMocks();
+    setSearchParams({});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('renders search input, filters, and 8 category cards on empty query', () => {
     render(<HelpCenterPage />);
+    expect(screen.getByRole('search')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Search help topics...')).toBeInTheDocument();
-    expect(screen.getByText('Getting Started')).toBeInTheDocument();
-    expect(screen.getByText('Billing')).toBeInTheDocument();
+    expect(getCategoryLinks()).toHaveLength(8);
   });
 
-  it('filtering updates card grid after debounce', async () => {
+  it('typing triggers debounced router.replace', async () => {
     render(<HelpCenterPage />);
-
     const input = screen.getByPlaceholderText('Search help topics...');
-    await userEvent.type(input, 'billing');
+    fireEvent.change(input, { target: { value: 'billing' } });
 
     await act(async () => {
-      await new Promise((r) => setTimeout(r, 350));
+      vi.advanceTimersByTime(350);
     });
 
-    // Should filter to show Billing (title match)
-    expect(screen.getByText('Billing')).toBeInTheDocument();
-    // Other categories should be hidden
-    expect(screen.queryByText('Getting Started')).not.toBeInTheDocument();
+    expect(mockReplace).toHaveBeenCalled();
   });
 
-  it('clearing search restores all 8 categories', async () => {
+  it('"xyznonexistent" shows "No results found"', () => {
+    setSearchParams({ q: 'xyznonexistent' });
     render(<HelpCenterPage />);
-
-    const input = screen.getByPlaceholderText('Search help topics...');
-    await userEvent.type(input, 'billing');
-
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, 350));
-    });
-
-    // Clear search
-    await userEvent.clear(input);
-
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, 350));
-    });
-
-    // All categories should be visible again
-    expect(screen.getByText('Getting Started')).toBeInTheDocument();
-    expect(screen.getByText('Leads & Contacts')).toBeInTheDocument();
-    expect(screen.getByText('Deals & Pipeline')).toBeInTheDocument();
-    expect(screen.getByText('Email & Calendar')).toBeInTheDocument();
-    expect(screen.getByText('Tickets & Cases')).toBeInTheDocument();
-    expect(screen.getByText('AI Features')).toBeInTheDocument();
-    expect(screen.getByText('Settings & Admin')).toBeInTheDocument();
-    expect(screen.getByText('Billing')).toBeInTheDocument();
-  });
-
-  it('empty search query displays all 8 categories', () => {
-    render(<HelpCenterPage />);
-
-    // All 8 category titles visible
-    expect(screen.getByText('Getting Started')).toBeInTheDocument();
-    expect(screen.getByText('Leads & Contacts')).toBeInTheDocument();
-    expect(screen.getByText('Deals & Pipeline')).toBeInTheDocument();
-    expect(screen.getByText('Email & Calendar')).toBeInTheDocument();
-    expect(screen.getByText('Tickets & Cases')).toBeInTheDocument();
-    expect(screen.getByText('AI Features')).toBeInTheDocument();
-    expect(screen.getByText('Settings & Admin')).toBeInTheDocument();
-    expect(screen.getByText('Billing')).toBeInTheDocument();
-
-    // 8 category links + 1 breadcrumb link = 9 total
-    const categoryLinks = screen
-      .getAllByRole('link')
-      .filter((l) => l.getAttribute('href')?.startsWith('/help-center/'));
-    expect(categoryLinks.length).toBe(8);
-  });
-
-  it('partial match filters categories correctly (keyword match)', async () => {
-    render(<HelpCenterPage />);
-
-    const input = screen.getByPlaceholderText('Search help topics...');
-    // "automation" is a keyword for AI Features
-    await userEvent.type(input, 'automation');
-
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, 350));
-    });
-
-    expect(screen.getByText('AI Features')).toBeInTheDocument();
-    // Other categories should not match "automation"
-    expect(screen.queryByText('Getting Started')).not.toBeInTheDocument();
-    expect(screen.queryByText('Billing')).not.toBeInTheDocument();
-  });
-
-  it('non-matching search shows "No results found"', async () => {
-    render(<HelpCenterPage />);
-
-    const input = screen.getByPlaceholderText('Search help topics...');
-    await userEvent.type(input, 'xyznonexistent');
-
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, 350));
-    });
-
     expect(screen.getByText('No results found')).toBeInTheDocument();
   });
 
-  it('Escape key clears search and restores all categories', async () => {
+  it('Escape key clears search, all 8 categories restored', () => {
+    setSearchParams({});
+    render(<HelpCenterPage />);
+    const input = screen.getByPlaceholderText('Search help topics...');
+    fireEvent.keyDown(input, { key: 'Escape' });
+    expect(getCategoryLinks()).toHaveLength(8);
+  });
+
+  it('popular-only filter shows only 3 popular categories', () => {
+    setSearchParams({ popular: 'true' });
+    render(<HelpCenterPage />);
+    expect(getCategoryLinks()).toHaveLength(3);
+  });
+
+  it('sort by A-Z passes all 8 categories', () => {
+    setSearchParams({ sort: 'a-z' });
+    render(<HelpCenterPage />);
+    expect(getCategoryLinks()).toHaveLength(8);
+  });
+
+  it('sort by most articles passes all 8 categories', () => {
+    setSearchParams({ sort: 'most-articles' });
+    render(<HelpCenterPage />);
+    expect(getCategoryLinks()).toHaveLength(8);
+  });
+
+  it('combined search + popular-only intersection', () => {
+    setSearchParams({ q: 'lead', popular: 'true' });
+    render(<HelpCenterPage />);
+    const links = getCategoryLinks();
+    expect(links.length).toBeGreaterThan(0);
+    expect(links.length).toBeLessThanOrEqual(3);
+  });
+
+  it('aria-live region is present', () => {
+    setSearchParams({ q: 'billing' });
+    render(<HelpCenterPage />);
+    const liveRegion = document.querySelector('[aria-live="polite"]');
+    expect(liveRegion).toBeInTheDocument();
+  });
+
+  it('empty query shows all 8 categories with correct links', () => {
+    setSearchParams({});
     render(<HelpCenterPage />);
 
+    const categoryLinks = getCategoryLinks();
+    expect(categoryLinks).toHaveLength(8);
+  });
+
+  it('?q=billing pre-populates input on mount', () => {
+    setSearchParams({ q: 'billing' });
+    render(<HelpCenterPage />);
+    const input = screen.getByPlaceholderText('Search help topics...') as HTMLInputElement;
+    expect(input.value).toBe('billing');
+  });
+
+  it('selecting a category filter calls router.replace', () => {
+    setSearchParams({});
+    render(<HelpCenterPage />);
+    const categorySelect = screen.getByLabelText(/category/i);
+    fireEvent.change(categorySelect, { target: { value: 'billing' } });
+    expect(mockReplace).toHaveBeenCalled();
+  });
+
+  it('selecting a sort mode calls router.replace', () => {
+    setSearchParams({});
+    render(<HelpCenterPage />);
+    const sortSelect = screen.getByLabelText(/sort/i);
+    fireEvent.change(sortSelect, { target: { value: 'a-z' } });
+    expect(mockReplace).toHaveBeenCalled();
+  });
+
+  it('clicking popular toggle calls router.replace', () => {
+    setSearchParams({});
+    render(<HelpCenterPage />);
+    const button = screen.getByRole('button', { name: /popular/i });
+    fireEvent.click(button);
+    expect(mockReplace).toHaveBeenCalled();
+  });
+
+  it('changing filter does not move focus away from the control', () => {
+    setSearchParams({});
+    render(<HelpCenterPage />);
     const input = screen.getByPlaceholderText('Search help topics...');
-    await userEvent.type(input, 'billing');
+    input.focus();
+    expect(document.activeElement).toBe(input);
 
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, 350));
-    });
-
-    // Should be filtered
-    expect(screen.queryByText('Getting Started')).not.toBeInTheDocument();
-
-    // Press Escape
-    await userEvent.keyboard('{Escape}');
-
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, 350));
-    });
-
-    // All categories restored
-    expect(screen.getByText('Getting Started')).toBeInTheDocument();
-    expect(screen.getByText('Billing')).toBeInTheDocument();
+    fireEvent.change(input, { target: { value: 'test' } });
+    expect(document.activeElement).toBe(input);
   });
 
   it('popular categories appear first in default order', () => {
+    setSearchParams({});
     render(<HelpCenterPage />);
 
-    // Filter to only category links (exclude breadcrumb links)
     const categoryLinks = screen
       .getAllByRole('link')
       .filter((l) => l.getAttribute('href')?.startsWith('/help-center/'));
-    // First 3 should be popular: getting-started, leads-contacts, deals-pipeline
     expect(categoryLinks[0]).toHaveAttribute('href', '/help-center/getting-started');
     expect(categoryLinks[1]).toHaveAttribute('href', '/help-center/leads-contacts');
     expect(categoryLinks[2]).toHaveAttribute('href', '/help-center/deals-pipeline');

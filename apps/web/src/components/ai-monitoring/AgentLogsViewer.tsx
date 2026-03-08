@@ -13,7 +13,8 @@ import { Card, CardContent, Button, Skeleton, cn } from '@intelliflow/ui';
 import { PageHeader, SearchFilterBar, useMultiFilterState } from '@/components/shared';
 import { useAgentLogs, useFailedJobs } from '@/lib/ai-monitoring/hooks';
 import { getAgentTypeIcon, getAgentTypeLabel } from '@/lib/active-agents/agent-utils';
-import type { AgentLog, AgentLogMessage, AgentLogToolCall, FailedJob, FailedJobQueue } from '@/lib/ai-monitoring/types';
+import type { AgentLog, AgentLogMessage, AgentLogToolCall, FailedJob } from '@/lib/ai-monitoring/types';
+
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -500,6 +501,7 @@ export function AgentLogsViewer({ agentId }: Readonly<AgentLogsViewerProps>) {
         description="View AI agent conversation transcripts and tool call records"
         actions={[{ label: 'Refresh', icon: 'refresh', variant: 'secondary', onClick: activeRefetch }]}
       />
+
 
       {/* Filters */}
       <SearchFilterBar

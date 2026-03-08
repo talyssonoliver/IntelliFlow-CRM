@@ -23,6 +23,7 @@ let serviceOverride: CalendarWebhookService | null = null;
 
 export function getGoogleAdapter(): GoogleAdapter {
   if (adapterOverride) return adapterOverride;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic require returns untyped module
   const { GoogleCalendarAdapter } = require('@intelliflow/adapters') as Record<string, any>;
   return new GoogleCalendarAdapter({
     clientId: '',

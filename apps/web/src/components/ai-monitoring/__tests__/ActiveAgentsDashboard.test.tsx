@@ -14,6 +14,23 @@ vi.mock('@/lib/active-agents/hooks', () => ({
   useActiveAgentsDashboard: vi.fn(),
 }));
 
+vi.mock('@/lib/ai-monitoring/queue-scheduler-hooks', () => ({
+  useQueueScheduler: vi.fn(() => ({
+    data: null,
+    isLoading: false,
+    isUnavailable: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
+  useQueueMutations: vi.fn(() => ({
+    pause: vi.fn(),
+    resume: vi.fn(),
+    retryFailed: vi.fn(),
+    deleteScheduler: vi.fn(),
+    isPending: {},
+  })),
+}));
+
 vi.mock('@/lib/auth/AuthContext', () => ({
   useRequireAuth: vi.fn(() => ({
     user: { id: 'user-1', name: 'Test User' },
@@ -328,7 +345,10 @@ describe('Category 3: Interactions', () => {
       refetch: refetchFn,
     });
     render(<ActiveAgentsDashboard />);
-    fireEvent.click(screen.getByRole('button', { name: /refresh/i }));
+    // Match the PageHeader refresh button (contains text "Refresh" as visible label)
+    const refreshButtons = screen.getAllByRole('button', { name: /refresh/i });
+    // Click the first one (PageHeader's Refresh), not the queue panel's "Refresh queue data"
+    fireEvent.click(refreshButtons[0]);
     expect(refetchFn).toHaveBeenCalled();
   });
 

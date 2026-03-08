@@ -173,7 +173,7 @@ export default function DocumentDetailPage() { // NOSONAR typescript:S3776
   });
 
   // Map audit trail to UI-friendly format using module-level mapAuditEntry helper
-  const auditEntries: RawAuditEntry[] = rawAuditTrail ? (rawAuditTrail as RawAuditEntry[]) : [];
+  const auditEntries: RawAuditEntry[] = rawAuditTrail ? (rawAuditTrail as unknown as RawAuditEntry[]) : [];
   const auditTrail: AuditEntry[] = auditEntries.map((entry, index) =>
     mapAuditEntry(entry, index, auditEntries.length)
   );

@@ -121,7 +121,7 @@ export default function AppointmentDetailPage() {
   const detailData = useMemo((): AppointmentDetailData | null => {
     if (!appointmentData) return null;
     // tRPC returns properly typed data — map dates from serialized strings
-    const d = appointmentData as AppointmentDetailData;
+    const d = appointmentData as unknown as AppointmentDetailData;
     return {
       ...d,
       startTime: new Date(d.startTime),

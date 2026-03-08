@@ -9,7 +9,7 @@ export interface FeedbackWidgetProps {
   onFeedback?: (value: FeedbackValue) => void;
 }
 
-export function FeedbackWidget({ articleId, onFeedback }: Readonly<FeedbackWidgetProps>) {
+export function FeedbackWidget({ articleId: _articleId, onFeedback }: Readonly<FeedbackWidgetProps>) {
   const [submitted, setSubmitted] = useState(false);
   const confirmationRef = useRef<HTMLDivElement>(null);
 

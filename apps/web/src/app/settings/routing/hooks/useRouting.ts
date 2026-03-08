@@ -53,6 +53,7 @@ export function useRouting(options: UseRoutingOptions = {}) {
 
   // --- Mutations ---
 
+  // @ts-expect-error — tRPC recursive type instantiation exceeds depth limit
   const createRule = api.routing.create.useMutation({
     onSuccess: () => {
       utils.routing.list.invalidate();
