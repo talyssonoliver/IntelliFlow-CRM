@@ -1003,7 +1003,7 @@ function applyCreationInfo(history: NonNullable<FileEntry['gitHistory']>, relati
   ]);
   if (!output) return;
   const lines = output.split('\n');
-  const parsed = parseGitLogLine(lines.at(-1));
+  const parsed = parseGitLogLine(lines[lines.length - 1]);
   if (!parsed) return;
   history.createdCommit = parsed.hash || null;
   history.createdAt = parsed.date || null;

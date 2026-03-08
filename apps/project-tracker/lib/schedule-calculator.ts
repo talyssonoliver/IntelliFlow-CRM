@@ -383,7 +383,7 @@ function runForwardPass(
 function runBackwardPass(
   sortedTasks: TaskScheduleInput[],
   scheduledTasks: Map<string, ScheduledTask>,
-  config: ScheduleConfig
+  _config: ScheduleConfig
 ): void {
   let maxEarlyFinish = new Date(0);
   for (const task of sortedTasks) {

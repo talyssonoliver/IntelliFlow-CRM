@@ -164,7 +164,7 @@ function loadSprintCompletion(sprintNumber: number): { // NOSONAR typescript:S37
   const percentage = acc.totalTasks > 0 ? Math.round((acc.completedCount / acc.totalTasks) * 100) : 0;
 
   return {
-    tasks: [...acc.tasks].sort((a, b) => b.completedAt.localeCompare(a.completedAt)),
+    tasks: [...acc.tasks].toSorted((a, b) => b.completedAt.localeCompare(a.completedAt)),
     completion: {
       sprintNumber,
       status: deriveSprintStatus(percentage),

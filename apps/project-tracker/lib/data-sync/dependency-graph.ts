@@ -216,7 +216,7 @@ function buildCriticalPath(
   if (path.length <= 1) return null;
   const doneCount = path.filter((t) => taskStatusMap.get(t) === 'DONE').length;
   const completionPct = (doneCount / path.length) * 100;
-  const blockingTask = path.find((t) => taskStatusMap.get(t) !== 'DONE') || path.at(-1);
+  const blockingTask = path.find((t) => taskStatusMap.get(t) !== 'DONE') ?? path[path.length - 1];
   return {
     name: `Path to ${endNode.task_id}`,
     tasks: path,

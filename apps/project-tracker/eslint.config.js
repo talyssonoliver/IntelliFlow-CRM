@@ -30,6 +30,8 @@ const eslintConfig = tseslint.config(
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs['core-web-vitals'].rules,
       '@typescript-eslint/no-explicit-any': 'off',
+      // Material Symbols loaded via <link> in layout.tsx (App Router) — Pages Router rule is a false positive
+      '@next/next/no-page-custom-font': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {

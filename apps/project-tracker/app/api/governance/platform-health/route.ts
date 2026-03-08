@@ -440,7 +440,8 @@ function computeProvenanceChecks(metrics: Record<string, any>): {
   });
 
   if (prov.sources) {
-    for (const [key, source] of Object.entries(prov.sources)) {
+    for (const [key, rawSource] of Object.entries(prov.sources)) {
+      const source = rawSource as { confidence: string; collection_method: string };
       provenanceChecks.push({
         name: `source_confidence:${key}`,
         passed: source.confidence !== 'low',
@@ -564,7 +565,8 @@ export async function GET() {
     const kpiEntries: Array<{ name: string; target: string; actual: string; met: boolean }> = [];
     let kpisMet = 0;
     if (metrics.kpis) {
-      for (const [key, kpi] of Object.entries(metrics.kpis)) {
+      for (const [key, rawKpi] of Object.entries(metrics.kpis)) {
+        const kpi = rawKpi as { target: string; actual: string; met: boolean };
         kpiEntries.push({
           name: key.replaceAll('_', ' '),
           target: kpi.target,

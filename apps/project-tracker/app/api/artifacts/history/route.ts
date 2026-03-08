@@ -148,7 +148,8 @@ function getFileHistory(relativePath: string, staleDays: number): FileHistoryEnt
     if (creationOutput) {
       const lines = creationOutput.split('\n');
       // Take the last line (oldest commit that added the file)
-      const { hash, date, author, message } = parseGitLogLine(lines.at(-1));
+      const lastLine = lines[lines.length - 1];
+      const { hash, date, author, message } = parseGitLogLine(lastLine);
       entry.createdInCommit = hash || null;
       entry.createdAt = date || null;
       entry.createdBy = author || null;
