@@ -146,7 +146,7 @@ async function loadMatopBundles(repoRoot: string): Promise<BundleItem[]> {
     const sprintDirs = sprintEntries.filter((e) => e.isDirectory() && e.name.startsWith('sprint-')).map((e) => e.name);
 
     const perSprintResults = await Promise.all(sprintDirs.map(async (sprintDir) => {
-      const sprintNumber = Number.parseInt(sprintDir.replace('sprint-', ''), 10);
+      const sprintNumber = Number.parseInt(sprintDir.replaceAll('sprint-', ''), 10);
       const executionDir = path.join(sprintsDir, sprintDir, 'execution');
       try {
         const taskEntries = await readdir(executionDir, { withFileTypes: true });

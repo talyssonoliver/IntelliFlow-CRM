@@ -679,7 +679,7 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: Readonly<
                                       })()}
                                     {status && !isReadyStatus && (
                                       <span className="text-xs px-2 py-0.5 bg-gray-200 text-gray-700 rounded">
-                                        {status.replace('_', ' ')}
+                                        {status.replaceAll('_', ' ')}
                                       </span>
                                     )}
                                   </div>

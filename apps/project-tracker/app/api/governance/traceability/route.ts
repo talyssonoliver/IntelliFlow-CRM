@@ -91,8 +91,8 @@ function getTaskSprint(taskId: string): number {
     const content = readFileSync(csvPath, 'utf-8');
     const lines = content.split('\n');
     const headers = lines[0].split(',');
-    const taskIdIndex = headers.findIndex((h) => h.includes('Task ID'));
-    const sprintIndex = headers.findIndex((h) => h.includes('Target Sprint'));
+    const taskIdIndex = headers.indexOf((h) => h.includes('Task ID'));
+    const sprintIndex = headers.indexOf((h) => h.includes('Target Sprint'));
 
     for (let i = 1; i < lines.length; i++) {
       const row = lines[i].split(',');

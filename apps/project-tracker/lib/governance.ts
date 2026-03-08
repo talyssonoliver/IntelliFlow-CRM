@@ -146,7 +146,7 @@ export function loadCSVTasks(): CSVTask[] {
 function isTierATask(taskId: string, section: string, dependentCount: number): boolean {
   const lc = section.toLowerCase();
   if (taskId.includes('SEC') || lc.includes('security')) return true;
-  if (taskId.startsWith('IFC-0') && Number.parseInt(taskId.replace('IFC-', '')) <= 10) return true;
+  if (taskId.startsWith('IFC-0') && Number.parseInt(taskId.replaceAll('IFC-', '')) <= 10) return true;
   if (dependentCount >= 5) return true;
   if (taskId.startsWith('EXC-')) return true;
   if (lc.includes('planning') || lc.includes('strategy')) return true;

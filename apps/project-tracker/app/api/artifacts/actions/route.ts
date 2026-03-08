@@ -104,7 +104,7 @@ function archiveFile(relativePath: string): ActionResult {
     renameSync(absolutePath, newPath);
 
     // Return relative path for display
-    const relativeNewPath = newPath.replace(PROJECT_ROOT, '').replace(/^[\\/]/, '');
+    const relativeNewPath = newPath.replaceAll(PROJECT_ROOT, '').replace(/^[\\/]/, '');
     return { path: relativePath, success: true, newPath: relativeNewPath };
   } catch (error) {
     return { path: relativePath, success: false, error: String(error) };

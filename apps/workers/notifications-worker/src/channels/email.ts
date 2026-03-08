@@ -24,9 +24,9 @@ export { resilientCall } from '@intelliflow/platform/resilience';
 // ============================================================================
 
 export const EmailPayloadSchema = z.object({
-  to: z.union([z.string().email(), z.array(z.string().email())]),
-  cc: z.array(z.string().email()).optional(),
-  bcc: z.array(z.string().email()).optional(),
+  to: z.union([z.email(), z.array(z.email())]),
+  cc: z.array(z.email()).optional(),
+  bcc: z.array(z.email()).optional(),
   subject: z.string().min(1).max(998), // RFC 2822 limit
   body: z.string(),
   htmlBody: z.string().optional(),
@@ -180,7 +180,7 @@ export class EmailChannel {
   constructor(config: EmailChannelConfig, logger?: pino.Logger) {
     this.config = config;
     this.logger =
-      logger ||
+      logger ??
       pino({
         name: 'email-channel',
         level: 'info',
@@ -361,7 +361,7 @@ export class EmailChannel {
 export function createEmailChannel(logger?: pino.Logger): EmailChannel {
   const config: EmailChannelConfig = {
     host: process.env.SMTP_HOST || 'localhost',
-    port: parseInt(process.env.SMTP_PORT || '1025', 10), // Default to Mailhog port for dev
+    port: Number.parseInt(process.env.SMTP_PORT || '1025', 10), // Default to Mailhog port for dev
     secure: process.env.SMTP_SECURE === 'true',
     auth:
       process.env.SMTP_USER && process.env.SMTP_PASSWORD

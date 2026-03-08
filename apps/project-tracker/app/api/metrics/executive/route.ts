@@ -387,7 +387,7 @@ function readPlanContent(candidates: string[]): { content: string; path: string 
     if (!existsSync(candidate)) continue;
     try {
       const content = readFileSync(candidate, 'utf-8');
-      const path = candidate.replace(MONOREPO_ROOT + '/', '').replace(MONOREPO_ROOT + '\\', '');
+      const path = candidate.replaceAll(MONOREPO_ROOT + '/', '').replaceAll(MONOREPO_ROOT + '\\', '');
       return { content, path };
     } catch {
       /* can't read */

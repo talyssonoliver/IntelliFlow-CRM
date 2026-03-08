@@ -368,7 +368,7 @@ function getAttestationHistory(
         const content = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
         history.push({
           timestamp:
-            content.attestation_timestamp || file.replace('attestation-', '').replace('.json', ''),
+            content.attestation_timestamp || file.replaceAll('attestation-', '').replaceAll('.json', ''),
           verdict: content.verdict || 'UNKNOWN',
           runId: content.run_id || '',
         });

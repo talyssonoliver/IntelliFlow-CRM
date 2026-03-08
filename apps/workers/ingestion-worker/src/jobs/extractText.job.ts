@@ -129,10 +129,10 @@ class HTMLExtractor implements TextExtractor {
     const html = buffer.toString('utf-8');
     // Remove script and style tags, then strip HTML
     const text = html
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
+      .replaceAll(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replaceAll(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replaceAll(/<[^>]+>/g, ' ')
+      .replaceAll(/\s+/g, ' ')
       .trim();
 
     return { text };
@@ -273,15 +273,15 @@ export class TextExtractionProcessor {
     return (
       text
         // Normalize whitespace
-        .replace(/\s+/g, ' ')
+        .replaceAll(/\s+/g, ' ')
         // Remove control characters
         // eslint-disable-next-line no-control-regex
-        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
+        .replaceAll(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
         // Normalize quotes
-        .replace(/[""]/g, '"')
-        .replace(/['']/g, "'")
+        .replaceAll(/[""]/g, '"')
+        .replaceAll(/['']/g, "'")
         // Normalize dashes
-        .replace(/[–—]/g, '-')
+        .replaceAll(/[–—]/g, '-')
         // Trim
         .trim()
     );

@@ -430,8 +430,8 @@ export class WebhookChannel {
 export function createWebhookChannel(logger?: pino.Logger): WebhookChannel {
   const config: WebhookChannelConfig = {
     signingSecret: process.env.WEBHOOK_SIGNING_SECRET,
-    defaultTimeoutMs: parseInt(process.env.WEBHOOK_TIMEOUT_MS || '30000', 10),
-    maxRetries: parseInt(process.env.WEBHOOK_MAX_RETRIES || '3', 10),
+    defaultTimeoutMs: Number.parseInt(process.env.WEBHOOK_TIMEOUT_MS || '30000', 10),
+    maxRetries: Number.parseInt(process.env.WEBHOOK_MAX_RETRIES || '3', 10),
     retryBackoff: [1000, 5000, 30000], // From dlq-triage.md
     userAgent: process.env.WEBHOOK_USER_AGENT || 'IntelliFlow-CRM/1.0',
   };

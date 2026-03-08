@@ -43,7 +43,7 @@ function getPythonCommand(): string {
 }
 
 function generateRunId(prefix: string): string {
-  const ts = new Date().toISOString().replaceAll(':', '').replaceAll('-', '').replace('.000Z', 'Z');
+  const ts = new Date().toISOString().replaceAll(':', '').replaceAll('-', '').replaceAll('.000Z', 'Z');
   const rand = randomUUID().replaceAll('-', '').slice(0, 8);
   return `${prefix}-${ts}-${rand}`;
 }

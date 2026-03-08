@@ -89,7 +89,7 @@ export function TaskDataProvider({ children }: Readonly<TaskDataProviderProps>) 
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [sections, setSections] = useState<string[]>([]);
   const [sprints, setSprints] = useState<SprintNumber[]>([]);
-  const [currentSprint, setCurrentSprintState] = useState<SprintNumber>(0);
+  const [currentSprint, setCurrentSprintState] = useState<SprintNumber>('all');
   const [statusCounts, setStatusCounts] = useState<TaskSummary>(defaultSummary);
   const [sectionData, setSectionData] = useState<SectionData[]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -153,11 +153,6 @@ export function TaskDataProvider({ children }: Readonly<TaskDataProviderProps>) 
         }))
       );
       setLastUpdated(new Date(data.last_modified));
-
-      // Auto-select first sprint if none selected
-      if (data.unique_sprints.length > 0 && currentSprint === 0) {
-        setCurrentSprintState(data.unique_sprints[0]);
-      }
 
       // Sync metrics after loading
       await fetch('/api/sync-metrics', { method: 'POST', cache: 'no-store' });

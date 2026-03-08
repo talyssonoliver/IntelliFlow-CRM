@@ -371,7 +371,7 @@ function generateSpecification(task: TaskRecord, allTasks: TaskRecord[], agents:
     task['Artifacts To Track']
       ?.split(';')
       .filter((a: string) => a.startsWith('ARTIFACT:'))
-      .map((a: string) => a.replace('ARTIFACT:', '').trim()) || [];
+      .map((a: string) => a.replaceAll('ARTIFACT:', '').trim()) || [];
 
   return `# Specification: ${task['Task ID']}
 

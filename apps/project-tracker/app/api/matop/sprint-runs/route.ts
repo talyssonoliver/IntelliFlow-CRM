@@ -54,7 +54,7 @@ export async function GET(request: Request) {
       try {
         const content = JSON.parse(readFileSync(f.path, 'utf-8'));
         return {
-          runId: content.runId || f.filename.replace('.json', ''),
+          runId: content.runId || f.filename.replaceAll('.json', ''),
           sprint: content.sprint,
           timestamp: content.timestamp,
           totalTasks: content.totalTasks,
@@ -62,11 +62,11 @@ export async function GET(request: Request) {
           duration: content.duration,
           passRate:
             content.totalTasks > 0 ? ((content.results?.pass || 0) / content.totalTasks) * 100 : 0,
-          mdPath: f.path.replace('.json', '.md'),
+          mdPath: f.path.replaceAll('.json', '.md'),
         };
       } catch {
         return {
-          runId: f.filename.replace('.json', ''),
+          runId: f.filename.replaceAll('.json', ''),
           error: 'Failed to parse report',
         };
       }

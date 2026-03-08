@@ -174,7 +174,7 @@ function buildTaskSummarySection(taskIssues: Record<string, TaskIssue>): string 
     if (xlsxFiles.length > 0) {
       out += `**Excel Files Required (create as CSV instead):**\n`;
       for (const artifact of xlsxFiles) {
-        out += `- \`${artifact.replace('.xlsx', '.csv')}\` (instead of .xlsx)\n`;
+        out += `- \`${artifact.replaceAll('.xlsx', '.csv')}\` (instead of .xlsx)\n`;
       }
       out += '\n';
     }
@@ -196,7 +196,7 @@ function buildDetailedFixSection(taskIssues: Record<string, TaskIssue>, timestam
     const attestationDir = `artifacts/attestations/${taskId}`;
     out += `### ${taskId}\n\n`;
     for (const xlsx of xlsxFiles) {
-      const csvPath = xlsx.replace('.xlsx', '.csv');
+      const csvPath = xlsx.replaceAll('.xlsx', '.csv');
       out += `1. Create \`${csvPath}\` with columns: \`${getXlsxColumns(xlsx)}\`\n`;
     }
     const ackNum = xlsxFiles.length > 0 ? '2' : '1';

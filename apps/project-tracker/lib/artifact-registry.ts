@@ -791,11 +791,11 @@ function addTestCoverage(files: FileEntry[]): FileEntry[] {
       .map((f) => {
         // Convert test path to source path
         return f.path
-          .replace('.test.ts', '.ts')
-          .replace('.test.tsx', '.tsx')
-          .replace('.spec.ts', '.ts')
-          .replace('.spec.tsx', '.tsx')
-          .replace('__tests__/', '')
+          .replaceAll('.test.ts', '.ts')
+          .replaceAll('.test.tsx', '.tsx')
+          .replaceAll('.spec.ts', '.ts')
+          .replaceAll('.spec.tsx', '.tsx')
+          .replaceAll('__tests__/', '')
           .toLowerCase();
       })
   );

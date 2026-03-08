@@ -346,7 +346,7 @@ export class IngestionWorker extends BaseWorker<IngestionJobData, IngestionJobRe
       const REINDEX_QUEUE_NAME = 'intelliflow-document-reindex';
 
       const redisHost = process.env.REDIS_HOST || 'localhost';
-      const redisPort = parseInt(process.env.REDIS_PORT || '6379', 10);
+      const redisPort = Number.parseInt(process.env.REDIS_PORT || '6379', 10);
       const redisPassword = process.env.REDIS_PASSWORD;
 
       const reindexQueue = new Queue(REINDEX_QUEUE_NAME, {

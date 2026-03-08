@@ -358,5 +358,5 @@ async function _listSessions(): Promise<string[]> {
 
   const { readdir } = await import('node:fs/promises');
   const files = await readdir(statusDir);
-  return files.filter((f) => f.endsWith('.json')).map((f) => f.replace('.json', ''));
+  return files.filter((f) => f.endsWith('.json')).map((f) => f.replaceAll('.json', ''));
 }

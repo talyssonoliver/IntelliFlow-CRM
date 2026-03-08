@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     });
 
     const tasks = data as TaskRecord[];
-    const taskIndex = tasks.findIndex((t) => t['Task ID'] === taskId);
+    const taskIndex = tasks.indexOf((t) => t['Task ID'] === taskId);
 
     if (taskIndex === -1) {
       return NextResponse.json({ error: `Task ${taskId} not found` }, { status: 404 });
@@ -166,7 +166,7 @@ function addPlanToArtifacts(current: string, taskId: string, sprintNumber: numbe
   }
 
   // Find SPEC position and insert PLAN after it
-  const specIndex = parts.findIndex((p) => p.startsWith('SPEC:'));
+  const specIndex = parts.indexOf((p) => p.startsWith('SPEC:'));
   if (specIndex === -1) {
     // No SPEC found, add PLAN at the beginning
     parts.unshift(planPath);
@@ -181,12 +181,12 @@ function generatePlan(task: TaskRecord, sprintNumber: number): string {
   const artifacts = task['Artifacts To Track']
     .split(';')
     .filter((a) => a.startsWith('ARTIFACT:'))
-    .map((a) => a.replace('ARTIFACT:', '').trim());
+    .map((a) => a.replaceAll('ARTIFACT:', '').trim());
 
   const validations = task['Validation Method']
     .split(';')
     .filter((v) => v.startsWith('VALIDATE:'))
-    .map((v) => v.replace('VALIDATE:', '').trim());
+    .map((v) => v.replaceAll('VALIDATE:', '').trim());
 
   const dodItems = task['Definition of Done']
     .split(';')

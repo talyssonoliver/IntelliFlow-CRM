@@ -310,7 +310,7 @@ export class SMSChannel {
         status: statusMap[message.status] || 'queued',
         deliveredAt: new Date().toISOString(),
         segmentCount: message.numSegments
-          ? parseInt(message.numSegments, 10)
+          ? Number.parseInt(message.numSegments, 10)
           : Math.ceil(payload.body.length / 160),
         cost: message.price ? parseFloat(message.price) : undefined,
       };

@@ -200,7 +200,7 @@ export async function GET() {
           r.status === 'PASS' && r.name !== 'api-p95' && r.p50 > 1 // Only real benchmarks (p50 > 1ms)
       )
       .map((r: { name: string; p50: number; p95: number; p99: number; avgTime: number }) => ({
-        name: r.name.replace('api-', ''),
+        name: r.name.replaceAll('api-', ''),
         p50: Math.round(r.p50 * 100) / 100,
         p95: Math.round(r.p95 * 100) / 100,
         p99: Math.round(r.p99 * 100) / 100,
@@ -214,7 +214,7 @@ export async function GET() {
     const k6TestedEndpoints = allK6Checks
       .filter((check) => check.name.includes('status 200')) // Only count status checks as endpoint tests
       .map((check) => ({
-        name: check.name.replace(' status 200', ''),
+        name: check.name.replaceAll(' status 200', ''),
         passes: check.passes,
         fails: check.fails,
         total: check.passes + check.fails,

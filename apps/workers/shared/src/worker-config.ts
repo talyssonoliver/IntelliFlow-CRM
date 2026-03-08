@@ -133,33 +133,33 @@ export function loadWorkerConfig(workerName: string): WorkerConfig {
   const rateLimiter =
     process.env.QUEUE_RATE_LIMIT_MAX && process.env.QUEUE_RATE_LIMIT_DURATION
       ? {
-          max: parseInt(process.env.QUEUE_RATE_LIMIT_MAX, 10),
-          duration: parseInt(process.env.QUEUE_RATE_LIMIT_DURATION, 10),
+          max: Number.parseInt(process.env.QUEUE_RATE_LIMIT_MAX, 10),
+          duration: Number.parseInt(process.env.QUEUE_RATE_LIMIT_DURATION, 10),
         }
       : undefined;
 
   const config = {
     name: workerName,
     version: process.env.WORKER_VERSION || process.env.npm_package_version || '1.0.0',
-    shutdownTimeoutMs: parseInt(process.env.WORKER_SHUTDOWN_TIMEOUT_MS || '30000', 10),
+    shutdownTimeoutMs: Number.parseInt(process.env.WORKER_SHUTDOWN_TIMEOUT_MS || '30000', 10),
     redis: {
       host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379', 10),
+      port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
       password: process.env.REDIS_PASSWORD,
       tls: process.env.REDIS_TLS === 'true',
-      db: parseInt(process.env.REDIS_DB || '0', 10),
+      db: Number.parseInt(process.env.REDIS_DB || '0', 10),
       maxRetriesPerRequest: process.env.REDIS_MAX_RETRIES
-        ? parseInt(process.env.REDIS_MAX_RETRIES, 10)
+        ? Number.parseInt(process.env.REDIS_MAX_RETRIES, 10)
         : null,
       enableOfflineQueue: process.env.REDIS_OFFLINE_QUEUE === 'true',
       lazyConnect: process.env.REDIS_LAZY_CONNECT !== 'false',
     },
     queue: {
-      concurrency: parseInt(process.env.QUEUE_CONCURRENCY || '5', 10),
+      concurrency: Number.parseInt(process.env.QUEUE_CONCURRENCY || '5', 10),
       rateLimiter,
-      lockDuration: parseInt(process.env.QUEUE_LOCK_DURATION || '30000', 10),
-      stalledInterval: parseInt(process.env.QUEUE_STALLED_INTERVAL || '30000', 10),
-      maxStalledCount: parseInt(process.env.QUEUE_MAX_STALLED || '3', 10),
+      lockDuration: Number.parseInt(process.env.QUEUE_LOCK_DURATION || '30000', 10),
+      stalledInterval: Number.parseInt(process.env.QUEUE_STALLED_INTERVAL || '30000', 10),
+      maxStalledCount: Number.parseInt(process.env.QUEUE_MAX_STALLED || '3', 10),
     },
     telemetry: {
       enabled: process.env.TELEMETRY_ENABLED !== 'false',
@@ -175,14 +175,14 @@ export function loadWorkerConfig(workerName: string): WorkerConfig {
     },
     circuitBreaker: {
       enabled: process.env.CIRCUIT_BREAKER_ENABLED !== 'false',
-      failureThreshold: parseInt(process.env.CIRCUIT_BREAKER_FAILURE_THRESHOLD || '5', 10),
-      successThreshold: parseInt(process.env.CIRCUIT_BREAKER_SUCCESS_THRESHOLD || '2', 10),
-      resetTimeoutMs: parseInt(process.env.CIRCUIT_BREAKER_RESET_TIMEOUT || '30000', 10),
-      halfOpenMaxCalls: parseInt(process.env.CIRCUIT_BREAKER_HALF_OPEN_MAX || '3', 10),
-      failureWindowMs: parseInt(process.env.CIRCUIT_BREAKER_FAILURE_WINDOW || '60000', 10),
+      failureThreshold: Number.parseInt(process.env.CIRCUIT_BREAKER_FAILURE_THRESHOLD || '5', 10),
+      successThreshold: Number.parseInt(process.env.CIRCUIT_BREAKER_SUCCESS_THRESHOLD || '2', 10),
+      resetTimeoutMs: Number.parseInt(process.env.CIRCUIT_BREAKER_RESET_TIMEOUT || '30000', 10),
+      halfOpenMaxCalls: Number.parseInt(process.env.CIRCUIT_BREAKER_HALF_OPEN_MAX || '3', 10),
+      failureWindowMs: Number.parseInt(process.env.CIRCUIT_BREAKER_FAILURE_WINDOW || '60000', 10),
     },
     healthCheck: {
-      port: parseInt(process.env.HEALTH_PORT || '0', 10), // 0 = random available port
+      port: Number.parseInt(process.env.HEALTH_PORT || '0', 10), // 0 = random available port
       path: process.env.HEALTH_PATH || '/health',
       readyPath: process.env.HEALTH_READY_PATH || '/health/ready',
       livePath: process.env.HEALTH_LIVE_PATH || '/health/live',
@@ -209,12 +209,12 @@ export function validateConfig(config: unknown): WorkerConfig {
 export function getRedisConfig(): RedisConfig {
   return {
     host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || '6379', 10),
+    port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
     password: process.env.REDIS_PASSWORD,
     tls: process.env.REDIS_TLS === 'true',
-    db: parseInt(process.env.REDIS_DB || '0', 10),
+    db: Number.parseInt(process.env.REDIS_DB || '0', 10),
     maxRetriesPerRequest: process.env.REDIS_MAX_RETRIES
-      ? parseInt(process.env.REDIS_MAX_RETRIES, 10)
+      ? Number.parseInt(process.env.REDIS_MAX_RETRIES, 10)
       : null,
     enableOfflineQueue: process.env.REDIS_OFFLINE_QUEUE === 'true',
     lazyConnect: process.env.REDIS_LAZY_CONNECT !== 'false',

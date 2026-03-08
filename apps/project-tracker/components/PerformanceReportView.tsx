@@ -1062,7 +1062,7 @@ export default function PerformanceReportView() { // NOSONAR typescript:S3776
                     // Get k6 tested endpoint names for matching
                     const testedEndpointNames =
                       data.k6_tested_endpoints?.map((e) =>
-                        e.name.replace(' status 200', '').toLowerCase()
+                        e.name.replaceAll(' status 200', '').toLowerCase()
                       ) || [];
 
                     return (

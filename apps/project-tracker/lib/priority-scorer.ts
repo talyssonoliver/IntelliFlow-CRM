@@ -131,7 +131,7 @@ function toFibonacci(normalized: number): number {
  */
 function isTierAId(taskId: string, lcSection: string, dependentCount: number): boolean {
   if (taskId.includes('SEC') || lcSection.includes('security')) return true;
-  if (taskId.startsWith('IFC-0') && Number.parseInt(taskId.replace('IFC-', ''), 10) <= 10) return true;
+  if (taskId.startsWith('IFC-0') && Number.parseInt(taskId.replaceAll('IFC-', ''), 10) <= 10) return true;
   if (dependentCount >= 5) return true;
   if (taskId.startsWith('EXC-')) return true;
   if (lcSection.includes('planning') || lcSection.includes('strategy')) return true;

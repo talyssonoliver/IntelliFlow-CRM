@@ -205,12 +205,12 @@ function generatePlan(task: TaskRecord, domain: string, sprintNumber: number = 0
     task['Artifacts To Track']
       ?.split(';')
       .filter((a) => a.startsWith('ARTIFACT:'))
-      .map((a) => a.replace('ARTIFACT:', '').trim()) || [];
+      .map((a) => a.replaceAll('ARTIFACT:', '').trim()) || [];
   const validations =
     task['Validation Method']
       ?.split(';')
       .filter((v) => v.startsWith('VALIDATE:'))
-      .map((v) => v.replace('VALIDATE:', '').trim()) || [];
+      .map((v) => v.replaceAll('VALIDATE:', '').trim()) || [];
 
   const totalSteps = 2 + dod.length + 2; // Setup + DoD items + Integration + Validation
 

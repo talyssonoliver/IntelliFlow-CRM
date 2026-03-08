@@ -252,7 +252,7 @@ export async function GET() {
 
   const tasks = await Promise.all(
     lockFiles.map((lockFile) => {
-      const taskId = lockFile.replace('.lock', '');
+      const taskId = lockFile.replaceAll('.lock', '');
       const logPath = getSwarmLogPath(taskId);
       return processTaskLog(taskId, logPath);
     })

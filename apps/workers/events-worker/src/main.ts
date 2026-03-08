@@ -279,11 +279,15 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
       DOMAIN_EVENT_TYPES.LEAD_SCORED,
       this.createHandler('lead.scored', async (event) => {
         const leadId = event.aggregateId;
-        const { score, previousScore, scoringModel } = event.payload as {
+        const { score, previousScore, scoringModel, tenantId, userId } = event.payload as {
           score?: number;
           previousScore?: number;
           scoringModel?: string;
+          tenantId?: string;
+          userId?: string;
         };
+        const eventTenantId = tenantId || (event.metadata as any)?.tenantId;
+        const eventUserId = userId || (event.metadata as any)?.userId;
 
         // Log score change for CRM sync
         this.logger.info(
@@ -291,14 +295,56 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
           'Updating CRM with new lead score'
         );
 
-        // Trigger automation workflows based on score thresholds
-        if (score !== undefined && score >= 80) {
-          this.logger.info({ leadId, score }, 'High score detected - triggering hot lead workflow');
-        } else if (score !== undefined && score >= 50) {
-          this.logger.info(
-            { leadId, score },
-            'Medium score detected - triggering nurture workflow'
-          );
+        // Create notifications for significant score events
+        if (eventTenantId && eventUserId && score !== undefined) {
+          try {
+            const { prisma } = await import('@intelliflow/db');
+
+            // Hot lead detected (score >= 80)
+            if (score >= 80) {
+              this.logger.info({ leadId, score }, 'High score detected - creating hot lead notification');
+              await prisma.notification.create({
+                data: {
+                  tenantId: eventTenantId,
+                  recipientId: eventUserId,
+                  channel: 'IN_APP',
+                  subject: `Hot lead detected: score ${score}`,
+                  body: `Lead ${leadId} scored ${score}/100 — prioritize for immediate outreach.`,
+                  priority: 'HIGH',
+                  status: 'PENDING',
+                  category: 'ALERTS',
+                  sourceType: 'lead_scored',
+                  sourceId: leadId,
+                  metadata: { score, previousScore, link: `/leads/${leadId}` },
+                },
+              });
+            }
+
+            // Lead warming up (crossed 50 threshold)
+            if (score >= 50 && (previousScore === undefined || previousScore < 50)) {
+              this.logger.info({ leadId, score, previousScore }, 'Lead warming up - creating notification');
+              await prisma.notification.create({
+                data: {
+                  tenantId: eventTenantId,
+                  recipientId: eventUserId,
+                  channel: 'IN_APP',
+                  subject: `Lead warming up: score ${score}`,
+                  body: `Lead ${leadId} crossed the engagement threshold (${previousScore ?? 0} → ${score}). Consider adding to active pipeline.`,
+                  priority: 'NORMAL',
+                  status: 'PENDING',
+                  category: 'ALERTS',
+                  sourceType: 'ai_recommendation',
+                  sourceId: leadId,
+                  metadata: { score, previousScore, link: `/leads/${leadId}` },
+                },
+              });
+            }
+          } catch (notifError) {
+            this.logger.warn(
+              { leadId, error: notifError instanceof Error ? notifError.message : String(notifError) },
+              'Failed to create lead score notification — non-blocking'
+            );
+          }
         }
 
         this.logger.info({ leadId, score }, 'Lead scored event handled');

@@ -159,7 +159,7 @@ export function loadExecutionHistory(
 
 function parseMATOPRun(data: any, filename: string): ExecutionRun {
   return {
-    runId: data.runId || filename.replace('.json', ''),
+    runId: data.runId || filename.replaceAll('.json', ''),
     sprintNumber: Number.parseInt(data.sprint, 10) || 0,
     timestamp: data.timestamp || new Date().toISOString(),
     status: determineStatus(data),
@@ -201,7 +201,7 @@ function parseSystemAuditRun(
       : 0;
 
   return {
-    runId: data.runId || filename.replace('.json', ''),
+    runId: data.runId || filename.replaceAll('.json', ''),
     sprintNumber,
     timestamp: data.timestamp || new Date().toISOString(),
     status,
@@ -234,7 +234,7 @@ function parseSystemAuditRun(
 
 function parseSprintOrchestratorRun(data: any, filename: string): ExecutionRun {
   return {
-    runId: data.runId || filename.replace('.json', ''),
+    runId: data.runId || filename.replaceAll('.json', ''),
     sprintNumber: data.sprintNumber || 0,
     timestamp: data.startedAt || new Date().toISOString(),
     status: data.status || 'completed',

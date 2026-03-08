@@ -65,7 +65,7 @@ function parseArtifactsWithPrefixes(artifactsStr: string): {
       const path = item.slice(pathPrefix.length).trim();
       if (path) result.artifacts.push(path);
     } else if (item.startsWith('EVIDENCE:')) {
-      const path = item.replace('EVIDENCE:', '').trim();
+      const path = item.replaceAll('EVIDENCE:', '').trim();
       if (path) result.evidence.push(path);
     } else if (METADATA_PREFIXES.some((prefix) => item.startsWith(prefix))) {
       // Skip metadata prefixes
