@@ -133,7 +133,7 @@ describe('PasswordStrengthIndicator', () => {
   });
 
   it('shows strong for strong passwords', () => {
-    render(<PasswordStrengthIndicator password="StrongP@ss123" />);
+      render(<PasswordStrengthIndicator password="StrongP@ss123" />); // pragma: allowlist secret
     expect(screen.getByText('Strong')).toBeInTheDocument();
   });
 
@@ -143,7 +143,7 @@ describe('PasswordStrengthIndicator', () => {
   });
 
   it('hides feedback for strong passwords', () => {
-    render(<PasswordStrengthIndicator password="StrongP@ss123" showRequirements={true} />);
+      render(<PasswordStrengthIndicator password="StrongP@ss123" showRequirements={true} />); // pragma: allowlist secret
     expect(screen.queryByText(/add:/i)).not.toBeInTheDocument();
   });
 
@@ -313,7 +313,7 @@ describe('PasswordResetForm', () => {
     const passwordInput = screen.getByLabelText('New password');
     const confirmInput = screen.getByLabelText('Confirm new password');
 
-    await user.type(passwordInput, 'ValidPass1!');
+    await user.type(passwordInput, 'ValidPass1!'); // pragma: allowlist secret
     await user.type(confirmInput, 'DifferentPass1!');
 
     // Trigger blur
@@ -377,16 +377,16 @@ describe('PasswordResetForm', () => {
     const passwordInput = screen.getByLabelText('New password');
     const confirmInput = screen.getByLabelText('Confirm new password');
 
-    await user.type(passwordInput, 'StrongP@ss1!');
-    await user.type(confirmInput, 'StrongP@ss1!');
+    await user.type(passwordInput, 'StrongP@ss1!'); // pragma: allowlist secret
+    await user.type(confirmInput, 'StrongP@ss1!'); // pragma: allowlist secret
     await user.click(screen.getByRole('button', { name: /reset password/i }));
 
     await waitFor(() => {
       expect(mockResetMutateAsync).toHaveBeenCalledWith(
         expect.objectContaining({
           token: 'test-token-123',
-          password: 'StrongP@ss1!',
-          confirmPassword: 'StrongP@ss1!',
+          password: 'StrongP@ss1!', // pragma: allowlist secret
+          confirmPassword: 'StrongP@ss1!', // pragma: allowlist secret
         })
       );
     });
@@ -408,8 +408,8 @@ describe('PasswordResetForm', () => {
     const passwordInput = screen.getByLabelText('New password');
     const confirmInput = screen.getByLabelText('Confirm new password');
 
-    await user.type(passwordInput, 'StrongP@ss1!');
-    await user.type(confirmInput, 'StrongP@ss1!');
+    await user.type(passwordInput, 'StrongP@ss1!'); // pragma: allowlist secret
+    await user.type(confirmInput, 'StrongP@ss1!'); // pragma: allowlist secret
     await user.click(screen.getByRole('button', { name: /reset password/i }));
 
     await waitFor(() => {
@@ -429,8 +429,8 @@ describe('PasswordResetForm', () => {
     const passwordInput = screen.getByLabelText('New password');
     const confirmInput = screen.getByLabelText('Confirm new password');
 
-    await user.type(passwordInput, 'StrongP@ss1!');
-    await user.type(confirmInput, 'StrongP@ss1!');
+    await user.type(passwordInput, 'StrongP@ss1!'); // pragma: allowlist secret
+    await user.type(confirmInput, 'StrongP@ss1!'); // pragma: allowlist secret
     await user.click(screen.getByRole('button', { name: /reset password/i }));
 
     await waitFor(() => {

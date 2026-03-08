@@ -143,8 +143,8 @@ describe('Password Reset Procedures (IFC-120)', () => {
   describe('resetPassword', () => {
     const validInput = {
       token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.valid-payload-here',
-      password: 'NewSecureP@ss1',
-      confirmPassword: 'NewSecureP@ss1',
+      password: 'NewSecureP@ss1', // pragma: allowlist secret
+      confirmPassword: 'NewSecureP@ss1', // pragma: allowlist secret
     };
 
     it('calls updateUserPassword and returns success (AC-002)', async () => {
@@ -178,8 +178,8 @@ describe('Password Reset Procedures (IFC-120)', () => {
       await expect(
         caller.resetPassword({
           token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.valid-payload-here',
-          password: 'NewSecureP@ss1',
-          confirmPassword: 'DifferentP@ss2',
+          password: 'NewSecureP@ss1', // pragma: allowlist secret
+          confirmPassword: 'DifferentP@ss2', // pragma: allowlist secret
         })
       ).rejects.toThrow();
     });

@@ -92,8 +92,8 @@ describe('Signup Procedure (IFC-120)', () => {
 
   const validSignup = {
     email: 'newuser@example.com',
-    password: 'StrongP@ss1',
-    confirmPassword: 'StrongP@ss1',
+    password: 'StrongP@ss1', // pragma: allowlist secret
+    confirmPassword: 'StrongP@ss1', // pragma: allowlist secret
     name: 'New User',
     acceptTerms: true as const,
   };
@@ -121,7 +121,7 @@ describe('Signup Procedure (IFC-120)', () => {
     expect(result).toEqual({ success: true, needsEmailVerification: true });
     expect(mockSupabaseAdmin.auth.signUp).toHaveBeenCalledWith({
       email: 'newuser@example.com',
-      password: 'StrongP@ss1',
+      password: 'StrongP@ss1', // pragma: allowlist secret
       options: { data: { name: 'New User' } },
     });
   });

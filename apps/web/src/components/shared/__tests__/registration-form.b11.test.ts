@@ -136,28 +136,28 @@ describe('Registration form logic (b11 coverage)', () => {
 
     it('returns fair for password with some criteria (score 3)', () => {
       // 8+ chars (1), lowercase (1), uppercase (1) = 3
-      const result = calculatePasswordStrength('Abcdefgh');
+      const result = calculatePasswordStrength('Abcdefgh'); // pragma: allowlist secret
       expect(result.strength).toBe('fair');
       expect(result.score).toBe(3);
     });
 
     it('returns good for password with 4 criteria (score 4)', () => {
       // 8+ chars (1), lowercase (1), uppercase (1), digit (1) = 4
-      const result = calculatePasswordStrength('Abcdefg1');
+      const result = calculatePasswordStrength('Abcdefg1'); // pragma: allowlist secret
       expect(result.strength).toBe('good');
       expect(result.score).toBe(4);
     });
 
     it('returns good for password with 5 criteria (score 5)', () => {
       // 12+ chars (2), lowercase (1), uppercase (1), digit (1), no special = 5
-      const result = calculatePasswordStrength('Abcdefghijk1');
+      const result = calculatePasswordStrength('Abcdefghijk1'); // pragma: allowlist secret
       expect(result.strength).toBe('good');
       expect(result.score).toBe(5);
     });
 
     it('returns strong for password with all criteria (score 6)', () => {
       // 12+ chars (2), lowercase (1), uppercase (1), digit (1), special (1) = 6
-      const result = calculatePasswordStrength('Abcdefghijk1!');
+      const result = calculatePasswordStrength('Abcdefghijk1!'); // pragma: allowlist secret
       expect(result.strength).toBe('strong');
       expect(result.score).toBe(6);
     });
@@ -172,7 +172,7 @@ describe('Registration form logic (b11 coverage)', () => {
     });
 
     it('returns empty feedback for strong password', () => {
-      const result = calculatePasswordStrength('MyP@ssw0rd123!');
+      const result = calculatePasswordStrength('MyP@ssw0rd123!'); // pragma: allowlist secret
       expect(result.feedback).toEqual([]);
     });
   });
@@ -224,7 +224,7 @@ describe('Registration form logic (b11 coverage)', () => {
       });
 
       it('returns undefined for valid password', () => {
-        expect(validateField('password', 'MyPassword123')).toBeUndefined();
+        expect(validateField('password', 'MyPassword123')).toBeUndefined(); // pragma: allowlist secret
       });
 
       it('returns error for boolean value', () => {

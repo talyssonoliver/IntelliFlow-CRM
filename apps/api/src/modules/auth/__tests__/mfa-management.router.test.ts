@@ -168,7 +168,7 @@ describe('MFA Management Router (PG-125)', () => {
       mockAuditLogger.log.mockResolvedValue(undefined);
 
       const caller = createProtectedCaller();
-      const result = await caller.disableMfa({ password: 'ValidP@ss1' });
+      const result = await caller.disableMfa({ password: 'ValidP@ss1' }); // pragma: allowlist secret
       expect(result.success).toBe(true);
     });
 
