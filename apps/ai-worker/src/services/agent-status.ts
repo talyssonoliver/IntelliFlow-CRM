@@ -114,12 +114,89 @@ export function extractJobContext(
 }
 
 // ============================================================================
+// Message logging
+// ============================================================================
+
+/** Options for job completion logging. */
+export interface JobCompletionMeta {
+  durationMs: number;
+  result?: Record<string, unknown>;
+}
+
+/**
+ * Create a message_record for a conversation and increment messageCount.
+ * This populates the Agent Logs transcript view.
+ */
+async function addLogMessage(
+  prisma: any,
+  conversationId: string,
+  tenantId: string,
+  content: string,
+  model?: string
+): Promise<void> {
+  await prisma.messageRecord.create({
+    data: {
+      id: randomUUID(),
+      conversationId,
+      tenantId,
+      role: 'ASSISTANT',
+      content,
+      contentType: 'text',
+      modelUsed: model ?? null,
+    },
+  });
+  await prisma.conversationRecord.update({
+    where: { id: conversationId },
+    data: { messageCount: { increment: 1 } },
+  });
+}
+
+/** Format milliseconds into a human-readable duration. */
+function formatDuration(ms: number): string {
+  if (ms < 1000) return `${ms}ms`;
+  const seconds = Math.floor(ms / 1000);
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return remainingSeconds > 0 ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`;
+}
+
+/**
+ * Build a rich completion message from job result data.
+ * Extracts key metrics like score, tier, insights count, confidence.
+ */
+function buildCompletionSummary(meta: JobCompletionMeta): string {
+  const duration = formatDuration(meta.durationMs);
+  const model = getModelName();
+  const r = meta.result as Record<string, unknown> | undefined;
+
+  // Scoring results: score, tier, confidence
+  if (r && 'score' in r && 'tier' in r) {
+    return `Completed in ${duration} — score: ${r.score}/100, tier: ${r.tier}, confidence: ${((r.confidence as number) * 100).toFixed(0)}% (${model})`;
+  }
+
+  // Insight results: insightsCreated
+  if (r && 'insightsCreated' in r) {
+    return `Completed in ${duration} — ${r.insightsCreated} insights generated (${model})`;
+  }
+
+  // Prediction results: prediction value + confidence
+  if (r && 'prediction' in r) {
+    const pred = r.prediction as Record<string, unknown>;
+    return `Completed in ${duration} — prediction: ${pred.value}, confidence: ${((pred.confidence as number) * 100).toFixed(0)}% (${model})`;
+  }
+
+  return `Completed in ${duration} (${model})`;
+}
+
+// ============================================================================
 // Status transitions
 // ============================================================================
 
 /**
  * Mark agent as ACTIVE when a job starts processing.
  * Creates the conversation_record if it doesn't exist yet.
+ * Also creates a SYSTEM message so the Agent Logs page shows the event.
  */
 export async function markAgentActive(ctx: AgentStatusContext): Promise<void> {
   try {
@@ -128,7 +205,7 @@ export async function markAgentActive(ctx: AgentStatusContext): Promise<void> {
     const now = new Date();
     const model = getModelName();
 
-    await prisma.conversationRecord.upsert({
+    const record = await prisma.conversationRecord.upsert({
       where: { sessionId },
       create: {
         id: randomUUID(),
@@ -150,7 +227,17 @@ export async function markAgentActive(ctx: AgentStatusContext): Promise<void> {
         status: 'ACTIVE',
         lastMessageAt: now,
       },
+      select: { id: true },
     });
+
+    await addLogMessage(
+      prisma,
+      record.id,
+      ctx.tenantId,
+      `Processing: ${ctx.taskDescription} [model: ${model}]`,
+      model
+    );
+
     logger.debug({ agentType: ctx.agentType, tenantId: ctx.tenantId }, 'Agent marked ACTIVE');
   } catch (error) {
     logger.warn(
@@ -162,24 +249,36 @@ export async function markAgentActive(ctx: AgentStatusContext): Promise<void> {
 
 /**
  * Mark agent as IDLE when a job completes successfully.
+ * Also creates a log message with duration, model, and result metrics.
  */
 export async function markAgentIdle(
   ctx: AgentStatusContext,
-  resultSummary?: string
+  resultSummary?: string,
+  meta?: JobCompletionMeta
 ): Promise<void> {
   try {
     const prisma = await getPrisma();
     const sessionId = `agent-status:${ctx.tenantId}:${ctx.agentType}`;
     const now = new Date();
 
-    await prisma.conversationRecord.update({
+    const logContent = meta
+      ? buildCompletionSummary(meta)
+      : resultSummary || `${ctx.taskDescription} — completed`;
+
+    const displayName = resultSummary || logContent;
+
+    const record = await prisma.conversationRecord.update({
       where: { sessionId },
       data: {
         status: 'IDLE',
-        contextName: resultSummary || `${ctx.taskDescription} — completed`,
+        contextName: displayName,
         lastMessageAt: now,
       },
+      select: { id: true },
     });
+
+    await addLogMessage(prisma, record.id, ctx.tenantId, logContent);
+
     logger.debug({ agentType: ctx.agentType }, 'Agent marked IDLE');
   } catch (error) {
     logger.warn(
@@ -191,17 +290,19 @@ export async function markAgentIdle(
 
 /**
  * Mark agent as ERROR when a job fails.
+ * Also creates a log message with the error details and duration.
  */
 export async function markAgentError(
   ctx: AgentStatusContext,
-  errorMessage: string
+  errorMessage: string,
+  durationMs?: number
 ): Promise<void> {
   try {
     const prisma = await getPrisma();
     const sessionId = `agent-status:${ctx.tenantId}:${ctx.agentType}`;
     const now = new Date();
 
-    await prisma.conversationRecord.update({
+    const record = await prisma.conversationRecord.update({
       where: { sessionId },
       data: {
         status: 'ERROR',
@@ -211,7 +312,17 @@ export async function markAgentError(
         lastMessageAt: now,
         endedAt: now,
       },
+      select: { id: true },
     });
+
+    const durationSuffix = durationMs != null ? ` after ${formatDuration(durationMs)}` : '';
+    await addLogMessage(
+      prisma,
+      record.id,
+      ctx.tenantId,
+      `Failed${durationSuffix}: ${errorMessage}`.slice(0, 2000)
+    );
+
     logger.debug({ agentType: ctx.agentType, errorMessage }, 'Agent marked ERROR');
   } catch (error) {
     logger.warn(

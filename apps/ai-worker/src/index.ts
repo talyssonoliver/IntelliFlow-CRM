@@ -192,6 +192,15 @@ export * from './prompts';
 // Shared AI types
 export * from './types';
 
+// Agent Status Tracking (Active Agents dashboard)
+export {
+  extractJobContext,
+  markAgentActive,
+  markAgentIdle,
+  markAgentError,
+} from './services/agent-status';
+export type { AgentStatusContext, JobCompletionMeta } from './services/agent-status';
+
 // AI Model Monitoring (IFC-117)
 export * from './monitoring';
 

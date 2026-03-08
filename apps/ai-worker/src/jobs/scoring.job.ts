@@ -129,6 +129,85 @@ export async function processScoringJob(job: Job<ScoringJobData>): Promise<Scori
   const startTime = Date.now();
   const { leadId, lead } = job.data;
 
+  // Scheduled cron sentinel — enumerate unscored/stale leads and enqueue real per-lead jobs
+  if (job.data.tenantId === '__scheduled__') {
+    logger.info({ jobId: job.id }, 'Scheduled scoring dispatcher — enumerating unscored leads');
+    let enqueued = 0;
+    try {
+      const { prisma } = await import('@intelliflow/db');
+      const { Queue } = await import('bullmq');
+
+      // Find leads with no AI insight or stale insights (updated > 24h ago)
+      const staleThreshold = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const unscoredLeads = await prisma.lead.findMany({
+        where: {
+          OR: [
+            { aiInsight: null },
+            { aiInsight: { updatedAt: { lt: staleThreshold } } },
+          ],
+        },
+        select: {
+          id: true,
+          tenantId: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          company: true,
+          title: true,
+          phone: true,
+          source: true,
+        },
+        take: 100, // batch limit per cron cycle
+      });
+
+      if (unscoredLeads.length > 0) {
+        const queue = new Queue(SCORING_QUEUE, {
+          connection: {
+            host: process.env.REDIS_HOST || 'localhost',
+            port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+          },
+        });
+
+        for (const l of unscoredLeads) {
+          await queue.add('score-lead', {
+            leadId: l.id,
+            tenantId: l.tenantId,
+            lead: {
+              email: l.email,
+              firstName: l.firstName ?? undefined,
+              lastName: l.lastName ?? undefined,
+              company: l.company ?? undefined,
+              title: l.title ?? undefined,
+              phone: l.phone ?? undefined,
+              source: l.source ?? 'unknown',
+            },
+          });
+          enqueued++;
+        }
+
+        await queue.close();
+      }
+
+      logger.info({ jobId: job.id, leadsEnqueued: enqueued }, 'Scheduled scoring dispatcher completed');
+    } catch (error) {
+      logger.error(
+        { jobId: job.id, error: error instanceof Error ? error.message : String(error) },
+        'Scheduled scoring dispatcher failed'
+      );
+    }
+    return {
+      leadId,
+      score: 0,
+      confidence: 0,
+      tier: 'UNQUALIFIED',
+      factors: [],
+      recommendations: [],
+      modelVersion: 'scheduler-dispatcher',
+      processedAt: new Date().toISOString(),
+      processingTimeMs: Date.now() - startTime,
+    };
+  }
+
   // Transform job data to chain input
   const chainInput: LeadInput = {
     email: lead.email,

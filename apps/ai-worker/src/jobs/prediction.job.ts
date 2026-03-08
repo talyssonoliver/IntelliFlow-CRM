@@ -246,6 +246,12 @@ async function persistPredictionResult(
       });
 
       logger.info({ entityId, predictionType }, 'Persisted prediction to ContactAIInsight');
+    } else {
+      // opportunity/account entity types have no dedicated AI insight table yet
+      logger.info(
+        { entityType, entityId, predictionType },
+        'Prediction persistence skipped — no AI insight table for this entity type'
+      );
     }
   } catch (error) {
     // Log but don't fail the job — the prediction was computed successfully

@@ -42,7 +42,9 @@ import {
   markAgentActive,
   markAgentIdle,
   markAgentError,
+  type AgentStatusContext,
 } from './services/agent-status';
+import { hallucinationChecker } from './monitoring';
 
 // ============================================================================
 // Types
@@ -109,6 +111,9 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
    *
    * - ai-insights: Refresh insights every 6 hours for all active tenants
    * - ai-scoring: Re-score unscored/stale leads every 4 hours
+   *
+   * Both use a __scheduled__ sentinel tenantId. The job handlers detect this
+   * and enumerate real data (tenants/leads) before enqueueing follow-up jobs.
    *
    * Jobs are added with a repeatJobKey so BullMQ deduplicates across restarts.
    */
@@ -206,6 +211,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
    */
   protected async processJob(job: Job<AIJobData>): Promise<AIJobResult> {
     const ctx = extractJobContext(job.queueName, job.data);
+    const startMs = Date.now();
 
     if (ctx) {
       await markAgentActive(ctx);
@@ -229,16 +235,73 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       }
 
       if (ctx) {
-        await markAgentIdle(ctx);
+        const durationMs = Date.now() - startMs;
+        await markAgentIdle(ctx, undefined, { durationMs, result });
+
+        // Run hallucination check on AI output (heuristic, non-blocking)
+        this.runHallucinationCheck(ctx, job, result).catch((err) => {
+          this.logger.warn({ error: String(err) }, 'Hallucination check failed');
+        });
       }
 
       return result;
     } catch (error) {
       if (ctx) {
         const message = error instanceof Error ? error.message : String(error);
-        await markAgentError(ctx, message);
+        const durationMs = Date.now() - startMs;
+        await markAgentError(ctx, message, durationMs);
       }
       throw error;
+    }
+  }
+
+  /**
+   * Run hallucination check on a completed job result.
+   * Tracks its own agent status as the "hallucination" agent type.
+   */
+  private async runHallucinationCheck(
+    parentCtx: AgentStatusContext,
+    job: Job<AIJobData>,
+    result: AIJobResult
+  ): Promise<void> {
+    const hCtx: AgentStatusContext = {
+      tenantId: parentCtx.tenantId,
+      userId: parentCtx.userId,
+      agentType: 'hallucination',
+      taskDescription: `Checking ${parentCtx.agentType} output for hallucinations`,
+    };
+    await markAgentActive(hCtx);
+    const startMs = Date.now();
+
+    try {
+      const outputStr = JSON.stringify(result);
+      const inputStr = JSON.stringify(job.data).slice(0, 2000);
+      const checkResult = await hallucinationChecker.checkOutput({
+        id: job.id ?? `job-${Date.now()}`,
+        model: this.getProviderModel(),
+        inputContext: inputStr,
+        output: outputStr,
+      });
+
+      const durationMs = Date.now() - startMs;
+      const summary = checkResult.hallucinated
+        ? `Hallucination detected (score: ${checkResult.score.toFixed(2)}, types: ${checkResult.hallucinationTypes.join(', ')})`
+        : `Clean output (score: ${checkResult.score.toFixed(2)})`;
+      await markAgentIdle(hCtx, summary, {
+        durationMs,
+        result: {
+          hallucinated: checkResult.hallucinated,
+          score: checkResult.score,
+          types: checkResult.hallucinationTypes,
+        },
+      });
+    } catch (error) {
+      const durationMs = Date.now() - startMs;
+      await markAgentError(
+        hCtx,
+        error instanceof Error ? error.message : String(error),
+        durationMs
+      );
     }
   }
 

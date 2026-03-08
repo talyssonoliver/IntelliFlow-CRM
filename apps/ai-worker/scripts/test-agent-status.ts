@@ -45,7 +45,7 @@ async function main() {
   const client = await pool.connect();
   try {
     const res = await client.query(
-      `SELECT "sessionId", "agentName", "agentModel", "status", "contextName", "lastMessageAt"
+      `SELECT "id", "sessionId", "agentName", "agentModel", "status", "contextName", "messageCount", "lastMessageAt"
        FROM conversation_records
        WHERE "sessionId" = $1`,
       [`agent-status:${TENANT_ID}:insights`]
@@ -56,30 +56,62 @@ async function main() {
     }
     console.log('DB record (ACTIVE):', JSON.stringify(res.rows[0], null, 2));
 
-    // 4. Mark IDLE
+    // Check messages were created
+    const msgRes1 = await client.query(
+      `SELECT role, content, "modelUsed" FROM message_records WHERE "conversationId" = $1 ORDER BY "createdAt" ASC`,
+      [res.rows[0].id]
+    );
+    console.log(`Messages after ACTIVE: ${msgRes1.rows.length}`);
+    for (const m of msgRes1.rows) console.log(`  [${m.role}] ${m.content}`);
+
+    // 4. Mark IDLE with rich meta
     console.log('\nMarking agent IDLE...');
-    await markAgentIdle(ctx, 'Generated 5 insights');
+    await markAgentIdle(ctx, undefined, {
+      durationMs: 272_000,
+      result: { insightsCreated: 5, processingTimeMs: 272_000, processedAt: new Date().toISOString() },
+    });
 
     const res2 = await client.query(
-      `SELECT "status", "contextName", "lastMessageAt" FROM conversation_records WHERE "sessionId" = $1`,
+      `SELECT "status", "contextName", "messageCount", "lastMessageAt" FROM conversation_records WHERE "sessionId" = $1`,
       [`agent-status:${TENANT_ID}:insights`]
     );
     console.log('DB record (IDLE):', JSON.stringify(res2.rows[0], null, 2));
 
-    // 5. Mark ERROR
+    const msgRes2 = await client.query(
+      `SELECT role, content FROM message_records WHERE "conversationId" = $1 ORDER BY "createdAt" ASC`,
+      [res.rows[0].id]
+    );
+    console.log(`Messages after IDLE: ${msgRes2.rows.length}`);
+    for (const m of msgRes2.rows) console.log(`  [${m.role}] ${m.content}`);
+
+    // 5. Mark ERROR with duration
     console.log('\nMarking agent ERROR...');
-    await markAgentError(ctx, 'Model timeout after 60s');
+    await markAgentError(ctx, 'Model timeout after 60s', 60_000);
 
     const res3 = await client.query(
-      `SELECT "status", "contextName", "lastMessageAt" FROM conversation_records WHERE "sessionId" = $1`,
+      `SELECT "status", "contextName", "messageCount", "lastMessageAt" FROM conversation_records WHERE "sessionId" = $1`,
       [`agent-status:${TENANT_ID}:insights`]
     );
     console.log('DB record (ERROR):', JSON.stringify(res3.rows[0], null, 2));
 
-    // 6. Reset to IDLE for clean state
-    await markAgentIdle(ctx, 'Awaiting new jobs');
+    const msgRes3 = await client.query(
+      `SELECT role, content FROM message_records WHERE "conversationId" = $1 ORDER BY "createdAt" ASC`,
+      [res.rows[0].id]
+    );
+    console.log(`Messages after ERROR: ${msgRes3.rows.length}`);
+    for (const m of msgRes3.rows) console.log(`  [${m.role}] ${m.content}`);
 
-    console.log('\nAll agent-status transitions verified successfully!');
+    // 6. Cleanup: delete test messages and reset messageCount
+    await client.query(
+      `DELETE FROM message_records WHERE "conversationId" = $1`,
+      [res.rows[0].id]
+    );
+    await client.query(
+      `UPDATE conversation_records SET "messageCount" = 0, status = 'IDLE', "contextName" = 'Awaiting new jobs' WHERE id = $1`,
+      [res.rows[0].id]
+    );
+
+    console.log('\nAll agent-status transitions + messages verified successfully!');
   } finally {
     client.release();
     await pool.end();

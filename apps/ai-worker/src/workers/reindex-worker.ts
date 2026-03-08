@@ -18,6 +18,12 @@ import {
   type ReindexProgress,
   type BatchIndexResult,
 } from '../services/document-indexer';
+import {
+  markAgentActive,
+  markAgentIdle,
+  markAgentError,
+  type AgentStatusContext,
+} from '../services/agent-status';
 
 // ============================================
 // Configuration
@@ -139,6 +145,22 @@ export class ReindexWorker {
       'failed',
       (job: Job<ReindexJobData, ReindexJobResult> | undefined, err: Error) => {
         console.error(`[ReindexWorker] Job ${job?.id} failed:`, err.message);
+
+        // Mark embedding agent as ERROR if we have tenant context
+        if (job?.data) {
+          const data = job.data;
+          if (data.tenantId && data.requestedBy) {
+            markAgentError(
+              {
+                tenantId: data.tenantId,
+                userId: data.requestedBy,
+                agentType: 'embedding',
+                taskDescription: `Re-indexing ${data.indexType} embeddings`,
+              },
+              err.message
+            ).catch(() => {});
+          }
+        }
       }
     );
 
@@ -174,6 +196,21 @@ export class ReindexWorker {
   private async processJob(job: Job<ReindexJobData, ReindexJobResult>): Promise<ReindexJobResult> {
     const startTime = Date.now();
     const data = ReindexJobDataSchema.parse(job.data);
+
+    // Track as "embedding" agent on the Active Agents dashboard
+    const statusCtx: AgentStatusContext | null =
+      data.tenantId && data.requestedBy
+        ? {
+            tenantId: data.tenantId,
+            userId: data.requestedBy,
+            agentType: 'embedding',
+            taskDescription: `Re-indexing ${data.indexType} embeddings${data.documentIds ? ` (${data.documentIds.length} docs)` : ''}`,
+          }
+        : null;
+
+    if (statusCtx) {
+      await markAgentActive(statusCtx);
+    }
 
     console.log(`[ReindexWorker] Processing job ${job.id}:`, {
       indexType: data.indexType,
@@ -251,6 +288,16 @@ export class ReindexWorker {
       totalTimeMs: Date.now() - startTime,
       completedAt: new Date().toISOString(),
     };
+
+    // Mark embedding agent as idle with result summary
+    if (statusCtx) {
+      const docsOk = documentsResult?.successful ?? 0;
+      const notesOk = notesResult?.successful ?? 0;
+      await markAgentIdle(statusCtx, undefined, {
+        durationMs: result.totalTimeMs,
+        result: { documentsIndexed: docsOk, notesIndexed: notesOk },
+      });
+    }
 
     // Log to audit
     await this.logReindexCompletion(data, result);

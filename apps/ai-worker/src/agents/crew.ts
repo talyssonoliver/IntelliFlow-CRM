@@ -10,6 +10,12 @@
  */
 
 import { BaseAgent, AgentResult, AgentTask } from './base.agent';
+import {
+  markAgentActive,
+  markAgentIdle,
+  markAgentError,
+  type AgentStatusContext,
+} from '../services/agent-status';
 import pino from 'pino';
 
 const logger = pino({
@@ -36,6 +42,10 @@ export interface CrewTask {
   description: string;
   expectedOutput: string;
   context?: unknown;
+  /** Tenant ID for agent-status tracking on the Active Agents dashboard */
+  tenantId?: string;
+  /** User ID for agent-status tracking on the Active Agents dashboard */
+  userId?: string;
 }
 
 /**
@@ -90,6 +100,18 @@ export class Crew {
     const startTime = Date.now();
     this.executionCount++;
 
+    // Agent-status tracking (requires tenantId + userId)
+    let statusCtx: AgentStatusContext | null = null;
+    if (task.tenantId && task.userId) {
+      statusCtx = {
+        tenantId: task.tenantId,
+        userId: task.userId,
+        agentType: 'crew',
+        taskDescription: `${this.config.name}: ${task.description}`.slice(0, 200),
+      };
+      await markAgentActive(statusCtx);
+    }
+
     logger.info(
       {
         crewName: this.config.name,
@@ -127,6 +149,13 @@ export class Crew {
         'Crew task completed'
       );
 
+      if (statusCtx) {
+        await markAgentIdle(statusCtx, undefined, {
+          durationMs: duration,
+          result: { agentCount: agentResults.size, process: this.config.process },
+        });
+      }
+
       return {
         success: true,
         agentResults,
@@ -145,6 +174,10 @@ export class Crew {
       );
 
       errors.push(error instanceof Error ? error.message : 'Unknown error');
+
+      if (statusCtx) {
+        await markAgentError(statusCtx, errors[0], duration);
+      }
 
       return {
         success: false,

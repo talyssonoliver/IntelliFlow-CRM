@@ -19,6 +19,12 @@ import { z } from 'zod';
 import { BaseAgent, AgentTask, AgentResult } from './base.agent';
 import { RAGContextChain, ragContextChain } from '../chains/rag-context.chain';
 import { SentimentAnalysisChain, getSentimentChain } from '../chains/sentiment.chain';
+import {
+  markAgentActive,
+  markAgentIdle,
+  markAgentError,
+  type AgentStatusContext,
+} from '../services/agent-status';
 import pino from 'pino';
 
 // Import domain constants (DRY architecture compliance)
@@ -186,6 +192,15 @@ export class NextBestActionAgent extends BaseAgent<NBAContext, NBAResult> {
   private async retrieveRAGContext(
     context: NBAContext
   ): Promise<{ ragContextUsed: boolean; ragContent: string }> {
+    const statusCtx: AgentStatusContext = {
+      tenantId: context.tenantId,
+      userId: context.userId,
+      agentType: 'rag',
+      taskDescription: `RAG retrieval for ${context.entityType} ${context.name || context.entityId}`,
+    };
+    await markAgentActive(statusCtx);
+    const startMs = Date.now();
+
     try {
       const ragResult = await this.ragChain.retrieveContext({
         query: this.buildContextQuery(context),
@@ -199,11 +214,21 @@ export class NextBestActionAgent extends BaseAgent<NBAContext, NBAResult> {
         searchType: 'hybrid',
       });
       if (ragResult.success && ragResult.context.length > 0) {
+        const durationMs = Date.now() - startMs;
+        await markAgentIdle(statusCtx, undefined, {
+          durationMs,
+          result: { retrieved: ragResult.context.length, avgRelevance: ragResult.avgRelevance },
+        });
         return { ragContextUsed: true, ragContent: this.ragChain.formatContextForPrompt(ragResult.context) };
       }
+      const durationMs = Date.now() - startMs;
+      await markAgentIdle(statusCtx, 'No relevant context found', { durationMs });
     } catch (error) {
+      const durationMs = Date.now() - startMs;
+      const errMsg = error instanceof Error ? error.message : String(error);
+      await markAgentError(statusCtx, errMsg, durationMs);
       logger.warn(
-        { error: error instanceof Error ? error.message : String(error) },
+        { error: errMsg },
         'RAG context retrieval failed, proceeding without'
       );
     }
@@ -217,6 +242,16 @@ export class NextBestActionAgent extends BaseAgent<NBAContext, NBAResult> {
     context: NBAContext
   ): Promise<NBAResult['sentimentAnalysis'] | undefined> {
     if (!context.recentMessages || context.recentMessages.length === 0) return undefined;
+
+    const statusCtx: AgentStatusContext = {
+      tenantId: context.tenantId,
+      userId: context.userId,
+      agentType: 'sentiment',
+      taskDescription: `Sentiment analysis for ${context.entityType} ${context.name || context.entityId}`,
+    };
+    await markAgentActive(statusCtx);
+    const startMs = Date.now();
+
     try {
       this.sentimentChain ??= getSentimentChain();
       const latestMessage = context.recentMessages[0];
@@ -232,14 +267,26 @@ export class NextBestActionAgent extends BaseAgent<NBAContext, NBAResult> {
         text: latestMessage.content,
         source,
       });
+      const durationMs = Date.now() - startMs;
+      await markAgentIdle(statusCtx, undefined, {
+        durationMs,
+        result: {
+          sentiment: sentimentResult.sentiment,
+          urgency: sentimentResult.urgency,
+          confidence: sentimentResult.confidence,
+        },
+      });
       return {
         sentiment: sentimentResult.sentiment,
         urgency: sentimentResult.urgency,
         primaryEmotion: sentimentResult.primaryEmotion,
       };
     } catch (error) {
+      const durationMs = Date.now() - startMs;
+      const errMsg = error instanceof Error ? error.message : String(error);
+      await markAgentError(statusCtx, errMsg, durationMs);
       logger.warn(
-        { error: error instanceof Error ? error.message : String(error) },
+        { error: errMsg },
         'Sentiment analysis failed, proceeding without'
       );
       return undefined;

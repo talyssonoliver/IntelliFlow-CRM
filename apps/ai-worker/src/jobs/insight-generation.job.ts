@@ -282,16 +282,95 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
   const startTime = Date.now();
   const { tenantId, userId } = job.data;
 
-  // Scheduled jobs use __scheduled__ sentinel — skip processing (the API
-  // enqueues real insight jobs on the next home-page load per tenant).
-  // This cron entry ensures the worker stays warm and the queue stays healthy.
+  // Scheduled cron sentinel — enumerate active tenants and enqueue real per-tenant jobs
   if (tenantId === '__scheduled__') {
-    logger.info({ jobId: job.id }, 'Scheduled sentinel job — skipping (insights generated on-demand per tenant)');
-    return {
-      insightsCreated: 0,
-      processingTimeMs: Date.now() - startTime,
-      processedAt: new Date().toISOString(),
-    };
+    logger.info({ jobId: job.id }, 'Scheduled insight dispatcher — enumerating active tenants');
+    let enqueued = 0;
+    try {
+      const { prisma } = await import('@intelliflow/db');
+      const { Queue } = await import('bullmq');
+
+      // Find tenants with recent activity (leads updated in the last 7 days)
+      const activeTenants = await prisma.lead.groupBy({
+        by: ['tenantId'],
+        where: { updatedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
+        _count: true,
+      });
+
+      if (activeTenants.length === 0) {
+        logger.info({ jobId: job.id }, 'No active tenants found — skipping scheduled insight refresh');
+        return { insightsCreated: 0, processingTimeMs: Date.now() - startTime, processedAt: new Date().toISOString() };
+      }
+
+      const queue = new Queue(INSIGHT_QUEUE, {
+        connection: {
+          host: process.env.REDIS_HOST || 'localhost',
+          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+        },
+      });
+
+      for (const tenant of activeTenants) {
+        // Gather heuristic data for this tenant
+        const [dealsAtRisk, hotLeads, overdueCount, staleContacts] = await Promise.all([
+          prisma.opportunity.findMany({
+            where: { tenantId: tenant.tenantId, updatedAt: { lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
+            select: { id: true, name: true, stage: true, value: true, updatedAt: true },
+            take: 20,
+          }),
+          prisma.lead.findMany({
+            where: { tenantId: tenant.tenantId, score: { gte: 60 } },
+            select: { id: true, firstName: true, lastName: true, score: true, company: true, status: true },
+            take: 20,
+          }),
+          prisma.task.count({
+            where: { tenantId: tenant.tenantId, dueDate: { lt: new Date() }, status: { not: 'COMPLETED' } },
+          }),
+          prisma.contact.findMany({
+            where: { tenantId: tenant.tenantId, lastContactedAt: { lt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000) } },
+            select: { id: true, firstName: true, lastName: true, lastContactedAt: true },
+            take: 20,
+          }),
+        ]);
+
+        await queue.add('generate-insights', {
+          tenantId: tenant.tenantId,
+          userId: 'system',
+          dealsAtRisk: dealsAtRisk.map((d) => ({
+            id: d.id,
+            name: d.name,
+            daysSinceUpdate: Math.floor((Date.now() - d.updatedAt.getTime()) / (24 * 60 * 60 * 1000)),
+            stage: d.stage ?? undefined,
+            value: d.value ? Number(d.value) : undefined,
+          })),
+          hotLeads: hotLeads.map((l) => ({
+            id: l.id,
+            name: [l.firstName, l.lastName].filter(Boolean).join(' ') || 'Unknown',
+            score: l.score ?? 0,
+            company: l.company ?? undefined,
+            status: l.status ?? undefined,
+          })),
+          overdueTasksCount: overdueCount,
+          staleContacts: staleContacts.map((c) => ({
+            id: c.id,
+            name: [c.firstName, c.lastName].filter(Boolean).join(' ') || 'Unknown',
+            daysSinceContact: c.lastContactedAt
+              ? Math.floor((Date.now() - c.lastContactedAt.getTime()) / (24 * 60 * 60 * 1000))
+              : null,
+          })),
+          correlationId: `scheduled-insight-${tenant.tenantId}-${Date.now()}`,
+        });
+        enqueued++;
+      }
+
+      await queue.close();
+      logger.info({ jobId: job.id, tenantsEnqueued: enqueued }, 'Scheduled insight dispatcher completed');
+    } catch (error) {
+      logger.error(
+        { jobId: job.id, error: error instanceof Error ? error.message : String(error) },
+        'Scheduled insight dispatcher failed'
+      );
+    }
+    return { insightsCreated: enqueued, processingTimeMs: Date.now() - startTime, processedAt: new Date().toISOString() };
   }
 
   logger.info(
