@@ -27,8 +27,8 @@ NAME: apply_patch
 +
 +function Clean-Cell([string]$text) {
 +  $t = ($text ?? '')
-+  $t = $t.Replace('|', '/').Replace('‑', '-').Replace('–', '-').Replace('—', '-').Replace('≥', '>=').Replace('≤', '<=')
-+  $t = $t.Replace("`r", ' ').Replace("`n", ' ').Trim()
++  $t = $t.replaceAll('|', '/').replaceAll('‑', '-').replaceAll('–', '-').replaceAll('—', '-').replaceAll('≥', '>=').replaceAll('≤', '<=')
++  $t = $t.replaceAll("`r", ' ').replaceAll("`n", ' ').Trim()
 +  $t = [regex]::Replace($t, '\s+', ' ')
 +  return $t
 +}

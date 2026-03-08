@@ -336,7 +336,7 @@
       "line": 188,
       "column": 36,
       "pattern": "XXX",
-      "content": "template = template.replace(/ADR-XXX/, `ADR-${nextId}`);",
+      "content": "template = template.replaceAll(/ADR-XXX/, `ADR-${nextId}`);",
       "linkedTaskId": null
     },
     {
@@ -360,7 +360,7 @@
       "line": 509,
       "column": 44,
       "pattern": "PLACEHOLDER",
-      "content": ".replace(/\\*\\*/g, '§§') // Temporary placeholder",
+      "content": ".replaceAll(/\\*\\*/g, '§§') // Temporary placeholder",
       "linkedTaskId": null
     },
     {
@@ -5640,7 +5640,7 @@
       "line": 290,
       "column": 38,
       "pattern": "XXX",
-      "content": "template = template.replace(/ADR-XXX/g, `ADR-${nextId}`);",
+      "content": "template = template.replaceAll(/ADR-XXX/g, `ADR-${nextId}`);",
       "linkedTaskId": null
     },
     {

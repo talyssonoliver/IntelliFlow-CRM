@@ -85,7 +85,7 @@ async function benchmark(
 
 const leadSchema = z.object({
   id: z.string().cuid(),
-  email: z.string().email(),
+  email: z.email(),
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
   score: z.number().int().min(0).max(100),

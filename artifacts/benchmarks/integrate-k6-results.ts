@@ -8,8 +8,8 @@
  *   npx tsx artifacts/benchmarks/integrate-k6-results.ts
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 const BASELINE_PATH = join(__dirname, 'baseline.json');
 const K6_RESULTS_PATH = join(__dirname, 'k6-latest.json');

@@ -385,7 +385,7 @@ export function teardown(data) {
 
 // Handle test summary
 export function handleSummary(data) {
-  var timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  var timestamp = new Date().toISOString().replaceAll(/[:.]/g, '-');
 
   var metrics = data.metrics || {};
   var httpDuration = (metrics.http_req_duration && metrics.http_req_duration.values) || {};
@@ -401,7 +401,7 @@ export function handleSummary(data) {
         var check = group.checks[i];
         if (check.name && check.name.indexOf('status 200') !== -1) {
           testedEndpoints.push({
-            name: check.name.replace(' status 200', ''),
+            name: check.name.replaceAll(' status 200', ''),
             passes: check.passes,
             fails: check.fails
           });

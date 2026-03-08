@@ -348,11 +348,11 @@ NAME: apply_patch
 +    function esc(v) {
 +      const s = String(v ?? '');
 +      return s
-+        .replace(/&/g, '&amp;')
-+        .replace(/</g, '&lt;')
-+        .replace(/>/g, '&gt;')
-+        .replace(/"/g, '&quot;')
-+        .replace(/'/g, '&#39;');
++        .replaceAll(/&/g, '&amp;')
++        .replaceAll(/</g, '&lt;')
++        .replaceAll(/>/g, '&gt;')
++        .replaceAll(/"/g, '&quot;')
++        .replaceAll(/'/g, '&#39;');
 +    }
 +
 +    function covKind(v) {
@@ -527,7 +527,7 @@ NAME: apply_patch
 +</html>
 +'@
 +
-+$htmlContent = $htmlTemplate.Replace('__FEATURE_JSON__', $featureJson).Replace('__RISK_JSON__', $riskJson).Replace('__GENERATED_AT__', $generatedAt)
++$htmlContent = $htmlTemplate.replaceAll('__FEATURE_JSON__', $featureJson).replaceAll('__RISK_JSON__', $riskJson).replaceAll('__GENERATED_AT__', $generatedAt)
 +Set-Content -Path $htmlOutPath -Value $htmlContent -Encoding UTF8
 +
 +Write-Output "Wrote $outPath and $htmlOutPath with $totalEntries entries. complete=$completeCount partial=$partialCount gap=$gapCount at_risk=$atRiskCount"

@@ -140,12 +140,12 @@ function checkInterDependencies(
 ```typescript
 // Before
 case 429:
-  const retryAfter = parseInt(...);
+  const retryAfter = Number.parseInt(...);
   break;
 
 // After
 case 429: {
-  const retryAfter = parseInt(...);
+  const retryAfter = Number.parseInt(...);
   break;
 }
 ```

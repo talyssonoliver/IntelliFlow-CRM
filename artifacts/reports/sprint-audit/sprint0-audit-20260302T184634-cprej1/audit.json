@@ -5671,7 +5671,7 @@
           "line": 509,
           "column": 44,
           "pattern": "PLACEHOLDER",
-          "content": ".replace(/\\*\\*/g, '§§') // Temporary placeholder",
+          "content": ".replaceAll(/\\*\\*/g, '§§') // Temporary placeholder",
           "linkedTaskId": null
         },
         {

@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-08T14:31:52.810Z",
+  "generated_at": "2026-03-08T17:54:50.448Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 327,
-    "completed": 323,
-    "partially_done": 1,
+    "total_specs_analyzed": 331,
+    "completed": 324,
+    "partially_done": 2,
     "spec_only": 1,
-    "uncertain": 2
+    "uncertain": 4
   },
   "status_legend": {
     "COMPLETED": "All evidence confirms task is done: attestation present, CSV=Completed, plan checkboxes done",
@@ -23,6 +23,18 @@
     },
     {
       "task_id": "PG-044",
+      "severity": "HIGH",
+      "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
+      "recommendation": "Investigate attestation evidence. Re-run validation if needed."
+    },
+    {
+      "task_id": "PG-048",
+      "severity": "HIGH",
+      "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
+      "recommendation": "Investigate attestation evidence. Re-run validation if needed."
+    },
+    {
+      "task_id": "PG-125",
       "severity": "HIGH",
       "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
       "recommendation": "Investigate attestation evidence. Re-run validation if needed."
@@ -3620,6 +3632,22 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-193",
+      "title": "Activity Feed Type Registry - Enum-based mapping from AuditLogEntry.eventType to ActivityFeedType with metadata",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/IFC-193-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-182"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
       "task_id": "IFC-195",
       "title": "Customizable Daily Goals - Multi-type goal support (revenue calls meetings tasks custom) with user preferences",
       "sprint": 15,
@@ -4631,6 +4659,38 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "PG-048",
+      "title": "Ticket Detail",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/PG-048-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-046"
+      ],
+      "real_status": "UNCERTAIN"
+    },
+    {
+      "task_id": "PG-050",
+      "title": "Privacy Policy",
+      "sprint": 17,
+      "spec_path": ".specify/sprints/sprint-17/specifications/PG-050-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-058"
+      ],
+      "real_status": "PARTIALLY_DONE"
+    },
+    {
       "task_id": "PG-104",
       "title": "Settings Home",
       "sprint": 13,
@@ -4663,6 +4723,24 @@
         "IFC-006"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-125",
+      "title": "Add MFA using TOTP or SMS and allow users to enable/disable from security settings",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/PG-125-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-021",
+        "PG-022",
+        "IFC-006"
+      ],
+      "real_status": "UNCERTAIN"
     },
     {
       "task_id": "PG-128",

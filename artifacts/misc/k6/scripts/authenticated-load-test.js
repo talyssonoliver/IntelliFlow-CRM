@@ -408,7 +408,7 @@ export function teardown(data) {
 
 // Handle test summary - export to JSON
 export function handleSummary(data) {
-  var timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  var timestamp = new Date().toISOString().replaceAll(/[:.]/g, '-');
 
   // Extract key metrics for baseline.json integration (ES5 compatible - no optional chaining)
   var metrics = data.metrics || {};

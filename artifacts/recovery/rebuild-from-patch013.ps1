@@ -22,9 +22,9 @@ function Normalize-Status([string]$status) {
 
 function Clean-Cell([string]$text) {
   $t = [string]$text
-  $t = $t.Replace('|', '/')
+  $t = $t.replaceAll('|', '/')
   $t = [regex]::Replace($t, '\p{Pd}', '-')
-  $t = $t.Replace("`r", ' ').Replace("`n", ' ').Trim()
+  $t = $t.replaceAll("`r", ' ').replaceAll("`n", ' ').Trim()
   $t = [regex]::Replace($t, '\s+', ' ')
   return $t
 }

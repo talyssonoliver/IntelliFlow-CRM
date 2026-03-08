@@ -352,7 +352,7 @@ export function teardown(data) {
 
 // Handle test summary
 export function handleSummary(data) {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const timestamp = new Date().toISOString().replaceAll(/[:.]/g, '-');
 
   return {
     'stdout': textSummary(data, { indent: ' ', enableColors: true }),

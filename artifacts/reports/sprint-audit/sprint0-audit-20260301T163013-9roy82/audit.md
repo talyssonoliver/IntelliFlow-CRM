@@ -424,7 +424,7 @@ These issues must be resolved before sprint can be considered complete:
 - Fix failing validations before marking complete
 
 **Placeholders Found:**
-- `tools\lint\artifact-paths.ts:509` - PLACEHOLDER: `.replace(/\*\*/g, '§§') // Temporary placeholder...`
+- `tools\lint\artifact-paths.ts:509` - PLACEHOLDER: `.replaceAll(/\*\*/g, '§§') // Temporary placeholder...`
 - `tools\lint\artifact-paths.ts:578` - PLACEHOLDER: `* Apply automatic fixes (placeholder for future im...`
 
 **Failed Validations:**

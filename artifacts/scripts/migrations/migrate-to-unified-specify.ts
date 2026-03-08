@@ -157,7 +157,7 @@ function moveDirectory(src: string, dest: string): boolean {
     const files = readdirSync(src, { recursive: true, withFileTypes: true });
     for (const file of files) {
       if (file.isFile()) {
-        const relativePath = file.path ? join(file.path, file.name).replace(src, '') : file.name;
+        const relativePath = file.path ? join(file.path, file.name).replaceAll(src, '') : file.name;
         const srcFile = join(src, relativePath);
         const destFile = join(dest, relativePath);
         ensureDir(dirname(destFile));

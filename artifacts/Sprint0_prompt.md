@@ -687,7 +687,7 @@ Sprint: 0
 3. Create `tools/lint/artifact-paths.ts`:
    ```typescript
    import { glob } from 'glob';
-   import path from 'path';
+   import path from 'node:path';
 
    const ALLOWED_PATTERNS = [
      'artifacts/metrics/**/*.json',

@@ -26,7 +26,7 @@ import { join, dirname } from 'node:path';
 const fileUrl = new URL(import.meta.url);
 const scriptPath =
   process.platform === 'win32'
-    ? fileUrl.pathname.replace(/^\/([A-Za-z]):/, '$1:')
+    ? fileUrl.pathname.replaceAll(/^\/([A-Za-z]):/, '$1:')
     : fileUrl.pathname;
 const REPO_ROOT = join(dirname(scriptPath), '..', '..');
 const CONTEXT_DIR = join(REPO_ROOT, 'artifacts', 'context');

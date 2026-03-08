@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-03-08T12:52:49.697Z",
+    "generated_at": "2026-03-08T16:50:38.294Z",
     "schema_version": "1.0.0",
     "sprint_scope": 0
   },
@@ -11,7 +11,7 @@
       "B": 8,
       "C": 7
     },
-    "error_count": 194,
+    "error_count": 197,
     "warning_count": 36,
     "review_queue_size": 29,
     "validation_coverage": {
@@ -45,6 +45,33 @@
       "message": "Tier A task IFC-015 missing evidence_required",
       "tasks": [
         "IFC-015"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-025 missing gate_profile",
+      "tasks": [
+        "IFC-025"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-025 missing acceptance_owner",
+      "tasks": [
+        "IFC-025"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-025 missing evidence_required",
+      "tasks": [
+        "IFC-025"
       ],
       "fix": "Add evidence_required array to task in plan-overrides.yaml"
     },

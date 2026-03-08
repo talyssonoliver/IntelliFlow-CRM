@@ -920,7 +920,7 @@ These issues must be resolved before sprint can be considered complete:
 - `EVIDENCE:.specify/sprints/sprint-0/attestations/IFC-160/context_ack.json` (missing)
 
 **Placeholders Found:**
-- `tools\lint\artifact-paths.ts:509` - PLACEHOLDER: `.replace(/\*\*/g, '§§') // Temporary placeholder...`
+- `tools\lint\artifact-paths.ts:509` - PLACEHOLDER: `.replaceAll(/\*\*/g, '§§') // Temporary placeholder...`
 - `tools\lint\artifact-paths.ts:578` - PLACEHOLDER: `* Apply automatic fixes (placeholder for future im...`
 
 **Failed Validations:**

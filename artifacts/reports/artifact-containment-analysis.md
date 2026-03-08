@@ -149,7 +149,7 @@ const jsonReportFile = path.join(REPORT_DIR, 'analysis.json');
 // Lines 157-160
 const outDir = path.join(repoRoot, 'sonar-reports');
 fs.mkdirSync(outDir, { recursive: true });
-const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+const stamp = new Date().toISOString().replaceAll(/[:.]/g, '-').slice(0, -5);
 const outPath = path.join(outDir, `sonar-new-issues-${stamp}.json`);
 ```
 
@@ -286,8 +286,8 @@ function generateRunId(): string {
 
   // Local: timestamp + pid
   const timestamp = new Date().toISOString()
-    .replace(/[-:]/g, '')
-    .replace(/\..+/, '')
+    .replaceAll(/[-:]/g, '')
+    .replaceAll(/\..+/, '')
     .slice(0, 15); // YYYYMMDDTHHmmss
 
   return `${timestamp}-${process.pid}`;
@@ -380,7 +380,7 @@ export function getLatestSymlink(tool: string): string {
  * Normalize path separators for cross-platform consistency
  */
 export function normalizePath(path: string): string {
-  return path.replace(/\\/g, '/');
+  return path.replaceAll(/\\/g, '/');
 }
 
 /**
