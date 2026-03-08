@@ -28,7 +28,7 @@ export const dsarRequestSchema = z.object({
     'restriction',
     'objection',
   ]),
-  subjectId: z.string().uuid(),
+  subjectId: z.uuid(),
   subjectEmail: z.string().email(),
   requestDetails: z.string().optional(),
   preferredFormat: z.enum(['json', 'csv', 'pdf']).default('json'),

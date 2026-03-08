@@ -17,7 +17,7 @@ import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypt
 export const WebhookEventSchema = z.object({
   id: z.string(),
   type: z.string(),
-  timestamp: z.string().datetime(),
+  timestamp: z.iso.datetime(),
   version: z.string().default('1.0'),
   source: z.string(),
   payload: z.record(z.string(), z.unknown()),

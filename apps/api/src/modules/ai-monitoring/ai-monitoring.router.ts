@@ -88,13 +88,39 @@ export const aiMonitoringRouter = createTRPCRouter({
   /**
    * Combined health status across all monitoring modules.
    * Returns drift, hallucination, latency, and ROI summaries.
+   *
+   * When running in a multi-process setup (AI worker separate from API),
+   * the in-memory singletons will be empty. Returns an `available: false`
+   * flag so the frontend can show an appropriate banner.
    */
   getStatus: tenantProcedure.query(async () => {
+    const isColocated = process.env.AI_WORKER_COLOCATED === 'true';
+
     try {
       const { getMonitoringStatus } = await loadAIMonitoringModule();
       const status = getMonitoringStatus();
 
+      // Detect genuinely empty data from a separate-process singleton
+      const isEmpty =
+        status.drift.trackedMetrics === 0 &&
+        status.hallucination.totalChecks === 0 &&
+        (status.latency.percentiles?.p95 ?? 0) === 0;
+
+      if (isEmpty && !isColocated) {
+        return {
+          available: false as const,
+          reason: 'monitoring_process_isolated' as const,
+          healthy: true,
+          issues: [],
+          drift: { trackedMetrics: 0, driftDetected: false, highSeverityCount: 0 },
+          hallucination: { rate: 0, kpiCompliant: true, totalChecks: 0 },
+          latency: { sloCompliant: true, p95: 0, p99: 0 },
+          roi: { currentROI: 0, trend: [], totalCost: 0, totalValue: 0 },
+        };
+      }
+
       return {
+        available: true as const,
         healthy: status.healthy,
         issues: status.issues,
         drift: {
@@ -132,12 +158,31 @@ export const aiMonitoringRouter = createTRPCRouter({
    * Drift detection metrics: current status and history.
    */
   getDriftMetrics: tenantProcedure.input(driftQuerySchema).query(async ({ input }) => {
+    const isColocated = process.env.AI_WORKER_COLOCATED === 'true';
+
     try {
       const { driftDetector } = await loadAIMonitoringModule();
       const status = driftDetector.getStatus();
       const history = driftDetector.getHistory(input.limit);
 
+      // Detect empty singleton from separate-process
+      if (status.totalSamples === 0 && history.length === 0 && !isColocated) {
+        return {
+          available: false as const,
+          reason: 'monitoring_process_isolated' as const,
+          status: {
+            trackedMetrics: 0,
+            totalSamples: 0,
+            driftDetected: false,
+            highSeverityCount: 0,
+            lastCheck: null,
+          },
+          history: [],
+        };
+      }
+
       return {
+        available: true as const,
         status: {
           trackedMetrics: status.trackedMetrics,
           totalSamples: status.totalSamples,
@@ -168,12 +213,31 @@ export const aiMonitoringRouter = createTRPCRouter({
    * Latency percentiles, SLO compliance, and alerts.
    */
   getLatencyMetrics: tenantProcedure.input(latencyQuerySchema).query(async ({ input }) => {
+    const isColocated = process.env.AI_WORKER_COLOCATED === 'true';
+
     try {
       const { latencyMonitor } = await loadAIMonitoringModule();
       const stats = latencyMonitor.getStats(input.startTime, input.endTime);
       const alerts = latencyMonitor.getAlerts();
 
+      // Detect empty singleton from separate-process
+      if (stats.sampleCount === 0 && !isColocated) {
+        return {
+          available: false as const,
+          reason: 'monitoring_process_isolated' as const,
+          sampleCount: 0,
+          successRate: 0,
+          percentiles: stats.percentiles,
+          sloCompliance: stats.sloCompliance,
+          byModel: {},
+          byOperation: {},
+          byPhase: {},
+          alerts: [],
+        };
+      }
+
       return {
+        available: true as const,
         sampleCount: stats.sampleCount,
         successRate: stats.successRate,
         percentiles: stats.percentiles,
@@ -270,12 +334,33 @@ export const aiMonitoringRouter = createTRPCRouter({
    * ROI metrics: costs, values, ROI %, trend direction, recommendations.
    */
   getROIMetrics: tenantProcedure.input(timeRangeSchema).query(async ({ input }) => {
+    const isColocated = process.env.AI_WORKER_COLOCATED === 'true';
+
     try {
       const { roiTracker } = await loadAIMonitoringModule();
       const roi = roiTracker.calculateROI(input.startTime, input.endTime);
       const stats = roiTracker.getStats();
 
+      // Detect empty singleton
+      if (roi.totalCost === 0 && roi.totalValue === 0 && !isColocated) {
+        return {
+          available: false as const,
+          reason: 'monitoring_process_isolated' as const,
+          totalCost: 0,
+          totalValue: 0,
+          netValue: 0,
+          roi: 0,
+          efficiency: 0,
+          trendDirection: 'stable',
+          costBreakdown: {},
+          valueBreakdown: {},
+          recommendations: [],
+          topPerformingOperations: [],
+        };
+      }
+
       return {
+        available: true as const,
         totalCost: roi.totalCost,
         totalValue: roi.totalValue,
         netValue: roi.netValue,
@@ -417,6 +502,87 @@ export const aiMonitoringRouter = createTRPCRouter({
       });
     }
   }),
+
+  /**
+   * Reset an agent's status from ERROR → IDLE.
+   * Clears error fields so it shows as healthy on the dashboard.
+   */
+  resetAgentStatus: tenantProcedure
+    .input(z.object({ agentId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const tenantId = ctx.tenant.tenantId;
+        const conversation = await ctx.prismaWithTenant.conversationRecord.findFirst({
+          where: { tenantId, agentId: input.agentId },
+          select: { id: true, status: true },
+        });
+
+        if (!conversation) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Agent not found' });
+        }
+
+        await ctx.prismaWithTenant.conversationRecord.update({
+          where: { id: conversation.id },
+          data: {
+            status: 'IDLE',
+            endReason: null,
+            summary: null,
+            endedAt: null,
+            contextName: 'Awaiting new jobs',
+            lastMessageAt: new Date(),
+          },
+        });
+
+        return { success: true, agentId: input.agentId };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to reset agent status',
+          cause: error,
+        });
+      }
+    }),
+
+  /**
+   * Delete an agent record (removes from Active Agents dashboard).
+   * Also deletes associated messages and tool calls.
+   */
+  deleteAgent: tenantProcedure
+    .input(z.object({ agentId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const tenantId = ctx.tenant.tenantId;
+        const conversation = await ctx.prismaWithTenant.conversationRecord.findFirst({
+          where: { tenantId, agentId: input.agentId },
+          select: { id: true },
+        });
+
+        if (!conversation) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Agent not found' });
+        }
+
+        // Delete child records first (messages, tool calls), then the conversation
+        await ctx.prismaWithTenant.messageRecord.deleteMany({
+          where: { conversationId: conversation.id },
+        });
+        await ctx.prismaWithTenant.toolCallRecord.deleteMany({
+          where: { conversationId: conversation.id },
+        });
+        await ctx.prismaWithTenant.conversationRecord.delete({
+          where: { id: conversation.id },
+        });
+
+        return { success: true, agentId: input.agentId };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to delete agent',
+          cause: error,
+        });
+      }
+    }),
 
   /**
    * Failed BullMQ jobs across AI queues.

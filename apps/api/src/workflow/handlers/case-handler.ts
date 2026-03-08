@@ -61,7 +61,7 @@ function createCaseIdOrThrow(caseIdString: string): CaseId {
  * Case event payload schema
  */
 export const caseEventPayloadSchema = z.object({
-  caseId: z.string().uuid(),
+  caseId: z.uuid(),
   title: z.string().optional(),
   description: z.string().optional(),
   clientId: z.string().optional(),

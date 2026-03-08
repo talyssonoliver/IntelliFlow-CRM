@@ -247,7 +247,7 @@ export interface IWorkflowEngine {
 // ============================================
 
 export const humanDecisionSchema = z.object({
-  workflowId: z.string().uuid(),
+  workflowId: z.uuid(),
   userId: z.string(),
   decision: z.enum(['approve', 'reject', 'modify']),
   comment: z.string().optional(),

@@ -48,8 +48,9 @@ export type Services = {
   closeDealWon: Container['closeDealWonUseCase'];
   closeDealLost: Container['closeDealLostUseCase'];
   feedbackSurvey: Container['feedbackSurveyService'];
-  // Optional future services - not yet implemented in container
-  experiment?: unknown;
+  // IFC-025: Experiment Service
+  experiment: Container['experimentService'];
+  // Optional future services
   feedback?: unknown;
 };
 
@@ -160,6 +161,7 @@ function buildServicesFromContainer(): Services {
     closeDealWon: container.closeDealWonUseCase,
     closeDealLost: container.closeDealLostUseCase,
     feedbackSurvey: container.feedbackSurveyService,
+    experiment: container.experimentService,
   };
 }
 

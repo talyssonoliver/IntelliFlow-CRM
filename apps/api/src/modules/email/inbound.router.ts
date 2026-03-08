@@ -25,8 +25,6 @@ const createOutboundEmailService = (adapters as any).createOutboundEmailService 
 }) => {
   sendEmail(email: any): Promise<{ status: string; error?: string; messageId: string }>;
 };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- inbound email parsing returns untyped payloads
-
 // Singleton outbound email service — picks up SendGrid key if configured, falls back to mock
 const outboundEmailService = createOutboundEmailService({
   sendgridApiKey: process.env.SENDGRID_API_KEY,

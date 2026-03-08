@@ -22,6 +22,7 @@ import {
   PrismaCaseDocumentRepository,
   PrismaNotificationRepository,
   PrismaNotificationPreferenceRepository,
+  PrismaExperimentRepository,
   InMemoryEventBus,
   MockAIService,
   OllamaAIService,
@@ -58,6 +59,7 @@ import {
   ConvertLeadToDealUseCase,
   CloseDealWonUseCase,
   CloseDealLostUseCase,
+  ExperimentService,
 } from '@intelliflow/application';
 import {
   getAuditLogger,
@@ -103,6 +105,7 @@ const createAdapters = (prismaClient: PrismaClient) => {
   const tenantModuleRepository = new PrismaTenantModuleRepository(prismaClient);
   const notificationRepository = new PrismaNotificationRepository(prismaClient);
   const notificationPreferenceRepository = new PrismaNotificationPreferenceRepository(prismaClient);
+  const experimentRepository = new PrismaExperimentRepository(prismaClient);
 
   // Storage & AV (IFC-094)
   const storageService = new SupabaseStorageAdapter(
@@ -179,6 +182,7 @@ const createAdapters = (prismaClient: PrismaClient) => {
     tenantModuleRepository,
     notificationRepository,
     notificationPreferenceRepository,
+    experimentRepository,
     eventBus,
     aiService,
     cache,
@@ -322,6 +326,14 @@ const createServices = (prismaClient: PrismaClient) => {
     adapters.notificationService
   );
 
+  // IFC-025: Experiment Service (A/B testing)
+  const experimentService = new ExperimentService(
+    adapters.experimentRepository,
+    adapters.experimentRepository.assignments,
+    adapters.experimentRepository.results,
+    adapters.eventBus
+  );
+
   // IFC-224: Calendar Webhook Service + Sync Adapter (stub)
   const calendarSyncService = new CalendarSyncServiceAdapter();
   const calendarWebhookService = new CalendarWebhookService(calendarSyncService);
@@ -363,6 +375,8 @@ const createServices = (prismaClient: PrismaClient) => {
     // IFC-094: Document services
     signatureProvider,
     ingestionOrchestrator,
+    // IFC-025: Experiment Service
+    experimentService,
     // IFC-209: Module Access Service
     moduleAccess: adapters.tenantModuleRepository,
     // Security services (IFC-098, IFC-113, IFC-127)

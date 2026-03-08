@@ -24,137 +24,98 @@ import {
 } from './types';
 import { agentLogger } from './logger';
 import { getAgentTool } from './tools';
+import { PrismaAgentActionStore } from './prisma-action-store';
+import { prisma as sharedPrisma } from '@intelliflow/db';
+
+// ---------------------------------------------------------------------------
+// Persistent Prisma-backed store (replaces in-memory Maps)
+// ---------------------------------------------------------------------------
+
+const DEFAULT_TENANT_ID = process.env.DEFAULT_TENANT_ID || '00000000-0000-4000-8000-000000000001';
 
 /**
- * In-memory store for pending actions
- * In production, this would be backed by a database
+ * Singleton Prisma-backed action store.
+ * Replaces the three in-memory stores (PendingActionsStore,
+ * ExecutedActionsStore, RollbackStore) with a single DB-backed
+ * implementation using the AgentAction model.
  */
-class PendingActionsStore {
-  private readonly actions: Map<string, PendingAction> = new Map();
+export const actionStore = new PrismaAgentActionStore(sharedPrisma, DEFAULT_TENANT_ID);
 
-  async add(action: PendingAction): Promise<void> {
-    this.actions.set(action.id, action);
-  }
+// Legacy aliases for callers that import these directly
+export const pendingActionsStore = {
+  add: (a: PendingAction) => actionStore.add(a),
+  get: (id: string) => actionStore.get(id),
+  update: (a: PendingAction) => actionStore.update(a),
+  delete: (id: string) => actionStore.delete(id),
+  findByUser: (userId: string) => actionStore.findByUser(userId),
+  findBySession: (sessionId: string) => actionStore.findBySession(sessionId),
+  findPending: () => actionStore.findPending(),
+  expireOld: () => actionStore.expireOld(),
+};
 
-  async get(id: string): Promise<PendingAction | undefined> {
-    const action = this.actions.get(id);
-    if (action && action.expiresAt < new Date()) {
-      // Action has expired, update status
-      action.status = 'EXPIRED';
-      await this.update(action);
-      return action;
+export const executedActionsStore = {
+  add: (a: ExecutedAction) => actionStore.addExecuted(a),
+  get: (id: string) => actionStore.getExecuted(id),
+  findByRollbackToken: (token: string) => actionStore.findByRollbackToken(token),
+  disableRollback: (id: string) => actionStore.disableRollback(id),
+  findAll: () => actionStore.findAllExecuted(),
+};
+
+// Rollback records are now stored in the same AgentAction rows.
+// This legacy alias provides the add/get API used by tools/update.ts.
+export const rollbackStore = {
+  async add(record: {
+    actionId: string;
+    entityType: EntityType;
+    entityId: string;
+    previousState: Record<string, unknown>;
+    rolledBackBy: string;
+    rolledBackAt: Date;
+  }): Promise<void> {
+    // Persist rollback metadata into the AgentAction row
+    try {
+      await sharedPrisma.agentAction.update({
+        where: { id: record.actionId },
+        data: {
+          status: 'ROLLED_BACK' as any,
+          rolledBackAt: record.rolledBackAt,
+          rolledBackBy: record.rolledBackBy,
+          rollbackReason: JSON.stringify(record.previousState),
+        },
+      });
+    } catch {
+      // If the action doesn't exist in DB (e.g. tests), silently ignore
     }
-    return action;
-  }
-
-  async update(action: PendingAction): Promise<void> {
-    this.actions.set(action.id, action);
-  }
-
-  async delete(id: string): Promise<boolean> {
-    return this.actions.delete(id);
-  }
-
-  async findByUser(userId: string): Promise<PendingAction[]> {
-    const now = new Date();
-    return Array.from(this.actions.values()).filter(
-      (action) =>
-        action.createdBy === userId && action.status === 'PENDING' && action.expiresAt > now
-    );
-  }
-
-  async findBySession(sessionId: string): Promise<PendingAction[]> {
-    const now = new Date();
-    return Array.from(this.actions.values()).filter(
-      (action) =>
-        action.agentSessionId === sessionId && action.status === 'PENDING' && action.expiresAt > now
-    );
-  }
-
-  async findPending(): Promise<PendingAction[]> {
-    const now = new Date();
-    return Array.from(this.actions.values()).filter(
-      (action) => action.status === 'PENDING' && action.expiresAt > now
-    );
-  }
-
-  async expireOld(): Promise<number> {
-    const now = new Date();
-    let expiredCount = 0;
-
-    for (const [id, action] of this.actions.entries()) {
-      if (action.status === 'PENDING' && action.expiresAt < now) {
-        action.status = 'EXPIRED';
-        this.actions.set(id, action);
-        expiredCount++;
+  },
+  async get(actionId: string): Promise<
+    | {
+        actionId: string;
+        entityType: EntityType;
+        entityId: string;
+        previousState: Record<string, unknown>;
+        rolledBackBy: string;
+        rolledBackAt: Date;
       }
+    | undefined
+  > {
+    try {
+      const row = await sharedPrisma.agentAction.findUnique({ where: { id: actionId } });
+      if (!row || !row.rolledBackAt) return undefined;
+      return {
+        actionId: row.id,
+        entityType: row.entityType.toUpperCase() as EntityType,
+        entityId: row.entityId,
+        previousState: row.rollbackReason
+          ? (JSON.parse(row.rollbackReason) as Record<string, unknown>)
+          : {},
+        rolledBackBy: row.rolledBackBy ?? '',
+        rolledBackAt: row.rolledBackAt,
+      };
+    } catch {
+      return undefined;
     }
-
-    return expiredCount;
-  }
-}
-
-/**
- * Store for executed actions (for rollback capability)
- */
-class ExecutedActionsStore {
-  private readonly actions: Map<string, ExecutedAction> = new Map();
-
-  async add(action: ExecutedAction): Promise<void> {
-    this.actions.set(action.id, action);
-  }
-
-  async get(id: string): Promise<ExecutedAction | undefined> {
-    return this.actions.get(id);
-  }
-
-  async findByRollbackToken(token: string): Promise<ExecutedAction | undefined> {
-    return Array.from(this.actions.values()).find(
-      (action) => action.rollbackToken === token && action.rollbackAvailable
-    );
-  }
-
-  async disableRollback(id: string): Promise<void> {
-    const action = this.actions.get(id);
-    if (action) {
-      action.rollbackAvailable = false;
-      this.actions.set(id, action);
-    }
-  }
-
-  async findAll(): Promise<ExecutedAction[]> {
-    return Array.from(this.actions.values());
-  }
-}
-
-/**
- * Store for rollback records
- */
-interface RollbackRecord {
-  actionId: string;
-  entityType: EntityType;
-  entityId: string;
-  previousState: Record<string, unknown>;
-  rolledBackBy: string;
-  rolledBackAt: Date;
-}
-
-class RollbackStore {
-  private readonly records: Map<string, RollbackRecord> = new Map();
-
-  async add(record: RollbackRecord): Promise<void> {
-    this.records.set(record.actionId, record);
-  }
-
-  async get(actionId: string): Promise<RollbackRecord | undefined> {
-    return this.records.get(actionId);
-  }
-}
-
-// Export singleton instances
-export const pendingActionsStore = new PendingActionsStore();
-export const executedActionsStore = new ExecutedActionsStore();
-export const rollbackStore = new RollbackStore();
+  },
+};
 
 /**
  * Approval Workflow Service

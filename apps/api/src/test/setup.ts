@@ -137,6 +137,7 @@ export const mockServices = {
   closeDealWon: mockDeep<any>(),
   closeDealLost: mockDeep<any>(),
   feedbackSurvey: mockDeep<any>(),
+  experiment: mockDeep<any>(),
 };
 
 /**
@@ -178,6 +179,7 @@ export const mockAdapters = {
   tenantModuleRepository: mockDeep<any>(),
   notificationRepository: mockDeep<any>(),
   notificationPreferenceRepository: mockDeep<any>(),
+  experimentRepository: mockDeep<any>(),
 };
 
 /**
