@@ -17,9 +17,14 @@
  * - Correlation ID support
  */
 
-import type { PrismaClient } from '@intelliflow/db';
 import { createTRPCRouter, publicProcedure } from '../../trpc';
-import { getCorrelationId } from '../../tracing/correlation';
+import {
+  getDatabaseStats,
+  getDetailedHealth,
+  getLivenessHealth,
+  getPingHealth,
+  getReadinessHealth,
+} from './health.service';
 
 export const healthRouter = createTRPCRouter({
   /**
@@ -31,11 +36,7 @@ export const healthRouter = createTRPCRouter({
    * @returns Simple status object with correlation ID
    */
   ping: publicProcedure.query(() => {
-    return {
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      correlationId: getCorrelationId(),
-    };
+    return getPingHealth();
   }),
 
   /**
@@ -50,44 +51,7 @@ export const healthRouter = createTRPCRouter({
    * @returns Detailed health status with dependency checks
    */
   check: publicProcedure.query(async ({ ctx }) => {
-    const startTime = Date.now();
-    const checks: Record<string, { status: 'ok' | 'error'; latency?: number; error?: string }> = {};
-
-    // Database connectivity check
-    try {
-      const dbStart = Date.now();
-      await ctx.prisma.$queryRaw`SELECT 1`;
-      const dbLatency = Date.now() - dbStart;
-
-      checks.database = {
-        status: 'ok',
-        latency: dbLatency,
-      };
-
-      // Warn if database is slow (>20ms as per performance targets)
-      if (dbLatency > 20) {
-        console.warn(`[Health] Database latency high: ${dbLatency}ms (target: <20ms)`);
-      }
-    } catch (error) {
-      checks.database = {
-        status: 'error',
-        error: error instanceof Error ? error.message : 'Unknown database error',
-      };
-    }
-
-    // Overall health status
-    const allOk = Object.values(checks).every((check) => check.status === 'ok');
-    const totalLatency = Date.now() - startTime;
-
-    return {
-      status: allOk ? 'healthy' : 'degraded',
-      timestamp: new Date().toISOString(),
-      latency: totalLatency,
-      checks,
-      correlationId: getCorrelationId(),
-      version: process.env.npm_package_version ?? '0.1.0',
-      environment: process.env.NODE_ENV ?? 'development',
-    };
+    return getDetailedHealth(ctx);
   }),
 
   /**
@@ -99,26 +63,7 @@ export const healthRouter = createTRPCRouter({
    * Returns HTTP 503 if not ready (handled by error middleware).
    */
   ready: publicProcedure.query(async ({ ctx }) => {
-    try {
-      // Check database connectivity
-      await ctx.prisma.$queryRaw`SELECT 1`;
-
-      // Future checks:
-      // - Redis connection
-      // - Required environment variables
-      // - AI worker availability
-
-      return {
-        ready: true,
-        timestamp: new Date().toISOString(),
-      };
-    } catch (error) {
-      return {
-        ready: false,
-        timestamp: new Date().toISOString(),
-        error: error instanceof Error ? error.message : 'Readiness check failed',
-      };
-    }
+    return getReadinessHealth(ctx);
   }),
 
   /**
@@ -130,15 +75,7 @@ export const healthRouter = createTRPCRouter({
    * Use for Kubernetes liveness probes.
    */
   alive: publicProcedure.query(() => {
-    return {
-      alive: true,
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      correlationId: getCorrelationId(),
-      pid: process.pid,
-      nodeVersion: process.version,
-      memoryUsage: process.memoryUsage(),
-    };
+    return getLivenessHealth();
   }),
 
   /**
@@ -148,33 +85,6 @@ export const healthRouter = createTRPCRouter({
    * Useful for diagnosing connection leaks or pool exhaustion.
    */
   dbStats: publicProcedure.query(async ({ ctx }) => {
-    try {
-      const prismaWithMetrics = ctx.prisma as PrismaClient & {
-        $metrics?: { json: () => Promise<unknown> };
-      };
-      const metricsProvider = prismaWithMetrics.$metrics;
-      if (!metricsProvider?.json) {
-        return {
-          status: 'unsupported',
-          timestamp: new Date().toISOString(),
-          error:
-            'Prisma metrics are not available in this Prisma client build. Enable Prisma metrics and regenerate.',
-        };
-      }
-
-      const metrics = await metricsProvider.json();
-
-      return {
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        metrics,
-      };
-    } catch (error) {
-      return {
-        status: 'error',
-        timestamp: new Date().toISOString(),
-        error: error instanceof Error ? error.message : 'Failed to fetch database metrics',
-      };
-    }
+    return getDatabaseStats(ctx);
   }),
 });

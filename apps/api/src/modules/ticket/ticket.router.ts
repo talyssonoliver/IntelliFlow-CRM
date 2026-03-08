@@ -79,6 +79,222 @@ async function getTenantId(ctx: Context): Promise<string> {
   return tenant.id;
 }
 
+// =============================================================================
+// Post-creation side-effect helpers (all fire-and-forget, non-blocking)
+// =============================================================================
+
+/**
+ * Notify the assigned agent (in-app) and enqueue an email notification via BullMQ.
+ */
+function notifyAssignee(
+  ctx: Context,
+  params: { assigneeId: string; tenantId: string; ticketId: string; subject: string }
+) {
+  // In-app notification
+  createNotification(ctx.prisma, {
+    userId: params.assigneeId,
+    tenantId: params.tenantId,
+    type: 'ticket_assigned',
+    title: 'Ticket assigned to you',
+    body: `Ticket "${params.subject}" has been assigned to you`,
+    priority: 'normal',
+    entityType: 'ticket',
+    entityId: params.ticketId,
+    entityName: params.subject,
+    actionUrl: `/tickets/${params.ticketId}`,
+  }).catch(() => {});
+
+  // BullMQ email notification (fire-and-forget)
+  (async () => {
+    const { Queue } = await import('bullmq');
+    const { QUEUE_NAMES, DEFAULT_QUEUE_CONFIGS } = await import('@intelliflow/platform/queues');
+    const qConfig = DEFAULT_QUEUE_CONFIGS[QUEUE_NAMES.EMAIL_NOTIFICATIONS];
+    const queue = new Queue(QUEUE_NAMES.EMAIL_NOTIFICATIONS, {
+      connection: {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+      },
+      defaultJobOptions: {
+        attempts: qConfig.defaultJobOptions.attempts,
+        backoff: {
+          type: qConfig.defaultJobOptions.backoff.type,
+          delay: qConfig.defaultJobOptions.backoff.delay,
+        },
+        removeOnComplete: qConfig.defaultJobOptions.removeOnComplete,
+        removeOnFail: qConfig.defaultJobOptions.removeOnFail,
+      },
+    });
+    await queue.add('notification:email', {
+      type: 'ticket_assigned',
+      recipientUserId: params.assigneeId,
+      tenantId: params.tenantId,
+      subject: `Ticket assigned: ${params.subject}`,
+      body: `Ticket "${params.subject}" has been assigned to you. View it at /tickets/${params.ticketId}`,
+      entityType: 'ticket',
+      entityId: params.ticketId,
+    });
+    await queue.close();
+  })().catch(() => {});
+}
+
+/**
+ * Enhancement 1: Auto-route unassigned tickets using the routing service.
+ * Attempts to find an eligible agent and assign the ticket automatically.
+ * If routing succeeds, sends an assignment notification to the routed agent.
+ */
+function autoRouteNewTicket(
+  ctx: Context,
+  params: { ticketId: string; tenantId: string; category?: string; subject: string }
+) {
+  const routingService = (ctx.services as Record<string, any>)?.ticketRouting;
+  if (!routingService) return;
+
+  const category = params.category || 'GENERAL';
+
+  (async () => {
+    // Find eligible agents
+    const candidates = await routingService.suggestAssignees(params.tenantId, category, 10);
+    if (candidates.length === 0) return; // No agents available — leave unassigned
+
+    // Check for a matching routing rule first
+    const ticket = await ctx.prisma.ticket.findUnique({
+      where: { id: params.ticketId },
+      select: { priority: true, status: true },
+    });
+    if (!ticket || ticket.status === 'ARCHIVED') return;
+
+    const matchingRule = await routingService.findMatchingRule(
+      params.tenantId,
+      category,
+      ticket.priority
+    );
+
+    let assigneeId: string;
+    let assigneeName: string;
+    let reason: string;
+    let routingMethod: string;
+    let matchedSkill: string | null = null;
+    let ruleId: string | null = null;
+
+    if (matchingRule) {
+      assigneeId = matchingRule.assignToUserId;
+      assigneeName =
+        candidates.find((c: { agentId: string }) => c.agentId === matchingRule.assignToUserId)
+          ?.name || 'Unknown';
+      reason = `Auto-routed on creation: rule match "${matchingRule.ruleName}"`;
+      routingMethod = 'rule_match';
+      ruleId = matchingRule.id;
+    } else {
+      // Skill/load balance — pick the top candidate
+      assigneeId = candidates[0].agentId;
+      assigneeName = candidates[0].name;
+      reason = `Auto-routed on creation: skill match for ${category}`;
+      routingMethod = 'skill_match';
+      matchedSkill = candidates[0].skills?.[0] || null;
+    }
+
+    await routingService.routeTicket({
+      ticketId: params.ticketId,
+      tenantId: params.tenantId,
+      inferredCategory: category,
+      assigneeId,
+      assigneeName,
+      reason,
+      routingMethod,
+      matchedSkill,
+      ruleId,
+      confidence: 0.85,
+      executionTimeMs: 0,
+      modelVersion: 'router:v1-auto',
+      isFallback: false,
+    });
+
+    // Notify the auto-assigned agent
+    notifyAssignee(ctx, {
+      assigneeId,
+      tenantId: params.tenantId,
+      ticketId: params.ticketId,
+      subject: params.subject,
+    });
+  })().catch(() => {});
+}
+
+/**
+ * Enhancement 2: Notify ADMIN and MANAGER users when a ticket is created unassigned.
+ */
+function notifyTeamUnassigned(
+  ctx: Context,
+  params: { tenantId: string; ticketId: string; subject: string; priority: string }
+) {
+  (async () => {
+    const teamMembers = await ctx.prisma.user.findMany({
+      where: {
+        tenantId: params.tenantId,
+        role: { in: ['ADMIN', 'MANAGER'] },
+      },
+      select: { id: true },
+    });
+
+    const priorityLabel: 'high' | 'normal' = params.priority === 'CRITICAL' || params.priority === 'HIGH' ? 'high' : 'normal';
+
+    for (const member of teamMembers) {
+      createNotification(ctx.prisma, {
+        userId: member.id,
+        tenantId: params.tenantId,
+        type: 'ticket_created',
+        title: 'New unassigned ticket',
+        body: `[${params.priority}] "${params.subject}" needs assignment`,
+        priority: priorityLabel,
+        entityType: 'ticket',
+        entityId: params.ticketId,
+        entityName: params.subject,
+        actionUrl: `/tickets/${params.ticketId}`,
+        actionLabel: 'View & Assign',
+      }).catch(() => {});
+    }
+  })().catch(() => {});
+}
+
+/**
+ * Enhancement 4: Write a TicketActivity on the contact's record when a ticket
+ * is created for them, linking the ticket to their activity timeline.
+ */
+function writeContactActivity(
+  ctx: Context,
+  params: {
+    tenantId: string;
+    contactEmail: string;
+    contactName: string;
+    ticketId: string;
+    subject: string;
+  }
+) {
+  (async () => {
+    // Look up the contact by email
+    const contact = await ctx.prisma.contact.findFirst({
+      where: { email: params.contactEmail, tenantId: params.tenantId },
+      select: { id: true },
+    });
+    if (!contact) return;
+
+    // Write to the contact's activity log
+    await ctx.prisma.contactActivity.create({
+      data: {
+        contactId: contact.id,
+        tenantId: params.tenantId,
+        type: 'TICKET',
+        title: `Support ticket created: ${params.subject}`,
+        description: `A support ticket "${params.subject}" was created for ${params.contactName}`,
+        userName: 'System',
+        metadata: {
+          ticketId: params.ticketId,
+          ticketSubject: params.subject,
+        },
+      },
+    });
+  })().catch(() => {});
+}
+
 export const ticketRouter = createTRPCRouter({
   /**
    * Create a new ticket
@@ -93,20 +309,43 @@ export const ticketRouter = createTRPCRouter({
         tenantId,
       });
 
-      // Fire-and-forget: notification failure must not block the ticket creation response
+      // --- Post-creation side effects (all fire-and-forget) ---
+
       if (input.assigneeId) {
-        createNotification(ctx.prisma, {
-          userId: input.assigneeId,
+        // Notify the assigned agent
+        notifyAssignee(ctx, {
+          assigneeId: input.assigneeId,
           tenantId,
-          type: 'ticket_assigned',
-          title: 'Ticket assigned to you',
-          body: `Ticket "${input.subject}" has been assigned to you`,
-          priority: 'normal',
-          entityType: 'ticket',
-          entityId: ticket.id,
-          entityName: input.subject,
-          actionUrl: `/tickets/${ticket.id}`,
-        }).catch(() => {}); // Swallow notification errors — non-critical side-effect
+          ticketId: ticket.id,
+          subject: input.subject,
+        });
+      } else {
+        // Enhancement 1: Auto-route unassigned tickets
+        autoRouteNewTicket(ctx, {
+          ticketId: ticket.id,
+          tenantId,
+          category: input.category,
+          subject: input.subject,
+        });
+
+        // Enhancement 2: Notify team leads/admins about unassigned ticket
+        notifyTeamUnassigned(ctx, {
+          tenantId,
+          ticketId: ticket.id,
+          subject: input.subject,
+          priority: input.priority,
+        });
+      }
+
+      // Enhancement 4: Write activity to contact's feed
+      if (input.contactEmail) {
+        writeContactActivity(ctx, {
+          tenantId,
+          contactEmail: input.contactEmail,
+          contactName: input.contactName,
+          ticketId: ticket.id,
+          subject: input.subject,
+        });
       }
 
       return ticket;

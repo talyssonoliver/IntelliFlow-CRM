@@ -276,16 +276,24 @@ export const aiMonitoringRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       try {
+        const isColocated = process.env.AI_WORKER_COLOCATED === 'true';
         const { latencyMonitor } = await loadAIMonitoringModule();
         const trend = latencyMonitor.getTrend(input.periodMinutes, input.bucketMinutes);
 
-        return trend.map((t) => ({
-          timestamp: t.timestamp.toISOString(),
-          p50: t.p50,
-          p95: t.p95,
-          p99: t.p99,
-          count: t.count,
-        }));
+        if (trend.length === 0 && !isColocated) {
+          return { available: false as const, reason: 'monitoring_process_isolated' as const, data: [] };
+        }
+
+        return {
+          available: true as const,
+          data: trend.map((t) => ({
+            timestamp: t.timestamp.toISOString(),
+            p50: t.p50,
+            p95: t.p95,
+            p99: t.p99,
+            count: t.count,
+          })),
+        };
       } catch (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',

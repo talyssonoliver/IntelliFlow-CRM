@@ -40,6 +40,7 @@ const mockMfaService = {
   sendSmsOtp: vi.fn(),
   sendEmailOtp: vi.fn(),
   verifyTotp: vi.fn(),
+  verifyTotpTimingSafe: vi.fn(),
   getUserMfaSettings: vi.fn(),
   saveUserMfaSettings: vi.fn(),
   generateBackupCodes: vi.fn(),

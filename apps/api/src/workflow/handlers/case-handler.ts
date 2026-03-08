@@ -71,9 +71,9 @@ export const caseEventPayloadSchema = z.object({
   previousStatus: z.enum(['OPEN', 'IN_PROGRESS', 'ON_HOLD', 'CLOSED', 'CANCELLED']).optional(),
   newStatus: z.enum(['OPEN', 'IN_PROGRESS', 'ON_HOLD', 'CLOSED', 'CANCELLED']).optional(),
   changedBy: z.string().optional(),
-  deadline: z.string().datetime().optional(),
-  previousDeadline: z.string().datetime().nullable().optional(),
-  newDeadline: z.string().datetime().optional(),
+  deadline: z.iso.datetime().optional(),
+  previousDeadline: z.iso.datetime().nullable().optional(),
+  newDeadline: z.iso.datetime().optional(),
   resolution: z.string().optional(),
 });
 

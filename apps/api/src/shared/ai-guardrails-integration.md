@@ -89,7 +89,7 @@ export function createGuardrailsAIService(ctx: Context) {
   return new GuardrailsAIService(baseAIService, {
     userId: ctx.user?.userId || 'anonymous',
     enableBiasDetection: process.env.ENABLE_BIAS_DETECTION !== 'false',
-    rateLimit: parseInt(process.env.AI_RATE_LIMIT || '10', 10),
+    rateLimit: Number.parseInt(process.env.AI_RATE_LIMIT || '10', 10),
     enableLogging: true,
   });
 }

@@ -14,7 +14,7 @@
  * - qrcode: For QR code generation (optional, can use URL)
  */
 
-import { randomBytes, randomInt, createHash, createHmac } from 'node:crypto';
+import { randomBytes, randomInt, createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { PrismaClient } from '@intelliflow/db';
 
 // ============================================
@@ -284,6 +284,30 @@ export class MfaService {
   verifyTotp(secret: string, code: string): boolean {
     const normalizedCode = code.replaceAll(/\s/g, '');
     return verifyTotpCode(secret, normalizedCode);
+  }
+
+  /**
+   * Timing-safe TOTP verification
+   * Uses timingSafeEqual to prevent timing side-channel attacks
+   * PG-125: AC-008
+   */
+  verifyTotpTimingSafe(secret: string, code: string): boolean {
+    const normalizedCode = code.replaceAll(/\s/g, '');
+    const now = Math.floor(Date.now() / 1000);
+    const period = 30;
+
+    for (let i = -1; i <= 1; i++) {
+      const checkTime = now + i * period;
+      const expectedCode = generateTotpCode(secret, checkTime);
+      // Use timing-safe comparison
+      const expectedBuf = Buffer.from(expectedCode, 'utf8');
+      const codeBuf = Buffer.from(normalizedCode, 'utf8');
+      if (expectedBuf.length === codeBuf.length && timingSafeEqual(expectedBuf, codeBuf)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**
@@ -617,18 +641,35 @@ export class MfaService {
 
   /**
    * Get user MFA settings
-   *
-   * Note: In production, this would query the database
    */
   async getUserMfaSettings(userId: string): Promise<MfaUserSettings | null> {
     // Check cache first
     const cached = mfaSettingsCache.get(userId);
     if (cached) return cached;
 
-    // Query database (placeholder)
+    // Query database
     if (this.prisma) {
-      // In production: query from UserMfaSettings table
-      // const settings = await this.prisma.userMfaSettings.findUnique({ where: { userId } });
+      try {
+        const dbSettings = await (this.prisma as any).userMfaSettings.findUnique({
+          where: { userId },
+        });
+        if (dbSettings) {
+          const settings: MfaUserSettings = {
+            userId: dbSettings.userId,
+            totpEnabled: dbSettings.totpEnabled,
+            totpSecret: dbSettings.totpSecret ?? undefined,
+            smsEnabled: dbSettings.smsEnabled,
+            smsPhone: dbSettings.smsPhone ?? undefined,
+            emailEnabled: dbSettings.emailEnabled,
+            backupCodes: dbSettings.backupCodes ?? undefined,
+            lastUsedAt: dbSettings.lastVerifiedAt ?? undefined,
+          };
+          mfaSettingsCache.set(userId, settings);
+          return settings;
+        }
+      } catch {
+        // Fall through to null if table doesn't exist yet
+      }
     }
 
     return null;
@@ -636,17 +677,44 @@ export class MfaService {
 
   /**
    * Save user MFA settings
-   *
-   * Note: In production, this would update the database
    */
-  async saveUserMfaSettings(settings: MfaUserSettings): Promise<void> {
+  async saveUserMfaSettings(settings: MfaUserSettings, tenantId?: string): Promise<void> {
     // Update cache
     mfaSettingsCache.set(settings.userId, settings);
 
-    // Save to database (placeholder)
+    // Invalidate and re-cache to ensure freshness
+    // Save to database
     if (this.prisma) {
-      // In production: upsert to UserMfaSettings table
-      // await this.prisma.userMfaSettings.upsert({ where: { userId }, create: settings, update: settings });
+      try {
+        await (this.prisma as any).userMfaSettings.upsert({
+          where: { userId: settings.userId },
+          create: {
+            userId: settings.userId,
+            tenantId: tenantId || settings.userId,
+            totpEnabled: settings.totpEnabled,
+            totpSecret: settings.totpSecret ?? null,
+            smsEnabled: settings.smsEnabled,
+            smsPhone: settings.smsPhone ?? null,
+            emailEnabled: settings.emailEnabled,
+            backupCodes: settings.backupCodes ?? [],
+            enabledAt: settings.totpEnabled || settings.smsEnabled || settings.emailEnabled ? new Date() : null,
+            lastVerifiedAt: settings.lastUsedAt ?? null,
+          },
+          update: {
+            totpEnabled: settings.totpEnabled,
+            totpSecret: settings.totpSecret ?? null,
+            smsEnabled: settings.smsEnabled,
+            smsPhone: settings.smsPhone ?? null,
+            emailEnabled: settings.emailEnabled,
+            backupCodes: settings.backupCodes ?? [],
+            enabledAt: settings.totpEnabled || settings.smsEnabled || settings.emailEnabled ? new Date() : null,
+            lastVerifiedAt: settings.lastUsedAt ?? null,
+          },
+        });
+      } catch {
+        // Log but don't throw - cache still updated
+        console.error('[MFA] Failed to persist settings to database');
+      }
     }
   }
 

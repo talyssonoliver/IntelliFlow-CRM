@@ -1160,7 +1160,7 @@ export const timelineRouter = createTRPCRouter({
           id: event.id,
           actionId: event.id,
           agentName: payload?.agentName || 'AI Assistant',
-          actionType: event.eventType.replace('AgentAction', ''),
+          actionType: event.eventType.replaceAll('AgentAction', ''),
           title: payload?.actionName || payload?.title || `Agent Action: ${event.eventType}`,
           description: payload?.description || null,
           proposedChanges: payload?.proposedChanges || payload?.changes || null,

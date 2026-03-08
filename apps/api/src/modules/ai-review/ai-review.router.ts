@@ -424,6 +424,43 @@ export const aiReviewRouter = createTRPCRouter({
     }),
 
   /**
+   * Release a claimed review without making a decision
+   * Returns to PENDING status for other reviewers
+   */
+  release: tenantProcedure
+    .input(
+      z.object({
+        reviewId: idSchema,
+        lockToken: z.string().min(1),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const repository = await getRepository(ctx);
+
+      const app = await getApplicationModule();
+      const useCase = new app.ReleaseReviewUseCase(repository, eventBus, LOCK_TOKEN_SECRET);
+      const result = await useCase.execute({
+        reviewId: input.reviewId,
+        tenantId: typedCtx.tenant.tenantId,
+        userId: typedCtx.tenant.userId,
+        lockToken: input.lockToken,
+      });
+
+      if (result.isFailure) {
+        throw mapDomainErrorToTRPCError(result.error);
+      }
+
+      // Fetch updated review for response
+      const updatedReview = await repository.findById(input.reviewId, typedCtx.tenant.tenantId);
+
+      return {
+        success: true,
+        review: updatedReview ? mapReviewToResponse(updatedReview) : null,
+      };
+    }),
+
+  /**
    * Get review queue statistics
    * Uses direct Prisma groupBy for efficient aggregation
    */

@@ -37,6 +37,8 @@ import {
   resetPasswordSchema,
   signupSchema,
   ssoResolveSchema,
+  disableMfaSchema,
+  regenerateBackupCodesSchema,
   type LoginResponse,
 } from '@intelliflow/validators';
 import {
@@ -127,6 +129,9 @@ const oauthInitLimiter = createEmailRateLimiter(10, 300000);
 
 // 5 SSO resolve requests per email per 5 minutes (PG-124)
 const ssoResolveLimiter = createEmailRateLimiter(5, 300000);
+
+// 3 attempts per user per 15 minutes (PG-125 AC-009)
+const mfaDisableLimiter = createEmailRateLimiter(3, 900000);
 
 /**
  * SSO provider configuration.
@@ -739,7 +744,7 @@ export const authRouter = createTRPCRouter({
 
     // For TOTP, verify the code against the secret
     if (input.method === 'totp' && userSettings?.totpSecret) {
-      const isValid = mfaService.verifyTotp(userSettings.totpSecret, input.code);
+      const isValid = mfaService.verifyTotpTimingSafe(userSettings.totpSecret, input.code);
 
       if (!isValid) {
         throw new TRPCError({
@@ -820,6 +825,165 @@ export const authRouter = createTRPCRouter({
       warning: 'Save these codes securely. They cannot be recovered if lost.',
     };
   }),
+
+  /**
+   * Get MFA status for current user
+   * PG-125: AC-001
+   */
+  getMfaStatus: protectedProcedure.query(async ({ ctx }) => {
+    const mfaService = getMfaService(ctx.prisma);
+    const settings = await mfaService.getUserMfaSettings(ctx.user.userId);
+
+    return {
+      enabled: !!(settings?.totpEnabled || settings?.smsEnabled || settings?.emailEnabled),
+      methods: {
+        totp: settings?.totpEnabled ?? false,
+        sms: settings?.smsEnabled ?? false,
+        email: settings?.emailEnabled ?? false,
+      },
+      backupCodesRemaining: settings?.backupCodes?.length ?? 0,
+      lastVerifiedAt: settings?.lastUsedAt ?? null,
+      enabledAt: null, // Stored in DB but not in MfaUserSettings interface yet
+    };
+  }),
+
+  /**
+   * Disable MFA for current user
+   * Requires re-authentication via TOTP code or password
+   * PG-125: AC-002, AC-003, AC-009
+   */
+  disableMfa: protectedProcedure
+    .input(disableMfaSchema)
+    .mutation(async ({ ctx, input }) => {
+      const mfaService = getMfaService(ctx.prisma);
+      const auditLogger = getAuditLogger(ctx.prisma);
+
+      // Rate limit check (AC-009)
+      const rateCheck = mfaDisableLimiter.check(ctx.user.userId);
+      if (!rateCheck.allowed) {
+        throw new TRPCError({
+          code: 'TOO_MANY_REQUESTS',
+          message: `Too many attempts. Please try again in ${Math.ceil(rateCheck.retryAfterSeconds / 60)} minutes.`,
+        });
+      }
+
+      // Get current MFA settings
+      const settings = await mfaService.getUserMfaSettings(ctx.user.userId);
+      if (!settings || !(settings.totpEnabled || settings.smsEnabled || settings.emailEnabled)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'MFA is not currently enabled',
+        });
+      }
+
+      // Re-authenticate (AC-002)
+      if (input.totpCode && settings.totpSecret) {
+        const isValid = mfaService.verifyTotpTimingSafe(settings.totpSecret, input.totpCode);
+        if (!isValid) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Invalid TOTP code',
+          });
+        }
+      } else if (input.password) {
+        // Verify password via Supabase (NF-003: doesn't create new session)
+        const { error } = await signIn(ctx.user.email, input.password);
+        if (error) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Invalid password',
+          });
+        }
+      } else {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Either TOTP code or password required',
+        });
+      }
+
+      // Disable all MFA methods (AC-003)
+      await mfaService.saveUserMfaSettings({
+        userId: ctx.user.userId,
+        totpEnabled: false,
+        totpSecret: undefined,
+        smsEnabled: false,
+        smsPhone: undefined,
+        emailEnabled: false,
+        backupCodes: [],
+      }, ctx.user.tenantId);
+
+      // Audit log (AC-003)
+      await auditLogger.log({
+        tenantId: ctx.user.tenantId,
+        eventType: 'MfaDisabled',
+        action: 'UPDATE',
+        actionResult: 'SUCCESS',
+        resourceType: 'user',
+        resourceId: ctx.user.userId,
+        actorId: ctx.user.userId,
+        actorEmail: ctx.user.email,
+      });
+
+      return { success: true };
+    }),
+
+  /**
+   * Regenerate backup codes
+   * Requires TOTP code for proof of possession
+   * PG-125: AC-004
+   */
+  regenerateBackupCodes: protectedProcedure
+    .input(regenerateBackupCodesSchema)
+    .mutation(async ({ ctx, input }) => {
+      const mfaService = getMfaService(ctx.prisma);
+      const auditLogger = getAuditLogger(ctx.prisma);
+
+      // Get current MFA settings
+      const settings = await mfaService.getUserMfaSettings(ctx.user.userId);
+      if (!settings || !settings.totpEnabled || !settings.totpSecret) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'MFA must be enabled to regenerate backup codes',
+        });
+      }
+
+      // Verify TOTP code
+      const isValid = mfaService.verifyTotpTimingSafe(settings.totpSecret, input.totpCode);
+      if (!isValid) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Invalid TOTP code',
+        });
+      }
+
+      // Generate new backup codes
+      const { codes, generatedAt } = mfaService.generateBackupCodes(8);
+      const hashedCodes = mfaService.hashBackupCodes(codes);
+
+      // Save with new codes (invalidates old ones)
+      await mfaService.saveUserMfaSettings({
+        ...settings,
+        backupCodes: hashedCodes,
+      }, ctx.user.tenantId);
+
+      // Audit log
+      await auditLogger.log({
+        tenantId: ctx.user.tenantId,
+        eventType: 'BackupCodesRegenerated',
+        action: 'UPDATE',
+        actionResult: 'SUCCESS',
+        resourceType: 'user',
+        resourceId: ctx.user.userId,
+        actorId: ctx.user.userId,
+        actorEmail: ctx.user.email,
+      });
+
+      return {
+        codes,
+        generatedAt,
+        warning: 'Save these codes securely. Your previous backup codes have been invalidated.',
+      };
+    }),
 
   /**
    * Get active sessions for current user

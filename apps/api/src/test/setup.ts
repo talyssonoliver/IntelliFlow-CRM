@@ -28,6 +28,11 @@ vi.mock('../tracing/correlation', () => ({
     correlationId: 'test-correlation-id',
     requestId: 'test-request-id',
     userId: undefined,
+    startTime: Date.now(),
+  })),
+  createCorrelationHeaders: vi.fn(() => ({
+    'X-Correlation-ID': 'test-correlation-id',
+    'X-Request-ID': 'test-request-id',
   })),
   runWithContext: vi.fn((_ctx: unknown, fn: () => unknown) => fn()),
 }));

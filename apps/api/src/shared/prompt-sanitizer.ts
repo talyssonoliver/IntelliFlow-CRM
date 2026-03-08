@@ -176,7 +176,7 @@ export function sanitizeOutput(output: string, userId: string): SanitizedOutput 
       redactedFields.push(fieldName);
 
       // Redact with masked version
-      sanitized = sanitized.replace(pattern, (match) => {
+      sanitized = sanitized.replaceAll(pattern, (match) => {
         // For emails, preserve first 2 chars and domain suffix
         if (fieldName === 'email') {
           const atIndex = match.indexOf('@');

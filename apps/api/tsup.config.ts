@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/index.ts'],
+  entry: ['src/index.ts', 'src/main.ts', 'src/ws-server.ts'],
   format: ['cjs', 'esm'],
   tsconfig: 'tsconfig.build.json',
   dts: true, // Required for tRPC type exports - api-client depends on AppRouter type

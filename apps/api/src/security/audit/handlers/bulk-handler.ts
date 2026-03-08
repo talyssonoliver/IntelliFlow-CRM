@@ -22,7 +22,7 @@ export function createBulkOperationEntry(
 ): AuditLogInput {
   return {
     tenantId,
-    eventType: `Bulk${action.replace('BULK_', '')}`,
+    eventType: `Bulk${action.replaceAll('BULK_', '')}`,
     action,
     actionResult: options.failureCount ? 'PARTIAL' : 'SUCCESS',
     resourceType,

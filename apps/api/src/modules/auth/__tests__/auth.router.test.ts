@@ -61,6 +61,7 @@ const mockMfaService = {
   sendEmailOtp: vi.fn(),
   getUserMfaSettings: vi.fn(),
   verifyTotp: vi.fn(),
+  verifyTotpTimingSafe: vi.fn(),
   saveUserMfaSettings: vi.fn(),
   generateBackupCodes: vi.fn(),
   hashBackupCodes: vi.fn(),
@@ -192,6 +193,7 @@ describe('authRouter', () => {
       totpEnabled: false,
     });
     mockMfaService.verifyTotp.mockReturnValue(true);
+    mockMfaService.verifyTotpTimingSafe.mockReturnValue(true);
     mockMfaService.saveUserMfaSettings.mockResolvedValue(undefined);
     mockMfaService.generateBackupCodes.mockReturnValue({
       codes: ['CODE1', 'CODE2', 'CODE3'],
@@ -666,7 +668,7 @@ describe('authRouter', () => {
 
       expect(result.success).toBe(true);
       expect(result.method).toBe('totp');
-      expect(mockMfaService.verifyTotp).toHaveBeenCalled();
+      expect(mockMfaService.verifyTotpTimingSafe).toHaveBeenCalled();
       expect(mockMfaService.saveUserMfaSettings).toHaveBeenCalled();
       expect(mockAuditLogger.log).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -677,6 +679,7 @@ describe('authRouter', () => {
 
     it('should reject invalid TOTP code', async () => {
       mockMfaService.verifyTotp.mockReturnValue(false);
+      mockMfaService.verifyTotpTimingSafe.mockReturnValue(false);
 
       const mockContext = createMockContext({ authenticated: true });
       const caller = authRouter.createCaller(mockContext);

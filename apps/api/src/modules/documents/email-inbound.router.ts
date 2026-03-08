@@ -18,8 +18,8 @@ const emailAttachmentSchema = z.object({
  * Inbound Email Schema (SendGrid/SES format)
  */
 const inboundEmailSchema = z.object({
-  from: z.string().email(),
-  to: z.string().email(),
+  from: z.email(),
+  to: z.email(),
   subject: z.string(),
   text: z.string().optional(),
   html: z.string().optional(),

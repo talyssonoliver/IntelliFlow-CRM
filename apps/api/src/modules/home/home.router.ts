@@ -126,9 +126,6 @@ const HOT_LEAD_SCORE = 80;
 /** IFC-192: Days threshold for stale contact warnings */
 const STALE_CONTACT_DAYS = 30;
 
-/** Cache freshness window for AI insights (6 hours) */
-const AI_INSIGHT_FRESHNESS_MS = 6 * 60 * 60 * 1000;
-
 /** Default SLA for optional AI output reviews created from insights */
 const INSIGHT_REVIEW_SLA_HOURS = 24;
 
@@ -844,15 +841,13 @@ export const homeRouter = createTRPCRouter({
     const tenantId = getTenantId(ctx);
     const userId = getUserId(ctx);
     const now = new Date();
-    const freshnessCutoff = new Date(now.getTime() - AI_INSIGHT_FRESHNESS_MS);
 
-    // Step 1: Check AIInsight table for fresh cached AI insights
+    // Step 1: Check AIInsight table for cached AI insights (expiresAt encodes priority-based TTL)
     const cachedInsights = await ctx.prisma.aIInsight.findMany({
       where: {
         tenantId,
         status: { notIn: ['DISMISSED', 'EXPIRED'] },
         expiresAt: { gt: now },
-        createdAt: { gt: freshnessCutoff },
         metadata: { path: ['userId'], equals: userId },
       },
       take: 5,
@@ -1298,9 +1293,8 @@ export const homeRouter = createTRPCRouter({
       const userId = getUserId(ctx);
       const now = new Date();
       const { limit, cursor, types } = input;
-      const freshnessCutoff = new Date(now.getTime() - AI_INSIGHT_FRESHNESS_MS);
 
-      // Step 1: Check AIInsight table for fresh cached AI insights
+      // Step 1: Check AIInsight table for cached AI insights (expiresAt encodes priority-based TTL)
       const typeFilter = types
         ? types.map((t) => {
             const reverseMap: Record<string, string> = {
@@ -1318,7 +1312,6 @@ export const homeRouter = createTRPCRouter({
           tenantId,
           status: { notIn: ['DISMISSED', 'EXPIRED'] },
           expiresAt: { gt: now },
-          createdAt: { gt: freshnessCutoff },
           metadata: { path: ['userId'], equals: userId },
           ...(typeFilter ? { type: { in: typeFilter } } : {}),
         },

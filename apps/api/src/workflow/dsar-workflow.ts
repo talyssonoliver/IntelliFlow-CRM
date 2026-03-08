@@ -29,7 +29,7 @@ export const dsarRequestSchema = z.object({
     'objection',
   ]),
   subjectId: z.uuid(),
-  subjectEmail: z.string().email(),
+  subjectEmail: z.email(),
   requestDetails: z.string().optional(),
   preferredFormat: z.enum(['json', 'csv', 'pdf']).default('json'),
 });

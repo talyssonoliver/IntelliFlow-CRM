@@ -31,10 +31,10 @@ describe('Health Router', () => {
   });
 
   describe('ping', () => {
-    it('should return ok status with timestamp', async () => {
+    it('should return healthy status with timestamp', async () => {
       const result = await caller.ping();
 
-      expect(result.status).toBe('ok');
+      expect(result.status).toBe('healthy');
       expect(result.timestamp).toBeDefined();
       expect(result.correlationId).toBe('test-correlation-id');
       expect(new Date(result.timestamp).getTime()).toBeGreaterThan(0);
