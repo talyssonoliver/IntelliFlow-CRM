@@ -246,7 +246,7 @@ import { ScoreLeadUseCase } from '@intelliflow/application';
 
 // Input validation with Zod
 const createLeadSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   company: z.string().optional(),

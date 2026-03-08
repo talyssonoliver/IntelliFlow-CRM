@@ -36,7 +36,7 @@
 ```
 intelliflow.com
 │
-├── PUBLIC PAGES (27 pages) ──────────────── Route Group: (public)
+├── PUBLIC PAGES (28 pages) ──────────────── Route Group: (public)
 │   │
 │   ├── / (Home)                          [PG-001] → Conditional render:
 │   │                                       • Unauth: PublicHomePage
@@ -50,6 +50,7 @@ intelliflow.com
 │   │   └── /press/[id]                   [PG-179] Press release detail
 │   ├── /security                         [PG-008]
 │   ├── /status                           [PG-014]
+│   ├── /privacy                          [PG-050] Privacy policy
 │   │
 │   ├── /blog                             [PG-009]
 │   │   └── /blog/[slug]                  [PG-010] Dynamic blog post
@@ -232,7 +233,8 @@ intelliflow.com
 ├── SUPPORT PORTAL ──────────────────────── Layout: support/tickets/(list)
 │   │
 │   ├── /support/tickets                  → Support-agent ticket queue (SLA-first)
-│   └── /support/tickets/new              → New ticket form with file attachments
+│   ├── /support/tickets/new              → New ticket form with file attachments
+│   └── /support/tickets/[id]             → Ticket detail (no delete/archive, PG-048)
 │
 └── SUPPORT / HELP CENTER ───────────────── Route: /help-center
     │
@@ -245,7 +247,7 @@ intelliflow.com
 
 | Section               | Pages   | Status                                         |
 | --------------------- | ------- | ---------------------------------------------- |
-| Public Pages          | 27      | Marketing, auth, blog, careers, callbacks, SSO |
+| Public Pages          | 28      | Marketing, auth, blog, careers, callbacks, SSO, legal |
 | Developer Portal      | 14      | Docs (10), apps (3), apps/new (1)              |
 | Dashboard             | 3       | Main, new, customize                           |
 | CRM Core: Leads       | 4       | List, new, detail, edit                        |
@@ -296,6 +298,7 @@ only** — no authenticated routes.
 | `/press`                               | 0.6      | monthly          |
 | `/security`                            | 0.6      | monthly          |
 | `/status`                              | 0.4      | hourly           |
+| `/privacy`                             | 0.5      | monthly          |
 | `/blog/ai-lead-scoring-best-practices` | 0.6      | monthly          |
 | `/blog/governance-ready-automation`    | 0.6      | monthly          |
 
@@ -502,7 +505,7 @@ All pages follow Next.js 16 App Router convention:
 apps/web/src/app/
 ├── layout.tsx                    # Root layout (Providers, Navigation)
 │
-├── (public)/                     # PUBLIC ROUTE GROUP (27 pages)
+├── (public)/                     # PUBLIC ROUTE GROUP (28 pages)
 │   ├── layout.tsx                # Public layout (minimal)
 │   ├── page.tsx                  # / (Home - conditional render)
 │   ├── login/page.tsx            # /login
@@ -530,6 +533,7 @@ apps/web/src/app/
 │   │   └── [id]/page.tsx         # /press/[id]
 │   ├── security/page.tsx         # /security
 │   ├── status/page.tsx           # /status
+│   ├── privacy/page.tsx          # /privacy
 │   ├── blog/
 │   │   ├── page.tsx              # /blog
 │   │   └── [slug]/page.tsx       # /blog/[slug]

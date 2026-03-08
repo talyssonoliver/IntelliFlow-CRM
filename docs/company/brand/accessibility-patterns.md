@@ -530,7 +530,7 @@ WCAG 2.1 AA compliant patterns for all interactive components.
     .querySelector('[role="tablist"]')
     .addEventListener('keydown', (e) => {
       const tabs = [...e.currentTarget.querySelectorAll('[role="tab"]')];
-      const current = tabs.findIndex(
+      const current = tabs.indexOf(
         (t) => t.getAttribute('aria-selected') === 'true'
       );
       let next;

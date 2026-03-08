@@ -73,6 +73,12 @@ When implementing new features or modifying existing ones:
    - `docs/design/navigation-reachability-audit.md` — add reachability row
    - This is enforced by TC-31 (automated) and plan-reviewer category CC
 
+### Public Legal Route Status
+
+| Route | Task | Status | Notes |
+| --- | --- | --- | --- |
+| `/privacy` | `PG-050` | ✅ Implemented | Public route backed by tracked policy content and legal metadata helper |
+
 ---
 
 # CORE CRM DOMAIN
@@ -394,6 +400,7 @@ Dependency Chain:
 Support Portal Chain:
   PG-046: /support/tickets → SupportTicketList → TicketList → useTicketFilters → api.ticket.list → TicketService (container.ts:247)
   PG-047: /support/tickets/new → SupportTicketForm → TicketForm + FileUploader → api.ticket.create + api.ticket.addAttachment → TicketService (container.ts:247)
+  PG-048: /support/tickets/[id] → TicketDetail (listHref/detailUrlPrefix) + TicketThread + StatusUpdater → api.ticket.getById + api.ticket.update + api.ticket.addResponse → TicketService (container.ts:247)
 ```
 
 ---
@@ -1065,6 +1072,50 @@ Dependency Chain:
 
 ---
 
+## MFA Management (COMPLETE)
+
+```
+                                    ┌──────────────────┐
+                                    │ UserMfaSettings  │
+                                    │   (Prisma)  ✅   │
+                                    └────────┬─────────┘
+                                             │
+              ┌──────────────────────────────┼──────────────────────────────┐
+              │                              │                              │
+              ▼                              ▼                              ▼
+    ┌──────────────────┐          ┌──────────────────┐          ┌──────────────────┐
+    │  auth.ts         │          │  MfaService      │          │  MfaService      │
+    │  Validators ✅   │          │  (persistence)   │          │  (timing-safe    │
+    └────────┬─────────┘          │      ✅          │          │   TOTP)  ✅      │
+             │                    └────────┬─────────┘          └────────┬─────────┘
+             │                             │                              │
+             └─────────────────────────────┼──────────────────────────────┘
+                                           │
+                                           ▼
+                              ┌────────────────────────────┐
+                              │  auth.router.ts            │
+                              │  (3 MFA endpoints)  ✅     │
+                              └────────────┬───────────────┘
+                                           │
+                                           ▼
+                              ┌────────────────────────────┐
+                              │  mfa-service.ts (hooks)    │
+                              │      ✅                    │
+                              └────────────┬───────────────┘
+                                           │
+                                           ▼
+                              ┌────────────────────────────┐
+                              │    PG-125                  │
+                              │  MFA Management Page ✅    │
+                              └────────────────────────────┘
+
+Dependency Chain:
+  UserMfaSettings (Prisma) ✅ ──┬──► auth.ts (Validators) ✅ ──► auth.router.ts (3 endpoints) ✅ ──► mfa-service.ts (hooks) ✅ ──► PG-125 (MFA Mgmt) ✅
+                                └──► MfaService (persistence + timing-safe TOTP) ✅ ──────────────────────────────────────────┘
+```
+
+---
+
 ## AI Agents Framework (CORE AI INFRASTRUCTURE)
 
 ```
@@ -1247,6 +1298,39 @@ Dependency Chain:
   IFC-150 (Contracts) ⬜ ──┬──► IFC-151 (Consumer) ⬜ ──► OutboxRepository ⬜ ──► events-worker ⬜
                           │
                           └──► domain-events.ts (Val) ⬜ ───────────────────────────────────────┘
+```
+
+---
+
+## Activity Type Registry (IFC-193)
+
+```
+                                    ┌──────────────────┐
+                                    │  IFC-182         │
+                                    │ActivityFeedConsts│
+                                    │  (Domain)        │
+                                    │      ✅          │
+                                    └────────┬─────────┘
+                                             │
+                                             ▼
+                                    ┌──────────────────┐
+                                    │  IFC-193         │
+                                    │ActivityType      │
+                                    │  Registry        │
+                                    │      ✅          │
+                                    └────────┬─────────┘
+                                             │
+              ┌──────────────────────────────┴──────────────────┐
+              │                                                  │
+              ▼                                                  ▼
+    ┌──────────────────┐                              ┌──────────────────┐
+    │audit-event-      │                              │ActivityFeed      │
+    │  handler.ts      │                              │  Service         │
+    │  (Future)   ⬜   │                              │  (Future)   ⬜   │
+    └──────────────────┘                              └──────────────────┘
+
+Dependency Chain:
+  IFC-182 (ActivityFeedConstants) ✅ ──► IFC-193 (ActivityTypeRegistry) ✅ ──► audit-event-handler ⬜ / ActivityFeedService ⬜
 ```
 
 ---

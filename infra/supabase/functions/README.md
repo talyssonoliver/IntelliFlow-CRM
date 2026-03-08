@@ -214,7 +214,7 @@ if (!authHeader) {
 const {
   data: { user },
   error,
-} = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+} = await supabase.auth.getUser(authHeader.replaceAll('Bearer ', ''));
 ```
 
 ### 4. Input Validation

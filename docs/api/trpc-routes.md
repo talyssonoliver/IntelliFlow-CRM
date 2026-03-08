@@ -490,6 +490,12 @@ apps/api/src/
 
 #### `health` Router (5 procedures)
 
+Canonical infra probes use the standalone HTTP surface: `GET /health`,
+`GET /health/ready`, `GET /health/live`, `GET /health/detailed`, and
+`GET /health/db`. The `health.*` tRPC procedures remain available for typed
+internal callers and diagnostics. Legacy `/api/health*` aliases are kept for
+compatibility.
+
 | Procedure | Type  | Description                                  |
 | --------- | ----- | -------------------------------------------- |
 | `ping`    | query | Simple health check response                 |

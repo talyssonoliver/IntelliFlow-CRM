@@ -219,7 +219,7 @@ production deployment and reviewed quarterly.
   - Example:
     ```typescript
     const CreateLeadSchema = z.object({
-      email: z.string().email(),
+      email: z.email(),
       name: z.string().min(1).max(255),
     });
     ```
@@ -244,7 +244,7 @@ production deployment and reviewed quarterly.
   - Example:
 
     ```typescript
-    import path from 'path';
+    import path from 'node:path';
 
     const safePath = path.resolve(uploadDir, path.basename(fileName));
     if (!safePath.startsWith(uploadDir)) {

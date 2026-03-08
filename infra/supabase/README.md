@@ -470,7 +470,7 @@ CREATE POLICY "policy_name" ON table_name
 import { z } from 'zod';
 
 const schema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   name: z.string().min(1),
 });
 

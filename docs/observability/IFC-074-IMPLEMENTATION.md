@@ -110,7 +110,11 @@ export const myRouter = createTRPCRouter({
 
 ### 5. Enhanced Health Router
 
-**Location**: `apps/api/src/modules/misc/health.router.ts`
+**Location**:
+
+- `apps/api/src/modules/misc/health.router.ts`
+- `apps/api/src/modules/misc/health.service.ts`
+- `apps/api/src/http-server.ts`
 
 **Enhancements**:
 
@@ -120,14 +124,28 @@ export const myRouter = createTRPCRouter({
 - ✅ Process information (PID, Node version, memory usage)
 - ✅ Database latency monitoring
 - ✅ Comprehensive dependency checks
+- ✅ Shared health logic for both tRPC and HTTP probes
+- ✅ Standalone HTTP health endpoints for infra probes
 
-**Endpoints**:
+**tRPC Endpoints**:
 
 - `health.ping` - Minimal liveness check
 - `health.check` - Comprehensive health with dependencies
 - `health.ready` - Readiness probe
 - `health.alive` - Liveness probe with system info
 - `health.dbStats` - Prisma connection pool metrics
+
+**HTTP Probe Endpoints**:
+
+- `GET /health` - Canonical basic probe
+- `GET /health/ready` - Canonical readiness probe
+- `GET /health/live` - Canonical liveness probe
+- `GET /health/detailed` - Canonical detailed probe
+- `GET /health/db` - Canonical DB metrics probe
+
+Compatibility aliases remain available at `/api/health*`. Monitoring and load
+balancer configs should use `/health*`; typed app callers can continue using
+`health.*`.
 
 ### 6. Monitoring Infrastructure
 
@@ -413,7 +431,7 @@ cd apps/api
 OTEL_ENABLED=true pnpm dev
 
 # 3. Make requests and check traces
-curl http://localhost:3000/api/trpc/health.check
+curl http://localhost:4000/health/detailed
 
 # 4. View traces in Grafana
 open http://localhost:3001

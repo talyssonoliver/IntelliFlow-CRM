@@ -35,24 +35,25 @@ Component**: `apps/web/src/components/tasks/TaskForm.tsx` **API**:
 | Frontend — Detail Page    | 0        | 0 (3F) | 0 (4F) | 0 (3F) | —         |
 | Frontend — List Page      | 0        | 0 (3F) | 0 (4F) | 0 (2F) | —         |
 | Backend Security          | 0        | 0 (1F) | 0 (2F) | 0      | —         |
-| Backend Logic             | 0        | 0 (3F) | 0 (2F) | 0 (1F) 1D | —   |
+| Backend Logic             | 0        | 0 (3F) | 0 (2F) | 0 (1F) 1DOC 1D | —   |
 | Events / Integration      | 0 (2F)   | 0 (1F) | 0 (1F) | 0      | —         |
 | Security / RBAC           | 0 (1F)   | 0      | 0      | 0      | —         |
-| Test Coverage             | —        | —      | —      | —      | 1         |
-| **Total**                 | **0**    | **0**  | **0**  | **0**  | **1**     |
+| Test Coverage             | —        | —      | —      | —      | 0 (1F)    |
+| **Total**                 | **0**    | **0**  | **0**  | **0**  | **0**     |
 
 (F = Fixed, D = Deferred)
 
-**Grand total: 37 findings** — **32 FIXED**, **4 deferred**, **1 test gap
-remaining**
+**Grand total: 37 findings** — **34 FIXED**, **0 DOCUMENTED**, **1
+DEFERRED-WITH-DEBT**, **1 ACCEPTED-WITH-DEBT**
 
 The Task domain is now **well-wired**. All CRITICAL and HIGH findings fixed.
 Core CRUD, state machine enforcement (start/cancel procedures), RBAC, audit
 logging, event handlers (7/7), URL filter params, pagination, calendar view
-toggle, activity timeline, and bulk operations all functional. Remaining:
-2 low deferred (B-09 dead endpoints CSV not found, B-10 optimistic locking
-needs schema migration), 1 medium accepted (F-05 account entity — API
-limitation), and 1 test gap (T-03 E2E Playwright).
+toggle, activity timeline, and bulk operations all functional. E2E Playwright
+tests added (T-03). Remaining items logged as debt:
+B-09 dead endpoints documented (WIRE-TASK-B09-001), B-10 optimistic locking
+deferred with ADR recommendation (WIRE-TASK-B10-001), F-05 account entity
+linking deferred as 6-layer change (WIRE-TASK-F05-001).
 
 ---
 
@@ -90,13 +91,15 @@ Added onStart/isStarting props. Detail page wires startMutation
 to api.task.start (new procedure, see B-07).
 ```
 
-### Finding F-05 (MEDIUM) — RelatedTasksCard Ignores Account Entity — ACCEPTED
+### Finding F-05 (MEDIUM) — RelatedTasksCard Ignores Account Entity — ACCEPTED-WITH-DEBT
 
 ```
-ACCEPTED: API does not support task.getByAccount query.
+ACCEPTED-WITH-DEBT: API does not support task.getByAccount query.
 RelatedTasksCard already has explicit account type check with
 graceful empty state: "No tasks linked to this account".
-Requires new API endpoint to resolve (follow-up task).
+Requires 6-layer change (Prisma schema + Domain + Application +
+Validators + API + Frontend). Logged as WIRE-TASK-F05-001 in
+docs/debt-ledger.yaml. Not audit cleanup — proper sprint task.
 ```
 
 ### Finding F-06 (MEDIUM) — Entity Re-assignment Not Possible — FIXED 2026-03-07
@@ -311,20 +314,28 @@ for all date calculations. startOfDay and endOfDay derived from
 same reference.
 ```
 
-### Finding B-09 (LOW) — 3 Dead Endpoints Not in Dead Endpoints CSV — DEFERRED
+### Finding B-09 (LOW) — 3 Dead Endpoints Not in Dead Endpoints CSV — FIXED 2026-03-08
 
 ```
-DEFERRED: dead-endpoints-audit.csv file does not exist in the
-artifacts directory. Cannot add entries to a non-existent file.
-Dead endpoints remain: task.stats, task.assign, task.reschedule.
+FIXED: All 3 dead endpoints now have frontend callers:
+- task.stats: TaskStatsBar component (apps/web/src/components/tasks/TaskStatsBar.tsx)
+  uses api.task.stats.useQuery(). Rendered on task list page between PageHeader
+  and ReminderConfig. Replaced client-side overdue/dueToday computation.
+- task.assign: Detail page (apps/web/src/app/tasks/[id]/page.tsx) uses
+  api.task.assign.useMutation(). TaskDetail has inline assign panel with
+  entity type selector + EntitySearchField.
+- task.reschedule: Detail page uses api.task.reschedule.useMutation().
+  TaskDetail has inline date picker next to due date display.
 ```
 
-### Finding B-10 (LOW) — No Optimistic Locking — DEFERRED
+### Finding B-10 (LOW) — No Optimistic Locking — DEFERRED-WITH-DEBT
 
 ```
-DEFERRED: Requires schema migration to add version/updatedAt
-optimistic locking field. Too invasive for a wiring fix.
-Follow-up task needed.
+DEFERRED-WITH-DEBT: Requires schema migration to add version field,
+plus domain/application/API layer changes. No entity in the system
+uses true optimistic locking — system-wide architectural decision.
+Logged as WIRE-TASK-B10-001 in docs/debt-ledger.yaml.
+Recommendation: ADR needed for system-wide optimistic locking strategy.
 ```
 
 ---
@@ -407,8 +418,8 @@ Consistent with other state-changing methods.
 | `tasks/[id]/__tests__/page.test.tsx`         | ~190  | Detail page: mutations, ActivityFeed, states (FIXED T-01) |
 | `tasks/(list)/__tests__/page.test.tsx`       | ~220  | List page: filters, pagination, view toggle (FIXED T-02) |
 
-**Total: ~6 test files, ~1,767 lines** — router, contract, and page-level
-coverage all present. E2E Playwright coverage absent (T-03).
+**Total: ~7 test files, ~1,870 lines** — router, contract, page-level, and
+E2E coverage all present. E2E Playwright tests added (T-03 FIXED).
 
 ### Test Gaps
 
@@ -416,7 +427,7 @@ coverage all present. E2E Playwright coverage absent (T-03).
 | --------------------------------- | ---------- | ------------------------------------------------------------------- |
 | ~~No task detail page test~~      | T-01       | FIXED 2026-03-08: 10 tests (mutations, ActivityFeed, states)        |
 | ~~No task list page test~~        | T-02       | FIXED 2026-03-08: 9 tests (filters, pagination, view toggle)       |
-| No E2E Playwright tests           | T-03       | No `tests/e2e/tasks.spec.ts` — zero E2E coverage for task flows    |
+| ~~No E2E Playwright tests~~       | T-03       | FIXED 2026-03-08: 10 tests in `tests/e2e/tasks.spec.ts` (navigation, UI elements, responsive, performance) |
 
 ---
 
@@ -477,9 +488,9 @@ Security: verified (RBAC enforced, audit logging on all procedures)
 | P2       | F-03, F-04, F-07             | Guard Complete for PENDING; add Start button; add activity timeline  | ALL FIXED |
 | P2       | F-14, F-15, F-16, F-17       | Fix reminder filter; wire calendarId; batch ops; remove dead query   | ALL FIXED |
 | P2       | E-03, E-04                   | Define task.updated/deleted events; emit event in updateTaskInfo     | ALL FIXED |
-| P3       | F-05, F-08, F-09, F-10       | Account entity; completedAt display; `<Link>`; button loading        | 3 FIXED, 1 ACCEPTED |
-| P3       | B-09, B-10, F-18, F-19       | Add 3 dead endpoints to CSV; optimistic locking; pagination UI      | 2 FIXED, 2 DEFERRED |
-| P3       | T-01, T-02, T-03             | Detail page test, list page test, E2E Playwright tests              | 2 FIXED, 1 REMAINING |
+| P3       | F-05, F-08, F-09, F-10       | Account entity; completedAt display; `<Link>`; button loading        | 3 FIXED, 1 ACCEPTED-WITH-DEBT |
+| P3       | B-09, B-10, F-18, F-19       | Wire 3 dead endpoints; optimistic locking; pagination UI      | 3 FIXED, 1 DEFERRED-WITH-DEBT |
+| P3       | T-01, T-02, T-03             | Detail page test, list page test, E2E Playwright tests              | ALL FIXED |
 
 ---
 
@@ -491,3 +502,5 @@ Security: verified (RBAC enforced, audit logging on all procedures)
 | 2026-03-07 | Fixed 18 findings: F-01, F-02, F-06, F-08, F-09, F-10, F-14, F-15, F-16, F-17, B-01, B-02, B-03, B-04, B-05, B-06, E-02, E-03, E-04 |
 | 2026-03-08 | Fixed 11 more: F-03, F-04, F-11, F-12, F-13, F-18, F-19, B-07, B-08, E-01. Total: 29/37 fixed, 5 deferred, 3 test gaps remaining |
 | 2026-03-08 | Session 3 re-audit: verified all 29 FIXED items present. Fixed F-07 (ActivityFeed existed but was falsely deferred), T-01 (10 tests), T-02 (9 tests). Total: 32/37 fixed, 4 deferred, 1 test gap |
+| 2026-03-08 | Session 4 remaining items: T-03 FIXED (10 E2E Playwright tests in tests/e2e/tasks.spec.ts). B-09 DOCUMENTED (3 dead endpoints with line numbers). F-05, B-10 logged as debt (WIRE-TASK-F05-001, WIRE-TASK-B09-001, WIRE-TASK-B10-001 in docs/debt-ledger.yaml). Final: 33 FIXED, 1 DOCUMENTED, 2 DEFERRED-WITH-DEBT, 1 ACCEPTED-WITH-DEBT |
+| 2026-03-08 | Session 5: B-09 FIXED — wired all 3 dead endpoints (task.stats → TaskStatsBar on list page, task.assign → assign panel on detail page, task.reschedule → inline date picker on detail page). Final: 34 FIXED, 0 DOCUMENTED, 1 DEFERRED-WITH-DEBT, 1 ACCEPTED-WITH-DEBT |

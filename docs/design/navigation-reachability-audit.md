@@ -111,7 +111,7 @@ Legend:
 - **IP** = In-page link (breadcrumb, button, data table row)
 - **--** = No entry (unreachable from that layer)
 
-### Public Pages (25 routes) — All reachable via PublicHeader/PublicFooter
+### Public Pages (26 routes) — All reachable via PublicHeader/PublicFooter
 
 | Route                                                     | Status | Notes                    |
 | --------------------------------------------------------- | ------ | ------------------------ |
@@ -121,6 +121,7 @@ Legend:
 | `/careers`, `/careers/[id]`                               | OK     | Footer link              |
 | `/contact`                                                | OK     | Header/footer link       |
 | `/features`                                               | OK     | Header link              |
+| `/privacy`                                                | OK     | Footer, signup, home, cookie banner |
 | `/login`, `/signup`, `/signup/success`                    | OK     | Header CTA               |
 | `/forgot-password`, `/reset-password/*`                   | OK     | Login page link          |
 | `/mfa/verify`                                             | OK     | Login flow               |

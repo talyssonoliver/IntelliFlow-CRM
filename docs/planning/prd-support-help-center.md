@@ -10,7 +10,7 @@
 | **Target Sprint** | 16                                             |
 | **Created Date**  | 2026-02-28                                     |
 | **Last Updated**  | 2026-03-08                                     |
-| **Related Tasks** | PG-043, PG-044, PG-045, PG-046, PG-047, PG-048 |
+| **Related Tasks** | PG-043, PG-044, PG-045, PG-046, PG-047, PG-048, IFC-298, IFC-299, IFC-300, IFC-301, IFC-302, IFC-303, IFC-304, PG-180, PG-181 |
 
 ## Problem Statement
 
@@ -217,6 +217,27 @@ workflow.
 
 **As a** support agent **I want to** view ticket details from the support
 section **So that** I can respond to and manage individual tickets in context.
+
+**Acceptance Criteria:**
+
+- [ ] Ticket detail page loads at `/support/tickets/[id]` with full ticket data
+      from `ticket.getById` tRPC endpoint
+- [ ] Page displays ticket metadata (status, priority, category, channel, SLA,
+      timestamps), customer info, and assignee
+- [ ] Conversation thread shows all activities (messages, agent replies, internal
+      notes, system events) in chronological order
+- [ ] Reply composer allows sending public replies and internal notes
+- [ ] Status updater shows current status with valid transition actions (based on
+      `VALID_TICKET_TRANSITIONS` from domain)
+- [ ] SLA display uses dual-track `SLADisplay` component (from PG-046) for
+      first response and resolution tracking
+- [ ] Quick actions available: Resolve, Close, Assign, Change Priority, Change
+      Status — no Delete or Archive (support agent context)
+- [ ] Breadcrumbs show Support > Tickets > {Ticket Subject}
+- [ ] After close/resolve, user stays on detail page (no redirect)
+- [ ] Page is reachable from ticket list row click and new ticket redirect
+- [ ] Layout includes sidebar with `supportTicketsSidebarConfig`
+- [ ] Loading skeleton displays while ticket data loads
 
 ## Out of Scope
 

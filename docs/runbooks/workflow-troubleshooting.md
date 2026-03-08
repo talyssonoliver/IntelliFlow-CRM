@@ -426,7 +426,7 @@ redis-cli LLEN bull:email-queue:failed
    ```typescript
    const connection = new IORedis({
      host: process.env.REDIS_HOST || 'localhost',
-     port: parseInt(process.env.REDIS_PORT || '6379'),
+     port: Number.parseInt(process.env.REDIS_PORT || '6379'),
      maxRetriesPerRequest: null, // Required for BullMQ
    });
    ```

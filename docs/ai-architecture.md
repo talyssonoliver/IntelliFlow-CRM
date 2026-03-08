@@ -74,7 +74,7 @@ End-to-end type safety using **Zod schemas**:
 ```typescript
 // Input validation
 const leadInputSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   company: z.string().optional(),
   title: z.string().optional(),
 });
@@ -389,7 +389,7 @@ const searchInputSchema = z.object({
         max: z.number().optional(),
       })
       .optional(),
-    createdAfter: z.string().datetime().optional(),
+    createdAfter: z.iso.datetime().optional(),
   }),
   limit: z.number().max(100).default(10),
 });

@@ -283,29 +283,46 @@ export const myRouter = createTRPCRouter({
 
 ### Available Endpoints
 
-All health endpoints are accessible via tRPC router (`health.*`):
+Monitoring and load balancer probes should use the standalone HTTP endpoints:
 
-1. **`health.ping`** - Minimal liveness check
+1. **`GET /health`** - Basic service health
    - Response time: <10ms
-   - Use for: Basic uptime monitoring
+   - Use for: Docker and uptime checks
 
-2. **`health.check`** - Comprehensive health check
+2. **`GET /health/detailed`** - Comprehensive dependency health
    - Database connectivity
    - Version and environment info
    - Correlation ID tracking
+   - Optional DB metrics payload
    - Response time: <50ms
 
-3. **`health.ready`** - Readiness probe
-   - Validates all dependencies
+3. **`GET /health/ready`** - Readiness probe
+   - Validates critical dependencies
    - Use for: Kubernetes readiness probes
 
-4. **`health.alive`** - Liveness probe
+4. **`GET /health/live`** - Liveness probe
    - Process uptime and memory
    - Use for: Kubernetes liveness probes
 
-5. **`health.dbStats`** - Database metrics
+5. **`GET /health/db`** - Database metrics
    - Connection pool stats
    - Prisma metrics (if enabled)
+
+Legacy compatibility aliases remain available at `/api/health*`, but new infra
+config should target `/health*`.
+
+The tRPC diagnostics router (`health.*`) remains available for typed internal
+consumers:
+
+1. **`health.ping`** - Minimal service check
+
+2. **`health.check`** - Detailed dependency check
+
+3. **`health.ready`** - Readiness status
+
+4. **`health.alive`** - Liveness status
+
+5. **`health.dbStats`** - Raw database metrics
 
 ### Example Queries
 
@@ -315,7 +332,7 @@ const health = await trpc.health.check.query();
 console.log(health.status); // 'healthy' | 'degraded'
 
 // From monitoring
-fetch('http://api:3000/api/trpc/health.ping');
+fetch('http://api:4000/health');
 ```
 
 ## Metrics and KPIs

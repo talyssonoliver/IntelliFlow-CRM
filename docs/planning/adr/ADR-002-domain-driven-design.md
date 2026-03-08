@@ -397,7 +397,7 @@ export class Opportunity extends AggregateRoot {
   }
 
   public removeLineItem(lineItemId: LineItemId): Result<void, DomainError> {
-    const index = this.lineItems.findIndex((item) =>
+    const index = this.lineItems.indexOf((item) =>
       item.getId().equals(lineItemId)
     );
 

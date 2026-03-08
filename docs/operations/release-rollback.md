@@ -83,9 +83,9 @@ sequenceDiagram
 
 3. **Health Validation**
    - Run health checks on inactive environment
-   - Verify `/api/health` returns 200
-   - Verify `/api/health/ready` returns 200
-   - Verify `/api/health/live` returns 200
+   - Verify `/health` returns 200
+   - Verify `/health/ready` returns 200
+   - Verify `/health/live` returns 200
    - Run smoke tests on critical endpoints
 
 4. **Traffic Switch** (<1 minute target)
@@ -145,42 +145,29 @@ To manually trigger a rollback:
 
 | Endpoint               | Purpose         | Expected Response                     |
 | ---------------------- | --------------- | ------------------------------------- |
-| `/api/health`          | Basic health    | `200 OK` with `{"status": "healthy"}` |
-| `/api/health/ready`    | Readiness probe | `200 OK` when ready to serve traffic  |
-| `/api/health/live`     | Liveness probe  | `200 OK` when process is alive        |
-| `/api/health/detailed` | Full status     | `200 OK` with component status        |
+| `/health`              | Basic health    | `200 OK` with `{"status": "healthy"}` |
+| `/health/ready`        | Readiness probe | `200 OK` when ready to serve traffic  |
+| `/health/live`         | Liveness probe  | `200 OK` when process is alive        |
+| `/health/detailed`     | Full status     | `200 OK` with component status        |
+
+Compatibility note: `/api/health`, `/api/health/ready`, `/api/health/live`,
+and `/api/health/detailed` are still served as legacy aliases. Use `/health*`
+for new infra configuration and rollback automation.
 
 ### Health Check Implementation
 
 ```typescript
-// apps/api/src/routes/health.ts
-import { Router } from 'express';
-
-const healthRouter = Router();
-
-healthRouter.get('/health', async (req, res) => {
-  res.json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    version: process.env.DEPLOYMENT_VERSION || 'unknown',
-  });
-});
-
-healthRouter.get('/health/ready', async (req, res) => {
-  const checks = await Promise.all([checkDatabase(), checkRedis()]);
-
-  const ready = checks.every((c) => c.healthy);
-  res.status(ready ? 200 : 503).json({
-    ready,
-    checks,
-  });
-});
-
-healthRouter.get('/health/live', (req, res) => {
-  res.json({ alive: true });
-});
-
-export { healthRouter };
+// apps/api/src/http-server.ts + apps/api/src/modules/misc/health.service.ts
+// HTTP probes and tRPC diagnostics both delegate to the same health helpers.
+//
+// Canonical HTTP endpoints:
+//   GET /health
+//   GET /health/ready
+//   GET /health/live
+//   GET /health/detailed
+//
+// Legacy aliases kept for compatibility:
+//   GET /api/health*
 ```
 
 ## Metrics and Monitoring

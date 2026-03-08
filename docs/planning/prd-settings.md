@@ -10,7 +10,7 @@
 | **Target Sprint** | Sprint 12-15                |
 | **Created Date**  | 2026-02-22                  |
 | **Last Updated**  | 2026-02-25                  |
-| **Related Tasks** | PG-104, IFC-191             |
+| **Related Tasks** | PG-104, IFC-191, PG-125     |
 
 > **Note**: This PRD was retroactively created to document requirements for
 > tasks that were completed before PRD governance was integrated into the
@@ -48,6 +48,21 @@ my location.
 **As a** user **I want** the home page greeting to say "Good
 morning/afternoon/evening" based on my timezone **So that** the CRM feels
 personalized regardless of where the server is hosted.
+
+### User Story 4 (PG-125)
+
+**As a** user **I want to** view my MFA status and enrolled methods in security
+settings **So that** I can manage my account security.
+
+### User Story 5 (PG-125)
+
+**As a** user **I want to** disable MFA from security settings (after
+re-authentication) **So that** I can change my security preferences.
+
+### User Story 6 (PG-125)
+
+**As a** user **I want to** regenerate backup codes **So that** I can replace
+lost or compromised backup codes.
 
 ## Acceptance Criteria
 

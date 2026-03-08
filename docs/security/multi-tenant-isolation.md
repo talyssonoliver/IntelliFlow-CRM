@@ -487,7 +487,7 @@ $$ LANGUAGE SQL STABLE;
 ```typescript
 // Update tRPC context to include organization
 export async function createContext({ req }: CreateContextOptions) {
-  const token = req.headers.authorization?.replace('Bearer ', '');
+  const token = req.headers.authorization?.replaceAll('Bearer ', '');
   const user = await verifyToken(token);
 
   // Get user's organizations

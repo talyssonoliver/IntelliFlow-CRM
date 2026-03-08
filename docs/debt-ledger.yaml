@@ -3782,6 +3782,36 @@ items:
     remediation_plan: IFC-219
     remediation_sprint: 20
     status: open
+  WIRE-TASK-B09-001:
+    origin_task: IFC-010
+    owner: Backend Dev
+    severity: low
+    description: "3 dead task router endpoints (task.stats, task.assign, task.reschedule) at lines ~695/~751/~814 in task.router.ts — zero frontend callers."
+    created_at: 2026-03-08T00:00:00.000Z
+    expiry_date: 2026-04-07
+    remediation_plan: Remove or wire during router cleanup sprint
+    remediation_sprint: 23
+    status: open
+  WIRE-TASK-F05-001:
+    origin_task: IFC-010
+    owner: Full Stack Dev
+    severity: medium
+    description: "Task entity missing Account linking — requires DB migration (add accountId to Task model) + 6-layer change (Prisma, Domain, Application, Validators, API, Frontend). RelatedTasksCard has graceful empty state for account type."
+    created_at: 2026-03-08T00:00:00.000Z
+    expiry_date: 2026-04-07
+    remediation_plan: Create IFC-* task for Sprint Continuous
+    remediation_sprint: 0
+    status: open
+  WIRE-TASK-B10-001:
+    origin_task: IFC-010
+    owner: Tech Lead
+    severity: low
+    description: "No optimistic locking on Task (or any entity) — concurrent edits silently overwrite. Requires schema migration (version field), domain change, application layer, and API layer updates. System-wide architectural decision needed."
+    created_at: 2026-03-08T00:00:00.000Z
+    expiry_date: 2026-04-07
+    remediation_plan: ADR needed for system-wide optimistic locking strategy
+    remediation_sprint: 0
+    status: open
   DEAD-ANALYTICS-001:
     origin_task: IFC-037
     owner: Frontend Dev
@@ -4323,6 +4353,9 @@ summary:
     - WIRE-PG-141-001
     - WIRE-IFC-095-001
     - WIRE-IFC-069-001
+    - WIRE-TASK-B09-001
+    - WIRE-TASK-F05-001
+    - WIRE-TASK-B10-001
     - DEAD-ANALYTICS-001
     - DEAD-AGENT-001
     - DEAD-INTEGRATIONS-001

@@ -249,6 +249,13 @@ pnpm run tracker
 
 ## Step 8: Verify Installation
 
+Open these URLs to confirm the local stack is healthy:
+
+- **Web App**: http://localhost:3000
+- **API Health Check**: http://localhost:4000/health
+- **AI Worker Health Check**: http://localhost:5000/health
+- **Project Tracker**: http://localhost:3002
+
 ### Check Web Application
 
 Open your browser and navigate to http://localhost:3000

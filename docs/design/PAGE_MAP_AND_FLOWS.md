@@ -35,8 +35,8 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 | Category        | Count |
 | --------------- | ----- |
-| Total Pages     | 126   |
-| Public Pages    | 27    |
+| Total Pages     | 130   |
+| Public Pages    | 28    |
 | Developer Pages | 14    |
 | Protected Pages | 78    |
 | API Routes      | 19    |
@@ -50,7 +50,7 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 ## Page Map by Category
 
-### 1. Public Pages (27 — No Authentication Required)
+### 1. Public Pages (28 — No Authentication Required)
 
 Located in `(public)` route group. Accessible without login.
 
@@ -78,6 +78,7 @@ Located in `(public)` route group. Accessible without login.
 | `/press`                   | Press                   | Press releases                                                                                                                                       |
 | `/press/[id]`              | Press Release Detail    | Individual press release with full body, quotes, boilerplate                                                                                         |
 | `/status`                  | Status                  | System status page                                                                                                                                   |
+| `/privacy`                 | Privacy Policy          | Public privacy policy and data handling commitments                                                                                                  |
 | `/blog`                    | Blog                    | Blog listing                                                                                                                                         |
 | `/blog/[slug]`             | Blog Post               | Individual blog article                                                                                                                              |
 | `/careers`                 | Careers                 | Job listings                                                                                                                                         |
@@ -299,7 +300,8 @@ developer sidebar. These pages are accessible through the Settings sidebar
 | `/settings/notifications` | Notification Settings | Alert preferences               |
 | `/settings/pipeline`      | Pipeline Settings     | Sales pipeline stages           |
 | `/settings/routing`       | Routing Settings      | Smart lead routing rules        |
-| `/settings/security/mfa`  | MFA Settings          | Two-factor authentication setup |
+| `/settings/security/mfa`  | MFA Settings          | MFA management dashboard        |
+| `/settings/security/mfa/setup` | MFA Setup Wizard | Two-factor authentication setup wizard |
 
 ---
 
@@ -332,8 +334,9 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 | Route                  | Page                  | Description                                              |
 | ---------------------- | --------------------- | -------------------------------------------------------- |
-| `/support/tickets`     | Support Tickets Queue | SLA-first agent ticket queue (excludes ARCHIVED, 3 bulk) |
-| `/support/tickets/new` | New Support Ticket    | Ticket creation form with file attachments (PG-047)      |
+| `/support/tickets`      | Support Tickets Queue  | SLA-first agent ticket queue (excludes ARCHIVED, 3 bulk)      |
+| `/support/tickets/new`  | New Support Ticket     | Ticket creation form with file attachments (PG-047)           |
+| `/support/tickets/[id]` | Support Ticket Detail  | Ticket detail with thread, status updater, no delete (PG-048) |
 
 ### 22. Support / Help Center (2 pages)
 

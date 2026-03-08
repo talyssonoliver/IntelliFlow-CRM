@@ -156,6 +156,7 @@ Open your browser and navigate to:
 
 - **Web App**: http://localhost:3000
 - **API Health Check**: http://localhost:4000/health
+- **AI Worker Health Check**: http://localhost:5000/health
 - **Project Tracker**: http://localhost:3002
 
 ## Development Workflow

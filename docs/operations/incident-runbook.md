@@ -163,13 +163,13 @@ kubectl logs <pod-name> | grep -i "heap\|memory"
 
 ```bash
 # Check AI worker status
-curl http://ai-worker:3000/health
+curl http://ai-worker:5000/health
 
-# Check model load status
-curl http://ai-worker:3000/models/status
+# Check detailed dependency health
+curl http://ai-worker:5000/health/detailed
 
-# Fallback to simpler model
-curl -X POST http://ai-worker:3000/config -d '{"model": "fallback"}'
+# Check queue dashboard
+curl -I http://ai-worker:3003/queues
 ```
 
 ### 2.4 Phase 4: Resolution (Variable)

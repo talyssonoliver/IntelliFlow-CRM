@@ -3,7 +3,7 @@
 > **Location**: `docs/design/page-registry.md` **Purpose**: Central registry of
 > all UI pages with task IDs, KPIs, file paths, components, API routers, test
 > paths, and RACI assignments **Last Updated**: 2026-02-24 (as of Sprint 14)
-> **Total Pages**: 126
+> **Total Pages**: 130
 
 ---
 
@@ -55,7 +55,7 @@ Each route entry uses this standard table format:
 
 ---
 
-## Section 1: Public Pages (25 routes)
+## Section 1: Public Pages (26 routes)
 
 ### Home Page (`/`)
 
@@ -126,6 +126,20 @@ Each route entry uses this standard table format:
 | **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90               |
 | **Status**     | Implemented                                                 |
 | **RACI**       | R: Frontend / A: DevRel / C: Product / I: QA                |
+
+### Privacy Policy (`/privacy`)
+
+| Field          | Value                                                       |
+| -------------- | ----------------------------------------------------------- |
+| **Task ID**    | PG-050                                                      |
+| **File Path**  | `apps/web/src/app/(public)/privacy/page.tsx`                |
+| **Layout**     | `apps/web/src/app/(public)/layout.tsx`                      |
+| **API Router** | N/A                                                         |
+| **E2E Test**   | None                                                        |
+| **Unit Tests** | `apps/web/src/app/(public)/privacy/__tests__/page.test.tsx` |
+| **KPI**        | Lighthouse >=90; Response <200ms; SEO >=90                  |
+| **Status**     | Implemented                                                 |
+| **RACI**       | R: Frontend / A: Legal Counsel / C: Compliance / I: QA      |
 
 ### Partners (`/partners`)
 
@@ -1436,12 +1450,27 @@ Each route entry uses this standard table format:
 | **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                 |
 | **Components** | "use client", RoutingContent (dynamic import), Skeleton, Card |
 
-### MFA Setup (`/settings/security/mfa`)
+### MFA Management (`/settings/security/mfa`)
+
+| Field          | Value                                                                       |
+| -------------- | --------------------------------------------------------------------------- |
+| **Task ID**    | PG-125                                                                      |
+| **File Path**  | `apps/web/src/app/settings/security/mfa/page.tsx`                           |
+| **Layout**     | `apps/web/src/app/settings/layout.tsx`                                      |
+| **API Router** | `apps/api/src/modules/auth/auth.router.ts`                                  |
+| **E2E Test**   | `tests/e2e/mfa.spec.ts`                                                    |
+| **Unit Tests** | `apps/web/src/app/settings/security/mfa/__tests__/management.test.tsx`      |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms                          |
+| **Status**     | Implemented                                                                 |
+| **RACI**       | R: Frontend / A: Security / C: Backend / I: QA                              |
+| **Components** | "use client", Card, Badge, AlertDialog, Alert, useMfaStatus, useDisableMfa  |
+
+### MFA Setup Wizard (`/settings/security/mfa/setup`)
 
 | Field          | Value                                                                       |
 | -------------- | --------------------------------------------------------------------------- |
 | **Task ID**    | PG-021, IFC-120                                                             |
-| **File Path**  | `apps/web/src/app/settings/security/mfa/page.tsx`                           |
+| **File Path**  | `apps/web/src/app/settings/security/mfa/setup/page.tsx`                     |
 | **Layout**     | `apps/web/src/app/settings/layout.tsx`                                      |
 | **API Router** | `apps/api/src/modules/auth/auth.router.ts`                                  |
 | **E2E Test**   | None                                                                        |
@@ -1731,6 +1760,26 @@ Each route entry uses this standard table format:
 
 ---
 
+### `/support/tickets/[id]` — Support Ticket Detail
+
+| Field          | Value                                                                                       |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| **Route**      | `/support/tickets/[id]`                                                                     |
+| **Task ID**    | PG-048                                                                                      |
+| **Sprint**     | 16                                                                                          |
+| **File**       | `apps/web/src/app/support/tickets/[id]/page.tsx`                                            |
+| **Layout**     | `apps/web/src/app/support/tickets/[id]/layout.tsx`                                          |
+| **API Router** | `ticket` (reuses existing)                                                                  |
+| **Procedures** | `ticket.getById`, `ticket.update`, `ticket.addResponse`, `ticket.assignees`, `auth.session` |
+| **E2E Test**   | None                                                                                        |
+| **Unit Tests** | `src/app/support/tickets/[id]/__tests__/page.test.tsx` (16 tests)                           |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s                                                        |
+| **Status**     | Implemented                                                                                 |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                               |
+| **Components** | TicketDetail, TicketThread, StatusUpdater, mapTicketToDetailData                             |
+
+---
+
 ## Section 22: Support / Help Center (1 route)
 
 ### `/help-center/[article]` — Help Article
@@ -1759,7 +1808,7 @@ Each route entry uses this standard table format:
 
 | Section             | Routes  | Implemented | Hardcoded | Partial |
 | ------------------- | ------- | ----------- | --------- | ------- |
-| 1. Public Pages     | 25      | 25          | 0         | 0       |
+| 1. Public Pages     | 26      | 26          | 0         | 0       |
 | 2. Developer Portal | 8       | 8           | 0         | 0       |
 | 3. Dashboard        | 3       | 1           | 2         | 0       |
 | 4. Leads            | 3       | 3           | 0         | 0       |
@@ -1794,7 +1843,7 @@ Each route entry uses this standard table format:
 
 | Section             | E2E Specs                                     | Unit Tests        | Coverage Gap                 |
 | ------------------- | --------------------------------------------- | ----------------- | ---------------------------- |
-| 1. Public Pages     | 4 (auth-flow, signup, forms, smoke)           | 16                | Low — 9 routes with no tests |
+| 1. Public Pages     | 4 (auth-flow, signup, forms, smoke)           | 17                | Low — 8 routes with no tests |
 | 2. Developer Portal | 0                                             | 6                 | No E2E coverage              |
 | 3. Dashboard        | 1 (smoke)                                     | 0                 | No unit tests                |
 | 4. Leads            | 1 (forms)                                     | 0                 | No dedicated E2E or unit     |

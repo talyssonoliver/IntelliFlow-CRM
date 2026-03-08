@@ -40,7 +40,7 @@ string:
 import { createClient } from '@supabase/supabase-js';
 
 // For transaction mode (recommended for serverless)
-const pooledUrl = process.env.SUPABASE_DB_URL?.replace(':5432', ':6543');
+const pooledUrl = process.env.SUPABASE_DB_URL?.replaceAll(':5432', ':6543');
 
 // Use pooled connection for API routes
 export const supabaseAdmin = createClient(

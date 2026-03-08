@@ -57,7 +57,7 @@ serve(async (req: Request): Promise<Response> => {
 
     if (authHeader) {
       // Verify JWT and get user
-      const token = authHeader.replace('Bearer ', '');
+      const token = authHeader.replaceAll('Bearer ', '');
       const {
         data: { user },
         error: authError,
