@@ -18,7 +18,7 @@
  */
 
 import * as fs from 'fs/promises';
-import * as path from 'path';
+import * as path from 'node:path';
 import { execSync } from 'child_process';
 import { glob } from 'glob';
 
@@ -341,7 +341,7 @@ class TurboValidator {
 
         const deps = tasks[task]?.dependsOn || [];
         for (const dep of deps) {
-          const depTask = dep.replace('^', '');
+          const depTask = dep.replaceAll('^', '');
           if (taskNames.includes(depTask)) {
             if (!visited.has(depTask) && hasCycle(depTask)) {
               return true;

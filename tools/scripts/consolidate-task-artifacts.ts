@@ -73,7 +73,7 @@ function loadSprintInfo(): Map<number, SprintInfo> {
     const sprintRaw = row['Target Sprint'];
     if (!taskId || !sprintRaw) continue;
 
-    const sprintNum = parseInt(sprintRaw, 10);
+    const sprintNum = Number.parseInt(sprintRaw, 10);
     if (isNaN(sprintNum) || sprintNum < 0) continue;
 
     if (!sprints.has(sprintNum)) {
@@ -157,7 +157,7 @@ function cleanupOrphanedSprintDirs(validSprints: Map<number, SprintInfo>): {
     const match = dir.match(/^sprint-(\d+)$/);
     if (!match) continue;
 
-    const sprintNum = parseInt(match[1], 10);
+    const sprintNum = Number.parseInt(match[1], 10);
     const sprintInfo = validSprints.get(sprintNum);
 
     if (!sprintInfo) {
@@ -204,8 +204,8 @@ function createMissingSprintDirs(
 
   // Only create sequential sprint directories up to the highest existing one
   const existingNums = existingDirs
-    .map((d) => parseInt(d.replace('sprint-', ''), 10))
-    .filter((n) => !isNaN(n));
+    .map((d) => Number.parseInt(d.replaceAll('sprint-', ''), 10))
+    .filter((n) => !Number.isNaN(n));
   const maxExisting = Math.max(...existingNums, 0);
 
   for (let i = 0; i <= maxExisting; i++) {
@@ -273,7 +273,7 @@ function moveMisplacedTaskFiles(sprints: Map<number, SprintInfo>): {
     .map((e) => e.name);
 
   for (const sprintDir of sprintDirs) {
-    const currentSprint = parseInt(sprintDir.replace('sprint-', ''), 10);
+    const currentSprint = Number.parseInt(sprintDir.replaceAll('sprint-', ''), 10);
     const dirPath = join(METRICS_DIR, sprintDir);
 
     // Find all task files recursively
@@ -285,7 +285,7 @@ function moveMisplacedTaskFiles(sprints: Map<number, SprintInfo>): {
         if (entry.isDirectory()) {
           results.push(...findTaskFiles(fullPath));
         } else if (entry.name.endsWith('.json') && !entry.name.startsWith('_')) {
-          const taskId = entry.name.replace('.json', '');
+          const taskId = entry.name.replaceAll('.json', '');
           results.push({ path: fullPath, taskId });
         }
       }
@@ -369,7 +369,7 @@ function generateReport(sprints: Map<number, SprintInfo>): void {
         if (entry.isDirectory()) {
           results.push(...findTaskFiles(fullPath));
         } else if (entry.name.endsWith('.json') && !entry.name.startsWith('_')) {
-          const taskId = entry.name.replace('.json', '');
+          const taskId = entry.name.replaceAll('.json', '');
           results.push(taskId);
         }
       }

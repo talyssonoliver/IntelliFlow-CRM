@@ -73,7 +73,7 @@ export const traceabilitySchema = z.object({
   $schema: z.string().optional().describe('JSON Schema reference'),
   title: z.string().describe('Title of the traceability matrix'),
   description: z.string().describe('Description of the traceability matrix purpose'),
-  created_at: z.string().datetime().describe('ISO 8601 timestamp when the matrix was created'),
+  created_at: z.iso.datetime().describe('ISO 8601 timestamp when the matrix was created'),
   task_reference: z.string().optional().describe('Reference to the task that created this matrix'),
   version: z.string().regex(versionPattern).optional().describe('Semantic version of the matrix'),
   capabilities: z
@@ -81,7 +81,7 @@ export const traceabilitySchema = z.object({
     .describe('Array of business capabilities with their traceability links'),
   coverage_summary: coverageSummarySchema.describe('Summary statistics of traceability coverage'),
   validated_by: z.string().describe('Identifier of the system or person who validated this matrix'),
-  validated_at: z.string().datetime().describe('ISO 8601 timestamp when the matrix was validated'),
+  validated_at: z.iso.datetime().describe('ISO 8601 timestamp when the matrix was validated'),
 });
 
 // Export TypeScript types inferred from Zod schema

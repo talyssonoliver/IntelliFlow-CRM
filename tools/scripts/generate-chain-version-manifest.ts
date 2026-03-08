@@ -10,8 +10,8 @@
  *   npx tsx tools/scripts/generate-chain-version-manifest.ts
  */
 
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import { PrismaClient } from '@intelliflow/db';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { CHAIN_TYPES, CHAIN_VERSION_DEFAULTS } from '@intelliflow/domain';
@@ -186,7 +186,7 @@ Key considerations:
 // =============================================================================
 
 function generateFilename(timestamp: string): string {
-  const safe = timestamp.replace(/[-:]/g, '').replace('T', '-').split('.')[0];
+  const safe = timestamp.replaceAll(/[-:]/g, '').replaceAll('T', '-').split('.')[0];
   return `prompt-versions-${safe}.json`;
 }
 

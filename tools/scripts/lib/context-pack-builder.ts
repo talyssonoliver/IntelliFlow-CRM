@@ -110,7 +110,7 @@ export function computeFileSha256(filePath: string): string | null {
  * If file exceeds EXCERPT_LINE_LIMIT lines, includes first 60 + last 60 with marker.
  */
 export function generateFileExcerpt(absolutePath: string, repoRoot: string): FileExcerpt {
-  const relativePath = relative(repoRoot, absolutePath).replace(/\\/g, '/');
+  const relativePath = relative(repoRoot, absolutePath).replaceAll(/\\/g, '/');
 
   if (!existsSync(absolutePath)) {
     return {
@@ -244,7 +244,7 @@ export function buildContextPack(
   const dirPaths = getDirPrerequisites(contract);
 
   // Create output directory - sprint-based structure: .specify/sprints/sprint-{N}/attestations/{taskId}/
-  const sprintNumber = parseInt(task['Target Sprint'] || '0', 10);
+  const sprintNumber = Number.parseInt(task['Target Sprint'] || '0', 10);
   const outputDir = join(
     root,
     '.specify',
@@ -464,8 +464,8 @@ function createEmptyManifest(taskId: string, runId: string, repoRoot: string): C
  */
 export function generateRunId(taskId: string): string {
   const now = new Date();
-  const datePart = now.toISOString().slice(0, 10).replace(/-/g, '');
-  const timePart = now.toTimeString().slice(0, 8).replace(/:/g, '');
+  const datePart = now.toISOString().slice(0, 10).replaceAll(/-/g, '');
+  const timePart = now.toTimeString().slice(0, 8).replaceAll(/:/g, '');
   const randomHex = Math.random().toString(16).slice(2, 6);
 
   return `${datePart}-${timePart}-${taskId}-${randomHex}`;

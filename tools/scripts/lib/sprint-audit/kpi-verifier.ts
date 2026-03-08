@@ -147,7 +147,7 @@ const KPI_PATTERNS: Array<{
   {
     pattern: /(\w+(?:\s+\w+)?)\s*([><=!]+)\s*(\d+(?:\.\d+)?)\s*%/i,
     extract: (m) => ({
-      metric: m[1].toLowerCase().replace(/\s+/g, '_'),
+      metric: m[1].toLowerCase().replaceAll(/\s+/g, '_'),
       operator: normalizeOperator(m[2]),
       target: parseFloat(m[3]),
       unit: '%',
@@ -158,7 +158,7 @@ const KPI_PATTERNS: Array<{
   {
     pattern: /(\w+(?:\s+\w+)?)\s*([><=!]+)\s*(\d+(?:\.\d+)?)\s*$/i,
     extract: (m) => ({
-      metric: m[1].toLowerCase().replace(/\s+/g, '_'),
+      metric: m[1].toLowerCase().replaceAll(/\s+/g, '_'),
       operator: normalizeOperator(m[2]),
       target: parseFloat(m[3]),
       unit: null,
@@ -171,7 +171,7 @@ const KPI_PATTERNS: Array<{
  * Normalizes comparison operators to standard forms
  */
 function normalizeOperator(op: string): KpiOperator {
-  const normalized = op.replace(/≥/g, '>=').replace(/≤/g, '<=').replace(/≠/g, '!=');
+  const normalized = op.replaceAll(/≥/g, '>=').replaceAll(/≤/g, '<=').replaceAll(/≠/g, '!=');
   const valid: KpiOperator[] = ['>', '<', '>=', '<=', '=', '!='];
   return valid.includes(normalized as KpiOperator) ? (normalized as KpiOperator) : '=';
 }

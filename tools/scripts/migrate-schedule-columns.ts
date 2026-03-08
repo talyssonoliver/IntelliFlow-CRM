@@ -11,15 +11,15 @@
  * Run with: npx tsx tools/scripts/migrate-schedule-columns.ts
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import Papa from 'papaparse';
 
 const CSV_PATH = path.join(
   process.cwd(),
   'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv'
 );
-const BACKUP_PATH = CSV_PATH.replace('.csv', '.backup.csv');
+const BACKUP_PATH = CSV_PATH.replaceAll('.csv', '.backup.csv');
 
 interface SprintPlanRow {
   'Task ID': string;

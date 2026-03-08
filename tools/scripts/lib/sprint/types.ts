@@ -387,7 +387,7 @@ function mapCSVStatus(status: string): TaskStatus {
 
 export function generateRunId(sprintNumber: number | 'all'): string {
   const now = new Date();
-  const timestamp = now.toISOString().replace(/[-:]/g, '').slice(0, 15);
+  const timestamp = now.toISOString().replaceAll(/[-:]/g, '').slice(0, 15);
   const random = Math.random().toString(36).substring(2, 8);
   return `sprint${sprintNumber}-${timestamp}-${random}`;
 }

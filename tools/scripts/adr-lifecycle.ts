@@ -25,8 +25,8 @@
  *   graph                 Generate dependency graph
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 // Configuration
 const ADR_PATHS = ['docs/planning/adr', 'docs/architecture/adr', 'docs/shared'];
@@ -173,12 +173,12 @@ function createADR(title: string, technicalStory?: string): void {
   // Get next ADR number
   const adrs = getAllADRs();
   const maxId = adrs.reduce((max, adr) => {
-    const num = parseInt(adr.id.replace('ADR-', ''), 10);
+    const num = Number.parseInt(adr.id.replaceAll('ADR-', ''), 10);
     return isNaN(num) ? max : Math.max(max, num);
   }, 0);
 
   const nextId = (maxId + 1).toString().padStart(3, '0');
-  const fileName = `ADR-${nextId}-${title.toLowerCase().replace(/\s+/g, '-')}.md`;
+  const fileName = `ADR-${nextId}-${title.toLowerCase().replaceAll(/\s+/g, '-')}.md`;
   const outputPath = path.resolve(process.cwd(), 'docs/planning/adr', fileName);
 
   // Read and customize template
@@ -392,7 +392,7 @@ function validateADR(adr: ADRMetadata): ValidationResult {
   // Check for related ADRs links validity
   for (const related of adr.relatedADRs) {
     const relatedExists = getAllADRFiles().some((f) =>
-      path.basename(f).includes(related.replace('ADR-', ''))
+      path.basename(f).includes(related.replaceAll('ADR-', ''))
     );
     if (!relatedExists) {
       warnings.push(`Referenced ADR may not exist: ${related}`);
@@ -417,7 +417,7 @@ function generateGraph(): void {
   console.log('graph TD');
 
   for (const adr of adrs) {
-    const shortId = adr.id.replace('ADR-0*', '');
+    const shortId = adr.id.replaceAll('ADR-0*', '');
     const shortTitle = adr.title.substring(0, 30);
     console.log(`    ${adr.id}["${shortId}: ${shortTitle}"]`);
 

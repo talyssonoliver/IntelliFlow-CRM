@@ -21,8 +21,8 @@
  * Note: Requires Zod v4+ for native JSON Schema support.
  */
 
-import { writeFileSync, mkdirSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
+import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { join, dirname } from 'node:path';
 import { z } from 'zod';
 import { vulnerabilityBaselineSchema } from './lib/schemas/vulnerability-baseline.schema';
 import { attestationSchema } from './lib/schemas/attestation.schema';

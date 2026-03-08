@@ -16,8 +16,8 @@
  *   pnpm tsx tools/scripts/validate-env.ts --output artifacts/misc/env-validation-results.json
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { z } from 'zod';
 
 // Color codes for terminal output
@@ -63,8 +63,8 @@ interface ValidationWarning {
 const urlSchema = z.url();
 const portSchema = z.coerce.number().int().min(1).max(65535);
 const booleanSchema = z.enum(['true', 'false', 'TRUE', 'FALSE', '1', '0']);
-const emailSchema = z.string().email();
-const uuidSchema = z.string().uuid();
+const emailSchema = z.email();
+const uuidSchema = z.uuid();
 
 // Environment variable definitions
 interface EnvVarDefinition {

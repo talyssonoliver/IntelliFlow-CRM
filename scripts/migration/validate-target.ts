@@ -13,8 +13,8 @@
 
 import type { PrismaClient } from '@intelliflow/db';
 import { createHash } from 'crypto';
-import { writeFileSync, mkdirSync } from 'fs';
-import { dirname } from 'path';
+import { writeFileSync, mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { parseArgs } from 'util';
 
 // ============================================
@@ -371,7 +371,7 @@ export async function validateIndexes(prisma: PrismaClient): Promise<ValidationR
     ];
 
     const missingIndexes = expectedIndexes.filter(
-      (idx) => !indexNames.some((name) => name.includes(idx.replace('_', '')))
+      (idx) => !indexNames.some((name) => name.includes(idx.replaceAll('_', '')))
     );
 
     results.push({

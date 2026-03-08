@@ -654,7 +654,7 @@ function main(): void {
   function escapeField(value: string): string {
     if (value === null || value === undefined) return '""';
     const str = String(value);
-    return `"${str.replace(/"/g, '""')}"`;
+    return `"${str.replaceAll(/"/g, '""')}"`;
   }
 
   const lines: string[] = [];

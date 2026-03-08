@@ -17,8 +17,8 @@
  * Task: EXP-SCRIPTS-001 - Utility Scripts
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 const METRICS_DIR = path.resolve(__dirname, '../../apps/project-tracker/docs/metrics');
 const CSV_PATH = path.resolve(METRICS_DIR, '_global/Sprint_plan.csv');
@@ -55,10 +55,10 @@ function parseCSV(csvPath: string): TaskEntry[] {
   if (lines.length < 2) return [];
 
   const headers = lines[0].split(',').map((h) => h.trim().replace(/^"/, '').replace(/"$/, ''));
-  const taskIdIdx = headers.findIndex((h) => h === 'Task ID');
-  const statusIdx = headers.findIndex((h) => h === 'Status');
-  const sprintIdx = headers.findIndex((h) => h === 'Target Sprint');
-  const sectionIdx = headers.findIndex((h) => h === 'Section');
+  const taskIdIdx = headers.indexOf((h) => h === 'Task ID');
+  const statusIdx = headers.indexOf((h) => h === 'Status');
+  const sprintIdx = headers.indexOf((h) => h === 'Target Sprint');
+  const sectionIdx = headers.indexOf((h) => h === 'Section');
 
   if (taskIdIdx === -1) {
     console.error('CSV missing "Task ID" column');
@@ -126,7 +126,7 @@ function findJsonFiles(
       // Sprint filter
       if (sprintFilter !== undefined) {
         const sprintMatch = entry.name.match(/^sprint-(\d+)$/);
-        if (sprintMatch && parseInt(sprintMatch[1], 10) !== sprintFilter) continue;
+        if (sprintMatch && Number.parseInt(sprintMatch[1], 10) !== sprintFilter) continue;
       }
 
       results.push(...findJsonFiles(fullPath, undefined)); // Don't filter subdirs
@@ -134,7 +134,7 @@ function findJsonFiles(
       // Skip summary and phase-summary files
       if (entry.name.startsWith('_')) continue;
 
-      const taskId = entry.name.replace('.json', '');
+      const taskId = entry.name.replaceAll('.json', '');
       results.push({ path: fullPath, taskId });
     }
   }
@@ -143,7 +143,7 @@ function findJsonFiles(
 }
 
 function normalizeStatus(status: string): string {
-  const upper = status.toUpperCase().replace(/\s+/g, '_');
+  const upper = status.toUpperCase().replaceAll(/\s+/g, '_');
   const mapping: Record<string, string> = {
     COMPLETED: 'DONE',
     DONE: 'DONE',
@@ -160,7 +160,7 @@ async function main() {
   const args = process.argv.slice(2);
   const fix = args.includes('--fix');
   const sprintIdx = args.indexOf('--sprint');
-  const sprintFilter = sprintIdx >= 0 ? parseInt(args[sprintIdx + 1], 10) : undefined;
+  const sprintFilter = sprintIdx >= 0 ? Number.parseInt(args[sprintIdx + 1], 10) : undefined;
 
   console.log('=== Task Data Cleanup Utility ===');
   console.log(`Mode: ${fix ? 'FIX' : 'DRY RUN (use --fix to apply changes)'}`);

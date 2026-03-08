@@ -514,7 +514,7 @@ function convertValidationMethod(validation: string, task: Record<string, string
 function escapeField(value: string): string {
   if (!value) return '""';
   const needsQuotes = value.includes(',') || value.includes('"') || value.includes('\n');
-  const escaped = value.replace(/"/g, '""');
+  const escaped = value.replaceAll(/"/g, '""');
   return needsQuotes || value.includes(';')
     ? `"${escaped}"`
     : escaped.includes(' ')

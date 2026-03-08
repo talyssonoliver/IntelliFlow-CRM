@@ -485,7 +485,7 @@ try:
         writer.writerows(rows)
 
     # Atomic replace
-    os.replace(csv_file + '.tmp', csv_file)
+    os.replaceAll(csv_file + '.tmp', csv_file)
 
 except Exception as e:
     print(f'ERROR updating CSV: {e}', file=sys.stderr)

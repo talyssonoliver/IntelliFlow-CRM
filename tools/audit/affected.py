@@ -16,7 +16,7 @@ DEFAULT_OUTPUT_DIR = REPO_ROOT / "artifacts" / "reports" / "affected"
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    return datetime.now(timezone.utc).replaceAll(microsecond=0).isoformat()
 
 
 def _run_capture(args: list[str]) -> tuple[int, str, str]:
@@ -87,7 +87,7 @@ def get_changed_files(merge_base: str) -> list[str]:
     out = _run_capture_ok(["git", "diff", "--name-only", merge_base, "HEAD"])
     files = []
     for line in out.splitlines():
-        p = line.strip().replace("\\", "/")
+        p = line.strip().replaceAll("\\", "/")
         if p:
             files.append(p)
     return sorted(set(files))
@@ -102,7 +102,7 @@ def get_turbo_packages() -> list[PackageInfo]:
         if not isinstance(item, dict):
             continue
         name = str(item.get("name") or "").strip()
-        path = str(item.get("path") or "").strip().replace("\\", "/")
+        path = str(item.get("path") or "").strip().replaceAll("\\", "/")
         if name and path:
             packages.append(PackageInfo(name=name, path=path))
     return sorted(packages, key=lambda p: p.name)
@@ -119,7 +119,7 @@ def get_turbo_package_graph(package_names: list[str]) -> dict[str, PackageGraphN
         if not isinstance(item, dict):
             continue
         name = str(item.get("name") or "").strip()
-        path = str(item.get("path") or "").strip().replace("\\", "/")
+        path = str(item.get("path") or "").strip().replaceAll("\\", "/")
         deps = tuple(sorted([str(x) for x in (item.get("dependencies") or []) if str(x).strip()]))
         dents = tuple(sorted([str(x) for x in (item.get("dependents") or []) if str(x).strip()]))
         if name and path:
@@ -129,7 +129,7 @@ def get_turbo_package_graph(package_names: list[str]) -> dict[str, PackageGraphN
 
 def _is_global_trigger(path: str) -> bool:
     # Conservative: treat shared configs as global-impact.
-    p = path.replace("\\", "/").lstrip("./")
+    p = path.replaceAll("\\", "/").lstrip("./")
     if p.startswith(".github/"):
         return True
     if p in {

@@ -15,8 +15,8 @@
  * @module tools/scripts/run-validation-cache
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { execSync } from 'child_process';
 import { parse as parseCsv } from 'csv-parse/sync';
 import { parseValidationCommands, executeCommand } from './lib/sprint-audit/validation-runner';
@@ -131,7 +131,7 @@ async function main() {
   const args = process.argv.slice(2);
   const checkOnly = args.includes('--check');
   const ttlIndex = args.indexOf('--ttl');
-  const ttlHours = ttlIndex >= 0 ? parseInt(args[ttlIndex + 1], 10) : DEFAULT_TTL_HOURS;
+  const ttlHours = ttlIndex >= 0 ? Number.parseInt(args[ttlIndex + 1], 10) : DEFAULT_TTL_HOURS;
 
   console.log(`\n${'='.repeat(60)}`);
   console.log('Validation Cache Generator');

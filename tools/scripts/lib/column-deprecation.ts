@@ -76,7 +76,7 @@ const SPRINTS_PER_QUARTER = 4; // Assuming 4 sprints per quarter
  * A dependency is "cross-quarter" if it references a task in a different quarter.
  */
 export function computeCrossQuarterDeps(task: SprintTask, allTasks: SprintTask[]): boolean {
-  const targetSprint = parseInt(task['Target Sprint'], 10);
+  const targetSprint = Number.parseInt(task['Target Sprint'], 10);
   if (isNaN(targetSprint)) {
     return false;
   }
@@ -99,7 +99,7 @@ export function computeCrossQuarterDeps(task: SprintTask, allTasks: SprintTask[]
     const depTask = allTasks.find((t) => t['Task ID'] === depId);
     if (!depTask) continue;
 
-    const depSprint = parseInt(depTask['Target Sprint'], 10);
+    const depSprint = Number.parseInt(depTask['Target Sprint'], 10);
     if (isNaN(depSprint)) continue;
 
     const depQuarter = Math.floor(depSprint / SPRINTS_PER_QUARTER);
@@ -293,7 +293,7 @@ export function generateDeprecationPlan(runId: string, repoRoot?: string): Depre
  * Create the three-step deprecation timeline.
  */
 function createTimeline(currentSprint: string): DeprecationTimeline {
-  const current = parseInt(currentSprint, 10) || 0;
+  const current = Number.parseInt(currentSprint, 10) || 0;
 
   return {
     step1: {
@@ -327,7 +327,7 @@ function getCurrentSprint(tasks: SprintTask[]): string {
   const sprints = new Map<number, { total: number; complete: number }>();
 
   for (const task of tasks) {
-    const sprint = parseInt(task['Target Sprint'], 10);
+    const sprint = Number.parseInt(task['Target Sprint'], 10);
     if (isNaN(sprint)) continue;
 
     if (!sprints.has(sprint)) {
@@ -463,7 +463,7 @@ export function generateAndWriteDeprecationPlan(
   writeDeprecationPlanMarkdown(plan, outputPath);
 
   // Also write JSON version
-  const jsonPath = outputPath.replace('.md', '.json');
+  const jsonPath = outputPath.replaceAll('.md', '.json');
   mkdirSync(dirname(jsonPath), { recursive: true });
   writeFileSync(jsonPath, JSON.stringify(plan, null, 2), 'utf-8');
 

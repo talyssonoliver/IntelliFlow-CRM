@@ -48,7 +48,7 @@ interface ChangeRecord {
 function parseSprintNumber(raw: string): number | null {
   const trimmed = (raw ?? '').trim();
   if (!trimmed || trimmed === 'Continuous' || trimmed === '-') return null;
-  const n = parseInt(trimmed, 10);
+  const n = Number.parseInt(trimmed, 10);
   return isNaN(n) ? null : n;
 }
 
@@ -67,8 +67,8 @@ function fixToken(token: string, actualSprint: number): string {
   if (!value.startsWith('.specify/sprints/sprint-')) return token; // Not a sprint path
 
   // Replace all sprint-N occurrences that differ from actualSprint
-  const fixed = value.replace(SPRINT_DIR_RE, (_match, capturedN) => {
-    const n = parseInt(capturedN, 10);
+  const fixed = value.replaceAll(SPRINT_DIR_RE, (_match, capturedN) => {
+    const n = Number.parseInt(capturedN, 10);
     if (n === actualSprint) return _match; // Already correct
     return `.specify/sprints/sprint-${actualSprint}/`;
   });

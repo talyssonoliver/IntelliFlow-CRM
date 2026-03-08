@@ -377,7 +377,7 @@ export function decomposeToTddSteps(
  */
 function generateTestFilePath(componentPath: string): string {
   const dir = componentPath.substring(0, componentPath.lastIndexOf('/'));
-  const fileName = basename(componentPath, '.ts').replace('.tsx', '');
+  const fileName = basename(componentPath, '.ts').replaceAll('.tsx', '');
 
   // Determine test location pattern
   if (dir.includes('apps/')) {

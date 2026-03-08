@@ -10,8 +10,8 @@
  *   npx tsx tools/scripts/generate-rollback-test-log.ts
  */
 
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 // =============================================================================
 // Types
@@ -295,7 +295,7 @@ function runTestCase7(): TestCase {
 // =============================================================================
 
 function generateFilename(timestamp: string): string {
-  const safe = timestamp.replace(/[-:]/g, '').replace('T', '-').split('.')[0];
+  const safe = timestamp.replaceAll(/[-:]/g, '').replaceAll('T', '-').split('.')[0];
   return `rollback-test-${safe}.json`;
 }
 

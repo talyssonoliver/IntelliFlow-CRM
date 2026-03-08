@@ -5,7 +5,7 @@
  * All schemas are stored locally in the repository.
  */
 
-import * as path from 'path';
+import * as path from 'node:path';
 
 // Base path for all metric schemas (relative to project root)
 export const SCHEMAS_DIR = 'apps/project-tracker/docs/metrics/schemas';
@@ -37,7 +37,7 @@ export function getRelativeSchemaPath(
   const schemaPath = path.join(projectRoot, SCHEMAS_DIR, SCHEMA_FILES[schemaName]);
   const relativePath = path.relative(fromDir, schemaPath);
   // Normalize to forward slashes for JSON compatibility
-  return relativePath.replace(/\\/g, '/');
+  return relativePath.replaceAll(/\\/g, '/');
 }
 
 /**

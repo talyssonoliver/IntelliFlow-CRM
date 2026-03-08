@@ -53,7 +53,7 @@ function generateRunId(): string {
   }
 
   // Local: timestamp + pid for uniqueness
-  const timestamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\..+/, '').slice(0, 15); // YYYYMMDDTHHmmss
+  const timestamp = new Date().toISOString().replaceAll(/[-:]/g, '').replace(/\..+/, '').slice(0, 15); // YYYYMMDDTHHmmss
 
   return `${timestamp}-${process.pid}`;
 }
@@ -245,7 +245,7 @@ export function getLatestSymlink(tool: string): string {
  * ```
  */
 export function normalizePath(path: string): string {
-  return path.replace(/\\/g, '/');
+  return path.replaceAll(/\\/g, '/');
 }
 
 /**

@@ -62,7 +62,7 @@ export const taskDetailSchema = z.object({
   owner: z.string(),
   status: registryTaskStatusSchema,
   sprint: z.number().int(),
-  completed_at: z.string().datetime().optional(),
+  completed_at: z.iso.datetime().optional(),
   duration_minutes: z.number().int().min(0).optional(),
   metrics_file: z.string().optional(),
 });

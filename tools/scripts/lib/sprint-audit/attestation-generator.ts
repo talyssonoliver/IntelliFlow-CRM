@@ -7,8 +7,8 @@
  * @module tools/scripts/lib/sprint-audit/attestation-generator
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { getRelativeSchemaPath, SCHEMA_FILES } from '../schema-paths';
 import type {
   ArtifactVerification,
@@ -297,7 +297,7 @@ export function getAttestationPath(
  */
 function generateAttestationFilename(timestamp: string): string {
   // Convert ISO timestamp to safe filename: 2025-12-29T10:30:00.000Z -> 20251229-103000
-  const safe = timestamp.replace(/[-:]/g, '').replace('T', '-').split('.')[0];
+  const safe = timestamp.replaceAll(/[-:]/g, '').replaceAll('T', '-').split('.')[0];
   return `attestation-${safe}.json`;
 }
 

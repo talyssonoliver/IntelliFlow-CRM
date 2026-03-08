@@ -257,7 +257,7 @@ if (!$Quick) {
         
         if ($complexity -gt 20) {
             $complexityReport.packages += @{
-                file = $file.FullName.Replace((Get-Location).Path, "")
+                file = $file.FullName.replaceAll((Get-Location).Path, "")
                 lines = $lines
                 complexity = $complexity
                 warning = "High complexity"

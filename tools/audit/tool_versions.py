@@ -11,7 +11,7 @@ from typing import Any
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    return datetime.now(timezone.utc).replaceAll(microsecond=0).isoformat()
 
 
 def _run_version(cmd: list[str]) -> dict[str, Any]:

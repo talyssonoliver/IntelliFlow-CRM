@@ -26,7 +26,7 @@ DEFAULT_DEBT_LEDGER_PATH = REPO_ROOT / "docs" / "debt-ledger.yaml"
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    return datetime.now(timezone.utc).replaceAll(microsecond=0).isoformat()
 
 
 def _read_csv_plan(path: Path) -> list[dict[str, str]]:
@@ -65,7 +65,7 @@ def _git_merge_base_is_ancestor(ancestor: str, descendant: str) -> bool:
 def _git_last_commit_for_path(path: Path) -> tuple[str | None, int | None]:
     if not path.exists():
         return None, None
-    rel = str(path.relative_to(REPO_ROOT)).replace("\\", "/")
+    rel = str(path.relative_to(REPO_ROOT)).replaceAll("\\", "/")
     proc = subprocess.run(
         ["git", "log", "-1", "--format=%H %ct", "--", rel],
         capture_output=True,
@@ -115,7 +115,7 @@ def _task_is_post_cutover(
             return None
     if cutover_time:
         try:
-            cut_ts = int(datetime.fromisoformat(str(cutover_time).replace("Z", "+00:00")).timestamp())
+            cut_ts = int(datetime.fromisoformat(str(cutover_time).replaceAll("Z", "+00:00")).timestamp())
         except Exception:
             return None
         if task_commit_ts is None:
@@ -172,7 +172,7 @@ def _parse_artifacts_to_track(value: str) -> list[str]:
 def _path_glob_exists(pattern: str) -> bool:
     if not pattern:
         return False
-    normalized = pattern.replace("\\", "/")
+    normalized = pattern.replaceAll("\\", "/")
     abs_pattern = str((REPO_ROOT / normalized).resolve())
     matches = glob(abs_pattern, recursive=True)
     return len(matches) > 0

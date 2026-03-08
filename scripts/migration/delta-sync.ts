@@ -15,7 +15,7 @@
 
 import type { PrismaClient } from '@intelliflow/db';
 import { createHash } from 'crypto';
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { parseArgs } from 'util';
 
 // ============================================

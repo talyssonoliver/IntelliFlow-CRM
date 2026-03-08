@@ -18,8 +18,8 @@
  *   SONAR_PROJECT_KEY - Project key (default: IntelliFlow)
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -236,7 +236,7 @@ function saveToHistory(metrics) {
     gateStatus: metrics.qualityGate?.status,
   };
 
-  const existingIndex = history.snapshots.findIndex((s) => s.date === today);
+  const existingIndex = history.snapshots.indexOf((s) => s.date === today);
   if (existingIndex >= 0) {
     history.snapshots[existingIndex] = snapshot;
   } else {
@@ -271,8 +271,8 @@ function calculateTrending(metrics) {
 
   const recent = snapshots.slice(0, 7);
   const current = {
-    bugs: parseInt(metrics.bugs) || 0,
-    vulnerabilities: parseInt(metrics.vulnerabilities) || 0,
+    bugs: Number.parseInt(metrics.bugs) || 0,
+    vulnerabilities: Number.parseInt(metrics.vulnerabilities) || 0,
   };
   const previous = {
     bugs: recent[1]?.bugs || current.bugs,
@@ -352,14 +352,14 @@ async function fetchAllMetrics(options = {}) {
     source: 'live',
 
     // Raw metrics
-    bugs: parseInt(m.bugs) || 0,
-    vulnerabilities: parseInt(m.vulnerabilities) || 0,
-    codeSmells: parseInt(m.code_smells) || 0,
-    securityHotspots: parseInt(m.security_hotspots) || 0,
+    bugs: Number.parseInt(m.bugs) || 0,
+    vulnerabilities: Number.parseInt(m.vulnerabilities) || 0,
+    codeSmells: Number.parseInt(m.code_smells) || 0,
+    securityHotspots: Number.parseInt(m.security_hotspots) || 0,
     coverage: parseFloat(m.coverage) || 0,
     duplications: parseFloat(m.duplicated_lines_density) || 0,
-    linesOfCode: parseInt(m.ncloc) || 0,
-    complexity: parseInt(m.complexity) || 0,
+    linesOfCode: Number.parseInt(m.ncloc) || 0,
+    complexity: Number.parseInt(m.complexity) || 0,
 
     // Ratings
     reliabilityRating: ratingToGrade(m.reliability_rating),
@@ -416,15 +416,15 @@ function calculateHealthScore(measures, gateResult) {
   let score = 100;
 
   // Bugs penalty
-  const bugs = parseInt(measures.bugs) || 0;
+  const bugs = Number.parseInt(measures.bugs) || 0;
   score -= bugs * 2;
 
   // Vulnerabilities penalty (severe)
-  const vulns = parseInt(measures.vulnerabilities) || 0;
+  const vulns = Number.parseInt(measures.vulnerabilities) || 0;
   score -= vulns * 5;
 
   // Security hotspots penalty
-  const hotspots = parseInt(measures.security_hotspots) || 0;
+  const hotspots = Number.parseInt(measures.security_hotspots) || 0;
   score -= hotspots;
 
   // Debt ratio penalty

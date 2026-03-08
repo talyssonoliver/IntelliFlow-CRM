@@ -34,9 +34,9 @@ function Normalize-Status([string]$status) {
 function Clean-Cell([string]$text) {
   if ($null -eq $text) { return '' }
   $t = [string]$text
-  $t = $t.Replace('|', '/')
+  $t = $t.replaceAll('|', '/')
   $t = [regex]::Replace($t, '\p{Pd}', '-')
-  $t = $t.Replace("`r", ' ').Replace("`n", ' ').Trim()
+  $t = $t.replaceAll("`r", ' ').replaceAll("`n", ' ').Trim()
   $t = [regex]::Replace($t, '\s+', ' ')
   return $t
 }
@@ -1495,11 +1495,11 @@ $htmlTemplate = @'
     function esc(v) {
       const s = String(v ?? '');
       return s
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+        .replaceAll(/&/g, '&amp;')
+        .replaceAll(/</g, '&lt;')
+        .replaceAll(/>/g, '&gt;')
+        .replaceAll(/"/g, '&quot;')
+        .replaceAll(/'/g, '&#39;');
     }
 
     function covKind(v) {
@@ -1682,7 +1682,7 @@ $htmlTemplate = @'
 </html>
 '@
 
-$htmlContent = $htmlTemplate.Replace('__FEATURE_JSON__', $featureJson).Replace('__RISK_JSON__', $riskJson).Replace('__GENERATED_AT__', $generatedAt)
+$htmlContent = $htmlTemplate.replaceAll('__FEATURE_JSON__', $featureJson).replaceAll('__RISK_JSON__', $riskJson).replaceAll('__GENERATED_AT__', $generatedAt)
 Set-Content -Path $htmlOutPath -Value $htmlContent -Encoding UTF8
 
 Write-Output "Wrote $outPath and $htmlOutPath with $totalEntries entries. complete=$completeCount partial=$partialCount gap=$gapCount at_risk=$atRiskCount"

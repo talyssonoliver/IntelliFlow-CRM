@@ -7,8 +7,8 @@
  * - PLAN:.specify/planning/{TASK-ID}.md -> PLAN:.specify/sprints/sprint-{N}/planning/{TASK-ID}-plan.md
  */
 
-import { readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import Papa from 'papaparse';
 
 const projectRoot = join(__dirname, '..', '..');
@@ -33,7 +33,7 @@ function getSprintNumber(sprint: string): number {
   if (!sprint || sprint === 'Continuous' || sprint === '-' || sprint === '') {
     return 0; // Default to sprint 0 for continuous/unassigned tasks
   }
-  const num = parseInt(sprint, 10);
+  const num = Number.parseInt(sprint, 10);
   return isNaN(num) ? 0 : num;
 }
 
@@ -44,13 +44,13 @@ function updateArtifactPaths(artifacts: string, taskId: string, sprintNumber: nu
 
   // Replace old attestation paths with new sprint-based paths
   // Pattern: artifacts/attestations/{TASK-ID}/... -> .specify/sprints/sprint-{N}/attestations/{TASK-ID}/...
-  result = result.replace(/artifacts\/attestations\/([^/;,]+)\//g, (match, capturedTaskId) => {
+  result = result.replaceAll(/artifacts\/attestations\/([^/;,]+)\//g, (match, capturedTaskId) => {
     return `.specify/sprints/sprint-${sprintNumber}/attestations/${capturedTaskId}/`;
   });
 
   // Replace old SPEC paths with new sprint-based paths
   // Pattern: SPEC:.specify/specifications/{TASK-ID}.md -> SPEC:.specify/sprints/sprint-{N}/specifications/{TASK-ID}-spec.md
-  result = result.replace(
+  result = result.replaceAll(
     /SPEC:\.specify\/specifications\/([^;,\s]+)\.md/g,
     (match, capturedTaskId) => {
       return `SPEC:.specify/sprints/sprint-${sprintNumber}/specifications/${capturedTaskId}-spec.md`;
@@ -59,7 +59,7 @@ function updateArtifactPaths(artifacts: string, taskId: string, sprintNumber: nu
 
   // Replace old PLAN paths with new sprint-based paths
   // Pattern: PLAN:.specify/planning/{TASK-ID}.md -> PLAN:.specify/sprints/sprint-{N}/planning/{TASK-ID}-plan.md
-  result = result.replace(/PLAN:\.specify\/planning\/([^;,\s]+)\.md/g, (match, capturedTaskId) => {
+  result = result.replaceAll(/PLAN:\.specify\/planning\/([^;,\s]+)\.md/g, (match, capturedTaskId) => {
     return `PLAN:.specify/sprints/sprint-${sprintNumber}/planning/${capturedTaskId}-plan.md`;
   });
 

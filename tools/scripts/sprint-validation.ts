@@ -839,7 +839,7 @@ function runArtifactContainmentGate(): GateResult[] {
 function runSprintStartGate(targetSprint: string): GateResult[] {
   logSection(`Gate 0: Sprint Start Gate (prerequisite sprints complete)`);
 
-  const sprintNum = parseInt(targetSprint, 10);
+  const sprintNum = Number.parseInt(targetSprint, 10);
   if (isNaN(sprintNum) || sprintNum < 0) {
     const result: GateResult = {
       name: 'Sprint Start Gate',

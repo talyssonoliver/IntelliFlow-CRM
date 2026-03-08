@@ -22,8 +22,8 @@ import { randomUUID } from 'node:crypto';
  */
 export function generateCodeReviewRunId(): string {
   const now = new Date();
-  const date = now.toISOString().slice(0, 10).replace(/-/g, '');
-  const time = now.toISOString().slice(11, 19).replace(/:/g, '');
+  const date = now.toISOString().slice(0, 10).replaceAll(/-/g, '');
+  const time = now.toISOString().slice(11, 19).replaceAll(/:/g, '');
   const uuid = randomUUID().slice(0, 8);
 
   return `${date}-${time}-${uuid}`;
@@ -253,7 +253,7 @@ export function getLegacyPackageReviewDir(repoRoot: string): string {
  * @returns Path with forward slashes
  */
 export function normalizePath(path: string): string {
-  return path.replace(/\\/g, '/');
+  return path.replaceAll(/\\/g, '/');
 }
 
 /**

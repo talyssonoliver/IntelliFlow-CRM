@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import { readFile } from 'fs/promises';
-import { join } from 'path';
+import { join } from 'node:path';
 import yaml from 'yaml';
 
 // Types

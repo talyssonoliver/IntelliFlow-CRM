@@ -17,7 +17,7 @@ DEFAULT_REPORTS_DIR = REPO_ROOT / "artifacts" / "reports"
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    return datetime.now(timezone.utc).replaceAll(microsecond=0).isoformat()
 
 
 def _write_json(path: Path, data: Any) -> None:
@@ -65,7 +65,7 @@ def _snapshot_from_csv(plan_path: Path) -> dict[str, Any]:
     tasks_sorted = sorted(tasks, key=lambda t: t["task_id"])
     return {
         "generated_at": _utc_now(),
-        "source": {"type": "csv", "path": str(plan_path.relative_to(REPO_ROOT)).replace("\\", "/")},
+        "source": {"type": "csv", "path": str(plan_path.relative_to(REPO_ROOT)).replaceAll("\\", "/")},
         "counts": {"total": len(tasks_sorted), "by_status": dict(sorted(counts.items()))},
         "tasks": tasks_sorted,
     }
@@ -99,7 +99,7 @@ def _load_status_overrides(status_dir: Path) -> tuple[dict[str, str], list[str]]
             if task_id and status:
                 overrides[task_id] = status
 
-        used_files.append(str(path.relative_to(REPO_ROOT)).replace("\\", "/"))
+        used_files.append(str(path.relative_to(REPO_ROOT)).replaceAll("\\", "/"))
 
     return overrides, used_files
 

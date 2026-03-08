@@ -13,9 +13,9 @@
  * Usage: npx tsx tools/scripts/migrate-artifacts-created.ts
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { createHash } from 'crypto';
-import { join, dirname } from 'path';
+import { join, dirname } from 'node:path';
 import { glob } from 'glob';
 
 // Get repo root
@@ -25,7 +25,7 @@ const scriptPath =
     ? fileUrl.pathname.replace(/^\/([A-Za-z]):/, '$1:')
     : fileUrl.pathname;
 const REPO_ROOT = join(dirname(scriptPath), '..', '..');
-const REPO_ROOT_POSIX = REPO_ROOT.replace(/\\/g, '/');
+const REPO_ROOT_POSIX = REPO_ROOT.replaceAll(/\\/g, '/');
 
 // Placeholder SHA256 for files that don't exist
 const PLACEHOLDER_SHA256 = '0'.repeat(64);
@@ -135,8 +135,8 @@ async function main(): Promise<void> {
       if (result.migrated) {
         totalMigrated++;
         totalArtifacts += result.count;
-        migratedFiles.push(file.replace(REPO_ROOT, '.'));
-        console.log(`  ✓ Migrated: ${file.replace(REPO_ROOT, '.')} (${result.count} artifacts)`);
+        migratedFiles.push(file.replaceAll(REPO_ROOT, '.'));
+        console.log(`  ✓ Migrated: ${file.replaceAll(REPO_ROOT, '.')} (${result.count} artifacts)`);
       }
     }
   }

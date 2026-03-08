@@ -48,7 +48,7 @@ for (const task of tasks) {
     continue;
   }
 
-  const sprintNumber = parseInt(sprintStr || '0', 10);
+  const sprintNumber = Number.parseInt(sprintStr || '0', 10);
   if (isNaN(sprintNumber)) {
     skipped++;
     continue;

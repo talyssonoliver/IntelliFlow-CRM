@@ -40,12 +40,12 @@ for (const coveragePath of coveragePaths) {
       const functions = { total: 0, covered: 0 };
 
       lcov.split('\n').forEach((line) => {
-        if (line.startsWith('LF:')) lines.total += parseInt(line.slice(3));
-        if (line.startsWith('LH:')) lines.covered += parseInt(line.slice(3));
-        if (line.startsWith('BRF:')) branches.total += parseInt(line.slice(4));
-        if (line.startsWith('BRH:')) branches.covered += parseInt(line.slice(4));
-        if (line.startsWith('FNF:')) functions.total += parseInt(line.slice(4));
-        if (line.startsWith('FNH:')) functions.covered += parseInt(line.slice(4));
+        if (line.startsWith('LF:')) lines.total += Number.parseInt(line.slice(3));
+        if (line.startsWith('LH:')) lines.covered += Number.parseInt(line.slice(3));
+        if (line.startsWith('BRF:')) branches.total += Number.parseInt(line.slice(4));
+        if (line.startsWith('BRH:')) branches.covered += Number.parseInt(line.slice(4));
+        if (line.startsWith('FNF:')) functions.total += Number.parseInt(line.slice(4));
+        if (line.startsWith('FNH:')) functions.covered += Number.parseInt(line.slice(4));
       });
 
       coverageData = {

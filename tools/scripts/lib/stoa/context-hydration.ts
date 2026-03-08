@@ -121,7 +121,7 @@ export function resolveDependencyArtifacts(
     if (!depId || depId.trim() === '') continue;
 
     const depTask = allTasks.find((t) => t.taskId === depId);
-    const depSprint = parseInt(depTask?.targetSprint || '0', 10);
+    const depSprint = Number.parseInt(depTask?.targetSprint || '0', 10);
 
     const artifact: DependencyArtifact = {
       taskId: depId,
@@ -180,7 +180,7 @@ export function resolveDependencyArtifacts(
           const fileMatches = content.match(/FILE:\s*([^\n]+)/g);
           if (fileMatches) {
             artifact.codeFiles.push(
-              ...fileMatches.map((m) => m.replace('FILE:', '').trim()).filter(Boolean)
+              ...fileMatches.map((m) => m.replaceAll('FILE:', '').trim()).filter(Boolean)
             );
           }
         } catch {
@@ -271,7 +271,7 @@ function extractKeywords(task: Task): string[] {
 
   const words = text
     .toLowerCase()
-    .replace(/[^\w\s-]/g, ' ')
+    .replaceAll(/[^\w\s-]/g, ' ')
     .split(/\s+/)
     .filter((w) => w.length >= 3 && !commonWords.has(w));
 
@@ -325,7 +325,7 @@ export function scanCodebasePatterns(
               if (grepResult.trim()) {
                 // Extract line number from first match
                 const lineMatch = grepResult.match(/^(\d+)[:-]/);
-                const lineNumber = lineMatch ? parseInt(lineMatch[1], 10) : 1;
+                const lineNumber = lineMatch ? Number.parseInt(lineMatch[1], 10) : 1;
 
                 patterns.push({
                   keyword,
@@ -823,7 +823,7 @@ export async function hydrateContextCli(taskId: string): Promise<void> {
   try {
     // Get task record to determine sprint number
     const taskRecord = getFullTaskRecord(taskId, repoRoot);
-    const sprintNumber = parseInt(taskRecord?.targetSprint || '0', 10);
+    const sprintNumber = Number.parseInt(taskRecord?.targetSprint || '0', 10);
     console.log(`[Context Hydration] Sprint: ${sprintNumber}`);
 
     const context = await hydrateContext(taskId, repoRoot);

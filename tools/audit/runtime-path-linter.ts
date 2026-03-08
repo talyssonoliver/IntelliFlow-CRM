@@ -18,8 +18,8 @@
  * @see tools/audit/policies/runtime-path-policy.yml
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { execSync } from 'child_process';
 import * as yaml from 'js-yaml';
 
@@ -207,11 +207,11 @@ function loadPolicy(): PolicyConfig {
  */
 function globToRegex(pattern: string): RegExp {
   const regex = pattern
-    .replace(/\./g, '\\.')
-    .replace(/\*\*/g, '§§')
-    .replace(/\*/g, '[^/]*')
-    .replace(/§§/g, '.*')
-    .replace(/\?/g, '[^/]');
+    .replaceAll(/\./g, '\\.')
+    .replaceAll(/\*\*/g, '§§')
+    .replaceAll(/\*/g, '[^/]*')
+    .replaceAll(/§§/g, '.*')
+    .replaceAll(/\?/g, '[^/]');
 
   return new RegExp(`^${regex}$`);
 }
@@ -221,7 +221,7 @@ function globToRegex(pattern: string): RegExp {
  */
 function matchesPattern(file: string, pattern: string): boolean {
   const regex = globToRegex(pattern);
-  const normalizedFile = file.replace(/\\/g, '/');
+  const normalizedFile = file.replaceAll(/\\/g, '/');
   return regex.test(normalizedFile);
 }
 
@@ -456,7 +456,7 @@ class RuntimePathLinter {
    */
   private checkForbiddenPaths(files: string[]): void {
     for (const file of files) {
-      const normalizedFile = file.replace(/\\/g, '/');
+      const normalizedFile = file.replaceAll(/\\/g, '/');
 
       for (const forbidden of this.policy.forbidden) {
         if (matchesPattern(normalizedFile, forbidden.pattern)) {
@@ -483,7 +483,7 @@ class RuntimePathLinter {
    */
   private checkPolicyPending(files: string[]): void {
     for (const file of files) {
-      const normalizedFile = file.replace(/\\/g, '/');
+      const normalizedFile = file.replaceAll(/\\/g, '/');
 
       for (const pending of this.policy.policy_pending) {
         if (matchesPattern(normalizedFile, pending.pattern)) {

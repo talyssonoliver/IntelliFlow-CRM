@@ -112,12 +112,12 @@ function parseCsv(csvPath: string): Map<string, CsvRow> {
     const title = rawTitle.replace(/^PHASE-\d+:\s*/, '');
 
     const sprintStr = (raw['Target Sprint'] || '0').trim();
-    const sprint = parseInt(sprintStr, 10) || 0;
+    const sprint = Number.parseInt(sprintStr, 10) || 0;
 
     const status = (raw['Status'] || 'Backlog').trim();
 
-    const percentStr = (raw['Percent Complete'] || '0').replace('%', '').trim();
-    const percent = parseInt(percentStr, 10) || 0;
+    const percentStr = (raw['Percent Complete'] || '0').replaceAll('%', '').trim();
+    const percent = Number.parseInt(percentStr, 10) || 0;
 
     const depsStr = raw['Dependencies'] || raw['CleanDependencies'] || '';
     const dependencies = parseDependencies(depsStr);
@@ -143,7 +143,7 @@ export function scanSpecifyDirectory(specifyDir: string): Map<string, TaskArtifa
   );
 
   for (const sprintDir of sprintDirs) {
-    const sprintNum = parseInt(sprintDir.name.replace('sprint-', ''), 10);
+    const sprintNum = Number.parseInt(sprintDir.name.replaceAll('sprint-', ''), 10);
     const sprintPath = join(sprintsDir, sprintDir.name);
 
     // Scan specifications
@@ -555,9 +555,9 @@ export function generateSpecTracker(opts?: GenerateOptions): SpecTrackerOutput {
     // Build spec_path relative to repo root
     const specPath = hasSpec
       ? artifacts.specs[0]
-          .replace(repoRoot + '\\', '')
-          .replace(repoRoot + '/', '')
-          .replace(/\\/g, '/')
+          .replaceAll(repoRoot + '\\', '')
+          .replaceAll(repoRoot + '/', '')
+          .replaceAll(/\\/g, '/')
       : null;
 
     taskEntries.push({
@@ -583,7 +583,7 @@ export function generateSpecTracker(opts?: GenerateOptions): SpecTrackerOutput {
     const bMatch = b.task_id.match(/^(.+?)-(\d+)(-[A-Z]+)?$/);
     if (aMatch && bMatch) {
       if (aMatch[1] !== bMatch[1]) return aMatch[1].localeCompare(bMatch[1]);
-      return parseInt(aMatch[2], 10) - parseInt(bMatch[2], 10);
+      return Number.parseInt(aMatch[2], 10) - Number.parseInt(bMatch[2], 10);
     }
     return a.task_id.localeCompare(b.task_id);
   });
@@ -641,7 +641,7 @@ const __filename = fileURLToPath(import.meta.url);
 const isMainModule =
   process.argv[1] &&
   (process.argv[1] === __filename ||
-    process.argv[1].replace(/\\/g, '/') === __filename.replace(/\\/g, '/'));
+    process.argv[1].replaceAll(/\\/g, '/') === __filename.replaceAll(/\\/g, '/'));
 
 if (isMainModule) {
   try {

@@ -32,7 +32,7 @@ function normalizePath(rawPath) {
     return '';
   }
   const cleaned = rawPath
-    .replace(/\\/g, '/')
+    .replaceAll(/\\/g, '/')
     .replace(/^\.\/+/, '')
     .replace(/^\/+/, '');
   const normalized = path.posix.normalize(cleaned);

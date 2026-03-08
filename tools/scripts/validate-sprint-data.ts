@@ -125,7 +125,7 @@ function mapCsvToJsonStatus(csvStatus: string): string {
 
 function normalizeText(input: unknown): string {
   if (typeof input !== 'string') return '';
-  return input.trim().replace(/\s+/g, ' ');
+  return input.trim().replaceAll(/\s+/g, ' ');
 }
 
 type ParsedTaskJson = {
@@ -148,7 +148,7 @@ function indexTaskJsonFiles(taskJsonFiles: string[]): {
   const duplicateTaskIds: string[] = [];
 
   for (const jsonFile of taskJsonFiles) {
-    const repoRelativePath = jsonFile.replace(repoRoot, '').replace(/\\/g, '/');
+    const repoRelativePath = jsonFile.replaceAll(repoRoot, '').replaceAll(/\\/g, '/');
     try {
       const raw = readFileSync(jsonFile, 'utf-8');
       const data = JSON.parse(raw);

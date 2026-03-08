@@ -13,8 +13,8 @@
  * 3. Writes the updated files back
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { join, dirname } from 'node:path';
 import { glob } from 'glob';
 import { createHash } from 'crypto';
 
@@ -25,7 +25,7 @@ const scriptPath =
     ? fileUrl.pathname.replace(/^\/([A-Za-z]):/, '$1:')
     : fileUrl.pathname;
 const REPO_ROOT = join(dirname(scriptPath), '..', '..');
-const REPO_ROOT_POSIX = REPO_ROOT.replace(/\\/g, '/');
+const REPO_ROOT_POSIX = REPO_ROOT.replaceAll(/\\/g, '/');
 
 interface MigrationResult {
   file: string;
@@ -395,7 +395,7 @@ async function migrateAttestationFiles(): Promise<void> {
 
         writeFileSync(file, JSON.stringify(cleaned, null, 2) + '\n');
         result.status = 'updated';
-        console.log(`  ✓ ${file.replace(REPO_ROOT, '.')}`);
+        console.log(`  ✓ ${file.replaceAll(REPO_ROOT, '.')}`);
         result.changes.forEach((c) => console.log(`    - ${c}`));
       } else {
         result.status = 'skipped';
@@ -403,7 +403,7 @@ async function migrateAttestationFiles(): Promise<void> {
     } catch (error) {
       result.status = 'error';
       result.error = String(error);
-      console.log(`  ✗ ${file.replace(REPO_ROOT, '.')}: ${error}`);
+      console.log(`  ✗ ${file.replaceAll(REPO_ROOT, '.')}: ${error}`);
     }
 
     results.push(result);
@@ -433,7 +433,7 @@ async function migrateTaskStatusFiles(): Promise<void> {
     const files = await glob(pattern, {
       nodir: true,
       ignore: ignorePatterns.map(
-        (p) => REPO_ROOT_POSIX + '/apps/project-tracker/docs/metrics/' + p.replace('**/', '')
+        (p) => REPO_ROOT_POSIX + '/apps/project-tracker/docs/metrics/' + p.replaceAll('**/', '')
       ),
     });
     allFiles = allFiles.concat(files);
@@ -636,7 +636,7 @@ async function migrateTaskStatusFiles(): Promise<void> {
       if (modified) {
         writeFileSync(file, JSON.stringify(data, null, 2) + '\n');
         result.status = 'updated';
-        console.log(`  ✓ ${file.replace(REPO_ROOT, '.')}`);
+        console.log(`  ✓ ${file.replaceAll(REPO_ROOT, '.')}`);
         result.changes.forEach((c) => console.log(`    - ${c}`));
       } else {
         result.status = 'skipped';
@@ -644,7 +644,7 @@ async function migrateTaskStatusFiles(): Promise<void> {
     } catch (error) {
       result.status = 'error';
       result.error = String(error);
-      console.log(`  ✗ ${file.replace(REPO_ROOT, '.')}: ${error}`);
+      console.log(`  ✗ ${file.replaceAll(REPO_ROOT, '.')}: ${error}`);
     }
 
     results.push(result);
@@ -701,10 +701,10 @@ async function migrateSprintSummaryFiles(): Promise<void> {
                 phase.name
                   .toLowerCase()
                   .replace(/phase\s*\d+\s*[-:.]?\s*/i, '')
-                  .replace(/\s+/g, '-')
-                  .replace(/[^a-z0-9-]/g, '')
-                  .replace(/-+/g, '-')
-                  .replace(/^-|-$/g, '') || 'default';
+                  .replaceAll(/\s+/g, '-')
+                  .replaceAll(/[^a-z0-9-]/g, '')
+                  .replaceAll(/-+/g, '-')
+                  .replaceAll(/^-|-$/g, '') || 'default';
               phase.id = `phase-${phaseNum}-${phaseName}`;
               phaseModified = true;
             } else {
@@ -808,7 +808,7 @@ async function migrateSprintSummaryFiles(): Promise<void> {
       if (modified) {
         writeFileSync(file, JSON.stringify(data, null, 2) + '\n');
         result.status = 'updated';
-        console.log(`  ✓ ${file.replace(REPO_ROOT, '.')}`);
+        console.log(`  ✓ ${file.replaceAll(REPO_ROOT, '.')}`);
         result.changes.forEach((c) => console.log(`    - ${c}`));
       } else {
         result.status = 'skipped';
@@ -816,7 +816,7 @@ async function migrateSprintSummaryFiles(): Promise<void> {
     } catch (error) {
       result.status = 'error';
       result.error = String(error);
-      console.log(`  ✗ ${file.replace(REPO_ROOT, '.')}: ${error}`);
+      console.log(`  ✗ ${file.replaceAll(REPO_ROOT, '.')}: ${error}`);
     }
 
     results.push(result);
@@ -909,7 +909,7 @@ async function migratePhaseSummaryFiles(): Promise<void> {
       if (modified) {
         writeFileSync(file, JSON.stringify(data, null, 2) + '\n');
         result.status = 'updated';
-        console.log(`  ✓ ${file.replace(REPO_ROOT, '.')}`);
+        console.log(`  ✓ ${file.replaceAll(REPO_ROOT, '.')}`);
         result.changes.forEach((c) => console.log(`    - ${c}`));
       } else {
         result.status = 'skipped';
@@ -917,7 +917,7 @@ async function migratePhaseSummaryFiles(): Promise<void> {
     } catch (error) {
       result.status = 'error';
       result.error = String(error);
-      console.log(`  ✗ ${file.replace(REPO_ROOT, '.')}: ${error}`);
+      console.log(`  ✗ ${file.replaceAll(REPO_ROOT, '.')}: ${error}`);
     }
 
     results.push(result);

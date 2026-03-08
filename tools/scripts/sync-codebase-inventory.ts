@@ -332,7 +332,7 @@ function extractWorkersInventory(workersDir: string): WorkersInventory {
     const jobsDir = join(workerPath, 'src', 'jobs');
     if (existsSync(jobsDir)) {
       const jobFiles = readdirSync(jobsDir).filter((f) => f.endsWith('.job.ts'));
-      jobs.push(...jobFiles.map((f) => f.replace('.job.ts', '')));
+      jobs.push(...jobFiles.map((f) => f.replaceAll('.job.ts', '')));
     }
 
     // Also check for outbox patterns
@@ -341,7 +341,7 @@ function extractWorkersInventory(workersDir: string): WorkersInventory {
       const outboxFiles = readdirSync(outboxDir).filter(
         (f) => f.endsWith('.ts') && !f.includes('.test')
       );
-      jobs.push(...outboxFiles.map((f) => f.replace('.ts', '')));
+      jobs.push(...outboxFiles.map((f) => f.replaceAll('.ts', '')));
     }
 
     // Check channels for notification worker
@@ -350,11 +350,11 @@ function extractWorkersInventory(workersDir: string): WorkersInventory {
       const channelFiles = readdirSync(channelsDir).filter(
         (f) => f.endsWith('.ts') && !f.includes('.test')
       );
-      jobs.push(...channelFiles.map((f) => `channel:${f.replace('.ts', '')}`));
+      jobs.push(...channelFiles.map((f) => `channel:${f.replaceAll('.ts', '')}`));
     }
 
     workers.push({
-      name: workerDir.replace('-worker', ''),
+      name: workerDir.replaceAll('-worker', ''),
       type,
       jobs,
       description: generateWorkerDescription(workerDir),
@@ -412,7 +412,7 @@ function extractIntegrationsInventory(adaptersDir: string): IntegrationsInventor
     const fullPath = join(adaptersDir, path);
     if (existsSync(fullPath)) {
       integrations.push({
-        name: provider.toLowerCase().replace(/\s+/g, '-'),
+        name: provider.toLowerCase().replaceAll(/\s+/g, '-'),
         category,
         provider,
         description: generateIntegrationDescription(category, provider),
@@ -589,7 +589,7 @@ function extractValidatorsInventory(validatorsDir: string): ValidatorsInventory 
     }
 
     validators.push({
-      name: file.replace('.ts', ''),
+      name: file.replaceAll('.ts', ''),
       file,
       schemas,
       complexity,

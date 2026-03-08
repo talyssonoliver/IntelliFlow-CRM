@@ -80,7 +80,7 @@ export function getTaskPaths(sprintNumber: number, taskId: string, runId?: strin
  * Generate a unique run ID for execution
  */
 export function generateRunId(): string {
-  const timestamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
+  const timestamp = new Date().toISOString().replaceAll(/[-:T]/g, '').slice(0, 14);
   const randomHex = Math.random().toString(16).slice(2, 10);
   return `${timestamp}-${randomHex}`;
 }
@@ -93,12 +93,12 @@ export function parseRunId(runId: string): { timestamp: Date; random: string } |
   if (!match) return null;
 
   const [, timestampStr, random] = match;
-  const year = parseInt(timestampStr.slice(0, 4));
-  const month = parseInt(timestampStr.slice(4, 6)) - 1;
-  const day = parseInt(timestampStr.slice(6, 8));
-  const hour = parseInt(timestampStr.slice(8, 10));
-  const minute = parseInt(timestampStr.slice(10, 12));
-  const second = parseInt(timestampStr.slice(12, 14));
+  const year = Number.parseInt(timestampStr.slice(0, 4));
+  const month = Number.parseInt(timestampStr.slice(4, 6)) - 1;
+  const day = Number.parseInt(timestampStr.slice(6, 8));
+  const hour = Number.parseInt(timestampStr.slice(8, 10));
+  const minute = Number.parseInt(timestampStr.slice(10, 12));
+  const second = Number.parseInt(timestampStr.slice(12, 14));
 
   return {
     timestamp: new Date(year, month, day, hour, minute, second),
@@ -156,7 +156,7 @@ export function extractTaskIdFromPath(path: string): string | null {
  */
 export function extractSprintFromPath(path: string): number | null {
   const match = path.match(/\.specify[/\\]sprints[/\\]sprint-(\d+)[/\\]/);
-  return match ? parseInt(match[1], 10) : null;
+  return match ? Number.parseInt(match[1], 10) : null;
 }
 
 /**

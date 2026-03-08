@@ -134,7 +134,7 @@ export function validateFilePrerequisites(
   // Build a map of acknowledged files
   const ackFileMap = new Map<string, string>();
   for (const entry of ack.files_read) {
-    const normalizedPath = entry.path.replace(/\\/g, '/');
+    const normalizedPath = entry.path.replaceAll(/\\/g, '/');
     ackFileMap.set(normalizedPath, entry.sha256);
   }
 
@@ -142,7 +142,7 @@ export function validateFilePrerequisites(
   const manifestFileMap = new Map<string, string>();
   for (const entry of manifest.files) {
     if (entry.included) {
-      const normalizedPath = entry.path.replace(/\\/g, '/');
+      const normalizedPath = entry.path.replaceAll(/\\/g, '/');
       manifestFileMap.set(normalizedPath, entry.sha256);
     }
   }
@@ -221,8 +221,8 @@ export function validateContextAck(
       const sprintDirs = readdirSync(sprintsDir)
         .filter((d) => /^sprint-\d+$/.test(d))
         .sort((a, b) => {
-          const numA = parseInt(a.replace('sprint-', ''), 10);
-          const numB = parseInt(b.replace('sprint-', ''), 10);
+          const numA = Number.parseInt(a.replaceAll('sprint-', ''), 10);
+          const numB = Number.parseInt(b.replaceAll('sprint-', ''), 10);
           return numB - numA; // newest first
         });
 

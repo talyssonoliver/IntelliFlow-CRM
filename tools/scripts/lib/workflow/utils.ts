@@ -67,8 +67,8 @@ export function getSprintForTask(taskId: string, repoRoot: string): number {
     if (!sprintStr || sprintStr === 'Continuous') {
       taskSprintCache.set(id, 0);
     } else {
-      const sprint = parseInt(sprintStr, 10);
-      if (!isNaN(sprint)) {
+      const sprint = Number.parseInt(sprintStr, 10);
+      if (!Number.isNaN(sprint)) {
         taskSprintCache.set(id, sprint);
       }
     }

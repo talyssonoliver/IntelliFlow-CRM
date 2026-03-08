@@ -471,7 +471,7 @@ export function generateRemediationReport(result: RemediationResult, verdict: St
     report += `| Severity | Source | Message | Recommendation |\n`;
     report += `|----------|--------|---------|----------------|\n`;
     for (const finding of verdict.findings) {
-      const rec = finding.recommendation?.replace(/\|/g, '\\|') || '-';
+      const rec = finding.recommendation?.replaceAll(/\|/g, '\\|') || '-';
       report += `| ${finding.severity} | ${finding.source} | ${finding.message} | ${rec} |\n`;
     }
     report += '\n';

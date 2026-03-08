@@ -173,7 +173,7 @@ export function getMetricsFilePath(taskId: string, repoRoot?: string): string {
   }
 
   const sprintNumber =
-    task['Target Sprint'] === 'Continuous' ? 0 : parseInt(task['Target Sprint'], 10) || 0;
+    task['Target Sprint'] === 'Continuous' ? 0 : Number.parseInt(task['Target Sprint'], 10) || 0;
 
   // Determine phase directory from task metadata
   // This is simplified - in practice, phase detection may need more logic

@@ -109,11 +109,11 @@ export function parseConformanceRoutes(content: string): string[] {
  */
 export function normalizeAppRoute(relPath: string): string | null {
   const rel = relPath
-    .replace(/\\/g, '/') // Windows path normalization
+    .replaceAll(/\\/g, '/') // Windows path normalization
     .replace(/\/page\.tsx$/, '') // Strip page.tsx suffix
-    .replace(/\/\([^)]+\)/g, '') // Strip route groups: (public), (list), (developer)
+    .replaceAll(/\/\([^)]+\)/g, '') // Strip route groups: (public), (list), (developer)
     .replace(/^\([^)]+\)/, '') // Strip leading route group without slash
-    .replace(/\/+/g, '/') // Collapse double slashes
+    .replaceAll(/\/+/g, '/') // Collapse double slashes
     .replace(/\/$/, ''); // Strip trailing slash
 
   // Check for dynamic segments

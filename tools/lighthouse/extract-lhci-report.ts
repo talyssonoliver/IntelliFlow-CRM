@@ -4,8 +4,8 @@
 // PG-166: Reads the LHCI manifest, picks the median run for "/",
 // and writes a summary to artifacts/benchmarks/home-page-lighthouse.json
 
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 export interface LhciSummary {
   url: string;

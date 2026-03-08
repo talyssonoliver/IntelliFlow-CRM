@@ -46,14 +46,14 @@ console.log(`Found ${oldArtifactCount} EVIDENCE:artifacts/attestations/ referenc
 // EVIDENCE:.specify/{TASK_ID}/attestations/file -> EVIDENCE:.specify/sprints/sprint-{N}/attestations/{TASK_ID}/file
 for (const [taskId, sprint] of taskSprintMap) {
   const oldPattern = new RegExp(`EVIDENCE:\\.specify/${taskId}/attestations/([^;"]+)`, 'g');
-  content = content.replace(
+  content = content.replaceAll(
     oldPattern,
     `EVIDENCE:.specify/sprints/sprint-${sprint}/attestations/${taskId}/$1`
   );
 }
 
 // Also replace artifacts/attestations/ paths
-content = content.replace(
+content = content.replaceAll(
   /EVIDENCE:artifacts\/attestations\/([^/]+)\/([^;"]+)/g,
   (_, taskId, file) => {
     const sprint = taskSprintMap.get(taskId) || '0';

@@ -30,7 +30,7 @@ export const extractedTextMetadataSchema = z.object({
   language: z.string().regex(languagePattern).describe('ISO 639-1 language code'),
   pageCount: z.number().int().min(1).describe('Number of pages processed'),
   wordCount: z.number().int().min(0).describe('Total word count in extracted text'),
-  extractedAt: z.string().datetime().describe('ISO 8601 timestamp of extraction'),
+  extractedAt: z.iso.datetime().describe('ISO 8601 timestamp of extraction'),
   engine: ocrEngineSchema.describe('OCR engine used for extraction'),
   confidence: z.number().min(0).max(1).describe('Overall OCR confidence score (0-1)'),
 });

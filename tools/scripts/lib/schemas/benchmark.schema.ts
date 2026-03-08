@@ -30,7 +30,7 @@ export const benchmarkResultSchema = z.object({
   p50: z.number().min(0).describe('50th percentile (median)'),
   p95: z.number().min(0).describe('95th percentile'),
   p99: z.number().min(0).describe('99th percentile'),
-  timestamp: z.string().datetime().optional().describe('When this benchmark was run'),
+  timestamp: z.iso.datetime().optional().describe('When this benchmark was run'),
   metadata: z.record(z.string(), z.unknown()).optional().describe('Additional metadata'),
   status: resultStatusSchema.optional().describe('Result status'),
 });
@@ -118,7 +118,7 @@ export const benchmarkSchema = z.object({
   benchmark_id: z.string().describe('Unique identifier for this benchmark'),
   title: z.string().describe('Human-readable title for the benchmark'),
   description: z.string().optional().describe('Description of what this benchmark measures'),
-  timestamp: z.string().datetime().describe('ISO 8601 timestamp of when benchmark was run'),
+  timestamp: z.iso.datetime().describe('ISO 8601 timestamp of when benchmark was run'),
   status: benchmarkStatusSchema.describe('Overall status of the benchmark execution'),
   reason: z.string().optional().describe('Explanation for NOT_RUN or FAILED status'),
 

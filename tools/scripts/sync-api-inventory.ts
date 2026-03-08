@@ -172,7 +172,7 @@ function generateDescription(
   type: 'query' | 'mutation'
 ): string {
   const action = procedureName
-    .replace(/([A-Z])/g, ' $1')
+    .replaceAll(/([A-Z])/g, ' $1')
     .toLowerCase()
     .trim();
 
@@ -295,10 +295,10 @@ function scanRouters(modulesDir: string): Map<string, ExtractedEndpoint[]> {
 
     for (const file of files) {
       const filePath = join(moduleDir, file);
-      const routerName = file.replace('.router.ts', '');
+      const routerName = file.replaceAll('.router.ts', '');
 
       // Convert kebab-case to camelCase
-      const camelName = routerName.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+      const camelName = routerName.replaceAll(/-([a-z])/g, (_, c) => c.toUpperCase());
 
       const endpoints = extractEndpointsFromFile(filePath, camelName);
 

@@ -49,7 +49,7 @@ Ensure complete type safety:
 ```typescript
 // ✅ GOOD: Full type safety with Zod validation
 export const createLeadSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   firstName: z.string().min(1).max(100),
 });
 

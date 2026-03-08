@@ -64,7 +64,7 @@ interface FreshnessReport {
 function parseCadenceThreshold(cadence: string): number {
   const match = cadence.match(/:(\d+)d$/);
   if (!match) return 0;
-  return parseInt(match[1], 10);
+  return Number.parseInt(match[1], 10);
 }
 
 /**

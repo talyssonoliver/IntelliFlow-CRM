@@ -317,7 +317,7 @@ export function scanRoutes(appDir: string): RawRoute[] {
       } else if (entry.name === 'page.tsx') {
         routes.push({
           filePath: fullPath,
-          relPath: relative(appDir, fullPath).replace(/\\/g, '/'),
+          relPath: relative(appDir, fullPath).replaceAll(/\\/g, '/'),
         });
       }
     }
@@ -333,11 +333,11 @@ export function scanRoutes(appDir: string): RawRoute[] {
 
 export function pathToRoute(relPath: string): string {
   const route = relPath
-    .replace(/\\/g, '/')
+    .replaceAll(/\\/g, '/')
     .replace(/\/?page\.tsx$/, '')
-    .replace(/\/\([^)]+\)/g, '')     // Strip /(groupName)
+    .replaceAll(/\/\([^)]+\)/g, '')     // Strip /(groupName)
     .replace(/^\([^)]+\)\/?/, '')    // Strip leading (groupName)/
-    .replace(/\/+/g, '/')
+    .replaceAll(/\/+/g, '/')
     .replace(/\/$/, '');
 
   if (route === '' || route === '/') return '/';
@@ -349,7 +349,7 @@ export function pathToRoute(relPath: string): string {
 // ============================================================================
 
 export function classifyAccessTier(relPath: string): AccessTier {
-  const normalized = relPath.replace(/\\/g, '/');
+  const normalized = relPath.replaceAll(/\\/g, '/');
   if (normalized.startsWith('(public)/') || normalized.startsWith('(public)\\')) return 'public';
   if (normalized.startsWith('(developer)/') || normalized.startsWith('(developer)\\')) return 'developer';
   return 'auth-gated';
@@ -381,7 +381,7 @@ export function buildLayoutMap(appDir: string): Map<string, ParsedMetadata> {
           const source = readFileSync(fullPath, 'utf-8');
           const meta = parseMetadataFromSource(source);
           if (meta) {
-            map.set(dir.replace(/\\/g, '/'), meta);
+            map.set(dir.replaceAll(/\\/g, '/'), meta);
           }
         } catch { /* skip unreadable layouts */ }
       }
@@ -410,11 +410,11 @@ export function resolveMetadataChain(
   const isDynamic = pageMeta?.isDynamic ?? false;
 
   // Find nearest non-root layout with metadata
-  const normAppDir = appDir.replace(/\\/g, '/');
+  const normAppDir = appDir.replaceAll(/\\/g, '/');
   let nearestLayout: ParsedMetadata | null = null;
   let dir = dirname(pagePath);
   while (true) {
-    const normDir = dir.replace(/\\/g, '/');
+    const normDir = dir.replaceAll(/\\/g, '/');
     if (normDir.length < normAppDir.length) break;
     if (normDir !== normAppDir && layoutMap.has(normDir)) {
       nearestLayout = layoutMap.get(normDir)!;
@@ -780,7 +780,7 @@ export function runAudit(repoRoot: string): AuditData {
 
     return {
       route,
-      file_path: relative(repoRoot, raw.filePath).replace(/\\/g, '/'),
+      file_path: relative(repoRoot, raw.filePath).replaceAll(/\\/g, '/'),
       access_tier: accessTier,
       metadata,
       seo_score: seoScore,

@@ -153,7 +153,7 @@ function parseCsvArtifacts(artifactsField: string): string[] {
       .trim();
 
     // Remove backticks and surrounding quotes
-    path = path.replace(/^[`"']+|[`"']+$/g, '');
+    path = path.replaceAll(/^[`"']+|[`"']+$/g, '');
 
     // Skip non-path entries (plain text descriptions, etc.)
     if (!path || (path.includes(' ') && !path.includes('/'))) continue;
@@ -175,7 +175,7 @@ function findPlanFile(taskId: string): string | null {
   const csvContent = readFileSync(CSV_PATH, 'utf-8');
   const rows = parseCsv(csvContent);
   const taskRow = getTaskRow(taskId, rows);
-  const sprint = parseInt(taskRow?.['Target Sprint'] ?? '0', 10);
+  const sprint = Number.parseInt(taskRow?.['Target Sprint'] ?? '0', 10);
 
   const candidates = [
     join(REPO_ROOT, '.specify', 'sprints', `sprint-${sprint}`, 'planning', `${taskId}-plan.md`),
@@ -270,7 +270,7 @@ function reconcile(taskId: string): ReconciliationResult {
 
   // 4. Check each path
   const statuses: ArtifactStatus[] = allPaths.map((path) => {
-    const normalizedPath = path.replace(/\\/g, '/');
+    const normalizedPath = path.replaceAll(/\\/g, '/');
     const fullPath = resolve(REPO_ROOT, normalizedPath);
     // Check with glob-like matching for wildcards
     const diskExists = normalizedPath.includes('*')
@@ -279,8 +279,8 @@ function reconcile(taskId: string): ReconciliationResult {
 
     return {
       path: normalizedPath,
-      inCsv: csvArtifacts.some((c) => c.replace(/\\/g, '/') === normalizedPath),
-      inPlan: planArtifacts.some((p) => p.replace(/\\/g, '/') === normalizedPath),
+      inCsv: csvArtifacts.some((c) => c.replaceAll(/\\/g, '/') === normalizedPath),
+      inPlan: planArtifacts.some((p) => p.replaceAll(/\\/g, '/') === normalizedPath),
       onDisk: diskExists,
     };
   });

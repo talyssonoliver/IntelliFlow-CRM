@@ -13,8 +13,8 @@
  */
 
 import { glob } from 'glob';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 // Configuration
 const CONFIG = {
@@ -297,7 +297,7 @@ class ArtifactPathLinter {
    */
   private isProhibitedLocation(file: string): boolean {
     // Normalize path to forward slashes for consistent matching
-    const normalizedFile = file.replace(/\\/g, '/');
+    const normalizedFile = file.replaceAll(/\\/g, '/');
 
     // Check against prohibited locations FIRST (includes deprecated artifact subpaths)
     for (const pattern of RULES.prohibitedLocations) {
@@ -389,7 +389,7 @@ class ArtifactPathLinter {
    */
   private isExcludedFromSecretScan(file: string): boolean {
     // Normalize path to forward slashes for consistent matching
-    const normalizedFile = file.replace(/\\/g, '/');
+    const normalizedFile = file.replaceAll(/\\/g, '/');
     for (const pattern of CONFIG.secretScanExclusions) {
       const regex = this.globToRegex(pattern);
       if (regex.test(normalizedFile)) {
@@ -505,11 +505,11 @@ class ArtifactPathLinter {
    */
   private globToRegex(pattern: string): RegExp {
     const regex = pattern
-      .replace(/\./g, '\\.')
-      .replace(/\*\*/g, '§§') // Temporary placeholder
-      .replace(/\*/g, '[^/]*')
-      .replace(/§§/g, '.*')
-      .replace(/\?/g, '[^/]');
+      .replaceAll(/\./g, '\\.')
+      .replaceAll(/\*\*/g, '§§') // Temporary placeholder
+      .replaceAll(/\*/g, '[^/]*')
+      .replaceAll(/§§/g, '.*')
+      .replaceAll(/\?/g, '[^/]');
 
     return new RegExp(`^${regex}$`);
   }

@@ -276,7 +276,7 @@ function escapeField(value: string): string {
   if (!value) return '""';
   const needsQuotes =
     value.includes(',') || value.includes('"') || value.includes('\n') || value.includes(';');
-  const escaped = value.replace(/"/g, '""');
+  const escaped = value.replaceAll(/"/g, '""');
   return needsQuotes ? `"${escaped}"` : escaped;
 }
 

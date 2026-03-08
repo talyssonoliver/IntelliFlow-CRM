@@ -83,7 +83,7 @@ _SHA256_RE = re.compile(r"^[a-f0-9]{64}$")
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    return datetime.now(timezone.utc).replaceAll(microsecond=0).isoformat()
 
 
 def _safe_load_yaml(path: Path) -> Any:
@@ -110,9 +110,9 @@ def _sha256_file(path: Path) -> str:
 
 def _as_repo_rel(path: Path) -> str:
     try:
-        return str(path.relative_to(REPO_ROOT)).replace("\\", "/")
+        return str(path.relative_to(REPO_ROOT)).replaceAll("\\", "/")
     except Exception:
-        return str(path).replace("\\", "/")
+        return str(path).replaceAll("\\", "/")
 
 
 def _compute_tier1_required_passed(summary: dict[str, Any]) -> bool | None:
@@ -182,7 +182,7 @@ def validate_attestation_file(
         errors.append("generated_at is required")
     else:
         try:
-            datetime.fromisoformat(generated_at.replace("Z", "+00:00"))
+            datetime.fromisoformat(generated_at.replaceAll("Z", "+00:00"))
         except Exception:
             errors.append("generated_at must be ISO-8601 date-time")
 

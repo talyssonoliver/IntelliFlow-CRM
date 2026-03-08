@@ -156,7 +156,7 @@ function analyzeTaskCompletion(): TaskInfo[] {
 
     const currentStatus = row['Status'] || 'Planned';
     const targetSprint = row['Target Sprint'] || '99';
-    const sprintNum = targetSprint === 'Continuous' ? -1 : parseInt(targetSprint, 10) || 99;
+    const sprintNum = targetSprint === 'Continuous' ? -1 : Number.parseInt(targetSprint, 10) || 99;
     const suggestedStatus = suggestStatus(completionPercent, currentStatus, sprintNum);
 
     results.push({
@@ -212,7 +212,7 @@ function generateReport(tasks: TaskInfo[]): void {
   const sortedSprints = Object.keys(sprintStats).sort((a, b) => {
     if (a === 'Continuous') return 1;
     if (b === 'Continuous') return -1;
-    return parseInt(a) - parseInt(b);
+    return Number.parseInt(a) - Number.parseInt(b);
   });
 
   for (const sprint of sortedSprints) {
@@ -225,8 +225,8 @@ function generateReport(tasks: TaskInfo[]): void {
 
   // Status mismatches
   const mismatches = tasks.filter((t) => {
-    const currentNorm = t.status.toLowerCase().replace(/\s+/g, '');
-    const suggestedNorm = t.suggestedStatus.toLowerCase().replace(/\s+/g, '');
+    const currentNorm = t.status.toLowerCase().replaceAll(/\s+/g, '');
+    const suggestedNorm = t.suggestedStatus.toLowerCase().replaceAll(/\s+/g, '');
     return (
       currentNorm !== suggestedNorm &&
       !(currentNorm === 'done' && suggestedNorm === 'completed') &&
@@ -290,8 +290,8 @@ function updateCSV(tasks: TaskInfo[]): void {
     const task = tasks.find((t) => t.taskId === row['Task ID']);
     if (task && task.status !== task.suggestedStatus) {
       // Only update if there's a significant change
-      const currentNorm = task.status.toLowerCase().replace(/\s+/g, '');
-      const suggestedNorm = task.suggestedStatus.toLowerCase().replace(/\s+/g, '');
+      const currentNorm = task.status.toLowerCase().replaceAll(/\s+/g, '');
+      const suggestedNorm = task.suggestedStatus.toLowerCase().replaceAll(/\s+/g, '');
 
       if (
         currentNorm !== suggestedNorm &&

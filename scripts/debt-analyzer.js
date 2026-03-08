@@ -17,8 +17,8 @@
  *   - apps/web/src/app/governance/quality-reports/
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'url';
 import { parse as parseYaml } from 'yaml';
 
@@ -71,7 +71,7 @@ function saveSnapshot(analysis) {
   const today = new Date().toISOString().split('T')[0];
 
   // Only keep one snapshot per day
-  const existingIndex = history.snapshots.findIndex((s) => s.date === today);
+  const existingIndex = history.snapshots.indexOf((s) => s.date === today);
   const snapshot = {
     date: today,
     timestamp: new Date().toISOString(),

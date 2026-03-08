@@ -50,16 +50,16 @@ export function substituteCommandTemplate(command: string, context: CommandConte
   let result = command;
 
   if (context.sprint !== undefined) {
-    result = result.replace(/\{sprint\}/g, String(context.sprint));
+    result = result.replaceAll(/\{sprint\}/g, String(context.sprint));
   }
   if (context.taskId) {
-    result = result.replace(/\{taskId\}/g, context.taskId);
+    result = result.replaceAll(/\{taskId\}/g, context.taskId);
   }
   if (context.runId) {
-    result = result.replace(/\{runId\}/g, context.runId);
+    result = result.replaceAll(/\{runId\}/g, context.runId);
   }
   if (context.gatesDir) {
-    result = result.replace(/\{gatesDir\}/g, context.gatesDir);
+    result = result.replaceAll(/\{gatesDir\}/g, context.gatesDir);
   }
 
   return result;
@@ -73,7 +73,7 @@ export function substituteCommandTemplate(command: string, context: CommandConte
  * Normalize paths to forward slashes for cross-platform compatibility.
  */
 export function normalizeRepoPath(filePath: string): string {
-  return filePath.replace(/\\/g, '/').trim();
+  return filePath.replaceAll(/\\/g, '/').trim();
 }
 
 // ============================================================================

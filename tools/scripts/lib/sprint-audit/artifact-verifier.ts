@@ -7,8 +7,8 @@
  * @module tools/scripts/lib/sprint-audit/artifact-verifier
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { glob } from 'glob';
 import { createHash } from 'crypto';
 import type { ArtifactVerification, ArtifactStatus } from './types';
@@ -195,7 +195,7 @@ function findAlternativeSprintPath(artifactPath: string, repoRoot: string): stri
   // Also try plain filename if prefixed (e.g. IFC-021-context_ack.json → context_ack.json)
   const filename = path.basename(suffix);
   const plainFilename = filename.replace(/^[A-Z]+-\d+-/, '');
-  const altSuffix = plainFilename !== filename ? suffix.replace(filename, plainFilename) : null;
+  const altSuffix = plainFilename !== filename ? suffix.replaceAll(filename, plainFilename) : null;
 
   // Scan existing sprint directories
   const sprintsDir = path.join(repoRoot, prefix);
@@ -205,8 +205,8 @@ function findAlternativeSprintPath(artifactPath: string, repoRoot: string): stri
     .readdirSync(sprintsDir)
     .filter((d) => /^sprint-\d+$/.test(d))
     .sort((a, b) => {
-      const numA = parseInt(a.replace('sprint-', ''), 10);
-      const numB = parseInt(b.replace('sprint-', ''), 10);
+      const numA = Number.parseInt(a.replaceAll('sprint-', ''), 10);
+      const numB = Number.parseInt(b.replaceAll('sprint-', ''), 10);
       return numB - numA; // newest first
     });
 
@@ -214,13 +214,13 @@ function findAlternativeSprintPath(artifactPath: string, repoRoot: string): stri
     // Try exact suffix
     const candidate = path.join(repoRoot, prefix, dir, suffix.slice(1));
     if (fs.existsSync(candidate)) {
-      return path.join(prefix, dir, suffix.slice(1)).replace(/\\/g, '/');
+      return path.join(prefix, dir, suffix.slice(1)).replaceAll(/\\/g, '/');
     }
     // Try plain filename variant
     if (altSuffix) {
       const altCandidate = path.join(repoRoot, prefix, dir, altSuffix.slice(1));
       if (fs.existsSync(altCandidate)) {
-        return path.join(prefix, dir, altSuffix.slice(1)).replace(/\\/g, '/');
+        return path.join(prefix, dir, altSuffix.slice(1)).replaceAll(/\\/g, '/');
       }
     }
   }

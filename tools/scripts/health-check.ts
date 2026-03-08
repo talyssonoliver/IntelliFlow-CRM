@@ -21,8 +21,8 @@ import * as http from 'http';
 import * as https from 'https';
 import { URL } from 'url';
 import { execSync } from 'child_process';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 // Color codes for terminal output
 const colors = {
@@ -575,7 +575,7 @@ async function main() {
   const timeoutArg = args.find((arg) => arg.startsWith('--timeout='));
 
   const service = serviceArg ? serviceArg.split('=')[1] : undefined;
-  const timeout = timeoutArg ? parseInt(timeoutArg.split('=')[1], 10) : 5000;
+  const timeout = timeoutArg ? Number.parseInt(timeoutArg.split('=')[1], 10) : 5000;
 
   const checker = new HealthChecker(timeout);
   const summary = await checker.check(service);

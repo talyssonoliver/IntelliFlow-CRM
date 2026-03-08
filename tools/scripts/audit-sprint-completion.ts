@@ -15,7 +15,7 @@
  */
 
 import { parseArgs } from 'node:util';
-import * as path from 'path';
+import * as path from 'node:path';
 import {
   auditSprintCompletion,
   getAuditOutputPaths,
@@ -120,7 +120,7 @@ function parseCliArgs(): CliOptions {
       process.exit(2);
     }
 
-    const sprintNumber = parseInt(values.sprint, 10);
+    const sprintNumber = Number.parseInt(values.sprint, 10);
     if (isNaN(sprintNumber) || sprintNumber < 0) {
       console.error('Error: --sprint must be a valid non-negative number\n');
       process.exit(2);
@@ -133,8 +133,8 @@ function parseCliArgs(): CliOptions {
       json: values.json ?? false,
       help: false,
       repoRoot: values['repo-root'] || process.cwd(),
-      parallelLimit: parseInt(values.parallel || '4', 10),
-      timeout: parseInt(values.timeout || '1000000', 10),
+      parallelLimit: Number.parseInt(values.parallel || '4', 10),
+      timeout: Number.parseInt(values.timeout || '1000000', 10),
       runId: values['run-id'],
     };
   } catch (error) {

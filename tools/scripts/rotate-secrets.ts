@@ -12,8 +12,8 @@
  *   npx tsx tools/scripts/rotate-secrets.ts re-encrypt --key-version <version>
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import * as crypto from 'crypto';
 
 // Types

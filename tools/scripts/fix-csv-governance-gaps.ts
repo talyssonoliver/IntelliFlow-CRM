@@ -352,7 +352,7 @@ function convertWildcardsToGlobs(prereqs: string): string {
   const converted = parts.map((part) => {
     // Convert FILE:path/* to GLOB:path/*
     if (part.startsWith('FILE:') && part.includes('*')) {
-      return part.replace('FILE:', 'GLOB:');
+      return part.replaceAll('FILE:', 'GLOB:');
     }
     return part;
   });
@@ -413,7 +413,7 @@ function escapeField(value: string): string {
   if (!value) return '""';
   const needsQuotes =
     value.includes(',') || value.includes('"') || value.includes('\n') || value.includes(';');
-  const escaped = value.replace(/"/g, '""');
+  const escaped = value.replaceAll(/"/g, '""');
   return needsQuotes ? `"${escaped}"` : escaped;
 }
 

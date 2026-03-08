@@ -32,7 +32,7 @@ const COVERAGE_DIR = path.join(__dirname, '..', '..', 'artifacts', 'coverage');
 const COVERAGE_SUMMARY_PATH = path.join(COVERAGE_DIR, 'coverage-summary.json');
 
 // Test results captured from vitest output (set via environment)
-const TEST_EXIT_CODE = parseInt(process.env.VITEST_EXIT_CODE || '0', 10);
+const TEST_EXIT_CODE = Number.parseInt(process.env.VITEST_EXIT_CODE || '0', 10);
 const TEST_OUTPUT_FILE = process.env.VITEST_OUTPUT_FILE;
 
 /**

@@ -37,7 +37,7 @@ async function getSprintForTask(taskId: string): Promise<number> {
           if (match) {
             // Find the sprint number (single or double digit in its own column)
             for (const m of match) {
-              const num = parseInt(m.replace(/,/g, ''), 10);
+              const num = Number.parseInt(m.replaceAll(/,/g, ''), 10);
               if (num >= 0 && num <= 50) {
                 return num;
               }

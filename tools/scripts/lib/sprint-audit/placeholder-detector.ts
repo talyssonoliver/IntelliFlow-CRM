@@ -7,8 +7,8 @@
  * @module tools/scripts/lib/sprint-audit/placeholder-detector
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { glob } from 'glob';
 import type {
   PlaceholderFinding,
@@ -745,8 +745,8 @@ function detectEmptyFunctions(content: string, relativePath: string): Placeholde
     const bodyContent = match[0].substring(match[0].indexOf('{') + 1, match[0].lastIndexOf('}'));
     const hasRealCode =
       bodyContent
-        .replace(/\/\/[^\n]*/g, '')
-        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replaceAll(/\/\/[^\n]*/g, '')
+        .replaceAll(/\/\*[\s\S]*?\*\//g, '')
         .trim().length > 0;
 
     if (!hasRealCode) {
@@ -927,10 +927,10 @@ export function filterFindingsByTaskArtifacts(
   artifactPaths: string[]
 ): PlaceholderFinding[] {
   // Normalize artifact paths for comparison
-  const normalizedArtifacts = artifactPaths.map((p) => p.replace(/\\/g, '/').toLowerCase());
+  const normalizedArtifacts = artifactPaths.map((p) => p.replaceAll(/\\/g, '/').toLowerCase());
 
   return findings.filter((finding) => {
-    const normalizedFile = finding.file.replace(/\\/g, '/').toLowerCase();
+    const normalizedFile = finding.file.replaceAll(/\\/g, '/').toLowerCase();
     return normalizedArtifacts.some(
       (artifact) =>
         normalizedFile.includes(artifact) ||
@@ -946,9 +946,9 @@ export function filterFindingsByTaskArtifacts(
  */
 function matchesGlobPattern(filePath: string, pattern: string): boolean {
   const regexPattern = pattern
-    .replace(/\*\*/g, '<<<DOUBLESTAR>>>')
-    .replace(/\*/g, '[^/]*')
-    .replace(/<<<DOUBLESTAR>>>/g, '.*');
+    .replaceAll(/\*\*/g, '<<<DOUBLESTAR>>>')
+    .replaceAll(/\*/g, '[^/]*')
+    .replaceAll(/<<<DOUBLESTAR>>>/g, '.*');
 
   const regex = new RegExp(`^${regexPattern}$`);
   return regex.test(filePath);

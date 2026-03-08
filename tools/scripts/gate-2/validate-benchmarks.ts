@@ -13,8 +13,8 @@
  * @see .specify/sprints/sprint-15/specifications/IFC-027-spec.md AC-007
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
-import { join } from 'path';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 interface K6Results {
   metrics: {

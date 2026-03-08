@@ -52,8 +52,8 @@ export const phaseSummarySchema = z.object({
     .optional()
     .describe('Parallel execution streams within this phase'),
   aggregated_metrics: aggregatedMetricsSchema,
-  started_at: z.string().datetime().nullable().optional(),
-  completed_at: z.string().datetime().nullable().optional(),
+  started_at: z.iso.datetime().nullable().optional(),
+  completed_at: z.iso.datetime().nullable().optional(),
   target_duration_minutes: z.number().int().nullable().optional(),
   actual_duration_minutes: z.number().int().nullable().optional(),
   kpis: z.record(z.string(), phaseKpiSchema).optional(),

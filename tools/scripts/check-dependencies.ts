@@ -18,8 +18,8 @@
  */
 
 import { execSync } from 'child_process';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { glob } from 'glob';
 
 // Color codes for terminal output
@@ -119,7 +119,7 @@ class DependencyValidator {
    */
   private parseVersion(version: string): number[] {
     return version
-      .replace(/[^0-9.]/g, '')
+      .replaceAll(/[^0-9.]/g, '')
       .split('.')
       .map(Number);
   }
@@ -144,7 +144,7 @@ class DependencyValidator {
    */
   private checkNodeVersion(): DependencyCheck {
     const requiredVersion = '20.0.0';
-    const currentVersion = process.version.replace('v', '');
+    const currentVersion = process.version.replaceAll('v', '');
     const satisfies = this.compareVersions(currentVersion, requiredVersion);
 
     return {
@@ -279,7 +279,7 @@ class DependencyValidator {
     let currentVersion = '';
 
     if (installed) {
-      currentVersion = this.exec('tsc --version').replace('Version ', '');
+      currentVersion = this.exec('tsc --version').replaceAll('Version ', '');
     }
 
     return {

@@ -77,14 +77,14 @@ function collectChangedFiles(): string[] {
   }
 
   return Array.from(files)
-    .map((file) => file.replace(/\\/g, '/'))
+    .map((file) => file.replaceAll(/\\/g, '/'))
     .filter((file) => TRACKED_EXTENSIONS.test(file))
     .filter((file) => !EXCLUDED_PATH_SEGMENTS.some((segment) => file.includes(segment)))
     .filter((file) => existsSync(resolve(process.cwd(), file)));
 }
 
 function quoteFiles(files: string[]): string {
-  return files.map((file) => `"${file.replace(/"/g, '\\"')}"`).join(' ');
+  return files.map((file) => `"${file.replaceAll(/"/g, '\\"')}"`).join(' ');
 }
 
 function runCommand(command: string): void {

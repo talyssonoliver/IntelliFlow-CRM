@@ -780,7 +780,7 @@ export function saveAttestationReport(
   const { mkdirSync } = require('node:fs');
   mkdirSync(dir, { recursive: true });
 
-  const timestamp = report.generatedAt.replace(/[:.]/g, '-').slice(0, 19);
+  const timestamp = report.generatedAt.replaceAll(/[:.]/g, '-').slice(0, 19);
   const jsonPath = join(dir, `sprint-${report.sprint}-${timestamp}.json`);
   const mdPath = join(dir, `sprint-${report.sprint}-${timestamp}.md`);
 

@@ -48,8 +48,8 @@ async function loadTaskSprintMapping(): Promise<Map<string, number>> {
   const mapping = new Map<string, number>();
   for (const record of records) {
     const taskId = record['Task ID'];
-    const sprint = parseInt(record['Target Sprint'], 10);
-    if (taskId && !isNaN(sprint)) {
+    const sprint = Number.parseInt(record['Target Sprint'], 10);
+    if (taskId && !Number.isNaN(sprint)) {
       mapping.set(taskId, sprint);
     }
   }
@@ -157,7 +157,7 @@ async function migrateSpecifications(
     const files = await readdir(oldSpecDir);
     for (const file of files) {
       if (file.endsWith('-spec.md')) {
-        const taskId = file.replace('-spec.md', '');
+        const taskId = file.replaceAll('-spec.md', '');
         const sprint = taskSprintMap.get(taskId) ?? 0;
         const source = join(oldSpecDir, file);
         const dest = join(SPECIFY_DIR, 'sprints', `sprint-${sprint}`, 'specifications', file);
@@ -203,7 +203,7 @@ async function migratePlans(
     const files = await readdir(oldPlanDir);
     for (const file of files) {
       if (file.endsWith('-plan.md') || file.endsWith('.md')) {
-        const taskId = file.replace('-plan.md', '').replace('.md', '');
+        const taskId = file.replaceAll('-plan.md', '').replaceAll('.md', '');
         const sprint = taskSprintMap.get(taskId) ?? 0;
         const source = join(oldPlanDir, file);
         const dest = join(SPECIFY_DIR, 'sprints', `sprint-${sprint}`, 'planning', file);

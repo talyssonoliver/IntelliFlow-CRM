@@ -190,14 +190,14 @@ function detectCrossSprintDeps(tasks, overrides) {
   // Build sprint map
   tasks.forEach((task) => {
     const id = task['Task ID'];
-    let sprint = parseInt(task['Target Sprint'], 10);
+    let sprint = Number.parseInt(task['Target Sprint'], 10);
 
     // Check for sprint override
     if (overrides && overrides[id] && overrides[id].sprint_override !== undefined) {
       sprint = overrides[id].sprint_override;
     }
 
-    if (!isNaN(sprint)) {
+    if (!Number.isNaN(sprint)) {
       sprintMap.set(id, sprint);
     }
   });
@@ -266,7 +266,7 @@ function checkValidationCoverage(tasks, validationRules, sprint) {
   );
 
   tasks
-    .filter((t) => sprint === undefined || parseInt(t['Target Sprint'], 10) === sprint)
+    .filter((t) => sprint === undefined || Number.parseInt(t['Target Sprint'], 10) === sprint)
     .forEach((task) => {
       const id = task['Task ID'];
       if (!validatedIds.has(id)) {
@@ -449,7 +449,7 @@ function checkSoftRules(tasks, overrides, validationRules, config, sprint) {
 
   // Filter by sprint if specified
   const sprintTasks =
-    sprint !== undefined ? tasks.filter((t) => parseInt(t['Target Sprint'], 10) === sprint) : tasks;
+    sprint !== undefined ? tasks.filter((t) => Number.parseInt(t['Target Sprint'], 10) === sprint) : tasks;
 
   // Check validation coverage
   const missingValidation = checkValidationCoverage(sprintTasks, validationRules, sprint);
@@ -591,7 +591,7 @@ function generateReviewQueue(tasks, overrides, validationRules, config, errors, 
 
   // Filter by sprint if specified
   const sprintTasks =
-    sprint !== undefined ? tasks.filter((t) => parseInt(t['Target Sprint'], 10) === sprint) : tasks;
+    sprint !== undefined ? tasks.filter((t) => Number.parseInt(t['Target Sprint'], 10) === sprint) : tasks;
 
   sprintTasks.forEach((task) => {
     const id = task['Task ID'];
@@ -690,7 +690,7 @@ function generateReport(
   const tiers = computeTiers(tasks, overrides, fanout, config);
 
   const sprintTasks =
-    sprint !== undefined ? tasks.filter((t) => parseInt(t['Target Sprint'], 10) === sprint) : tasks;
+    sprint !== undefined ? tasks.filter((t) => Number.parseInt(t['Target Sprint'], 10) === sprint) : tasks;
 
   const tierCounts = { A: 0, B: 0, C: 0 };
   sprintTasks.forEach((task) => {
@@ -751,7 +751,7 @@ async function main() {
   const args = process.argv.slice(2);
   const verbose = args.includes('--verbose') || args.includes('-v');
   const sprintArg = args.find((a) => a.startsWith('--sprint='));
-  const sprint = sprintArg ? parseInt(sprintArg.split('=')[1], 10) : 0; // Default to Sprint 0
+  const sprint = sprintArg ? Number.parseInt(sprintArg.split('=')[1], 10) : 0; // Default to Sprint 0
 
   console.log('========================================');
   console.log('Plan Linter v1.0.0');
@@ -795,7 +795,7 @@ async function main() {
   console.log(`\nParsed ${tasks.length} tasks from Sprint plan`);
 
   if (sprint !== undefined) {
-    const sprintTasks = tasks.filter((t) => parseInt(t['Target Sprint'], 10) === sprint);
+    const sprintTasks = tasks.filter((t) => Number.parseInt(t['Target Sprint'], 10) === sprint);
     console.log(`Filtering to Sprint ${sprint}: ${sprintTasks.length} tasks\n`);
   }
 

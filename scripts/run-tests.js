@@ -50,17 +50,17 @@ vitest.stdout.on('data', (data) => {
   // Parse test results from output
   // Strip ANSI codes for parsing
   // eslint-disable-next-line no-control-regex
-  const stripped = text.replace(/\x1b\[[0-9;]*m/g, '');
+  const stripped = text.replaceAll(/\x1b\[[0-9;]*m/g, '');
 
   // Format: "Tests  X passed | Y skipped (Z)"
   const testsMatch = stripped.match(/Tests\s+(\d+)\s+passed/);
   if (testsMatch) {
-    testsPassedCount = parseInt(testsMatch[1], 10);
+    testsPassedCount = Number.parseInt(testsMatch[1], 10);
   }
 
   const failedMatch = stripped.match(/(\d+)\s+failed/);
   if (failedMatch) {
-    testsFailedCount = parseInt(failedMatch[1], 10);
+    testsFailedCount = Number.parseInt(failedMatch[1], 10);
   }
 });
 
@@ -73,7 +73,7 @@ vitest.stderr.on('data', (data) => {
 vitest.on('close', (code) => {
   // Strip ANSI codes from full output for checking
   // eslint-disable-next-line no-control-regex
-  const strippedOutput = output.replace(/\x1b\[[0-9;]*m/g, '');
+  const strippedOutput = output.replaceAll(/\x1b\[[0-9;]*m/g, '');
 
   // Check if we saw test results in the output
   const sawTestResults = strippedOutput.includes('Test Files') && strippedOutput.includes('Tests');
@@ -82,7 +82,7 @@ vitest.on('close', (code) => {
   if (testsPassedCount === 0) {
     const match = strippedOutput.match(/Tests\s+(\d+)\s+passed/);
     if (match) {
-      testsPassedCount = parseInt(match[1], 10);
+      testsPassedCount = Number.parseInt(match[1], 10);
     }
   }
 

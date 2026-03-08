@@ -7,8 +7,8 @@
  * DEPRECATED: The artifacts/attestations/ path is deprecated.
  * This script reads from the old location for migration purposes.
  */
-import { readdirSync, existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { readdirSync, existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { getRelativeSchemaPath } from './lib/schema-paths';
 import { OUTPUT_PATHS } from './lib/workflow/config.js';
 
@@ -35,18 +35,18 @@ function loadTaskSprintMap(): Map<string, number> {
   // Find header line and column indices
   const headerLine = lines.find((line) => line.includes('Task ID'));
   if (!headerLine) return map;
-  const headers = headerLine.split(',').map((h) => h.trim().replace(/^"|"$/g, ''));
-  const taskIdIdx = headers.findIndex((h) => h === 'Task ID');
-  const sprintIdx = headers.findIndex((h) => h === 'Target Sprint');
+  const headers = headerLine.split(',').map((h) => h.trim().replaceAll(/^"|"$/g, ''));
+  const taskIdIdx = headers.indexOf((h) => h === 'Task ID');
+  const sprintIdx = headers.indexOf((h) => h === 'Target Sprint');
   if (taskIdIdx === -1 || sprintIdx === -1) return map;
 
   for (const line of lines) {
     if (!line.trim() || line === headerLine) continue;
-    const cols = line.split(',').map((c) => c.trim().replace(/^"|"$/g, ''));
+    const cols = line.split(',').map((c) => c.trim().replaceAll(/^"|"$/g, ''));
     const taskId = cols[taskIdIdx];
     const sprintStr = cols[sprintIdx];
-    if (taskId && sprintStr && !isNaN(parseInt(sprintStr, 10))) {
-      map.set(taskId, parseInt(sprintStr, 10));
+    if (taskId && sprintStr && !Number.isNaN(parseInt(sprintStr, 10))) {
+      map.set(taskId, Number.parseInt(sprintStr, 10));
     }
   }
   return map;
@@ -168,7 +168,7 @@ function transformContextAckToAttestation(contextAck: ContextAck, outputDir: str
 
   // Build KPI results
   const kpiResults = Object.entries(contextAck.kpis || {}).map(([key, kpi]) => ({
-    kpi: key.replace(/_/g, ' '),
+    kpi: key.replaceAll(/_/g, ' '),
     target: String(kpi.target),
     actual: String(kpi.actual),
     met: kpi.met,

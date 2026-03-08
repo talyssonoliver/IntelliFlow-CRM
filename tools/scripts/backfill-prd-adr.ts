@@ -8,8 +8,8 @@
  * Usage: npx tsx tools/scripts/backfill-prd-adr.ts [--dry-run]
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 const ROOT = path.resolve(__dirname, '../..');
 const PLANNING_DIR = path.join(ROOT, 'docs/planning');
@@ -44,7 +44,7 @@ function updateFile(filePath: string, oldStr: string, newStr: string) {
     console.log(`[DRY RUN] Would update: ${path.relative(ROOT, filePath)}`);
     return;
   }
-  fs.writeFileSync(filePath, content.replace(oldStr, newStr), 'utf-8');
+  fs.writeFileSync(filePath, content.replaceAll(oldStr, newStr), 'utf-8');
   console.log(`[UPDATED] ${path.relative(ROOT, filePath)}`);
 }
 
@@ -209,7 +209,7 @@ const pubAuthPath = path.join(PLANNING_DIR, 'prd-public-site-auth.md');
 if (fs.existsSync(pubAuthPath)) {
   const content = fs.readFileSync(pubAuthPath, 'utf-8');
   if (content.includes('PG-018') && !content.includes('PG-019')) {
-    const updated = content.replace(
+    const updated = content.replaceAll(
       /PG-018/g,
       'PG-018, PG-019, PG-020, PG-021, PG-022, PG-023, PG-024'
     );
@@ -697,7 +697,7 @@ if (fs.existsSync(readmePath)) {
 `;
 
     if (readmeContent.includes('## Next Steps')) {
-      readmeContent = readmeContent.replace('## Next Steps', newSection + '\n## Next Steps');
+      readmeContent = readmeContent.replaceAll('## Next Steps', newSection + '\n## Next Steps');
       readmeChanged = true;
       console.log(
         DRY_RUN
@@ -728,7 +728,7 @@ if (fs.existsSync(readmePath)) {
 
   // Update metrics count
   if (readmeContent.includes('**Total ADRs**: 25')) {
-    readmeContent = readmeContent.replace('**Total ADRs**: 25', '**Total ADRs**: 38');
+    readmeContent = readmeContent.replaceAll('**Total ADRs**: 25', '**Total ADRs**: 38');
     readmeChanged = true;
     console.log(
       DRY_RUN

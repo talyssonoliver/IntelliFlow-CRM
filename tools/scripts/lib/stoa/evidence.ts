@@ -34,8 +34,8 @@ import type {
  */
 export function generateRunId(): string {
   const now = new Date();
-  const date = now.toISOString().slice(0, 10).replace(/-/g, '');
-  const time = now.toISOString().slice(11, 19).replace(/:/g, '');
+  const date = now.toISOString().slice(0, 10).replaceAll(/-/g, '');
+  const time = now.toISOString().slice(11, 19).replaceAll(/:/g, '');
   const uuid = randomUUID().slice(0, 8);
 
   return `${date}-${time}-${uuid}`;
@@ -67,7 +67,7 @@ export function generateEvidenceHash(filePath: string, baseDir: string): Evidenc
   const stats = statSync(filePath);
 
   return {
-    path: relative(baseDir, filePath).replace(/\\/g, '/'),
+    path: relative(baseDir, filePath).replaceAll(/\\/g, '/'),
     sha256: sha256File(filePath),
     size: stats.size,
   };

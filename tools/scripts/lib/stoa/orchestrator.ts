@@ -220,7 +220,7 @@ export async function runStoaOrchestration(
   log(`Current Status: ${task.status || 'Unknown'}`);
 
   // Parse sprint number from task's targetSprint
-  const sprintNumber = task.targetSprint ? parseInt(task.targetSprint, 10) : 0; // Default to sprint 0 if not specified
+  const sprintNumber = task.targetSprint ? Number.parseInt(task.targetSprint, 10) : 0; // Default to sprint 0 if not specified
 
   log(`Sprint: ${sprintNumber}`);
 

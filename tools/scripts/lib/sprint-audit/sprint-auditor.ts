@@ -13,8 +13,8 @@
  * @module tools/scripts/lib/sprint-audit/sprint-auditor
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { parse as parseCsv } from 'csv-parse/sync';
 import type {
   SprintAuditConfig,
@@ -133,7 +133,7 @@ export function filterSprintTasks(tasks: CsvTask[], sprintNumber: number): CsvTa
       return false; // Exclude continuous tasks from sprint audits
     }
 
-    return parseInt(targetSprint, 10) === sprintNumber;
+    return Number.parseInt(targetSprint, 10) === sprintNumber;
   });
 }
 
@@ -180,7 +180,7 @@ export function verifyDependencies(
     }
 
     // Check for attestation file (sprint-based path)
-    const depSprintNumber = parseInt(depTask?.['Target Sprint'] || '0', 10);
+    const depSprintNumber = Number.parseInt(depTask?.['Target Sprint'] || '0', 10);
     const attestationPath = path.join(
       repoRoot,
       '.specify',
@@ -451,7 +451,7 @@ export async function auditTask(
   const attestation = generateAttestation(taskId, findings, runId, issues.join('; '));
 
   // 9. Write attestation to sprint-based location
-  const sprintNumber = parseInt(task['Target Sprint'] || '0', 10);
+  const sprintNumber = Number.parseInt(task['Target Sprint'] || '0', 10);
   await writeAttestation(config.repoRoot, attestation, sprintNumber);
 
   // 10. Create action items for failures (integrates with debt-ledger.yaml)
@@ -704,7 +704,7 @@ export async function auditSprintCompletion(
 
 function generateRunId(sprintNumber: number): string {
   const now = new Date();
-  const timestamp = now.toISOString().replace(/[-:]/g, '').slice(0, 15);
+  const timestamp = now.toISOString().replaceAll(/[-:]/g, '').slice(0, 15);
   const random = Math.random().toString(36).substring(2, 8);
   return `sprint${sprintNumber}-audit-${timestamp}-${random}`;
 }

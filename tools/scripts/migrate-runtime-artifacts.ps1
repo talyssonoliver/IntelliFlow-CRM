@@ -109,8 +109,8 @@ foreach ($rule in $MigrationRules) {
         }
 
         $MoveMap += [PSCustomObject]@{
-            original_path = $file.FullName.Replace($RepoRoot + "\", "")
-            new_path = $destPath.Replace($RepoRoot + "\", "")
+            original_path = $file.FullName.replaceAll($RepoRoot + "\", "")
+            new_path = $destPath.replaceAll($RepoRoot + "\", "")
             reason = $rule.Reason
             timestamp = $Timestamp
         }

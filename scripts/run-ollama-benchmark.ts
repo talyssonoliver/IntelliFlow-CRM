@@ -236,7 +236,7 @@ async function runBenchmark(): Promise<void> {
     const scoringChainPath = path.join(projectRoot, 'apps/ai-worker/src/chains/scoring.chain');
     const importPath =
       process.platform === 'win32'
-        ? `file:///${scoringChainPath.replace(/\\/g, '/')}`
+        ? `file:///${scoringChainPath.replaceAll(/\\/g, '/')}`
         : scoringChainPath;
     const scoringModule = await import(importPath);
     leadScoringChain = scoringModule.leadScoringChain;

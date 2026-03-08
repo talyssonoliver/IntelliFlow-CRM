@@ -70,10 +70,10 @@ function stripAnsi(input: string): string {
     input
       // CSI sequences
       // eslint-disable-next-line no-control-regex
-      .replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, '')
+      .replaceAll(/\x1b\[[0-?]*[ -/]*[@-~]/g, '')
       // OSC sequences
       // eslint-disable-next-line no-control-regex
-      .replace(/\x1b\][^\x07]*(\x07|\x1b\\)/g, '')
+      .replaceAll(/\x1b\][^\x07]*(\x07|\x1b\\)/g, '')
   );
 }
 
@@ -81,23 +81,23 @@ function downlevelUnicodeToAscii(input: string): string {
   let output = input;
 
   // Status icons
-  output = output.replace(/✅/g, '[PASS]');
-  output = output.replace(/❌/g, '[FAIL]');
-  output = output.replace(/⚠️?/g, '[WARN]');
-  output = output.replace(/🎉/g, '[OK]');
+  output = output.replaceAll(/✅/g, '[PASS]');
+  output = output.replaceAll(/❌/g, '[FAIL]');
+  output = output.replaceAll(/⚠️?/g, '[WARN]');
+  output = output.replaceAll(/🎉/g, '[OK]');
 
   // Section icons (remove)
-  output = output.replace(/[📦⚙🧪📁📚📖🔧🌳🔷📊🔍📄🎯📋🔄⛔]/gu, '');
+  output = output.replaceAll(/[📦⚙🧪📁📚📖🔧🌳🔷📊🔍📄🎯📋🔄⛔]/gu, '');
 
   // Remove remaining non-ASCII characters (keep CR/LF/TAB)
   // eslint-disable-next-line no-control-regex
-  output = output.replace(/[^\x09\x0A\x0D\x20-\x7E]/g, '');
+  output = output.replaceAll(/[^\x09\x0A\x0D\x20-\x7E]/g, '');
 
   return output;
 }
 
 function normalizeEol(input: string): string {
-  return input.replace(/\r\n/g, '\n').replace(/\n/g, EOL);
+  return input.replaceAll(/\r\n/g, '\n').replaceAll(/\n/g, EOL);
 }
 
 function runCommand(command: string, args: string[]): { code: number; output: string } {

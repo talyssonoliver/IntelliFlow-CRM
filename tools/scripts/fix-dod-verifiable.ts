@@ -279,7 +279,7 @@ function enhanceDoD(
   if (validation.includes('VALIDATE:') && !originalDoD.toLowerCase().includes('test')) {
     const validateCmds = validation.match(/VALIDATE:([^;]+)/g);
     if (validateCmds && validateCmds.length > 0) {
-      const cmds = validateCmds.map((v) => v.replace('VALIDATE:', '').trim()).join(', ');
+      const cmds = validateCmds.map((v) => v.replaceAll('VALIDATE:', '').trim()).join(', ');
       enhancedDoD += `; verified by: ${cmds}`;
     }
   }
@@ -287,7 +287,7 @@ function enhanceDoD(
   if (validation.includes('GATE:') && !originalDoD.toLowerCase().includes('gate')) {
     const gates = validation.match(/GATE:([^;]+)/g);
     if (gates && gates.length > 0) {
-      const gateNames = gates.map((g) => g.replace('GATE:', '').trim()).join(', ');
+      const gateNames = gates.map((g) => g.replaceAll('GATE:', '').trim()).join(', ');
       enhancedDoD += `; gates: ${gateNames}`;
     }
   }
@@ -358,7 +358,7 @@ function escapeField(value: string): string {
   if (!value) return '""';
   const needsQuotes =
     value.includes(',') || value.includes('"') || value.includes('\n') || value.includes(';');
-  const escaped = value.replace(/"/g, '""');
+  const escaped = value.replaceAll(/"/g, '""');
   return needsQuotes ? `"${escaped}"` : escaped;
 }
 

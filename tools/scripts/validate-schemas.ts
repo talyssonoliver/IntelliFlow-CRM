@@ -12,8 +12,8 @@
  * - 1: One or more validations failed
  */
 
-import { readFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
+import { readFileSync, existsSync } from 'node:fs';
+import { join, dirname } from 'node:path';
 import { glob } from 'glob';
 import { z } from 'zod';
 import { vulnerabilityBaselineSchema } from './lib/schemas/vulnerability-baseline.schema.js';
@@ -36,7 +36,7 @@ const scriptPath =
     : fileUrl.pathname;
 const REPO_ROOT = join(dirname(scriptPath), '..', '..');
 // Normalize to forward slashes for glob (required on Windows)
-const REPO_ROOT_POSIX = REPO_ROOT.replace(/\\/g, '/');
+const REPO_ROOT_POSIX = REPO_ROOT.replaceAll(/\\/g, '/');
 
 // Schema to file pattern mappings
 interface ValidationRule {
@@ -182,9 +182,9 @@ async function main(): Promise<void> {
         results.push(result);
 
         if (result.valid) {
-          console.log(`  ✓ ${file.replace(REPO_ROOT, '.')}`);
+          console.log(`  ✓ ${file.replaceAll(REPO_ROOT, '.')}`);
         } else {
-          console.log(`  ✗ ${file.replace(REPO_ROOT, '.')}`);
+          console.log(`  ✗ ${file.replaceAll(REPO_ROOT, '.')}`);
           result.errors?.forEach((e) => console.log(e));
         }
       }
