@@ -40,7 +40,7 @@ export type PredictionType = (typeof PredictionTypes)[number];
 /** Schema for prediction job data */
 export const PredictionJobDataSchema = z.object({
   entityType: z.enum(['lead', 'contact', 'opportunity', 'account']),
-  entityId: z.string().uuid(),
+  entityId: z.uuid(),
   predictionType: z.enum(PredictionTypes),
   context: z.record(z.string(), z.unknown()).optional(),
   correlationId: z.string().optional(),
@@ -52,7 +52,7 @@ export type PredictionJobData = z.infer<typeof PredictionJobDataSchema>;
 /** Schema for prediction job result */
 export const PredictionJobResultSchema = z.object({
   entityType: z.string(),
-  entityId: z.string().uuid(),
+  entityId: z.uuid(),
   predictionType: z.string(),
   prediction: z.object({
     value: z.union([z.string(), z.number(), z.boolean()]),
@@ -60,7 +60,7 @@ export const PredictionJobResultSchema = z.object({
     explanation: z.string(),
   }),
   recommendations: z.array(z.string()),
-  processedAt: z.string().datetime(),
+  processedAt: z.iso.datetime(),
   processingTimeMs: z.number(),
 });
 
@@ -157,6 +157,102 @@ export async function processPredictionJob(
 // Prediction Result Persistence
 // ============================================================================
 
+/** Map a numeric churn score to a risk level string. */
+function churnRiskLevel(score: number): 'HIGH' | 'MEDIUM' | 'LOW' {
+  if (score >= 0.7) return 'HIGH';
+  if (score >= 0.4) return 'MEDIUM';
+  return 'LOW';
+}
+
+/** Build the update payload for a prediction type. */
+function buildPredictionUpdateData(
+  predictionType: string,
+  prediction: PredictionJobResult['prediction'],
+  recommendations: string[]
+): Record<string, unknown> {
+  const updateData: Record<string, unknown> = { recommendations };
+
+  if (predictionType === 'CHURN_RISK') {
+    const score = typeof prediction.value === 'number' ? prediction.value : 0.5;
+    updateData.churnRisk = churnRiskLevel(score);
+    updateData.nextBestAction = recommendations[0] || 'Review churn risk assessment';
+  } else if (predictionType === 'QUALIFICATION') {
+    const status = typeof prediction.value === 'string' ? prediction.value : 'NEEDS_REVIEW';
+    updateData.nextBestAction = recommendations[0] || `Qualification: ${status}`;
+  } else if (predictionType === 'NEXT_BEST_ACTION') {
+    updateData.nextBestAction = typeof prediction.value === 'string'
+      ? prediction.value
+      : recommendations[0] || 'Follow up';
+  }
+
+  return updateData;
+}
+
+/** Persist prediction to LeadAIInsight table. */
+async function persistLeadPrediction(
+  prisma: any,
+  entityId: string,
+  tenantId: string,
+  predictionType: string,
+  prediction: PredictionJobResult['prediction'],
+  recommendations: string[]
+): Promise<void> {
+  const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);
+
+  await prisma.leadAIInsight.upsert({
+    where: { leadId: entityId },
+    create: {
+      leadId: entityId,
+      tenantId,
+      engagementScore: 50,
+      conversionProbability: 50,
+      estimatedValue: 0,
+      churnRisk: ((updateData.churnRisk as string) || 'MEDIUM') as any,
+      nextBestAction: (updateData.nextBestAction as string) || 'Review prediction results',
+      sentiment: 'NEUTRAL',
+      sentimentTrend: 'stable',
+      recommendations,
+      lastEngagementDays: 0,
+      icpMatch: 'Partial Match',
+    },
+    update: updateData,
+  });
+
+  logger.info({ entityId, predictionType }, 'Persisted prediction to LeadAIInsight');
+}
+
+/** Persist prediction to ContactAIInsight table. */
+async function persistContactPrediction(
+  prisma: any,
+  entityId: string,
+  tenantId: string,
+  predictionType: string,
+  prediction: PredictionJobResult['prediction'],
+  recommendations: string[]
+): Promise<void> {
+  const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);
+
+  await prisma.contactAIInsight.upsert({
+    where: { contactId: entityId },
+    create: {
+      contactId: entityId,
+      tenantId,
+      engagementScore: 50,
+      conversionProbability: 50,
+      lifetimeValue: 0,
+      churnRisk: ((updateData.churnRisk as string) || 'MEDIUM') as any,
+      nextBestAction: (updateData.nextBestAction as string) || 'Review prediction results',
+      sentiment: 'NEUTRAL',
+      sentimentTrend: 'stable',
+      recommendations,
+      lastEngagementDays: 0,
+    },
+    update: updateData,
+  });
+
+  logger.info({ entityId, predictionType }, 'Persisted prediction to ContactAIInsight');
+}
+
 /**
  * Persist prediction results to entity-level insight tables.
  * Uses the same LeadAIInsight / ContactAIInsight tables as the insight job,
@@ -174,87 +270,16 @@ async function persistPredictionResult(
     const { prisma } = await import('@intelliflow/db');
 
     if (entityType === 'lead') {
-      const updateData: Record<string, unknown> = {
-        recommendations,
-      };
-
-      if (predictionType === 'CHURN_RISK') {
-        const score = typeof prediction.value === 'number' ? prediction.value : 0.5;
-        const riskLevel = score >= 0.7 ? 'HIGH' : score >= 0.4 ? 'MEDIUM' : 'LOW';
-        updateData.churnRisk = riskLevel;
-        updateData.nextBestAction = recommendations[0] || 'Review churn risk assessment';
-      } else if (predictionType === 'QUALIFICATION') {
-        const status = typeof prediction.value === 'string' ? prediction.value : 'NEEDS_REVIEW';
-        updateData.nextBestAction = recommendations[0] || `Qualification: ${status}`;
-      } else if (predictionType === 'NEXT_BEST_ACTION') {
-        updateData.nextBestAction = typeof prediction.value === 'string'
-          ? prediction.value
-          : recommendations[0] || 'Follow up';
-      }
-
-      await prisma.leadAIInsight.upsert({
-        where: { leadId: entityId },
-        create: {
-          leadId: entityId,
-          tenantId,
-          engagementScore: 50,
-          conversionProbability: 50,
-          estimatedValue: 0,
-          churnRisk: ((updateData.churnRisk as string) || 'MEDIUM') as any,
-          nextBestAction: (updateData.nextBestAction as string) || 'Review prediction results',
-          sentiment: 'NEUTRAL',
-          sentimentTrend: 'stable',
-          recommendations,
-          lastEngagementDays: 0,
-          icpMatch: 'Partial Match',
-        },
-        update: updateData,
-      });
-
-      logger.info({ entityId, predictionType }, 'Persisted prediction to LeadAIInsight');
+      await persistLeadPrediction(prisma, entityId, tenantId, predictionType, prediction, recommendations);
     } else if (entityType === 'contact') {
-      const updateData: Record<string, unknown> = {
-        recommendations,
-      };
-
-      if (predictionType === 'CHURN_RISK') {
-        const score = typeof prediction.value === 'number' ? prediction.value : 0.5;
-        updateData.churnRisk = score >= 0.7 ? 'HIGH' : score >= 0.4 ? 'MEDIUM' : 'LOW';
-        updateData.nextBestAction = recommendations[0] || 'Review churn risk';
-      } else if (predictionType === 'NEXT_BEST_ACTION') {
-        updateData.nextBestAction = typeof prediction.value === 'string'
-          ? prediction.value
-          : recommendations[0] || 'Follow up';
-      }
-
-      await prisma.contactAIInsight.upsert({
-        where: { contactId: entityId },
-        create: {
-          contactId: entityId,
-          tenantId,
-          engagementScore: 50,
-          conversionProbability: 50,
-          lifetimeValue: 0,
-          churnRisk: ((updateData.churnRisk as string) || 'MEDIUM') as any,
-          nextBestAction: (updateData.nextBestAction as string) || 'Review prediction results',
-          sentiment: 'NEUTRAL',
-          sentimentTrend: 'stable',
-          recommendations,
-          lastEngagementDays: 0,
-        },
-        update: updateData,
-      });
-
-      logger.info({ entityId, predictionType }, 'Persisted prediction to ContactAIInsight');
+      await persistContactPrediction(prisma, entityId, tenantId, predictionType, prediction, recommendations);
     } else {
-      // opportunity/account entity types have no dedicated AI insight table yet
       logger.info(
         { entityType, entityId, predictionType },
         'Prediction persistence skipped — no AI insight table for this entity type'
       );
     }
   } catch (error) {
-    // Log but don't fail the job — the prediction was computed successfully
     logger.error(
       {
         entityType,

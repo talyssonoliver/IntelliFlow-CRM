@@ -172,7 +172,25 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     const serverAdapter = new ExpressAdapter();
     serverAdapter.setBasePath('/queues');
 
+    // Register AI worker queues (read-write)
     const queues = AI_WORKER_QUEUES.map((name) => new BullMQAdapter(this.getQueue(name)));
+
+    // Also register external worker queues (read-only visibility)
+    const { Queue } = await import('bullmq');
+    const connection = {
+      host: process.env.REDIS_HOST || 'localhost',
+      port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+    };
+    const externalQueueNames = [
+      'intelliflow-document-reindex',
+      'intelliflow-text-extraction',
+      'intelliflow-ocr-processing',
+      'intelliflow-embedding-generation',
+    ];
+    for (const name of externalQueueNames) {
+      queues.push(new BullMQAdapter(new Queue(name, { connection })));
+    }
+
     createBullBoard({ queues, serverAdapter });
 
     const app = express();

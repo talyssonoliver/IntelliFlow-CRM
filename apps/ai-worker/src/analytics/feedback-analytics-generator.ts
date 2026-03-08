@@ -363,7 +363,7 @@ export class FeedbackAnalyticsGenerator {
     const windowRecords = records.filter((r) => r.createdAt >= windowStart);
 
     // Get most recent model version
-    const sortedByDate = [...records].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    const sortedByDate = [...records].sort((a: FeedbackRecord, b: FeedbackRecord) => b.createdAt.getTime() - a.createdAt.getTime());
     const latestVersion = sortedByDate.length > 0 ? sortedByDate[0].modelVersion : 'unknown';
 
     // Calculate metrics

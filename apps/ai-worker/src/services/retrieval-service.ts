@@ -225,7 +225,7 @@ export const SearchConfigSchema = z.object({
     })
     .optional(),
   // IFC-155: Case-scoped search
-  caseId: z.string().uuid().optional(),
+  caseId: z.uuid().optional(),
   searchType: z.enum(['fulltext', 'semantic', 'hybrid']).optional().default('hybrid'),
   limit: z.number().min(1).max(100).optional().default(20),
   offset: z.number().min(0).optional().default(0),

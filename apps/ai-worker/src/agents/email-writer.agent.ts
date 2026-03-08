@@ -22,7 +22,7 @@ const logger = pino({
  * Uses domain constants via validator schemas for consistency
  */
 export const emailWriterInputSchema = z.object({
-  recipientEmail: z.string().email(),
+  recipientEmail: z.email(),
   recipientName: z.string(),
   recipientCompany: z.string().optional(),
   recipientTitle: z.string().optional(),

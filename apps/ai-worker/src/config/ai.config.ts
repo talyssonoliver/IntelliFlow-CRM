@@ -16,7 +16,7 @@ export const AIConfigSchema = z.object({
   openai: z.object({
     apiKey: z.string().optional(),
     // Optional OpenAI-compatible endpoint (e.g., vLLM)
-    baseUrl: z.string().url().optional(),
+    baseUrl: z.url().optional(),
     model: z.string().default('gpt-4-turbo-preview'),
     temperature: z.number().min(0).max(2).default(0.7),
     maxTokens: z.number().positive().default(2000),
@@ -25,7 +25,7 @@ export const AIConfigSchema = z.object({
 
   // Ollama Configuration (local development)
   ollama: z.object({
-    baseUrl: z.string().url().default('http://localhost:11434'),
+    baseUrl: z.url().default('http://localhost:11434'),
     model: z.string().default('mistral'),
     temperature: z.number().min(0).max(2).default(0.7),
     timeout: z.number().positive().default(60000), // 60 seconds

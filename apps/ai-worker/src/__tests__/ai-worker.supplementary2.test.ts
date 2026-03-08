@@ -100,10 +100,24 @@ vi.mock('../services/agent-status', () => ({
 }));
 
 // ============================================================
+// Mock hallucination checker (used by processJob post-completion)
+// ============================================================
+vi.mock('../monitoring', () => ({
+  hallucinationChecker: {
+    checkOutput: vi.fn().mockResolvedValue({
+      hallucinated: false,
+      score: 0.1,
+      hallucinationTypes: [],
+    }),
+  },
+}));
+
+// ============================================================
 // Mock bullmq
 // ============================================================
 vi.mock('bullmq', () => ({
   Job: class {},
+  Queue: class { constructor(_name: any, _opts: any) {} },
 }));
 
 // ============================================================

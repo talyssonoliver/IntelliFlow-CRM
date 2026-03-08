@@ -30,10 +30,10 @@ export type LeadTier = 'HOT' | 'WARM' | 'COLD' | 'UNQUALIFIED';
 
 /** Schema for scoring job data */
 export const ScoringJobDataSchema = z.object({
-  leadId: z.string().uuid(),
+  leadId: z.uuid(),
   tenantId: z.string().optional(),
   lead: z.object({
-    email: z.string().email(),
+    email: z.email(),
     firstName: z.string().optional(),
     lastName: z.string().optional(),
     company: z.string().optional(),
@@ -50,7 +50,7 @@ export type ScoringJobData = z.infer<typeof ScoringJobDataSchema>;
 
 /** Schema for scoring job result */
 export const ScoringJobResultSchema = z.object({
-  leadId: z.string().uuid(),
+  leadId: z.uuid(),
   score: z.number().min(0).max(100),
   confidence: z.number().min(0).max(1),
   tier: z.enum(['HOT', 'WARM', 'COLD', 'UNQUALIFIED']),
@@ -63,7 +63,7 @@ export const ScoringJobResultSchema = z.object({
   ),
   recommendations: z.array(z.string()),
   modelVersion: z.string(),
-  processedAt: z.string().datetime(),
+  processedAt: z.iso.datetime(),
   processingTimeMs: z.number(),
 });
 
@@ -81,6 +81,28 @@ function computeTier(score: number): LeadTier {
   if (score >= 60) return 'WARM';
   if (score >= 30) return 'COLD';
   return 'UNQUALIFIED';
+}
+
+/** Map lead tier to churn risk level. */
+function churnRiskFromTier(tier: LeadTier): 'MINIMAL' | 'LOW' | 'MEDIUM' | 'HIGH' {
+  if (tier === 'HOT') return 'MINIMAL';
+  if (tier === 'WARM') return 'LOW';
+  if (tier === 'COLD') return 'MEDIUM';
+  return 'HIGH';
+}
+
+/** Map score to sentiment label. */
+function sentimentFromScore(score: number): 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE' {
+  if (score >= 65) return 'POSITIVE';
+  if (score >= 35) return 'NEUTRAL';
+  return 'NEGATIVE';
+}
+
+/** Map score to ICP match label. */
+function icpMatchFromScore(score: number): string {
+  if (score >= 80) return 'Strong Match';
+  if (score >= 60) return 'Good Match';
+  return 'Partial Match';
 }
 
 /**
@@ -120,6 +142,137 @@ function generateRecommendations(tier: LeadTier, score: number): string[] {
 // ============================================================================
 
 /**
+ * Handle the scheduled cron sentinel — enumerate unscored/stale leads and enqueue per-lead jobs.
+ */
+async function handleScheduledDispatch(job: Job<ScoringJobData>, startTime: number): Promise<ScoringJobResult> {
+  const { leadId } = job.data;
+  logger.info({ jobId: job.id }, 'Scheduled scoring dispatcher — enumerating unscored leads');
+  let enqueued = 0;
+
+  try {
+    const { prisma } = await import('@intelliflow/db');
+    const { Queue } = await import('bullmq');
+
+    const staleThreshold = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const unscoredLeads = await prisma.lead.findMany({
+      where: {
+        OR: [
+          { aiInsight: null },
+          { aiInsight: { updatedAt: { lt: staleThreshold } } },
+        ],
+      },
+      select: {
+        id: true,
+        tenantId: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        company: true,
+        title: true,
+        phone: true,
+        source: true,
+      },
+      take: 100,
+    });
+
+    if (unscoredLeads.length > 0) {
+      const queue = new Queue(SCORING_QUEUE, {
+        connection: {
+          host: process.env.REDIS_HOST || 'localhost',
+          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+        },
+      });
+
+      for (const l of unscoredLeads) {
+        await queue.add('score-lead', {
+          leadId: l.id,
+          tenantId: l.tenantId,
+          lead: {
+            email: l.email,
+            firstName: l.firstName ?? undefined,
+            lastName: l.lastName ?? undefined,
+            company: l.company ?? undefined,
+            title: l.title ?? undefined,
+            phone: l.phone ?? undefined,
+            source: l.source ?? 'unknown',
+          },
+        });
+        enqueued++;
+      }
+
+      await queue.close();
+    }
+
+    logger.info({ jobId: job.id, leadsEnqueued: enqueued }, 'Scheduled scoring dispatcher completed');
+  } catch (error) {
+    logger.error(
+      { jobId: job.id, error: error instanceof Error ? error.message : String(error) },
+      'Scheduled scoring dispatcher failed'
+    );
+  }
+
+  return {
+    leadId,
+    score: 0,
+    confidence: 0,
+    tier: 'UNQUALIFIED',
+    factors: [],
+    recommendations: [],
+    modelVersion: 'scheduler-dispatcher',
+    processedAt: new Date().toISOString(),
+    processingTimeMs: Date.now() - startTime,
+  };
+}
+
+/**
+ * Persist scoring result to LeadAIInsight table.
+ */
+async function persistScoringResult(
+  leadId: string,
+  tenantId: string,
+  result: ScoringResult,
+  tier: LeadTier,
+  recommendations: string[]
+): Promise<void> {
+  try {
+    const { prisma } = await import('@intelliflow/db');
+    const churnRisk = churnRiskFromTier(tier);
+
+    await prisma.leadAIInsight.upsert({
+      where: { leadId },
+      create: {
+        leadId,
+        tenantId,
+        engagementScore: Math.min(100, result.score),
+        conversionProbability: Math.min(100, Math.round(result.score * 0.8)),
+        estimatedValue: 0,
+        churnRisk,
+        nextBestAction: recommendations[0] || 'Review lead',
+        sentiment: sentimentFromScore(result.score),
+        sentimentTrend: 'stable',
+        recommendations,
+        lastEngagementDays: 0,
+        icpMatch: icpMatchFromScore(result.score),
+      },
+      update: {
+        engagementScore: Math.min(100, result.score),
+        conversionProbability: Math.min(100, Math.round(result.score * 0.8)),
+        churnRisk,
+        nextBestAction: recommendations[0] || 'Review lead',
+        recommendations,
+      },
+    });
+
+    logger.info({ leadId, score: result.score, tier }, 'Persisted scoring result to LeadAIInsight');
+  } catch (error) {
+    logger.error(
+      { leadId, error: error instanceof Error ? error.message : String(error) },
+      'Failed to persist scoring result'
+    );
+  }
+}
+
+/**
  * Process a lead scoring job
  *
  * @param job - BullMQ job containing lead data
@@ -129,86 +282,10 @@ export async function processScoringJob(job: Job<ScoringJobData>): Promise<Scori
   const startTime = Date.now();
   const { leadId, lead } = job.data;
 
-  // Scheduled cron sentinel — enumerate unscored/stale leads and enqueue real per-lead jobs
   if (job.data.tenantId === '__scheduled__') {
-    logger.info({ jobId: job.id }, 'Scheduled scoring dispatcher — enumerating unscored leads');
-    let enqueued = 0;
-    try {
-      const { prisma } = await import('@intelliflow/db');
-      const { Queue } = await import('bullmq');
-
-      // Find leads with no AI insight or stale insights (updated > 24h ago)
-      const staleThreshold = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      const unscoredLeads = await prisma.lead.findMany({
-        where: {
-          OR: [
-            { aiInsight: null },
-            { aiInsight: { updatedAt: { lt: staleThreshold } } },
-          ],
-        },
-        select: {
-          id: true,
-          tenantId: true,
-          email: true,
-          firstName: true,
-          lastName: true,
-          company: true,
-          title: true,
-          phone: true,
-          source: true,
-        },
-        take: 100, // batch limit per cron cycle
-      });
-
-      if (unscoredLeads.length > 0) {
-        const queue = new Queue(SCORING_QUEUE, {
-          connection: {
-            host: process.env.REDIS_HOST || 'localhost',
-            port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-          },
-        });
-
-        for (const l of unscoredLeads) {
-          await queue.add('score-lead', {
-            leadId: l.id,
-            tenantId: l.tenantId,
-            lead: {
-              email: l.email,
-              firstName: l.firstName ?? undefined,
-              lastName: l.lastName ?? undefined,
-              company: l.company ?? undefined,
-              title: l.title ?? undefined,
-              phone: l.phone ?? undefined,
-              source: l.source ?? 'unknown',
-            },
-          });
-          enqueued++;
-        }
-
-        await queue.close();
-      }
-
-      logger.info({ jobId: job.id, leadsEnqueued: enqueued }, 'Scheduled scoring dispatcher completed');
-    } catch (error) {
-      logger.error(
-        { jobId: job.id, error: error instanceof Error ? error.message : String(error) },
-        'Scheduled scoring dispatcher failed'
-      );
-    }
-    return {
-      leadId,
-      score: 0,
-      confidence: 0,
-      tier: 'UNQUALIFIED',
-      factors: [],
-      recommendations: [],
-      modelVersion: 'scheduler-dispatcher',
-      processedAt: new Date().toISOString(),
-      processingTimeMs: Date.now() - startTime,
-    };
+    return handleScheduledDispatch(job, startTime);
   }
 
-  // Transform job data to chain input
   const chainInput: LeadInput = {
     email: lead.email,
     firstName: lead.firstName,
@@ -220,60 +297,20 @@ export async function processScoringJob(job: Job<ScoringJobData>): Promise<Scori
     metadata: lead.metadata,
   };
 
-  // Update job progress
   await job.updateProgress(10);
 
-  // Process through scoring chain
   const result: ScoringResult = await leadScoringChain.scoreLead(chainInput);
 
   await job.updateProgress(90);
 
-  // Compute tier and recommendations
   const tier = computeTier(result.score);
   const recommendations = generateRecommendations(tier, result.score);
 
-  // Persist scoring result to LeadAIInsight
   const tenantId = job.data.tenantId;
   if (tenantId) {
-    try {
-      const { prisma } = await import('@intelliflow/db');
-      const churnRisk = tier === 'HOT' ? 'MINIMAL' : tier === 'WARM' ? 'LOW' : tier === 'COLD' ? 'MEDIUM' : 'HIGH';
-
-      await prisma.leadAIInsight.upsert({
-        where: { leadId },
-        create: {
-          leadId,
-          tenantId,
-          engagementScore: Math.min(100, result.score),
-          conversionProbability: Math.min(100, Math.round(result.score * 0.8)),
-          estimatedValue: 0,
-          churnRisk,
-          nextBestAction: recommendations[0] || 'Review lead',
-          sentiment: result.score >= 65 ? 'POSITIVE' : result.score >= 35 ? 'NEUTRAL' : 'NEGATIVE',
-          sentimentTrend: 'stable',
-          recommendations,
-          lastEngagementDays: 0,
-          icpMatch: result.score >= 80 ? 'Strong Match' : result.score >= 60 ? 'Good Match' : 'Partial Match',
-        },
-        update: {
-          engagementScore: Math.min(100, result.score),
-          conversionProbability: Math.min(100, Math.round(result.score * 0.8)),
-          churnRisk,
-          nextBestAction: recommendations[0] || 'Review lead',
-          recommendations,
-        },
-      });
-
-      logger.info({ leadId, score: result.score, tier }, 'Persisted scoring result to LeadAIInsight');
-    } catch (error) {
-      logger.error(
-        { leadId, error: error instanceof Error ? error.message : String(error) },
-        'Failed to persist scoring result'
-      );
-    }
+    await persistScoringResult(leadId, tenantId, result, tier, recommendations);
   }
 
-  // Transform to job result
   const processingTimeMs = Date.now() - startTime;
   const jobResult: ScoringJobResult = {
     leadId,

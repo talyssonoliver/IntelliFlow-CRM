@@ -21,7 +21,7 @@ const logger = pino({
  */
 export const followupInputSchema = z.object({
   leadId: z.string(),
-  leadEmail: z.string().email(),
+  leadEmail: z.email(),
   leadName: z.string(),
   leadCompany: z.string().optional(),
   leadTitle: z.string().optional(),

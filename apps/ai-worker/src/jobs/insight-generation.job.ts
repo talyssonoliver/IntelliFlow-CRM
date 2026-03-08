@@ -74,7 +74,7 @@ export type InsightJobData = z.infer<typeof InsightJobDataSchema>;
 export const InsightJobResultSchema = z.object({
   insightsCreated: z.number(),
   processingTimeMs: z.number(),
-  processedAt: z.string().datetime(),
+  processedAt: z.iso.datetime(),
 });
 
 export type InsightJobResult = z.infer<typeof InsightJobResultSchema>;

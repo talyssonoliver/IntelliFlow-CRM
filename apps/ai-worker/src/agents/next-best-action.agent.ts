@@ -17,7 +17,7 @@
 
 import { z } from 'zod';
 import { BaseAgent, AgentTask, AgentResult } from './base.agent';
-import { RAGContextChain, ragContextChain } from '../chains/rag-context.chain';
+import { RAGContextChain } from '../chains/rag-context.chain';
 import { SentimentAnalysisChain, getSentimentChain } from '../chains/sentiment.chain';
 import {
   markAgentActive,
@@ -51,13 +51,13 @@ const logger = pino({
  */
 export const nbaContextSchema = z.object({
   entityType: z.enum(['lead', 'opportunity', 'contact']),
-  entityId: z.string().uuid(),
-  tenantId: z.string().uuid(),
-  userId: z.string().uuid(),
+  entityId: z.uuid(),
+  tenantId: z.uuid(),
+  userId: z.uuid(),
 
   // Entity data
   name: z.string().optional(),
-  email: z.string().email().optional(),
+  email: z.email().optional(),
   company: z.string().optional(),
   title: z.string().optional(),
   score: z.number().min(0).max(100).optional(),
@@ -65,7 +65,7 @@ export const nbaContextSchema = z.object({
   value: z.number().optional(),
 
   // Historical context
-  lastContactDate: z.string().datetime().optional(),
+  lastContactDate: z.iso.datetime().optional(),
   totalInteractions: z.number().optional(),
   daysSinceLastContact: z.number().optional(),
 
@@ -75,7 +75,7 @@ export const nbaContextSchema = z.object({
       z.object({
         content: z.string(),
         direction: z.enum(['inbound', 'outbound']),
-        timestamp: z.string().datetime(),
+        timestamp: z.iso.datetime(),
         channel: z.enum(['email', 'call', 'meeting', 'chat', 'other']),
       })
     )
@@ -103,7 +103,7 @@ export const recommendedActionSchema = z.object({
 
   // Timing
   suggestedTiming: z.string(),
-  deadline: z.string().datetime().optional(),
+  deadline: z.iso.datetime().optional(),
 
   // Template/content suggestions
   contentSuggestion: z.string().optional(),
@@ -178,7 +178,7 @@ export class NextBestActionAgent extends BaseAgent<NBAContext, NBAResult> {
 
   constructor(customRagChain?: RAGContextChain, customSentimentChain?: SentimentAnalysisChain) {
     super(NBA_AGENT_CONFIG);
-    this.ragChain = customRagChain || ragContextChain;
+    this.ragChain = customRagChain || new RAGContextChain();
     if (customSentimentChain) {
       this.sentimentChain = customSentimentChain;
     }
@@ -467,7 +467,7 @@ Valid ACTION_TYPES: ${ACTION_TYPES.join(', ')}
   private parseRecommendations(response: string, context: NBAContext): RecommendedAction[] {
     try {
       // Try to extract JSON from response
-      const jsonMatch = response.match(/\[[^\[\]]{0,50000}\]/); // NOSONAR javascript:S6535
+      const jsonMatch = response.match(/\[[^[\]]{0,50000}\]/); // NOSONAR javascript:S6535
       if (!jsonMatch) {
         throw new Error('No JSON array found in response');
       }

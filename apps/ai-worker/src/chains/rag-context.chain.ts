@@ -48,8 +48,8 @@ export type RAGSource = (typeof RAG_SOURCES)[number];
  */
 export const ragContextInputSchema = z.object({
   query: z.string().min(1).max(4000),
-  tenantId: z.string().uuid(),
-  userId: z.string().uuid(),
+  tenantId: z.uuid(),
+  userId: z.uuid(),
   userRoles: z.array(z.string()).optional().default([]),
   sources: z.array(z.enum(RAG_SOURCES)).optional().default(['documents', 'notes']),
   maxResults: z.number().min(1).max(20).optional().default(5),
@@ -72,7 +72,7 @@ export const contextItemSchema = z.object({
   relevanceScore: z.number().min(0).max(1),
   metadata: z.record(z.string(), z.unknown()),
   citation: z.string(),
-  retrievedAt: z.string().datetime(),
+  retrievedAt: z.iso.datetime(),
 });
 
 export type ContextItem = z.infer<typeof contextItemSchema>;
@@ -260,7 +260,7 @@ export class RAGContextChain {
     // Fall back to mock only in test mode or if explicitly enabled
     if (this.useMockFallback) {
       logger.warn('Using mock retrieval - RetrievalService not configured');
-      return this.performMockRetrieval(input);
+      return this.performMockRetrieval(input); // NOSONAR typescript:S1874 — intentional test-fallback call
     }
 
     // In production without RetrievalService, throw error

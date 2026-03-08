@@ -88,7 +88,7 @@ export const RISK_LEVEL_CONFIG: Record<ChurnRiskLevel, { threshold: number; slaH
  */
 export const churnRiskInputSchema = z.object({
   entityType: z.enum(['lead', 'contact', 'opportunity', 'account']),
-  entityId: z.string().uuid(),
+  entityId: z.uuid(),
 
   // Engagement metrics
   daysSinceLastLogin: z.number().optional(),
