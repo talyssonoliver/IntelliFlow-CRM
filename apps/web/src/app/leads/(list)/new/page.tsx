@@ -151,7 +151,7 @@ export default function CreateNewLeadPage() {
     description: '',
   });
 
-  const currentStepIndex = steps.findIndex((s) => s.id === currentStep);
+  const currentStepIndex = steps.indexOf((s) => s.id === currentStep);
 
   // Track if form has unsaved changes
   const isDirty = JSON.stringify(formData) !== JSON.stringify(initialFormData);
@@ -315,7 +315,7 @@ export default function CreateNewLeadPage() {
 
   // Get step status for styling
   const getStepStatus = (step: Step): 'completed' | 'current' | 'upcoming' => {
-    const stepIndex = steps.findIndex((s) => s.id === step.id);
+    const stepIndex = steps.indexOf((s) => s.id === step.id);
     if (stepIndex < currentStepIndex) return 'completed';
     if (stepIndex === currentStepIndex) return 'current';
     return 'upcoming';
@@ -323,7 +323,7 @@ export default function CreateNewLeadPage() {
 
   // Navigate to a specific step by clicking on it
   const handleStepClick = (step: Step) => {
-    const targetIndex = steps.findIndex((s) => s.id === step.id);
+    const targetIndex = steps.indexOf((s) => s.id === step.id);
     // Only allow navigating to completed steps or current step
     if (targetIndex <= currentStepIndex) {
       setCurrentStep(step.id);

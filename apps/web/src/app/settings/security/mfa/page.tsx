@@ -1,231 +1,67 @@
 'use client';
 
 /**
- * MFA Setup Page
+ * MFA Management Dashboard
+ * PG-125: AC-001, AC-002, AC-004, AC-010, AC-011, AC-012
  *
- * IMPLEMENTS: PG-021 (MFA Setup)
- *
- * Multi-step wizard for setting up multi-factor authentication:
- * 1. Method selection (TOTP, SMS, Email)
- * 2. Method setup (QR code, phone input, email confirm)
- * 3. Code verification
- * 4. Backup codes display
- * 5. Success confirmation
- *
- * Integrates with tRPC endpoints:
- * - auth.setupMfa: Initiates MFA setup (generates secret/QR code)
- * - auth.confirmMfa: Verifies code and enables MFA
- * - auth.getBackupCodes: Generates backup codes
+ * Shows MFA status, enrolled methods, and provides management actions:
+ * - View status and enrolled methods
+ * - Disable MFA (with re-authentication)
+ * - Regenerate backup codes
+ * - Link to setup wizard for adding new methods
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { cn, Card } from '@intelliflow/ui';
+import {
+  Card,
+  Badge,
+  Alert,
+  AlertDescription,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+  Skeleton,
+} from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared/page-header';
-import { MfaQrGenerator } from '@/components/shared/mfa-qr-generator';
-import { BackupCodesDisplay } from '@/components/shared/backup-codes-display';
-import { trpc } from '@/lib/trpc';
-import { useAuth } from '@/lib/auth/AuthContext';
-
-// ============================================
-// Types
-// ============================================
-
-type MfaMethod = 'totp' | 'sms' | 'email';
-type WizardStep = 'method' | 'setup' | 'verify' | 'backup' | 'complete';
-
-interface SetupData {
-  method: MfaMethod;
-  secret?: string;
-  qrCodeUrl?: string;
-  phone?: string;
-  email?: string;
-}
-
-interface MethodOption {
-  id: MfaMethod;
-  name: string;
-  description: string;
-  icon: string;
-  recommended?: boolean;
-}
-
-// ============================================
-// Constants
-// ============================================
-
-const MFA_METHODS: MethodOption[] = [
-  {
-    id: 'totp',
-    name: 'Authenticator App',
-    description: 'Use Google Authenticator, Authy, or 1Password to generate codes',
-    icon: 'key',
-    recommended: true,
-  },
-  {
-    id: 'sms',
-    name: 'SMS Code',
-    description: 'Receive a verification code via text message',
-    icon: 'sms',
-  },
-  {
-    id: 'email',
-    name: 'Email Code',
-    description: 'Receive a verification code via email',
-    icon: 'email',
-  },
-];
+import { useMfaStatus, useDisableMfa, useRegenerateBackupCodes } from '@/lib/security/mfa-service';
+import { downloadBackupCodes } from '@/lib/security/backup-codes';
 
 // ============================================
 // Sub-components
 // ============================================
 
-interface MethodCardProps {
-  method: MethodOption;
-  selected: boolean;
-  onSelect: () => void;
-}
-
-function MethodCard({ method, selected, onSelect }: Readonly<MethodCardProps>) {
+function MfaMethodRow({
+  name,
+  enabled,
+  icon,
+  comingSoon,
+}: {
+  name: string;
+  enabled: boolean;
+  icon: string;
+  comingSoon?: boolean;
+}) {
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={cn(
-        'w-full p-4 rounded-lg border-2 text-left transition-colors',
-        'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background',
-        selected
-          ? 'border-primary bg-primary/10'
-          : 'border-border bg-muted/50 hover:border-muted-foreground/30'
+    <div className="flex items-center justify-between py-2" data-testid={`method-row-${name.toLowerCase()}`}>
+      <div className="flex items-center gap-3">
+        <span className="text-muted-foreground">{icon}</span>
+        <span className="text-foreground">{name}</span>
+      </div>
+      {comingSoon ? (
+        <span className="text-xs text-muted-foreground">Coming soon</span>
+      ) : (
+        <Badge variant={enabled ? 'default' : 'secondary'}>
+          {enabled ? 'Active' : 'Not configured'}
+        </Badge>
       )}
-    >
-      <div className="flex items-start gap-3">
-        <div
-          className={cn(
-            'w-10 h-10 rounded-lg flex items-center justify-center',
-            selected ? 'bg-primary' : 'bg-muted'
-          )}
-        >
-          <span
-            className={cn(
-              'material-symbols-outlined',
-              selected ? 'text-primary-foreground' : 'text-muted-foreground'
-            )}
-            aria-hidden="true"
-          >
-            {method.icon}
-          </span>
-        </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <span
-              className={cn('font-medium', selected ? 'text-foreground' : 'text-foreground/80')}
-            >
-              {method.name}
-            </span>
-            {method.recommended && (
-              <span className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full">
-                Recommended
-              </span>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">{method.description}</p>
-        </div>
-        <div
-          className={cn(
-            'w-5 h-5 rounded-full border-2 flex items-center justify-center',
-            selected ? 'border-primary bg-primary' : 'border-border'
-          )}
-        >
-          {selected && (
-            <span
-              className="material-symbols-outlined text-sm text-primary-foreground"
-              aria-hidden="true"
-            >
-              check
-            </span>
-          )}
-        </div>
-      </div>
-    </button>
-  );
-}
-
-interface VerificationInputProps {
-  value: string;
-  onChange: (value: string) => void;
-  onSubmit: () => void;
-  error?: string;
-  loading?: boolean;
-}
-
-function VerificationInput({ value, onChange, onSubmit, error, loading }: Readonly<VerificationInputProps>) {
-  return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <label htmlFor="verification-code" className="block text-sm font-medium text-foreground">
-          Verification Code
-        </label>
-        <input
-          id="verification-code"
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          maxLength={6}
-          value={value}
-          onChange={(e) => onChange(e.target.value.replaceAll(/\D/g, ''))}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && value.length === 6) {
-              onSubmit();
-            }
-          }}
-          placeholder="000000"
-          className={cn(
-            'w-full px-4 py-3 text-center text-2xl font-mono tracking-[0.5em]',
-            'bg-muted border-2 rounded-lg text-foreground',
-            'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background',
-            error ? 'border-destructive' : 'border-border focus:border-primary'
-          )}
-          aria-describedby={error ? 'verification-error' : undefined}
-          aria-invalid={!!error}
-        />
-        {error && (
-          <p id="verification-error" className="text-sm text-destructive flex items-center gap-1">
-            <span className="material-symbols-outlined text-sm" aria-hidden="true">
-              error
-            </span>{' '}
-            {error}
-          </p>
-        )}
-      </div>
-      <button
-        type="button"
-        onClick={onSubmit}
-        disabled={value.length !== 6 || loading}
-        className={cn(
-          'w-full py-3 px-4 rounded-lg font-medium transition-colors',
-          'flex items-center justify-center gap-2',
-          value.length === 6 && !loading
-            ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-            : 'bg-muted text-muted-foreground cursor-not-allowed',
-          'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background'
-        )}
-      >
-        {loading ? (
-          <>
-            <span className="w-5 h-5 border-2 border-muted-foreground border-t-primary-foreground rounded-full animate-spin" />{' '}
-            Verifying...
-          </>
-        ) : (
-          <>
-            <span className="material-symbols-outlined text-lg" aria-hidden="true">
-              verified
-            </span>{' '}
-            Verify Code
-          </>
-        )}
-      </button>
     </div>
   );
 }
@@ -234,394 +70,283 @@ function VerificationInput({ value, onChange, onSubmit, error, loading }: Readon
 // Main Component
 // ============================================
 
-export default function MfaSetupPage() {
+export default function MfaManagementPage() {
   const router = useRouter();
-  const { user } = useAuth();
-  const [step, setStep] = useState<WizardStep>('method');
-  const [selectedMethod, setSelectedMethod] = useState<MfaMethod>('totp');
-  const [setupData, setSetupData] = useState<SetupData | null>(null);
-  const [verificationCode, setVerificationCode] = useState('');
-  const [verificationError, setVerificationError] = useState('');
-  const [backupCodes, setBackupCodes] = useState<string[]>([]);
-  const [backupCodesGeneratedAt, setBackupCodesGeneratedAt] = useState<Date>(new Date());
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const { data: mfaStatus, isLoading } = useMfaStatus();
+  const disableMfa = useDisableMfa();
+  const regenerateBackupCodes = useRegenerateBackupCodes();
 
-  // User email from auth context
-  const userEmail = user?.email || 'user@example.com';
+  // Disable MFA state
+  const [disableInput, setDisableInput] = useState({ totpCode: '', password: '' });
+  const [disableMethod, setDisableMethod] = useState<'totp' | 'password'>('totp');
+  const disableBtnRef = useRef<HTMLButtonElement>(null);
 
-  // tRPC mutations
-  const setupMfaMutation = trpc.auth.setupMfa.useMutation();
-  const confirmMfaMutation = trpc.auth.confirmMfa.useMutation();
-  const getBackupCodesMutation = trpc.auth.getBackupCodes.useMutation();
+  // Regenerate codes state
+  const [regenTotpCode, setRegenTotpCode] = useState('');
+  const [newCodes, setNewCodes] = useState<string[] | null>(null);
+  const regenBtnRef = useRef<HTMLButtonElement>(null);
 
-  // Step 1: Select method and initiate setup
-  const handleMethodSelect = useCallback(async () => {
+  const isEnabled = mfaStatus?.enabled ?? false;
+
+  const handleDisableMfa = useCallback(async () => {
     try {
-      const result = await setupMfaMutation.mutateAsync({
-        method: selectedMethod,
-        phone: selectedMethod === 'sms' ? phoneNumber : undefined,
-      });
-
-      if (result.success) {
-        // Handle discriminated union response based on method
-        const setupDataFromResult: SetupData = {
-          method: selectedMethod,
-        };
-
-        if (result.method === 'totp') {
-          setupDataFromResult.secret = result.secret;
-          setupDataFromResult.qrCodeUrl = result.qrCodeUrl;
-        } else if (result.method === 'sms' || result.method === 'email') {
-          setupDataFromResult.email = result.codeSentTo;
-        }
-
-        setSetupData(setupDataFromResult);
-        setStep('setup');
-      }
-    } catch (error) {
-      console.error('MFA setup failed:', error);
-      setVerificationError(error instanceof Error ? error.message : 'Failed to initiate MFA setup');
+      const input = disableMethod === 'totp'
+        ? { totpCode: disableInput.totpCode }
+        : { password: disableInput.password };
+      await disableMfa.mutateAsync(input);
+      setDisableInput({ totpCode: '', password: '' });
+      router.push('/settings/account');
+    } catch {
+      // Error handled by mutation state
     }
-  }, [selectedMethod, phoneNumber, setupMfaMutation]);
+  }, [disableMfa, disableInput, disableMethod, router]);
 
-  // Step 2: Complete setup (QR scanned, phone entered, etc.)
-  const handleSetupComplete = useCallback(() => {
-    setStep('verify');
-  }, []);
-
-  // Step 3: Verify code and enable MFA
-  const handleVerification = useCallback(async () => {
-    setVerificationError('');
-
+  const handleRegenerateBackupCodes = useCallback(async () => {
     try {
-      const result = await confirmMfaMutation.mutateAsync({
-        method: selectedMethod,
-        code: verificationCode,
-      });
-
-      if (result.success) {
-        // MFA enabled - now generate backup codes
-        const backupResult = await getBackupCodesMutation.mutateAsync();
-        setBackupCodes(backupResult.codes);
-        setBackupCodesGeneratedAt(new Date(backupResult.generatedAt));
-        setStep('backup');
-      }
-    } catch (error) {
-      console.error('MFA verification failed:', error);
-      setVerificationError(
-        error instanceof Error ? error.message : 'Invalid verification code. Please try again.'
-      );
+      const result = await regenerateBackupCodes.mutateAsync({ totpCode: regenTotpCode });
+      setNewCodes(result.codes);
+      setRegenTotpCode('');
+    } catch {
+      // Error handled by mutation state
     }
-  }, [verificationCode, selectedMethod, confirmMfaMutation, getBackupCodesMutation]);
+  }, [regenerateBackupCodes, regenTotpCode]);
 
-  // Step 4: Acknowledge backup codes
-  const handleBackupAcknowledge = useCallback(() => {
-    setStep('complete');
-  }, []);
-
-  // Step 5: Complete and return to settings
-  const handleComplete = useCallback(() => {
-    router.push('/settings/account');
-  }, [router]);
-
-  // Check if any mutation is loading (for future UI enhancements)
-  const _isLoading =
-    setupMfaMutation.isPending || confirmMfaMutation.isPending || getBackupCodesMutation.isPending;
-
-  // Get step title and description
-  const getStepInfo = () => {
-    switch (step) {
-      case 'method':
-        return {
-          title: 'Choose Authentication Method',
-          description: 'Select how you want to receive verification codes',
-        };
-      case 'setup':
-        return {
-          title: (() => {
-            if (selectedMethod === 'totp') return 'Set Up Authenticator App';
-            return selectedMethod === 'sms'
-              ? 'Set Up SMS Verification'
-              : 'Set Up Email Verification';
-          })(),
-          description: 'Follow the instructions below to complete setup',
-        };
-      case 'verify':
-        return {
-          title: 'Verify Your Setup',
-          description: 'Enter the 6-digit code to confirm everything is working',
-        };
-      case 'backup':
-        return {
-          title: 'Save Backup Codes',
-          description: 'These codes will help you access your account if you lose your device',
-        };
-      case 'complete':
-        return {
-          title: 'Setup Complete!',
-          description: 'Two-factor authentication is now enabled on your account',
-        };
-    }
-  };
-
-  const stepInfo = getStepInfo();
+  // Loading skeleton
+  if (isLoading) {
+    return (
+      <div className="max-w-2xl mx-auto p-6 space-y-6">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-48 w-full" />
+        <Skeleton className="h-32 w-full" />
+      </div>
+    );
+  }
 
   return (
-    <div className="mfa-setup-page">
-      {/* Header */}
+    <div className="max-w-2xl mx-auto p-6 space-y-6">
       <PageHeader
-        title="Set Up Two-Factor Authentication"
+        title="Two-Factor Authentication"
         breadcrumbs={[
           { label: 'Settings', href: '/settings' },
           { label: 'Account', href: '/settings/account' },
-          { label: 'MFA Setup' },
+          { label: 'Two-Factor Authentication' },
         ]}
       />
 
-      {/* Progress Indicator */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between max-w-md">
-          {['method', 'setup', 'verify', 'backup', 'complete'].map((s, i) => {
-            const stepIndex = ['method', 'setup', 'verify', 'backup', 'complete'].indexOf(step);
-            const pastStepClass =
-              stepIndex > i ? 'bg-emerald-500 text-white dark:text-white' : 'bg-muted text-muted-foreground';
-            const stepCircleClass = step === s ? 'bg-primary text-primary-foreground' : pastStepClass;
-            return (
-              <div key={s} className="flex items-center">
-                <div
-                  className={cn(
-                    'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium',
-                    stepCircleClass
-                  )}
-                >
-                  {['method', 'setup', 'verify', 'backup', 'complete'].indexOf(step) > i ? (
-                    <span className="material-symbols-outlined text-sm" aria-hidden="true">
-                      check
-                    </span>
-                  ) : (
-                    i + 1
-                  )}
-                </div>
-                {i < 4 && (
-                  <div
-                    className={cn(
-                      'w-12 h-0.5 mx-1',
-                      ['method', 'setup', 'verify', 'backup', 'complete'].indexOf(step) > i
-                        ? 'bg-emerald-500'
-                        : 'bg-muted'
-                    )}
-                  />
-                )}
-              </div>
-            );
-          })}
+      {/* Status Card */}
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-foreground">Status</h2>
+          <Badge
+            data-testid="mfa-status-badge"
+            variant={isEnabled ? 'default' : 'secondary'}
+          >
+            {isEnabled ? 'Enabled' : 'Disabled'}
+          </Badge>
         </div>
-      </div>
-
-      {/* Step Content */}
-      <Card className="max-w-lg p-6">
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-foreground">{stepInfo.title}</h2>
-          <p className="text-muted-foreground mt-1">{stepInfo.description}</p>
+        <div className="space-y-1">
+          <MfaMethodRow name="Authenticator App" enabled={mfaStatus?.methods.totp ?? false} icon="🔑" />
+          <MfaMethodRow name="SMS" enabled={mfaStatus?.methods.sms ?? false} icon="📱" comingSoon />
+          <MfaMethodRow name="Email" enabled={mfaStatus?.methods.email ?? false} icon="📧" comingSoon />
         </div>
-
-        {/* Method Selection Step */}
-        {step === 'method' && (
-          <div className="space-y-6">
-            <div className="space-y-3">
-              {MFA_METHODS.map((method) => (
-                <MethodCard
-                  key={method.id}
-                  method={method}
-                  selected={selectedMethod === method.id}
-                  onSelect={() => setSelectedMethod(method.id)}
-                />
-              ))}
-            </div>
-
-            {/* Phone input for SMS method */}
-            {selectedMethod === 'sms' && (
-              <div className="space-y-2">
-                <label htmlFor="phone-number" className="block text-sm font-medium text-foreground">
-                  Phone Number
-                </label>
-                <input
-                  id="phone-number"
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="+1 (555) 123-4567"
-                  className={cn(
-                    'w-full px-4 py-3 bg-muted border-2 border-border rounded-lg',
-                    'focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary',
-                    'text-foreground placeholder:text-muted-foreground'
-                  )}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Enter your phone number in E.164 format (e.g., +14155551234)
-                </p>
-              </div>
-            )}
-
-            {/* Error display */}
-            {verificationError && step === 'method' && (
-              <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3">
-                <p className="text-sm text-destructive flex items-center gap-2">
-                  <span className="material-symbols-outlined text-lg" aria-hidden="true">
-                    error
-                  </span>{' '}
-                  {verificationError}
-                </p>
-              </div>
-            )}
-
-            <button
-              type="button"
-              onClick={handleMethodSelect}
-              disabled={setupMfaMutation.isPending || (selectedMethod === 'sms' && !phoneNumber)}
-              className={cn(
-                'w-full py-3 px-4 rounded-lg font-medium',
-                'bg-primary text-primary-foreground',
-                'hover:bg-primary/90',
-                'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background',
-                'transition-colors flex items-center justify-center gap-2',
-                'disabled:opacity-50 disabled:cursor-not-allowed'
-              )}
-            >
-              {setupMfaMutation.isPending ? (
-                <>
-                  <span className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />{' '}
-                  Setting up...
-                </>
-              ) : (
-                <>
-                  <span className="material-symbols-outlined text-lg" aria-hidden="true">
-                    arrow_forward
-                  </span>{' '}
-                  Continue with {MFA_METHODS.find((m) => m.id === selectedMethod)?.name}
-                </>
-              )}
-            </button>
-          </div>
-        )}
-
-        {/* TOTP Setup Step */}
-        {step === 'setup' &&
-          setupData?.method === 'totp' &&
-          setupData.qrCodeUrl &&
-          setupData.secret && (
-            <MfaQrGenerator
-              otpauthUrl={setupData.qrCodeUrl}
-              secret={setupData.secret}
-              accountName={userEmail}
-              onConfirm={handleSetupComplete}
-            />
-          )}
-
-        {/* SMS/Email Setup Step */}
-        {step === 'setup' && (setupData?.method === 'sms' || setupData?.method === 'email') && (
-          <div className="space-y-4">
-            <p className="text-muted-foreground">
-              {setupData.method === 'sms'
-                ? 'Enter your phone number to receive verification codes.'
-                : 'We will send verification codes to your email.'}
-            </p>
-            {setupData.method === 'sms' && (
-              <input
-                type="tel"
-                placeholder="+1 (555) 123-4567"
-                className={cn(
-                  'w-full px-4 py-3 bg-muted border-2 border-border rounded-lg text-foreground',
-                  'focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary'
-                )}
-              />
-            )}
-            <button
-              type="button"
-              onClick={handleSetupComplete}
-              className={cn(
-                'w-full py-3 px-4 rounded-lg font-medium',
-                'bg-primary text-primary-foreground',
-                'hover:bg-primary/90',
-                'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background'
-              )}
-            >
-              Send Code
-            </button>
-          </div>
-        )}
-
-        {/* Verification Step */}
-        {step === 'verify' && (
-          <VerificationInput
-            value={verificationCode}
-            onChange={setVerificationCode}
-            onSubmit={handleVerification}
-            error={verificationError}
-            loading={confirmMfaMutation.isPending || getBackupCodesMutation.isPending}
-          />
-        )}
-
-        {/* Backup Codes Step */}
-        {step === 'backup' && backupCodes.length > 0 && (
-          <BackupCodesDisplay
-            codes={backupCodes}
-            email={userEmail}
-            generatedAt={backupCodesGeneratedAt}
-            onAcknowledge={handleBackupAcknowledge}
-          />
-        )}
-
-        {/* Complete Step */}
-        {step === 'complete' && (
-          <div className="text-center space-y-6">
-            <div className="w-16 h-16 mx-auto bg-emerald-500/20 rounded-full flex items-center justify-center">
-              <span
-                className="material-symbols-outlined text-4xl text-emerald-600 dark:text-emerald-400"
-                aria-hidden="true"
-              >
-                verified_user
-              </span>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-foreground">
-                Two-Factor Authentication Enabled
-              </h3>
-              <p className="text-muted-foreground mt-2">
-                Your account is now protected with an additional layer of security. You will need to
-                enter a verification code when signing in.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleComplete}
-              className={cn(
-                'w-full py-3 px-4 rounded-lg font-medium',
-                'bg-primary text-primary-foreground',
-                'hover:bg-primary/90',
-                'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background',
-                'transition-colors flex items-center justify-center gap-2'
-              )}
-            >
-              <span className="material-symbols-outlined text-lg" aria-hidden="true">
-                arrow_back
-              </span>{' '}
-              Return to Account Settings
-            </button>
-          </div>
-        )}
       </Card>
 
-      {/* Cancel Link */}
-      {step !== 'complete' && (
-        <div className="mt-4 text-center">
-          <Link
-            href="/settings/account"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Cancel and return to settings
-          </Link>
-        </div>
+      {/* Backup Codes Card */}
+      {isEnabled && (
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-foreground">Backup Codes</h2>
+            <span className="text-sm text-muted-foreground">
+              {mfaStatus?.backupCodesRemaining ?? 0} remaining
+            </span>
+          </div>
+
+          {newCodes ? (
+            <div data-testid="new-backup-codes-display" className="space-y-4">
+              <Alert>
+                <AlertDescription>
+                  Save these codes securely. Your previous codes have been invalidated.
+                </AlertDescription>
+              </Alert>
+              <div className="grid grid-cols-2 gap-2 font-mono text-sm">
+                {newCodes.map((code, i) => (
+                  <div key={i} className="p-2 bg-muted rounded text-foreground">{code}</div>
+                ))}
+              </div>
+              <button
+                className="text-sm text-primary hover:underline"
+                onClick={() => downloadBackupCodes(newCodes, '', new Date())}
+              >
+                Download codes
+              </button>
+            </div>
+          ) : (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button
+                  ref={regenBtnRef}
+                  data-testid="regen-backup-btn"
+                  className="text-sm text-primary font-medium hover:underline"
+                >
+                  Regenerate backup codes
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Regenerate Backup Codes</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will invalidate all existing backup codes. Enter your authenticator code to continue.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="py-4">
+                  <label htmlFor="regen-totp-code" className="text-sm font-medium text-foreground">Authenticator Code</label>
+                  <input
+                    id="regen-totp-code"
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={regenTotpCode}
+                    onChange={(e) => setRegenTotpCode(e.target.value.replaceAll(/\D/g, ''))}
+                    className="mt-1 w-full rounded border border-border bg-background px-3 py-2 text-foreground"
+                    placeholder="000000"
+                    data-testid="regen-totp-input"
+                  />
+                  {regenerateBackupCodes.error && (
+                    <p className="mt-2 text-sm text-destructive">{regenerateBackupCodes.error.message}</p>
+                  )}
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => { setRegenTotpCode(''); regenBtnRef.current?.focus(); }}>
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleRegenerateBackupCodes}
+                    disabled={regenTotpCode.length !== 6 || regenerateBackupCodes.isPending}
+                  >
+                    {regenerateBackupCodes.isPending ? 'Regenerating...' : 'Regenerate'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+        </Card>
+      )}
+
+      {/* Add Method Card */}
+      <Card className="p-6">
+        <h2 className="text-lg font-semibold text-foreground mb-2">
+          {isEnabled ? 'Add Another Method' : 'Set Up Two-Factor Authentication'}
+        </h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          {isEnabled
+            ? 'Add additional authentication methods for more security options.'
+            : 'Protect your account with an authenticator app, SMS, or email verification.'}
+        </p>
+        <Link
+          href="/settings/security/mfa/setup"
+          className="inline-flex items-center text-sm font-medium text-primary hover:underline"
+        >
+          {isEnabled ? 'Add method' : 'Get started'} →
+        </Link>
+      </Card>
+
+      {/* Disable MFA Card */}
+      {isEnabled && (
+        <Card className="p-6 border-destructive/50">
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>
+              Disabling two-factor authentication will make your account less secure.
+            </AlertDescription>
+          </Alert>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button
+                ref={disableBtnRef}
+                data-testid="disable-mfa-btn"
+                className="text-sm font-medium text-destructive hover:underline"
+              >
+                Disable two-factor authentication
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent data-testid="disable-confirm-dialog">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Disable Two-Factor Authentication</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will remove all MFA methods and invalidate your backup codes.
+                  Verify your identity to continue.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="py-4 space-y-4">
+                <div className="flex gap-4">
+                  <button
+                    className={`text-sm font-medium px-3 py-1 rounded ${disableMethod === 'totp' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}
+                    onClick={() => setDisableMethod('totp')}
+                  >
+                    Authenticator
+                  </button>
+                  <button
+                    className={`text-sm font-medium px-3 py-1 rounded ${disableMethod === 'password' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}
+                    onClick={() => setDisableMethod('password')}
+                  >
+                    Password
+                  </button>
+                </div>
+                {disableMethod === 'totp' ? (
+                  <div>
+                    <label htmlFor="disable-totp-code" className="text-sm font-medium text-foreground">Authenticator Code</label>
+                    <input
+                      id="disable-totp-code"
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={disableInput.totpCode}
+                      onChange={(e) => setDisableInput({ ...disableInput, totpCode: e.target.value.replaceAll(/\D/g, '') })}
+                      className="mt-1 w-full rounded border border-border bg-background px-3 py-2 text-foreground"
+                      placeholder="000000"
+                      data-testid="disable-totp-input"
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <label htmlFor="disable-password" className="text-sm font-medium text-foreground">Password</label>
+                    <input
+                      id="disable-password"
+                      type="password"
+                      value={disableInput.password}
+                      onChange={(e) => setDisableInput({ ...disableInput, password: e.target.value })}
+                      className="mt-1 w-full rounded border border-border bg-background px-3 py-2 text-foreground"
+                      placeholder="Enter your password"
+                      data-testid="disable-password-input"
+                    />
+                  </div>
+                )}
+                {disableMfa.error && (
+                  <p className="text-sm text-destructive">{disableMfa.error.message}</p>
+                )}
+              </div>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => {
+                  setDisableInput({ totpCode: '', password: '' });
+                  disableBtnRef.current?.focus();
+                }}>
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDisableMfa}
+                  disabled={
+                    (disableMethod === 'totp' && disableInput.totpCode.length !== 6) ||
+                    (disableMethod === 'password' && disableInput.password.length < 8) ||
+                    disableMfa.isPending
+                  }
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {disableMfa.isPending ? 'Disabling...' : 'Disable MFA'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </Card>
       )}
     </div>
   );

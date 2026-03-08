@@ -194,10 +194,10 @@ describe('Content Audit Results Schema Validation', () => {
     }
   });
 
-  // TC-04: All 27 public routes have seo_score as integer 0-100 (AC-003)
+  // TC-04: All 28 public routes have seo_score as integer 0-100 (AC-003)
   it('TC-04: all public routes have integer seo_score 0-100', () => {
     const publicRoutes = auditData.routes.filter((r) => r.access_tier === 'public');
-    expect(publicRoutes.length).toBe(27);
+    expect(publicRoutes.length).toBe(28);
 
     for (const route of publicRoutes) {
       expect(typeof route.seo_score).toBe('number');
@@ -212,7 +212,7 @@ describe('Content Audit Results Schema Validation', () => {
     const nonPublicRoutes = auditData.routes.filter(
       (r) => r.access_tier === 'auth-gated' || r.access_tier === 'developer'
     );
-    expect(nonPublicRoutes.length).toBe(auditData.routes.length - 27);
+    expect(nonPublicRoutes.length).toBe(auditData.routes.length - 28);
 
     for (const route of nonPublicRoutes) {
       expect(route.seo_score).toBeNull();
@@ -234,20 +234,21 @@ describe('Content Audit Results Schema Validation', () => {
     }
   });
 
-  // TC-07: summary.legal_pages_missing contains privacy, terms, cookies (AC-005)
+  // TC-07: summary.legal_pages_missing contains terms and cookies after /privacy ships (AC-005)
   it('TC-07: summary.legal_pages_missing contains required pages', () => {
     expect(auditData.summary.legal_pages_missing).toEqual(
-      expect.arrayContaining(['privacy', 'terms', 'cookies'])
+      expect.arrayContaining(['terms', 'cookies'])
     );
-    expect(auditData.summary.legal_pages_missing.length).toBe(3);
+    expect(auditData.summary.legal_pages_missing).not.toContain('privacy');
+    expect(auditData.summary.legal_pages_missing.length).toBe(2);
   });
 
-  // TC-08: findings.critical contains entry referencing /privacy (AC-005, TR-004)
-  it('TC-08: findings.critical contains legal page reference', () => {
+  // TC-08: findings.critical no longer flags /privacy once PG-050 is implemented (AC-005, TR-004)
+  it('TC-08: findings.critical does not include /privacy once route exists', () => {
     const privacyFinding = auditData.findings.critical.find(
       (f) => f.description.includes('/privacy') || f.route === '/privacy'
     );
-    expect(privacyFinding).toBeDefined();
+    expect(privacyFinding).toBeUndefined();
   });
 
   // TC-09: findings.high contains /press/[id] broken link entry (AC-006)

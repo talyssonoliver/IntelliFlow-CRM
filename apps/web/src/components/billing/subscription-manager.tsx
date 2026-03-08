@@ -747,7 +747,7 @@ export function SubscriptionManager({
     // Get the price ID for the selected interval
     const priceId =
       interval === 'annual'
-        ? `${selectedPlan.priceId.replace('_monthly', '_annual')}`
+        ? `${selectedPlan.priceId.replaceAll('_monthly', '_annual')}`
         : selectedPlan.priceId;
 
     updateSubscription.mutate({ priceId });

@@ -157,8 +157,8 @@ export default function CustomizeDashboardPage() {
 
     if (over && active.id !== over.id) {
       setWidgets((items) => {
-        const oldIndex = items.findIndex((i) => i.id === active.id);
-        const newIndex = items.findIndex((i) => i.id === over.id);
+        const oldIndex = items.indexOf((i) => i.id === active.id);
+        const newIndex = items.indexOf((i) => i.id === over.id);
         return arrayMove(items, oldIndex, newIndex);
       });
     }

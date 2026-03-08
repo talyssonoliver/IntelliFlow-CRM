@@ -231,7 +231,7 @@ export default function StatusPage() {
                         })()
                       }`}
                     >
-                      {service.status.replace('_', ' ')}
+                      {service.status.replaceAll('_', ' ')}
                     </span>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
                       {service.uptime}% uptime

@@ -68,6 +68,10 @@ interface TicketDetailProps {
   onDelete?: () => Promise<void>;
   /** Called after confirmed archive */
   onArchive?: () => Promise<void>;
+  /** Override back-navigation href. Defaults to '/tickets'. */
+  listHref?: string;
+  /** Override detail page URL prefix for related tickets. Defaults to '/tickets'. */
+  detailUrlPrefix?: string;
 }
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -133,6 +137,8 @@ export function TicketDetail({
   onClose,
   onDelete,
   onArchive,
+  listHref = '/tickets',
+  detailUrlPrefix = '/tickets',
 }: Readonly<TicketDetailProps>) {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
@@ -225,7 +231,7 @@ export function TicketDetail({
             {/* Breadcrumb */}
             <nav className="flex items-center gap-2 text-sm text-slate-500">
               <Link
-                href="/tickets"
+                href={listHref}
                 className="hover:text-[#137fec] transition-colors flex items-center gap-1"
               >
                 <span className="material-symbols-outlined text-[16px]">arrow_back</span>{' '}Tickets
@@ -269,7 +275,7 @@ export function TicketDetail({
               entityId={ticket.id}
               title={ticket.subject}
               icon="confirmation_number"
-              url={`/tickets/${ticket.id}`}
+              url={`${detailUrlPrefix}/${ticket.id}`}
             />
             <MoreActionsButton onClick={() => setActionSheetOpen(true)} />
           </div>
@@ -284,7 +290,7 @@ export function TicketDetail({
             title: ticket.subject,
             subtitle: `#${ticket.ticketNumber}`,
             icon: 'confirmation_number',
-            url: `/tickets/${ticket.id}`,
+            url: `${detailUrlPrefix}/${ticket.id}`,
           }}
           extraActions={[
             {
@@ -1163,7 +1169,7 @@ export function TicketDetail({
                           .map((related) => (
                             <Link
                               key={related.id}
-                              href={`/tickets/${related.id}`}
+                              href={`${detailUrlPrefix}/${related.id}`}
                               className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                             >
                               <div>
@@ -1367,7 +1373,7 @@ export function TicketDetail({
                   return (
                     <Link
                       key={related.id}
-                      href={`/tickets/${related.id}`}
+                      href={`${detailUrlPrefix}/${related.id}`}
                       className="block p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
                     >
                       <div className="flex items-center justify-between">

@@ -392,7 +392,7 @@ function TimelineEventCard({
             <span
               className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(event.status)}`}
             >
-              {event.status.replace('_', ' ')}
+              {event.status.replaceAll('_', ' ')}
             </span>
             {isOverdue && <Icon name="warning" className="text-base text-red-500" />}
             <button

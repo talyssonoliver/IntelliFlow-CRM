@@ -147,7 +147,7 @@ export function FileUploader({
 
   return (
     <div className="space-y-3">
-      <label htmlFor="file-upload-input" className="block text-sm font-medium text-foreground">Attachments</label>
+      <label htmlFor="file-upload-input" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Attachments</label>
 
       {/* Drop zone */}
       <div
@@ -156,29 +156,29 @@ export function FileUploader({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`relative rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
+        className={`relative rounded-lg border-2 border-dashed p-4 text-center transition-colors ${
           disabled
-            ? 'cursor-not-allowed border-border bg-muted/50 opacity-60'
+            ? 'cursor-not-allowed border-slate-200 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-800/30 opacity-60'
             : isDragOver
-              ? 'border-primary bg-primary/5'
-              : 'border-border hover:border-primary/50'
+              ? 'border-[#137fec] bg-[#137fec]/5'
+              : 'border-slate-300 dark:border-slate-600 hover:border-[#137fec]/50'
         }`}
       >
-        <span className="material-symbols-outlined text-3xl text-muted-foreground mb-2 block">
+        <span className="material-symbols-outlined text-2xl text-slate-400 dark:text-slate-500 mb-1 block">
           cloud_upload
         </span>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-slate-500 dark:text-slate-400">
           Drag & drop files here, or{' '}
           <button
             type="button"
             onClick={handleBrowseClick}
             disabled={disabled}
-            className="text-primary font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-primary/50 rounded"
+            className="text-[#137fec] font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-[#137fec]/20 rounded"
           >
             browse
           </button>
         </p>
-        <p className="text-xs text-muted-foreground mt-1">
+        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
           Max {maxSizeMB}MB per file, up to {maxFiles} files
         </p>
         <input
@@ -199,7 +199,7 @@ export function FileUploader({
       {errors.length > 0 && (
         <div role="alert" className="space-y-1">
           {errors.map((error, i) => (
-            <p key={i} className="text-xs text-destructive">
+            <p key={i} className="text-xs text-red-500">
               {error}
             </p>
           ))}
@@ -212,21 +212,21 @@ export function FileUploader({
           {files.map((file, index) => (
             <li
               key={`${file.name}-${index}`}
-              className="flex items-center gap-3 rounded-lg border border-border p-2 text-sm"
+              className="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 text-sm"
             >
-              <span className="material-symbols-outlined text-muted-foreground text-lg">
+              <span className="material-symbols-outlined text-slate-400 dark:text-slate-500 text-lg">
                 {getFileTypeIcon(file.type)}
               </span>
               <div className="flex-1 min-w-0">
-                <p className="truncate font-medium text-foreground">{file.name}</p>
-                <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                <p className="truncate font-medium text-slate-900 dark:text-white">{file.name}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{formatFileSize(file.size)}</p>
               </div>
               <button
                 type="button"
                 onClick={() => handleRemove(index)}
                 disabled={disabled}
                 aria-label={`Remove ${file.name}`}
-                className="text-muted-foreground hover:text-destructive transition-colors p-1 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
+                className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded focus:outline-none focus:ring-2 focus:ring-[#137fec]/20 disabled:opacity-50"
               >
                 <span className="material-symbols-outlined text-lg">close</span>
               </button>

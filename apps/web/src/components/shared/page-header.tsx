@@ -83,7 +83,7 @@ export function Breadcrumbs({ items, className }: Readonly<BreadcrumbsProps>) {
                 {item.label}
               </span>
             ) : (
-              <Link href={item.href} className="hover:text-foreground transition-colors">
+              <Link href={item.href} className="hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                 {item.label}
               </Link>
             )}

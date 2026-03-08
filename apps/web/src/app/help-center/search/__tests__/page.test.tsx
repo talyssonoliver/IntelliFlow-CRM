@@ -12,24 +12,26 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mockReplace }),
 }));
 
-// Mock child components to isolate page logic
-vi.mock('@/components/support/help-search', () => ({
-  HelpSearch: (props: any) => (
-    <div data-testid="help-search" data-value={props.value} data-result-count={props.resultCount}>
-      HelpSearch
+// Mock SearchFilterBar to isolate page logic
+vi.mock('@/components/shared', () => ({
+  PageHeader: (props: any) => (
+    <div data-testid="page-header">
+      <h1>{props.title}</h1>
+      {props.breadcrumbs?.map((b: any) => (
+        <span key={b.label}>{b.label}</span>
+      ))}
     </div>
   ),
-}));
-
-vi.mock('@/components/support/search-filters', () => ({
-  SearchFilters: (props: any) => (
+  SearchFilterBar: (props: any) => (
     <div
-      data-testid="search-filters"
-      data-category={props.categoryFilter}
-      data-sort={props.sortBy}
-      data-popular={props.popularOnly}
+      data-testid="search-filter-bar"
+      data-search-value={props.searchValue}
+      data-search-placeholder={props.searchPlaceholder}
+      data-sort-value={props.sort?.value}
+      data-chip-value={props.filterChips?.value}
+      data-category-value={props.filters?.[0]?.value}
     >
-      SearchFilters
+      SearchFilterBar
     </div>
   ),
 }));
@@ -50,7 +52,6 @@ vi.mock('@/components/support/help-categories', () => ({
 import HelpSearchPage from '@/app/help-center/search/page';
 
 function setSearchParams(params: Record<string, string>) {
-  // Clear and set new params
   const keys = Array.from(mockSearchParams.keys());
   keys.forEach((k) => mockSearchParams.delete(k));
   Object.entries(params).forEach(([k, v]) => mockSearchParams.set(k, v));
@@ -74,14 +75,9 @@ describe('HelpSearchPage', () => {
     expect(screen.getByText('Search')).toBeInTheDocument();
   });
 
-  it('renders HelpSearch component', () => {
+  it('renders SearchFilterBar component', () => {
     render(<HelpSearchPage />);
-    expect(screen.getByTestId('help-search')).toBeInTheDocument();
-  });
-
-  it('renders SearchFilters component', () => {
-    render(<HelpSearchPage />);
-    expect(screen.getByTestId('search-filters')).toBeInTheDocument();
+    expect(screen.getByTestId('search-filter-bar')).toBeInTheDocument();
   });
 
   it('renders HelpCategories', () => {
@@ -89,11 +85,11 @@ describe('HelpSearchPage', () => {
     expect(screen.getByTestId('help-categories')).toBeInTheDocument();
   });
 
-  it('?q=billing pre-populates HelpSearch value', () => {
+  it('?q=billing pre-populates SearchFilterBar searchValue', () => {
     setSearchParams({ q: 'billing' });
     render(<HelpSearchPage />);
-    const search = screen.getByTestId('help-search');
-    expect(search).toHaveAttribute('data-value', 'billing');
+    const bar = screen.getByTestId('search-filter-bar');
+    expect(bar).toHaveAttribute('data-search-value', 'billing');
   });
 
   it('empty query passes all 8 categories', () => {
@@ -103,33 +99,25 @@ describe('HelpSearchPage', () => {
     expect(categories).toHaveAttribute('data-count', '8');
   });
 
-  it('result count passed to HelpSearch (undefined when empty, N when active)', () => {
-    setSearchParams({});
-    render(<HelpSearchPage />);
-    const search = screen.getByTestId('help-search');
-    // Empty query → no resultCount
-    expect(search.getAttribute('data-result-count')).toBeNull();
-  });
-
-  it('?category=billing propagates to SearchFilters', () => {
+  it('?category=billing propagates to SearchFilterBar', () => {
     setSearchParams({ category: 'billing' });
     render(<HelpSearchPage />);
-    const filters = screen.getByTestId('search-filters');
-    expect(filters).toHaveAttribute('data-category', 'billing');
+    const bar = screen.getByTestId('search-filter-bar');
+    expect(bar).toHaveAttribute('data-category-value', 'billing');
   });
 
-  it('?sort=a-z propagates to SearchFilters', () => {
+  it('?sort=a-z propagates to SearchFilterBar', () => {
     setSearchParams({ sort: 'a-z' });
     render(<HelpSearchPage />);
-    const filters = screen.getByTestId('search-filters');
-    expect(filters).toHaveAttribute('data-sort', 'a-z');
+    const bar = screen.getByTestId('search-filter-bar');
+    expect(bar).toHaveAttribute('data-sort-value', 'a-z');
   });
 
-  it('?popular=true propagates to SearchFilters', () => {
+  it('?popular=true propagates as chip value "popular"', () => {
     setSearchParams({ popular: 'true' });
     render(<HelpSearchPage />);
-    const filters = screen.getByTestId('search-filters');
-    expect(filters).toHaveAttribute('data-popular', 'true');
+    const bar = screen.getByTestId('search-filter-bar');
+    expect(bar).toHaveAttribute('data-chip-value', 'popular');
   });
 
   it('?q=xyznonexistent passes 0 categories', () => {
@@ -144,6 +132,13 @@ describe('HelpSearchPage', () => {
     render(<HelpSearchPage />);
     const categories = screen.getByTestId('help-categories');
     expect(Number(categories.getAttribute('data-count'))).toBe(3);
+  });
+
+  it('default chip value is "all" when popular param absent', () => {
+    setSearchParams({});
+    render(<HelpSearchPage />);
+    const bar = screen.getByTestId('search-filter-bar');
+    expect(bar).toHaveAttribute('data-chip-value', 'all');
   });
 
   it('use client directive present', () => {

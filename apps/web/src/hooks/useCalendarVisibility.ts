@@ -29,6 +29,8 @@ interface CalendarVisibilityContextValue {
   dbCalendars: DbCalendar[];
   toggle: (id: string) => void;
   isVisible: (id: string) => boolean;
+  /** Show only the specified calendar IDs, hiding all others */
+  setOnlyVisible: (ids: string[]) => void;
   addCalendar: (label: string, color: string) => Promise<void>;
   removeCalendar: (id: string) => Promise<void>;
 }
@@ -159,6 +161,21 @@ export function CalendarVisibilityProvider({ children }: { children: ReactNode }
 
   const isVisible = useCallback((id: string): boolean => visibility[id] ?? true, [visibility]);
 
+  const setOnlyVisible = useCallback((ids: string[]) => {
+    const idSet = new Set(ids);
+    setVisibility((prev) => {
+      const next: Record<string, boolean> = {};
+      for (const key of Object.keys(prev)) {
+        next[key] = idSet.has(key);
+      }
+      // Ensure requested ids are visible even if not in prev
+      for (const id of ids) {
+        next[id] = true;
+      }
+      return next;
+    });
+  }, []);
+
   const addCalendar = useCallback(
     (label: string, color: string): Promise<void> => {
       return createMutation
@@ -213,8 +230,8 @@ export function CalendarVisibilityProvider({ children }: { children: ReactNode }
   }, [visibility, dbCalendars]);
 
   const value = useMemo<CalendarVisibilityContextValue>(
-    () => ({ calendars, dbCalendars, toggle, isVisible, addCalendar, removeCalendar }),
-    [calendars, dbCalendars, toggle, isVisible, addCalendar, removeCalendar]
+    () => ({ calendars, dbCalendars, toggle, isVisible, setOnlyVisible, addCalendar, removeCalendar }),
+    [calendars, dbCalendars, toggle, isVisible, setOnlyVisible, addCalendar, removeCalendar]
   );
 
   return React.createElement(CalendarVisibilityContext.Provider, { value }, children);
@@ -240,6 +257,7 @@ export function useCalendarVisibilityOptional(): CalendarVisibilityContextValue 
     dbCalendars: [],
     toggle: () => {},
     isVisible: () => true,
+    setOnlyVisible: () => {},
     addCalendar: NOOP_ASYNC,
     removeCalendar: NOOP_ASYNC,
   };

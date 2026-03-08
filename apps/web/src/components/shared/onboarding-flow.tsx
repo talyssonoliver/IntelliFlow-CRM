@@ -316,7 +316,7 @@ export function OnboardingFlow({
       onStepComplete?.(stepId, stepIndex);
 
       // Move to next uncompleted step
-      const nextIncomplete = steps.findIndex(
+      const nextIncomplete = steps.indexOf(
         (s, i) => i > stepIndex && !completedSteps.has(s.id) && s.id !== stepId
       );
       if (nextIncomplete !== -1) {

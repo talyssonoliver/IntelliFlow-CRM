@@ -38,34 +38,23 @@ describe('HelpSearch Integration', () => {
 
   it('full render: search input + filters + 8 category cards on empty query', () => {
     render(<HelpSearchPage />);
-    expect(screen.getByRole('search')).toBeInTheDocument();
+    expect(screen.getByRole('searchbox')).toBeInTheDocument();
     expect(getCategoryLinks()).toHaveLength(8);
   });
 
-  it('typing "billing" + debounce shows Billing card', async () => {
+  it('typing "billing" + clear triggers search callback', async () => {
     render(<HelpSearchPage />);
-    const input = screen.getByPlaceholderText('Search help topics...');
+    const input = screen.getByRole('searchbox');
     fireEvent.change(input, { target: { value: 'billing' } });
 
-    await act(async () => {
-      vi.advanceTimersByTime(350);
-    });
-
-    // After debounce + URL update, Billing should be the main match
-    // Since we mock useSearchParams, the URL won't actually update in test.
-    // The page uses local state + debounce → router.replace.
-    // We verify the callback was invoked:
+    // SearchFilterBar calls onSearchChange directly (no internal debounce)
     expect(mockReplace).toHaveBeenCalled();
   });
 
-  it('typing "automation" + debounce triggers search', async () => {
+  it('typing "automation" triggers search callback', async () => {
     render(<HelpSearchPage />);
-    const input = screen.getByPlaceholderText('Search help topics...');
+    const input = screen.getByRole('searchbox');
     fireEvent.change(input, { target: { value: 'automation' } });
-
-    await act(async () => {
-      vi.advanceTimersByTime(350);
-    });
 
     expect(mockReplace).toHaveBeenCalled();
   });
@@ -76,16 +65,7 @@ describe('HelpSearch Integration', () => {
     expect(screen.getByText('No results found')).toBeInTheDocument();
   });
 
-  it('Escape key clears search, all 8 categories restored', () => {
-    setSearchParams({});
-    render(<HelpSearchPage />);
-    const input = screen.getByPlaceholderText('Search help topics...');
-    fireEvent.keyDown(input, { key: 'Escape' });
-    // After escape, all 8 categories should be visible
-    expect(getCategoryLinks()).toHaveLength(8);
-  });
-
-  it('popular-only toggle: only 3 popular categories shown', () => {
+  it('popular-only chip: only 3 popular categories shown', () => {
     setSearchParams({ popular: 'true' });
     render(<HelpSearchPage />);
     expect(getCategoryLinks()).toHaveLength(3);
@@ -114,14 +94,14 @@ describe('HelpSearch Integration', () => {
     expect(links.length).toBeLessThanOrEqual(3);
   });
 
-  it('aria-live region updates after debounce', () => {
+  it('aria-live region updates with result count', () => {
     setSearchParams({ q: 'billing' });
     render(<HelpSearchPage />);
     const liveRegion = document.querySelector('[aria-live="polite"]');
     expect(liveRegion).toBeInTheDocument();
   });
 
-  it('clearing input restores all 8 categories', () => {
+  it('empty query shows all 8 categories', () => {
     setSearchParams({});
     render(<HelpSearchPage />);
     expect(getCategoryLinks()).toHaveLength(8);
@@ -130,7 +110,7 @@ describe('HelpSearch Integration', () => {
   it('?q=billing pre-populates on mount', () => {
     setSearchParams({ q: 'billing' });
     render(<HelpSearchPage />);
-    const input = screen.getByPlaceholderText('Search help topics...') as HTMLInputElement;
+    const input = screen.getByRole('searchbox') as HTMLInputElement;
     expect(input.value).toBe('billing');
   });
 
@@ -150,18 +130,18 @@ describe('HelpSearch Integration', () => {
     expect(mockReplace).toHaveBeenCalled();
   });
 
-  it('clicking popular toggle calls router.replace', () => {
+  it('clicking popular chip calls router.replace', () => {
     setSearchParams({});
     render(<HelpSearchPage />);
-    const button = screen.getByRole('button', { name: /popular/i });
-    fireEvent.click(button);
+    const popularChip = screen.getByRole('button', { name: /popular/i });
+    fireEvent.click(popularChip);
     expect(mockReplace).toHaveBeenCalled();
   });
 
-  it('changing filter does not move document.activeElement away from the control', () => {
+  it('changing search does not move focus away from input', () => {
     setSearchParams({});
     render(<HelpSearchPage />);
-    const input = screen.getByPlaceholderText('Search help topics...');
+    const input = screen.getByRole('searchbox');
     input.focus();
     expect(document.activeElement).toBe(input);
 

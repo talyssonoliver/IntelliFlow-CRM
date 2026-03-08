@@ -34,3 +34,7 @@ export { TicketForm } from './TicketForm';
 export { CustomerPortalView } from './CustomerPortalView';
 export { SupportTicketForm } from './ticket-form';
 export { FileUploader } from './file-uploader';
+export { TicketThread } from './ticket-thread';
+export type { TicketThreadProps } from './ticket-thread';
+export { StatusUpdater } from './status-updater';
+export type { StatusUpdaterProps } from './status-updater';

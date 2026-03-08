@@ -220,7 +220,7 @@ export function validateADR(adr: ADRMetadata): ValidationResult {
     const allFiles = getAllADRFiles();
     for (const related of adr.relatedADRs) {
       const relatedExists = allFiles.some((f) =>
-        path.basename(f).includes(related.replace('ADR-', ''))
+        path.basename(f).includes(related.replaceAll('ADR-', ''))
       );
       if (!relatedExists) {
         warnings.push(`Referenced ADR may not exist: ${related}`);
@@ -266,7 +266,7 @@ export function createADR(
     // Get next ADR number
     const adrs = getAllADRs();
     const maxId = adrs.reduce((max, adr) => {
-      const num = Number.parseInt(adr.id.replace('ADR-', ''), 10);
+      const num = Number.parseInt(adr.id.replaceAll('ADR-', ''), 10);
       return Number.isNaN(num) ? max : Math.max(max, num);
     }, 0);
 

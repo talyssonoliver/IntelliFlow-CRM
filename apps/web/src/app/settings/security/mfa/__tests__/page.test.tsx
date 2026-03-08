@@ -146,7 +146,7 @@ vi.mock('@/components/shared/backup-codes-display', () => ({
 // Import page AFTER all mocks
 // ============================================
 
-import MfaSetupPage from '../page';
+import MfaSetupPage from '../setup/page';
 
 // ============================================
 // Test helpers

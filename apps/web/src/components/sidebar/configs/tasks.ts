@@ -22,6 +22,12 @@ export const tasksSidebarConfig: SidebarConfig = {
         },
         { id: 'today', label: 'Due Today', icon: 'today', href: '/tasks?view=today' },
         { id: 'upcoming', label: 'Upcoming', icon: 'event_upcoming', href: '/tasks?view=upcoming' },
+        {
+          id: 'task-calendar',
+          label: 'Task Calendar',
+          icon: 'calendar_month',
+          href: '/calendar?show=tasks',
+        },
       ],
     },
     {

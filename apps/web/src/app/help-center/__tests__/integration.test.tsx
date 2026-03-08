@@ -38,19 +38,14 @@ describe('HelpCenter Integration', () => {
 
   it('renders search input, filters, and 8 category cards on empty query', () => {
     render(<HelpCenterPage />);
-    expect(screen.getByRole('search')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Search help topics...')).toBeInTheDocument();
+    expect(screen.getByRole('searchbox')).toBeInTheDocument();
     expect(getCategoryLinks()).toHaveLength(8);
   });
 
-  it('typing triggers debounced router.replace', async () => {
+  it('typing triggers router.replace', async () => {
     render(<HelpCenterPage />);
-    const input = screen.getByPlaceholderText('Search help topics...');
+    const input = screen.getByRole('searchbox');
     fireEvent.change(input, { target: { value: 'billing' } });
-
-    await act(async () => {
-      vi.advanceTimersByTime(350);
-    });
 
     expect(mockReplace).toHaveBeenCalled();
   });
@@ -59,14 +54,6 @@ describe('HelpCenter Integration', () => {
     setSearchParams({ q: 'xyznonexistent' });
     render(<HelpCenterPage />);
     expect(screen.getByText('No results found')).toBeInTheDocument();
-  });
-
-  it('Escape key clears search, all 8 categories restored', () => {
-    setSearchParams({});
-    render(<HelpCenterPage />);
-    const input = screen.getByPlaceholderText('Search help topics...');
-    fireEvent.keyDown(input, { key: 'Escape' });
-    expect(getCategoryLinks()).toHaveLength(8);
   });
 
   it('popular-only filter shows only 3 popular categories', () => {
@@ -95,25 +82,16 @@ describe('HelpCenter Integration', () => {
     expect(links.length).toBeLessThanOrEqual(3);
   });
 
-  it('aria-live region is present', () => {
-    setSearchParams({ q: 'billing' });
-    render(<HelpCenterPage />);
-    const liveRegion = document.querySelector('[aria-live="polite"]');
-    expect(liveRegion).toBeInTheDocument();
-  });
-
-  it('empty query shows all 8 categories with correct links', () => {
+  it('empty query shows all 8 categories', () => {
     setSearchParams({});
     render(<HelpCenterPage />);
-
-    const categoryLinks = getCategoryLinks();
-    expect(categoryLinks).toHaveLength(8);
+    expect(getCategoryLinks()).toHaveLength(8);
   });
 
   it('?q=billing pre-populates input on mount', () => {
     setSearchParams({ q: 'billing' });
     render(<HelpCenterPage />);
-    const input = screen.getByPlaceholderText('Search help topics...') as HTMLInputElement;
+    const input = screen.getByRole('searchbox') as HTMLInputElement;
     expect(input.value).toBe('billing');
   });
 
@@ -133,18 +111,18 @@ describe('HelpCenter Integration', () => {
     expect(mockReplace).toHaveBeenCalled();
   });
 
-  it('clicking popular toggle calls router.replace', () => {
+  it('clicking popular chip calls router.replace', () => {
     setSearchParams({});
     render(<HelpCenterPage />);
-    const button = screen.getByRole('button', { name: /popular/i });
-    fireEvent.click(button);
+    const popularChip = screen.getByRole('button', { name: /popular/i });
+    fireEvent.click(popularChip);
     expect(mockReplace).toHaveBeenCalled();
   });
 
   it('changing filter does not move focus away from the control', () => {
     setSearchParams({});
     render(<HelpCenterPage />);
-    const input = screen.getByPlaceholderText('Search help topics...');
+    const input = screen.getByRole('searchbox');
     input.focus();
     expect(document.activeElement).toBe(input);
 

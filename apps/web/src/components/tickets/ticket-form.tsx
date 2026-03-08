@@ -34,18 +34,18 @@ export function SupportTicketForm({
   };
 
   return (
-    <div className="space-y-6">
-      <TicketForm
-        mode="create"
-        onSubmit={handleFormSubmit}
-        onCancel={onCancel}
-        isSubmitting={isSubmitting}
-      />
-      <FileUploader
-        files={stagedFiles}
-        onChange={setStagedFiles}
-        disabled={isSubmitting}
-      />
-    </div>
+    <TicketForm
+      mode="create"
+      onSubmit={handleFormSubmit}
+      onCancel={onCancel}
+      isSubmitting={isSubmitting}
+      renderBeforeActions={
+        <FileUploader
+          files={stagedFiles}
+          onChange={setStagedFiles}
+          disabled={isSubmitting}
+        />
+      }
+    />
   );
 }

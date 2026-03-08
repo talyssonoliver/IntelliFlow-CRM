@@ -127,7 +127,7 @@ export function ChainVersionsDashboard({
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">Strategy</span>
                   <span className="text-xs text-foreground capitalize">
-                    {version.rolloutStrategy.toLowerCase().replace('_', ' ')}
+                    {version.rolloutStrategy.toLowerCase().replaceAll('_', ' ')}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">

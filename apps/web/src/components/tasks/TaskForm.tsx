@@ -226,7 +226,7 @@ export function TaskForm({ open, onClose, onSubmit, initialData, mode }: Readonl
               >
                 {TASK_STATUSES.map((s) => (
                   <option key={s} value={s}>
-                    {s.replace('_', ' ')}
+                    {s.replaceAll('_', ' ')}
                   </option>
                 ))}
               </select>

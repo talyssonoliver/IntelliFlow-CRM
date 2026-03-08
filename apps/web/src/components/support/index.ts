@@ -1,9 +1,5 @@
-export { HelpSearch } from './help-search';
-export type { HelpSearchProps } from './help-search';
 export { HelpCategories } from './help-categories';
 export type { HelpCategoriesProps } from './help-categories';
-export { SearchFilters } from './search-filters';
-export type { SearchFiltersProps } from './search-filters';
 export { ArticleRenderer } from './article-renderer';
 export type { ArticleRendererProps } from './article-renderer';
 export { FeedbackWidget } from './feedback-widget';

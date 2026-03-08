@@ -82,7 +82,7 @@ const STATUS_BADGE_MAP: Record<string, 'success' | 'warning' | 'destructive' | '
  * ADR-025+: Process & Tooling
  */
 function getCategoryForAdr(adr: Readonly<ADRMetadata>): string {
-  const num = Number.parseInt(adr.id.replace('ADR-', ''), 10);
+  const num = Number.parseInt(adr.id.replaceAll('ADR-', ''), 10);
   if (Number.isNaN(num)) return 'process-tooling';
   if (num <= 4) return 'architecture-patterns';
   if (num <= 9) return 'data-security';

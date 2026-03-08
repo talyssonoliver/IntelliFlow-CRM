@@ -2,14 +2,36 @@
 
 import { Suspense, useMemo, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { PageHeader } from '@/components/shared/page-header';
-import { HelpSearch, HelpCategories, SearchFilters } from '@/components/support';
+import { PageHeader, SearchFilterBar } from '@/components/shared';
+import { HelpCategories } from '@/components/support';
 import {
   searchHelpContent,
   DEFAULT_SEARCH_FILTERS,
 } from '@/components/support/search-algorithm';
 import type { SortMode } from '@/components/support/search-algorithm';
 import { DEFAULT_HELP_CATEGORIES } from '@/lib/support/help-categories';
+
+// ---------------------------------------------------------------------------
+// Filter options derived from help category data
+// ---------------------------------------------------------------------------
+
+const CATEGORY_OPTIONS = [
+  { value: '', label: 'All Categories' },
+  ...DEFAULT_HELP_CATEGORIES.map((cat) => ({
+    value: cat.id,
+    label: cat.title,
+  })),
+];
+
+const SORT_OPTIONS = [
+  { value: 'relevance', label: 'Relevance' },
+  { value: 'a-z', label: 'A-Z' },
+  { value: 'most-articles', label: 'Most Articles' },
+];
+
+// ---------------------------------------------------------------------------
+// Skeleton
+// ---------------------------------------------------------------------------
 
 function HelpCenterSkeleton() {
   return (
@@ -25,6 +47,10 @@ function HelpCenterSkeleton() {
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Page content
+// ---------------------------------------------------------------------------
 
 function HelpCenterContent() {
   const searchParams = useSearchParams();
@@ -49,8 +75,6 @@ function HelpCenterContent() {
     [query, filters]
   );
 
-  const resultCount = query ? results.length : undefined;
-
   const updateParams = useCallback(
     (updates: Record<string, string>) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -70,29 +94,13 @@ function HelpCenterContent() {
   );
 
   const handleSearchChange = useCallback(
-    (value: string) => {
-      updateParams({ q: value });
-    },
+    (value: string) => updateParams({ q: value }),
     [updateParams]
   );
 
-  const handleCategoryChange = useCallback(
-    (id: string) => {
-      updateParams({ category: id });
-    },
-    [updateParams]
-  );
-
-  const handleSortChange = useCallback(
-    (sort: SortMode) => {
-      updateParams({ sort });
-    },
-    [updateParams]
-  );
-
-  const handlePopularOnlyChange = useCallback(
-    (value: boolean) => {
-      updateParams({ popular: value ? 'true' : 'false' });
+  const handlePopularChipChange = useCallback(
+    (chipValue: string) => {
+      updateParams({ popular: chipValue === 'popular' ? 'true' : 'false' });
     },
     [updateParams]
   );
@@ -106,22 +114,35 @@ function HelpCenterContent() {
           breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Help Center' }]}
         />
 
-        <div className="mb-4">
-          <HelpSearch
-            value={query}
-            onChange={handleSearchChange}
-            resultCount={resultCount}
-          />
-        </div>
-
         <div className="mb-6">
-          <SearchFilters
-            categoryFilter={categoryFilter}
-            onCategoryChange={handleCategoryChange}
-            sortBy={sortBy}
-            onSortChange={handleSortChange}
-            popularOnly={popularOnly}
-            onPopularOnlyChange={handlePopularOnlyChange}
+          <SearchFilterBar
+            searchValue={query}
+            onSearchChange={handleSearchChange}
+            searchPlaceholder="Search help topics..."
+            searchAriaLabel="Search help topics"
+            filters={[
+              {
+                id: 'category',
+                label: 'Category',
+                icon: 'category',
+                options: CATEGORY_OPTIONS,
+                value: categoryFilter,
+                onChange: (v) => updateParams({ category: v }),
+              },
+            ]}
+            filterChips={{
+              options: [
+                { id: 'all', label: 'All' },
+                { id: 'popular', label: 'Popular' },
+              ],
+              value: popularOnly ? 'popular' : 'all',
+              onChange: handlePopularChipChange,
+            }}
+            sort={{
+              options: SORT_OPTIONS,
+              value: sortBy,
+              onChange: (v) => updateParams({ sort: v }),
+            }}
           />
         </div>
 

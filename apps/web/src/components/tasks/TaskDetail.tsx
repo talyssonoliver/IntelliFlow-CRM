@@ -166,7 +166,7 @@ export function TaskDetail({
             <span
               className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusStyle}`}
             >
-              {task.status.replace('_', ' ')}
+              {task.status.replaceAll('_', ' ')}
             </span>
             <span
               className={`inline-flex items-center gap-1 text-sm font-medium ${priority.color}`}

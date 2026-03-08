@@ -15,9 +15,9 @@
  * @implements AC-012 (reachable via sidebar Quick Links)
  */
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { toast } from '@intelliflow/ui';
-import { PageHeader } from '@/components/shared';
+import { Card, toast } from '@intelliflow/ui';
 import { SupportTicketForm } from '@/components/tickets/ticket-form';
 import { api } from '@/lib/api';
 
@@ -108,21 +108,55 @@ export default function SupportNewTicketPage() {
   const isSubmitting = createMutation.isPending || addAttachmentMutation.isPending;
 
   return (
-    <>
-      <PageHeader
-        breadcrumbs={[
-          { label: 'Support', href: '/support' },
-          { label: 'Tickets', href: '/support/tickets' },
-          { label: 'New Ticket' },
-        ]}
-        title="Create Support Ticket"
-        description="Log a new customer support ticket"
-      />
-      <SupportTicketForm
-        onSubmit={handleSubmit}
-        onCancel={() => router.push('/support/tickets')}
-        isSubmitting={isSubmitting}
-      />
-    </>
+    <div className="flex flex-col gap-5 p-2 sm:p-3 md:p-4">
+      {/* Breadcrumbs + Title */}
+      <div className="flex flex-col gap-2">
+        <nav aria-label="Breadcrumb" className="flex">
+          <ol className="flex items-center space-x-2">
+            <li>
+              <Link
+                href="/support"
+                className="text-slate-500 dark:text-slate-400 hover:text-[#137fec] text-sm font-medium transition-colors"
+              >
+                Support
+              </Link>
+            </li>
+            <li><span className="text-slate-300 dark:text-slate-600">/</span></li>
+            <li>
+              <Link
+                href="/support/tickets"
+                className="text-slate-500 dark:text-slate-400 hover:text-[#137fec] text-sm font-medium transition-colors"
+              >
+                Tickets
+              </Link>
+            </li>
+            <li><span className="text-slate-300 dark:text-slate-600">/</span></li>
+            <li>
+              <span className="text-slate-900 dark:text-white text-sm font-medium">New Ticket</span>
+            </li>
+          </ol>
+        </nav>
+
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            Create Support Ticket
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 text-base">
+            Log a new customer support ticket with optional file attachments.
+          </p>
+        </div>
+      </div>
+
+      {/* Form Card */}
+      <Card className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div className="p-6">
+          <SupportTicketForm
+            onSubmit={handleSubmit}
+            onCancel={() => router.push('/support/tickets')}
+            isSubmitting={isSubmitting}
+          />
+        </div>
+      </Card>
+    </div>
   );
 }

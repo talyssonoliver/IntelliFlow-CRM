@@ -15,28 +15,12 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush, replace: vi.fn(), back: vi.fn() }),
 }));
 
-// Mock toast
+// Mock @intelliflow/ui (toast + Card)
 const mockToast = vi.fn();
 vi.mock('@intelliflow/ui', () => ({
   toast: (...args: unknown[]) => mockToast(...args),
-}));
-
-// Mock PageHeader
-vi.mock('@/components/shared', () => ({
-  PageHeader: (props: {
-    title: string;
-    breadcrumbs: Array<{ label: string; href?: string }>;
-  }) => (
-    <div data-testid="page-header">
-      <h1>{props.title}</h1>
-      <nav data-testid="breadcrumbs">
-        {props.breadcrumbs.map((b, i) => (
-          <span key={i} data-href={b.href}>
-            {b.label}
-          </span>
-        ))}
-      </nav>
-    </div>
+  Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
+    <div data-testid="card" className={className}>{children}</div>
   ),
 }));
 
@@ -125,9 +109,9 @@ beforeEach(async () => {
 });
 
 describe('SupportNewTicketPage', () => {
-  it('renders PageHeader with breadcrumbs Support > Tickets > New Ticket', () => {
+  it('renders breadcrumbs Support > Tickets > New Ticket', () => {
     render(<SupportNewTicketPage />);
-    const breadcrumbs = screen.getByTestId('breadcrumbs');
+    const breadcrumbs = screen.getByLabelText('Breadcrumb');
     expect(breadcrumbs.textContent).toContain('Support');
     expect(breadcrumbs.textContent).toContain('Tickets');
     expect(breadcrumbs.textContent).toContain('New Ticket');

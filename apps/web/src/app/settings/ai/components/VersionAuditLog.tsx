@@ -101,7 +101,7 @@ export function VersionAuditLog({ auditLog, isLoading }: Readonly<VersionAuditLo
               {CHAIN_VERSION_AUDIT_ACTIONS.map((action) => (
                 <SelectItem key={action} value={action}>
                   {ACTION_CONFIG[action].icon}{' '}
-                  {action.charAt(0) + action.slice(1).toLowerCase().replace('_', ' ')}
+                  {action.charAt(0) + action.slice(1).toLowerCase().replaceAll('_', ' ')}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -137,7 +137,7 @@ export function VersionAuditLog({ auditLog, isLoading }: Readonly<VersionAuditLo
                     <TableCell>
                       <Badge className={actionConfig.color}>
                         <span className="mr-1">{actionConfig.icon}</span>
-                        {entry.action.replace('_', ' ')}
+                        {entry.action.replaceAll('_', ' ')}
                       </Badge>
                     </TableCell>
                     <TableCell className="font-mono text-sm">

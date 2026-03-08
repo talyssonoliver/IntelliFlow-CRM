@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { Button } from '@intelliflow/ui';
 
 export type FeedbackValue = 'helpful' | 'not_helpful';
 
@@ -34,7 +35,7 @@ export function FeedbackWidget({ articleId: _articleId, onFeedback }: Readonly<F
             tabIndex={-1}
             className="flex items-center gap-2 text-sm text-muted-foreground"
           >
-            <span className="material-symbols-outlined text-emerald-500 text-base" aria-hidden="true">
+            <span className="material-symbols-outlined text-success text-base" aria-hidden="true">
               check_circle
             </span>
             Thank you for your feedback!
@@ -43,30 +44,32 @@ export function FeedbackWidget({ articleId: _articleId, onFeedback }: Readonly<F
           <div className="flex items-center gap-4">
             <span className="text-sm font-medium text-foreground">Was this helpful?</span>
             <div className="flex items-center gap-2">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 aria-label="Yes, this article was helpful"
                 aria-pressed="false"
                 onClick={() => handleFeedback('helpful')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm border border-border hover:bg-accent hover:text-accent-foreground transition-colors"
               >
                 <span className="material-symbols-outlined text-base" aria-hidden="true">
                   thumb_up
                 </span>
                 Yes
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 aria-label="No, this article was not helpful"
                 aria-pressed="false"
                 onClick={() => handleFeedback('not_helpful')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm border border-border hover:bg-accent hover:text-accent-foreground transition-colors"
               >
                 <span className="material-symbols-outlined text-base" aria-hidden="true">
                   thumb_down
                 </span>
                 No
-              </button>
+              </Button>
             </div>
           </div>
         )}

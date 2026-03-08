@@ -396,7 +396,7 @@ function DealsPageContent() {
   const barChartData = useMemo(
     () =>
       OPPORTUNITY_STAGES.map((stage) => ({
-        name: PIPELINE_STAGE_CONFIG[stage].label.replace(' ', '\n'),
+        name: PIPELINE_STAGE_CONFIG[stage].label.replaceAll(' ', '\n'),
         revenue: dealsByStage[stage].reduce((sum, deal) => sum + deal.value, 0),
         color: PIPELINE_STAGE_CONFIG[stage].color,
       })),

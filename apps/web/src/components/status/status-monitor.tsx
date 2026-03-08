@@ -123,7 +123,7 @@ export function StatusMonitor({ services, refreshInterval = 30000 }: Readonly<St
                     <div
                       key={idx} // NOSONAR typescript:S6479
                       className={`h-8 w-1 rounded-sm ${getStatusColor(bar.status)} opacity-80 hover:opacity-100 transition-opacity`}
-                      title={`Day ${90 - idx}: ${bar.status.replace('_', ' ')}`}
+                      title={`Day ${90 - idx}: ${bar.status.replaceAll('_', ' ')}`}
                     />
                   ))}
                 </div>

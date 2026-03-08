@@ -378,7 +378,7 @@ export default function DocumentDetailPage() { // NOSONAR typescript:S3776
                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.bg} ${statusConfig.text}`}
                   >
                     <span className="material-symbols-outlined text-sm">{statusConfig.icon}</span>{' '}
-                    {document.status.replace('_', ' ')}
+                    {document.status.replaceAll('_', ' ')}
                   </span>
                   {document.isLegalHold && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">

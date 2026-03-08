@@ -124,7 +124,7 @@ function createColumns(handlers: {
           <span
             className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${style}`}
           >
-            {row.original.status.replace('_', ' ')}
+            {row.original.status.replaceAll('_', ' ')}
           </span>
         );
       },

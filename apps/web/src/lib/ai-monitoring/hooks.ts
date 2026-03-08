@@ -276,10 +276,13 @@ export function useLatencyDashboard(filters?: LatencyFilters): LatencyDashboardD
       }
     | undefined;
 
-  const trendData = trendQuery.data as LatencyTrendPoint[] | undefined;
+  const trendRaw = trendQuery.data as Record<string, unknown> | undefined;
+  const trendData = (Array.isArray(trendRaw) ? trendRaw : (trendRaw?.data as LatencyTrendPoint[] | undefined)) ?? [];
 
   // Check if backend reports data unavailable (multi-process isolation)
-  const available = (metricsData as Record<string, unknown>)?.available !== false;
+  const metricsAvailable = (metricsData as Record<string, unknown>)?.available !== false;
+  const trendAvailable = trendRaw?.available !== false;
+  const available = metricsAvailable && trendAvailable;
 
   return {
     available,
@@ -291,7 +294,7 @@ export function useLatencyDashboard(filters?: LatencyFilters): LatencyDashboardD
     byOperation: metricsData?.byOperation ?? {},
     byPhase: metricsData?.byPhase ?? {},
     alerts: metricsData?.alerts ?? [],
-    trend: trendData ?? [],
+    trend: trendData,
     isLoading: metricsQuery.isLoading || trendQuery.isLoading,
     error: (metricsQuery.error as Error | null) ?? (trendQuery.error as Error | null),
     refetch: () => {

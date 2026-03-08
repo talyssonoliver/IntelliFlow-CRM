@@ -111,7 +111,7 @@ export function ContactForm({
     onDirtyChange?.(JSON.stringify(formData) !== initialSnapshot);
   }, [formData, initialSnapshot, onDirtyChange]);
 
-  const currentStepIndex = steps.findIndex((s) => s.id === currentStep);
+  const currentStepIndex = steps.indexOf((s) => s.id === currentStep);
 
   const updateField = useCallback((field: keyof ContactFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -160,7 +160,7 @@ export function ContactForm({
 
   const handleStepClick = useCallback(
     (step: Step) => {
-      const targetIndex = steps.findIndex((s) => s.id === step.id);
+      const targetIndex = steps.indexOf((s) => s.id === step.id);
       if (targetIndex <= currentStepIndex) {
         setCurrentStep(step.id);
       }
@@ -174,7 +174,7 @@ export function ContactForm({
   }, [validateStep, formData, onSubmit]);
 
   const getStepStatus = (step: Readonly<Step>): 'completed' | 'current' | 'upcoming' => {
-    const idx = steps.findIndex((s) => s.id === step.id);
+    const idx = steps.indexOf((s) => s.id === step.id);
     if (idx < currentStepIndex) return 'completed';
     if (idx === currentStepIndex) return 'current';
     return 'upcoming';

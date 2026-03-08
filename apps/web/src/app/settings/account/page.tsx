@@ -154,9 +154,17 @@ export default function AccountPage() {
             <div className="flex items-center justify-between py-3 border-b border-border">
               <div>
                 <p className="font-medium text-foreground">Two-Factor Authentication</p>
-                <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
+                <p className="text-sm text-muted-foreground">
+                  {/* Dynamic status — PG-125 AC-006 */}
+                  Add an extra layer of security
+                </p>
               </div>
-              <button className="text-primary text-sm font-medium hover:underline">Enable</button>
+              <Link
+                href="/settings/security/mfa"
+                className="text-primary text-sm font-medium hover:underline"
+              >
+                Manage
+              </Link>
             </div>
             <div className="flex items-center justify-between py-3">
               <div>

@@ -14,8 +14,8 @@
  * @implements AC-29 (Calendar/list view toggle)
  */
 
-import { useRouter } from 'next/navigation';
-import { useState, useMemo, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Skeleton } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared';
 import { AppointmentList, AppointmentCalendar } from '@/components/appointments';
@@ -57,7 +57,19 @@ export default function CalendarPage() {
     setViewMode,
     setCalendarView,
   } = useAppointmentFilters();
-  const { isVisible: isCalendarVisible } = useCalendarVisibility();
+  const { isVisible: isCalendarVisible, setOnlyVisible } = useCalendarVisibility();
+  const searchParams = useSearchParams();
+
+  // Apply ?show=tasks (or other calendar IDs) filter on mount
+  const appliedShowFilter = useRef(false);
+  useEffect(() => {
+    const showParam = searchParams.get('show');
+    if (showParam && !appliedShowFilter.current) {
+      appliedShowFilter.current = true;
+      const ids = showParam.split(',').map((s) => s.trim());
+      setOnlyVisible(ids);
+    }
+  }, [searchParams, setOnlyVisible]);
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [showTaskCreate, setShowTaskCreate] = useState(false);
   const [taskCreateDefaultDate, setTaskCreateDefaultDate] = useState<string>('');
