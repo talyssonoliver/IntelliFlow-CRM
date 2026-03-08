@@ -123,6 +123,11 @@ export async function processPredictionJob(
   const tenantId = context?.tenantId as string | undefined;
   if (tenantId) {
     await persistPredictionResult(entityType, entityId, tenantId, predictionType, prediction, recommendations);
+
+    // Notify on high churn risk (non-blocking)
+    if (predictionType === 'CHURN_RISK') {
+      await notifyHighChurnRisk(tenantId, entityType, entityId, prediction, context);
+    }
   } else {
     logger.warn({ jobId: job.id, entityId }, 'No tenantId in context — skipping DB persistence');
   }
@@ -292,6 +297,55 @@ async function persistPredictionResult(
 }
 
 // ============================================================================
+// Churn Risk Notification
+// ============================================================================
+
+/** Create an in-app notification when churn risk is high. Non-blocking. */
+async function notifyHighChurnRisk(
+  tenantId: string,
+  entityType: string,
+  entityId: string,
+  prediction: PredictionJobResult['prediction'],
+  context?: Record<string, unknown>
+): Promise<void> {
+  if (prediction.confidence < 0.7) return;
+
+  const riskLevel = typeof prediction.value === 'string' ? prediction.value : String(prediction.value);
+  const isHighRisk = riskLevel === 'HIGH' || riskLevel === 'CRITICAL' ||
+    (typeof prediction.value === 'number' && prediction.value >= 0.7);
+  if (!isHighRisk) return;
+
+  const recipientId = context?.userId as string;
+  if (!recipientId) return;
+
+  try {
+    const { prisma } = await import('@intelliflow/db');
+    await prisma.notification.create({
+      data: {
+        tenantId,
+        recipientId,
+        channel: 'IN_APP',
+        subject: `High churn risk: ${entityType} ${entityId}`,
+        body: prediction.explanation || 'High churn risk detected — review and take action.',
+        priority: 'HIGH',
+        status: 'PENDING',
+        category: 'ALERTS',
+        sourceType: 'ai_recommendation',
+        sourceId: entityId,
+        metadata: {
+          predictionType: 'CHURN_RISK',
+          confidence: prediction.confidence,
+          riskLevel,
+          link: `/${entityType}s/${entityId}`,
+        },
+      },
+    });
+  } catch {
+    // Non-blocking — notification failure should not affect prediction pipeline
+  }
+}
+
+// ============================================================================
 // Prediction Handlers - Real AI Chain Integration (IFC-095)
 // ============================================================================
 
@@ -411,6 +465,34 @@ async function processNextBestAction(
       urgencyOverride: context?.urgencyOverride as NBAContext['urgencyOverride'],
       excludeActions: context?.excludeActions as NBAContext['excludeActions'],
     };
+
+    // Enrich with existing AI insight data if entity is a lead
+    if (entityType === 'lead') {
+      try {
+        const { prisma } = await import('@intelliflow/db');
+        const existingInsight = await prisma.leadAIInsight.findUnique({
+          where: { leadId: entityId },
+          select: {
+            engagementScore: true,
+            conversionProbability: true,
+            churnRisk: true,
+            sentiment: true,
+            sentimentTrend: true,
+            recommendations: true,
+            lastEngagementDays: true,
+            icpMatch: true,
+          },
+        });
+        if (existingInsight) {
+          nbaContext.score = existingInsight.engagementScore ?? nbaContext.score;
+          nbaContext.urgencyOverride = nbaContext.urgencyOverride ?? (
+            existingInsight.churnRisk === 'HIGH' ? 'HIGH' : undefined
+          );
+        }
+      } catch {
+        // Non-blocking — proceed without enrichment
+      }
+    }
 
     // Call the real NBA agent
     const agent = createNBAAgent();

@@ -68,6 +68,16 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     super({
       name: 'ai-worker',
       queues: [...AI_WORKER_QUEUES],
+      config: {
+        queue: {
+          // Ollama/LLM inference can take 30-120s — default 30s lockDuration
+          // causes stale-job failures. Use 3 min lock + 90s stall check.
+          lockDuration: 180_000,
+          stalledInterval: 90_000,
+          maxStalledCount: 3,
+          concurrency: 2,
+        },
+      },
     });
   }
 

@@ -196,7 +196,7 @@ async function handleScheduledDispatch(job: Job<ScoringJobData>, startTime: numb
             phone: l.phone ?? undefined,
             source: l.source ?? 'unknown',
           },
-        });
+        }, DEFAULT_SCORING_JOB_OPTIONS);
         enqueued++;
       }
 

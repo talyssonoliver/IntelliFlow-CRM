@@ -29,7 +29,7 @@ function getMetricsToken(): string {
  */
 export function authenticateMetricsRequest(authHeader: string | undefined): boolean {
   if (!authHeader) return false;
-  const token = authHeader.replace('Bearer ', '');
+  const token = authHeader.replaceAll('Bearer ', '');
   return token === getMetricsToken();
 }
 

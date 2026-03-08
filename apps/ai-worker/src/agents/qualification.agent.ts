@@ -13,7 +13,7 @@ const logger = pino({
  */
 export const qualificationInputSchema = z.object({
   leadId: z.string(),
-  email: z.string().email(),
+  email: z.email(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   company: z.string().optional(),

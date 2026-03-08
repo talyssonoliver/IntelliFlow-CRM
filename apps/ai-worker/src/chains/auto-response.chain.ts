@@ -320,7 +320,7 @@ Requirements:
 - Include a clear call to action
 - Match the specified tone
 - Be personalized to the lead's context
-${tenantSettings.signatureTemplate ? '- End with signature: ' + tenantSettings.signatureTemplate.replace('{companyName}', tenantSettings.companyName) : ''}`;
+${tenantSettings.signatureTemplate ? '- End with signature: ' + tenantSettings.signatureTemplate.replaceAll('{companyName}', tenantSettings.companyName) : ''}`;
   }
 
   /**

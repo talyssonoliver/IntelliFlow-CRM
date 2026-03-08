@@ -19,7 +19,7 @@ import { SENTIMENT_LABELS, type SentimentLabel } from '@intelliflow/domain';
  * Lead data input for scoring
  */
 export const leadInputSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   company: z.string().optional(),

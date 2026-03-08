@@ -269,6 +269,38 @@ async function populateEntityInsights(
 }
 
 // ============================================================================
+// Priority-Based TTL
+// ============================================================================
+
+/** Returns TTL in milliseconds based on insight priority */
+function getInsightTTL(priority: string): number {
+  switch (priority) {
+    case 'critical':
+      return 7 * 24 * 60 * 60 * 1000; // 7 days
+    case 'high':
+      return 3 * 24 * 60 * 60 * 1000; // 3 days
+    case 'low':
+      return 12 * 60 * 60 * 1000; // 12 hours
+    default:
+      return 24 * 60 * 60 * 1000; // 24 hours (medium / unknown)
+  }
+}
+
+/** Build a link path for an entity */
+function buildEntityLink(entityType: string | undefined, entityId: string | undefined): string | null {
+  if (!entityType || !entityId) return null;
+  const pluralMap: Record<string, string> = {
+    lead: 'leads',
+    contact: 'contacts',
+    opportunity: 'opportunities',
+    deal: 'opportunities',
+    account: 'accounts',
+  };
+  const plural = pluralMap[entityType] || `${entityType}s`;
+  return `/${plural}/${entityId}`;
+}
+
+// ============================================================================
 // Job Handler
 // ============================================================================
 
@@ -406,11 +438,12 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
   const { prisma } = await import('@intelliflow/db');
 
   const now = new Date();
-  const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24h TTL
 
   let insightsCreated = 0;
 
   for (const insight of insights) {
+    const expiresAt = new Date(now.getTime() + getInsightTTL(insight.priority));
+
     await prisma.aIInsight.create({
       data: {
         type: mapInsightTypeToDbType(insight.type),
@@ -436,6 +469,59 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
       },
     });
     insightsCreated++;
+
+    // Create in-app notification for critical/high priority insights
+    if (insight.priority === 'critical' || insight.priority === 'high') {
+      try {
+        const entityLink = buildEntityLink(insight.entityType ?? undefined, insight.entityId ?? undefined);
+        await prisma.notification.create({
+          data: {
+            tenantId,
+            recipientId: userId,
+            channel: 'IN_APP',
+            subject: insight.title,
+            body: insight.description,
+            priority: insight.priority === 'critical' ? 'HIGH' : 'NORMAL',
+            status: 'PENDING',
+            category: 'ALERTS',
+            sourceType: 'ai_insight',
+            sourceId: insight.entityId ?? undefined,
+            metadata: {
+              insightPriority: insight.priority,
+              insightType: insight.type,
+              ...(entityLink ? { link: entityLink } : {}),
+            },
+          },
+        });
+      } catch (notifError) {
+        logger.warn(
+          { error: notifError instanceof Error ? notifError.message : String(notifError) },
+          'Failed to create notification for insight — non-blocking'
+        );
+      }
+    }
+
+    // Auto-create follow-up task for critical insights with suggested actions
+    if (insight.priority === 'critical' && insight.suggestedActions.length > 0) {
+      try {
+        await prisma.task.create({
+          data: {
+            title: `[AI] ${insight.suggestedActions[0]}`,
+            description: `Auto-created from AI insight: ${insight.title}\n\nReasoning: ${insight.reasoning}`,
+            status: 'PENDING',
+            priority: 'HIGH',
+            tenantId,
+            ownerId: userId,
+            dueDate: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000),
+          },
+        });
+      } catch (taskError) {
+        logger.warn(
+          { error: taskError instanceof Error ? taskError.message : String(taskError) },
+          'Failed to create auto-task for critical insight — non-blocking'
+        );
+      }
+    }
   }
 
   await job.updateProgress(80);
