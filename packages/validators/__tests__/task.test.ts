@@ -16,6 +16,7 @@ import {
   taskResponseSchema,
   taskListResponseSchema,
   completeTaskSchema,
+  taskIdSchema,
 } from '../src/task';
 
 describe('Task Validators', () => {
@@ -257,6 +258,16 @@ describe('Task Validators', () => {
       expect(result.success).toBe(false);
     });
 
+    it('should accept seeded home task ids', () => {
+      const validData = {
+        id: 'home-task-2',
+        title: 'Updated task',
+      };
+
+      const result = updateTaskSchema.safeParse(validData);
+      expect(result.success).toBe(true);
+    });
+
     it('should reject empty title when provided', () => {
       const invalidData = {
         id: '123e4567-e89b-12d3-a456-426614174000',
@@ -322,6 +333,16 @@ describe('Task Validators', () => {
 
       const result = updateTaskSchema.safeParse(fullUpdate);
       expect(result.success).toBe(true);
+    });
+  });
+
+  describe('taskIdSchema', () => {
+    it('accepts seeded home task ids', () => {
+      expect(taskIdSchema.safeParse('home-task-3').success).toBe(true);
+    });
+
+    it('rejects arbitrary non-task slugs', () => {
+      expect(taskIdSchema.safeParse('not-a-task-id').success).toBe(false);
     });
   });
 

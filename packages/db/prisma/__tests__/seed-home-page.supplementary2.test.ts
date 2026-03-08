@@ -15,19 +15,20 @@
  * - $disconnect in finally block
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { SEED_IDS } from '../../src/seed-ids';
 
 // ---------------------------------------------------------------------------
 // vi.hoisted mocks
 // ---------------------------------------------------------------------------
-const { mockFindFirst, mockUpsert, mockCreate, mockExecuteRaw, mockDisconnect } = vi.hoisted(
-  () => ({
+const { mockFindFirst, mockUpsert, mockDeleteMany, mockCreate, mockExecuteRaw, mockDisconnect } =
+  vi.hoisted(() => ({
     mockFindFirst: vi.fn(),
     mockUpsert: vi.fn().mockResolvedValue({ id: 'upserted-id' }),
+    mockDeleteMany: vi.fn().mockResolvedValue({ count: 0 }),
     mockCreate: vi.fn().mockResolvedValue({ id: 'created-id', name: 'TestAccount' }),
     mockExecuteRaw: vi.fn().mockResolvedValue(undefined),
     mockDisconnect: vi.fn().mockResolvedValue(undefined),
-  })
-);
+  }));
 
 vi.mock('@prisma/client', () => ({
   PrismaClient: vi.fn().mockImplementation(() => ({
@@ -35,7 +36,7 @@ vi.mock('@prisma/client', () => ({
     $executeRaw: mockExecuteRaw,
     tenant: { findFirst: mockFindFirst },
     user: { findFirst: mockFindFirst },
-    task: { upsert: mockUpsert },
+    task: { upsert: mockUpsert, deleteMany: mockDeleteMany },
     account: { findFirst: mockFindFirst, create: mockCreate },
     opportunity: { upsert: mockUpsert },
     lead: { findFirst: mockFindFirst, upsert: mockUpsert },
@@ -95,19 +96,19 @@ describe('seed-home-page - supplementary2', () => {
       // Step 3: Upsert 3 tasks
       const tasks = [
         {
-          id: 'home-task-1',
+          id: SEED_IDS.dashboardTasks.callAcme,
           title: 'Follow up with Acme Corp on proposal',
           priority: 'HIGH',
           status: 'IN_PROGRESS',
         },
         {
-          id: 'home-task-2',
+          id: SEED_IDS.dashboardTasks.reviewQ3,
           title: 'Prepare quarterly review presentation',
           priority: 'HIGH',
           status: 'PENDING',
         },
         {
-          id: 'home-task-3',
+          id: SEED_IDS.dashboardTasks.emailFollowup,
           title: 'Review contract with legal team',
           priority: 'HIGH',
           status: 'PENDING',
@@ -335,7 +336,7 @@ describe('seed-home-page - supplementary2', () => {
         id: 'home-audit-3',
         eventType: 'LeadQualified',
         actorType: 'AI',
-        actorId: 'ai-scoring-engine',
+        actorId: null,
         resourceType: 'Lead',
         action: 'UPDATE',
         beforeState: { status: 'NEW', score: 45 },
@@ -346,7 +347,7 @@ describe('seed-home-page - supplementary2', () => {
       };
 
       expect(auditEntry.actorType).toBe('AI');
-      expect(auditEntry.actorId).toBe('ai-scoring-engine');
+      expect(auditEntry.actorId).toBeNull();
       expect(auditEntry.ipAddress).toBeNull();
     });
 

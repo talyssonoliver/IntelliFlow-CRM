@@ -12,12 +12,13 @@
  * IMPORTANT: This is a destructive operation. Make sure you have a backup!
  */
 
-import { PrismaClient } from '../src/generated/prisma/client';
+import { PrismaClient } from '../generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { LEGACY_STRING_IDS } from '../src/seed-ids';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
+const LEGACY_HOME_PAGE_TASK_IDS = ['home-task-1', 'home-task-2', 'home-task-3'] as const;
 
 /**
  * Legacy string ID patterns for each entity type
@@ -201,7 +202,12 @@ async function cleanupLegacySeedData() {
   // 4. Tasks
   try {
     const tasksDeleted = await prisma.task.deleteMany({
-      where: { id: { startsWith: 'seed-' } },
+      where: {
+        OR: [
+          { id: { startsWith: 'seed-' } },
+          { id: { in: [...LEGACY_HOME_PAGE_TASK_IDS] } },
+        ],
+      },
     });
     if (tasksDeleted.count > 0) {
       console.log(`  ✓ Deleted ${tasksDeleted.count} tasks`);
@@ -355,7 +361,12 @@ async function showLegacyCounts() {
   // Check tasks
   try {
     const taskCount = await prisma.task.count({
-      where: { id: { startsWith: 'seed-' } },
+      where: {
+        OR: [
+          { id: { startsWith: 'seed-' } },
+          { id: { in: [...LEGACY_HOME_PAGE_TASK_IDS] } },
+        ],
+      },
     });
     if (taskCount > 0) {
       console.log(`  • Tasks: ${taskCount} records with string IDs`);

@@ -61,7 +61,7 @@ import {
   // Appointment enums (IFC-182)
   AppointmentStatus,
   AppointmentType,
-} from '../src/generated/prisma/client';
+} from '../generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 
 // Import SEED_IDS from the single source of truth
@@ -8565,9 +8565,16 @@ async function seedHomePageData(tenantId: string) {
   }
 
   // 1. Create recent HIGH priority tasks (for welcome message)
+  await prisma.task.deleteMany({
+    where: {
+      tenantId,
+      id: { in: ['home-task-1', 'home-task-2', 'home-task-3'] },
+    },
+  });
+
   const recentTasks = [
     {
-      id: 'home-task-1',
+      id: SEED_IDS.dashboardTasks.callAcme,
       title: 'Follow up with Acme Corp on proposal',
       description: 'Send updated pricing and schedule demo call',
       status: TaskStatus.IN_PROGRESS,
@@ -8577,7 +8584,7 @@ async function seedHomePageData(tenantId: string) {
       tenantId,
     },
     {
-      id: 'home-task-2',
+      id: SEED_IDS.dashboardTasks.reviewQ3,
       title: 'Prepare quarterly review presentation',
       description: 'Compile Q4 metrics and forecasts',
       status: TaskStatus.PENDING,
@@ -8587,7 +8594,7 @@ async function seedHomePageData(tenantId: string) {
       tenantId,
     },
     {
-      id: 'home-task-3',
+      id: SEED_IDS.dashboardTasks.emailFollowup,
       title: 'Review contract with legal team',
       description: 'Get approval for TechCorp enterprise deal',
       status: TaskStatus.PENDING,
@@ -8686,7 +8693,7 @@ async function seedHomePageData(tenantId: string) {
       actorType: ActorType.USER,
       actorId: user.id,
       resourceType: 'Task',
-      resourceId: 'home-task-1',
+      resourceId: SEED_IDS.dashboardTasks.callAcme,
       action: AuditAction.UPDATE,
       beforeState: { status: 'IN_PROGRESS' },
       afterState: { status: 'COMPLETED' },

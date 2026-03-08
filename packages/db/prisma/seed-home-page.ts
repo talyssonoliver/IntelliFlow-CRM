@@ -18,11 +18,13 @@ import {
   LeadSource,
   UserRole,
   Prisma,
-} from '../src/generated/prisma/client';
+} from '../generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { SEED_IDS } from '../src/seed-ids';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
+const LEGACY_HOME_PAGE_TASK_IDS = ['home-task-1', 'home-task-2', 'home-task-3'] as const;
 
 async function seedHomePageData() {
   console.log('🏠 Seeding home page data with recent dates...');
@@ -66,9 +68,16 @@ async function seedHomePageData() {
   console.log(`  Using tenant: ${tenant.name}, user: ${user.email}`);
 
   // 1. Create recent HIGH priority tasks
+  await prisma.task.deleteMany({
+    where: {
+      tenantId: tenant.id,
+      id: { in: [...LEGACY_HOME_PAGE_TASK_IDS] },
+    },
+  });
+
   const recentTasks = [
     {
-      id: 'home-task-1',
+      id: SEED_IDS.dashboardTasks.callAcme,
       title: 'Follow up with Acme Corp on proposal',
       description: 'Send updated pricing and schedule demo call',
       status: TaskStatus.IN_PROGRESS,
@@ -78,7 +87,7 @@ async function seedHomePageData() {
       tenantId: tenant.id,
     },
     {
-      id: 'home-task-2',
+      id: SEED_IDS.dashboardTasks.reviewQ3,
       title: 'Prepare quarterly review presentation',
       description: 'Compile Q4 metrics and forecasts',
       status: TaskStatus.PENDING,
@@ -88,7 +97,7 @@ async function seedHomePageData() {
       tenantId: tenant.id,
     },
     {
-      id: 'home-task-3',
+      id: SEED_IDS.dashboardTasks.emailFollowup,
       title: 'Review contract with legal team',
       description: 'Get approval for TechCorp enterprise deal',
       status: TaskStatus.PENDING,
@@ -260,7 +269,7 @@ async function seedHomePageData() {
       actorType: ActorType.USER,
       actorId: user.id,
       resourceType: 'Task',
-      resourceId: 'home-task-1',
+      resourceId: SEED_IDS.dashboardTasks.callAcme,
       action: AuditAction.UPDATE,
       beforeState: { status: 'IN_PROGRESS' },
       afterState: { status: 'COMPLETED' },
@@ -275,7 +284,7 @@ async function seedHomePageData() {
       eventType: 'LeadQualified',
       eventId: `event-home-audit-3-${Date.now()}`,
       actorType: ActorType.AI,
-      actorId: 'ai-scoring-engine',
+      actorId: null,
       resourceType: 'Lead',
       resourceId: lead?.id || 'unknown',
       action: AuditAction.UPDATE,

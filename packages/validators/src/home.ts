@@ -59,6 +59,7 @@ export const aiInsightSchema = z.object({
   entityType: z.string().optional().nullable(),
   entityId: z.string().optional().nullable(),
   actionUrl: z.string().optional().nullable(),
+  requiresApproval: z.boolean().default(false),
   priority: z.enum(['low', 'medium', 'high']).default('medium'),
   createdAt: z.date(),
 });
@@ -88,6 +89,28 @@ export const getAllInsightsResponseSchema = z.object({
   lastRefreshed: z.date(),
 });
 export type GetAllInsightsResponse = z.infer<typeof getAllInsightsResponseSchema>;
+
+export const getInsightByIdInputSchema = z.object({
+  insightId: z.string().min(1),
+});
+export type GetInsightByIdInput = z.infer<typeof getInsightByIdInputSchema>;
+
+export const getInsightByIdResponseSchema = z.object({
+  insight: aiInsightSchema,
+});
+export type GetInsightByIdResponse = z.infer<typeof getInsightByIdResponseSchema>;
+
+export const ensureInsightReviewInputSchema = z.object({
+  insightId: z.string().min(1),
+});
+export type EnsureInsightReviewInput = z.infer<typeof ensureInsightReviewInputSchema>;
+
+export const ensureInsightReviewResponseSchema = z.object({
+  created: z.boolean(),
+  reviewId: z.string().nullable(),
+  requiresApproval: z.boolean(),
+});
+export type EnsureInsightReviewResponse = z.infer<typeof ensureInsightReviewResponseSchema>;
 
 // =============================================================================
 // Activity Feed Schemas

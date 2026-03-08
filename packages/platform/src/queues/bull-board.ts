@@ -202,7 +202,7 @@ Dashboard URL: http://localhost:3000/admin/queues (when API server is running)
 |  IntelliFlow CRM - Job Queue Dashboard   |
 +------------------------------------------+
 |        |                                 |
-| Queues |  Queue: intelliflow:ai-scoring  |
+| Queues |  Queue: ai-scoring              |
 |--------|                                 |
 | > AI   |  [Active: 5] [Waiting: 12]      |
 |   Scor |  [Completed: 1,234] [Failed: 8] |

@@ -36,6 +36,14 @@ describe('TaskId', () => {
       expect(result.value.value).toBe(validUuid);
     });
 
+    it('should create with seeded home task id', () => {
+      const seededTaskId = 'home-task-2';
+      const result = TaskId.create(seededTaskId);
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.value).toBe(seededTaskId);
+    });
+
     it('should reject empty string', () => {
       const result = TaskId.create('');
 
@@ -83,6 +91,13 @@ describe('TaskId', () => {
 
     it('should reject random string', () => {
       const result = TaskId.create('abc123');
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBeInstanceOf(InvalidTaskIdError);
+    });
+
+    it('should reject malformed home task id', () => {
+      const result = TaskId.create('home-task-two');
 
       expect(result.isFailure).toBe(true);
       expect(result.error).toBeInstanceOf(InvalidTaskIdError);

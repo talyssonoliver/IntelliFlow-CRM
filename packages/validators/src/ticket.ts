@@ -115,3 +115,15 @@ export const slaResumeSchema = z.object({
 });
 
 export type SlaResumeInput = z.infer<typeof slaResumeSchema>;
+
+// Add Attachment Schema (PG-047)
+export const addAttachmentSchema = z.object({
+  ticketId: idSchema,
+  name: z.string().min(1).max(255),
+  size: z.string(), // human-readable size e.g. "1.2 MB"
+  sizeBytes: z.number().int().positive().max(10_485_760), // 10MB limit
+  fileType: z.string(),
+  content: z.string(), // base64 encoded
+});
+
+export type AddAttachmentInput = z.infer<typeof addAttachmentSchema>;

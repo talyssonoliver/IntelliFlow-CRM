@@ -177,7 +177,9 @@ describe('Job Data Schemas', () => {
 describe('Queue Configuration', () => {
   describe('QUEUE_NAMES', () => {
     it('defines all required queue names', () => {
-      expect(QUEUE_NAMES.AI_SCORING).toBe('intelliflow:ai-scoring');
+      expect(QUEUE_NAMES.AI_SCORING).toBe('ai-scoring');
+      expect(QUEUE_NAMES.AI_PREDICTION).toBe('ai-prediction');
+      expect(QUEUE_NAMES.AI_INSIGHTS).toBe('ai-insights');
       expect(QUEUE_NAMES.EMAIL_NOTIFICATIONS).toBe('intelliflow:email-notifications');
       expect(QUEUE_NAMES.WEBHOOK_DELIVERY).toBe('intelliflow:webhook-delivery');
     });
@@ -188,7 +190,7 @@ describe('Queue Configuration', () => {
       const config = DEFAULT_QUEUE_CONFIGS[QUEUE_NAMES.AI_SCORING];
       expect(config).toBeDefined();
       expect(config.concurrency).toBe(5);
-      expect(config.defaultJobOptions.attempts).toBe(5);
+      expect(config.defaultJobOptions.attempts).toBe(3);
       expect(config.defaultJobOptions.backoff.type).toBe('exponential');
     });
 
@@ -600,7 +602,7 @@ describe('Bull Board Integration', () => {
       expect(desc.components).toContain(
         'Queue List Sidebar - Shows all registered queues (AI Scoring, Email Notifications, Webhook Delivery)'
       );
-      expect(desc.layout).toContain('intelliflow:ai-scoring');
+      expect(desc.layout).toContain('ai-scoring');
     });
   });
 });

@@ -2,6 +2,8 @@ import { v4 as uuidv4, validate as uuidValidate } from 'uuid';
 import { ValueObject } from '../../shared/ValueObject';
 import { Result, DomainError } from '../../shared/Result';
 
+const SEEDED_TASK_ID_PATTERN = /^home-task-\d+$/;
+
 export class InvalidTaskIdError extends DomainError {
   readonly code = 'INVALID_TASK_ID';
 
@@ -28,7 +30,7 @@ export class TaskId extends ValueObject<TaskIdProps> {
   }
 
   static create(value: string): Result<TaskId, InvalidTaskIdError> {
-    if (!value || !uuidValidate(value)) {
+    if (!value || (!uuidValidate(value) && !SEEDED_TASK_ID_PATTERN.test(value))) {
       return Result.fail(new InvalidTaskIdError(value));
     }
     return Result.ok(new TaskId({ value }));

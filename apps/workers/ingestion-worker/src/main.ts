@@ -17,6 +17,36 @@ import {
   type TextExtractionInput,
   type TextExtractionResult,
 } from './jobs/extractText.job';
+// Agent-status functions loaded dynamically from @intelliflow/ai-worker barrel.
+// Uses `any` to avoid compile-time dependency on ai-worker dist types (they may be stale).
+interface AgentStatusCtx {
+  tenantId: string;
+  userId: string;
+  agentType: string;
+  taskDescription: string;
+}
+
+interface AgentStatusFns {
+  markAgentActive: (ctx: AgentStatusCtx) => Promise<void>;
+  markAgentIdle: (ctx: AgentStatusCtx, summary?: string, meta?: { durationMs: number; result?: Record<string, unknown> }) => Promise<void>;
+  markAgentError: (ctx: AgentStatusCtx, error: string, durationMs?: number) => Promise<void>;
+}
+
+let agentStatusFns: AgentStatusFns | null = null;
+
+async function getAgentStatusFns(): Promise<AgentStatusFns> {
+  if (agentStatusFns) return agentStatusFns;
+  const m = await import('@intelliflow/ai-worker') as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  if (m.markAgentActive) {
+    agentStatusFns = {
+      markAgentActive: m.markAgentActive,
+      markAgentIdle: m.markAgentIdle,
+      markAgentError: m.markAgentError,
+    };
+    return agentStatusFns;
+  }
+  throw new Error('Agent-status functions not available');
+}
 
 // ============================================================================
 // Queue Names
@@ -169,15 +199,58 @@ export class IngestionWorker extends BaseWorker<IngestionJobData, IngestionJobRe
   private async processTextExtraction(
     job: Job<TextExtractionInput>
   ): Promise<TextExtractionResult> {
-    const result = await this.textExtractionProcessor.process(job);
-    this.processedByType['text-extraction']++;
-    return result;
+    const data = job.data;
+    const fns = await getAgentStatusFns().catch(() => null);
+    const statusCtx = data.tenantId && data.userId
+      ? { tenantId: data.tenantId, userId: data.userId, agentType: 'indexer', taskDescription: `Text extraction for document ${data.documentId}` }
+      : null;
+
+    if (fns && statusCtx) {
+      await fns.markAgentActive(statusCtx);
+    }
+    const startMs = Date.now();
+
+    try {
+      const result = await this.textExtractionProcessor.process(job);
+      this.processedByType['text-extraction']++;
+
+      if (fns && statusCtx) {
+        const durationMs = Date.now() - startMs;
+        if (result.status === 'failed') {
+          await fns.markAgentError(statusCtx, result.error || 'Extraction failed', durationMs);
+        } else {
+          await fns.markAgentIdle(statusCtx, undefined, {
+            durationMs,
+            result: { wordCount: result.wordCount, format: result.metadata.format },
+          });
+        }
+      }
+
+      return result;
+    } catch (error) {
+      if (fns && statusCtx) {
+        const durationMs = Date.now() - startMs;
+        await fns.markAgentError(statusCtx, error instanceof Error ? error.message : String(error), durationMs);
+      }
+      throw error;
+    }
   }
 
   private async processOCR(job: Job<IngestionJobData>): Promise<IngestionJobResult> {
     const startTime = Date.now();
     this.logger.info({ jobId: job.id }, 'Processing OCR job');
     this.processedByType['ocr']++;
+
+    // Track as "ocr" agent on the Active Agents dashboard
+    const input = job.data as TextExtractionInput;
+    const fns = await getAgentStatusFns().catch(() => null);
+    const statusCtx = input.tenantId && input.userId
+      ? { tenantId: input.tenantId, userId: input.userId, agentType: 'ocr', taskDescription: `OCR extraction for document ${input.documentId}` }
+      : null;
+
+    if (fns && statusCtx) {
+      await fns.markAgentActive(statusCtx);
+    }
 
     try {
       const { OCRWorker } = await import('@intelliflow/ai-worker');
@@ -202,13 +275,25 @@ export class IngestionWorker extends BaseWorker<IngestionJobData, IngestionJobRe
       const normalizedText = ocrWorker.normalizeText(ocrResult.extractedText);
       const chunks = ocrWorker.createSearchableChunks(normalizedText);
 
+      const durationMs = Date.now() - startTime;
+      if (fns && statusCtx) {
+        if (ocrResult.status === 'failed') {
+          await fns.markAgentError(statusCtx, ocrResult.error || 'OCR failed', durationMs);
+        } else {
+          await fns.markAgentIdle(statusCtx, undefined, {
+            durationMs,
+            result: { pages: ocrResult.pageCount, confidence: ocrResult.confidence, wordCount: normalizedText.split(/\s+/).filter((w: string) => w.length > 0).length },
+          });
+        }
+      }
+
       return {
         documentId: input.documentId,
         text: ocrResult.extractedText,
         normalizedText,
         wordCount: normalizedText.split(/\s+/).filter((w: string) => w.length > 0).length,
         characterCount: normalizedText.length,
-        processingTimeMs: Date.now() - startTime,
+        processingTimeMs: durationMs,
         metadata: {
           format: input.format,
           language: input.language,
@@ -221,14 +306,20 @@ export class IngestionWorker extends BaseWorker<IngestionJobData, IngestionJobRe
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
+      const durationMs = Date.now() - startTime;
       this.logger.error({ jobId: job.id, error: errorMessage }, 'OCR processing failed');
+
+      if (fns && statusCtx) {
+        await fns.markAgentError(statusCtx, errorMessage, durationMs);
+      }
+
       return {
         documentId: job.data.documentId,
         text: '',
         normalizedText: '',
         wordCount: 0,
         characterCount: 0,
-        processingTimeMs: Date.now() - startTime,
+        processingTimeMs: durationMs,
         metadata: {
           format: 'image',
           language: 'en',

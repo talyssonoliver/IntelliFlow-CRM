@@ -6,19 +6,20 @@
  * and error handling with process.exit.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { SEED_IDS } from '../../src/seed-ids';
 
 // ---------------------------------------------------------------------------
 // vi.hoisted mocks
 // ---------------------------------------------------------------------------
-const { mockFindFirst, mockUpsert, mockCreate, mockExecuteRaw, mockDisconnect } = vi.hoisted(
-  () => ({
+const { mockFindFirst, mockUpsert, mockDeleteMany, mockCreate, mockExecuteRaw, mockDisconnect } =
+  vi.hoisted(() => ({
     mockFindFirst: vi.fn(),
     mockUpsert: vi.fn().mockResolvedValue({}),
+    mockDeleteMany: vi.fn().mockResolvedValue({ count: 0 }),
     mockCreate: vi.fn().mockResolvedValue({ id: 'created-id', name: 'Test' }),
     mockExecuteRaw: vi.fn().mockResolvedValue(undefined),
     mockDisconnect: vi.fn().mockResolvedValue(undefined),
-  })
-);
+  }));
 
 vi.mock('@prisma/client', () => ({
   PrismaClient: vi.fn().mockImplementation(() => ({
@@ -26,7 +27,7 @@ vi.mock('@prisma/client', () => ({
     $executeRaw: mockExecuteRaw,
     tenant: { findFirst: mockFindFirst },
     user: { findFirst: mockFindFirst },
-    task: { upsert: mockUpsert },
+    task: { upsert: mockUpsert, deleteMany: mockDeleteMany },
     account: { findFirst: mockFindFirst, create: mockCreate },
     opportunity: { upsert: mockUpsert },
     lead: { findFirst: mockFindFirst, upsert: mockUpsert },
@@ -98,9 +99,24 @@ describe('seed-home-page - supplementary', () => {
   describe('seedHomePageData - task creation', () => {
     it('should upsert 3 high-priority tasks', async () => {
       const tasks = [
-        { id: 'home-task-1', title: 'Follow up', priority: 'HIGH', status: 'IN_PROGRESS' },
-        { id: 'home-task-2', title: 'Prepare review', priority: 'HIGH', status: 'PENDING' },
-        { id: 'home-task-3', title: 'Review contract', priority: 'HIGH', status: 'PENDING' },
+        {
+          id: SEED_IDS.dashboardTasks.callAcme,
+          title: 'Follow up',
+          priority: 'HIGH',
+          status: 'IN_PROGRESS',
+        },
+        {
+          id: SEED_IDS.dashboardTasks.reviewQ3,
+          title: 'Prepare review',
+          priority: 'HIGH',
+          status: 'PENDING',
+        },
+        {
+          id: SEED_IDS.dashboardTasks.emailFollowup,
+          title: 'Review contract',
+          priority: 'HIGH',
+          status: 'PENDING',
+        },
       ];
 
       for (const task of tasks) {

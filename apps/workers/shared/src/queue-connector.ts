@@ -12,35 +12,9 @@ import { Queue, Worker, Job, QueueEvents } from 'bullmq';
 import type { ConnectionOptions } from 'bullmq';
 import IORedis from 'ioredis';
 import pino from 'pino';
+import { DEFAULT_QUEUE_CONFIGS } from '@intelliflow/platform/queues';
 import type { RedisConfig, QueueConfig } from './worker-config';
 import type { ComponentHealth } from './types';
-
-// Default job options per queue (aligned with ai-worker job definitions)
-const QUEUE_DEFAULT_JOB_OPTIONS: Record<string, {
-  attempts: number;
-  backoff: { type: 'fixed' | 'exponential'; delay: number };
-  removeOnComplete: number | { count: number; age?: number } | boolean;
-  removeOnFail: number | { age: number } | boolean;
-}> = {
-  'ai-scoring': {
-    attempts: 3,
-    backoff: { type: 'exponential', delay: 1000 },
-    removeOnComplete: { count: 1000, age: 86400 },
-    removeOnFail: { age: 604800 },
-  },
-  'ai-prediction': {
-    attempts: 3,
-    backoff: { type: 'exponential', delay: 1000 },
-    removeOnComplete: { count: 1000, age: 86400 },
-    removeOnFail: { age: 604800 },
-  },
-  'ai-insights': {
-    attempts: 3,
-    backoff: { type: 'exponential', delay: 5000 },
-    removeOnComplete: { count: 100 },
-    removeOnFail: { age: 604800 },
-  },
-};
 
 // ============================================================================
 // Types
@@ -146,10 +120,22 @@ export class QueueConnector {
       return this.queues.get(name)!;
     }
 
-    const defaults = QUEUE_DEFAULT_JOB_OPTIONS[name];
+    const config = DEFAULT_QUEUE_CONFIGS[name];
     const queue = new Queue(name, {
       connection: this.getBullConnection(),
-      ...(defaults ? { defaultJobOptions: defaults } : {}),
+      ...(config
+        ? {
+            defaultJobOptions: {
+              attempts: config.defaultJobOptions.attempts,
+              backoff: {
+                type: config.defaultJobOptions.backoff.type,
+                delay: config.defaultJobOptions.backoff.delay,
+              },
+              removeOnComplete: config.defaultJobOptions.removeOnComplete,
+              removeOnFail: config.defaultJobOptions.removeOnFail,
+            },
+          }
+        : {}),
     });
 
     this.queues.set(name, queue);

@@ -5,6 +5,12 @@ import { TASK_STATUSES, TASK_PRIORITIES } from '@intelliflow/domain';
 // Re-export common schemas used by API routers
 export { idSchema } from './common';
 
+const seededTaskIdSchema = z
+  .string()
+  .check(z.regex(/^home-task-\d+$/, 'Invalid seeded task ID'));
+
+export const taskIdSchema = z.union([idSchema, seededTaskIdSchema]);
+
 // Enums - derived from domain constants (single source of truth)
 export const taskPrioritySchema = z.enum(TASK_PRIORITIES);
 export const taskStatusSchema = z.enum(TASK_STATUSES);
@@ -29,7 +35,7 @@ export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 
 // Update Task Schema
 export const updateTaskSchema = z.object({
-  id: idSchema,
+  id: taskIdSchema,
   title: z.string().min(1).max(200).optional(),
   description: z.string().max(2000).optional(),
   dueDate: z.coerce.date().optional().nullable(),
@@ -61,7 +67,7 @@ export type TaskQueryInput = z.infer<typeof taskQuerySchema>;
 
 // Task Response Schema
 export const taskResponseSchema = z.object({
-  id: idSchema,
+  id: taskIdSchema,
   title: z.string(),
   description: z.string().nullable(),
   dueDate: z.coerce.date().nullable(),
@@ -91,14 +97,14 @@ export type TaskListResponse = z.infer<typeof taskListResponseSchema>;
 
 // Start Task Schema
 export const startTaskSchema = z.object({
-  taskId: idSchema,
+  taskId: taskIdSchema,
 });
 
 export type StartTaskInput = z.infer<typeof startTaskSchema>;
 
 // Cancel Task Schema
 export const cancelTaskSchema = z.object({
-  taskId: idSchema,
+  taskId: taskIdSchema,
   reason: z.string().min(5).max(1000),
 });
 
@@ -106,7 +112,7 @@ export type CancelTaskInput = z.infer<typeof cancelTaskSchema>;
 
 // Complete Task Schema
 export const completeTaskSchema = z.object({
-  taskId: idSchema,
+  taskId: taskIdSchema,
   notes: z.string().max(1000).optional(),
 });
 
@@ -114,7 +120,7 @@ export type CompleteTaskInput = z.infer<typeof completeTaskSchema>;
 
 // Assign Task Schema
 export const assignTaskSchema = z.object({
-  taskId: idSchema,
+  taskId: taskIdSchema,
   entityType: z.enum(['lead', 'contact', 'opportunity']),
   entityId: idSchema,
 });
@@ -123,7 +129,7 @@ export type AssignTaskInput = z.infer<typeof assignTaskSchema>;
 
 // Reschedule Task Schema
 export const rescheduleTaskSchema = z.object({
-  taskId: idSchema,
+  taskId: taskIdSchema,
   newDueDate: z.coerce.date(),
 });
 
