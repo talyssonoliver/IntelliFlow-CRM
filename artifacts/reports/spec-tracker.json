@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-03-08T11:58:39.708Z",
+  "generated_at": "2026-03-08T14:31:52.810Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
     "total_specs_analyzed": 327,
-    "completed": 320,
-    "partially_done": 2,
-    "spec_only": 3,
+    "completed": 323,
+    "partially_done": 1,
+    "spec_only": 1,
     "uncertain": 2
   },
   "status_legend": {
@@ -3822,16 +3822,16 @@
       "spec_path": ".specify/sprints/sprint-15/specifications/IFC-296-spec.md",
       "has_spec": true,
       "has_plan": true,
-      "has_attestation": false,
-      "csv_status": "Planning",
-      "metric_status": "PLANNED",
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-015",
         "IFC-197",
         "PG-151"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-001",
@@ -4589,14 +4589,14 @@
       "spec_path": ".specify/sprints/sprint-16/specifications/PG-045-spec.md",
       "has_spec": true,
       "has_plan": true,
-      "has_attestation": false,
-      "csv_status": "Plan Complete",
-      "metric_status": "NOT_FOUND",
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-043"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-046",
@@ -4621,14 +4621,14 @@
       "spec_path": ".specify/sprints/sprint-16/specifications/PG-047-spec.md",
       "has_spec": true,
       "has_plan": true,
-      "has_attestation": false,
-      "csv_status": "In Progress",
+      "has_attestation": true,
+      "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-046"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-104",

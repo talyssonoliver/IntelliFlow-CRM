@@ -248,7 +248,7 @@ export const updateLeadStatusTool = createTRPCTool(
   'update_lead_status',
   'Update the status of a lead (e.g., New → Qualified → Converted). Requires human approval.',
   z.object({
-    lead_id: z.string().uuid().describe('Lead UUID'),
+    lead_id: z.uuid().describe('Lead UUID'),
     new_status: z
       .enum(['new', 'contacted', 'qualified', 'disqualified', 'converted'])
       .describe('New status to set'),
@@ -267,10 +267,10 @@ export const sendEmailTool = createTRPCTool(
   'send_email',
   'Send an email to a lead or contact. Requires human approval before sending.',
   z.object({
-    to: z.string().email().describe('Recipient email address'),
+    to: z.email().describe('Recipient email address'),
     subject: z.string().describe('Email subject line'),
     body: z.string().describe('Email body (HTML supported)'),
-    lead_id: z.string().uuid().optional().describe('Associated lead ID'),
+    lead_id: z.uuid().optional().describe('Associated lead ID'),
   }),
   (input) => trpc.email.send.mutate(input),
   {

@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-03-07T15:45:44.256Z",
+    "generated_at": "2026-03-08T12:52:49.697Z",
     "schema_version": "1.0.0",
     "sprint_scope": 0
   },
@@ -1945,7 +1945,7 @@
         "AI-SETUP-003"
       ],
       "priority": "critical",
-      "days_until_expiry": -36
+      "days_until_expiry": -37
     },
     {
       "rule": "WAIVER_USED",
@@ -1965,7 +1965,7 @@
         "ENV-008-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -8
+      "days_until_expiry": -9
     },
     {
       "rule": "WAIVER_USED",
@@ -1985,7 +1985,7 @@
         "ENV-010-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -36
+      "days_until_expiry": -37
     },
     {
       "rule": "WAIVER_USED",
@@ -2005,7 +2005,7 @@
         "ENV-011-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -36
+      "days_until_expiry": -37
     },
     {
       "rule": "WAIVER_USED",
@@ -2025,7 +2025,7 @@
         "ENV-012-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -8
+      "days_until_expiry": -9
     },
     {
       "rule": "WAIVER_USED",
@@ -2045,7 +2045,7 @@
         "ENV-014-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -8
+      "days_until_expiry": -9
     },
     {
       "rule": "WAIVER_USED",
@@ -2065,7 +2065,7 @@
         "ENV-015-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -8
+      "days_until_expiry": -9
     },
     {
       "rule": "WAIVER_USED",
@@ -2085,7 +2085,7 @@
         "ENV-016-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -8
+      "days_until_expiry": -9
     },
     {
       "rule": "WAIVER_USED",
@@ -2105,7 +2105,7 @@
         "AUTOMATION-001"
       ],
       "priority": "critical",
-      "days_until_expiry": -8
+      "days_until_expiry": -9
     },
     {
       "rule": "WAIVER_USED",
@@ -2125,7 +2125,7 @@
         "AUTOMATION-002"
       ],
       "priority": "critical",
-      "days_until_expiry": -8
+      "days_until_expiry": -9
     }
   ],
   "review_queue": [

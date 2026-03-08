@@ -1201,6 +1201,8 @@ Dependency Chain:
   IFC-117 (Monitoring) ✅ ──┬──► AUTOMATION-002 (Drift) ⬜ ──► ai-monitoring.router ⬜ ──► PG-146 (UI) ⬜
                             ├──► TRACK-004 (Metrics) ⬜ ────────────────────────────────────────────────┘
                             └──► ai-metrics.ts (Val) ⬜ ────────────────────────────────────────────────┘
+
+  IFC-015 (Platform) ✅ ──► IFC-197 (AI Monitoring API) ✅ ──► PG-151 (Dashboard UI) ⏳ ──► IFC-296 (Queue Admin API + UI) ⏳
 ```
 
 ---

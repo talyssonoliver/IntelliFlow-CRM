@@ -406,7 +406,7 @@ Updates CRM entities (leads, contacts, etc.).
 ```typescript
 const updateInputSchema = z.object({
   entity: z.enum(['lead', 'contact', 'opportunity', 'task']),
-  id: z.string().uuid(),
+  id: z.uuid(),
   updates: z.record(z.unknown()),
 });
 ```

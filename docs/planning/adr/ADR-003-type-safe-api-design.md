@@ -254,7 +254,7 @@ const createLeadSchema = z.object({
 });
 
 const scoreLeadSchema = z.object({
-  leadId: z.string().uuid(),
+  leadId: z.uuid(),
 });
 
 export const leadsRouter = router({
@@ -284,7 +284,7 @@ export const leadsRouter = router({
     .input(
       z.object({
         limit: z.number().min(1).max(100).default(20),
-        cursor: z.string().uuid().optional(),
+        cursor: z.uuid().optional(),
         status: z
           .enum(['new', 'contacted', 'qualified', 'disqualified'])
           .optional(),

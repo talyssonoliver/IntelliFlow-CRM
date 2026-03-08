@@ -6,7 +6,7 @@
 | ----------------- | ------------------------------------------------- |
 | **Feature Name**  | Queue Scheduler Administration                    |
 | **Owner**         | Backend Dev + Frontend Dev                        |
-| **Status**        | Draft                                             |
+| **Status**        | In Progress                                       |
 | **Target Sprint** | 15                                                |
 | **Created Date**  | 2026-03-08                                        |
 | **Last Updated**  | 2026-03-08                                        |
