@@ -1,0 +1,41 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-298",
+  "section": "Support",
+  "description": "HelpArticle Prisma Model + Migration",
+  "owner": "Backend Dev (STOA-Domain)",
+  "status": "Backlog",
+  "sprint": "sprint-17",
+  "phase": null,
+  "stream": null,
+  "dependencies": {
+    "required": ["PG-045"],
+    "all_satisfied": true,
+    "verified_at": null
+  },
+  "started_at": null,
+  "completed_at": null,
+  "execution": {
+    "retry_count": 0,
+    "last_error": null
+  },
+  "artifacts": {
+    "expected": [
+      "packages/db/prisma/schema.prisma",
+      "packages/db/prisma/migrations/"
+    ],
+    "created": [],
+    "missing": []
+  },
+  "validations": [],
+  "kpis": {},
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-08T18:00:00Z",
+      "note": "Task created — HelpArticle Prisma model for DB-backed articles"
+    }
+  ],
+  "notes": "Creates HelpArticle, ArticleSection, ArticleFeedback Prisma models with draft/published status enum. Fields match existing HelpArticle TypeScript interface from help-articles.ts."
+}

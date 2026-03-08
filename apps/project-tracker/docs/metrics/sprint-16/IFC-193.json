@@ -4,19 +4,19 @@
   "section": "Infrastructure",
   "description": "Activity Feed Type Registry - Enum-based mapping from AuditLogEntry.eventType to ActivityFeedType with metadata",
   "owner": "Backend Dev (STOA-Domain)",
-  "status": "BACKLOG",
+  "status": "DONE",
   "sprint": "sprint-0",
   "phase": "phase-0-initialisation",
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-03-08T14:31:51.703Z",
+    "verified_at": "2026-03-08T17:54:49.155Z",
     "required": [
       "IFC-182"
     ]
   },
   "started_at": "2026-02-13T23:40:57+00:00",
-  "completed_at": null,
+  "completed_at": "2026-03-08T17:47:30.911Z",
   "execution": {
     "retry_count": 0,
     "last_error": null,
@@ -28,7 +28,18 @@
     "created": [],
     "missing": []
   },
-  "validations": [],
+  "validations": [
+    {
+      "name": "Task completion verification",
+      "command": "echo \"Task IFC-193 completed\"",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2026-03-08T17:47:30.911Z",
+      "exit_code": 0,
+      "passed": true,
+      "notes": "Task marked as completed in Sprint_plan.csv"
+    }
+  ],
   "kpis": {},
   "blockers": [],
   "status_history": [
@@ -43,5 +54,6 @@
   "attempt": 0,
   "dependencies_resolved": [
     "IFC-182"
-  ]
+  ],
+  "actual_duration_minutes": 15
 }

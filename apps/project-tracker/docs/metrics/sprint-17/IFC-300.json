@@ -1,0 +1,40 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-300",
+  "section": "Support",
+  "description": "Help Article Seed Script — Static to DB Migration",
+  "owner": "Backend Dev (STOA-Foundation)",
+  "status": "Backlog",
+  "sprint": "sprint-17",
+  "phase": null,
+  "stream": null,
+  "dependencies": {
+    "required": ["IFC-298"],
+    "all_satisfied": false,
+    "verified_at": null
+  },
+  "started_at": null,
+  "completed_at": null,
+  "execution": {
+    "retry_count": 0,
+    "last_error": null
+  },
+  "artifacts": {
+    "expected": [
+      "packages/db/prisma/seed-help-articles.ts"
+    ],
+    "created": [],
+    "missing": []
+  },
+  "validations": [],
+  "kpis": {},
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-08T18:00:00Z",
+      "note": "Task created — Idempotent seed script migrating 17 static articles to DB"
+    }
+  ],
+  "notes": "Seed script reads DEFAULT_HELP_ARTICLES from help-articles.ts and inserts into HelpArticle table. Idempotent: skips existing slugs. Validates count post-seed."
+}

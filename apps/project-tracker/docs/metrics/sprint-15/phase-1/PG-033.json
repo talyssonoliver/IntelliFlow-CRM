@@ -11,7 +11,7 @@
     "required": [
       "PG-032"
     ],
-    "verified_at": "2026-03-08T14:31:51.680Z",
+    "verified_at": "2026-03-08T17:54:49.128Z",
     "all_satisfied": true,
     "notes": "PG-032 verified complete — docs index page, search, navigation components all exist. Attestation checked."
   },

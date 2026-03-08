@@ -1,0 +1,40 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-303",
+  "section": "Support",
+  "description": "Article Feedback tRPC Mutation",
+  "owner": "Backend Dev (STOA-Domain)",
+  "status": "Backlog",
+  "sprint": "sprint-17",
+  "phase": null,
+  "stream": null,
+  "dependencies": {
+    "required": ["IFC-298"],
+    "all_satisfied": false,
+    "verified_at": null
+  },
+  "started_at": null,
+  "completed_at": null,
+  "execution": {
+    "retry_count": 0,
+    "last_error": null
+  },
+  "artifacts": {
+    "expected": [
+      "apps/api/src/modules/help-article/help-article.router.ts"
+    ],
+    "created": [],
+    "missing": []
+  },
+  "validations": [],
+  "kpis": {},
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-08T18:00:00Z",
+      "note": "Task created — Article feedback persistence + analytics aggregation"
+    }
+  ],
+  "notes": "helpArticle.submitFeedback mutation (articleId, value: helpful|not_helpful, optional comment). Stores in ArticleFeedback table. Wires FeedbackWidget onFeedback callback to tRPC."
+}

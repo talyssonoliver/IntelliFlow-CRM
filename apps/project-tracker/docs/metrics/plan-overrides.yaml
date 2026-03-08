@@ -1599,7 +1599,8 @@ IFC-112:
   notes: |
     Blue/green deployment and rollback strategy implementation.
     Uses Vercel alias swapping for instant traffic switching.
-    Health endpoints: /api/health, /api/health/ready, /api/health/live
+    Canonical API health endpoints: /health, /health/ready, /health/live
+    Legacy aliases remain available at /api/health, /api/health/ready, /api/health/live
     Depends on ENV-005-AI completing first.
 
 ENV-006-AI:

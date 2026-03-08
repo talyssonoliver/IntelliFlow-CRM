@@ -1,8 +1,8 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-03-08T14:31:51.494Z",
-  "total_tasks": 381,
+  "last_updated": "2026-03-08T17:56:11.248Z",
+  "total_tasks": 390,
   "current_sprint": 14,
   "active_sprint": "sprint-14",
   "sprints": {
@@ -31,13 +31,13 @@
       "in_review": 0
     },
     "sprint-18": {
-      "total_tasks": 30,
+      "total_tasks": 34,
       "completed": 3,
       "in_progress": 0,
       "validating": 0,
       "blocked": 0,
       "planned": 0,
-      "backlog": 25,
+      "backlog": 29,
       "failed": 0,
       "needs_human": 0,
       "in_review": 0,
@@ -138,6 +138,30 @@
       "in_progress": 0,
       "backlog": 1,
       "blocked": 0
+    },
+    "sprint-17": {
+      "total_tasks": 4,
+      "completed": 0,
+      "in_progress": 0,
+      "validating": 0,
+      "blocked": 0,
+      "planned": 0,
+      "backlog": 4,
+      "failed": 0,
+      "needs_human": 0,
+      "in_review": 0
+    },
+    "sprint-19": {
+      "total_tasks": 1,
+      "completed": 0,
+      "in_progress": 0,
+      "validating": 0,
+      "blocked": 0,
+      "planned": 0,
+      "backlog": 1,
+      "failed": 0,
+      "needs_human": 0,
+      "in_review": 0
     }
   },
   "tasks_by_status": {
@@ -290,6 +314,7 @@
       "PG-045",
       "PG-046",
       "PG-047",
+      "PG-048",
       "DOC-001",
       "BRAND-001",
       "BRAND-002",
@@ -322,6 +347,7 @@
       "IFC-119",
       "IFC-120",
       "PG-124",
+      "PG-125",
       "IFC-121",
       "IFC-122",
       "IFC-124",
@@ -421,6 +447,7 @@
       "PG-146",
       "IFC-191",
       "IFC-192",
+      "IFC-193",
       "IFC-195",
       "IFC-197",
       "PG-148",
@@ -469,11 +496,13 @@
       "IFC-224",
       "IFC-296"
     ],
-    "IN_PROGRESS": [],
+    "IN_PROGRESS": [
+      "PG-050"
+    ],
     "VALIDATING": [],
     "BLOCKED": [],
     "PLANNED": [
-      "PG-048"
+      "IFC-297"
     ],
     "BACKLOG": [
       "IFC-031",
@@ -502,7 +531,6 @@
       "IFC-084",
       "IFC-087",
       "PG-049",
-      "PG-050",
       "PG-051",
       "PG-052",
       "PG-053",
@@ -576,7 +604,6 @@
       "PG-122",
       "PG-123",
       "IFC-115",
-      "PG-125",
       "IFC-123",
       "PG-126",
       "PG-127",
@@ -586,7 +613,6 @@
       "IFC-175",
       "PG-145",
       "PG-147",
-      "IFC-193",
       "IFC-194",
       "IFC-196",
       "IFC-199",
@@ -690,7 +716,25 @@
       "IFC-292",
       "IFC-293",
       "IFC-294",
-      "IFC-295"
+      "IFC-295",
+      "IFC-298",
+      "IFC-299",
+      "IFC-300",
+      "IFC-303",
+      "PG-180",
+      "IFC-301",
+      "PG-181",
+      "IFC-302",
+      "IFC-304",
+      "IFC-298",
+      "IFC-299",
+      "IFC-300",
+      "IFC-301",
+      "IFC-302",
+      "IFC-303",
+      "IFC-304",
+      "PG-180",
+      "PG-181"
     ],
     "FAILED": [],
     "NEEDS_HUMAN": [],
@@ -3991,15 +4035,15 @@
       "section": "Support Pages",
       "description": "Ticket Detail",
       "owner": "Support Eng (STOA-Domain)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [
         "PG-046"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/support/tickets/[id]/page.tsx;ARTIFACT:apps/web/src/components/tickets/ticket-thread.tsx;ARTIFACT:apps/web/src/components/tickets/status-updater.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-048/context_ack.json"
+        "ARTIFACT:apps/web/src/app/support/tickets/[id]/page.tsx;ARTIFACT:apps/web/src/components/tickets/ticket-thread.tsx;ARTIFACT:apps/web/src/components/tickets/status-updater.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-048/context_ack.json;SPEC:.specify/sprints/sprint-16/specifications/PG-048-spec.md;PLAN:.specify/sprints/sprint-16/planning/PG-048-plan.md;ATTESTATION:.specify/sprints/sprint-16/attestations/PG-048/attestation.json"
       ],
-      "kpis": "Details displayed, thread working, updates real-time",
+      "kpis": "Details displayed, thread working, updates real-time; V8 coverage: Stmts 95.45% Branches 93.22% Functions 100% Lines 97.67%; 158 tests (48 new + 110 regression); STOA PASS",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, details shown; artifacts: page.tsx, ticket-thread.tsx, status-updater.tsx",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
       "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Ticket thread;ENV:status updates;FILE:apps/web/src/app/(support)/support/tickets/page.tsx",
@@ -4027,7 +4071,7 @@
       "section": "Legal Pages",
       "description": "Privacy Policy",
       "owner": "Legal Counsel (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "IN_PROGRESS",
       "sprint": 17,
       "dependencies": [
         "IFC-058"
@@ -4038,7 +4082,7 @@
       "kpis": "Policy published, versions tracked, consent logged",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, policy displayed; artifacts: page.tsx, privacy-content.md, consent-tracker.ts",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:Privacy content approved;ENV:versioning ready;FILE:docs/shared/review-checklist.md;FILE:docs/operations/pr-checklist.md;FILE:artifacts/reports/gdpr-compliance-checklist.xlsx",
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:Privacy content approved;ENV:versioning ready;FILE:docs/shared/review-checklist.md;FILE:docs/operations/pr-checklist.md;FILE:artifacts/reports/gdpr-compliance-checklist.csv",
       "cadence": ""
     },
     "PG-051": {
@@ -5971,7 +6015,7 @@
       "section": "Auth Pages",
       "description": "Add MFA using TOTP or SMS and allow users to enable/disable from security settings",
       "owner": "Frontend Dev + Backend Dev (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [
         "PG-021",
@@ -5979,7 +6023,7 @@
         "IFC-006"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/settings/security/mfa/page.tsx;ARTIFACT:apps/web/src/lib/security/mfa-service.ts;ARTIFACT:apps/web/src/lib/security/backup-codes.ts;ARTIFACT:tests/mfa.spec.ts;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-125/context_ack.json"
+        "ARTIFACT:apps/web/src/app/settings/security/mfa/page.tsx;ARTIFACT:apps/web/src/lib/security/mfa-service.ts;ARTIFACT:apps/web/src/lib/security/backup-codes.ts;ARTIFACT:tests/e2e/mfa.spec.ts;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-125/context_ack.json;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-125/attestation.json"
       ],
       "kpis": "MFA adoption >50%, bypass not possible",
       "definition_of_done": "MFA enrollment, challenge, backup codes implemented; targets: >=50%; verified by: pnpm test, pnpm test:e2e",
@@ -8019,13 +8063,13 @@
       "section": "Infrastructure",
       "description": "Activity Feed Type Registry - Enum-based mapping from AuditLogEntry.eventType to ActivityFeedType with metadata",
       "owner": "Backend Dev (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [
         "IFC-182"
       ],
       "artifacts": [
-        "ARTIFACT:packages/domain/src/crm/activity/ActivityTypeRegistry.ts;ARTIFACT:packages/domain/src/crm/activity/__tests__/ActivityTypeRegistry.test.ts;EVIDENCE:.specify/sprints/sprint-16/attestations/IFC-193/context_ack.json"
+        "ARTIFACT:packages/domain/src/crm/activity/ActivityTypeRegistry.ts;ARTIFACT:packages/domain/src/crm/activity/__tests__/ActivityTypeRegistry.test.ts;EVIDENCE:.specify/sprints/sprint-16/attestations/IFC-193/context_ack.json;EVIDENCE:.specify/sprints/sprint-16/attestations/IFC-193/attestation.json;SPEC:.specify/sprints/sprint-16/specifications/IFC-193-spec.md;PLAN:.specify/sprints/sprint-16/planning/IFC-193-plan.md"
       ],
       "kpis": "All event types mapped; registry extensible; no string matching in router; test coverage >=90%",
       "definition_of_done": "ACTIVITY_TYPE_REGISTRY constant maps all AuditLogEntry.eventType values to ActivityFeedType with icon/label/color metadata; router uses registry instead of string includes(); new event types require only registry entry; verified by: pnpm test",
@@ -10677,6 +10721,189 @@
       "definition_of_done": "queuesAdmin router returns live queue stats from Redis; scheduler list/pause/resume/retry/delete endpoints functional; ActiveAgentsDashboard displays queue health panel with cron patterns and action buttons; stub router fully replaced; artifacts: queues.router.ts, QueueSchedulerPanel.tsx; targets: response <200ms, coverage >90%; verified by: pnpm test",
       "validation": "VALIDATE:pnpm typecheck;VALIDATE:pnpm test;VALIDATE:pnpm lint;VALIDATE:pnpm build",
       "prerequisites": "FILE:apps/api/src/modules/admin/queues.router.ts;FILE:apps/web/src/components/ai-monitoring/ActiveAgentsDashboard.tsx;FILE:packages/platform/src/queues/queue-factory.ts;ENV:Redis running;ENV:BullMQ configured",
+      "cadence": ""
+    },
+    "IFC-297": {
+      "section": "AI Foundation",
+      "description": "AI Monitoring Data Persistence — Replace in-memory singleton monitoring data (driftDetector, latencyMonitor, hallucinationChecker, roiTracker) with DB-backed persistence via new AIMonitoringEvent model. Add ai-worker flush service to write metrics to DB periodically. Rewrite monitoring router to query DB instead of in-process singletons. Enables multi-process deployments to share monitoring data.",
+      "owner": "Backend Dev (STOA-Domain)",
+      "status": "PLANNED",
+      "sprint": 16,
+      "dependencies": [
+        "IFC-015",
+        "IFC-025"
+      ],
+      "artifacts": [
+        "ARTIFACT:packages/db/prisma/migrations/*_ai_monitoring_events;ARTIFACT:apps/ai-worker/src/monitoring/monitoring-flush-service.ts;ARTIFACT:apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts"
+      ],
+      "kpis": "Coverage >90%, Flush latency <100ms, Multi-process data visible",
+      "definition_of_done": "AIMonitoringEvent Prisma model created with migration; ai-worker flushes metrics to DB every 60s; monitoring router queries DB; drift/latency/ROI dashboards show real data in multi-process mode; targets: flush latency <100ms, coverage >90%; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm typecheck;VALIDATE:pnpm test;VALIDATE:pnpm lint;VALIDATE:pnpm build",
+      "prerequisites": "FILE:apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts;FILE:apps/ai-worker/src/monitoring;FILE:packages/db/prisma/schema.prisma;ENV:PostgreSQL running",
+      "cadence": ""
+    },
+    "IFC-298": {
+      "section": "Support",
+      "description": "HelpArticle Prisma Model + Migration",
+      "owner": "Backend Dev (STOA-Domain)",
+      "status": "BACKLOG",
+      "sprint": 17,
+      "dependencies": [
+        "PG-045"
+      ],
+      "artifacts": [
+        "ARTIFACT:packages/db/prisma/schema.prisma;ARTIFACT:packages/db/prisma/migrations/;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-298/context_ack.json"
+      ],
+      "kpis": "Models created, migration clean, schema validates",
+      "definition_of_done": "HelpArticle, ArticleSection, ArticleFeedback Prisma models; migration applied; fields match HelpArticle TS interface; status enum (draft/published); verified by: pnpm test",
+      "validation": "VALIDATE:pnpm --filter @intelliflow/db typecheck;VALIDATE:pnpm test",
+      "prerequisites": "FILE:packages/db/prisma/schema.prisma;FILE:apps/web/src/lib/support/help-articles.ts;FILE:docs/planning/prd-support-help-center.md",
+      "cadence": ""
+    },
+    "IFC-299": {
+      "section": "Support",
+      "description": "Help Article CRUD tRPC Router",
+      "owner": "Backend Dev (STOA-Domain)",
+      "status": "BACKLOG",
+      "sprint": 17,
+      "dependencies": [
+        "IFC-298"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/api/src/modules/help-article/help-article.router.ts;ARTIFACT:packages/validators/src/help-article.ts;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-299/context_ack.json"
+      ],
+      "kpis": "All procedures functional, coverage >=90%",
+      "definition_of_done": "helpArticle tRPC router with list/getBySlug/getByCategory/getRelated/create/update/delete/publish/unpublish; tenant-scoped; coverage >=90%; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm --filter @intelliflow/api typecheck;VALIDATE:pnpm test;GATE:coverage-gte-90",
+      "prerequisites": "FILE:packages/db/prisma/schema.prisma;FILE:apps/api/src/router.ts;FILE:docs/planning/prd-support-help-center.md",
+      "cadence": ""
+    },
+    "IFC-300": {
+      "section": "Support",
+      "description": "Help Article Seed Script — Static to DB Migration",
+      "owner": "Backend Dev (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 17,
+      "dependencies": [
+        "IFC-298"
+      ],
+      "artifacts": [
+        "ARTIFACT:packages/db/prisma/seed-help-articles.ts;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-300/context_ack.json"
+      ],
+      "kpis": "17 articles seeded, idempotent re-run passes",
+      "definition_of_done": "Seed script migrates DEFAULT_HELP_ARTICLES into DB; idempotent (skip existing slugs); validates data integrity post-seed; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm --filter @intelliflow/db typecheck;VALIDATE:pnpm test",
+      "prerequisites": "FILE:packages/db/prisma/schema.prisma;FILE:apps/web/src/lib/support/help-articles.ts",
+      "cadence": ""
+    },
+    "IFC-303": {
+      "section": "Support",
+      "description": "Article Feedback tRPC Mutation",
+      "owner": "Backend Dev (STOA-Domain)",
+      "status": "BACKLOG",
+      "sprint": 17,
+      "dependencies": [
+        "IFC-298"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/api/src/modules/help-article/help-article.router.ts;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-303/context_ack.json"
+      ],
+      "kpis": "Feedback stored, aggregation working, coverage >=90%",
+      "definition_of_done": "helpArticle.submitFeedback mutation stores feedback in ArticleFeedback table; FeedbackWidget onFeedback wired to tRPC; analytics aggregation; coverage >=90%; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm --filter @intelliflow/api typecheck;VALIDATE:pnpm test;GATE:coverage-gte-90",
+      "prerequisites": "FILE:packages/db/prisma/schema.prisma;FILE:apps/web/src/components/support/feedback-widget.tsx",
+      "cadence": ""
+    },
+    "PG-180": {
+      "section": "Support Pages",
+      "description": "Help Article Admin List Page",
+      "owner": "Support Eng (STOA-Domain)",
+      "status": "BACKLOG",
+      "sprint": 18,
+      "dependencies": [
+        "IFC-299"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/app/settings/help-center/articles/page.tsx;ARTIFACT:apps/web/src/components/support/article-admin-list.tsx;EVIDENCE:.specify/sprints/sprint-18/attestations/PG-180/context_ack.json"
+      ],
+      "kpis": "Articles listed, filters working, CRUD actions functional",
+      "definition_of_done": "Response <200ms, Lighthouse >=90; admin page at /settings/help-center/articles with article list, status badges, category filters, search, CRUD actions; verified by: pnpm test",
+      "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
+      "prerequisites": "FILE:apps/api/src/modules/help-article/help-article.router.ts;FILE:docs/planning/prd-support-help-center.md;DESIGN:docs/design/README.md",
+      "cadence": ""
+    },
+    "IFC-301": {
+      "section": "Infrastructure",
+      "description": "Rich Text Editor Integration — Tiptap",
+      "owner": "Frontend Dev (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 18,
+      "dependencies": [
+        "PG-180"
+      ],
+      "artifacts": [
+        "ARTIFACT:packages/ui/src/components/rich-text-editor.tsx;ARTIFACT:packages/ui/src/components/__tests__/rich-text-editor.test.tsx;EVIDENCE:.specify/sprints/sprint-18/attestations/IFC-301/context_ack.json"
+      ],
+      "kpis": "Editor renders, all formatting works, structured output correct",
+      "definition_of_done": "Tiptap editor as reusable @intelliflow/ui component; headings/bold/italic/lists/links/images/code blocks; exports structured sections; coverage >=90%; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm --filter @intelliflow/ui typecheck;VALIDATE:pnpm test;GATE:coverage-gte-90",
+      "prerequisites": "FILE:packages/ui/src/index.ts;FILE:docs/planning/prd-support-help-center.md",
+      "cadence": ""
+    },
+    "PG-181": {
+      "section": "Support Pages",
+      "description": "Help Article Editor Page",
+      "owner": "Support Eng (STOA-Domain)",
+      "status": "BACKLOG",
+      "sprint": 18,
+      "dependencies": [
+        "PG-180",
+        "IFC-301"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/app/settings/help-center/articles/[id]/edit/page.tsx;ARTIFACT:apps/web/src/app/settings/help-center/articles/new/page.tsx;EVIDENCE:.specify/sprints/sprint-18/attestations/PG-181/context_ack.json"
+      ],
+      "kpis": "Articles editable, preview works, draft/publish functional",
+      "definition_of_done": "Response <200ms, Lighthouse >=90; editor at /settings/help-center/articles/[id]/edit and /new; Tiptap editor, metadata fields, preview, save draft, publish; verified by: pnpm test",
+      "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
+      "prerequisites": "FILE:apps/web/src/app/settings/help-center/articles/page.tsx;FILE:packages/ui/src/components/rich-text-editor.tsx;DESIGN:docs/design/README.md",
+      "cadence": ""
+    },
+    "IFC-302": {
+      "section": "Support",
+      "description": "Refactor Help Article Page to Use Database",
+      "owner": "Support Eng (STOA-Domain)",
+      "status": "BACKLOG",
+      "sprint": 18,
+      "dependencies": [
+        "IFC-299"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/app/help-center/[article]/page.tsx;EVIDENCE:.specify/sprints/sprint-18/attestations/IFC-302/context_ack.json"
+      ],
+      "kpis": "Page renders from DB, no static imports, tests passing",
+      "definition_of_done": "Replace static DEFAULT_HELP_ARTICLES in [article]/page.tsx with tRPC queries; same UI, DB data source; static dependency removed; all tests passing; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
+      "prerequisites": "FILE:apps/web/src/app/help-center/[article]/page.tsx;FILE:apps/api/src/modules/help-article/help-article.router.ts",
+      "cadence": ""
+    },
+    "IFC-304": {
+      "section": "Support",
+      "description": "Article Analytics Dashboard",
+      "owner": "Support Eng (STOA-Domain)",
+      "status": "BACKLOG",
+      "sprint": 19,
+      "dependencies": [
+        "IFC-303",
+        "PG-180"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/components/support/article-analytics.tsx;ARTIFACT:apps/api/src/modules/help-article/help-article.router.ts;EVIDENCE:.specify/sprints/sprint-19/attestations/IFC-304/context_ack.json"
+      ],
+      "kpis": "Analytics render, data accurate, coverage >=90%",
+      "definition_of_done": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm test;GATE:coverage-gte-90",
+      "prerequisites": "FILE:apps/api/src/modules/help-article/help-article.router.ts;FILE:apps/web/src/app/settings/help-center/articles/page.tsx",
       "cadence": ""
     }
   }

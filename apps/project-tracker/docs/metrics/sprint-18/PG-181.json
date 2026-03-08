@@ -1,0 +1,41 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "PG-181",
+  "section": "Support Pages",
+  "description": "Help Article Editor Page",
+  "owner": "Support Eng (STOA-Domain)",
+  "status": "Backlog",
+  "sprint": "sprint-18",
+  "phase": null,
+  "stream": null,
+  "dependencies": {
+    "required": ["PG-180", "IFC-301"],
+    "all_satisfied": false,
+    "verified_at": null
+  },
+  "started_at": null,
+  "completed_at": null,
+  "execution": {
+    "retry_count": 0,
+    "last_error": null
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/settings/help-center/articles/[id]/edit/page.tsx",
+      "apps/web/src/app/settings/help-center/articles/new/page.tsx"
+    ],
+    "created": [],
+    "missing": []
+  },
+  "validations": [],
+  "kpis": {},
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-08T18:00:00Z",
+      "note": "Task created — Article editor with Tiptap, metadata fields, draft/publish"
+    }
+  ],
+  "notes": "Admin editor at /settings/help-center/articles/[id]/edit and /new. Tiptap rich text editor, metadata fields (title, slug, category, excerpt, keywords, read time), preview mode, save draft, publish actions."
+}

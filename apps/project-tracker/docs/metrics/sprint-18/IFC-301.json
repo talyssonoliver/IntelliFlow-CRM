@@ -1,0 +1,41 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-301",
+  "section": "Infrastructure",
+  "description": "Rich Text Editor Integration — Tiptap",
+  "owner": "Frontend Dev (STOA-Foundation)",
+  "status": "Backlog",
+  "sprint": "sprint-18",
+  "phase": null,
+  "stream": null,
+  "dependencies": {
+    "required": ["PG-180"],
+    "all_satisfied": false,
+    "verified_at": null
+  },
+  "started_at": null,
+  "completed_at": null,
+  "execution": {
+    "retry_count": 0,
+    "last_error": null
+  },
+  "artifacts": {
+    "expected": [
+      "packages/ui/src/components/rich-text-editor.tsx",
+      "packages/ui/src/components/__tests__/rich-text-editor.test.tsx"
+    ],
+    "created": [],
+    "missing": []
+  },
+  "validations": [],
+  "kpis": {},
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-08T18:00:00Z",
+      "note": "Task created — Tiptap rich text editor as reusable @intelliflow/ui component"
+    }
+  ],
+  "notes": "Tiptap editor supporting headings, bold, italic, lists, links, images, code blocks. Exports structured sections (heading + content pairs) for HelpArticle compatibility."
+}
