@@ -412,6 +412,14 @@ export class TicketService {
       assigneeId?: string;
     }
   ) {
+    // Fetch previous state for activity logging
+    const previousTicket = (data.assigneeId || data.priority)
+      ? await this.prisma.ticket.findUnique({
+          where: { id },
+          select: { assigneeId: true, priority: true },
+        })
+      : null;
+
     const ticket = await this.prisma.ticket.update({
       where: { id },
       data: {
@@ -424,7 +432,7 @@ export class TicketService {
       },
     });
 
-    // Log activity
+    // Log activity for status changes
     if (data.status) {
       await this.prisma.ticketActivity.create({
         data: {
@@ -432,6 +440,51 @@ export class TicketService {
           tenantId: ticket.tenantId,
           type: 'STATUS_CHANGE',
           content: `Status changed to ${data.status}`,
+          authorName: 'System',
+          authorRole: 'System',
+          channel: 'PORTAL',
+        },
+      });
+    }
+
+    // Log activity for assignment changes
+    if (data.assigneeId && data.assigneeId !== previousTicket?.assigneeId) {
+      // Look up assignee name for a human-readable log
+      const newAssignee = await this.prisma.user.findUnique({
+        where: { id: data.assigneeId },
+        select: { name: true },
+      });
+      const prevAssignee = previousTicket?.assigneeId
+        ? await this.prisma.user.findUnique({
+            where: { id: previousTicket.assigneeId },
+            select: { name: true },
+          })
+        : null;
+
+      const fromLabel = prevAssignee?.name ?? 'Unassigned';
+      const toLabel = newAssignee?.name ?? data.assigneeId;
+
+      await this.prisma.ticketActivity.create({
+        data: {
+          ticketId: id,
+          tenantId: ticket.tenantId,
+          type: 'ASSIGNMENT',
+          content: `Reassigned from ${fromLabel} to ${toLabel}`,
+          authorName: 'System',
+          authorRole: 'System',
+          channel: 'PORTAL',
+        },
+      });
+    }
+
+    // Log activity for priority changes
+    if (data.priority && data.priority !== previousTicket?.priority) {
+      await this.prisma.ticketActivity.create({
+        data: {
+          ticketId: id,
+          tenantId: ticket.tenantId,
+          type: 'SYSTEM_EVENT',
+          content: `Priority changed from ${previousTicket?.priority ?? 'Unknown'} to ${data.priority}`,
           authorName: 'System',
           authorRole: 'System',
           channel: 'PORTAL',

@@ -806,16 +806,21 @@ export const intelligenceRouter = createTRPCRouter({
 
       try {
         const { Queue } = await import('bullmq');
-        const queue = new Queue('ai-prediction', {
+        const { QUEUE_NAMES, DEFAULT_QUEUE_CONFIGS } = await import('@intelliflow/platform/queues');
+        const qConfig = DEFAULT_QUEUE_CONFIGS[QUEUE_NAMES.AI_PREDICTION];
+        const queue = new Queue(QUEUE_NAMES.AI_PREDICTION, {
           connection: {
             host: process.env.REDIS_HOST || 'localhost',
             port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
           },
           defaultJobOptions: {
-            attempts: 3,
-            backoff: { type: 'exponential', delay: 1000 },
-            removeOnComplete: { count: 1000, age: 86400 },
-            removeOnFail: { age: 604800 },
+            attempts: qConfig.defaultJobOptions.attempts,
+            backoff: {
+              type: qConfig.defaultJobOptions.backoff.type,
+              delay: qConfig.defaultJobOptions.backoff.delay,
+            },
+            removeOnComplete: qConfig.defaultJobOptions.removeOnComplete,
+            removeOnFail: qConfig.defaultJobOptions.removeOnFail,
           },
         });
 

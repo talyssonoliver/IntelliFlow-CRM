@@ -23,7 +23,7 @@ import {
   rescheduleTaskSchema,
   getRemindersSchema,
   getByEntitySchema,
-  idSchema,
+  taskIdSchema,
 } from '@intelliflow/validators/task';
 import { mapTaskToResponse } from '../../shared/mappers';
 import { type Context } from '../../context';
@@ -255,7 +255,7 @@ export const taskRouter = createTRPCRouter({
   /**
    * Get a single task by ID
    */
-  getById: tenantProcedure.input(z.object({ id: idSchema })).query(async ({ ctx, input }) => {
+  getById: tenantProcedure.input(z.object({ id: taskIdSchema })).query(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
 
     const where = createTenantWhereClause(typedCtx.tenant, { id: input.id });
@@ -461,7 +461,7 @@ export const taskRouter = createTRPCRouter({
   /**
    * Delete a task
    */
-  delete: tenantProcedure.input(z.object({ id: idSchema })).mutation(async ({ ctx, input }) => {
+  delete: tenantProcedure.input(z.object({ id: taskIdSchema })).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
     const taskService = getTaskService(ctx);
     const rbac = new RBACService(ctx.prisma);
@@ -514,7 +514,7 @@ export const taskRouter = createTRPCRouter({
   /**
    * Archive a completed or cancelled task
    */
-  archive: tenantProcedure.input(z.object({ id: idSchema })).mutation(async ({ ctx, input }) => {
+  archive: tenantProcedure.input(z.object({ id: taskIdSchema })).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
     const taskService = getTaskService(ctx);
     const auditLogger = getAuditLogger(ctx.prisma);

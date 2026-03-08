@@ -665,6 +665,113 @@ export const autoResponseRouter = createTRPCRouter({
     }),
 
   /**
+   * Regenerate a draft from an expired/invalidated/rejected one
+   * Creates a new draft with the same parameters and a fresh expiry window.
+   * SECURITY: Uses tenantProcedure to enforce tenant isolation
+   */
+  regenerate: tenantProcedure
+    .input(
+      z.object({
+        draftId: idSchema,
+        subject: z.string().min(1).max(500).optional(),
+        body: z.string().min(1).max(10000).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const repository = await getRepository(ctx);
+
+      const id = AutoResponseDraftId.fromString(input.draftId);
+      const original = await repository.findById(id, typedCtx.tenant.tenantId);
+
+      if (!original) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Draft not found: ${input.draftId}`,
+        });
+      }
+
+      // Only allow regeneration from terminal states
+      const terminalStatuses = ['INVALIDATED', 'REJECTED', 'FAILED'];
+      if (!terminalStatuses.includes(original.status)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Cannot regenerate draft with status: ${original.status}. Only terminal states (${terminalStatuses.join(', ')}) can be regenerated.`,
+        });
+      }
+
+      // Check no active draft already exists for this lead+trigger
+      const existingActive = await repository.findActiveByLeadAndTrigger(
+        original.leadId,
+        original.triggerType,
+        typedCtx.tenant.tenantId
+      );
+
+      if (existingActive) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: `An active draft already exists for lead ${original.leadId} with trigger ${original.triggerType}`,
+        });
+      }
+
+      // Build content — use overrides if provided, else reuse original
+      const originalContent = original.content.toValue();
+      let content: ResponseContent;
+      try {
+        content = ResponseContent.create({
+          subject: input.subject ?? originalContent.subject,
+          body: input.body ?? originalContent.body,
+        });
+      } catch (error) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: error instanceof Error ? error.message : 'Invalid response content',
+        });
+      }
+
+      // Create new draft reusing original parameters
+      // leadTenantId === tenantId (validated at original creation), leadStatus defaults to CONTACTED
+      const createResult = AutoResponseDraft.create({
+        tenantId: typedCtx.tenant.tenantId,
+        leadId: original.leadId,
+        leadTenantId: typedCtx.tenant.tenantId,
+        leadStatus: 'CONTACTED',
+        triggerType: original.triggerType,
+        content,
+        aiConfidence: original.aiConfidence,
+        modelVersion: original.modelVersion,
+        recipientEmail: original.recipientEmail,
+      });
+
+      if (createResult.isFailure) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: createResult.error.message,
+        });
+      }
+
+      const draft = createResult.value;
+
+      try {
+        await repository.save(draft);
+      } catch {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to save regenerated draft',
+        });
+      }
+
+      await publishEvents(draft);
+
+      return {
+        draftId: draft.id.toString(),
+        status: draft.status,
+        expiresAt: draft.expiresAt,
+        regeneratedFrom: input.draftId,
+      };
+    }),
+
+  /**
    * Get statistics by status
    * SECURITY: Uses protectedProcedure for admin/manager analytics
    */

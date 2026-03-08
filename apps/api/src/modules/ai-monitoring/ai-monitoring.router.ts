@@ -47,7 +47,7 @@ const hallucinationQuerySchema = timeRangeSchema.extend({
 });
 
 const agentLogsQuerySchema = z.object({
-  agentId: z.uuid().optional(),
+  agentId: z.string().min(1).optional(),
   limit: z.number().int().min(1).max(100).default(20),
   offset: z.number().int().min(0).default(0),
 });
@@ -417,4 +417,81 @@ export const aiMonitoringRouter = createTRPCRouter({
       });
     }
   }),
+
+  /**
+   * Failed BullMQ jobs across AI queues.
+   * Provides DLQ-like visibility into the /agent-approvals/logs page.
+   */
+  getFailedJobs: tenantProcedure
+    .input(
+      z.object({
+        queue: z.enum(['ai-scoring', 'ai-prediction', 'ai-insights']).optional(),
+        limit: z.number().int().min(1).max(100).default(20),
+        offset: z.number().int().min(0).default(0),
+      })
+    )
+    .query(async ({ input }) => {
+      try {
+        const { Queue } = await import('bullmq');
+        const queueNames = input.queue
+          ? [input.queue]
+          : ['ai-scoring', 'ai-prediction', 'ai-insights'];
+
+        const connection = {
+          host: process.env.REDIS_HOST || 'localhost',
+          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+        };
+
+        const allFailed: Array<{
+          id: string;
+          queue: string;
+          name: string;
+          failedReason: string;
+          attemptsMade: number;
+          timestamp: string;
+          data: Record<string, unknown>;
+        }> = [];
+
+        for (const qName of queueNames) {
+          const q = new Queue(qName, { connection });
+          const counts = await q.getJobCounts();
+          if (counts.failed > 0) {
+            const failed = await q.getFailed(0, counts.failed);
+            for (const job of failed) {
+              allFailed.push({
+                id: job.id ?? 'unknown',
+                queue: qName,
+                name: job.name,
+                failedReason: job.failedReason || 'Unknown',
+                attemptsMade: job.attemptsMade,
+                timestamp: job.finishedOn
+                  ? new Date(job.finishedOn).toISOString()
+                  : new Date().toISOString(),
+                data: job.data as Record<string, unknown>,
+              });
+            }
+          }
+          await q.close();
+        }
+
+        // Sort by most recent first
+        allFailed.sort(
+          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
+
+        const paged = allFailed.slice(input.offset, input.offset + input.limit);
+
+        return {
+          jobs: paged,
+          total: allFailed.length,
+          hasMore: input.offset + input.limit < allFailed.length,
+        };
+      } catch (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to retrieve failed jobs from BullMQ',
+          cause: error,
+        });
+      }
+    }),
 });

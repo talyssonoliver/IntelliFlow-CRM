@@ -129,9 +129,30 @@ const STALE_CONTACT_DAYS = 30;
 /** Cache freshness window for AI insights (6 hours) */
 const AI_INSIGHT_FRESHNESS_MS = 6 * 60 * 60 * 1000;
 
+/** Default SLA for optional AI output reviews created from insights */
+const INSIGHT_REVIEW_SLA_HOURS = 24;
+
 // =============================================================================
 // AI Insight Helpers
 // =============================================================================
+
+type InsightResponseItem = AIInsightsResponse['insights'][number] & {
+  requiresApproval?: boolean;
+};
+type GetInsightByIdResponse = { insight: InsightResponseItem };
+type EnsureInsightReviewResponse = {
+  created: boolean;
+  reviewId: string | null;
+  requiresApproval: boolean;
+};
+
+const getInsightByIdInputSchema = z.object({
+  insightId: z.string().min(1),
+});
+
+const ensureInsightReviewInputSchema = z.object({
+  insightId: z.string().min(1),
+});
 
 /**
  * Maps DB AIInsight type to frontend type
@@ -186,6 +207,36 @@ function buildActionUrl(
   return `/${route}/${entityId}${tabSuffix}`;
 }
 
+function getFirstSuggestedAction(suggestedActions: unknown): string | null {
+  if (!Array.isArray(suggestedActions) || suggestedActions.length === 0) {
+    return null;
+  }
+
+  const first = suggestedActions[0];
+  if (typeof first === 'string') {
+    return first;
+  }
+
+  if (first && typeof first === 'object' && !Array.isArray(first)) {
+    const candidateKeys = ['action', 'title', 'label', 'text', 'suggestedAction'] as const;
+    for (const key of candidateKeys) {
+      const value = (first as Record<string, unknown>)[key];
+      if (typeof value === 'string' && value.trim().length > 0) {
+        return value;
+      }
+    }
+  }
+
+  return String(first);
+}
+
+function getRequiresApproval(metadata: unknown): boolean {
+  if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) {
+    return false;
+  }
+  return (metadata as Record<string, unknown>).requiresApproval === true;
+}
+
 /**
  * Maps an AIInsight DB row to the validator response shape
  */
@@ -199,17 +250,18 @@ function mapAIInsightToResponse(row: {
   entityId: string | null;
   priority: string;
   createdAt: Date;
-}): AIInsightsResponse['insights'][number] {
-  const actions = Array.isArray(row.suggestedActions) ? row.suggestedActions : [];
+  metadata?: unknown;
+}): InsightResponseItem {
   return {
     id: row.id,
     type: mapDbTypeToFrontend(row.type),
     title: row.title,
     description: row.description,
-    suggestedAction: actions.length > 0 ? String(actions[0]) : null,
+    suggestedAction: getFirstSuggestedAction(row.suggestedActions),
     entityType: row.entityType,
     entityId: row.entityId,
     actionUrl: buildActionUrl(row.entityType, row.entityId, row.title),
+    requiresApproval: getRequiresApproval(row.metadata),
     priority: mapDbPriority(row.priority),
     createdAt: row.createdAt,
   };
@@ -231,16 +283,21 @@ async function enqueueInsightGeneration(
   try {
     // Lazy import BullMQ to avoid loading it on every request
     const { Queue } = await import('bullmq');
-    const queue = new Queue('ai-insights', {
+    const { QUEUE_NAMES, DEFAULT_QUEUE_CONFIGS } = await import('@intelliflow/platform/queues');
+    const qConfig = DEFAULT_QUEUE_CONFIGS[QUEUE_NAMES.AI_INSIGHTS];
+    const queue = new Queue(QUEUE_NAMES.AI_INSIGHTS, {
       connection: {
         host: process.env.REDIS_HOST || 'localhost',
         port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
       },
       defaultJobOptions: {
-        attempts: 3,
-        backoff: { type: 'exponential', delay: 5000 },
-        removeOnComplete: { count: 100 },
-        removeOnFail: { age: 604800 },
+        attempts: qConfig.defaultJobOptions.attempts,
+        backoff: {
+          type: qConfig.defaultJobOptions.backoff.type,
+          delay: qConfig.defaultJobOptions.backoff.delay,
+        },
+        removeOnComplete: qConfig.defaultJobOptions.removeOnComplete,
+        removeOnFail: qConfig.defaultJobOptions.removeOnFail,
       },
     });
 
@@ -377,8 +434,8 @@ function buildHeuristicInsights(
     lastContactedAt: Date | null;
   }>,
   now: Date
-): AIInsightsResponse['insights'] {
-  const insights: AIInsightsResponse['insights'] = [];
+): InsightResponseItem[] {
+  const insights: InsightResponseItem[] = [];
 
   dealsAtRisk.forEach((deal) => {
     const daysSinceUpdate = Math.floor(
@@ -393,6 +450,7 @@ function buildHeuristicInsights(
       entityType: 'opportunity',
       entityId: deal.id,
       actionUrl: `/deals/${deal.id}`,
+      requiresApproval: false,
       priority: 'high',
       createdAt: now,
     });
@@ -409,6 +467,7 @@ function buildHeuristicInsights(
       entityType: 'lead',
       entityId: lead.id,
       actionUrl: `/leads/${lead.id}?tab=ai-insights`,
+      requiresApproval: false,
       priority: 'high',
       createdAt: now,
     });
@@ -424,6 +483,7 @@ function buildHeuristicInsights(
       entityType: null,
       entityId: null,
       actionUrl: '/tasks?filter=overdue',
+      requiresApproval: false,
       priority: 'medium',
       createdAt: now,
     });
@@ -445,12 +505,138 @@ function buildHeuristicInsights(
       entityType: 'contact',
       entityId: contact.id,
       actionUrl: `/contacts/${contact.id}?tab=ai-insights`,
+      requiresApproval: false,
       priority: 'medium',
       createdAt: now,
     });
   });
 
   return insights;
+}
+
+function normalizeConfidence(confidence: unknown, fallback: number): number {
+  if (typeof confidence !== 'number' || Number.isNaN(confidence) || !Number.isFinite(confidence)) {
+    return fallback;
+  }
+  if (confidence > 1) {
+    return Math.max(0, Math.min(1, confidence / 100));
+  }
+  return Math.max(0, Math.min(1, confidence));
+}
+
+function formatDisplayName(
+  firstName: string | null | undefined,
+  lastName: string | null | undefined,
+  fallback: string
+): string {
+  const name = `${firstName ?? ''} ${lastName ?? ''}`.trim();
+  return name || fallback;
+}
+
+async function resolveStaleContactHeuristicInsight(
+  prisma: Context['prisma'],
+  tenantId: string,
+  insightId: string
+): Promise<InsightResponseItem | null> {
+  if (!insightId.startsWith('stale-contact-')) {
+    return null;
+  }
+
+  const contactId = insightId.slice('stale-contact-'.length);
+  if (!contactId) {
+    return null;
+  }
+
+  const contact = await prisma.contact.findFirst({
+    where: {
+      id: contactId,
+      tenantId,
+      opportunities: {
+        some: { stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] } },
+      },
+    },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      lastContactedAt: true,
+    },
+  });
+
+  if (!contact) {
+    return null;
+  }
+
+  const now = new Date();
+  const days = contact.lastContactedAt
+    ? Math.floor((now.getTime() - contact.lastContactedAt.getTime()) / (24 * 60 * 60 * 1000))
+    : null;
+  const name = formatDisplayName(contact.firstName, contact.lastName, 'Contact');
+
+  return {
+    id: insightId,
+    type: 'warning',
+    title: `Stale Contact: ${name}`,
+    description: days
+      ? `No interaction in ${days} days. This contact has open opportunities.`
+      : `Never contacted. This contact has open opportunities.`,
+    suggestedAction: 'Schedule a follow-up',
+    entityType: 'contact',
+    entityId: contact.id,
+    actionUrl: `/contacts/${contact.id}?tab=ai-insights`,
+    requiresApproval: false,
+    priority: 'medium',
+    createdAt: now,
+  };
+}
+
+async function resolveInsightById(
+  prisma: Context['prisma'],
+  tenantId: string,
+  userId: string,
+  insightId: string
+): Promise<{ insight: InsightResponseItem; confidence: number } | null> {
+  const now = new Date();
+
+  const aiInsight = await prisma.aIInsight.findFirst({
+    where: {
+      id: insightId,
+      tenantId,
+      status: { notIn: ['DISMISSED', 'EXPIRED'] },
+      expiresAt: { gt: now },
+      metadata: { path: ['userId'], equals: userId },
+    },
+    select: {
+      id: true,
+      type: true,
+      title: true,
+      description: true,
+      suggestedActions: true,
+      entityType: true,
+      entityId: true,
+      priority: true,
+      confidence: true,
+      metadata: true,
+      createdAt: true,
+    },
+  });
+
+  if (aiInsight) {
+    return {
+      insight: mapAIInsightToResponse(aiInsight),
+      confidence: normalizeConfidence(aiInsight.confidence, 0.85),
+    };
+  }
+
+  const staleContactHeuristic = await resolveStaleContactHeuristicInsight(prisma, tenantId, insightId);
+  if (staleContactHeuristic) {
+    return {
+      insight: staleContactHeuristic,
+      confidence: 0.7,
+    };
+  }
+
+  return null;
 }
 
 // =============================================================================
@@ -680,6 +866,7 @@ export const homeRouter = createTRPCRouter({
         entityType: true,
         entityId: true,
         priority: true,
+        metadata: true,
         createdAt: true,
       },
     });
@@ -723,6 +910,7 @@ export const homeRouter = createTRPCRouter({
         entityType: null,
         entityId: null,
         actionUrl: null,
+        requiresApproval: false,
         priority: 'low',
         createdAt: now,
       });
@@ -1144,6 +1332,7 @@ export const homeRouter = createTRPCRouter({
           entityType: true,
           entityId: true,
           priority: true,
+          metadata: true,
           createdAt: true,
         },
       });
@@ -1236,6 +1425,104 @@ export const homeRouter = createTRPCRouter({
         hasMore,
         total,
         lastRefreshed: heuristic.now,
+      };
+    }),
+
+  /**
+   * Resolve a single insight by ID (AI table row or heuristic fallback).
+   * Supports deep-linking from insight cards to entity AI tabs.
+   */
+  getInsightById: protectedProcedure
+    .input(getInsightByIdInputSchema)
+    .query(async ({ ctx, input }): Promise<GetInsightByIdResponse> => {
+      const tenantId = getTenantId(ctx);
+      const userId = getUserId(ctx);
+
+      const resolved = await resolveInsightById(ctx.prisma, tenantId, userId, input.insightId);
+      if (!resolved) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Insight not found',
+        });
+      }
+
+      return {
+        insight: resolved.insight,
+      };
+    }),
+
+  /**
+   * Optionally creates a review queue row for insights marked requiresApproval.
+   * Idempotent by insightId.
+   */
+  ensureInsightReview: protectedProcedure
+    .input(ensureInsightReviewInputSchema)
+    .mutation(async ({ ctx, input }): Promise<EnsureInsightReviewResponse> => {
+      const tenantId = getTenantId(ctx);
+      const userId = getUserId(ctx);
+
+      const resolved = await resolveInsightById(ctx.prisma, tenantId, userId, input.insightId);
+      if (!resolved) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Insight not found',
+        });
+      }
+
+      const { insight, confidence } = resolved;
+      if (!insight.requiresApproval) {
+        return {
+          created: false,
+          reviewId: null,
+          requiresApproval: false,
+        };
+      }
+
+      const existing = await (ctx.prisma as any).aIOutputReview.findFirst({
+        where: {
+          tenantId,
+          outputType: 'NEXT_BEST_ACTION',
+          outputPayload: {
+            path: ['insightId'],
+            equals: insight.id,
+          },
+        },
+        select: { id: true },
+      });
+
+      if (existing?.id) {
+        return {
+          created: false,
+          reviewId: existing.id,
+          requiresApproval: true,
+        };
+      }
+
+      const review = await (ctx.prisma as any).aIOutputReview.create({
+        data: {
+          tenantId,
+          outputType: 'NEXT_BEST_ACTION',
+          outputPayload: {
+            insightId: insight.id,
+            title: insight.title,
+            description: insight.description,
+            suggestedAction: insight.suggestedAction,
+            entityType: insight.entityType,
+            entityId: insight.entityId,
+            actionUrl: insight.actionUrl,
+            source: 'home-insight-link',
+            requestedByUserId: userId,
+          },
+          confidence,
+          slaDeadline: new Date(Date.now() + INSIGHT_REVIEW_SLA_HOURS * 60 * 60 * 1000),
+        },
+        select: { id: true },
+      });
+
+      return {
+        created: true,
+        reviewId: review.id,
+        requiresApproval: true,
       };
     }),
 });

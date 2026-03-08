@@ -17,6 +17,7 @@ import {
   updateTicketSchema,
   ticketQuerySchema,
   addResponseSchema,
+  addAttachmentSchema,
   idSchema,
   ticketStatusSchema,
   statsInputSchema,
@@ -547,5 +548,57 @@ export const ticketRouter = createTRPCRouter({
           count: s._count,
         })),
       };
+    }),
+
+  /**
+   * Add attachment to a ticket (PG-047)
+   */
+  addAttachment: tenantProcedure
+    .input(addAttachmentSchema)
+    .mutation(async ({ ctx, input }) => {
+      const tenantId = await getTenantId(ctx);
+
+      // Verify ticket exists and belongs to tenant
+      const ticket = await ctx.prisma.ticket.findFirst({
+        where: { id: input.ticketId, tenantId },
+        select: { id: true },
+      });
+
+      if (!ticket) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Ticket not found',
+        });
+      }
+
+      // Determine file type enum from MIME type
+      const fileTypeMap: Record<string, string> = {
+        'image/jpeg': 'IMAGE',
+        'image/png': 'IMAGE',
+        'image/gif': 'IMAGE',
+        'image/webp': 'IMAGE',
+        'application/pdf': 'PDF',
+        'application/msword': 'DOCUMENT',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCUMENT',
+        'text/plain': 'DOCUMENT',
+        'text/csv': 'SPREADSHEET',
+        'application/zip': 'ARCHIVE',
+      };
+      const dbFileType = fileTypeMap[input.fileType] ?? 'OTHER';
+
+      const attachment = await ctx.prisma.ticketAttachment.create({
+        data: {
+          name: input.name,
+          size: input.size,
+          sizeBytes: input.sizeBytes,
+          fileType: dbFileType as never,
+          url: `data:${input.fileType};base64,${input.content.slice(0, 100)}...`,
+          ticketId: input.ticketId,
+          uploadedById: ctx.user?.userId ?? null,
+          tenantId,
+        },
+      });
+
+      return { id: attachment.id, name: attachment.name, size: attachment.size };
     }),
 });
