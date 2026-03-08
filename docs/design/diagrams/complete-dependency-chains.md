@@ -393,6 +393,7 @@ Dependency Chain:
 
 Support Portal Chain:
   PG-046: /support/tickets → SupportTicketList → TicketList → useTicketFilters → api.ticket.list → TicketService (container.ts:247)
+  PG-047: /support/tickets/new → SupportTicketForm → TicketForm + FileUploader → api.ticket.create + api.ticket.addAttachment → TicketService (container.ts:247)
 ```
 
 ---
@@ -1999,7 +2000,7 @@ PG-039 (Dev Apps) ✅ ──► PG-040 (New Dev App) ✅
 
 ```
 PG-043 (Help Center Index) ✅ ──► PG-044 (Help Search) ✅
-                             └──► PG-045 (Article Detail) ⬜
+                             └──► PG-045 (Article Detail) ✅
 ```
 
 ---

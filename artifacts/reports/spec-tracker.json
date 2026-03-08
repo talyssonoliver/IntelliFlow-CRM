@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-07T15:00:31.547Z",
+  "generated_at": "2026-03-08T11:58:39.708Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 323,
-    "completed": 319,
-    "partially_done": 1,
-    "spec_only": 2,
-    "uncertain": 1
+    "total_specs_analyzed": 327,
+    "completed": 320,
+    "partially_done": 2,
+    "spec_only": 3,
+    "uncertain": 2
   },
   "status_legend": {
     "COMPLETED": "All evidence confirms task is done: attestation present, CSV=Completed, plan checkboxes done",
@@ -17,6 +17,12 @@
   "issues": [
     {
       "task_id": "PG-038",
+      "severity": "HIGH",
+      "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
+      "recommendation": "Investigate attestation evidence. Re-run validation if needed."
+    },
+    {
+      "task_id": "PG-044",
       "severity": "HIGH",
       "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
       "recommendation": "Investigate attestation evidence. Re-run validation if needed."
@@ -3810,6 +3816,24 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-296",
+      "title": "Queue Scheduler Administration — Implement queuesAdmin tRPC router with live BullMQ stats and scheduler CRUD (list/pause/resume/retry/delete), wire to /agent-approvals/agents page. Replace stub router with live Redis/BullMQ data. Add queue health panel to ActiveAgentsDashboard showing scheduler cron patterns, queue counts, and action buttons.",
+      "sprint": 15,
+      "spec_path": ".specify/sprints/sprint-15/specifications/IFC-296-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": false,
+      "csv_status": "Planning",
+      "metric_status": "PLANNED",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-015",
+        "IFC-197",
+        "PG-151"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
       "task_id": "PG-001",
       "title": "Home Page (Public)",
       "sprint": 11,
@@ -4548,9 +4572,25 @@
       "sprint": 16,
       "spec_path": ".specify/sprints/sprint-16/specifications/PG-044-spec.md",
       "has_spec": true,
-      "has_plan": false,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-043"
+      ],
+      "real_status": "UNCERTAIN"
+    },
+    {
+      "task_id": "PG-045",
+      "title": "Help Article",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/PG-045-spec.md",
+      "has_spec": true,
+      "has_plan": true,
       "has_attestation": false,
-      "csv_status": "Spec Complete",
+      "csv_status": "Plan Complete",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
@@ -4573,6 +4613,22 @@
         "IFC-093"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-047",
+      "title": "New Ticket",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/PG-047-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": false,
+      "csv_status": "In Progress",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-046"
+      ],
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "PG-104",
@@ -5134,6 +5190,23 @@
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-129"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-164",
+      "title": "Home page E2E tests - 5 Playwright scenarios: public page auth redirect insight click quick action pin/unpin flow",
+      "sprint": 15,
+      "spec_path": ".specify/sprints/sprint-15/specifications/PG-164-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-129",
+        "PG-155"
       ],
       "real_status": "COMPLETED"
     },

@@ -35,7 +35,7 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 | Category        | Count |
 | --------------- | ----- |
-| Total Pages     | 124   |
+| Total Pages     | 126   |
 | Public Pages    | 27    |
 | Developer Pages | 14    |
 | Protected Pages | 78    |
@@ -328,18 +328,20 @@ developer sidebar. These pages are accessible through the Settings sidebar
 | `/governance/quality-reports`            | Quality Reports     | Quality assessment reports    |
 | `/governance/quality-reports/[reportId]` | Report Detail       | Individual quality report     |
 
-### 21. Support Portal (1 page)
+### 21. Support Portal (2 pages)
 
-| Route              | Page                  | Description                                              |
-| ------------------ | --------------------- | -------------------------------------------------------- |
-| `/support/tickets` | Support Tickets Queue | SLA-first agent ticket queue (excludes ARCHIVED, 3 bulk) |
+| Route                  | Page                  | Description                                              |
+| ---------------------- | --------------------- | -------------------------------------------------------- |
+| `/support/tickets`     | Support Tickets Queue | SLA-first agent ticket queue (excludes ARCHIVED, 3 bulk) |
+| `/support/tickets/new` | New Support Ticket    | Ticket creation form with file attachments (PG-047)      |
 
-### 22. Support / Help Center (1 page)
+### 22. Support / Help Center (2 pages)
 
 | Route          | Page              | Description                                       |
 | -------------- | ----------------- | ------------------------------------------------- |
 | `/help-center` | Help Center Index | Searchable category grid for self-service support |
 | `/help-center/search` | Help Search | URL-driven search with scoring, filters, and category results |
+| `/help-center/[article]` | Help Article | Individual help article detail page (PG-045) |
 
 ---
 

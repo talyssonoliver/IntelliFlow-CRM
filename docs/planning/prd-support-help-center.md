@@ -9,7 +9,7 @@
 | **Status**        | In Progress                                    |
 | **Target Sprint** | 16                                             |
 | **Created Date**  | 2026-02-28                                     |
-| **Last Updated**  | 2026-03-02                                     |
+| **Last Updated**  | 2026-03-08                                     |
 | **Related Tasks** | PG-043, PG-044, PG-045, PG-046, PG-047, PG-048 |
 
 ## Problem Statement
@@ -197,6 +197,21 @@ admin/lifecycle clutter.
 **As a** support agent **I want to** create a new ticket from the support
 section **So that** I can log customer issues without leaving the support
 workflow.
+
+**Acceptance Criteria:**
+
+- [ ] New ticket page loads at `/support/tickets/new` with the ticket creation form
+- [ ] Form validates required fields: subject, contact name, contact email
+- [ ] Form includes priority selector, category selector, and description field
+- [ ] File attachment upload component allows drag-and-drop and click-to-browse
+- [ ] File upload shows preview/filename, progress indicator, and remove button
+- [ ] File size limit enforced (max 10MB per file, max 5 files)
+- [ ] On successful submission, user is redirected to `/support/tickets/{id}`
+- [ ] Success toast notification is displayed after ticket creation
+- [ ] Error handling shows validation errors inline and submission errors as toast
+- [ ] Page is reachable from sidebar Quick Links "New Ticket" entry
+- [ ] Breadcrumbs show Support > Tickets > New Ticket
+- [ ] Cancel button returns to `/support/tickets`
 
 #### Story 6 — Support Ticket Detail (PG-048)
 

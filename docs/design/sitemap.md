@@ -231,7 +231,8 @@ intelliflow.com
 │
 ├── SUPPORT PORTAL ──────────────────────── Layout: support/tickets/(list)
 │   │
-│   └── /support/tickets                  → Support-agent ticket queue (SLA-first)
+│   ├── /support/tickets                  → Support-agent ticket queue (SLA-first)
+│   └── /support/tickets/new              → New ticket form with file attachments
 │
 └── SUPPORT / HELP CENTER ───────────────── Route: /help-center
     │

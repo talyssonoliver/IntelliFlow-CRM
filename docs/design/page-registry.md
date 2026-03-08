@@ -3,7 +3,7 @@
 > **Location**: `docs/design/page-registry.md` **Purpose**: Central registry of
 > all UI pages with task IDs, KPIs, file paths, components, API routers, test
 > paths, and RACI assignments **Last Updated**: 2026-02-24 (as of Sprint 14)
-> **Total Pages**: 124
+> **Total Pages**: 126
 
 ---
 
@@ -1728,6 +1728,28 @@ Each route entry uses this standard table format:
 | **Status**     | Implemented                                                                                                                                 |
 | **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                                                                               |
 | **Components** | SupportTicketList, PageHeader, useTicketFilters, mapTicketListItems                                                                         |
+
+---
+
+## Section 22: Support / Help Center (1 route)
+
+### `/help-center/[article]` — Help Article
+
+| Field          | Value                                                         |
+| -------------- | ------------------------------------------------------------- |
+| **Route**      | `/help-center/[article]`                                      |
+| **Task ID**    | PG-045                                                        |
+| **Sprint**     | 15                                                            |
+| **File**       | `apps/web/src/app/help-center/[article]/page.tsx`             |
+| **Layout**     | `apps/web/src/app/help-center/[article]/layout.tsx`           |
+| **API Router** | N/A                                                           |
+| **Procedures** | N/A                                                           |
+| **E2E Test**   | None                                                          |
+| **Unit Tests** | None                                                          |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s                           |
+| **Status**     | Implemented                                                   |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                 |
+| **Components** | HelpArticleDetail, ArticleBreadcrumb, RelatedArticles         |
 
 ---
 
