@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import type { ReactNode } from 'react';
 import * as React from 'react';
 import { api } from '@/lib/api';
@@ -112,9 +112,11 @@ export function CalendarVisibilityProvider({ children }: { children: ReactNode }
   // Always initialize with defaults to match server render and avoid hydration mismatch.
   // localStorage values are applied in the useEffect below after hydration.
   const [visibility, setVisibility] = useState<Record<string, boolean>>(getDefaultVisibility);
+  const hasExternalOverride = useRef(false);
 
   // Hydrate from localStorage after mount to avoid SSR/client mismatch
   useEffect(() => {
+    if (hasExternalOverride.current) return;
     const stored = loadJson<Record<string, boolean>>(VISIBILITY_KEY);
     if (stored) {
       setVisibility(stored);
@@ -162,6 +164,7 @@ export function CalendarVisibilityProvider({ children }: { children: ReactNode }
   const isVisible = useCallback((id: string): boolean => visibility[id] ?? true, [visibility]);
 
   const setOnlyVisible = useCallback((ids: string[]) => {
+    hasExternalOverride.current = true;
     const idSet = new Set(ids);
     setVisibility((prev) => {
       const next: Record<string, boolean> = {};

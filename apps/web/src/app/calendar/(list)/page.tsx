@@ -201,6 +201,14 @@ export default function CalendarPage() {
     [router]
   );
 
+  const handleMoreClick = useCallback(
+    (date: Date) => {
+      setCurrentDate(date);
+      setCalendarView('day');
+    },
+    [setCalendarView]
+  );
+
   const handleCreateWithDate = useCallback((date: Date) => {
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     setTaskCreateDefaultDate(dateStr);
@@ -276,6 +284,7 @@ export default function CalendarPage() {
           onTaskClick={handleTaskClick}
           onCreateWithSlot={handleCreateWithSlot}
           onCreateWithDate={handleCreateWithDate}
+          onMoreClick={handleMoreClick}
         />
       ) : (
         <AppointmentList

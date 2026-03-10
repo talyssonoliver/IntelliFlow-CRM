@@ -37,20 +37,20 @@ export interface PasswordRequirement {
 // Constants
 // ============================================
 
-export const MIN_PASSWORD_LENGTH = 8;
-export const STRONG_PASSWORD_LENGTH = 12;
+export const MIN_PASSWORD_LENGTH = 12;
+export const STRONG_PASSWORD_LENGTH = 16;
 export const MAX_SCORE = 6;
 
 export const PASSWORD_REQUIREMENTS: PasswordRequirement[] = [
   {
     id: 'length',
-    label: 'At least 8 characters',
+    label: 'At least 12 characters',
     test: (p) => p.length >= MIN_PASSWORD_LENGTH,
     weight: 1,
   },
   {
     id: 'longLength',
-    label: '12+ characters (recommended)',
+    label: '16+ characters (recommended)',
     test: (p) => p.length >= STRONG_PASSWORD_LENGTH,
     weight: 1,
   },

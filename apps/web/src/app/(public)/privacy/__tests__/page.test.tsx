@@ -43,3 +43,45 @@ describe('PrivacyPage', () => {
     expect(metadata.openGraph?.url).toBe('https://intelliflow-crm.com/privacy');
   });
 });
+
+describe('consent-tracker', () => {
+  it('buildConsentRecord returns a valid consent record', async () => {
+    const { buildConsentRecord } = await import('@/lib/legal/consent-tracker');
+    const record = buildConsentRecord('2026-03-08T10:00:00Z');
+
+    expect(record.policyVersion).toBe('v2026.03');
+    expect(record.reviewedAt).toBe('2026-03-08T10:00:00Z');
+    expect(record.route).toBe('/privacy');
+  });
+
+  it('buildConsentRecord defaults reviewedAt to now', async () => {
+    const { buildConsentRecord } = await import('@/lib/legal/consent-tracker');
+    const before = new Date().toISOString();
+    const record = buildConsentRecord();
+    const after = new Date().toISOString();
+
+    expect(record.reviewedAt >= before).toBe(true);
+    expect(record.reviewedAt <= after).toBe(true);
+  });
+
+  it('formatPolicyDate formats ISO dates in en-GB locale', async () => {
+    const { formatPolicyDate } = await import('@/lib/legal/consent-tracker');
+    const result = formatPolicyDate('2026-01-15');
+
+    expect(result).toMatch(/15/);
+    expect(result).toMatch(/2026/);
+  });
+
+  it('getPrivacyPolicy returns parsed sections from content file', async () => {
+    const { getPrivacyPolicy } = await import('@/lib/legal/consent-tracker');
+    const policy = getPrivacyPolicy();
+
+    expect(policy.metadata.title).toBe('Privacy Policy');
+    expect(policy.metadata.version).toBe('v2026.03');
+    expect(policy.metadata.contactEmail).toBe('privacy@intelliflow-crm.com');
+    expect(policy.metadata.summary.length).toBeGreaterThanOrEqual(4);
+    expect(policy.sections.length).toBeGreaterThanOrEqual(6);
+    expect(policy.sections[0].id).toBe('information-we-collect');
+    expect(policy.sections[0].body.length).toBeGreaterThanOrEqual(1);
+  });
+});

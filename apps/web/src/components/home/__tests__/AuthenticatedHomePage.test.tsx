@@ -256,10 +256,9 @@ vi.mock('@/components/shared/activity-feed', () => ({
         </button>
         {open && (
           <>
-            <div
+            <button
+              type="button"
               className="fixed inset-0 z-10"
-              role="button"
-              tabIndex={0}
               aria-label="Close filter menu"
               onClick={() => setOpen(false)}
               onKeyDown={(e) => {
@@ -334,6 +333,7 @@ const insightsData = {
     {
       id: 'ins-1',
       type: 'warning' as const,
+      source: 'heuristic' as const,
       title: 'Deal at Risk: Acme Corp',
       description: 'No contact in 15 days.',
       suggestedAction: 'Schedule follow-up',
@@ -346,6 +346,7 @@ const insightsData = {
     {
       id: 'ins-2',
       type: 'opportunity' as const,
+      source: 'ai' as const,
       title: 'Hot Lead Detected',
       description: 'Jane Smith has score 92.',
       suggestedAction: null,
@@ -540,8 +541,9 @@ describe('AuthenticatedHomePage', () => {
 
     it('renders View All link', () => {
       render(<AuthenticatedHomePage />);
-      const viewAll = screen.getByRole('link', { name: /View All/i });
-      expect(viewAll).toHaveAttribute('href', '/agent-approvals/insights');
+      const viewAllLinks = screen.getAllByRole('link', { name: /View All/i });
+      const insightsLink = viewAllLinks.find((l) => l.getAttribute('href') === '/agent-approvals/insights');
+      expect(insightsLink).toBeDefined();
     });
 
     it('renders insight cards with titles', () => {
@@ -555,10 +557,16 @@ describe('AuthenticatedHomePage', () => {
       expect(screen.getByText(/Suggested Action: Schedule follow-up/)).toBeInTheDocument();
     });
 
+    it('labels heuristic fallback insights distinctly', () => {
+      render(<AuthenticatedHomePage />);
+      expect(screen.getAllByTestId('heuristic-insight-badge')).toHaveLength(1);
+      expect(screen.getByText('Heuristic fallback')).toBeInTheDocument();
+    });
+
     it('renders insight links with correct URLs', () => {
       render(<AuthenticatedHomePage />);
       const dealLink = screen.getByText('Deal at Risk: Acme Corp').closest('a');
-      expect(dealLink).toHaveAttribute('href', '/deals/opp-1');
+      expect(dealLink).toHaveAttribute('href', '/deals/opp-1?insightId=ins-1');
     });
 
     it('shows empty state when no insights', () => {
@@ -1049,34 +1057,21 @@ describe('AuthenticatedHomePage', () => {
   });
 
   // =========================================================================
-  // Footer
+  // Layout Boundary
   // =========================================================================
-  describe('Footer', () => {
-    it('renders footer with product links', () => {
+  describe('Layout boundary', () => {
+    it('does not render public footer sections inline', () => {
       render(<AuthenticatedHomePage />);
-      expect(screen.getByText('Product')).toBeInTheDocument();
+      expect(screen.queryByText('Product')).not.toBeInTheDocument();
+      expect(screen.queryByText('Company')).not.toBeInTheDocument();
+      expect(screen.queryByText('Legal')).not.toBeInTheDocument();
     });
 
-    it('renders company info links', () => {
+    it('does not duplicate public footer social links inline', () => {
       render(<AuthenticatedHomePage />);
-      expect(screen.getByText('Company')).toBeInTheDocument();
-    });
-
-    it('renders legal links', () => {
-      render(<AuthenticatedHomePage />);
-      expect(screen.getByText('Legal')).toBeInTheDocument();
-    });
-
-    it('renders copyright notice', () => {
-      render(<AuthenticatedHomePage />);
-      expect(screen.getByText(/2025 IntelliFlow CRM/)).toBeInTheDocument();
-    });
-
-    it('renders social links', () => {
-      render(<AuthenticatedHomePage />);
-      expect(screen.getByLabelText('Twitter')).toBeInTheDocument();
-      expect(screen.getByLabelText('LinkedIn')).toBeInTheDocument();
-      expect(screen.getByLabelText('GitHub')).toBeInTheDocument();
+      expect(screen.queryByLabelText('Twitter')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('LinkedIn')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('GitHub')).not.toBeInTheDocument();
     });
   });
 
@@ -1096,9 +1091,9 @@ describe('AuthenticatedHomePage', () => {
       expect(container).toBeTruthy();
     });
 
-    it('renders IntelliFlow CRM branding in footer', () => {
+    it('does not render public-footer branding inline', () => {
       render(<AuthenticatedHomePage />);
-      expect(screen.getByText('IntelliFlow CRM')).toBeInTheDocument();
+      expect(screen.queryByText('IntelliFlow CRM')).not.toBeInTheDocument();
     });
   });
 

@@ -7,11 +7,12 @@ import { Card } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { AppAvatar } from '@/components/shared/app-avatar';
+import { ActivityFeed } from '@/components/shared/activity-feed';
 import { formatFileSize } from '@/components/documents';
 import type { AccessLevel, DocumentStatus } from '@/components/documents';
 
 // Tab types
-type TabId = 'overview' | 'versions' | 'access-control' | 'signatures' | 'comments';
+type TabId = 'overview' | 'versions' | 'access-control' | 'signatures' | 'activity' | 'comments';
 
 interface Tab {
   id: TabId;
@@ -173,7 +174,9 @@ export default function DocumentDetailPage() { // NOSONAR typescript:S3776
   });
 
   // Map audit trail to UI-friendly format using module-level mapAuditEntry helper
-  const auditEntries: RawAuditEntry[] = rawAuditTrail ? (rawAuditTrail as unknown as RawAuditEntry[]) : [];
+  // tRPC serializes dates as strings; the type mismatch is expected at the wire boundary
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const auditEntries: RawAuditEntry[] = rawAuditTrail ? (rawAuditTrail as any as RawAuditEntry[]) : [];
   const auditTrail: AuditEntry[] = auditEntries.map((entry, index) =>
     mapAuditEntry(entry, index, auditEntries.length)
   );
@@ -325,6 +328,7 @@ export default function DocumentDetailPage() { // NOSONAR typescript:S3776
     { id: 'versions', label: 'Version History', count: auditTrail?.length || 0 },
     { id: 'access-control', label: 'Access Control', count: accessControlList.length },
     { id: 'signatures', label: 'Signatures', count: signatures.length },
+    { id: 'activity', label: 'Activity' },
     { id: 'comments', label: 'Comments', count: comments.length },
   ];
 
@@ -912,6 +916,11 @@ export default function DocumentDetailPage() { // NOSONAR typescript:S3776
                     </div>
                   )}
                 </div>
+              )}
+
+              {/* Activity Tab */}
+              {activeTab === 'activity' && (
+                <ActivityFeed entityType="DOCUMENT" entityId={documentId} height={500} />
               )}
 
               {/* Comments Tab */}

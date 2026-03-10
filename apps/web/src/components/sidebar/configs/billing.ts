@@ -72,6 +72,24 @@ export const billingSidebarConfig: SidebarConfig = {
           icon: 'upgrade',
           href: '/billing/upgrade',
         },
+        {
+          id: 'cancel',
+          label: 'Cancel',
+          icon: 'cancel',
+          href: '/billing/cancel',
+        },
+      ],
+    },
+    {
+      id: 'settings',
+      title: 'Settings',
+      items: [
+        {
+          id: 'billing-settings',
+          label: 'Billing Settings',
+          icon: 'settings',
+          href: '/billing/settings',
+        },
       ],
     },
   ],

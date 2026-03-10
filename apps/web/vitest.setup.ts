@@ -87,15 +87,6 @@ vi.mock('@/hooks/use-trpc-subscriptions', () => ({
   useActivitySubscription: vi.fn(() => mockSubscriptionState),
 }));
 
-// Also mock the re-export module
-vi.mock('@/hooks/use-subscription', () => ({
-  useLeadScoredSubscription: vi.fn(() => mockSubscriptionState),
-  useTaskAssignedSubscription: vi.fn(() => mockSubscriptionState),
-  useSystemEventSubscription: vi.fn(() => mockSubscriptionState),
-  useRealtimeHealth: vi.fn(() => mockHealthState),
-  useActivitySubscription: vi.fn(() => mockSubscriptionState),
-}));
-
 // =============================================================================
 // Auth Context Mock
 // =============================================================================

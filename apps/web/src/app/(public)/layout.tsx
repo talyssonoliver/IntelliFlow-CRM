@@ -50,7 +50,7 @@ export default function PublicLayout({ children }: Readonly<{ children: React.Re
       ) : (
         <main className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">{children}</main>
       )}
-      {!isAuthPage && !isAuthenticated && <PublicFooter />}
+      {!isAuthPage && <PublicFooter />}
     </>
   );
 }

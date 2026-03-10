@@ -100,9 +100,16 @@ vi.mock('@/lib/api', () => ({
       task: {
         list: { invalidate: vi.fn() },
         getById: { invalidate: vi.fn() },
+        stats: { invalidate: vi.fn() },
       },
     }),
     task: {
+      stats: {
+        useQuery: () => ({
+          data: { total: 2, byStatus: { PENDING: 1, IN_PROGRESS: 1 }, byPriority: {}, overdue: 0, dueToday: 0 },
+          isLoading: false,
+        }),
+      },
       list: {
         useQuery: () => ({
           data: mockQueryState.data,
@@ -218,6 +225,10 @@ vi.mock('@/components/tasks/TaskCalendar', () => ({
 vi.mock('@/components/tasks/TaskForm', () => ({
   TaskForm: ({ open }: { open: boolean }) =>
     open ? <div data-testid="task-form">Create Form</div> : null,
+}));
+
+vi.mock('@/components/tasks/ReminderConfig', () => ({
+  ReminderConfig: () => <div data-testid="reminder-config">Reminder</div>,
 }));
 
 // ─── Import after mocks ─────────────────────────────────────────

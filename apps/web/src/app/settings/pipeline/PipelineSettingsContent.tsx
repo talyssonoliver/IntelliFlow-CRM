@@ -130,7 +130,7 @@ export default function PipelineSettingsContent() {
   // Move stage up or down
   const moveStage = useCallback((stageKey: string, direction: 'up' | 'down') => {
     setLocalStages((prev) => {
-      const index = prev.indexOf((s) => s.stageKey === stageKey);
+      const index = prev.findIndex((s) => s.stageKey === stageKey);
       if (
         (direction === 'up' && index === 0) ||
         (direction === 'down' && index === prev.length - 1)

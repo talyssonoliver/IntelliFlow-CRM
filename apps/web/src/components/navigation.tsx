@@ -30,7 +30,8 @@ export function Navigation() {
   const pathname = usePathname();
 
   // IFC-210: Dynamic module-based navigation
-  const { enabledRoutes, isLoading: modulesLoading } = useEnabledModules();
+  // Fail closed: if modules query errors, enabledRoutes defaults to CORE_CRM only
+  const { enabledRoutes, isLoading: modulesLoading, isError: modulesError } = useEnabledModules();
 
   // Map domain NavRouteConfig to header NavRoute (compatible shapes)
   const routes: NavRoute[] = React.useMemo(
@@ -65,7 +66,7 @@ export function Navigation() {
         </div>
 
         {/* Desktop Navigation */}
-        {modulesLoading ? (
+        {modulesLoading && !modulesError ? (
           <nav className="hidden lg:flex items-center gap-1">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="h-8 w-20 rounded-lg bg-muted animate-pulse" /> // NOSONAR typescript:S6479

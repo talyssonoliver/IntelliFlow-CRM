@@ -13,7 +13,6 @@ import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import {
   type ModuleId,
-  MODULE_PLAN_MAP,
   getRoutesForModules,
   type NavRouteConfig,
 } from '@intelliflow/domain';
@@ -37,14 +36,11 @@ export function useEnabledModules(): UseEnabledModulesResult {
   const { data, isLoading, isError } = trpc.moduleAccess.getEnabledModules.useQuery(undefined, {
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
-    // Fallback: if query fails, show Professional-tier modules (graceful degradation)
-    placeholderData: {
-      modules: [...MODULE_PLAN_MAP.PROFESSIONAL] as ModuleId[],
-      plan: 'PROFESSIONAL' as const,
-    },
+    // Fail closed: no placeholderData — unresolved access defaults to CORE_CRM only
   });
 
-  const enabledModules = (data?.modules ?? [...MODULE_PLAN_MAP.PROFESSIONAL]) as ModuleId[];
+  // Fail closed: if query hasn't resolved, only grant CORE_CRM
+  const enabledModules = (data?.modules ?? ['CORE_CRM']) as ModuleId[];
   const plan = data?.plan;
 
   const isModuleEnabled = useMemo(() => {

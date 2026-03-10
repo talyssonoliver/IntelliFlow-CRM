@@ -180,8 +180,9 @@ function queueConversion(event: ConversionEvent): void {
 function sendConversion(event: ConversionEvent): void {
   // Integration with analytics providers
   // Google Analytics 4
-  if ('gtag' in globalThis && typeof (globalThis as unknown as { gtag?: Function }).gtag === 'function') {
-    (globalThis as unknown as { gtag: Function }).gtag('event', 'ab_conversion', {
+  const gtagGlobal = globalThis as Record<string, unknown>;
+  if (typeof gtagGlobal.gtag === 'function') {
+    (gtagGlobal.gtag as (...args: unknown[]) => void)('event', 'ab_conversion', {
       experiment_id: event.experimentId,
       variant_id: event.variantId,
       event_type: event.eventType,

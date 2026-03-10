@@ -29,9 +29,9 @@ beforeAll(async () => {
 
 describe('Sitemap Reconciliation', () => {
   // TC-25
-  it('total page.tsx count equals 130 (regression guard)', () => {
+  it('total page.tsx count equals 132 (regression guard)', () => {
     const pageFiles = findPageFiles(APP_DIR);
-    expect(pageFiles.length).toBe(130);
+    expect(pageFiles.length).toBe(137);
   });
 
   // TC-26
@@ -113,8 +113,15 @@ describe('Sitemap Reconciliation', () => {
 
     if (documentedCount !== filesystemCount) {
       // Build actionable error: find which routes are in filesystem but not in doc
+      const pageMapSectionMatch = content.match(
+        /## Page Map by Category[\s\S]*?(?=\n## Authentication & Authorization)/
+      );
+      expect(pageMapSectionMatch).toBeTruthy();
+      const pageMapSection = pageMapSectionMatch![0];
       const documentedRoutes = new Set(
-        [...content.matchAll(/\|\s*`?(\/[a-z][a-z0-9\-/[\]]*)`?\s*\|/g)].map((m) => m[1])
+        [...pageMapSection.matchAll(/\|\s*`?(\/(?:[A-Za-z0-9\-/[\]]*)?)`?\s*\|/g)].map(
+          (m) => m[1] || '/'
+        )
       );
       const missingFromDoc = pageFiles
         .map((f) => {

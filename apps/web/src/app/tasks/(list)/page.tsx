@@ -37,7 +37,6 @@ function getEditingTaskDueDate(task: TaskListItem | null): string {
 }
 import { TaskForm, type TaskFormData } from '@/components/tasks/TaskForm';
 import { ReminderConfig } from '@/components/tasks/ReminderConfig';
-import { TaskStatsBar } from '@/components/tasks/TaskStatsBar';
 
 // Custom hook for debounced value
 function useDebounce<T>(value: T, delay: number): T {
@@ -343,9 +342,6 @@ export default function TasksPage() {
           },
         ]}
       />
-
-      {/* Stats Bar */}
-      <TaskStatsBar />
 
       {/* Reminder Banner */}
       <ReminderConfig

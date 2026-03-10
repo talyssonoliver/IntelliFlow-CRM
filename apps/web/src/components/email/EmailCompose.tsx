@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Send, Save, X, Paperclip } from 'lucide-react';
+import DOMPurify from 'isomorphic-dompurify';
 import { trpc } from '@/lib/trpc';
 import { useDebounce } from '@/hooks/useDebounce';
 import { cn } from '@/lib/utils';
@@ -76,7 +77,7 @@ export function EmailCompose({
     mode === 'forward' && originalEmail?.htmlBody
       ? `<br><br><div style="border-left:2px solid #ccc;padding-left:8px;color:#666">
           <p><strong>Forwarded message:</strong></p>
-          ${originalEmail.htmlBody}
+          ${DOMPurify.sanitize(originalEmail.htmlBody)}
         </div>`
       : '';
 
@@ -169,7 +170,7 @@ export function EmailCompose({
   const handleTemplateSelect = useCallback(
     (template: { body: string; subject: string }) => {
       if (bodyRef.current) {
-        bodyRef.current.innerHTML = template.body;
+        bodyRef.current.innerHTML = DOMPurify.sanitize(template.body);
       }
       if (!subject) {
         setSubject(template.subject);

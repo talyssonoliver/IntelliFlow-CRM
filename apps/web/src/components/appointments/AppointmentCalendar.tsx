@@ -27,6 +27,8 @@ export interface AppointmentCalendarProps {
   onTaskClick?: (id: string) => void;
   onCreateWithSlot: (startTime: Date, endTime: Date) => void;
   onCreateWithDate?: (date: Date) => void;
+  /** Called when user clicks the "+N more" link in month view */
+  onMoreClick?: (date: Date) => void;
   isLoading?: boolean;
 }
 
@@ -41,6 +43,7 @@ export function AppointmentCalendar({
   onTaskClick,
   onCreateWithSlot,
   onCreateWithDate,
+  onMoreClick,
   isLoading,
 }: Readonly<AppointmentCalendarProps>) {
   const navigatePrev = useCallback(() => {
@@ -171,6 +174,7 @@ export function AppointmentCalendar({
           onTaskClick={onTaskClick}
           onCreateWithSlot={onCreateWithSlot}
           onCreateWithDate={onCreateWithDate}
+          onMoreClick={onMoreClick}
           onDateChange={onDateChange}
         />
       </div>

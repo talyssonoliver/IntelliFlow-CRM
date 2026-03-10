@@ -173,7 +173,8 @@ export function ExportReportButton({ className }: Readonly<ExportReportButtonPro
       const risksData = await risksRes.json();
       const timelineData = await timelineRes.json();
 
-      const doc = new jsPDF() as unknown as JsPDFDoc;
+      // jsPDF class structurally satisfies JsPDFDoc (local subset type)
+      const doc: JsPDFDoc = new jsPDF() as JsPDFDoc;
       const pageWidth = doc.internal.pageSize.getWidth();
       const yPosRef = { value: 20 };
       const checkNewPage = makePageChecker(doc, () => yPosRef.value, (y) => { yPosRef.value = y; });

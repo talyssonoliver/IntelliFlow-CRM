@@ -96,7 +96,6 @@ export function TicketForm({
       priority: formData.priority,
       contactName: formData.contactName.trim(),
       contactEmail: formData.contactEmail.trim(),
-      slaPolicyId: 'default-sla-policy',
     };
 
     if (formData.description.trim()) submitData.description = formData.description.trim();

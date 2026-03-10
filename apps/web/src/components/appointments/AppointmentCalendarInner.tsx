@@ -26,6 +26,8 @@ export interface AppointmentCalendarInnerProps {
   onCreateWithSlot: (startTime: Date, endTime: Date) => void;
   onCreateWithDate?: (date: Date) => void;
   onDateChange: (date: Date) => void;
+  /** Called when user clicks the "+N more" link in month view */
+  onMoreClick?: (date: Date) => void;
 }
 
 const PRIORITY_CHIP_COLORS: Record<string, string> = {
@@ -145,15 +147,13 @@ function MonthGridEvent({ calendarEvent }: Readonly<{ calendarEvent: Record<stri
     const chipColor = PRIORITY_CHIP_COLORS[priority] ?? PRIORITY_CHIP_COLORS.MEDIUM;
     return (
       <div
-        className={`w-full text-left rounded px-1 py-0.5 text-[10px] truncate ${chipColor}`}
+        className={`w-full text-left rounded px-1 py-0.5 text-[10px] truncate cursor-pointer ${chipColor}`}
         data-testid="calendar-task-chip"
       >
         <span
-          className="material-symbols-outlined text-[10px] mr-0.5 align-middle"
+          className="inline-block w-1.5 h-1.5 rounded-full bg-current mr-1 align-middle"
           aria-hidden="true"
-        >
-          task_alt
-        </span>
+        />
         {calendarEvent.title as string}
       </div>
     );
@@ -181,6 +181,37 @@ function MonthGridEvent({ calendarEvent }: Readonly<{ calendarEvent: Record<stri
   );
 }
 
+function DateGridEvent({ calendarEvent }: Readonly<{ calendarEvent: Record<string, unknown> }>) {
+  const custom = calendarEvent._custom as { _type?: string; [key: string]: unknown } | undefined;
+
+  if (custom?._type === 'task') {
+    const priority = (custom.priority as string) ?? 'MEDIUM';
+    const chipColor = PRIORITY_CHIP_COLORS[priority] ?? PRIORITY_CHIP_COLORS.MEDIUM;
+    return (
+      <div
+        className={`w-full text-left rounded px-1 py-0.5 text-[10px] truncate cursor-pointer ${chipColor}`}
+        data-testid="calendar-task-chip"
+      >
+        <span
+          className="inline-block w-1.5 h-1.5 rounded-full bg-current mr-1 align-middle"
+          aria-hidden="true"
+        />
+        {calendarEvent.title as string}
+      </div>
+    );
+  }
+
+  // Appointment all-day events — use type-based colors
+  const typeConfig = getTypeConfig((custom?.appointmentType as string) ?? 'OTHER');
+  return (
+    <div
+      className={`w-full text-left text-xs px-1.5 py-0.5 rounded truncate ${typeConfig.bgColor} ${typeConfig.color}`}
+    >
+      {calendarEvent.title as string}
+    </div>
+  );
+}
+
 /** Fixed grid height (px) for week/day time grid — keeps container stable across views */
 const WEEK_GRID_HEIGHT = 660;
 
@@ -194,6 +225,7 @@ export function AppointmentCalendarInner({
   onCreateWithSlot,
   onCreateWithDate,
   onDateChange,
+  onMoreClick,
 }: Readonly<AppointmentCalendarInnerProps>) {
   const [eventsService] = useState(() => createEventsServicePlugin());
   const [calendarControls] = useState(() => createCalendarControlsPlugin());
@@ -204,6 +236,7 @@ export function AppointmentCalendarInner({
   const onCreateWithSlotRef = useRef(onCreateWithSlot);
   const onCreateWithDateRef = useRef(onCreateWithDate);
   const onDateChangeRef = useRef(onDateChange);
+  const onMoreClickRef = useRef(onMoreClick);
 
   useEffect(() => {
     onAppointmentClickRef.current = onAppointmentClick;
@@ -211,7 +244,8 @@ export function AppointmentCalendarInner({
     onCreateWithSlotRef.current = onCreateWithSlot;
     onCreateWithDateRef.current = onCreateWithDate;
     onDateChangeRef.current = onDateChange;
-  }, [onAppointmentClick, onTaskClick, onCreateWithSlot, onCreateWithDate, onDateChange]);
+    onMoreClickRef.current = onMoreClick;
+  }, [onAppointmentClick, onTaskClick, onCreateWithSlot, onCreateWithDate, onDateChange, onMoreClick]);
 
   const calendar = useNextCalendarApp({
     views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
@@ -250,6 +284,10 @@ export function AppointmentCalendarInner({
       onSelectedDateUpdate(date) {
         const jsDate = new Date(date.year, date.month - 1, date.day);
         onDateChangeRef.current(jsDate);
+      },
+      onClickPlusEvents(date) {
+        const jsDate = new Date(date.year, date.month - 1, date.day);
+        onMoreClickRef.current?.(jsDate);
       },
     },
   });
@@ -296,6 +334,7 @@ export function AppointmentCalendarInner({
     () => ({
       timeGridEvent: TimeGridEvent,
       monthGridEvent: MonthGridEvent,
+      dateGridEvent: DateGridEvent,
     }),
     []
   );

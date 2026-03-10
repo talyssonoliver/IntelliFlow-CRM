@@ -23,6 +23,8 @@ interface ActivityFeedBaseProps {
   className?: string;
   /** Empty state message */
   emptyMessage?: string;
+  /** Show a vertical timeline line connecting item avatars */
+  timeline?: boolean;
 }
 
 /** Internal mode: component fetches its own data */
@@ -86,7 +88,7 @@ function resolveDataSource(
 }
 
 export function ActivityFeed(props: Readonly<ActivityFeedProps>) {
-  const { height = 400, className = '', emptyMessage = 'No recent activity' } = props;
+  const { height = 400, className = '', emptyMessage = 'No recent activity', timeline = false } = props;
 
   // Resolve data source: internal hook or external props
   const internal = useActivityFeedConditional(props);
@@ -176,6 +178,14 @@ export function ActivityFeed(props: Readonly<ActivityFeedProps>) {
             position: 'relative',
           }}
         >
+          {/* Continuous vertical timeline line — centered on avatars (p-5 + half size-10 = 40px) */}
+          {timeline && items.length > 0 && (
+            <div
+              className="absolute w-0.5 bg-slate-200 dark:bg-slate-700"
+              style={{ left: 39, top: 0, bottom: 0 }}
+            />
+          )}
+
           {virtualizer.getVirtualItems().map((virtualItem) => {
             const item = items[virtualItem.index];
             if (!item) return null;
@@ -194,8 +204,15 @@ export function ActivityFeed(props: Readonly<ActivityFeedProps>) {
                 data-index={virtualItem.index}
               >
                 {/* Divider between items (not before first) */}
-                {virtualItem.index > 0 && (
+                {!timeline && virtualItem.index > 0 && (
                   <div className="border-t border-[#e2e8f0] dark:border-[#334155]" />
+                )}
+                {/* Timeline dot overlay — sits on the vertical line behind the avatar */}
+                {timeline && (
+                  <div
+                    className="absolute w-3 h-3 rounded-full bg-ds-primary border-2 border-white dark:border-slate-900 z-10"
+                    style={{ left: 34, top: 26 }}
+                  />
                 )}
                 <ActivityFeedItem
                   id={item.id}

@@ -219,8 +219,8 @@ export function RoutingRulesEditor() {
       const { active, over } = event;
       if (!over || active.id === over.id || !rules) return;
 
-      const oldIndex = rules.indexOf((r) => r.id === active.id);
-      const newIndex = rules.indexOf((r) => r.id === over.id);
+      const oldIndex = rules.findIndex((r) => r.id === active.id);
+      const newIndex = rules.findIndex((r) => r.id === over.id);
       if (oldIndex === -1 || newIndex === -1) return;
 
       const reordered = arrayMove(rules, oldIndex, newIndex);

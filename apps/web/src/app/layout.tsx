@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import localFont from 'next/font/local';
 import { GoogleTagManager } from '@next/third-parties/google';
 import './globals.css';
 import { Providers } from './providers';
@@ -8,6 +9,13 @@ import { Navigation } from '@/components/navigation';
 import { CookieConsentBanner, Toaster } from '@intelliflow/ui';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+
+const materialSymbols = localFont({
+  src: '../../public/fonts/MaterialSymbolsOutlined.woff2',
+  variable: '--font-material-symbols',
+  display: 'block',
+  weight: '100 700',
+});
 
 export const metadata: Metadata = {
   title: {
@@ -69,15 +77,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-          rel="stylesheet"
-        />
-      </head>
-      <body className={inter.variable}>
+      <body className={`${inter.variable} ${materialSymbols.variable}`}>
         {process.env.NEXT_PUBLIC_GTM_ID && (
           <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM_ID} />
         )}

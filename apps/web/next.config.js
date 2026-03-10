@@ -15,6 +15,8 @@ const nextConfig = {
     '@prisma/engines',
     '@prisma/adapter-pg',
     '@intelliflow/db',
+    '@bull-board/api',
+    'bullmq',
   ],
 
   // Compiler options
@@ -101,8 +103,37 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
+            // Note: Next.js (Turbopack/webpack) injects inline scripts for HMR in development,
+            // requiring 'unsafe-inline' for script-src in dev mode. In production we omit it
+            // for a strict CSP. 'unsafe-eval' is removed entirely — Next.js 16 does not need it
+            // in production builds, and in development the security trade-off is acceptable.
             value:
-              "frame-src 'self' https://js.stripe.com; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com;",
+              process.env.NODE_ENV === 'production'
+                ? [
+                    "default-src 'self'",
+                    "script-src 'self' https://js.stripe.com",
+                    "style-src 'self' 'unsafe-inline'",
+                    "img-src 'self' data: blob: https:",
+                    "font-src 'self' data:",
+                    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com",
+                    "frame-src 'self' https://js.stripe.com",
+                    "base-uri 'self'",
+                    "form-action 'self'",
+                    "object-src 'none'",
+                  ].join('; ')
+                : [
+                    "default-src 'self'",
+                    // 'unsafe-inline' needed for HMR injected scripts in dev mode
+                    "script-src 'self' 'unsafe-inline' https://js.stripe.com",
+                    "style-src 'self' 'unsafe-inline'",
+                    "img-src 'self' data: blob: https:",
+                    "font-src 'self' data:",
+                    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com ws://localhost:*",
+                    "frame-src 'self' https://js.stripe.com",
+                    "base-uri 'self'",
+                    "form-action 'self'",
+                    "object-src 'none'",
+                  ].join('; '),
           },
         ],
       },

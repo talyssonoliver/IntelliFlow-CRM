@@ -207,7 +207,7 @@ export default function PricingPage() {
               </thead>
               <tbody>
                 {pricingData.comparisonFeatures.map((category, catIndex) => (
-                  <React.Fragment key={catIndex}> {/* NOSONAR typescript:S6479 */}
+                  <React.Fragment key={catIndex}>{/* NOSONAR typescript:S6479 */}
                     {/* Category Header */}
                     <tr className="bg-slate-50 dark:bg-slate-900">
                       <td colSpan={5} className="p-4 font-semibold text-slate-900 dark:text-white">

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Card } from '@intelliflow/ui';
+import { trpc } from '@/lib/trpc';
 import {
   RiskHeatMap,
   ComplianceTimeline,
@@ -202,30 +203,22 @@ function OverallScoreCard() {
   );
 }
 
-const recentActivity = [
-  {
-    action: 'Audit completed for ISO 27001',
-    description: 'System automatically verified 14 controls.',
-    time: '2 hours ago',
-    dotColor: 'bg-slate-300 dark:bg-slate-600',
-  },
-  {
-    action: 'New Risk Detected: AI Model Bias',
-    description: 'Flagged by automated monitoring in ISO 42001 module.',
-    time: 'Yesterday, 4:30 PM',
-    dotColor: 'bg-red-400',
-  },
-  {
-    action: 'GDPR Policy Updated',
-    description: 'Version 2.4 published by Legal Team.',
-    time: 'Oct 20, 2023',
-    dotColor: 'bg-slate-300 dark:bg-slate-600',
-  },
-];
+function formatActivityTime(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  if (diffHours < 1) return 'Just now';
+  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+  return d.toLocaleDateString();
+}
 
 export default function ComplianceDashboardPage() {
   const [selectedStandard, setSelectedStandard] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const { data: recentActivity = [] } = trpc.analytics.recentActivity.useQuery({ limit: 10 });
 
   const handleSelectStandard = (id: string) => {
     setSelectedStandard(id);
@@ -349,19 +342,23 @@ export default function ComplianceDashboardPage() {
             </button>
           </div>
           <div className="space-y-6">
-            {recentActivity.map((activity, index) => (
-              <div key={index} className="flex gap-4"> {/* NOSONAR typescript:S6479 */}
+            {recentActivity.length > 0 ? recentActivity.map((activity, index) => (
+              <div key={activity.id} className="flex gap-4">
                 <div className="flex flex-col items-center">
-                  <div className={`w-2 h-2 rounded-full ${activity.dotColor} my-1`} />
+                  <div className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600 my-1" />
                   {index < recentActivity.length - 1 && <div className="w-px h-full bg-border" />}
                 </div>
                 <div className="pb-2">
-                  <p className="text-sm font-semibold text-foreground">{activity.action}</p>
-                  <p className="text-sm text-muted-foreground">{activity.description}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
+                  <p className="text-sm font-semibold text-foreground">{activity.description}</p>
+                  {activity.actorName && (
+                    <p className="text-sm text-muted-foreground">by {activity.actorName}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-1">{formatActivityTime(activity.createdAt)}</p>
                 </div>
               </div>
-            ))}
+            )) : (
+              <p className="text-sm text-muted-foreground text-center py-4">No recent activity</p>
+            )}
           </div>
         </Card>
 

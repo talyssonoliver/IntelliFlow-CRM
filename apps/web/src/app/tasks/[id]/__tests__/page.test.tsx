@@ -83,6 +83,7 @@ vi.mock('@/lib/api', () => ({
       task: {
         getById: { invalidate: vi.fn() },
         list: { invalidate: vi.fn() },
+        stats: { invalidate: vi.fn() },
       },
     }),
     task: {
@@ -98,6 +99,8 @@ vi.mock('@/lib/api', () => ({
       delete: createMockMutation('delete'),
       start: createMockMutation('start'),
       archive: createMockMutation('archive'),
+      assign: createMockMutation('assign'),
+      reschedule: createMockMutation('reschedule'),
     },
   },
 }));
@@ -226,7 +229,7 @@ describe('TaskDetailPage', () => {
     render(<TaskDetailPage />);
     const feed = screen.getByTestId('activity-feed');
     expect(feed).toBeInTheDocument();
-    expect(feed).toHaveAttribute('data-entity-type', 'task');
+    expect(feed).toHaveAttribute('data-entity-type', 'TASK');
     expect(feed).toHaveAttribute('data-entity-id', 'task-1');
   });
 

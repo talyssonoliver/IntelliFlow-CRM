@@ -64,7 +64,7 @@ export default function NewCasePage() {
           { label: 'Create New Case' },
         ]}
         title="Create New Case"
-        description="Log a new support ticket or customer inquiry into the CRM system."
+        description="Create a new legal case for management and tracking."
       />
       <CaseForm
         mode="create"

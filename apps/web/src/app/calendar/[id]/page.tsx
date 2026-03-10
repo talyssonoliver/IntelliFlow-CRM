@@ -121,7 +121,8 @@ export default function AppointmentDetailPage() {
   const detailData = useMemo((): AppointmentDetailData | null => {
     if (!appointmentData) return null;
     // tRPC returns properly typed data — map dates from serialized strings
-    const d = appointmentData as unknown as AppointmentDetailData;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const d = appointmentData as any;
     return {
       ...d,
       startTime: new Date(d.startTime),
@@ -130,7 +131,7 @@ export default function AppointmentDetailPage() {
       updatedAt: new Date(d.updatedAt),
       attendees: d.attendees ?? [],
       linkedCases: d.linkedCases ?? [],
-    };
+    } as AppointmentDetailData;
   }, [appointmentData]);
 
   const headerDescription = useMemo(() => {

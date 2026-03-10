@@ -165,7 +165,7 @@ export default function CreateNewContactPage() {
     description: '',
   });
 
-  const currentStepIndex = steps.indexOf((s) => s.id === currentStep);
+  const currentStepIndex = steps.findIndex((s) => s.id === currentStep);
 
   // tRPC mutation for creating contacts (IFC-089 integration)
   const createContact = trpc.contact.create.useMutation({
@@ -296,7 +296,7 @@ export default function CreateNewContactPage() {
 
   // Get step status for styling
   const getStepStatus = (step: Step): 'completed' | 'current' | 'upcoming' => {
-    const stepIndex = steps.indexOf((s) => s.id === step.id);
+    const stepIndex = steps.findIndex((s) => s.id === step.id);
     if (stepIndex < currentStepIndex) return 'completed';
     if (stepIndex === currentStepIndex) return 'current';
     return 'upcoming';
@@ -304,7 +304,7 @@ export default function CreateNewContactPage() {
 
   // Navigate to a specific step by clicking on it
   const handleStepClick = (step: Step) => {
-    const targetIndex = steps.indexOf((s) => s.id === step.id);
+    const targetIndex = steps.findIndex((s) => s.id === step.id);
     // Only allow navigating to completed steps or current step
     if (targetIndex <= currentStepIndex) {
       setCurrentStep(step.id);

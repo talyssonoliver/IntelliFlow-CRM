@@ -2,6 +2,7 @@
 
 import { useId } from 'react';
 import { ChevronDown, ChevronUp, Reply, ReplyAll, Forward, Paperclip } from 'lucide-react';
+import DOMPurify from 'isomorphic-dompurify';
 import { cn } from '@/lib/utils';
 
 interface EmailMessageData {
@@ -102,7 +103,7 @@ export function EmailMessage({
             {message.htmlBody ? (
               <div
                 className="prose prose-sm dark:prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ __html: message.htmlBody }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(message.htmlBody) }}
               />
             ) : (
               <pre className="whitespace-pre-wrap text-sm">{message.textBody}</pre>

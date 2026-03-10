@@ -56,6 +56,7 @@ const sampleInsights = [
   {
     id: 'deal-risk-1',
     type: 'warning' as const,
+    source: 'heuristic' as const,
     title: 'Deal at Risk: Acme Corp',
     description: 'Last interaction was 20 days ago.',
     suggestedAction: 'Schedule a check-in call',
@@ -68,6 +69,7 @@ const sampleInsights = [
   {
     id: 'hot-lead-1',
     type: 'opportunity' as const,
+    source: 'ai' as const,
     title: 'Hot Lead Detected',
     description: 'Jane Doe has a high score of 95.',
     suggestedAction: 'Send personalized follow-up',
@@ -80,6 +82,7 @@ const sampleInsights = [
   {
     id: 'overdue-tasks',
     type: 'reminder' as const,
+    source: 'heuristic' as const,
     title: '5 Overdue Tasks',
     description: 'You have tasks past their due date.',
     suggestedAction: 'Review overdue tasks',
@@ -92,6 +95,7 @@ const sampleInsights = [
   {
     id: 'stale-contact-1',
     type: 'warning' as const,
+    source: 'heuristic' as const,
     title: 'Stale Contact: Bob Smith',
     description: 'No interaction in 45 days.',
     suggestedAction: 'Schedule a follow-up',
@@ -160,12 +164,20 @@ describe('Insights Page', () => {
     expect(screen.getByText(/Schedule a check-in call/)).toBeInTheDocument();
   });
 
+  it('labels heuristic fallback insights distinctly', async () => {
+    setupMockQuery();
+    await importAndRender();
+
+    expect(screen.getAllByTestId('heuristic-insight-badge')).toHaveLength(3);
+    expect(screen.getAllByText('Heuristic fallback')).toHaveLength(3);
+  });
+
   it('clicking a card navigates to actionUrl', async () => {
     setupMockQuery();
     await importAndRender();
 
     const links = screen.getAllByRole('link');
-    const dealLink = links.find((l) => l.getAttribute('href') === '/deals/opp-1');
+    const dealLink = links.find((l) => l.getAttribute('href') === '/deals/opp-1?insightId=deal-risk-1');
     expect(dealLink).toBeDefined();
   });
 
@@ -353,6 +365,7 @@ describe('Insights Page', () => {
           {
             id: 'no-url',
             type: 'achievement' as const,
+            source: 'ai' as const,
             title: 'Achievement Unlocked',
             description: 'You hit 100 deals.',
             suggestedAction: null,
@@ -383,6 +396,7 @@ describe('Insights Page', () => {
           {
             id: 'unknown-type',
             type: 'custom-new-type' as any,
+            source: 'heuristic' as const,
             title: 'Unknown Type Insight',
             description: 'Testing fallback path.',
             suggestedAction: null,

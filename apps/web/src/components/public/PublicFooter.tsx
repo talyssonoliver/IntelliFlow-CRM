@@ -61,8 +61,8 @@ export function PublicFooter() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-border bg-card">
-      <div className="container px-4 lg:px-6 py-12">
+    <footer className="border-t border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1e2936]">
+      <div className="px-4 sm:px-6 lg:px-8 xl:px-12 py-12 max-w-[1800px] mx-auto">
         {/* Main Footer Content */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-8">
           {/* Brand Column */}

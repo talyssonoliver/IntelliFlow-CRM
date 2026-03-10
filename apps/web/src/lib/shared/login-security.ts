@@ -161,7 +161,7 @@ export function getDeviceFingerprint(): DeviceFingerprint {
   const components: DeviceFingerprintComponents = {
     userAgent: navigator.userAgent,
     language: navigator.language,
-    platform: ((navigator as unknown as Record<string, { platform?: string }>).userAgentData?.platform ?? navigator.platform) || 'unknown',
+    platform: ('userAgentData' in navigator && (navigator as { userAgentData?: { platform?: string } }).userAgentData?.platform) || navigator.platform || 'unknown',
     screenResolution: `${screen.width}x${screen.height}`,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     colorDepth: screen.colorDepth,

@@ -28,6 +28,7 @@ import {
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
 import { PinButton } from '@/components/home/PinButton';
+import { QuickLogComposer } from '@/components/shared/quick-log-composer';
 import { AppAvatar } from '@/components/shared/app-avatar';
 import { AssignSheet } from '@/components/shared/assign-sheet';
 import { EscalationAlert } from './EscalationAlert';
@@ -149,7 +150,6 @@ export function TicketDetail({
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const [replyMode, setReplyMode] = useState<'public' | 'internal'>('public');
   const [replyContent, setReplyContent] = useState('');
-  const [activityNote, setActivityNote] = useState('');
   const [activityView, setActivityView] = useState<'timeline' | 'unified'>('timeline');
   const [resolutionType, setResolutionType] = useState('');
   const [rootCause, setRootCause] = useState('');
@@ -177,12 +177,6 @@ export function TicketDetail({
     if (!replyContent.trim()) return;
     await onAddResponse(replyContent, replyMode === 'internal');
     setReplyContent('');
-  };
-
-  const handleAddNote = async () => {
-    if (!activityNote.trim()) return;
-    await onAddResponse(activityNote, true);
-    setActivityNote('');
   };
 
   const handleResolve = async () => {
@@ -657,8 +651,8 @@ export function TicketDetail({
           </aside>
 
           {/* Center Content - 6 cols */}
-          <section className="lg:col-span-6 flex flex-col">
-            <Card className="flex-1">
+          <section className="lg:col-span-6 flex flex-col gap-6">
+            <Card>
               {/* Tabs */}
               <div className="flex border-b border-slate-200 dark:border-slate-800 px-2 overflow-x-auto">
                 {tabs.map((tab) => {
@@ -685,98 +679,115 @@ export function TicketDetail({
                 })}
               </div>
 
-              {/* Tab Content */}
-              <div className="p-6">
-                {/* Overview Tab */}
-                {activeTab === 'overview' && (
-                  <div className="space-y-6">
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-2">
-                        Description
-                      </h4>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                        {ticket.description}
+              <QuickLogComposer
+                placeholder="Add an internal note to this ticket..."
+                submitLabel="Add Note"
+                onSubmit={(note) => {
+                  onAddResponse(note, true).then(() => {
+                    toast({ title: 'Note added', description: 'Internal note has been recorded.' });
+                  }).catch(() => {
+                    toast({ title: 'Failed to add note', variant: 'destructive' });
+                  });
+                }}
+              />
+            </Card>
+
+            {/* Overview Tab */}
+            {activeTab === 'overview' && (
+              <div className="space-y-6">
+                <Card className="p-6">
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-2">
+                    Description
+                  </h4>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                    {ticket.description || 'No description provided.'}
+                  </p>
+                </Card>
+
+                <Card className="p-6">
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-4">
+                    SLA Metrics
+                  </h4>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg text-center">
+                      <p className={`text-2xl font-bold ${firstResponseMetricClass}`}>
+                        {firstResponseValue === null ? 'Pending' : `${firstResponseValue}m`}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">First Response</p>
+                      <p className="text-[10px] text-slate-400">
+                        Target: {ticket.sla.firstResponse.target}m
                       </p>
                     </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg text-center">
-                        <p className={`text-2xl font-bold ${firstResponseMetricClass}`}>
-                          {firstResponseValue === null ? 'Pending' : `${firstResponseValue}m`}
-                        </p>
-                        <p className="text-xs text-slate-500 mt-1">First Response</p>
-                        <p className="text-[10px] text-slate-400">
-                          Target: {ticket.sla.firstResponse.target}m
-                        </p>
-                      </div>
-                      <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg text-center">
-                        <p className={`text-2xl font-bold ${slaConfig.text}`}>
-                          {formatSLATime(ticket.sla.resolution.remaining)}
-                        </p>
-                        <p className="text-xs text-slate-500 mt-1">Resolution Time</p>
-                        <p className="text-[10px] text-slate-400">
-                          Target: {ticket.sla.resolution.target}m
-                        </p>
-                      </div>
-                      <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg text-center">
-                        <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                          {activityCount}
-                        </p>
-                        <p className="text-xs text-slate-500 mt-1">Interactions</p>
-                        <p className="text-[10px] text-slate-400">Last: {ticket.updatedAt}</p>
-                      </div>
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg text-center">
+                      <p className={`text-2xl font-bold ${slaConfig.text}`}>
+                        {formatSLATime(ticket.sla.resolution.remaining)}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">Resolution Time</p>
+                      <p className="text-[10px] text-slate-400">
+                        Target: {ticket.sla.resolution.target}m
+                      </p>
                     </div>
-
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                          Recent Activity
-                        </h4>
-                        <button
-                          onClick={() => setActiveTab('activity')}
-                          className="text-xs text-[#137fec] font-medium hover:underline"
-                        >
-                          View All
-                        </button>
-                      </div>
-                      <div className="space-y-3">
-                        {ticket.activities.slice(0, 3).map((activity) => (
-                          <div
-                            key={activity.id}
-                            className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
-                          >
-                            <AppAvatar
-                              name={activity.author.name}
-                              src={activity.author.avatar ?? null}
-                              maxInitials={1}
-                              className="w-8 h-8 flex-shrink-0"
-                              fallbackClassName="text-xs font-bold bg-slate-200 dark:bg-slate-700"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-slate-900 dark:text-white">
-                                {activity.author.name}
-                              </p>
-                              <p className="text-xs text-slate-500 truncate">
-                                {activity.content.substring(0, 80)}...
-                              </p>
-                            </div>
-                            <span className="text-[10px] text-slate-400 whitespace-nowrap">
-                              {activity.timestamp}
-                            </span>
-                          </div>
-                        ))}
-                        {ticket.activities.length === 0 && (
-                          <p className="text-sm text-muted-foreground text-center py-4">
-                            No recent activity yet
-                          </p>
-                        )}
-                      </div>
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg text-center">
+                      <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                        {activityCount}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">Interactions</p>
+                      <p className="text-[10px] text-slate-400">Last: {ticket.updatedAt}</p>
                     </div>
                   </div>
-                )}
+                </Card>
 
-                {/* Activity Tab */}
-                {activeTab === 'activity' && (
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                      Recent Activity
+                    </h4>
+                    <button
+                      onClick={() => setActiveTab('activity')}
+                      className="text-xs text-[#137fec] font-medium hover:underline"
+                    >
+                      View All
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {ticket.activities.slice(0, 3).map((activity) => (
+                      <div
+                        key={activity.id}
+                        className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
+                      >
+                        <AppAvatar
+                          name={activity.author.name}
+                          src={activity.author.avatar ?? null}
+                          maxInitials={1}
+                          className="w-8 h-8 flex-shrink-0"
+                          fallbackClassName="text-xs font-bold bg-slate-200 dark:bg-slate-700"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-900 dark:text-white">
+                            {activity.author.name}
+                          </p>
+                          <p className="text-xs text-slate-500 truncate">
+                            {activity.content.substring(0, 80)}...
+                          </p>
+                        </div>
+                        <span className="text-[10px] text-slate-400 whitespace-nowrap">
+                          {activity.timestamp}
+                        </span>
+                      </div>
+                    ))}
+                    {ticket.activities.length === 0 && (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No recent activity yet
+                      </p>
+                    )}
+                  </div>
+                </Card>
+              </div>
+            )}
+
+            {/* Activity Tab */}
+            {activeTab === 'activity' && (
+              <Card className="p-6">
                   <div className="space-y-6">
                     {/* View Toggle: Timeline vs Unified Feed (IFC-069) */}
                     <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1 w-fit">
@@ -817,43 +828,6 @@ export function TicketDetail({
                       />
                     ) : (
                       <>
-                        <div className="flex gap-3">
-                          <div className="pt-1">
-                            <div className="w-8 h-8 rounded-full bg-[#137fec] flex items-center justify-center text-white text-xs font-bold">
-                              {ticket.assigneeInfo?.name.charAt(0) || 'U'}
-                            </div>
-                          </div>
-                          <div className="flex-1">
-                            <textarea
-                              value={activityNote}
-                              onChange={(e) => setActivityNote(e.target.value)}
-                              className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec] min-h-[80px] p-3 placeholder:text-slate-400"
-                              placeholder="Add a note, log activity..."
-                            />
-                            <div className="flex justify-between items-center mt-2">
-                              <div className="flex gap-2">
-                                <button className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-                                  <span className="material-symbols-outlined text-[20px]">
-                                    attach_file
-                                  </span>
-                                </button>
-                                <button className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-                                  <span className="material-symbols-outlined text-[20px]">
-                                    alternate_email
-                                  </span>
-                                </button>
-                              </div>
-                              <button
-                                onClick={handleAddNote}
-                                disabled={isLoading || !activityNote.trim()}
-                                className="px-4 py-1.5 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
-                              >
-                                Add Note
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-
                         <div className="relative pl-4 border-l-2 border-slate-200 dark:border-slate-700 ml-4 space-y-6">
                           {ticket.activities.map((activity) => (
                             <ActivityItem key={activity.id} activity={activity} />
@@ -917,11 +891,13 @@ export function TicketDetail({
                       </>
                     )}
                   </div>
-                )}
+              </Card>
+            )}
 
-                {/* Resolution Tab */}
-                {activeTab === 'resolution' && (
-                  <div className="space-y-6">
+            {/* Resolution Tab */}
+            {activeTab === 'resolution' && (
+              <Card className="p-6">
+                <div className="space-y-6">
                     <div className="flex items-center justify-between p-4 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-100 dark:border-amber-900/30">
                       <div>
                         <p className="font-bold text-amber-800 dark:text-amber-400">
@@ -1014,12 +990,14 @@ export function TicketDetail({
                         Mark as Resolved
                       </button>
                     </div>
-                  </div>
-                )}
+                </div>
+              </Card>
+            )}
 
-                {/* Attachments Tab */}
-                {activeTab === 'attachments' && (
-                  <div className="space-y-6">
+            {/* Attachments Tab */}
+            {activeTab === 'attachments' && (
+              <Card className="p-6">
+                <div className="space-y-6">
                     <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-8 text-center hover:border-[#137fec] hover:bg-[#137fec]/5 transition-colors cursor-pointer">
                       <span className="material-symbols-outlined text-4xl text-slate-400 mb-2">
                         cloud_upload
@@ -1087,12 +1065,14 @@ export function TicketDetail({
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
+                </div>
+              </Card>
+            )}
 
-                {/* AI Insights Tab */}
-                {activeTab === 'ai-insights' && (
-                  <div className="space-y-6">
+            {/* AI Insights Tab */}
+            {activeTab === 'ai-insights' && (
+              <Card className="p-6">
+                <div className="space-y-6">
                     {(() => {
                       const riskIsHigh = ticket.aiInsights.escalationRisk === 'high';
                       const riskIsMedium = ticket.aiInsights.escalationRisk === 'medium';
@@ -1211,10 +1191,9 @@ export function TicketDetail({
                         <p className="text-xs text-slate-500">In the last 30 days</p>
                       </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            </Card>
+                </div>
+              </Card>
+            )}
           </section>
 
           {/* Right Sidebar - 3 cols */}

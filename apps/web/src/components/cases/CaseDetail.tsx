@@ -22,6 +22,7 @@ import {
   getInitials,
   timeAgo,
 } from '@/lib/cases/case-utils';
+import { ActivityFeed } from '@/components/shared/activity-feed';
 import { DeadlineTracker } from './DeadlineTracker';
 import { PartyManager } from './PartyManager';
 import { DocumentLinks } from './DocumentLinks';
@@ -500,13 +501,16 @@ export function CaseDetail({
 
               {/* ── Activities Tab ── */}
               {activeTab === 'activities' && (
-                <DeadlineTracker
-                  tasks={caseData.tasks}
-                  onAddTask={onAddTask}
-                  onCompleteTask={onCompleteTask}
-                  onRemoveTask={onRemoveTask}
-                  disabled={isClosed}
-                />
+                <div className="space-y-6">
+                  <ActivityFeed entityType="CASE" entityId={caseData.id} height={400} />
+                  <DeadlineTracker
+                    tasks={caseData.tasks}
+                    onAddTask={onAddTask}
+                    onCompleteTask={onCompleteTask}
+                    onRemoveTask={onRemoveTask}
+                    disabled={isClosed}
+                  />
+                </div>
               )}
 
               {/* ── Evidence Tab ── */}

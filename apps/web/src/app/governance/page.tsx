@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import { useEffect, useState } from 'react';
+import { trpc } from '@/lib/trpc';
 
 interface ADRStats {
   total: number;
@@ -34,33 +35,29 @@ const governanceCards = [
   },
 ];
 
-const recentActivity = [
-  {
-    action: 'ISO 27001 audit completed',
-    description: 'System automatically verified 14 controls.',
-    time: '2 hours ago',
-    icon: 'check_circle',
-    iconColor: 'text-emerald-500',
-  },
-  {
-    action: 'New Risk Detected: AI Model Bias',
-    description: 'Flagged by automated monitoring in ISO 42001 module.',
-    time: 'Yesterday, 4:30 PM',
-    icon: 'warning',
-    iconColor: 'text-amber-500',
-  },
-  {
-    action: 'GDPR Policy Updated',
-    description: 'Version 2.4 published by Legal Team.',
-    time: 'Oct 20, 2023',
-    icon: 'description',
-    iconColor: 'text-blue-500',
-  },
-];
+const ACTION_ICON_MAP: Record<string, { icon: string; iconColor: string }> = {
+  CREATE: { icon: 'add_circle', iconColor: 'text-emerald-500' },
+  QUALIFY: { icon: 'check_circle', iconColor: 'text-emerald-500' },
+  CONVERT: { icon: 'swap_horiz', iconColor: 'text-blue-500' },
+  UPDATE: { icon: 'edit', iconColor: 'text-amber-500' },
+};
+
+function formatActivityTime(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  if (diffHours < 1) return 'Just now';
+  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+  return d.toLocaleDateString();
+}
 
 export default function GovernancePage() {
   const [adrStats, setAdrStats] = useState<ADRStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const { data: recentActivity = [] } = trpc.analytics.recentActivity.useQuery({ limit: 10 });
 
   useEffect(() => {
     async function fetchStats() {
@@ -186,20 +183,27 @@ export default function GovernancePage() {
             <button className="text-sm text-primary hover:underline">View All</button>
           </div>
           <div className="space-y-4">
-            {recentActivity.map((activity, index) => (
-              <div key={index} className="flex items-start gap-4"> {/* NOSONAR typescript:S6479 */}
-                <div className="flex-shrink-0 mt-0.5">
-                  <span className={`material-symbols-outlined ${activity.iconColor}`}>
-                    {activity.icon}
-                  </span>
+            {recentActivity.length > 0 ? recentActivity.map((activity) => {
+              const cfg = ACTION_ICON_MAP[activity.action] ?? { icon: activity.icon, iconColor: 'text-muted-foreground' };
+              return (
+                <div key={activity.id} className="flex items-start gap-4">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <span className={`material-symbols-outlined ${cfg.iconColor}`}>
+                      {cfg.icon}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground">{activity.description}</p>
+                    {activity.actorName && (
+                      <p className="text-sm text-muted-foreground">by {activity.actorName}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-1">{formatActivityTime(activity.createdAt)}</p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground">{activity.action}</p>
-                  <p className="text-sm text-muted-foreground">{activity.description}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
-                </div>
-              </div>
-            ))}
+              );
+            }) : (
+              <p className="text-sm text-muted-foreground text-center py-4">No recent activity</p>
+            )}
           </div>
         </Card>
       </div>

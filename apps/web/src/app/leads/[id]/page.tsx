@@ -39,7 +39,10 @@ import { AppAvatar } from '@/components/shared/app-avatar';
 import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
 import { UpcomingEventsCard } from '@/components/shared';
 import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
-import { ActivityFeed } from '@/components/shared/activity-feed';
+import { ActivityFeed, ActivityFeedItemActions } from '@/components/shared/activity-feed';
+import { useActivityReactions } from '@/hooks/useActivityReactions';
+import { useActivityComments } from '@/hooks/useActivityComments';
+import { QuickLogComposer } from '@/components/shared/quick-log-composer';
 
 // Common nullable date type
 type DateStringNull = Date | string | null;
@@ -468,7 +471,7 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
   const leadId = params.id as string;
 
   // Require authentication - redirects to login if not authenticated
-  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+  const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
 
   // Fetch lead data from API
   const {
@@ -562,12 +565,15 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
       toast({ title: 'Note added', description: 'Your note has been saved.' });
       setActivityNote('');
       utils.lead.getById.invalidate({ id: leadId });
+      utils.activityFeed.getUnifiedFeed.invalidate();
+      utils.activityFeed.getEntityFeed.invalidate();
     },
     onError: (err) => {
       toast({ title: 'Failed to add note', description: err.message, variant: 'destructive' });
     },
   });
 
+  // @ts-ignore — tRPC recursive type instantiation exceeds TS depth limit (TS2589)
   const logActivityMutation = api.lead.logActivity.useMutation({
     onSuccess: () => {
       toast({ title: 'Activity logged', description: 'Activity has been recorded.' });
@@ -576,6 +582,8 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
       setLogCallTitle('');
       setLogCallDescription('');
       utils.lead.getById.invalidate({ id: leadId });
+      utils.activityFeed.getUnifiedFeed.invalidate();
+      utils.activityFeed.getEntityFeed.invalidate();
     },
     onError: (err) => {
       toast({ title: 'Failed to log activity', description: err.message, variant: 'destructive' });
@@ -1002,6 +1010,21 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
   const visibleActivities = filteredActivities.slice(0, visibleCount);
   const hasMore = visibleCount < filteredActivities.length;
 
+  // Activity reactions
+  const activityIdsForReactions = useMemo(
+    () => visibleActivities.map((a) => a.id),
+    [visibleActivities]
+  );
+  const { reactions: reactionsMap, toggleReaction } = useActivityReactions(
+    activityIdsForReactions,
+    'LEAD_ACTIVITY',
+    user?.email ?? undefined
+  );
+  const { comments: commentsMap, addComment, isAdding: isAddingComment } = useActivityComments(
+    activityIdsForReactions,
+    'LEAD_ACTIVITY'
+  );
+
   // Toggle activity expansion
   const toggleExpand = (id: string) => {
     setExpandedActivities((prev) => {
@@ -1170,26 +1193,20 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
     }
   };
 
-  // Render inline actions for activity
-  const renderActivityActions = () => (
-    <div className="flex items-center gap-1 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-      <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-500 hover:text-[#137fec] hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-        <span className="material-symbols-outlined !text-[14px]">reply</span>{' '}
-        Reply
-      </button>
-      <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-500 hover:text-[#137fec] hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-        <span className="material-symbols-outlined !text-[14px]">add_reaction</span>{' '}
-        React
-      </button>
-      <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-500 hover:text-[#137fec] hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-        <span className="material-symbols-outlined !text-[14px]">note_add</span>{' '}
-        Add Note
-      </button>
-      <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-500 hover:text-[#137fec] hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-        <span className="material-symbols-outlined !text-[14px]">share</span>{' '}
-        Share
-      </button>
-    </div>
+  // Render inline actions for activity using shared component
+  const renderActivityActions = (activity: Activity) => (
+    <ActivityFeedItemActions
+      activityId={activity.id}
+      activityTitle={activity.title}
+      onReply={addComment}
+      onSubmitNote={(content) => addNoteMutation.mutate({ leadId, content })}
+      onToggleReaction={toggleReaction}
+      isSubmitting={addNoteMutation.isPending || isAddingComment}
+      shareUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/leads/${leadId}#activity-${activity.id}`}
+      reactions={reactionsMap[activity.id] ?? []}
+      currentUserId={user?.email ?? undefined}
+      comments={commentsMap[activity.id] ?? []}
+    />
   );
 
   return (
@@ -1570,51 +1587,18 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
                 </button>
               ))}
             </div>
-            <div className="p-4 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex gap-3">
-                <div className="pt-1">
-                  <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500">
-                    <span className="material-symbols-outlined !text-[20px]">edit_note</span>
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <textarea
-                    value={activityNote}
-                    onChange={(e) => setActivityNote(e.target.value)}
-                    className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec] min-h-[80px] p-3 placeholder:text-slate-400"
-                    placeholder="Log a call, email, or internal note..."
-                  />
-                  <div className="flex justify-between items-center mt-2">
-                    <div className="flex gap-2">
-                      <button className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-                        <span className="material-symbols-outlined !text-[20px]">attach_file</span>
-                      </button>
-                      <button className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-                        <span className="material-symbols-outlined !text-[20px]">format_bold</span>
-                      </button>
-                      <button className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-                        <span className="material-symbols-outlined !text-[20px]">list</span>
-                      </button>
-                    </div>
-                    <button
-                      onClick={() => {
-                        if (!activityNote.trim()) return;
-                        logActivityMutation.mutate({
-                          leadId,
-                          type: 'NOTE',
-                          title: 'Note Added',
-                          description: activityNote.trim(),
-                        });
-                      }}
-                      disabled={!activityNote.trim() || logActivityMutation.isPending}
-                      className="bg-[#137fec] text-white text-sm font-semibold px-4 py-1.5 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
-                    >
-                      {logActivityMutation.isPending ? 'Logging...' : 'Log Activity'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <QuickLogComposer
+              placeholder="Log a call, email, or internal note..."
+              isSubmitting={logActivityMutation.isPending}
+              onSubmit={(note) => {
+                logActivityMutation.mutate({
+                  leadId,
+                  type: 'NOTE',
+                  title: 'Note Added',
+                  description: note,
+                });
+              }}
+            />
           </Card>
 
           {/* Overview Tab */}
@@ -1957,7 +1941,7 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
                                 )}
 
                                 {/* Inline Actions */}
-                                {renderActivityActions()}
+                                {renderActivityActions(activity)}
                               </div>
                             )}
                           </div>
@@ -2009,19 +1993,37 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Notes</h3>
-                <button
-                  onClick={() => {
-                    const noteContent = globalThis.prompt('Enter note:');
-                    if (noteContent?.trim()) {
-                      addNoteMutation.mutate({ leadId, content: noteContent.trim() });
+              </div>
+              <div className="mb-4">
+                <textarea
+                  value={activityNote}
+                  onChange={(e) => setActivityNote(e.target.value)}
+                  onKeyDown={(e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                      e.preventDefault();
+                      if (activityNote.trim()) {
+                        addNoteMutation.mutate({ leadId, content: activityNote.trim() });
+                      }
                     }
                   }}
-                  disabled={addNoteMutation.isPending}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors disabled:opacity-50"
-                >
-                  <span className="material-symbols-outlined !text-[18px]">add</span>{' '}
-                  {addNoteMutation.isPending ? 'Adding...' : 'Add Note'}
-                </button>
+                  placeholder="Write a note..."
+                  className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec] min-h-[80px] p-3 placeholder:text-slate-400"
+                />
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-[10px] text-slate-400">Ctrl+Enter to submit</span>
+                  <button
+                    onClick={() => {
+                      if (activityNote.trim()) {
+                        addNoteMutation.mutate({ leadId, content: activityNote.trim() });
+                      }
+                    }}
+                    disabled={addNoteMutation.isPending || !activityNote.trim()}
+                    className="inline-flex items-center gap-2 px-4 py-1.5 text-sm font-semibold text-white bg-[#137fec] hover:bg-blue-600 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    <span className="material-symbols-outlined !text-[18px]">add</span>{' '}
+                    {addNoteMutation.isPending ? 'Adding...' : 'Add Note'}
+                  </button>
+                </div>
               </div>
               <div className="space-y-4">
                 {notes.length > 0 ? (
@@ -2394,7 +2396,11 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
           <Card className="p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-slate-900 dark:text-white">Notes</h3>
-              <button className="w-6 h-6 rounded hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500">
+              <button
+                onClick={() => setActiveTab('notes')}
+                className="w-6 h-6 rounded hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500"
+                title="Add note"
+              >
                 <span className="material-symbols-outlined !text-[20px]">add</span>
               </button>
             </div>
@@ -2419,6 +2425,14 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
                 <p className="text-sm text-slate-500 text-center py-2">No notes yet</p>
               )}
             </div>
+            {notes.length > 2 && (
+              <button
+                onClick={() => setActiveTab('notes')}
+                className="w-full mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs font-medium text-[#137fec] hover:text-[#0f6dd0] transition-colors text-center"
+              >
+                View all notes ({notes.length})
+              </button>
+            )}
           </Card>
 
           {/* Similar Leads */}

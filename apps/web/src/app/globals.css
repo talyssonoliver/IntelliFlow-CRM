@@ -235,8 +235,23 @@
     linear-gradient(to bottom, #1e293b 1px, transparent 1px);
 }
 
-/* Material Symbols — required for icon rendering */
+/* Material Symbols — loaded via next/font/local in layout.tsx, referenced by CSS variable */
 .material-symbols-outlined {
+  font-family: var(--font-material-symbols);
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'liga';
   font-variation-settings:
     'FILL' 0,
     'wght' 400,
@@ -663,6 +678,20 @@
 }
 .dark .sx-calendar-container .sx__month-grid-week {
   border-top: 1px solid #1e293b !important;
+}
+
+/* ─── Calendar event UX refinements ─── */
+
+/* Pointer cursor on all event chips — override Schedule-X default copy/text cursor */
+.sx-calendar-container .sx__month-grid-event,
+.sx-calendar-container .sx__date-grid-event,
+.sx-calendar-container .sx__time-grid-event {
+  cursor: pointer !important;
+}
+
+/* Small top padding so first event doesn't touch the day header */
+.sx-calendar-container .sx__month-grid-day__events {
+  padding-top: 2px !important;
 }
 
 /* Week/day hour grid lines — lighter */

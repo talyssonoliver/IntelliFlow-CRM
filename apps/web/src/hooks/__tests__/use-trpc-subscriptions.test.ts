@@ -9,10 +9,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // CRITICAL: Unmock the global mock from vitest.setup.ts so we can test
-// the actual implementation. Also unmock the re-export module.
+// the actual implementation.
 // ---------------------------------------------------------------------------
 vi.unmock('@/hooks/use-trpc-subscriptions');
-vi.unmock('@/hooks/use-subscription');
 
 // ---------------------------------------------------------------------------
 // Use vi.hoisted so variables are available in vi.mock factories

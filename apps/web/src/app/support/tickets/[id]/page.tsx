@@ -12,9 +12,9 @@
  */
 
 import { useMemo } from 'react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, Skeleton, toast } from '@intelliflow/ui';
-import { PageHeader } from '@/components/shared';
 import { TicketDetail } from '@/components/tickets';
 import type { TicketDetailData, ResolutionInput } from '@/components/tickets';
 import { api } from '@/lib/api';
@@ -144,15 +144,25 @@ export default function SupportTicketDetailPage() {
 
   if (!ticket) {
     return (
-      <PageHeader
-        breadcrumbs={[
-          { label: 'Support', href: '/support' },
-          { label: 'Tickets', href: '/support/tickets' },
-          { label: 'Not Found' },
-        ]}
-        title="Ticket Not Found"
-        description={`No ticket found with ID "${ticketId}"`}
-      />
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
+        <Card className="p-8 text-center">
+          <span className="material-symbols-outlined text-5xl text-red-500 mb-4">error</span>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+            Ticket Not Found
+          </h2>
+          <p className="text-slate-500 dark:text-slate-400 mb-4">
+            The ticket you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission
+            to view it.
+          </p>
+          <Link
+            href="/support/tickets"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            <span className="material-symbols-outlined !text-lg">arrow_back</span>{' '}
+            Back to Tickets
+          </Link>
+        </Card>
+      </div>
     );
   }
 

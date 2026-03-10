@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import {
+  Button,
   Card,
   Skeleton,
   ChurnRiskCard,
@@ -24,7 +25,11 @@ import { AppAvatar } from '@/components/shared/app-avatar';
 import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
 import { UpcomingEventsCard } from '@/components/shared';
 import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
-import { ActivityFeed } from '@/components/shared/activity-feed';
+import { ActivityFeed, ActivityFeedItem, ActivityFeedItemActions } from '@/components/shared/activity-feed';
+import { useActivityFeed } from '@/hooks/useActivityFeed';
+import { useActivityReactions } from '@/hooks/useActivityReactions';
+import { useActivityComments } from '@/hooks/useActivityComments';
+import { QuickLogComposer } from '@/components/shared/quick-log-composer';
 
 // Common nullable date type
 type DateStringNull = string | Date | null;
@@ -87,32 +92,6 @@ interface Activity {
   reactions?: { emoji: string; count: number; users: string[] }[];
   comments?: { user: string; text: string; timestamp: string }[];
 }
-
-// Database activity type enum
-type DBActivityType =
-  | 'EMAIL'
-  | 'CALL'
-  | 'MEETING'
-  | 'CHAT'
-  | 'DOCUMENT'
-  | 'DEAL'
-  | 'TICKET'
-  | 'NOTE';
-
-// Map database activity types to UI activity types
-const mapActivityType = (dbType: Readonly<DBActivityType>): ActivityType => {
-  const typeMap: Record<DBActivityType, ActivityType> = {
-    EMAIL: 'email',
-    CALL: 'call',
-    MEETING: 'meeting',
-    CHAT: 'chat',
-    DOCUMENT: 'document',
-    DEAL: 'deal',
-    TICKET: 'ticket',
-    NOTE: 'note',
-  };
-  return typeMap[dbType] || 'note';
-};
 
 // Map sentiment from database to UI
 const mapSentiment = (
@@ -314,16 +293,357 @@ function ContactStatusBadge({ status }: Readonly<{ status: ContactStatus }>) {
   );
 }
 
+function ContactAiPendingState({
+  compact = false,
+  onAction,
+}: Readonly<{
+  compact?: boolean;
+  onAction: () => void;
+}>) {
+  return (
+    <div
+      data-testid={compact ? 'contact-ai-pending-summary' : 'contact-ai-pending-banner'}
+      className={`rounded-lg border border-dashed border-amber-300 bg-amber-50 dark:bg-amber-950/20 ${
+        compact ? 'p-4' : 'p-4'
+      }`}
+    >
+      <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+        AI analysis has not been run for this contact yet.
+      </p>
+      <p className="mt-2 text-sm text-amber-700/90 dark:text-amber-300/90">
+        Metrics and recommendations will appear here after a real AI analysis is available.
+      </p>
+      <Button size="sm" onClick={onAction} className="mt-3">
+        View pending AI status
+      </Button>
+    </div>
+  );
+}
+
+type ContactAiInsightsSummary = {
+  conversionProbability: number;
+  lifetimeValue: number;
+  churnRisk: string;
+  nextBestAction: string;
+  sentiment: string;
+  engagementScore: number;
+  recommendations: string[];
+  quietPeriodAlert: string | null;
+  sentimentTrend: string | null;
+  lastEngagementDays: number;
+} | null;
+
+type ContactPageQueryError = {
+  data?: { code?: string } | null;
+  message?: string;
+} | null | undefined;
+
+function isUnauthorizedContactError(error: ContactPageQueryError): boolean {
+  const message = error?.message?.toLowerCase() ?? '';
+
+  return (
+    error?.data?.code === 'UNAUTHORIZED' ||
+    message.includes('authentication') ||
+    message.includes('unauthorized') ||
+    false
+  );
+}
+
+function shouldRequestLinkedInsightReview(
+  insightId: string | null,
+  requiresApproval: boolean,
+  lastRequestedInsightId: string | null
+): boolean {
+  return Boolean(insightId && requiresApproval && lastRequestedInsightId !== insightId);
+}
+
+function resolveNextBestActionType(selectedAction: string): NBAActionType {
+  const actionText = selectedAction.toUpperCase();
+  if (actionText.includes('CALL')) return 'CALL';
+  if (actionText.includes('EMAIL')) return 'EMAIL';
+  if (actionText.includes('MEET')) return 'MEETING';
+  if (actionText.includes('PROPOSAL')) return 'SEND_PROPOSAL';
+  if (actionText.includes('DEMO')) return 'SCHEDULE_DEMO';
+  if (actionText.includes('DISCOUNT')) return 'OFFER_DISCOUNT';
+  if (actionText.includes('TRAIN')) return 'TRAINING';
+  if (actionText.includes('ESCALATE')) return 'ESCALATE';
+  return 'WAIT';
+}
+
+function resolveNextBestActionPriority(
+  linkedPriority: 'low' | 'medium' | 'high' | undefined,
+  churnRisk: string | null | undefined
+): NBAPriority {
+  if (linkedPriority === 'high') return 'HIGH';
+  if (linkedPriority === 'low') return 'LOW';
+  if (churnRisk === 'HIGH' || churnRisk === 'CRITICAL') return 'HIGH';
+  if (churnRisk === 'LOW' || churnRisk === 'MINIMAL') return 'LOW';
+  return 'MEDIUM';
+}
+
+function useRedirectOnUnauthorizedContactError(params: {
+  error: ContactPageQueryError;
+  isAuthError: boolean;
+  isLoading: boolean;
+  authLoading: boolean;
+  router: ReturnType<typeof useRouter>;
+}) {
+  const { error, isAuthError, isLoading, authLoading, router } = params;
+
+  useEffect(() => {
+    if (error && isAuthError && !isLoading && !authLoading) {
+      router.replace('/login');
+    }
+  }, [error, isAuthError, isLoading, authLoading, router]);
+}
+
+function useEnsureLinkedInsightReview(params: {
+  insightIdParam: string | null;
+  linkedInsightRequiresApproval: boolean;
+  reviewRequestedInsightRef: React.RefObject<string | null>;
+  ensureInsightReviewMutation: { mutate: (input: { insightId: string }) => void };
+}) {
+  const {
+    insightIdParam,
+    linkedInsightRequiresApproval,
+    reviewRequestedInsightRef,
+    ensureInsightReviewMutation,
+  } = params;
+
+  useEffect(() => {
+    if (
+      !shouldRequestLinkedInsightReview(
+        insightIdParam,
+        linkedInsightRequiresApproval,
+        reviewRequestedInsightRef.current
+      )
+    ) {
+      return;
+    }
+
+    if (!insightIdParam) {
+      return;
+    }
+
+    reviewRequestedInsightRef.current = insightIdParam;
+    ensureInsightReviewMutation.mutate({ insightId: insightIdParam });
+  }, [
+    insightIdParam,
+    linkedInsightRequiresApproval,
+    reviewRequestedInsightRef,
+    ensureInsightReviewMutation,
+  ]);
+}
+
+function ContactAiInsightsTab({
+  aiInsights,
+  churnRiskData,
+  nextBestActionData,
+  onPendingAction,
+}: Readonly<{
+  aiInsights: ContactAiInsightsSummary;
+  churnRiskData: ChurnRiskData | null;
+  nextBestActionData: NextBestActionData | null;
+  onPendingAction: () => void;
+}>) {
+  return (
+    <div className="space-y-6">
+      {!aiInsights && <ContactAiPendingState onAction={onPendingAction} />}
+
+      {(churnRiskData || nextBestActionData) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {churnRiskData && (
+            <ChurnRiskCard
+              data={churnRiskData}
+              title="Churn Risk Assessment"
+              showFactors={true}
+              showConfidence={true}
+              showSLA={true}
+            />
+          )}
+          {nextBestActionData && (
+            <NextBestActionCard
+              data={nextBestActionData}
+              title="Recommended Action"
+              showRationale={true}
+              showConfidence={true}
+            />
+          )}
+        </div>
+      )}
+
+      {aiInsights && (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-green-600">trending_up</span>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {aiInsights.conversionProbability}%
+                  </p>
+                  <p className="text-xs text-slate-500">Conversion Probability</p>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-[#137fec]/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[#137fec]">paid</span>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                    ${(aiInsights.lifetimeValue / 1000).toFixed(0)}k
+                  </p>
+                  <p className="text-xs text-slate-500">Est. Lifetime Value</p>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-purple-600">
+                    sentiment_satisfied
+                  </span>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {aiInsights.engagementScore}%
+                  </p>
+                  <p className="text-xs text-slate-500">Engagement Score</p>
+                </div>
+              </div>
+            </Card>
+          </div>
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+              AI Recommendations
+            </h3>
+            <ul className="space-y-3">
+              {aiInsights.recommendations.map((rec, index) => (
+                <li key={`rec-${rec.slice(0, 20)}`} className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-[#137fec]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-xs font-medium text-[#137fec]">{index + 1}</span>
+                  </div>
+                  <p className="text-slate-600 dark:text-slate-400">{rec}</p>
+                </li>
+              ))}
+            </ul>
+          </Card>
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+              Engagement Analysis
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between mb-1.5">
+                  <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                    Engagement Score
+                  </span>
+                  <span className="text-sm font-bold text-[#137fec]">
+                    {aiInsights.engagementScore}%
+                  </span>
+                </div>
+                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
+                  <div
+                    className="bg-[#137fec] h-2 rounded-full"
+                    style={{ width: `${aiInsights.engagementScore}%` }}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center justify-between pt-2">
+                <span className="text-sm text-slate-600 dark:text-slate-300">Sentiment</span>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                  {aiInsights.sentiment}
+                </span>
+              </div>
+            </div>
+          </Card>
+        </>
+      )}
+    </div>
+  );
+}
+
+function ContactAiSummaryCard({
+  aiInsights,
+  onViewAiTab,
+}: Readonly<{
+  aiInsights: ContactAiInsightsSummary;
+  onViewAiTab: () => void;
+}>) {
+  return (
+    <Card className="p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <svg className="w-5 h-5 text-[#137fec]" viewBox="0 0 24 24" fill="currentColor">
+            <path d="m19 9 1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z" />
+          </svg>
+          <h3 className="text-base font-bold text-slate-900 dark:text-white">AI Insights</h3>
+        </div>
+        <span className="text-xs text-slate-400">Updated today</span>
+      </div>
+      {aiInsights ? (
+        <div className="space-y-4">
+          <div>
+            <div className="flex justify-between mb-1.5">
+              <span className="text-sm text-slate-600 dark:text-slate-300">Conversion</span>
+              <span className="text-sm font-bold text-[#137fec]">
+                {aiInsights.conversionProbability}%
+              </span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
+              <div
+                className="bg-[#137fec] h-2 rounded-full"
+                style={{ width: `${aiInsights.conversionProbability}%` }}
+              />
+            </div>
+          </div>
+          <div>
+            <div className="flex justify-between mb-1.5">
+              <span className="text-sm text-slate-600 dark:text-slate-300">Engagement</span>
+              <span className="text-sm font-bold text-green-600">{aiInsights.engagementScore}%</span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
+              <div
+                className="bg-green-500 h-2 rounded-full"
+                style={{ width: `${aiInsights.engagementScore}%` }}
+              />
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-2">
+            <span className="text-sm text-slate-600 dark:text-slate-300">Sentiment</span>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+              {aiInsights.sentiment}
+            </span>
+          </div>
+          <button
+            onClick={onViewAiTab}
+            className="w-full mt-2 text-sm text-[#137fec] hover:underline text-center"
+          >
+            View Full Analysis
+          </button>
+        </div>
+      ) : (
+        <ContactAiPendingState compact onAction={onViewAiTab} />
+      )}
+    </Card>
+  );
+}
+
 export default function Contact360Page() {
   // Get contact ID from URL params
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const utils = api.useUtils();
   const contactId = params.id as string;
   const insightIdParam = searchParams.get('insightId');
 
   // Require authentication - redirects to login if not authenticated
-  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+  const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
 
   // Fetch contact data from API
   const {
@@ -342,28 +662,48 @@ export default function Contact360Page() {
   const linkedInsightRequiresApproval =
     (linkedInsight as { requiresApproval?: boolean } | undefined)?.requiresApproval === true;
   const ensureInsightReviewMutation = api.home.ensureInsightReview.useMutation();
+  const logActivityMutation = api.contact.logActivity.useMutation({
+    onSuccess: () => {
+      toast({ title: 'Activity logged', description: 'Activity has been recorded.' });
+      utils.contact.getById.invalidate({ id: contactId });
+      utils.activityFeed.getUnifiedFeed.invalidate();
+      utils.activityFeed.getEntityFeed.invalidate();
+    },
+  });
+  const addNoteMutation = api.contact.addNote.useMutation({
+    onSuccess: () => {
+      toast({ title: 'Note added', description: 'Your note has been saved.' });
+      setShowNoteInput(false);
+      setNewNoteContent('');
+      utils.contact.getById.invalidate({ id: contactId });
+      utils.activityFeed.getUnifiedFeed.invalidate();
+      utils.activityFeed.getEntityFeed.invalidate();
+    },
+    onError: (err) => {
+      toast({ title: 'Failed to add note', description: err.message, variant: 'destructive' });
+    },
+  });
   const reviewRequestedInsightRef = useRef<string | null>(null);
 
   // Check for auth errors
-  const isAuthError =
-    error?.data?.code === 'UNAUTHORIZED' ||
-    error?.message?.toLowerCase().includes('authentication') ||
-    error?.message?.toLowerCase().includes('unauthorized');
+  // @ts-ignore — tRPC recursive type instantiation exceeds TS depth limit (TS2345)
+  const isAuthError = isUnauthorizedContactError(error);
 
-  // Redirect to login for auth errors
-  useEffect(() => {
-    if (error && isAuthError && !isLoading && !authLoading) {
-      router.replace('/login');
-    }
-  }, [error, isAuthError, isLoading, authLoading, router]);
+  useRedirectOnUnauthorizedContactError({
+    // @ts-ignore — tRPC recursive type instantiation exceeds TS depth limit (TS2322)
+    error,
+    isAuthError,
+    isLoading,
+    authLoading,
+    router,
+  });
 
-  useEffect(() => {
-    if (!insightIdParam || !linkedInsightRequiresApproval) return;
-    if (reviewRequestedInsightRef.current === insightIdParam) return;
-    reviewRequestedInsightRef.current = insightIdParam;
-
-    ensureInsightReviewMutation.mutate({ insightId: insightIdParam });
-  }, [insightIdParam, linkedInsightRequiresApproval, ensureInsightReviewMutation]);
+  useEnsureLinkedInsightReview({
+    insightIdParam,
+    linkedInsightRequiresApproval,
+    reviewRequestedInsightRef,
+    ensureInsightReviewMutation,
+  });
 
   // Cast to extended type
   const apiContact = rawApiContact as ContactWithRelations | undefined;
@@ -372,13 +712,23 @@ export default function Contact360Page() {
   const tabParam = searchParams.get('tab') as TabId | null;
   const [activeTab, setActiveTab] = useState<TabId>(tabParam && validTabs.includes(tabParam) ? tabParam : 'overview');
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
-  const [activityNote, setActivityNote] = useState('');
+  // Activity note state managed by QuickLogComposer
   const [expandedActivities, setExpandedActivities] = useState<Set<string>>(new Set());
   const [activityTypeFilter, setActivityTypeFilter] = useState<ActivityType | 'all'>('all');
   const [personFilter, setPersonFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(5);
   const [activityView, setActivityView] = useState<'timeline' | 'unified'>('timeline');
+  const [showNoteInput, setShowNoteInput] = useState(false);
+  const [newNoteContent, setNewNoteContent] = useState('');
+
+  // Unified activity feed for this contact (shared by Overview + Timeline)
+  const { items: contactFeedItems, isLoading: isUnifiedLoading } = useActivityFeed({
+    entityType: 'CONTACT',
+    entityId: contactId,
+    limit: 50,
+  });
+  const recentUnifiedActivities = contactFeedItems.slice(0, 3);
 
   // Transform API data to UI format
   const contact = useMemo(() => {
@@ -447,22 +797,23 @@ export default function Contact360Page() {
     };
   }, [apiContact]);
 
-  // Transform activities from API to UI format
+  // Transform unified feed items to Timeline UI format
   const activities: Activity[] = useMemo(() => {
-    if (!apiContact?.activities) return [];
-    return apiContact.activities.map((act) => ({
-      id: act.id,
-      type: mapActivityType(act.type as DBActivityType),
-      title: act.title,
-      description: act.description || '',
-      timestamp: typeof act.timestamp === 'string' ? act.timestamp : act.timestamp.toISOString(),
-      user: act.userName,
-      metadata: act.metadata as Activity['metadata'],
-      sentiment: mapSentiment(act.sentiment),
+    return contactFeedItems.map((item) => ({
+      id: item.id,
+      type: (item.type.toLowerCase()) as ActivityType,
+      title: item.title,
+      description: item.description || '',
+      timestamp: typeof item.timestamp === 'string' ? item.timestamp : new Date(item.timestamp).toISOString(),
+      user: item.actor?.name || 'System',
+      metadata: item.metadata as Activity['metadata'],
+      sentiment: item.metadata?.sentiment
+        ? mapSentiment(String(item.metadata.sentiment).toUpperCase())
+        : undefined,
       reactions: [],
       comments: [],
     }));
-  }, [apiContact?.activities]);
+  }, [contactFeedItems]);
 
   // Transform notes from API
   const notes = useMemo(() => {
@@ -512,18 +863,7 @@ export default function Contact360Page() {
   const aiInsights = useMemo(() => {
     const insight = apiContact?.aiInsight;
     if (!insight) {
-      return {
-        conversionProbability: 0,
-        lifetimeValue: 0,
-        churnRisk: 'Unknown',
-        nextBestAction: 'Gather more information about this contact',
-        sentiment: 'Unknown',
-        engagementScore: 0,
-        recommendations: ['No AI recommendations available yet'],
-        quietPeriodAlert: null as string | null,
-        sentimentTrend: null as string | null,
-        lastEngagementDays: 0,
-      };
+      return null;
     }
 
     return {
@@ -614,34 +954,10 @@ export default function Contact360Page() {
     const selectedAction = linkedSuggestedAction || contactInsight?.nextBestAction;
     if (!selectedAction) return null;
 
-    // Parse action type from next best action string
-    const actionText = selectedAction.toUpperCase();
-    let actionType: NBAActionType = 'WAIT';
-    if (actionText.includes('CALL')) actionType = 'CALL';
-    else if (actionText.includes('EMAIL')) actionType = 'EMAIL';
-    else if (actionText.includes('MEET')) actionType = 'MEETING';
-    else if (actionText.includes('PROPOSAL')) actionType = 'SEND_PROPOSAL';
-    else if (actionText.includes('DEMO')) actionType = 'SCHEDULE_DEMO';
-    else if (actionText.includes('DISCOUNT')) actionType = 'OFFER_DISCOUNT';
-    else if (actionText.includes('TRAIN')) actionType = 'TRAINING';
-    else if (actionText.includes('ESCALATE')) actionType = 'ESCALATE';
-
-    // Determine priority based on churn risk
-    let priority: NBAPriority = 'MEDIUM';
-    if (linkedInsight?.priority === 'high') {
-      priority = 'HIGH';
-    } else if (linkedInsight?.priority === 'low') {
-      priority = 'LOW';
-    } else if (contactInsight?.churnRisk === 'HIGH' || contactInsight?.churnRisk === 'CRITICAL') {
-      priority = 'HIGH';
-    } else if (contactInsight?.churnRisk === 'LOW' || contactInsight?.churnRisk === 'MINIMAL') {
-      priority = 'LOW';
-    }
-
     return {
-      actionType,
+      actionType: resolveNextBestActionType(selectedAction),
       title: selectedAction,
-      priority,
+      priority: resolveNextBestActionPriority(linkedInsight?.priority, contactInsight?.churnRisk),
       rationale: linkedSuggestedAction
         ? `Opened from insight: ${linkedInsight?.title || 'AI insight'}.`
         : `Based on ${contactInsight?.engagementScore || 0}% engagement score and ${contactInsight?.churnRisk || 'unknown'} churn risk level.`,
@@ -701,6 +1017,21 @@ export default function Contact360Page() {
   // Visible activities (for infinite scroll simulation)
   const visibleActivities = filteredActivities.slice(0, visibleCount);
   const hasMore = visibleCount < filteredActivities.length;
+
+  // Activity reactions
+  const activityIdsForReactions = useMemo(
+    () => visibleActivities.map((a) => a.id),
+    [visibleActivities]
+  );
+  const { reactions: reactionsMap, toggleReaction } = useActivityReactions(
+    activityIdsForReactions,
+    'CONTACT_ACTIVITY',
+    user?.email
+  );
+  const { comments: commentsMap, addComment, isAdding: isAddingComment } = useActivityComments(
+    activityIdsForReactions,
+    'CONTACT_ACTIVITY'
+  );
 
   // Loading state
   if (isLoading) {
@@ -1111,34 +1442,20 @@ export default function Contact360Page() {
     }
   };
 
-  // Render inline actions for activity
-  const renderActivityActions = (_activity: Activity) => (
-    <div className="flex items-center gap-1 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-      <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-500 hover:text-[#137fec] hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z" />
-        </svg>{' '}
-        Reply
-      </button>
-      <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-500 hover:text-[#137fec] hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-        </svg>{' '}
-        React
-      </button>
-      <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-500 hover:text-[#137fec] hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M5 21q-.825 0-1.412-.587Q3 19.825 3 19V5q0-.825.588-1.413Q4.175 3 5 3h14q.825 0 1.413.587Q21 4.175 21 5v10l-6 6Zm0-2h9v-5h5V5H5v14Z" />
-        </svg>{' '}
-        Add Note
-      </button>
-      <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-500 hover:text-[#137fec] hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z" />
-        </svg>{' '}
-        Share
-      </button>
-    </div>
+  // Render inline actions for activity using shared component
+  const renderActivityActions = (activity: Activity) => (
+    <ActivityFeedItemActions
+      activityId={activity.id}
+      activityTitle={activity.title}
+      onReply={addComment}
+      onSubmitNote={(content) => addNoteMutation.mutate({ contactId, content })}
+      onToggleReaction={toggleReaction}
+      isSubmitting={addNoteMutation.isPending || isAddingComment}
+      shareUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/contacts/${contactId}#activity-${activity.id}`}
+      reactions={reactionsMap[activity.id] ?? []}
+      currentUserId={user?.email ?? undefined}
+      comments={commentsMap[activity.id] ?? []}
+    />
   );
 
   return (
@@ -1433,47 +1750,18 @@ export default function Contact360Page() {
                 </button>
               ))}
             </div>
-            <div className="p-4 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex gap-3">
-                <div className="pt-1">
-                  <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500">
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M5 19h1.4l8.625-8.625-1.4-1.4L5 17.6ZM19.3 8.925l-4.25-4.2 1.4-1.4q.575-.575 1.413-.575.837 0 1.412.575l1.4 1.4q.575.575.6 1.388.025.812-.55 1.387Z" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <textarea
-                    value={activityNote}
-                    onChange={(e) => setActivityNote(e.target.value)}
-                    className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec] min-h-[80px] p-3 placeholder:text-slate-400"
-                    placeholder="Log a note, call, or email..."
-                  />
-                  <div className="flex justify-between items-center mt-2">
-                    <div className="flex gap-2">
-                      <button className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5a2.5 2.5 0 0 1 5 0v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5a2.5 2.5 0 0 0 5 0V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z" />
-                        </svg>
-                      </button>
-                      <button className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M15.6 10.79c.97-.67 1.65-1.77 1.65-2.79 0-2.26-1.75-4-4-4H7v14h7.04c2.09 0 3.71-1.7 3.71-3.79 0-1.52-.86-2.82-2.15-3.42zM10 6.5h3c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-3v-3zm3.5 9H10v-3h3.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5z" />
-                        </svg>
-                      </button>
-                      <button className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
-                        </svg>
-                      </button>
-                    </div>
-                    <button className="bg-[#137fec] text-white text-sm font-semibold px-4 py-1.5 rounded-lg hover:bg-blue-600 transition-colors">
-                      Log Activity
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <QuickLogComposer
+              placeholder="Log a call, meeting, or email..."
+              isSubmitting={logActivityMutation.isPending}
+              onSubmit={(note) => {
+                logActivityMutation.mutate({
+                  contactId,
+                  type: 'CALL',
+                  title: 'Note logged',
+                  description: note,
+                });
+              }}
+            />
           </Card>
 
           {/* Activity Tab with Filters & Search (FLOW-020) */}
@@ -1585,7 +1873,7 @@ export default function Contact360Page() {
                     </div>
 
                     {/* AI Insights Banner (Sentiment Trend & Quiet Period Alert) */}
-                    {aiInsights.sentimentTrend && (
+                    {aiInsights?.sentimentTrend && (
                       <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 rounded-lg border border-blue-100 dark:border-slate-700">
                         <div className="w-8 h-8 rounded-full bg-[#137fec]/10 flex items-center justify-center">
                           <svg
@@ -1624,22 +1912,24 @@ export default function Contact360Page() {
                   </div>
 
                   {/* Activity Timeline */}
-                  <div className="relative pl-4 space-y-4">
+                  <div className="relative space-y-4" style={{ paddingLeft: 40 }}>
+                    {/* Continuous vertical timeline line */}
+                    <div className="absolute top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700" style={{ left: 19 }} />
+
                     {visibleActivities.map((activity) => {
                       const isExpanded = expandedActivities.has(activity.id);
                       return (
                         <div key={activity.id} className="relative">
-                          {/* Timeline line */}
-                          <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700 -ml-4" />
+                          {/* Timeline dot marker */}
+                          <div
+                            className={`absolute w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 shadow-sm flex items-center justify-center z-10 ${getActivityIconBg(activity.type)}`}
+                            style={{ left: -36, top: 12 }}
+                          >
+                            {getActivityIcon(activity.type)}
+                          </div>
 
                           {/* Activity Card */}
-                          <div className="relative ml-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
-                            {/* Timeline dot */}
-                            <div
-                              className={`absolute -left-8 top-4 w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center z-10 ${getActivityIconBg(activity.type)}`}
-                            >
-                              {getActivityIcon(activity.type)}
-                            </div>
+                          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
 
                             {/* Header */}
                             <div className="flex items-start justify-between gap-2">
@@ -1770,39 +2060,65 @@ export default function Contact360Page() {
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
-              <Card className="p-6">
-                <div className="flex items-center justify-between mb-4">
+              <Card>
+                <div className="flex items-center justify-between p-6 border-b border-border">
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                     Recent Activity
                   </h3>
                   <button
                     onClick={() => setActiveTab('activity')}
-                    className="text-sm text-[#137fec] hover:underline"
+                    className="text-sm text-ds-primary hover:underline"
                   >
                     View All
                   </button>
                 </div>
-                <div className="space-y-4">
-                  {activities.slice(0, 3).map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-3">
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${getActivityIconBg(activity.type)}`}
-                      >
-                        {getActivityIcon(activity.type)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 dark:text-white">
-                          {activity.title}
-                        </p>
-                        <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
-                          {activity.description}
-                        </p>
-                        <p className="text-xs text-slate-500 mt-1">
-                          {activity.user} • {formatRelativeTime(activity.timestamp)}
-                        </p>
-                      </div>
+                {/* AI Sentiment Trend Banner */}
+                {aiInsights?.sentimentTrend && (
+                  <div className="flex items-center gap-3 p-3 mx-5 mt-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 rounded-lg border border-blue-100 dark:border-slate-700">
+                    <div className="w-8 h-8 rounded-full bg-[#137fec]/10 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-base text-[#137fec]">
+                        auto_awesome
+                      </span>
                     </div>
-                  ))}
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">
+                        Sentiment is{' '}
+                        <span className={getSentimentTrendStyle(aiInsights.sentimentTrend)}>
+                          {aiInsights.sentimentTrend}
+                        </span>
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Last engagement: {aiInsights.lastEngagementDays} days ago
+                      </p>
+                    </div>
+                  </div>
+                )}
+                <div className="flex flex-col divide-y divide-border">
+                  {recentUnifiedActivities.length > 0 &&
+                    recentUnifiedActivities.map((activity) => (
+                      <ActivityFeedItem
+                        key={activity.id}
+                        id={activity.id}
+                        source={activity.source}
+                        type={activity.type}
+                        title={activity.title}
+                        description={activity.description}
+                        timestamp={activity.timestamp}
+                        actor={activity.actor}
+                        entity={activity.entity}
+                        metadata={activity.metadata}
+                      />
+                    ))}
+                  {recentUnifiedActivities.length === 0 && !isUnifiedLoading && (
+                    <div className="flex items-center justify-center rounded-md border border-dashed border-border m-5 p-4">
+                      <p className="text-xs text-muted-foreground text-center">No recent activity yet.</p>
+                    </div>
+                  )}
+                  {isUnifiedLoading && (
+                    <div className="flex items-center justify-center p-6">
+                      <p className="text-xs text-muted-foreground">Loading activity...</p>
+                    </div>
+                  )}
                 </div>
               </Card>
               <Card className="p-6">
@@ -2052,13 +2368,46 @@ export default function Contact360Page() {
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Notes</h3>
-                <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
+                <button
+                  onClick={() => setShowNoteInput((v) => !v)}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors"
+                >
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M11 13H5v-2h6V5h2v6h6v2h-6v6h-2Z" />
                   </svg>{' '}
                   Add Note
                 </button>
               </div>
+              {showNoteInput && (
+                <div className="mb-4">
+                  <textarea
+                    value={newNoteContent}
+                    onChange={(e) => setNewNoteContent(e.target.value)}
+                    placeholder="Write a note..."
+                    className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] resize-none"
+                    rows={3}
+                  />
+                  <div className="flex items-center justify-end gap-2 mt-2">
+                    <button
+                      onClick={() => { setShowNoteInput(false); setNewNoteContent(''); }}
+                      className="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (newNoteContent.trim()) {
+                          addNoteMutation.mutate({ contactId, content: newNoteContent.trim() });
+                        }
+                      }}
+                      disabled={!newNoteContent.trim() || addNoteMutation.isPending}
+                      className="px-3 py-1.5 text-xs font-medium text-white bg-[#137fec] hover:bg-[#0f6dd0] rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {addNoteMutation.isPending ? 'Saving...' : 'Save Note'}
+                    </button>
+                  </div>
+                </div>
+              )}
               <div className="space-y-4">
                 {notes.map((note) => (
                   <div
@@ -2079,175 +2428,18 @@ export default function Contact360Page() {
 
           {/* AI Insights Tab (IFC-095) */}
           {activeTab === 'ai-insights' && (
-            <div className="space-y-6">
-              {/* Churn Risk and Next Best Action Cards */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {churnRiskData && (
-                  <ChurnRiskCard
-                    data={churnRiskData}
-                    title="Churn Risk Assessment"
-                    showFactors={true}
-                    showConfidence={true}
-                    showSLA={true}
-                  />
-                )}
-                {nextBestActionData && (
-                  <NextBestActionCard
-                    data={nextBestActionData}
-                    title="Recommended Action"
-                    showRationale={true}
-                    showConfidence={true}
-                  />
-                )}
-              </div>
-
-              {/* Quick Stats Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Card className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-green-600">trending_up</span>
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                        {aiInsights.conversionProbability}%
-                      </p>
-                      <p className="text-xs text-slate-500">Conversion Probability</p>
-                    </div>
-                  </div>
-                </Card>
-                <Card className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-[#137fec]/10 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-[#137fec]">paid</span>
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                        ${(aiInsights.lifetimeValue / 1000).toFixed(0)}k
-                      </p>
-                      <p className="text-xs text-slate-500">Est. Lifetime Value</p>
-                    </div>
-                  </div>
-                </Card>
-                <Card className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-purple-600">
-                        sentiment_satisfied
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                        {aiInsights.engagementScore}%
-                      </p>
-                      <p className="text-xs text-slate-500">Engagement Score</p>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                  AI Recommendations
-                </h3>
-                <ul className="space-y-3">
-                  {aiInsights.recommendations.map((rec, index) => (
-                    <li key={`rec-${rec.slice(0, 20)}`} className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-[#137fec]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-xs font-medium text-[#137fec]">{index + 1}</span>
-                      </div>
-                      <p className="text-slate-600 dark:text-slate-400">{rec}</p>
-                    </li>
-                  ))}
-                </ul>
-              </Card>
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                  Engagement Analysis
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between mb-1.5">
-                      <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                        Engagement Score
-                      </span>
-                      <span className="text-sm font-bold text-[#137fec]">
-                        {aiInsights.engagementScore}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-                      <div
-                        className="bg-[#137fec] h-2 rounded-full"
-                        style={{ width: `${aiInsights.engagementScore}%` }}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-sm text-slate-600 dark:text-slate-300">Sentiment</span>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                      {aiInsights.sentiment}
-                    </span>
-                  </div>
-                </div>
-              </Card>
-            </div>
+            <ContactAiInsightsTab
+              aiInsights={aiInsights}
+              churnRiskData={churnRiskData}
+              nextBestActionData={nextBestActionData}
+              onPendingAction={() => router.push('/agent-approvals/insights')}
+            />
           )}
         </section>
 
         {/* Right Sidebar */}
         <aside className="lg:col-span-3 flex flex-col gap-6">
-          <Card className="p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-[#137fec]" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="m19 9 1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z" />
-                </svg>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">AI Insights</h3>
-              </div>
-              <span className="text-xs text-slate-400">Updated today</span>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between mb-1.5">
-                  <span className="text-sm text-slate-600 dark:text-slate-300">Conversion</span>
-                  <span className="text-sm font-bold text-[#137fec]">
-                    {aiInsights.conversionProbability}%
-                  </span>
-                </div>
-                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-                  <div
-                    className="bg-[#137fec] h-2 rounded-full"
-                    style={{ width: `${aiInsights.conversionProbability}%` }}
-                  />
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between mb-1.5">
-                  <span className="text-sm text-slate-600 dark:text-slate-300">Engagement</span>
-                  <span className="text-sm font-bold text-green-600">
-                    {aiInsights.engagementScore}%
-                  </span>
-                </div>
-                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-                  <div
-                    className="bg-green-500 h-2 rounded-full"
-                    style={{ width: `${aiInsights.engagementScore}%` }}
-                  />
-                </div>
-              </div>
-              <div className="flex items-center justify-between pt-2">
-                <span className="text-sm text-slate-600 dark:text-slate-300">Sentiment</span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                  {aiInsights.sentiment}
-                </span>
-              </div>
-              <button
-                onClick={() => setActiveTab('ai-insights')}
-                className="w-full mt-2 text-sm text-[#137fec] hover:underline text-center"
-              >
-                View Full Analysis
-              </button>
-            </div>
-          </Card>
+          <ContactAiSummaryCard aiInsights={aiInsights} onViewAiTab={() => setActiveTab('ai-insights')} />
           <RelatedTasksCard
             entityType="contact"
             entityId={contactId}
@@ -2259,7 +2451,11 @@ export default function Contact360Page() {
           <Card className="p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-slate-900 dark:text-white">Notes</h3>
-              <button className="w-6 h-6 rounded hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500">
+              <button
+                onClick={() => { setShowNoteInput(true); setActiveTab('notes'); }}
+                className="w-6 h-6 rounded hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500"
+                title="Add note"
+              >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M11 13H5v-2h6V5h2v6h6v2h-6v6h-2Z" />
                 </svg>
@@ -2281,7 +2477,18 @@ export default function Contact360Page() {
                   </div>
                 </div>
               ))}
+              {notes.length === 0 && (
+                <p className="text-sm text-slate-500 text-center py-2">No notes yet</p>
+              )}
             </div>
+            {notes.length > 2 && (
+              <button
+                onClick={() => setActiveTab('notes')}
+                className="w-full mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs font-medium text-[#137fec] hover:text-[#0f6dd0] transition-colors text-center"
+              >
+                View all notes ({notes.length})
+              </button>
+            )}
           </Card>
         </aside>
       </div>
