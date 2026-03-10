@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-03-08T17:56:11.248Z",
+  "last_updated": "2026-03-10T21:31:10.299Z",
   "total_tasks": 390,
   "current_sprint": 14,
   "active_sprint": "sprint-14",
@@ -315,6 +315,8 @@
       "PG-046",
       "PG-047",
       "PG-048",
+      "PG-050",
+      "PG-055",
       "DOC-001",
       "BRAND-001",
       "BRAND-002",
@@ -448,6 +450,7 @@
       "IFC-191",
       "IFC-192",
       "IFC-193",
+      "IFC-194",
       "IFC-195",
       "IFC-197",
       "PG-148",
@@ -458,6 +461,7 @@
       "PG-153",
       "IFC-198",
       "IFC-200",
+      "IFC-202",
       "IFC-205",
       "IFC-206",
       "IFC-207",
@@ -468,12 +472,14 @@
       "PG-158",
       "PG-159",
       "PG-160",
+      "PG-162",
       "PG-163",
       "PG-164",
       "PG-165",
       "PG-169",
       "PG-170",
       "PG-171",
+      "PG-172",
       "DOC-002",
       "DOC-003",
       "DOC-004",
@@ -494,11 +500,10 @@
       "IFC-222",
       "IFC-223",
       "IFC-224",
-      "IFC-296"
+      "IFC-296",
+      "IFC-298"
     ],
-    "IN_PROGRESS": [
-      "PG-050"
-    ],
+    "IN_PROGRESS": [],
     "VALIDATING": [],
     "BLOCKED": [],
     "PLANNED": [
@@ -535,7 +540,6 @@
       "PG-052",
       "PG-053",
       "PG-054",
-      "PG-055",
       "PG-056",
       "PG-057",
       "PG-058",
@@ -613,19 +617,15 @@
       "IFC-175",
       "PG-145",
       "PG-147",
-      "IFC-194",
       "IFC-196",
       "IFC-199",
       "IFC-201",
-      "IFC-202",
       "IFC-203",
       "IFC-204",
       "PG-161",
-      "PG-162",
       "PG-166",
       "PG-167",
       "PG-168",
-      "PG-172",
       "PG-173",
       "PG-174",
       "PG-175",
@@ -717,7 +717,6 @@
       "IFC-293",
       "IFC-294",
       "IFC-295",
-      "IFC-298",
       "IFC-299",
       "IFC-300",
       "IFC-303",
@@ -725,16 +724,7 @@
       "IFC-301",
       "PG-181",
       "IFC-302",
-      "IFC-304",
-      "IFC-298",
-      "IFC-299",
-      "IFC-300",
-      "IFC-301",
-      "IFC-302",
-      "IFC-303",
-      "IFC-304",
-      "PG-180",
-      "PG-181"
+      "IFC-304"
     ],
     "FAILED": [],
     "NEEDS_HUMAN": [],
@@ -3969,10 +3959,10 @@
         "PG-043"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/help-center/search/page.tsx;ARTIFACT:apps/web/src/components/support/search-algorithm.tsx;ARTIFACT:apps/web/src/components/support/search-filters.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-044/context_ack.json;SPEC:.specify/sprints/sprint-16/specifications/PG-044-spec.md;PLAN:.specify/sprints/sprint-16/planning/PG-044-plan.md"
+        "ARTIFACT:apps/web/src/app/help-center/search/page.tsx;ARTIFACT:apps/web/src/components/support/search-algorithm.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-044/context_ack.json;SPEC:.specify/sprints/sprint-16/specifications/PG-044-spec.md;PLAN:.specify/sprints/sprint-16/planning/PG-044-plan.md"
       ],
-      "kpis": "Search working, results relevant, filters functional",
-      "definition_of_done": "Response <200ms, Lighthouse ≥90, results relevant; artifacts: page.tsx, search-algorithm.tsx, search-filters.tsx",
+      "kpis": "Search working, results relevant, filters via shared SearchFilterBar",
+      "definition_of_done": "Response <200ms, Lighthouse ≥90, results relevant; artifacts: page.tsx, search-algorithm.tsx; uses shared SearchFilterBar (DRY)",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
       "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Search algorithm;ENV:relevance ranking;FILE:apps/web/src/app/help-center/(list)/page.tsx",
       "cadence": ""
@@ -4071,7 +4061,7 @@
       "section": "Legal Pages",
       "description": "Privacy Policy",
       "owner": "Legal Counsel (STOA-Foundation)",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "sprint": 17,
       "dependencies": [
         "IFC-058"
@@ -4161,7 +4151,7 @@
       "section": "System Pages",
       "description": "404 Not Found",
       "owner": "SRE (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 17,
       "dependencies": [
         "IFC-076"
@@ -8081,14 +8071,14 @@
       "section": "Architecture",
       "description": "Router Middleware Standardization - Migrate all routers from manual getTenantId to tenantProcedure",
       "owner": "Backend Dev (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [
         "IFC-182",
         "IFC-003"
       ],
       "artifacts": [
-        "ARTIFACT:tests/architecture/tenant-procedure-enforcement.test.ts;EVIDENCE:.specify/sprints/sprint-16/attestations/IFC-194/context_ack.json"
+        "ARTIFACT:tests/architecture/tenant-procedure-enforcement.test.ts;EVIDENCE:.specify/sprints/sprint-16/attestations/IFC-194/context_ack.json;SPEC:.specify/sprints/sprint-16/specifications/IFC-194-spec.md;PLAN:.specify/sprints/sprint-16/planning/IFC-194-plan.md"
       ],
       "kpis": "All routers use tenantProcedure; no manual tenant extraction; architecture test passing; zero functional regressions",
       "definition_of_done": "All tenant-scoped routers use tenantProcedure from trpc.ts; manual getTenantId/getUserId helpers removed; consistent ctx.tenantId access pattern across all routers; architecture test enforces tenantProcedure usage; verified by: pnpm test",
@@ -8351,7 +8341,7 @@
       "section": "Core CRM",
       "description": "Activity Feed Stats Endpoint - getStats aggregation with counts by type source and entity over time windows",
       "owner": "Backend Dev (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [
         "IFC-069"
@@ -8363,7 +8353,7 @@
       "definition_of_done": "activityFeed.getStats endpoint returning aggregate counts by type, source, entity type, and configurable time windows (24h, 7d, 30d); repository port extended with getStats method; Prisma adapter implements COUNT queries; unit and router tests; verified by: pnpm test",
       "validation": "VALIDATE:pnpm test;GATE:coverage-gte-90",
       "prerequisites": "FILE:apps/api/src/modules/misc/activity-feed.router.ts;FILE:packages/application/src/services/ActivityFeedService.ts;FILE:packages/application/src/ports/repositories/ActivityFeedRepositoryPort.ts",
-      "cadence": ""
+      "cadence": "SPEC:.specify/sprints/sprint-16/specifications/IFC-202-spec.md;PLAN:.specify/sprints/sprint-16/planning/IFC-202-plan.md"
     },
     "IFC-203": {
       "section": "Core CRM",
@@ -8605,18 +8595,18 @@
       "section": "Core CRM",
       "description": "AI Insights from ML model - LangChain chain for generating daily insights with caching confidence scores and action recommendations Cross-entity scope: null-state UX - when AI insight is null on entity detail pages show Run AI Analysis button. Lead detail already done (2026-03-04) apply same pattern to Contact detail. Ensure fallback values visually distinct from real AI data.",
       "owner": "AI Specialist (STOA-Intelligence)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [
         "PG-129",
         "IFC-095"
       ],
       "artifacts": [
-        "ARTIFACT:apps/ai-worker/src/chains/daily-insights.chain.ts;ARTIFACT:apps/ai-worker/src/chains/daily-insights.chain.test.ts"
+        "ARTIFACT:apps/api/src/modules/home/home.router.ts;ARTIFACT:apps/web/src/components/insights/InsightCard.tsx;ARTIFACT:apps/web/src/app/contacts/[id]/page.tsx;ARTIFACT:packages/validators/src/home.ts;ARTIFACT:apps/web/src/app/contacts/[id]/__tests__/page.test.tsx"
       ],
       "kpis": "Insight generation <3s, cache hit rate >80%, 4 insight types",
       "definition_of_done": "LangChain chain generates daily insights per user; cached 1h TTL; confidence scores; 4 insight types; home.getAIInsights reads from cache; tests with mocked LLM; Null-state indicator on Contact detail; fallback data visually distinguished from real AI output",
-      "validation": "VALIDATE:pnpm --filter @intelliflow/ai-worker typecheck;VALIDATE:pnpm --filter @intelliflow/ai-worker test --run",
+      "validation": "VALIDATE:pnpm --filter @intelliflow/validators exec vitest run src/__tests__/home.test.ts;VALIDATE:pnpm --filter @intelliflow/api exec vitest run src/modules/home/__tests__/home.router.test.ts;VALIDATE:pnpm --filter @intelliflow/web exec vitest run src/components/home/__tests__/AuthenticatedHomePage.test.tsx src/app/insights/__tests__/page.test.tsx src/app/contacts/[id]/__tests__/page.test.tsx",
       "prerequisites": "FILE:apps/ai-worker/src/chains;FILE:apps/api/src/modules/home/home.router.ts",
       "cadence": ""
     },
@@ -8788,14 +8778,14 @@
       "section": "Billing Pages",
       "description": "Billing Ghost Pages - Usage Plans Upgrade Cancel and Settings",
       "owner": "Platform BE (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [
         "PG-025",
         "PG-030"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/billing/usage/page.tsx;ARTIFACT:apps/web/src/app/billing/plans/page.tsx;ARTIFACT:apps/web/src/app/billing/upgrade/page.tsx;ARTIFACT:apps/web/src/app/billing/cancel/page.tsx;ARTIFACT:apps/web/src/app/billing/settings/page.tsx;ARTIFACT:apps/web/src/components/billing/usage-dashboard.tsx;ARTIFACT:apps/web/src/components/billing/plan-comparison.tsx;ARTIFACT:apps/web/src/components/billing/upgrade-flow.tsx;ARTIFACT:apps/web/src/components/billing/cancel-flow.tsx;ARTIFACT:apps/web/src/components/billing/__tests__/usage-dashboard.test.tsx;ARTIFACT:apps/web/src/components/billing/__tests__/plan-comparison.test.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-172/context_ack.json"
+        "ARTIFACT:apps/web/src/app/billing/usage/page.tsx;ARTIFACT:apps/web/src/app/billing/plans/page.tsx;ARTIFACT:apps/web/src/app/billing/upgrade/page.tsx;ARTIFACT:apps/web/src/app/billing/cancel/page.tsx;ARTIFACT:apps/web/src/app/billing/settings/page.tsx;ARTIFACT:apps/web/src/components/billing/usage-dashboard.tsx;ARTIFACT:apps/web/src/components/billing/plan-comparison.tsx;ARTIFACT:apps/web/src/components/billing/upgrade-flow.tsx;ARTIFACT:apps/web/src/components/billing/cancel-flow.tsx;ARTIFACT:apps/web/src/components/billing/__tests__/usage-dashboard.test.tsx;ARTIFACT:apps/web/src/components/billing/__tests__/plan-comparison.test.tsx;ARTIFACT:apps/web/src/components/billing/__tests__/upgrade-flow.test.tsx;ARTIFACT:apps/web/src/components/billing/__tests__/cancel-flow.test.tsx;ARTIFACT:apps/web/src/components/billing/__tests__/billing-settings.test.tsx;ARTIFACT:apps/web/src/components/billing/billing-shared.tsx;ARTIFACT:apps/web/src/components/billing/billing-settings.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-172/attestation.json;SPEC:.specify/sprints/sprint-16/specifications/PG-172-spec.md;PLAN:.specify/sprints/sprint-16/planning/PG-172-plan.md"
       ],
       "kpis": "All 5 billing ghost routes resolve; usage bars accurate; upgrade shows proration; cancel period-end confirmed; Lighthouse >=90",
       "definition_of_done": "Pages at /billing/usage (usage metrics vs plan limits with progress bars) /billing/plans (3-tier comparison grid Starter/Professional/Enterprise) /billing/upgrade (proration preview and confirmation) /billing/cancel (retention offer reason selection period-end behaviour) /billing/settings (billing address contact tax fields); all sidebar and billing-portal.tsx in-page links resolve; Lighthouse >=90; tests passing; verified by: pnpm test",
@@ -10746,15 +10736,15 @@
       "section": "Support",
       "description": "HelpArticle Prisma Model + Migration",
       "owner": "Backend Dev (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 17,
       "dependencies": [
         "PG-045"
       ],
       "artifacts": [
-        "ARTIFACT:packages/db/prisma/schema.prisma;ARTIFACT:packages/db/prisma/migrations/;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-298/context_ack.json"
+        "ARTIFACT:packages/db/prisma/schema.prisma;ARTIFACT:packages/db/prisma/migrations/;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-298/context_ack.json;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-298/attestation.json;SPEC:.specify/sprints/sprint-17/specifications/IFC-298-spec.md;PLAN:.specify/sprints/sprint-17/planning/IFC-298-plan.md"
       ],
-      "kpis": "Models created, migration clean, schema validates",
+      "kpis": "3 models + 1 enum + migration + 14 tests; all 4 validations pass",
       "definition_of_done": "HelpArticle, ArticleSection, ArticleFeedback Prisma models; migration applied; fields match HelpArticle TS interface; status enum (draft/published); verified by: pnpm test",
       "validation": "VALIDATE:pnpm --filter @intelliflow/db typecheck;VALIDATE:pnpm test",
       "prerequisites": "FILE:packages/db/prisma/schema.prisma;FILE:apps/web/src/lib/support/help-articles.ts;FILE:docs/planning/prd-support-help-center.md",

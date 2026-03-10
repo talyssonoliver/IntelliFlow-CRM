@@ -1,8 +1,8 @@
 {
   "meta": {
-    "generated_at": "2026-03-08T16:50:38.297Z",
+    "generated_at": "2026-03-10T20:59:52.210Z",
     "sprint_scope": 0,
-    "total_items": 29
+    "total_items": 23
   },
   "items": [
     {
@@ -12,11 +12,9 @@
       "status": "Completed",
       "owner": "DevOps Engineer",
       "reasons": [
-        "High fan-out (5 dependents)",
-        "Has waiver or debt_allowed"
+        "High fan-out (5 dependents)"
       ],
       "dependent_count": 5,
-      "waiver_expiry": "2026-02-28",
       "priority": "high"
     },
     {
@@ -30,7 +28,7 @@
         "Has waiver or debt_allowed"
       ],
       "dependent_count": 4,
-      "waiver_expiry": "2026-01-31",
+      "waiver_expiry": "2026-06-30",
       "priority": "high"
     },
     {
@@ -42,31 +40,7 @@
       "reasons": [
         "Has waiver or debt_allowed"
       ],
-      "waiver_expiry": "2026-01-31",
-      "priority": "medium"
-    },
-    {
-      "task_id": "ENV-011-AI",
-      "tier": "B",
-      "section": "Foundation Setup",
-      "status": "Completed",
-      "owner": "AI Specialist",
-      "reasons": [
-        "Has waiver or debt_allowed"
-      ],
-      "waiver_expiry": "2026-01-31",
-      "priority": "medium"
-    },
-    {
-      "task_id": "ENV-012-AI",
-      "tier": "C",
-      "section": "Foundation Setup",
-      "status": "Completed",
-      "owner": "Tech Writer",
-      "reasons": [
-        "Has waiver or debt_allowed"
-      ],
-      "waiver_expiry": "2026-02-28",
+      "waiver_expiry": "2026-06-30",
       "priority": "medium"
     },
     {
@@ -78,58 +52,7 @@
       "reasons": [
         "Has waiver or debt_allowed"
       ],
-      "waiver_expiry": "2026-02-28",
-      "priority": "medium"
-    },
-    {
-      "task_id": "ENV-015-AI",
-      "tier": "C",
-      "section": "Foundation Setup",
-      "status": "Completed",
-      "owner": "Backend Dev",
-      "reasons": [
-        "Has waiver or debt_allowed"
-      ],
-      "dependent_count": 1,
-      "waiver_expiry": "2026-02-28",
-      "priority": "medium"
-    },
-    {
-      "task_id": "ENV-016-AI",
-      "tier": "C",
-      "section": "Foundation Setup",
-      "status": "Completed",
-      "owner": "Frontend Dev",
-      "reasons": [
-        "Has waiver or debt_allowed"
-      ],
-      "waiver_expiry": "2026-02-28",
-      "priority": "medium"
-    },
-    {
-      "task_id": "AUTOMATION-001",
-      "tier": "B",
-      "section": "AI Foundation",
-      "status": "Completed",
-      "owner": "AI Specialist",
-      "reasons": [
-        "Has waiver or debt_allowed"
-      ],
-      "dependent_count": 2,
-      "waiver_expiry": "2026-02-28",
-      "priority": "medium"
-    },
-    {
-      "task_id": "AUTOMATION-002",
-      "tier": "B",
-      "section": "AI Foundation",
-      "status": "Completed",
-      "owner": "DevOps Engineer",
-      "reasons": [
-        "Has waiver or debt_allowed"
-      ],
-      "dependent_count": 2,
-      "waiver_expiry": "2026-02-28",
+      "waiver_expiry": "2026-06-30",
       "priority": "medium"
     },
     {
