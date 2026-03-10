@@ -4,14 +4,17 @@
   "section": "Support",
   "description": "Article Analytics Dashboard",
   "owner": "Support Eng (STOA-Domain)",
-  "status": "Backlog",
+  "status": "BACKLOG",
   "sprint": "sprint-19",
   "phase": null,
   "stream": null,
   "dependencies": {
-    "required": ["IFC-303", "PG-180"],
+    "required": [
+      "IFC-303",
+      "PG-180"
+    ],
     "all_satisfied": false,
-    "verified_at": null
+    "verified_at": "2026-03-10T21:31:10.861Z"
   },
   "started_at": null,
   "completed_at": null,
@@ -25,7 +28,10 @@
       "apps/api/src/modules/help-article/help-article.router.ts"
     ],
     "created": [],
-    "missing": []
+    "missing": [
+      "apps/web/src/components/support/article-analytics.tsx",
+      "apps/api/src/modules/help-article/help-article.router.ts"
+    ]
   },
   "validations": [],
   "kpis": {},

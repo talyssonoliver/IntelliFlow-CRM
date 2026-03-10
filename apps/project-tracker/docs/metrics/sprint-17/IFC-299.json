@@ -4,14 +4,16 @@
   "section": "Support",
   "description": "Help Article CRUD tRPC Router",
   "owner": "Backend Dev (STOA-Domain)",
-  "status": "Backlog",
+  "status": "BACKLOG",
   "sprint": "sprint-17",
   "phase": null,
   "stream": null,
   "dependencies": {
-    "required": ["IFC-298"],
-    "all_satisfied": false,
-    "verified_at": null
+    "required": [
+      "IFC-298"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-03-10T21:31:10.819Z"
   },
   "started_at": null,
   "completed_at": null,
@@ -25,7 +27,10 @@
       "packages/validators/src/help-article.ts"
     ],
     "created": [],
-    "missing": []
+    "missing": [
+      "apps/api/src/modules/help-article/help-article.router.ts",
+      "packages/validators/src/help-article.ts"
+    ]
   },
   "validations": [],
   "kpis": {},
@@ -37,5 +42,8 @@
       "note": "Task created — helpArticle tRPC router with full CRUD + publish workflow"
     }
   ],
-  "notes": "Tenant-scoped tRPC router with list/getBySlug/getByCategory/getRelated/create/update/delete/publish/unpublish procedures."
+  "notes": "Tenant-scoped tRPC router with list/getBySlug/getByCategory/getRelated/create/update/delete/publish/unpublish procedures.",
+  "dependencies_resolved": [
+    "IFC-298"
+  ]
 }

@@ -4,14 +4,17 @@
   "section": "Support Pages",
   "description": "Help Article Editor Page",
   "owner": "Support Eng (STOA-Domain)",
-  "status": "Backlog",
+  "status": "BACKLOG",
   "sprint": "sprint-18",
   "phase": null,
   "stream": null,
   "dependencies": {
-    "required": ["PG-180", "IFC-301"],
+    "required": [
+      "PG-180",
+      "IFC-301"
+    ],
     "all_satisfied": false,
-    "verified_at": null
+    "verified_at": "2026-03-10T21:31:10.854Z"
   },
   "started_at": null,
   "completed_at": null,
@@ -25,7 +28,10 @@
       "apps/web/src/app/settings/help-center/articles/new/page.tsx"
     ],
     "created": [],
-    "missing": []
+    "missing": [
+      "apps/web/src/app/settings/help-center/articles/[id]/edit/page.tsx",
+      "apps/web/src/app/settings/help-center/articles/new/page.tsx"
+    ]
   },
   "validations": [],
   "kpis": {},

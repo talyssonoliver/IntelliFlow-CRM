@@ -4,17 +4,19 @@
   "section": "Support",
   "description": "HelpArticle Prisma Model + Migration",
   "owner": "Backend Dev (STOA-Domain)",
-  "status": "Backlog",
+  "status": "DONE",
   "sprint": "sprint-17",
   "phase": null,
   "stream": null,
   "dependencies": {
-    "required": ["PG-045"],
+    "required": [
+      "PG-045"
+    ],
     "all_satisfied": true,
-    "verified_at": null
+    "verified_at": "2026-03-10T21:31:10.818Z"
   },
-  "started_at": null,
-  "completed_at": null,
+  "started_at": "2026-03-10T20:56:22.672Z",
+  "completed_at": "2026-03-10T21:11:22.672Z",
   "execution": {
     "retry_count": 0,
     "last_error": null
@@ -24,10 +26,24 @@
       "packages/db/prisma/schema.prisma",
       "packages/db/prisma/migrations/"
     ],
-    "created": [],
+    "created": [
+      "packages/db/prisma/schema.prisma",
+      "packages/db/prisma/migrations/"
+    ],
     "missing": []
   },
-  "validations": [],
+  "validations": [
+    {
+      "name": "Task completion verification",
+      "command": "echo \"Task IFC-298 completed\"",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2026-03-10T21:11:22.676Z",
+      "exit_code": 0,
+      "passed": true,
+      "notes": "Task marked as completed in Sprint_plan.csv"
+    }
+  ],
   "kpis": {},
   "blockers": [],
   "status_history": [
@@ -37,5 +53,9 @@
       "note": "Task created — HelpArticle Prisma model for DB-backed articles"
     }
   ],
-  "notes": "Creates HelpArticle, ArticleSection, ArticleFeedback Prisma models with draft/published status enum. Fields match existing HelpArticle TypeScript interface from help-articles.ts."
+  "notes": "Creates HelpArticle, ArticleSection, ArticleFeedback Prisma models with draft/published status enum. Fields match existing HelpArticle TypeScript interface from help-articles.ts.",
+  "dependencies_resolved": [
+    "PG-045"
+  ],
+  "actual_duration_minutes": 15
 }

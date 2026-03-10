@@ -4,14 +4,16 @@
   "section": "Infrastructure",
   "description": "Rich Text Editor Integration — Tiptap",
   "owner": "Frontend Dev (STOA-Foundation)",
-  "status": "Backlog",
+  "status": "BACKLOG",
   "sprint": "sprint-18",
   "phase": null,
   "stream": null,
   "dependencies": {
-    "required": ["PG-180"],
+    "required": [
+      "PG-180"
+    ],
     "all_satisfied": false,
-    "verified_at": null
+    "verified_at": "2026-03-10T21:31:10.853Z"
   },
   "started_at": null,
   "completed_at": null,
@@ -25,7 +27,10 @@
       "packages/ui/src/components/__tests__/rich-text-editor.test.tsx"
     ],
     "created": [],
-    "missing": []
+    "missing": [
+      "packages/ui/src/components/rich-text-editor.tsx",
+      "packages/ui/src/components/__tests__/rich-text-editor.test.tsx"
+    ]
   },
   "validations": [],
   "kpis": {},

@@ -4,14 +4,16 @@
   "section": "Support",
   "description": "Refactor Help Article Page to Use Database",
   "owner": "Support Eng (STOA-Domain)",
-  "status": "Backlog",
+  "status": "BACKLOG",
   "sprint": "sprint-18",
   "phase": null,
   "stream": null,
   "dependencies": {
-    "required": ["IFC-299"],
+    "required": [
+      "IFC-299"
+    ],
     "all_satisfied": false,
-    "verified_at": null
+    "verified_at": "2026-03-10T21:31:10.855Z"
   },
   "started_at": null,
   "completed_at": null,
@@ -23,7 +25,9 @@
     "expected": [
       "apps/web/src/app/help-center/[article]/page.tsx"
     ],
-    "created": [],
+    "created": [
+      "apps/web/src/app/help-center/[article]/page.tsx"
+    ],
     "missing": []
   },
   "validations": [],
