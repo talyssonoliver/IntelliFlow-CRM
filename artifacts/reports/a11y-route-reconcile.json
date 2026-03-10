@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-07T17:20:01.843Z",
+  "timestamp": "2026-03-10T20:42:53.207Z",
   "docRoutes": [
     "/",
     "/about",
@@ -86,6 +86,7 @@
   ],
   "fsRoutes": [
     "/",
+    "/404",
     "/about",
     "/accounts",
     "/activity",
@@ -163,6 +164,7 @@
     "/partners",
     "/press",
     "/pricing",
+    "/privacy",
     "/profile",
     "/reset-password/callback",
     "/security",
@@ -174,15 +176,18 @@
     "/settings/pipeline",
     "/settings/routing",
     "/settings/security/mfa",
+    "/settings/security/mfa/setup",
     "/settings/team",
     "/signup",
     "/signup/success",
     "/sso",
     "/status",
     "/support/tickets",
+    "/support/tickets/new",
     "/tasks",
     "/tickets",
     "/tickets/new",
+    "/upgrade",
     "/verify-email/callback"
   ],
   "matchedRoutes": [
@@ -271,6 +276,7 @@
   ],
   "docOnlyRoutes": [],
   "fsOnlyRoutes": [
+    "/404",
     "/activity",
     "/agent-approvals/insights",
     "/agent-approvals/tools",
@@ -287,7 +293,11 @@
     "/docs/sdk",
     "/docs/webhooks",
     "/help-center/search",
-    "/support/tickets"
+    "/privacy",
+    "/settings/security/mfa/setup",
+    "/support/tickets",
+    "/support/tickets/new",
+    "/upgrade"
   ],
   "gates": [
     {
@@ -298,7 +308,7 @@
     {
       "name": "COUNT_MATCH",
       "severity": "PASS",
-      "message": "Doc routes: 82, FS routes: 99"
+      "message": "Doc routes: 82, FS routes: 104"
     },
     {
       "name": "STATEMENT_COVERS_DISK",
@@ -308,8 +318,9 @@
     {
       "name": "DISK_COVERED_BY_STATEMENT",
       "severity": "WARN",
-      "message": "17 route(s) on disk not in conformance statement",
+      "message": "22 route(s) on disk not in conformance statement",
       "details": [
+        "/404",
         "/activity",
         "/agent-approvals/insights",
         "/agent-approvals/tools",
@@ -326,13 +337,17 @@
         "/docs/sdk",
         "/docs/webhooks",
         "/help-center/search",
-        "/support/tickets"
+        "/privacy",
+        "/settings/security/mfa/setup",
+        "/support/tickets",
+        "/support/tickets/new",
+        "/upgrade"
       ]
     },
     {
       "name": "TOTAL_COUNT",
       "severity": "INFO",
-      "message": "Total: 82 matched, 0 doc-only, 17 fs-only"
+      "message": "Total: 82 matched, 0 doc-only, 22 fs-only"
     }
   ],
   "exitCode": 0

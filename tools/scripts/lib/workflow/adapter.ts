@@ -227,7 +227,7 @@ export async function updateTaskStatus(
   repoRoot?: string
 ): Promise<TaskRecord | null> {
   const tasks = await loadTasks(repoRoot);
-  const taskIndex = tasks.indexOf((t) => t['Task ID'] === taskId);
+  const taskIndex = tasks.findIndex((t) => t['Task ID'] === taskId);
 
   if (taskIndex === -1) {
     return null;
@@ -259,7 +259,7 @@ export async function updateTaskArtifacts(
   repoRoot?: string
 ): Promise<TaskRecord | null> {
   const tasks = await loadTasks(repoRoot);
-  const taskIndex = tasks.indexOf((t) => t['Task ID'] === taskId);
+  const taskIndex = tasks.findIndex((t) => t['Task ID'] === taskId);
 
   if (taskIndex === -1) {
     return null;

@@ -343,8 +343,8 @@ export function applyCsvPatch(
 
     // Parse header to find column indices
     const header = lines[0].split(',').map((h) => h.trim());
-    const taskIdIndex = header.indexOf((h) => h === 'Task ID');
-    const statusIndex = header.indexOf((h) => h === 'Status');
+    const taskIdIndex = header.findIndex((h) => h === 'Task ID');
+    const statusIndex = header.findIndex((h) => h === 'Status');
 
     if (taskIdIndex === -1) {
       return {

@@ -383,7 +383,7 @@ export async function addToReviewQueue(
   const queue = loadReviewQueue(repoRoot);
 
   // Check if task already in queue
-  const existingIndex = queue.indexOf((item) => item.task_id === attestation.task_id);
+  const existingIndex = queue.findIndex((item) => item.task_id === attestation.task_id);
 
   const reasons: string[] = [];
   const actionItems: string[] = [];

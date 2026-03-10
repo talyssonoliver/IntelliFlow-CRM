@@ -55,10 +55,10 @@ function parseCSV(csvPath: string): TaskEntry[] {
   if (lines.length < 2) return [];
 
   const headers = lines[0].split(',').map((h) => h.trim().replace(/^"/, '').replace(/"$/, ''));
-  const taskIdIdx = headers.indexOf((h) => h === 'Task ID');
-  const statusIdx = headers.indexOf((h) => h === 'Status');
-  const sprintIdx = headers.indexOf((h) => h === 'Target Sprint');
-  const sectionIdx = headers.indexOf((h) => h === 'Section');
+  const taskIdIdx = headers.findIndex((h) => h === 'Task ID');
+  const statusIdx = headers.findIndex((h) => h === 'Status');
+  const sprintIdx = headers.findIndex((h) => h === 'Target Sprint');
+  const sectionIdx = headers.findIndex((h) => h === 'Section');
 
   if (taskIdIdx === -1) {
     console.error('CSV missing "Task ID" column');

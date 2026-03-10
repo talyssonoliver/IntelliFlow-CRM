@@ -36,8 +36,8 @@ function loadTaskSprintMap(): Map<string, number> {
   const headerLine = lines.find((line) => line.includes('Task ID'));
   if (!headerLine) return map;
   const headers = headerLine.split(',').map((h) => h.trim().replaceAll(/^"|"$/g, ''));
-  const taskIdIdx = headers.indexOf((h) => h === 'Task ID');
-  const sprintIdx = headers.indexOf((h) => h === 'Target Sprint');
+  const taskIdIdx = headers.findIndex((h) => h === 'Task ID');
+  const sprintIdx = headers.findIndex((h) => h === 'Target Sprint');
   if (taskIdIdx === -1 || sprintIdx === -1) return map;
 
   for (const line of lines) {

@@ -103,9 +103,10 @@ function loadYAML(filepath) {
 function parseDependencies(depString) {
   if (!depString || depString.trim() === '') return [];
   // Split on comma or semicolon (defensive: CSV standard is comma, but handle semicolons too)
+  // Strip qualifier suffixes like :FS (Feature Specification) from task IDs
   return depString
     .split(/[,;]/)
-    .map((d) => d.trim())
+    .map((d) => d.trim().replace(/:FS$/, ''))
     .filter((d) => d);
 }
 
