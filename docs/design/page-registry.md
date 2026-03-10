@@ -3,7 +3,7 @@
 > **Location**: `docs/design/page-registry.md` **Purpose**: Central registry of
 > all UI pages with task IDs, KPIs, file paths, components, API routers, test
 > paths, and RACI assignments **Last Updated**: 2026-02-24 (as of Sprint 14)
-> **Total Pages**: 130
+> **Total Pages**: 137
 
 ---
 
@@ -55,7 +55,7 @@ Each route entry uses this standard table format:
 
 ---
 
-## Section 1: Public Pages (26 routes)
+## Section 1: Public Pages (27 routes)
 
 ### Home Page (`/`)
 
@@ -196,6 +196,20 @@ Each route entry uses this standard table format:
 | **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90 |
 | **Status**     | Implemented                                   |
 | **RACI**       | R: Frontend / A: DevRel / C: Product / I: QA  |
+
+### 404 Not Found (`/404`)
+
+| Field          | Value                                                     |
+| -------------- | --------------------------------------------------------- |
+| **Task ID**    | PG-055                                                    |
+| **File Path**  | `apps/web/src/app/404/page.tsx`                           |
+| **Layout**     | `apps/web/src/app/layout.tsx`                             |
+| **API Router** | N/A                                                       |
+| **E2E Test**   | None                                                      |
+| **Unit Tests** | `apps/web/src/app/404/__tests__/page.test.tsx`            |
+| **KPI**        | Lighthouse >=90; Response <200ms; noindex route           |
+| **Status**     | Implemented                                               |
+| **RACI**       | R: Frontend / A: SRE / C: Product / I: QA                 |
 
 ### Blog (`/blog`)
 
@@ -1808,7 +1822,7 @@ Each route entry uses this standard table format:
 
 | Section             | Routes  | Implemented | Hardcoded | Partial |
 | ------------------- | ------- | ----------- | --------- | ------- |
-| 1. Public Pages     | 26      | 26          | 0         | 0       |
+| 1. Public Pages     | 27      | 27          | 0         | 0       |
 | 2. Developer Portal | 8       | 8           | 0         | 0       |
 | 3. Dashboard        | 3       | 1           | 2         | 0       |
 | 4. Leads            | 3       | 3           | 0         | 0       |

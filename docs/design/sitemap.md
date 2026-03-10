@@ -1,7 +1,7 @@
 # IntelliFlow CRM - Sitemap
 
-> **Location**: `docs/design/sitemap.md` **Last Updated**: 2026-03-01 **Total
-> Pages**: 124 **Total Flows**: 42 (linked) **Layouts**: 37 **API Routers**: 25
+> **Location**: `docs/design/sitemap.md` **Last Updated**: 2026-03-10 **Total
+> Pages**: 137 **Total Flows**: 42 (linked) **Layouts**: 37 **API Routers**: 25
 > (232 procedures)
 
 ---
@@ -36,7 +36,7 @@
 ```
 intelliflow.com
 │
-├── PUBLIC PAGES (28 pages) ──────────────── Route Group: (public)
+├── PUBLIC PAGES (29 pages) ──────────────── Route Group: (public)
 │   │
 │   ├── / (Home)                          [PG-001] → Conditional render:
 │   │                                       • Unauth: PublicHomePage
@@ -50,6 +50,7 @@ intelliflow.com
 │   │   └── /press/[id]                   [PG-179] Press release detail
 │   ├── /security                         [PG-008]
 │   ├── /status                           [PG-014]
+│   ├── /404                              [PG-055] Direct missing-page route (noindex)
 │   ├── /privacy                          [PG-050] Privacy policy
 │   │
 │   ├── /blog                             [PG-009]
@@ -247,7 +248,7 @@ intelliflow.com
 
 | Section               | Pages   | Status                                         |
 | --------------------- | ------- | ---------------------------------------------- |
-| Public Pages          | 28      | Marketing, auth, blog, careers, callbacks, SSO, legal |
+| Public Pages          | 29      | Marketing, auth, blog, careers, callbacks, SSO, legal, system |
 | Developer Portal      | 14      | Docs (10), apps (3), apps/new (1)              |
 | Dashboard             | 3       | Main, new, customize                           |
 | CRM Core: Leads       | 4       | List, new, detail, edit                        |
@@ -270,7 +271,7 @@ intelliflow.com
 | Profile               | 1       | User profile                                   |
 | Support Portal        | 1       | Support-agent ticket queue                     |
 | Support / Help Center | 1       | Self-service help center                       |
-| **Total**             | **124** |                                                |
+| **Total**             | **125** |                                                |
 
 ---
 
@@ -302,7 +303,7 @@ only** — no authenticated routes.
 | `/blog/ai-lead-scoring-best-practices` | 0.6      | monthly          |
 | `/blog/governance-ready-automation`    | 0.6      | monthly          |
 
-**Excluded:** All 78 authenticated routes, auth flow pages, dynamic
+**Excluded:** All 78 authenticated routes, `/404`, auth flow pages, dynamic
 `[id]`/`[token]` routes, API routes, redirect-only paths.
 
 ### `apps/web/src/app/robots.ts`
@@ -533,6 +534,7 @@ apps/web/src/app/
 │   │   └── [id]/page.tsx         # /press/[id]
 │   ├── security/page.tsx         # /security
 │   ├── status/page.tsx           # /status
+│   ├── 404/page.tsx              # /404
 │   ├── privacy/page.tsx          # /privacy
 │   ├── blog/
 │   │   ├── page.tsx              # /blog

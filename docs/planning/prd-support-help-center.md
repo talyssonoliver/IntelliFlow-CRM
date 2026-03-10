@@ -254,7 +254,8 @@ section **So that** I can respond to and manage individual tickets in context.
 | Milestone            | Date       | Owner       | Status      |
 | -------------------- | ---------- | ----------- | ----------- |
 | PRD Draft            | 2026-02-28 | Support Eng | Complete    |
-| Spec Session         | 2026-02-28 | Support Eng | In Progress |
+| Spec Session         | 2026-02-28 | Support Eng | Complete    |
+| IFC-298 DB Models    | 2026-03-10 | Support Eng | Complete    |
 | Implementation Start | TBD        | Support Eng | Pending     |
 | Feature Complete     | TBD        | Support Eng | Pending     |
 

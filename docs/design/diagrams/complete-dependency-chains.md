@@ -1331,6 +1331,7 @@ Dependency Chain:
 
 Dependency Chain:
   IFC-182 (ActivityFeedConstants) ✅ ──► IFC-193 (ActivityTypeRegistry) ✅ ──► audit-event-handler ⬜ / ActivityFeedService ⬜
+  IFC-069 (Unified Activity Feed Service) ✅ ──► IFC-202 (Activity Feed Stats Endpoint - getStats aggregation) ✅
 ```
 
 ---
@@ -2004,11 +2005,15 @@ Legal Case Workflows: IFC-136 ✅ ──► IFC-147 ✅ ──► IFC-141 ⬜ �
 ```
 IFC-198 (Billing Domain Core) ──┐
                                 ├──→ PG-025 (Billing Portal) ──→ PG-027 (Invoices) ──→ PG-028 (Invoice Detail)
-                                │                            └──→ PG-030 (Subscriptions) ✅
+                                │                            ├──→ PG-030 (Subscriptions) ✅
+                                │                            └──→ PG-172 (Billing Ghost Pages) ✅
                                 │
                                 └──→ PG-026 (Checkout) ✅
 ```
 
+- **PG-172**: Billing Ghost Pages — Usage, Plans, Upgrade, Cancel, Settings.
+  5 new billing sub-pages with shared utilities (billing-shared.tsx).
+- Dependencies: PG-025 (Billing Portal), PG-030 (Subscriptions)
 - **PG-030**: Subscription management page with plan comparison,
   cancel/reactivation, proration estimates, reason selector
 - Dependencies: PG-025 (tRPC billing router), IFC-198 (Billing domain aggregate)
@@ -2086,7 +2091,9 @@ PG-039 (Dev Apps) ✅ ──► PG-040 (New Dev App) ✅
 
 ```
 PG-043 (Help Center Index) ✅ ──► PG-044 (Help Search) ✅
-                             └──► PG-045 (Article Detail) ✅
+                             └──► PG-045 (Article Detail) ✅ ──► IFC-298 (DB Models) ✅ ──► IFC-299 (CRUD Router)
+                                                                                      ├──► IFC-300 (Seed Script)
+                                                                                      └──► IFC-303 (Feedback Mutation)
 ```
 
 ---

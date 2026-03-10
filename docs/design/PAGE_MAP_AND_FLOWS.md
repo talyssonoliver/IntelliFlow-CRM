@@ -35,10 +35,10 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 | Category        | Count |
 | --------------- | ----- |
-| Total Pages     | 130   |
-| Public Pages    | 28    |
+| Total Pages     | 137   |
+| Public Pages    | 29    |
 | Developer Pages | 14    |
-| Protected Pages | 78    |
+| Protected Pages | 89    |
 | API Routes      | 19    |
 | Layouts         | 36    |
 
@@ -50,7 +50,7 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 ## Page Map by Category
 
-### 1. Public Pages (28 — No Authentication Required)
+### 1. Public Pages (29 — No Authentication Required)
 
 Located in `(public)` route group. Accessible without login.
 
@@ -78,6 +78,7 @@ Located in `(public)` route group. Accessible without login.
 | `/press`                   | Press                   | Press releases                                                                                                                                       |
 | `/press/[id]`              | Press Release Detail    | Individual press release with full body, quotes, boilerplate                                                                                         |
 | `/status`                  | Status                  | System status page                                                                                                                                   |
+| `/404`                     | 404 Not Found           | Direct system-page route for missing URLs; excluded from sitemap indexing                                                                            |
 | `/privacy`                 | Privacy Policy          | Public privacy policy and data handling commitments                                                                                                  |
 | `/blog`                    | Blog                    | Blog listing                                                                                                                                         |
 | `/blog/[slug]`             | Blog Post               | Individual blog article                                                                                                                              |
@@ -115,13 +116,14 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ---
 
-### 3. Dashboard (3 pages)
+### 3. Dashboard (4 pages)
 
 | Route                  | Page                | Description                             |
 | ---------------------- | ------------------- | --------------------------------------- |
 | `/dashboard`           | Dashboard           | Main dashboard with widgets and metrics |
 | `/dashboard/new`       | New Dashboard       | Create custom dashboard                 |
 | `/dashboard/customize` | Customize Dashboard | Edit dashboard layout and widgets       |
+| `/activity`            | Activity Log        | Unified activity feed with filtering    |
 
 ---
 
@@ -162,7 +164,7 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ---
 
-### 7. CRM Core — Deals (4 pages)
+### 7. CRM Core — Deals (5 pages)
 
 | Route                  | Page              | Description                 |
 | ---------------------- | ----------------- | --------------------------- |
@@ -170,6 +172,7 @@ developer sidebar. These pages are accessible through the Settings sidebar
 | `/deals/[id]`          | Deal Detail       | Deal overview with stages   |
 | `/deals/[id]/forecast` | Deal Forecast     | AI-powered deal probability |
 | `/deals/forecast`      | Forecast Overview | Sales forecasting dashboard |
+| `/deals/all/forecast`  | Legacy Forecast   | Redirects legacy forecast route to `/deals/forecast` |
 
 ---
 
@@ -232,7 +235,7 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ---
 
-### 14. AI & Agent Actions (15 pages)
+### 14. AI & Agent Actions (17 pages)
 
 | Route                             | Page               | Task            |
 | --------------------------------- | ------------------ | --------------- |
@@ -245,12 +248,15 @@ developer sidebar. These pages are accessible through the Settings sidebar
 | `/agent-approvals/drift`          | Drift Detection    | PG-146          |
 | `/agent-approvals/experiments`    | Experiments        | PG-149          |
 | `/agent-approvals/history`        | Review History     | PG-150          |
+| `/agent-approvals/insights`      | AI Insights Hub    | PG-160          |
+| `/insights`                       | AI Insights        | PG-160          |
 | `/agent-approvals/latency`        | Latency Monitor    | PG-153          |
 | `/agent-approvals/lead-scoring`   | Lead Scoring       | PG-148          |
 | `/agent-approvals/logs`           | Agent Logs         | PG-152          |
+| `/agent-approvals/logs/[id]`      | Agent Log Detail   | PG-152          |
 | `/agent-approvals/preview`        | Preview Mode       | —               |
 | `/agent-approvals/sentiment`      | Sentiment Analysis | PG-142          |
-| `/insights`                       | AI Insights        | PG-160          |
+| `/agent-approvals/tools`          | Agent Tools        | IFC-191         |
 
 **Sidebar groupings** (from `agent-approvals.ts`):
 
@@ -305,7 +311,7 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ---
 
-### 19. Billing (7 pages)
+### 19. Billing (13 pages)
 
 | Route                      | Page             | Description                      |
 | -------------------------- | ---------------- | -------------------------------- |
@@ -316,6 +322,12 @@ developer sidebar. These pages are accessible through the Settings sidebar
 | `/billing/invoices`        | Invoices         | Invoice history                  |
 | `/billing/invoices/[id]`   | Invoice Detail   | Individual invoice view          |
 | `/billing/receipts`        | Receipts         | Payment receipts                 |
+| `/billing/usage`           | Usage            | Usage metrics with progress bars |
+| `/billing/plans`           | Compare Plans    | Side-by-side plan comparison     |
+| `/billing/upgrade`         | Change Plan      | Proration preview and plan change|
+| `/billing/cancel`          | Cancel           | Multi-step cancellation flow     |
+| `/billing/settings`        | Billing Settings | Manage billing information       |
+| `/upgrade`                 | Plan Upgrade     | Upgrade flow for module-gated features |
 
 ---
 

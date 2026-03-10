@@ -2,7 +2,7 @@
 
 **Version:** 1.0 **Date:** 2026-02-09 **Owners:** Platform Lead, FinOps Lead
 **Related Tasks:** PG-025, PG-026, PG-027, PG-028, PG-029, PG-030, PG-031,
-IFC-198, IFC-099 **Decision Records:** ADR-029-billing-architecture.md
+PG-172, IFC-198, IFC-099 **Decision Records:** ADR-029-billing-architecture.md
 **Implements:** FLOW-048
 
 ## Summary
