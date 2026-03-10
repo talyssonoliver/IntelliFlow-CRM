@@ -177,7 +177,7 @@ export default function GanttChart({
   const findTaskIndexForDate = useCallback(
     (targetDate: Readonly<Date>): number => {
       // First, find tasks that are currently in progress (start <= today <= finish)
-      const activeIndex = sortedTasks.indexOf((task) => {
+      const activeIndex = sortedTasks.findIndex((task) => {
         const taskStart = new Date(task.earlyStart);
         const taskFinish = new Date(task.earlyFinish);
         return taskStart <= targetDate && targetDate <= taskFinish;
@@ -185,7 +185,7 @@ export default function GanttChart({
       if (activeIndex >= 0) return activeIndex;
 
       // If no active task, find the first task starting after today
-      const upcomingIndex = sortedTasks.indexOf((task) => {
+      const upcomingIndex = sortedTasks.findIndex((task) => {
         const taskStart = new Date(task.earlyStart);
         return taskStart > targetDate;
       });

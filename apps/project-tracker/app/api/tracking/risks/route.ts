@@ -82,7 +82,7 @@ async function parseRiskRegister(): Promise<{ risks: Risk[]; lastUpdated: string
       if (!firstValue.startsWith('RISK-')) continue;
 
       const getValue = (key: string): string => {
-        const idx = headers.indexOf((h) => h.includes(key));
+        const idx = headers.findIndex((h) => h.includes(key));
         return idx >= 0 ? values[idx] || '' : '';
       };
 
@@ -270,7 +270,7 @@ async function handleEditRisk(body: any): Promise<NextResponse> {
 
   const { riskId, updates } = parseResult.data;
   const { risks } = await parseRiskRegister();
-  const riskIndex = risks.indexOf((r) => r.id === riskId);
+  const riskIndex = risks.findIndex((r) => r.id === riskId);
   if (riskIndex === -1) {
     return NextResponse.json({ status: 'error', message: `Risk ${riskId} not found` }, { status: 404 });
   }

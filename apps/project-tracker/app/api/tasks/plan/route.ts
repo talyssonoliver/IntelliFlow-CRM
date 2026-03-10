@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     });
 
     const tasks = data as TaskRecord[];
-    const taskIndex = tasks.indexOf((t) => t['Task ID'] === taskId);
+    const taskIndex = tasks.findIndex((t) => t['Task ID'] === taskId);
 
     if (taskIndex === -1) {
       return NextResponse.json({ error: `Task ${taskId} not found` }, { status: 404 });
@@ -166,7 +166,7 @@ function addPlanToArtifacts(current: string, taskId: string, sprintNumber: numbe
   }
 
   // Find SPEC position and insert PLAN after it
-  const specIndex = parts.indexOf((p) => p.startsWith('SPEC:'));
+  const specIndex = parts.findIndex((p) => p.startsWith('SPEC:'));
   if (specIndex === -1) {
     // No SPEC found, add PLAN at the beginning
     parts.unshift(planPath);

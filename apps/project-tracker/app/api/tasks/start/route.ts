@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     const tasks = data as Record<string, string>[];
 
     // Find the task
-    const taskIndex = tasks.indexOf((t) => t['Task ID'] === taskId);
+    const taskIndex = tasks.findIndex((t) => t['Task ID'] === taskId);
 
     if (taskIndex === -1) {
       return NextResponse.json({ error: `Task ${taskId} not found` }, { status: 404 });
