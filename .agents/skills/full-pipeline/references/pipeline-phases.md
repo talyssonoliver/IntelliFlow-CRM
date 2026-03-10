@@ -1,6 +1,8 @@
 # Pipeline Phases — Detailed Instructions
 
-## Phase Detection Algorithm (Full)
+## Pipeline Flow (Full)
+
+**CRITICAL**: Each invocation runs the FULL pipeline — all remaining phases in sequence. Do NOT stop after one phase. Only stop if a phase FAILS.
 
 ```
 TASK_ID = $ARGUMENTS (first word only)
@@ -19,20 +21,25 @@ IF status is "Completed" or "DONE":
    → If verification PASSES → Output: <promise>PIPELINE COMPLETE</promise> → STOP
    → If verification FAILS → Set status back to "In Progress", fall through to Phase 3
 
+THEN run ALL remaining phases sequentially (do NOT stop between phases):
+
 IF SPEC_PATH does NOT exist:
    → PHASE 1: Run /spec-session
-   → After completion, STOP (let Ralph re-invoke for next phase)
+   → On SUCCESS: continue immediately to Phase 2
+   → On FAILURE: STOP (let Ralph retry the full pipeline)
 
-IF SPEC_PATH exists AND PLAN_PATH does NOT exist:
+IF PLAN_PATH does NOT exist:
    → PHASE 2: Run /plan-session
-   → After completion, STOP (let Ralph re-invoke for next phase)
+   → On SUCCESS: continue immediately to Phase 3
+   → On FAILURE: STOP (let Ralph retry the full pipeline)
 
-IF SPEC_PATH exists AND PLAN_PATH exists AND status is NOT "Completed":
+IF status is NOT "Completed":
    → PHASE 3: Run /exec
-   → After completion, STOP (let Ralph re-invoke for next phase)
+   → On SUCCESS: continue immediately to Deliverable Verification
+   → On FAILURE: STOP (let Ralph retry the full pipeline)
 
-IF status is "Completed":
-   → Run DELIVERABLE VERIFICATION again
+After all phases succeed:
+   → Run DELIVERABLE VERIFICATION
    → If PASSES → Output: <promise>PIPELINE COMPLETE</promise> → STOP
    → If FAILS → Set status back to "In Progress", re-run /exec
 ```
@@ -84,8 +91,8 @@ exits prematurely with a false completion promise.
 
 1. Invoke the `/spec-session` skill with TASK_ID: use the Skill tool with `skill: "spec-session", args: "{TASK_ID}"`
 2. Follow ALL spec-session instructions (context hydration, agent selection, STOA consensus)
-3. When spec-session completes successfully, STOP this invocation
-4. If spec-session fails (STOA rejection, missing deps), fix the issue and STOP — Ralph will retry
+3. On SUCCESS: **continue immediately to Phase 2** — do NOT stop
+4. On FAILURE (STOA rejection, missing deps): fix the issue and STOP — Ralph will retry the full pipeline
 
 **Success indicator**: `{TASK_ID}-spec.md` exists and CSV status is "Spec Complete"
 
@@ -95,8 +102,8 @@ exits prematurely with a false completion promise.
 
 1. Invoke the `/plan-session` skill with TASK_ID: use the Skill tool with `skill: "plan-session", args: "{TASK_ID}"`
 2. Follow ALL plan-session instructions (TDD decomposition, plan review, hexagonal layer order)
-3. When plan-session completes successfully, STOP this invocation
-4. If plan reviewer rejects, revise the plan and STOP — Ralph will retry
+3. On SUCCESS: **continue immediately to Phase 3** — do NOT stop
+4. On FAILURE (plan reviewer rejects): revise the plan and STOP — Ralph will retry the full pipeline
 
 **Success indicator**: `{TASK_ID}-plan.md` exists and CSV status is "Plan Complete"
 
@@ -106,11 +113,11 @@ exits prematurely with a false completion promise.
 
 1. Invoke the `/exec` skill with TASK_ID: use the Skill tool with `skill: "exec", args: "{TASK_ID}"`
 2. Follow ALL exec instructions (TDD implementation, MATOP validation, compliance check)
-3. When exec completes successfully with PASS verdict, STOP this invocation
-4. If MATOP fails or compliance check fails:
+3. On SUCCESS (PASS verdict): **continue immediately to Deliverable Verification** — do NOT stop
+4. On FAILURE (MATOP fails or compliance check fails):
    - Read failure details from STOA verdicts
    - Fix the issues identified
-   - STOP — Ralph will retry (re-runs /exec which re-validates)
+   - STOP — Ralph will retry the full pipeline (re-runs /exec which re-validates)
 
 **Success indicator**: CSV status is "Completed" and delivery report exists
 
@@ -129,15 +136,15 @@ When all three phases are complete:
 
 ## Error Recovery Table
 
-Ralph's retry mechanism handles failures naturally:
+Each invocation runs the full pipeline. Ralph retries the entire pipeline on failure:
 
 | Failure | What Happens | Recovery |
 |---------|--------------|----------|
-| Spec STOA rejection | Spec file not created or marked invalid | Next iteration retries /spec-session |
-| Plan review rejection | Plan file not created | Next iteration retries /plan-session |
-| Exec test failures | Status stays "In Progress" | Next iteration re-enters /exec, fixes code |
-| Exec MATOP FAIL | Status set to "Failed" | Next iteration re-enters /exec, addresses STOA findings |
-| Compliance check FAIL | Status stays "In Progress" | Next iteration re-enters /exec, fixes compliance issues |
+| Spec STOA rejection | Spec file not created or marked invalid | Pipeline stops. Next Ralph iteration retries from spec |
+| Plan review rejection | Plan file not created | Pipeline stops. Next iteration resumes from plan (spec already exists) |
+| Exec test failures | Status stays "In Progress" | Pipeline stops. Next iteration resumes from exec (spec+plan exist) |
+| Exec MATOP FAIL | Status set to "Failed" | Pipeline stops. Next iteration resumes from exec |
+| Compliance check FAIL | Status stays "In Progress" | Pipeline stops. Next iteration resumes from exec |
 | Blocking follow-up open | Cannot complete | Fix blocking task first, then re-run pipeline |
 | Out-of-scope bug found | Follow-up created | Non-blocking: pipeline continues. Blocking: pipeline pauses |
 | Max iterations hit | Ralph stops | Human reviews partial progress, runs manually |
@@ -155,22 +162,24 @@ If Ralph is cancelled mid-pipeline or hits max-iterations:
 
 ## Iteration Budget Details
 
-| Task Type | Spec Iterations | Plan Iterations | Exec Iterations | Total | Recommended --max-iterations |
-|-----------|----------------|----------------|-----------------|-------|------------------------------|
-| Simple page (404, legal) | 1-2 | 1-2 | 3-8 | 5-12 | 15 |
-| Settings page (CRUD form) | 2-3 | 1-2 | 5-12 | 8-17 | 20 |
-| CRM page (list+detail) | 2-3 | 2-3 | 8-20 | 12-26 | 30 |
-| Complex feature (AI, workflow) | 3-4 | 2-3 | 10-25 | 15-32 | 40 |
+Since each iteration now runs the full pipeline (not just one phase), fewer iterations are needed. Each Ralph iteration = one full spec→plan→exec attempt:
+
+| Task Type | Expected full-pipeline runs | Recommended --max-iterations |
+|-----------|----------------------------|------------------------------|
+| Simple page (404, legal) | 1-2 | 3 |
+| Settings page (CRUD form) | 1-3 | 5 |
+| CRM page (list+detail) | 2-5 | 7 |
+| Complex feature (AI, workflow) | 3-7 | 10 |
 
 ---
 
 ## Important Notes
 
-1. **One phase per iteration** — Do NOT try to run multiple phases in one invocation
-2. **Trust the state machine** — Always detect phase from artifacts, never assume
-3. **STOP after each phase** — Let Ralph handle the loop, don't loop internally
+1. **Full pipeline per invocation** — Run ALL remaining phases (spec → plan → exec) in one invocation. Only stop on phase failure.
+2. **Trust the state machine** — Always detect phase from artifacts, never assume. Resume from the first missing artifact.
+3. **Stop on failure only** — If a phase fails, STOP the pipeline. Ralph will retry from the failed phase (earlier phases' artifacts are preserved).
 4. **Skill invocation** — Use the Skill tool to invoke /spec-session, /plan-session, /exec
-5. **No shortcuts** — Each phase must fully complete before advancing
+5. **No shortcuts** — Each phase must fully complete before advancing to the next
 6. **Failed status** — If CSV shows "Failed", exec will attempt remediation
 7. **NEVER output promise without verification** — Even if CSV says "Completed" and delivery exists, ALWAYS run Deliverable Verification first. A previous session may have left incomplete artifacts (missing evidence files, files at wrong paths, attestation hash omissions). False promises break the loop prematurely.
 8. **Do NOT manually set CSV to "Completed"** — Only /exec Phase 5 should set this status after all gates pass. If you find a "Backlog" task with existing delivery artifacts, re-run /exec to properly validate.

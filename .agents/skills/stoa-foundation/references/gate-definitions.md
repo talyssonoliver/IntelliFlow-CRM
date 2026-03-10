@@ -1,46 +1,39 @@
 # Foundation STOA: Gate Definitions
 
-## Tier 1 Baseline Gates (MANDATORY — NEVER WAIVE)
+## Baseline Gates — NOT Part of This STOA
 
-All Tier 1 gates are NON-WAIVABLE. "Frontend-only", "simple task", or "typecheck sufficient" are NOT valid reasons to skip.
+The following gates run in MATOP Phase 2.5 (mandatory baseline) BEFORE any STOA agent spawns. They are NOT part of the Foundation STOA and should NOT be re-run here:
 
-```bash
-# 1. TypeScript compilation
-pnpm run typecheck 2>&1 | tee "artifacts/reports/system-audit/$RUN_ID/gates/turbo-typecheck.log"
-
-# 2. Build validation — NEVER waive or skip
-# Typecheck is NOT a substitute. Build validates SSR/CSR boundaries,
-# dynamic imports, and bundle resolution that typecheck cannot catch.
-pnpm run build 2>&1 | tee "artifacts/reports/system-audit/$RUN_ID/gates/turbo-build.log"
-# Or package-scoped if root build unavailable:
-pnpm --filter <affected-package> build
-
-# 3. Linting
-pnpm exec eslint --max-warnings=0 . 2>&1 | tee "artifacts/reports/system-audit/$RUN_ID/gates/eslint.log"
-
-# 4. Formatting
-pnpm run format:check 2>&1 | tee "artifacts/reports/system-audit/$RUN_ID/gates/prettier-check.log"
+```
+pnpm run typecheck       # Already run in baseline
+pnpm run build           # Already run in baseline
+pnpm run lint            # Already run in baseline (eslint --max-warnings=0)
+pnpm run format:check    # Already run in baseline
 ```
 
-Optional Tier 1 (run when available):
-```bash
-# 5. Commit linting
-python tools/audit/commit_msg_lint.py --count 20 2>&1 | tee "artifacts/reports/system-audit/$RUN_ID/gates/commitlint.log"
-```
+**If baseline fails, MATOP stops immediately. This STOA is never spawned.**
 
 ## Foundation-Specific Gates
 
+These are the only gates this STOA runs:
+
 ```bash
-# 6. Artifact path validation
+# 1. Artifact path validation
 tsx tools/lint/artifact-paths.ts 2>&1 | tee "artifacts/reports/system-audit/$RUN_ID/gates/artifact-paths-lint.log"
 
-# 7. Docker configuration validation (if docker-compose.yml exists)
+# 2. Dependency architecture validation (broad scope: all packages + apps)
+pnpm exec depcruise --config .dependency-cruiser.cjs packages apps --output-type err 2>&1 | tee "artifacts/reports/system-audit/$RUN_ID/gates/dependency-cruiser.log"
+
+# 3. Docker configuration validation (if docker-compose.yml exists)
 if [ -f "docker-compose.yml" ]; then
   docker compose config -q 2>&1 | tee "artifacts/reports/system-audit/$RUN_ID/gates/docker-config.log"
 fi
+```
 
-# 8. Dependency architecture validation
-pnpm exec depcruise --config .dependency-cruiser.cjs packages apps --output-type err 2>&1 | tee "artifacts/reports/system-audit/$RUN_ID/gates/dependency-cruiser.log"
+Optional (run when available):
+```bash
+# 4. Commit linting
+python tools/audit/commit_msg_lint.py --count 20 2>&1 | tee "artifacts/reports/system-audit/$RUN_ID/gates/commitlint.log"
 ```
 
 ## Plan Deliverable Verification Gate (BLOCKING)
@@ -60,19 +53,17 @@ This gate cannot be waived. Path deviations must be corrected before PASS.
 | Condition | Verdict |
 |---|---|
 | All gates exit 0 | PASS |
-| ANY gate exits non-zero (including formatting) | FAIL |
-| Build fails OR typecheck fails | FAIL |
+| ANY gate exits non-zero | FAIL |
 | Docker config invalid (for infra tasks) | FAIL |
 | Plan deliverable missing or at wrong path | FAIL |
 
-**CRITICAL**: There is NO WARN verdict. Gates either pass (exit 0) or fail. WARN was removed because it silently allowed incomplete work to pass through.
+**CRITICAL**: There is NO WARN verdict. Gates either pass (exit 0) or fail.
 
 ## Execution Code (TypeScript)
 
 ```typescript
 import {
   loadAuditMatrix,
-  selectGates,
   runGates,
   generateStoaVerdict,
   writeStoaVerdict,
@@ -82,13 +73,12 @@ import {
 const matrix = loadAuditMatrix(repoRoot);
 const evidenceDir = getEvidenceDir(repoRoot, runId);
 
+// Foundation-specific gates only (baseline already ran typecheck/build/lint)
 const foundationGates = [
-  'turbo-typecheck',
-  'turbo-build',
-  'eslint-max-warnings-0',
-  'prettier-check',
-  'commitlint',
+  'artifact-paths-lint',
   'dependency-cruiser-validate',
+  'docker-config',
+  'commitlint',
 ];
 
 const results = await runGates(foundationGates, {
@@ -118,8 +108,8 @@ console.log(`Foundation STOA: ${verdict.verdict}`);
   "stoa": "Foundation",
   "taskId": "<TASK_ID>",
   "verdict": "PASS|FAIL|NEEDS_HUMAN",
-  "rationale": "All infrastructure gates passed",
-  "toolIdsExecuted": ["turbo-typecheck", "turbo-build", "eslint-max-warnings-0", "prettier-check", "commitlint", "dependency-cruiser-validate"],
+  "rationale": "All Foundation-specific gates passed",
+  "toolIdsExecuted": ["artifact-paths-lint", "dependency-cruiser-validate", "docker-config", "commitlint"],
   "findings": [],
   "timestamp": "2025-12-20T14:30:00.000Z"
 }
@@ -127,8 +117,8 @@ console.log(`Foundation STOA: ${verdict.verdict}`);
 
 ## Waiver Handling
 
-- Tier 1 gates (typecheck, build, lint, formatting) can NEVER be waived
-- Non-Tier-1 gates: if command not available, create waiver record with reason
+- Baseline gates (typecheck, build, lint, format) are handled by MATOP Phase 2.5 — NEVER waivable
+- Foundation-specific gates: if command not available, create waiver record with reason
 - Waivers stored in `waivers.json` in evidence dir
 - Human must approve waivers before task can complete
 
@@ -136,23 +126,21 @@ console.log(`Foundation STOA: ${verdict.verdict}`);
 
 ```
 [Foundation STOA] Task: ENV-008-AI
-[Foundation STOA] Running 6 gates...
+[Foundation STOA] Note: Baseline (typecheck, build, lint, format) already passed in Phase 2.5
+[Foundation STOA] Running 3 Foundation-specific gates...
 
-  [1/6] turbo-typecheck... PASS (2.3s)
-  [2/6] turbo-build... PASS (45.2s)
-  [3/6] eslint-max-warnings-0... PASS (12.1s)
-  [4/6] prettier-check... PASS (3.4s)
-  [5/6] commitlint... PASS (1.2s)
-  [6/6] dependency-cruiser-validate... PASS (4.5s)
+  [1/3] artifact-paths-lint... PASS (1.2s)
+  [2/3] dependency-cruiser-validate... PASS (4.5s)
+  [3/3] docker-config... PASS (0.8s)
 
 [Foundation STOA] Verdict: PASS
-[Foundation STOA] Rationale: All 6 gates passed
+[Foundation STOA] Rationale: All Foundation-specific gates passed
 [Foundation STOA] Output: artifacts/reports/system-audit/<RUN_ID>/stoa-verdicts/Foundation.json
 ```
 
 ## Rules
 
-- Run ALL Tier 1 gates regardless of individual results (collect all failures)
+- Do NOT re-run baseline gates (typecheck, build, lint, format) — they already ran
 - Log each gate's stdout/stderr to evidence files
 - Report exact exit codes and durations for each gate
 - FAIL verdict blocks task completion — issues must be fixed before re-run

@@ -42,13 +42,22 @@ CRITICAL: `vitest.config.ts` MUST have `thresholdAutoUpdate: false`. If `true`, 
 
 ## Verdict Logic
 
+There is **NO WARN verdict**. All verdicts are binary: PASS, FAIL, or NEEDS_HUMAN.
+
 | Condition | Verdict |
 |---|---|
 | Coverage >= 90%, all tests pass | PASS |
-| Coverage between 85-90% | WARN |
+| Coverage below 90% | FAIL |
 | Tests fail | FAIL |
-| Coverage below 85% | FAIL |
 | Coverage enforcement not configured | NEEDS_HUMAN |
+
+## Trigger Conditions
+
+**Primary STOA**: `PG-*` task prefix (page implementations need test coverage, E2E, Lighthouse)
+
+**Supporting STOA** by keywords: `coverage`, `e2e`, `test`, `vitest`, `playwright`, `mutation`, `quality gate`, `sonarqube`, `lighthouse`
+
+**Supporting STOA** by path: `tests/`, `*.test.*`, `*.spec.*`, `*coverage*`, `*vitest*`, `*playwright*`
 
 ## Output
 

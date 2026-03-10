@@ -16,8 +16,7 @@ Before returning a PASS verdict, verify all plan checkboxes are complete.
 | Completion % | Verdict Impact |
 |---|---|
 | 100% | No impact — can proceed to PASS |
-| 80-99% | Force verdict to WARN minimum |
-| <80% | Force verdict to FAIL |
+| <100% | Force verdict to FAIL |
 
 **Required Output:**
 ```
@@ -27,7 +26,7 @@ Checked: 10/12 (83.3%)
 Unchecked Items:
   - [ ] Document API schema
   - [ ] Run integration tests
-Impact: Verdict downgraded to WARN (missing checkboxes)
+Impact: Verdict set to FAIL (incomplete plan checkboxes — 100% required)
 ```
 
 ---
@@ -63,15 +62,16 @@ Impact: Verdict set to FAIL (missing artifact)
 
 ---
 
-## Gate 3: Build Validation Must Be Real (BLOCKING)
+## Gate 3: Mandatory Baseline Validation (BLOCKING)
 
-All baseline gates MUST be actually executed with real exit codes.
+Verifies that MATOP Phase 2.5 mandatory baseline actually executed with real exit codes. These run ONCE before any STOA agent spawns.
 
 **Required Commands (MUST run, not simulate):**
 ```bash
-pnpm run typecheck  # Capture real exit code
-pnpm run build      # Capture real exit code
-pnpm run lint       # Capture real exit code
+pnpm run typecheck    # Capture real exit code
+pnpm run build        # Capture real exit code
+pnpm run lint         # Capture real exit code
+pnpm run format:check # Capture real exit code
 ```
 
 | Command Result | Verdict Impact |
@@ -98,12 +98,12 @@ Impact: Verdict set to FAIL (lint failed)
 
 Final consensus MUST accurately reflect individual STOA results.
 
-**Aggregation Rules:**
+**Aggregation Rules (NO WARN — binary only):**
 ```
 IF any STOA verdict == FAIL:
   consensus = FAIL
-ELSE IF any STOA verdict == WARN:
-  consensus = WARN
+ELSE IF any STOA verdict == NEEDS_HUMAN:
+  consensus = NEEDS_HUMAN
 ELSE:
   consensus = PASS
 ```
@@ -131,7 +131,7 @@ Consensus: FAIL (Security STOA failed)
 ║  MATOP VALIDATION ENFORCEMENT SUMMARY                                      ║
 ╠═══════════════════════════════════════════════════════════════════════════╣
 ║                                                                            ║
-║  Gate 1: Plan Checkboxes     [10/12 - 83%]              [⚠️ WARN]          ║
+║  Gate 1: Plan Checkboxes     [10/12 - 83%]              [❌ FAIL]          ║
 ║  Gate 2: Artifact Hashes     [5/5 verified]             [✅ PASS]          ║
 ║  Gate 3: Build Validation    [2/3 passed - lint fail]   [❌ FAIL]          ║
 ║  Gate 4: STOA Aggregation    [Security FAIL]            [❌ FAIL]          ║
@@ -179,9 +179,7 @@ Every MATOP summary MUST include:
 | Completion % | Verdict Impact |
 |---|---|
 | 100% | No impact |
-| 80-99% | WARN added |
-| 50-79% | May contribute to FAIL |
-| <50% | Contributes to FAIL |
+| <100% | FAIL — 100% required |
 
 ## Package Mapping for Coverage
 

@@ -71,12 +71,13 @@ If `thresholdAutoUpdate: true`, the gate is ineffective — report as NEEDS_HUMA
 
 ## Verdict Logic
 
+There is **NO WARN verdict**. All verdicts are binary: PASS, FAIL, or NEEDS_HUMAN.
+
 | Condition | Verdict |
 |---|---|
 | Coverage >= 90%, all tests pass, no lint errors | PASS |
-| Coverage between 85-90% | WARN |
+| Coverage below 90% | FAIL |
 | Tests fail | FAIL |
-| Coverage below 85% | FAIL |
 | Coverage enforcement not configured | NEEDS_HUMAN |
 
 ## Execution Code (TypeScript)
@@ -107,11 +108,11 @@ const coverageMatch = results[0].stdout?.match(/All files\s+\|\s+([\d.]+)/);
 const coverage = coverageMatch ? parseFloat(coverageMatch[1]) : 0;
 
 const findings = [];
-if (coverage < 90 && coverage >= 85) {
+if (coverage < 90) {
   findings.push({
-    severity: 'medium',
+    severity: 'high',
     source: 'turbo-test-coverage',
-    message: `Coverage at ${coverage}% (threshold: 90%)`,
+    message: `Coverage at ${coverage}% (threshold: 90%) — FAIL`,
     recommendation: 'Add tests to increase coverage above 90%',
   });
 }
@@ -134,7 +135,7 @@ writeStoaVerdict(evidenceDir, verdict);
 {
   "stoa": "Quality",
   "taskId": "<TASK_ID>",
-  "verdict": "PASS|WARN|FAIL|NEEDS_HUMAN",
+  "verdict": "PASS|FAIL|NEEDS_HUMAN",
   "rationale": "Coverage 92.3%, all 156 tests passed",
   "toolIdsSelected": ["turbo-test-coverage", "eslint-max-warnings-0"],
   "toolIdsExecuted": ["turbo-test-coverage", "eslint-max-warnings-0"],

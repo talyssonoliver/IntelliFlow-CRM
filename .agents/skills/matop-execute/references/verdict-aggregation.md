@@ -47,7 +47,7 @@ User: /matop-execute ENV-008-AI
 Claude Code (MATOP Lead):
 [MATOP] Task: ENV-008-AI - Supabase Local Development Environment
 [MATOP] Run ID: 20251220-143000-a1b2c3d4
-[MATOP] Lead STOA: Foundation
+[MATOP] Primary STOA: Foundation
 [MATOP] Supporting STOAs: Quality, Security
 
 [MATOP] Spawning Foundation STOA sub-agent...

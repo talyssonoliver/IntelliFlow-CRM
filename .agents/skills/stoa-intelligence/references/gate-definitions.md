@@ -63,14 +63,15 @@ fi
 
 ## Verdict Logic
 
+There is **NO WARN verdict**. All verdicts are binary: PASS, FAIL, or NEEDS_HUMAN.
+
 | Condition | Verdict |
 |---|---|
 | AI tests pass, prompts valid, models configured | PASS |
-| Minor prompt warnings, tests pass | WARN |
 | AI tests fail | FAIL |
 | Chain produces invalid output format | FAIL |
 | Safety guardrail missing for high-risk operation | FAIL |
-| Model not available (dev environment) | WARN with waiver |
+| Model not available (dev environment) | NEEDS_HUMAN |
 
 ## Verdict JSON Schema
 
@@ -78,7 +79,7 @@ fi
 {
   "stoa": "Intelligence",
   "taskId": "<TASK_ID>",
-  "verdict": "PASS|WARN|FAIL|NEEDS_HUMAN",
+  "verdict": "PASS|FAIL|NEEDS_HUMAN",
   "rationale": "AI worker tests passed, prompts validated",
   "toolIdsSelected": ["ai-worker-test"],
   "toolIdsExecuted": ["ai-worker-test"],
@@ -96,7 +97,7 @@ fi
 
 ## When to Trigger
 
-### By Task Prefix (Lead)
+### By Task Prefix (Primary)
 - `AI-*` tasks
 - `AI-SETUP-*` tasks
 

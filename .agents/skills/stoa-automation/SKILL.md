@@ -48,7 +48,7 @@ Runtime artifacts MUST NOT exist in:
 
 ## Trigger Conditions
 
-**Lead STOA**: `AUTOMATION-*` task prefix
+**Primary STOA**: `AUTOMATION-*` task prefix
 
 **Supporting STOA** by keywords: `orchestrator`, `swarm`, `tracker`, `validation`, `artifact`, `audit`, `sprint`, `metrics`, `registry`
 
@@ -56,14 +56,16 @@ Runtime artifacts MUST NOT exist in:
 
 ## Verdict Logic
 
+There is **NO WARN verdict**. All verdicts are binary: PASS, FAIL, or NEEDS_HUMAN.
+
 | Condition | Verdict |
 |---|---|
 | All validation scripts pass, artifacts in correct locations | PASS |
-| Minor sync warnings, validations pass | WARN |
 | Sprint validation fails | FAIL |
 | Artifact in forbidden location | FAIL |
 | Multiple Sprint_plan.csv copies | FAIL |
 | Registry inconsistent with CSV | FAIL |
+| Sync warnings present | FAIL |
 
 ## Evidence Bundle Requirements
 

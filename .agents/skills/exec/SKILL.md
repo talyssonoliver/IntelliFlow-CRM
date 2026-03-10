@@ -72,7 +72,7 @@ Based on MATOP + Compliance verdict, update Sprint_plan.csv status.
 1. **Prerequisite Missing** — Inform user, provide command to generate
 2. **Test Fails in RED** — Expected, proceed to GREEN
 3. **Test Fails in GREEN** — Fix code, don't skip to next step
-4. **MATOP Gate Fails** — Log details, set WARN/FAIL, generate remediation
+4. **MATOP Gate Fails** — Log details, set FAIL, generate remediation
 5. **Build/Typecheck Fails** — Fix before proceeding
 6. **Runtime Path Still Bypasses New Code** — Keep status "In Progress" until the production caller is actually rewired
 7. **Related Regression Suite Fails** — Do not narrow validation scope to hide the failure; fix it or report task incomplete

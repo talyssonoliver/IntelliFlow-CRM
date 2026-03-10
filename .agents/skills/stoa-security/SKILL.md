@@ -52,6 +52,14 @@ Validates security gates for tasks involving auth, secrets, dependencies, and OW
 | MEDIUM | FAIL, requires fix before completion |
 | LOW | FAIL, log finding and require fix |
 
+## Trigger Conditions
+
+**Primary STOA**: `EXC-SEC-*`, `SEC-*` task prefix
+
+**Supporting STOA** by keywords: `auth`, `jwt`, `token`, `session`, `rbac`, `permissions`, `secret`, `vault`, `rate-limit`, `csrf`, `xss`, `injection`
+
+**Supporting STOA** by path: `*auth*`, `*security*`, `.env*`, `*vault*`, `*secrets*`
+
 ## Output
 
 Write verdict JSON to:

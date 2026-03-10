@@ -1,25 +1,25 @@
 ---
 name: full-pipeline
-description: Autonomous state-machine that chains spec-session → plan-session → exec for a task. Designed to run inside a Ralph Wiggum loop for fully autonomous task execution. Runs ONE phase per invocation — Ralph handles iteration.
+description: Autonomous state-machine that chains spec-session → plan-session → exec for a task. Runs the FULL pipeline (spec → plan → exec) in a single invocation. With Ralph, each iteration is a complete pipeline attempt — Ralph handles retries on failure.
 ---
 
 # Full Pipeline Command (Ralph-Compatible)
 
-**CRITICAL**: This command runs ONE phase per invocation. Ralph handles iteration.
+**CRITICAL**: This command runs the FULL pipeline (all phases) in a single invocation. Do NOT stop after one phase — chain spec → plan → exec sequentially until the task is complete or a phase fails.
 
 ## Usage
 
 ```bash
-# Standalone (runs one phase per invocation)
+# Standalone (runs full pipeline: spec → plan → exec)
 /full-pipeline <TASK_ID>
 
-# With Ralph loop (chains all phases automatically)
-/ralph-wiggum:ralph-loop "/full-pipeline <TASK_ID>" --max-iterations 40 --completion-promise "PIPELINE COMPLETE"
+# With Ralph loop (retries on failure, verifies completion)
+/ralph-wiggum:ralph-loop "/full-pipeline <TASK_ID>" --max-iterations 10 --completion-promise "PIPELINE COMPLETE"
 ```
 
-## Phase Detection Algorithm
+## Pipeline Flow
 
-On each invocation, detect the current phase from artifact existence:
+On each invocation, detect the current state and run ALL remaining phases:
 
 ```
 SPEC_PATH = .specify/sprints/sprint-{N}/specifications/{TASK_ID}-spec.md
@@ -30,21 +30,31 @@ ATTESTATION_PATH = .specify/sprints/sprint-{N}/attestations/{TASK_ID}/attestatio
 1. Check CSV status for TASK_ID
 2. Check which artifacts exist
 
-IF status is "Completed" or "DONE"     → Run Deliverable Verification → if PASS output promise, if FAIL re-run exec
-IF SPEC_PATH does NOT exist            → PHASE 1: Run /spec-session → STOP
-IF SPEC_PATH exists AND PLAN_PATH missing → PHASE 2: Run /plan-session → STOP
-IF both exist AND status not "Completed" → PHASE 3: Run /exec → STOP
-IF status is "Completed"               → Run Deliverable Verification → if PASS output promise
+IF status is "Completed" or "DONE":
+   → Run Deliverable Verification → if PASS output promise, if FAIL re-run exec
+
+THEN run all remaining phases in sequence:
+
+IF SPEC_PATH does NOT exist            → PHASE 1: Run /spec-session
+                                         (continue to Phase 2 on success, STOP on failure)
+IF PLAN_PATH does NOT exist            → PHASE 2: Run /plan-session
+                                         (continue to Phase 3 on success, STOP on failure)
+IF status is NOT "Completed"           → PHASE 3: Run /exec
+                                         (continue to verification on success, STOP on failure)
+
+After all phases succeed → Run Deliverable Verification → if PASS output promise
 ```
 
-## Iteration Budget Guide
+## Iteration Budget Guide (with Ralph)
+
+Since each iteration now runs the full pipeline, fewer iterations are needed:
 
 | Task Type | Recommended --max-iterations |
 |-----------|------------------------------|
-| Simple page (404, legal) | 15 |
-| Settings page (CRUD form) | 20 |
-| CRM page (list+detail) | 30 |
-| Complex feature (AI, workflow) | 40 |
+| Simple page (404, legal) | 3 |
+| Settings page (CRUD form) | 5 |
+| CRM page (list+detail) | 7 |
+| Complex feature (AI, workflow) | 10 |
 
 **See references/pipeline-phases.md** for: full phase instructions, deliverable verification algorithm, error recovery table, resumability details, and important notes.
 
@@ -68,15 +78,16 @@ When spec, plan, or exec discovers issues outside the current task's scope:
 
 ## Non-Negotiable Rules
 
-1. One phase per iteration — do NOT run multiple phases in one invocation
-2. Trust the state machine — always detect phase from artifacts, never assume
-3. STOP after each phase — let Ralph handle the loop, don't loop internally
-4. Use the Skill tool to invoke /spec-session, /plan-session, /exec
-5. NEVER manually set CSV to "Completed" — only /exec Phase 5 should do this
+1. Full pipeline per invocation — run ALL remaining phases (spec → plan → exec) sequentially in one invocation
+2. Stop on failure only — if a phase fails, STOP and let Ralph retry the full pipeline
+3. Trust the state machine — always detect phase from artifacts, never assume
+4. Resume from where you left off — if spec already exists, skip to plan; if plan exists, skip to exec
+5. Use the Skill tool to invoke /spec-session, /plan-session, /exec
+6. NEVER manually set CSV to "Completed" — only /exec Phase 5 should do this
 
 ## Related Skills
 
 - `/spec-session` — Phase 1
 - `/plan-session` — Phase 2
 - `/exec` — Phase 3
-- `/ralph-wiggum:ralph-loop` — iteration driver
+- `/ralph-wiggum:ralph-loop` — retry driver on failure

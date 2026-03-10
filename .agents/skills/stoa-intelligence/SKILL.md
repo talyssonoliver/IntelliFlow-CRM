@@ -45,7 +45,7 @@ Validates AI/ML logic, chain correctness, prompt quality, model configuration, a
 
 ## Trigger Conditions
 
-**Lead STOA**: `AI-*`, `AI-SETUP-*` task prefixes
+**Primary STOA**: `AI-*`, `AI-SETUP-*` task prefixes
 
 **Supporting STOA** by keywords: `prompt`, `agent`, `chain`, `embedding`, `vector`, `scoring`, `llm`, `ollama`, `openai`, `langchain`, `crewai`, `model`, `eval`
 

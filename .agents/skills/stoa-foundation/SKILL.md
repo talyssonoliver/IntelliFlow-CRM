@@ -1,34 +1,41 @@
 ---
 name: stoa-foundation
-description: Execute Foundation STOA validation for infrastructure, tooling, CI, and environment tasks. Validates TypeScript compilation, build, linting, Docker config, artifact paths, and dependency architecture.
+description: Execute Foundation STOA validation for infrastructure, tooling, and environment tasks. Runs Foundation-SPECIFIC gates only (artifact-lint, docker, depcruise). Baseline gates (typecheck, build, lint, format) are handled by MATOP Phase 2.5 before any STOA spawns.
 ---
 
 # Foundation STOA Sub-Agent
 
-Validates infrastructure, build, and tooling gates. Runs during `/exec` Phase 3 (MATOP Validation).
+Validates infrastructure, artifact placement, and dependency architecture. Runs during `/exec` Phase 3 (MATOP Validation).
+
+**Important**: Baseline gates (typecheck, build, lint, format) have already run in MATOP Phase 2.5 before this STOA is spawned. This STOA only runs Foundation-SPECIFIC gates.
 
 ## Responsibility
 
-- TypeScript compilation and build verification
-- Linting (ESLint, Prettier) and commit linting
+- Artifact path linting (correct file placement)
 - Docker configuration validation
-- Artifact path linting
-- Dependency architecture validation (depcruise)
+- Dependency architecture validation (depcruise — broad scope across packages + apps)
 - Plan deliverable path verification
 
-## Gate Table
+## Gate Table (Foundation-Specific Only)
 
-| # | Gate | Command | Tier |
-|---|------|---------|------|
-| 1 | TypeScript compilation | `pnpm run typecheck` | Tier 1 — NON-WAIVABLE |
-| 2 | Build validation | `pnpm --filter <pkg> build` | Tier 1 — NON-WAIVABLE |
-| 3 | Linting | `pnpm exec eslint --max-warnings=0 .` | Tier 1 — NON-WAIVABLE |
-| 4 | Formatting | `pnpm run format:check` | Tier 1 — NON-WAIVABLE |
-| 5 | Artifact paths | `tsx tools/lint/artifact-paths.ts` | Foundation-specific |
-| 6 | Dependency architecture | `pnpm exec depcruise --config .dependency-cruiser.cjs packages apps --output-type err` | Foundation-specific |
-| 7 | Plan deliverable verification | Check each planned file exists at exact path | BLOCKING |
+| # | Gate | Command | Condition |
+|---|------|---------|-----------|
+| 1 | Artifact paths | `tsx tools/lint/artifact-paths.ts` | Always |
+| 2 | Dependency architecture | `pnpm exec depcruise --config .dependency-cruiser.cjs packages apps --output-type err` | Always |
+| 3 | Docker config | `docker compose config -q` | If `docker-compose.yml` exists |
+| 4 | Plan deliverable verification | Check each planned file exists at exact path | Always |
+
+**NOT in this table**: typecheck, build, lint, format — those run in MATOP Phase 2.5 (mandatory baseline).
 
 **See references/gate-definitions.md** for full commands, log paths, and waiver rules.
+
+## Trigger Conditions
+
+**Primary STOA** prefix: `ENV-*`, `EP-*`
+
+**Supporting STOA** (always added for every task) — Foundation is always included because its unique gates (artifact-lint, depcruise) apply universally.
+
+**Supporting STOA** keywords: `docker`, `ci`, `deployment`, `github actions`, `environment`, `infra`, `observability`, `monitoring`, `logging`, `otel`
 
 ## Verdict Logic
 
@@ -36,7 +43,6 @@ Validates infrastructure, build, and tooling gates. Runs during `/exec` Phase 3 
 |---|---|
 | All gates exit 0 | PASS |
 | ANY gate exits non-zero | FAIL |
-| Build fails OR typecheck fails | FAIL |
 | Docker config invalid (infra tasks) | FAIL |
 | Plan deliverable missing or at wrong path | FAIL |
 

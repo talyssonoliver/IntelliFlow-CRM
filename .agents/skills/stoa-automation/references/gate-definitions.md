@@ -109,7 +109,7 @@ for (const module of stoaModules) {
 {
   "stoa": "Automation",
   "taskId": "<TASK_ID>",
-  "verdict": "PASS|WARN|FAIL|NEEDS_HUMAN",
+  "verdict": "PASS|FAIL|NEEDS_HUMAN",
   "rationale": "All validation scripts passed, artifacts correctly placed",
   "toolIdsSelected": ["artifact-paths-lint", "sprint-validation", "sprint-data-validation"],
   "toolIdsExecuted": ["artifact-paths-lint", "sprint-validation", "sprint-data-validation"],
@@ -127,7 +127,7 @@ for (const module of stoaModules) {
 
 ## When to Trigger
 
-### By Task Prefix (Lead)
+### By Task Prefix (Primary)
 - `AUTOMATION-*` tasks
 
 ### By Keywords (Supporting STOA)

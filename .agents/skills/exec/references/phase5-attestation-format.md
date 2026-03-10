@@ -16,10 +16,9 @@ this automatically. If writing attestation inline, use this path.
 | MATOP | Compliance | New Status | Action |
 |-------|------------|------------|--------|
 | PASS | PASS | Completed | Task done |
-| PASS | WARN | Completed | Done, warnings documented |
 | PASS | FAIL | Needs Review | Compliance blocking |
-| WARN | Any | In Progress | Remediation required |
 | FAIL | Any | Failed | Blocking issues |
+| NEEDS_HUMAN | Any | Needs Review | Human review required |
 
 Update Sprint_plan.csv with new status.
 
@@ -55,7 +54,7 @@ Save to `.specify/sprints/sprint-{N}/execution/{{task_id}}/{run_id}/{{task_id}}-
 
 ## MATOP Validation
 | STOA | Verdict | Gates Passed | Gates Failed |
-**Consensus Verdict**: PASS/WARN/FAIL
+**Consensus Verdict**: PASS/FAIL/NEEDS_HUMAN
 
 ## Compliance Check Results
 | Check | Status | Details |
@@ -71,8 +70,8 @@ Save to `.specify/sprints/sprint-{N}/execution/{{task_id}}/{run_id}/{{task_id}}-
 **Task**: {{task_id}}
 **Run ID**: {run_id}
 **Steps Completed**: X/Y
-**MATOP Verdict**: PASS/WARN/FAIL
-**Compliance Verdict**: PASS/WARN/FAIL
+**MATOP Verdict**: PASS/FAIL/NEEDS_HUMAN
+**Compliance Verdict**: PASS/FAIL
 **Status**: Plan Complete → {new_status}
 **Artifacts**:
 - Delivery: .specify/sprints/sprint-{N}/execution/{{task_id}}/{run_id}/{{task_id}}-delivery.md
