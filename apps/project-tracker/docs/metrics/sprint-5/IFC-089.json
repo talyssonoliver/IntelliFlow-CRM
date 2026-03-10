@@ -6,8 +6,8 @@
   "owner": "Frontend Dev + Backend Dev (STOA-Domain)",
   "sprint": "sprint-5",
   "status": "DONE",
-  "started_at": null,
-  "completed_at": null,
+  "started_at": "2026-03-08T21:44:04.646Z",
+  "completed_at": "2026-03-08T21:59:04.646Z",
   "dependencies": {
     "required": [
       "IFC-002",
@@ -15,7 +15,7 @@
       "IFC-102"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-03-08T00:00:00Z"
+    "verified_at": "2026-03-10T21:31:11.120Z"
   },
   "artifacts": {
     "expected": [],
@@ -30,5 +30,11 @@
       "passed": true
     }
   ],
-  "notes": "Evidence stub. Task marked Completed in Sprint_plan.csv. Full evidence may be recorded in sprint attestations or audit reports."
+  "notes": "Evidence stub. Task marked Completed in Sprint_plan.csv. Full evidence may be recorded in sprint attestations or audit reports.",
+  "actual_duration_minutes": 15,
+  "dependencies_resolved": [
+    "IFC-002",
+    "IFC-004",
+    "IFC-102"
+  ]
 }

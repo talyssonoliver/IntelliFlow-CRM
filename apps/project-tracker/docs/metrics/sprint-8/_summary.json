@@ -13,7 +13,7 @@
     "not_started": 0,
     "failed": 0
   },
-  "notes": "9/9 tasks DONE (100%). Last synced: 2026-03-08T20:59:05.592Z",
+  "notes": "9/9 tasks DONE (100%). Last synced: 2026-03-10T21:31:11.051Z",
   "completed_tasks": [
     {
       "task_id": "IFC-077",
@@ -32,37 +32,37 @@
     },
     {
       "task_id": "IFC-055",
-      "completed_at": "2026-03-08T20:59:05.592Z",
+      "completed_at": "2026-03-08T21:59:04.570Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-094",
-      "completed_at": "2026-03-08T20:59:05.592Z",
+      "completed_at": "2026-03-08T21:59:04.580Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-118",
-      "completed_at": "2026-03-08T20:59:05.592Z",
+      "completed_at": "2026-03-08T21:59:04.581Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-142",
-      "completed_at": "2026-03-08T20:59:05.592Z",
+      "completed_at": "2026-03-08T21:59:04.583Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-146",
-      "completed_at": "2026-03-08T20:59:05.592Z",
+      "completed_at": "2026-03-08T21:59:04.586Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-152",
-      "completed_at": "2026-03-08T20:59:05.592Z",
+      "completed_at": "2026-03-08T21:59:04.589Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-153",
-      "completed_at": "2026-03-08T20:59:05.592Z",
+      "completed_at": "2026-03-08T21:59:04.591Z",
       "duration_minutes": 15
     }
   ],
@@ -85,6 +85,6 @@
       "spi": 1,
       "status": "on_track"
     },
-    "calculated_at": "2026-03-08T20:59:05.664Z"
+    "calculated_at": "2026-03-10T21:31:11.310Z"
   }
 }

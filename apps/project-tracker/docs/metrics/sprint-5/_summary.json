@@ -13,7 +13,7 @@
     "not_started": 0,
     "failed": 0
   },
-  "notes": "16/16 tasks DONE (100%). Last synced: 2026-03-08T20:59:05.613Z",
+  "notes": "16/16 tasks DONE (100%). Last synced: 2026-03-10T21:31:11.154Z",
   "completed_tasks": [
     {
       "task_id": "IFC-150",
@@ -52,47 +52,47 @@
     },
     {
       "task_id": "IFC-089",
-      "completed_at": "2026-03-08T20:59:05.613Z",
+      "completed_at": "2026-03-08T21:59:04.646Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-098",
-      "completed_at": "2026-03-08T20:59:05.613Z",
+      "completed_at": "2026-03-08T21:59:04.647Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-111",
-      "completed_at": "2026-03-08T20:59:05.613Z",
+      "completed_at": "2026-03-08T21:59:04.648Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-112",
-      "completed_at": "2026-03-08T20:59:05.613Z",
+      "completed_at": "2026-03-08T21:59:04.649Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-127",
-      "completed_at": "2026-03-08T20:59:05.613Z",
+      "completed_at": "2026-03-08T21:59:04.650Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-130",
-      "completed_at": "2026-03-08T20:59:05.613Z",
+      "completed_at": "2026-03-08T21:59:04.651Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-138",
-      "completed_at": "2026-03-08T20:59:05.613Z",
+      "completed_at": "2026-03-08T21:59:04.652Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-147",
-      "completed_at": "2026-03-08T20:59:05.613Z",
+      "completed_at": "2026-03-08T21:59:04.653Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-189",
-      "completed_at": "2026-03-08T20:59:05.613Z",
+      "completed_at": "2026-03-08T21:59:04.662Z",
       "duration_minutes": 15
     }
   ],
@@ -115,6 +115,6 @@
       "spi": 1,
       "status": "on_track"
     },
-    "calculated_at": "2026-03-08T20:59:05.668Z"
+    "calculated_at": "2026-03-10T21:31:11.315Z"
   }
 }
