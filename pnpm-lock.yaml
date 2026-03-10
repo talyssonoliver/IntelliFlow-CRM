@@ -376,7 +376,7 @@ importers:
         version: 4.1.1
       next:
         specifier: 16.1.6
-        version: 16.1.6(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 16.1.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       papaparse:
         specifier: ^5.4.1
         version: 5.5.3
@@ -464,7 +464,7 @@ importers:
         version: link:../../packages/validators
       '@next/third-parties':
         specifier: ^16.1.6
-        version: 16.1.6(next@16.1.6(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
+        version: 16.1.6(next@16.1.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
       '@prisma/client':
         specifier: ^7.4.2
         version: 7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(typescript@5.9.3)
@@ -513,6 +513,9 @@ importers:
       '@trpc/server':
         specifier: ^11.8.0
         version: 11.10.0(typescript@5.9.3)
+      isomorphic-dompurify:
+        specifier: ^3.1.0
+        version: 3.1.0
       jspdf:
         specifier: ^4.2.0
         version: 4.2.0
@@ -521,7 +524,7 @@ importers:
         version: 0.575.0(react@19.2.4)
       next:
         specifier: 16.1.6
-        version: 16.1.6(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 16.1.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -866,6 +869,9 @@ importers:
       twilio:
         specifier: ^5.12.2
         version: 5.12.2
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
     devDependencies:
       '@intelliflow/typescript-config':
         specifier: workspace:*
@@ -1119,6 +1125,9 @@ importers:
       '@bull-board/api':
         specifier: ^6.20.3
         version: 6.20.3(@bull-board/ui@6.20.3)
+      '@bull-board/ui':
+        specifier: ^6.20.3
+        version: 6.20.3
       '@intelliflow/domain':
         specifier: workspace:*
         version: link:../domain
@@ -8162,6 +8171,10 @@ packages:
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
 
+  isomorphic-dompurify@3.1.0:
+    resolution: {integrity: sha512-mwWh3/+EQPeBvUAfZZDG5Tmyvr/yKxKB8VYSdw6c+3hMfW4FZZ93kxdohpHmtmSRUWX/jOJQtVObeA6cBLvosA==}
+    engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
+
   isomorphic-fetch@3.0.0:
     resolution: {integrity: sha512-qvUtwJ3j6qwsF3jLxkZ72qCgjMysPzDfeV240JHiGZsANBYd+EEuu35v7dfrJ9Up0Ak07D7GGSkGhCHTqg/5wA==}
 
@@ -12818,9 +12831,9 @@ snapshots:
   '@next/swc-win32-x64-msvc@16.1.6':
     optional: true
 
-  '@next/third-parties@16.1.6(next@16.1.6(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)':
+  '@next/third-parties@16.1.6(next@16.1.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)':
     dependencies:
-      next: 16.1.6(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      next: 16.1.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react: 19.2.4
       third-party-capital: 1.0.20
 
@@ -17666,7 +17679,6 @@ snapshots:
   dompurify@3.3.2:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
-    optional: true
 
   dot-prop@5.3.0:
     dependencies:
@@ -19176,6 +19188,15 @@ snapshots:
 
   isexe@2.0.0: {}
 
+  isomorphic-dompurify@3.1.0:
+    dependencies:
+      dompurify: 3.3.2
+      jsdom: 28.1.0
+    transitivePeerDependencies:
+      - '@noble/hashes'
+      - canvas
+      - supports-color
+
   isomorphic-fetch@3.0.0:
     dependencies:
       node-fetch: 2.7.0
@@ -20332,7 +20353,7 @@ snapshots:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
 
-  next@16.1.6(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  next@16.1.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@next/env': 16.1.6
       '@swc/helpers': 0.5.15
@@ -20341,7 +20362,7 @@ snapshots:
       postcss: 8.4.31
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-      styled-jsx: 5.1.6(react@19.2.4)
+      styled-jsx: 5.1.6(@babel/core@7.29.0)(react@19.2.4)
     optionalDependencies:
       '@next/swc-darwin-arm64': 16.1.6
       '@next/swc-darwin-x64': 16.1.6
@@ -22047,10 +22068,12 @@ snapshots:
 
   style-mod@4.1.3: {}
 
-  styled-jsx@5.1.6(react@19.2.4):
+  styled-jsx@5.1.6(@babel/core@7.29.0)(react@19.2.4):
     dependencies:
       client-only: 0.0.1
       react: 19.2.4
+    optionalDependencies:
+      '@babel/core': 7.29.0
 
   stylus-lookup@6.1.0:
     dependencies:
