@@ -17,6 +17,7 @@
 
 import { z } from 'zod';
 import { EmbeddingChain, embeddingChain } from './embedding.chain';
+import { sanitizeStringField } from '../utils/input-sanitizer';
 import pino from 'pino';
 
 const logger = pino({
@@ -191,8 +192,14 @@ export class RAGContextChain {
       // Validate input
       const validatedInput = ragContextInputSchema.parse(input);
 
+      // Fix #12: sanitize user query against prompt/retrieval injection after schema validation.
+      const sanitizedInput = {
+        ...validatedInput,
+        query: sanitizeStringField(validatedInput.query, 4000),
+      };
+
       // Perform retrieval
-      const context = await this.performRetrieval(validatedInput);
+      const context = await this.performRetrieval(sanitizedInput);
 
       // Calculate aggregate metrics
       const avgRelevance =

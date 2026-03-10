@@ -24,6 +24,7 @@ import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { costTracker } from '../utils/cost-tracker';
 import { getOpenAIClientSettings } from '../utils/openai-client';
+import { sanitizeStringField } from '../utils/input-sanitizer';
 import pino from 'pino';
 
 import {
@@ -210,9 +211,12 @@ IMPORTANT: The assigneeId MUST be one of the agent IDs listed above.
         )
         .join('\n');
 
+      // Fix #12: sanitize user-provided subject and description before prompt injection.
       const formattedPrompt = await this.prompt.format({
-        subject: input.subject,
-        description: input.description || 'No description provided',
+        subject: sanitizeStringField(input.subject, 500),
+        description: input.description
+          ? sanitizeStringField(input.description, 2000)
+          : 'No description provided',
         priority: input.priority,
         categories: TICKET_CATEGORIES.join(', '),
         agentList,
@@ -266,7 +270,8 @@ IMPORTANT: The assigneeId MUST be one of the agent IDs listed above.
    * Uses keyword matching for category + lowest-load agent selection.
    */
   generateFallbackResult(input: TicketRoutingInput, executionTimeMs: number): TicketRoutingResult {
-    const text = `${input.subject} ${input.description || ''}`.toLowerCase();
+    // Fix #12: sanitize before keyword matching to prevent control-char injection
+    const text = `${sanitizeStringField(input.subject, 500)} ${sanitizeStringField(input.description || '', 2000)}`.toLowerCase();
 
     // Keyword-based category inference
     let inferredCategory: TicketCategory = 'GENERAL';

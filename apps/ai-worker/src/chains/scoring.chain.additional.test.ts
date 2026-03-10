@@ -157,40 +157,40 @@ describe('LeadScoringChain - additional', () => {
   });
   it('formatLeadInfo minimal', () => {
     const f = (new LeadScoringChain() as any).formatLeadInfo({ email: 'm@t.com', source: 'CC' });
-    expect(f).toContain('m@t.com');
+    expect(f).not.toContain('m@t.com');
     expect(f).toContain('Email Domain: t.com');
+    expect(f).toContain('Has Email: Yes');
   });
   it('formatLeadInfo firstName', () => {
-    expect(
-      (new LeadScoringChain() as any).formatLeadInfo({
-        email: 'a@b.c',
-        firstName: 'Al',
-        source: 'W',
-      })
-    ).toContain('Name: Al');
+    const f = (new LeadScoringChain() as any).formatLeadInfo({
+      email: 'a@b.c',
+      firstName: 'Al',
+      source: 'W',
+    });
+    expect(f).toContain('Has Name: Yes');
+    expect(f).not.toContain('Al');
   });
   it('formatLeadInfo lastName', () => {
-    expect(
-      (new LeadScoringChain() as any).formatLeadInfo({
-        email: 'a@b.c',
-        lastName: 'Sm',
-        source: 'W',
-      })
-    ).toContain('Name: Sm');
+    const f = (new LeadScoringChain() as any).formatLeadInfo({
+      email: 'a@b.c',
+      lastName: 'Sm',
+      source: 'W',
+    });
+    expect(f).toContain('Has Name: Yes');
+    expect(f).not.toContain('Sm');
   });
   it('formatLeadInfo phone', () => {
     expect(
       (new LeadScoringChain() as any).formatLeadInfo({ email: 'a@b.c', phone: '+1', source: 'W' })
     ).toContain('Phone: Available');
   });
-  it('formatLeadInfo metadata', () => {
-    expect(
-      (new LeadScoringChain() as any).formatLeadInfo({
-        email: 'a@b.c',
-        source: 'W',
-        metadata: { k: 'v' },
-      })
-    ).toContain('Additional Data:');
+  it('formatLeadInfo no longer includes metadata', () => {
+    const f = (new LeadScoringChain() as any).formatLeadInfo({
+      email: 'a@b.c',
+      source: 'W',
+      metadata: { k: 'v' },
+    });
+    expect(f).not.toContain('Additional Data:');
   });
   it('validate: short reasoning', () => {
     const v = new LeadScoringChain().validateScoringResult({

@@ -43,14 +43,13 @@ export function formatLeadInfo(lead: LeadInput): string {
   const parts: string[] = [];
 
   if (lead.email) {
-    parts.push(`Email: ${lead.email}`);
     const domain = lead.email.split('@')[1];
     parts.push(`Email Domain: ${domain}`);
+    parts.push(`Has Email: Yes`);
   }
 
   if (lead.firstName || lead.lastName) {
-    const name = [lead.firstName, lead.lastName].filter(Boolean).join(' ');
-    parts.push(`Name: ${name}`);
+    parts.push(`Has Name: Yes`);
   }
 
   if (lead.company) {
@@ -66,10 +65,6 @@ export function formatLeadInfo(lead: LeadInput): string {
   }
 
   parts.push(`Source: ${lead.source}`);
-
-  if (lead.metadata) {
-    parts.push(`Additional Data: ${JSON.stringify(lead.metadata)}`);
-  }
 
   return parts.join('\n');
 }

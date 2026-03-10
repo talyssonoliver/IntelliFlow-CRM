@@ -15,6 +15,10 @@ import {
   getInsightGenerationChain,
   type GeneratedInsight,
 } from '../chains/insight-generation.chain';
+// Fix #14: hallucination checker
+import { hallucinationChecker } from '../monitoring/hallucination-checker';
+// Fix #20: conversation record audit logging
+import { logConversationRecord } from '../utils/conversation-record-logger';
 
 const logger = pino({
   name: 'insight-generation-job',
@@ -301,6 +305,38 @@ function buildEntityLink(entityType: string | undefined, entityId: string | unde
 }
 
 // ============================================================================
+// Payload Guardrails
+// ============================================================================
+
+/**
+ * Maximum items per category sent to the LLM.
+ * Keeps prompt within token budgets and prevents stalls on large tenants.
+ * Items are priority-sorted so the most important ones are always included.
+ */
+const MAX_DEALS_PER_JOB = 10;
+const MAX_LEADS_PER_JOB = 10;
+const MAX_CONTACTS_PER_JOB = 10;
+
+/** Sort deals by value DESC then by staleness DESC, slice to limit */
+function capDeals(deals: InsightJobData['dealsAtRisk'], max: number) {
+  return [...deals]
+    .sort((a, b) => (b.value ?? 0) - (a.value ?? 0) || b.daysSinceUpdate - a.daysSinceUpdate)
+    .slice(0, max);
+}
+
+/** Sort leads by score DESC, slice to limit */
+function capLeads(leads: InsightJobData['hotLeads'], max: number) {
+  return [...leads].sort((a, b) => b.score - a.score).slice(0, max);
+}
+
+/** Sort contacts by staleness DESC (nulls = never contacted → most urgent), slice to limit */
+function capContacts(contacts: InsightJobData['staleContacts'], max: number) {
+  return [...contacts]
+    .sort((a, b) => (b.daysSinceContact ?? 999) - (a.daysSinceContact ?? 999))
+    .slice(0, max);
+}
+
+// ============================================================================
 // Job Handler
 // ============================================================================
 
@@ -376,7 +412,7 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
           })),
           hotLeads: hotLeads.map((l) => ({
             id: l.id,
-            name: [l.firstName, l.lastName].filter(Boolean).join(' ') || 'Unknown',
+            name: l.company ? `${l.company} lead` : `Lead ${l.id.slice(0, 8)}`,
             score: l.score ?? 0,
             company: l.company ?? undefined,
             status: l.status ?? undefined,
@@ -384,7 +420,7 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
           overdueTasksCount: overdueCount,
           staleContacts: staleContacts.map((c) => ({
             id: c.id,
-            name: [c.firstName, c.lastName].filter(Boolean).join(' ') || 'Unknown',
+            name: `Contact ${c.id.slice(0, 8)}`,
             daysSinceContact: c.lastContactedAt
               ? Math.floor((Date.now() - c.lastContactedAt.getTime()) / (24 * 60 * 60 * 1000))
               : null,
@@ -418,24 +454,127 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
   // Validate input
   const validatedData = InsightJobDataSchema.parse(job.data);
 
+  // Cap arrays to prevent LLM token overflow and stalls on large tenants.
+  // Items are priority-sorted so the most important ones are always analysed.
+  const cappedDeals = capDeals(validatedData.dealsAtRisk, MAX_DEALS_PER_JOB);
+  const cappedLeads = capLeads(validatedData.hotLeads, MAX_LEADS_PER_JOB);
+  const cappedContacts = capContacts(validatedData.staleContacts, MAX_CONTACTS_PER_JOB);
+
+  const truncated =
+    cappedDeals.length < validatedData.dealsAtRisk.length ||
+    cappedLeads.length < validatedData.hotLeads.length ||
+    cappedContacts.length < validatedData.staleContacts.length;
+
+  if (truncated) {
+    logger.info(
+      {
+        jobId: job.id,
+        original: {
+          deals: validatedData.dealsAtRisk.length,
+          leads: validatedData.hotLeads.length,
+          contacts: validatedData.staleContacts.length,
+        },
+        capped: {
+          deals: cappedDeals.length,
+          leads: cappedLeads.length,
+          contacts: cappedContacts.length,
+        },
+      },
+      'Payload truncated to fit LLM prompt budget — highest-priority items retained'
+    );
+  }
+
+  const cappedData = {
+    ...validatedData,
+    dealsAtRisk: cappedDeals,
+    hotLeads: cappedLeads,
+    staleContacts: cappedContacts,
+  };
+
   await job.updateProgress(10);
 
-  // Generate insights via chain
+  // Extend lock before the potentially long-running LLM call to prevent
+  // BullMQ stall detection from killing the job mid-inference.
+  await job.extendLock(job.token!, 300_000); // 5 minutes
+
+  // Generate insights via chain, with a timeout guard so a hanging LLM
+  // (e.g. Ollama not running) doesn't stall the worker indefinitely.
+  const LLM_TIMEOUT_MS = 120_000; // 2 minutes
   const chain = getInsightGenerationChain();
-  const insights = await chain.generateInsights({
-    tenantId: validatedData.tenantId,
-    userId: validatedData.userId,
-    dealsAtRisk: validatedData.dealsAtRisk,
-    hotLeads: validatedData.hotLeads,
-    overdueTasksCount: validatedData.overdueTasksCount,
-    staleContacts: validatedData.staleContacts,
-  });
+  const llmStartTime = Date.now();
+
+  let insights: Awaited<ReturnType<typeof chain.generateInsights>>;
+  let usedFallback = false;
+  try {
+    insights = await Promise.race([
+      chain.generateInsights({
+        tenantId: cappedData.tenantId,
+        userId: cappedData.userId,
+        dealsAtRisk: cappedData.dealsAtRisk,
+        hotLeads: cappedData.hotLeads,
+        overdueTasksCount: cappedData.overdueTasksCount,
+        staleContacts: cappedData.staleContacts,
+      }),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`LLM inference timed out after ${LLM_TIMEOUT_MS}ms`)), LLM_TIMEOUT_MS)
+      ),
+    ]);
+  } catch (error) {
+    logger.warn(
+      { jobId: job.id, error: error instanceof Error ? error.message : String(error) },
+      'LLM inference failed or timed out — falling back to heuristic insights'
+    );
+    insights = chain.generateFallbackInsights(cappedData);
+    usedFallback = true;
+  }
+
+  const llmDuration = Date.now() - llmStartTime;
+
+  // Fix #20: log conversation record for audit trail (only when LLM was actually called)
+  if (!usedFallback) {
+    logConversationRecord(logger, {
+      conversationId: `insight-${tenantId}-${job.id ?? Date.now()}`,
+      model: `${process.env.AI_PROVIDER || 'mock'}:insight-generation:v1`,
+      tokenCountInput: 0, // token usage tracked via cost-tracker callbacks
+      tokenCountOutput: 0,
+      duration: llmDuration,
+      chainType: 'INSIGHT_GENERATION',
+      tenantId,
+    });
+  }
+
+  // Fix #14: hallucination check on first insight's description — log warning, do NOT block
+  if (!usedFallback && insights.length > 0) {
+    const firstInsight = insights[0];
+    const inputSummary = `Deals: ${cappedData.dealsAtRisk.length}, Leads: ${cappedData.hotLeads.length}, Overdue: ${cappedData.overdueTasksCount}`;
+    const hallucinationResult = await hallucinationChecker.checkOutput({
+      id: `insight-${tenantId}-${job.id ?? Date.now()}`,
+      model: `${process.env.AI_PROVIDER || 'mock'}:insight-generation:v1`,
+      inputContext: inputSummary,
+      output: firstInsight.description,
+    });
+
+    if (hallucinationResult.hallucinated) {
+      logger.warn(
+        {
+          jobId: job.id,
+          tenantId,
+          hallucinationScore: hallucinationResult.score,
+          hallucinationTypes: hallucinationResult.hallucinationTypes,
+        },
+        'Hallucination detected in insight generation output — output not blocked, flagged for monitoring'
+      );
+    }
+  }
 
   await job.updateProgress(60);
 
   // Persist insights to AIInsight table
   // Dynamic import to avoid circular deps — Prisma client lives in @intelliflow/db
   const { prisma } = await import('@intelliflow/db');
+
+  // Extend lock again before the DB write loop (many insights = many round-trips)
+  await job.extendLock(job.token!, 300_000);
 
   const now = new Date();
 

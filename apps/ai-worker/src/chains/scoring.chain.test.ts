@@ -217,8 +217,10 @@ describe('LeadScoringChain', () => {
       // Access private method for testing
       const formatted = (chain as any).formatLeadInfo(lead);
 
-      expect(formatted).toContain('john@acme.com');
-      expect(formatted).toContain('John Doe');
+      expect(formatted).toContain('Email Domain: acme.com');
+      expect(formatted).not.toContain('john@acme.com');
+      expect(formatted).toContain('Has Name: Yes');
+      expect(formatted).not.toContain('John Doe');
       expect(formatted).toContain('Acme Corp');
       expect(formatted).toContain('CEO');
       expect(formatted).toContain('WEBSITE');

@@ -45,15 +45,16 @@ describe('formatLeadInfo', () => {
 
     const result = formatLeadInfo(lead);
 
-    expect(result).toContain('Email: john.doe@acme.com');
     expect(result).toContain('Email Domain: acme.com');
-    expect(result).toContain('Name: John Doe');
+    expect(result).toContain('Has Email: Yes');
+    expect(result).not.toContain('john.doe@acme.com');
+    expect(result).toContain('Has Name: Yes');
+    expect(result).not.toContain('John Doe');
     expect(result).toContain('Company: Acme Corp');
     expect(result).toContain('Title: VP of Sales');
     expect(result).toContain('Phone: Available');
     expect(result).toContain('Source: WEBSITE');
-    expect(result).toContain('Additional Data:');
-    expect(result).toContain('Technology');
+    expect(result).not.toContain('Additional Data:');
   });
 
   it('should handle minimal lead data', () => {
@@ -64,10 +65,10 @@ describe('formatLeadInfo', () => {
 
     const result = formatLeadInfo(lead);
 
-    expect(result).toContain('Email: test@gmail.com');
     expect(result).toContain('Email Domain: gmail.com');
+    expect(result).not.toContain('test@gmail.com');
     expect(result).toContain('Source: COLD_CALL');
-    expect(result).not.toContain('Name:');
+    expect(result).not.toContain('Has Name:');
     expect(result).not.toContain('Company:');
   });
 
@@ -80,7 +81,8 @@ describe('formatLeadInfo', () => {
 
     const result = formatLeadInfo(lead);
 
-    expect(result).toContain('Name: Jane');
+    expect(result).toContain('Has Name: Yes');
+    expect(result).not.toContain('Jane');
   });
 
   it('should handle last name only', () => {
@@ -92,7 +94,8 @@ describe('formatLeadInfo', () => {
 
     const result = formatLeadInfo(lead);
 
-    expect(result).toContain('Name: Smith');
+    expect(result).toContain('Has Name: Yes');
+    expect(result).not.toContain('Smith');
   });
 });
 

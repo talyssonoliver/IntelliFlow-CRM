@@ -20,6 +20,12 @@ import pino from 'pino';
 import { getChurnRiskChain, type ChurnRiskInput } from '../chains/churn-risk.chain';
 import { createNBAAgent, type NBAContext } from '../agents/next-best-action.agent';
 import { getLeadScoringChain, type LeadInput } from '../chains/scoring.chain';
+// Fix #14: hallucination checker
+import { hallucinationChecker } from '../monitoring/hallucination-checker';
+// Fix #20: conversation record audit logging
+import { logConversationRecord } from '../utils/conversation-record-logger';
+// Fix #15: human review threshold check
+import { requiresHumanReview } from '@intelliflow/domain';
 
 const logger = pino({
   name: 'prediction-job',
@@ -393,8 +399,49 @@ async function processChurnRisk(
     };
 
     // Call the real churn risk chain
+    const llmStartTime = Date.now();
     const chain = getChurnRiskChain();
     const result = await chain.predictChurnRisk(churnInput);
+    const llmDuration = Date.now() - llmStartTime;
+
+    // Fix #20: log conversation record for audit trail
+    logConversationRecord(logger, {
+      conversationId: `churn-${entityId}-${Date.now()}`,
+      model: result.modelVersion,
+      tokenCountInput: result.tokenCount ?? 0,
+      tokenCountOutput: 0,
+      duration: llmDuration,
+      chainType: 'CHURN_PREDICTION',
+      tenantId: context?.tenantId as string | undefined,
+    });
+
+    // Fix #14: hallucination check — log warning if detected, do NOT block output
+    const hallucinationResult = await hallucinationChecker.checkOutput({
+      id: `churn-${entityId}`,
+      model: result.modelVersion,
+      inputContext: JSON.stringify(churnInput).slice(0, 500),
+      output: result.explanation,
+    });
+
+    if (hallucinationResult.hallucinated) {
+      logger.warn(
+        {
+          entityId,
+          hallucinationScore: hallucinationResult.score,
+          hallucinationTypes: hallucinationResult.hallucinationTypes,
+        },
+        'Hallucination detected in churn risk output — output not blocked, flagged for monitoring'
+      );
+    }
+
+    // Fix #15: log if output requires human review
+    const needsReview = requiresHumanReview(result.confidence, 'CHURN_PREDICTION');
+    if (needsReview) {
+      logger.info(
+        { entityId, confidence: result.confidence },
+        'Churn risk output is pending human review due to low confidence'
+      );
+    }
 
     return {
       prediction: {

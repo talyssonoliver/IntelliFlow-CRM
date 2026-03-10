@@ -24,6 +24,7 @@ import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { costTracker } from '../utils/cost-tracker';
 import { getOpenAIClientSettings } from '../utils/openai-client';
+import { sanitizeStringField } from '../utils/input-sanitizer';
 import pino from 'pino';
 
 /**
@@ -203,6 +204,7 @@ export class InsightGenerationChain {
         baseUrl: aiConfig.ollama.baseUrl,
         model: aiConfig.ollama.model,
         temperature: 0.4,
+        numCtx: 4096,
       });
 
       logger.info(
@@ -291,13 +293,14 @@ ANALYSIS INSTRUCTIONS:
 
       const validatedInput = InsightGenerationInputSchema.parse(input);
 
+      // Fix #12: sanitize all user-provided text fields interpolated into the prompt.
       const dealsData =
         validatedInput.dealsAtRisk.length > 0
           ? validatedInput.dealsAtRisk
               .map(
                 (d) =>
-                  `- ${d.name} (ID: ${d.id}): ${d.daysSinceUpdate} days since last update` +
-                  (d.stage ? `, stage: ${d.stage}` : '') +
+                  `- ${sanitizeStringField(d.name, 200)} (ID: ${d.id}): ${d.daysSinceUpdate} days since last update` +
+                  (d.stage ? `, stage: ${sanitizeStringField(d.stage, 100)}` : '') +
                   (d.value ? `, value: $${d.value.toLocaleString()}` : '')
               )
               .join('\n')
@@ -308,9 +311,9 @@ ANALYSIS INSTRUCTIONS:
           ? validatedInput.hotLeads
               .map(
                 (l) =>
-                  `- ${l.name} (ID: ${l.id}): score ${l.score}` +
-                  (l.company ? `, company: ${l.company}` : '') +
-                  (l.status ? `, status: ${l.status}` : '')
+                  `- ${sanitizeStringField(l.name, 200)} (ID: ${l.id}): score ${l.score}` +
+                  (l.company ? `, company: ${sanitizeStringField(l.company, 200)}` : '') +
+                  (l.status ? `, status: ${sanitizeStringField(l.status, 100)}` : '')
               )
               .join('\n')
           : 'No hot leads';
@@ -320,7 +323,7 @@ ANALYSIS INSTRUCTIONS:
           ? validatedInput.staleContacts
               .map(
                 (c) =>
-                  `- ${c.name} (ID: ${c.id}): ` +
+                  `- ${sanitizeStringField(c.name, 200)} (ID: ${c.id}): ` +
                   (c.daysSinceContact === null ? 'never contacted' : `${c.daysSinceContact} days since last contact`)
               )
               .join('\n')

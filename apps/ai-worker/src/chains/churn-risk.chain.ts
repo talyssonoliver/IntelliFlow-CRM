@@ -23,6 +23,7 @@ import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { costTracker } from '../utils/cost-tracker';
 import { getOpenAIClientSettings } from '../utils/openai-client';
+import { sanitizeStringField } from '../utils/input-sanitizer';
 import pino from 'pino';
 
 /**
@@ -588,7 +589,8 @@ ANALYSIS INSTRUCTIONS:
   }
 
   /**
-   * Format account data for prompt
+   * Format account data for prompt.
+   * Sanitizes user-provided string fields against prompt injection (Fix #12).
    */
   private formatAccountData(input: ChurnRiskInput): string {
     const parts: string[] = [];
@@ -597,7 +599,7 @@ ANALYSIS INSTRUCTIONS:
       parts.push(`Account age: ${input.accountAgeMonths} months`);
     }
     if (input.planTier) {
-      parts.push(`Plan tier: ${input.planTier}`);
+      parts.push(`Plan tier: ${sanitizeStringField(input.planTier, 500)}`);
     }
     if (input.userCount !== undefined) {
       parts.push(`User count: ${input.userCount}`);

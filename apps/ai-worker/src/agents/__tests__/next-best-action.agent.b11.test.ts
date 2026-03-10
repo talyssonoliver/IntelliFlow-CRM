@@ -26,6 +26,12 @@ vi.mock('../../chains/rag-context.chain', () => ({
   },
 }));
 
+vi.mock('../../services/agent-status', () => ({
+  markAgentActive: vi.fn().mockResolvedValue(undefined),
+  markAgentIdle: vi.fn().mockResolvedValue(undefined),
+  markAgentError: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock('../../chains/sentiment.chain', () => ({
   SentimentAnalysisChain: vi.fn(),
   getSentimentChain: () => ({
@@ -70,6 +76,13 @@ function createContext(overrides: Partial<NBAContext> = {}): NBAContext {
   };
 }
 
+function createAgent() {
+  return createNBAAgent({
+    retrieveContext: mockRagRetrieveContext,
+    formatContextForPrompt: mockRagFormatContext,
+  } as any);
+}
+
 describe('NextBestActionAgent - b11 coverage', () => {
   beforeEach(() => {
     mockRagRetrieveContext.mockReset();
@@ -90,14 +103,14 @@ describe('NextBestActionAgent - b11 coverage', () => {
 
   describe('createNBAAgent', () => {
     it('should create an agent instance', () => {
-      const agent = createNBAAgent();
+      const agent = createAgent();
       expect(agent).toBeInstanceOf(NextBestActionAgent);
     });
   });
 
   describe('execute - fallback recommendations', () => {
     it('should generate default follow-up when no specific signals', async () => {
-      const agent = createNBAAgent();
+      const agent = createAgent();
       const result = await agent.execute({
         id: 'nba-test-1',
         description: 'Test NBA',
@@ -113,7 +126,7 @@ describe('NextBestActionAgent - b11 coverage', () => {
     });
 
     it('should recommend CALL for high urgency override', async () => {
-      const agent = createNBAAgent();
+      const agent = createAgent();
       const result = await agent.execute({
         id: 'nba-test-2',
         description: 'Test NBA urgent',
@@ -130,7 +143,7 @@ describe('NextBestActionAgent - b11 coverage', () => {
     });
 
     it('should recommend RE_ENGAGE for cold lead (>14 days)', async () => {
-      const agent = createNBAAgent();
+      const agent = createAgent();
       const result = await agent.execute({
         id: 'nba-test-3',
         description: 'Test NBA cold',
@@ -146,7 +159,7 @@ describe('NextBestActionAgent - b11 coverage', () => {
     });
 
     it('should recommend NURTURE for low score lead (<40)', async () => {
-      const agent = createNBAAgent();
+      const agent = createAgent();
       const result = await agent.execute({
         id: 'nba-test-4',
         description: 'Test NBA low score',
@@ -162,7 +175,7 @@ describe('NextBestActionAgent - b11 coverage', () => {
     });
 
     it('should recommend CLOSE_DEAL for late-stage opportunity', async () => {
-      const agent = createNBAAgent();
+      const agent = createAgent();
       const result = await agent.execute({
         id: 'nba-test-5',
         description: 'Test NBA close deal',
@@ -180,7 +193,7 @@ describe('NextBestActionAgent - b11 coverage', () => {
     });
 
     it('should build context query for opportunity', async () => {
-      const agent = createNBAAgent();
+      const agent = createAgent();
       const result = await agent.execute({
         id: 'nba-test-6',
         description: 'Test NBA opportunity query',
@@ -201,7 +214,7 @@ describe('NextBestActionAgent - b11 coverage', () => {
       });
       mockRagFormatContext.mockReturnValue('RAG context here');
 
-      const agent = createNBAAgent();
+      const agent = createAgent();
       const result = await agent.execute({
         id: 'nba-test-7',
         description: 'Test NBA with RAG',
@@ -215,7 +228,7 @@ describe('NextBestActionAgent - b11 coverage', () => {
     it('should handle RAG context retrieval failure gracefully', async () => {
       mockRagRetrieveContext.mockRejectedValue(new Error('RAG down'));
 
-      const agent = createNBAAgent();
+      const agent = createAgent();
       const result = await agent.execute({
         id: 'nba-test-8',
         description: 'Test NBA RAG failure',
@@ -227,7 +240,7 @@ describe('NextBestActionAgent - b11 coverage', () => {
     });
 
     it('should include sentiment analysis when recent messages provided', async () => {
-      const agent = createNBAAgent();
+      const agent = createAgent();
       const result = await agent.execute({
         id: 'nba-test-9',
         description: 'Test NBA with sentiment',
@@ -250,7 +263,7 @@ describe('NextBestActionAgent - b11 coverage', () => {
     it('should handle sentiment analysis failure', async () => {
       mockSentimentAnalyze.mockRejectedValue(new Error('Sentiment error'));
 
-      const agent = createNBAAgent();
+      const agent = createAgent();
       const result = await agent.execute({
         id: 'nba-test-10',
         description: 'Test NBA sentiment fail',
@@ -271,7 +284,7 @@ describe('NextBestActionAgent - b11 coverage', () => {
     });
 
     it('should build entity summary with all fields', async () => {
-      const agent = createNBAAgent();
+      const agent = createAgent();
       const result = await agent.execute({
         id: 'nba-test-11',
         description: 'Test full summary',
@@ -291,7 +304,7 @@ describe('NextBestActionAgent - b11 coverage', () => {
     });
 
     it('should build entity summary with no fields', async () => {
-      const agent = createNBAAgent();
+      const agent = createAgent();
       const result = await agent.execute({
         id: 'nba-test-12',
         description: 'Test minimal summary',
@@ -305,7 +318,7 @@ describe('NextBestActionAgent - b11 coverage', () => {
 
   describe('calculateConfidence', () => {
     it('should have higher confidence with more data', async () => {
-      const agent = createNBAAgent();
+      const agent = createAgent();
 
       const minResult = await agent.execute({
         id: 'nba-min',

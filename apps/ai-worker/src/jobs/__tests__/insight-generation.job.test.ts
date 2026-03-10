@@ -10,42 +10,37 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock ai.config before importing chain
-vi.mock('../../config/ai.config', () => ({
-  aiConfig: {
-    provider: 'mock',
-    openai: { model: 'gpt-4', temperature: 0.4, maxTokens: 2000, timeout: 30000, apiKey: 'test' },
-    ollama: { baseUrl: 'http://localhost:11434', model: 'mistral' },
-    features: { enableChainLogging: false },
-    costTracking: { enabled: false },
-  },
+const mockGenerateInsights = vi.hoisted(() => vi.fn());
+const mockGenerateFallbackInsights = vi.hoisted(() => vi.fn());
+const mockCreate = vi.hoisted(() => vi.fn());
+const mockNotificationCreate = vi.hoisted(() => vi.fn());
+const mockTaskCreate = vi.hoisted(() => vi.fn());
+const mockLeadAIInsightUpsert = vi.hoisted(() => vi.fn());
+const mockContactAIInsightUpsert = vi.hoisted(() => vi.fn());
+
+vi.mock('../..//chains/insight-generation.chain', () => ({
+  getInsightGenerationChain: () => ({
+    generateInsights: mockGenerateInsights,
+    generateFallbackInsights: mockGenerateFallbackInsights,
+  }),
 }));
 
-vi.mock('@langchain/openai', () => ({
-  ChatOpenAI: vi.fn().mockImplementation(() => ({
-    invoke: vi.fn().mockResolvedValue({ content: '{}' }),
-  })),
-}));
-
-vi.mock('@langchain/ollama', () => ({
-  ChatOllama: vi.fn().mockImplementation(() => ({
-    invoke: vi.fn().mockResolvedValue({ content: '{}' }),
-  })),
-}));
-
-vi.mock('../../utils/cost-tracker', () => ({
-  costTracker: { recordUsage: vi.fn() },
-}));
-
-vi.mock('../../utils/openai-client', () => ({
-  getOpenAIClientSettings: vi.fn().mockReturnValue({ apiKey: 'test', configuration: {} }),
-}));
-
-const mockCreate = vi.fn().mockResolvedValue({ id: 'insight-1' });
 vi.mock('@intelliflow/db', () => ({
   prisma: {
     aIInsight: {
       create: (...args: any[]) => mockCreate(...args),
+    },
+    notification: {
+      create: (...args: any[]) => mockNotificationCreate(...args),
+    },
+    task: {
+      create: (...args: any[]) => mockTaskCreate(...args),
+    },
+    leadAIInsight: {
+      upsert: (...args: any[]) => mockLeadAIInsightUpsert(...args),
+    },
+    contactAIInsight: {
+      upsert: (...args: any[]) => mockContactAIInsightUpsert(...args),
     },
   },
 }));
@@ -55,6 +50,22 @@ import {
   InsightJobDataSchema,
   type InsightJobData,
 } from '../insight-generation.job';
+import type { GeneratedInsight } from '../../chains/insight-generation.chain';
+
+function createInsight(overrides: Partial<GeneratedInsight> = {}): GeneratedInsight {
+  return {
+    entityId: 'deal-1',
+    entityType: 'opportunity',
+    type: 'warning',
+    title: 'Deal at Risk',
+    description: 'Follow up with the buyer.',
+    suggestedActions: ['Schedule a call'],
+    confidence: 0.85,
+    priority: 'medium',
+    reasoning: 'Recent inactivity detected.',
+    ...overrides,
+  };
+}
 
 function createMockJob(data: Partial<InsightJobData> = {}) {
   const fullData: InsightJobData = {
@@ -71,6 +82,8 @@ function createMockJob(data: Partial<InsightJobData> = {}) {
     id: 'job-123',
     data: fullData,
     updateProgress: vi.fn(),
+    extendLock: vi.fn().mockResolvedValue(undefined),
+    token: 'mock-lock-token',
     queueName: 'ai-insights',
   } as any;
 }
@@ -78,7 +91,42 @@ function createMockJob(data: Partial<InsightJobData> = {}) {
 describe('processInsightJob', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    mockGenerateInsights.mockResolvedValue([createInsight()]);
+    mockGenerateFallbackInsights.mockImplementation((input: InsightJobData) => {
+      if (input.dealsAtRisk.length > 0) {
+        return [
+          createInsight({
+            entityId: input.dealsAtRisk[0].id,
+            entityType: 'opportunity',
+            title: `Deal at Risk: ${input.dealsAtRisk[0].name}`,
+            confidence: 0.4,
+            priority: 'high',
+          }),
+        ];
+      }
+
+      if (input.overdueTasksCount > 0) {
+        return [
+          createInsight({
+            entityId: null,
+            entityType: 'task',
+            type: 'reminder',
+            title: `${input.overdueTasksCount} Overdue Tasks`,
+            confidence: 0.4,
+            priority: 'medium',
+          }),
+        ];
+      }
+
+      return [createInsight({ entityId: null, entityType: null, type: 'achievement', priority: 'low', confidence: 0.4 })];
+    });
+
     mockCreate.mockResolvedValue({ id: 'insight-1' });
+    mockNotificationCreate.mockResolvedValue({ id: 'notification-1' });
+    mockTaskCreate.mockResolvedValue({ id: 'task-1' });
+    mockLeadAIInsightUpsert.mockResolvedValue({ id: 'lead-insight-1' });
+    mockContactAIInsightUpsert.mockResolvedValue({ id: 'contact-insight-1' });
   });
 
   it('should create AIInsight rows with correct fields on happy path', async () => {
@@ -103,6 +151,8 @@ describe('processInsightJob', () => {
   });
 
   it('should create rows with confidence 40 when chain falls back to heuristics', async () => {
+    mockGenerateInsights.mockRejectedValue(new Error('LLM down'));
+
     const job = createMockJob({
       dealsAtRisk: [{ id: 'deal-1', name: 'Test Deal', daysSinceUpdate: 15 }],
     });
@@ -111,13 +161,11 @@ describe('processInsightJob', () => {
 
     expect(result.insightsCreated).toBeGreaterThan(0);
 
-    // The mock provider generates mock insights, but the fallback path
-    // uses confidence 0.4 → rounded to 40 in DB
+    // Fallback heuristics use confidence 0.4 -> rounded to 40 in DB
     const createCalls = mockCreate.mock.calls;
     createCalls.forEach((call: any[]) => {
       const data = call[0].data;
-      expect(data.confidence).toBeGreaterThanOrEqual(0);
-      expect(data.confidence).toBeLessThanOrEqual(100);
+      expect(data.confidence).toBe(40);
     });
   });
 
@@ -142,6 +190,8 @@ describe('processInsightJob', () => {
         staleContacts: [],
       },
       updateProgress: vi.fn(),
+      extendLock: vi.fn().mockResolvedValue(undefined),
+      token: 'mock-lock-token',
     } as any;
 
     await expect(processInsightJob(job)).rejects.toThrow();
@@ -149,6 +199,15 @@ describe('processInsightJob', () => {
 
   it('should set expiresAt to 24h from now on created rows', async () => {
     const beforeTime = Date.now();
+
+    mockGenerateInsights.mockResolvedValue([
+      createInsight({
+        entityId: null,
+        entityType: 'task',
+        type: 'reminder',
+        priority: 'medium',
+      }),
+    ]);
 
     const job = createMockJob({
       overdueTasksCount: 5,

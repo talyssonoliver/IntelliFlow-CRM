@@ -11,6 +11,7 @@ import { chainMonitor, withMonitoring } from '../monitoring/chain-monitor';
 import type { MonitoredResult } from '../monitoring/chain-monitor';
 import { leadScoreSchema } from '@intelliflow/validators';
 import { requiresHumanReview } from '@intelliflow/domain';
+import { sanitizeStringField } from '../utils/input-sanitizer';
 import pino from 'pino';
 
 const logger = pino({
@@ -192,7 +193,8 @@ Be thorough but concise. Each factor should have a clear impact score and reason
       const scoringResult = monitored.result;
       const duration = Date.now() - startTime;
 
-      // Check if result requires human review based on confidence threshold
+      // Fix #15: Check if result requires human review based on confidence threshold
+      // and propagate the flag through the result object so callers can act on it.
       const needsReview = requiresHumanReview(scoringResult.confidence, 'LEAD_SCORING');
 
       logger.info(
@@ -211,7 +213,7 @@ Be thorough but concise. Each factor should have a clear impact score and reason
         'Lead scoring completed'
       );
 
-      return scoringResult;
+      return { ...scoringResult, requiresReview: needsReview };
     } catch (error) {
       logger.error(
         {
@@ -262,39 +264,35 @@ Be thorough but concise. Each factor should have a clear impact score and reason
   }
 
   /**
-   * Format lead information for the prompt
+   * Format lead information for the prompt.
+   * Sanitizes all user-provided string fields against prompt injection (Fix #12).
    */
   private formatLeadInfo(lead: LeadInput): string {
     const parts: string[] = [];
 
     if (lead.email) {
-      parts.push(`Email: ${lead.email}`);
       const domain = lead.email.split('@')[1];
       parts.push(`Email Domain: ${domain}`);
+      parts.push(`Has Email: Yes`);
     }
 
     if (lead.firstName || lead.lastName) {
-      const name = [lead.firstName, lead.lastName].filter(Boolean).join(' ');
-      parts.push(`Name: ${name}`);
+      parts.push(`Has Name: Yes`);
     }
 
     if (lead.company) {
-      parts.push(`Company: ${lead.company}`);
+      parts.push(`Company: ${sanitizeStringField(lead.company, 500)}`);
     }
 
     if (lead.title) {
-      parts.push(`Title: ${lead.title}`);
+      parts.push(`Title: ${sanitizeStringField(lead.title, 500)}`);
     }
 
     if (lead.phone) {
       parts.push(`Phone: Available`);
     }
 
-    parts.push(`Source: ${lead.source}`);
-
-    if (lead.metadata) {
-      parts.push(`Additional Data: ${JSON.stringify(lead.metadata)}`);
-    }
+    parts.push(`Source: ${sanitizeStringField(lead.source, 500)}`);
 
     return parts.join('\n');
   }
