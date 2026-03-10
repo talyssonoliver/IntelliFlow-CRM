@@ -282,14 +282,9 @@
       "task_id": "IFC-044",
       "completed_at": "2025-12-23T21:30:00.000Z",
       "duration_minutes": 30
-    },
-    {
-      "task_id": "EXP-REPORTS-002",
-      "completed_at": "2026-02-27T23:30:00Z",
-      "duration_minutes": 15
     }
   ],
-  "notes": "34/34 tasks DONE (100%). Last synced: 2026-03-08T17:54:49.049Z",
+  "notes": "34/34 tasks DONE (100%). Last synced: 2026-03-10T21:31:10.514Z",
   "section": "Other",
   "dependencies": {
     "all_satisfied": true,
@@ -335,6 +330,6 @@
       "spi": 1,
       "status": "on_track"
     },
-    "calculated_at": "2026-03-08T17:54:49.327Z"
+    "calculated_at": "2026-03-10T21:31:11.286Z"
   }
 }
