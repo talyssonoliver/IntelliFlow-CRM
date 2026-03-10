@@ -11,7 +11,7 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure } from '../../trpc';
+import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { type Context } from '../../context';
 import { feedbackSurveyAnalyticsQuerySchema } from '@intelliflow/validators';
 
@@ -28,39 +28,26 @@ function getFeedbackSurveyService(ctx: Context) {
   return ctx.services.feedbackSurvey;
 }
 
-/**
- * Helper to get tenant ID from context
- */
-function getTenantId(ctx: Context): string {
-  if (!ctx.user?.tenantId) {
-    throw new TRPCError({
-      code: 'UNAUTHORIZED',
-      message: 'Tenant ID not found in user context',
-    });
-  }
-  return ctx.user.tenantId;
-}
-
 export const feedbackSurveyRouter = createTRPCRouter({
   /**
    * Get full dashboard summary with NPS, CSAT, CES, sentiment, trends
    */
-  getDashboardStats: protectedProcedure
+  getDashboardStats: tenantProcedure
     .input(feedbackSurveyAnalyticsQuerySchema)
     .query(async ({ ctx, input }) => {
       const service = getFeedbackSurveyService(ctx);
-      const tenantId = getTenantId(ctx);
+      const tenantId = ctx.tenant.tenantId;
       return service.getDashboardSummary(tenantId, input);
     }),
 
   /**
    * Get NPS trend data over time (subset of dashboard data)
    */
-  getNPSTrend: protectedProcedure
+  getNPSTrend: tenantProcedure
     .input(feedbackSurveyAnalyticsQuerySchema)
     .query(async ({ ctx, input }) => {
       const service = getFeedbackSurveyService(ctx);
-      const tenantId = getTenantId(ctx);
+      const tenantId = ctx.tenant.tenantId;
       const data = await service.getDashboardSummary(tenantId, input);
       return { trends: data.trends, nps: data.nps };
     }),
@@ -68,11 +55,11 @@ export const feedbackSurveyRouter = createTRPCRouter({
   /**
    * Get sentiment breakdown (subset of dashboard data)
    */
-  getSentimentBreakdown: protectedProcedure
+  getSentimentBreakdown: tenantProcedure
     .input(feedbackSurveyAnalyticsQuerySchema)
     .query(async ({ ctx, input }) => {
       const service = getFeedbackSurveyService(ctx);
-      const tenantId = getTenantId(ctx);
+      const tenantId = ctx.tenant.tenantId;
       const data = await service.getDashboardSummary(tenantId, input);
       return data.sentiment;
     }),
@@ -80,11 +67,11 @@ export const feedbackSurveyRouter = createTRPCRouter({
   /**
    * Export data for CSV/PDF generation (returns full dashboard data)
    */
-  exportData: protectedProcedure
+  exportData: tenantProcedure
     .input(feedbackSurveyAnalyticsQuerySchema)
     .query(async ({ ctx, input }) => {
       const service = getFeedbackSurveyService(ctx);
-      const tenantId = getTenantId(ctx);
+      const tenantId = ctx.tenant.tenantId;
       return service.getDashboardSummary(tenantId, input);
     }),
 });

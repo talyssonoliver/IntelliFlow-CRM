@@ -194,7 +194,7 @@ describe('activityFeedRouter', () => {
       ctx.user = { ...ctx.user!, tenantId: undefined } as any;
       const caller = activityFeedRouter.createCaller(ctx);
 
-      await expect(caller.getUnifiedFeed({})).rejects.toThrow(/Tenant context required/);
+      await expect(caller.getUnifiedFeed({})).rejects.toThrow(/Tenant.*required/);
     });
 
     it('throws INTERNAL_SERVER_ERROR when service not in container', async () => {
@@ -294,7 +294,7 @@ describe('activityFeedRouter', () => {
 
       await expect(
         caller.getEntityFeed({ entityType: 'LEAD', entityId: 'lead-1' })
-      ).rejects.toThrow(/Tenant context required/);
+      ).rejects.toThrow(/Tenant.*required/);
     });
 
     it('throws INTERNAL_SERVER_ERROR when service not in container', async () => {

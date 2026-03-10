@@ -11,6 +11,37 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+vi.mock('../logger', () => ({
+  agentLogger: {
+    log: vi.fn().mockResolvedValue(undefined),
+  },
+}));
+
+vi.mock('../approval-workflow', () => ({
+  pendingActionsStore: {
+    add: vi.fn().mockResolvedValue(undefined),
+    get: vi.fn().mockResolvedValue(null),
+    update: vi.fn().mockResolvedValue(undefined),
+    delete: vi.fn().mockResolvedValue(undefined),
+    findByUser: vi.fn().mockResolvedValue([]),
+    findBySession: vi.fn().mockResolvedValue([]),
+    findPending: vi.fn().mockResolvedValue([]),
+    expireOld: vi.fn().mockResolvedValue(undefined),
+  },
+  executedActionsStore: {
+    add: vi.fn().mockResolvedValue(undefined),
+    get: vi.fn().mockResolvedValue(null),
+    findByRollbackToken: vi.fn().mockResolvedValue(null),
+    disableRollback: vi.fn().mockResolvedValue(undefined),
+    findAll: vi.fn().mockResolvedValue([]),
+  },
+  rollbackStore: {
+    add: vi.fn().mockResolvedValue(undefined),
+    get: vi.fn().mockResolvedValue(undefined),
+  },
+}));
+
 import {
   searchLeadsTool,
   searchContactsTool,

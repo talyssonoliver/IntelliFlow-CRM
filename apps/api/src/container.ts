@@ -32,6 +32,7 @@ import {
   FeatureFlagAdapter,
   SupabaseStorageAdapter,
   NoOpAVScanner,
+  ClamAVScanner,
   MockNotificationServiceAdapter,
   RealNotificationServiceAdapter,
   createEmailServiceAdapter,
@@ -112,7 +113,11 @@ const createAdapters = (prismaClient: PrismaClient) => {
     process.env.SUPABASE_URL || 'http://localhost:54321',
     process.env.SUPABASE_SERVICE_ROLE_KEY || 'dev-service-key'
   );
-  const avScanner = new NoOpAVScanner();
+  
+  // AV Scanner (addressing audit finding)
+  const clamAvHost = process.env.CLAMAV_HOST;
+  const clamAvPort = process.env.CLAMAV_PORT ? parseInt(process.env.CLAMAV_PORT, 10) : 3310;
+  const avScanner = clamAvHost ? new ClamAVScanner({ host: clamAvHost, port: clamAvPort }) : new NoOpAVScanner();
 
   // Feature flags
   const featureFlagsConfig = loadFeatureFlagsConfig();
@@ -153,10 +158,17 @@ const createAdapters = (prismaClient: PrismaClient) => {
   const icsGenerationService = new IcsGenerationService();
 
   // IFC-125: Wrap AI service with guardrails + audit logging
-  const auditSigningKey = Buffer.from(
-    process.env.AI_AUDIT_SIGNING_KEY || 'dev-signing-key-change-in-production',
-    'utf-8'
-  );
+  // Security: In production, AI_AUDIT_SIGNING_KEY must be explicitly set.
+  // In dev/test, a safe local-only fallback is used.
+  const _rawSigningKey = process.env.AI_AUDIT_SIGNING_KEY;
+  const _resolvedSigningKey =
+    _rawSigningKey ||
+    (process.env.NODE_ENV === 'production'
+      ? (() => {
+          throw new Error('AI_AUDIT_SIGNING_KEY is required in production');
+        })()
+      : 'dev-only-signing-key-not-for-production');
+  const auditSigningKey = Buffer.from(_resolvedSigningKey, 'utf-8');
   const auditLogAdapter = new DurableAuditLogAdapter(prismaClient as any, auditSigningKey, {
     encryptPII: !!process.env.AI_AUDIT_ENCRYPTION_KEY,
   });

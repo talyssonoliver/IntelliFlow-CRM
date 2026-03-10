@@ -48,6 +48,13 @@ function makeCtx(overrides?: {
       role: 'USER',
       tenantId: overrides && 'tenantId' in overrides ? overrides.tenantId : 'tenant_123',
     } as any, // test-only mock
+    tenant: {
+      tenantId: overrides && 'tenantId' in overrides ? overrides.tenantId : 'tenant_123',
+      tenantType: 'user' as const,
+      userId: 'user_123',
+      role: 'USER',
+      canAccessAllTenantData: false,
+    },
     services: {
       analytics: overrides && 'analytics' in overrides ? overrides.analytics : mockAnalyticsService,
     },
@@ -131,7 +138,6 @@ describe('analyticsRouter', () => {
       await expect(caller.leadStats()).rejects.toThrow(TRPCError);
       await expect(caller.leadStats()).rejects.toMatchObject({
         code: 'UNAUTHORIZED',
-        message: 'Tenant ID not found in user context',
       });
     });
 

@@ -847,8 +847,8 @@ export const leadRouter = createTRPCRouter({
 
       // Fire-and-forget: notification failure must not block the AI scoring response
       createNotification(ctx.prisma, {
-        userId: ctx.user?.userId || 'system',
-        tenantId: ctx.user?.tenantId || 'default',
+        userId: ctx.tenant.userId,
+        tenantId: ctx.tenant.tenantId,
         type: 'lead_scored',
         title: 'Lead scored by AI',
         body: `Lead scored ${result.value.newScore} (${result.value.tier})`,
@@ -913,7 +913,7 @@ export const leadRouter = createTRPCRouter({
             },
             create: {
               leadId: input.leadId,
-              tenantId: ctx.user?.tenantId || 'default',
+              tenantId: ctx.tenant.tenantId,
               ...insights,
               recommendations: insights.recommendations,
             },

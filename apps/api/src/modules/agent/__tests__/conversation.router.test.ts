@@ -794,6 +794,7 @@ describe('Conversation Router', () => {
             get: (name: string) => {
               if (name === 'x-forwarded-for') return '10.0.0.1';
               if (name === 'user-agent') return 'TestAgent/1.0';
+              if (name === 'x-csrf-token') return 'test-csrf-token';
               return null;
             },
           },

@@ -124,7 +124,7 @@ describe('authRouter additional coverage', () => {
       await expect(
         caller.login({
           email: 'test@example.com',
-          password: 'password123',
+          password: 'password123!!',
         })
       ).rejects.toThrow('Authentication failed');
     });

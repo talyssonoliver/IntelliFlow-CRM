@@ -25,6 +25,7 @@ import {
   contactTimelineSchema,
   contactTimelineResponseSchema,
   logActivitySchema,
+  addContactNoteSchema,
 } from '@intelliflow/validators/contact';
 import {
   bulkEmailContactsSchema,
@@ -1257,5 +1258,34 @@ export const contactRouter = createTRPCRouter({
       createdAt: updatedContact.createdAt,
       updatedAt: updatedContact.updatedAt,
     };
+  }),
+
+  /**
+   * Add a note to a contact (mirrors lead.addNote pattern).
+   */
+  addNote: tenantProcedure.input(addContactNoteSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+
+    const contact = await typedCtx.prismaWithTenant.contact.findUnique({
+      where: { id: input.contactId },
+    });
+
+    if (!contact) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Contact not found: ${input.contactId}`,
+      });
+    }
+
+    const note = await ctx.prisma.contactNote.create({
+      data: {
+        content: input.content,
+        author: ctx.user?.email ?? 'Unknown',
+        contactId: input.contactId,
+        tenantId: typedCtx.tenant.tenantId,
+      },
+    });
+
+    return note;
   }),
 });

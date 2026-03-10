@@ -20,7 +20,7 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, publicProcedure, protectedProcedure } from '../../trpc';
+import { createTRPCRouter, publicProcedure, protectedProcedure, authProcedure } from '../../trpc';
 import {
   loginSchema,
   mfaVerifySchema,
@@ -252,7 +252,7 @@ export const authRouter = createTRPCRouter({
    * Validates credentials via Supabase Auth.
    * If MFA is enabled, returns challenge info instead of session.
    */
-  login: publicProcedure.input(loginSchema).mutation(async ({ ctx, input }) => {
+  login: authProcedure.input(loginSchema).mutation(async ({ ctx, input }) => {
     const loginLimiter = getLoginLimiter();
     const auditLogger = getAuditLogger(ctx.prisma);
     const mfaService = getMfaService(ctx.prisma);
@@ -310,6 +310,53 @@ export const authRouter = createTRPCRouter({
         };
 
         return response;
+      }
+
+      // Fix #13: MFA_REQUIRED env flag
+      // If MFA is globally required but the user has not enrolled, signal
+      // the frontend to redirect to MFA setup. We intentionally do NOT block
+      // login here — that is a product decision left to the frontend.
+      const mfaRequiredGlobally = process.env.MFA_REQUIRED === 'true';
+      if (mfaRequiredGlobally) {
+        // Record success and create session so the user is authenticated
+        loginLimiter.recordSuccess(input.email, ipAddress);
+        const deviceInfoEnroll = sessionService.parseDeviceInfo(userAgent);
+        await sessionService.createSession({
+          userId: user.id,
+          tenantId: user.id,
+          deviceInfo: deviceInfoEnroll,
+          ipAddress,
+          userAgent,
+          refreshToken: session.refresh_token,
+          rememberMe: input.rememberMe,
+        });
+        await auditLogger.logLoginSuccess(user.id, {
+          userId: user.id,
+          email: user.email || input.email,
+          ipAddress,
+          userAgent,
+          mfaUsed: false,
+        });
+
+        const enrollResponse: LoginResponse = {
+          success: true,
+          user: {
+            id: user.id,
+            email: user.email || input.email,
+            name: user.user_metadata?.name || null,
+            role: user.user_metadata?.role || 'USER',
+            avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+          },
+          session: {
+            accessToken: session.access_token,
+            refreshToken: session.refresh_token,
+            expiresAt: new Date(session.expires_at! * 1000),
+          },
+          requiresMfa: false,
+          mfaEnrollmentRequired: true,
+        };
+
+        return enrollResponse;
       }
 
       // Record successful login
@@ -1110,7 +1157,7 @@ export const authRouter = createTRPCRouter({
    * Sends a password reset email via Supabase. Always returns success
    * to prevent email enumeration (AC-007). Rate limited per email (AC-008).
    */
-  requestPasswordReset: publicProcedure.input(forgotPasswordSchema).mutation(async ({ input }) => {
+  requestPasswordReset: authProcedure.input(forgotPasswordSchema).mutation(async ({ input }) => {
     // Check per-email rate limit (AC-008)
     const rateCheck = passwordResetLimiter.check(input.email);
     if (!rateCheck.allowed) {
@@ -1139,7 +1186,7 @@ export const authRouter = createTRPCRouter({
    *
    * Uses the access token from the Supabase callback URL to update the password.
    */
-  resetPassword: publicProcedure.input(resetPasswordSchema).mutation(async ({ input }) => {
+  resetPassword: authProcedure.input(resetPasswordSchema).mutation(async ({ input }) => {
     const { error } = await updateUserPassword(input.token, input.password);
 
     if (error) {
@@ -1162,7 +1209,7 @@ export const authRouter = createTRPCRouter({
    *
    * Creates a user via Supabase Auth. Supabase auto-sends confirmation email.
    */
-  signup: publicProcedure.input(signupSchema).mutation(async ({ input }) => {
+  signup: authProcedure.input(signupSchema).mutation(async ({ input }) => {
     const { data, error } = await supabaseAdmin.auth.signUp({
       email: input.email,
       password: input.password,

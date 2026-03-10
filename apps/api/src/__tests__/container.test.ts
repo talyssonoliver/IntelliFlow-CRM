@@ -179,11 +179,36 @@ vi.mock('@intelliflow/adapters', () => ({
       return { name: 'notificationPreferenceRepo' };
     }
   },
+  PrismaExperimentRepository: class {
+    constructor() {
+      return {
+        name: 'experimentRepo',
+        assignments: { name: 'experimentAssignmentsRepo' },
+        results: { name: 'experimentResultsRepo' },
+      };
+    }
+  },
   CalendarSyncServiceAdapter: class {
     constructor() {
       return { name: 'calendarSyncService' };
     }
   },
+  ClamAVScanner: class {
+    constructor() {
+      return { name: 'clamAvScanner' };
+    }
+  },
+  RealNotificationServiceAdapter: class {
+    constructor() {
+      return {
+        name: 'realNotificationService',
+        sendEmail: vi.fn(),
+        schedule: vi.fn(),
+        cancelScheduled: vi.fn(),
+      };
+    }
+  },
+  createEmailServiceAdapter: vi.fn().mockReturnValue({ name: 'emailServiceAdapter' }),
 }));
 
 vi.mock('../modules/calendar/calendar-webhook.service', () => ({
@@ -292,6 +317,11 @@ vi.mock('@intelliflow/application', () => ({
   CloseDealLostUseCase: class {
     constructor() {
       return { name: 'closeDealLostUseCase' };
+    }
+  },
+  ExperimentService: class {
+    constructor() {
+      return { name: 'experimentService' };
     }
   },
 }));

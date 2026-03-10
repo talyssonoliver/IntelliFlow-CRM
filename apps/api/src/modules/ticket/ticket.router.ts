@@ -53,32 +53,6 @@ function getAssigneeTitle(role?: string | null): string {
   }
 }
 
-/**
- * Helper to get tenant ID from context
- */
-async function getTenantId(ctx: Context): Promise<string> {
-  // Resolves the tenant ID for the current request.
-  // tenantContextMiddleware populates ctx.tenant from the JWT, but this router
-  // also supports unauthenticated code paths that call getTenantId directly.
-  // When ctx.user is present, prefer the session-bound tenantId; otherwise fall
-  // back to the default tenant record for backwards-compatible tooling contexts.
-  if (ctx.user?.tenantId) {
-    return ctx.user.tenantId;
-  }
-  const tenant = await ctx.prisma.tenant.findUnique({
-    where: { slug: 'default' },
-  });
-
-  if (!tenant) {
-    throw new TRPCError({
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'Default tenant not found',
-    });
-  }
-
-  return tenant.id;
-}
-
 // =============================================================================
 // Post-creation side-effect helpers (all fire-and-forget, non-blocking)
 // =============================================================================
@@ -301,7 +275,7 @@ export const ticketRouter = createTRPCRouter({
    */
   create: tenantProcedure.input(createTicketSchema).mutation(async ({ ctx, input }) => {
     const ticketService = getTicketService(ctx);
-    const tenantId = await getTenantId(ctx);
+    const tenantId = ctx.tenant.tenantId;
 
     try {
       const ticket = await ticketService.create({
@@ -382,7 +356,7 @@ export const ticketRouter = createTRPCRouter({
     const startTime = performance.now();
     assertTenantContext(ctx);
     const ticketService = getTicketService(ctx);
-    const tenantId = await getTenantId(ctx);
+    const tenantId = ctx.tenant.tenantId;
 
     const {
       page = 1,
@@ -445,7 +419,7 @@ export const ticketRouter = createTRPCRouter({
 
       // Fire-and-forget: notification failure must not block the ticket update response
       if (updateData.priority && ['URGENT', 'CRITICAL'].includes(updateData.priority)) {
-        const tenantId = await getTenantId(ctx);
+        const tenantId = ctx.tenant.tenantId;
         createNotification(ctx.prisma, {
           userId: ticket.assigneeId || 'system',
           tenantId,
@@ -509,7 +483,7 @@ export const ticketRouter = createTRPCRouter({
   stats: tenantProcedure.input(statsInputSchema).query(async ({ ctx, input }) => {
     const startTime = performance.now();
     const ticketService = getTicketService(ctx);
-    const tenantId = await getTenantId(ctx);
+    const tenantId = ctx.tenant.tenantId;
 
     const stats = await ticketService.getStats(tenantId, input.timeWindow);
 
@@ -688,7 +662,7 @@ export const ticketRouter = createTRPCRouter({
    */
   assignees: tenantProcedure.query(async ({ ctx }) => {
     assertTenantContext(ctx);
-    const tenantId = await getTenantId(ctx);
+    const tenantId = ctx.tenant.tenantId;
 
     const users = await ctx.prisma.user.findMany({
       where: { tenantId },
@@ -730,7 +704,7 @@ export const ticketRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       assertTenantContext(ctx);
-      const tenantId = await getTenantId(ctx);
+      const tenantId = ctx.tenant.tenantId;
 
       // Build base where clause with current filters
       const baseWhere: Record<string, unknown> = { tenantId };
@@ -795,7 +769,7 @@ export const ticketRouter = createTRPCRouter({
   addAttachment: tenantProcedure
     .input(addAttachmentSchema)
     .mutation(async ({ ctx, input }) => {
-      const tenantId = await getTenantId(ctx);
+      const tenantId = ctx.tenant.tenantId;
 
       // Verify ticket exists and belongs to tenant
       const ticket = await ctx.prisma.ticket.findFirst({

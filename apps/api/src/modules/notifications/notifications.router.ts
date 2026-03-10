@@ -63,16 +63,6 @@ interface NotificationEmitPayload {
 // Helper Functions
 // =============================================================================
 
-function getUserId(ctx: Context): string {
-  if (!ctx.user?.userId) {
-    throw new TRPCError({
-      code: 'UNAUTHORIZED',
-      message: 'User ID not found in context',
-    });
-  }
-  return ctx.user.userId;
-}
-
 function emitNotificationEvent(payload: NotificationEmitPayload) {
   notificationEmitter.emit(`notification:${payload.userId}`, payload);
 }
@@ -318,7 +308,7 @@ export const notificationsRouter = createTRPCRouter({
     .input(notificationListQuerySchema)
     .query(async ({ ctx, input }): Promise<NotificationListResponse> => {
       const startTime = performance.now();
-      const userId = getUserId(ctx);
+      const userId = ctx.tenant.userId;
       const tenantId = ctx.tenant.tenantId;
       const { limit, cursor, types, priorities, status, isRead, fromDate, toDate, search } = input;
 
@@ -373,7 +363,7 @@ export const notificationsRouter = createTRPCRouter({
    */
   getUnreadCount: tenantProcedure.query(async ({ ctx }): Promise<UnreadCountResponse> => {
     const startTime = performance.now();
-    const userId = getUserId(ctx);
+    const userId = ctx.tenant.userId;
     const tenantId = ctx.tenant.tenantId;
 
     const baseWhere = { tenantId, recipientId: userId, status: 'PENDING' as const };
@@ -410,7 +400,7 @@ export const notificationsRouter = createTRPCRouter({
     .input(markAsReadInputSchema)
     .mutation(async ({ ctx, input }): Promise<MarkAsReadResponse> => {
       const startTime = performance.now();
-      const userId = getUserId(ctx);
+      const userId = ctx.tenant.userId;
       const tenantId = ctx.tenant.tenantId;
       const { notificationIds } = input;
 
@@ -448,7 +438,7 @@ export const notificationsRouter = createTRPCRouter({
    */
   markAllAsRead: tenantProcedure.mutation(async ({ ctx }): Promise<MarkAsReadResponse> => {
     const startTime = performance.now();
-    const userId = getUserId(ctx);
+    const userId = ctx.tenant.userId;
     const tenantId = ctx.tenant.tenantId;
 
     const result = await ctx.prisma.notification.updateMany({
@@ -483,7 +473,7 @@ export const notificationsRouter = createTRPCRouter({
     .input(deleteNotificationsInputSchema)
     .mutation(async ({ ctx, input }): Promise<DeleteNotificationsResponse> => {
       const startTime = performance.now();
-      const userId = getUserId(ctx);
+      const userId = ctx.tenant.userId;
       const tenantId = ctx.tenant.tenantId;
       const { notificationIds, permanent } = input;
 
@@ -526,7 +516,7 @@ export const notificationsRouter = createTRPCRouter({
    * Get notification preferences from NotificationPreference table
    */
   getPreferences: tenantProcedure.query(async ({ ctx }): Promise<NotificationPreferences> => {
-    const userId = getUserId(ctx);
+    const userId = ctx.tenant.userId;
     const tenantId = ctx.tenant.tenantId;
 
     const record = await ctx.prisma.notificationPreference.findUnique({
@@ -570,7 +560,7 @@ export const notificationsRouter = createTRPCRouter({
   updatePreferences: tenantProcedure
     .input(updatePreferencesInputSchema)
     .mutation(async ({ ctx, input }) => {
-      const userId = getUserId(ctx);
+      const userId = ctx.tenant.userId;
       const tenantId = ctx.tenant.tenantId;
 
       const existing = await ctx.prisma.notificationPreference.findUnique({
@@ -613,7 +603,7 @@ export const notificationsRouter = createTRPCRouter({
     .input(batchNotificationActionSchema)
     .mutation(async ({ ctx, input }): Promise<BatchNotificationResponse> => {
       const startTime = performance.now();
-      const userId = getUserId(ctx);
+      const userId = ctx.tenant.userId;
       const tenantId = ctx.tenant.tenantId;
       const { action, notificationIds, filter } = input;
 
@@ -680,7 +670,7 @@ export const notificationsRouter = createTRPCRouter({
     .input(notificationSubscriptionInputSchema)
     // NOSONAR typescript:S1874 — legacy observable subscription, tRPC v11 async iterator migration tracked separately
     .subscription(({ ctx, input }) => {
-      const userId = getUserId(ctx);
+      const userId = ctx.tenant.userId;
       return observable<NotificationEvent>(
         createSubscriptionHandler(userId, input.types, input.priorities)
       );

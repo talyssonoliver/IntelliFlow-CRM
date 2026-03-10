@@ -14,7 +14,7 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure } from '../../trpc';
+import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { type Context } from '../../context';
 import {
   pinItemInputSchema,
@@ -31,30 +31,6 @@ import {
   type GoalType,
 } from '@intelliflow/validators';
 import { z } from 'zod';
-
-// =============================================================================
-// Helper Functions
-// =============================================================================
-
-function getTenantId(ctx: Context): string {
-  if (!ctx.user?.tenantId) {
-    throw new TRPCError({
-      code: 'UNAUTHORIZED',
-      message: 'Tenant ID not found in user context',
-    });
-  }
-  return ctx.user.tenantId;
-}
-
-function getUserId(ctx: Context): string {
-  if (!ctx.user?.userId) {
-    throw new TRPCError({
-      code: 'UNAUTHORIZED',
-      message: 'User ID not found in context',
-    });
-  }
-  return ctx.user.userId;
-}
 
 /**
  * Maps pinnable entity types to their Prisma model delegate names.
@@ -252,6 +228,7 @@ function mapAIInsightToResponse(row: {
   return {
     id: row.id,
     type: mapDbTypeToFrontend(row.type),
+    source: 'ai',
     title: row.title,
     description: row.description,
     suggestedAction: getFirstSuggestedAction(row.suggestedActions),
@@ -267,6 +244,12 @@ function mapAIInsightToResponse(row: {
 /**
  * Fire-and-forget: enqueue a BullMQ job to generate AI insights
  */
+/** Max items per category enqueued to the AI insight job.
+ *  Prevents oversized Redis payloads and LLM prompt overflow. */
+const ENQUEUE_MAX_DEALS = 10;
+const ENQUEUE_MAX_LEADS = 10;
+const ENQUEUE_MAX_CONTACTS = 10;
+
 async function enqueueInsightGeneration(
   tenantId: string,
   userId: string,
@@ -298,18 +281,33 @@ async function enqueueInsightGeneration(
       },
     });
 
+    // Cap arrays before enqueuing — the worker also caps, but trimming here
+    // avoids bloated Redis payloads when callers pass 50+ items.
+    const deals = data.dealsAtRisk
+      .slice()
+      .sort((a, b) => b.daysSinceUpdate - a.daysSinceUpdate)
+      .slice(0, ENQUEUE_MAX_DEALS);
+    const leads = data.hotLeads
+      .slice()
+      .sort((a, b) => b.score - a.score)
+      .slice(0, ENQUEUE_MAX_LEADS);
+    const contacts = data.staleContacts
+      .slice()
+      .sort((a, b) => (b.daysSinceContact ?? 999) - (a.daysSinceContact ?? 999))
+      .slice(0, ENQUEUE_MAX_CONTACTS);
+
     await queue.add(
       'generate-insights',
       {
         tenantId,
         userId,
-        dealsAtRisk: data.dealsAtRisk,
-        hotLeads: data.hotLeads.map((l) => ({
+        dealsAtRisk: deals,
+        hotLeads: leads.map((l) => ({
           ...l,
           company: l.company ?? undefined,
         })),
         overdueTasksCount: data.overdueTasksCount,
-        staleContacts: data.staleContacts,
+        staleContacts: contacts,
         correlationId: `insight-${tenantId}-${Date.now()}`,
       }
     );
@@ -441,6 +439,7 @@ function buildHeuristicInsights(
     insights.push({
       id: `deal-risk-${deal.id}`,
       type: 'warning',
+      source: 'heuristic',
       title: `Deal at Risk: ${deal.name}`,
       description: `Last interaction was ${daysSinceUpdate} days ago. Consider scheduling a follow-up.`,
       suggestedAction: 'Schedule a check-in call',
@@ -458,6 +457,7 @@ function buildHeuristicInsights(
     insights.push({
       id: `hot-lead-${lead.id}`,
       type: 'opportunity',
+      source: 'heuristic',
       title: 'Hot Lead Detected',
       description: `${name} has a high score of ${lead.score}. This lead shows strong buying signals.`,
       suggestedAction: 'Send personalized follow-up',
@@ -474,6 +474,7 @@ function buildHeuristicInsights(
     insights.push({
       id: `overdue-tasks`,
       type: 'reminder',
+      source: 'heuristic',
       title: `${overdueTasksCount} Overdue Task${overdueTasksCount > 1 ? 's' : ''}`,
       description: `You have tasks past their due date. Review and update your task list.`,
       suggestedAction: 'Review overdue tasks',
@@ -494,6 +495,7 @@ function buildHeuristicInsights(
     insights.push({
       id: `stale-contact-${contact.id}`,
       type: 'warning',
+      source: 'heuristic',
       title: `Stale Contact: ${name}`,
       description: days
         ? `No interaction in ${days} days. This contact has open opportunities.`
@@ -573,6 +575,7 @@ async function resolveStaleContactHeuristicInsight(
   return {
     id: insightId,
     type: 'warning',
+    source: 'heuristic',
     title: `Stale Contact: ${name}`,
     description: days
       ? `No interaction in ${days} days. This contact has open opportunities.`
@@ -645,10 +648,10 @@ export const homeRouter = createTRPCRouter({
    * Get welcome summary for authenticated home page
    * Uses progressive time fallbacks for meaningful data display
    */
-  getWelcomeSummary: protectedProcedure.query(async ({ ctx }): Promise<WelcomeSummary> => {
+  getWelcomeSummary: tenantProcedure.query(async ({ ctx }): Promise<WelcomeSummary> => {
     const startTime = performance.now();
-    const tenantId = getTenantId(ctx);
-    const userId = getUserId(ctx);
+    const tenantId = ctx.tenant.tenantId;
+    const userId = ctx.tenant.userId;
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
@@ -657,14 +660,9 @@ export const homeRouter = createTRPCRouter({
     const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const twoMonthsAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
 
-    // Fetch user name (timezone comes from ctx.user session)
-    const user = await ctx.prisma.user.findUnique({
-      where: { id: userId },
-      select: { name: true, email: true },
-    });
-
-    // Parallel fetch all stats with multiple time periods for fallbacks
+    // Parallel fetch user + all stats (user query was previously sequential)
     const [
+      user,
       highPriorityTasks,
       overdueTasks,
       newLeadsSinceYesterday,
@@ -677,17 +675,24 @@ export const homeRouter = createTRPCRouter({
       dealsClosedThisMonth,
       dealsClosedLastMonth,
     ] = await Promise.all([
-      // High priority tasks not completed
+      // User name (timezone comes from ctx.user session)
+      ctx.prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true, email: true },
+      }),
+      // High priority tasks not completed (includes URGENT)
       ctx.prisma.task.count({
         where: {
+          tenantId,
           ownerId: userId,
-          priority: 'HIGH',
+          priority: { in: ['HIGH', 'URGENT'] },
           status: { notIn: ['COMPLETED', 'CANCELLED'] },
         },
       }),
       // Overdue tasks
       ctx.prisma.task.count({
         where: {
+          tenantId,
           ownerId: userId,
           dueDate: { lt: now },
           status: { notIn: ['COMPLETED', 'CANCELLED'] },
@@ -836,10 +841,10 @@ export const homeRouter = createTRPCRouter({
   /**
    * Get AI insights for home page
    */
-  getAIInsights: protectedProcedure.query(async ({ ctx }): Promise<AIInsightsResponse> => {
+  getAIInsights: tenantProcedure.query(async ({ ctx }): Promise<AIInsightsResponse> => {
     const startTime = performance.now();
-    const tenantId = getTenantId(ctx);
-    const userId = getUserId(ctx);
+    const tenantId = ctx.tenant.tenantId;
+    const userId = ctx.tenant.userId;
     const now = new Date();
 
     // Step 1: Check AIInsight table for cached AI insights (expiresAt encodes priority-based TTL)
@@ -899,6 +904,7 @@ export const homeRouter = createTRPCRouter({
       insights.push({
         id: 'all-good',
         type: 'achievement',
+        source: 'heuristic',
         title: "You're on track!",
         description: 'No urgent items need your attention. Keep up the great work!',
         suggestedAction: null,
@@ -956,10 +962,10 @@ export const homeRouter = createTRPCRouter({
    * Reads user preferences from User.preferences.dailyGoal; defaults to revenue/$5000.
    * Task: IFC-195 - Customizable Daily Goals
    */
-  getDailyGoal: protectedProcedure.query(async ({ ctx }): Promise<DailyGoalResponse> => {
+  getDailyGoal: tenantProcedure.query(async ({ ctx }): Promise<DailyGoalResponse> => {
     const startTime = performance.now();
-    const tenantId = getTenantId(ctx);
-    const userId = getUserId(ctx);
+    const tenantId = ctx.tenant.tenantId;
+    const userId = ctx.tenant.userId;
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
@@ -1077,10 +1083,10 @@ export const homeRouter = createTRPCRouter({
    * read-merge-write pattern (same as pinItem).
    * Task: IFC-195 - Customizable Daily Goals
    */
-  updateDailyGoal: protectedProcedure
+  updateDailyGoal: tenantProcedure
     .input(updateDailyGoalInputSchema)
     .mutation(async ({ ctx, input }) => {
-      const userId = getUserId(ctx);
+      const userId = ctx.tenant.userId;
       const { type, targetValue, label, customUnit } = input;
 
       // Get current preferences
@@ -1108,9 +1114,9 @@ export const homeRouter = createTRPCRouter({
   /**
    * Get pinned items
    */
-  getPinnedItems: protectedProcedure.query(async ({ ctx }): Promise<PinnedItemsResponse> => {
-    const userId = getUserId(ctx);
-    const tenantId = getTenantId(ctx);
+  getPinnedItems: tenantProcedure.query(async ({ ctx }): Promise<PinnedItemsResponse> => {
+    const userId = ctx.tenant.userId;
+    const tenantId = ctx.tenant.tenantId;
 
     // Get pinned items from user preferences
     const user = await ctx.prisma.user.findUnique({
@@ -1148,8 +1154,8 @@ export const homeRouter = createTRPCRouter({
   /**
    * Pin an item
    */
-  pinItem: protectedProcedure.input(pinItemInputSchema).mutation(async ({ ctx, input }) => {
-    const userId = getUserId(ctx);
+  pinItem: tenantProcedure.input(pinItemInputSchema).mutation(async ({ ctx, input }) => {
+    const userId = ctx.tenant.userId;
     const { entityType, entityId, title, subtitle, icon, url } = input;
 
     // Get current preferences
@@ -1203,8 +1209,8 @@ export const homeRouter = createTRPCRouter({
   /**
    * Unpin an item
    */
-  unpinItem: protectedProcedure.input(unpinItemInputSchema).mutation(async ({ ctx, input }) => {
-    const userId = getUserId(ctx);
+  unpinItem: tenantProcedure.input(unpinItemInputSchema).mutation(async ({ ctx, input }) => {
+    const userId = ctx.tenant.userId;
     const { entityType, entityId } = input;
 
     // Get current preferences
@@ -1242,10 +1248,10 @@ export const homeRouter = createTRPCRouter({
   /**
    * Reorder pinned items
    */
-  reorderPinnedItems: protectedProcedure
+  reorderPinnedItems: tenantProcedure
     .input(reorderPinnedItemsInputSchema)
     .mutation(async ({ ctx, input }) => {
-      const userId = getUserId(ctx);
+      const userId = ctx.tenant.userId;
       const { items: newOrder } = input;
 
       // Get current preferences
@@ -1285,12 +1291,12 @@ export const homeRouter = createTRPCRouter({
    * PG-160 — View All AI Insights page
    * Cache-aside: checks AIInsight table first, falls back to heuristic queries.
    */
-  getAllInsights: protectedProcedure
+  getAllInsights: tenantProcedure
     .input(getAllInsightsQuerySchema)
     .query(async ({ ctx, input }): Promise<GetAllInsightsResponse> => {
       const startTime = performance.now();
-      const tenantId = getTenantId(ctx);
-      const userId = getUserId(ctx);
+      const tenantId = ctx.tenant.tenantId;
+      const userId = ctx.tenant.userId;
       const now = new Date();
       const { limit, cursor, types } = input;
 
@@ -1425,11 +1431,11 @@ export const homeRouter = createTRPCRouter({
    * Resolve a single insight by ID (AI table row or heuristic fallback).
    * Supports deep-linking from insight cards to entity AI tabs.
    */
-  getInsightById: protectedProcedure
+  getInsightById: tenantProcedure
     .input(getInsightByIdInputSchema)
     .query(async ({ ctx, input }): Promise<GetInsightByIdResponse> => {
-      const tenantId = getTenantId(ctx);
-      const userId = getUserId(ctx);
+      const tenantId = ctx.tenant.tenantId;
+      const userId = ctx.tenant.userId;
 
       const resolved = await resolveInsightById(ctx.prisma, tenantId, userId, input.insightId);
       if (!resolved) {
@@ -1448,11 +1454,11 @@ export const homeRouter = createTRPCRouter({
    * Optionally creates a review queue row for insights marked requiresApproval.
    * Idempotent by insightId.
    */
-  ensureInsightReview: protectedProcedure
+  ensureInsightReview: tenantProcedure
     .input(ensureInsightReviewInputSchema)
     .mutation(async ({ ctx, input }): Promise<EnsureInsightReviewResponse> => {
-      const tenantId = getTenantId(ctx);
-      const userId = getUserId(ctx);
+      const tenantId = ctx.tenant.tenantId;
+      const userId = ctx.tenant.userId;
 
       const resolved = await resolveInsightById(ctx.prisma, tenantId, userId, input.insightId);
       if (!resolved) {

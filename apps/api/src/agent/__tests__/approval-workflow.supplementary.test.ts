@@ -20,6 +20,91 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+const agentActionRows = vi.hoisted(() => [] as any[]);
+
+function sortRows(rows: any[], orderBy?: Record<string, 'asc' | 'desc'>) {
+  if (!orderBy) return rows;
+  const [[field, direction]] = Object.entries(orderBy);
+  return [...rows].sort((a, b) => {
+    const av = a[field];
+    const bv = b[field];
+    const cmp = av > bv ? 1 : av < bv ? -1 : 0;
+    return direction === 'desc' ? -cmp : cmp;
+  });
+}
+
+function matchesWhere(row: any, where: Record<string, any> | undefined) {
+  if (!where) return true;
+
+  return Object.entries(where).every(([key, value]) => {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      if ('gt' in value) return row[key] > value.gt;
+      if ('lt' in value) return row[key] < value.lt;
+      if ('not' in value) return row[key] !== value.not;
+    }
+
+    return row[key] === value;
+  });
+}
+
+vi.mock('@intelliflow/db', () => ({
+  prisma: {
+    agentAction: {
+      create: vi.fn(async ({ data }: { data: any }) => {
+        const row = {
+          createdAt: new Date(),
+          reviewedAt: null,
+          reviewedBy: null,
+          feedback: null,
+          rollbackReason: null,
+          rolledBackAt: null,
+          rolledBackBy: null,
+          ...data,
+        };
+        agentActionRows.push(row);
+        return row;
+      }),
+      findUnique: vi.fn(async ({ where }: { where: { id: string } }) => {
+        return agentActionRows.find((row) => row.id === where.id) ?? null;
+      }),
+      update: vi.fn(async ({ where, data }: { where: { id: string }; data: any }) => {
+        const row = agentActionRows.find((item) => item.id === where.id);
+        if (!row) {
+          throw new Error(`AgentAction not found: ${where.id}`);
+        }
+
+        Object.assign(row, data);
+        return row;
+      }),
+      delete: vi.fn(async ({ where }: { where: { id: string } }) => {
+        const index = agentActionRows.findIndex((row) => row.id === where.id);
+        if (index === -1) {
+          throw new Error(`AgentAction not found: ${where.id}`);
+        }
+
+        const [deleted] = agentActionRows.splice(index, 1);
+        return deleted;
+      }),
+      findMany: vi.fn(async ({ where, orderBy }: { where?: Record<string, any>; orderBy?: Record<string, 'asc' | 'desc'> }) => {
+        const filtered = agentActionRows.filter((row) => matchesWhere(row, where));
+        return sortRows(filtered, orderBy);
+      }),
+      updateMany: vi.fn(async ({ where, data }: { where?: Record<string, any>; data: any }) => {
+        let count = 0;
+
+        for (const row of agentActionRows) {
+          if (matchesWhere(row, where)) {
+            Object.assign(row, data);
+            count++;
+          }
+        }
+
+        return { count };
+      }),
+    },
+  },
+}));
 import {
   ApprovalWorkflowService,
   pendingActionsStore,
@@ -76,10 +161,26 @@ const createTestPendingAction = (overrides: Partial<PendingAction> = {}): Pendin
   };
 };
 
+const storeExecutedAction = async (action: ExecutedAction): Promise<void> => {
+  await pendingActionsStore.add(
+    createTestPendingAction({
+      id: action.id,
+      toolName: action.toolName,
+      entityType: action.entityType,
+      input: action.input,
+      preview: action.preview,
+      createdBy: action.createdBy,
+      agentSessionId: action.agentSessionId,
+    })
+  );
+  await executedActionsStore.add(action);
+};
+
 describe('Approval Workflow (supplementary)', () => {
   let service: ApprovalWorkflowService;
 
   beforeEach(() => {
+    agentActionRows.length = 0;
     vi.clearAllMocks();
     service = new ApprovalWorkflowService();
   });
@@ -93,7 +194,7 @@ describe('Approval Workflow (supplementary)', () => {
         rollbackToken: 'token-1',
       };
 
-      await executedActionsStore.add(action);
+      await storeExecutedAction(action);
       const retrieved = await executedActionsStore.get('exec-1');
 
       expect(retrieved).toBeDefined();
@@ -114,7 +215,7 @@ describe('Approval Workflow (supplementary)', () => {
         rollbackToken: 'find-by-token-123',
       };
 
-      await executedActionsStore.add(action);
+      await storeExecutedAction(action);
       const found = await executedActionsStore.findByRollbackToken('find-by-token-123');
 
       expect(found).toBeDefined();
@@ -129,7 +230,7 @@ describe('Approval Workflow (supplementary)', () => {
         rollbackToken: 'disabled-token-123',
       };
 
-      await executedActionsStore.add(action);
+      await storeExecutedAction(action);
       const found = await executedActionsStore.findByRollbackToken('disabled-token-123');
       expect(found).toBeUndefined();
     });
@@ -142,7 +243,7 @@ describe('Approval Workflow (supplementary)', () => {
         rollbackToken: 'disable-test-token',
       };
 
-      await executedActionsStore.add(action);
+      await storeExecutedAction(action);
       await executedActionsStore.disableRollback('exec-disable-1');
 
       const updated = await executedActionsStore.get('exec-disable-1');
@@ -166,6 +267,7 @@ describe('Approval Workflow (supplementary)', () => {
         rolledBackAt: new Date(),
       };
 
+      await pendingActionsStore.add(createTestPendingAction({ id: 'rollback-record-1' }));
       await rollbackStore.add(record);
       const retrieved = await rollbackStore.get('rollback-record-1');
 
@@ -361,7 +463,7 @@ describe('Approval Workflow (supplementary)', () => {
       // Must set rollbackAvailable to true for findByRollbackToken to find it,
       // but then we test the !rollbackAvailable branch. Let's add it with true first.
       executedAction.rollbackAvailable = true;
-      await executedActionsStore.add(executedAction);
+      await storeExecutedAction(executedAction);
       // Now disable rollback
       await executedActionsStore.disableRollback('rollback-unavail-1');
 
@@ -387,7 +489,7 @@ describe('Approval Workflow (supplementary)', () => {
         rollbackAvailable: true,
         rollbackToken: 'expired-window-token',
       };
-      await executedActionsStore.add(executedAction);
+      await storeExecutedAction(executedAction);
 
       const result = await service.rollbackAction(
         {
@@ -410,7 +512,7 @@ describe('Approval Workflow (supplementary)', () => {
         rollbackAvailable: true,
         rollbackToken: 'no-tool-rb-token',
       };
-      await executedActionsStore.add(executedAction);
+      await storeExecutedAction(executedAction);
 
       // Mock tool without rollback
       (getAgentTool as any).mockReturnValue({
@@ -440,7 +542,7 @@ describe('Approval Workflow (supplementary)', () => {
         rollbackAvailable: true,
         rollbackToken: 'success-rb-token',
       };
-      await executedActionsStore.add(executedAction);
+      await storeExecutedAction(executedAction);
 
       // Mock tool with successful rollback
       const mockRollback = vi.fn().mockResolvedValue({
@@ -479,7 +581,7 @@ describe('Approval Workflow (supplementary)', () => {
         rollbackAvailable: true,
         rollbackToken: 'error-rb-token',
       };
-      await executedActionsStore.add(executedAction);
+      await storeExecutedAction(executedAction);
 
       // Mock tool with failing rollback
       (getAgentTool as any).mockReturnValue({
@@ -509,7 +611,7 @@ describe('Approval Workflow (supplementary)', () => {
         rollbackAvailable: true,
         rollbackToken: 'fail-rb-token',
       };
-      await executedActionsStore.add(executedAction);
+      await storeExecutedAction(executedAction);
 
       // Mock tool with unsuccessful rollback (but no throw)
       (getAgentTool as any).mockReturnValue({
@@ -541,7 +643,7 @@ describe('Approval Workflow (supplementary)', () => {
         rollbackAvailable: true,
         rollbackToken: 'no-tool-token',
       };
-      await executedActionsStore.add(executedAction);
+      await storeExecutedAction(executedAction);
 
       // Mock tool as undefined
       (getAgentTool as any).mockReturnValue(undefined);

@@ -197,6 +197,45 @@ export const defaultContextProps = {
   adapters: mockAdapters,
 };
 
+type HeaderLike =
+  | Headers
+  | {
+      get?: (name: string) => string | null;
+      has?: (name: string) => boolean;
+      [key: string]: unknown;
+    };
+
+function normalizeHeaders(headers?: HeaderLike): Headers | undefined {
+  if (!headers) return undefined;
+
+  if (headers instanceof Headers) {
+    return headers;
+  }
+
+  const headerSource = headers as Record<string, unknown>;
+
+  return {
+    get(name: string): string | null {
+      const key = Object.keys(headerSource).find((candidate) => candidate.toLowerCase() === name.toLowerCase());
+      const value =
+        typeof headerSource.get === 'function'
+          ? headerSource.get(name)
+          : key
+            ? headerSource[key]
+            : undefined;
+
+      return typeof value === 'string' ? value : value == null ? null : String(value);
+    },
+    has(name: string): boolean {
+      if (typeof headerSource.has === 'function') {
+        return headerSource.has(name);
+      }
+
+      return this.get(name) !== null;
+    },
+  } as Headers;
+}
+
 /**
  * Create a test context with optional overrides
  * Includes tenant context required by router middleware
@@ -232,7 +271,16 @@ export function createTestContext(overrides?: Partial<BaseContext>): BaseContext
     res: undefined,
   };
 
-  return { ...defaultContext, ...overrides };
+  const mergedContext = { ...defaultContext, ...overrides };
+
+  if (mergedContext.req) {
+    mergedContext.req = {
+      ...mergedContext.req,
+      headers: normalizeHeaders((mergedContext.req as { headers?: HeaderLike }).headers),
+    } as BaseContext['req'];
+  }
+
+  return mergedContext;
 }
 
 /**

@@ -96,7 +96,28 @@ function createWebRequest(
   return new Request(url, init);
 }
 
+/**
+ * Apply HTTP security headers to every API response.
+ *
+ * These headers protect against common web vulnerabilities:
+ * - HSTS: enforce TLS for 2 years (reverts to http-only warning in dev)
+ * - X-Frame-Options: prevent clickjacking — API should never be framed
+ * - X-Content-Type-Options: prevent MIME sniffing
+ * - X-XSS-Protection: disabled (0) — modern browsers use CSP instead
+ * - Referrer-Policy: limit referrer leakage
+ * - Cache-Control: prevent caching of sensitive API responses
+ */
+function applySecurityHeaders(res: ServerResponse): void {
+  res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-XSS-Protection', '0');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Cache-Control', 'no-store');
+}
+
 function applyCorrelationHeaders(res: ServerResponse): void {
+  applySecurityHeaders(res);
   const headers = createCorrelationHeaders();
   for (const [name, value] of Object.entries(headers)) {
     res.setHeader(name, value);

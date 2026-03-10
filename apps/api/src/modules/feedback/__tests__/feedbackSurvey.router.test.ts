@@ -30,6 +30,13 @@ function createMockContext(overrides?: Partial<Context>) {
   return {
     prisma: mockPrisma,
     user: mockUser,
+    tenant: {
+      tenantId: 'tenant_123',
+      tenantType: 'user' as const,
+      userId: 'user_123',
+      role: 'USER',
+      canAccessAllTenantData: false,
+    },
     services: {
       feedbackSurvey: mockFeedbackSurveyService,
     },

@@ -12,6 +12,7 @@ import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure, adminProcedure } from '../../trpc';
 import { toggleModuleInputSchema } from '@intelliflow/validators';
 import {
+  CRM_MODULES,
   PLAN_TIERS,
   MODULE_PLAN_MAP,
   MODULE_METADATA,
@@ -36,10 +37,19 @@ export const moduleAccessRouter = createTRPCRouter({
     const moduleAccess =
       ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
     if (!moduleAccess) {
-      // Fallback: return Professional-tier modules (dev mode / no container)
+      // Admins get full access even when the module service is not yet wired
+      if (ctx.user?.role === 'ADMIN') {
+        return {
+          modules: [...CRM_MODULES] as ModuleId[],
+          plan: 'ENTERPRISE' as PlanTier,
+          status: 'pending' as const,
+        };
+      }
+      // Fail closed: non-admin users only get CORE_CRM when service is unavailable
       return {
-        modules: [...MODULE_PLAN_MAP.PROFESSIONAL] as ModuleId[],
-        plan: 'PROFESSIONAL' as PlanTier,
+        modules: ['CORE_CRM'] as ModuleId[],
+        plan: 'STARTER' as PlanTier,
+        status: 'pending' as const,
       };
     }
 

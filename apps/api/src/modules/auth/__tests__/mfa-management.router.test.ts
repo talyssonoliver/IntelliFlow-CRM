@@ -3,7 +3,7 @@
  * PG-125: Tests for getMfaStatus, disableMfa, regenerateBackupCodes
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll, afterEach } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { createMockMfaService } from './fixtures/mock-mfa-service';
 
@@ -65,15 +65,17 @@ vi.mock('../../../lib/supabase', () => ({
   updateUserPassword: vi.fn(),
 }));
 
-// Import router after mocks
-const { authRouter } = await import('../auth.router');
+// Import router after mocks — loaded in beforeAll to avoid top-level await
+let authRouter: any;
 
 // Create caller helpers
 function createProtectedCaller() {
+  const headers = new Headers();
+  headers.set('x-csrf-token', 'test-csrf-token');
   const ctx = {
     prisma: {} as any,
     user: TEST_USER,
-    req: { headers: new Headers() },
+    req: { headers },
   };
   return authRouter.createCaller(ctx);
 }
@@ -83,6 +85,11 @@ let testTimeOffset = 0;
 const realDateNow = Date.now;
 
 describe('MFA Management Router (PG-125)', () => {
+  beforeAll(async () => {
+    const mod = await import('../auth.router.js');
+    authRouter = mod.authRouter;
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     testTimeOffset += 16 * 60 * 1000;
@@ -168,7 +175,7 @@ describe('MFA Management Router (PG-125)', () => {
       mockAuditLogger.log.mockResolvedValue(undefined);
 
       const caller = createProtectedCaller();
-      const result = await caller.disableMfa({ password: 'ValidP@ss1' }); // pragma: allowlist secret
+      const result = await caller.disableMfa({ password: 'ValidP@ssword1' }); // pragma: allowlist secret
       expect(result.success).toBe(true);
     });
 
@@ -183,7 +190,7 @@ describe('MFA Management Router (PG-125)', () => {
       mockSignIn.mockResolvedValue({ user: null, session: null, error: new Error('Invalid') });
 
       const caller = createProtectedCaller();
-      await expect(caller.disableMfa({ password: 'WrongPass1' })).rejects.toThrow(TRPCError);
+      await expect(caller.disableMfa({ password: 'WrongPassword1' })).rejects.toThrow(TRPCError);
     });
 
     it('should return BAD_REQUEST when MFA already disabled', async () => {

@@ -240,6 +240,7 @@ describe('Home Router', () => {
       expect(result.insights).toHaveLength(1);
       expect(result.insights[0].type).toBe('warning');
       expect(result.insights[0].title).toContain('Deal at Risk');
+      expect(result.insights[0].source).toBe('heuristic');
       expect(result.insights[0].entityType).toBe('opportunity');
       expect(result.insights[0].actionUrl).toBe(`/deals/${TEST_UUIDS.opportunity1}`);
     });
@@ -1284,6 +1285,7 @@ describe('Home Router', () => {
         expect(result.insights[0].title).toContain('Stale Contact');
         expect(result.insights[0].title).toContain('Jane Smith');
         expect(result.insights[0].description).toContain('40 days');
+        expect(result.insights[0].source).toBe('heuristic');
         expect(result.insights[0].entityType).toBe('contact');
         expect(result.insights[0].actionUrl).toBe(`/contacts/${TEST_UUIDS.contact1}?tab=ai-insights`);
         expect(result.insights[0].priority).toBe('medium');
@@ -1567,6 +1569,7 @@ describe('Home Router', () => {
 
       expect(result.insights.length).toBe(1);
       expect(result.insights[0].type).toBe('warning'); // anomaly → warning
+      expect(result.insights[0].source).toBe('ai');
       expect(result.insights[0].title).toBe('Deal at Risk: Big Enterprise');
       expect(result.insights[0].suggestedAction).toBe('Schedule a call');
       expect(result.insights[0].actionUrl).toBe('/deals/deal-123');
@@ -1595,6 +1598,7 @@ describe('Home Router', () => {
 
       expect(result.insights.length).toBeGreaterThan(0);
       expect(result.insights[0].type).toBe('warning');
+      expect(result.insights[0].source).toBe('heuristic');
       // Heuristic queries WERE executed
       expect(prismaMock.opportunity.findMany).toHaveBeenCalled();
     });
@@ -1646,6 +1650,26 @@ describe('Home Router', () => {
         // The mapping is tested through the router; here we validate the expectation
         expect(expectedFrontendType).toBeTruthy();
       });
+    });
+  });
+
+  describe('getInsightById', () => {
+    it('returns heuristic provenance for stale-contact fallback insights', async () => {
+      (prismaMock.aIInsight.findFirst as any).mockResolvedValue(null);
+      prismaMock.contact.findFirst.mockResolvedValue({
+        id: TEST_UUIDS.contact1,
+        firstName: 'Jane',
+        lastName: 'Smith',
+        lastContactedAt: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000),
+      } as any);
+
+      const result = await caller.getInsightById({
+        insightId: `stale-contact-${TEST_UUIDS.contact1}`,
+      });
+
+      expect(result.insight.id).toBe(`stale-contact-${TEST_UUIDS.contact1}`);
+      expect(result.insight.source).toBe('heuristic');
+      expect(result.insight.actionUrl).toBe(`/contacts/${TEST_UUIDS.contact1}?tab=ai-insights`);
     });
   });
 });

@@ -15,7 +15,10 @@ import { initTRPC, TRPCError } from '@trpc/server';
 import { Context } from './context';
 import { ZodError } from 'zod';
 import { tracingMiddleware } from './tracing/middleware';
-import { createAuthenticatedRateLimitMiddleware } from './middleware/rate-limit';
+import {
+  createAuthenticatedRateLimitMiddleware,
+  createAuthEndpointRateLimitMiddleware,
+} from './middleware/rate-limit';
 
 /**
  * Initialize tRPC with context type
@@ -89,6 +92,51 @@ const isAuthed = t.middleware(({ ctx, next }) => {
 });
 
 /**
+ * CSRF Protection Middleware
+ *
+ * Enforces that mutations (state-changing operations) must either:
+ * 1. Have an Origin header that matches the server Host
+ * 2. Have a custom anti-CSRF header (which forces a CORS preflight)
+ */
+const csrfMiddleware = t.middleware(({ ctx, type, next }) => {
+  if (type === 'mutation' && ctx.req) {
+    const origin = ctx.req.headers.get('origin');
+    const host = ctx.req.headers.get('host') || ctx.req.headers.get('x-forwarded-host');
+
+    // 1. Origin checking (Standard Defense)
+    if (origin && host) {
+      let originUrl: URL;
+      try {
+        originUrl = new URL(origin);
+      } catch {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'CSRF violation: Malformed Origin header',
+        });
+      }
+      if (originUrl.host !== host && !host.includes('localhost')) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'CSRF violation: Origin does not match Host',
+        });
+      }
+    }
+
+    // 2. Custom header fallback (for non-browser clients or when Origin is stripped)
+    // A cross-origin request cannot easily set custom headers without CORS preflight
+    const hasCustomHeader = ctx.req.headers.has('x-csrf-token') || ctx.req.headers.has('authorization');
+    if (!origin && !hasCustomHeader) {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'CSRF violation: Missing Origin or custom anti-CSRF headers',
+      });
+    }
+  }
+
+  return next();
+});
+
+/**
  * Protected procedure - requires authentication
  *
  * Use this for endpoints that require a logged-in user:
@@ -111,6 +159,7 @@ const rateLimitMiddleware = t.middleware(async (opts) => {
 });
 
 export const protectedProcedure = t.procedure
+  .use(csrfMiddleware)
   .use(isAuthed)
   .use(tracingMiddleware)
   .use(rateLimitMiddleware);
@@ -227,6 +276,27 @@ const tenantMiddleware = t.middleware(async ({ ctx, next }) => {
 });
 
 export const tenantProcedure = protectedProcedure.use(tenantMiddleware);
+
+/**
+ * Auth procedure - applies strict rate limiting for auth endpoints (5 req/min)
+ *
+ * Use this for all unauthenticated auth endpoints to prevent brute-force attacks:
+ * - login / signup
+ * - forgotPassword / resetPassword
+ *
+ * Applies the AUTH tier: 5 requests per minute per IP/user key.
+ *
+ * @example
+ * authProcedure
+ *   .input(loginSchema)
+ *   .mutation(({ input }) => { ... })
+ */
+const _authRateLimitFn = createAuthEndpointRateLimitMiddleware();
+const authRateLimitMiddleware = t.middleware(async (opts) => {
+  return _authRateLimitFn({ ctx: opts.ctx, next: opts.next });
+});
+
+export const authProcedure = t.procedure.use(tracingMiddleware).use(authRateLimitMiddleware);
 
 /**
  * Re-export router for backward compatibility

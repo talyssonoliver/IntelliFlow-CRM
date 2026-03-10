@@ -52,6 +52,48 @@ describe('tRPC Configuration', () => {
       const { router } = await import('../trpc.js');
       expect(router).toBeDefined();
     });
+
+    it('Fix #6: should export authProcedure for auth endpoint rate limiting', async () => {
+      const { authProcedure } = await import('../trpc.js');
+      expect(authProcedure).toBeDefined();
+    });
+  });
+
+  describe('Fix #6: authProcedure rate limiting (AUTH tier: 5 req/min)', () => {
+    it('should allow a request through authProcedure', async () => {
+      const { createTRPCRouter, authProcedure } = await import('../trpc.js');
+
+      const router = createTRPCRouter({
+        test: authProcedure.query(() => 'auth-rate-limited'),
+      });
+
+      const caller = router.createCaller({} as any);
+      const result = await caller.test();
+
+      expect(result).toBe('auth-rate-limited');
+    });
+
+    it('should block requests after exceeding AUTH tier limit (5 req/min)', async () => {
+      const { createTRPCRouter, authProcedure } = await import('../trpc.js');
+
+      const router = createTRPCRouter({
+        test: authProcedure.query(() => 'ok'),
+      });
+
+      // The AUTH tier allows 5 req/min. On the 6th call it should throw TOO_MANY_REQUESTS.
+      // Each caller shares the same in-memory store per middleware instance.
+      const caller = router.createCaller({ user: undefined } as any);
+
+      // First 5 should succeed
+      for (let i = 0; i < 5; i++) {
+        await expect(caller.test()).resolves.toBe('ok');
+      }
+
+      // 6th should be rate-limited
+      await expect(caller.test()).rejects.toMatchObject({
+        code: 'TOO_MANY_REQUESTS',
+      });
+    });
   });
 
   describe('isAuthed middleware', () => {

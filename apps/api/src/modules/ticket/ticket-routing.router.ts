@@ -37,14 +37,7 @@ export const ticketRoutingRouter = createTRPCRouter({
    */
   autoRoute: tenantProcedure.input(autoRouteInputSchema).mutation(async ({ ctx, input }) => {
     const service = getTicketRoutingService(ctx);
-    const tenantId = ctx.user?.tenantId;
-
-    if (!tenantId) {
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'Tenant context required',
-      });
-    }
+    const tenantId = ctx.tenant.tenantId;
 
     // Fetch the ticket to get subject, description, priority
     const ticket = await ctx.prisma.ticket.findFirst({
@@ -139,14 +132,7 @@ export const ticketRoutingRouter = createTRPCRouter({
     .input(suggestAssigneeInputSchema)
     .query(async ({ ctx, input }) => {
       const service = getTicketRoutingService(ctx);
-      const tenantId = ctx.user?.tenantId;
-
-      if (!tenantId) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'Tenant context required',
-        });
-      }
+      const tenantId = ctx.tenant.tenantId;
 
       const candidates = await service.suggestAssignees(tenantId, input.category, input.limit);
 

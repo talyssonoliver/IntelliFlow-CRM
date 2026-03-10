@@ -573,52 +573,112 @@ export class SessionService {
   // ==========================================
 
   /**
-   * Persist session to database
+   * Map a Prisma session record to SessionData
+   */
+  private mapDbSession(record: {
+    id: string;
+    userId: string;
+    tenantId: string;
+    deviceInfo: unknown;
+    ipAddress: string | null;
+    userAgent: string | null;
+    refreshToken: string | null;
+    rememberMe: boolean;
+    lastActiveAt: Date;
+    expiresAt: Date;
+    createdAt: Date;
+  }): SessionData {
+    return {
+      id: record.id,
+      userId: record.userId,
+      tenantId: record.tenantId,
+      deviceInfo: (record.deviceInfo as DeviceInfo) ?? {},
+      ipAddress: record.ipAddress ?? undefined,
+      userAgent: record.userAgent ?? undefined,
+      refreshToken: record.refreshToken ?? undefined,
+      rememberMe: record.rememberMe,
+      lastActiveAt: record.lastActiveAt,
+      expiresAt: record.expiresAt,
+      createdAt: record.createdAt,
+    };
+  }
+
+  /**
+   * Persist session to database (upsert — handles both create and update)
    */
   private async persistSession(session: SessionData): Promise<void> {
-    // In production: upsert to sessions table
-    // await this.prisma.session.upsert({
-    //   where: { id: session.id },
-    //   create: { ...session },
-    //   update: { ...session }
-    // });
+    if (!this.prisma) return;
+    await (this.prisma as any).session.upsert({
+      where: { id: session.id },
+      create: {
+        id: session.id,
+        userId: session.userId,
+        tenantId: session.tenantId,
+        deviceInfo: session.deviceInfo as object,
+        ipAddress: session.ipAddress ?? null,
+        userAgent: session.userAgent ?? null,
+        refreshToken: session.refreshToken ?? null,
+        rememberMe: session.rememberMe,
+        lastActiveAt: session.lastActiveAt,
+        expiresAt: session.expiresAt,
+        createdAt: session.createdAt,
+      },
+      update: {
+        deviceInfo: session.deviceInfo as object,
+        ipAddress: session.ipAddress ?? null,
+        userAgent: session.userAgent ?? null,
+        refreshToken: session.refreshToken ?? null,
+        rememberMe: session.rememberMe,
+        lastActiveAt: session.lastActiveAt,
+        expiresAt: session.expiresAt,
+      },
+    });
   }
 
   /**
-   * Load session from database
+   * Load session from database by ID
    */
   private async loadSessionFromDb(sessionId: string): Promise<SessionData | null> {
-    // In production: query from sessions table
-    // return await this.prisma.session.findUnique({ where: { id: sessionId } });
-    return null;
+    if (!this.prisma) return null;
+    const record = await (this.prisma as any).session.findUnique({
+      where: { id: sessionId },
+    });
+    if (!record) return null;
+    return this.mapDbSession(record);
   }
 
   /**
-   * Load all sessions for a user from database
+   * Load all non-expired sessions for a user from database
    */
   private async loadUserSessionsFromDb(userId: string): Promise<SessionData[]> {
-    // In production: query from sessions table
-    // return await this.prisma.session.findMany({ where: { userId, expiresAt: { gt: new Date() } } });
-    return [];
+    if (!this.prisma) return [];
+    const records = await (this.prisma as any).session.findMany({
+      where: { userId, expiresAt: { gt: new Date() } },
+    });
+    return records.map((r: Parameters<typeof this.mapDbSession>[0]) => this.mapDbSession(r));
   }
 
   /**
-   * Update session activity in database
+   * Update lastActiveAt for a session in the database
    */
   private async updateSessionActivity(sessionId: string): Promise<void> {
-    // In production: update lastActiveAt in sessions table
-    // await this.prisma.session.update({
-    //   where: { id: sessionId },
-    //   data: { lastActiveAt: new Date() }
-    // });
+    if (!this.prisma) return;
+    await (this.prisma as any).session.update({
+      where: { id: sessionId },
+      data: { lastActiveAt: new Date() },
+    });
   }
 
   /**
-   * Delete session from database
+   * Delete a session from the database
    */
   private async deleteSessionFromDb(sessionId: string): Promise<void> {
-    // In production: delete from sessions table
-    // await this.prisma.session.delete({ where: { id: sessionId } });
+    if (!this.prisma) return;
+    try {
+      await (this.prisma as any).session.delete({ where: { id: sessionId } });
+    } catch {
+      // Session may have already been deleted; ignore not-found errors
+    }
   }
 
   // ==========================================

@@ -11,7 +11,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure } from '../../trpc';
+import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { type Context } from '../../context';
 
 /**
@@ -27,24 +27,11 @@ function getAnalyticsService(ctx: Context) {
   return ctx.services.analytics;
 }
 
-/**
- * Helper to get tenant ID from context
- */
-function getTenantId(ctx: Context): string {
-  if (!ctx.user?.tenantId) {
-    throw new TRPCError({
-      code: 'UNAUTHORIZED',
-      message: 'Tenant ID not found in user context',
-    });
-  }
-  return ctx.user.tenantId;
-}
-
 export const analyticsRouter = createTRPCRouter({
   /**
    * Get deals won trend (last N months)
    */
-  dealsWonTrend: protectedProcedure
+  dealsWonTrend: tenantProcedure
     .input(
       z.object({
         months: z.number().min(1).max(12).default(6),
@@ -52,7 +39,7 @@ export const analyticsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const analyticsService = getAnalyticsService(ctx);
-      const tenantId = getTenantId(ctx);
+      const tenantId = ctx.tenant.tenantId;
 
       const trend = await analyticsService.getDealsWonTrend(tenantId, input.months);
 
@@ -62,7 +49,7 @@ export const analyticsRouter = createTRPCRouter({
   /**
    * Get growth trends for a specific metric
    */
-  growthTrends: protectedProcedure
+  growthTrends: tenantProcedure
     .input(
       z.object({
         metric: z.enum(['revenue', 'leads', 'deals', 'contacts']),
@@ -71,7 +58,7 @@ export const analyticsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const analyticsService = getAnalyticsService(ctx);
-      const tenantId = getTenantId(ctx);
+      const tenantId = ctx.tenant.tenantId;
 
       const trends = await analyticsService.getGrowthTrend(tenantId, input.metric, input.months);
 
@@ -81,9 +68,9 @@ export const analyticsRouter = createTRPCRouter({
   /**
    * Get traffic source distribution (lead sources)
    */
-  trafficSources: protectedProcedure.query(async ({ ctx }) => {
+  trafficSources: tenantProcedure.query(async ({ ctx }) => {
     const analyticsService = getAnalyticsService(ctx);
-    const tenantId = getTenantId(ctx);
+    const tenantId = ctx.tenant.tenantId;
 
     const sources = await analyticsService.getTrafficSources(tenantId);
 
@@ -93,7 +80,7 @@ export const analyticsRouter = createTRPCRouter({
   /**
    * Get recent activity feed
    */
-  recentActivity: protectedProcedure
+  recentActivity: tenantProcedure
     .input(
       z.object({
         limit: z.number().min(1).max(50).default(10),
@@ -101,7 +88,7 @@ export const analyticsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const analyticsService = getAnalyticsService(ctx);
-      const tenantId = getTenantId(ctx);
+      const tenantId = ctx.tenant.tenantId;
 
       const activities = await analyticsService.getRecentActivity(tenantId, input.limit);
 
@@ -111,9 +98,9 @@ export const analyticsRouter = createTRPCRouter({
   /**
    * Get lead statistics for dashboard widget
    */
-  leadStats: protectedProcedure.query(async ({ ctx }) => {
+  leadStats: tenantProcedure.query(async ({ ctx }) => {
     const analyticsService = getAnalyticsService(ctx);
-    const tenantId = getTenantId(ctx);
+    const tenantId = ctx.tenant.tenantId;
 
     const stats = await analyticsService.getLeadStats(tenantId);
 
@@ -123,7 +110,7 @@ export const analyticsRouter = createTRPCRouter({
   /**
    * Export aggregated metrics for selected metric types in a date range
    */
-  exportMetrics: protectedProcedure
+  exportMetrics: tenantProcedure
     .input(
       z.object({
         startDate: z.iso.datetime(),
@@ -133,7 +120,7 @@ export const analyticsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const analyticsService = getAnalyticsService(ctx);
-      const tenantId = getTenantId(ctx);
+      const tenantId = ctx.tenant.tenantId;
 
       return analyticsService.exportMetrics(
         tenantId,
@@ -149,7 +136,7 @@ export const analyticsRouter = createTRPCRouter({
    * @deprecated Use exportReport instead (IFC-190)
    * Export conversion funnel data for a date range
    */
-  exportConversionFunnel: protectedProcedure
+  exportConversionFunnel: tenantProcedure
     .input(
       z.object({
         startDate: z.iso.datetime(),
@@ -158,7 +145,7 @@ export const analyticsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const analyticsService = getAnalyticsService(ctx);
-      const tenantId = getTenantId(ctx);
+      const tenantId = ctx.tenant.tenantId;
 
       return analyticsService.exportConversionFunnel(tenantId, {
         startDate: new Date(input.startDate),
@@ -173,7 +160,7 @@ export const analyticsRouter = createTRPCRouter({
   /**
    * Dashboard overview — composite metrics with parallel queries
    */
-  getOverview: protectedProcedure
+  getOverview: tenantProcedure
     .input(
       z.object({
         startDate: z.iso.datetime().optional(),
@@ -182,7 +169,7 @@ export const analyticsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const analyticsService = getAnalyticsService(ctx);
-      const tenantId = getTenantId(ctx);
+      const tenantId = ctx.tenant.tenantId;
 
       const dateRange =
         input.startDate && input.endDate
@@ -195,7 +182,7 @@ export const analyticsRouter = createTRPCRouter({
   /**
    * Sales KPIs — pipeline value, win rate, avg deal size, cycle length, revenue
    */
-  getSalesMetrics: protectedProcedure
+  getSalesMetrics: tenantProcedure
     .input(
       z.object({
         startDate: z.iso.datetime(),
@@ -205,7 +192,7 @@ export const analyticsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const analyticsService = getAnalyticsService(ctx);
-      const tenantId = getTenantId(ctx);
+      const tenantId = ctx.tenant.tenantId;
 
       return analyticsService.getSalesMetrics(
         tenantId,
@@ -217,7 +204,7 @@ export const analyticsRouter = createTRPCRouter({
   /**
    * Lead pipeline metrics — by source, by status, conversion rate
    */
-  getLeadMetrics: protectedProcedure
+  getLeadMetrics: tenantProcedure
     .input(
       z.object({
         startDate: z.iso.datetime(),
@@ -226,7 +213,7 @@ export const analyticsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const analyticsService = getAnalyticsService(ctx);
-      const tenantId = getTenantId(ctx);
+      const tenantId = ctx.tenant.tenantId;
 
       return analyticsService.getLeadMetrics(tenantId, {
         startDate: new Date(input.startDate),
@@ -237,7 +224,7 @@ export const analyticsRouter = createTRPCRouter({
   /**
    * Conversion funnel — 7-stage pipeline with per-stage metrics
    */
-  getConversionFunnel: protectedProcedure
+  getConversionFunnel: tenantProcedure
     .input(
       z.object({
         startDate: z.iso.datetime(),
@@ -247,7 +234,7 @@ export const analyticsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const analyticsService = getAnalyticsService(ctx);
-      const tenantId = getTenantId(ctx);
+      const tenantId = ctx.tenant.tenantId;
 
       return analyticsService.getConversionFunnel(
         tenantId,
@@ -259,7 +246,7 @@ export const analyticsRouter = createTRPCRouter({
   /**
    * Time series data — parametric metric + granularity with date range limits
    */
-  getTimeSeriesData: protectedProcedure
+  getTimeSeriesData: tenantProcedure
     .input(
       z.object({
         metric: z.enum(['revenue', 'leads', 'deals', 'contacts', 'pipeline_value', 'win_rate']),
@@ -271,7 +258,7 @@ export const analyticsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const analyticsService = getAnalyticsService(ctx);
-      const tenantId = getTenantId(ctx);
+      const tenantId = ctx.tenant.tenantId;
 
       const start = new Date(input.startDate);
       const end = new Date(input.endDate);
@@ -304,7 +291,7 @@ export const analyticsRouter = createTRPCRouter({
   /**
    * Unified report export — delegates to other endpoints, supports JSON/CSV
    */
-  exportReport: protectedProcedure
+  exportReport: tenantProcedure
     .input(
       z.object({
         format: z.enum(['csv', 'json']),
@@ -320,7 +307,7 @@ export const analyticsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const analyticsService = getAnalyticsService(ctx);
-      const tenantId = getTenantId(ctx);
+      const tenantId = ctx.tenant.tenantId;
 
       return analyticsService.exportReport(
         tenantId,

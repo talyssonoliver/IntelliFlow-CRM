@@ -287,17 +287,17 @@ export class TicketService {
     contactEmail: string;
     contactId?: string;
     assigneeId?: string;
-    slaPolicyId: string;
+    slaPolicyId?: string;
     tenantId: string;
   }) {
     // Generate ticket number
     const ticketCount = await this.prisma.ticket.count();
     const ticketNumber = `T-${String(ticketCount + 1).padStart(5, '0')}`;
 
-    // Get SLA policy to calculate due times
-    const slaPolicy = await this.prisma.sLAPolicy.findUnique({
-      where: { id: data.slaPolicyId },
-    });
+    // Get SLA policy to calculate due times — auto-select default if not provided
+    const slaPolicy = data.slaPolicyId
+      ? await this.prisma.sLAPolicy.findUnique({ where: { id: data.slaPolicyId } })
+      : await this.prisma.sLAPolicy.findFirst({ orderBy: { createdAt: 'asc' } });
 
     if (!slaPolicy) {
       throw new Error('SLA policy not found');
@@ -347,7 +347,7 @@ export class TicketService {
         contactEmail: data.contactEmail,
         contactId: data.contactId,
         assigneeId: data.assigneeId,
-        slaPolicyId: data.slaPolicyId,
+        slaPolicyId: slaPolicy.id,
         tenantId: data.tenantId,
         slaResponseDue,
         slaResolutionDue,

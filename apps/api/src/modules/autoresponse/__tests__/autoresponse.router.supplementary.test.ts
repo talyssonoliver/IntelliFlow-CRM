@@ -57,25 +57,20 @@ vi.mock('@intelliflow/adapters', () => ({
   PrismaAutoResponseDraftRepository: vi.fn().mockImplementation(() => mockRepo),
 }));
 
-vi.mock('@intelliflow/domain', () => ({
-  AutoResponseDraft: { create: mockDraftCreate },
-  AutoResponseDraftId: { fromString: vi.fn().mockReturnValue('draft-id-1') },
-  ResponseContent: { create: mockResponseContentCreate },
-}));
-
-vi.mock('@intelliflow/validators', () => {
-  const passThru = { parse: (x: any) => x };
+vi.mock('@intelliflow/domain', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@intelliflow/domain')>();
   return {
-    createAutoResponseDraftSchema: { extend: vi.fn().mockReturnValue(passThru) },
-    submitForApprovalSchema: passThru,
-    approvalDecisionSchema: { refine: vi.fn().mockReturnValue(passThru) },
-    escalationSchema: { extend: vi.fn().mockReturnValue(passThru) },
-    markSentSchema: passThru,
-    markFailedSchema: passThru,
-    autoResponseQuerySchema: passThru,
-    triggerTypeSchema: {},
-    autoResponseStatusSchema: {},
-    idSchema: {},
+    ...actual,
+    AutoResponseDraft: { create: mockDraftCreate },
+    AutoResponseDraftId: { fromString: vi.fn().mockReturnValue('draft-id-1') },
+    ResponseContent: { create: mockResponseContentCreate },
+  };
+});
+
+vi.mock('@intelliflow/validators', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@intelliflow/validators')>();
+  return {
+    ...actual,
   };
 });
 

@@ -49,6 +49,7 @@ import { feedbackSurveyRouter } from './modules/feedback/feedbackSurvey.router';
 import { userRouter } from './modules/user/user.router';
 import { calendarRouter } from './modules/calendar/calendar.router';
 import { calendarWebhooksRouter } from './modules/calendar/calendar-webhook.router';
+import { dsarRouter } from './modules/privacy/dsar.router';
 
 /**
  * Main application router
@@ -185,6 +186,9 @@ export const appRouter = createTRPCRouter({
 
   // Calendar Webhook Management (IFC-224)
   calendarWebhooks: calendarWebhooksRouter,
+
+  // Privacy & GDPR (Fix #17 — IFC-140)
+  privacy: dsarRouter,
 });
 
 /**

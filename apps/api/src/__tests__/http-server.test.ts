@@ -191,4 +191,85 @@ describe('HTTP API Server', () => {
     expect(aliasResponse.status).toBe(200);
     expect(aliasBody).toContain('world');
   });
+
+  // Fix #19 — Security headers are present on all responses
+  describe('security headers (Fix #19)', () => {
+    it('includes HSTS header on /health responses', async () => {
+      const { server, baseUrl } = await startTestServer();
+      servers.push(server);
+
+      const response = await fetch(`${baseUrl}/health`);
+
+      expect(response.headers.get('strict-transport-security')).toBe(
+        'max-age=63072000; includeSubDomains; preload'
+      );
+    });
+
+    it('includes X-Frame-Options: DENY on API responses', async () => {
+      const { server, baseUrl } = await startTestServer();
+      servers.push(server);
+
+      const response = await fetch(`${baseUrl}/health`);
+      expect(response.headers.get('x-frame-options')).toBe('DENY');
+    });
+
+    it('includes X-Content-Type-Options: nosniff on API responses', async () => {
+      const { server, baseUrl } = await startTestServer();
+      servers.push(server);
+
+      const response = await fetch(`${baseUrl}/health`);
+      expect(response.headers.get('x-content-type-options')).toBe('nosniff');
+    });
+
+    it('includes X-XSS-Protection: 0 (modern best practice) on API responses', async () => {
+      const { server, baseUrl } = await startTestServer();
+      servers.push(server);
+
+      const response = await fetch(`${baseUrl}/health`);
+      expect(response.headers.get('x-xss-protection')).toBe('0');
+    });
+
+    it('includes Referrer-Policy on API responses', async () => {
+      const { server, baseUrl } = await startTestServer();
+      servers.push(server);
+
+      const response = await fetch(`${baseUrl}/health`);
+      expect(response.headers.get('referrer-policy')).toBe('strict-origin-when-cross-origin');
+    });
+
+    it('includes Cache-Control: no-store on API responses', async () => {
+      const { server, baseUrl } = await startTestServer();
+      servers.push(server);
+
+      const response = await fetch(`${baseUrl}/health`);
+      expect(response.headers.get('cache-control')).toBe('no-store');
+    });
+
+    it('includes all security headers on tRPC responses', async () => {
+      const { server, baseUrl } = await startTestServer();
+      servers.push(server);
+
+      const response = await fetch(`${baseUrl}/trpc/hello`);
+
+      expect(response.headers.get('strict-transport-security')).toBe(
+        'max-age=63072000; includeSubDomains; preload'
+      );
+      expect(response.headers.get('x-frame-options')).toBe('DENY');
+      expect(response.headers.get('x-content-type-options')).toBe('nosniff');
+      expect(response.headers.get('x-xss-protection')).toBe('0');
+      expect(response.headers.get('referrer-policy')).toBe('strict-origin-when-cross-origin');
+      expect(response.headers.get('cache-control')).toBe('no-store');
+    });
+
+    it('includes security headers on 404 responses', async () => {
+      const { server, baseUrl } = await startTestServer();
+      servers.push(server);
+
+      const response = await fetch(`${baseUrl}/nonexistent-route`);
+
+      expect(response.status).toBe(404);
+      expect(response.headers.get('x-frame-options')).toBe('DENY');
+      expect(response.headers.get('x-content-type-options')).toBe('nosniff');
+    });
+  });
 });

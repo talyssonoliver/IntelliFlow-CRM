@@ -42,6 +42,16 @@ vi.mock('../../../security/login-limiter', () => ({
   }),
 }));
 
+// Mock the auth endpoint rate-limit middleware so it does not accumulate counts
+// across test cases (the in-memory store is module-level and persists).
+vi.mock('../../../middleware/rate-limit', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../../../middleware/rate-limit')>();
+  return {
+    ...original,
+    createAuthEndpointRateLimitMiddleware: () => async ({ next }: { next: () => Promise<unknown> }) => next(),
+  };
+});
+
 vi.mock('../../../security/audit-logger', () => ({
   getAuditLogger: () => ({
     logLoginFailure: vi.fn(),
