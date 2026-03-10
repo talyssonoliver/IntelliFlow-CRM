@@ -21,10 +21,15 @@ import type {
   ActivityFeedType,
   ActivityFeedSource,
   ActivityFeedEntityType,
+  ActivityFeedTimeWindow,
+  ActivityFeedStats,
 } from '@intelliflow/domain';
 
 /** Cache TTL for feed pages (30 seconds — feeds are near-real-time) */
 const FEED_CACHE_TTL_SECONDS = 30;
+
+/** Cache TTL for stats (60 seconds — stats are less volatile) */
+const STATS_CACHE_TTL_SECONDS = 60;
 
 export class ActivityFeedService {
   constructor(
@@ -51,7 +56,7 @@ export class ActivityFeedService {
     const cursor = cursorStr ? decodeCursor(cursorStr) : null;
 
     // Cache-aside: try cache first for first page with no filters
-    const cacheKey = this.buildCacheKey(tenantId, cursor, filters);
+    const cacheKey = this.buildCacheKey(tenantId, limit, cursor, filters);
     const isFirstPageNoFilters =
       !cursor &&
       !filters.types?.length &&
@@ -141,12 +146,55 @@ export class ActivityFeedService {
     };
   }
 
+  /**
+   * Get aggregate stats from the activity feed.
+   * IFC-202: Counts by type, source, and entity type over configurable time windows.
+   */
+  async getStats(
+    tenantId: string,
+    timeWindow: ActivityFeedTimeWindow,
+    filters?: { sources?: ActivityFeedSource[]; entityType?: ActivityFeedEntityType }
+  ) {
+    const windowEnd = new Date();
+    const windowStart = resolveWindowStart(timeWindow, windowEnd);
+
+    // Cache-aside with 60s TTL (stats are less real-time than feed)
+    const filterHash = filters
+      ? `${(filters.sources || []).join(',')}:${filters.entityType || ''}`
+      : '';
+    const cacheKey = `activity-stats:${tenantId}:${timeWindow}:${filterHash}`;
+    const cached = await this.cache.get<{
+      timeWindow: ActivityFeedTimeWindow;
+      windowStart: Date | null;
+      windowEnd: Date;
+    } & ActivityFeedStats>(cacheKey);
+    if (cached) return cached;
+
+    const stats = await this.feedRepository.getStats(
+      tenantId,
+      windowStart,
+      windowEnd,
+      filters ?? {}
+    );
+
+    const result = {
+      timeWindow,
+      windowStart,
+      windowEnd,
+      ...stats,
+    };
+
+    await this.cache.set(cacheKey, result, STATS_CACHE_TTL_SECONDS);
+    return result;
+  }
+
   private buildCacheKey(
     tenantId: string,
+    limit: number,
     cursor: ActivityFeedCursor | null,
     filters: ActivityFeedFilters
   ): string {
-    const parts = [`activity-feed:${tenantId}`];
+    const parts = [`activity-feed:${tenantId}`, `l:${limit}`];
     if (cursor) parts.push(`c:${cursor.id}`);
     if (filters.types?.length) parts.push(`t:${filters.types.join(',')}`);
     if (filters.sources?.length) parts.push(`s:${filters.sources.join(',')}`);
@@ -176,5 +224,28 @@ function decodeCursor(cursorStr: string): ActivityFeedCursor {
     return { timestamp: new Date(timestampStr), id };
   } catch {
     throw new Error('Invalid activity feed cursor');
+  }
+}
+
+/**
+ * Resolve a time window enum to a start Date (or null for 'all').
+ * Server-side date math — clients send only the window name.
+ */
+function resolveWindowStart(
+  timeWindow: ActivityFeedTimeWindow,
+  windowEnd: Date
+): Date | null {
+  const MS_PER_HOUR = 3600_000;
+  const MS_PER_DAY = 24 * MS_PER_HOUR;
+
+  switch (timeWindow) {
+    case '24h':
+      return new Date(windowEnd.getTime() - MS_PER_DAY);
+    case '7d':
+      return new Date(windowEnd.getTime() - 7 * MS_PER_DAY);
+    case '30d':
+      return new Date(windowEnd.getTime() - 30 * MS_PER_DAY);
+    case 'all':
+      return null;
   }
 }

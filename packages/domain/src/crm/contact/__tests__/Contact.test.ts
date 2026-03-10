@@ -848,14 +848,15 @@ describe('Contact Aggregate', () => {
 
   describe('CONTACT_INTERACTION_TYPES (IFC-192)', () => {
     it('should export CONTACT_INTERACTION_TYPES with correct values', () => {
-      expect(CONTACT_INTERACTION_TYPES).toEqual(['EMAIL', 'CALL', 'MEETING']);
+      expect(CONTACT_INTERACTION_TYPES).toEqual(['EMAIL', 'CALL', 'MEETING', 'NOTE']);
     });
 
-    it('should be a readonly tuple (3 values)', () => {
-      expect(CONTACT_INTERACTION_TYPES).toHaveLength(3);
+    it('should be a readonly tuple (4 values)', () => {
+      expect(CONTACT_INTERACTION_TYPES).toHaveLength(4);
       expect(CONTACT_INTERACTION_TYPES[0]).toBe('EMAIL');
       expect(CONTACT_INTERACTION_TYPES[1]).toBe('CALL');
       expect(CONTACT_INTERACTION_TYPES[2]).toBe('MEETING');
+      expect(CONTACT_INTERACTION_TYPES[3]).toBe('NOTE');
     });
   });
 });

@@ -169,8 +169,11 @@ export function sanitizeContent(content: string): string {
   // Substitute with a sentinel token that won't be affected by the escape pass below
   for (const pattern of INJECTION_PATTERNS) {
     if (pattern.test(sanitized)) {
+      const replacePattern = pattern.global
+        ? pattern
+        : new RegExp(pattern.source, pattern.flags.includes('g') ? pattern.flags : `${pattern.flags}g`);
       // Replace the suspicious pattern with the sentinel token
-      sanitized = sanitized.replaceAll(pattern, FILTERED_PLACEHOLDER);
+      sanitized = sanitized.replaceAll(replacePattern, FILTERED_PLACEHOLDER);
     }
   }
 
@@ -413,28 +416,13 @@ async function retrieveCaseDocuments(
   query: string,
   maxResults: number
 ): Promise<Citation[]> {
-  // Get document IDs attached to the case
-  const caseWithDocs = await prisma.case.findFirst({
-    where: {
-      id: caseId,
-      tenantId: tenantId,
-    },
-    select: {
-      documentIds: true,
-    },
-  });
-
-  if (!caseWithDocs || !caseWithDocs.documentIds.length) {
-    return [];
-  }
-
-  // Fetch documents with ACL
+  // Case documents are linked via relatedCaseId in the current Prisma schema.
   const documents = await prisma.caseDocument.findMany({
     where: {
-      id: { in: caseWithDocs.documentIds },
-      tenant_id: tenantId,
-      deleted_at: null,
-      is_latest_version: true,
+      relatedCaseId: caseId,
+      tenantId,
+      deletedAt: null,
+      isLatestVersion: true,
       OR: [
         { title: { contains: query, mode: 'insensitive' } },
         { description: { contains: query, mode: 'insensitive' } },
@@ -444,17 +432,17 @@ async function retrieveCaseDocuments(
       acl: true,
     },
     take: maxResults,
-    orderBy: { updated_at: 'desc' },
+    orderBy: { updatedAt: 'desc' },
   });
 
   // Filter by ACL
   const accessibleDocs = documents.filter((doc) => {
     const hasAccess = doc.acl.some(
       (acl) =>
-        (acl.principal_type === 'USER' && acl.principal_id === userId) ||
-        acl.principal_type === 'TENANT'
+        (acl.principalType === 'USER' && acl.principalId === userId) ||
+        acl.principalType === 'TENANT'
     );
-    return hasAccess || doc.created_by === userId;
+    return hasAccess || doc.createdBy === userId;
   });
 
   return accessibleDocs.map((doc) => ({
@@ -466,9 +454,9 @@ async function retrieveCaseDocuments(
     relevanceScore: calculateRelevance(query, `${doc.title} ${doc.description || ''}`),
     snippet: sanitizeContent(doc.description || doc.title),
     metadata: {
-      documentType: doc.document_type,
+      documentType: doc.documentType,
       classification: doc.classification,
-      version: `${doc.version_major}.${doc.version_minor}.${doc.version_patch}`,
+      version: `${doc.versionMajor}.${doc.versionMinor}.${doc.versionPatch}`,
     },
   }));
 }
@@ -511,7 +499,7 @@ async function retrieveCaseTasks(
     metadata: {
       status: task.status,
       dueDate: task.dueDate?.toISOString(),
-      priority: task.priority,
+      assignee: task.assignee,
     },
   }));
 }
@@ -773,21 +761,45 @@ export async function requestApproval(
     status: 'pending',
   };
 
-  // Store in database for persistence
-  await prisma.pendingApproval.create({
-    data: {
-      id: approvalRequest.id,
-      tenantId: request.tenantId,
-      userId: request.userId,
-      toolName: request.toolName,
-      action: request.action,
-      resourceType: 'case',
-      resourceId: request.caseId,
-      content: request.content,
-      recipients: request.recipients || [],
-      status: 'PENDING',
-    },
-  });
+  // Older environments exposed a pendingApproval delegate. The current Prisma
+  // client does not, so persist only when that legacy delegate is available.
+  type PendingApprovalDelegate = {
+    create(args: {
+      data: {
+        id: string;
+        tenantId: string;
+        userId: string;
+        toolName: string;
+        action: string;
+        resourceType: string;
+        resourceId: string;
+        content: string;
+        recipients: string[];
+        status: string;
+      };
+    }): Promise<unknown>;
+  };
+
+  const pendingApprovalStore = (
+    prisma as PrismaClient & { pendingApproval?: PendingApprovalDelegate }
+  ).pendingApproval;
+
+  if (pendingApprovalStore) {
+    await pendingApprovalStore.create({
+      data: {
+        id: approvalRequest.id,
+        tenantId: request.tenantId,
+        userId: request.userId,
+        toolName: request.toolName,
+        action: request.action,
+        resourceType: 'case',
+        resourceId: request.caseId,
+        content: request.content,
+        recipients: request.recipients || [],
+        status: 'PENDING',
+      },
+    });
+  }
 
   return approvalRequest;
 }

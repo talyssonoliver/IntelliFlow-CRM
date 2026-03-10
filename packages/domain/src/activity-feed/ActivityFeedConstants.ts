@@ -50,9 +50,16 @@ export const ACTIVITY_FEED_ENTITY_TYPES = [
   'TICKET',
   'ACCOUNT',
   'TASK',
+  'CASE',
+  'DOCUMENT',
 ] as const;
 
 export type ActivityFeedEntityType = (typeof ACTIVITY_FEED_ENTITY_TYPES)[number];
+
+/** Time windows for activity feed stats aggregation */
+export const ACTIVITY_FEED_TIME_WINDOWS = ['24h', '7d', '30d', 'all'] as const;
+
+export type ActivityFeedTimeWindow = (typeof ACTIVITY_FEED_TIME_WINDOWS)[number];
 
 /** Default feed page size */
 export const ACTIVITY_FEED_DEFAULT_LIMIT = 20;

@@ -35,7 +35,7 @@ export const createTicketSchema = z.object({
   contactEmail: z.email(),
   contactId: idSchema.optional(),
   assigneeId: idSchema.optional(),
-  slaPolicyId: idSchema,
+  slaPolicyId: idSchema.optional(),
 });
 
 export type CreateTicketInput = z.infer<typeof createTicketSchema>;

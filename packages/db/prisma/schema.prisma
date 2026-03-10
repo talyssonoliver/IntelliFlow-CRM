@@ -134,6 +134,18 @@ model Tenant {
   // Custom calendars
   calendars            Calendar[]
 
+  // Activity reactions & comments
+  activityReactions    ActivityReaction[]
+  activityComments     ActivityComment[]
+
+  // User sessions (Fix #9 — session persistence)
+  sessions             Session[]
+
+  // Help center
+  helpArticles         HelpArticle[]
+  articleSections      ArticleSection[]
+  articleFeedback      ArticleFeedback[]
+
   @@index([slug])
   @@index([status])
   @@map("tenants")
@@ -215,6 +227,7 @@ model User {
   // Custom calendars owned by this user
   calendars           Calendar[]
   mfaSettings         UserMfaSettings?
+  sessions            Session[]
 
   @@index([email])
   @@index([role])
@@ -243,6 +256,28 @@ model UserMfaSettings {
   @@index([userId])
   @@index([tenantId])
   @@map("user_mfa_settings")
+}
+
+/// User session persistence model (Fix #9 — session.service.ts DB persistence)
+model Session {
+  id           String   @id
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  deviceInfo   Json     @default("{}")
+  ipAddress    String?  @db.VarChar(45)
+  userAgent    String?
+  refreshToken String?
+  rememberMe   Boolean  @default(false)
+  lastActiveAt DateTime @default(now())
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([tenantId])
+  @@index([expiresAt])
+  @@map("sessions")
 }
 
 enum UserRole {
@@ -305,6 +340,7 @@ model Lead {
   @@index([createdAt])
   @@index([tenantId, status, score(sort: Desc)]) // IFC-030: Lead routing queries
   @@index([tenantId, ownerId, status]) // IFC-030: Assigned lead lookups
+  @@index([tenantId, ownerId, createdAt(sort: Desc)]) // HOME-PERF: Welcome summary lead counts
   @@map("leads")
 }
 
@@ -552,6 +588,8 @@ model Opportunity {
   @@index([accountId, createdAt(sort: Desc)])
   // IFC-192: Composite index for stale contact EXISTS subquery
   @@index([contactId, stage])
+  // HOME-PERF: Composite index for getWelcomeSummary deal trend queries
+  @@index([tenantId, ownerId, stage, closedAt])
   @@map("opportunities")
 }
 
@@ -865,6 +903,9 @@ model Task {
   // DBA-122: Missing FK index for opportunity queries
   @@index([opportunityId])
   @@index([calendarId])
+  // HOME-PERF: Composite indexes for getWelcomeSummary queries
+  @@index([tenantId, ownerId, priority, status])
+  @@index([tenantId, ownerId, status, dueDate])
   @@map("tasks")
 }
 
@@ -4325,4 +4366,126 @@ model Calendar {
   @@index([tenantId])
   @@index([ownerId])
   @@map("calendars")
+}
+
+model ActivityComment {
+  id             String   @id @default(cuid())
+  activityId     String
+  activitySource String   // "LEAD_ACTIVITY", "CONTACT_ACTIVITY", etc.
+  text           String   @db.Text
+  userId         String
+  userName       String
+  tenantId       String
+  createdAt      DateTime @default(now())
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([activityId, activitySource])
+  @@index([tenantId])
+  @@map("activity_comments")
+}
+
+model ActivityReaction {
+  id             String   @id @default(cuid())
+  activityId     String
+  activitySource String
+  emoji          String
+  userId         String
+  userName       String
+  tenantId       String
+  createdAt      DateTime @default(now())
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, activitySource, userId, emoji])
+  @@index([activityId, activitySource])
+  @@index([tenantId])
+  @@map("activity_reactions")
+}
+
+// ============================================
+// HELP CENTER MODELS - IFC-298
+// ============================================
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model HelpArticle {
+  id                String          @id @default(cuid())
+  slug              String
+  title             String
+  categoryId        String
+  excerpt           String          @db.Text
+  readTimeMinutes   Int
+  keywords          Json            @default("[]")
+  relatedArticleIds Json            @default("[]")
+  order             Int             @default(0)
+  status            ArticleStatus   @default(DRAFT)
+  publishedAt       DateTime?
+
+  // Multi-tenancy
+  tenantId          String
+  tenant            Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  // Relations
+  sections          ArticleSection[]
+  feedback          ArticleFeedback[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@index([categoryId])
+  @@index([status])
+  @@index([tenantId, categoryId])
+  @@map("help_articles")
+}
+
+model ArticleSection {
+  id          String       @id @default(cuid())
+  heading     String
+  content     String       @db.Text
+  blocks      Json?
+  order       Int          @default(0)
+
+  // Parent relation
+  articleId   String
+  article     HelpArticle  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  // Multi-tenancy
+  tenantId    String
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([articleId])
+  @@index([tenantId])
+  @@map("article_sections")
+}
+
+model ArticleFeedback {
+  id          String       @id @default(cuid())
+
+  // Parent relation
+  articleId   String
+  article     HelpArticle  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  helpful     Boolean
+  comment     String?      @db.Text
+  userId      String?
+
+  // Multi-tenancy
+  tenantId    String
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Timestamp (immutable — no updatedAt)
+  createdAt   DateTime     @default(now())
+
+  @@index([articleId])
+  @@index([tenantId])
+  @@map("article_feedback")
 }

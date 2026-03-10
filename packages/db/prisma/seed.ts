@@ -311,7 +311,7 @@ async function cleanDatabase() {
     where: { id: { startsWith: SEED_UUID_PREFIX } },
   });
   await prisma.caseDocumentACL.deleteMany({
-    where: { document_id: { startsWith: SEED_UUID_PREFIX } },
+    where: { documentId: { startsWith: SEED_UUID_PREFIX } },
   });
   await prisma.caseDocument.deleteMany({
     where: { id: { startsWith: SEED_UUID_PREFIX } },
@@ -610,7 +610,7 @@ async function seedRBACPermissions() {
     description: string;
   }> = [];
 
-  for (const [resources] of Object.entries(RBAC_DEFAULT_PERMISSIONS)) {
+  for (const [, resources] of Object.entries(RBAC_DEFAULT_PERMISSIONS)) {
     for (const [resource, actions] of Object.entries(resources)) {
       for (const action of actions) {
         const permissionName = `${resource}:${action}`;
@@ -5056,7 +5056,7 @@ async function seedContactAIInsights(tenantId: string) {
     lifetimeValue: 24500000, // $245,000 in cents
     churnRisk: ChurnRisk.LOW,
     nextBestAction: 'Schedule a meeting to discuss contract terms',
-    sentiment: 'Positive',
+    sentiment: 'POSITIVE',
     engagementScore: 85,
     recommendations: [
       'Contact has high engagement - good time to propose upsell',
@@ -5367,7 +5367,7 @@ async function seedGrowthMetrics(tenantId: string) {
   console.log(`✅ Created ${metrics.length} growth metrics`);
 }
 
-async function seedDealsWonMetrics() {
+async function seedDealsWonMetrics(tenantId: string) {
   console.log('📊 Seeding deals won metrics...');
 
   const currentYear = new Date().getFullYear();
@@ -5385,6 +5385,7 @@ async function seedDealsWonMetrics() {
 
   const metrics = chartData.map((data, index) => ({
     id: SEED_IDS.dealsWonMetrics[monthIds[index] as keyof typeof SEED_IDS.dealsWonMetrics],
+    tenantId,
     month: data.month,
     year: currentYear,
     value: data.value,
@@ -5410,7 +5411,7 @@ async function seedTicketNextSteps(tenantId: string) {
       id: SEED_IDS.ticketNextSteps.verifyDbFix,
       ticketId: SEED_IDS.tickets.systemOutage,
       title: 'Verify DB cluster fix deployment',
-      dueDate: 'Due in 1 hour',
+      dueDateLabel: 'Due in 1 hour',
       completed: false,
       tenantId,
     },
@@ -5418,7 +5419,7 @@ async function seedTicketNextSteps(tenantId: string) {
       id: SEED_IDS.ticketNextSteps.confirmResolution,
       ticketId: SEED_IDS.tickets.systemOutage,
       title: 'Confirm with customer resolution',
-      dueDate: 'Due Today',
+      dueDateLabel: 'Due Today',
       completed: false,
       tenantId,
     },
@@ -5426,7 +5427,7 @@ async function seedTicketNextSteps(tenantId: string) {
       id: SEED_IDS.ticketNextSteps.documentRootCause,
       ticketId: SEED_IDS.tickets.systemOutage,
       title: 'Document root cause for knowledge base',
-      dueDate: 'Tomorrow',
+      dueDateLabel: 'Tomorrow',
       completed: false,
       tenantId,
     },
@@ -5436,7 +5437,7 @@ async function seedTicketNextSteps(tenantId: string) {
       id: SEED_IDS.ticketNextSteps.loginReviewSso,
       ticketId: SEED_IDS.tickets.loginFailure,
       title: 'Review ticket details and confirm category',
-      dueDate: 'Due Today',
+      dueDateLabel: 'Due Today',
       completed: true,
       tenantId,
     },
@@ -5444,7 +5445,7 @@ async function seedTicketNextSteps(tenantId: string) {
       id: SEED_IDS.ticketNextSteps.loginAckCustomer,
       ticketId: SEED_IDS.tickets.loginFailure,
       title: 'Send initial acknowledgement to customer',
-      dueDate: 'Due Today',
+      dueDateLabel: 'Due Today',
       completed: true,
       tenantId,
     },
@@ -5452,7 +5453,7 @@ async function seedTicketNextSteps(tenantId: string) {
       id: SEED_IDS.ticketNextSteps.loginEscalate,
       ticketId: SEED_IDS.tickets.loginFailure,
       title: 'Escalate to senior support if unresolved',
-      dueDate: 'Due Today',
+      dueDateLabel: 'Due Today',
       completed: false,
       tenantId,
     },
@@ -5460,7 +5461,7 @@ async function seedTicketNextSteps(tenantId: string) {
       id: SEED_IDS.ticketNextSteps.loginUpdateCustomer,
       ticketId: SEED_IDS.tickets.loginFailure,
       title: 'Update customer with resolution progress',
-      dueDate: 'Tomorrow',
+      dueDateLabel: 'Tomorrow',
       completed: false,
       tenantId,
     },
@@ -5470,7 +5471,7 @@ async function seedTicketNextSteps(tenantId: string) {
       id: SEED_IDS.ticketNextSteps.darkReviewDetails,
       ticketId: SEED_IDS.tickets.darkModeRequest,
       title: 'Review ticket details and confirm category',
-      dueDate: 'Due Today',
+      dueDateLabel: 'Due Today',
       completed: false,
       tenantId,
     },
@@ -5478,7 +5479,7 @@ async function seedTicketNextSteps(tenantId: string) {
       id: SEED_IDS.ticketNextSteps.darkAckCustomer,
       ticketId: SEED_IDS.tickets.darkModeRequest,
       title: 'Send initial acknowledgement to customer',
-      dueDate: 'Due Today',
+      dueDateLabel: 'Due Today',
       completed: false,
       tenantId,
     },
@@ -5486,7 +5487,7 @@ async function seedTicketNextSteps(tenantId: string) {
       id: SEED_IDS.ticketNextSteps.darkInvestigate,
       ticketId: SEED_IDS.tickets.darkModeRequest,
       title: 'Investigate root cause and document findings',
-      dueDate: 'Tomorrow',
+      dueDateLabel: 'Tomorrow',
       completed: false,
       tenantId,
     },
@@ -5496,7 +5497,7 @@ async function seedTicketNextSteps(tenantId: string) {
       id: SEED_IDS.ticketNextSteps.billingReview,
       ticketId: SEED_IDS.tickets.billingInquiry,
       title: 'Review ticket details and confirm category',
-      dueDate: 'Due Today',
+      dueDateLabel: 'Due Today',
       completed: true,
       tenantId,
     },
@@ -5504,7 +5505,7 @@ async function seedTicketNextSteps(tenantId: string) {
       id: SEED_IDS.ticketNextSteps.billingAck,
       ticketId: SEED_IDS.tickets.billingInquiry,
       title: 'Send initial acknowledgement to customer',
-      dueDate: 'Due Today',
+      dueDateLabel: 'Due Today',
       completed: true,
       tenantId,
     },
@@ -5512,7 +5513,7 @@ async function seedTicketNextSteps(tenantId: string) {
       id: SEED_IDS.ticketNextSteps.billingInvestigate,
       ticketId: SEED_IDS.tickets.billingInquiry,
       title: 'Investigate root cause and document findings',
-      dueDate: 'Tomorrow',
+      dueDateLabel: 'Tomorrow',
       completed: false,
       tenantId,
     },
@@ -5522,7 +5523,7 @@ async function seedTicketNextSteps(tenantId: string) {
       id: SEED_IDS.ticketNextSteps.apiReview,
       ticketId: SEED_IDS.tickets.api500Error,
       title: 'Review ticket details and confirm category',
-      dueDate: 'Due Today',
+      dueDateLabel: 'Due Today',
       completed: true,
       tenantId,
     },
@@ -5530,7 +5531,7 @@ async function seedTicketNextSteps(tenantId: string) {
       id: SEED_IDS.ticketNextSteps.apiAck,
       ticketId: SEED_IDS.tickets.api500Error,
       title: 'Send initial acknowledgement to customer',
-      dueDate: 'Due Today',
+      dueDateLabel: 'Due Today',
       completed: true,
       tenantId,
     },
@@ -5538,7 +5539,7 @@ async function seedTicketNextSteps(tenantId: string) {
       id: SEED_IDS.ticketNextSteps.apiEscalate,
       ticketId: SEED_IDS.tickets.api500Error,
       title: 'Escalate to senior support if unresolved',
-      dueDate: 'Due in 1 hour',
+      dueDateLabel: 'Due in 1 hour',
       completed: false,
       tenantId,
     },
@@ -5546,7 +5547,7 @@ async function seedTicketNextSteps(tenantId: string) {
       id: SEED_IDS.ticketNextSteps.apiUpdate,
       ticketId: SEED_IDS.tickets.api500Error,
       title: 'Update customer with resolution progress',
-      dueDate: 'Tomorrow',
+      dueDateLabel: 'Tomorrow',
       completed: false,
       tenantId,
     },
@@ -5556,7 +5557,7 @@ async function seedTicketNextSteps(tenantId: string) {
       id: SEED_IDS.ticketNextSteps.dashReview,
       ticketId: SEED_IDS.tickets.dashboardPerformance,
       title: 'Review ticket details and confirm category',
-      dueDate: 'Due Today',
+      dueDateLabel: 'Due Today',
       completed: false,
       tenantId,
     },
@@ -5564,7 +5565,7 @@ async function seedTicketNextSteps(tenantId: string) {
       id: SEED_IDS.ticketNextSteps.dashAck,
       ticketId: SEED_IDS.tickets.dashboardPerformance,
       title: 'Send initial acknowledgement to customer',
-      dueDate: 'Due Today',
+      dueDateLabel: 'Due Today',
       completed: false,
       tenantId,
     },
@@ -5572,7 +5573,7 @@ async function seedTicketNextSteps(tenantId: string) {
       id: SEED_IDS.ticketNextSteps.dashEscalate,
       ticketId: SEED_IDS.tickets.dashboardPerformance,
       title: 'Escalate to senior support if unresolved',
-      dueDate: 'Due Today',
+      dueDateLabel: 'Due Today',
       completed: false,
       tenantId,
     },
@@ -5580,7 +5581,7 @@ async function seedTicketNextSteps(tenantId: string) {
       id: SEED_IDS.ticketNextSteps.dashUpdate,
       ticketId: SEED_IDS.tickets.dashboardPerformance,
       title: 'Update customer with resolution progress',
-      dueDate: 'Tomorrow',
+      dueDateLabel: 'Tomorrow',
       completed: false,
       tenantId,
     },
@@ -5705,7 +5706,7 @@ async function seedTicketAIInsights(tenantId: string) {
         'Verify load balancer health checks for West region',
         'Review recent deployment changes in the last 24 hours',
       ],
-      sentiment: 'negative',
+      sentiment: 'NEGATIVE',
       predictedResolutionTime: '2-4 hours',
       similarResolvedTickets: 8,
       escalationRisk: 'high',
@@ -5719,7 +5720,7 @@ async function seedTicketAIInsights(tenantId: string) {
         'Verify SAML certificate expiry dates',
         'Provide direct login URL as temporary workaround',
       ],
-      sentiment: 'negative',
+      sentiment: 'NEGATIVE',
       predictedResolutionTime: '1-2 hours',
       similarResolvedTickets: 5,
       escalationRisk: 'high',
@@ -5733,7 +5734,7 @@ async function seedTicketAIInsights(tenantId: string) {
         'Review API gateway rate limiting configuration',
         'Verify recent schema migration compatibility',
       ],
-      sentiment: 'negative',
+      sentiment: 'NEGATIVE',
       predictedResolutionTime: '1-3 hours',
       similarResolvedTickets: 12,
       escalationRisk: 'critical',
@@ -5747,7 +5748,7 @@ async function seedTicketAIInsights(tenantId: string) {
         'Add caching layer for chart data aggregation',
         'Check if recent data volume increase is causing slow queries',
       ],
-      sentiment: 'neutral',
+      sentiment: 'NEUTRAL',
       predictedResolutionTime: '4-8 hours',
       similarResolvedTickets: 3,
       escalationRisk: 'medium',
@@ -5775,6 +5776,7 @@ async function seedSalesPerformance(tenantId: string) {
   const performers = [
     {
       id: SEED_IDS.salesPerformance.sarahJohnson,
+      tenantId,
       userId: SEED_IDS.users.sarahJohnson,
       userName: 'Sarah Johnson',
       userAvatar: 'SJ',
@@ -5786,6 +5788,7 @@ async function seedSalesPerformance(tenantId: string) {
     },
     {
       id: SEED_IDS.salesPerformance.mikeChen,
+      tenantId,
       userId: SEED_IDS.users.mikeDavis,
       userName: 'Mike Chen',
       userAvatar: 'MC',
@@ -5797,6 +5800,7 @@ async function seedSalesPerformance(tenantId: string) {
     },
     {
       id: SEED_IDS.salesPerformance.emilyDavis,
+      tenantId,
       userId: SEED_IDS.users.emilyDavis,
       userName: 'Emily Davis',
       userAvatar: 'ED',
@@ -5808,6 +5812,7 @@ async function seedSalesPerformance(tenantId: string) {
     },
     {
       id: SEED_IDS.salesPerformance.jamesWilson,
+      tenantId,
       userId: SEED_IDS.users.jamesWilson,
       userName: 'James Wilson',
       userAvatar: 'JW',
@@ -6004,7 +6009,7 @@ async function seedWorkspaces() {
       description: 'Main IntelliFlow CRM workspace for enterprise customers',
       industry: 'Technology',
       size: 'enterprise',
-      plan: 'enterprise',
+      plan: 'ENTERPRISE',
       isActive: true,
       settings: {
         theme: 'dark',
@@ -6019,7 +6024,7 @@ async function seedWorkspaces() {
       description: 'Demo workspace for trials and demonstrations',
       industry: 'Various',
       size: 'small',
-      plan: 'trial',
+      plan: 'STARTER',
       isActive: true,
       settings: { theme: 'light', timezone: 'America/New_York' },
     },
@@ -6036,12 +6041,13 @@ async function seedWorkspaces() {
   console.log(`✅ Created ${workspaces.length} workspaces`);
 }
 
-async function seedTeams() {
+async function seedTeams(tenantId: string) {
   console.log('👥 Seeding teams...');
 
   const teams = [
     {
       id: SEED_IDS.teams.sales,
+      tenantId,
       name: 'Sales Team',
       description: 'Enterprise sales and account management',
       workspaceId: SEED_IDS.workspaces.intelliflow,
@@ -6050,6 +6056,7 @@ async function seedTeams() {
     },
     {
       id: SEED_IDS.teams.support,
+      tenantId,
       name: 'Support Team',
       description: 'Customer support and ticket resolution',
       workspaceId: SEED_IDS.workspaces.intelliflow,
@@ -6058,6 +6065,7 @@ async function seedTeams() {
     },
     {
       id: SEED_IDS.teams.engineering,
+      tenantId,
       name: 'Engineering Team',
       description: 'Technical implementation and integrations',
       workspaceId: SEED_IDS.workspaces.intelliflow,
@@ -6077,12 +6085,13 @@ async function seedTeams() {
   console.log(`✅ Created ${teams.length} teams`);
 }
 
-async function seedTeamMembers() {
+async function seedTeamMembers(tenantId: string) {
   console.log('👤 Seeding team members...');
 
   const members = [
     {
       id: SEED_IDS.teamMembers.sarahSales,
+      tenantId,
       teamId: SEED_IDS.teams.sales,
       userId: SEED_IDS.users.sarahJohnson,
       role: 'lead',
@@ -6090,6 +6099,7 @@ async function seedTeamMembers() {
     },
     {
       id: SEED_IDS.teamMembers.mikeSales,
+      tenantId,
       teamId: SEED_IDS.teams.sales,
       userId: SEED_IDS.users.mikeDavis,
       role: 'member',
@@ -6097,6 +6107,7 @@ async function seedTeamMembers() {
     },
     {
       id: SEED_IDS.teamMembers.emilySupport,
+      tenantId,
       teamId: SEED_IDS.teams.support,
       userId: SEED_IDS.users.emilyDavis,
       role: 'lead',
@@ -6122,6 +6133,7 @@ async function seedEmailTemplates(tenantId: string) {
   const templates = [
     {
       id: SEED_IDS.emailTemplates.welcome,
+      tenantId,
       name: 'Welcome Email',
       subject: 'Welcome to IntelliFlow CRM!',
       body: "<h1>Welcome!</h1><p>Thank you for joining IntelliFlow CRM. We're excited to help you streamline your sales process.</p>",
@@ -6131,6 +6143,7 @@ async function seedEmailTemplates(tenantId: string) {
     },
     {
       id: SEED_IDS.emailTemplates.followUp,
+      tenantId,
       name: 'Sales Follow-up',
       subject: 'Following up on our conversation',
       body: '<p>Hi {{firstName}},</p><p>I wanted to follow up on our conversation about {{topic}}. Are you available for a quick call this week?</p>',
@@ -6140,6 +6153,7 @@ async function seedEmailTemplates(tenantId: string) {
     },
     {
       id: SEED_IDS.emailTemplates.proposal,
+      tenantId,
       name: 'Proposal Template',
       subject: 'Your Custom Proposal from IntelliFlow',
       body: "<h2>Proposal for {{company}}</h2><p>Based on our discussions, we've prepared the following proposal...</p>",
@@ -6166,6 +6180,7 @@ async function seedEmailRecords(tenantId: string) {
   const emails = [
     {
       id: SEED_IDS.emailRecords.welcomeSarah,
+      tenantId,
       templateId: SEED_IDS.emailTemplates.welcome,
       subject: 'Welcome to IntelliFlow CRM!',
       body: '<h1>Welcome Sarah!</h1><p>Thank you for joining IntelliFlow CRM.</p>',
@@ -6181,6 +6196,7 @@ async function seedEmailRecords(tenantId: string) {
     },
     {
       id: SEED_IDS.emailRecords.proposalAcme,
+      tenantId,
       templateId: SEED_IDS.emailTemplates.proposal,
       subject: 'Your Custom Proposal from IntelliFlow',
       body: '<h2>Proposal for Acme Corp</h2><p>Enterprise license proposal...</p>',
@@ -6197,6 +6213,7 @@ async function seedEmailRecords(tenantId: string) {
     },
     {
       id: SEED_IDS.emailRecords.followUpDavid,
+      tenantId,
       templateId: SEED_IDS.emailTemplates.followUp,
       subject: 'Following up on our conversation',
       body: '<p>Hi David,</p><p>I wanted to follow up on our demo...</p>',
@@ -6226,25 +6243,30 @@ async function seedChatConversations(tenantId: string) {
   const conversations = [
     {
       id: SEED_IDS.chatConversations.supportChat1,
+      tenantId,
       channel: ChatChannel.INTERNAL,
       status: ChatStatus.OPEN,
       contactId: SEED_IDS.additionalContacts.sarahJenkins,
+      contactName: 'Sarah Jenkins',
       assigneeId: SEED_IDS.users.emilyDavis,
       priority: 'high',
       lastMessageAt: new Date('2024-12-20T09:02:00'),
     },
     {
       id: SEED_IDS.chatConversations.whatsappInquiry,
+      tenantId,
       channel: ChatChannel.WHATSAPP,
       externalId: 'wa_12345678',
       status: ChatStatus.RESOLVED,
       contactId: SEED_IDS.contacts.sarahMiller,
+      contactName: 'Sarah Miller',
       assigneeId: SEED_IDS.users.mikeDavis,
       closedAt: new Date('2024-12-18T14:30:00'),
       lastMessageAt: new Date('2024-12-18T14:25:00'),
     },
     {
       id: SEED_IDS.chatConversations.slackIntegration,
+      tenantId,
       channel: ChatChannel.SLACK,
       externalId: 'slack_C123ABC',
       status: ChatStatus.OPEN,
@@ -6316,6 +6338,7 @@ async function seedCallRecords(tenantId: string) {
   const calls = [
     {
       id: SEED_IDS.callRecords.discoverySarah,
+      tenantId,
       direction: 'outbound',
       fromNumber: '+1-555-0100',
       toNumber: '+1-555-0101',
@@ -6326,7 +6349,7 @@ async function seedCallRecords(tenantId: string) {
         'Sarah: Hi, thanks for taking the time today...\nRep: Of course, let me walk you through our enterprise features...',
       summary:
         'Discovery call with Sarah Jenkins. Discussed enterprise features, pricing, and implementation timeline. Scheduled follow-up demo.',
-      sentiment: 'positive',
+      sentiment: 'POSITIVE',
       startedAt: new Date('2024-12-15T10:00:00'),
       endedAt: new Date('2024-12-15T10:30:00'),
       userId: SEED_IDS.users.sarahJohnson,
@@ -6335,6 +6358,7 @@ async function seedCallRecords(tenantId: string) {
     },
     {
       id: SEED_IDS.callRecords.demoTechCorp,
+      tenantId,
       direction: 'outbound',
       fromNumber: '+1-555-0100',
       toNumber: '+1-555-0102',
@@ -6343,7 +6367,7 @@ async function seedCallRecords(tenantId: string) {
       recordingUrl: 'https://recordings.intelliflow.com/call_002.mp3',
       transcription: 'Demo of the platform...',
       summary: 'Product demo for TechCorp. Very engaged. Requested pricing proposal.',
-      sentiment: 'positive',
+      sentiment: 'POSITIVE',
       startedAt: new Date('2024-12-18T14:00:00'),
       endedAt: new Date('2024-12-18T14:45:00'),
       userId: SEED_IDS.users.mikeDavis,
@@ -6351,13 +6375,14 @@ async function seedCallRecords(tenantId: string) {
     },
     {
       id: SEED_IDS.callRecords.supportFollowup,
+      tenantId,
       direction: 'inbound',
       fromNumber: '+1-555-0103',
       toNumber: '+1-555-0100',
       duration: 600, // 10 minutes
       status: CallStatus.COMPLETED,
       summary: 'Support follow-up on ticket resolution.',
-      sentiment: 'neutral',
+      sentiment: 'NEUTRAL',
       startedAt: new Date('2024-12-20T16:00:00'),
       endedAt: new Date('2024-12-20T16:10:00'),
       userId: SEED_IDS.users.emilyDavis,
@@ -6382,6 +6407,7 @@ async function seedDocuments(tenantId: string) {
   const documents = [
     {
       id: SEED_IDS.documents.proposalAcme,
+      tenantId,
       name: 'Acme Corp Enterprise Proposal',
       fileName: 'Acme_Enterprise_Proposal_2024.pdf',
       fileSize: 2048576, // 2MB
@@ -6396,6 +6422,7 @@ async function seedDocuments(tenantId: string) {
     },
     {
       id: SEED_IDS.documents.contract2024,
+      tenantId,
       name: 'Master Service Agreement',
       fileName: 'MSA_TechCorp_2024.pdf',
       fileSize: 1548576,
@@ -6410,6 +6437,7 @@ async function seedDocuments(tenantId: string) {
     },
     {
       id: SEED_IDS.documents.requirementsSpec,
+      tenantId,
       name: 'Technical Requirements Spec',
       fileName: 'TechCorp_Requirements.docx',
       fileSize: 512000,
@@ -6636,13 +6664,14 @@ async function seedCases() {
   console.log(`✅ Created ${cases.length} cases`);
 }
 
-async function seedCaseTasks() {
+async function seedCaseTasks(tenantId: string) {
   console.log('📋 Seeding case tasks...');
 
   const tasks = [
     // Estate Planning tasks
     {
       id: SEED_IDS.caseTasks.reviewDocuments,
+      tenantId,
       caseId: SEED_IDS.cases.estatePlanningSmith,
       title: 'Review existing estate documents',
       description: 'Review all current wills, trusts, and beneficiary designations',
@@ -6653,6 +6682,7 @@ async function seedCaseTasks() {
     },
     {
       id: SEED_IDS.caseTasks.draftAgreement,
+      tenantId,
       caseId: SEED_IDS.cases.estatePlanningSmith,
       title: 'Draft updated trust agreement',
       description: 'Prepare new revocable living trust with tax optimization provisions',
@@ -6663,6 +6693,7 @@ async function seedCaseTasks() {
     },
     {
       id: SEED_IDS.caseTasks.clientMeeting,
+      tenantId,
       caseId: SEED_IDS.cases.estatePlanningSmith,
       title: 'Schedule client review meeting',
       description: 'Set up meeting with Robert and Margaret Smith to review draft documents',
@@ -6674,6 +6705,7 @@ async function seedCaseTasks() {
     // Corporate Merger tasks (overdue)
     {
       id: SEED_IDS.caseTasks.mergerReview,
+      tenantId,
       caseId: SEED_IDS.cases.corporateMergerTechFlow,
       title: 'Complete financial due diligence review',
       description: 'Review all financial statements, audit reports, and projections from TechFlow',
@@ -6684,6 +6716,7 @@ async function seedCaseTasks() {
     },
     {
       id: SEED_IDS.caseTasks.dueDiligence,
+      tenantId,
       caseId: SEED_IDS.cases.corporateMergerTechFlow,
       title: 'Collect outstanding disclosure documents',
       description: 'Request and verify all required disclosure documents from counterparty',
@@ -6695,6 +6728,7 @@ async function seedCaseTasks() {
     // Civil Litigation tasks
     {
       id: SEED_IDS.caseTasks.collectEvidence,
+      tenantId,
       caseId: SEED_IDS.cases.civilLitigationJohnson,
       title: 'Gather zoning records and evidence',
       description: 'Request municipal zoning records, meeting minutes, and prior zoning decisions',
@@ -6705,6 +6739,7 @@ async function seedCaseTasks() {
     },
     {
       id: SEED_IDS.caseTasks.fileMotion,
+      tenantId,
       caseId: SEED_IDS.cases.civilLitigationJohnson,
       title: 'File preliminary motion',
       description: 'Prepare and file motion for preliminary injunction',
@@ -6716,6 +6751,7 @@ async function seedCaseTasks() {
     // Real Estate Closing tasks (all completed)
     {
       id: SEED_IDS.caseTasks.titleSearch,
+      tenantId,
       caseId: SEED_IDS.cases.realEstateClosingPine,
       title: 'Complete title search',
       description: 'Verify clear title and resolve any liens or encumbrances',
@@ -6726,6 +6762,7 @@ async function seedCaseTasks() {
     },
     {
       id: SEED_IDS.caseTasks.draftClosingDocs,
+      tenantId,
       caseId: SEED_IDS.cases.realEstateClosingPine,
       title: 'Draft closing documents',
       description: 'Prepare deed, settlement statement, and all closing documents',
@@ -6736,6 +6773,7 @@ async function seedCaseTasks() {
     },
     {
       id: SEED_IDS.caseTasks.depositTransfer,
+      tenantId,
       caseId: SEED_IDS.cases.realEstateClosingPine,
       title: 'Process deposit and fund transfer',
       description: 'Coordinate escrow deposit and final fund transfer between parties',
@@ -6747,6 +6785,7 @@ async function seedCaseTasks() {
     // Employment Dispute task
     {
       id: SEED_IDS.caseTasks.filingDeadline,
+      tenantId,
       caseId: SEED_IDS.cases.employmentDispute,
       title: 'Prepare response to claim',
       description: 'Draft formal response to wrongful termination claim before filing deadline',
@@ -6758,6 +6797,7 @@ async function seedCaseTasks() {
     // Court Hearing for IP case
     {
       id: SEED_IDS.caseTasks.courtHearing,
+      tenantId,
       caseId: SEED_IDS.cases.intellectualPropertyDispute,
       title: 'Prepare for preliminary hearing',
       description: 'Prepare all materials for the preliminary injunction hearing',
@@ -6768,13 +6808,11 @@ async function seedCaseTasks() {
     },
   ];
 
-  const tenantId = SEED_IDS.tenant.default;
   for (const t of tasks) {
-    const data = { ...t, tenantId };
     await prisma.caseTask.upsert({
       where: { id: t.id },
-      update: data,
-      create: data,
+      update: t,
+      create: t,
     });
   }
 
@@ -6782,7 +6820,7 @@ async function seedCaseTasks() {
 }
 
 // IFC-152: Case Document Management
-async function seedCaseDocuments() {
+async function seedCaseDocuments(tenantId: string) {
   console.log('📑 Seeding case documents...');
 
   const userId = SEED_IDS.users.admin;
@@ -6790,164 +6828,164 @@ async function seedCaseDocuments() {
   const caseDocuments = [
     {
       id: SEED_IDS.caseDocuments.employmentAgreement,
-      tenant_id: userId,
-      version_major: 2,
-      version_minor: 1,
-      version_patch: 0,
-      parent_version_id: null,
-      is_latest_version: true,
+      tenantId,
+      versionMajor: 2,
+      versionMinor: 1,
+      versionPatch: 0,
+      parentVersionId: null,
+      isLatestVersion: true,
       status: 'SIGNED',
       title: 'Employment Agreement - Sarah Chen',
       description:
         'Standard employment contract with non-compete clause for Senior Software Engineer position',
-      document_type: 'CONTRACT',
+      documentType: 'CONTRACT',
       classification: 'CONFIDENTIAL',
       tags: ['Employment', 'Legal', 'HR'],
-      related_case_id: null,
-      related_contact_id: SEED_IDS.contacts.sarahMiller,
-      storage_key: 'documents/employment-agreement-sarah-chen.pdf',
-      content_hash: 'a'.repeat(64),
-      mime_type: 'application/pdf',
-      size_bytes: BigInt(245000),
-      signed_by: userId,
-      signed_at: new Date('2024-12-29T14:00:00'),
-      signature_hash: 'signature-' + 'b'.repeat(56),
-      signature_ip_address: '192.168.1.100',
-      signature_user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-      created_by: userId,
-      created_at: new Date('2024-12-28T14:30:00'),
-      updated_by: userId,
-      updated_at: new Date('2024-12-29T10:15:00'),
-      retention_until: null,
-      deleted_at: null,
+      relatedCaseId: null,
+      relatedContactId: SEED_IDS.contacts.sarahMiller,
+      storageKey: 'documents/employment-agreement-sarah-chen.pdf',
+      contentHash: 'a'.repeat(64),
+      mimeType: 'application/pdf',
+      sizeBytes: BigInt(245000),
+      signedBy: userId,
+      signedAt: new Date('2024-12-29T14:00:00'),
+      signatureHash: 'signature-' + 'b'.repeat(56),
+      signatureIpAddress: '192.168.1.100',
+      signatureUserAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+      createdBy: userId,
+      createdAt: new Date('2024-12-28T14:30:00'),
+      updatedBy: userId,
+      updatedAt: new Date('2024-12-29T10:15:00'),
+      retentionUntil: null,
+      deletedAt: null,
     },
     {
       id: SEED_IDS.caseDocuments.ndaTechCorp,
-      tenant_id: userId,
-      version_major: 1,
-      version_minor: 0,
-      version_patch: 0,
-      parent_version_id: null,
-      is_latest_version: true,
+      tenantId,
+      versionMajor: 1,
+      versionMinor: 0,
+      versionPatch: 0,
+      parentVersionId: null,
+      isLatestVersion: true,
       status: 'APPROVED',
       title: 'NDA - TechCorp Partnership',
       description: 'Non-disclosure agreement for Q1 2025 partnership discussions',
-      document_type: 'AGREEMENT',
+      documentType: 'AGREEMENT',
       classification: 'CONFIDENTIAL',
       tags: ['NDA', 'Legal', 'Partnership'],
-      related_case_id: null,
-      related_contact_id: SEED_IDS.contacts.davidChen,
-      storage_key: 'documents/nda-techcorp-2024.pdf',
-      content_hash: 'c'.repeat(64),
-      mime_type: 'application/pdf',
-      size_bytes: BigInt(95000),
-      signed_by: userId,
-      signed_at: new Date('2024-12-27T16:00:00'),
-      signature_hash: 'signature-' + 'd'.repeat(56),
-      signature_ip_address: '192.168.1.50',
-      signature_user_agent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
-      created_by: userId,
-      created_at: new Date('2024-12-26T11:00:00'),
-      updated_by: userId,
-      updated_at: new Date('2024-12-27T16:00:00'),
-      retention_until: null,
-      deleted_at: null,
+      relatedCaseId: null,
+      relatedContactId: SEED_IDS.contacts.davidChen,
+      storageKey: 'documents/nda-techcorp-2024.pdf',
+      contentHash: 'c'.repeat(64),
+      mimeType: 'application/pdf',
+      sizeBytes: BigInt(95000),
+      signedBy: userId,
+      signedAt: new Date('2024-12-27T16:00:00'),
+      signatureHash: 'signature-' + 'd'.repeat(56),
+      signatureIpAddress: '192.168.1.50',
+      signatureUserAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+      createdBy: userId,
+      createdAt: new Date('2024-12-26T11:00:00'),
+      updatedBy: userId,
+      updatedAt: new Date('2024-12-27T16:00:00'),
+      retentionUntil: null,
+      deletedAt: null,
     },
     {
       id: SEED_IDS.caseDocuments.motionToDismiss,
-      tenant_id: userId,
-      version_major: 1,
-      version_minor: 3,
-      version_patch: 0,
-      parent_version_id: null,
-      is_latest_version: true,
+      tenantId,
+      versionMajor: 1,
+      versionMinor: 3,
+      versionPatch: 0,
+      parentVersionId: null,
+      isLatestVersion: true,
       status: 'UNDER_REVIEW',
       title: 'Motion to Dismiss - Case #2024-CV-1234',
       description: 'Motion to dismiss based on lack of jurisdiction',
-      document_type: 'COURT_FILING',
+      documentType: 'COURT_FILING',
       classification: 'INTERNAL',
       tags: ['Litigation', 'Motion', 'Civil'],
-      related_case_id: null,
-      related_contact_id: null,
-      storage_key: 'documents/motion-dismiss-cv1234.pdf',
-      content_hash: 'e'.repeat(64),
-      mime_type: 'application/pdf',
-      size_bytes: BigInt(180000),
-      signed_by: null,
-      signed_at: null,
-      signature_hash: null,
-      signature_ip_address: null,
-      signature_user_agent: null,
-      created_by: userId,
-      created_at: new Date('2024-12-27T09:15:00'),
-      updated_by: userId,
-      updated_at: new Date('2024-12-29T11:20:00'),
-      retention_until: new Date('2025-12-31T23:59:59'),
-      deleted_at: null,
+      relatedCaseId: null,
+      relatedContactId: null,
+      storageKey: 'documents/motion-dismiss-cv1234.pdf',
+      contentHash: 'e'.repeat(64),
+      mimeType: 'application/pdf',
+      sizeBytes: BigInt(180000),
+      signedBy: null,
+      signedAt: null,
+      signatureHash: null,
+      signatureIpAddress: null,
+      signatureUserAgent: null,
+      createdBy: userId,
+      createdAt: new Date('2024-12-27T09:15:00'),
+      updatedBy: userId,
+      updatedAt: new Date('2024-12-29T11:20:00'),
+      retentionUntil: new Date('2025-12-31T23:59:59'),
+      deletedAt: null,
     },
     {
       id: SEED_IDS.caseDocuments.evidenceEmailLog,
-      tenant_id: userId,
-      version_major: 1,
-      version_minor: 0,
-      version_patch: 0,
-      parent_version_id: null,
-      is_latest_version: true,
+      tenantId,
+      versionMajor: 1,
+      versionMinor: 0,
+      versionPatch: 0,
+      parentVersionId: null,
+      isLatestVersion: true,
       status: 'ARCHIVED',
       title: 'Evidence - Email Communication Log',
       description: 'Email thread regarding contract negotiations with timestamps',
-      document_type: 'EVIDENCE',
+      documentType: 'EVIDENCE',
       classification: 'PRIVILEGED',
       tags: ['Evidence', 'Discovery', 'Email'],
-      related_case_id: null,
-      related_contact_id: null,
-      storage_key: 'documents/evidence-email-log.pdf',
-      content_hash: 'f'.repeat(64),
-      mime_type: 'application/pdf',
-      size_bytes: BigInt(1250000),
-      signed_by: null,
-      signed_at: null,
-      signature_hash: null,
-      signature_ip_address: null,
-      signature_user_agent: null,
-      created_by: userId,
-      created_at: new Date('2024-12-25T08:00:00'),
-      updated_by: userId,
-      updated_at: new Date('2024-12-25T08:00:00'),
-      retention_until: new Date('2030-12-31T23:59:59'),
-      deleted_at: null,
+      relatedCaseId: null,
+      relatedContactId: null,
+      storageKey: 'documents/evidence-email-log.pdf',
+      contentHash: 'f'.repeat(64),
+      mimeType: 'application/pdf',
+      sizeBytes: BigInt(1250000),
+      signedBy: null,
+      signedAt: null,
+      signatureHash: null,
+      signatureIpAddress: null,
+      signatureUserAgent: null,
+      createdBy: userId,
+      createdAt: new Date('2024-12-25T08:00:00'),
+      updatedBy: userId,
+      updatedAt: new Date('2024-12-25T08:00:00'),
+      retentionUntil: new Date('2030-12-31T23:59:59'),
+      deletedAt: null,
     },
     {
       id: SEED_IDS.caseDocuments.serviceAgreement,
-      tenant_id: userId,
-      version_major: 0,
-      version_minor: 2,
-      version_patch: 0,
-      parent_version_id: null,
-      is_latest_version: true,
+      tenantId,
+      versionMajor: 0,
+      versionMinor: 2,
+      versionPatch: 0,
+      parentVersionId: null,
+      isLatestVersion: true,
       status: 'DRAFT',
       title: 'Service Agreement - Cloud Infrastructure',
       description: 'Annual cloud service provider agreement with SLA terms',
-      document_type: 'CONTRACT',
+      documentType: 'CONTRACT',
       classification: 'INTERNAL',
       tags: ['Contract', 'SaaS', 'Infrastructure'],
-      related_case_id: null,
-      related_contact_id: null,
-      storage_key: 'documents/service-agreement-cloud.pdf',
-      content_hash: 'g'.repeat(64),
-      mime_type: 'application/pdf',
-      size_bytes: BigInt(310000),
-      signed_by: null,
-      signed_at: null,
-      signature_hash: null,
-      signature_ip_address: null,
-      signature_user_agent: null,
-      created_by: userId,
-      created_at: new Date('2024-12-24T16:45:00'),
-      updated_by: userId,
-      updated_at: new Date('2024-12-29T09:30:00'),
-      retention_until: null,
-      deleted_at: null,
+      relatedCaseId: null,
+      relatedContactId: null,
+      storageKey: 'documents/service-agreement-cloud.pdf',
+      contentHash: 'g'.repeat(64),
+      mimeType: 'application/pdf',
+      sizeBytes: BigInt(310000),
+      signedBy: null,
+      signedAt: null,
+      signatureHash: null,
+      signatureIpAddress: null,
+      signatureUserAgent: null,
+      createdBy: userId,
+      createdAt: new Date('2024-12-24T16:45:00'),
+      updatedBy: userId,
+      updatedAt: new Date('2024-12-29T09:30:00'),
+      retentionUntil: null,
+      deletedAt: null,
     },
   ];
 
@@ -6962,48 +7000,48 @@ async function seedCaseDocuments() {
     await prisma.caseDocumentACL.upsert({
       where: {
         document_id_principal_id: {
-          document_id: doc.id,
-          principal_id: userId,
+          documentId: doc.id,
+          principalId: userId,
         },
       },
       update: {},
       create: {
-        document_id: doc.id,
-        tenant_id: doc.tenant_id,
-        principal_id: userId,
-        principal_type: 'USER',
-        access_level: 'ADMIN',
-        granted_by: userId,
-        granted_at: doc.created_at,
-        expires_at: null,
+        documentId: doc.id,
+        tenantId: doc.tenantId,
+        principalId: userId,
+        principalType: 'USER',
+        accessLevel: 'ADMIN',
+        grantedBy: userId,
+        grantedAt: doc.createdAt,
+        expiresAt: null,
       },
     });
 
     // Add some audit logs
     await prisma.caseDocumentAudit.create({
       data: {
-        document_id: doc.id,
-        tenant_id: doc.tenant_id,
-        event_type: 'CREATED',
+        documentId: doc.id,
+        tenantId: doc.tenantId,
+        eventType: 'CREATED',
         metadata: { title: doc.title },
-        user_id: userId,
-        ip_address: '192.168.1.1',
-        user_agent: 'Mozilla/5.0',
-        created_at: doc.created_at,
+        userId: userId,
+        ipAddress: '192.168.1.1',
+        userAgent: 'Mozilla/5.0',
+        createdAt: doc.createdAt,
       },
     });
 
-    if (doc.status === 'SIGNED' && doc.signed_at) {
+    if (doc.status === 'SIGNED' && doc.signedAt) {
       await prisma.caseDocumentAudit.create({
         data: {
-          document_id: doc.id,
-          tenant_id: doc.tenant_id,
-          event_type: 'SIGNED',
-          metadata: { signatureHash: doc.signature_hash },
-          user_id: userId,
-          ip_address: doc.signature_ip_address || '192.168.1.1',
-          user_agent: doc.signature_user_agent || 'Mozilla/5.0',
-          created_at: doc.signed_at,
+          documentId: doc.id,
+          tenantId: doc.tenantId,
+          eventType: 'SIGNED',
+          metadata: { signatureHash: doc.signatureHash },
+          userId: userId,
+          ipAddress: doc.signatureIpAddress || '192.168.1.1',
+          userAgent: doc.signatureUserAgent || 'Mozilla/5.0',
+          createdAt: doc.signedAt,
         },
       });
     }
@@ -7019,6 +7057,7 @@ async function seedFeedbackSurveys(tenantId: string) {
   const surveys = [
     {
       id: SEED_IDS.feedbackSurveys.npsSarah,
+      tenantId,
       type: FeedbackType.NPS,
       contactId: SEED_IDS.additionalContacts.sarahJenkins,
       contactName: 'Sarah Jenkins',
@@ -7026,33 +7065,35 @@ async function seedFeedbackSurveys(tenantId: string) {
       score: 9,
       comment:
         'Excellent service! The team was very responsive and the platform exceeded our expectations.',
-      sentiment: 'positive',
+      sentiment: 'POSITIVE',
       status: FeedbackStatus.RESPONDED,
       sentAt: new Date('2024-12-01T10:00:00'),
       respondedAt: new Date('2024-12-02T14:30:00'),
     },
     {
       id: SEED_IDS.feedbackSurveys.csatDavid,
+      tenantId,
       type: FeedbackType.CSAT,
       contactId: SEED_IDS.contacts.davidChen,
       contactName: 'David Chen',
       contactEmail: 'david.chen@globalsoft.com',
       score: 4,
       comment: 'Good experience overall. Support was helpful.',
-      sentiment: 'positive',
+      sentiment: 'POSITIVE',
       status: FeedbackStatus.RESPONDED,
       sentAt: new Date('2024-12-10T09:00:00'),
       respondedAt: new Date('2024-12-10T16:00:00'),
     },
     {
       id: SEED_IDS.feedbackSurveys.cesMike,
+      tenantId,
       type: FeedbackType.CES,
       contactId: SEED_IDS.contacts.michaelBrown,
       contactName: 'Michael Brown',
       contactEmail: 'michael.brown@acme.com',
       score: 3,
       comment: 'The onboarding process was straightforward.',
-      sentiment: 'neutral',
+      sentiment: 'NEUTRAL',
       status: FeedbackStatus.RESPONDED,
       sentAt: new Date('2024-12-15T11:00:00'),
       respondedAt: new Date('2024-12-16T09:00:00'),
@@ -7122,6 +7163,7 @@ async function seedAccountHealthScores(tenantId: string) {
   const healthScores = [
     {
       id: SEED_IDS.accountHealthScores.acmeHealth,
+      tenantId,
       accountId: SEED_IDS.accounts.acmeCorp,
       accountName: 'Acme Corporation',
       overallScore: 92,
@@ -7140,6 +7182,7 @@ async function seedAccountHealthScores(tenantId: string) {
     },
     {
       id: SEED_IDS.accountHealthScores.techCorpHealth,
+      tenantId,
       accountId: SEED_IDS.accounts.techCorp,
       accountName: 'TechCorp',
       overallScore: 78,
@@ -7158,6 +7201,7 @@ async function seedAccountHealthScores(tenantId: string) {
     },
     {
       id: SEED_IDS.accountHealthScores.globalSoftHealth,
+      tenantId,
       accountId: SEED_IDS.accounts.globalSoft,
       accountName: 'GlobalSoft',
       overallScore: 65,
@@ -7745,12 +7789,13 @@ async function seedRoutingAudits(tenantId: string) {
 }
 
 // FLOW-011, FLOW-013: Ticket Categories & SLA
-async function seedTicketCategories() {
+async function seedTicketCategories(tenantId: string) {
   console.log('🏷️ Seeding ticket categories...');
 
   const categories = [
     {
       id: SEED_IDS.ticketCategories.billing,
+      tenantId,
       name: 'Billing',
       description: 'Billing and payment related inquiries',
       color: '#10B981',
@@ -7759,6 +7804,7 @@ async function seedTicketCategories() {
     },
     {
       id: SEED_IDS.ticketCategories.technical,
+      tenantId,
       name: 'Technical Support',
       description: 'Technical issues and troubleshooting',
       color: '#3B82F6',
@@ -7767,6 +7813,7 @@ async function seedTicketCategories() {
     },
     {
       id: SEED_IDS.ticketCategories.featureRequest,
+      tenantId,
       name: 'Feature Request',
       description: 'New feature requests and suggestions',
       color: '#8B5CF6',
@@ -7775,6 +7822,7 @@ async function seedTicketCategories() {
     },
     {
       id: SEED_IDS.ticketCategories.general,
+      tenantId,
       name: 'General Inquiry',
       description: 'General questions and information requests',
       color: '#6B7280',
@@ -7794,12 +7842,13 @@ async function seedTicketCategories() {
   console.log(`✅ Created ${categories.length} ticket categories`);
 }
 
-async function seedSLABreaches() {
+async function seedSLABreaches(tenantId: string) {
   console.log('⚠️ Seeding SLA breaches...');
 
   const breaches = [
     {
       id: SEED_IDS.slaBreaches.responseBreachOutage,
+      tenantId,
       ticketId: SEED_IDS.tickets.systemOutage,
       slaPolicyId: SEED_IDS.slaPolicy.premium,
       breachType: 'response',
@@ -7812,6 +7861,7 @@ async function seedSLABreaches() {
     },
     {
       id: SEED_IDS.slaBreaches.resolutionBreachLogin,
+      tenantId,
       ticketId: SEED_IDS.tickets.loginFailure,
       slaPolicyId: SEED_IDS.slaPolicy.default,
       breachType: 'resolution',
@@ -7878,12 +7928,13 @@ async function seedEscalationHistory(tenantId: string) {
 }
 
 // FLOW-025, FLOW-026: Workflow Engine
-async function seedWorkflowDefinitions() {
+async function seedWorkflowDefinitions(tenantId: string) {
   console.log('⚙️ Seeding workflow definitions...');
 
   const workflows = [
     {
       id: SEED_IDS.workflowDefinitions.leadQualification,
+      tenantId,
       name: 'Lead Qualification Workflow',
       description: 'Automated lead qualification and scoring',
       category: 'sales',
@@ -7901,6 +7952,7 @@ async function seedWorkflowDefinitions() {
     },
     {
       id: SEED_IDS.workflowDefinitions.dealApproval,
+      tenantId,
       name: 'Deal Approval Workflow',
       description: 'Multi-stage deal approval process',
       category: 'sales',
@@ -7918,6 +7970,7 @@ async function seedWorkflowDefinitions() {
     },
     {
       id: SEED_IDS.workflowDefinitions.ticketRouting,
+      tenantId,
       name: 'Ticket Auto-Routing',
       description: 'Intelligent ticket routing based on category and priority',
       category: 'support',
@@ -7946,12 +7999,13 @@ async function seedWorkflowDefinitions() {
   console.log(`✅ Created ${workflows.length} workflow definitions`);
 }
 
-async function seedWorkflowExecutions() {
+async function seedWorkflowExecutions(tenantId: string) {
   console.log('▶️ Seeding workflow executions...');
 
   const executions = [
     {
       id: SEED_IDS.workflowExecutions.leadQual1,
+      tenantId,
       workflowId: SEED_IDS.workflowDefinitions.leadQualification,
       triggeredBy: 'system',
       entityType: 'lead',
@@ -7970,6 +8024,7 @@ async function seedWorkflowExecutions() {
     },
     {
       id: SEED_IDS.workflowExecutions.dealApproval1,
+      tenantId,
       workflowId: SEED_IDS.workflowDefinitions.dealApproval,
       triggeredBy: 'user',
       entityType: 'deal',
@@ -8001,12 +8056,13 @@ async function seedWorkflowExecutions() {
 }
 
 // FLOW-027: Business Rules
-async function seedBusinessRules() {
+async function seedBusinessRules(tenantId: string) {
   console.log('📏 Seeding business rules...');
 
   const rules = [
     {
       id: SEED_IDS.businessRules.discountApproval,
+      tenantId,
       name: 'Discount Approval Threshold',
       description: 'Requires manager approval for discounts over 15%',
       entityType: 'deal',
@@ -8019,6 +8075,7 @@ async function seedBusinessRules() {
     },
     {
       id: SEED_IDS.businessRules.autoAssignment,
+      tenantId,
       name: 'Auto-Assignment by Territory',
       description: 'Automatically assign leads based on geographic territory',
       entityType: 'lead',
@@ -8031,6 +8088,7 @@ async function seedBusinessRules() {
     },
     {
       id: SEED_IDS.businessRules.escalationTrigger,
+      tenantId,
       name: 'SLA Escalation Trigger',
       description: 'Escalate tickets approaching SLA breach',
       entityType: 'ticket',
@@ -8055,12 +8113,13 @@ async function seedBusinessRules() {
 }
 
 // FLOW-022, FLOW-023: Dashboards & Reports
-async function seedDashboardConfigs() {
+async function seedDashboardConfigs(tenantId: string) {
   console.log('📊 Seeding dashboard configs...');
 
   const dashboards = [
     {
       id: SEED_IDS.dashboardConfigs.salesDashboard,
+      tenantId,
       name: 'Sales Dashboard',
       userId: SEED_IDS.users.sarahJohnson,
       isDefault: true,
@@ -8074,6 +8133,7 @@ async function seedDashboardConfigs() {
     },
     {
       id: SEED_IDS.dashboardConfigs.supportDashboard,
+      tenantId,
       name: 'Support Dashboard',
       userId: SEED_IDS.users.emilyDavis,
       isDefault: true,
@@ -8086,6 +8146,7 @@ async function seedDashboardConfigs() {
     },
     {
       id: SEED_IDS.dashboardConfigs.executiveDashboard,
+      tenantId,
       name: 'Executive Overview',
       userId: SEED_IDS.users.admin,
       isDefault: false,
@@ -8401,12 +8462,13 @@ async function seedAlertIncidents() {
   console.log(`✅ Created ${incidents.length} alert incidents`);
 }
 
-async function seedPerformanceMetrics() {
+async function seedPerformanceMetrics(tenantId: string) {
   console.log('📉 Seeding performance metrics...');
 
   const metrics = [
     {
       id: SEED_IDS.performanceMetrics.apiLatency,
+      tenantId,
       metricName: 'api_response_time_p95',
       metricType: 'histogram',
       value: 125,
@@ -8417,6 +8479,7 @@ async function seedPerformanceMetrics() {
     },
     {
       id: SEED_IDS.performanceMetrics.dbQueryTime,
+      tenantId,
       metricName: 'db_query_time_avg',
       metricType: 'gauge',
       value: 18,
@@ -8427,6 +8490,7 @@ async function seedPerformanceMetrics() {
     },
     {
       id: SEED_IDS.performanceMetrics.aiResponseTime,
+      tenantId,
       metricName: 'ai_scoring_latency_p99',
       metricType: 'histogram',
       value: 1850,
@@ -8779,6 +8843,47 @@ async function seedHomePageData(tenantId: string) {
     }
     console.log(`  ✅ Created ${recentDeals.length} recent closed deals`);
   }
+
+  // 2b. Create recent leads (for welcome message new leads count)
+  const recentLeads = [
+    {
+      id: 'home-lead-1',
+      email: 'james.carter@nexagen.io',
+      firstName: 'James',
+      lastName: 'Carter',
+      company: 'NexaGen Solutions',
+      title: 'VP of Operations',
+      source: LeadSource.REFERRAL,
+      status: LeadStatus.NEW,
+      score: 72,
+      ownerId: user.id,
+      tenantId,
+      createdAt: yesterday,
+    },
+    {
+      id: 'home-lead-2',
+      email: 'priya.sharma@brightpath.co',
+      firstName: 'Priya',
+      lastName: 'Sharma',
+      company: 'BrightPath Analytics',
+      title: 'CTO',
+      source: LeadSource.WEBSITE,
+      status: LeadStatus.NEW,
+      score: 85,
+      ownerId: user.id,
+      tenantId,
+      createdAt: yesterday,
+    },
+  ];
+
+  for (const lead of recentLeads) {
+    await prisma.lead.upsert({
+      where: { id: lead.id },
+      update: lead,
+      create: lead,
+    });
+  }
+  console.log(`  ✅ Created ${recentLeads.length} recent leads`);
 
   // 3. Create recent audit log entries (for activity feed)
   const recentAuditLogs = [
@@ -9489,7 +9594,7 @@ async function main() {
       console.warn('⚠️  seedTicketActivities failed:', (e as Error).message?.slice(0, 100));
     }
     try {
-      await seedTicketAttachments();
+      await seedTicketAttachments(tenantId);
     } catch (e) {
       console.warn('⚠️  seedTicketAttachments failed:', (e as Error).message?.slice(0, 100));
     }
@@ -9504,7 +9609,7 @@ async function main() {
       );
     }
     try {
-      await seedAgentActions();
+      await seedAgentActions(tenantId);
     } catch (e) {
       console.warn('⚠️  seedAgentActions failed:', (e as Error).message?.slice(0, 100));
     }
@@ -9514,7 +9619,7 @@ async function main() {
       console.warn('⚠️  seedContactActivities failed:', (e as Error).message?.slice(0, 100));
     }
     try {
-      await seedDashboardActivities();
+      await seedDashboardActivities(tenantId);
     } catch (e) {
       console.warn('⚠️  seedDashboardActivities failed:', (e as Error).message?.slice(0, 100));
     }
@@ -9536,27 +9641,27 @@ async function main() {
       console.warn('⚠️  seedCalendarEvents failed:', (e as Error).message?.slice(0, 100));
     }
     try {
-      await seedTeamMessages();
+      await seedTeamMessages(tenantId);
     } catch (e) {
       console.warn('⚠️  seedTeamMessages failed:', (e as Error).message?.slice(0, 100));
     }
     try {
-      await seedPipelineSnapshots();
+      await seedPipelineSnapshots(tenantId);
     } catch (e) {
       console.warn('⚠️  seedPipelineSnapshots failed:', (e as Error).message?.slice(0, 100));
     }
     try {
-      await seedTrafficSources();
+      await seedTrafficSources(tenantId);
     } catch (e) {
       console.warn('⚠️  seedTrafficSources failed:', (e as Error).message?.slice(0, 100));
     }
     try {
-      await seedGrowthMetrics();
+      await seedGrowthMetrics(tenantId);
     } catch (e) {
       console.warn('⚠️  seedGrowthMetrics failed:', (e as Error).message?.slice(0, 100));
     }
     try {
-      await seedDealsWonMetrics();
+      await seedDealsWonMetrics(tenantId);
     } catch (e) {
       console.warn('⚠️  seedDealsWonMetrics failed:', (e as Error).message?.slice(0, 100));
     }
@@ -9576,7 +9681,7 @@ async function main() {
       console.warn('⚠️  seedTicketAIInsights failed:', (e as Error).message?.slice(0, 100));
     }
     try {
-      await seedSalesPerformance();
+      await seedSalesPerformance(tenantId);
     } catch (e) {
       console.warn('⚠️  seedSalesPerformance failed:', (e as Error).message?.slice(0, 100));
     }
@@ -9608,50 +9713,50 @@ async function main() {
       console.warn('⚠️  seedWorkspaces failed:', (e as Error).message?.slice(0, 100));
     }
     try {
-      await seedTeams();
+      await seedTeams(tenantId);
     } catch (e) {
       console.warn('⚠️  seedTeams failed:', (e as Error).message?.slice(0, 100));
     }
     try {
-      await seedTeamMembers();
+      await seedTeamMembers(tenantId);
     } catch (e) {
       console.warn('⚠️  seedTeamMembers failed:', (e as Error).message?.slice(0, 100));
     }
 
     // FLOW-016: Email Communication
     try {
-      await seedEmailTemplates();
+      await seedEmailTemplates(tenantId);
     } catch (e) {
       console.warn('⚠️  seedEmailTemplates failed:', (e as Error).message?.slice(0, 100));
     }
     try {
-      await seedEmailRecords();
+      await seedEmailRecords(tenantId);
     } catch (e) {
       console.warn('⚠️  seedEmailRecords failed:', (e as Error).message?.slice(0, 100));
     }
 
     // FLOW-017: Chat Integration
     try {
-      await seedChatConversations();
+      await seedChatConversations(tenantId);
     } catch (e) {
       console.warn('⚠️  seedChatConversations failed:', (e as Error).message?.slice(0, 100));
     }
     try {
-      await seedChatMessages();
+      await seedChatMessages(tenantId);
     } catch (e) {
       console.warn('⚠️  seedChatMessages failed:', (e as Error).message?.slice(0, 100));
     }
 
     // FLOW-018: Call Recording
     try {
-      await seedCallRecords();
+      await seedCallRecords(tenantId);
     } catch (e) {
       console.warn('⚠️  seedCallRecords failed:', (e as Error).message?.slice(0, 100));
     }
 
     // FLOW-021: Document Management
     try {
-      await seedDocuments();
+      await seedDocuments(tenantId);
     } catch (e) {
       console.warn('⚠️  seedDocuments failed:', (e as Error).message?.slice(0, 100));
     }
@@ -9663,21 +9768,21 @@ async function main() {
       console.warn('⚠️  seedCases failed:', (e as Error).message?.slice(0, 100));
     }
     try {
-      await seedCaseTasks();
+      await seedCaseTasks(tenantId);
     } catch (e) {
       console.warn('⚠️  seedCaseTasks failed:', (e as Error).message?.slice(0, 100));
     }
 
     // IFC-152: Case Document Management
     try {
-      await seedCaseDocuments();
+      await seedCaseDocuments(tenantId);
     } catch (e) {
       console.warn('⚠️  seedCaseDocuments failed:', (e as Error).message?.slice(0, 100));
     }
 
     // FLOW-015: Customer Feedback (NPS/CSAT)
     try {
-      await seedFeedbackSurveys();
+      await seedFeedbackSurveys(tenantId);
     } catch (e) {
       console.warn('⚠️  seedFeedbackSurveys failed:', (e as Error).message?.slice(0, 100));
     }
@@ -9689,7 +9794,7 @@ async function main() {
       console.warn('⚠️  seedDealRenewals failed:', (e as Error).message?.slice(0, 100));
     }
     try {
-      await seedAccountHealthScores();
+      await seedAccountHealthScores(tenantId);
     } catch (e) {
       console.warn('⚠️  seedAccountHealthScores failed:', (e as Error).message?.slice(0, 100));
     }
@@ -9718,43 +9823,43 @@ async function main() {
 
     // FLOW-011, FLOW-013: Ticket Categories & SLA
     try {
-      await seedTicketCategories();
+      await seedTicketCategories(tenantId);
     } catch (e) {
       console.warn('⚠️  seedTicketCategories failed:', (e as Error).message?.slice(0, 100));
     }
     try {
-      await seedSLABreaches();
+      await seedSLABreaches(tenantId);
     } catch (e) {
       console.warn('⚠️  seedSLABreaches failed:', (e as Error).message?.slice(0, 100));
     }
     try {
-      await seedEscalationHistory();
+      await seedEscalationHistory(tenantId);
     } catch (e) {
       console.warn('⚠️  seedEscalationHistory failed:', (e as Error).message?.slice(0, 100));
     }
 
     // FLOW-025, FLOW-026: Workflow Engine
     try {
-      await seedWorkflowDefinitions();
+      await seedWorkflowDefinitions(tenantId);
     } catch (e) {
       console.warn('⚠️  seedWorkflowDefinitions failed:', (e as Error).message?.slice(0, 100));
     }
     try {
-      await seedWorkflowExecutions();
+      await seedWorkflowExecutions(tenantId);
     } catch (e) {
       console.warn('⚠️  seedWorkflowExecutions failed:', (e as Error).message?.slice(0, 100));
     }
 
     // FLOW-027: Business Rules
     try {
-      await seedBusinessRules();
+      await seedBusinessRules(tenantId);
     } catch (e) {
       console.warn('⚠️  seedBusinessRules failed:', (e as Error).message?.slice(0, 100));
     }
 
     // FLOW-022, FLOW-023: Dashboards & Reports
     try {
-      await seedDashboardConfigs();
+      await seedDashboardConfigs(tenantId);
     } catch (e) {
       console.warn('⚠️  seedDashboardConfigs failed:', (e as Error).message?.slice(0, 100));
     }
@@ -9764,14 +9869,14 @@ async function main() {
       console.warn('⚠️  seedKPIDefinitions failed:', (e as Error).message?.slice(0, 100));
     }
     try {
-      await seedReportDefinitions();
+      await seedReportDefinitions(tenantId);
     } catch (e) {
       console.warn('⚠️  seedReportDefinitions failed:', (e as Error).message?.slice(0, 100));
     }
 
     // FLOW-024: AI Insights
     try {
-      await seedAIInsights();
+      await seedAIInsights(tenantId);
     } catch (e) {
       console.warn('⚠️  seedAIInsights failed:', (e as Error).message?.slice(0, 100));
     }
@@ -9788,21 +9893,21 @@ async function main() {
       console.warn('⚠️  seedAlertIncidents failed:', (e as Error).message?.slice(0, 100));
     }
     try {
-      await seedPerformanceMetrics();
+      await seedPerformanceMetrics(tenantId);
     } catch (e) {
       console.warn('⚠️  seedPerformanceMetrics failed:', (e as Error).message?.slice(0, 100));
     }
 
     // FLOW-034: Webhooks
     try {
-      await seedWebhookEndpoints();
+      await seedWebhookEndpoints(tenantId);
     } catch (e) {
       console.warn('⚠️  seedWebhookEndpoints failed:', (e as Error).message?.slice(0, 100));
     }
 
     // FLOW-035, FLOW-036: API Management
     try {
-      await seedAPIKeys();
+      await seedAPIKeys(tenantId);
     } catch (e) {
       console.warn('⚠️  seedAPIKeys failed:', (e as Error).message?.slice(0, 100));
     }

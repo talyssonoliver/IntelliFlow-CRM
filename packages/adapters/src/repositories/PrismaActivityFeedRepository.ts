@@ -15,6 +15,8 @@ import type {
   ActivityFeedFilters,
   ActivityFeedSource,
   ActivityFeedType,
+  ActivityFeedStats,
+  ActivityFeedEntityType,
 } from '@intelliflow/domain';
 
 /**
@@ -446,6 +448,9 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
         { createdAt: cursor.timestamp, id: { lt: cursor.id } },
       ];
     }
+    if (filters.entityId && filters.entityType === 'CONTACT') {
+      where.conversation = { contactId: filters.entityId };
+    }
     if (filters.after) where.createdAt = { ...where.createdAt, gte: filters.after };
     if (filters.before) where.createdAt = { ...where.createdAt, lte: filters.before };
 
@@ -478,6 +483,171 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
   }
 
   // ---------------------------------------------------------------------------
+  // IFC-202: Activity Feed Stats
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Get aggregate stats from the activity feed across all 7 source tables.
+   * Runs queries in parallel via Promise.all (NF-005: No N+1).
+   *
+   * Risk mitigation (Risk #4): MVP accepts heap scan within time window for
+   * type grouping — existing (tenantId, timestamp) indexes cover the time filter.
+   * Consider (tenantId, type, timestamp) composite indexes if performance degrades.
+   *
+   * Risk mitigation (Risk #6): Slight count variance across 7 parallel queries
+   * is acceptable for dashboard-level aggregates; cache mitigates variance.
+   */
+  async getStats(
+    tenantId: string,
+    windowStart: Date | null,
+    windowEnd: Date,
+    filters: { sources?: ActivityFeedSource[]; entityType?: ActivityFeedEntityType }
+  ): Promise<ActivityFeedStats> {
+    // Determine which sources to query
+    let sourcesToQuery: ActivityFeedSource[] = [
+      'LEAD_ACTIVITY', 'CONTACT_ACTIVITY', 'OPPORTUNITY_EVENT',
+      'TICKET_ACTIVITY', 'EMAIL', 'CALL', 'CHAT',
+    ];
+
+    if (filters.sources?.length) {
+      sourcesToQuery = sourcesToQuery.filter((s) => filters.sources!.includes(s));
+    }
+
+    if (filters.entityType) {
+      const validSources = this.getEntitySourceMapForStats()[filters.entityType] || [];
+      sourcesToQuery = sourcesToQuery.filter((s) => validSources.includes(s));
+    }
+
+    // Type maps for tables that have a 'type' column
+    const typeMaps: Partial<Record<ActivityFeedSource, Record<string, ActivityFeedType>>> = {
+      LEAD_ACTIVITY: LEAD_ACTIVITY_TYPE_MAP,
+      CONTACT_ACTIVITY: CONTACT_ACTIVITY_TYPE_MAP,
+      OPPORTUNITY_EVENT: OPPORTUNITY_EVENT_TYPE_MAP,
+      TICKET_ACTIVITY: TICKET_ACTIVITY_TYPE_MAP,
+    };
+
+    // Tables with groupBy (have type column): leadActivity, contactActivity, activityEvent, ticketActivity
+    // Tables with count only (single type): emailRecord→EMAIL, callRecord→CALL, chatMessage→CHAT
+    const sourceCountMap: Record<string, number> = {};
+    const typeCountMap: Record<string, number> = {};
+
+    const queries: Promise<void>[] = [];
+
+    for (const source of sourcesToQuery) {
+      if (source === 'LEAD_ACTIVITY' || source === 'CONTACT_ACTIVITY' ||
+          source === 'OPPORTUNITY_EVENT' || source === 'TICKET_ACTIVITY') {
+        const modelName = this.getModelForSource(source);
+        const timestampField = 'timestamp';
+        const where: Record<string, unknown> = { tenantId };
+        const tsWhere: Record<string, unknown> = {};
+        if (windowStart) tsWhere.gte = windowStart;
+        tsWhere.lte = windowEnd;
+        where[timestampField] = tsWhere;
+
+        queries.push(
+          (this.prisma as any)[modelName].groupBy({
+            by: ['type'],
+            where,
+            _count: { _all: true },
+          }).then((rows: Array<{ type: string; _count: { _all: number } }>) => {
+            let sourceTotal = 0;
+            const typeMap = typeMaps[source]!;
+            for (const row of rows) {
+              const normalizedType = typeMap[row.type] || 'SYSTEM';
+              const count = row._count._all;
+              sourceTotal += count;
+              typeCountMap[normalizedType] = (typeCountMap[normalizedType] || 0) + count;
+            }
+            sourceCountMap[source] = sourceTotal;
+          })
+        );
+      } else {
+        // EMAIL, CALL, CHAT — single-type sources, use count()
+        const modelName = this.getModelForSource(source);
+        const timestampField = source === 'EMAIL' ? 'createdAt'
+          : source === 'CALL' ? 'startedAt'
+          : 'createdAt'; // CHAT
+
+        const feedType: ActivityFeedType = source === 'EMAIL' ? 'EMAIL'
+          : source === 'CALL' ? 'CALL'
+          : 'CHAT';
+
+        const where: Record<string, unknown> = { tenantId };
+        const tsWhere: Record<string, unknown> = {};
+        if (windowStart) tsWhere.gte = windowStart;
+        tsWhere.lte = windowEnd;
+        where[timestampField] = tsWhere;
+
+        queries.push(
+          (this.prisma as any)[modelName].count({ where }).then((count: number) => {
+            sourceCountMap[source] = count;
+            if (count > 0) {
+              typeCountMap[feedType] = (typeCountMap[feedType] || 0) + count;
+            }
+          })
+        );
+      }
+    }
+
+    await Promise.all(queries);
+
+    // Build bySource
+    const bySource = Object.entries(sourceCountMap)
+      .filter(([, count]) => count > 0)
+      .map(([source, count]) => ({ source: source as ActivityFeedSource, count }));
+
+    // Build byType
+    const byType = Object.entries(typeCountMap)
+      .filter(([, count]) => count > 0)
+      .map(([type, count]) => ({ type: type as ActivityFeedType, count }));
+
+    // Build byEntityType — derived from bySource using entitySourceMap
+    const entitySourceMap = this.getEntitySourceMapForStats();
+    const entityCountMap: Record<string, number> = {};
+    for (const [entityType, entitySources] of Object.entries(entitySourceMap)) {
+      let entityTotal = 0;
+      for (const s of entitySources) {
+        entityTotal += sourceCountMap[s] || 0;
+      }
+      if (entityTotal > 0) {
+        entityCountMap[entityType] = entityTotal;
+      }
+    }
+    const byEntityType = Object.entries(entityCountMap)
+      .map(([entityType, count]) => ({ entityType: entityType as ActivityFeedEntityType, count }));
+
+    const total = Object.values(sourceCountMap).reduce((sum, c) => sum + c, 0);
+
+    return { total, byType, bySource, byEntityType };
+  }
+
+  private getModelForSource(source: ActivityFeedSource): string {
+    const map: Record<ActivityFeedSource, string> = {
+      LEAD_ACTIVITY: 'leadActivity',
+      CONTACT_ACTIVITY: 'contactActivity',
+      OPPORTUNITY_EVENT: 'activityEvent',
+      TICKET_ACTIVITY: 'ticketActivity',
+      EMAIL: 'emailRecord',
+      CALL: 'callRecord',
+      CHAT: 'chatMessage',
+    };
+    return map[source];
+  }
+
+  private getEntitySourceMapForStats(): Record<string, ActivityFeedSource[]> {
+    return {
+      LEAD: ['LEAD_ACTIVITY'],
+      CONTACT: ['CONTACT_ACTIVITY', 'EMAIL', 'CALL', 'CHAT'],
+      OPPORTUNITY: ['OPPORTUNITY_EVENT'],
+      TICKET: ['TICKET_ACTIVITY'],
+      ACCOUNT: ['CONTACT_ACTIVITY', 'OPPORTUNITY_EVENT'],
+      TASK: [],
+      CASE: [],
+      DOCUMENT: [],
+    };
+  }
+
+  // ---------------------------------------------------------------------------
   // Private: Helpers
   // ---------------------------------------------------------------------------
 
@@ -491,6 +661,11 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       OPPORTUNITY: ['OPPORTUNITY_EVENT'],
       TICKET: ['TICKET_ACTIVITY'],
       ACCOUNT: ['CONTACT_ACTIVITY', 'OPPORTUNITY_EVENT'],
+      // TODO: Add backing Prisma models (CaseActivity, TaskActivity, DocumentActivity)
+      // then wire CASE_ACTIVITY/TASK_ACTIVITY/DOCUMENT_ACTIVITY sources here
+      TASK: [],
+      CASE: [],
+      DOCUMENT: [],
     };
     const validSources = entitySourceMap[entityType] || sources;
     return sources.filter((s) => validSources.includes(s));
@@ -503,6 +678,11 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       OPPORTUNITY: ['OPPORTUNITY_EVENT'],
       TICKET: ['TICKET_ACTIVITY'],
       ACCOUNT: ['CONTACT_ACTIVITY', 'OPPORTUNITY_EVENT'],
+      // TODO: Add backing Prisma models (CaseActivity, TaskActivity, DocumentActivity)
+      // then wire CASE_ACTIVITY/TASK_ACTIVITY/DOCUMENT_ACTIVITY sources here
+      TASK: [],
+      CASE: [],
+      DOCUMENT: [],
     };
     return entitySourceMap[entityType] || [];
   }

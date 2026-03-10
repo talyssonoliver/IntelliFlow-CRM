@@ -23,9 +23,13 @@ import type {
   ExperimentResultRecord,
 } from '@intelliflow/application';
 import type { ExperimentStatus, ExperimentType } from '@intelliflow/domain';
+import { z } from 'zod';
 
 type ExperimentWinner = 'control' | 'treatment' | null;
 type ConfidenceInterval = { lower: number; upper: number };
+
+// Zod schema for validating Prisma JSON field on read
+const confidenceIntervalSchema = z.object({ lower: z.number(), upper: z.number() });
 
 export class PrismaExperimentRepository implements ExperimentRepositoryPort {
   private _assignments: AssignmentRepositoryPort | null = null;
@@ -264,7 +268,7 @@ export class PrismaExperimentRepository implements ExperimentRepositoryPort {
         treatmentStdDev: data.treatmentStdDev,
         tStatistic: data.tStatistic,
         pValue: data.pValue,
-        confidenceInterval: data.confidenceInterval as unknown as Prisma.InputJsonValue,
+        confidenceInterval: data.confidenceInterval as Prisma.InputJsonValue,
         effectSize: data.effectSize,
         controlConversionRate: data.controlConversionRate,
         treatmentConversionRate: data.treatmentConversionRate,
@@ -300,7 +304,7 @@ export class PrismaExperimentRepository implements ExperimentRepositoryPort {
     if (data.tStatistic !== undefined) updateData.tStatistic = data.tStatistic;
     if (data.pValue !== undefined) updateData.pValue = data.pValue;
     if (data.confidenceInterval !== undefined)
-      updateData.confidenceInterval = data.confidenceInterval as unknown as Prisma.InputJsonValue;
+      updateData.confidenceInterval = data.confidenceInterval as Prisma.InputJsonValue;
     if (data.effectSize !== undefined) updateData.effectSize = data.effectSize;
     if (data.controlConversionRate !== undefined)
       updateData.controlConversionRate = data.controlConversionRate;
@@ -371,7 +375,7 @@ export class PrismaExperimentRepository implements ExperimentRepositoryPort {
       treatmentStdDev: row.treatmentStdDev,
       tStatistic: row.tStatistic,
       pValue: row.pValue,
-      confidenceInterval: row.confidenceInterval as unknown as ConfidenceInterval,
+      confidenceInterval: confidenceIntervalSchema.parse(row.confidenceInterval),
       effectSize: row.effectSize,
       controlConversionRate: row.controlConversionRate,
       treatmentConversionRate: row.treatmentConversionRate,

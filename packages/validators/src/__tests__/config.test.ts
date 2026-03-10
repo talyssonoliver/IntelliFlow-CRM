@@ -111,6 +111,14 @@ describe('Config Validators', () => {
       }
     });
 
+    it('Fix #10: should default JWT_EXPIRES_IN to 1h (not 7d)', () => {
+      const result = envSchema.safeParse(minimalValidEnv);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.JWT_EXPIRES_IN).toBe('1h');
+      }
+    });
+
     it('should accept all valid NODE_ENV values', () => {
       const envs = ['development', 'test', 'staging', 'production'];
       envs.forEach((nodeEnv) => {

@@ -35,6 +35,7 @@ function createMockRepository(): ActivityFeedRepositoryPort {
   return {
     getUnifiedFeed: vi.fn().mockResolvedValue([]),
     getEntityFeed: vi.fn().mockResolvedValue([]),
+    getStats: vi.fn().mockResolvedValue({ total: 0, byType: [], bySource: [], byEntityType: [] }),
   };
 }
 

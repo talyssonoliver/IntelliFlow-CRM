@@ -31,6 +31,7 @@ import {
   GOAL_TYPES,
   GOAL_DEFAULTS,
   AI_INSIGHT_TYPES,
+  AI_INSIGHT_SOURCES,
   ACTIVITY_FEED_TYPES,
   PINNABLE_ENTITY_TYPES,
 } from '../home';
@@ -155,6 +156,12 @@ describe('Home Page Validators', () => {
     });
   });
 
+  describe('AI_INSIGHT_SOURCES', () => {
+    it('contains both explicit provenance values', () => {
+      expect(AI_INSIGHT_SOURCES).toEqual(['ai', 'heuristic']);
+    });
+  });
+
   describe('aiInsightTypeSchema', () => {
     it('validates all AI insight types', () => {
       expect(aiInsightTypeSchema.safeParse('warning').success).toBe(true);
@@ -175,6 +182,7 @@ describe('Home Page Validators', () => {
       const result = aiInsightSchema.safeParse({
         id: 'insight-1',
         type: 'warning',
+        source: 'ai',
         title: 'Deal at Risk',
         description: 'No activity in 14 days',
         suggestedAction: 'Schedule a follow-up call',
@@ -191,6 +199,7 @@ describe('Home Page Validators', () => {
       const result = aiInsightSchema.safeParse({
         id: 'insight-1',
         type: 'achievement',
+        source: 'heuristic',
         title: 'Great job!',
         description: 'All tasks completed',
         priority: 'low',
@@ -203,6 +212,7 @@ describe('Home Page Validators', () => {
       const result = aiInsightSchema.safeParse({
         id: 'insight-1',
         type: 'reminder',
+        source: 'ai',
         title: 'Reminder',
         description: 'Check your tasks',
         suggestedAction: null,
@@ -219,6 +229,7 @@ describe('Home Page Validators', () => {
       const result = aiInsightSchema.parse({
         id: 'insight-1',
         type: 'opportunity',
+        source: 'ai',
         title: 'Hot Lead',
         description: 'High score lead',
         createdAt: new Date(),
@@ -230,9 +241,21 @@ describe('Home Page Validators', () => {
       const result = aiInsightSchema.safeParse({
         id: 'insight-1',
         type: 'warning',
+        source: 'ai',
         title: 'Test',
         description: 'Test',
         priority: 'urgent', // Invalid
+        createdAt: new Date(),
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects missing source', () => {
+      const result = aiInsightSchema.safeParse({
+        id: 'insight-1',
+        type: 'warning',
+        title: 'Test',
+        description: 'Test',
         createdAt: new Date(),
       });
       expect(result.success).toBe(false);
@@ -246,6 +269,7 @@ describe('Home Page Validators', () => {
           {
             id: '1',
             type: 'warning',
+            source: 'ai',
             title: 'Test',
             description: 'Test',
             priority: 'high',

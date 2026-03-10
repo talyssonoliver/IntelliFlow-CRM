@@ -50,9 +50,16 @@ export type AIInsightType = (typeof AI_INSIGHT_TYPES)[number];
 
 export const aiInsightTypeSchema = z.enum(AI_INSIGHT_TYPES);
 
+export const AI_INSIGHT_SOURCES = ['ai', 'heuristic'] as const;
+
+export type AIInsightSource = (typeof AI_INSIGHT_SOURCES)[number];
+
+export const aiInsightSourceSchema = z.enum(AI_INSIGHT_SOURCES);
+
 export const aiInsightSchema = z.object({
   id: z.string(),
   type: aiInsightTypeSchema,
+  source: aiInsightSourceSchema,
   title: z.string(),
   description: z.string(),
   suggestedAction: z.string().optional().nullable(),

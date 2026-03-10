@@ -71,7 +71,6 @@ export class AIOutputReview extends AggregateRoot<ReviewId> {
   private _lockToken?: string;
   private readonly _createdAt: Date;
   private _updatedAt: Date;
-  private _version: number = 0;
 
   private constructor(
     id: ReviewId,
@@ -236,10 +235,6 @@ export class AIOutputReview extends AggregateRoot<ReviewId> {
 
   get updatedAt(): Date {
     return this._updatedAt;
-  }
-
-  get version(): number {
-    return this._version;
   }
 
   /**

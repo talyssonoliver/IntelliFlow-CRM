@@ -183,6 +183,14 @@ describe('Env Validators', () => {
       }
     });
 
+    it('Fix #10: should default JWT_EXPIRES_IN to 1h (short-lived, not 7d)', () => {
+      const result = envSchema.safeParse(minimalValidEnv);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.JWT_EXPIRES_IN).toBe('1h');
+      }
+    });
+
     it('should accept all valid LOG_LEVEL values', () => {
       const levels = ['debug', 'info', 'warn', 'error'];
       levels.forEach((level) => {

@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@bull-board/api": "^6.20.3",
+    "@bull-board/ui": "^6.20.3",
     "@intelliflow/domain": "workspace:*",
     "bullmq": "^5.70.1",
     "zod": "^4.3.6"

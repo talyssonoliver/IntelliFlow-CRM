@@ -64,6 +64,8 @@ export const leadScoreSchema = z.object({
     })
   ),
   modelVersion: z.string(),
+  /** Fix #15: human-review gate flag — set true when confidence < threshold */
+  requiresReview: z.boolean().optional(),
 });
 
 export type LeadScoreInput = z.infer<typeof leadScoreSchema>;

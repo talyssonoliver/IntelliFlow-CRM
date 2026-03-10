@@ -119,19 +119,20 @@ export function extractAggregateId(
   fallbackId: string
 ): string {
   const aggregateIdField = `${aggregateType.toLowerCase()}Id`;
+  const toAggregateId = (value: unknown): string => String(value);
 
   // Try aggregate-specific ID first
   if (payload[aggregateIdField] !== undefined) {
-    return payload[aggregateIdField] as string;
+    return toAggregateId(payload[aggregateIdField]);
   }
 
   // Fall back to common patterns
   if (payload.id !== undefined) {
-    return payload.id as string;
+    return toAggregateId(payload.id);
   }
 
   if (payload.aggregateId !== undefined) {
-    return payload.aggregateId as string;
+    return toAggregateId(payload.aggregateId);
   }
 
   // Use fallback as last resort

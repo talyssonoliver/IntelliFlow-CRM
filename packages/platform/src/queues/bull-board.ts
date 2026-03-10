@@ -5,12 +5,19 @@
  * - Queue adapter configuration
  * - Express/Fastify middleware integration
  * - Custom theming and branding
+ *
+ * @bull-board/api is loaded lazily via dynamic import so that consumers
+ * who only need connection/retry utilities (e.g. Next.js tRPC route)
+ * never trigger a resolution of this server-only dependency.
  */
 
-import { createBullBoard } from '@bull-board/api';
-import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import type { Queue } from 'bullmq';
+import type { createBullBoard } from '@bull-board/api';
+import type { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { queueRegistry } from './queue-factory';
+
+type BullBoardReturn = ReturnType<typeof createBullBoard>;
+type BullMQAdapterClass = typeof BullMQAdapter;
 
 // ============================================================================
 // Bull Board Configuration
@@ -41,20 +48,39 @@ const DEFAULT_CONFIG: BullBoardConfig = {
 };
 
 // ============================================================================
+// Lazy loader for @bull-board/api
+// ============================================================================
+
+async function loadBullBoard(): Promise<{
+  createBullBoard: typeof createBullBoard;
+  BullMQAdapter: BullMQAdapterClass;
+}> {
+  const [bullBoardApi, bullMQAdapter] = await Promise.all([
+    import('@bull-board/api'),
+    import('@bull-board/api/bullMQAdapter'),
+  ]);
+  return {
+    createBullBoard: bullBoardApi.createBullBoard,
+    BullMQAdapter: bullMQAdapter.BullMQAdapter,
+  };
+}
+
+// ============================================================================
 // Bull Board Setup
 // ============================================================================
 
 /**
  * Bull Board instance holder
  */
-let bullBoardInstance: ReturnType<typeof createBullBoard> | null = null;
+let bullBoardInstance: BullBoardReturn | null = null;
 
 /**
  * Create Bull Board adapters for all registered queues
  */
-export function createQueueAdapters(): BullMQAdapter[] {
+export async function createQueueAdapters() {
+  const { BullMQAdapter } = await loadBullBoard();
   const queues = queueRegistry.getQueues();
-  const adapters: BullMQAdapter[] = [];
+  const adapters: InstanceType<typeof BullMQAdapter>[] = [];
 
   for (const [, queue] of queues) {
     adapters.push(new BullMQAdapter(queue));
@@ -66,8 +92,9 @@ export function createQueueAdapters(): BullMQAdapter[] {
 /**
  * Add a queue to Bull Board dynamically
  */
-export function addQueueToBullBoard(queue: Queue): void {
+export async function addQueueToBullBoard(queue: Queue): Promise<void> {
   if (bullBoardInstance) {
+    const { BullMQAdapter } = await loadBullBoard();
     bullBoardInstance.addQueue(new BullMQAdapter(queue));
   }
 }
@@ -85,9 +112,10 @@ export function removeQueueFromBullBoard(queueName: string): void {
  * Set up Bull Board with all queues
  * Returns the configured Bull Board instance
  */
-export function setupBullBoard(config: BullBoardConfig = {}): ReturnType<typeof createBullBoard> {
+export async function setupBullBoard(config: BullBoardConfig = {}) {
+  const { createBullBoard } = await loadBullBoard();
   // Create adapters for all known queues
-  const adapters = createQueueAdapters();
+  const adapters = await createQueueAdapters();
 
   // Create Bull Board instance
   bullBoardInstance = createBullBoard({
@@ -101,47 +129,40 @@ export function setupBullBoard(config: BullBoardConfig = {}): ReturnType<typeof 
 /**
  * Get the current Bull Board instance
  */
-export function getBullBoardInstance(): ReturnType<typeof createBullBoard> | null {
+export function getBullBoardInstance() {
   return bullBoardInstance;
 }
 
 // ============================================================================
-// Express Middleware Setup
+// Express/Fastify Middleware Setup
 // ============================================================================
 
 /**
- * Creates Express middleware for Bull Board
+ * Creates middleware for Bull Board with a framework-specific adapter
  * Usage:
  * ```
  * import { ExpressAdapter } from '@bull-board/express';
  * const serverAdapter = new ExpressAdapter();
- * setupBullBoardExpress(serverAdapter, config);
+ * await configureBullBoard(serverAdapter, config);
  * app.use('/admin/queues', serverAdapter.getRouter());
  * ```
  */
-function configureBullBoard<T extends { setBasePath: (path: string) => void }>(
+async function configureBullBoard<T extends { setBasePath: (path: string) => void }>(
   serverAdapter: T,
   config: BullBoardConfig = {}
-): void {
+): Promise<void> {
+  const { createBullBoard } = await loadBullBoard();
   const mergedConfig = { ...DEFAULT_CONFIG, ...config };
 
   serverAdapter.setBasePath(mergedConfig.basePath || '/admin/queues');
 
-  const adapters = createQueueAdapters();
+  const adapters = await createQueueAdapters();
 
   bullBoardInstance = createBullBoard({
     queues: adapters,
     serverAdapter: serverAdapter as any,
   });
 }
-
-const configureBullBoardForExpress = configureBullBoard;
-
-// ============================================================================
-// Fastify Plugin Setup
-// ============================================================================
-
-const configureBullBoardForFastify = configureBullBoard;
 
 // ============================================================================
 // Dashboard Information

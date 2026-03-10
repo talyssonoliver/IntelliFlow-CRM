@@ -35,7 +35,7 @@ const apiConfigSchema = z.object({
 // Authentication configuration
 const authConfigSchema = z.object({
   JWT_SECRET: z.string().min(32, 'JWT secret must be at least 32 characters'),
-  JWT_EXPIRES_IN: z.string().default('7d'),
+  JWT_EXPIRES_IN: z.string().default('1h'),
   SESSION_SECRET: z.string().min(32, 'Session secret must be at least 32 characters'),
   BCRYPT_ROUNDS: z.coerce.number().int().min(10).max(15).default(12),
 });

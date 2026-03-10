@@ -122,6 +122,13 @@ export const contactSearchResultSchema = z.object({
 
 export type ContactSearchResultValidated = z.infer<typeof contactSearchResultSchema>;
 
+// Add Note Schema (mirrors lead.addNote)
+export const addContactNoteSchema = z.object({
+  contactId: idSchema,
+  content: z.string().min(1).max(5000),
+});
+export type AddContactNoteInput = z.infer<typeof addContactNoteSchema>;
+
 // IFC-184: Link/Unlink Lead Schemas
 export const linkToLeadSchema = z.object({
   contactId: idSchema,

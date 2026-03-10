@@ -33,7 +33,7 @@ export const CONTACT_STATUSES = [
 ] as const;
 
 // IFC-192: Interaction types that trigger lastContactedAt update
-export const CONTACT_INTERACTION_TYPES = ['EMAIL', 'CALL', 'MEETING'] as const;
+export const CONTACT_INTERACTION_TYPES = ['EMAIL', 'CALL', 'MEETING', 'NOTE'] as const;
 
 // Derive types from const arrays
 export type ContactType = (typeof CONTACT_TYPES)[number];
@@ -383,11 +383,11 @@ export class Contact extends AggregateRoot<ContactId> {
       'contactType', 'contactNotes',
     ] as const;
 
+    const mutableProps = this.props as { -readonly [K in keyof ContactProps]: ContactProps[K] };
     for (const field of simpleFields) {
       const val = updates[field];
-      const propsAsMap = this.props as unknown as Record<string, unknown>;
-      if (val !== undefined && val !== propsAsMap[field]) {
-        propsAsMap[field] = val;
+      if (val !== undefined && val !== mutableProps[field]) {
+        Object.assign(mutableProps, { [field]: val });
         updatedFields.push(field);
       }
     }

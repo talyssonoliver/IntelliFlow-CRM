@@ -24,6 +24,9 @@ const RESPONDED_STATUSES: FeedbackStatus[] = ['RESPONDED', 'FOLLOWED_UP', 'CLOSE
 // Allowlist for SQL granularity interpolation (injection prevention)
 const VALID_GRANULARITY = new Set(['day', 'week', 'month']);
 
+// Allowlist for Survey Types to prevent SQL injection when interpolated
+const VALID_SURVEY_TYPES = new Set<SurveyType>(['NPS', 'CSAT', 'CES']);
+
 export class PrismaFeedbackSurveyRepository implements FeedbackSurveyRepositoryPort {
   constructor(private readonly prisma: PrismaClient) {}
 
@@ -173,6 +176,9 @@ export class PrismaFeedbackSurveyRepository implements FeedbackSurveyRepositoryP
     to: Date,
     type?: SurveyType
   ): Promise<SentimentBreakdown> {
+    if (type && !VALID_SURVEY_TYPES.has(type)) {
+      throw new Error(`Invalid survey type: ${type}`);
+    }
     const typeFilter = type ? `AND type = '${type}'` : '';
 
     const result = await this.prisma.$queryRawUnsafe<

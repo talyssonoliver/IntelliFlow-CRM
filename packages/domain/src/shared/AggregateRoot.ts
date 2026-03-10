@@ -7,7 +7,7 @@ import { DomainEvent } from './DomainEvent';
  */
 export abstract class AggregateRoot<TId> extends Entity<TId> {
   private _domainEvents: DomainEvent[] = [];
-  private _version: number = 0;
+  protected _version: number = 0;
 
   protected constructor(id: TId) {
     super(id);

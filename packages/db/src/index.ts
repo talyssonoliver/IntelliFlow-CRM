@@ -35,6 +35,9 @@ export type {
   Experiment,
   ExperimentAssignment,
   ExperimentResult,
+  HelpArticle,
+  ArticleSection,
+  ArticleFeedback,
 } from '../generated/prisma/client';
 
 // Re-export performance tracking utilities

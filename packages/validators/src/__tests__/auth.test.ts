@@ -93,6 +93,23 @@ describe('Auth Validators', () => {
       expect(result.success).toBe(false);
     });
 
+    it('rejects password under 12 characters (security: min is now 12)', () => {
+      // 11-char password must be rejected
+      const result = loginSchema.safeParse({
+        email: 'user@example.com',
+        password: '11charpassw',
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('accepts password with exactly 12 characters', () => {
+      const result = loginSchema.safeParse({
+        email: 'user@example.com',
+        password: '12charpasswd',
+      });
+      expect(result.success).toBe(true);
+    });
+
     it('rejects password that is too long', () => {
       const result = loginSchema.safeParse({
         email: 'user@example.com',
@@ -375,25 +392,34 @@ describe('Auth Validators', () => {
   // Strong Password Schema
   // ============================================
   describe('strongPasswordSchema', () => {
-    it('validates strong passwords', () => {
-      expect(strongPasswordSchema.safeParse('StrongP@ss1').success).toBe(true);
+    it('validates strong passwords (>=12 chars)', () => {
+      // 'C0mplex!Pass' = 12 chars, meets all criteria
       expect(strongPasswordSchema.safeParse('C0mplex!Pass').success).toBe(true);
+      // 'StrongP@ssword1' = 15 chars, meets all criteria
+      expect(strongPasswordSchema.safeParse('StrongP@ssword1').success).toBe(true);
+    });
+
+    it('rejects passwords under 12 characters', () => {
+      // 'StrongP@ss1' = 11 chars — fails new min of 12
+      expect(strongPasswordSchema.safeParse('StrongP@ss1').success).toBe(false);
+      // 'Sh0rt!' = 6 chars
+      expect(strongPasswordSchema.safeParse('Sh0rt!').success).toBe(false);
     });
 
     it('rejects passwords without uppercase', () => {
-      expect(strongPasswordSchema.safeParse('lowercase1!').success).toBe(false);
+      expect(strongPasswordSchema.safeParse('lowercase12!@').success).toBe(false);
     });
 
     it('rejects passwords without lowercase', () => {
-      expect(strongPasswordSchema.safeParse('UPPERCASE1!').success).toBe(false);
+      expect(strongPasswordSchema.safeParse('UPPERCASE12!@').success).toBe(false);
     });
 
     it('rejects passwords without number', () => {
-      expect(strongPasswordSchema.safeParse('NoNumber!@').success).toBe(false);
+      expect(strongPasswordSchema.safeParse('NoNumber!@abc').success).toBe(false);
     });
 
     it('rejects passwords without special character', () => {
-      expect(strongPasswordSchema.safeParse('NoSpecial1').success).toBe(false);
+      expect(strongPasswordSchema.safeParse('NoSpecial1abc').success).toBe(false);
     });
 
     it('rejects short passwords', () => {
@@ -509,8 +535,8 @@ describe('Auth Validators', () => {
     it('validates complete signup request', () => {
       const result = signupSchema.safeParse({
         email: 'user@example.com',
-        password: 'StrongP@ss1',
-        confirmPassword: 'StrongP@ss1',
+        password: 'StrongP@ssword1',
+        confirmPassword: 'StrongP@ssword1',
         name: 'John Doe',
         acceptTerms: true,
       });
@@ -520,8 +546,8 @@ describe('Auth Validators', () => {
     it('rejects without accepting terms', () => {
       const result = signupSchema.safeParse({
         email: 'user@example.com',
-        password: 'StrongP@ss1',
-        confirmPassword: 'StrongP@ss1',
+        password: 'StrongP@ssword1',
+        confirmPassword: 'StrongP@ssword1',
         name: 'John Doe',
         acceptTerms: false,
       });
@@ -531,8 +557,8 @@ describe('Auth Validators', () => {
     it('rejects mismatched passwords', () => {
       const result = signupSchema.safeParse({
         email: 'user@example.com',
-        password: 'StrongP@ss1',
-        confirmPassword: 'DifferentP@ss1',
+        password: 'StrongP@ssword1',
+        confirmPassword: 'DifferentP@sswd1',
         name: 'John Doe',
         acceptTerms: true,
       });

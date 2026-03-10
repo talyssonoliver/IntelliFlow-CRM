@@ -81,8 +81,8 @@ describe('ActivityFeedConstants', () => {
   });
 
   describe('ACTIVITY_FEED_ENTITY_TYPES', () => {
-    it('contains exactly 5 entity types', () => {
-      expect(ACTIVITY_FEED_ENTITY_TYPES).toHaveLength(5);
+    it('contains exactly 8 entity types', () => {
+      expect(ACTIVITY_FEED_ENTITY_TYPES).toHaveLength(8);
     });
 
     it('includes all expected entity types', () => {
@@ -91,6 +91,9 @@ describe('ActivityFeedConstants', () => {
       expect(ACTIVITY_FEED_ENTITY_TYPES).toContain('OPPORTUNITY');
       expect(ACTIVITY_FEED_ENTITY_TYPES).toContain('TICKET');
       expect(ACTIVITY_FEED_ENTITY_TYPES).toContain('ACCOUNT');
+      expect(ACTIVITY_FEED_ENTITY_TYPES).toContain('TASK');
+      expect(ACTIVITY_FEED_ENTITY_TYPES).toContain('CASE');
+      expect(ACTIVITY_FEED_ENTITY_TYPES).toContain('DOCUMENT');
     });
 
     it('derives ActivityFeedEntityType correctly', () => {

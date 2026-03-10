@@ -10,6 +10,9 @@ import type {
   UnifiedActivityItem,
   ActivityFeedCursor,
   ActivityFeedFilters,
+  ActivityFeedStats,
+  ActivityFeedSource,
+  ActivityFeedEntityType,
 } from '@intelliflow/domain';
 
 export interface ActivityFeedRepositoryPort {
@@ -47,4 +50,20 @@ export interface ActivityFeedRepositoryPort {
     limit: number,
     cursor: ActivityFeedCursor | null
   ): Promise<UnifiedActivityItem[]>;
+
+  /**
+   * Get aggregate stats from the activity feed.
+   * IFC-202: Counts by type, source, and entity type within a time window.
+   *
+   * @param tenantId - Tenant to scope stats to
+   * @param windowStart - Start of time window (null for all-time)
+   * @param windowEnd - End of time window
+   * @param filters - Optional source and entity type filters
+   */
+  getStats(
+    tenantId: string,
+    windowStart: Date | null,
+    windowEnd: Date,
+    filters: { sources?: ActivityFeedSource[]; entityType?: ActivityFeedEntityType }
+  ): Promise<ActivityFeedStats>;
 }

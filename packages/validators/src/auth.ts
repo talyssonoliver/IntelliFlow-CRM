@@ -32,7 +32,7 @@ export const loginSchema = z.object({
   email: emailSchema,
   password: z
     .string()
-    .min(8, 'Password must be at least 8 characters')
+    .min(12, 'Password must be at least 12 characters')
     .max(128, 'Password is too long'),
   rememberMe: z.boolean().default(false),
 });
@@ -64,6 +64,8 @@ export const loginResponseSchema = z.object({
   requiresMfa: z.boolean().default(false),
   mfaChallengeId: z.uuid().optional(),
   mfaMethods: z.array(mfaMethodSchema).optional(),
+  /** Fix #13: MFA_REQUIRED env flag — user has not enrolled in MFA yet */
+  mfaEnrollmentRequired: z.boolean().optional(),
 });
 
 export type LoginResponse = z.infer<typeof loginResponseSchema>;
@@ -186,7 +188,7 @@ export const disableMfaSchema = z
       .length(6)
       .regex(/^\d{6}$/)
       .optional(),
-    password: z.string().min(8).max(128).optional(),
+    password: z.string().min(12).max(128).optional(),
   })
   .refine((data) => !!(data.totpCode || data.password), {
     message: 'Either TOTP code or password required',
@@ -341,7 +343,7 @@ export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
  */
 export const strongPasswordSchema = z
   .string()
-  .min(8, 'Password must be at least 8 characters')
+  .min(12, 'Password must be at least 12 characters')
   .max(128, 'Password is too long')
   .check(z.regex(/[A-Z]/, 'Password must contain at least one uppercase letter'))
   .check(z.regex(/[a-z]/, 'Password must contain at least one lowercase letter'))

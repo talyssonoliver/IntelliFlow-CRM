@@ -196,6 +196,10 @@ export class IcsGenerationService implements IcsGenerationServicePort {
     IcsGenerationError
   > {
     try {
+      if (typeof icsContent !== 'string') {
+        throw new Error('ICS content must be a string');
+      }
+
       // Simple regex-based parsing (for basic use cases)
       const uid = this.extractField(icsContent, 'UID');
       const sequenceStr = this.extractField(icsContent, 'SEQUENCE') || '0';

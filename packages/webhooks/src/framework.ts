@@ -379,7 +379,7 @@ class DeadLetterQueue {
   }
 
   remove(eventId: string): boolean {
-    const index = this.entries.indexOf((e) => e.event.id === eventId);
+    const index = this.entries.findIndex((e) => e.event.id === eventId);
     if (index >= 0) {
       this.entries.splice(index, 1);
       return true;
