@@ -204,13 +204,16 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ---
 
-### 11. CRM Core — Tickets (3 pages)
+### 11. CRM Core — Tickets (6 pages)
 
-| Route           | Page          | Description                   |
-| --------------- | ------------- | ----------------------------- |
-| `/tickets`      | Tickets List  | Support tickets queue         |
-| `/tickets/new`  | New Ticket    | Create ticket form            |
-| `/tickets/[id]` | Ticket Detail | Ticket view with conversation |
+| Route                    | Page               | Description                              |
+| ------------------------ | ------------------ | ---------------------------------------- |
+| `/tickets`               | Tickets List       | Support tickets queue                    |
+| `/tickets/new`           | New Ticket         | Create ticket form                       |
+| `/tickets/[id]`          | Ticket Detail      | Ticket view with conversation            |
+| `/tickets/sla-policies`  | SLA Policies       | Manage SLA response/resolution targets   |
+| `/tickets/types`         | Ticket Types       | Configure ticket categories/types        |
+| `/tickets/automations`   | Automations        | Automation rules for routing and actions |
 
 ---
 

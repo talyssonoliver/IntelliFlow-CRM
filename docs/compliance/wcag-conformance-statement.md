@@ -37,7 +37,8 @@ are not listed separately.
 - **CRM — Cases & Documents (5):** `/cases`, `/cases/new`, `/cases/timeline`,
   `/documents`, `/documents/new`
 - **CRM — Calendar & Email (3):** `/calendar`, `/calendar/new`, `/email`
-- **CRM — Tasks & Tickets (3):** `/tasks`, `/tickets`, `/tickets/new`
+- **CRM — Tasks & Tickets (6):** `/tasks`, `/tickets`, `/tickets/new`,
+  `/tickets/sla-policies`, `/tickets/types`, `/tickets/automations`
 - **Agent Approvals & AI (13):** `/agent-approvals`, `/agent-approvals/agents`,
   `/agent-approvals/ai-review`, `/agent-approvals/ai-search`,
   `/agent-approvals/churn-risk`, `/agent-approvals/drift`,
@@ -217,3 +218,4 @@ Users who encounter accessibility barriers can report issues via:
 | ------- | ---------- | --------------------- | --------------------------------------------------------------------------------- |
 | 1.0.0   | 2026-02-24 | Engineering (DOC-008) | Initial conformance statement with screen reader testing plan                     |
 | 1.1.0   | 2026-03-01 | Engineering (DOC-011) | Expanded scope from 26 to 82 routes; added dynamic segment parent-inherits policy |
+| 1.2.0   | 2026-03-10 | Engineering (PG-173)  | Added 3 ticket config routes (sla-policies, types, automations) — scope now 85 routes |

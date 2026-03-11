@@ -401,6 +401,13 @@ Support Portal Chain:
   PG-046: /support/tickets → SupportTicketList → TicketList → useTicketFilters → api.ticket.list → TicketService (container.ts:247)
   PG-047: /support/tickets/new → SupportTicketForm → TicketForm + FileUploader → api.ticket.create + api.ticket.addAttachment → TicketService (container.ts:247)
   PG-048: /support/tickets/[id] → TicketDetail (listHref/detailUrlPrefix) + TicketThread + StatusUpdater → api.ticket.getById + api.ticket.update + api.ticket.addResponse → TicketService (container.ts:247)
+
+Ticket Configuration Chain (PG-173):
+  sla-policy.ts + ticket-category.ts (Validators) ✅ ──► ticket-config.router.ts (API) ✅ ──► SLAPolicyManager + TicketTypeManager (UI) ✅
+  routing.router.ts (API, existing PG-132) ✅ ──► AutomationRuleBuilder (UI) ✅
+  PG-173: /tickets/sla-policies → SLAPolicyManager → api.ticketConfig.slaPolicy.* → Prisma SLAPolicy
+  PG-173: /tickets/types → TicketTypeManager → api.ticketConfig.category.* → Prisma TicketCategory
+  PG-173: /tickets/automations → AutomationRuleBuilder → api.routing.* → Prisma RoutingRule
 ```
 
 ---
@@ -1332,6 +1339,7 @@ Dependency Chain:
 Dependency Chain:
   IFC-182 (ActivityFeedConstants) ✅ ──► IFC-193 (ActivityTypeRegistry) ✅ ──► audit-event-handler ⬜ / ActivityFeedService ⬜
   IFC-069 (Unified Activity Feed Service) ✅ ──► IFC-202 (Activity Feed Stats Endpoint - getStats aggregation) ✅
+  IFC-069 (Unified Activity Feed Service) ✅ ──► IFC-203 (Activity Feed Full-Text Search) ✅
 ```
 
 ---

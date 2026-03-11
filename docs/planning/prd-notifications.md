@@ -9,8 +9,8 @@
 | **Status**        | In Progress                              |
 | **Target Sprint** | Sprint 5 (backend), Sprint 14 (inbox UI) |
 | **Created Date**  | 2026-02-22                               |
-| **Last Updated**  | 2026-02-22                               |
-| **Related Tasks** | IFC-157, IFC-183, PG-130, IFC-222        |
+| **Last Updated**  | 2026-03-10                               |
+| **Related Tasks** | IFC-157, IFC-183, PG-130, IFC-222, PG-174, PG-161 |
 
 ## Problem Statement
 
@@ -75,6 +75,21 @@ inbox.
 | AC-010 | Page loads in <300ms; Lighthouse score >=90                                                                         |
 | AC-011 | Components extracted into separate files: NotificationList, NotificationItem, NotificationFilters, NotificationBell |
 | AC-012 | Priority filter uses correct domain values: high, normal, low (not urgent/medium)                                   |
+
+### PG-174: Notification Configuration Pages — Channels & Quiet Hours
+
+| ID     | Criterion                                                                                                           |
+| ------ | ------------------------------------------------------------------------------------------------------------------- |
+| AC-013 | `/notifications/channels` page renders a card per delivery channel (in_app, email, sms, push, webhook) with enable/disable Switch toggle |
+| AC-014 | Toggling a channel calls `notifications.updatePreferences` with updated `defaultChannels` array                     |
+| AC-015 | Each channel card expands to show channel-specific configuration fields                                             |
+| AC-016 | `/notifications/quiet-hours` page renders a weekly schedule with day selectors and time-range pickers               |
+| AC-017 | Saving quiet hours calls `notifications.updatePreferences` with `quietHours` object (enabled, start, end, timezone, daysOfWeek) |
+| AC-018 | Both pages load preferences from `notifications.getPreferences` on mount                                            |
+| AC-019 | Sidebar "Configuration" links at `/notifications/channels` and `/notifications/quiet-hours` resolve (ghost links G-09, G-10 fixed) |
+| AC-020 | Lighthouse score >=90 on both routes                                                                                |
+| AC-021 | Both pages use shared `PageHeader` component with proper breadcrumbs                                                |
+| AC-022 | Success/error toast feedback on save operations                                                                     |
 
 ## Technical Requirements
 
