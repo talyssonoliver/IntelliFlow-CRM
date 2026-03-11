@@ -63,6 +63,7 @@ dist/
 # SonarQube / scanner outputs
 .scannerwork/
 sonar-reports/
+.sonarlint/
 
 # misc
 .DS_Store
