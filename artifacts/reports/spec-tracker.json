@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-03-11T20:33:38.543Z",
+  "generated_at": "2026-03-11T21:35:58.980Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 342,
+    "total_specs_analyzed": 343,
     "completed": 333,
     "partially_done": 1,
-    "spec_only": 2,
+    "spec_only": 3,
     "uncertain": 6
   },
   "status_legend": {
@@ -54,8 +54,8 @@
     {
       "task_id": "PG-161",
       "severity": "HIGH",
-      "issue": "CSV says Completed but NO attestation file exists and metric status is NOT_FOUND. Task may not be truly implemented.",
-      "recommendation": "Verify actual codebase for implementation. Run /exec or /matop-execute to generate proper attestation."
+      "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
+      "recommendation": "Investigate attestation evidence. Re-run validation if needed."
     },
     {
       "task_id": "PG-166",
@@ -5368,7 +5368,7 @@
       "spec_path": ".specify/sprints/sprint-16/specifications/PG-161-spec.md",
       "has_spec": true,
       "has_plan": true,
-      "has_attestation": false,
+      "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
@@ -5573,6 +5573,23 @@
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-157"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "PG-178",
+      "title": "Module Settings Pages - 11 per-module configuration pages at /settings/[module]",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/PG-178-spec.md",
+      "has_spec": true,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Planning",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-104",
+        "IFC-076"
       ],
       "real_status": "SPEC_ONLY"
     },
