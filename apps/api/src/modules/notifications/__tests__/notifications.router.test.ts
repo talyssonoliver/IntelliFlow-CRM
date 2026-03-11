@@ -143,10 +143,14 @@ describe('notificationsRouter', () => {
           where: expect.objectContaining({
             tenantId: TENANT_ID,
             recipientId: USER_ID,
-            metadata: {
-              path: ['notificationType'],
-              in: ['lead_assigned', 'task_assigned'],
-            },
+            AND: [
+              {
+                OR: [
+                  { metadata: { path: ['notificationType'], equals: 'lead_assigned' } },
+                  { metadata: { path: ['notificationType'], equals: 'task_assigned' } },
+                ],
+              },
+            ],
           }),
         })
       );
@@ -847,7 +851,7 @@ describe('notificationsRouter', () => {
       const where = (prismaMock.notification.updateMany as any).mock.calls[0][0].where;
       expect(where.metadata).toEqual({
         path: ['notificationType'],
-        in: ['lead_assigned'],
+        equals: 'lead_assigned',
       });
     });
 

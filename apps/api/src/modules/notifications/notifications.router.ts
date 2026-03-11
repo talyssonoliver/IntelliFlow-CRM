@@ -220,12 +220,23 @@ function buildPreferenceUpsertData(
  * Build the Prisma WHERE clause for the notifications list query.
  * Extracts the sequential filter-building logic to reduce cognitive complexity.
  */
-/** Append a type-filter clause to and-clauses or set metadata directly. */
+/** Append a type-filter clause using JSON path equals (single) or AND+OR (multiple). */
 function applyTypeFilter(
   types: string[],
   where: Record<string, unknown>
 ): void {
-  where.metadata = { path: ['notificationType'], in: types };
+  if (types.length === 1) {
+    where.metadata = { path: ['notificationType'], equals: types[0] };
+  } else {
+    // Use AND to nest the OR so it doesn't collide with search OR
+    const andClauses = Array.isArray(where.AND) ? (where.AND as unknown[]) : [];
+    andClauses.push({
+      OR: types.map((t) => ({
+        metadata: { path: ['notificationType'], equals: t },
+      })),
+    });
+    where.AND = andClauses;
+  }
 }
 
 /** Apply batch-action filter to an existing where clause. */
