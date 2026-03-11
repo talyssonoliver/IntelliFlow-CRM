@@ -77,6 +77,12 @@ export * from './routing';
 // Email Schemas (read state, unread counts)
 export * from './email';
 
+// SLA Policy Schemas (PG-173)
+export * from './sla-policy';
+
+// Ticket Category Schemas (PG-173)
+export * from './ticket-category';
+
 // Feedback Survey Schemas (IFC-068: Feedback Analytics Dashboard)
 export * from './feedback-survey';
 

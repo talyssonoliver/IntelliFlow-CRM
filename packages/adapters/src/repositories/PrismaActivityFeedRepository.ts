@@ -146,6 +146,398 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
   }
 
   // ---------------------------------------------------------------------------
+  // IFC-203: Activity Feed Full-Text Search
+  // ---------------------------------------------------------------------------
+
+  async searchFeed(
+    tenantId: string,
+    query: string,
+    limit: number,
+    cursor: ActivityFeedCursor | null,
+    filters: ActivityFeedFilters
+  ): Promise<UnifiedActivityItem[]> {
+    // Determine which sources to query
+    const sourcesToQuery = filters.sources?.length
+      ? filters.sources
+      : ([
+          'LEAD_ACTIVITY',
+          'CONTACT_ACTIVITY',
+          'OPPORTUNITY_EVENT',
+          'TICKET_ACTIVITY',
+          'EMAIL',
+          'CALL',
+          'CHAT',
+        ] as ActivityFeedSource[]);
+
+    const filteredSources = filters.entityType
+      ? this.filterSourcesByEntityType(sourcesToQuery, filters.entityType)
+      : sourcesToQuery;
+
+    const cursorCondition = cursor ? { timestamp: cursor.timestamp, id: cursor.id } : null;
+
+    // Execute all source search queries in parallel
+    const queries = filteredSources.map((source) =>
+      this.searchSource(source, tenantId, query, limit, cursorCondition, filters)
+    );
+
+    const results = await Promise.all(queries);
+
+    // Merge sort all results by timestamp DESC
+    const merged = results.flat();
+    merged.sort((a, b) => {
+      const timeDiff = b.timestamp.getTime() - a.timestamp.getTime();
+      if (timeDiff !== 0) return timeDiff;
+      return b.id.localeCompare(a.id);
+    });
+
+    return merged.slice(0, limit);
+  }
+
+  /**
+   * Build ILIKE search conditions for a set of fields.
+   */
+  private buildSearchConditions(query: string, fields: string[]): Record<string, unknown>[] {
+    return fields.map((field) => ({
+      [field]: { contains: query, mode: 'insensitive' },
+    }));
+  }
+
+  /**
+   * Search a single source table with ILIKE conditions.
+   */
+  private async searchSource(
+    source: ActivityFeedSource,
+    tenantId: string,
+    query: string,
+    limit: number,
+    cursor: { timestamp: Date; id: string } | null,
+    filters: ActivityFeedFilters
+  ): Promise<UnifiedActivityItem[]> {
+    switch (source) {
+      case 'LEAD_ACTIVITY':
+        return this.searchLeadActivities(tenantId, query, limit, cursor, filters);
+      case 'CONTACT_ACTIVITY':
+        return this.searchContactActivities(tenantId, query, limit, cursor, filters);
+      case 'OPPORTUNITY_EVENT':
+        return this.searchOpportunityEvents(tenantId, query, limit, cursor, filters);
+      case 'TICKET_ACTIVITY':
+        return this.searchTicketActivities(tenantId, query, limit, cursor, filters);
+      case 'EMAIL':
+        return this.searchEmailRecords(tenantId, query, limit, cursor, filters);
+      case 'CALL':
+        return this.searchCallRecords(tenantId, query, limit, cursor, filters);
+      case 'CHAT':
+        return this.searchChatMessages(tenantId, query, limit, cursor, filters);
+      default:
+        return [];
+    }
+  }
+
+  private async searchLeadActivities(
+    tenantId: string, query: string, limit: number,
+    cursor: { timestamp: Date; id: string } | null, filters: ActivityFeedFilters
+  ): Promise<UnifiedActivityItem[]> {
+    const where: any = {
+      tenantId,
+      AND: [{ OR: this.buildSearchConditions(query, ['title', 'description', 'userName']) }],
+    };
+    if (cursor) {
+      where.AND.push({
+        OR: [
+          { timestamp: { lt: cursor.timestamp } },
+          { timestamp: cursor.timestamp, id: { lt: cursor.id } },
+        ],
+      });
+    }
+    if (filters.entityId) where.leadId = filters.entityId;
+
+    const rows = await this.prisma.leadActivity.findMany({
+      where,
+      orderBy: [{ timestamp: 'desc' }, { id: 'desc' }],
+      take: limit,
+      include: { lead: { select: { id: true, firstName: true, lastName: true, email: true } } },
+    });
+
+    return rows.map((r) => ({
+      id: `lead_${r.id}`,
+      source: 'LEAD_ACTIVITY' as const,
+      type: LEAD_ACTIVITY_TYPE_MAP[r.type] || 'SYSTEM',
+      title: r.title,
+      description: r.description,
+      timestamp: r.timestamp,
+      actor: r.userName ? { id: r.userId, name: r.userName } : null,
+      entity: r.lead
+        ? {
+            id: r.lead.id,
+            type: 'LEAD' as const,
+            name: [r.lead.firstName, r.lead.lastName].filter(Boolean).join(' ') || r.lead.email,
+          }
+        : null,
+      metadata: r.metadata as Record<string, unknown> | null,
+    }));
+  }
+
+  private async searchContactActivities(
+    tenantId: string, query: string, limit: number,
+    cursor: { timestamp: Date; id: string } | null, filters: ActivityFeedFilters
+  ): Promise<UnifiedActivityItem[]> {
+    const where: any = {
+      tenantId,
+      AND: [{ OR: this.buildSearchConditions(query, ['title', 'description', 'userName']) }],
+    };
+    if (cursor) {
+      where.AND.push({
+        OR: [
+          { timestamp: { lt: cursor.timestamp } },
+          { timestamp: cursor.timestamp, id: { lt: cursor.id } },
+        ],
+      });
+    }
+    if (filters.entityId) where.contactId = filters.entityId;
+
+    const rows = await this.prisma.contactActivity.findMany({
+      where,
+      orderBy: [{ timestamp: 'desc' }, { id: 'desc' }],
+      take: limit,
+      include: { contact: { select: { id: true, firstName: true, lastName: true, email: true } } },
+    });
+
+    return rows.map((r) => ({
+      id: `contact_${r.id}`,
+      source: 'CONTACT_ACTIVITY' as const,
+      type: CONTACT_ACTIVITY_TYPE_MAP[r.type] || 'SYSTEM',
+      title: r.title,
+      description: r.description,
+      timestamp: r.timestamp,
+      actor: r.userName ? { id: r.userId, name: r.userName } : null,
+      entity: r.contact
+        ? {
+            id: r.contact.id,
+            type: 'CONTACT' as const,
+            name: `${r.contact.firstName} ${r.contact.lastName}`.trim() || r.contact.email,
+          }
+        : null,
+      metadata: r.metadata as Record<string, unknown> | null,
+    }));
+  }
+
+  private async searchOpportunityEvents(
+    tenantId: string, query: string, limit: number,
+    cursor: { timestamp: Date; id: string } | null, filters: ActivityFeedFilters
+  ): Promise<UnifiedActivityItem[]> {
+    const where: any = {
+      tenantId,
+      AND: [{ OR: this.buildSearchConditions(query, ['title', 'description']) }],
+    };
+    if (cursor) {
+      where.AND.push({
+        OR: [
+          { timestamp: { lt: cursor.timestamp } },
+          { timestamp: cursor.timestamp, id: { lt: cursor.id } },
+        ],
+      });
+    }
+    if (filters.entityId) where.opportunityId = filters.entityId;
+
+    const rows = await this.prisma.activityEvent.findMany({
+      where,
+      orderBy: [{ timestamp: 'desc' }, { id: 'desc' }],
+      take: limit,
+      include: { opportunity: { select: { id: true, name: true } } },
+    });
+
+    return rows.map((r) => ({
+      id: `opp_${r.id}`,
+      source: 'OPPORTUNITY_EVENT' as const,
+      type: OPPORTUNITY_EVENT_TYPE_MAP[r.type] || 'SYSTEM',
+      title: r.title,
+      description: r.description,
+      timestamp: r.timestamp,
+      actor: r.userId ? { id: r.userId, name: r.agentName || 'System' } : null,
+      entity: r.opportunity
+        ? { id: r.opportunity.id, type: 'OPPORTUNITY' as const, name: r.opportunity.name }
+        : null,
+      metadata:
+        r.stageFrom || r.stageTo
+          ? { stageFrom: r.stageFrom, stageTo: r.stageTo, confidenceScore: r.confidenceScore }
+          : null,
+    }));
+  }
+
+  private async searchTicketActivities(
+    tenantId: string, query: string, limit: number,
+    cursor: { timestamp: Date; id: string } | null, filters: ActivityFeedFilters
+  ): Promise<UnifiedActivityItem[]> {
+    const where: any = {
+      tenantId,
+      AND: [{ OR: this.buildSearchConditions(query, ['content', 'authorName']) }],
+    };
+    if (cursor) {
+      where.AND.push({
+        OR: [
+          { timestamp: { lt: cursor.timestamp } },
+          { timestamp: cursor.timestamp, id: { lt: cursor.id } },
+        ],
+      });
+    }
+    if (filters.entityId) where.ticketId = filters.entityId;
+
+    const rows = await this.prisma.ticketActivity.findMany({
+      where,
+      orderBy: [{ timestamp: 'desc' }, { id: 'desc' }],
+      take: limit,
+      include: { ticket: { select: { id: true, subject: true, ticketNumber: true } } },
+    });
+
+    return rows.map((r) => ({
+      id: `ticket_${r.id}`,
+      source: 'TICKET_ACTIVITY' as const,
+      type: TICKET_ACTIVITY_TYPE_MAP[r.type] || 'SYSTEM',
+      title: r.content.length > 100 ? r.content.slice(0, 100) + '...' : r.content,
+      description: r.isInternal ? '[Internal note]' : null,
+      timestamp: r.timestamp,
+      actor: { id: null, name: r.authorName },
+      entity: r.ticket
+        ? {
+            id: r.ticket.id,
+            type: 'TICKET' as const,
+            name: `${r.ticket.ticketNumber}: ${r.ticket.subject}`,
+          }
+        : null,
+      metadata: r.systemEventData as Record<string, unknown> | null,
+    }));
+  }
+
+  private async searchEmailRecords(
+    tenantId: string, query: string, limit: number,
+    cursor: { timestamp: Date; id: string } | null, filters: ActivityFeedFilters
+  ): Promise<UnifiedActivityItem[]> {
+    const where: any = {
+      tenantId,
+      AND: [{ OR: this.buildSearchConditions(query, ['subject', 'fromEmail', 'toEmail']) }],
+    };
+    if (cursor) {
+      where.AND.push({
+        OR: [
+          { createdAt: { lt: cursor.timestamp } },
+          { createdAt: cursor.timestamp, id: { lt: cursor.id } },
+        ],
+      });
+    }
+    if (filters.entityId && filters.entityType === 'CONTACT') where.contactId = filters.entityId;
+
+    const rows = await this.prisma.emailRecord.findMany({
+      where,
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: limit,
+    });
+
+    return rows.map((r) => ({
+      id: `email_${r.id}`,
+      source: 'EMAIL' as const,
+      type: 'EMAIL' as const,
+      title: r.subject,
+      description: `From: ${r.fromEmail} → To: ${r.toEmail}`,
+      timestamp: r.createdAt,
+      actor: r.userId ? { id: r.userId, name: r.fromEmail } : null,
+      entity: r.contactId ? { id: r.contactId, type: 'CONTACT' as const, name: r.toEmail } : null,
+      metadata: { status: r.status, openCount: r.openCount, clickCount: r.clickCount },
+    }));
+  }
+
+  private async searchCallRecords(
+    tenantId: string, query: string, limit: number,
+    cursor: { timestamp: Date; id: string } | null, filters: ActivityFeedFilters
+  ): Promise<UnifiedActivityItem[]> {
+    const where: any = {
+      tenantId,
+      AND: [{ OR: this.buildSearchConditions(query, ['contactName', 'userName', 'summary']) }],
+    };
+    if (cursor) {
+      where.AND.push({
+        OR: [
+          { startedAt: { lt: cursor.timestamp } },
+          { startedAt: cursor.timestamp, id: { lt: cursor.id } },
+        ],
+      });
+    }
+    if (filters.entityId && filters.entityType === 'CONTACT') where.contactId = filters.entityId;
+
+    const rows = await this.prisma.callRecord.findMany({
+      where,
+      orderBy: [{ startedAt: 'desc' }, { id: 'desc' }],
+      take: limit,
+    });
+
+    return rows.map((r) => ({
+      id: `call_${r.id}`,
+      source: 'CALL' as const,
+      type: 'CALL' as const,
+      title: `${r.direction === 'inbound' ? 'Incoming' : 'Outgoing'} call` + (r.contactName ? ` with ${r.contactName}` : ''),
+      description: r.summary || r.outcome || null,
+      timestamp: r.startedAt,
+      actor: r.userName ? { id: r.userId, name: r.userName } : null,
+      entity: r.contactId
+        ? { id: r.contactId, type: 'CONTACT' as const, name: r.contactName || r.toNumber }
+        : null,
+      metadata: {
+        duration: r.duration,
+        status: r.status,
+        outcome: r.outcome,
+        sentiment: r.sentiment,
+      },
+    }));
+  }
+
+  private async searchChatMessages(
+    tenantId: string, query: string, limit: number,
+    cursor: { timestamp: Date; id: string } | null, filters: ActivityFeedFilters
+  ): Promise<UnifiedActivityItem[]> {
+    const where: any = {
+      tenantId,
+      AND: [{ OR: this.buildSearchConditions(query, ['content']) }],
+    };
+    if (cursor) {
+      where.AND.push({
+        OR: [
+          { createdAt: { lt: cursor.timestamp } },
+          { createdAt: cursor.timestamp, id: { lt: cursor.id } },
+        ],
+      });
+    }
+    if (filters.entityId && filters.entityType === 'CONTACT') {
+      where.conversation = { contactId: filters.entityId };
+    }
+
+    const rows = await this.prisma.chatMessage.findMany({
+      where,
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: limit,
+      include: {
+        conversation: { select: { id: true, contactName: true, contactId: true, subject: true } },
+      },
+    });
+
+    return rows.map((r) => ({
+      id: `chat_${r.id}`,
+      source: 'CHAT' as const,
+      type: 'CHAT' as const,
+      title: r.conversation?.subject || 'Chat message',
+      description: r.content.length > 200 ? r.content.slice(0, 200) + '...' : r.content,
+      timestamp: r.createdAt,
+      actor: { id: r.senderId, name: r.senderName },
+      entity: r.conversation?.contactId
+        ? {
+            id: r.conversation.contactId,
+            type: 'CONTACT' as const,
+            name: r.conversation.contactName || 'Unknown',
+          }
+        : null,
+      metadata: r.metadata as Record<string, unknown> | null,
+    }));
+  }
+
+  // ---------------------------------------------------------------------------
   // Private: Source-specific query methods
   // ---------------------------------------------------------------------------
 

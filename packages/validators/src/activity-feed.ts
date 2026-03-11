@@ -168,3 +168,19 @@ export const activityFeedStatsResponseSchema = z.object({
 });
 
 export type ActivityFeedStatsResponseOutput = z.infer<typeof activityFeedStatsResponseSchema>;
+
+// =============================================================================
+// Search Schemas (IFC-203)
+// =============================================================================
+
+/** Input schema for search — full-text search across activity feed */
+export const activityFeedSearchQuerySchema = z.object({
+  query: z.string().min(1).max(500).trim(),
+  limit: z.number().int().min(1).max(ACTIVITY_FEED_MAX_LIMIT).default(ACTIVITY_FEED_DEFAULT_LIMIT),
+  cursor: z.string().nullish(),
+  types: z.array(unifiedFeedTypeSchema).optional(),
+  sources: z.array(unifiedFeedSourceSchema).optional(),
+  entityType: unifiedFeedEntityTypeSchema.optional(),
+});
+
+export type ActivityFeedSearchQueryInput = z.infer<typeof activityFeedSearchQuerySchema>;

@@ -52,6 +52,25 @@ export interface ActivityFeedRepositoryPort {
   ): Promise<UnifiedActivityItem[]>;
 
   /**
+   * Search activities across all sources using text matching.
+   * IFC-203: Full-text search with ILIKE across titles, descriptions, and actor names.
+   *
+   * @param tenantId - Tenant to scope search to
+   * @param query - Text query to search for
+   * @param limit - Maximum items to return
+   * @param cursor - Pagination cursor (timestamp + id)
+   * @param filters - Optional filters (types, sources, entity type)
+   * @returns Matching activity items sorted by timestamp DESC
+   */
+  searchFeed(
+    tenantId: string,
+    query: string,
+    limit: number,
+    cursor: ActivityFeedCursor | null,
+    filters: ActivityFeedFilters
+  ): Promise<UnifiedActivityItem[]>;
+
+  /**
    * Get aggregate stats from the activity feed.
    * IFC-202: Counts by type, source, and entity type within a time window.
    *

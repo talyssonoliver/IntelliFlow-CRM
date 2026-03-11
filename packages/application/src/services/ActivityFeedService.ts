@@ -23,6 +23,7 @@ import type {
   ActivityFeedEntityType,
   ActivityFeedTimeWindow,
   ActivityFeedStats,
+  UnifiedActivityItem,
 } from '@intelliflow/domain';
 
 /** Cache TTL for feed pages (30 seconds — feeds are near-real-time) */
@@ -188,6 +189,57 @@ export class ActivityFeedService {
     return result;
   }
 
+  /**
+   * Search activities across all sources using text matching.
+   * IFC-203: Full-text search with ILIKE across titles, descriptions, and actor names.
+   * No caching — search results are always fresh.
+   */
+  async search(
+    tenantId: string,
+    query: string,
+    limit: number,
+    cursorStr: string | null | undefined,
+    filters: {
+      types?: ActivityFeedType[];
+      sources?: ActivityFeedSource[];
+      entityType?: ActivityFeedEntityType;
+    }
+  ): Promise<ActivityFeedPage> {
+    const cursor = cursorStr ? decodeCursor(cursorStr) : null;
+
+    const items = await this.feedRepository.searchFeed(
+      tenantId,
+      query,
+      limit + 1,
+      cursor,
+      filters
+    );
+
+    // Deduplicate by ID (same item may appear from multiple source tables)
+    const seen = new Set<string>();
+    const deduped = items.filter((item) => {
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    });
+
+    // Relevance boost: within same-second groups, title matches come first
+    const boosted = boostTitleMatches(deduped, query);
+
+    const hasMore = boosted.length > limit;
+    const pageItems = boosted.slice(0, limit);
+    const lastItem = pageItems.at(-1);
+
+    return {
+      items: pageItems,
+      nextCursor:
+        hasMore && lastItem
+          ? encodeCursor({ timestamp: lastItem.timestamp, id: lastItem.id })
+          : null,
+      hasMore,
+    };
+  }
+
   private buildCacheKey(
     tenantId: string,
     limit: number,
@@ -248,4 +300,48 @@ function resolveWindowStart(
     case 'all':
       return null;
   }
+}
+
+/**
+ * Boost title matches within same-second timestamp groups.
+ * Items with the query appearing in the title sort before items
+ * where it only appears in description/other fields.
+ */
+function boostTitleMatches(
+  items: UnifiedActivityItem[],
+  query: string
+): UnifiedActivityItem[] {
+  if (items.length <= 1) return items;
+
+  const lowerQuery = query.toLowerCase();
+  const result: UnifiedActivityItem[] = [];
+  let groupStart = 0;
+
+  for (let i = 0; i <= items.length; i++) {
+    const current = items[i];
+    const prev = items[i - 1];
+
+    // Detect group boundary: different second or end of array
+    const isBoundary =
+      i === items.length ||
+      !prev ||
+      Math.floor(current!.timestamp.getTime() / 1000) !==
+        Math.floor(prev.timestamp.getTime() / 1000);
+
+    if (isBoundary && i > groupStart) {
+      const group = items.slice(groupStart, i);
+      if (group.length > 1) {
+        // Stable sort: title matches first
+        group.sort((a, b) => {
+          const aTitle = a.title?.toLowerCase().includes(lowerQuery) ? 0 : 1;
+          const bTitle = b.title?.toLowerCase().includes(lowerQuery) ? 0 : 1;
+          return aTitle - bTitle;
+        });
+      }
+      result.push(...group);
+      groupStart = i;
+    }
+  }
+
+  return result;
 }
