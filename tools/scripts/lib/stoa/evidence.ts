@@ -225,7 +225,7 @@ export function writeRunSummaryMd(evidenceDir: string, summary: RunSummary): str
 
 ## STOA Assignment
 
-- **Lead STOA:** ${summary.stoaAssignment.leadStoa}
+- **Primary STOA:** ${summary.stoaAssignment.primaryStoa}
 - **Supporting STOAs:** ${summary.stoaAssignment.supportingStoas.join(', ') || 'None'}
 
 ## Gate Selection
@@ -351,8 +351,6 @@ export function createRunSummary(
     finalVerdict = 'FAIL';
   } else if (verdicts.includes('NEEDS_HUMAN')) {
     finalVerdict = 'NEEDS_HUMAN';
-  } else if (verdicts.includes('WARN')) {
-    finalVerdict = 'WARN';
   }
 
   // Count findings by severity

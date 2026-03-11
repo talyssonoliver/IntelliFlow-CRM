@@ -204,7 +204,7 @@ async function executeMatop(
     dependencies: task.dependencies,
   });
 
-  log(`Lead STOA: ${assignment.leadStoa}`);
+  log(`Primary STOA: ${assignment.primaryStoa}`);
   log(`Supporting STOAs: ${assignment.supportingStoas.join(', ') || 'None'}`);
 
   const allStoas = getAllInvolvedStoas(assignment);
@@ -345,7 +345,7 @@ async function executeMatop(
     stoaVerdicts.push(verdict);
     writeStoaVerdict(evidenceDir, verdict);
 
-    const icon = verdict.verdict === 'PASS' ? '✓' : verdict.verdict === 'WARN' ? '!' : '✗';
+    const icon = verdict.verdict === 'PASS' ? '✓' : '✗';
     log(`${icon} ${stoa}: ${verdict.verdict}`);
   }
 
@@ -519,7 +519,7 @@ async function executeMatop(
 **Timestamp:** ${summaryData.timestamp}
 
 ## STOA Assignment
-- **Lead:** ${assignment.leadStoa}
+- **Lead:** ${assignment.primaryStoa}
 - **Supporting:** ${assignment.supportingStoas.join(', ') || 'None'}
 
 ## Gate Execution
@@ -551,7 +551,7 @@ ${remediation.actions.map((a) => `- ${a}`).join('\n')}
   // =========================================================================
   logSection('MATOP Complete');
 
-  const success = finalVerdict === 'PASS' || (finalVerdict === 'WARN' && !strictMode);
+  const success = finalVerdict === 'PASS';
   log(`Success: ${success ? 'Yes' : 'No'}`);
   log(`Evidence: ${evidenceDir}`);
 

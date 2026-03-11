@@ -229,7 +229,7 @@ export async function runStoaOrchestration(
   await ensureEvidenceDirs(evidenceDir);
 
   const stoaAssignment = assignStoas(task);
-  log(`Lead STOA: ${stoaAssignment.leadStoa}`);
+  log(`Primary STOA: ${stoaAssignment.primaryStoa}`);
   log(`Supporting STOAs: ${stoaAssignment.supportingStoas.join(', ') || 'None'}`);
 
   // -------------------------------------------------------------------------
@@ -311,9 +311,9 @@ export async function runStoaOrchestration(
 
   const stoaVerdicts: StoaVerdict[] = [];
 
-  // Lead STOA verdict
-  const leadVerdict = generateStoaVerdict(
-    stoaAssignment.leadStoa,
+  // Primary STOA verdict
+  const primaryVerdict = generateStoaVerdict(
+    stoaAssignment.primaryStoa,
     taskId,
     gateSelection,
     gateResults,
@@ -321,9 +321,9 @@ export async function runStoaOrchestration(
     strictMode
   );
 
-  stoaVerdicts.push(leadVerdict);
-  writeStoaVerdict(evidenceDir, leadVerdict);
-  log(`${stoaAssignment.leadStoa} STOA: ${leadVerdict.verdict} - ${leadVerdict.rationale}`);
+  stoaVerdicts.push(primaryVerdict);
+  writeStoaVerdict(evidenceDir, primaryVerdict);
+  log(`${stoaAssignment.primaryStoa} STOA: ${primaryVerdict.verdict} - ${primaryVerdict.rationale}`);
 
   // Supporting STOA verdicts (for now, they inherit the lead verdict)
   for (const supportingStoa of stoaAssignment.supportingStoas) {
@@ -358,7 +358,7 @@ export async function runStoaOrchestration(
       taskId,
       task.status || 'Unknown',
       finalVerdict,
-      `All gates passed. Lead STOA (${stoaAssignment.leadStoa}) verdict: PASS`,
+      `All gates passed. Primary STOA (${stoaAssignment.primaryStoa}) verdict: PASS`,
       [`${evidenceDir}/summary.json`]
     );
 

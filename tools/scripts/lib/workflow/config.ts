@@ -156,8 +156,8 @@ export const MATOP_CONSENSUS = {
   failOnAnyFail: true,
   /** If any STOA returns NEEDS_HUMAN, overall verdict is NEEDS_HUMAN */
   needsHumanOnAny: true,
-  /** If no FAIL but any WARN, overall verdict is WARN */
-  warnOnAnyWarn: true,
+  /** @deprecated WARN verdict removed — binary gate policy (PASS/FAIL/NEEDS_HUMAN only) */
+  warnOnAnyWarn: false,
   /** Minimum number of STOAs that must pass for overall PASS */
   minPassCount: 1,
 };

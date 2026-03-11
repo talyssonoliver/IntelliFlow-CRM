@@ -24,7 +24,7 @@ export {
 
 // STOA Assignment
 export {
-  getLeadStoa,
+  getPrimaryStoa,
   deriveSupportingStoas,
   assignStoas,
   getAllInvolvedStoas,

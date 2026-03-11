@@ -11,7 +11,7 @@ import { STOA_PREFIX_RULES, STOA_KEYWORD_TRIGGERS, MATOP_CONSENSUS } from './con
  * STOA assignment result
  */
 export interface StoaAssignment {
-  leadStoa: StoaType;
+  primaryStoa: StoaType;
   supportingStoas: StoaType[];
   allStoas: StoaType[];
   reasons: Record<StoaType, string[]>;
@@ -39,7 +39,6 @@ export interface MatopResult {
   stoaVerdicts: StoaVerdict[];
   consensus: {
     passCount: number;
-    warnCount: number;
     failCount: number;
     needsHumanCount: number;
   };
@@ -66,10 +65,10 @@ export function assignStoas(task: TaskRecord): StoaAssignment {
   };
 
   // Determine lead STOA by prefix
-  let leadStoa: StoaType = 'Domain'; // Default
+  let primaryStoa: StoaType = 'Domain'; // Default
   for (const [prefix, stoa] of Object.entries(STOA_PREFIX_RULES)) {
     if (taskId.startsWith(prefix)) {
-      leadStoa = stoa;
+      primaryStoa = stoa;
       reasons[stoa].push(`Task ID prefix "${prefix}" matches ${stoa} STOA`);
       break;
     }
@@ -82,7 +81,7 @@ export function assignStoas(task: TaskRecord): StoaAssignment {
   for (const [stoa, keywords] of Object.entries(STOA_KEYWORD_TRIGGERS) as [StoaType, string[]][]) {
     for (const keyword of keywords) {
       if (searchText.includes(keyword.toLowerCase())) {
-        if (stoa !== leadStoa) {
+        if (stoa !== primaryStoa) {
           supportingStoas.add(stoa);
           reasons[stoa].push(`Keyword "${keyword}" found in task`);
         }
@@ -91,15 +90,15 @@ export function assignStoas(task: TaskRecord): StoaAssignment {
   }
 
   // Foundation is always included for baseline gates
-  if (leadStoa !== 'Foundation') {
+  if (primaryStoa !== 'Foundation') {
     supportingStoas.add('Foundation');
     reasons.Foundation.push('Baseline gates (typecheck, build, lint) always required');
   }
 
-  const allStoas = [leadStoa, ...Array.from(supportingStoas)];
+  const allStoas = [primaryStoa, ...Array.from(supportingStoas)];
 
   return {
-    leadStoa,
+    primaryStoa,
     supportingStoas: Array.from(supportingStoas),
     allStoas,
     reasons,
@@ -111,7 +110,6 @@ export function assignStoas(task: TaskRecord): StoaAssignment {
  */
 export function calculateConsensus(verdicts: StoaVerdict[]): MatopResult {
   const passCount = verdicts.filter((v) => v.verdict === 'PASS').length;
-  const warnCount = verdicts.filter((v) => v.verdict === 'WARN').length;
   const failCount = verdicts.filter((v) => v.verdict === 'FAIL').length;
   const needsHumanCount = verdicts.filter((v) => v.verdict === 'NEEDS_HUMAN').length;
 
@@ -126,10 +124,6 @@ export function calculateConsensus(verdicts: StoaVerdict[]): MatopResult {
     finalVerdict = 'NEEDS_HUMAN';
     const humanStoas = verdicts.filter((v) => v.verdict === 'NEEDS_HUMAN').map((v) => v.stoa);
     summary = `NEEDS_HUMAN: ${needsHumanCount} STOA(s) require human review (${humanStoas.join(', ')})`;
-  } else if (MATOP_CONSENSUS.warnOnAnyWarn && warnCount > 0) {
-    finalVerdict = 'WARN';
-    const warnedStoas = verdicts.filter((v) => v.verdict === 'WARN').map((v) => v.stoa);
-    summary = `WARN: ${warnCount} STOA(s) passed with warnings (${warnedStoas.join(', ')})`;
   } else if (passCount >= MATOP_CONSENSUS.minPassCount) {
     finalVerdict = 'PASS';
     summary = `PASS: All ${passCount} STOA(s) passed validation`;
@@ -143,7 +137,6 @@ export function calculateConsensus(verdicts: StoaVerdict[]): MatopResult {
     stoaVerdicts: verdicts,
     consensus: {
       passCount,
-      warnCount,
       failCount,
       needsHumanCount,
     },
@@ -209,8 +202,6 @@ export function getStatusFromVerdict(
   switch (verdict) {
     case 'PASS':
       return 'Completed';
-    case 'WARN':
-      return 'In Progress'; // Needs remediation
     case 'FAIL':
       return 'Failed';
     case 'NEEDS_HUMAN':

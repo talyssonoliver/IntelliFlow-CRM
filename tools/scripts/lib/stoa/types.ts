@@ -101,7 +101,7 @@ export interface GateExecutionResult {
 
 export interface StoaAssignment {
   taskId: string;
-  leadStoa: StoaRole;
+  primaryStoa: StoaRole;
   supportingStoas: StoaRole[];
   derivedFrom: {
     prefix: boolean;
@@ -129,7 +129,7 @@ export interface WaiverRecord {
   createdAt: string;
   expiresAt: string | null;
   approved: boolean;
-  strictModeBehavior: 'WARN' | 'FAIL';
+  strictModeBehavior: 'FAIL';
   justification?: string;
 }
 
@@ -137,7 +137,7 @@ export interface WaiverRecord {
 // STOA Verdict Types
 // ============================================================================
 
-export type VerdictType = 'PASS' | 'WARN' | 'FAIL' | 'NEEDS_HUMAN';
+export type VerdictType = 'PASS' | 'FAIL' | 'NEEDS_HUMAN';
 
 export type FindingSeverity = 'critical' | 'high' | 'medium' | 'low' | 'info';
 
@@ -242,7 +242,6 @@ export type CsvStatus = 'Completed' | 'Blocked' | 'In Progress' | 'Needs Human' 
 
 export const VERDICT_TO_CSV_STATUS: Record<VerdictType, CsvStatus> = {
   PASS: 'Completed',
-  WARN: 'Completed',
   FAIL: 'Blocked',
   NEEDS_HUMAN: 'Needs Human',
 } as const;
@@ -270,7 +269,7 @@ export interface HumanPacket {
 export interface PathResolutionResult {
   path: string | null;
   source: 'env' | 'canonical' | 'fallback' | 'not_found';
-  severity: 'PASS' | 'WARN' | 'FAIL';
+  severity: 'PASS' | 'FAIL';
   message: string;
 }
 

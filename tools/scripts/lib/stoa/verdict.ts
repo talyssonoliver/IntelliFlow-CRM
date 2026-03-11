@@ -113,41 +113,24 @@ export function determineVerdict(
     };
   }
 
-  // Check for pending waivers
+  // Check for pending waivers — always NEEDS_HUMAN
   if (waiversSummary.pending > 0) {
-    if (strictMode) {
-      return {
-        verdict: 'FAIL',
-        rationale: `${waiversSummary.pending} waiver(s) pending approval (strict mode)`,
-      };
-    }
     return {
-      verdict: 'WARN',
+      verdict: 'NEEDS_HUMAN',
       rationale: `${waiversSummary.pending} waiver(s) pending approval`,
     };
   }
 
-  // Check for expired waivers
+  // Check for expired waivers — always FAIL
   if (waiversSummary.expired > 0) {
-    if (strictMode) {
-      return {
-        verdict: 'FAIL',
-        rationale: `${waiversSummary.expired} waiver(s) expired (strict mode)`,
-      };
-    }
     return {
-      verdict: 'WARN',
+      verdict: 'FAIL',
       rationale: `${waiversSummary.expired} waiver(s) expired`,
     };
   }
 
-  // Check for approved waivers (still a concern, but not blocking)
-  if (waiversSummary.approved > 0) {
-    return {
-      verdict: 'WARN',
-      rationale: `All gates passed, but ${waiversSummary.approved} tool(s) skipped with approved waiver(s)`,
-    };
-  }
+  // Approved waivers are acceptable — PASS with note
+  // (waived tools were intentionally skipped with human approval)
 
   // All gates passed, no waivers
   return {
@@ -240,7 +223,7 @@ export function writeStoaVerdict(evidenceDir: string, verdict: StoaVerdict): str
  * Rules:
  * - Any FAIL → final FAIL
  * - Any NEEDS_HUMAN → final NEEDS_HUMAN (unless FAIL)
- * - Any WARN → final WARN (unless FAIL or NEEDS_HUMAN)
+ * - All PASS → final PASS
  * - All PASS → final PASS
  */
 export function aggregateVerdicts(verdicts: StoaVerdict[]): VerdictType {
@@ -250,10 +233,6 @@ export function aggregateVerdicts(verdicts: StoaVerdict[]): VerdictType {
 
   if (verdicts.some((v) => v.verdict === 'NEEDS_HUMAN')) {
     return 'NEEDS_HUMAN';
-  }
-
-  if (verdicts.some((v) => v.verdict === 'WARN')) {
-    return 'WARN';
   }
 
   return 'PASS';
@@ -309,12 +288,12 @@ export interface SignOffResult {
 }
 
 /**
- * Determine supporting STOA decision based on lead verdict.
+ * Determine supporting STOA decision based on primary verdict.
  * This is a simplified auto-decision; real implementation may involve human review.
  */
 export function determineSupportingSignOff(
   supportingStoa: StoaRole,
-  leadVerdict: StoaVerdict,
+  primaryVerdict: StoaVerdict,
   ownFindings: Finding[]
 ): SignOffResult {
   // Check for critical findings from this STOA's perspective
@@ -330,11 +309,11 @@ export function determineSupportingSignOff(
     };
   }
 
-  if (highFindings.length > 0 && leadVerdict.verdict === 'PASS') {
+  if (highFindings.length > 0 && primaryVerdict.verdict === 'PASS') {
     return {
       stoa: supportingStoa,
       decision: 'ESCALATE',
-      reason: `High severity findings but lead says PASS: ${highFindings.map((f) => f.message).join('; ')}`,
+      reason: `High severity findings but primary says PASS: ${highFindings.map((f) => f.message).join('; ')}`,
       timestamp: new Date().toISOString(),
     };
   }
@@ -342,7 +321,7 @@ export function determineSupportingSignOff(
   return {
     stoa: supportingStoa,
     decision: 'AGREE',
-    reason: `Concur with lead verdict: ${leadVerdict.verdict}`,
+    reason: `Concur with primary verdict: ${primaryVerdict.verdict}`,
     timestamp: new Date().toISOString(),
   };
 }

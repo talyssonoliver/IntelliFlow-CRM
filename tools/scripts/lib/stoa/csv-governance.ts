@@ -33,7 +33,6 @@ const CSV_PATCH_HISTORY_FILE = 'csv-patch-history.jsonl';
 export function verdictToCsvStatus(verdict: VerdictType): CsvStatus {
   const mapping: Record<VerdictType, CsvStatus> = {
     PASS: 'Completed',
-    WARN: 'Completed',
     FAIL: 'Blocked',
     NEEDS_HUMAN: 'Needs Human',
   };

@@ -323,8 +323,6 @@ async function runStoa(args: CliArgs): Promise<void> {
     process.exit(1);
   } else if (verdict.verdict === 'NEEDS_HUMAN') {
     process.exit(2);
-  } else if (verdict.verdict === 'WARN' && strictMode) {
-    process.exit(1);
   }
 }
 

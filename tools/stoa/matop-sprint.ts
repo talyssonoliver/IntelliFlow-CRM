@@ -182,7 +182,7 @@ async function runSprint(
 
   // Results
   const results: TaskSummary[] = [];
-  const counts = { pass: 0, warn: 0, fail: 0, error: 0, skipped: 0 };
+  const counts = { pass: 0, fail: 0, error: 0, skipped: 0 };
 
   // Execute each task
   for (let i = 0; i < tasks.length; i++) {
@@ -204,10 +204,6 @@ async function runSprint(
         case 'PASS':
           counts.pass++;
           console.log(`PASS (${duration}ms)`);
-          break;
-        case 'WARN':
-          counts.warn++;
-          console.log(`WARN (${duration}ms)`);
           break;
         case 'FAIL':
           counts.fail++;
@@ -240,7 +236,6 @@ async function runSprint(
   logSection('Sprint Summary');
   log(`Total: ${tasks.length} tasks`);
   log(`PASS: ${counts.pass}`);
-  log(`WARN: ${counts.warn}`);
   log(`FAIL: ${counts.fail}`);
   log(`ERROR: ${counts.error}`);
   log(`Duration: ${(totalDuration / 1000).toFixed(1)}s`);
@@ -304,9 +299,7 @@ function generateMarkdownReport(report: SprintReport): string {
     const icon =
       task.verdict === 'PASS'
         ? '✅'
-        : task.verdict === 'WARN'
-          ? '⚠️'
-          : task.verdict === 'FAIL'
+        : task.verdict === 'FAIL'
             ? '❌'
             : '💥';
     const desc =

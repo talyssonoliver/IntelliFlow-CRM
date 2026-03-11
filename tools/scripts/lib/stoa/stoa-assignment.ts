@@ -2,8 +2,9 @@
  * STOA Assignment System
  *
  * Implements deterministic STOA assignment from Framework.md Section 3.
- * - Lead STOA determined by task ID prefix
+ * - Primary STOA determined by task ID prefix (cosmetic — for ordering only)
  * - Supporting STOAs derived from keywords and impact surface
+ * - All STOAs are equal blockers — any FAIL blocks completion
  *
  * @module tools/scripts/lib/stoa/stoa-assignment
  */
@@ -11,14 +12,14 @@
 import type { StoaRole, StoaAssignment, Task } from './types.js';
 
 // ============================================================================
-// Lead STOA Assignment (by Task ID Prefix)
+// Primary STOA Assignment (by Task ID Prefix)
 // ============================================================================
 
 /**
- * Prefix patterns for Lead STOA assignment.
+ * Prefix patterns for Primary STOA assignment.
  * Order matters - first match wins.
  */
-const LEAD_STOA_PREFIX_PATTERNS: Array<{ pattern: RegExp; stoa: StoaRole }> = [
+const PRIMARY_STOA_PREFIX_PATTERNS: Array<{ pattern: RegExp; stoa: StoaRole }> = [
   { pattern: /^ENV-/i, stoa: 'Foundation' },
   { pattern: /^EP-/i, stoa: 'Foundation' },
   { pattern: /^EXC-SEC-/i, stoa: 'Security' },
@@ -26,15 +27,16 @@ const LEAD_STOA_PREFIX_PATTERNS: Array<{ pattern: RegExp; stoa: StoaRole }> = [
   { pattern: /^AI-SETUP-/i, stoa: 'Intelligence' },
   { pattern: /^AI-/i, stoa: 'Intelligence' },
   { pattern: /^AUTOMATION-/i, stoa: 'Automation' },
+  { pattern: /^PG-/i, stoa: 'Quality' },
   { pattern: /^IFC-/i, stoa: 'Domain' },
 ];
 
 /**
- * Determine Lead STOA from task ID prefix.
+ * Determine Primary STOA from task ID prefix.
  * Falls back to 'Domain' if no prefix matches.
  */
-export function getLeadStoa(taskId: string): StoaRole {
-  for (const { pattern, stoa } of LEAD_STOA_PREFIX_PATTERNS) {
+export function getPrimaryStoa(taskId: string): StoaRole {
+  for (const { pattern, stoa } of PRIMARY_STOA_PREFIX_PATTERNS) {
     if (pattern.test(taskId)) {
       return stoa;
     }
@@ -217,7 +219,7 @@ function findMatchedPaths(paths: string[], patterns: RegExp[]): string[] {
  */
 export function deriveSupportingStoas(
   task: Task,
-  leadStoa: StoaRole
+  primaryStoa: StoaRole
 ): { stoas: StoaRole[]; derivedFrom: StoaAssignment['derivedFrom'] } {
   const supportingStoas: StoaRole[] = [];
   const allText = [task.description || '', task.definitionOfDone || '', task.section || ''].join(
@@ -227,7 +229,7 @@ export function deriveSupportingStoas(
   const dependencies = task.dependencies || [];
 
   const derivedFrom: StoaAssignment['derivedFrom'] = {
-    prefix: true, // Lead STOA always derived from prefix
+    prefix: true, // Primary STOA always derived from prefix
     keywords: [],
     affectedPaths: [],
     dependencies: [],
@@ -235,7 +237,7 @@ export function deriveSupportingStoas(
 
   for (const stoa of Object.keys(STOA_KEYWORD_TRIGGERS) as StoaRole[]) {
     // Skip if this is the lead STOA (already assigned)
-    if (stoa === leadStoa) continue;
+    if (stoa === primaryStoa) continue;
 
     let shouldAdd = false;
 
@@ -271,25 +273,25 @@ export function deriveSupportingStoas(
 // ============================================================================
 
 /**
- * Assign Lead and Supporting STOAs to a task.
+ * Assign Primary and Supporting STOAs to a task.
  */
 export function assignStoas(task: Task): StoaAssignment {
-  const leadStoa = getLeadStoa(task.taskId);
-  const { stoas: supportingStoas, derivedFrom } = deriveSupportingStoas(task, leadStoa);
+  const primaryStoa = getPrimaryStoa(task.taskId);
+  const { stoas: supportingStoas, derivedFrom } = deriveSupportingStoas(task, primaryStoa);
 
   return {
     taskId: task.taskId,
-    leadStoa,
+    primaryStoa,
     supportingStoas,
     derivedFrom,
   };
 }
 
 /**
- * Get all STOAs involved with a task (lead + supporting).
+ * Get all STOAs involved with a task (primary + supporting).
  */
 export function getAllInvolvedStoas(assignment: StoaAssignment): StoaRole[] {
-  return [assignment.leadStoa, ...assignment.supportingStoas];
+  return [assignment.primaryStoa, ...assignment.supportingStoas];
 }
 
 // ============================================================================
@@ -301,7 +303,7 @@ export function getAllInvolvedStoas(assignment: StoaAssignment): StoaRole[] {
  */
 export interface StoaOverride {
   taskId: string;
-  leadStoa: StoaRole;
+  primaryStoa: StoaRole;
   justification: string;
   expiresAt: string | 'permanent';
 }
@@ -332,7 +334,7 @@ export function applyOverrides(
   // Apply the override
   return {
     ...assignment,
-    leadStoa: override.leadStoa,
+    primaryStoa: override.primaryStoa,
     derivedFrom: {
       ...assignment.derivedFrom,
       prefix: false, // Override means prefix wasn't used

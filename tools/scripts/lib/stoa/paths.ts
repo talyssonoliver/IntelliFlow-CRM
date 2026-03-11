@@ -20,7 +20,7 @@
  * │       │       └── {TASK_ID}-plan-session.json
  * │       ├── attestations/
  * │       │   └── {TASK_ID}/
- * │       │       ├── {TASK_ID}-context_ack.json
+ * │       │       ├── context_ack.json          (plain name — no prefix)
  * │       │       ├── {TASK_ID}-context_pack.md
  * │       │       ├── {TASK_ID}-context_pack.manifest.json
  * │       │       ├── {TASK_ID}-attestation.json
@@ -236,7 +236,9 @@ export function getPlanSessionPath(
 }
 
 /**
- * Get path to the context acknowledgment file
+ * Get path to the context acknowledgment file.
+ * IMPORTANT: Filename is plain `context_ack.json` — NOT prefixed with task ID.
+ * The task ID directory already provides namespacing.
  */
 export function getContextAckPath(
   specifyDir: string,
@@ -249,7 +251,7 @@ export function getContextAckPath(
     `sprint-${sprintNumber}`,
     'attestations',
     taskId,
-    `${taskId}-context_ack.json`
+    'context_ack.json'
   );
 }
 

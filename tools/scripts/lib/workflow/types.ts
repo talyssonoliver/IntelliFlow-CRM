@@ -30,7 +30,7 @@ export type WorkflowStatus =
 /**
  * MATOP verdict values
  */
-export type MatopVerdict = 'PASS' | 'WARN' | 'FAIL' | 'NEEDS_HUMAN';
+export type MatopVerdict = 'PASS' | 'FAIL' | 'NEEDS_HUMAN';
 
 /**
  * STOA (Specialized Task Orchestration Agent) types
