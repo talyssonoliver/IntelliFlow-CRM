@@ -14,6 +14,7 @@
  */
 
 import { TRPCError } from '@trpc/server';
+import { Queue } from 'bullmq';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { type Context } from '../../context';
 import {
@@ -249,6 +250,35 @@ function mapAIInsightToResponse(row: {
 const ENQUEUE_MAX_DEALS = 10;
 const ENQUEUE_MAX_LEADS = 10;
 const ENQUEUE_MAX_CONTACTS = 10;
+const AI_INSIGHTS_QUEUE_NAME = 'ai-insights';
+const DEFAULT_AI_INSIGHTS_QUEUE_CONFIG = {
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: {
+      type: 'exponential' as const,
+      delay: 5000,
+    },
+    removeOnComplete: 86400000,
+    removeOnFail: 604800000,
+  },
+};
+
+async function getAIInsightsQueueConfig() {
+  try {
+    const platformQueues = await import('@intelliflow/platform/queues');
+    return {
+      queueName: platformQueues.QUEUE_NAMES.AI_INSIGHTS,
+      queueConfig:
+        platformQueues.DEFAULT_QUEUE_CONFIGS[platformQueues.QUEUE_NAMES.AI_INSIGHTS] ??
+        DEFAULT_AI_INSIGHTS_QUEUE_CONFIG,
+    };
+  } catch {
+    return {
+      queueName: AI_INSIGHTS_QUEUE_NAME,
+      queueConfig: DEFAULT_AI_INSIGHTS_QUEUE_CONFIG,
+    };
+  }
+}
 
 async function enqueueInsightGeneration(
   tenantId: string,
@@ -261,23 +291,20 @@ async function enqueueInsightGeneration(
   }
 ): Promise<void> {
   try {
-    // Lazy import BullMQ to avoid loading it on every request
-    const { Queue } = await import('bullmq');
-    const { QUEUE_NAMES, DEFAULT_QUEUE_CONFIGS } = await import('@intelliflow/platform/queues');
-    const qConfig = DEFAULT_QUEUE_CONFIGS[QUEUE_NAMES.AI_INSIGHTS];
-    const queue = new Queue(QUEUE_NAMES.AI_INSIGHTS, {
+    const { queueName, queueConfig } = await getAIInsightsQueueConfig();
+    const queue = new Queue(queueName, {
       connection: {
         host: process.env.REDIS_HOST || 'localhost',
         port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
       },
       defaultJobOptions: {
-        attempts: qConfig.defaultJobOptions.attempts,
+        attempts: queueConfig.defaultJobOptions.attempts,
         backoff: {
-          type: qConfig.defaultJobOptions.backoff.type,
-          delay: qConfig.defaultJobOptions.backoff.delay,
+          type: queueConfig.defaultJobOptions.backoff.type,
+          delay: queueConfig.defaultJobOptions.backoff.delay,
         },
-        removeOnComplete: qConfig.defaultJobOptions.removeOnComplete,
-        removeOnFail: qConfig.defaultJobOptions.removeOnFail,
+        removeOnComplete: queueConfig.defaultJobOptions.removeOnComplete,
+        removeOnFail: queueConfig.defaultJobOptions.removeOnFail,
       },
     });
 

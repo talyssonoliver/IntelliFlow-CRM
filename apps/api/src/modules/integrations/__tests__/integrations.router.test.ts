@@ -7,24 +7,23 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { appRouter } from '../../../router';
 import type { Context } from '../../../context';
+import { createPublicContext, createTestContext } from '../../../test/setup';
 import { setConnectorHealthProviderForTests } from '../integrations.router';
 
-// Mock user for protected procedures
-const mockUser = {
-  id: 'user-123',
-  email: 'test@example.com',
-  tenant: { id: 'tenant-123', name: 'Test Tenant' },
-};
-
 // Mock context factory
-const createMockContext = (authenticated = true): Context =>
-  ({
-    user: authenticated ? mockUser : null,
-    tenantId: authenticated ? 'tenant-123' : null,
-    req: {} as Context['req'],
-    res: {} as Context['res'],
-    db: {} as Context['db'],
-  }) as any as Context;
+const createMockContext = (authenticated = true): Context => {
+  const req = {
+    headers: {
+      get: (name: string) => {
+        if (name === 'x-csrf-token') return 'test-csrf-token';
+        return null;
+      },
+      has: (name: string) => name === 'x-csrf-token',
+    },
+  } as unknown as Context['req'];
+
+  return authenticated ? createTestContext({ req }) : createPublicContext({ req });
+};
 
 const HEALTH_CHECK_FIXTURES: Record<
   string,
