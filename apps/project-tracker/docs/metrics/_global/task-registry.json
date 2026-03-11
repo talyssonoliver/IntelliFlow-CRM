@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-03-10T21:31:10.299Z",
+  "last_updated": "2026-03-11T20:33:37.132Z",
   "total_tasks": 390,
   "current_sprint": 14,
   "active_sprint": "sprint-14",
@@ -462,6 +462,7 @@
       "IFC-198",
       "IFC-200",
       "IFC-202",
+      "IFC-203",
       "IFC-205",
       "IFC-206",
       "IFC-207",
@@ -472,14 +473,17 @@
       "PG-158",
       "PG-159",
       "PG-160",
+      "PG-161",
       "PG-162",
       "PG-163",
       "PG-164",
       "PG-165",
+      "PG-167",
       "PG-169",
       "PG-170",
       "PG-171",
       "PG-172",
+      "PG-173",
       "DOC-002",
       "DOC-003",
       "DOC-004",
@@ -507,6 +511,7 @@
     "VALIDATING": [],
     "BLOCKED": [],
     "PLANNED": [
+      "PG-174",
       "IFC-297"
     ],
     "BACKLOG": [
@@ -620,14 +625,9 @@
       "IFC-196",
       "IFC-199",
       "IFC-201",
-      "IFC-203",
       "IFC-204",
-      "PG-161",
       "PG-166",
-      "PG-167",
       "PG-168",
-      "PG-173",
-      "PG-174",
       "PG-175",
       "PG-176",
       "PG-177",
@@ -1554,7 +1554,7 @@
         "IFC-014"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/hooks/use-subscription.ts;ARTIFACT:apps/web/hooks/use-subscription.test.ts;ARTIFACT:artifacts/misc/websocket-test-results.json;EVIDENCE:.specify/sprints/sprint-6/attestations/IFC-016/context_ack.json"
+        "ARTIFACT:apps/web/src/hooks/use-trpc-subscriptions.ts;ARTIFACT:apps/web/src/hooks/__tests__/use-trpc-subscriptions.test.ts;ARTIFACT:artifacts/misc/websocket-test-results.json;EVIDENCE:.specify/sprints/sprint-6/attestations/IFC-016/context_ack.json"
       ],
       "kpis": "<100ms latency (60ms actual), connection stable",
       "definition_of_done": "Live updates for lead scores and activities; P95 latency 60ms; 27 tests passing; artifacts: use-subscription.ts, websocket-test-results.json; verified by: pnpm test; gates: latency-check PASSED",
@@ -1598,7 +1598,7 @@
       "kpis": "All critical paths tested (4711 tests), CI green",
       "definition_of_done": "157 test files, 4711 tests passing; coverage thresholds: 90% statements, 80% branches; gates: coverage-gte-80 PASSED, coverage-gte-90 PASSED",
       "validation": "VALIDATE:pnpm test;GATE:coverage-gte-80;GATE:coverage-gte-90",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Vitest configured;ENV:coverage tools ready;FILE:docs/tdd-guidelines.md;FILE:docs/company/brand/visual-identity.md;FILE:artifacts/reports/web-vitals-report.json;FILE:artifacts/misc/bull-board-screenshot.png;FILE:apps/web/hooks/use-subscription.ts",
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Vitest configured;ENV:coverage tools ready;FILE:docs/tdd-guidelines.md;FILE:docs/company/brand/visual-identity.md;FILE:artifacts/reports/web-vitals-report.json;FILE:artifacts/misc/bull-board-screenshot.png;FILE:apps/web/src/hooks/use-trpc-subscriptions.ts",
       "cadence": ""
     },
     "IFC-019": {
@@ -8347,7 +8347,7 @@
         "IFC-069"
       ],
       "artifacts": [
-        "ARTIFACT:apps/api/src/modules/misc/__tests__/activity-feed-stats.router.test.ts;EVIDENCE:.specify/sprints/sprint-16/attestations/IFC-202/attestation.json"
+        "ARTIFACT:apps/api/src/modules/misc/__tests__/activity-feed-stats.router.test.ts;EVIDENCE:.specify/sprints/sprint-16/attestations/IFC-202/context_ack.json;EVIDENCE:.specify/sprints/sprint-16/attestations/IFC-202/attestation.json"
       ],
       "kpis": "Response <200ms; test coverage >=90%; counts accurate vs raw feed data",
       "definition_of_done": "activityFeed.getStats endpoint returning aggregate counts by type, source, entity type, and configurable time windows (24h, 7d, 30d); repository port extended with getStats method; Prisma adapter implements COUNT queries; unit and router tests; verified by: pnpm test",
@@ -8359,7 +8359,7 @@
       "section": "Core CRM",
       "description": "Activity Feed Full-Text Search - search endpoint with text query across titles descriptions and actor names",
       "owner": "Backend Dev (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [
         "IFC-069",
@@ -8372,7 +8372,7 @@
       "definition_of_done": "activityFeed.search endpoint accepting text query with cursor pagination; repository uses Prisma full-text search (or ILIKE fallback) across activity titles, descriptions, and actor names; tenant-scoped; results ranked by relevance then timestamp; unit and router tests; verified by: pnpm test",
       "validation": "VALIDATE:pnpm test;GATE:coverage-gte-90",
       "prerequisites": "FILE:apps/api/src/modules/misc/activity-feed.router.ts;FILE:packages/application/src/services/ActivityFeedService.ts;FILE:packages/adapters/src/repositories/PrismaActivityFeedRepository.ts",
-      "cadence": ""
+      "cadence": "SPEC:.specify/sprints/sprint-16/specifications/IFC-203-spec.md;PLAN:.specify/sprints/sprint-16/planning/IFC-203-plan.md"
     },
     "IFC-204": {
       "section": "Core CRM",
@@ -8576,20 +8576,20 @@
       "section": "Core CRM",
       "description": "Notifications integration on home page - bell icon header badge count IFC-183 Prisma model and notification router",
       "owner": "CRM FE+BE (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [
         "PG-129",
         "IFC-183"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/components/notifications/NotificationBell.tsx;ARTIFACT:apps/api/src/modules/notifications/notifications.router.ts"
+        "ARTIFACT:apps/web/src/components/notifications/NotificationBell.tsx;ARTIFACT:apps/api/src/modules/notifications/notifications.router.ts;ARTIFACT:apps/web/src/components/home/NotificationsSummaryWidget.tsx"
       ],
       "kpis": "Badge updates in real-time, mark-read latency <200ms",
       "definition_of_done": "Bell icon in home header; unread count badge; dropdown with recent notifications; mark-as-read; Notification model + router; tests cover bell and badge",
       "validation": "VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
       "prerequisites": "FILE:apps/web/src/components/home/AuthenticatedHomePage.tsx",
-      "cadence": ""
+      "cadence": "SPEC:.specify/sprints/sprint-16/specifications/PG-161-spec.md;PLAN:.specify/sprints/sprint-16/planning/PG-161-plan.md;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-161/attestation.json"
     },
     "PG-162": {
       "section": "Core CRM",
@@ -8687,13 +8687,13 @@
       "section": "Core CRM",
       "description": "Analytics tracking plan for home page - define and implement business metrics events for section interactions",
       "owner": "CRM FE (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [
         "PG-129"
       ],
       "artifacts": [
-        "ARTIFACT:docs/analytics/home-page-tracking-plan.md;ARTIFACT:apps/web/src/lib/analytics.ts"
+        "ARTIFACT:docs/analytics/home-page-tracking-plan.md;ARTIFACT:apps/web/src/lib/analytics.ts;SPEC:.specify/sprints/sprint-16/specifications/PG-167-spec.md;PLAN:.specify/sprints/sprint-16/planning/PG-167-plan.md;ATTESTATION:.specify/sprints/sprint-16/attestations/PG-167/attestation.json"
       ],
       "kpis": "All 6 home sections emit analytics events, schema documented",
       "definition_of_done": "Analytics events for quick action clicks, insight interactions, feed scrolls, pin/unpin, goal views; tracking utility integrated; event schema documented",
@@ -8785,7 +8785,7 @@
         "PG-030"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/billing/usage/page.tsx;ARTIFACT:apps/web/src/app/billing/plans/page.tsx;ARTIFACT:apps/web/src/app/billing/upgrade/page.tsx;ARTIFACT:apps/web/src/app/billing/cancel/page.tsx;ARTIFACT:apps/web/src/app/billing/settings/page.tsx;ARTIFACT:apps/web/src/components/billing/usage-dashboard.tsx;ARTIFACT:apps/web/src/components/billing/plan-comparison.tsx;ARTIFACT:apps/web/src/components/billing/upgrade-flow.tsx;ARTIFACT:apps/web/src/components/billing/cancel-flow.tsx;ARTIFACT:apps/web/src/components/billing/__tests__/usage-dashboard.test.tsx;ARTIFACT:apps/web/src/components/billing/__tests__/plan-comparison.test.tsx;ARTIFACT:apps/web/src/components/billing/__tests__/upgrade-flow.test.tsx;ARTIFACT:apps/web/src/components/billing/__tests__/cancel-flow.test.tsx;ARTIFACT:apps/web/src/components/billing/__tests__/billing-settings.test.tsx;ARTIFACT:apps/web/src/components/billing/billing-shared.tsx;ARTIFACT:apps/web/src/components/billing/billing-settings.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-172/attestation.json;SPEC:.specify/sprints/sprint-16/specifications/PG-172-spec.md;PLAN:.specify/sprints/sprint-16/planning/PG-172-plan.md"
+        "ARTIFACT:apps/web/src/app/billing/usage/page.tsx;ARTIFACT:apps/web/src/app/billing/plans/page.tsx;ARTIFACT:apps/web/src/app/billing/upgrade/page.tsx;ARTIFACT:apps/web/src/app/billing/cancel/page.tsx;ARTIFACT:apps/web/src/app/billing/settings/page.tsx;ARTIFACT:apps/web/src/components/billing/usage-dashboard.tsx;ARTIFACT:apps/web/src/components/billing/plan-comparison.tsx;ARTIFACT:apps/web/src/components/billing/upgrade-flow.tsx;ARTIFACT:apps/web/src/components/billing/cancel-flow.tsx;ARTIFACT:apps/web/src/components/billing/__tests__/usage-dashboard.test.tsx;ARTIFACT:apps/web/src/components/billing/__tests__/plan-comparison.test.tsx;ARTIFACT:apps/web/src/components/billing/__tests__/upgrade-flow.test.tsx;ARTIFACT:apps/web/src/components/billing/__tests__/cancel-flow.test.tsx;ARTIFACT:apps/web/src/components/billing/__tests__/billing-settings.test.tsx;ARTIFACT:apps/web/src/components/billing/billing-shared.tsx;ARTIFACT:apps/web/src/components/billing/billing-settings.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-172/context_ack.json;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-172/attestation.json;SPEC:.specify/sprints/sprint-16/specifications/PG-172-spec.md;PLAN:.specify/sprints/sprint-16/planning/PG-172-plan.md"
       ],
       "kpis": "All 5 billing ghost routes resolve; usage bars accurate; upgrade shows proration; cancel period-end confirmed; Lighthouse >=90",
       "definition_of_done": "Pages at /billing/usage (usage metrics vs plan limits with progress bars) /billing/plans (3-tier comparison grid Starter/Professional/Enterprise) /billing/upgrade (proration preview and confirmation) /billing/cancel (retention offer reason selection period-end behaviour) /billing/settings (billing address contact tax fields); all sidebar and billing-portal.tsx in-page links resolve; Lighthouse >=90; tests passing; verified by: pnpm test",
@@ -8797,7 +8797,7 @@
       "section": "Support",
       "description": "Ticket Configuration Pages - SLA Policies Types and Automations",
       "owner": "Frontend Dev (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [
         "PG-137",
@@ -8805,9 +8805,9 @@
         "IFC-093"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/tickets/sla-policies/page.tsx;ARTIFACT:apps/web/src/app/tickets/types/page.tsx;ARTIFACT:apps/web/src/app/tickets/automations/page.tsx;ARTIFACT:apps/web/src/components/tickets/SLAPolicyManager.tsx;ARTIFACT:apps/web/src/components/tickets/TicketTypeManager.tsx;ARTIFACT:apps/web/src/components/tickets/AutomationRuleBuilder.tsx;ARTIFACT:apps/web/src/components/tickets/__tests__/SLAPolicyManager.test.tsx;ARTIFACT:apps/web/src/components/tickets/__tests__/TicketTypeManager.test.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-173/context_ack.json"
+        "ARTIFACT:apps/web/src/app/tickets/sla-policies/page.tsx;ARTIFACT:apps/web/src/app/tickets/types/page.tsx;ARTIFACT:apps/web/src/app/tickets/automations/page.tsx;ARTIFACT:apps/web/src/components/tickets/SLAPolicyManager.tsx;ARTIFACT:apps/web/src/components/tickets/TicketTypeManager.tsx;ARTIFACT:apps/web/src/components/tickets/AutomationRuleBuilder.tsx;ARTIFACT:apps/web/src/components/tickets/ticket-config-shared.tsx;ARTIFACT:apps/web/src/components/tickets/__tests__/SLAPolicyManager.test.tsx;ARTIFACT:apps/web/src/components/tickets/__tests__/TicketTypeManager.test.tsx;ARTIFACT:apps/web/src/components/tickets/__tests__/AutomationRuleBuilder.test.tsx;ARTIFACT:packages/validators/src/sla-policy.ts;ARTIFACT:packages/validators/src/ticket-category.ts;ARTIFACT:packages/validators/src/__tests__/ticket-config-validators.test.ts;ARTIFACT:apps/api/src/modules/ticket/ticket-config.router.ts;ARTIFACT:apps/api/src/modules/ticket/__tests__/ticket-config.router.test.ts;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-173/context_ack.json;SPEC:.specify/sprints/sprint-16/specifications/PG-173-spec.md;PLAN:.specify/sprints/sprint-16/planning/PG-173-plan.md"
       ],
-      "kpis": "All 3 ticket config routes resolve; SLA rules CRUD working; types editable; automations rule engine renders; Lighthouse >=90",
+      "kpis": "All 3 ticket config routes resolve; SLA rules CRUD working; types editable; automations rule engine renders; 96 total tests pass (57 frontend + 16 backend + 23 validators)",
       "definition_of_done": "Pages at /tickets/sla-policies (SLA rule list with priority and time targets CRUD) /tickets/types (ticket category list with custom field definitions) /tickets/automations (trigger-condition-action rule builder for auto-assignment and status transitions); sidebar Configuration section links resolve; Lighthouse >=90; verified by: pnpm test",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm test",
       "prerequisites": "FILE:apps/web/src/components/sidebar/configs/tickets.ts;FILE:apps/api/src/modules/ticket/ticket.router.ts;FILE:packages/domain/src/crm/ticket/Ticket.ts;FILE:packages/domain/src/support/TicketConstants.ts;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;FILE:docs/design/navigation-reachability-audit.md;DESIGN:docs/design/mockups/tickets-config.png",
@@ -8817,13 +8817,13 @@
       "section": "Notifications",
       "description": "Notification Configuration Pages - Channels and Quiet Hours",
       "owner": "Frontend Dev (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "sprint": 16,
       "dependencies": [
         "IFC-157"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/notifications/channels/page.tsx;ARTIFACT:apps/web/src/app/notifications/quiet-hours/page.tsx;ARTIFACT:apps/web/src/components/notifications/ChannelManager.tsx;ARTIFACT:apps/web/src/components/notifications/QuietHoursScheduler.tsx;ARTIFACT:apps/web/src/components/notifications/__tests__/ChannelManager.test.tsx;ARTIFACT:apps/web/src/components/notifications/__tests__/QuietHoursScheduler.test.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-174/context_ack.json"
+        "ARTIFACT:apps/web/src/app/notifications/channels/page.tsx;ARTIFACT:apps/web/src/app/notifications/quiet-hours/page.tsx;ARTIFACT:apps/web/src/components/notifications/ChannelManager.tsx;ARTIFACT:apps/web/src/components/notifications/QuietHoursScheduler.tsx;ARTIFACT:apps/web/src/components/notifications/__tests__/ChannelManager.test.tsx;ARTIFACT:apps/web/src/components/notifications/__tests__/QuietHoursScheduler.test.tsx;SPEC:.specify/sprints/sprint-16/specifications/PG-174-spec.md;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-174/context_ack.json"
       ],
       "kpis": "Both notification config routes resolve; channels enable/disable toggles; quiet-hours schedule saves; Lighthouse >=90",
       "definition_of_done": "Pages at /notifications/channels (delivery channel list with enable/disable toggles and per-channel config for email SMS push webhook) and /notifications/quiet-hours (weekly schedule grid with time-range pickers and day selectors for suppression windows); sidebar Configuration links resolve; Lighthouse >=90; verified by: pnpm test",
