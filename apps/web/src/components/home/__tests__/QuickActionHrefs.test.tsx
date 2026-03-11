@@ -48,9 +48,19 @@ vi.mock('@/lib/trpc', () => ({
       updateDailyGoal: { useMutation: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })) },
       reorderPinnedItems: { useMutation: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })) },
     },
+    notifications: {
+      getUnreadCount: { useQuery: vi.fn(() => ({ data: { total: 0, byPriority: {} }, isLoading: false })) },
+      list: { useQuery: vi.fn(() => ({ data: { notifications: [] }, isLoading: false })) },
+      markAsRead: { useMutation: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })) },
+      markAllAsRead: { useMutation: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })) },
+    },
     useUtils: vi.fn(() => ({
       activityFeed: { getUnifiedFeed: { invalidate: vi.fn() } },
       home: { getDailyGoal: { invalidate: vi.fn() } },
+      notifications: {
+        getUnreadCount: { invalidate: vi.fn() },
+        list: { invalidate: vi.fn() },
+      },
     })),
   },
 }));
@@ -61,7 +71,15 @@ vi.mock('@/hooks/useActivityFeed', () => ({
 
 vi.mock('@/components/shared/activity-feed', () => ({
   ActivityFeed: () => <div data-testid="activity-feed-mock" />,
+  ActivityFeedStatsBar: () => <div data-testid="activity-feed-stats-bar" />,
   ActivityFeedTypeFilter: () => <button aria-label="Filter activity feed">filter_list</button>,
+}));
+
+vi.mock('@/components/notifications', () => ({
+  NotificationItem: ({ notification }: any) => (
+    <div data-testid={`notification-item-${notification.id}`}>{notification.title}</div>
+  ),
+  NotificationItemSkeleton: () => <div data-testid="notification-skeleton" />,
 }));
 
 vi.mock('@dnd-kit/core', () => ({

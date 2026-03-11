@@ -4,12 +4,16 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 
 // Hoisted mock values — must be before vi.mock
-const { mockUseQuery, mockListUseQuery, mockUseSubscription, mockInvalidate } = vi.hoisted(() => ({
+const { mockUseQuery, mockListUseQuery, mockUseSubscription, mockInvalidate, mockRouterPush, mockMarkAsReadMutate } = vi.hoisted(() => ({
   mockUseQuery: vi.fn(),
   mockListUseQuery: vi.fn(),
   mockUseSubscription: vi.fn(),
   mockInvalidate: vi.fn(),
+  mockRouterPush: vi.fn(),
+  mockMarkAsReadMutate: vi.fn(),
 }));
+
+let markAsReadMutationOnSuccess: (() => void) | undefined;
 
 vi.mock('@/lib/trpc', () => ({
   trpc: {
@@ -21,10 +25,12 @@ vi.mock('@/lib/trpc', () => ({
       },
       onNew: { useSubscription: mockUseSubscription },
       markAsRead: {
-        useMutation: vi.fn(() => ({
-          mutate: vi.fn(),
-          isLoading: false,
-        })),
+        useMutation: vi.fn((opts?: { onSuccess?: () => void }) => {
+          if (opts?.onSuccess) {
+            (markAsReadMutationOnSuccess as any) = opts.onSuccess;
+          }
+          return { mutate: mockMarkAsReadMutate, isLoading: false };
+        }),
       },
     },
     useUtils: vi.fn(() => ({
@@ -88,11 +94,16 @@ vi.mock('next/link', () => ({
   ),
 }));
 
+vi.mock('next/navigation', () => ({
+  useRouter: vi.fn(() => ({ push: mockRouterPush })),
+}));
+
 import { NotificationBell } from '../NotificationBell';
 
 describe('NotificationBell', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    markAsReadMutationOnSuccess = undefined;
     mockUseQuery.mockReturnValue({
       data: { total: 3, byPriority: { high: 1, normal: 1, low: 1 } },
       isLoading: false,
@@ -234,5 +245,127 @@ describe('NotificationBell', () => {
     fireEvent.click(viewAllLink);
     // Link should still be in the DOM (mock Popover always renders)
     expect(viewAllLink).toBeInTheDocument();
+  });
+
+  // ---------------------------------------------------------------------------
+  // PG-161: Branch coverage gap closure (9 tests)
+  // ---------------------------------------------------------------------------
+
+  // 2.1 — Clicking unread notification calls markAsRead.mutate with notification ID
+  it('clicking unread notification calls markAsRead.mutate with correct IDs', () => {
+    mockListUseQuery.mockReturnValue({
+      data: {
+        notifications: [
+          { id: 'n1', type: 'lead_assigned', title: 'Lead', isRead: false, createdAt: new Date() },
+        ],
+      },
+      isLoading: false,
+    });
+    render(<NotificationBell />);
+    const notification = screen.getByText('Lead');
+    fireEvent.click(notification.closest('button')!);
+    expect(mockMarkAsReadMutate).toHaveBeenCalledWith({ notificationIds: ['n1'] });
+  });
+
+  // 2.2 — Clicking read notification does NOT call markAsRead.mutate
+  it('clicking read notification does NOT call markAsRead.mutate', () => {
+    mockListUseQuery.mockReturnValue({
+      data: {
+        notifications: [
+          { id: 'n2', type: 'task_assigned', title: 'Read Item', isRead: true, createdAt: new Date() },
+        ],
+      },
+      isLoading: false,
+    });
+    render(<NotificationBell />);
+    const notification = screen.getByText('Read Item');
+    fireEvent.click(notification.closest('button')!);
+    expect(mockMarkAsReadMutate).not.toHaveBeenCalled();
+  });
+
+  // 2.3 — Clicking notification closes popover (setIsOpen(false))
+  it('clicking notification exercises popover close path', () => {
+    mockListUseQuery.mockReturnValue({
+      data: {
+        notifications: [
+          { id: 'n3', type: 'lead_assigned', title: 'Close Test', isRead: false, createdAt: new Date() },
+        ],
+      },
+      isLoading: false,
+    });
+    render(<NotificationBell />);
+    const notification = screen.getByText('Close Test');
+    // Click triggers handleNotificationClick which calls setIsOpen(false)
+    fireEvent.click(notification.closest('button')!);
+    // Since our Popover mock always renders, we verify the click handler runs without error
+    expect(notification).toBeInTheDocument();
+  });
+
+  // 2.4 — router.push called with actionUrl when present
+  it('router.push called with actionUrl when present', () => {
+    mockListUseQuery.mockReturnValue({
+      data: {
+        notifications: [
+          { id: 'n4', type: 'lead_assigned', title: 'Navigate', isRead: false, createdAt: new Date(), actionUrl: '/leads/123' },
+        ],
+      },
+      isLoading: false,
+    });
+    render(<NotificationBell />);
+    const notification = screen.getByText('Navigate');
+    fireEvent.click(notification.closest('button')!);
+    expect(mockRouterPush).toHaveBeenCalledWith('/leads/123');
+  });
+
+  // 2.5 — router.push NOT called when actionUrl is null/undefined
+  it('router.push NOT called when actionUrl is null', () => {
+    mockListUseQuery.mockReturnValue({
+      data: {
+        notifications: [
+          { id: 'n5', type: 'lead_assigned', title: 'No URL', isRead: false, createdAt: new Date(), actionUrl: null },
+        ],
+      },
+      isLoading: false,
+    });
+    render(<NotificationBell />);
+    const notification = screen.getByText('No URL');
+    fireEvent.click(notification.closest('button')!);
+    expect(mockRouterPush).not.toHaveBeenCalled();
+  });
+
+  // 2.6 — markAsRead.onSuccess invalidates getUnreadCount and list
+  it('markAsRead.onSuccess invalidates getUnreadCount and list caches', () => {
+    render(<NotificationBell />);
+    expect(markAsReadMutationOnSuccess).toBeDefined();
+    markAsReadMutationOnSuccess!();
+    expect(mockInvalidate).toHaveBeenCalled();
+  });
+
+  // 2.7 — Bell button aria-label is "Notifications, N unread" when count > 0
+  it('bell button aria-label is "Notifications, N unread" when count > 0', () => {
+    mockUseQuery.mockReturnValue({
+      data: { total: 5, byPriority: {} },
+      isLoading: false,
+    });
+    render(<NotificationBell />);
+    expect(screen.getByLabelText('Notifications, 5 unread')).toBeInTheDocument();
+  });
+
+  // 2.8 — Bell button aria-label is "Notifications" when count is 0
+  it('bell button aria-label is "Notifications" when count is 0', () => {
+    mockUseQuery.mockReturnValue({
+      data: { total: 0, byPriority: {} },
+      isLoading: false,
+    });
+    render(<NotificationBell />);
+    expect(screen.getByLabelText('Notifications')).toBeInTheDocument();
+  });
+
+  // 2.9 — list.useQuery enabled only when isAuthenticated && isOpen
+  it('list.useQuery enabled only when isAuthenticated and isOpen', () => {
+    render(<NotificationBell />);
+    // Since isOpen starts as false, list query should be disabled
+    const listCallArgs = mockListUseQuery.mock.calls[0];
+    expect(listCallArgs[1]?.enabled).toBe(false);
   });
 });

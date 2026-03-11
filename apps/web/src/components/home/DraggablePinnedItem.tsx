@@ -12,9 +12,10 @@ interface DraggablePinnedItemProps {
   item: SerializedPinnedItem;
   isDragDisabled?: boolean;
   onUnpin?: (entityType: string, entityId: string) => void;
+  onItemClick?: (entityType: string, entityId: string) => void;
 }
 
-export function DraggablePinnedItem({ item, isDragDisabled, onUnpin }: Readonly<DraggablePinnedItemProps>) {
+export function DraggablePinnedItem({ item, isDragDisabled, onUnpin, onItemClick }: Readonly<DraggablePinnedItemProps>) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `${item.entityType}-${item.entityId}`,
     disabled: isDragDisabled,
@@ -79,6 +80,7 @@ export function DraggablePinnedItem({ item, isDragDisabled, onUnpin }: Readonly<
       ) : (
         <Link
           href={item.url}
+          onClick={() => onItemClick?.(item.entityType, item.entityId)}
           className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors group flex-1 min-w-0"
         >
           <div

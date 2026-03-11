@@ -7,6 +7,7 @@ import { useActivityFeed } from '@/hooks/useActivityFeed';
 import {
   ActivityFeedItem,
   ActivityFeedTypeFilter,
+  ActivityFeedStatsBar,
   type ActivityFeedTypeFilterValue,
 } from '@/components/shared/activity-feed';
 import type { ActivityFeedType } from '@intelliflow/domain';
@@ -35,6 +36,11 @@ export function RecentActivityWidget({ config }: Readonly<WidgetProps>) {
             View All
           </Link>
         </div>
+      </div>
+
+      {/* IFC-202: Activity stats summary */}
+      <div className="px-6 py-2 border-b border-border bg-slate-50/50 dark:bg-slate-800/30">
+        <ActivityFeedStatsBar timeWindow="7d" maxTypes={3} showBreakdown />
       </div>
 
       <div className="flex flex-col flex-1 divide-y divide-border overflow-hidden">

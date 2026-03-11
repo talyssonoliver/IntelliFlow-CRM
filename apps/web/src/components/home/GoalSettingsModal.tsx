@@ -12,6 +12,7 @@ import {
   Label,
 } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
+import { trackGoalSettingsSaved } from '@/lib/analytics';
 
 const GOAL_OPTIONS = [
   {
@@ -56,6 +57,7 @@ export function GoalSettingsModal({
   });
 
   const handleSave = useCallback(() => {
+    trackGoalSettingsSaved(goalType, targetValue);
     updateGoal.mutate({
       type: goalType as 'revenue' | 'calls' | 'meetings' | 'tasks' | 'custom',
       targetValue,

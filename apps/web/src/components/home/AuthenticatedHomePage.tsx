@@ -20,14 +20,30 @@ import {
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { DraggablePinnedItem } from './DraggablePinnedItem';
+import { NotificationsSummaryWidget } from './NotificationsSummaryWidget';
 import {
   ActivityFeed,
   ActivityFeedTypeFilter,
+  ActivityFeedStatsBar,
   type ActivityFeedTypeFilterValue,
 } from '@/components/shared/activity-feed';
 import type { ActivityFeedType } from '@intelliflow/domain';
 import type { PinnableEntityType } from '@intelliflow/validators';
 import { toast } from '@intelliflow/ui';
+import {
+  trackWelcomeCtaClick,
+  trackInsightClick,
+  trackInsightsViewAllClick,
+  trackQuickActionClick,
+  trackQuickActionsSettingsOpened,
+  trackFeedFilterChange,
+  trackFeedViewAllClick,
+  trackGoalSettingsOpened,
+  trackPinnedItemClick,
+  trackPinnedItemUnpin,
+  trackPinnedItemsReorder,
+  trackPinnedNavSettingsOpened,
+} from '@/lib/analytics';
 import {
   EditQuickActionsSheet,
   ALL_QUICK_ACTIONS,
@@ -211,9 +227,10 @@ function PinnedSkeleton() {
 interface InsightsSectionProps {
   isLoading: boolean;
   insights: SerializedAIInsight[] | undefined;
+  onInsightClick?: (insight: SerializedAIInsight) => void;
 }
 
-function InsightsSection({ isLoading, insights }: Readonly<InsightsSectionProps>) {
+function InsightsSection({ isLoading, insights, onInsightClick }: Readonly<InsightsSectionProps>) {
   if (isLoading) {
     return <InsightsSkeleton />;
   }
@@ -227,7 +244,7 @@ function InsightsSection({ isLoading, insights }: Readonly<InsightsSectionProps>
   return (
     <>
       {insights.map((insight) => (
-        <InsightCard key={insight.id} insight={insight} />
+        <InsightCard key={insight.id} insight={insight} onClick={onInsightClick} />
       ))}
     </>
   );
@@ -292,11 +309,13 @@ function PinnedSection({
   items,
   onReorder,
   onUnpin,
+  onItemClick,
 }: Readonly<{
   isLoading: boolean;
   items: SerializedPinnedItem[] | undefined;
   onReorder: (reorderedItems: SerializedPinnedItem[]) => void;
   onUnpin?: (entityType: string, entityId: string) => void;
+  onItemClick?: (entityType: string, entityId: string) => void;
 }>) {
   const [orderedItems, setOrderedItems] = useState<SerializedPinnedItem[]>(items ?? []);
 
@@ -342,6 +361,7 @@ function PinnedSection({
             key={`${item.entityType}-${item.entityId}`}
             item={item}
             onUnpin={onUnpin}
+            onItemClick={onItemClick}
           />
         ))}
       </SortableContext>
@@ -406,6 +426,7 @@ export function AuthenticatedHomePage() {
 
   const handleReorder = useCallback(
     (items: SerializedPinnedItem[]) => {
+      trackPinnedItemsReorder(items.length);
       reorderMutation.mutate({
         items: items.map((item, i) => ({
           entityType: item.entityType,
@@ -420,6 +441,7 @@ export function AuthenticatedHomePage() {
   // Callbacks
   const handleUnpin = useCallback(
     (entityType: string, entityId: string) => {
+      trackPinnedItemUnpin(entityType);
       unpinMutation.mutate({ entityType: entityType as PinnableEntityType, entityId });
     },
     [unpinMutation]
@@ -431,6 +453,22 @@ export function AuthenticatedHomePage() {
 
   const handlePinnedNavSave = useCallback((ids: Set<string>) => {
     setPinnedGroupIds(new Set(ids));
+  }, []);
+
+  const handleFeedFilterChange = useCallback(
+    (newValue: ActivityFeedTypeFilterValue) => {
+      trackFeedFilterChange(newValue, feedFilter);
+      setFeedFilter(newValue);
+    },
+    [feedFilter]
+  );
+
+  const handleInsightClick = useCallback((insight: SerializedAIInsight) => {
+    trackInsightClick(insight.id, insight.type, insight.priority);
+  }, []);
+
+  const handlePinnedItemClick = useCallback((entityType: string, entityId: string) => {
+    trackPinnedItemClick(entityType, entityId);
   }, []);
 
   const visibleQuickActions = ALL_QUICK_ACTIONS.filter((a) => enabledActionIds.has(a.id));
@@ -481,6 +519,7 @@ export function AuthenticatedHomePage() {
               <div className="flex flex-wrap gap-3">
                 <Link
                   href="/calendar"
+                  onClick={() => trackWelcomeCtaClick('View Schedule', '/calendar')}
                   className="bg-white text-[#137fec] hover:bg-blue-50 px-4 py-2 rounded-lg font-semibold text-sm transition-colors shadow-sm flex items-center gap-2"
                 >
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
@@ -490,6 +529,7 @@ export function AuthenticatedHomePage() {
                 </Link>
                 <Link
                   href="/dashboard"
+                  onClick={() => trackWelcomeCtaClick('Go to Dashboard', '/dashboard')}
                   className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors backdrop-blur-sm flex items-center gap-2"
                 >
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
@@ -519,13 +559,14 @@ export function AuthenticatedHomePage() {
                 </div>
                 <Link
                   href="/agent-approvals/insights"
+                  onClick={() => trackInsightsViewAllClick()}
                   className="text-xs font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 hover:underline"
                 >
                   View All
                 </Link>
               </div>
               <div className="p-4 grid gap-4">
-                <InsightsSection isLoading={insightsLoading} insights={insightsData?.insights} />
+                <InsightsSection isLoading={insightsLoading} insights={insightsData?.insights} onInsightClick={handleInsightClick} />
               </div>
             </div>
 
@@ -534,7 +575,7 @@ export function AuthenticatedHomePage() {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="font-bold text-slate-900 dark:text-white">Quick Actions</h2>
                 <button
-                  onClick={() => setIsQuickActionsSheetOpen(true)}
+                  onClick={() => { trackQuickActionsSettingsOpened(); setIsQuickActionsSheetOpen(true); }}
                   className="text-slate-400 hover:text-[#137fec] transition-colors"
                   aria-label="Edit quick actions"
                 >
@@ -568,11 +609,12 @@ export function AuthenticatedHomePage() {
                         key={action.id}
                         type="button"
                         className={cardClassName}
-                        onClick={() =>
+                        onClick={() => {
+                          trackQuickActionClick(action.id, action.label, true);
                           toast({
                             description: `${action.label} is coming soon! This feature is under development.`,
-                          })
-                        }
+                          });
+                        }}
                       >
                         {inner}
                       </button>
@@ -580,7 +622,12 @@ export function AuthenticatedHomePage() {
                   }
 
                   return (
-                    <Link key={action.id} href={action.href} className={cardClassName}>
+                    <Link
+                      key={action.id}
+                      href={action.href}
+                      onClick={() => trackQuickActionClick(action.id, action.label, false)}
+                      className={cardClassName}
+                    >
                       {inner}
                     </Link>
                   );
@@ -598,13 +645,17 @@ export function AuthenticatedHomePage() {
               <div className="p-5 border-b border-[#e2e8f0] dark:border-[#334155] flex justify-between items-center">
                 <h2 className="font-bold text-slate-900 dark:text-white">Your Feed</h2>
                 <div className="flex items-center gap-2">
-                  <ActivityFeedTypeFilter value={feedFilter} onChange={setFeedFilter} />
-                  <Link href="/activity" className="text-sm text-ds-primary hover:underline">
+                  <ActivityFeedTypeFilter value={feedFilter} onChange={handleFeedFilterChange} />
+                  <Link href="/activity" onClick={() => trackFeedViewAllClick()} className="text-sm text-ds-primary hover:underline">
                     View All
                   </Link>
                 </div>
               </div>
-              <ActivityFeed types={feedTypes} limit={20} enabled={queryEnabled} height={480} />
+              {/* IFC-202: Activity stats summary */}
+              <div className="px-5 py-2.5 border-b border-[#e2e8f0] dark:border-[#334155] bg-slate-50/50 dark:bg-slate-800/20">
+                <ActivityFeedStatsBar timeWindow="7d" enabled={queryEnabled} maxTypes={4} />
+              </div>
+              <ActivityFeed types={feedTypes} limit={20} enabled={queryEnabled} height={440} />
             </div>
 
             {/* Today's Focus - colSpan: 1 */}
@@ -616,7 +667,7 @@ export function AuthenticatedHomePage() {
                     {goalData?.goal.label || 'Sales'}
                   </span>
                   <button
-                    onClick={() => setIsGoalSettingsOpen(true)}
+                    onClick={() => { trackGoalSettingsOpened(); setIsGoalSettingsOpen(true); }}
                     className="text-slate-400 hover:text-[#137fec] transition-colors"
                     aria-label="Goal settings"
                     data-testid="goal-settings-button"
@@ -635,7 +686,7 @@ export function AuthenticatedHomePage() {
               <div className="flex justify-between items-center mb-3">
                 <h2 className="font-bold text-slate-900 dark:text-white">Pinned</h2>
                 <button
-                  onClick={() => setIsPinnedNavSheetOpen(true)}
+                  onClick={() => { trackPinnedNavSettingsOpened(); setIsPinnedNavSheetOpen(true); }}
                   className="text-slate-400 hover:text-[#137fec] transition-colors"
                   aria-label="Edit pinned navigation"
                 >
@@ -650,9 +701,13 @@ export function AuthenticatedHomePage() {
                   items={filteredPinnedItems}
                   onReorder={handleReorder}
                   onUnpin={handleUnpin}
+                  onItemClick={handlePinnedItemClick}
                 />
               </div>
             </div>
+
+            {/* Notifications Summary - colSpan: 1 (PG-161) */}
+            <NotificationsSummaryWidget enabled={queryEnabled} />
           </div>
         </div>
       </main>

@@ -75,15 +75,32 @@ vi.mock('@/lib/trpc', () => ({
       updateDailyGoal: { useMutation: mockUpdateDailyGoalMutation },
       reorderPinnedItems: { useMutation: mockReorderMutation },
     },
+    notifications: {
+      getUnreadCount: { useQuery: vi.fn(() => ({ data: { total: 0, byPriority: {} }, isLoading: false })) },
+      list: { useQuery: vi.fn(() => ({ data: { notifications: [] }, isLoading: false })) },
+      markAsRead: { useMutation: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })) },
+      markAllAsRead: { useMutation: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })) },
+    },
     useUtils: vi.fn(() => ({
       activityFeed: { getUnifiedFeed: { invalidate: vi.fn() } },
       home: { getDailyGoal: { invalidate: vi.fn() } },
+      notifications: {
+        getUnreadCount: { invalidate: vi.fn() },
+        list: { invalidate: vi.fn() },
+      },
     })),
   },
 }));
 
 vi.mock('@/hooks/useActivityFeed', () => ({
   useActivityFeed: mockUseActivityFeed,
+}));
+
+vi.mock('@/components/notifications', () => ({
+  NotificationItem: ({ notification }: any) => (
+    <div data-testid={`notification-item-${notification.id}`}>{notification.title}</div>
+  ),
+  NotificationItemSkeleton: () => <div data-testid="notification-skeleton" />,
 }));
 
 // ---------------------------------------------------------------------------
@@ -299,6 +316,7 @@ vi.mock('@/components/shared/activity-feed', () => ({
       </div>
     );
   },
+  ActivityFeedStatsBar: () => <div data-testid="activity-feed-stats-bar" />,
 }));
 
 vi.mock('@/lib/auth/AuthContext', () => ({

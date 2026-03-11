@@ -27,6 +27,7 @@ export type SerializedAIInsight = {
 
 interface InsightCardProps {
   insight: SerializedAIInsight;
+  onClick?: (insight: SerializedAIInsight) => void;
 }
 
 function resolveInsightHref(
@@ -51,13 +52,14 @@ function resolveInsightHref(
   return params.size > 0 ? `${path}?${params.toString()}` : path;
 }
 
-export function InsightCard({ insight }: Readonly<InsightCardProps>) {
+export function InsightCard({ insight, onClick }: Readonly<InsightCardProps>) {
   const iconStyle = getInsightIcon(insight.type);
   const href = resolveInsightHref(insight.actionUrl, insight.id, insight.title);
 
   return (
     <Link
       href={href}
+      onClick={() => onClick?.(insight)}
       className="flex gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer border border-transparent hover:border-slate-100 dark:hover:border-slate-700"
     >
       <div className={`shrink-0 ${iconStyle.iconBg} ${iconStyle.iconColor} rounded-lg p-2 h-fit`}>

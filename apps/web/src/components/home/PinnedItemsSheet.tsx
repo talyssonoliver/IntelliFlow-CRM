@@ -2,6 +2,10 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@intelliflow/ui';
+import {
+  trackQuickActionsSettingsSaved,
+  trackPinnedNavSettingsSaved,
+} from '@/lib/analytics';
 
 // =============================================================================
 // All available quick actions (superset of what can appear on home)
@@ -199,6 +203,7 @@ export function EditQuickActionsSheet({ open, onOpenChange, onSave }: Readonly<E
   const handleSave = useCallback(() => {
     const current = draftRef.current;
     saveEnabledActions(current);
+    trackQuickActionsSettingsSaved(current.size);
     onSave(current);
     onOpenChange(false);
   }, [onSave, onOpenChange]);
@@ -496,6 +501,7 @@ export function EditPinnedNavigationSheet({
   const handleSave = useCallback(() => {
     const current = draftRef.current;
     savePinnedGroups(current);
+    trackPinnedNavSettingsSaved(current.size);
     onSave(current);
     onOpenChange(false);
   }, [onSave, onOpenChange]);

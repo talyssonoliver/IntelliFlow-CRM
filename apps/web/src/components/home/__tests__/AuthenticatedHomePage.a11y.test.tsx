@@ -70,9 +70,19 @@ vi.mock('@/lib/trpc', () => ({
       updateDailyGoal: { useMutation: mockUpdateDailyGoalMutation },
       reorderPinnedItems: { useMutation: mockReorderMutation },
     },
+    notifications: {
+      getUnreadCount: { useQuery: vi.fn(() => ({ data: { total: 0, byPriority: {} }, isLoading: false })) },
+      list: { useQuery: vi.fn(() => ({ data: { notifications: [] }, isLoading: false })) },
+      markAsRead: { useMutation: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })) },
+      markAllAsRead: { useMutation: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })) },
+    },
     useUtils: vi.fn(() => ({
       activityFeed: { getUnifiedFeed: { invalidate: vi.fn() } },
       home: { getDailyGoal: { invalidate: vi.fn() } },
+      notifications: {
+        getUnreadCount: { invalidate: vi.fn() },
+        list: { invalidate: vi.fn() },
+      },
     })),
   },
 }));
@@ -132,6 +142,50 @@ vi.mock('@/components/insights/InsightCard', () => ({
   InsightCard: ({ insight }: Readonly<{ insight: { title: string } }>) => (
     <div data-testid="insight-card">{insight.title}</div>
   ),
+}));
+
+vi.mock('@/components/notifications', () => ({
+  NotificationItem: ({ notification }: any) => (
+    <div data-testid={`notification-item-${notification.id}`}>{notification.title}</div>
+  ),
+  NotificationItemSkeleton: () => <div data-testid="notification-skeleton" />,
+}));
+
+vi.mock('@/components/shared/activity-feed', () => ({
+  ActivityFeed: (_props: any) => <div data-testid="activity-feed-mock" role="feed" aria-busy="false" />,
+  ActivityFeedStatsBar: () => <div data-testid="activity-feed-stats-bar" />,
+  ActivityFeedTypeFilter: ({
+    value,
+    onChange,
+  }: Readonly<{
+    value: string;
+    onChange: (value: string) => void;
+  }>) => {
+    const [open, setOpen] = React.useState(false);
+    return (
+      <div>
+        <button
+          onClick={() => setOpen((prev) => !prev)}
+          aria-label={value === 'all' ? 'Filter activity feed' : `Filter: ${value}`}
+          aria-expanded={open}
+          aria-haspopup="listbox"
+        >
+          Filter
+        </button>
+        {open && (
+          <button
+            data-testid="filter-option-CALL"
+            onClick={() => {
+              onChange('CALL');
+              setOpen(false);
+            }}
+          >
+            Calls
+          </button>
+        )}
+      </div>
+    );
+  },
 }));
 
 // ---------------------------------------------------------------------------

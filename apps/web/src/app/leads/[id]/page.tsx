@@ -881,6 +881,31 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
     [activities.length, tasks, notes.length, emails.length, files.length]
   );
 
+  // Activity reactions/comments — hooks must be before any early returns
+  const filteredActivitiesAll = useMemo(
+    () => activities.filter((activity) =>
+      filterActivity(activity, activityTypeFilter, personFilter, searchQuery)
+    ),
+    [activities, activityTypeFilter, personFilter, searchQuery]
+  );
+  const visibleActivitiesAll = useMemo(
+    () => filteredActivitiesAll.slice(0, visibleCount),
+    [filteredActivitiesAll, visibleCount]
+  );
+  const activityIdsForReactions = useMemo(
+    () => visibleActivitiesAll.map((a) => a.id),
+    [visibleActivitiesAll]
+  );
+  const { reactions: reactionsMap, toggleReaction } = useActivityReactions(
+    activityIdsForReactions,
+    'LEAD_ACTIVITY',
+    user?.email ?? undefined
+  );
+  const { comments: commentsMap, addComment, isAdding: isAddingComment } = useActivityComments(
+    activityIdsForReactions,
+    'LEAD_ACTIVITY'
+  );
+
   // Loading state
   if (isLoading) {
     return (
@@ -1002,28 +1027,10 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
     touchpoints: activities.length,
   };
 
-  // Filter activities
-  const filteredActivities = activities.filter((activity) =>
-    filterActivity(activity, activityTypeFilter, personFilter, searchQuery)
-  );
-
-  const visibleActivities = filteredActivities.slice(0, visibleCount);
+  // Use pre-computed filtered/visible activities (hooks moved before early returns)
+  const filteredActivities = filteredActivitiesAll;
+  const visibleActivities = visibleActivitiesAll;
   const hasMore = visibleCount < filteredActivities.length;
-
-  // Activity reactions
-  const activityIdsForReactions = useMemo(
-    () => visibleActivities.map((a) => a.id),
-    [visibleActivities]
-  );
-  const { reactions: reactionsMap, toggleReaction } = useActivityReactions(
-    activityIdsForReactions,
-    'LEAD_ACTIVITY',
-    user?.email ?? undefined
-  );
-  const { comments: commentsMap, addComment, isAdding: isAddingComment } = useActivityComments(
-    activityIdsForReactions,
-    'LEAD_ACTIVITY'
-  );
 
   // Toggle activity expansion
   const toggleExpand = (id: string) => {

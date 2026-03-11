@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/shared';
 import {
   ActivityFeed,
   ActivityFeedTypeFilter,
+  ActivityFeedStatsBar,
   type ActivityFeedTypeFilterValue,
 } from '@/components/shared/activity-feed';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
@@ -69,6 +70,10 @@ export default function ActivityPage() {
               All Activity
             </h2>
             <ActivityFeedTypeFilter value={feedFilter} onChange={setFeedFilter} />
+          </div>
+          {/* IFC-202: Activity stats summary */}
+          <div className="px-5 py-2.5 border-b border-[#e2e8f0] dark:border-[#334155] bg-slate-50/50 dark:bg-slate-800/20">
+            <ActivityFeedStatsBar timeWindow="30d" enabled={isAuthenticated} maxTypes={5} />
           </div>
           <ActivityFeed
             limit={50}
