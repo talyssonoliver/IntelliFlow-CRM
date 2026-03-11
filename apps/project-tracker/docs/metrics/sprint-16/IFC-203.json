@@ -4,20 +4,20 @@
   "section": "Core CRM",
   "description": "Activity Feed Full-Text Search - search endpoint with text query across titles descriptions and actor names",
   "owner": "Backend Dev (STOA-Domain)",
-  "status": "BACKLOG",
+  "status": "DONE",
   "sprint": "sprint-0",
   "phase": "phase-0-initialisation",
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-03-10T21:31:10.721Z",
+    "verified_at": "2026-03-11T20:33:37.323Z",
     "required": [
       "IFC-069",
       "IFC-155"
     ]
   },
   "started_at": "2026-02-13T23:42:14+00:00",
-  "completed_at": null,
+  "completed_at": "2026-03-10T23:26:51.773Z",
   "execution": {
     "retry_count": 0,
     "last_error": null,
@@ -29,7 +29,18 @@
     "created": [],
     "missing": []
   },
-  "validations": [],
+  "validations": [
+    {
+      "name": "Task completion verification",
+      "command": "echo \"Task IFC-203 completed\"",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2026-03-10T23:26:51.774Z",
+      "exit_code": 0,
+      "passed": true,
+      "notes": "Task marked as completed in Sprint_plan.csv"
+    }
+  ],
   "kpis": {},
   "blockers": [],
   "status_history": [
@@ -45,5 +56,6 @@
   "dependencies_resolved": [
     "IFC-069",
     "IFC-155"
-  ]
+  ],
+  "actual_duration_minutes": 15
 }

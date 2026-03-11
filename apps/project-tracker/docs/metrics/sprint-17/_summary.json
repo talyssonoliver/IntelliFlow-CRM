@@ -31,11 +31,11 @@
     },
     {
       "task_id": "PG-055",
-      "completed_at": "2026-03-10T21:31:10.823Z",
+      "completed_at": "2026-03-11T20:33:37.350Z",
       "duration_minutes": 15
     }
   ],
-  "notes": "4/16 tasks DONE (25%). Last synced: 2026-03-10T21:31:10.823Z",
+  "notes": "4/16 tasks DONE (25%). Last synced: 2026-03-11T20:33:37.350Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": null,
@@ -56,6 +56,6 @@
       "spi": 0.18,
       "status": "critical"
     },
-    "calculated_at": "2026-03-10T21:31:11.297Z"
+    "calculated_at": "2026-03-11T20:33:37.552Z"
   }
 }
