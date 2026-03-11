@@ -14,6 +14,7 @@ import { pipelineConfigRouter } from './modules/opportunity/pipeline-config.rout
 import { taskRouter } from './modules/task/task.router';
 import { ticketRouter } from './modules/ticket/ticket.router';
 import { ticketRoutingRouter } from './modules/ticket/ticket-routing.router';
+import { ticketConfigRouter } from './modules/ticket/ticket-config.router';
 import { analyticsRouter } from './modules/analytics/analytics.router';
 import { healthRouter } from './modules/misc/health.router';
 import { systemRouter } from './modules/misc/system.router';
@@ -113,6 +114,7 @@ export const appRouter = createTRPCRouter({
   task: taskRouter,
   ticket: ticketRouter,
   ticketRouting: ticketRoutingRouter, // IFC-067: Automatic Ticket Routing
+  ticketConfig: ticketConfigRouter, // PG-173: Ticket Configuration Pages
 
   // Analytics & Reporting
   analytics: analyticsRouter,

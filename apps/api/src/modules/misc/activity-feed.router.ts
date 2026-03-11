@@ -20,7 +20,9 @@ import {
   addActivityCommentSchema,
   getActivityCommentsSchema,
   activityFeedStatsQuerySchema,
+  activityFeedSearchQuerySchema,
 } from '@intelliflow/validators';
+import { ACTIVITY_FEED_DEFAULT_LIMIT } from '@intelliflow/domain';
 
 export const activityFeedRouter = createTRPCRouter({
   /**
@@ -115,6 +117,44 @@ export const activityFeedRouter = createTRPCRouter({
 
       if (duration > 200) {
         console.warn(`[activityFeed.getStats] SLOW: ${duration.toFixed(2)}ms (target: <200ms)`);
+      }
+
+      return result;
+    }),
+
+  /**
+   * Search activities across all sources using text matching.
+   * IFC-203: Full-text search with ILIKE across titles, descriptions, and actor names.
+   */
+  search: tenantProcedure
+    .input(activityFeedSearchQuerySchema)
+    .query(async ({ ctx, input }) => {
+      const tenantId = ctx.tenant.tenantId;
+
+      const activityFeedService = ctx.container?.activityFeedService;
+      if (!activityFeedService) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'ActivityFeedService not available in container',
+        });
+      }
+
+      const startTime = performance.now();
+      const result = await activityFeedService.search(
+        tenantId,
+        input.query.trim(),
+        input.limit ?? ACTIVITY_FEED_DEFAULT_LIMIT,
+        input.cursor,
+        {
+          types: input.types,
+          sources: input.sources,
+          entityType: input.entityType,
+        }
+      );
+      const duration = performance.now() - startTime;
+
+      if (duration > 500) {
+        console.warn(`[activityFeed.search] SLOW: ${duration.toFixed(2)}ms (target: <500ms)`);
       }
 
       return result;
