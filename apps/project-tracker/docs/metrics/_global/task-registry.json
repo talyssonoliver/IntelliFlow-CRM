@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-03-11T20:33:37.132Z",
+  "last_updated": "2026-03-11T21:35:57.276Z",
   "total_tasks": 390,
   "current_sprint": 14,
   "active_sprint": "sprint-14",
@@ -512,6 +512,7 @@
     "BLOCKED": [],
     "PLANNED": [
       "PG-174",
+      "PG-178",
       "IFC-297"
     ],
     "BACKLOG": [
@@ -631,7 +632,6 @@
       "PG-175",
       "PG-176",
       "PG-177",
-      "PG-178",
       "IFC-208",
       "DOC-015",
       "DOC-016",
@@ -8889,7 +8889,7 @@
       "section": "Settings",
       "description": "Module Settings Pages - 11 per-module configuration pages at /settings/[module]",
       "owner": "Frontend Dev (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "sprint": 16,
       "dependencies": [
         "PG-104",
@@ -8901,8 +8901,8 @@
       "kpis": "All 11 module settings routes resolve; form fields render and save; breadcrumb navigation works; Lighthouse >=90",
       "definition_of_done": "Pages at /settings/leads (scoring thresholds assignment auto-qual) /settings/contacts (duplicate detection required fields tags) /settings/accounts (hierarchy industry custom fields) /settings/deals (pipeline stages win-loss reasons scoring) /settings/tickets (default SLA auto-close notification triggers) /settings/documents (file types size limits antivirus retention) /settings/reports (default range currency scheduled delivery) /settings/billing (billing address tax ID invoice contact) /settings/appointments (duration buffer calendar integration) /settings/cases (case prefix default priority auto-assign) /settings/tasks (due-date offset reminder templates); all settingsHref and ModulePaywall links resolve; follows settings/account pattern; Lighthouse >=90; verified by: pnpm test",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm test",
-      "prerequisites": "FILE:apps/web/src/components/sidebar/configs/leads.ts;FILE:apps/web/src/components/sidebar/configs/contacts.ts;FILE:apps/web/src/components/sidebar/configs/accounts.ts;FILE:apps/web/src/components/sidebar/configs/deals.ts;FILE:apps/web/src/components/sidebar/configs/tickets.ts;FILE:apps/web/src/components/sidebar/configs/documents.ts;FILE:apps/web/src/components/sidebar/configs/analytics.ts;FILE:apps/web/src/components/sidebar/configs/appointments.ts;FILE:apps/web/src/components/sidebar/configs/cases.ts;FILE:apps/web/src/components/sidebar/configs/tasks.ts;FILE:apps/web/src/components/ModulePaywall.tsx;FILE:apps/web/src/app/settings/account/page.tsx;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;FILE:docs/design/navigation-reachability-audit.md;DESIGN:docs/design/mockups/module-settings.png",
-      "cadence": ""
+      "prerequisites": "FILE:apps/web/src/components/sidebar/configs/leads.ts;FILE:apps/web/src/components/sidebar/configs/contacts.ts;FILE:apps/web/src/components/sidebar/configs/accounts.ts;FILE:apps/web/src/components/sidebar/configs/deals.ts;FILE:apps/web/src/components/sidebar/configs/tickets.ts;FILE:apps/web/src/components/sidebar/configs/documents.ts;FILE:apps/web/src/components/sidebar/configs/analytics.ts;FILE:apps/web/src/components/sidebar/configs/appointments.ts;FILE:apps/web/src/components/sidebar/configs/cases.ts;FILE:apps/web/src/components/sidebar/configs/tasks.ts;FILE:apps/web/src/components/ModulePaywall.tsx;FILE:apps/web/src/app/settings/account/page.tsx;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;FILE:docs/design/navigation-reachability-audit.md;DESIGN:docs/design/mockups/module-settings.png;DESIGN:docs/design/mockups/lead-settings.html;DESIGN:docs/design/mockups/lead-settings.png",
+      "cadence": "SPEC:.specify/sprints/sprint-16/specifications/PG-178-spec.md;PLAN:.specify/sprints/sprint-16/planning/PG-178-plan.md"
     },
     "DOC-002": {
       "section": "Documentation",
