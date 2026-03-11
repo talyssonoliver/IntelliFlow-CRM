@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-10T21:31:13.020Z",
+  "generated_at": "2026-03-11T20:33:38.543Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 337,
-    "completed": 331,
+    "total_specs_analyzed": 342,
+    "completed": 333,
     "partially_done": 1,
-    "spec_only": 1,
-    "uncertain": 4
+    "spec_only": 2,
+    "uncertain": 6
   },
   "status_legend": {
     "COMPLETED": "All evidence confirms task is done: attestation present, CSV=Completed, plan checkboxes done",
@@ -52,10 +52,22 @@
       "recommendation": "Investigate attestation evidence. Re-run validation if needed."
     },
     {
+      "task_id": "PG-161",
+      "severity": "HIGH",
+      "issue": "CSV says Completed but NO attestation file exists and metric status is NOT_FOUND. Task may not be truly implemented.",
+      "recommendation": "Verify actual codebase for implementation. Run /exec or /matop-execute to generate proper attestation."
+    },
+    {
       "task_id": "PG-166",
       "severity": "MEDIUM",
       "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
       "recommendation": "Run /exec PG-166 when ready for implementation."
+    },
+    {
+      "task_id": "PG-173",
+      "severity": "HIGH",
+      "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
+      "recommendation": "Investigate attestation evidence. Re-run validation if needed."
     }
   ],
   "tasks": [
@@ -3760,6 +3772,23 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-203",
+      "title": "Activity Feed Full-Text Search - search endpoint with text query across titles descriptions and actor names",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/IFC-203-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-069",
+        "IFC-155"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
       "task_id": "IFC-205",
       "title": "Ticket Full-Text Search - add search parameter to ticketQuerySchema and TicketService for subject ticketNumber contactName searching",
       "sprint": 6,
@@ -5333,6 +5362,23 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "PG-161",
+      "title": "Notifications integration on home page - bell icon header badge count IFC-183 Prisma model and notification router",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/PG-161-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": false,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-129",
+        "IFC-183"
+      ],
+      "real_status": "UNCERTAIN"
+    },
+    {
       "task_id": "PG-162",
       "title": "AI Insights from ML model - LangChain chain for generating daily insights with caching confidence scores and action recommendations Cross-entity scope: null-state UX - when AI insight is null on entity detail pages show Run AI Analysis button. Lead detail already done (2026-03-04) apply same pattern to Contact detail. Ensure fallback values visually distinct from real AI data.",
       "sprint": 16,
@@ -5415,6 +5461,22 @@
       "real_status": "PARTIALLY_DONE"
     },
     {
+      "task_id": "PG-167",
+      "title": "Analytics tracking plan for home page - define and implement business metrics events for section interactions",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/PG-167-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-129"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
       "task_id": "PG-169",
       "title": "Developer Guides Page",
       "sprint": 15,
@@ -5479,6 +5541,40 @@
         "PG-030"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-173",
+      "title": "Ticket Configuration Pages - SLA Policies Types and Automations",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/PG-173-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-137",
+        "IFC-189",
+        "IFC-093"
+      ],
+      "real_status": "UNCERTAIN"
+    },
+    {
+      "task_id": "PG-174",
+      "title": "Notification Configuration Pages - Channels and Quiet Hours",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/PG-174-spec.md",
+      "has_spec": true,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Spec Complete",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-157"
+      ],
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "PG-179",
