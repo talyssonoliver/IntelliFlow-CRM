@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-10T20:42:53.207Z",
+  "timestamp": "2026-03-10T23:21:11.936Z",
   "docRoutes": [
     "/",
     "/about",
@@ -109,11 +109,16 @@
     "/analytics/feedback",
     "/auth/callback",
     "/billing",
+    "/billing/cancel",
     "/billing/checkout",
     "/billing/invoices",
     "/billing/payment-methods",
+    "/billing/plans",
     "/billing/receipts",
+    "/billing/settings",
     "/billing/subscriptions",
+    "/billing/upgrade",
+    "/billing/usage",
     "/blog",
     "/calendar",
     "/calendar/new",
@@ -186,7 +191,10 @@
     "/support/tickets/new",
     "/tasks",
     "/tickets",
+    "/tickets/automations",
     "/tickets/new",
+    "/tickets/sla-policies",
+    "/tickets/types",
     "/upgrade",
     "/verify-email/callback"
   ],
@@ -280,6 +288,11 @@
     "/activity",
     "/agent-approvals/insights",
     "/agent-approvals/tools",
+    "/billing/cancel",
+    "/billing/plans",
+    "/billing/settings",
+    "/billing/upgrade",
+    "/billing/usage",
     "/deals/all/forecast",
     "/developers/apps",
     "/developers/apps/new",
@@ -297,6 +310,9 @@
     "/settings/security/mfa/setup",
     "/support/tickets",
     "/support/tickets/new",
+    "/tickets/automations",
+    "/tickets/sla-policies",
+    "/tickets/types",
     "/upgrade"
   ],
   "gates": [
@@ -308,7 +324,7 @@
     {
       "name": "COUNT_MATCH",
       "severity": "PASS",
-      "message": "Doc routes: 82, FS routes: 104"
+      "message": "Doc routes: 82, FS routes: 112"
     },
     {
       "name": "STATEMENT_COVERS_DISK",
@@ -318,12 +334,17 @@
     {
       "name": "DISK_COVERED_BY_STATEMENT",
       "severity": "WARN",
-      "message": "22 route(s) on disk not in conformance statement",
+      "message": "30 route(s) on disk not in conformance statement",
       "details": [
         "/404",
         "/activity",
         "/agent-approvals/insights",
         "/agent-approvals/tools",
+        "/billing/cancel",
+        "/billing/plans",
+        "/billing/settings",
+        "/billing/upgrade",
+        "/billing/usage",
         "/deals/all/forecast",
         "/developers/apps",
         "/developers/apps/new",
@@ -341,13 +362,16 @@
         "/settings/security/mfa/setup",
         "/support/tickets",
         "/support/tickets/new",
+        "/tickets/automations",
+        "/tickets/sla-policies",
+        "/tickets/types",
         "/upgrade"
       ]
     },
     {
       "name": "TOTAL_COUNT",
       "severity": "INFO",
-      "message": "Total: 82 matched, 0 doc-only, 22 fs-only"
+      "message": "Total: 82 matched, 0 doc-only, 30 fs-only"
     }
   ],
   "exitCode": 0
