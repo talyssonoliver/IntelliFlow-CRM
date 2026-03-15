@@ -224,6 +224,53 @@ export default [
     },
   },
 
+  // ==========================================
+  // Timezone Safety Rules
+  // Prevent server-local time usage in production code.
+  // All date display must use explicit timeZone option;
+  // all date boundaries must use UTC constructors.
+  // ==========================================
+  {
+    files: [
+      'apps/api/src/**/*.ts',
+      'apps/web/src/**/*.ts',
+      'apps/web/src/**/*.tsx',
+      'apps/ai-worker/src/**/*.ts',
+      'packages/application/src/**/*.ts',
+      'packages/adapters/src/**/*.ts',
+    ],
+    rules: {
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector: "CallExpression[callee.property.name='toLocaleDateString'][arguments.length=0]",
+          message:
+            'Bare toLocaleDateString() uses browser/server timezone. Pass locale and { timeZone } option, or use timezone-utils formatDate().',
+        },
+        {
+          selector: "CallExpression[callee.property.name='toLocaleTimeString'][arguments.length=0]",
+          message:
+            'Bare toLocaleTimeString() uses browser/server timezone. Pass locale and { timeZone } option, or use timezone-utils formatTime().',
+        },
+        {
+          selector: "CallExpression[callee.property.name='toLocaleString'][arguments.length=0]",
+          message:
+            'Bare toLocaleString() on Date uses browser/server timezone. Pass locale and { timeZone } option, or use timezone-utils formatDateTime().',
+        },
+        {
+          selector: "CallExpression[callee.property.name='getHours']",
+          message:
+            'getHours() uses server-local timezone. Use getUTCHours() for UTC or getHourInTimezone() from timezone-utils for user timezone.',
+        },
+        {
+          selector: "CallExpression[callee.property.name='getDate']",
+          message:
+            'getDate() uses server-local timezone. Use getUTCDate() for UTC or timezone-utils for user-aware boundaries.',
+        },
+      ],
+    },
+  },
+
   // Test files - keep flexible
   {
     files: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx'],

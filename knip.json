@@ -3,6 +3,8 @@
   "workspaces": {
     ".": {
       "entry": [
+        "lighthouserc.js",
+        "lighthouserc.authenticated.js",
         "tools/**/*.ts",
         "tools/**/*.js",
         "scripts/**/*.ts",
@@ -19,9 +21,68 @@
         "artifacts/benchmarks/run-accuracy-benchmark.ts"
       ],
       "project": ["**/*.ts"]
+    },
+    "apps/web": {
+      "entry": [
+        "src/app/**/page.tsx",
+        "src/app/**/layout.tsx",
+        "src/app/**/route.ts",
+        "src/app/**/loading.tsx",
+        "src/app/**/error.tsx",
+        "src/app/not-found.tsx",
+        "src/app/global-error.tsx"
+      ],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "apps/api": {
+      "entry": ["src/index.ts", "src/main.ts", "src/ws-server.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "apps/ai-worker": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "apps/project-tracker": {
+      "entry": [
+        "app/**/page.tsx",
+        "app/**/layout.tsx",
+        "app/**/route.ts",
+        "scripts/**/*.ts"
+      ],
+      "project": ["**/*.{ts,tsx}"]
+    },
+    "apps/workers/*": {
+      "entry": ["src/main.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "apps/workers/shared": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/*": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/search": {
+      "entry": ["src/index.ts", "src/retrieval.ts", "src/indexer.ts", "src/worker.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/ui": {
+      "entry": ["src/index.ts", "src/**/*.stories.tsx"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/validators": {
+      "entry": [
+        "src/{index,lead,contact,account,opportunity,task,ticket,common,env,base-schemas,ai-review,case,timeline}.ts"
+      ],
+      "project": ["src/**/*.ts"]
     }
   },
   "ignore": [
+    "**/dist/**",
+    "**/coverage/**",
+    "**/.next/**",
+    "**/generated/**",
     "**/.tsup/**",
     "**/migrations/**",
     "artifacts/misc/**/*.ts",
@@ -29,6 +90,7 @@
     "tests/mocks/**",
     "tests/utils/**",
     "tests/architecture/**",
+    "tests/a11y/mocks/**",
     "apps/web/src/test-utils/**",
     "apps/web/src/test/mocks/**",
     "apps/web/src/**/__tests__/**",
@@ -56,13 +118,14 @@
     "tools/scripts/lib/**",
     "packages/sdk/src/**"
   ],
+  "tags": ["-knipignore"],
   "ignoreIssues": {
     "apps/api/src/test/**": ["exports", "types"],
     "apps/web/src/lib/test-runner/**": ["exports", "types"],
     "apps/project-tracker/lib/data-sync/orchestrator.ts": ["exports"],
     "apps/project-tracker/lib/data-sync/validation.ts": ["exports"],
     "packages/validators/src/**": ["types"],
-    "packages/search/src/**": ["exports", "types"],
+    "packages/search/src/**": ["types"],
     "packages/platform/src/queues/**": ["exports", "types"],
     "packages/platform/src/resilience/**": ["exports", "types"],
     "packages/platform/src/workflow/**": ["exports", "types"],
@@ -117,10 +180,10 @@
     "packages/domain/src/config/ConfigConstants.ts": ["types"],
     "packages/domain/src/crm/lead/LeadActivityConstants.ts": ["types"],
     "packages/domain/src/shared/QueryTypes.ts": ["types"],
-    "packages/domain/src/crm/ticket/TicketRepository.ts": ["types"],
     "packages/domain/src/crm/ticket/TicketEvents.ts": ["exports"],
-    "packages/domain/src/crm/task/TaskRepository.ts": ["types"],
+    "packages/domain/src/crm/ticket/TicketRepository.ts": ["types"],
     "packages/domain/src/crm/task/TaskEvents.ts": ["exports"],
+    "packages/domain/src/crm/task/TaskRepository.ts": ["types"],
     "packages/domain/src/crm/opportunity/OpportunityRepository.ts": ["types"],
     "packages/domain/src/crm/lead/LeadRepository.ts": ["types"],
     "packages/domain/src/crm/contact/ContactRepository.ts": ["types"],
@@ -144,7 +207,7 @@
     "packages/adapters/src/external/GuardrailsAIService.ts": ["types"],
     "packages/adapters/src/messaging/email/outbound.ts": ["types"],
     "packages/adapters/src/messaging/email/dkim-signer.ts": ["types"],
-    "packages/platform/src/feature-flags/schema.ts": ["types"],
+    "packages/platform/src/feature-flags/schema.ts": ["exports", "types"],
     "packages/ui/src/components/layout-builder/types.ts": ["types"],
     "apps/api/src/shared/scoring-output-schema.zod.ts": ["types"],
     "apps/api/src/webhooks/retry.ts": ["exports"],
@@ -169,6 +232,7 @@
     "packages/ui/src/lib/icon-mapping.ts": ["exports", "types"],
     "apps/web/src/lib/export/csv.ts": ["types"],
     "apps/api/src/shared/external-service-wrapper.ts": ["exports"],
+    "packages/ui/src/components/hover-card.tsx": ["exports"],
     "packages/ui/src/components/status-select-dialog.tsx": ["exports"],
     "packages/ui/src/components/confirmation-dialog.tsx": ["exports"],
     "packages/ui/src/components/sheet.tsx": ["exports"],

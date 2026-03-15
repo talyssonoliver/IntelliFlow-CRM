@@ -216,8 +216,8 @@ export default defineConfig({
         'artifacts',
         process.env['COVERAGE_RUN'] === '1' ? 'coverage' : 'coverage-vitest'
       ),
-      // Don't clean directory to preserve partial results on worker crash
-      clean: false,
+      // Clean old coverage HTML between runs to prevent accumulation (was 84MB+ stale data)
+      clean: true,
       // Write coverage even when some tests fail (e.g., one flaky test shouldn't suppress all coverage data)
       reportOnFailure: true,
       include: [
