@@ -53,7 +53,7 @@ const CHARS_PER_TOKEN = 4;
 const MAX_TOKENS_PER_FILE = 18000; // Conservative limit to stay well under 25000
 const MAX_CHARS_PER_FILE = MAX_TOKENS_PER_FILE * CHARS_PER_TOKEN; // ~72000 chars
 
-const PART_NAMES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']; // Support up to 8 parts if needed
+const PART_NAMES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']; // Support up to 10 parts if needed
 
 interface PartInfo {
   name: string;

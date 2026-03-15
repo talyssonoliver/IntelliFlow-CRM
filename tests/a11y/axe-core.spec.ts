@@ -47,7 +47,7 @@ vi.mock('next/link', () => ({
   }) => React.createElement('a', { href, ...props }, children),
 }));
 
-// Mock tRPC hooks used by NotificationBell
+// Mock tRPC hooks used by NotificationBell and SearchBar
 vi.mock('@/lib/trpc', () => ({
   trpc: {
     useUtils: () => ({
@@ -65,6 +65,11 @@ vi.mock('@/lib/trpc', () => ({
       },
       markAsRead: {
         useMutation: () => ({ mutate: vi.fn() }),
+      },
+    },
+    globalSearch: {
+      query: {
+        useQuery: () => ({ data: null, isLoading: false }),
       },
     },
   },

@@ -210,13 +210,13 @@ export function getStatusFromVerdict(
 }
 
 /**
- * Generate a summary of what needs remediation for a WARN verdict
+ * Generate a summary of what needs remediation for a FAIL verdict
  */
 export function generateRemediationSummary(verdicts: StoaVerdict[]): string[] {
   const items: string[] = [];
 
   for (const verdict of verdicts) {
-    if (verdict.verdict === 'WARN' || verdict.verdict === 'FAIL') {
+    if (verdict.verdict === 'FAIL') {
       for (const gate of verdict.gatesFailed) {
         items.push(`[${verdict.stoa}] Gate "${gate}" failed`);
       }
