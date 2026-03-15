@@ -146,6 +146,12 @@ model Tenant {
   articleSections      ArticleSection[]
   articleFeedback      ArticleFeedback[]
 
+  // Lead Settings (PG-178)
+  leadStageConfigs       LeadStageConfig[]
+  leadScoringRules       LeadScoringRule[]
+  leadCustomFields       LeadCustomField[]
+  leadAutomationSettings LeadAutomationSetting[]
+
   @@index([slug])
   @@index([status])
   @@map("tenants")
@@ -1174,6 +1180,7 @@ model Appointment {
   description         String?
   startTime           DateTime
   endTime             DateTime
+  timezone            String?             /// IANA timezone of the event (e.g. "America/New_York"). Null = UTC.
   appointmentType     AppointmentType     @default(MEETING)
   status              AppointmentStatus   @default(SCHEDULED)
   location            String?
@@ -1279,19 +1286,21 @@ enum AppointmentStatus {
 // ============================================
 
 model Case {
-  id          String       @id @default(cuid())
-  title       String
-  description String?      @db.Text
-  status      CaseStatus   @default(OPEN)
-  priority    CasePriority @default(MEDIUM)
-  deadline    DateTime?
-  clientId    String
-  assignedTo  String
-  resolution  String?      @db.Text
-  parties     Json?
-  closedAt    DateTime?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id           String       @id @default(cuid())
+  title        String
+  description  String?      @db.Text
+  status       CaseStatus   @default(OPEN)
+  priority     CasePriority @default(MEDIUM)
+  deadline     DateTime?
+  timezone     String?      /// IANA timezone for deadlines (e.g. "America/New_York"). Null = UTC.
+  jurisdiction String?      /// Legal jurisdiction (e.g. "US-NY", "UK-England"). Drives court-time display.
+  clientId     String
+  assignedTo   String
+  resolution   String?      @db.Text
+  parties      Json?
+  closedAt     DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   // Multi-tenancy
   tenantId    String
@@ -3863,6 +3872,7 @@ model Notification {
   @@index([scheduledAt])
   @@index([createdAt])
   @@index([tenantId, recipientId, status])
+  @@index([tenantId, recipientId, sourceType, createdAt])
   @@map("notifications")
 }
 
@@ -3916,6 +3926,7 @@ model NotificationPreference {
   quietHoursStart   String   @default("22:00")  // HH:MM format
   quietHoursEnd     String   @default("08:00")  // HH:MM format
   quietHoursEnabled Boolean  @default(true)
+  quietHoursDays    Int[]    @default([0, 1, 2, 3, 4, 5, 6])  // Days of week (0=Sun, 6=Sat)
 
   // Timezone for quiet hours calculation
   timezone          String   @default("UTC")
@@ -4488,4 +4499,76 @@ model ArticleFeedback {
   @@index([articleId])
   @@index([tenantId])
   @@map("article_feedback")
+}
+
+// ─── Lead Settings (PG-178) ─────────────────────────────────────────────────
+
+model LeadStageConfig {
+  id          String   @id @default(cuid())
+  stageKey    String
+  displayName String
+  color       String   @default("#6366f1")
+  sortOrder   Int      @default(0)
+  isDefault   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, stageKey])
+  @@index([tenantId])
+  @@index([sortOrder])
+  @@map("lead_stage_configs")
+}
+
+model LeadScoringRule {
+  id           String   @id @default(cuid())
+  activityType String
+  points       Int
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, activityType])
+  @@index([tenantId])
+  @@map("lead_scoring_rules")
+}
+
+model LeadCustomField {
+  id          String   @id @default(cuid())
+  fieldName   String
+  fieldKey    String
+  dataType    String
+  options     Json?
+  isRequired  Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, fieldKey])
+  @@index([tenantId])
+  @@map("lead_custom_fields")
+}
+
+model LeadAutomationSetting {
+  id                    String   @id @default(cuid())
+  autoAssignment        Boolean  @default(true)
+  instantNotifications  Boolean  @default(false)
+  leadRecurrence        Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  tenantId              String   @unique
+  tenant                Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("lead_automation_settings")
 }

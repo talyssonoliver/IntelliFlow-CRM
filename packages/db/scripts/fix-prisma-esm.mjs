@@ -23,6 +23,17 @@ const GENERATED_DIR = join(__dirname, '..', 'generated', 'prisma');
 
 let created = 0;
 
+function ensureGeneratedPackageTypeModule() {
+  if (!existsSync(GENERATED_DIR)) {
+    return;
+  }
+
+  writeFileSync(
+    join(GENERATED_DIR, 'package.json'),
+    JSON.stringify({ type: 'module' }, null, 2) + '\n'
+  );
+}
+
 function walkDir(dir) {
   if (!existsSync(dir)) {
     console.log(`[fix-prisma-esm] Directory not found: ${dir} — skipping`);
@@ -57,5 +68,5 @@ function walkDir(dir) {
 }
 
 walkDir(GENERATED_DIR);
+ensureGeneratedPackageTypeModule();
 console.log(`[fix-prisma-esm] Created ${created} .js shim files in generated/prisma/`);
-

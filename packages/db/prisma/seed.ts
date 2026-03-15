@@ -221,6 +221,11 @@ async function cleanDatabase() {
     where: { id: { startsWith: SEED_UUID_PREFIX } },
   });
 
+  // Notifications (use cuid IDs, not seed UUIDs — clean by tenant)
+  await prisma.notificationDeliveryLog.deleteMany({});
+  await prisma.notificationDLQ.deleteMany({});
+  await prisma.notification.deleteMany({});
+
   // AI Insights
   await prisma.aIInsight.deleteMany({
     where: { id: { startsWith: SEED_UUID_PREFIX } },
@@ -741,6 +746,57 @@ async function seedRBACRolePermissions() {
   }
 
   console.log(`✅ Created ${mappingCount} role-permission mappings`);
+}
+
+async function seedUserRoleAssignments(tenantId: string) {
+  console.log('🔐 Seeding user role assignments...');
+
+  // Map User.role enum values to RBAC role names
+  const userRoleMappings = [
+    { userId: SEED_IDS.users.admin, roleName: 'ADMIN' },
+    { userId: SEED_IDS.users.manager, roleName: 'MANAGER' },
+    { userId: SEED_IDS.users.sarahJohnson, roleName: 'SALES_REP' },
+    { userId: SEED_IDS.users.mikeDavis, roleName: 'SALES_REP' },
+    { userId: SEED_IDS.users.emilyDavis, roleName: 'SALES_REP' },
+    { userId: SEED_IDS.users.jamesWilson, roleName: 'SALES_REP' },
+    { userId: SEED_IDS.users.alexMorgan, roleName: 'USER' },
+    { userId: SEED_IDS.users.sarahJenkins, roleName: 'USER' },
+    { userId: SEED_IDS.users.mikeRoss, roleName: 'USER' },
+    { userId: SEED_IDS.users.davidKim, roleName: 'USER' },
+    { userId: SEED_IDS.users.janeDoe, roleName: 'SALES_REP' },
+  ];
+
+  let assignmentCount = 0;
+
+  for (const mapping of userRoleMappings) {
+    const role = await prisma.rBACRole.findUnique({
+      where: { name: mapping.roleName },
+    });
+
+    if (!role) {
+      console.warn(`⚠️  RBAC role ${mapping.roleName} not found, skipping assignment for user ${mapping.userId}`);
+      continue;
+    }
+
+    await prisma.userRoleAssignment.upsert({
+      where: {
+        userId_roleId: {
+          userId: mapping.userId,
+          roleId: role.id,
+        },
+      },
+      update: { tenantId },
+      create: {
+        userId: mapping.userId,
+        roleId: role.id,
+        tenantId,
+      },
+    });
+
+    assignmentCount++;
+  }
+
+  console.log(`✅ Created ${assignmentCount} user role assignments`);
 }
 
 async function seedUsers(tenantId: string) {
@@ -3746,8 +3802,8 @@ async function seedTasks(tenantId: string) {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
-  const oct24 = new Date(2025, 9, 24); // Oct 24, 2025
-  const jan20 = new Date(2025, 0, 20); // Jan 20, 2025
+  const inTwoWeeks = new Date(today.getTime() + 14 * 86400000); // 14 days from now
+  const inThirtyDays = new Date(today.getTime() + 30 * 86400000); // 30 days from now
 
   // Data from Dashboard widgets and Deal detail page
   const tasks = [
@@ -3756,7 +3812,7 @@ async function seedTasks(tenantId: string) {
       id: SEED_IDS.tasks.callSarah,
       title: 'Call Sarah re: contract',
       description: 'Discuss contract terms for the TechCorp deal',
-      dueDate: today,
+      dueDate: tomorrow,
       priority: TaskPriority.HIGH,
       status: TaskStatus.PENDING,
       ownerId: SEED_IDS.users.sarahJohnson,
@@ -3778,7 +3834,7 @@ async function seedTasks(tenantId: string) {
       id: SEED_IDS.tasks.prepareQ3Report,
       title: 'Prepare Q3 Report',
       description: 'Compile Q3 sales and performance metrics',
-      dueDate: oct24,
+      dueDate: inThirtyDays,
       priority: TaskPriority.LOW,
       status: TaskStatus.PENDING,
       ownerId: SEED_IDS.users.manager,
@@ -3789,7 +3845,7 @@ async function seedTasks(tenantId: string) {
       id: SEED_IDS.tasks.callAcmeCorp,
       title: 'Call with Acme Corp',
       description: 'Scheduled call at 2:00 PM',
-      dueDate: today,
+      dueDate: tomorrow,
       priority: TaskPriority.HIGH,
       status: TaskStatus.IN_PROGRESS,
       ownerId: SEED_IDS.users.janeDoe,
@@ -3822,7 +3878,7 @@ async function seedTasks(tenantId: string) {
       id: SEED_IDS.tasks.scheduleTechReview,
       title: 'Schedule tech review',
       description: 'Arrange technical review meeting with Acme Corp team',
-      dueDate: jan20,
+      dueDate: inTwoWeeks,
       priority: TaskPriority.MEDIUM,
       status: TaskStatus.PENDING,
       ownerId: SEED_IDS.users.janeDoe,
@@ -5847,7 +5903,7 @@ async function seedDashboardTasks(tenantId: string) {
       id: SEED_IDS.dashboardTasks.callAcme,
       title: 'Call with Acme Corp',
       description: 'Discuss Q4 renewal',
-      dueDate: new Date(today.getTime() + 14 * 60 * 60 * 1000), // Today 2 PM
+      dueDate: new Date(today.getTime() + 24 * 60 * 60 * 1000 + 14 * 60 * 60 * 1000), // Tomorrow 2 PM
       priority: TaskPriority.HIGH,
       status: TaskStatus.PENDING,
       ownerId: SEED_IDS.users.sarahJohnson,
@@ -5867,7 +5923,7 @@ async function seedDashboardTasks(tenantId: string) {
       id: SEED_IDS.dashboardTasks.emailFollowup,
       title: 'Email follow-up: Sarah',
       description: 'Follow up on proposal',
-      dueDate: new Date(today.getTime() - 24 * 60 * 60 * 1000), // Yesterday (overdue)
+      dueDate: new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
       priority: TaskPriority.HIGH,
       status: TaskStatus.PENDING,
       ownerId: SEED_IDS.users.alexMorgan,
@@ -5945,13 +6001,16 @@ async function seedContactDeals(tenantId: string) {
 async function seedContactTasks(tenantId: string) {
   console.log('📋 Seeding contact tasks...');
 
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
   // Data from apps/web/src/app/contacts/[id]/page.tsx (mockTasks)
   const tasks = [
     {
       id: SEED_IDS.contactTasks.followUpContract,
       title: 'Follow up on contract',
       description: 'Follow up with Sarah on enterprise license contract',
-      dueDate: new Date('2024-12-28'),
+      dueDate: new Date(today.getTime() + 7 * 86400000), // 7 days from now
       priority: TaskPriority.HIGH,
       status: TaskStatus.PENDING,
       ownerId: SEED_IDS.users.alexMorgan,
@@ -5962,7 +6021,7 @@ async function seedContactTasks(tenantId: string) {
       id: SEED_IDS.contactTasks.scheduleTechDemo,
       title: 'Schedule tech demo',
       description: 'Schedule technical demonstration for engineering team',
-      dueDate: new Date('2024-12-30'),
+      dueDate: new Date(today.getTime() + 14 * 86400000), // 14 days from now
       priority: TaskPriority.MEDIUM,
       status: TaskStatus.PENDING,
       ownerId: SEED_IDS.users.alexMorgan,
@@ -5973,7 +6032,7 @@ async function seedContactTasks(tenantId: string) {
       id: SEED_IDS.contactTasks.sendProposal,
       title: 'Send initial proposal',
       description: 'Send initial proposal document',
-      dueDate: new Date('2024-12-10'),
+      dueDate: new Date(today.getTime() + 21 * 86400000), // 21 days from now (was completed, so any future date is fine)
       priority: TaskPriority.LOW,
       status: TaskStatus.COMPLETED,
       ownerId: SEED_IDS.users.alexMorgan,
@@ -6667,6 +6726,9 @@ async function seedCases() {
 async function seedCaseTasks(tenantId: string) {
   console.log('📋 Seeding case tasks...');
 
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
   const tasks = [
     // Estate Planning tasks
     {
@@ -6675,7 +6737,7 @@ async function seedCaseTasks(tenantId: string) {
       caseId: SEED_IDS.cases.estatePlanningSmith,
       title: 'Review existing estate documents',
       description: 'Review all current wills, trusts, and beneficiary designations',
-      dueDate: new Date('2026-02-20'),
+      dueDate: new Date('2026-02-20'), // completed — past date is intentional
       status: 'COMPLETED' as const,
       assignee: SEED_IDS.users.sarahJenkins,
       completedAt: new Date('2026-02-15T14:00:00Z'),
@@ -6686,7 +6748,7 @@ async function seedCaseTasks(tenantId: string) {
       caseId: SEED_IDS.cases.estatePlanningSmith,
       title: 'Draft updated trust agreement',
       description: 'Prepare new revocable living trust with tax optimization provisions',
-      dueDate: new Date('2026-03-10'),
+      dueDate: new Date(today.getTime() + 7 * 86400000), // 7 days from now
       status: 'IN_PROGRESS' as const,
       assignee: SEED_IDS.users.sarahJenkins,
       completedAt: null,
@@ -6697,19 +6759,19 @@ async function seedCaseTasks(tenantId: string) {
       caseId: SEED_IDS.cases.estatePlanningSmith,
       title: 'Schedule client review meeting',
       description: 'Set up meeting with Robert and Margaret Smith to review draft documents',
-      dueDate: new Date('2026-03-15'),
+      dueDate: new Date(today.getTime() + 14 * 86400000), // 14 days from now
       status: 'PENDING' as const,
       assignee: SEED_IDS.users.sarahJenkins,
       completedAt: null,
     },
-    // Corporate Merger tasks (overdue)
+    // Corporate Merger tasks
     {
       id: SEED_IDS.caseTasks.mergerReview,
       tenantId,
       caseId: SEED_IDS.cases.corporateMergerTechFlow,
       title: 'Complete financial due diligence review',
       description: 'Review all financial statements, audit reports, and projections from TechFlow',
-      dueDate: new Date('2026-02-10'),
+      dueDate: new Date(today.getTime() + 7 * 86400000), // 7 days from now
       status: 'IN_PROGRESS' as const,
       assignee: SEED_IDS.users.mikeDavis,
       completedAt: null,
@@ -6720,7 +6782,7 @@ async function seedCaseTasks(tenantId: string) {
       caseId: SEED_IDS.cases.corporateMergerTechFlow,
       title: 'Collect outstanding disclosure documents',
       description: 'Request and verify all required disclosure documents from counterparty',
-      dueDate: new Date('2026-02-08'),
+      dueDate: new Date(today.getTime() + 10 * 86400000), // 10 days from now
       status: 'PENDING' as const,
       assignee: SEED_IDS.users.mikeDavis,
       completedAt: null,
@@ -6732,7 +6794,7 @@ async function seedCaseTasks(tenantId: string) {
       caseId: SEED_IDS.cases.civilLitigationJohnson,
       title: 'Gather zoning records and evidence',
       description: 'Request municipal zoning records, meeting minutes, and prior zoning decisions',
-      dueDate: new Date('2026-03-01'),
+      dueDate: new Date(today.getTime() + 7 * 86400000), // 7 days from now
       status: 'IN_PROGRESS' as const,
       assignee: SEED_IDS.users.davidKim,
       completedAt: null,
@@ -6743,12 +6805,12 @@ async function seedCaseTasks(tenantId: string) {
       caseId: SEED_IDS.cases.civilLitigationJohnson,
       title: 'File preliminary motion',
       description: 'Prepare and file motion for preliminary injunction',
-      dueDate: new Date('2026-03-20'),
+      dueDate: new Date(today.getTime() + 21 * 86400000), // 21 days from now
       status: 'PENDING' as const,
       assignee: SEED_IDS.users.davidKim,
       completedAt: null,
     },
-    // Real Estate Closing tasks (all completed)
+    // Real Estate Closing tasks (all completed — past dates are intentional)
     {
       id: SEED_IDS.caseTasks.titleSearch,
       tenantId,
@@ -6789,7 +6851,7 @@ async function seedCaseTasks(tenantId: string) {
       caseId: SEED_IDS.cases.employmentDispute,
       title: 'Prepare response to claim',
       description: 'Draft formal response to wrongful termination claim before filing deadline',
-      dueDate: new Date('2026-02-18'),
+      dueDate: new Date(today.getTime() + 7 * 86400000), // 7 days from now
       status: 'IN_PROGRESS' as const,
       assignee: SEED_IDS.users.jamesWilson,
       completedAt: null,
@@ -6801,7 +6863,7 @@ async function seedCaseTasks(tenantId: string) {
       caseId: SEED_IDS.cases.intellectualPropertyDispute,
       title: 'Prepare for preliminary hearing',
       description: 'Prepare all materials for the preliminary injunction hearing',
-      dueDate: new Date('2026-03-10'),
+      dueDate: new Date(today.getTime() + 14 * 86400000), // 14 days from now
       status: 'PENDING' as const,
       assignee: SEED_IDS.users.admin,
       completedAt: null,
@@ -8776,7 +8838,7 @@ async function seedHomePageData(tenantId: string) {
       description: 'Get approval for TechCorp enterprise deal',
       status: TaskStatus.PENDING,
       priority: TaskPriority.HIGH,
-      dueDate: today, // due today
+      dueDate: tomorrow, // due tomorrow to avoid dueDate < createdAt on same-day seed
       ownerId: user.id,
       tenantId,
     },
@@ -9544,6 +9606,7 @@ async function main() {
 
     // Seed data in correct order (respecting foreign key constraints)
     await seedUsers(tenantId);
+    await seedUserRoleAssignments(tenantId);
     await seedAccounts(tenantId);
     await seedLeads(tenantId);
     // Lead 360 data (requires leads)
