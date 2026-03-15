@@ -165,4 +165,48 @@ describe('AccountContactsList', () => {
 
     expect(screen.getByText('JD')).toBeInTheDocument();
   });
+
+  // IFC-267: onAddContact callback wiring
+  it('empty-state "Add Contact" button calls onAddContact', () => {
+    const onAddContact = vi.fn();
+    useQueryMock.mockReturnValue({
+      data: { contacts: [], nextCursor: null },
+      isLoading: false,
+      error: null,
+    });
+    render(
+      <AccountContactsList
+        accountId="00000000-0000-4000-8000-000000000001"
+        onAddContact={onAddContact}
+      />
+    );
+
+    fireEvent.click(screen.getByText('Add Contact'));
+    expect(onAddContact).toHaveBeenCalledTimes(1);
+  });
+
+  it('header "Add Contact" button calls onAddContact', () => {
+    const onAddContact = vi.fn();
+    useQueryMock.mockReturnValue({
+      data: {
+        contacts: [
+          { id: 'c1', firstName: 'A', lastName: 'B', email: 'a@b.com', status: 'ACTIVE' },
+        ],
+        nextCursor: null,
+      },
+      isLoading: false,
+      error: null,
+    });
+    render(
+      <AccountContactsList
+        accountId="00000000-0000-4000-8000-000000000001"
+        onAddContact={onAddContact}
+      />
+    );
+
+    // In the non-empty state, the "Add Contact" button is in the header row
+    const addBtns = screen.getAllByText('Add Contact');
+    fireEvent.click(addBtns[0]);
+    expect(onAddContact).toHaveBeenCalledTimes(1);
+  });
 });

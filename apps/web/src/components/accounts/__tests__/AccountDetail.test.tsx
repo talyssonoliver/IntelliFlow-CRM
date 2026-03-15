@@ -72,10 +72,28 @@ vi.mock('../AccountCard', () => ({
 }));
 
 vi.mock('../AccountContactsList', () => ({
-  AccountContactsList: () => <div data-testid="contacts-list">Contacts List</div>,
+  AccountContactsList: ({ onAddContact }: { onAddContact?: () => void }) => (
+    <div data-testid="contacts-list">
+      Contacts List
+      {onAddContact && <button data-testid="contacts-add-btn" onClick={onAddContact}>Add Contact</button>}
+    </div>
+  ),
 }));
 vi.mock('../AccountOpportunitiesList', () => ({
-  AccountOpportunitiesList: () => <div data-testid="opps-list">Opportunities List</div>,
+  AccountOpportunitiesList: ({ onCreateOpportunity }: { onCreateOpportunity?: () => void }) => (
+    <div data-testid="opps-list">
+      Opportunities List
+      {onCreateOpportunity && <button data-testid="opps-create-btn" onClick={onCreateOpportunity}>Create Opportunity</button>}
+    </div>
+  ),
+}));
+vi.mock('../OpportunityCreateSheet', () => ({
+  OpportunityCreateSheet: ({ open, accountId }: { open: boolean; accountId: string }) =>
+    open ? <div data-testid="opp-create-sheet" data-account-id={accountId}>Opportunity Create Sheet</div> : null,
+}));
+vi.mock('../ContactAddSheet', () => ({
+  ContactAddSheet: ({ open, accountId }: { open: boolean; accountId: string }) =>
+    open ? <div data-testid="contact-add-sheet" data-account-id={accountId}>Contact Add Sheet</div> : null,
 }));
 vi.mock('../RevenueChart', () => ({
   RevenueChart: () => <div data-testid="revenue-chart">Revenue Chart</div>,
@@ -328,5 +346,39 @@ describe('AccountDetail', () => {
   it('renders account health section in right sidebar', () => {
     render(<AccountDetail {...defaultProps} />);
     expect(screen.getByText('Account Health')).toBeInTheDocument();
+  });
+
+  // IFC-267: Button wiring tests
+  it('"Create Deal" button opens OpportunityCreateSheet', async () => {
+    const user = userEvent.setup();
+    render(<AccountDetail {...defaultProps} />);
+    const createDealBtn = screen.getByText('Create Deal').closest('button')!;
+    await user.click(createDealBtn);
+    await waitFor(() => {
+      expect(screen.getByTestId('opp-create-sheet')).toBeInTheDocument();
+    });
+  });
+
+  it('"Add Contact" button opens ContactAddSheet', async () => {
+    const user = userEvent.setup();
+    render(<AccountDetail {...defaultProps} />);
+    // "Add Contact" appears multiple times — the header button is the first one
+    const addContactBtns = screen.getAllByText('Add Contact');
+    const headerBtn = addContactBtns[0].closest('button')!;
+    await user.click(headerBtn);
+    await waitFor(() => {
+      expect(screen.getByTestId('contact-add-sheet')).toBeInTheDocument();
+    });
+  });
+
+  it('sheets receive correct accountId prop', async () => {
+    const user = userEvent.setup();
+    render(<AccountDetail {...defaultProps} />);
+    const createDealBtn = screen.getByText('Create Deal').closest('button')!;
+    await user.click(createDealBtn);
+    await waitFor(() => {
+      const sheet = screen.getByTestId('opp-create-sheet');
+      expect(sheet).toHaveAttribute('data-account-id', '00000000-0000-4000-8000-000000000001');
+    });
   });
 });

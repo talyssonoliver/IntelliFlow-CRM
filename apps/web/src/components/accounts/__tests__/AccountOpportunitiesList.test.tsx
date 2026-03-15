@@ -165,4 +165,50 @@ describe('AccountOpportunitiesList', () => {
 
     expect(screen.getByText('All Stages')).toBeInTheDocument();
   });
+
+  // IFC-267: onCreateOpportunity callback wiring
+  it('empty-state "Create Opportunity" button calls onCreateOpportunity', () => {
+    const onCreateOpportunity = vi.fn();
+    useQueryMock.mockReturnValue({
+      data: { opportunities: [], total: 0, summary: null, nextCursor: null },
+      isLoading: false,
+      error: null,
+    });
+    render(
+      <AccountOpportunitiesList
+        accountId="00000000-0000-4000-8000-000000000001"
+        onCreateOpportunity={onCreateOpportunity}
+      />
+    );
+
+    fireEvent.click(screen.getByText('Create Opportunity'));
+    expect(onCreateOpportunity).toHaveBeenCalledTimes(1);
+  });
+
+  it('header "Create Opportunity" button calls onCreateOpportunity', () => {
+    const onCreateOpportunity = vi.fn();
+    useQueryMock.mockReturnValue({
+      data: {
+        opportunities: [
+          { id: 'o1', name: 'Deal', value: 10000, probability: 50, stage: 'PROPOSAL' },
+        ],
+        total: 1,
+        summary: { totalValue: 10000, weightedValue: 5000 },
+        nextCursor: null,
+      },
+      isLoading: false,
+      error: null,
+    });
+    render(
+      <AccountOpportunitiesList
+        accountId="00000000-0000-4000-8000-000000000001"
+        onCreateOpportunity={onCreateOpportunity}
+      />
+    );
+
+    // In the non-empty state, the "Create Opportunity" button is in the header
+    const createBtns = screen.getAllByText('Create Opportunity');
+    fireEvent.click(createBtns[0]);
+    expect(onCreateOpportunity).toHaveBeenCalledTimes(1);
+  });
 });
