@@ -35,10 +35,10 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 | Category        | Count |
 | --------------- | ----- |
-| Total Pages     | 137   |
+| Total Pages     | 143   |
 | Public Pages    | 29    |
 | Developer Pages | 14    |
-| Protected Pages | 89    |
+| Protected Pages | 95    |
 | API Routes      | 19    |
 | Layouts         | 36    |
 
@@ -280,12 +280,14 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ---
 
-### 16. Notifications (2 pages)
+### 16. Notifications (4 pages)
 
-| Route                     | Page                  | Description              |
-| ------------------------- | --------------------- | ------------------------ |
-| `/notifications`          | Notifications         | All notifications list   |
-| `/notifications/settings` | Notification Settings | Notification preferences |
+| Route                        | Page                       | Description                                          |
+| ---------------------------- | -------------------------- | ---------------------------------------------------- |
+| `/notifications`             | Notifications              | All notifications list                               |
+| `/notifications/settings`    | Notification Settings      | Notification preferences                             |
+| `/notifications/channels`    | Notification Channels      | Enable/disable delivery channels (PG-174)            |
+| `/notifications/quiet-hours` | Notification Quiet Hours   | Weekly quiet-hours schedule and time-range (PG-174)  |
 
 ---
 
@@ -297,7 +299,7 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ---
 
-### 18. Settings (9 pages)
+### 18. Settings (10 pages)
 
 | Route                     | Page                  | Description                     |
 | ------------------------- | --------------------- | ------------------------------- |
@@ -309,6 +311,7 @@ developer sidebar. These pages are accessible through the Settings sidebar
 | `/settings/notifications` | Notification Settings | Alert preferences               |
 | `/settings/pipeline`      | Pipeline Settings     | Sales pipeline stages           |
 | `/settings/routing`       | Routing Settings      | Smart lead routing rules        |
+| `/settings/leads`         | Lead Settings         | Lead pipeline configuration - stages, scoring rules, custom fields, and automation toggles |
 | `/settings/security/mfa`  | MFA Settings          | MFA management dashboard        |
 | `/settings/security/mfa/setup` | MFA Setup Wizard | Two-factor authentication setup wizard |
 

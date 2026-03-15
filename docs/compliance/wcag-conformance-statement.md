@@ -19,7 +19,7 @@ partially supported on the `/deals` pipeline view.
 
 ## 2. Scope
 
-This statement covers the IntelliFlow CRM web application across all 82
+This statement covers the IntelliFlow CRM web application across all 87
 user-facing routes (excluding developer portal). Dynamic segment routes (e.g.,
 `/contacts/[id]`) inherit conformance status from their parent static route and
 are not listed separately.
@@ -52,11 +52,13 @@ are not listed separately.
   `/governance/quality-reports`
 - **Billing (6):** `/billing`, `/billing/checkout`, `/billing/invoices`,
   `/billing/payment-methods`, `/billing/receipts`, `/billing/subscriptions`
-- **Notifications, Help & Profile (4):** `/help-center`, `/notifications`,
+- **Notifications, Help & Profile (6):** `/help-center`, `/notifications`,
+  `/notifications/channels`, `/notifications/quiet-hours`,
   `/notifications/settings`, `/profile`
-- **Settings (9):** `/settings`, `/settings/account`, `/settings/ai`,
-  `/settings/integrations`, `/settings/notifications`, `/settings/pipeline`,
-  `/settings/routing`, `/settings/security/mfa`, `/settings/team`
+- **Settings (10):** `/settings`, `/settings/account`, `/settings/ai`,
+  `/settings/integrations`, `/settings/leads`, `/settings/notifications`,
+  `/settings/pipeline`, `/settings/routing`, `/settings/security/mfa`,
+  `/settings/team`
 
 ---
 
@@ -71,8 +73,8 @@ are not listed separately.
 | Level A: Not Applicable          | 4                  |
 | Level AA: Supports               | 16                 |
 | Level AA: Not Applicable         | 4                  |
-| Routes fully conformant          | 81 of 82           |
-| Routes partially conformant      | 1 of 82 (`/deals`) |
+| Routes fully conformant          | 86 of 87           |
+| Routes partially conformant      | 1 of 87 (`/deals`) |
 
 ---
 
@@ -219,3 +221,4 @@ Users who encounter accessibility barriers can report issues via:
 | 1.0.0   | 2026-02-24 | Engineering (DOC-008) | Initial conformance statement with screen reader testing plan                     |
 | 1.1.0   | 2026-03-01 | Engineering (DOC-011) | Expanded scope from 26 to 82 routes; added dynamic segment parent-inherits policy |
 | 1.2.0   | 2026-03-10 | Engineering (PG-173)  | Added 3 ticket config routes (sla-policies, types, automations) — scope now 85 routes |
+| 1.3.0   | 2026-03-11 | Engineering (PG-174)  | Added 2 notification config routes (channels, quiet-hours) — scope now 87 routes |

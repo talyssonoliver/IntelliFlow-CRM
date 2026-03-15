@@ -3,7 +3,7 @@
 > **Location**: `docs/design/page-registry.md` **Purpose**: Central registry of
 > all UI pages with task IDs, KPIs, file paths, components, API routers, test
 > paths, and RACI assignments **Last Updated**: 2026-02-24 (as of Sprint 14)
-> **Total Pages**: 137
+> **Total Pages**: 143
 
 ---
 
@@ -1716,20 +1716,50 @@ Each route entry uses this standard table format:
 | **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                                |
 | **Components** | "use client", PageHeader, NotificationList, NotificationFilters, useRequireAuth, useDebounce |
 
-### Notification Settings (`/notifications/settings`)
+### Notification Settings Hub (`/notifications/settings`)
 
 | Field          | Value                                                                       |
 | -------------- | --------------------------------------------------------------------------- |
-| **Task ID**    | PG-116, IFC-157                                                             |
+| **Task ID**    | PG-174                                                                      |
 | **File Path**  | `apps/web/src/app/notifications/settings/page.tsx`                          |
 | **Layout**     | `apps/web/src/app/notifications/layout.tsx`                                 |
-| **API Router** | N/A                                                                         |
+| **API Router** | `apps/api/src/modules/notifications/notifications.router.ts`                |
 | **E2E Test**   | None                                                                        |
-| **Unit Tests** | None                                                                        |
+| **Unit Tests** | `apps/web/src/app/notifications/settings/__tests__/page.test.tsx`           |
 | **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s                                         |
-| **Status**     | Hardcoded                                                                   |
+| **Status**     | Implemented                                                                 |
 | **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                               |
-| **Components** | "use client", Link — initialNotificationTypes array (preferences not wired) |
+| **Components** | "use client", PageHeader, Card, StatusBadge, Skeleton, trpc, useRequireAuth |
+
+### Notification Channels (`/notifications/channels`)
+
+| Field          | Value                                                                       |
+| -------------- | --------------------------------------------------------------------------- |
+| **Task ID**    | PG-174                                                                      |
+| **File Path**  | `apps/web/src/app/notifications/channels/page.tsx`                          |
+| **Layout**     | `apps/web/src/app/notifications/layout.tsx`                                 |
+| **API Router** | `apps/api/src/modules/notifications/notifications.router.ts`                |
+| **E2E Test**   | None                                                                        |
+| **Unit Tests** | `apps/web/src/components/notifications/__tests__/ChannelManager.test.tsx`    |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s                                         |
+| **Status**     | Implemented                                                                 |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                               |
+| **Components** | "use client", PageHeader, ChannelManager, useRequireAuth                    |
+
+### Quiet Hours (`/notifications/quiet-hours`)
+
+| Field          | Value                                                                       |
+| -------------- | --------------------------------------------------------------------------- |
+| **Task ID**    | PG-174                                                                      |
+| **File Path**  | `apps/web/src/app/notifications/quiet-hours/page.tsx`                       |
+| **Layout**     | `apps/web/src/app/notifications/layout.tsx`                                 |
+| **API Router** | `apps/api/src/modules/notifications/notifications.router.ts`                |
+| **E2E Test**   | None                                                                        |
+| **Unit Tests** | `apps/web/src/components/notifications/__tests__/QuietHoursScheduler.test.tsx` |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s                                         |
+| **Status**     | Implemented                                                                 |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                               |
+| **Components** | "use client", PageHeader, QuietHoursScheduler, useRequireAuth               |
 
 ---
 

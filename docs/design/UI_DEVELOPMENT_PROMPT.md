@@ -53,10 +53,10 @@ intelliFlow-CRM/
 │   └── db/                            # Prisma schema, client
 ├── docs/
 │   ├── design/
-│   │   ├── UI_CONSOLIDATION_PLAN.md   # **READ THIS FIRST**
+│   │   ├── UI_DEVELOPMENT_PROMPT.md    # **READ THIS FIRST** (this file)
 │   │   ├── page-registry.md           # Route → mockup mapping
 │   │   ├── sitemap.md                 # Full app structure (~90 pages)
-│   │   └── mockups/                   # 28 design mockups (PNG + HTML)
+│   │   └── mockups/                   # 32 design mockups (PNG + HTML)
 │   └── company/brand/
 │       ├── palette.tokens.json        # Color system (85 lines)
 │       ├── typography.tokens.json     # Type scale (149 lines)
@@ -714,7 +714,7 @@ Bad: Single agent for "check everything"
 
 ### Before Starting
 
-- [ ] Read `docs/design/UI_CONSOLIDATION_PLAN.md`
+- [ ] Read this prompt (`docs/design/UI_DEVELOPMENT_PROMPT.md`) in full
 - [ ] Check `Sprint_plan.csv` for task details (Task ID, Dependencies,
       Pre-requisites)
 - [ ] Review mockup if exists (check `Pre-requisites` column for `DESIGN:`
@@ -1145,6 +1145,376 @@ state | | `loading` | `boolean?` | Loading state |
 
 ---
 
+### Navigation Header (Authenticated)
+
+The authenticated header renders automatically for all non-public routes.
+
+**Location**: `apps/web/src/components/navigation.tsx`
+
+**Sub-components** (in `apps/web/src/components/header/`):
+
+| Component | File | Purpose |
+|---|---|---|
+| `Logo` | `logo.tsx` | Brand mark + "IntelliFlow CRM" text |
+| `MainNav` | `main-nav.tsx` | Desktop top-level navigation links |
+| `MobileNav` | `mobile-nav.tsx` | Slide-down mobile menu |
+| `SearchBar` | `search-bar.tsx` | Global search input (`w-64`) |
+| `Notifications` | `notifications.tsx` | Bell icon with unread count |
+| `UserMenu` | `user-menu.tsx` | Avatar dropdown (profile, settings, sign out) |
+
+**Behavior**:
+
+- **Position**: `sticky top-0 z-50`, height `h-16` (64 px)
+- Renders only when `isAuthenticated === true` AND not on a public route
+- While `authLoading` is true, renders nothing (prevents header flash)
+- Routes are driven by `useEnabledModules()` — module toggle in settings
+  hides/shows nav items dynamically (IFC-210)
+- Mobile: hamburger button toggles `MobileNav`
+
+**Layout rule**: The authenticated header is rendered in the root layout.
+All module layouts assume `top-16` offset for sticky/fixed child elements.
+
+**❌ NEVER create custom headers per module**:
+
+```tsx
+// ❌ DON'T — the shared Navigation component handles everything
+export function LeadsHeader() { ... }
+export function SettingsHeader() { ... }
+```
+
+---
+
+### PublicHeader & PublicFooter (Marketing / Auth Pages)
+
+**Location**: `apps/web/src/components/public/PublicHeader.tsx` and
+`PublicFooter.tsx`
+
+**Rendering logic** (in `apps/web/src/app/(public)/layout.tsx`):
+
+| Condition | PublicHeader | PublicFooter |
+|---|---|---|
+| Auth pages (`/login`, `/signup`, etc.) | Shown | **Hidden** |
+| Marketing pages (`/features`, `/pricing`, etc.) | Shown | Shown |
+| Authenticated user on public page | Hidden | Shown |
+
+**Auth pages suppressing footer** (`AUTH_PAGES_NO_FOOTER`): `/login`,
+`/signup`, `/forgot-password`, `/reset-password`, `/logout`, `/verify-email`,
+`/mfa`, `/auth/callback`, `/sso`
+
+**PublicHeader**: Sticky, semi-transparent with `backdrop-blur`. Links:
+Features, Pricing, About, Contact. CTA: "Sign In" (ghost) + "Start Free Trial"
+(primary). Mobile: hamburger with slide-down nav.
+
+**PublicFooter**: 5-column grid (Brand + Product, Company, Resources, Legal).
+Social links (Twitter, LinkedIn, GitHub). Bottom bar with copyright + privacy
+links.
+
+**❌ NEVER create additional public headers or footers**:
+
+```tsx
+// ❌ DON'T — use the shared PublicHeader/PublicFooter
+export function LandingHeader() { ... }
+export function PricingFooter() { ... }
+```
+
+---
+
+### EntityHeader Pattern (Detail Pages)
+
+For entity detail pages (Contact/[id], Deal/[id], Ticket/[id], etc.) that
+display a single record with ID badge, status badges, and entity-specific
+actions.
+
+**Location**: `apps/web/src/components/shared/entity-header.tsx`
+
+**✅ CORRECT Pattern**:
+
+```tsx
+import { EntityHeader } from '@/components/shared';
+
+<EntityHeader
+  breadcrumbs={[
+    { label: 'Tickets', href: '/tickets' },
+    { label: 'T-10924' },
+  ]}
+  title="System Outage: West Region"
+  entityId="T-10924"
+  badges={[
+    { label: 'Open', variant: 'status' },
+    { label: 'Critical', variant: 'priority' },
+  ]}
+  actions={[
+    { label: 'Edit', icon: 'edit', variant: 'secondary', onClick: handleEdit },
+    { label: 'Resolve', icon: 'check_circle', variant: 'primary', onClick: handleResolve },
+  ]}
+  endContent={<MoreActionsButton onClick={openSheet} />}
+>
+  <p className="text-sm text-muted-foreground mt-2">
+    Opened 3 days ago by Sarah Chen
+  </p>
+</EntityHeader>
+```
+
+**When to use which header**:
+
+| Component | Use for |
+|---|---|
+| `PageHeader` | List pages, dashboards, settings — any page showing a collection |
+| `EntityHeader` | Detail pages showing a single record with ID + status badges |
+
+**EntityHeaderProps**: | Prop | Type | Description |
+|------|------|-------------| | `breadcrumbs` | `BreadcrumbItem[]?` | Navigation
+breadcrumbs (reuses PageHeader's type) | | `title` | `string` | Entity name
+(h1) | | `entityId` | `string?` | Displayed as `#ID` badge | | `badges` |
+`EntityBadge[]?` | Status/priority badges after title | | `actions` |
+`PageAction[]?` | Action buttons (reuses PageHeader's type) | | `endContent` |
+`ReactNode?` | Content after actions (e.g., MoreActionsButton) | | `children` |
+`ReactNode?` | Metadata below the title row | | `className` | `string?` |
+Additional CSS classes |
+
+**EntityBadge variants**: `status` (blue), `priority` (red), `info` (slate),
+`success` (green), `warning` (amber), `error` (red)
+
+---
+
+### EntityActionSheet Pattern (Row/Card Actions)
+
+A right-side slide-over sheet for entity row actions. Uses the shared `Sheet`
+component from `@intelliflow/ui`. Includes built-in Pin/Unpin, Share, and
+Export actions.
+
+**Location**: `apps/web/src/components/shared/entity-action-sheet.tsx`
+
+**✅ CORRECT Pattern**:
+
+```tsx
+import { EntityActionSheet, type EntityActionSheetEntity } from '@/components/shared';
+
+const entity: EntityActionSheetEntity = {
+  type: 'lead',           // EntityType for pin system
+  id: lead.id,
+  title: lead.name,
+  subtitle: lead.company,
+  icon: 'person',
+  url: `/leads/${lead.id}`,
+};
+
+<EntityActionSheet
+  open={sheetOpen}
+  onOpenChange={setSheetOpen}
+  entity={entity}
+  extraActions={[
+    { label: 'Convert to Deal', icon: 'swap_horiz', onClick: handleConvert },
+    { label: 'Delete', icon: 'delete', onClick: handleDelete, destructive: true },
+  ]}
+/>
+```
+
+**Built-in actions**: Pin/Unpin to Home, Share, Export. Separator before extra
+actions.
+
+**EntityActionSheetEntity Props**: | Prop | Type | Description |
+|------|------|-------------| | `type` | `UseEntityPinOptions['entityType']` |
+Entity type for pin system | | `id` | `string` | Entity ID | | `title` |
+`string` | Displayed in sheet header | | `subtitle` | `string?` | Shown below
+title | | `icon` | `string?` | Material Symbol icon name | | `url` | `string` |
+Entity URL for pin link |
+
+**ExtraAction Props**: | Prop | Type | Description |
+|------|------|-------------| | `label` | `string` | Action button text | |
+`icon` | `string` | Material Symbol icon name | | `onClick` | `() => void` |
+Click handler | | `destructive` | `boolean?` | Red styling for dangerous
+actions |
+
+---
+
+### ComplementarySidebar Pattern (Detail Panel)
+
+A fixed-position detail panel that slides in from the right edge for
+two-column layouts where the main content occupies 70-80% and the panel
+overlays 20-30% **without causing layout shift**. Used in modules with multiple
+views (Settings, AI & Agents, etc.) to show selected item details.
+
+**Location**: `apps/web/src/components/shared/complementary-sidebar.tsx`
+**Hook**: `apps/web/src/hooks/useComplementarySidebar.ts`
+
+**✅ CORRECT Pattern**:
+
+```tsx
+import { ComplementarySidebar } from '@/components/shared/complementary-sidebar';
+import { useComplementarySidebar } from '@/hooks/useComplementarySidebar';
+
+// In your page/component:
+const sidebar = useComplementarySidebar<Agent>();
+
+// In a list item (with highlight on selected row):
+<button
+  onClick={() => sidebar.toggle(agent, agent.id)}
+  className={cn(
+    'w-full text-left p-3 rounded-lg transition-colors',
+    sidebar.selectedItem?.id === agent.id && sidebar.isOpen
+      ? 'bg-primary/10 border-primary/20'
+      : 'hover:bg-slate-50 dark:hover:bg-slate-800/50',
+  )}
+>
+  {agent.name}
+</button>
+
+// In the layout (works standalone or via ModuleSettingsLayout):
+<ComplementarySidebar
+  isOpen={sidebar.isOpen}
+  onClose={sidebar.close}
+  contentKey={sidebar.contentKey}
+  title={sidebar.selectedItem?.name}
+  subtitle={sidebar.selectedItem?.type}
+  isLoading={isLoadingDetails}
+  headerActions={<button aria-label="Edit">...</button>}
+>
+  <AgentDetailView agent={sidebar.selectedItem} />
+</ComplementarySidebar>
+
+// Or via ModuleSettingsLayout:
+<ModuleSettingsLayout
+  complementarySidebar={<ComplementarySidebar ... />}
+  {...otherProps}
+/>
+```
+
+**Behavior**:
+
+| Event | Behavior |
+|---|---|
+| Item click | Panel slides in (200ms ease-out), row highlights |
+| Same item click | Panel closes (toggle) |
+| Different item click | Content crossfades (100ms fade-in via key remount) |
+| Tab switch | Panel persists, content updates via `contentKey` change |
+| Escape key | Panel closes |
+| Loading | Shows skeleton loader, then crossfades to content |
+
+**Position**: `fixed top-16 right-0 bottom-0 z-20` — sits below the header,
+overlays the right edge. Width: `w-80` / `lg:w-[340px]` / `xl:w-[380px]`.
+
+**ComplementarySidebar vs EntityActionSheet**:
+
+| Feature | ComplementarySidebar | EntityActionSheet |
+|---|---|---|
+| Purpose | Show detail content for selected item | Quick actions menu |
+| Trigger | Row/card click (toggle) | "More" button click |
+| Duration | Stays open while browsing list | Closes after action |
+| Content | Rich detail view (text, cards, data) | Action button list |
+| Persistence | Persists across tab switches | Closes on action |
+| Overlay | No backdrop | Dark backdrop overlay |
+
+**ComplementarySidebarProps**: | Prop | Type | Description |
+|------|------|-------------| | `isOpen` | `boolean` | Controls visibility | |
+`onClose` | `() => void` | Called on close button or Escape | | `title` |
+`string?` | Header title (also used as `aria-label`) | | `subtitle` |
+`string?` | Secondary text below title | | `isLoading` | `boolean?` | Shows
+skeleton loader | | `contentKey` | `string?` | Change to trigger crossfade
+animation | | `children` | `ReactNode` | Panel body content | | `skeleton` |
+`ReactNode?` | Custom skeleton (falls back to default) | | `headerActions` |
+`ReactNode?` | Buttons in header row | | `className` | `string?` | Additional
+CSS classes |
+
+**useComplementarySidebar<T>** return: | Field | Type | Description |
+|------|------|-------------| | `isOpen` | `boolean` | Current visibility | |
+`selectedItem` | `T \| null` | Currently selected item | | `contentKey` |
+`string` | Key for crossfade animation | | `open(item, key?)` | `function` |
+Open with item | | `close()` | `function` | Close (preserves selection) | |
+`toggle(item, key?)` | `function` | Toggle — same key closes, different opens |
+
+---
+
+### SidebarPortal Pattern (Dynamic Sidebar Injection)
+
+Used by modules that need to inject sidebar content dynamically at page level
+rather than at layout level. Currently used by: **Cases**, **Calendar**,
+**Tickets**.
+
+**Location**: `apps/web/src/components/sidebar/SidebarPortalContext.tsx`
+
+**Components**:
+
+- `SidebarPortalProvider` — Context wrapper (place in shared layout)
+- `useSidebarConfig(config)` — Hook for pages to inject their sidebar config
+- `SidebarPortal` — Component alternative (renders children into portal target)
+- `SidebarPortalTarget` — Render target (used by sidebar infrastructure)
+
+**When to use**: When different pages under the same layout need **different**
+sidebar configurations. If all pages in a module share the same sidebar, use
+the static `AppSidebar config={...}` pattern instead.
+
+**✅ CORRECT Pattern**:
+
+```tsx
+// In a page component
+import { useSidebarConfig, ticketsSidebarConfig } from '@/components/sidebar';
+
+export default function TicketsPage() {
+  useSidebarConfig(ticketsSidebarConfig);
+  return <div>Tickets content...</div>;
+}
+```
+
+---
+
+### _layout-shell.tsx Pattern (RSC + Client Split)
+
+Used when a module layout needs both Server Component capabilities (metadata
+export, server-side data fetching) and client-side sidebar state management.
+
+**Modules using this pattern**: Agent Approvals, Billing, Calendar, Email,
+Governance, Notifications, Settings
+
+**Structure**:
+
+```
+app/module/
+├── layout.tsx          # Server Component — exports metadata, renders shell
+└── _layout-shell.tsx   # Client Component — SidebarProvider + SidebarInset
+```
+
+**When to use**: When the module's `layout.tsx` needs to export `metadata` (a
+Server Component feature) but also needs `SidebarProvider` (a client
+component). The shell file is prefixed with `_` to indicate it's not a route
+segment.
+
+---
+
+### Right-Side Panel Architecture Summary
+
+Three distinct right-side patterns exist. Use the correct one:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ Navigation (header, z-50)                               │
+├──────┬────────────────────────────┬─────────────────────┤
+│      │                            │ ComplementarySidebar│
+│ App  │    Main Content            │ (fixed, z-20)       │
+│ Side │    (scrollable)            │ Detail panel for    │
+│ bar  │                            │ selected items.     │
+│      │                            │ Persists across     │
+│(z-30)│                            │ tab switches.       │
+│      │                            │                     │
+│      │         EntityActionSheet ─┼──────────┐          │
+│      │         (Sheet, z-50)      │          │          │
+│      │         Modal overlay for  │ overlay  │          │
+│      │         quick actions.     │ region   │          │
+│      │         Closes on action.  │          │          │
+├──────┴────────────────────────────┴──────────┴──────────┤
+│ (PublicFooter — only on marketing pages)                │
+└─────────────────────────────────────────────────────────┘
+```
+
+| Layer | z-index | Position | Backdrop |
+|---|---|---|---|
+| Navigation header | 50 | `sticky top-0` | No |
+| AppSidebar (left) | 30 | `fixed top-16 left-0` | Mobile only |
+| ComplementarySidebar (right) | 20 | `fixed top-16 right-0` | No |
+| EntityActionSheet | 50 | Sheet overlay (Radix Portal) | Yes (`bg-black/80`) |
+
+---
+
 ## 📦 DEPENDENCY VERSIONS (LOCKED)
 
 **Do not upgrade** without team approval:
@@ -1206,7 +1576,7 @@ pnpm --filter @intelliflow/ui storybook
 
 1. **Check existing patterns**: Look at similar components in
    `packages/ui/src/components/`
-2. **Read consolidation plan**: `docs/design/UI_CONSOLIDATION_PLAN.md`
+2. **Read this prompt in full**: `docs/design/UI_DEVELOPMENT_PROMPT.md`
 3. **Review style guide**: `docs/company/brand/style-guide.md`
 4. **Use sub-agents**: Spawn Explore agent to search codebase
 5. **Validate early**: Run typecheck/test frequently to catch issues
@@ -1234,7 +1604,7 @@ At the end of this session, you should have:
 
 You now have all context needed for consistent UI development. Remember:
 
-1. **Read `UI_CONSOLIDATION_PLAN.md` first**
+1. **Read `UI_DEVELOPMENT_PROMPT.md` first**
 2. **Check `Sprint_plan.csv` for your task**
 3. **Use correct colors**: CSS variables for semantic, slate for hierarchy
 4. **Follow existing patterns**

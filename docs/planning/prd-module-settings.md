@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | Feature Name | Module Settings Pages |
-| Status | Draft |
+| Status | Active |
 | Related Tasks | PG-178 |
 | Created | 2026-03-11 |
 | Last Updated | 2026-03-11 |

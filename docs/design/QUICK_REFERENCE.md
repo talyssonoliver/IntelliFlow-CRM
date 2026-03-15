@@ -324,7 +324,6 @@ At session end, you should have:
 ## 🔗 Quick Links
 
 - **Full Prompt**: `docs/design/UI_DEVELOPMENT_PROMPT.md`
-- **Consolidation Plan**: `docs/design/UI_CONSOLIDATION_PLAN.md`
 - **Style Guide**: `docs/company/brand/style-guide.md`
 - **Page Registry**: `docs/design/page-registry.md`
 - **Sitemap**: `docs/design/sitemap.md`

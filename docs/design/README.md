@@ -12,24 +12,39 @@ docs/design/
 ├── README.md              # This file
 ├── sitemap.md             # Full application sitemap (~90 pages)
 ├── page-registry.md       # Central registry of all UI pages with KPIs, paths, ownership
-└── mockups/
-    ├── contact-360-view.png    # Contact 360 page design (IFC-090)
-    ├── contact-360-view.html   # Interactive prototype
-    ├── contact-list.png        # Contact list view
-    ├── contact-list.html       # Interactive prototype
-    ├── dashboard-overview.png  # Dashboard with pipeline (IFC-091)
-    ├── dashboard-overview.html # Interactive prototype
-    ├── deal-forecast.png       # Deal forecasting dashboard
-    ├── deal-forecast.html      # Interactive prototype
-    ├── deals-detail.png        # Deal detail page
-    ├── deals-detail.html       # Interactive prototype
-    ├── deals-kanban.png        # Deals Kanban board view
-    ├── deals-kanban.html       # Interactive prototype
-    ├── lead-new.png            # New lead creation form
-    ├── lead_list.png           # Lead list view
-    ├── lead-list.html          # Interactive prototype
-    └── tickets-sla.png         # Tickets with SLA monitoring
-    └── tickets-sla.html        # Interactive prototype
+└── mockups/               # 32 unique mockups (PNG + HTML prototypes)
+    ├── account-list.*           # Account list view
+    ├── ai-review-queue.*        # AI agent review/approval queue
+    ├── billing-portal.*         # Billing & subscription management
+    ├── calendar-detail.*        # Calendar event detail
+    ├── case_list.*              # Case list view
+    ├── case-detail.*            # Case detail page
+    ├── case-new.*               # New case creation form
+    ├── compliance-dashboard-mockup.html  # Compliance dashboard
+    ├── contact-360-view.*       # Contact 360 page (IFC-090)
+    ├── contact-list.*           # Contact list view (IFC-092)
+    ├── create-new-contact.*     # New contact creation form
+    ├── create-new-lead.*        # New lead creation form
+    ├── create-new-record.*      # Generic new record creation
+    ├── customize-dashboard.*    # Dashboard customization view
+    ├── dashboard-overview.*     # Dashboard with pipeline (IFC-091)
+    ├── deal-forecast.*          # Deal forecasting dashboard (IFC-093)
+    ├── deals-detail.*           # Deal detail page (IFC-094)
+    ├── deals-kanban.*           # Deals Kanban board view (IFC-095)
+    ├── edit-pinned-home-authenticated.*  # Home page pin editing
+    ├── email-compose.*          # Email composition view
+    ├── home-authenticated.html  # Authenticated home page
+    ├── lead_list.png            # Lead list view (IFC-097)
+    ├── lead-360-view.*          # Lead 360 detail page
+    ├── lead-list.html           # Lead list interactive prototype
+    ├── lead-new.png             # New lead form (IFC-096)
+    ├── lead-settings.*          # Lead module settings
+    ├── notification-page.html   # Notification center
+    ├── notification-settings.html  # Notification settings
+    ├── right-side-home-authenticated.*  # Home page right sidebar
+    ├── sentiment-analysis.*     # Sentiment analysis dashboard
+    ├── ticket-datail.*          # Ticket detail page
+    └── tickets-sla.*            # Tickets with SLA monitoring (IFC-098)
 ```
 
 ## Page Registry
@@ -76,17 +91,39 @@ Pipeline Kanban). Root cause analysis revealed:
 
 ## Design Mockup Mapping
 
-| Mockup                   | Tasks            | Description                                                    |
-| ------------------------ | ---------------- | -------------------------------------------------------------- |
-| `contact-360-view.png`   | IFC-090          | Contact detail page with tabs, AI insights, tasks              |
-| `contact-list.png`       | IFC-092          | Contact list view with search, filters, and bulk actions       |
-| `dashboard-overview.png` | IFC-091, IFC-096 | Dashboard with pipeline stages, charts                         |
-| `deal-forecast.png`      | IFC-093          | Deal forecasting dashboard with predictive analytics           |
-| `deals-detail.png`       | IFC-094          | Individual deal detail page with stages, activities, and notes |
-| `deals-kanban.png`       | IFC-095          | Deals displayed in Kanban board format by pipeline stages      |
-| `lead-new.png`           | IFC-096          | New lead creation form with qualification fields               |
-| `lead_list.png`          | IFC-097          | Lead list view with conversion tracking and scoring            |
-| `tickets-sla.png`        | IFC-098          | Support tickets with SLA monitoring and escalation alerts      |
+| Mockup | Tasks | Description |
+| --- | --- | --- |
+| `account-list` | IFC-100 | Account list view with search and filters |
+| `ai-review-queue` | PG-148 | AI agent review/approval queue |
+| `billing-portal` | PG-045 | Billing portal with subscription management |
+| `calendar-detail` | IFC-082 | Calendar event detail page |
+| `case_list` | IFC-133 | Case list view with search and filters |
+| `case-detail` | IFC-134 | Case detail page |
+| `case-new` | IFC-134 | New case creation form |
+| `compliance-dashboard-mockup` | GOV-001 | Compliance/governance dashboard |
+| `contact-360-view` | IFC-090 | Contact detail page with tabs, AI insights, tasks |
+| `contact-list` | IFC-092 | Contact list view with search, filters, and bulk actions |
+| `create-new-contact` | IFC-092 | New contact creation form |
+| `create-new-lead` | IFC-096 | New lead creation form (alternate design) |
+| `create-new-record` | — | Generic new record creation pattern |
+| `customize-dashboard` | IFC-091 | Dashboard customization/widget editor |
+| `dashboard-overview` | IFC-091 | Dashboard with pipeline stages, charts |
+| `deal-forecast` | IFC-093 | Deal forecasting dashboard with predictive analytics |
+| `deals-detail` | IFC-094 | Individual deal detail page with stages, activities, and notes |
+| `deals-kanban` | IFC-095 | Deals displayed in Kanban board format by pipeline stages |
+| `edit-pinned-home-authenticated` | PG-025 | Home page pinned items editor |
+| `email-compose` | IFC-079 | Email composition view |
+| `home-authenticated` | PG-025 | Authenticated home/dashboard page |
+| `lead-360-view` | IFC-097 | Lead 360 detail page with scoring and conversion data |
+| `lead_list` / `lead-list` | IFC-097 | Lead list view with conversion tracking and scoring |
+| `lead-new` | IFC-096 | New lead creation form with qualification fields |
+| `lead-settings` | PG-178 | Lead module settings page |
+| `notification-page` | IFC-044 | Notification center / inbox |
+| `notification-settings` | PG-174 | Notification settings and channel management |
+| `right-side-home-authenticated` | PG-025 | Home page right sidebar (upcoming events, quick actions) |
+| `sentiment-analysis` | IFC-116 | Sentiment analysis dashboard |
+| `ticket-datail` | IFC-098 | Ticket detail page (note: filename typo "datail") |
+| `tickets-sla` | IFC-098 | Support tickets with SLA monitoring and escalation alerts |
 
 ## UI Components Required (from designs)
 

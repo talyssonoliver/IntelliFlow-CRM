@@ -105,3 +105,4 @@ inbox.
 - IFC-157 (Notification Service MVP): **Completed**
 - IFC-183 (Notifications tRPC Router): **Completed**
 - PG-130 (Notifications Inbox Page): **In Progress** (Specifying)
+- PG-174 (Notification Configuration Pages — Channels & Quiet Hours): **In Progress**

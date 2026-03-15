@@ -97,17 +97,37 @@ Logo Code**:
 3. **Panel**: Container component with optional header/footer
 4. **Spacer**: Fixed-height vertical spacing component
 
-### Navigation (5 components)
+### Navigation (9 components)
 
-1. **Header**: Application (`AppHeader`) and marketing (`PublicHeader`) variants
-2. **Footer**: Application and marketing footer variants
-3. **AppSidebar**: Unified collapsible sidebar with expand-on-hover (MANDATORY
-   for all modules)
+1. **Navigation (header)**: Authenticated header bar with Logo, MainNav,
+   SearchBar, Notifications, UserMenu, MobileNav. Auto-hides on public routes.
+   Renders module nav dynamically via `useEnabledModules()`.
+   - Location: `apps/web/src/components/navigation.tsx`
+   - Sub-components: `apps/web/src/components/header/`
+2. **PublicHeader**: Marketing/auth page header with Features, Pricing, About,
+   Contact links + Sign In / Start Free Trial CTAs. Sticky with backdrop blur.
+   - Location: `apps/web/src/components/public/PublicHeader.tsx`
+3. **PublicFooter**: Marketing footer with 5-column grid (Brand, Product,
+   Company, Resources, Legal), social links, copyright bar. Hidden on auth pages.
+   - Location: `apps/web/src/components/public/PublicFooter.tsx`
+4. **AppSidebar**: Unified collapsible left sidebar with expand-on-hover
+   (MANDATORY for all modules). `56px` collapsed, `240px` expanded.
    - Uses `SidebarProvider` for state management
    - Uses `SidebarConfig` for module-specific navigation
    - Location: `apps/web/src/components/sidebar/`
-4. **Breadcrumb**: Navigation trail (basic and with icons)
-5. **Pagination**: Page navigation (basic and with info)
+5. **ComplementarySidebar**: Fixed right-side detail panel (20-30% width) that
+   slides in without shifting main content. For two-column layouts in Settings,
+   AI & Agents, etc. 200ms slide, 100ms content crossfade.
+   - Location: `apps/web/src/components/shared/complementary-sidebar.tsx`
+   - Hook: `apps/web/src/hooks/useComplementarySidebar.ts`
+6. **EntityActionSheet**: Right-side Sheet overlay for entity row actions
+   (Pin, Share, Export + custom actions). Modal with dark backdrop.
+   - Location: `apps/web/src/components/shared/entity-action-sheet.tsx`
+7. **Breadcrumb**: Navigation trail (basic and with icons)
+8. **Pagination**: Page navigation (basic and with info)
+9. **SidebarPortal**: Dynamic sidebar injection for modules where different
+   pages need different sidebar configs (Cases, Calendar, Tickets).
+   - Location: `apps/web/src/components/sidebar/SidebarPortalContext.tsx`
 
 **Sidebar Configuration Pattern**:
 
@@ -115,11 +135,14 @@ Logo Code**:
 // All sidebar configs located in: apps/web/src/components/sidebar/configs/
 import { leadsSidebarConfig } from '@/components/sidebar';
 
-// Available configs:
-// leadsSidebarConfig, contactsSidebarConfig, documentsSidebarConfig,
-// dealsSidebarConfig, ticketsSidebarConfig, analyticsSidebarConfig,
-// agentApprovalsSidebarConfig, notificationsSidebarConfig,
-// governanceSidebarConfig, settingsSidebarConfig
+// Available configs (22 modules):
+// accountsSidebarConfig, agentApprovalsSidebarConfig, analyticsSidebarConfig,
+// appointmentsSidebarConfig, billingSidebarConfig, casesSidebarConfig,
+// contactsSidebarConfig, dealsSidebarConfig, developerSidebarConfig,
+// documentsSidebarConfig, emailSidebarConfig, governanceSidebarConfig,
+// helpCenterSidebarConfig, insightsSidebarConfig, leadsSidebarConfig,
+// notificationsSidebarConfig, settingsSidebarConfig, supportTicketsSidebarConfig,
+// tasksSidebarConfig, ticketsSidebarConfig, ticketSettingsSidebarConfig
 ```
 
 ### Forms (12 components)
@@ -136,6 +159,17 @@ import { leadsSidebarConfig } from '@/components/sidebar';
 10. **Search**: Search input with icon
 11. **Date Picker**: (Reference existing)
 12. **Form Validation**: Inline error states
+
+### Page Structure (3 components)
+
+1. **PageHeader**: MANDATORY for all list/collection pages. Title + breadcrumbs
+   + description + action buttons. Location: `apps/web/src/components/shared/page-header.tsx`
+2. **EntityHeader**: For detail pages (Contact/[id], Deal/[id], etc.). Title +
+   ID badge + status/priority badges + actions. Location:
+   `apps/web/src/components/shared/entity-header.tsx`
+3. **ModuleSettingsLayout**: Two-column tabbed settings layout with sticky
+   save/reset sidebar. Supports optional `ComplementarySidebar`. Location:
+   `apps/web/src/components/settings/ModuleSettingsLayout.tsx`
 
 ### Display (12 components)
 
@@ -361,7 +395,6 @@ When implementing UI from this design system:
 
 ## Related Documents
 
-- `docs/design/UI_DEVELOPMENT_PROMPT.md`: UI development session guide
-- `docs/design/UI_CONSOLIDATION_PLAN.md`: Component consolidation strategy
+- `docs/design/UI_DEVELOPMENT_PROMPT.md`: UI development session guide (primary reference)
 - `docs/design/sitemap.md`: Page structure and routes
 - `Sprint_plan.csv`: Task breakdown and implementation order

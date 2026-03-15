@@ -135,7 +135,7 @@ Dependency Chain:
 
 ---
 
-## Contact Entity (GAPS IDENTIFIED)
+## Contact Entity (GAPS IDENTIFIED — Security Hardened IFC-252)
 
 ```
                                     ┌──────────────────┐
@@ -176,6 +176,10 @@ Dependency Chain:
                                  │  Contact Pages   │
                                  │      ⬜ NEW      │
                                  └──────────────────┘
+
+Security Hardening:
+  IFC-252: Tenant isolation fixes (search, logActivity, bulkEmail, bulkExport, stats, getById, getByEmail)
+           Applied createTenantWhereClause + prismaWithTenant across 5 vulnerability areas (R-02..R-06)
 
 Dependency Chain:
   IFC-102 (Domain) ──┬──► contact.ts (Validators) ──► IFC-108 (Services) ──► IFC-107 (Adapters) ──► IFC-184 (API) ⬜ ──► PG-133 (UI) ⬜
@@ -230,6 +234,12 @@ Dependency Chain:
   IFC-103 (Domain) ──┬──► account.ts (Validators) ──► IFC-108 (Services) ──► IFC-107 (Adapters) ──► IFC-185 (API) ✅ ──► PG-134 (UI) ✅
                      │
                      └──► IFC-017 (Database) ────────────────────────────────────────────────────────────────────────────┘
+
+IFC-267 (Account Detail Action Buttons) — wiring added in PG-134 (AccountDetail):
+  AccountDetail ──► OpportunityCreateSheet ──► api.opportunity.create (IFC-185)
+  AccountDetail ──► ContactAddSheet ──► api.contact.create (IFC-008)
+  AccountDetail ──► AccountContactsList.onAddContact (callback prop)
+  AccountDetail ──► AccountOpportunitiesList.onCreateOpportunity (callback prop)
 ```
 
 ---
@@ -897,7 +907,7 @@ Dependency Chain:
 
 # SECURITY & PLATFORM DOMAIN
 
-## Notifications (ROUTER MISSING - BLOCKING)
+## Notifications (ROUTER COMPLETE)
 
 ```
                                     ┌──────────────────┐
@@ -921,24 +931,28 @@ Dependency Chain:
                                  ┌──────────────────┐
                                  │    IFC-183       │
                                  │notifications.router│
-                                 │      ⬜ BLOCKING │
+                                 │      ✅          │
                                  └────────┬─────────┘
                                           │
-                         ┌────────────────┴────────────────┐
-                         │                                 │
-                         ▼                                 ▼
-              ┌──────────────────┐              ┌──────────────────┐
-              │    PG-116        │              │    PG-130        │
-              │  Prefs UI        │              │  Inbox UI        │
-              │      ⬜ BLOCKED  │              │      ✅          │
-              └──────────────────┘              └──────────────────┘
+                         ┌────────────────┼────────────────┐
+                         │                │                 │
+                         ▼                ▼                 ▼
+              ┌──────────────────┐  ┌──────────────┐  ┌──────────────────┐
+              │    PG-116        │  │    PG-130    │  │    PG-174        │
+              │  Prefs UI        │  │  Inbox UI    │  │  Channels &      │
+              │      ⬜ BLOCKED  │  │      ✅      │  │  Quiet Hours ⏳  │
+              └──────────────────┘  └──────────────┘  └──────────────────┘
+                                                        /notifications/channels
+                                                        /notifications/quiet-hours
 
 Dependency Chain:
   IFC-157 (Service) ✅ ──┬──► IFC-170 (SMS) ✅ ──► IFC-171 (Webhook) ✅ ──► IFC-183 (Router) ✅ ──┬──► PG-116 (Prefs) ⬜
                          │                                                                       │
-                         └──► notifications.ts (Val) ✅ ─────────────────────────────────────────┴──► PG-130 (Inbox) ✅
+                         └──► notifications.ts (Val) ✅ ─────────────────────────────────────────┼──► PG-130 (Inbox) ✅
+                                                                                                 │
+                                                                                                 └──► PG-174 (Channels & Quiet Hours) ⏳
 
-⚠️ IFC-183 complete. PG-116 (Notification Prefs) still pending.
+ℹ️ IFC-183 complete. PG-116 (Notification Prefs) still pending. PG-174 (Channels & Quiet Hours) in progress.
 
 Runtime Wiring (IFC-222):
   NotificationsWorker.deliverSMS() ──► SMSChannel.deliver() ──► Twilio REST API
@@ -1954,7 +1968,7 @@ Appointment:   IFC-137 ──► validators ──► IFC-138 ──► appointm
 Document:      IFC-152 ──► IFC-153 ──► IFC-154 ──► documents.router ✅ ──► PG-140 ✅
 Email:         IFC-144 ──► IFC-173 ──► inbound.router ✅ ──► PG-141 ✅
 Sentiment:     IFC-039 ──► timeline.router ✅ ──► PG-142 ✅
-Churn:         IFC-095 ──► intelligence.router ✅ ──► PG-143 ⬜
+Churn:         IFC-095 ──► IFC-220 (Contact AI null-state UX) ✅ ──► intelligence.router ✅ ──► PG-143 ⬜
 RAG:           IFC-039 ──► IFC-155 ✅ ──► IFC-156 ✅ ──► PG-144 ✅
 AI Settings:   IFC-086 ✅ ──► chain-version.router ✅ ──► PG-128 ⬜
 Multi-Tenancy: IFC-098 ✅ ──► IFC-127 ✅ ──► Per-Tenant Keys ✅ ──► PG-106/107 ⬜
@@ -1965,7 +1979,7 @@ AI Agents:     IFC-021 ✅ ──► IFC-139 ✅ ──► IFC-149 ✅ ──►
 ## Chains Missing Router (BLOCKING) - 2 Total
 
 ```
-Notifications: IFC-157 ✅ ──► IFC-170 ✅ ──► IFC-171 ✅ ──► IFC-183 ✅ ──► PG-130 ✅
+Notifications: IFC-157 ✅ ──► IFC-170 ✅ ──► IFC-171 ✅ ──► IFC-183 ✅ ──► PG-130 ✅ / PG-174 (Channels & Quiet Hours) ⏳
 Analytics:     ANALYTICS-001 ✅ ──► IFC-200 ✅ ──► IFC-190 ✅ ──► IFC-037 ⬜ ──► IFC-038 (UI) ⬜
 ```
 
@@ -2159,10 +2173,29 @@ IFC-137 (NotificationService MVP)
   └── IFC-157 (MockNotificationServiceAdapter) ✅
         └── IFC-223 (Email Outbound Adapter — RealNotificationServiceAdapter) ✅
               Wire SendGridProvider to container.ts via env-based selection
+        └── IFC-183 (Notifications tRPC Router) ✅
+              └── PG-174 (Notification Configuration Pages) ⏳
+                    Pages: /notifications/channels, /notifications/quiet-hours
+                    Resolves ghost links G-09 and G-10
 ```
+
+## Lead Settings Dependency Chain
+
+### Lead Settings (PG-178)
+
+```
+LeadStageConfig (Prisma) → lead-settings validators → lead-settings.router → /settings/leads page
+LeadScoringRule (Prisma) → lead-settings validators → lead-settings.router → /settings/leads page
+LeadCustomField (Prisma) → lead-settings validators → lead-settings.router → /settings/leads page
+LeadAutomationSetting (Prisma) → lead-settings validators → lead-settings.router → /settings/leads page
+ModuleSettingsLayout → /settings/leads page (reusable across all module settings)
+```
+
+---
 
 ## Critical Blockers
 
-1. **IFC-183 (Notifications Router)** - Blocking PG-116 and PG-130
+1. ~~**IFC-183 (Notifications Router)** - Blocking PG-116 and PG-130~~ ✅ RESOLVED
+   — Router complete. PG-130 (Inbox) done. PG-174 (Channels & Quiet Hours) in progress. PG-116 (Prefs) still pending.
 2. ~~**IFC-190 (Analytics Router)** - Blocking Analytics Dashboard~~ ✅ RESOLVED
    — Router complete, IFC-037 (Design) → IFC-038 (UI) next

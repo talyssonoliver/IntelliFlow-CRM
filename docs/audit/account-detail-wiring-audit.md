@@ -15,29 +15,29 @@ procedures **Domain**: `packages/domain/src/crm/account/Account.ts` (~299 lines)
 | Category            | Wired  | Partially Wired | Not Wired |
 | ------------------- | ------ | --------------- | --------- |
 | Core Account Data   | 12     | 1               | 0         |
-| Contacts Tab        | 2      | 1               | 2         |
-| Opportunities Tab   | 2      | 0               | 2         |
+| Contacts Tab        | 4      | 1               | 0         |
+| Opportunities Tab   | 4      | 0               | 0         |
 | Activity Tab        | 0      | 0               | 1         |
 | Pipeline Tab        | 1      | 0               | 0         |
 | Hierarchy Tab       | 3      | 0               | 0         |
-| Action Buttons      | 2      | 2               | 4         |
+| Action Buttons      | 8      | 2               | 0         |
 | Owner Management    | 0      | 1               | 1         |
 | Create / Edit Forms | 0      | 0               | 2         |
-| **Total**           | **22** | **5**           | **12**    |
+| **Total**           | **28** | **5**           | **6**     |
 
 ### Comprehensive Flow Analysis
 
 | Category             | CRITICAL | HIGH   | MEDIUM | LOW   | Test Gaps |
 | -------------------- | -------- | ------ | ------ | ----- | --------- |
-| Frontend UX          | 6        | 5      | 2      | 4     | —         |
+| Frontend UX          | 0        | 5      | 2      | 4     | —         |
 | Backend Security     | 1        | 3      | 3      | 2     | —         |
 | Backend Logic        | 0        | 2      | 4      | 3     | —         |
 | Integration / Events | 0        | 2      | 1      | 0     | —         |
 | Test Coverage        | —        | —      | —      | —     | 5         |
-| **Total**            | **7**    | **12** | **10** | **9** | **5**     |
+| **Total**            | **1**    | **12** | **10** | **9** | **4**     |
 
-**Grand total: 43 findings** (7 CRITICAL, 12 HIGH, 10 MEDIUM, 9 LOW, 5 test
-gaps)
+**Grand total: 36 findings** (1 CRITICAL, 12 HIGH, 10 MEDIUM, 9 LOW, 4 test
+gaps) — 7 findings resolved by IFC-267
 
 Notable positive: Account domain is significantly better wired than Lead or
 Contact — all 6 tabs use real API queries, auth guards are properly implemented,
@@ -110,29 +110,29 @@ AccountService has no updateOwner method.
 | Edit                   | Wired               | —          | Navigates to edit route (but edit form doesn't exist — see §10)                                               |
 | Merge Account          | **Partially Wired** | F-03       | Toast stub: `toast({ title: 'Merge initiated', description: 'This feature will be available with IFC-044' })` |
 | Archive                | **Partially Wired** | F-04       | Toast stub referencing IFC-044, same pattern as merge                                                         |
-| Create Deal (overview) | **Not Wired**       | F-05       | `<Button>` at line 229-232 with NO `onClick` handler                                                          |
-| Add Contact (overview) | **Not Wired**       | F-06       | `<Button>` at line 233-236 with NO `onClick` handler                                                          |
+| Create Deal (overview) | Wired               | F-05       | Opens `OpportunityCreateSheet` with accountId pre-filled (IFC-267)                                             |
+| Add Contact (overview) | Wired               | F-06       | Opens `ContactAddSheet` with accountId pre-filled (IFC-267)                                                    |
 
-### Finding F-05 (CRITICAL) — "Create Deal" Button No-Op
-
-```
-AccountDetail.tsx line 229-232:
-<Button variant="outline" size="sm">
-  <Plus className="h-3 w-3 mr-1" />
-  Create Deal
-</Button>
-// No onClick, no navigation, no sheet — completely non-functional
-```
-
-### Finding F-06 (CRITICAL) — "Add Contact" Button No-Op (Overview)
+### Finding F-05 ~~(CRITICAL)~~ RESOLVED — "Create Deal" Button Wired
 
 ```
-AccountDetail.tsx line 233-236:
-<Button variant="outline" size="sm">
-  <UserPlus className="h-3 w-3 mr-1" />
-  Add Contact
-</Button>
-// No onClick — duplicate of same issue in AccountContactsList
+RESOLVED by IFC-267 (2026-03-12):
+AccountDetail.tsx: onClick={() => setCreateDealOpen(true)}
+Opens OpportunityCreateSheet with accountId pre-filled.
+Form creates opportunity via api.opportunity.create mutation.
+Validates name, value (moneySchema), stage. Invalidates cache on success.
+19 tests in OpportunityCreateSheet.test.tsx, 100% statement coverage.
+```
+
+### Finding F-06 ~~(CRITICAL)~~ RESOLVED — "Add Contact" Button Wired (Overview)
+
+```
+RESOLVED by IFC-267 (2026-03-12):
+AccountDetail.tsx: onClick={() => setAddContactOpen(true)}
+Opens ContactAddSheet with accountId pre-filled.
+Form creates contact via api.contact.create mutation.
+Validates firstName, lastName, email, phone. Invalidates cache on success.
+17 tests in ContactAddSheet.test.tsx, 100% statement coverage.
 ```
 
 ---
@@ -145,30 +145,27 @@ API: `account.getContacts` returns contacts list — real data.
 | ---------------------------------- | ------------------- | ---------- | --------------------------------------------------------------------------------- |
 | Contact list                       | Wired               | —          | Real API data via `api.account.getContacts.useQuery` (line 26-31)                 |
 | Contact search                     | Wired               | —          | Client-side filter working                                                        |
-| "Add Contact" button (header)      | **Not Wired**       | F-07       | `AccountContactsList.tsx` line 61-64: NO `onClick` handler                        |
-| "Add Contact" button (empty state) | **Not Wired**       | F-08       | `AccountContactsList.tsx` line 85-88: NO `onClick` handler                        |
+| "Add Contact" button (header)      | Wired               | F-07       | Calls `onAddContact` callback → opens ContactAddSheet (IFC-267)                   |
+| "Add Contact" button (empty state) | Wired               | F-08       | Calls `onAddContact` callback → opens ContactAddSheet (IFC-267)                   |
 | Status filter options              | **Partially Wired** | F-09       | Hardcoded inline `<option>` values: ACTIVE, INACTIVE, LEAD — not from domain enum |
 
-### Finding F-07 (CRITICAL) — "Add Contact" Header Button No-Op
+### Finding F-07 ~~(CRITICAL)~~ RESOLVED — "Add Contact" Header Button Wired
 
 ```
-AccountContactsList.tsx line 61-64:
-<Button variant="outline" size="sm">
-  <Plus className="h-4 w-4 mr-1" />
-  Add Contact
-</Button>
-// No onClick — should open contact association dialog or navigate to create
+RESOLVED by IFC-267 (2026-03-12):
+AccountContactsList.tsx: onClick={onAddContact} callback prop
+AccountDetail.tsx passes onAddContact={() => setAddContactOpen(true)}
+Opens ContactAddSheet with accountId pre-filled.
+2 tests in AccountContactsList.test.tsx verify callback invocation.
 ```
 
-### Finding F-08 (CRITICAL) — "Add Contact" Empty State Button No-Op
+### Finding F-08 ~~(CRITICAL)~~ RESOLVED — "Add Contact" Empty State Button Wired
 
 ```
-AccountContactsList.tsx line 85-88:
-<Button variant="outline" size="sm">
-  <Plus className="h-4 w-4 mr-1" />
-  Add Contact
-</Button>
-// Same as F-07 but in the empty state — user sees CTA but can't act
+RESOLVED by IFC-267 (2026-03-12):
+AccountContactsList.tsx: onClick={onAddContact} on empty-state button
+Same callback pattern as F-07 — both buttons share the same prop.
+2 tests verify empty-state button calls onAddContact.
 ```
 
 ### Finding F-09 (MEDIUM) — Hardcoded Contact Status Filter
@@ -191,30 +188,27 @@ API: `account.getOpportunities` returns opportunities list — real data.
 | ----------------------------------------- | ------------- | ---------- | ---------------------------------------------------------------------- |
 | Opportunity list                          | Wired         | —          | Real API data via `api.account.getOpportunities.useQuery` (line 27-32) |
 | Opportunity search                        | Wired         | —          | Client-side filter working                                             |
-| "Create Opportunity" button (header)      | **Not Wired** | F-10       | `AccountOpportunitiesList.tsx` line 68-71: NO `onClick` handler        |
-| "Create Opportunity" button (empty state) | **Not Wired** | F-11       | `AccountOpportunitiesList.tsx` line 116-119: NO `onClick` handler      |
+| "Create Opportunity" button (header)      | Wired         | F-10       | Calls `onCreateOpportunity` callback → opens OpportunityCreateSheet (IFC-267) |
+| "Create Opportunity" button (empty state) | Wired         | F-11       | Calls `onCreateOpportunity` callback → opens OpportunityCreateSheet (IFC-267) |
 | Stage filter options                      | **Not Wired** | F-12       | Hardcoded 6 stage values as inline strings, not from domain enum       |
 
-### Finding F-10 (CRITICAL) — "Create Opportunity" Header Button No-Op
+### Finding F-10 ~~(CRITICAL)~~ RESOLVED — "Create Opportunity" Header Button Wired
 
 ```
-AccountOpportunitiesList.tsx line 68-71:
-<Button variant="outline" size="sm">
-  <Plus className="h-4 w-4 mr-1" />
-  Create Opportunity
-</Button>
-// No onClick handler
+RESOLVED by IFC-267 (2026-03-12):
+AccountOpportunitiesList.tsx: onClick={onCreateOpportunity} callback prop
+AccountDetail.tsx passes onCreateOpportunity={() => setCreateDealOpen(true)}
+Opens OpportunityCreateSheet with accountId pre-filled.
+2 tests in AccountOpportunitiesList.test.tsx verify callback invocation.
 ```
 
-### Finding F-11 (CRITICAL) — "Create Opportunity" Empty State Button No-Op
+### Finding F-11 ~~(CRITICAL)~~ RESOLVED — "Create Opportunity" Empty State Button Wired
 
 ```
-AccountOpportunitiesList.tsx line 116-119:
-<Button variant="outline" size="sm">
-  <Plus className="h-4 w-4 mr-1" />
-  Create Opportunity
-</Button>
-// No onClick — user has no way to create opportunity from account context
+RESOLVED by IFC-267 (2026-03-12):
+AccountOpportunitiesList.tsx: onClick={onCreateOpportunity} on empty-state button
+Same callback pattern as F-10 — both buttons share the same prop.
+2 tests verify empty-state button calls onCreateOpportunity.
 ```
 
 ### Finding F-12 (MEDIUM) — Hardcoded Stage Filter
@@ -502,7 +496,7 @@ Several account findings share patterns with Lead/Contact audits:
 
 | Pattern              | Account                       | Lead                          | Contact                       |
 | -------------------- | ----------------------------- | ----------------------------- | ----------------------------- |
-| No-op action buttons | 6 buttons (F-05 to F-11)      | 8+ buttons                    | 6 buttons                     |
+| No-op action buttons | ~~6 buttons~~ 0 (F-05–F-11 resolved by IFC-267) | 8+ buttons           | 6 buttons                     |
 | Owner display wrong  | Static text (F-01)            | Hardcoded "Account Executive" | Hardcoded "Account Executive" |
 | Missing delete event | No AccountDeletedEvent (D-01) | —                             | No ContactDeletedEvent        |
 | Event worker gaps    | Zero handlers (W-01, W-02)    | —                             | Zero handlers                 |
@@ -535,7 +529,7 @@ Several account findings share patterns with Lead/Contact audits:
 | Gap                       | Finding ID | Notes                                                              |
 | ------------------------- | ---------- | ------------------------------------------------------------------ |
 | No contract test          | T-01       | Accounts is the ONLY entity without a contract test file           |
-| No-op buttons untested    | T-02       | None of the 6 CRITICAL no-op buttons are tested for click behavior |
+| ~~No-op buttons untested~~| ~~T-02~~   | RESOLVED by IFC-267: All 6 buttons tested (36 tests across 5 test files) |
 | Tenant isolation untested | T-03       | Router tests don't verify tenant isolation                         |
 | No E2E tests              | T-04       | No Playwright tests for account CRUD flow                          |
 | Owner display untested    | T-05       | Tests don't verify owner name/title rendering                      |
@@ -565,7 +559,7 @@ These areas are properly wired and require no remediation:
 
 | Priority | Finding IDs                                    | Task    | Description                                                                        |
 | -------- | ---------------------------------------------- | ------- | ---------------------------------------------------------------------------------- |
-| P0       | F-05, F-06, F-07, F-08, F-10, F-11             | IFC-267 | Wire 6 no-op action buttons (Create Deal, Add Contact x3, Create Opportunity x2)   |
+| ~~P0~~   | ~~F-05, F-06, F-07, F-08, F-10, F-11~~         | IFC-267 | ~~Wire 6 no-op action buttons~~ RESOLVED (2026-03-12) — OpportunityCreateSheet + ContactAddSheet |
 | P0       | B-01, B-02, B-03, B-04, B-05, B-07             | IFC-269 | Fix filterOptions tenant isolation, repository tenant filters, audit logging       |
 | P1       | F-01, F-02                                     | IFC-268 | Fix owner display and add owner assignment                                         |
 | P1       | B-08, B-09, B-10, B-11, B-12, B-13             | IFC-270 | Fix router update procedure, schema mismatch, expose domain commands               |
@@ -585,3 +579,4 @@ These areas are properly wired and require no remediation:
 | ---------- | --------------------------------------------------------------------------- |
 | 2026-03-05 | Created — 43 findings (7 CRITICAL, 12 HIGH, 10 MEDIUM, 9 LOW, 5 test gaps)  |
 | 2026-03-05 | Tasks assigned: IFC-267 to IFC-277 (11 tasks across sprints 16/18/20/22/24) |
+| 2026-03-13 | IFC-267 RESOLVED: F-05–F-11 (6 CRITICAL no-op buttons) all wired. T-02 resolved. Grand total 43→36 findings, CRITICAL 7→1 |

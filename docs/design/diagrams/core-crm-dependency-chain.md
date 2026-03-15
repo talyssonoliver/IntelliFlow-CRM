@@ -14,7 +14,7 @@ and frontend layers.
 | Entity      | Domain  | Database | Adapter | Router  | Frontend | Status   |
 | ----------- | ------- | -------- | ------- | ------- | -------- | -------- |
 | Lead        | IFC-101 | IFC-017  | IFC-107 | IFC-013 | IFC-004  | COMPLETE |
-| Contact     | IFC-102 | IFC-017  | IFC-107 | MISSING | MISSING  | ORPHAN   |
+| Contact     | IFC-102 | IFC-017  | IFC-107 | MISSING | MISSING  | ORPHAN (Security: IFC-252 tenant isolation) |
 | Account     | IFC-103 | IFC-017  | IFC-107 | MISSING | MISSING  | ORPHAN   |
 | Opportunity | IFC-104 | IFC-017  | IFC-107 | MISSING | PG-131\* | PARTIAL  |
 | Task        | IFC-105 | IFC-017  | IFC-107 | IFC-187 | MISSING  | PARTIAL  |
