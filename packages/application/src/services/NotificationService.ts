@@ -236,7 +236,7 @@ export class NotificationService {
     updates: {
       channel?: { channel: NotificationChannel; enabled: boolean };
       category?: { category: NotificationCategory; enabled: boolean };
-      quietHours?: { start: string; end: string; enabled?: boolean };
+      quietHours?: { start: string; end: string; enabled?: boolean; daysOfWeek?: number[] };
       timezone?: string;
       doNotDisturb?: boolean;
     }
@@ -255,6 +255,9 @@ export class NotificationService {
       preference.setQuietHours(updates.quietHours.start, updates.quietHours.end);
       if (updates.quietHours.enabled !== undefined) {
         preference.setQuietHoursEnabled(updates.quietHours.enabled);
+      }
+      if (updates.quietHours.daysOfWeek) {
+        preference.setQuietHoursDays(updates.quietHours.daysOfWeek);
       }
     }
 

@@ -45,3 +45,6 @@ export * from './FeedbackSurveyAnalyticsService';
 
 // Experiment Service (IFC-025)
 export * from './ExperimentService';
+
+// Calendar Webhook Service (IFC-224)
+export * from './CalendarWebhookService';

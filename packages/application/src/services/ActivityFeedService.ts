@@ -80,11 +80,16 @@ export class ActivityFeedService {
       filters as ActivityFeedFilters
     );
 
-    // Deduplicate by id (items from different sources could overlap)
+    // Deduplicate by id AND by content — different source tables can
+    // surface the same real-world event with different IDs.
     const seen = new Set<string>();
     const deduped = items.filter((item) => {
       if (seen.has(item.id)) return false;
+      // Content-based dedup: same title+description within same minute
+      const contentKey = `${item.title}|${item.description}|${Math.floor(new Date(item.timestamp).getTime() / 60000)}`;
+      if (seen.has(contentKey)) return false;
       seen.add(item.id);
+      seen.add(contentKey);
       return true;
     });
 
@@ -130,8 +135,19 @@ export class ActivityFeedService {
       cursor
     );
 
+    // Deduplicate by id and content (same pattern as unified feed)
+    const seen = new Set<string>();
+    const dedupedItems = items.filter((item) => {
+      if (seen.has(item.id)) return false;
+      const contentKey = `${item.title}|${item.description}|${Math.floor(new Date(item.timestamp).getTime() / 60000)}`;
+      if (seen.has(contentKey)) return false;
+      seen.add(item.id);
+      seen.add(contentKey);
+      return true;
+    });
+
     // Apply type filter if provided (entity feed may not filter at DB level)
-    const filtered = types?.length ? items.filter((item) => types.includes(item.type)) : items;
+    const filtered = types?.length ? dedupedItems.filter((item) => types.includes(item.type)) : dedupedItems;
 
     const hasMore = filtered.length > limit;
     const pageItems = filtered.slice(0, limit);
@@ -215,11 +231,14 @@ export class ActivityFeedService {
       filters
     );
 
-    // Deduplicate by ID (same item may appear from multiple source tables)
+    // Deduplicate by ID and content (same event from different source tables)
     const seen = new Set<string>();
     const deduped = items.filter((item) => {
       if (seen.has(item.id)) return false;
+      const contentKey = `${item.title}|${item.description}|${Math.floor(new Date(item.timestamp).getTime() / 60000)}`;
+      if (seen.has(contentKey)) return false;
       seen.add(item.id);
+      seen.add(contentKey);
       return true;
     });
 

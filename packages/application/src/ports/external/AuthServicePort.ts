@@ -6,6 +6,9 @@ import { Result, DomainError } from '@intelliflow/domain';
  * Implementation lives in adapters layer (Supabase Auth, etc.)
  */
 
+/**
+ * @knipignore Intentional public auth contract shared across application boundaries.
+ */
 export interface User {
   id: string;
   email: string;
@@ -13,6 +16,9 @@ export interface User {
   createdAt: Date;
 }
 
+/**
+ * @knipignore Intentional public auth port for adapter implementations.
+ */
 export interface AuthServicePort {
   /**
    * Get current authenticated user
