@@ -94,3 +94,6 @@ export * from './user';
 
 // Calendar Schemas (custom calendar management)
 export * from './calendar';
+
+// Lead Settings Schemas (PG-178)
+export * from './lead-settings';

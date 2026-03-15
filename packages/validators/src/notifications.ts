@@ -74,6 +74,8 @@ export const NOTIFICATION_TYPES = [
   'case_assigned',
   'case_status_changed',
   'case_closed',
+  // Contact notifications
+  'contact_stale',
   // Email notifications
   'email_received',
   'email_opened',
@@ -274,6 +276,7 @@ export const notificationPreferencesSchema = z.object({
     })
     .optional(),
   preferences: z.array(notificationPreferenceItemSchema),
+  priorityFilter: z.enum(['low', 'normal', 'high', 'urgent']).optional(),
   updatedAt: z.date(),
 });
 
@@ -308,6 +311,7 @@ export const updatePreferencesInputSchema = z.object({
       })
     )
     .optional(),
+  priorityFilter: z.enum(['low', 'normal', 'high', 'urgent']).optional(),
 });
 
 export type UpdatePreferencesInput = z.infer<typeof updatePreferencesInputSchema>;

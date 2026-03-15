@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { idSchema, paginationSchema } from './common';
 import { CASE_STATUSES, CASE_PRIORITIES, CASE_TASK_STATUSES } from '@intelliflow/domain';
+import { timezoneSchema } from './user';
 
 // Re-export common schemas used by API routers
 export { idSchema } from './common';
@@ -20,6 +21,8 @@ export const createCaseSchema = z.object({
   description: z.string().max(5000).optional(),
   priority: casePrioritySchema.default('MEDIUM'),
   deadline: z.coerce.date().optional(),
+  timezone: timezoneSchema.optional(),
+  jurisdiction: z.string().max(100).optional(),
   clientId: idSchema,
   assignedTo: idSchema.optional(),
 });
@@ -33,6 +36,8 @@ export const updateCaseSchema = z.object({
   description: z.string().max(5000).optional(),
   priority: casePrioritySchema.optional(),
   deadline: z.coerce.date().optional().nullable(),
+  timezone: timezoneSchema.optional().nullable(),
+  jurisdiction: z.string().max(100).optional().nullable(),
   assignedTo: idSchema.optional(),
 });
 
@@ -127,6 +132,8 @@ export const caseResponseSchema = z.object({
   status: caseStatusSchema,
   priority: casePrioritySchema,
   deadline: z.coerce.date().nullable(),
+  timezone: z.string().nullable(),
+  jurisdiction: z.string().nullable(),
   clientId: idSchema,
   assignedTo: idSchema,
   tasks: z.array(caseTaskResponseSchema),
