@@ -75,6 +75,7 @@ interface AppointmentProps {
   title: string;
   description?: string;
   timeSlot: TimeSlot;
+  timezone?: string;
   appointmentType: AppointmentType;
   status: AppointmentStatus;
   location?: string;
@@ -134,6 +135,10 @@ export class Appointment extends AggregateRoot<AppointmentId> {
 
   get timeSlot(): TimeSlot {
     return this.props.timeSlot;
+  }
+
+  get timezone(): string | undefined {
+    return this.props.timezone;
   }
 
   get appointmentType(): AppointmentType {

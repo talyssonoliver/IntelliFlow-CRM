@@ -5,6 +5,9 @@ import { AccountId } from './AccountId';
  * Raw account record with hierarchy data from persistence layer.
  * Used by findWithChildren to return nested account trees.
  */
+/**
+ * @knipignore Intentional public repository result contract for hierarchy queries.
+ */
 export interface AccountHierarchyRecord {
   id: string;
   name: string;
@@ -20,6 +23,9 @@ export interface AccountHierarchyRecord {
  * Account Repository Interface
  * Defines the contract for account persistence
  * Implementation lives in adapters layer
+ */
+/**
+ * @knipignore Intentional public repository contract for adapter implementations.
  */
 export interface AccountRepository {
   /**
@@ -83,6 +89,9 @@ export interface AccountRepository {
  * Account Query Service Interface
  * For complex read-only queries that don't need domain logic
  */
+/**
+ * @knipignore Intentional public query contract shared across application boundaries.
+ */
 export interface AccountQueryService {
   /**
    * Search accounts with filters
@@ -101,6 +110,9 @@ export interface AccountQueryService {
 }
 
 // Query Types
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface AccountSearchParams {
   query?: string;
   industry?: string[];
@@ -115,6 +127,9 @@ export interface AccountSearchParams {
   sortOrder?: 'asc' | 'desc';
 }
 
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface AccountSearchResult {
   accounts: Account[];
   total: number;
@@ -123,6 +138,9 @@ export interface AccountSearchResult {
   hasMore: boolean;
 }
 
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface AccountStatistics {
   total: number;
   byIndustry: Record<string, number>;

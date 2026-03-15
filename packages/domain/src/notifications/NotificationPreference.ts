@@ -64,6 +64,7 @@ interface NotificationPreferenceProps {
   quietHoursStart: string; // HH:MM format
   quietHoursEnd: string; // HH:MM format
   quietHoursEnabled: boolean;
+  quietHoursDays: number[]; // Days of week (0=Sun, 6=Sat)
   timezone: string;
   doNotDisturb: boolean;
   createdAt: Date;
@@ -99,6 +100,10 @@ export class NotificationPreference extends Entity<string> {
     return this.props.quietHoursEnabled;
   }
 
+  get quietHoursDays(): number[] {
+    return this.props.quietHoursDays;
+  }
+
   get timezone(): string {
     return this.props.timezone;
   }
@@ -130,6 +135,7 @@ export class NotificationPreference extends Entity<string> {
       quietHoursStart: '22:00',
       quietHoursEnd: '08:00',
       quietHoursEnabled: true,
+      quietHoursDays: [0, 1, 2, 3, 4, 5, 6],
       timezone: 'UTC',
       doNotDisturb: false,
       createdAt: now,
@@ -233,6 +239,18 @@ export class NotificationPreference extends Entity<string> {
   }
 
   /**
+   * Set quiet hours active days
+   */
+  setQuietHoursDays(days: number[]): void {
+    const valid = days.every((d) => Number.isInteger(d) && d >= 0 && d <= 6);
+    if (!valid) {
+      throw new Error('Days must be integers between 0 (Sunday) and 6 (Saturday)');
+    }
+    this.props.quietHoursDays = [...new Set(days)].sort();
+    this.props.updatedAt = new Date();
+  }
+
+  /**
    * Set timezone
    */
   setTimezone(timezone: string): void {
@@ -256,6 +274,11 @@ export class NotificationPreference extends Entity<string> {
    */
   isInQuietHours(currentTime: Date = new Date()): boolean {
     if (!this.props.quietHoursEnabled) {
+      return false;
+    }
+
+    const dayOfWeek = currentTime.getDay(); // 0=Sun, 6=Sat
+    if (!this.props.quietHoursDays.includes(dayOfWeek)) {
       return false;
     }
 
@@ -329,6 +352,7 @@ export class NotificationPreference extends Entity<string> {
       quietHoursStart: this.props.quietHoursStart,
       quietHoursEnd: this.props.quietHoursEnd,
       quietHoursEnabled: this.props.quietHoursEnabled,
+      quietHoursDays: this.props.quietHoursDays,
       timezone: this.props.timezone,
       doNotDisturb: this.props.doNotDisturb,
       createdAt: this.props.createdAt.toISOString(),

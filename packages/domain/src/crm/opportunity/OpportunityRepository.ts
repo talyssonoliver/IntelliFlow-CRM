@@ -8,6 +8,9 @@ import { DateRange } from '../../shared/QueryTypes';
  * Defines the contract for opportunity persistence
  * Implementation lives in adapters layer
  */
+/**
+ * @knipignore Intentional public repository contract for adapter implementations.
+ */
 export interface OpportunityRepository {
   /**
    * Save an opportunity (create or update)
@@ -59,6 +62,9 @@ export interface OpportunityRepository {
  * Opportunity Query Service Interface
  * For complex read-only queries that don't need domain logic
  */
+/**
+ * @knipignore Intentional public query contract shared across application boundaries.
+ */
 export interface OpportunityQueryService {
   /**
    * Search opportunities with filters
@@ -82,6 +88,9 @@ export interface OpportunityQueryService {
 }
 
 // Query Types
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface OpportunitySearchParams {
   query?: string;
   stage?: OpportunityStage[];
@@ -99,6 +108,9 @@ export interface OpportunitySearchParams {
   sortOrder?: 'asc' | 'desc';
 }
 
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface OpportunitySearchResult {
   opportunities: Opportunity[];
   total: number;
@@ -107,6 +119,9 @@ export interface OpportunitySearchResult {
   hasMore: boolean;
 }
 
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface OpportunityStatistics {
   total: number;
   byStage: Record<string, number>;
@@ -119,6 +134,9 @@ export interface OpportunityStatistics {
   activeCount: number;
 }
 
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface PipelineMetrics {
   stages: Record<OpportunityStage, StageMetrics>;
   totalPipelineValue: number;
@@ -127,6 +145,9 @@ export interface PipelineMetrics {
   conversionRates: Record<string, number>;
 }
 
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface StageMetrics {
   count: number;
   totalValue: number;
@@ -134,6 +155,9 @@ export interface StageMetrics {
   averageProbability: number;
 }
 
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface WinRateAnalysis {
   totalOpportunities: number;
   wonOpportunities: number;

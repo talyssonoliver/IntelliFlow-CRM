@@ -177,6 +177,54 @@ describe('NotificationPreference', () => {
 
       expect(prefs.isInQuietHours(time)).toBe(true);
     });
+
+    it('should return false when current day is not in quietHoursDays', () => {
+      const prefs = NotificationPreference.createDefault('tenant-123', 'user-456');
+      prefs.setQuietHours('22:00', '23:59');
+      // Set only weekdays (Mon-Fri = 1-5)
+      prefs.setQuietHoursDays([1, 2, 3, 4, 5]);
+
+      // Create a time on Sunday (day 0) at 22:30
+      const sunday = new Date('2026-03-08T22:30:00'); // 2026-03-08 is a Sunday
+      expect(sunday.getDay()).toBe(0);
+      expect(prefs.isInQuietHours(sunday)).toBe(false);
+    });
+
+    it('should return true when current day is in quietHoursDays', () => {
+      const prefs = NotificationPreference.createDefault('tenant-123', 'user-456');
+      prefs.setQuietHours('22:00', '23:59');
+      prefs.setQuietHoursDays([1, 2, 3, 4, 5]);
+
+      // Create a time on Monday (day 1) at 22:30
+      const monday = new Date('2026-03-09T22:30:00'); // 2026-03-09 is a Monday
+      expect(monday.getDay()).toBe(1);
+      expect(prefs.isInQuietHours(monday)).toBe(true);
+    });
+  });
+
+  describe('setQuietHoursDays', () => {
+    it('should set specific days', () => {
+      const prefs = NotificationPreference.createDefault('tenant-123', 'user-456');
+      prefs.setQuietHoursDays([1, 3, 5]);
+      expect(prefs.quietHoursDays).toEqual([1, 3, 5]);
+    });
+
+    it('should default to all days', () => {
+      const prefs = NotificationPreference.createDefault('tenant-123', 'user-456');
+      expect(prefs.quietHoursDays).toEqual([0, 1, 2, 3, 4, 5, 6]);
+    });
+
+    it('should deduplicate and sort days', () => {
+      const prefs = NotificationPreference.createDefault('tenant-123', 'user-456');
+      prefs.setQuietHoursDays([5, 1, 3, 1, 5]);
+      expect(prefs.quietHoursDays).toEqual([1, 3, 5]);
+    });
+
+    it('should throw for invalid day values', () => {
+      const prefs = NotificationPreference.createDefault('tenant-123', 'user-456');
+      expect(() => prefs.setQuietHoursDays([7])).toThrow('Days must be integers between 0');
+      expect(() => prefs.setQuietHoursDays([-1])).toThrow('Days must be integers between 0');
+    });
   });
 
   describe('setCategoryEnabled', () => {

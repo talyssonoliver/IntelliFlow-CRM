@@ -8,6 +8,9 @@ import { DateRange } from '../../shared/QueryTypes';
  * Defines the contract for task persistence
  * Implementation lives in adapters layer
  */
+/**
+ * @knipignore Intentional public repository contract for adapter implementations.
+ */
 export interface TaskRepository {
   /**
    * Save a task (create or update)
@@ -74,6 +77,9 @@ export interface TaskRepository {
  * Task Query Service Interface
  * For complex read-only queries that don't need domain logic
  */
+/**
+ * @knipignore Intentional public query contract shared across application boundaries.
+ */
 export interface TaskQueryService {
   /**
    * Search tasks with filters
@@ -92,6 +98,9 @@ export interface TaskQueryService {
 }
 
 // Query Types
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface TaskSearchParams {
   query?: string;
   status?: TaskStatus[];
@@ -109,6 +118,9 @@ export interface TaskSearchParams {
   sortOrder?: 'asc' | 'desc';
 }
 
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface TaskSearchResult {
   tasks: Task[];
   total: number;
@@ -117,6 +129,9 @@ export interface TaskSearchResult {
   hasMore: boolean;
 }
 
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface TaskStatistics {
   total: number;
   byStatus: Record<string, number>;

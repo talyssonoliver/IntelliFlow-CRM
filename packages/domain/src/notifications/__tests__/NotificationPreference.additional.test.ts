@@ -32,6 +32,7 @@ describe('NotificationPreference - Additional Coverage', () => {
         quietHoursStart: '23:00',
         quietHoursEnd: '07:00',
         quietHoursEnabled: false,
+        quietHoursDays: [1, 2, 3, 4, 5],
         timezone: 'Europe/London',
         doNotDisturb: true,
         createdAt: now,
@@ -174,6 +175,7 @@ describe('NotificationPreference - Additional Coverage', () => {
       expect(json.quietHoursStart).toBe('22:00');
       expect(json.quietHoursEnd).toBe('08:00');
       expect(json.quietHoursEnabled).toBe(true);
+      expect(json.quietHoursDays).toEqual([0, 1, 2, 3, 4, 5, 6]);
       expect(json.doNotDisturb).toBe(false);
       expect(typeof json.createdAt).toBe('string');
       expect(typeof json.updatedAt).toBe('string');

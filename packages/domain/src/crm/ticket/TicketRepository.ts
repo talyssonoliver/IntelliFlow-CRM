@@ -10,6 +10,9 @@ import { DateRange } from '../../shared/QueryTypes';
  *
  * CRITICAL: All methods require tenantId for multi-tenant isolation
  */
+/**
+ * @knipignore Intentional public repository contract for adapter implementations.
+ */
 export interface TicketRepository {
   /**
    * Save a ticket (create or update)
@@ -86,6 +89,9 @@ export interface TicketRepository {
  * Ticket Query Service Interface
  * For complex read-only queries that don't need domain logic
  */
+/**
+ * @knipignore Intentional public query contract shared across application boundaries.
+ */
 export interface TicketQueryService {
   /**
    * Search tickets with filters
@@ -104,6 +110,9 @@ export interface TicketQueryService {
 }
 
 // Query Types
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface TicketSearchParams {
   tenantId: string;
   query?: string;
@@ -121,6 +130,9 @@ export interface TicketSearchParams {
   sortOrder?: 'asc' | 'desc';
 }
 
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface TicketSearchResult {
   tickets: Ticket[];
   total: number;
@@ -129,6 +141,9 @@ export interface TicketSearchResult {
   hasMore: boolean;
 }
 
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface TicketStatistics {
   total: number;
   byStatus: Record<TicketStatus, number>;
@@ -140,6 +155,9 @@ export interface TicketStatistics {
   averageFirstResponseTime: number; // in minutes
 }
 
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface SlaMetrics {
   totalTickets: number;
   responseSlaMet: number;

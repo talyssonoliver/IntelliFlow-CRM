@@ -7,6 +7,9 @@ import { Email } from '../lead/Email';
  * Defines the contract for contact persistence
  * Implementation lives in adapters layer
  */
+/**
+ * @knipignore Intentional public repository contract for adapter implementations.
+ */
 export interface ContactRepository {
   /**
    * Save a contact (create or update)
@@ -58,6 +61,9 @@ export interface ContactRepository {
  * Contact Query Service Interface
  * For complex read-only queries that don't need domain logic
  */
+/**
+ * @knipignore Intentional public query contract shared across application boundaries.
+ */
 export interface ContactQueryService {
   /**
    * Search contacts with filters
@@ -71,6 +77,9 @@ export interface ContactQueryService {
 }
 
 // Query Types
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface ContactSearchParams {
   query?: string;
   accountId?: string;
@@ -83,6 +92,9 @@ export interface ContactSearchParams {
   sortOrder?: 'asc' | 'desc';
 }
 
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface ContactSearchResult {
   contacts: Contact[];
   total: number;
@@ -91,6 +103,9 @@ export interface ContactSearchResult {
   hasMore: boolean;
 }
 
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface ContactStatistics {
   total: number;
   byDepartment: Record<string, number>;
