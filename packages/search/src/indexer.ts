@@ -27,6 +27,9 @@ export const IndexerConfigSchema = z.object({
 
 export type IndexerConfig = z.infer<typeof IndexerConfigSchema>;
 
+/**
+ * @knipignore Intentional public package constant exported for downstream consumers.
+ */
 export const DEFAULT_INDEXER_CONFIG: IndexerConfig = {
   batchSize: 10,
   embeddingModel: 'text-embedding-3-small',

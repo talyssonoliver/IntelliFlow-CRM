@@ -16,6 +16,9 @@ import type { ReindexProgress } from './indexer';
 // Queue Configuration
 // ============================================
 
+/**
+ * @knipignore Intentional public package constant exported for downstream consumers.
+ */
 export const REINDEX_QUEUE_NAME = 'intelliflow:document-reindex';
 
 // ============================================

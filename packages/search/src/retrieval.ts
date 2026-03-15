@@ -113,6 +113,9 @@ export interface RelevanceConfig {
   diversityPenalty: number;
 }
 
+/**
+ * @knipignore Intentional public package constant exported for downstream consumers.
+ */
 export const DEFAULT_RELEVANCE_CONFIG: RelevanceConfig = {
   fullTextWeight: 0.4,
   semanticWeight: 0.6,

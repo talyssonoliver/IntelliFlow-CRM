@@ -67,6 +67,9 @@ export {
 
 export type SearchMode = 'fulltext' | 'semantic' | 'hybrid';
 
+/**
+ * @knipignore Intentional public package constant exported for downstream consumers.
+ */
 export const SEARCH_MODES: readonly SearchMode[] = ['fulltext', 'semantic', 'hybrid'] as const;
 
 // ============================================
@@ -82,6 +85,9 @@ export type SearchSource =
   | 'documents'
   | 'notes';
 
+/**
+ * @knipignore Intentional public package constant exported for downstream consumers.
+ */
 export const SEARCH_SOURCES: readonly SearchSource[] = [
   'leads',
   'contacts',
@@ -96,6 +102,9 @@ export const SEARCH_SOURCES: readonly SearchSource[] = [
 // Performance Constants
 // ============================================
 
+/**
+ * @knipignore Intentional public package constant exported for downstream consumers.
+ */
 export const SEARCH_PERFORMANCE = {
   /** Target p95 latency for hybrid search (ms) */
   TARGET_LATENCY_P95_MS: 200,
