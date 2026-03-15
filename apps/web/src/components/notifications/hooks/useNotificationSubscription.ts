@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { handleSubscriptionAuthError } from '@/lib/trpc/subscription-auth';
 
 interface UseNotificationSubscriptionOptions {
   enabled?: boolean;
@@ -30,6 +31,9 @@ export function useNotificationSubscription({
       enabled: enabled && isAuthenticated,
       onData: handleData,
       onError: (err) => {
+        if (handleSubscriptionAuthError(err, 'useNotificationSubscription')) {
+          return;
+        }
         console.error('[useNotificationSubscription] WebSocket error:', err);
       },
     }

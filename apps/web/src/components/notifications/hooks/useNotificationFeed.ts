@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { keepPreviousData } from '@tanstack/react-query';
 import { trpc } from '@/lib/trpc';
 import { useNotificationSubscription } from './useNotificationSubscription';
@@ -47,8 +47,17 @@ export function useNotificationFeed(filters: NotificationFiltersState) {
     onData: invalidateFeed,
   });
 
-  // Flatten pages into items (let TypeScript infer the tRPC response type)
-  const items = query.data?.pages.flatMap((page) => page.notifications) ?? [];
+  // Flatten pages into deduplicated items — cursor-based pagination can
+  // produce overlapping entries when pages shift after mutations/invalidations.
+  const items = useMemo(() => {
+    const all = query.data?.pages.flatMap((page) => page.notifications) ?? [];
+    const seen = new Set<string>();
+    return all.filter((n) => {
+      if (seen.has(n.id)) return false;
+      seen.add(n.id);
+      return true;
+    });
+  }, [query.data]);
 
   return {
     items,
