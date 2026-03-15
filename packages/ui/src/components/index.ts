@@ -41,6 +41,7 @@ export * from './sheet';
 // Navigation
 export * from './dropdown-menu';
 export * from './popover';
+export * from './hover-card';
 
 // Form Components
 export * from './form';

@@ -709,9 +709,3 @@ function CookieCategorySection({
     </div>
   );
 }
-
-// ============================================
-// Default Export
-// ============================================
-
-export default CookieConsentBanner;

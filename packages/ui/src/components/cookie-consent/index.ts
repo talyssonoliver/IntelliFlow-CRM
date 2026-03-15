@@ -12,5 +12,3 @@ export {
   type CookieInfo,
   type UseCookieConsentReturn,
 } from './cookie-consent';
-
-export { default } from './cookie-consent';
