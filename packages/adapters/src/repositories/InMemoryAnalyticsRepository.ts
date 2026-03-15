@@ -25,7 +25,7 @@ export class InMemoryAnalyticsRepository implements AnalyticsRepository {
    */
   async getDealsWonByMonth(tenantId: string, months: number): Promise<OpportunityGroupByResult[]> {
     const cutoff = new Date();
-    cutoff.setMonth(cutoff.getMonth() - months);
+    cutoff.setUTCMonth(cutoff.getUTCMonth() - months);
 
     // Filter closed-won opportunities in date range
     const filtered = this.opportunities.filter(
@@ -172,7 +172,7 @@ export class InMemoryAnalyticsRepository implements AnalyticsRepository {
    */
   async countLeadsThisMonth(tenantId: string): Promise<number> {
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 
     return this.leads.filter((lead) => lead.tenantId === tenantId && lead.createdAt >= startOfMonth)
       .length;

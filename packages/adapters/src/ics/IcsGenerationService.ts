@@ -358,7 +358,7 @@ export class IcsGenerationService implements IcsGenerationServicePort {
       return new Date(Date.UTC(year, month, day, hour, minute, second));
     }
 
-    // Otherwise, treat as local (though RFC 5545 recommends UTC)
-    return new Date(year, month, day, hour, minute, second);
+    // Otherwise, treat as UTC (RFC 5545 floating times default to UTC when no VTIMEZONE is present)
+    return new Date(Date.UTC(year, month, day, hour, minute, second));
   }
 }

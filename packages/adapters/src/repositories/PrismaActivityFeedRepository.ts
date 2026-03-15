@@ -273,7 +273,10 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
             name: [r.lead.firstName, r.lead.lastName].filter(Boolean).join(' ') || r.lead.email,
           }
         : null,
-      metadata: r.metadata as Record<string, unknown> | null,
+      metadata: {
+        ...(r.metadata as Record<string, unknown> | null),
+        ...(!r.lead && r.leadId ? { actionUrl: `/leads/${r.leadId}` } : {}),
+      },
     }));
   }
 
@@ -441,7 +444,12 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       timestamp: r.createdAt,
       actor: r.userId ? { id: r.userId, name: r.fromEmail } : null,
       entity: r.contactId ? { id: r.contactId, type: 'CONTACT' as const, name: r.toEmail } : null,
-      metadata: { status: r.status, openCount: r.openCount, clickCount: r.clickCount },
+      metadata: {
+        status: r.status,
+        openCount: r.openCount,
+        clickCount: r.clickCount,
+        actionUrl: `/email/${r.id}`,
+      },
     }));
   }
 
@@ -616,7 +624,10 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
             name: [r.lead.firstName, r.lead.lastName].filter(Boolean).join(' ') || r.lead.email,
           }
         : null,
-      metadata: r.metadata as Record<string, unknown> | null,
+      metadata: {
+        ...(r.metadata as Record<string, unknown> | null),
+        ...(!r.lead && r.leadId ? { actionUrl: `/leads/${r.leadId}` } : {}),
+      },
     }));
   }
 
@@ -780,7 +791,12 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       timestamp: r.createdAt,
       actor: r.userId ? { id: r.userId, name: r.fromEmail } : null,
       entity: r.contactId ? { id: r.contactId, type: 'CONTACT' as const, name: r.toEmail } : null,
-      metadata: { status: r.status, openCount: r.openCount, clickCount: r.clickCount },
+      metadata: {
+        status: r.status,
+        openCount: r.openCount,
+        clickCount: r.clickCount,
+        actionUrl: `/email/${r.id}`,
+      },
     }));
   }
 

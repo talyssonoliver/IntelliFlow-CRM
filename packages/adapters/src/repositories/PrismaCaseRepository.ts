@@ -243,7 +243,7 @@ export class PrismaCaseRepository implements CaseRepository, CaseQueryService {
     if (assignedTo) where.assignedTo = assignedTo;
 
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 
     const [statusGroups, priorityGroups, overdueCount, closedThisMonth, total] = await Promise.all([
       this.prisma.case.groupBy({ by: ['status'], where, _count: true }),

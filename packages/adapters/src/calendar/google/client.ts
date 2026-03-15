@@ -927,9 +927,11 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
       location: appointment.location,
       start: {
         dateTime: appointment.startTime.toISOString(),
+        timeZone: 'UTC',
       },
       end: {
         dateTime: appointment.endTime.toISOString(),
+        timeZone: 'UTC',
       },
       status: appointment.isCancelled ? 'cancelled' : 'confirmed',
     };

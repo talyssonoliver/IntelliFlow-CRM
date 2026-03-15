@@ -42,6 +42,9 @@ export * from './PrismaFeedbackSurveyRepository';
 // Experiment Repository (IFC-025)
 export * from './PrismaExperimentRepository';
 
+// Notification Audit Logger (IFC-157)
+export * from './PrismaNotificationAuditLogger';
+
 // In-memory implementations (testing)
 export * from './InMemoryLeadRepository';
 export * from './InMemoryContactRepository';

@@ -17,7 +17,7 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
 
   async getDealsWonByMonth(tenantId: string, months: number): Promise<OpportunityGroupByResult[]> {
     const monthsAgo = new Date();
-    monthsAgo.setMonth(monthsAgo.getMonth() - months);
+    monthsAgo.setUTCMonth(monthsAgo.getUTCMonth() - months);
 
     const result = await this.prisma.opportunity.groupBy({
       by: ['closedAt'],
@@ -162,7 +162,7 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
 
   async countLeadsThisMonth(tenantId: string): Promise<number> {
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 
     return this.prisma.lead.count({
       where: {
