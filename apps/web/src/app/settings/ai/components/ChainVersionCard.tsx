@@ -15,6 +15,7 @@
 
 import { Card, Button, Badge } from '@intelliflow/ui';
 import type { ChainVersionStatus, ChainType } from '@intelliflow/domain';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 export interface ChainVersionCardProps {
   id: string;
@@ -93,9 +94,10 @@ export function ChainVersionCard({
   isSelected = false,
   isLoading = false,
 }: Readonly<ChainVersionCardProps>) {
+  const { timezone } = useTimezoneContext();
   const statusConfig = STATUS_CONFIG[status];
   const chainLabel = CHAIN_TYPE_LABELS[chainType];
-  const dateStr = typeof createdAt === 'string' ? createdAt : createdAt.toLocaleDateString();
+  const dateStr = typeof createdAt === 'string' ? createdAt : createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone });
 
   const canActivate = status === 'DRAFT';
   const canDeprecate = status === 'ACTIVE';

@@ -21,12 +21,14 @@ import {
   TooltipTrigger,
 } from '@intelliflow/ui';
 import { useZepBudget } from '../hooks';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 interface ZepBudgetGaugeProps {
   className?: string;
 }
 
 export function ZepBudgetGauge({ className }: Readonly<ZepBudgetGaugeProps>) {
+  const { timezone } = useTimezoneContext();
   const { budget, isLoading, percentUsed, budgetStatus } = useZepBudget();
 
   if (isLoading) {
@@ -141,7 +143,7 @@ export function ZepBudgetGauge({ className }: Readonly<ZepBudgetGaugeProps>) {
                 <p>Total: {budget.total.toLocaleString()} episodes</p>
                 {budget.lastSyncedAt && (
                   <p className="text-muted-foreground mt-1">
-                    Last synced: {new Date(budget.lastSyncedAt).toLocaleString()}
+                    Last synced: {new Date(budget.lastSyncedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: timezone })}
                   </p>
                 )}
               </div>

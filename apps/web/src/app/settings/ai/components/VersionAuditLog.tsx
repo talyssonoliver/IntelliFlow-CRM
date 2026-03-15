@@ -10,6 +10,7 @@
  */
 
 import { useState } from 'react';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import {
   Card,
   Table,
@@ -57,6 +58,7 @@ const ACTION_CONFIG: Record<
 const PAGE_SIZE = 20;
 
 export function VersionAuditLog({ auditLog, isLoading }: Readonly<VersionAuditLogProps>) {
+  const { timezone } = useTimezoneContext();
   const [currentPage, setCurrentPage] = useState(0);
   const [actionFilter, setActionFilter] = useState<ChainVersionAuditAction | 'all'>('all');
 
@@ -146,8 +148,8 @@ export function VersionAuditLog({ auditLog, isLoading }: Readonly<VersionAuditLo
                     <TableCell className="text-muted-foreground">{entry.performedBy}</TableCell>
                     <TableCell className="text-muted-foreground">
                       {typeof entry.performedAt === 'string'
-                        ? new Date(entry.performedAt).toLocaleString()
-                        : entry.performedAt.toLocaleString()}
+                        ? new Date(entry.performedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: timezone })
+                        : entry.performedAt.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: timezone })}
                     </TableCell>
                     <TableCell>
                       {entry.reason ? (

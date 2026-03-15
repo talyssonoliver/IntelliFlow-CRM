@@ -13,6 +13,7 @@
  */
 
 import { useState } from 'react';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import {
   Dialog,
   DialogContent,
@@ -43,6 +44,7 @@ export function RollbackConfirmDialog({
   onConfirm,
   isLoading,
 }: Readonly<RollbackConfirmDialogProps>) {
+  const { timezone } = useTimezoneContext();
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -105,8 +107,8 @@ export function RollbackConfirmDialog({
                 <span className="text-muted-foreground">Created:</span>
                 <span className="ml-2 font-medium">
                   {typeof targetVersion.createdAt === 'string'
-                    ? new Date(targetVersion.createdAt).toLocaleDateString()
-                    : targetVersion.createdAt.toLocaleDateString()}
+                    ? new Date(targetVersion.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone })
+                    : targetVersion.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone })}
                 </span>
               </div>
             </div>

@@ -16,6 +16,7 @@
 import { Card, Skeleton } from '@intelliflow/ui';
 import type { ChainType } from '@intelliflow/domain';
 import type { ChainVersionSummary } from '@intelliflow/validators';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 interface ChainVersionsDashboardProps {
   activeVersions: Record<ChainType, ChainVersionSummary | null>;
@@ -66,6 +67,7 @@ export function ChainVersionsDashboard({
   isLoading,
   onViewVersion,
 }: Readonly<ChainVersionsDashboardProps>) {
+  const { timezone } = useTimezoneContext();
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -134,8 +136,8 @@ export function ChainVersionsDashboard({
                   <span className="text-xs text-muted-foreground">Created</span>
                   <span className="text-xs text-foreground">
                     {typeof version.createdAt === 'string'
-                      ? new Date(version.createdAt).toLocaleDateString()
-                      : version.createdAt.toLocaleDateString()}
+                      ? new Date(version.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone })
+                      : version.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone })}
                   </span>
                 </div>
 
