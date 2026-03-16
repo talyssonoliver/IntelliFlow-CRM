@@ -53,6 +53,7 @@ out/
 /build
 build/
 dist/
+.tsup/
 .output/
 .nuxt/
 .vercel/

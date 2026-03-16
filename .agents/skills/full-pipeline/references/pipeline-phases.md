@@ -52,6 +52,26 @@ After all phases succeed:
 
 Even if spec, plan, delivery, and attestation all exist, verify:
 
+### Step 0: Run Deterministic Phantom-Completion Detector (BLOCKING)
+
+**This step is NON-NEGOTIABLE. Run the script BEFORE any manual checks.**
+
+```bash
+npx tsx tools/scripts/detect-phantom-completions.ts
+```
+
+Then check the output for the current TASK_ID:
+- If the task appears in `phantom_completions` → **FAIL** (fix missing artifacts before continuing)
+- If the task appears in `verified_tasks` → proceed to manual checks below
+- If the script errors → fix the error, do not skip this step
+
+**Why this exists**: LLM agents skip manual file-existence checks under context pressure.
+This script is deterministic — it cannot be skipped, summarized, or reasoned away.
+IFC-220 was declared PIPELINE COMPLETE with missing context_ack.json because the agent
+skipped manual verification steps. This script would have caught it.
+
+### Steps 1-8: Manual Verification (after script passes)
+
 ```
 1. Parse PLAN_PATH for ALL "Files to Create:" and "Files to Modify:" paths
 2. For EACH path, verify the file EXISTS on disk at that EXACT location
@@ -183,3 +203,4 @@ Since each iteration now runs the full pipeline (not just one phase), fewer iter
 6. **Failed status** — If CSV shows "Failed", exec will attempt remediation
 7. **NEVER output promise without verification** — Even if CSV says "Completed" and delivery exists, ALWAYS run Deliverable Verification first. A previous session may have left incomplete artifacts (missing evidence files, files at wrong paths, attestation hash omissions). False promises break the loop prematurely.
 8. **Do NOT manually set CSV to "Completed"** — Only /exec Phase 5 should set this status after all gates pass. If you find a "Backlog" task with existing delivery artifacts, re-run /exec to properly validate.
+9. **NEVER check Ralph loop status** — Do NOT read `.claude/ralph-loops/` state files or check if the Ralph loop is active/deactivated/cancelled. Ralph is ONLY for retries on failure — the pipeline runs ALL phases regardless of Ralph status. Even if Ralph was cancelled, you MUST continue to the next phase after each success. The phrase "the Ralph loop was deactivated" is NEVER a valid reason to stop.

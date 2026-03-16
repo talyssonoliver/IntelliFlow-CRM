@@ -16,8 +16,11 @@
     "dist",
     "build",
     ".next",
+    ".tsup",
+    "generated",
     "coverage",
-    "node_modules"
+    "node_modules",
+    "__pycache__"
   ],
   "skip-missing": true
 }

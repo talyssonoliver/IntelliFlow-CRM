@@ -5,7 +5,7 @@ description: Autonomous state-machine that chains spec-session → plan-session 
 
 # Full Pipeline Command (Ralph-Compatible)
 
-**CRITICAL**: This command runs the FULL pipeline (all phases) in a single invocation. Do NOT stop after one phase — chain spec → plan → exec sequentially until the task is complete or a phase fails.
+**CRITICAL**: This command runs the FULL pipeline (all phases) in a single invocation. Do NOT stop after one phase — chain spec → plan → exec sequentially until the task is complete or a phase fails. **NEVER check Ralph loop status or use it as a reason to stop** — Ralph is only for retries, the pipeline runs independently.
 
 ## Usage
 
@@ -67,6 +67,13 @@ Only output the promise after Deliverable Verification PASSES:
 
 **NEVER output the promise without running Deliverable Verification first.**
 
+**MANDATORY pre-promise script** (IFC-220 lesson — agent skipped manual checks):
+```bash
+npx tsx tools/scripts/detect-phantom-completions.ts
+```
+If the task appears in `phantom_completions` → DO NOT output promise. Fix missing artifacts first.
+This is deterministic enforcement — the script checks every EVIDENCE/ARTIFACT path against disk.
+
 ## Follow-Up Tasks
 
 When spec, plan, or exec discovers issues outside the current task's scope:
@@ -84,6 +91,7 @@ When spec, plan, or exec discovers issues outside the current task's scope:
 4. Resume from where you left off — if spec already exists, skip to plan; if plan exists, skip to exec
 5. Use the Skill tool to invoke /spec-session, /plan-session, /exec
 6. NEVER manually set CSV to "Completed" — only /exec Phase 5 should do this
+7. **NEVER check Ralph loop status** — Do NOT read `.claude/ralph-loops/` state files. Do NOT check if the Ralph loop is active, cancelled, or deactivated. Ralph is ONLY for retries on failure — the pipeline itself runs ALL phases regardless of Ralph status. Even if Ralph was cancelled or never started, you MUST continue to the next phase after each success.
 
 ## Related Skills
 

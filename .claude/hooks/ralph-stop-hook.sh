@@ -179,8 +179,8 @@ fi
 # When a session compacts (context overflow → continuation), the new session
 # reuses the same transcript UUID. The session_id match above succeeds, but
 # the session may now be doing completely different work. Guard against this
-# by extracting the task ID from the loop prompt and checking if the last
-# assistant message actually references it. If not → session was repurposed.
+# by extracting the task ID from the loop prompt and checking if recent
+# session content actually references it. If not → session was repurposed.
 #
 # Extract prompt text early (needed for task ID extraction)
 PROMPT_TEXT=$(awk '/^---$/{i++; next} i>=2' "$RALPH_STATE_FILE")
@@ -188,9 +188,30 @@ PROMPT_TEXT=$(awk '/^---$/{i++; next} i>=2' "$RALPH_STATE_FILE")
 LOOP_TASK_ID=$(echo "$PROMPT_TEXT" | grep -oE '[A-Z]+-[0-9]+' | head -1 || true)
 
 if [[ -n "$LOOP_TASK_ID" ]] && [[ -n "$LAST_OUTPUT" ]]; then
-  if ! echo "$LAST_OUTPUT" | grep -qiF "$LOOP_TASK_ID"; then
-    echo "⚠️  Ralph loop: Session context mismatch — last message doesn't mention $LOOP_TASK_ID. Deactivating loop." >&2
-    debug "CONTEXT MISMATCH: last message doesn't mention $LOOP_TASK_ID — session likely compacted/repurposed"
+  CONTEXT_RELEVANT=false
+
+  # Check 1: last assistant message (fast path)
+  if echo "$LAST_OUTPUT" | grep -qiF "$LOOP_TASK_ID" 2>/dev/null; then
+    CONTEXT_RELEVANT=true
+  fi
+
+  # Check 2: if not in last message, check recent transcript entries (slow path)
+  # The last message might be a Skill tool result or compressed text that doesn't
+  # contain the task ID literally (e.g., full-pipeline invoking /spec-session)
+  if [[ "$CONTEXT_RELEVANT" == "false" ]]; then
+    CURRENT_TRANSCRIPT=$(echo "$HOOK_INPUT" | jq -r '.transcript_path // empty' 2>/dev/null || echo "")
+    if [[ -n "$CURRENT_TRANSCRIPT" ]] && [[ -f "$CURRENT_TRANSCRIPT" ]]; then
+      # Check last 100 lines of transcript for the task ID
+      if tail -100 "$CURRENT_TRANSCRIPT" 2>/dev/null | grep -qiF "$LOOP_TASK_ID" 2>/dev/null; then
+        CONTEXT_RELEVANT=true
+        debug "CONTEXT OK (transcript fallback): $LOOP_TASK_ID found in recent transcript"
+      fi
+    fi
+  fi
+
+  if [[ "$CONTEXT_RELEVANT" == "false" ]]; then
+    echo "⚠️  Ralph loop: Session context mismatch — recent messages don't mention $LOOP_TASK_ID. Deactivating loop." >&2
+    debug "CONTEXT MISMATCH: neither last message nor recent transcript mentions $LOOP_TASK_ID"
     # Deactivate the orphaned loop
     TEMP_CTX="${RALPH_STATE_FILE}.ctx.$$"
     sed 's/^active: true/active: false/' "$RALPH_STATE_FILE" > "$TEMP_CTX"
