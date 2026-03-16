@@ -77,6 +77,13 @@ export interface FileEntry {
   extension: string;
   isTestFile: boolean;
   hasTest: boolean; // For source files, whether a test exists
+  // Audit signals for orphan quality analysis (populated by computeAuditSignals)
+  auditSignals?: {
+    hasAttestation: boolean; // Path found in any attestation artifact_hashes
+    isImported: boolean; // Referenced by at least one linked source file
+    duplicateNames: string[]; // Other files in the codebase with identical filename
+    daysSinceModified: number; // Days since last modification
+  };
   // Git history metadata (populated by enrichWithGitHistory)
   gitHistory?: {
     createdAt: string | null; // ISO timestamp from git
@@ -1612,6 +1619,197 @@ export function propagateTaskLinks(files: FileEntry[]): FileEntry[] {
 }
 
 // =============================================================================
+// AUDIT SIGNALS — Orphan quality analysis
+// =============================================================================
+
+const SOURCE_EXTS = new Set(['.ts', '.tsx', '.js', '.jsx']);
+const IMPORT_RE = /(?:from|require\()\s*['"]([^'"]+)['"]/g;
+
+/**
+ * Build a set of all file paths mentioned in any attestation artifact_hashes.
+ * Used to determine if an orphan was created through proper exec pipeline.
+ */
+function buildAttestationPathSet(): Set<string> {
+  const paths = new Set<string>();
+  const specifyDir = join(MONOREPO_ROOT, '.specify', 'sprints');
+  if (!existsSync(specifyDir)) return paths;
+
+  try {
+    for (const sprintDir of readdirSync(specifyDir, { withFileTypes: true })) {
+      if (!sprintDir.isDirectory()) continue;
+      const attDir = join(specifyDir, sprintDir.name, 'attestations');
+      if (!existsSync(attDir)) continue;
+
+      for (const taskDir of readdirSync(attDir, { withFileTypes: true })) {
+        if (!taskDir.isDirectory()) continue;
+        const attFile = join(attDir, taskDir.name, 'attestation.json');
+        const data = readJsonSafe(attFile);
+        if (!data) continue;
+        const hashes = data.artifact_hashes;
+        if (hashes && typeof hashes === 'object' && !Array.isArray(hashes)) {
+          for (const p of Object.keys(hashes as Record<string, string>)) {
+            paths.add(p.toLowerCase());
+          }
+        }
+      }
+    }
+  } catch {
+    // Skip on read errors
+  }
+  return paths;
+}
+
+/**
+ * Build a set of basenames imported by linked source files.
+ * Regex-based — covers `import from '...'` and `require('...')`.
+ */
+function buildImportedBasenames(files: FileEntry[]): Set<string> {
+  const imported = new Set<string>();
+
+  for (const file of files) {
+    if (file.isOrphan || !SOURCE_EXTS.has(file.extension)) continue;
+
+    let content: string;
+    try {
+      content = readFileSync(file.absolutePath, 'utf-8');
+    } catch {
+      continue;
+    }
+
+    IMPORT_RE.lastIndex = 0;
+    let match;
+    while ((match = IMPORT_RE.exec(content)) !== null) {
+      const importPath = match[1];
+      // Extract the last segment (basename) of the import path
+      const segments = importPath.split('/');
+      const basename = segments[segments.length - 1]
+        .replace(/\.[jt]sx?$/, ''); // strip extension if present
+      if (basename && !basename.startsWith('.')) {
+        imported.add(basename.toLowerCase());
+      }
+      // Also add full last two segments for scoped imports like @intelliflow/domain
+      if (segments.length >= 2) {
+        imported.add(segments.slice(-2).join('/').replace(/\.[jt]sx?$/, '').toLowerCase());
+      }
+    }
+  }
+  return imported;
+}
+
+/**
+ * Build a map of filename -> list of full paths for duplicate detection.
+ */
+function buildDuplicateMap(files: FileEntry[]): Map<string, string[]> {
+  const byName = new Map<string, string[]>();
+  for (const file of files) {
+    const name = file.path.split('/').pop() || '';
+    if (!name || name === 'index.ts' || name === 'index.tsx' || name === 'page.tsx' ||
+        name === 'layout.tsx' || name === 'route.ts' || name === 'README.md' ||
+        name === 'package.json' || name === 'tsconfig.json' || name === 'CLAUDE.md') {
+      continue; // Skip ubiquitous filenames
+    }
+    let list = byName.get(name);
+    if (!list) {
+      list = [];
+      byName.set(name, list);
+    }
+    list.push(file.path);
+  }
+  return byName;
+}
+
+/**
+ * Compute audit signals for all orphan files.
+ * Main scan: hasAttestation, duplicateNames, daysSinceModified (cheap).
+ * isImported is computed separately via computeImportSignals() to avoid
+ * reading thousands of files on every scan.
+ */
+export function computeAuditSignals(files: FileEntry[]): FileEntry[] {
+  const attestedPaths = buildAttestationPathSet();
+  const duplicateMap = buildDuplicateMap(files);
+  const now = Date.now();
+
+  return files.map((file) => {
+    if (!file.isOrphan) return file;
+
+    const fileLower = file.path.toLowerCase();
+    const fileName = file.path.split('/').pop() || '';
+
+    const hasAttestation = attestedPaths.has(fileLower);
+
+    const allWithName = duplicateMap.get(fileName) || [];
+    const duplicateNames = allWithName.filter((p) => p !== file.path);
+
+    const daysSinceModified = Math.floor(
+      (now - new Date(file.lastModified).getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    return {
+      ...file,
+      auditSignals: {
+        hasAttestation,
+        isImported: false, // Set by computeImportSignals() when requested
+        duplicateNames,
+        daysSinceModified,
+      },
+    };
+  });
+}
+
+/**
+ * Compute isImported signal for orphan files by scanning linked source files
+ * for import statements. Only reads files in directories that contain orphans
+ * to limit I/O. Call separately from the main scan (e.g., on orphan tab load).
+ */
+export function computeImportSignals(files: FileEntry[]): FileEntry[] {
+  // Collect directories that have orphans
+  const orphanDirs = new Set<string>();
+  for (const f of files) {
+    if (f.isOrphan && SOURCE_EXTS.has(f.extension)) {
+      const dir = f.path.substring(0, f.path.lastIndexOf('/'));
+      orphanDirs.add(dir);
+      // Also add parent dir for __tests__/ cases
+      const parent = dir.substring(0, dir.lastIndexOf('/'));
+      if (parent) orphanDirs.add(parent);
+    }
+  }
+
+  // Only scan linked files in/near orphan directories (limits I/O)
+  const importedBasenames = new Set<string>();
+  for (const file of files) {
+    if (file.isOrphan || !SOURCE_EXTS.has(file.extension)) continue;
+    const dir = file.path.substring(0, file.path.lastIndexOf('/'));
+    if (!orphanDirs.has(dir)) continue;
+
+    let content: string;
+    try {
+      content = readFileSync(file.absolutePath, 'utf-8');
+    } catch {
+      continue;
+    }
+
+    IMPORT_RE.lastIndex = 0;
+    let match;
+    while ((match = IMPORT_RE.exec(content)) !== null) {
+      const segments = match[1].split('/');
+      const basename = segments[segments.length - 1].replace(/\.[jt]sx?$/, '');
+      if (basename) importedBasenames.add(basename.toLowerCase());
+    }
+  }
+
+  return files.map((file) => {
+    if (!file.isOrphan || !file.auditSignals) return file;
+    const fileName = file.path.split('/').pop() || '';
+    const fileStem = fileName.replace(/\.[^.]+$/, '').toLowerCase();
+    const isImported = importedBasenames.has(fileStem);
+    return {
+      ...file,
+      auditSignals: { ...file.auditSignals, isImported },
+    };
+  });
+}
+
+// =============================================================================
 // CLEANUP SUGGESTIONS
 // =============================================================================
 
@@ -2004,7 +2202,10 @@ export function scanFullRegistry(
   // 7. Add test coverage info
   linkedFiles = addTestCoverage(linkedFiles);
 
-  // 7. Generate health metrics
+  // 8. Compute audit signals for orphans (attestation, imports, duplicates, staleness)
+  linkedFiles = computeAuditSignals(linkedFiles);
+
+  // 9. Generate health metrics
   const health = generateCodebaseHealth(linkedFiles, missing);
 
   // 8. Generate cleanup suggestions

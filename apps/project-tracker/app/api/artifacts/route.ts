@@ -18,6 +18,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readFileSync, existsSync } from 'node:fs';
 import {
   scanFullRegistry,
+  computeImportSignals,
   FileEntry,
   CodebaseHealth,
   MissingFile,
@@ -172,8 +173,14 @@ export async function GET(request: NextRequest) {
     const page = Number.parseInt(searchParams.get('page') || '1', 10);
     const pageSize = Number.parseInt(searchParams.get('pageSize') || '100', 10);
     const forceRefresh = searchParams.get('refresh') === 'true';
+    const enrichImports = searchParams.get('enrichImports') === 'true';
 
     const registry = getFullRegistry(forceRefresh);
+
+    // Optionally compute import signals (expensive — only when requested)
+    if (enrichImports) {
+      registry.files = computeImportSignals(registry.files);
+    }
 
     // Start with all files or just artifacts
     let filteredFiles =
