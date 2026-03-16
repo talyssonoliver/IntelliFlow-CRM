@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-03-16T17:52:56.403Z",
+  "last_updated": "2026-03-16T18:39:37.085Z",
   "total_tasks": 390,
   "current_sprint": 14,
   "active_sprint": "sprint-14",
@@ -10734,12 +10734,12 @@
         "IFC-025"
       ],
       "artifacts": [
-        "ARTIFACT:packages/db/prisma/migrations/*_ai_monitoring_events;ARTIFACT:apps/ai-worker/src/monitoring/monitoring-flush-service.ts;ARTIFACT:apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts"
+        "ARTIFACT:packages/db/prisma/migrations/*_ai_monitoring_events;ARTIFACT:apps/ai-worker/src/monitoring/monitoring-flush.service.ts;ARTIFACT:apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts"
       ],
       "kpis": "Coverage >90%, Flush latency <100ms, Multi-process data visible",
       "definition_of_done": "AIMonitoringEvent Prisma model created with migration; ai-worker flushes metrics to DB every 60s; monitoring router queries DB; drift/latency/ROI dashboards show real data in multi-process mode; targets: flush latency <100ms, coverage >90%; verified by: pnpm test",
       "validation": "VALIDATE:pnpm typecheck;VALIDATE:pnpm test;VALIDATE:pnpm lint;VALIDATE:pnpm build",
-      "prerequisites": "FILE:apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts;FILE:apps/ai-worker/src/monitoring;FILE:packages/db/prisma/schema.prisma;ENV:PostgreSQL running",
+      "prerequisites": "FILE:apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts;FILE:apps/ai-worker/src/monitoring/index.ts;FILE:packages/db/prisma/schema.prisma;ENV:PostgreSQL running",
       "cadence": ""
     },
     "IFC-298": {

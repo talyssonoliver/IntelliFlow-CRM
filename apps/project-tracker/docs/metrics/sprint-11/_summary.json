@@ -85,7 +85,7 @@
       "duration_minutes": 15
     }
   ],
-  "notes": "14/14 tasks DONE (100%). Last synced: 2026-03-16T17:52:56.881Z",
+  "notes": "14/14 tasks DONE (100%). Last synced: 2026-03-16T18:39:37.423Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": null,
@@ -106,6 +106,6 @@
       "spi": 1,
       "status": "on_track"
     },
-    "calculated_at": "2026-03-16T17:52:56.986Z"
+    "calculated_at": "2026-03-16T18:39:37.495Z"
   }
 }
