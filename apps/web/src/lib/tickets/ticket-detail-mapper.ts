@@ -382,7 +382,7 @@ function mapActivities(rawActivities: unknown, ticketId: string): TicketActivity
         avatar: normalizeAvatarSource(asOptionalString(activity.authorAvatar)) ?? undefined,
       },
       content: content || 'Activity recorded',
-      timestamp: timestamp ? timestamp.toLocaleString() : 'Unknown',
+      timestamp: timestamp ? timestamp.toLocaleString('en-US', { timeZone: 'UTC' }) : 'Unknown',
       metadata: channel
         ? {
             via: channel,

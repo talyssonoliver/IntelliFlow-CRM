@@ -18,7 +18,7 @@ const MONTH = 30 * DAY;
  * Format a date as a human-readable relative time string.
  * e.g., "just now", "2 minutes ago", "3 hours ago", "5 days ago"
  */
-export function formatTimeAgo(date: Date | string): string {
+export function formatTimeAgo(date: Date | string, timezone: string = 'Europe/London'): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = Date.now();
   const diffSeconds = Math.floor((now - d.getTime()) / 1000);
@@ -33,7 +33,7 @@ export function formatTimeAgo(date: Date | string): string {
   if (diffSeconds < WEEK) return `${Math.floor(diffSeconds / DAY)} days ago`;
   if (diffSeconds < 2 * WEEK) return '1 week ago';
   if (diffSeconds < MONTH) return `${Math.floor(diffSeconds / WEEK)} weeks ago`;
-  return d.toLocaleDateString();
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone });
 }
 
 /**

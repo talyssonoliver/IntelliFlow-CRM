@@ -21,6 +21,10 @@ const { mockSetState, mockUseSubscription } = vi.hoisted(() => ({
   mockUseSubscription: vi.fn(),
 }));
 
+const { mockHandleSubscriptionAuthError } = vi.hoisted(() => ({
+  mockHandleSubscriptionAuthError: vi.fn(() => false),
+}));
+
 // ---------------------------------------------------------------------------
 // Mock React hooks
 // ---------------------------------------------------------------------------
@@ -63,6 +67,10 @@ vi.mock('@intelliflow/api-client', () => ({
   AppRouter: {},
 }));
 
+vi.mock('@/lib/trpc/subscription-auth', () => ({
+  handleSubscriptionAuthError: mockHandleSubscriptionAuthError,
+}));
+
 // Now import the module under test (after mocks are set up)
 import {
   useLeadScoredSubscription,
@@ -83,6 +91,8 @@ describe('use-trpc-subscriptions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseSubscription.mockReset();
+    mockHandleSubscriptionAuthError.mockReset();
+    mockHandleSubscriptionAuthError.mockReturnValue(false);
   });
 
   // =========================================================================
@@ -340,6 +350,24 @@ describe('use-trpc-subscriptions', () => {
         '[useTaskAssignedSubscription] Error:',
         expect.anything()
       );
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('suppresses console logging when auth errors are handled centrally', () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockHandleSubscriptionAuthError.mockReturnValue(true);
+
+      useTaskAssignedSubscription();
+      const [, opts] = mockUseSubscription.mock.calls[0];
+      const error = { message: 'Authentication required. Please log in to access this resource.' };
+
+      opts.onError(error);
+
+      expect(mockHandleSubscriptionAuthError).toHaveBeenCalledWith(
+        error,
+        'useTaskAssignedSubscription'
+      );
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
       consoleErrorSpy.mockRestore();
     });
   });

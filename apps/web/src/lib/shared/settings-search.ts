@@ -75,7 +75,7 @@ export const SETTINGS_ITEMS: SettingItem[] = [
     id: 'notifications',
     title: 'Notifications',
     description: 'Configure email, push, and in-app notification preferences',
-    href: '/settings/notifications',
+    href: '/notifications/settings',
     icon: 'notifications',
     color: 'bg-primary/60',
     keywords: ['email', 'push', 'alerts', 'digest', 'preferences'],
@@ -88,6 +88,15 @@ export const SETTINGS_ITEMS: SettingItem[] = [
     icon: 'security',
     color: 'bg-destructive',
     keywords: ['mfa', '2fa', 'totp', 'sessions', 'password', 'authentication'],
+  },
+  {
+    id: 'leads',
+    title: 'Leads',
+    description: 'Configure lead stages, scoring rules, custom fields, and automation',
+    href: '/settings/leads',
+    icon: 'sell',
+    color: 'bg-primary/75',
+    keywords: ['lead', 'stage', 'scoring', 'pipeline', 'custom field', 'automation'],
   },
 ];
 
@@ -103,7 +112,7 @@ export const SETTINGS_CATEGORIES: SettingCategory[] = [
   {
     id: 'ai-automation',
     title: 'AI & Automation',
-    itemIds: ['ai', 'pipeline'],
+    itemIds: ['ai', 'pipeline', 'leads'],
   },
   {
     id: 'integrations-comms',

@@ -12,7 +12,7 @@
  * A 60s stale fallback poll is kept as safety net for missed events.
  */
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { trpc } from '@/lib/trpc';
 import {
   useLeadScoredSubscription,
@@ -97,8 +97,23 @@ export function useActivityFeed(options: UseActivityFeedOptions = {}) {
     }
   );
 
-  // Flatten all pages into a single array of items
-  const items = query.data?.pages.flatMap((page) => page.items) ?? [];
+  // Flatten pages and deduplicate — cursor-based pagination can produce
+  // overlapping entries when pages shift after mutations/invalidations,
+  // and different source tables can surface the same event with different IDs.
+  const items = useMemo(() => {
+    const all = query.data?.pages.flatMap((page) => page.items) ?? [];
+    const seen = new Set<string>();
+    return all.filter((item) => {
+      // Primary dedup by id
+      if (seen.has(item.id)) return false;
+      // Content-based dedup: same title+description within 1 minute = duplicate
+      const contentKey = `${item.title}|${item.description}|${Math.floor(new Date(item.timestamp).getTime() / 60000)}`;
+      if (seen.has(contentKey)) return false;
+      seen.add(item.id);
+      seen.add(contentKey);
+      return true;
+    });
+  }, [query.data]);
 
   return {
     items,
@@ -165,7 +180,18 @@ export function useEntityFeed(options: UseEntityFeedOptions) {
     }
   );
 
-  const items = query.data?.pages.flatMap((page) => page.items) ?? [];
+  const items = useMemo(() => {
+    const all = query.data?.pages.flatMap((page) => page.items) ?? [];
+    const seen = new Set<string>();
+    return all.filter((item) => {
+      if (seen.has(item.id)) return false;
+      const contentKey = `${item.title}|${item.description}|${Math.floor(new Date(item.timestamp).getTime() / 60000)}`;
+      if (seen.has(contentKey)) return false;
+      seen.add(item.id);
+      seen.add(contentKey);
+      return true;
+    });
+  }, [query.data]);
 
   return {
     items,

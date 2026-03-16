@@ -31,7 +31,7 @@ function toDate(input: DateInput): Date {
  */
 export function formatDate(
   input: DateInput,
-  timezone: string = 'UTC',
+  timezone: string = 'Europe/London',
   options?: Partial<Pick<Intl.DateTimeFormatOptions, 'weekday' | 'year' | 'month' | 'day'>>
 ): string {
   const date = toDate(input);
@@ -56,7 +56,7 @@ export function formatDate(
  */
 export function formatTime(
   input: DateInput,
-  timezone: string = 'UTC',
+  timezone: string = 'Europe/London',
   options?: Partial<Pick<Intl.DateTimeFormatOptions, 'hour12' | 'second'>>
 ): string {
   const date = toDate(input);
@@ -77,7 +77,7 @@ export function formatTime(
  */
 export function formatDateTime(
   input: DateInput,
-  timezone: string = 'UTC',
+  timezone: string = 'Europe/London',
   options?: Partial<Intl.DateTimeFormatOptions>
 ): string {
   const date = toDate(input);
@@ -101,7 +101,7 @@ export function formatDateTime(
  */
 export function formatDateShort(
   input: DateInput,
-  timezone: string = 'UTC'
+  timezone: string = 'Europe/London'
 ): string {
   const date = toDate(input);
   return date.toLocaleDateString('en-US', {
@@ -122,7 +122,7 @@ export function formatDateShort(
  */
 export function formatISODate(
   input: DateInput,
-  timezone: string = 'UTC'
+  timezone: string = 'Europe/London'
 ): string {
   const date = toDate(input);
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -149,7 +149,7 @@ export function formatISODate(
  * // → Date representing "2026-03-15T05:00:00.000Z" (midnight ET in UTC)
  */
 export function startOfDay(
-  timezone: string = 'UTC',
+  timezone: string = 'Europe/London',
   referenceDate?: DateInput
 ): Date {
   const ref = referenceDate ? toDate(referenceDate) : new Date();
@@ -209,7 +209,7 @@ export function startOfDay(
  * Get the end of "today" (start of tomorrow) in a specific timezone as UTC Date.
  */
 export function endOfDay(
-  timezone: string = 'UTC',
+  timezone: string = 'Europe/London',
   referenceDate?: DateInput
 ): Date {
   const start = startOfDay(timezone, referenceDate);
@@ -220,7 +220,7 @@ export function endOfDay(
  * Get the start of the current month in a specific timezone as a UTC Date.
  */
 export function startOfMonth(
-  timezone: string = 'UTC',
+  timezone: string = 'Europe/London',
   referenceDate?: DateInput
 ): Date {
   const ref = referenceDate ? toDate(referenceDate) : new Date();
@@ -234,7 +234,7 @@ export function startOfMonth(
  * Used for greetings ("Good morning/afternoon/evening").
  */
 export function getHourInTimezone(
-  timezone: string = 'UTC',
+  timezone: string = 'Europe/London',
   referenceDate?: DateInput
 ): number {
   const ref = referenceDate ? toDate(referenceDate) : new Date();
@@ -260,7 +260,7 @@ export function getHourInTimezone(
 export function formatTimeRange(
   start: DateInput,
   end: DateInput,
-  timezone: string = 'UTC'
+  timezone: string = 'Europe/London'
 ): string {
   return `${formatTime(start, timezone)} - ${formatTime(end, timezone)}`;
 }
@@ -280,7 +280,7 @@ export function parseDateInputValue(value: string): Date {
  * Get the timezone abbreviation for display (e.g., "EST", "PDT").
  */
 export function getTimezoneAbbreviation(
-  timezone: string = 'UTC',
+  timezone: string = 'Europe/London',
   referenceDate?: DateInput
 ): string {
   const ref = referenceDate ? toDate(referenceDate) : new Date();

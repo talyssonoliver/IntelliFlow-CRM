@@ -84,11 +84,11 @@ export function getConflictSeverityColor(type: string): {
   }
 }
 
-export function formatTimeRange(start: Date | string, end: Date | string): string {
+export function formatTimeRange(start: Date | string, end: Date | string, timezone: string = 'Europe/London'): string {
   const s = new Date(start);
   const e = new Date(end);
   const fmt = (d: Date) =>
-    d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: timezone });
   return `${fmt(s)} - ${fmt(e)}`;
 }
 
@@ -107,12 +107,12 @@ export function isOverdue(endTime: Date | string, status: string): boolean {
   return new Date(endTime) < new Date();
 }
 
-export function formatDateShort(date: Date | string): string {
+export function formatDateShort(date: Date | string, timezone: string = 'Europe/London'): string {
   const d = new Date(date);
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: timezone });
 }
 
-export function timeAgo(date: Date | string): string {
+export function timeAgo(date: Date | string, timezone: string = 'Europe/London'): string {
   const now = new Date();
   const d = new Date(date);
   const seconds = Math.floor((now.getTime() - d.getTime()) / 1000);
@@ -125,7 +125,7 @@ export function timeAgo(date: Date | string): string {
   const days = Math.floor(hours / 24);
   if (days === 1) return 'Yesterday';
   if (days < 7) return `${days} days ago`;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone });
 }
 
 export function getInitials(name: string): string {
@@ -155,7 +155,7 @@ const FREQUENCY_LABELS: Record<string, string> = {
   YEARLY: 'year',
 };
 
-export function formatRecurrence(pattern: RecurrencePattern | null | undefined): string {
+export function formatRecurrence(pattern: RecurrencePattern | null | undefined, timezone: string = 'Europe/London'): string {
   if (!pattern) return '';
   const freq = FREQUENCY_LABELS[pattern.frequency] || pattern.frequency.toLowerCase();
   let text =
@@ -172,7 +172,7 @@ export function formatRecurrence(pattern: RecurrencePattern | null | undefined):
 
   if (pattern.endDate) {
     const d = new Date(pattern.endDate);
-    text += ` until ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    text += ` until ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone })}`;
   } else if (pattern.occurrenceCount) {
     text += ` for ${pattern.occurrenceCount} occurrences`;
   }

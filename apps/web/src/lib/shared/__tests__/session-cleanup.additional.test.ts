@@ -8,6 +8,7 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
+  AUTH_TOKEN_CHANGED_EVENT,
   syncTokenToCookie,
   clearTokenCookie,
   clearLocalStorage,
@@ -62,6 +63,16 @@ describe('session-cleanup (additional coverage)', () => {
       syncTokenToCookie('token123');
       expect(document.cookie).toContain('accessToken=token123');
     });
+
+    it('dispatches auth token changed event when token is set', () => {
+      const handler = vi.fn();
+      window.addEventListener(AUTH_TOKEN_CHANGED_EVENT, handler);
+
+      syncTokenToCookie('token123');
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      window.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, handler);
+    });
   });
 
   // =========================================================================
@@ -76,6 +87,16 @@ describe('session-cleanup (additional coverage)', () => {
 
     it('does not throw when no cookie exists', () => {
       expect(() => clearTokenCookie()).not.toThrow();
+    });
+
+    it('dispatches auth token changed event when token is cleared', () => {
+      const handler = vi.fn();
+      window.addEventListener(AUTH_TOKEN_CHANGED_EVENT, handler);
+
+      clearTokenCookie();
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      window.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, handler);
     });
   });
 

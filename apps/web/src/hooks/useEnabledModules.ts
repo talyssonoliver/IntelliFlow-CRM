@@ -11,6 +11,7 @@
 
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
+import { useAuth } from '@/lib/auth/AuthContext';
 import {
   type ModuleId,
   getRoutesForModules,
@@ -33,7 +34,9 @@ export interface UseEnabledModulesResult {
 }
 
 export function useEnabledModules(): UseEnabledModulesResult {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { data, isLoading, isError } = trpc.moduleAccess.getEnabledModules.useQuery(undefined, {
+    enabled: isAuthenticated && !authLoading,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
     // Fail closed: no placeholderData — unresolved access defaults to CORE_CRM only
@@ -55,7 +58,7 @@ export function useEnabledModules(): UseEnabledModulesResult {
     isModuleEnabled,
     enabledRoutes,
     plan,
-    isLoading,
-    isError,
+    isLoading: authLoading || isLoading,
+    isError: isAuthenticated ? isError : false,
   };
 }

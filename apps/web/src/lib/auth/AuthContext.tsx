@@ -31,6 +31,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getSupabaseBrowserClient } from '../supabase-browser';
 import type { OAuthProvider } from '@intelliflow/domain';
 import { getSupabaseProviderName } from './sso-handler';
+import { storeSessionTokens } from '@/lib/shared/token-exchange';
 
 export type AuthMfaMethod = 'totp' | 'sms' | 'email' | 'backup';
 
@@ -459,7 +460,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
           // For enhanced security, consider HttpOnly cookies via Supabase Auth.
           // Trade-off: localStorage enables SPA auth without server-side sessions.
           if (typeof globalThis.window !== 'undefined') {
-            localStorage.setItem('accessToken', result.session.accessToken);
+            storeSessionTokens(result.session.accessToken, result.session.refreshToken);
             // Sync to cookie for middleware access
             const { syncTokenToCookie } = await import('@/lib/shared/session-cleanup');
             syncTokenToCookie(result.session.accessToken);
@@ -644,7 +645,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
           }));
 
           if (typeof globalThis.window !== 'undefined') {
-            localStorage.setItem('accessToken', result.session.accessToken);
+            storeSessionTokens(result.session.accessToken, result.session.refreshToken);
             // Sync to cookie for middleware access
             const { syncTokenToCookie } = await import('@/lib/shared/session-cleanup');
             syncTokenToCookie(result.session.accessToken);

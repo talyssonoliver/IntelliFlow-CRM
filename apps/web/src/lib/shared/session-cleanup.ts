@@ -54,6 +54,18 @@ const AUTH_STORAGE_KEYS = [
   'lastActivity',
 ] as const;
 
+export const AUTH_TOKEN_CHANGED_EVENT = 'intelliflow-auth-token-changed';
+
+function notifyAuthTokenChanged(hasToken: boolean): void {
+  if (typeof globalThis.window === 'undefined') return;
+
+  globalThis.dispatchEvent(
+    new CustomEvent(AUTH_TOKEN_CHANGED_EVENT, {
+      detail: { hasToken },
+    })
+  );
+}
+
 // ============================================
 // Token Sync to Cookie (for middleware access)
 // ============================================
@@ -72,9 +84,11 @@ export function syncTokenToCookie(token: string | null): void {
     const isSecure = globalThis.location.protocol === 'https:';
     const cookieValue = `accessToken=${token}; path=/; max-age=${60 * 60 * 24}; samesite=lax${isSecure ? '; secure' : ''}`;
     document.cookie = cookieValue;
+    notifyAuthTokenChanged(true);
   } else {
     // Clear the cookie
     document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    notifyAuthTokenChanged(false);
   }
 }
 
@@ -84,6 +98,7 @@ export function syncTokenToCookie(token: string | null): void {
 export function clearTokenCookie(): void {
   if (typeof document === 'undefined') return;
   document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+  notifyAuthTokenChanged(false);
 }
 
 const AUTH_COOKIE_PREFIXES = [

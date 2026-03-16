@@ -14,6 +14,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { trpc } from '@/lib/trpc';
 import { TRPCClientErrorLike } from '@trpc/client';
 import type { AppRouter } from '@intelliflow/api-client';
+import { handleSubscriptionAuthError } from '@/lib/trpc/subscription-auth';
 
 // tRPC error type for subscriptions
 type SubscriptionError = TRPCClientErrorLike<AppRouter>;
@@ -231,9 +232,12 @@ export function useLeadScoredSubscription(options: UseLeadScoredSubscriptionOpti
         onDataRef.current?.(event);
       },
       onError: (err: SubscriptionError) => {
-        console.error('[useLeadScoredSubscription] Error:', err);
         setStatus('error');
         recordError();
+        if (handleSubscriptionAuthError(err, 'useLeadScoredSubscription')) {
+          return;
+        }
+        console.error('[useLeadScoredSubscription] Error:', err);
         onErrorRef.current?.(toError(err));
       },
     }
@@ -330,9 +334,12 @@ export function useTaskAssignedSubscription(options: UseTaskAssignedSubscription
       onDataRef.current?.(event);
     },
     onError: (err: SubscriptionError) => {
-      console.error('[useTaskAssignedSubscription] Error:', err);
       setStatus('error');
       recordError();
+      if (handleSubscriptionAuthError(err, 'useTaskAssignedSubscription')) {
+        return;
+      }
+      console.error('[useTaskAssignedSubscription] Error:', err);
       onErrorRef.current?.(toError(err));
     },
   });
@@ -428,9 +435,12 @@ export function useSystemEventSubscription(options: UseSystemEventSubscriptionOp
       onDataRef.current?.(event);
     },
     onError: (err: SubscriptionError) => {
-      console.error('[useSystemEventSubscription] Error:', err);
       setStatus('error');
       recordError();
+      if (handleSubscriptionAuthError(err, 'useSystemEventSubscription')) {
+        return;
+      }
+      console.error('[useSystemEventSubscription] Error:', err);
       onErrorRef.current?.(toError(err));
     },
   });
@@ -545,9 +555,12 @@ export function useAIProgressSubscription(options: UseAIProgressSubscriptionOpti
         }
       },
       onError: (err: SubscriptionError) => {
-        console.error(`[useAIProgressSubscription:${jobId}] Error:`, err);
         setStatus('error');
         recordError();
+        if (handleSubscriptionAuthError(err, `useAIProgressSubscription:${jobId}`)) {
+          return;
+        }
+        console.error(`[useAIProgressSubscription:${jobId}] Error:`, err);
         onErrorRef.current?.(toError(err));
       },
     }
@@ -642,8 +655,11 @@ export function useRealtimeHealth(options: UseRealtimeHealthOptions = {}) {
         setIsHealthy(true);
       },
       onError: (err: SubscriptionError) => {
-        console.error('[useRealtimeHealth] Error:', err);
         setIsHealthy(false);
+        if (handleSubscriptionAuthError(err, 'useRealtimeHealth')) {
+          return;
+        }
+        console.error('[useRealtimeHealth] Error:', err);
       },
     }
   );

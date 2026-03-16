@@ -23,7 +23,7 @@ export interface ReportSection {
 function generatePDFHTML(sections: ReportSection[], options: PDFExportOptions = {}): string {
   const { title = 'Analytics Report', subtitle = '', includeTimestamp = true } = options;
 
-  const timestamp = new Date().toLocaleString();
+  const timestamp = new Date().toLocaleString('en-US', { timeZone: 'UTC' });
 
   const styles = `
     <style>

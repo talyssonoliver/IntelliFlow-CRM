@@ -228,7 +228,7 @@ export function emailInvoice(invoice: InvoiceData, recipientEmail?: string): Inv
     `Please find your invoice below:\n\n` +
       (url ? `View Invoice: ${url}\n\n` : '') +
       `Invoice ID: ${invoice.id}\n` +
-      `Date: ${new Date(invoice.created).toLocaleDateString('en-GB')}\n\n` +
+      `Date: ${new Date(invoice.created).toLocaleDateString('en-GB', { timeZone: 'UTC' })}\n\n` +
       `Thank you for your business.`
   );
 
