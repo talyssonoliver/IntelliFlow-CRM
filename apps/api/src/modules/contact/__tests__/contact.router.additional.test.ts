@@ -1105,6 +1105,166 @@ describe('Contact Router - Additional Coverage', () => {
     });
   });
 
+  // IFC-254 R-10: sortBy enum validation
+  describe('sortBy validation (R-10)', () => {
+    it('should reject invalid sortBy value with BAD_REQUEST', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      // Set up mocks so call would succeed if schema passes
+      prismaMock.contact.findMany.mockResolvedValue([]);
+      prismaMock.contact.count.mockResolvedValue(0);
+
+      // Should be rejected by Zod enum validation, not pass through
+      const result = caller.list({ sortBy: 'password' } as any);
+      await expect(result).rejects.toThrow(
+        expect.objectContaining({ code: 'BAD_REQUEST' })
+      );
+    });
+
+    it('should reject SQL-injection-like sortBy with BAD_REQUEST', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findMany.mockResolvedValue([]);
+      prismaMock.contact.count.mockResolvedValue(0);
+
+      const result = caller.list({ sortBy: '1;DROP TABLE contacts' } as any);
+      await expect(result).rejects.toThrow(
+        expect.objectContaining({ code: 'BAD_REQUEST' })
+      );
+    });
+
+    it('should reject empty string sortBy with BAD_REQUEST', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findMany.mockResolvedValue([]);
+      prismaMock.contact.count.mockResolvedValue(0);
+
+      const result = caller.list({ sortBy: '' } as any);
+      await expect(result).rejects.toThrow(
+        expect.objectContaining({ code: 'BAD_REQUEST' })
+      );
+    });
+
+    it('should accept all valid sortBy enum values', async () => {
+      const validSortFields = [
+        'createdAt', 'updatedAt', 'firstName', 'lastName', 'email',
+        'status', 'company', 'department', 'lastContactedAt',
+      ];
+
+      for (const sortBy of validSortFields) {
+        const ctx = createTestContext();
+        const caller = contactRouter.createCaller(ctx);
+
+        prismaMock.contact.findMany.mockResolvedValue([]);
+        prismaMock.contact.count.mockResolvedValue(0);
+
+        // Should not throw
+        await expect(caller.list({ sortBy } as any)).resolves.toBeDefined();
+      }
+    });
+  });
+
+  // IFC-254 R-12: filterOptions status support
+  describe('filterOptions status support (R-12)', () => {
+    it('should apply status filter to WHERE condition', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      (prismaMock.contact.groupBy as any).mockImplementation((args: { by: string[]; where?: Record<string, unknown> }) => {
+        if (args.by?.includes('department'))
+          return Promise.resolve([{ department: 'Engineering', _count: 3 }]);
+        if (args.by?.includes('accountId'))
+          return Promise.resolve([]);
+        if (args.by?.includes('status'))
+          return Promise.resolve([{ status: 'ACTIVE', _count: 5 }]);
+        return Promise.resolve([]);
+      });
+
+      const result = await caller.filterOptions({ status: ['ACTIVE'] });
+
+      // Verify groupBy was called with status filter in where clause
+      const groupByCalls = (prismaMock.contact.groupBy as any).mock.calls;
+      const deptCall = groupByCalls.find((c: any) => c[0].by?.includes('department'));
+      expect(deptCall?.[0]?.where?.status).toEqual({ in: ['ACTIVE'] });
+    });
+
+    it('should apply multiple status values in filter', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      (prismaMock.contact.groupBy as any).mockImplementation((args: { by: string[] }) => {
+        if (args.by?.includes('department')) return Promise.resolve([]);
+        if (args.by?.includes('accountId')) return Promise.resolve([]);
+        if (args.by?.includes('status'))
+          return Promise.resolve([
+            { status: 'ACTIVE', _count: 5 },
+            { status: 'INACTIVE', _count: 2 },
+          ]);
+        return Promise.resolve([]);
+      });
+
+      const result = await caller.filterOptions({ status: ['ACTIVE', 'INACTIVE'] });
+
+      const groupByCalls = (prismaMock.contact.groupBy as any).mock.calls;
+      const deptCall = groupByCalls.find((c: any) => c[0].by?.includes('department'));
+      expect(deptCall?.[0]?.where?.status).toEqual({ in: ['ACTIVE', 'INACTIVE'] });
+    });
+
+    it('should apply status and department filters combined', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      (prismaMock.contact.groupBy as any).mockImplementation((args: { by: string[] }) => {
+        if (args.by?.includes('department'))
+          return Promise.resolve([{ department: 'Engineering', _count: 2 }]);
+        if (args.by?.includes('accountId')) return Promise.resolve([]);
+        if (args.by?.includes('status'))
+          return Promise.resolve([{ status: 'ACTIVE', _count: 2 }]);
+        return Promise.resolve([]);
+      });
+
+      const result = await caller.filterOptions({
+        status: ['ACTIVE'],
+        department: 'Engineering',
+      });
+
+      const groupByCalls = (prismaMock.contact.groupBy as any).mock.calls;
+      const deptCall = groupByCalls.find((c: any) => c[0].by?.includes('department'));
+      expect(deptCall?.[0]?.where?.status).toEqual({ in: ['ACTIVE'] });
+      expect(deptCall?.[0]?.where?.department).toBeDefined();
+    });
+
+    it('should return statuses array in filterOptions response', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      (prismaMock.contact.groupBy as any).mockImplementation((args: { by: string[] }) => {
+        if (args.by?.includes('department')) return Promise.resolve([]);
+        if (args.by?.includes('accountId')) return Promise.resolve([]);
+        if (args.by?.includes('status'))
+          return Promise.resolve([
+            { status: 'ACTIVE', _count: 10 },
+            { status: 'INACTIVE', _count: 3 },
+            { status: 'PROSPECT', _count: 7 },
+          ]);
+        return Promise.resolve([]);
+      });
+
+      const result = await caller.filterOptions();
+
+      expect(result).toHaveProperty('statuses');
+      expect((result as any).statuses).toHaveLength(3);
+      expect((result as any).statuses[0]).toEqual({
+        value: 'ACTIVE',
+        label: 'ACTIVE',
+        count: 10,
+      });
+    });
+  });
+
   // IFC-192: logActivity tests
   describe('logActivity', () => {
     const setupLogActivityMocks = (

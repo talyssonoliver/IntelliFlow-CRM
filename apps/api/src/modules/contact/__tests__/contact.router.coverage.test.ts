@@ -170,6 +170,7 @@ describe('Contact Router - Coverage Tests', () => {
     it('should handle raw query throwing error (catch block)', async () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       prismaMock.contact.findUnique.mockResolvedValue({
         ...mockContact,
@@ -180,7 +181,7 @@ describe('Contact Router - Coverage Tests', () => {
 
       prismaMock.task.findMany.mockResolvedValue([]);
 
-      // Raw query throws error - should be caught and return empty array
+      // Raw query throws error - should be caught, logged, and return empty array
       prismaMock.$queryRaw.mockRejectedValue(new Error('Table "notes" does not exist'));
 
       const result = await caller.getTimeline({
@@ -190,6 +191,12 @@ describe('Contact Router - Coverage Tests', () => {
 
       expect(result.events).toHaveLength(0);
       expect(result.nextCursor).toBeNull();
+      // IFC-254 R-09: error must be logged, not silently swallowed
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '[fetchContactNotes] Query failed',
+        expect.objectContaining({ contactId: TEST_UUIDS.contact1, error: expect.any(Error) })
+      );
+      consoleSpy.mockRestore();
     });
 
     it('should log warning when query exceeds 1000ms target', async () => {
@@ -541,6 +548,180 @@ describe('Contact Router - Coverage Tests', () => {
       expect(result.events[1].id).toBe('task-task-2');
     });
 
+    // IFC-254 R-09: Error logging tests for each date filter branch
+    it('should log error for gte+lte date filter path when notes query fails', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      prismaMock.contact.findUnique.mockResolvedValue({
+        ...mockContact,
+        id: TEST_UUIDS.contact1,
+        leadId: null,
+        tenantId: TEST_UUIDS.tenant,
+      });
+
+      prismaMock.task.findMany.mockResolvedValue([
+        {
+          id: 'task-1',
+          contactId: TEST_UUIDS.contact1,
+          title: 'Task within range',
+          description: null,
+          status: 'PENDING',
+          priority: 'HIGH',
+          dueDate: null,
+          createdAt: new Date('2024-06-15'),
+          owner: { id: TEST_UUIDS.user1, name: 'User' },
+        } as any,
+      ]);
+
+      prismaMock.$queryRaw.mockRejectedValue(new Error('Permission denied'));
+
+      const result = await caller.getTimeline({
+        contactId: TEST_UUIDS.contact1,
+        fromDate: new Date('2024-01-01'),
+        toDate: new Date('2024-12-31'),
+        limit: 20,
+      });
+
+      // Timeline should still return tasks (resilience)
+      expect(result.events.length).toBeGreaterThanOrEqual(1);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '[fetchContactNotes] Query failed',
+        expect.objectContaining({ contactId: TEST_UUIDS.contact1, error: expect.any(Error) })
+      );
+      consoleSpy.mockRestore();
+    });
+
+    it('should log error for gte-only date filter path when notes query fails', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      prismaMock.contact.findUnique.mockResolvedValue({
+        ...mockContact,
+        id: TEST_UUIDS.contact1,
+        leadId: null,
+        tenantId: TEST_UUIDS.tenant,
+      });
+
+      prismaMock.task.findMany.mockResolvedValue([]);
+      prismaMock.$queryRaw.mockRejectedValue(new Error('Connection lost'));
+
+      const result = await caller.getTimeline({
+        contactId: TEST_UUIDS.contact1,
+        fromDate: new Date('2024-01-01'),
+        limit: 20,
+      });
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '[fetchContactNotes] Query failed',
+        expect.objectContaining({ contactId: TEST_UUIDS.contact1 })
+      );
+      consoleSpy.mockRestore();
+    });
+
+    it('should log error for lte-only date filter path when notes query fails', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      prismaMock.contact.findUnique.mockResolvedValue({
+        ...mockContact,
+        id: TEST_UUIDS.contact1,
+        leadId: null,
+        tenantId: TEST_UUIDS.tenant,
+      });
+
+      prismaMock.task.findMany.mockResolvedValue([]);
+      prismaMock.$queryRaw.mockRejectedValue(new Error('RLS policy violation'));
+
+      const result = await caller.getTimeline({
+        contactId: TEST_UUIDS.contact1,
+        toDate: new Date('2024-12-31'),
+        limit: 20,
+      });
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '[fetchContactNotes] Query failed',
+        expect.objectContaining({ contactId: TEST_UUIDS.contact1 })
+      );
+      consoleSpy.mockRestore();
+    });
+
+    it('should log error for no-date-filter path when notes query fails', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      prismaMock.contact.findUnique.mockResolvedValue({
+        ...mockContact,
+        id: TEST_UUIDS.contact1,
+        leadId: null,
+        tenantId: TEST_UUIDS.tenant,
+      });
+
+      prismaMock.task.findMany.mockResolvedValue([]);
+      prismaMock.$queryRaw.mockRejectedValue(new Error('Connection lost'));
+
+      const result = await caller.getTimeline({
+        contactId: TEST_UUIDS.contact1,
+        limit: 20,
+      });
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '[fetchContactNotes] Query failed',
+        expect.objectContaining({ contactId: TEST_UUIDS.contact1 })
+      );
+      consoleSpy.mockRestore();
+    });
+
+    it('should return tasks even when notes query fails (resilience)', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      prismaMock.contact.findUnique.mockResolvedValue({
+        ...mockContact,
+        id: TEST_UUIDS.contact1,
+        leadId: null,
+        tenantId: TEST_UUIDS.tenant,
+      });
+
+      prismaMock.task.findMany.mockResolvedValue([
+        {
+          id: 'task-1',
+          contactId: TEST_UUIDS.contact1,
+          title: 'Task 1',
+          description: null,
+          status: 'PENDING',
+          priority: 'HIGH',
+          dueDate: null,
+          createdAt: new Date('2024-01-15'),
+          owner: { id: TEST_UUIDS.user1, name: 'User' },
+        } as any,
+        {
+          id: 'task-2',
+          contactId: TEST_UUIDS.contact1,
+          title: 'Task 2',
+          description: null,
+          status: 'PENDING',
+          priority: 'MEDIUM',
+          dueDate: null,
+          createdAt: new Date('2024-01-16'),
+          owner: { id: TEST_UUIDS.user1, name: 'User' },
+        } as any,
+      ]);
+      prismaMock.$queryRaw.mockRejectedValue(new Error('DB error'));
+
+      const result = await caller.getTimeline({
+        contactId: TEST_UUIDS.contact1,
+        limit: 20,
+      });
+
+      expect(result.events.length).toBeGreaterThanOrEqual(2);
+    });
+
     it('should not set nextCursor when events.length < limit', async () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
@@ -575,6 +756,147 @@ describe('Contact Router - Coverage Tests', () => {
 
       expect(result.events).toHaveLength(1);
       expect(result.nextCursor).toBeNull();
+    });
+  });
+
+  // IFC-254 D-03: contactListResponseSchema key alignment
+  describe('D-03 - list response schema alignment', () => {
+    it('should use contacts key in list response (not data)', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findMany.mockResolvedValue([]);
+      prismaMock.contact.count.mockResolvedValue(0);
+
+      const result = await caller.list({});
+
+      expect(result).toHaveProperty('contacts');
+      expect(result).not.toHaveProperty('data');
+    });
+
+    it('should validate list response against contactListResponseSchema', async () => {
+      const { contactListResponseSchema } = await import('@intelliflow/validators/contact');
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findMany.mockResolvedValue([]);
+      prismaMock.contact.count.mockResolvedValue(0);
+
+      const result = await caller.list({});
+      const parsed = contactListResponseSchema.safeParse(result);
+
+      expect(parsed.success).toBe(true);
+    });
+  });
+
+  // IFC-254 D-08/R-14: phone schema in response
+  describe('D-08 - phone nullable in response schema', () => {
+    it('should accept null phone in contactResponseSchema', async () => {
+      const { contactResponseSchema } = await import('@intelliflow/validators/contact');
+
+      const validContact = {
+        id: TEST_UUIDS.contact1,
+        email: 'test@example.com',
+        firstName: 'Test',
+        lastName: 'User',
+        title: null,
+        phone: null,
+        department: null,
+        status: 'ACTIVE',
+        accountId: null,
+        ownerId: TEST_UUIDS.user1,
+        leadId: null,
+        streetAddress: null,
+        city: null,
+        zipCode: null,
+        company: null,
+        linkedInUrl: null,
+        contactType: null,
+        tags: [],
+        contactNotes: null,
+        lastContactedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const parsed = contactResponseSchema.safeParse(validContact);
+      expect(parsed.success).toBe(true);
+    });
+
+    it('should accept string phone in contactResponseSchema', async () => {
+      const { contactResponseSchema } = await import('@intelliflow/validators/contact');
+
+      const validContact = {
+        id: TEST_UUIDS.contact1,
+        email: 'test@example.com',
+        firstName: 'Test',
+        lastName: 'User',
+        title: null,
+        phone: '+14155552671',
+        department: null,
+        status: 'ACTIVE',
+        accountId: null,
+        ownerId: TEST_UUIDS.user1,
+        leadId: null,
+        streetAddress: null,
+        city: null,
+        zipCode: null,
+        company: null,
+        linkedInUrl: null,
+        contactType: null,
+        tags: [],
+        contactNotes: null,
+        lastContactedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const parsed = contactResponseSchema.safeParse(validContact);
+      expect(parsed.success).toBe(true);
+      // After D-08 fix, phone should remain a plain string, not transform to VO
+      if (parsed.success) {
+        expect(typeof parsed.data.phone).toBe('string');
+      }
+    });
+
+    it('should handle list response items with null phone via schema validation', async () => {
+      const { contactListResponseSchema } = await import('@intelliflow/validators/contact');
+
+      const listResponse = {
+        contacts: [
+          {
+            id: TEST_UUIDS.contact1,
+            email: 'test@example.com',
+            firstName: 'Test',
+            lastName: 'User',
+            title: null,
+            phone: null,
+            department: null,
+            status: 'ACTIVE',
+            accountId: null,
+            ownerId: TEST_UUIDS.user1,
+            leadId: null,
+            streetAddress: null,
+            city: null,
+            zipCode: null,
+            company: null,
+            linkedInUrl: null,
+            contactType: null,
+            tags: [],
+            contactNotes: null,
+            lastContactedAt: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+        total: 1,
+        page: 1,
+        limit: 20,
+        hasMore: false,
+      };
+
+      const parsed = contactListResponseSchema.safeParse(listResponse);
+      expect(parsed.success).toBe(true);
     });
   });
 });

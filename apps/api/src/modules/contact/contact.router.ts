@@ -240,53 +240,62 @@ type NoteRecord = { id: string; content: string; createdAt: Date };
 
 /**
  * Fetch contact notes using a raw SQL query with optional date filter.
- * Falls back to an empty array if the notes table doesn't exist.
- * Note: ORDER BY is always DESC — the original inline query used an invalid
- * nested $queryRaw pattern for ASC/DESC which was a no-op in practice.
+ * IFC-254: Fixed table name ("notes" → "contact_notes"), added tenantId filter,
+ * and replaced silent error swallowing with logged error handling.
  */
 async function fetchContactNotes(
   prismaWithTenant: PrismaWithTenant,
   contactId: string,
+  tenantId: string,
   dateFilter: { gte?: Date; lte?: Date },
   fetchLimit: number
 ): Promise<NoteRecord[]> {
+  const handleError = (err: unknown): NoteRecord[] => {
+    console.error('[fetchContactNotes] Query failed', { contactId, error: err });
+    return [] as NoteRecord[];
+  };
+
   if (dateFilter.gte && dateFilter.lte) {
     return prismaWithTenant.$queryRaw<NoteRecord[]>`
-      SELECT id, content, "createdAt" FROM "notes"
+      SELECT id, content, "createdAt" FROM "contact_notes"
       WHERE "contactId" = ${contactId}
+        AND "tenantId" = ${tenantId}
         AND "createdAt" >= ${dateFilter.gte}
         AND "createdAt" <= ${dateFilter.lte}
       ORDER BY "createdAt" DESC
       LIMIT ${fetchLimit}
-    `.catch(() => []);
+    `.catch(handleError);
   }
 
   if (dateFilter.gte) {
     return prismaWithTenant.$queryRaw<NoteRecord[]>`
-      SELECT id, content, "createdAt" FROM "notes"
+      SELECT id, content, "createdAt" FROM "contact_notes"
       WHERE "contactId" = ${contactId}
+        AND "tenantId" = ${tenantId}
         AND "createdAt" >= ${dateFilter.gte}
       ORDER BY "createdAt" DESC
       LIMIT ${fetchLimit}
-    `.catch(() => []);
+    `.catch(handleError);
   }
 
   if (dateFilter.lte) {
     return prismaWithTenant.$queryRaw<NoteRecord[]>`
-      SELECT id, content, "createdAt" FROM "notes"
+      SELECT id, content, "createdAt" FROM "contact_notes"
       WHERE "contactId" = ${contactId}
+        AND "tenantId" = ${tenantId}
         AND "createdAt" <= ${dateFilter.lte}
       ORDER BY "createdAt" DESC
       LIMIT ${fetchLimit}
-    `.catch(() => []);
+    `.catch(handleError);
   }
 
   return prismaWithTenant.$queryRaw<NoteRecord[]>`
-    SELECT id, content, "createdAt" FROM "notes"
+    SELECT id, content, "createdAt" FROM "contact_notes"
     WHERE "contactId" = ${contactId}
+      AND "tenantId" = ${tenantId}
     ORDER BY "createdAt" DESC
     LIMIT ${fetchLimit}
-  `.catch(() => []);
+  `.catch(handleError);
 }
 
 export const contactRouter = createTRPCRouter({
@@ -824,10 +833,15 @@ export const contactRouter = createTRPCRouter({
         baseWhere.department = { contains: input.department, mode: 'insensitive' };
       }
 
+      // IFC-254 R-12: Apply status filter
+      if (input?.status && input.status.length > 0) {
+        baseWhere.status = { in: input.status };
+      }
+
       const where = createTenantWhereClause(typedCtx.tenant, baseWhere);
 
       // Get counts for each filter option
-      const [departmentCounts, accountCounts] = await Promise.all([
+      const [departmentCounts, accountCounts, statusCounts] = await Promise.all([
         typedCtx.prismaWithTenant.contact.groupBy({
           by: ['department'],
           where,
@@ -835,6 +849,11 @@ export const contactRouter = createTRPCRouter({
         }),
         typedCtx.prismaWithTenant.contact.groupBy({
           by: ['accountId'],
+          where,
+          _count: true,
+        }),
+        typedCtx.prismaWithTenant.contact.groupBy({
+          by: ['status'],
           where,
           _count: true,
         }),
@@ -866,6 +885,11 @@ export const contactRouter = createTRPCRouter({
             label: accountMap.get(a.accountId as string) ?? a.accountId ?? 'Unknown',
             count: a._count,
           })),
+        statuses: (statusCounts ?? []).map((s) => ({
+          value: s.status,
+          label: s.status,
+          count: s._count,
+        })),
       };
     }),
 
@@ -1098,8 +1122,8 @@ export const contactRouter = createTRPCRouter({
             owner: { select: { id: true, name: true } },
           },
         }),
-        // Notes (using ContactNote model if exists, fallback to direct query)
-        fetchContactNotes(typedCtx.prismaWithTenant, input.contactId, dateFilter, fetchLimit),
+        // Notes (using ContactNote model via raw query with tenant isolation)
+        fetchContactNotes(typedCtx.prismaWithTenant, input.contactId, typedCtx.tenant.tenantId, dateFilter, fetchLimit),
       ]);
 
       // 5. Map to timeline events
