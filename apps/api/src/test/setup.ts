@@ -99,7 +99,7 @@ export const prismaMock = mockDeep<PrismaClient>();
 beforeEach(() => {
   mockReset(prismaMock);
   // Reset mockServices - prevents call history accumulation
-  Object.values(mockServices).forEach((mock) => mockReset(mock));
+  Object.values(mockServices).forEach((mock) => mock && mockReset(mock));
   // Reset mockSecurityServices
   Object.values(mockSecurityServices).forEach((mock) => mockReset(mock));
   // Reset mockAdapters
@@ -143,6 +143,11 @@ export const mockServices = {
   closeDealLost: mockDeep<any>(),
   feedbackSurvey: mockDeep<any>(),
   experiment: mockDeep<any>(),
+  // IFC-157: Notification Orchestrator — set to undefined so router tests
+  // fall back to direct Prisma mocks. Tests that need orchestrator behavior
+  // should override via createTestContext({ services: { notificationOrchestrator: ... } }).
+  notificationOrchestrator: undefined as any,
+  aiMonitoringService: mockDeep<any>(),
 };
 
 /**
@@ -184,6 +189,7 @@ export const mockAdapters = {
   tenantModuleRepository: mockDeep<any>(),
   notificationRepository: mockDeep<any>(),
   notificationPreferenceRepository: mockDeep<any>(),
+  notificationAuditLogger: mockDeep<any>(),
   experimentRepository: mockDeep<any>(),
 };
 
@@ -242,7 +248,7 @@ function normalizeHeaders(headers?: HeaderLike): Headers | undefined {
  */
 export function createTestContext(overrides?: Partial<BaseContext>): BaseContext {
   const userId = TEST_UUIDS.user1;
-  const tenantId = 'test-tenant-id';
+  const tenantId = TEST_UUIDS.tenant;
 
   const defaultContext: BaseContext = {
     prisma: prismaMock as PrismaClient, // NOSONAR
@@ -288,7 +294,7 @@ export function createTestContext(overrides?: Partial<BaseContext>): BaseContext
  */
 export function createAdminContext(overrides?: Partial<BaseContext>): BaseContext {
   const adminId = TEST_UUIDS.admin1;
-  const tenantId = 'test-tenant-id';
+  const tenantId = TEST_UUIDS.tenant;
 
   return createTestContext({
     user: {

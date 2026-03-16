@@ -45,6 +45,7 @@ describe('Entry Points', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    delete process.env.ALLOW_DEV_AUTH_FALLBACK;
   });
 
   describe('context.ts - createContext', () => {
@@ -62,13 +63,23 @@ describe('Entry Points', () => {
       expect(context.user).toBeDefined();
     });
 
-    it('should include mock user with correct properties', async () => {
+    it('should not auto-authenticate without a bearer token', async () => {
+      const { createContext } = await import('../context.js');
+
+      const context = await createContext();
+
+      expect(context.user).toBeNull();
+    });
+
+    it('should include fallback user only when explicitly enabled', async () => {
+      process.env.ALLOW_DEV_AUTH_FALLBACK = 'true';
+
       const { createContext } = await import('../context.js');
 
       const context = await createContext();
 
       expect(context.user).toEqual({
-        userId: '00000000-0000-4000-8000-000000000103', // Sarah Johnson from SEED_IDS
+        userId: '00000000-0000-4000-8000-000000000103',
         email: 'sarah.johnson@intelliflow.dev',
         name: 'Sarah Johnson',
         role: 'SALES_REP',

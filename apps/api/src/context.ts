@@ -50,6 +50,10 @@ export type Services = {
   feedbackSurvey: Container['feedbackSurveyService'];
   // IFC-025: Experiment Service
   experiment: Container['experimentService'];
+  // IFC-157: Notification Orchestrator (unified service with preferences + audit)
+  notificationOrchestrator: Container['notificationOrchestrator'];
+  // IFC-297: AI Monitoring persistence service
+  aiMonitoringService: Container['aiMonitoringService'];
   // Optional future services
   feedback?: unknown;
 };
@@ -130,6 +134,16 @@ const FALLBACK_USER: UserSession = {
 };
 
 /**
+ * Dev-only escape hatch for local diagnostics.
+ *
+ * Disabled by default because it bypasses real authentication and can expose
+ * tenant-scoped data in the UI when route guards are missing.
+ */
+function isDevAuthFallbackEnabled(): boolean {
+  return process.env.NODE_ENV !== 'production' && process.env.ALLOW_DEV_AUTH_FALLBACK === 'true';
+}
+
+/**
  * Create context for tRPC requests
  *
  * IFC-007: Now properly extracts and verifies JWT tokens from Authorization header
@@ -140,7 +154,7 @@ const FALLBACK_USER: UserSession = {
  * 3. Look up user in database to get role and tenant
  * 4. Return authenticated user session
  *
- * Falls back to mock user in development if no valid token is provided
+ * Falls back to mock user only when explicitly enabled for development diagnostics
  */
 /**
  * Build the shared services object from the container
@@ -162,6 +176,8 @@ function buildServicesFromContainer(): Services {
     closeDealLost: container.closeDealLostUseCase,
     feedbackSurvey: container.feedbackSurveyService,
     experiment: container.experimentService,
+    notificationOrchestrator: container.notificationOrchestrator,
+    aiMonitoringService: container.aiMonitoringService,
   };
 }
 
@@ -348,8 +364,8 @@ export const createWSContext = async (authHeader?: string): Promise<BaseContext>
     }
   }
 
-  // Fall back to mock user in development
-  if (!user && !hadBearerToken && process.env.NODE_ENV !== 'production') {
+  // Explicit opt-in only: never auto-authenticate by default in development.
+  if (!user && !hadBearerToken && isDevAuthFallbackEnabled()) {
     user = FALLBACK_USER;
   }
 
@@ -381,8 +397,8 @@ export const createContext = async (opts?: {
     }
   }
 
-  // Fall back to mock user only when no bearer was provided (dev convenience)
-  if (!user && !hadBearerToken && process.env.NODE_ENV !== 'production') {
+  // Explicit opt-in only: never auto-authenticate by default in development.
+  if (!user && !hadBearerToken && isDevAuthFallbackEnabled()) {
     user = FALLBACK_USER;
   }
 

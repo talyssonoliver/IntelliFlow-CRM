@@ -22,6 +22,7 @@ import {
   PrismaCaseDocumentRepository,
   PrismaNotificationRepository,
   PrismaNotificationPreferenceRepository,
+  PrismaNotificationAuditLogger,
   PrismaExperimentRepository,
   InMemoryEventBus,
   MockAIService,
@@ -61,6 +62,7 @@ import {
   CloseDealWonUseCase,
   CloseDealLostUseCase,
   ExperimentService,
+  NotificationService,
 } from '@intelliflow/application';
 import {
   getAuditLogger,
@@ -71,6 +73,7 @@ import {
 } from './security';
 import { loadFeatureFlagsConfig } from './config/feature-flags.config';
 import { CalendarWebhookService } from './modules/calendar/calendar-webhook.service';
+import { AIMonitoringService } from './services/AIMonitoringService';
 
 /**
  * Get the API Prisma client.
@@ -106,6 +109,7 @@ const createAdapters = (prismaClient: PrismaClient) => {
   const tenantModuleRepository = new PrismaTenantModuleRepository(prismaClient);
   const notificationRepository = new PrismaNotificationRepository(prismaClient);
   const notificationPreferenceRepository = new PrismaNotificationPreferenceRepository(prismaClient);
+  const notificationAuditLogger = new PrismaNotificationAuditLogger(prismaClient);
   const experimentRepository = new PrismaExperimentRepository(prismaClient);
 
   // Storage & AV (IFC-094)
@@ -194,6 +198,7 @@ const createAdapters = (prismaClient: PrismaClient) => {
     tenantModuleRepository,
     notificationRepository,
     notificationPreferenceRepository,
+    notificationAuditLogger,
     experimentRepository,
     eventBus,
     aiService,
@@ -308,6 +313,15 @@ const createServices = (prismaClient: PrismaClient) => {
     adapters.cache
   );
 
+  // IFC-157: Notification Orchestrator (unified notification service with preferences + audit)
+  const notificationOrchestrator = new NotificationService(
+    adapters.notificationRepository,
+    adapters.notificationPreferenceRepository,
+    adapters.notificationService,
+    adapters.eventBus,
+    adapters.notificationAuditLogger
+  );
+
   // IFC-158: Appointment ICS + Reminder services
   const appointmentIcsHandler = new AppointmentIcsEventHandler(
     adapters.icsGenerationService,
@@ -359,6 +373,9 @@ const createServices = (prismaClient: PrismaClient) => {
     adapters.avScanner
   );
 
+  // IFC-297: AI Monitoring persistence service
+  const aiMonitoringService = new AIMonitoringService(prismaClient);
+
   return {
     leadService,
     contactService,
@@ -389,12 +406,16 @@ const createServices = (prismaClient: PrismaClient) => {
     ingestionOrchestrator,
     // IFC-025: Experiment Service
     experimentService,
+    // IFC-157: Notification Orchestrator (unified service with preferences + audit)
+    notificationOrchestrator,
     // IFC-209: Module Access Service
     moduleAccess: adapters.tenantModuleRepository,
     // Security services (IFC-098, IFC-113, IFC-127)
     security,
     // Also expose adapters for direct access when needed
     adapters,
+    // IFC-297: AI Monitoring persistence service
+    aiMonitoringService,
   };
 };
 

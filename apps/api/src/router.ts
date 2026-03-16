@@ -7,6 +7,7 @@
 
 import { createTRPCRouter } from './trpc';
 import { leadRouter } from './modules/lead/lead.router';
+import { leadSettingsRouter } from './modules/lead/lead-settings.router';
 import { contactRouter } from './modules/contact/contact.router';
 import { accountRouter } from './modules/account/account.router';
 import { opportunityRouter } from './modules/opportunity/opportunity.router';
@@ -43,6 +44,7 @@ import { workflowRouter } from './modules/workflow/workflow.router';
 import { webhooksRouter } from './modules/webhooks/webhooks.router';
 import { queuesAdminRouter } from './modules/admin/queues.router';
 import { activityFeedRouter } from './modules/misc/activity-feed.router';
+import { globalSearchRouter } from './modules/misc/global-search.router';
 import { moduleAccessRouter } from './modules/subscription/subscription.router';
 import { experimentRouter } from './modules/experiment';
 import { routingRouter } from './modules/routing';
@@ -115,6 +117,7 @@ export const appRouter = createTRPCRouter({
   ticket: ticketRouter,
   ticketRouting: ticketRoutingRouter, // IFC-067: Automatic Ticket Routing
   ticketConfig: ticketConfigRouter, // PG-173: Ticket Configuration Pages
+  leadSettings: leadSettingsRouter, // PG-178: Lead Settings Configuration
 
   // Analytics & Reporting
   analytics: analyticsRouter,
@@ -170,6 +173,9 @@ export const appRouter = createTRPCRouter({
 
   // Activity Feed (IFC-069)
   activityFeed: activityFeedRouter,
+
+  // Global Search (IFC-203: cross-entity search from header)
+  globalSearch: globalSearchRouter,
 
   // Module Access (IFC-209)
   moduleAccess: moduleAccessRouter,

@@ -443,8 +443,8 @@ export const createAppointmentTool: AgentToolDefinition<
     }
 
     // Check for appointments outside business hours (before 8am or after 7pm)
-    const startHour = input.startTime.getHours();
-    const endHour = input.endTime.getHours();
+    const startHour = input.startTime.getUTCHours();
+    const endHour = input.endTime.getUTCHours();
     if (startHour < 8 || endHour > 19) {
       warnings.push('This appointment is scheduled outside typical business hours (8am-7pm)');
     }
@@ -456,7 +456,7 @@ export const createAppointmentTool: AgentToolDefinition<
     }
 
     return {
-      summary: `Create appointment: "${input.title}" (${input.appointmentType}) on ${input.startTime.toLocaleDateString()} at ${input.startTime.toLocaleTimeString()}`,
+      summary: `Create appointment: "${input.title}" (${input.appointmentType}) on ${input.startTime.toLocaleDateString('en-US', { timeZone: 'UTC' })} at ${input.startTime.toLocaleTimeString('en-US', { timeZone: 'UTC' })}`,
       changes: [
         {
           field: 'title',

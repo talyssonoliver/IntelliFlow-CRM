@@ -35,6 +35,7 @@ vi.mock('../context', () => ({
 
 import { createWebSocketServer, WS_PORT } from '../ws-server';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
+import { createWSContext } from '../context';
 
 describe('WS_PORT', () => {
   it('should export WS_PORT as number', () => {
@@ -73,6 +74,29 @@ describe('createWebSocketServer', () => {
     const result = createWebSocketServer(4000);
     expect(result).toBeDefined();
     expect(result.on).toBe(mockOn);
+  });
+
+  it('uses authorization from connection params when creating context', async () => {
+    createWebSocketServer(4000);
+
+    const createContext = vi.mocked(applyWSSHandler).mock.calls[0]?.[0].createContext;
+    expect(createContext).toBeDefined();
+
+    await createContext?.({
+      req: { headers: {} } as any,
+      res: {} as any,
+      info: {
+        connectionParams: { authorization: 'Bearer ws-token' },
+        calls: [],
+        isBatchCall: false,
+        accept: null,
+        type: 'unknown',
+        signal: new AbortController().signal,
+        url: null,
+      },
+    });
+
+    expect(createWSContext).toHaveBeenCalledWith('Bearer ws-token');
   });
 });
 

@@ -116,7 +116,7 @@ function applyAppointmentStartTimeChange(
 ): void {
   changes.push(makeChange('startTime', startTime.toISOString()));
   if (startTime < new Date()) warnings.push('Warning: New start time is in the past');
-  const hour = startTime.getHours();
+  const hour = startTime.getUTCHours();
   if (hour < 8 || hour > 19) warnings.push('New time is outside typical business hours (8am-7pm)');
   const day = startTime.getDay();
   if (day === 0 || day === 6) warnings.push('New appointment time is on a weekend');

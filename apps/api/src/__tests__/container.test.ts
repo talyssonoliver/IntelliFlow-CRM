@@ -179,6 +179,11 @@ vi.mock('@intelliflow/adapters', () => ({
       return { name: 'notificationPreferenceRepo' };
     }
   },
+  PrismaNotificationAuditLogger: class {
+    constructor() {
+      return { name: 'notificationAuditLogger' };
+    }
+  },
   PrismaExperimentRepository: class {
     constructor() {
       return {
@@ -322,6 +327,11 @@ vi.mock('@intelliflow/application', () => ({
   ExperimentService: class {
     constructor() {
       return { name: 'experimentService' };
+    }
+  },
+  NotificationService: class {
+    constructor() {
+      return { name: 'notificationOrchestrator' };
     }
   },
 }));

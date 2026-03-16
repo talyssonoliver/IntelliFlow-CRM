@@ -87,31 +87,38 @@ export function extractTenantContext(user: Context['user']): TenantContext {
  * Create a tenant-scoped Prisma extension
  *
  * This extension automatically sets the PostgreSQL session variable
- * for RLS policy evaluation before each query.
+ * `app.current_tenant_id` before each model operation so that Supabase
+ * RLS policies can call `get_current_tenant_id()` and enforce row-level
+ * tenant isolation.
+ *
+ * See: supabase/migrations/20260203120000_enable_rls_policies.sql
+ *   → get_current_tenant_id() reads current_setting('app.current_tenant_id', true)
+ *
+ * NOTE: Do NOT use `SET LOCAL` here — Prisma 7 with the pg adapter does not
+ * wrap every operation in an explicit transaction, so SET LOCAL would be a
+ * no-op between implicit transactions. `SET` (session-scoped) persists for
+ * the connection lifetime, which is safe with PgBouncer in session mode.
  */
 export function createTenantScopedPrisma(
   prisma: PrismaClient,
   tenantContext: TenantContext
 ): PrismaClient {
-  // Set RLS context before query execution
+  // Validate tenantId is a UUID — prevents SQL injection via the SET command
+  // since we embed it directly in a raw SQL string (no parameterised SET syntax).
+  if (!/^[0-9a-f-]{36}$/i.test(tenantContext.tenantId)) {
+    throw new Error(
+      `createTenantScopedPrisma: invalid tenantId format: "${tenantContext.tenantId}"`
+    );
+  }
+
   return prisma.$extends({
     query: {
       $allModels: {
-        async $allOperations({ args, query, model, operation }) {
-          // Set JWT claims for RLS evaluation
-          const claims = JSON.stringify({
-            sub: tenantContext.userId,
-            role: tenantContext.role,
-            tenant_id: tenantContext.tenantId,
-            organization_id: tenantContext.organizationId,
-          });
-
-          // Set session variable (used by RLS policies)
+        async $allOperations({ args, query }) {
+          // Set the session variable that all RLS policies read.
           await prisma.$executeRawUnsafe(
-            `SET request.jwt.claims = '${claims.replaceAll("'", "''")}'`
+            `SET app.current_tenant_id = '${tenantContext.tenantId}'`
           );
-
-          // Execute the actual query
           return query(args);
         },
       },

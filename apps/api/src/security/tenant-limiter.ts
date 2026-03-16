@@ -211,7 +211,7 @@ export async function checkResourceUsage(
       break;
     case 'ai_scores': {
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      today.setUTCHours(0, 0, 0, 0);
       current = await prisma.aIScore.count({
         where: {
           scoredById: tenantId,

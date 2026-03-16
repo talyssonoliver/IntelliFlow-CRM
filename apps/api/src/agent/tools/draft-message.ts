@@ -125,7 +125,7 @@ function collectMessageWarnings(input: DraftMessageInput, warnings: string[]): v
     if (input.scheduledFor < new Date()) {
       warnings.push('Warning: Scheduled time is in the past');
     }
-    const hour = input.scheduledFor.getHours();
+    const hour = input.scheduledFor.getUTCHours();
     if (hour < 8 || hour > 18) {
       warnings.push('Scheduled time is outside typical business hours (8am-6pm)');
     }
@@ -302,7 +302,7 @@ export const draftMessageTool: AgentToolDefinition<DraftMessageInput, DraftedMes
     }
     summary += ` to ${input.recipientType.toLowerCase()} ${input.recipientId}`;
     if (input.scheduledFor) {
-      summary += ` (scheduled for ${input.scheduledFor.toLocaleString()})`;
+      summary += ` (scheduled for ${input.scheduledFor.toLocaleString('en-US', { timeZone: 'UTC' })})`;
     }
 
     return {
