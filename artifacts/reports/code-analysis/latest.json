@@ -1,11 +1,9 @@
 {
-  "timestamp": "2026-03-15T20:09:53.753Z",
+  "timestamp": "2026-03-16T18:30:13.152Z",
   "knip": {
     "success": true,
     "data": {
-      "files": [
-        "apps/web/src/lib/calendar-webhook-service.ts"
-      ],
+      "files": [],
       "duplicates": [],
       "dependencies": [
         "@langchain/core",
@@ -18,35 +16,21 @@
       "unlisted": [],
       "exports": [
         {
-          "file": "apps/ai-worker/src/jobs/insight-generation.job.ts",
+          "file": "lighthouserc.authenticated.js",
           "exports": [
-            "DEFAULT_INSIGHT_JOB_OPTIONS"
+            "default"
+          ]
+        },
+        {
+          "file": "lighthouserc.js",
+          "exports": [
+            "default"
           ]
         },
         {
           "file": "tools/lighthouse/lhci-auth.js",
           "exports": [
             "default"
-          ]
-        },
-        {
-          "file": "packages/platform/src/feature-flags/schema.ts",
-          "exports": [
-            "featureFlagRuleSchema",
-            "featureFlagDefinitionSchema"
-          ]
-        },
-        {
-          "file": "packages/ui/src/components/cookie-consent/cookie-consent.tsx",
-          "exports": [
-            "default"
-          ]
-        },
-        {
-          "file": "packages/ui/src/components/hover-card.tsx",
-          "exports": [
-            "HoverCard",
-            "HoverCardTrigger"
           ]
         },
         {
@@ -67,32 +51,6 @@
           "file": "apps/web/src/components/sidebar/configs/contacts.ts",
           "exports": [
             "contactsSidebarConfig"
-          ]
-        },
-        {
-          "file": "apps/web/src/app/api/webhooks/google/calendar/providers.ts",
-          "exports": [
-            "setGoogleAdapterForTests",
-            "setWebhookServiceForTests"
-          ]
-        },
-        {
-          "file": "apps/web/src/app/api/webhooks/microsoft/calendar/providers.ts",
-          "exports": [
-            "setMicrosoftAdapterForTests",
-            "setWebhookServiceForTests"
-          ]
-        },
-        {
-          "file": "apps/web/src/components/notifications/notification-utils.ts",
-          "exports": [
-            "PROACTIVE_ALERT_CATEGORIES"
-          ]
-        },
-        {
-          "file": "apps/web/src/lib/trpc/subscription-auth.ts",
-          "exports": [
-            "resetSubscriptionAuthRedirectStateForTests"
           ]
         },
         {
@@ -178,9 +136,9 @@
       ]
     },
     "summary": {
-      "unusedFiles": 1,
+      "unusedFiles": 0,
       "unusedDeps": 4,
-      "unusedExports": 28,
+      "unusedExports": 18,
       "unusedTypes": 3
     }
   },
