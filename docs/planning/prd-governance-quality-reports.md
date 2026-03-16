@@ -6,7 +6,7 @@
 | ----------------- | ------------------------------------------------------ |
 | **Feature Name**  | Governance Quality Report Sub-Pages                    |
 | **Owner**         | Frontend Dev (STOA-Quality)                            |
-| **Status**        | Draft                                                  |
+| **Status**        | In Progress                                            |
 | **Target Sprint** | 16                                                     |
 | **Created Date**  | 2026-03-15                                             |
 | **Last Updated**  | 2026-03-15                                             |
