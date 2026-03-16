@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createTestContext, createPublicContext } from '../../../test/setup';
+import { createTestContext, createPublicContext, TEST_UUIDS } from '../../../test/setup';
 import { activityFeedRouter } from '../activity-feed.router';
 import type { ActivityFeedPage } from '@intelliflow/domain';
 
@@ -71,7 +71,7 @@ describe('activityFeedRouter', () => {
       expect(result.items).toHaveLength(2);
       expect(result.hasMore).toBe(false);
       expect(mockActivityFeedService.getUnifiedFeed).toHaveBeenCalledWith(
-        'test-tenant-id',
+        TEST_UUIDS.tenant,
         20, // default limit
         undefined, // no cursor
         expect.objectContaining({})
@@ -84,7 +84,7 @@ describe('activityFeedRouter', () => {
 
       await caller.getUnifiedFeed({ limit: 50 });
       expect(mockActivityFeedService.getUnifiedFeed).toHaveBeenCalledWith(
-        'test-tenant-id',
+        TEST_UUIDS.tenant,
         50,
         undefined,
         expect.anything()
@@ -98,7 +98,7 @@ describe('activityFeedRouter', () => {
 
       await caller.getUnifiedFeed({ cursor });
       expect(mockActivityFeedService.getUnifiedFeed).toHaveBeenCalledWith(
-        'test-tenant-id',
+        TEST_UUIDS.tenant,
         20,
         cursor,
         expect.anything()
@@ -111,7 +111,7 @@ describe('activityFeedRouter', () => {
 
       await caller.getUnifiedFeed({ types: ['EMAIL', 'CALL'] });
       expect(mockActivityFeedService.getUnifiedFeed).toHaveBeenCalledWith(
-        'test-tenant-id',
+        TEST_UUIDS.tenant,
         20,
         undefined,
         expect.objectContaining({ types: ['EMAIL', 'CALL'] })
@@ -124,7 +124,7 @@ describe('activityFeedRouter', () => {
 
       await caller.getUnifiedFeed({ sources: ['LEAD_ACTIVITY', 'EMAIL'] });
       expect(mockActivityFeedService.getUnifiedFeed).toHaveBeenCalledWith(
-        'test-tenant-id',
+        TEST_UUIDS.tenant,
         20,
         undefined,
         expect.objectContaining({ sources: ['LEAD_ACTIVITY', 'EMAIL'] })
@@ -137,7 +137,7 @@ describe('activityFeedRouter', () => {
 
       await caller.getUnifiedFeed({ entityType: 'LEAD' });
       expect(mockActivityFeedService.getUnifiedFeed).toHaveBeenCalledWith(
-        'test-tenant-id',
+        TEST_UUIDS.tenant,
         20,
         undefined,
         expect.objectContaining({ entityType: 'LEAD' })
@@ -150,7 +150,7 @@ describe('activityFeedRouter', () => {
 
       await caller.getUnifiedFeed({ entityType: 'CONTACT', entityId: 'contact-123' });
       expect(mockActivityFeedService.getUnifiedFeed).toHaveBeenCalledWith(
-        'test-tenant-id',
+        TEST_UUIDS.tenant,
         20,
         undefined,
         expect.objectContaining({ entityType: 'CONTACT', entityId: 'contact-123' })
@@ -182,7 +182,7 @@ describe('activityFeedRouter', () => {
 
       await caller.getUnifiedFeed({});
       expect(mockActivityFeedService.getUnifiedFeed).toHaveBeenCalledWith(
-        'test-tenant-id',
+        TEST_UUIDS.tenant,
         20,
         undefined,
         expect.objectContaining({})
@@ -221,7 +221,7 @@ describe('activityFeedRouter', () => {
       });
       expect(result.items).toHaveLength(2);
       expect(mockActivityFeedService.getEntityFeed).toHaveBeenCalledWith(
-        'test-tenant-id',
+        TEST_UUIDS.tenant,
         'LEAD',
         'lead-123',
         20,
@@ -242,7 +242,7 @@ describe('activityFeedRouter', () => {
         cursor,
       });
       expect(mockActivityFeedService.getEntityFeed).toHaveBeenCalledWith(
-        'test-tenant-id',
+        TEST_UUIDS.tenant,
         'CONTACT',
         'contact-1',
         10,
@@ -261,7 +261,7 @@ describe('activityFeedRouter', () => {
         types: ['EMAIL', 'CALL'],
       });
       expect(mockActivityFeedService.getEntityFeed).toHaveBeenCalledWith(
-        'test-tenant-id',
+        TEST_UUIDS.tenant,
         'LEAD',
         'lead-1',
         20,

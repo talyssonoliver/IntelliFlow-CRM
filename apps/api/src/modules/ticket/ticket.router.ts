@@ -76,7 +76,7 @@ function notifyAssignee(
     entityId: params.ticketId,
     entityName: params.subject,
     actionUrl: `/tickets/${params.ticketId}`,
-  }).catch(() => {});
+  }, ctx.services?.notificationOrchestrator).catch(() => {});
 
   // BullMQ email notification (fire-and-forget)
   (async () => {
@@ -224,7 +224,7 @@ function notifyTeamUnassigned(
         entityName: params.subject,
         actionUrl: `/tickets/${params.ticketId}`,
         actionLabel: 'View & Assign',
-      }).catch(() => {});
+      }, ctx.services?.notificationOrchestrator).catch(() => {});
     }
   })().catch(() => {});
 }
@@ -431,7 +431,7 @@ export const ticketRouter = createTRPCRouter({
           entityId: ticket.id,
           entityName: ticket.subject,
           actionUrl: `/tickets/${ticket.id}`,
-        }).catch(() => {}); // Swallow notification errors — non-critical side-effect
+        }, ctx.services?.notificationOrchestrator).catch(() => {}); // Swallow notification errors — non-critical side-effect
       }
 
       return ticket;

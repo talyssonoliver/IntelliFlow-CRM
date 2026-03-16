@@ -12,6 +12,7 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import { startOfDayInTimezone, endOfDayInTimezone, safeTimezone } from '../../lib/timezone-utils';
 import {
   createTaskSchema,
   updateTaskSchema,
@@ -247,7 +248,7 @@ export const taskRouter = createTRPCRouter({
       entityId: result.value.id.toString(),
       entityName: result.value.title,
       actionUrl: `/tasks/${result.value.id.toString()}`,
-    }).catch(() => {}); // Swallow notification errors — non-critical side-effect
+    }, ctx.services?.notificationOrchestrator).catch(() => {}); // Swallow notification errors — non-critical side-effect
 
     return mapTaskToResponse(result.value);
   }),
@@ -616,7 +617,7 @@ export const taskRouter = createTRPCRouter({
       entityId: result.value.id.toString(),
       entityName: result.value.title,
       actionUrl: `/tasks/${result.value.id.toString()}`,
-    }).catch(() => {}); // Swallow notification errors — non-critical side-effect
+    }, ctx.services?.notificationOrchestrator).catch(() => {}); // Swallow notification errors — non-critical side-effect
 
     return mapTaskToResponse(result.value);
   }),
@@ -695,8 +696,9 @@ export const taskRouter = createTRPCRouter({
   stats: tenantProcedure.query(async ({ ctx }) => {
     const typedCtx = getTenantContext(ctx);
     const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    const userTz = safeTimezone(ctx.user?.timezone);
+    const startOfDay = startOfDayInTimezone(userTz, now);
+    const endOfDay = endOfDayInTimezone(userTz, now);
     const [total, byStatus, byPriority, overdue, dueToday] = await Promise.all([
       typedCtx.prismaWithTenant.task.count(),
       typedCtx.prismaWithTenant.task.groupBy({
@@ -803,7 +805,7 @@ export const taskRouter = createTRPCRouter({
       entityId: result.value.id.toString(),
       entityName: result.value.title,
       actionUrl: `/tasks/${result.value.id.toString()}`,
-    }).catch(() => {}); // Swallow notification errors — non-critical side-effect
+    }, ctx.services?.notificationOrchestrator).catch(() => {}); // Swallow notification errors — non-critical side-effect
 
     return mapTaskToResponse(result.value);
   }),

@@ -58,7 +58,7 @@ describe('Opportunity Router - Won Closure (IFC-065)', () => {
       expect(ctx.services!.closeDealWon!.execute).toHaveBeenCalledWith({
         opportunityId: TEST_UUIDS.opportunity1,
         closedBy: TEST_UUIDS.user1,
-        tenantId: 'test-tenant-id',
+        tenantId: TEST_UUIDS.tenant,
       });
     });
 

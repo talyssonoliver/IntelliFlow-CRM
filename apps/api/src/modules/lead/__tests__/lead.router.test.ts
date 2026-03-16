@@ -718,68 +718,65 @@ describe('Lead Router', () => {
   });
 
   describe('getHotLeads', () => {
-    it('should return hot leads via LeadService', async () => {
-      const mockHotLeads = [
-        {
-          id: { value: TEST_UUIDS.lead1 },
-          email: { value: 'hot@example.com' },
-          firstName: 'Hot',
-          lastName: 'Lead',
-          company: 'Hot Corp',
-          title: null,
-          phone: null,
-          source: 'WEBSITE' as const,
-          status: 'NEW' as const,
-          score: { value: 85, confidence: 0.9, tier: 'hot' as const },
-          ownerId: TEST_UUIDS.user1,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ];
+    it('should return hot leads via tenant-scoped direct query', async () => {
+      const mockHotLeadRecord = {
+        ...mockLead,
+        id: TEST_UUIDS.lead1,
+        email: 'hot@example.com',
+        firstName: 'Hot',
+        lastName: 'Lead',
+        company: 'Hot Corp',
+        score: 85,
+        status: 'NEW',
+      };
 
       const ctx = createTestContext();
       const callerWithService = leadRouter.createCaller(ctx);
 
-      ctx.services!.lead!.getHotLeads = vi.fn().mockResolvedValue(mockHotLeads);
+      prismaMock.lead.findMany.mockResolvedValue([mockHotLeadRecord] as any);
 
       const result = await callerWithService.getHotLeads();
 
       expect(result).toHaveLength(1);
       expect(result[0].score).toBe(85);
-      expect(ctx.services!.lead!.getHotLeads).toHaveBeenCalled();
+      expect(prismaMock.lead.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ tenantId: TEST_UUIDS.tenant }),
+          orderBy: { score: 'desc' },
+        })
+      );
     });
   });
 
   describe('getReadyForQualification', () => {
-    it('should return leads ready for qualification via LeadService', async () => {
-      const mockReadyLeads = [
-        {
-          id: { value: TEST_UUIDS.lead1 },
-          email: { value: 'ready@example.com' },
-          firstName: 'Ready',
-          lastName: 'Lead',
-          company: 'Ready Corp',
-          title: null,
-          phone: null,
-          source: 'REFERRAL' as const,
-          status: 'CONTACTED' as const,
-          score: { value: 65, confidence: 0.7, tier: 'warm' as const },
-          ownerId: TEST_UUIDS.user1,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ];
+    it('should return leads ready for qualification via tenant-scoped direct query', async () => {
+      const mockReadyLeadRecord = {
+        ...mockLead,
+        id: TEST_UUIDS.lead1,
+        email: 'ready@example.com',
+        firstName: 'Ready',
+        lastName: 'Lead',
+        company: 'Ready Corp',
+        source: 'REFERRAL',
+        status: 'CONTACTED',
+        score: 65,
+      };
 
       const ctx = createTestContext();
       const callerWithService = leadRouter.createCaller(ctx);
 
-      ctx.services!.lead!.getLeadsReadyForQualification = vi.fn().mockResolvedValue(mockReadyLeads);
+      prismaMock.lead.findMany.mockResolvedValue([mockReadyLeadRecord] as any);
 
       const result = await callerWithService.getReadyForQualification();
 
       expect(result).toHaveLength(1);
       expect(result[0].status).toBe('CONTACTED');
-      expect(ctx.services!.lead!.getLeadsReadyForQualification).toHaveBeenCalled();
+      expect(prismaMock.lead.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ tenantId: TEST_UUIDS.tenant }),
+          orderBy: { score: 'desc' },
+        })
+      );
     });
   });
 

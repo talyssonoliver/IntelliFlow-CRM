@@ -52,7 +52,7 @@ describe('Appointments Router - Caller Tests', () => {
     status: 'SCHEDULED' as const,
     location: 'Office',
     organizerId: TEST_UUIDS.user1,
-    tenantId: 'test-tenant-id',
+    tenantId: TEST_UUIDS.tenant,
     bufferMinutesBefore: 0,
     bufferMinutesAfter: 0,
     notes: null,

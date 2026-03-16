@@ -810,7 +810,7 @@ describe('Opportunity Router', () => {
         color: '#94a3b8',
         order: 0,
         probability: 10,
-        tenantId: 'test-tenant-id',
+        tenantId: TEST_UUIDS.tenant,
       },
       {
         stageKey: 'QUALIFICATION',
@@ -818,7 +818,7 @@ describe('Opportunity Router', () => {
         color: '#60a5fa',
         order: 1,
         probability: 20,
-        tenantId: 'test-tenant-id',
+        tenantId: TEST_UUIDS.tenant,
       },
       {
         stageKey: 'NEEDS_ANALYSIS',
@@ -826,7 +826,7 @@ describe('Opportunity Router', () => {
         color: '#38bdf8',
         order: 2,
         probability: 30,
-        tenantId: 'test-tenant-id',
+        tenantId: TEST_UUIDS.tenant,
       },
       {
         stageKey: 'PROPOSAL',
@@ -834,7 +834,7 @@ describe('Opportunity Router', () => {
         color: '#fb923c',
         order: 3,
         probability: 70,
-        tenantId: 'test-tenant-id',
+        tenantId: TEST_UUIDS.tenant,
       },
       {
         stageKey: 'NEGOTIATION',
@@ -842,7 +842,7 @@ describe('Opportunity Router', () => {
         color: '#facc15',
         order: 4,
         probability: 80,
-        tenantId: 'test-tenant-id',
+        tenantId: TEST_UUIDS.tenant,
       },
     ];
 
@@ -894,7 +894,7 @@ describe('Opportunity Router', () => {
           color: '#22c55e',
           order: 5,
           probability: 100,
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
         {
           stageKey: 'CLOSED_LOST',
@@ -902,7 +902,7 @@ describe('Opportunity Router', () => {
           color: '#ef4444',
           order: 6,
           probability: 0,
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       ];
 
@@ -939,7 +939,7 @@ describe('Opportunity Router', () => {
           color: '#ff0000',
           order: 0,
           probability: 15,
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       ];
 

@@ -23,7 +23,7 @@ import { prismaMock, createTestContext, TEST_UUIDS } from '../../../test/setup';
 // Mock Helpers
 // =============================================================================
 
-const TENANT_ID = 'test-tenant-id';
+const TENANT_ID = TEST_UUIDS.tenant;
 const USER_ID = TEST_UUIDS.user1;
 
 /** Build a mock Prisma Notification record */
@@ -580,6 +580,7 @@ describe('notificationsRouter', () => {
         quietHoursEnabled: true,
         quietHoursStart: '23:00',
         quietHoursEnd: '07:00',
+        quietHoursDays: [1, 2, 3, 4, 5],
         timezone: 'Europe/London',
         channelPreferences: {
           defaultChannels: ['push'],
@@ -599,6 +600,7 @@ describe('notificationsRouter', () => {
       expect(result.quietHours?.enabled).toBe(true);
       expect(result.quietHours?.start).toBe('23:00');
       expect(result.quietHours?.timezone).toBe('Europe/London');
+      expect(result.quietHours?.daysOfWeek).toEqual([1, 2, 3, 4, 5]);
 
       const leadPref = result.preferences.find((p) => p.type === 'lead_assigned');
       expect(leadPref?.enabled).toBe(false);
@@ -689,6 +691,7 @@ describe('notificationsRouter', () => {
           start: '22:00',
           end: '07:00',
           timezone: 'Europe/London',
+          daysOfWeek: [1, 2, 3, 4, 5],
         },
       });
 
@@ -698,6 +701,7 @@ describe('notificationsRouter', () => {
             quietHoursEnabled: true,
             quietHoursStart: '22:00',
             quietHoursEnd: '07:00',
+            quietHoursDays: [1, 2, 3, 4, 5],
             timezone: 'Europe/London',
           }),
         })

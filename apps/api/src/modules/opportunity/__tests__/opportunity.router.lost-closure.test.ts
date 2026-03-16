@@ -60,7 +60,7 @@ describe('Opportunity Router - Lost Closure (IFC-066)', () => {
         opportunityId: TEST_UUIDS.opportunity1,
         reason: 'Lost to competitor pricing',
         closedBy: TEST_UUIDS.user1,
-        tenantId: 'test-tenant-id',
+        tenantId: TEST_UUIDS.tenant,
       });
     });
 

@@ -8,6 +8,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { zepBudgetRouter } from '../zep-budget.router';
 import { initTRPC, TRPCError } from '@trpc/server';
 import type { Context } from '../../../context';
+import { TEST_UUIDS } from '../../../test/setup';
 
 // Mock Prisma client
 const mockPrisma = {
@@ -27,14 +28,14 @@ const createTestContext = (overrides: Partial<Context> = {}): Context =>
     prisma: mockPrisma as any, // test-only mock data
     user: {
       userId: 'test-user-id',
-      tenantId: 'test-tenant-id',
+      tenantId: TEST_UUIDS.tenant,
       email: 'test@example.com',
       role: 'ADMIN',
     } as Context['user'],
     session: {
       id: 'test-session-id',
       userId: 'test-user-id',
-      tenantId: 'test-tenant-id',
+      tenantId: TEST_UUIDS.tenant,
       email: 'test@example.com',
       role: 'ADMIN',
       permissions: [],

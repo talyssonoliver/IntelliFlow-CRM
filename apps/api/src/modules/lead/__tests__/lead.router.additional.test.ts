@@ -51,17 +51,15 @@ describe('Lead Router - Additional Coverage', () => {
       );
     });
 
-    it('should throw INTERNAL_SERVER_ERROR in getHotLeads when service is null', async () => {
+    it('should return results from getHotLeads even when lead service is null (uses direct query)', async () => {
       const ctx = createTestContext();
       ctx.services = { ...ctx.services, lead: undefined } as any;
       const caller = leadRouter.createCaller(ctx);
 
-      await expect(caller.getHotLeads()).rejects.toThrow(
-        expect.objectContaining({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Lead service not available',
-        })
-      );
+      prismaMock.lead.findMany.mockResolvedValue([]);
+
+      const result = await caller.getHotLeads();
+      expect(result).toEqual([]);
     });
 
     it('should throw INTERNAL_SERVER_ERROR in scoreWithAI when service is null', async () => {
@@ -84,12 +82,12 @@ describe('Lead Router - Additional Coverage', () => {
       const caller = leadRouter.createCaller(ctx);
 
       const mockLeads = [
-        { ...mockLead, id: TEST_UUIDS.lead1, status: 'QUALIFIED', tenantId: 'test-tenant-id' },
+        { ...mockLead, id: TEST_UUIDS.lead1, status: 'QUALIFIED', tenantId: TEST_UUIDS.tenant },
         {
           ...mockLead,
           id: TEST_UUIDS.lead2,
           status: 'CONTACTED',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
           email: 'lead2@example.com',
         },
       ];
@@ -169,7 +167,7 @@ describe('Lead Router - Additional Coverage', () => {
                   ...mockLead,
                   id: TEST_UUIDS.lead1,
                   status: 'CONVERTED',
-                  tenantId: 'test-tenant-id',
+                  tenantId: TEST_UUIDS.tenant,
                 },
               ]),
               updateMany: vi.fn().mockResolvedValue({ count: 0 }),
@@ -208,7 +206,7 @@ describe('Lead Router - Additional Coverage', () => {
                   id: TEST_UUIDS.lead1,
                   status: 'QUALIFIED',
                   company: 'ACME Corp',
-                  tenantId: 'test-tenant-id',
+                  tenantId: TEST_UUIDS.tenant,
                 },
               ]),
               updateMany: vi.fn().mockResolvedValue({ count: 1 }),
@@ -252,7 +250,7 @@ describe('Lead Router - Additional Coverage', () => {
                   id: TEST_UUIDS.lead1,
                   status: 'QUALIFIED',
                   company: null,
-                  tenantId: 'test-tenant-id',
+                  tenantId: TEST_UUIDS.tenant,
                 },
               ]),
               updateMany: vi.fn().mockResolvedValue({ count: 1 }),
@@ -297,7 +295,7 @@ describe('Lead Router - Additional Coverage', () => {
                   firstName: null,
                   lastName: null,
                   ownerId: null,
-                  tenantId: 'test-tenant-id',
+                  tenantId: TEST_UUIDS.tenant,
                 },
               ]),
               updateMany: vi.fn().mockResolvedValue({ count: 1 }),

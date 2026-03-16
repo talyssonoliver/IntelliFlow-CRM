@@ -85,7 +85,7 @@ function mapDbToNotification(record: any): Notification {
     entityType: record.sourceType || null,
     entityId: record.sourceId || null,
     entityName: record.metadata?.entityName || null,
-    actionUrl: record.metadata?.actionUrl || null,
+    actionUrl: record.metadata?.actionUrl || record.metadata?.link || null,
     actionLabel: record.metadata?.actionLabel || null,
     actor: record.metadata?.actor || null,
     groupId: record.metadata?.groupId || null,
@@ -140,12 +140,13 @@ function createSubscriptionHandler(
 /** Build updated channel preferences by merging existing with input. */
 function buildUpdatedChannelPrefs(
   current: Record<string, unknown>,
-  input: { defaultChannels?: string[]; emailDigest?: unknown }
+  input: { defaultChannels?: string[]; emailDigest?: unknown; priorityFilter?: string }
 ): Record<string, unknown> {
   return {
     ...current,
     ...(input.defaultChannels ? { defaultChannels: input.defaultChannels } : {}),
     ...(input.emailDigest ? { emailDigest: input.emailDigest } : {}),
+    ...(input.priorityFilter ? { priorityFilter: input.priorityFilter } : {}),
   };
 }
 
@@ -178,6 +179,7 @@ function buildPreferenceUpsertData(
       start: string;
       end: string;
       timezone: string;
+      daysOfWeek?: number[];
     };
   },
   channelPrefs: Record<string, unknown>,
@@ -190,6 +192,7 @@ function buildPreferenceUpsertData(
     quietHoursEnabled: input.quietHours?.enabled ?? false,
     quietHoursStart: input.quietHours?.start || '22:00',
     quietHoursEnd: input.quietHours?.end || '08:00',
+    quietHoursDays: input.quietHours?.daysOfWeek ?? [0, 1, 2, 3, 4, 5, 6],
     timezone: input.quietHours?.timezone || 'UTC',
     channelPreferences: channelPrefs as any,
     categoryPreferences: categoryPrefs as any,
@@ -207,6 +210,9 @@ function buildPreferenceUpsertData(
     updateData.quietHoursStart = input.quietHours.start;
     updateData.quietHoursEnd = input.quietHours.end;
     updateData.timezone = input.quietHours.timezone;
+    if (input.quietHours.daysOfWeek) {
+      updateData.quietHoursDays = input.quietHours.daysOfWeek;
+    }
   }
 
   return { createData, updateData };
@@ -405,7 +411,7 @@ export const notificationsRouter = createTRPCRouter({
 
   /**
    * Mark notifications as read
-   * Sets readAt and status=READ on Notification table
+   * Uses NotificationService orchestrator for audit logging + domain events
    */
   markAsRead: tenantProcedure
     .input(markAsReadInputSchema)
@@ -414,19 +420,32 @@ export const notificationsRouter = createTRPCRouter({
       const userId = ctx.tenant.userId;
       const tenantId = ctx.tenant.tenantId;
       const { notificationIds } = input;
+      const orchestrator = ctx.services?.notificationOrchestrator;
 
-      const result = await ctx.prisma.notification.updateMany({
-        where: {
-          id: { in: notificationIds },
-          tenantId,
-          recipientId: userId,
-          status: { in: ['PENDING', 'SENT', 'DELIVERED'] },
-        },
-        data: {
-          status: 'READ',
-          readAt: new Date(),
-        },
-      });
+      let updatedCount = 0;
+
+      if (orchestrator) {
+        // Use orchestrator — marks as read with audit logging + domain events
+        const results = await Promise.allSettled(
+          notificationIds.map((id) => orchestrator.markAsRead(id))
+        );
+        updatedCount = results.filter((r) => r.status === 'fulfilled').length;
+      } else {
+        // Fallback to direct Prisma for backward compat (tests, etc.)
+        const result = await ctx.prisma.notification.updateMany({
+          where: {
+            id: { in: notificationIds },
+            tenantId,
+            recipientId: userId,
+            status: { in: ['PENDING', 'SENT', 'DELIVERED'] },
+          },
+          data: {
+            status: 'READ',
+            readAt: new Date(),
+          },
+        });
+        updatedCount = result.count;
+      }
 
       notificationIds.forEach((id) => {
         emitNotificationEvent({ userId, eventType: 'read', notificationId: id });
@@ -439,30 +458,39 @@ export const notificationsRouter = createTRPCRouter({
 
       return {
         success: true,
-        updatedCount: result.count,
+        updatedCount,
         updatedIds: notificationIds,
       };
     }),
 
   /**
-   * Mark all notifications as read — atomic single updateMany (no TOCTOU race)
+   * Mark all notifications as read
+   * Uses NotificationService orchestrator for audit logging
    */
   markAllAsRead: tenantProcedure.mutation(async ({ ctx }): Promise<MarkAsReadResponse> => {
     const startTime = performance.now();
     const userId = ctx.tenant.userId;
     const tenantId = ctx.tenant.tenantId;
+    const orchestrator = ctx.services?.notificationOrchestrator;
 
-    const result = await ctx.prisma.notification.updateMany({
-      where: {
-        tenantId,
-        recipientId: userId,
-        status: { not: 'READ' },
-      },
-      data: {
-        status: 'READ',
-        readAt: new Date(),
-      },
-    });
+    let updatedCount: number;
+
+    if (orchestrator) {
+      updatedCount = await orchestrator.markAllAsRead(tenantId, userId);
+    } else {
+      const result = await ctx.prisma.notification.updateMany({
+        where: {
+          tenantId,
+          recipientId: userId,
+          status: { not: 'READ' },
+        },
+        data: {
+          status: 'READ',
+          readAt: new Date(),
+        },
+      });
+      updatedCount = result.count;
+    }
 
     const duration = performance.now() - startTime;
     if (duration > 200) {
@@ -471,7 +499,7 @@ export const notificationsRouter = createTRPCRouter({
 
     return {
       success: true,
-      updatedCount: result.count,
+      updatedCount,
       updatedIds: [],
     };
   }),
@@ -553,7 +581,7 @@ export const notificationsRouter = createTRPCRouter({
         start: record?.quietHoursStart || '22:00',
         end: record?.quietHoursEnd || '08:00',
         timezone: record?.timezone || 'UTC',
-        daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
+        daysOfWeek: record?.quietHoursDays ?? [0, 1, 2, 3, 4, 5, 6],
       },
       emailDigest: channelPrefs.emailDigest || {
         enabled: false,
@@ -561,12 +589,14 @@ export const notificationsRouter = createTRPCRouter({
         time: '09:00',
       },
       preferences: defaultPreferences,
+      priorityFilter: channelPrefs.priorityFilter || 'normal',
       updatedAt: record?.updatedAt || new Date(),
     };
   }),
 
   /**
    * Update notification preferences via upsert to NotificationPreference table
+   * Audit-logged via NotificationService orchestrator when available
    */
   updatePreferences: tenantProcedure
     .input(updatePreferencesInputSchema)
@@ -603,6 +633,22 @@ export const notificationsRouter = createTRPCRouter({
         create: createData,
         update: updateData as any,
       });
+
+      // Audit log the preference change via orchestrator
+      const orchestrator = ctx.services?.notificationOrchestrator;
+      if (orchestrator) {
+        try {
+          const auditLogger = (orchestrator as any).auditLogger;
+          if (auditLogger) {
+            await auditLogger.logPreferenceUpdated(
+              { userId, tenantId } as any,
+              { channelPrefs: updatedChannelPrefs, categoryPrefs: updatedCategoryPrefs, ...input }
+            );
+          }
+        } catch {
+          // Audit logging is best-effort — don't fail the mutation
+        }
+      }
 
       return { success: true, message: 'Preferences updated successfully' };
     }),
@@ -692,28 +738,94 @@ export const notificationsRouter = createTRPCRouter({
 // Export helper for creating notifications
 // =============================================================================
 
+export type CreateNotificationParams = {
+  userId: string;
+  tenantId: string;
+  type: (typeof NOTIFICATION_TYPES)[number];
+  title: string;
+  body: string;
+  priority?: 'high' | 'normal' | 'low';
+  entityType?: string;
+  entityId?: string;
+  entityName?: string;
+  actionUrl?: string;
+  actionLabel?: string;
+  expiresAt?: Date;
+  metadata?: Record<string, any>;
+};
+
 /**
- * Create and emit a new notification
- * Writes to Notification table (not DomainEvent). Uses Prisma @default(cuid()) for ID.
+ * Create and emit a new notification.
+ *
+ * When an orchestrator (NotificationService) is provided, uses the full
+ * delivery pipeline with preference checks, audit logging, and retry.
+ * Falls back to direct Prisma insert for backward compatibility.
  */
 export async function createNotification(
   prisma: Context['prisma'],
-  params: {
-    userId: string;
-    tenantId: string;
-    type: (typeof NOTIFICATION_TYPES)[number];
-    title: string;
-    body: string;
-    priority?: 'high' | 'normal' | 'low';
-    entityType?: string;
-    entityId?: string;
-    entityName?: string;
-    actionUrl?: string;
-    actionLabel?: string;
-    expiresAt?: Date;
-    metadata?: Record<string, any>;
-  }
+  params: CreateNotificationParams,
+  orchestrator?: any,
 ): Promise<Notification> {
+
+  // When orchestrator is available, use the full delivery pipeline
+  if (orchestrator && typeof orchestrator.send === 'function') {
+    try {
+      const result = await orchestrator.send({
+        tenantId: params.tenantId,
+        recipientId: params.userId,
+        channel: 'in_app',
+        subject: params.title,
+        body: params.body,
+        priority: params.priority,
+        category: 'system',
+        sourceType: params.entityType,
+        sourceId: params.entityId,
+        metadata: {
+          notificationType: params.type,
+          entityName: params.entityName,
+          actionUrl: params.actionUrl,
+          actionLabel: params.actionLabel,
+          ...params.metadata,
+        },
+      });
+
+      const notification: Notification = {
+        id: result.notificationId,
+        type: params.type,
+        title: params.title,
+        body: params.body,
+        priority: params.priority || 'normal',
+        status: result.status === 'filtered' ? 'filtered' as any : 'pending',
+        isRead: false,
+        readAt: null,
+        createdAt: new Date(),
+        expiresAt: params.expiresAt || null,
+        entityType: params.entityType || null,
+        entityId: params.entityId || null,
+        entityName: params.entityName || null,
+        actionUrl: params.actionUrl || null,
+        actionLabel: params.actionLabel || null,
+        actor: null,
+        groupId: null,
+        metadata: params.metadata || null,
+      };
+
+      if (result.status !== 'filtered') {
+        emitNotificationEvent({
+          userId: params.userId,
+          eventType: 'new',
+          notification,
+          notificationId: result.notificationId,
+        });
+      }
+
+      return notification;
+    } catch {
+      // Fall through to direct Prisma on orchestrator error
+    }
+  }
+
+  // Direct Prisma fallback (backward compat for tests and callers without orchestrator)
   const priorityEnum = (params.priority || 'normal').toUpperCase();
 
   const record = await prisma.notification.create({

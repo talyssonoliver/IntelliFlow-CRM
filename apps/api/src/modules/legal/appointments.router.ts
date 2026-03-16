@@ -33,6 +33,7 @@ import {
 } from '@intelliflow/domain';
 import { container } from '../../container';
 import { createNotification } from '../notifications/notifications.router';
+import { safeTimezone } from '../../lib/timezone-utils';
 
 // Zod schemas for appointment operations
 const appointmentTypeSchema = z.enum([
@@ -75,11 +76,22 @@ const recurrenceSchema = z
   })
   .optional();
 
+const ianaTimezoneSchema = z.string().refine(
+  (tz) => {
+    if (tz === 'UTC' || tz.includes('/')) {
+      try { Intl.DateTimeFormat(undefined, { timeZone: tz }); return true; } catch { return false; }
+    }
+    return false;
+  },
+  { message: 'Must be a valid IANA timezone (e.g. America/New_York) or UTC' }
+);
+
 const createAppointmentSchema = z.object({
   title: z.string().min(1).max(255),
   description: z.string().max(2000).optional(),
   startTime: z.coerce.date(),
   endTime: z.coerce.date(),
+  timezone: ianaTimezoneSchema.optional(),
   appointmentType: appointmentTypeSchema,
   location: z.string().max(500).optional(),
   attendeeIds: z.array(z.string()).optional().default([]),
@@ -97,6 +109,7 @@ const updateAppointmentSchema = z.object({
   title: z.string().min(1).max(255).optional(),
   description: z.string().max(2000).optional(),
   location: z.string().max(500).optional(),
+  timezone: ianaTimezoneSchema.optional().nullable(),
   appointmentType: appointmentTypeSchema.optional(),
   notes: z.string().max(5000).optional(),
   reminderMinutes: z.number().min(0).optional(),
@@ -415,6 +428,7 @@ export const appointmentsRouter = createTRPCRouter({
         description: input.description,
         startTime: input.startTime,
         endTime: input.endTime,
+        timezone: input.timezone ?? null,
         appointmentType: input.appointmentType,
         location: input.location,
         bufferMinutesBefore: input.bufferMinutesBefore,
@@ -451,13 +465,13 @@ export const appointmentsRouter = createTRPCRouter({
       tenantId,
       type: 'appointment_scheduled',
       title: 'Appointment scheduled',
-      body: `Appointment "${input.title}" scheduled for ${input.startTime.toLocaleDateString()}`,
+      body: `Appointment "${input.title}" scheduled for ${input.startTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: safeTimezone(ctx.user?.timezone) })}`,
       priority: 'normal',
       entityType: 'appointment',
       entityId: appointment.id,
       entityName: input.title,
       actionUrl: `/calendar/${appointment.id}`,
-    }).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
+    }, ctx.services?.notificationOrchestrator).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
 
     return appointment;
   }),
@@ -755,7 +769,7 @@ export const appointmentsRouter = createTRPCRouter({
       entityId: appointment.id,
       entityName: existing.title,
       actionUrl: `/calendar/${appointment.id}`,
-    }).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
+    }, ctx.services?.notificationOrchestrator).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
 
     return {
       appointment,

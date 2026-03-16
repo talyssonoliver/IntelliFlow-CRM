@@ -39,6 +39,8 @@ import {
 import { detectScoreBias, type LeadScoringBiasCheck } from '@intelliflow/adapters';
 import { createNotification } from '../notifications/notifications.router';
 import { deriveLeadInsights } from '../../shared/lead-insight-deriver';
+import { Lead, LeadId, Email, PhoneNumber, type LeadStatus, type LeadSource } from '@intelliflow/domain';
+import { LEAD_SCORE_THRESHOLDS } from '@intelliflow/application';
 
 function buildNumberRange(
   min: number | undefined,
@@ -177,8 +179,6 @@ function buildContactDataFromLeads(
     tenantId: lead.tenantId,
     ownerId: lead.ownerId || fallbackUserId,
     createdBy: fallbackUserId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
   }));
 }
 
@@ -196,8 +196,6 @@ function buildAccountDataFromLeads(
       tenantId: lead.tenantId,
       ownerId: lead.ownerId || fallbackUserId,
       createdBy: fallbackUserId,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     }));
 }
 
@@ -279,6 +277,46 @@ function getLeadService(ctx: Context) {
 }
 
 /**
+ * Map a raw Prisma lead record to the API response shape.
+ * Used by procedures that query Prisma directly (bypassing LeadService).
+ */
+function mapPrismaLeadToResponse(lead: {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  company: string | null;
+  title: string | null;
+  phone: string | null;
+  source: string;
+  status: string;
+  score: number;
+  ownerId: string;
+  tenantId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}) {
+  return {
+    id: lead.id,
+    email: lead.email,
+    firstName: lead.firstName,
+    lastName: lead.lastName,
+    company: lead.company,
+    title: lead.title,
+    phone: lead.phone,
+    source: lead.source,
+    status: lead.status,
+    score: lead.score,
+    scoreConfidence: 1,
+    scoreTier: lead.score >= LEAD_SCORE_THRESHOLDS.HOT ? 'hot' : lead.score >= LEAD_SCORE_THRESHOLDS.WARM ? 'warm' : 'cold',
+    ownerId: lead.ownerId,
+    tenantId: lead.tenantId,
+    createdAt: lead.createdAt,
+    updatedAt: lead.updatedAt,
+  };
+}
+
+/**
  * Run a lightweight bias check on recently scored leads.
  * This keeps IFC-125 bias detection on an active runtime path.
  */
@@ -347,7 +385,7 @@ type LeadActivityLogType =
  * Activity write failures must not block the primary business operation.
  */
 async function writeLeadActivityLog(
-  ctx: Context,
+  ctx: TenantAwareContext,
   input: {
     leadId: string;
     tenantId: string;
@@ -361,7 +399,7 @@ async function writeLeadActivityLog(
   }
 ): Promise<void> {
   try {
-    await ctx.prisma.leadActivity.create({
+    await ctx.prismaWithTenant.leadActivity.create({
       data: {
         type: input.type,
         title: input.title,
@@ -405,7 +443,7 @@ export const leadRouter = createTRPCRouter({
       });
     }
 
-    await writeLeadActivityLog(ctx, {
+    await writeLeadActivityLog(typedCtx, {
       leadId: result.value.id.value,
       tenantId: typedCtx.tenant.tenantId,
       type: 'NOTE',
@@ -493,7 +531,7 @@ export const leadRouter = createTRPCRouter({
       };
 
       // Fire-and-forget: persist so future visits read from DB
-      ctx.prisma.leadAIInsight
+      typedCtx.prismaWithTenant.leadAIInsight
         ?.upsert({
           where: { leadId: lead.id },
           create: {
@@ -676,7 +714,7 @@ export const leadRouter = createTRPCRouter({
     }
 
     // Fire-and-forget: notification failure must not block the lead qualification response
-    createNotification(ctx.prisma, {
+    createNotification(typedCtx.prismaWithTenant, {
       userId: typedCtx.tenant.userId,
       tenantId: typedCtx.tenant.tenantId,
       type: 'lead_converted',
@@ -686,9 +724,9 @@ export const leadRouter = createTRPCRouter({
       entityType: 'lead',
       entityId: input.leadId,
       actionUrl: `/leads/${input.leadId}`,
-    }).catch(() => {}); // Swallow notification errors — non-critical side-effect
+    }, typedCtx.services?.notificationOrchestrator).catch(() => {}); // Swallow notification errors — non-critical side-effect
 
-    await writeLeadActivityLog(ctx, {
+    await writeLeadActivityLog(typedCtx, {
       leadId: input.leadId,
       tenantId: typedCtx.tenant.tenantId,
       type: 'QUALIFICATION',
@@ -738,7 +776,7 @@ export const leadRouter = createTRPCRouter({
       });
     }
 
-    await writeLeadActivityLog(ctx, {
+    await writeLeadActivityLog(typedCtx, {
       leadId: input.leadId,
       tenantId: typedCtx.tenant.tenantId,
       type: 'STATUS_CHANGE',
@@ -790,7 +828,7 @@ export const leadRouter = createTRPCRouter({
     }
 
     // Fire-and-forget: notification failure must not block the lead-to-deal conversion response
-    createNotification(ctx.prisma, {
+    createNotification(typedCtx.prismaWithTenant, {
       userId: typedCtx.tenant.userId,
       tenantId: typedCtx.tenant.tenantId,
       type: 'lead_converted',
@@ -800,9 +838,9 @@ export const leadRouter = createTRPCRouter({
       entityType: 'lead',
       entityId: input.leadId,
       actionUrl: `/leads/${input.leadId}`,
-    }).catch(() => {}); // Swallow notification errors — non-critical side-effect
+    }, typedCtx.services?.notificationOrchestrator).catch(() => {}); // Swallow notification errors — non-critical side-effect
 
-    await writeLeadActivityLog(ctx, {
+    await writeLeadActivityLog(typedCtx, {
       leadId: input.leadId,
       tenantId: typedCtx.tenant.tenantId,
       type: 'STATUS_CHANGE',
@@ -846,9 +884,9 @@ export const leadRouter = createTRPCRouter({
       }
 
       // Fire-and-forget: notification failure must not block the AI scoring response
-      createNotification(ctx.prisma, {
-        userId: ctx.tenant.userId,
-        tenantId: ctx.tenant.tenantId,
+      createNotification(typedCtx.prismaWithTenant, {
+        userId: typedCtx.tenant.userId,
+        tenantId: typedCtx.tenant.tenantId,
         type: 'lead_scored',
         title: 'Lead scored by AI',
         body: `Lead scored ${result.value.newScore} (${result.value.tier})`,
@@ -856,9 +894,9 @@ export const leadRouter = createTRPCRouter({
         entityType: 'lead',
         entityId: result.value.leadId,
         actionUrl: `/leads/${result.value.leadId}`,
-      }).catch(() => {}); // Swallow notification errors — non-critical side-effect
+      }, typedCtx.services?.notificationOrchestrator).catch(() => {}); // Swallow notification errors — non-critical side-effect
 
-      await writeLeadActivityLog(ctx, {
+      await writeLeadActivityLog(typedCtx, {
         leadId: result.value.leadId,
         tenantId: typedCtx.tenant.tenantId,
         type: 'SCORE_UPDATE',
@@ -879,7 +917,7 @@ export const leadRouter = createTRPCRouter({
       // Fire-and-forget: populate LeadAIInsight so Lead IQ sidebar shows real data
       (async () => {
         try {
-          const lead = await ctx.prisma.lead.findUnique({
+          const lead = await typedCtx.prismaWithTenant.lead.findUnique({
             where: { id: input.leadId },
             select: {
               source: true,
@@ -905,7 +943,7 @@ export const leadRouter = createTRPCRouter({
             createdAt: lead.createdAt,
           });
 
-          await ctx.prisma.leadAIInsight.upsert({
+          await typedCtx.prismaWithTenant.leadAIInsight.upsert({
             where: { leadId: input.leadId },
             update: {
               ...insights,
@@ -913,7 +951,7 @@ export const leadRouter = createTRPCRouter({
             },
             create: {
               leadId: input.leadId,
-              tenantId: ctx.tenant.tenantId,
+              tenantId: typedCtx.tenant.tenantId,
               ...insights,
               recommendations: insights.recommendations,
             },
@@ -994,21 +1032,32 @@ export const leadRouter = createTRPCRouter({
    */
   getHotLeads: tenantProcedure.query(async ({ ctx }) => {
     const typedCtx = getTenantContext(ctx);
-    const leadService = getLeadService(ctx);
-
-    const leads = await leadService.getHotLeads(typedCtx.tenant.userId);
-    return leads.map(mapLeadToResponse);
+    const where = createTenantWhereClause(typedCtx.tenant, {
+      score: { gte: LEAD_SCORE_THRESHOLDS.HOT },
+      tenantId: typedCtx.tenant.tenantId,
+    });
+    const leads = await typedCtx.prismaWithTenant.lead.findMany({
+      where,
+      orderBy: { score: 'desc' },
+    });
+    return leads.map(mapPrismaLeadToResponse);
   }),
 
   /**
-   * Get leads ready for qualification using LeadService
+   * Get leads ready for qualification — tenant-scoped direct query
    */
   getReadyForQualification: tenantProcedure.query(async ({ ctx }) => {
     const typedCtx = getTenantContext(ctx);
-    const leadService = getLeadService(ctx);
-
-    const leads = await leadService.getLeadsReadyForQualification(typedCtx.tenant.userId);
-    return leads.map(mapLeadToResponse);
+    const where = createTenantWhereClause(typedCtx.tenant, {
+      score: { gte: LEAD_SCORE_THRESHOLDS.WARM },
+      status: { in: ['NEW', 'CONTACTED'] as LeadStatus[] },
+      tenantId: typedCtx.tenant.tenantId,
+    });
+    const leads = await typedCtx.prismaWithTenant.lead.findMany({
+      where,
+      orderBy: { score: 'desc' },
+    });
+    return leads.map(mapPrismaLeadToResponse);
   }),
 
   /**
@@ -1192,33 +1241,83 @@ export const leadRouter = createTRPCRouter({
       const typedCtx = getTenantContext(ctx);
       const { ids, status } = input;
 
-      // IFC-007: Use batch operation
-      // Replaces O(n) sequential calls with O(1) batch queries
+      // IFC-237: Domain-validated status change — uses Lead.changeStatus() to enforce invariants
       const successful: string[] = [];
       const failed: Array<{ id: string; error: string }> = [];
 
       try {
-        // Verify which leads exist
+        // Fetch full lead records for domain reconstitution
         const existingLeads = await typedCtx.prismaWithTenant.lead.findMany({
           where: { id: { in: ids }, tenantId: typedCtx.tenant.tenantId },
-          select: { id: true, status: true },
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            company: true,
+            title: true,
+            phone: true,
+            source: true,
+            status: true,
+            score: true,
+            ownerId: true,
+            tenantId: true,
+            createdAt: true,
+            updatedAt: true,
+          },
         });
         const existingIds = new Set(existingLeads.map((l) => l.id));
 
         collectMissingLeads(ids, existingIds, failed);
 
-        // Batch update existing leads
-        const idsToUpdate = ids.filter((id) => existingIds.has(id));
-        if (idsToUpdate.length > 0) {
+        // Validate each lead through domain model before persisting
+        const validatedLeadIds: string[] = [];
+        for (const record of existingLeads) {
+          const leadIdResult = LeadId.create(record.id);
+          if (leadIdResult.isFailure) {
+            failed.push({ id: record.id, error: 'Invalid lead ID' });
+            continue;
+          }
+
+          const emailResult = Email.create(record.email);
+          const phone = record.phone ? PhoneNumber.create(record.phone) : undefined;
+
+          const lead = Lead.reconstitute(leadIdResult.value, {
+            email: emailResult.isSuccess ? emailResult.value : Email.create('unknown@placeholder.invalid').value,
+            firstName: record.firstName ?? undefined,
+            lastName: record.lastName ?? undefined,
+            company: record.company ?? undefined,
+            title: record.title ?? undefined,
+            phone: phone?.isSuccess ? phone.value : undefined,
+            source: record.source as LeadSource,
+            status: record.status as LeadStatus,
+            score: { value: record.score, confidence: 1 },
+            ownerId: record.ownerId,
+            tenantId: record.tenantId,
+            createdAt: record.createdAt,
+            updatedAt: record.updatedAt,
+          });
+
+          const changeResult = lead.changeStatus(status as LeadStatus, typedCtx.tenant.userId);
+          if (changeResult.isFailure) {
+            failed.push({ id: record.id, error: changeResult.error.message });
+            continue;
+          }
+
+          validatedLeadIds.push(record.id);
+        }
+
+        // Persist only validated leads
+        if (validatedLeadIds.length > 0) {
           await typedCtx.prismaWithTenant.lead.updateMany({
-            where: { id: { in: idsToUpdate } },
+            where: { id: { in: validatedLeadIds } },
             data: { status, updatedAt: new Date() },
           });
-          successful.push(...idsToUpdate);
+          successful.push(...validatedLeadIds);
 
           const activityRows = buildBulkStatusActivityRows(
-            existingLeads,
-            idsToUpdate,
+            existingLeads.filter((l) => validatedLeadIds.includes(l.id)),
+            validatedLeadIds,
             status,
             typedCtx.tenant.tenantId,
             typedCtx.tenant.userId,
@@ -1226,7 +1325,7 @@ export const leadRouter = createTRPCRouter({
             'Lead Status Changed'
           );
 
-          await persistBulkStatusActivityRows(ctx.prisma, activityRows, 'bulkUpdateStatus');
+          await persistBulkStatusActivityRows(typedCtx.prismaWithTenant, activityRows, 'bulkUpdateStatus');
         }
       } catch (error) {
         collectBulkFailures(ids, failed, successful, error);
@@ -1283,7 +1382,7 @@ export const leadRouter = createTRPCRouter({
 
         if (activityRows.length > 0) {
           try {
-            await ctx.prisma.leadActivity.createMany({ data: activityRows as any });
+            await typedCtx.prismaWithTenant.leadActivity.createMany({ data: activityRows as any });
           } catch (error) {
             console.warn('[lead.bulkArchive] Failed to persist activity rows', {
               count: activityRows.length,
@@ -1323,7 +1422,7 @@ export const leadRouter = createTRPCRouter({
         });
       }
 
-      const note = await ctx.prisma.leadNote.create({
+      const note = await typedCtx.prismaWithTenant.leadNote.create({
         data: {
           content: input.content,
           author: ctx.user?.email ?? 'Unknown',
@@ -1373,7 +1472,7 @@ export const leadRouter = createTRPCRouter({
       const now = new Date();
 
       // Transaction: create activity + update lastContactedAt
-      const activity = await ctx.prisma.$transaction(async (tx) => {
+      const activity = await typedCtx.prismaWithTenant.$transaction(async (tx) => {
         const created = await tx.leadActivity.create({
           data: {
             type: input.type,
@@ -1387,7 +1486,7 @@ export const leadRouter = createTRPCRouter({
         });
 
         await tx.lead.update({
-          where: { id: input.leadId },
+          where: { id: input.leadId, ...createTenantWhereClause(typedCtx.tenant, {}) },
           data: {
             lastContactedAt: now,
             updatedAt: now,

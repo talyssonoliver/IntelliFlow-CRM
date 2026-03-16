@@ -291,6 +291,7 @@ describe('Timeline Router', () => {
         description: 'Discuss proposal',
         startTime: new Date('2024-06-01T10:00:00Z'),
         endTime: new Date('2024-06-01T11:00:00Z'),
+        timezone: null,
         appointmentType: 'MEETING' as const,
         location: 'Conference Room A',
         status: 'SCHEDULED' as const,

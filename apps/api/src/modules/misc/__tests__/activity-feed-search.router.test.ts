@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createTestContext } from '../../../test/setup';
+import { createTestContext, TEST_UUIDS } from '../../../test/setup';
 import { activityFeedRouter } from '../activity-feed.router';
 import type { ActivityFeedPage } from '@intelliflow/domain';
 
@@ -78,7 +78,7 @@ describe('activityFeedRouter.search', () => {
     });
 
     expect(mockActivityFeedService.search).toHaveBeenCalledWith(
-      'test-tenant-id',
+      TEST_UUIDS.tenant,
       'test search',
       10,
       undefined,
@@ -97,7 +97,7 @@ describe('activityFeedRouter.search', () => {
     await caller.search({ query: 'test' });
 
     expect(mockActivityFeedService.search).toHaveBeenCalledWith(
-      'test-tenant-id',
+      TEST_UUIDS.tenant,
       'test',
       20, // ACTIVITY_FEED_DEFAULT_LIMIT
       undefined,
@@ -113,7 +113,7 @@ describe('activityFeedRouter.search', () => {
     await caller.search({ query: 'test', cursor: cursorStr });
 
     expect(mockActivityFeedService.search).toHaveBeenCalledWith(
-      'test-tenant-id',
+      TEST_UUIDS.tenant,
       'test',
       20,
       cursorStr,
@@ -146,7 +146,7 @@ describe('activityFeedRouter.search', () => {
     await caller.search({ query: '  test  ' });
 
     expect(mockActivityFeedService.search).toHaveBeenCalledWith(
-      'test-tenant-id',
+      TEST_UUIDS.tenant,
       'test',
       20,
       undefined,
@@ -180,7 +180,7 @@ describe('activityFeedRouter.search', () => {
     await caller.search({ query: 'test' });
 
     expect(mockActivityFeedService.search).toHaveBeenCalledWith(
-      'test-tenant-id',
+      TEST_UUIDS.tenant,
       expect.any(String),
       expect.any(Number),
       undefined,

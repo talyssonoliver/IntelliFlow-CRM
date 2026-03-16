@@ -104,9 +104,11 @@ describe('ticketRouter', () => {
       } as UserSession,
       tenant: tenantContext, // Complete TenantContext object
       req: {
-        headers: {
+        // Use Headers Web API so CSRF middleware .get()/.has() calls work
+        headers: new Headers({
           'x-tenant-id': TENANT_UUID,
-        },
+          authorization: 'Bearer test-token',
+        }),
       },
     };
   };

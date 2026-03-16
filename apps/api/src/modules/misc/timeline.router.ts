@@ -23,6 +23,7 @@ import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '../../trpc';
 import { deadlineDomainService } from '../../services';
+import { startOfDayInTimezone, safeTimezone } from '../../lib/timezone-utils';
 
 // =============================================================================
 // Timeline Event Types
@@ -902,9 +903,10 @@ export const timelineRouter = createTRPCRouter({
       }> = [];
 
       // Get upcoming tasks
+      const userTz = safeTimezone(ctx.user?.timezone);
       const taskWhere: any = {
         dueDate: {
-          gte: new Date(now.setHours(0, 0, 0, 0)),
+          gte: startOfDayInTimezone(userTz, now),
           lte: futureDate,
         },
         status: { notIn: ['COMPLETED', 'CANCELLED'] },

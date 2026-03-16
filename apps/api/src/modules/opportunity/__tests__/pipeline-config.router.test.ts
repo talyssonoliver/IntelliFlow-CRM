@@ -27,7 +27,7 @@ import { Prisma } from '@intelliflow/db';
 // Mock pipeline stage config
 const createMockPipelineConfig = (stageKey: string, overrides: Record<string, unknown> = {}) => ({
   id: `config-${stageKey}`,
-  tenantId: 'test-tenant-id',
+  tenantId: TEST_UUIDS.tenant,
   stageKey,
   displayName: DEFAULT_STAGE_NAMES[stageKey] || stageKey,
   color: DEFAULT_STAGE_COLORS[stageKey] || '#6366f1',

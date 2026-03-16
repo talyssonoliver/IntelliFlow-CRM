@@ -360,7 +360,7 @@ function buildMonthlyRevenue(
 ): Record<string, { actual: number; deals: number }> {
   const monthlyRevenue: Record<string, { actual: number; deals: number }> = {};
   for (const deal of wonDeals) {
-    const month = new Date(deal.closedAt!).toLocaleString('en-US', { month: 'short' });
+    const month = new Date(deal.closedAt!).toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
     if (!monthlyRevenue[month]) {
       monthlyRevenue[month] = { actual: 0, deals: 0 };
     }
@@ -427,7 +427,7 @@ function buildWinRateTrend(
   const months = ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
   return months.map((month) => {
     const monthDeals = closedDeals.filter(
-      (d) => new Date(d.closedAt!).toLocaleString('en-US', { month: 'short' }) === month
+      (d) => new Date(d.closedAt!).toLocaleString('en-US', { month: 'short', timeZone: 'UTC' }) === month
     );
     const monthWon = monthDeals.filter((d) => d.stage === 'CLOSED_WON').length;
     const rate = monthDeals.length > 0 ? Math.round((monthWon / monthDeals.length) * 100) : 0;
@@ -510,7 +510,7 @@ export const opportunityRouter = createTRPCRouter({
       entityId: result.value.id.value,
       entityName: result.value.name,
       actionUrl: `/deals/${result.value.id.value}`,
-    }).catch((err) => console.error('[opportunity.router] Notification failed:', err));
+    }, ctx.services?.notificationOrchestrator).catch((err) => console.error('[opportunity.router] Notification failed:', err));
 
     return mapOpportunityToResponse(result.value);
   }),
@@ -662,7 +662,7 @@ export const opportunityRouter = createTRPCRouter({
       entityId: result.value.id.value,
       entityName: result.value.name,
       actionUrl: `/deals/${result.value.id.value}`,
-    }).catch((err) => console.error('[opportunity.router] Notification failed:', err));
+    }, ctx.services?.notificationOrchestrator).catch((err) => console.error('[opportunity.router] Notification failed:', err));
 
     return mapOpportunityToResponse(result.value);
   }),

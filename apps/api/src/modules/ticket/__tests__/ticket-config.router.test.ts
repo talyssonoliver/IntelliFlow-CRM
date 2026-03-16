@@ -8,7 +8,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ticketConfigRouter } from '../ticket-config.router';
 import { prismaMock, createTestContext, TEST_UUIDS } from '../../../test/setup';
 
-const tenantId = 'test-tenant-id';
+const tenantId = TEST_UUIDS.tenant;
 
 const mockSlaPolicy = {
   id: 'sla-1',

@@ -12,6 +12,7 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import { startOfMonthInTimezone, safeTimezone } from '../../lib/timezone-utils';
 import {
   createCaseSchema,
   updateCaseSchema,
@@ -278,7 +279,8 @@ export const casesRouter = createTRPCRouter({
     const tenantId = ctx.tenant.tenantId;
 
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const userTz = safeTimezone(ctx.user?.timezone);
+    const startOfMonth = startOfMonthInTimezone(userTz, now);
 
     const [statusCounts, priorityCounts, overdueCount, closedThisMonth, allCases] =
       await Promise.all([
@@ -349,6 +351,8 @@ export const casesRouter = createTRPCRouter({
         description: input.description,
         priority: input.priority,
         deadline: input.deadline,
+        timezone: input.timezone ?? null,
+        jurisdiction: input.jurisdiction ?? null,
         clientId: input.clientId,
         assignedTo,
         tenantId,
@@ -373,7 +377,7 @@ export const casesRouter = createTRPCRouter({
         entityId: caseData.id,
         entityName: input.title,
         actionUrl: `/cases/${caseData.id}`,
-      }).catch((err) => console.error('[cases.router] Notification failed:', err));
+      }, ctx.services?.notificationOrchestrator).catch((err) => console.error('[cases.router] Notification failed:', err));
     }
 
     return caseData;
@@ -462,7 +466,7 @@ export const casesRouter = createTRPCRouter({
       entityId: caseData.id,
       entityName: existing.title,
       actionUrl: `/cases/${caseData.id}`,
-    }).catch((err) => console.error('[cases.router] Notification failed:', err));
+    }, ctx.services?.notificationOrchestrator).catch((err) => console.error('[cases.router] Notification failed:', err));
 
     return caseData;
   }),
@@ -508,7 +512,7 @@ export const casesRouter = createTRPCRouter({
       entityId: caseData.id,
       entityName: existing.title,
       actionUrl: `/cases/${caseData.id}`,
-    }).catch((err) => console.error('[cases.router] Notification failed:', err));
+    }, ctx.services?.notificationOrchestrator).catch((err) => console.error('[cases.router] Notification failed:', err));
 
     return caseData;
   }),

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createTestContext } from '../../../test/setup';
+import { createTestContext, TEST_UUIDS } from '../../../test/setup';
 import { activityFeedRouter } from '../activity-feed.router';
 import type { ActivityFeedStats } from '@intelliflow/domain';
 
@@ -65,7 +65,7 @@ describe('activityFeedRouter.getStats', () => {
     expect(result.total).toBe(42);
     expect(result.timeWindow).toBe('7d');
     expect(mockActivityFeedService.getStats).toHaveBeenCalledWith(
-      'test-tenant-id',
+      TEST_UUIDS.tenant,
       '7d', // default
       { sources: undefined, entityType: undefined }
     );
@@ -80,7 +80,7 @@ describe('activityFeedRouter.getStats', () => {
       const result = await caller.getStats({ timeWindow: tw });
       expect(result.timeWindow).toBe(tw);
       expect(mockActivityFeedService.getStats).toHaveBeenCalledWith(
-        'test-tenant-id',
+        TEST_UUIDS.tenant,
         tw,
         expect.any(Object)
       );
@@ -94,7 +94,7 @@ describe('activityFeedRouter.getStats', () => {
     await caller.getStats({ sources: ['LEAD_ACTIVITY', 'EMAIL'] });
 
     expect(mockActivityFeedService.getStats).toHaveBeenCalledWith(
-      'test-tenant-id',
+      TEST_UUIDS.tenant,
       '7d',
       { sources: ['LEAD_ACTIVITY', 'EMAIL'], entityType: undefined }
     );
@@ -107,7 +107,7 @@ describe('activityFeedRouter.getStats', () => {
     await caller.getStats({ entityType: 'LEAD' });
 
     expect(mockActivityFeedService.getStats).toHaveBeenCalledWith(
-      'test-tenant-id',
+      TEST_UUIDS.tenant,
       '7d',
       { sources: undefined, entityType: 'LEAD' }
     );

@@ -278,7 +278,7 @@ describe('Routing Router', () => {
           userId: TEST_UUIDS.user1,
           skillName: 'Sales',
           proficiency: 4,
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       ]);
 
@@ -332,11 +332,11 @@ describe('Routing Router', () => {
     it('should create RoutingAudit entry and update lead ownerId', async () => {
       const mockLead = {
         id: TEST_UUIDS.lead1,
-        tenantId: 'test-tenant-id',
+        tenantId: TEST_UUIDS.tenant,
       };
       const mockAudit = {
         id: 'audit-1',
-        tenantId: 'test-tenant-id',
+        tenantId: TEST_UUIDS.tenant,
         ticketId: TEST_UUIDS.lead1,
         reason: 'manual',
         ruleId: null,
@@ -403,7 +403,7 @@ describe('Routing Router', () => {
     it('should return paginated assignments with cursor', async () => {
       const audits = Array.from({ length: 21 }, (_, i) => ({
         id: `audit-${i}`,
-        tenantId: 'test-tenant-id',
+        tenantId: TEST_UUIDS.tenant,
         ticketId: `ticket-${i}`,
         ruleId: null,
         ruleName: null,
@@ -427,7 +427,7 @@ describe('Routing Router', () => {
       (prismaMock.routingAudit.findMany as any).mockResolvedValue([
         {
           id: 'audit-cursor',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
           ticketId: 'ticket-1',
           ruleId: 'rule-1',
           ruleName: 'Test Rule',
@@ -457,7 +457,7 @@ describe('Routing Router', () => {
         status: 'ONLINE',
         currentCapacity: 2,
         maxCapacity: 10,
-        tenantId: 'test-tenant-id',
+        tenantId: TEST_UUIDS.tenant,
         user: { id: TEST_UUIDS.user1, name: 'Agent NoSkills', email: 'a@b.com' },
       };
       (prismaMock.agentAvailability.findMany as any).mockResolvedValue([mockAgent]);
@@ -474,7 +474,7 @@ describe('Routing Router', () => {
       (prismaMock.routingAudit.findMany as any).mockResolvedValue([
         {
           id: 'audit-norule',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
           ticketId: 'ticket-1',
           ruleId: null,
           ruleName: null,
@@ -496,7 +496,7 @@ describe('Routing Router', () => {
       (prismaMock.routingAudit.findMany as any).mockResolvedValue([
         {
           id: 'audit-unknownrule',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
           ticketId: 'ticket-1',
           ruleId: 'rule-1',
           ruleName: null,
@@ -639,7 +639,7 @@ describe('Routing Router', () => {
       });
 
       expect((ctx.services!.leadRouting as any).suggestAssignees).toHaveBeenCalledWith(
-        'test-tenant-id',
+        TEST_UUIDS.tenant,
         'HOT',
         3
       );

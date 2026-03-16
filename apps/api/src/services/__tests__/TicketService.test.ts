@@ -36,6 +36,7 @@ type MockPrismaClient = {
   };
   user: {
     findMany: ReturnType<typeof vi.fn>;
+    findUnique: ReturnType<typeof vi.fn>;
   };
 };
 
@@ -109,6 +110,7 @@ describe('TicketService', () => {
       },
       user: {
         findMany: vi.fn().mockResolvedValue([]),
+        findUnique: vi.fn().mockResolvedValue(null),
       },
     };
 

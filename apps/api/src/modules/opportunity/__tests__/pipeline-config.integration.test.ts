@@ -11,14 +11,14 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { pipelineConfigRouter } from '../pipeline-config.router';
-import { prismaMock, createTestContext } from '../../../test/setup';
+import { prismaMock, createTestContext, TEST_UUIDS } from '../../../test/setup';
 import { PROTECTED_STAGES } from '@intelliflow/validators/opportunity';
 import { OPPORTUNITY_STAGES } from '@intelliflow/domain';
 
 // Mock pipeline stage config
 const createMockPipelineConfig = (stageKey: string, overrides: Record<string, unknown> = {}) => ({
   id: `config-${stageKey}`,
-  tenantId: 'test-tenant-id',
+  tenantId: TEST_UUIDS.tenant,
   stageKey,
   displayName: stageKey
     .replace('_', ' ')
@@ -152,7 +152,7 @@ describe('Pipeline Config Router Integration', () => {
       expect(prismaMock.pipelineStageConfig.deleteMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            tenantId: 'test-tenant-id',
+            tenantId: TEST_UUIDS.tenant,
           }),
         })
       );
@@ -171,7 +171,7 @@ describe('Pipeline Config Router Integration', () => {
       expect(prismaMock.pipelineStageConfig.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            tenantId: 'test-tenant-id',
+            tenantId: TEST_UUIDS.tenant,
           }),
         })
       );
