@@ -7,7 +7,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { calendarRouter } from '../calendar.router';
 import { createTRPCRouter } from '../../../trpc';
-import { createTestContext, createAdminContext, prismaMock } from '../../../test/setup';
+import { createTestContext, createAdminContext, prismaMock, TEST_UUIDS } from '../../../test/setup';
 
 const testRouter = createTRPCRouter({ calendar: calendarRouter });
 
@@ -23,7 +23,7 @@ const mockCalendar = {
   id: CAL_ID,
   name: 'Work Calendar',
   color: '#3b82f6',
-  tenantId: 'test-tenant-id',
+  tenantId: TEST_UUIDS.tenant,
   ownerId: '', // set in beforeEach
   createdAt: new Date('2026-01-01'),
   updatedAt: new Date('2026-01-01'),

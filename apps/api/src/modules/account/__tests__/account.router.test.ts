@@ -33,7 +33,7 @@ const createMockDomainAccount = (overrides: Record<string, unknown> = {}) => ({
   revenue: 5000000,
   description: 'A technology company',
   ownerId: TEST_UUIDS.user1,
-  tenantId: 'test-tenant-id',
+  tenantId: TEST_UUIDS.tenant,
   createdAt: new Date(),
   updatedAt: new Date(),
   getDomainEvents: () => [],
@@ -871,7 +871,7 @@ describe('Account Router', () => {
       expect(result.nextCursor).toBeUndefined();
       expect(ctx.services!.account!.getAccountContacts).toHaveBeenCalledWith(
         TEST_UUIDS.account1,
-        'test-tenant-id',
+        TEST_UUIDS.tenant,
         expect.objectContaining({ limit: 20 })
       );
     });
@@ -952,7 +952,7 @@ describe('Account Router', () => {
 
       expect(ctx.services!.account!.getAccountContacts).toHaveBeenCalledWith(
         TEST_UUIDS.account1,
-        'test-tenant-id',
+        TEST_UUIDS.tenant,
         expect.objectContaining({ limit: 1 })
       );
       expect(result.contacts).toHaveLength(1);
@@ -985,7 +985,7 @@ describe('Account Router', () => {
 
       expect(ctx.services!.account!.getAccountContacts).toHaveBeenCalledWith(
         TEST_UUIDS.account1,
-        'test-tenant-id',
+        TEST_UUIDS.tenant,
         expect.objectContaining({ status: ['ACTIVE'] })
       );
     });
@@ -1004,7 +1004,7 @@ describe('Account Router', () => {
 
       expect(ctx.services!.account!.getAccountContacts).toHaveBeenCalledWith(
         TEST_UUIDS.account1,
-        'test-tenant-id',
+        TEST_UUIDS.tenant,
         expect.objectContaining({ status: ['ACTIVE', 'INACTIVE'] })
       );
     });
@@ -1047,7 +1047,7 @@ describe('Account Router', () => {
 
       expect(ctx.services!.account!.getAccountContacts).toHaveBeenCalledWith(
         TEST_UUIDS.account1,
-        'test-tenant-id',
+        TEST_UUIDS.tenant,
         expect.objectContaining({ cursor: TEST_UUIDS.contact1 })
       );
     });
@@ -1178,7 +1178,7 @@ describe('Account Router', () => {
 
       expect(ctx.services!.account!.getAccountOpportunities).toHaveBeenCalledWith(
         TEST_UUIDS.account1,
-        'test-tenant-id',
+        TEST_UUIDS.tenant,
         expect.objectContaining({ stage: ['QUALIFICATION'] })
       );
     });
@@ -1212,7 +1212,7 @@ describe('Account Router', () => {
 
       expect(ctx.services!.account!.getAccountOpportunities).toHaveBeenCalledWith(
         TEST_UUIDS.account1,
-        'test-tenant-id',
+        TEST_UUIDS.tenant,
         expect.objectContaining({ cursor: TEST_UUIDS.opportunity1, limit: 1 })
       );
       expect(result.nextCursor).toBe('o1');
@@ -1351,7 +1351,7 @@ describe('Account Router', () => {
 
       expect(ctx.services!.account!.getAccountActivity).toHaveBeenCalledWith(
         TEST_UUIDS.account1,
-        'test-tenant-id',
+        TEST_UUIDS.tenant,
         expect.objectContaining({ types: ['CONTACT_CREATED'] })
       );
     });
@@ -1425,7 +1425,7 @@ describe('Account Router', () => {
 
       expect(ctx.services!.account!.getAccountActivity).toHaveBeenCalledWith(
         TEST_UUIDS.account1,
-        'test-tenant-id',
+        TEST_UUIDS.tenant,
         expect.objectContaining({ cursor: cursorDate })
       );
     });

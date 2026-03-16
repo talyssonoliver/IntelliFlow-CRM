@@ -443,7 +443,7 @@ export const autoResponseRouter = createTRPCRouter({
           entityName: draft.content.subject,
           actionUrl: '/agent-approvals?status=escalated',
           actionLabel: 'Review Draft',
-        });
+        }, ctx.services?.notificationOrchestrator);
       } catch (notifError) {
         // Non-blocking — escalation still succeeds even if notification fails
         console.error('[AutoResponse] Failed to send escalation notification:', notifError);

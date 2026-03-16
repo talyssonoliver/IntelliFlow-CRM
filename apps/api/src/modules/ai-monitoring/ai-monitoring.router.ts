@@ -1,22 +1,20 @@
 /**
- * AI Monitoring Router - IFC-197
+ * AI Monitoring Router - IFC-197 / IFC-297
  *
  * Exposes AI monitoring data (drift detection, latency metrics, hallucination
  * checks, ROI tracking, agent status) via type-safe tRPC endpoints.
  *
- * Architecture: Direct import of monitoring singletons from @intelliflow/ai-worker.
- * The monitoring modules are in-memory state holders — no DI/container wiring needed.
+ * Architecture (IFC-297): DB-backed AIMonitoringService replaces in-memory
+ * singleton imports from @intelliflow/ai-worker. All monitoring data is now
+ * persisted to PostgreSQL via the container service, making it available
+ * regardless of process topology.
  *
  * Tenant strategy:
  * - Monitoring data (5 endpoints): global, returned to all authenticated users
  * - Agent data (2 endpoints): tenant-scoped via Prisma queries
  *
- * Limitation: In a multi-process setup, API process gets separate singleton
- * instances from ai-worker. Data will be empty unless both run in same process
- * or Redis backing is added (future sprint).
- *
  * @module ai-monitoring
- * @task IFC-197
+ * @task IFC-197, IFC-297
  */
 
 import { z } from 'zod';
@@ -52,34 +50,6 @@ const agentLogsQuerySchema = z.object({
   offset: z.number().int().min(0).default(0),
 });
 
-type AIMonitoringModule = Pick<
-  typeof import('@intelliflow/ai-worker'),
-  'driftDetector' | 'latencyMonitor' | 'hallucinationChecker' | 'roiTracker' | 'getMonitoringStatus'
->;
-
-let aiMonitoringModulePromise: Promise<AIMonitoringModule> | null = null;
-
-async function loadAIMonitoringModule(): Promise<AIMonitoringModule> {
-  aiMonitoringModulePromise ??= import('@intelliflow/ai-worker').then((module) => ({
-    driftDetector: module.driftDetector,
-    latencyMonitor: module.latencyMonitor,
-    hallucinationChecker: module.hallucinationChecker,
-    roiTracker: module.roiTracker,
-    getMonitoringStatus: module.getMonitoringStatus,
-  }));
-
-  try {
-    return await aiMonitoringModulePromise;
-  } catch (error) {
-    aiMonitoringModulePromise = null;
-    throw new TRPCError({
-      code: 'SERVICE_UNAVAILABLE',
-      message: 'AI monitoring module is unavailable',
-      cause: error,
-    });
-  }
-}
-
 // ============================================================
 // Router
 // ============================================================
@@ -88,63 +58,11 @@ export const aiMonitoringRouter = createTRPCRouter({
   /**
    * Combined health status across all monitoring modules.
    * Returns drift, hallucination, latency, and ROI summaries.
-   *
-   * When running in a multi-process setup (AI worker separate from API),
-   * the in-memory singletons will be empty. Returns an `available: false`
-   * flag so the frontend can show an appropriate banner.
+   * IFC-297: Now DB-backed via AIMonitoringService — available regardless of process topology.
    */
-  getStatus: tenantProcedure.query(async () => {
-    const isColocated = process.env.AI_WORKER_COLOCATED === 'true';
-
+  getStatus: tenantProcedure.query(async ({ ctx }) => {
     try {
-      const { getMonitoringStatus } = await loadAIMonitoringModule();
-      const status = getMonitoringStatus();
-
-      // Detect genuinely empty data from a separate-process singleton
-      const isEmpty =
-        status.drift.trackedMetrics === 0 &&
-        status.hallucination.totalChecks === 0 &&
-        (status.latency.percentiles?.p95 ?? 0) === 0;
-
-      if (isEmpty && !isColocated) {
-        return {
-          available: false as const,
-          reason: 'monitoring_process_isolated' as const,
-          healthy: true,
-          issues: [],
-          drift: { trackedMetrics: 0, driftDetected: false, highSeverityCount: 0 },
-          hallucination: { rate: 0, kpiCompliant: true, totalChecks: 0 },
-          latency: { sloCompliant: true, p95: 0, p99: 0 },
-          roi: { currentROI: 0, trend: [], totalCost: 0, totalValue: 0 },
-        };
-      }
-
-      return {
-        available: true as const,
-        healthy: status.healthy,
-        issues: status.issues,
-        drift: {
-          trackedMetrics: status.drift.trackedMetrics,
-          driftDetected: status.drift.driftDetected,
-          highSeverityCount: status.drift.highSeverityCount,
-        },
-        hallucination: {
-          rate: status.hallucination.hallucinationRate,
-          kpiCompliant: status.hallucination.kpiCompliant,
-          totalChecks: status.hallucination.totalChecks,
-        },
-        latency: {
-          sloCompliant: status.latency.sloCompliance?.overallCompliant ?? true,
-          p95: status.latency.percentiles?.p95 ?? 0,
-          p99: status.latency.percentiles?.p99 ?? 0,
-        },
-        roi: {
-          currentROI: status.roi.currentROI ?? 0,
-          trend: status.roi.roiTrend ?? [],
-          totalCost: status.roi.totalCostsTracked ?? 0,
-          totalValue: status.roi.totalValuesTracked ?? 0,
-        },
-      };
+      return await ctx.services!.aiMonitoringService!.getStatus();
     } catch (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -156,50 +74,11 @@ export const aiMonitoringRouter = createTRPCRouter({
 
   /**
    * Drift detection metrics: current status and history.
+   * IFC-297: Now DB-backed via AIMonitoringService.
    */
-  getDriftMetrics: tenantProcedure.input(driftQuerySchema).query(async ({ input }) => {
-    const isColocated = process.env.AI_WORKER_COLOCATED === 'true';
-
+  getDriftMetrics: tenantProcedure.input(driftQuerySchema).query(async ({ ctx, input }) => {
     try {
-      const { driftDetector } = await loadAIMonitoringModule();
-      const status = driftDetector.getStatus();
-      const history = driftDetector.getHistory(input.limit);
-
-      // Detect empty singleton from separate-process
-      if (status.totalSamples === 0 && history.length === 0 && !isColocated) {
-        return {
-          available: false as const,
-          reason: 'monitoring_process_isolated' as const,
-          status: {
-            trackedMetrics: 0,
-            totalSamples: 0,
-            driftDetected: false,
-            highSeverityCount: 0,
-            lastCheck: null,
-          },
-          history: [],
-        };
-      }
-
-      return {
-        available: true as const,
-        status: {
-          trackedMetrics: status.trackedMetrics,
-          totalSamples: status.totalSamples,
-          driftDetected: status.driftDetected,
-          highSeverityCount: status.highSeverityCount,
-          lastCheck: status.lastCheck?.toISOString() ?? null,
-        },
-        history: history.map((h) => ({
-          detected: h.detected,
-          severity: h.severity,
-          metric: h.metric,
-          pValue: h.pValue,
-          driftScore: h.driftScore,
-          timestamp: h.timestamp.toISOString(),
-          recommendations: h.recommendations,
-        })),
-      };
+      return await ctx.services!.aiMonitoringService!.getDriftMetrics(input);
     } catch (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -211,50 +90,11 @@ export const aiMonitoringRouter = createTRPCRouter({
 
   /**
    * Latency percentiles, SLO compliance, and alerts.
+   * IFC-297: Now DB-backed via AIMonitoringService.
    */
-  getLatencyMetrics: tenantProcedure.input(latencyQuerySchema).query(async ({ input }) => {
-    const isColocated = process.env.AI_WORKER_COLOCATED === 'true';
-
+  getLatencyMetrics: tenantProcedure.input(latencyQuerySchema).query(async ({ ctx, input }) => {
     try {
-      const { latencyMonitor } = await loadAIMonitoringModule();
-      const stats = latencyMonitor.getStats(input.startTime, input.endTime);
-      const alerts = latencyMonitor.getAlerts();
-
-      // Detect empty singleton from separate-process
-      if (stats.sampleCount === 0 && !isColocated) {
-        return {
-          available: false as const,
-          reason: 'monitoring_process_isolated' as const,
-          sampleCount: 0,
-          successRate: 0,
-          percentiles: stats.percentiles,
-          sloCompliance: stats.sloCompliance,
-          byModel: {},
-          byOperation: {},
-          byPhase: {},
-          alerts: [],
-        };
-      }
-
-      return {
-        available: true as const,
-        sampleCount: stats.sampleCount,
-        successRate: stats.successRate,
-        percentiles: stats.percentiles,
-        sloCompliance: stats.sloCompliance,
-        byModel: stats.byModel,
-        byOperation: stats.byOperation,
-        byPhase: stats.byPhase,
-        alerts: alerts.map((a) => ({
-          severity: a.severity,
-          message: a.message,
-          timestamp: a.timestamp.toISOString(),
-          model: a.model,
-          operationType: a.operationType,
-          currentP95: a.currentP95,
-          targetP95: a.targetP95,
-        })),
-      };
+      return await ctx.services!.aiMonitoringService!.getLatencyMetrics(input);
     } catch (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -266,6 +106,7 @@ export const aiMonitoringRouter = createTRPCRouter({
 
   /**
    * Latency trend over time: p50, p95, p99, count per bucket.
+   * IFC-297: Now DB-backed via AIMonitoringService.
    */
   getLatencyTrend: tenantProcedure
     .input(
@@ -274,26 +115,9 @@ export const aiMonitoringRouter = createTRPCRouter({
         bucketMinutes: z.number().int().min(1).max(60).default(5),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       try {
-        const isColocated = process.env.AI_WORKER_COLOCATED === 'true';
-        const { latencyMonitor } = await loadAIMonitoringModule();
-        const trend = latencyMonitor.getTrend(input.periodMinutes, input.bucketMinutes);
-
-        if (trend.length === 0 && !isColocated) {
-          return { available: false as const, reason: 'monitoring_process_isolated' as const, data: [] };
-        }
-
-        return {
-          available: true as const,
-          data: trend.map((t) => ({
-            timestamp: t.timestamp.toISOString(),
-            p50: t.p50,
-            p95: t.p95,
-            p99: t.p99,
-            count: t.count,
-          })),
-        };
+        return await ctx.services!.aiMonitoringService!.getLatencyTrend(input);
       } catch (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -305,30 +129,13 @@ export const aiMonitoringRouter = createTRPCRouter({
 
   /**
    * Hallucination detection stats: rate, type breakdown, KPI compliance.
+   * IFC-297: Now DB-backed via AIMonitoringService.
    */
   getHallucinationReport: tenantProcedure
     .input(hallucinationQuerySchema)
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       try {
-        const { hallucinationChecker } = await loadAIMonitoringModule();
-        const stats = hallucinationChecker.getStats(input.startTime, input.endTime);
-        const recentResults = hallucinationChecker.getRecentResults(input.limit);
-
-        return {
-          totalChecks: stats.totalChecks,
-          hallucinationsDetected: stats.hallucinationsDetected,
-          hallucinationRate: stats.hallucinationRate,
-          kpiCompliant: stats.kpiCompliant,
-          byType: stats.byType,
-          byModel: stats.byModel,
-          recentResults: recentResults.map((r) => ({
-            id: r.id,
-            hallucinated: r.hallucinated,
-            confidence: r.confidence,
-            types: r.hallucinationTypes,
-            timestamp: r.timestamp.toISOString(),
-          })),
-        };
+        return await ctx.services!.aiMonitoringService!.getHallucinationReport(input);
       } catch (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -340,46 +147,11 @@ export const aiMonitoringRouter = createTRPCRouter({
 
   /**
    * ROI metrics: costs, values, ROI %, trend direction, recommendations.
+   * IFC-297: Now DB-backed via AIMonitoringService.
    */
-  getROIMetrics: tenantProcedure.input(timeRangeSchema).query(async ({ input }) => {
-    const isColocated = process.env.AI_WORKER_COLOCATED === 'true';
-
+  getROIMetrics: tenantProcedure.input(timeRangeSchema).query(async ({ ctx, input }) => {
     try {
-      const { roiTracker } = await loadAIMonitoringModule();
-      const roi = roiTracker.calculateROI(input.startTime, input.endTime);
-      const stats = roiTracker.getStats();
-
-      // Detect empty singleton
-      if (roi.totalCost === 0 && roi.totalValue === 0 && !isColocated) {
-        return {
-          available: false as const,
-          reason: 'monitoring_process_isolated' as const,
-          totalCost: 0,
-          totalValue: 0,
-          netValue: 0,
-          roi: 0,
-          efficiency: 0,
-          trendDirection: 'stable',
-          costBreakdown: {},
-          valueBreakdown: {},
-          recommendations: [],
-          topPerformingOperations: [],
-        };
-      }
-
-      return {
-        available: true as const,
-        totalCost: roi.totalCost,
-        totalValue: roi.totalValue,
-        netValue: roi.netValue,
-        roi: roi.roi,
-        efficiency: roi.efficiency,
-        trendDirection: roi.trendDirection,
-        costBreakdown: roi.costBreakdown,
-        valueBreakdown: roi.valueBreakdown,
-        recommendations: roi.recommendations,
-        topPerformingOperations: stats.topPerformingOperations,
-      };
+      return await ctx.services!.aiMonitoringService!.getROIMetrics(input);
     } catch (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',

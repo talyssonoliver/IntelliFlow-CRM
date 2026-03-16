@@ -131,7 +131,7 @@ vi.mock('../../../agent/authorization', () => ({
     userId: userInfo.userId,
     role: userInfo.role,
     agentSessionId: sessionId,
-    tenantId: 'test-tenant-id',
+    tenantId: '344b1756-0000-4000-8000-344b17560000',
     permissions: ['read', 'write'],
     actionCount: 0,
     sessionStartedAt: new Date(),

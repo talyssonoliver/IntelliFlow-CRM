@@ -30,6 +30,7 @@ import {
 import { callStripeAPI } from '../../shared/external-service-wrapper';
 import { mapErrorToTRPCError } from '../../shared/error-mapper';
 import { PLAN_TIERS, type PlanTier } from '@intelliflow/domain';
+import { formatDateTimeInTimezone } from '../../lib/timezone-utils';
 
 // ============================================
 // Local Type Definitions (from StripeAdapter)
@@ -1159,7 +1160,7 @@ export const billingRouter = createTRPCRouter({
         `Receipt: ${receiptNumber}`,
         `Amount: ${amountFormatted}`,
         `Status: ${invoice.status}`,
-        invoice.paidAt ? `Paid: ${invoice.paidAt.toLocaleDateString()}` : '',
+        invoice.paidAt ? `Paid: ${invoice.paidAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}` : '',
         invoice.hostedInvoiceUrl ? `\nView receipt: ${invoice.hostedInvoiceUrl}` : '',
       ]
         .filter(Boolean)
@@ -1168,7 +1169,7 @@ export const billingRouter = createTRPCRouter({
         <p><strong>Receipt:</strong> ${receiptNumber}</p>
         <p><strong>Amount:</strong> ${amountFormatted}</p>
         <p><strong>Status:</strong> ${invoice.status}</p>
-        ${invoice.paidAt ? `<p><strong>Paid:</strong> ${invoice.paidAt.toLocaleDateString()}</p>` : ''}
+        ${invoice.paidAt ? `<p><strong>Paid:</strong> ${invoice.paidAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</p>` : ''}
         ${invoice.hostedInvoiceUrl ? `<p><a href="${invoice.hostedInvoiceUrl}">View receipt online</a></p>` : ''}
       `;
 

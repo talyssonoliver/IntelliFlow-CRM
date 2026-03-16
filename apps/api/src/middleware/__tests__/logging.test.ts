@@ -11,6 +11,7 @@ import {
   createErrorTrackingMiddleware,
 } from '../logging';
 import type { Context } from '../../context';
+import { TEST_UUIDS } from '../../test/setup';
 
 /**
  * Create a minimal mock context for middleware tests
@@ -61,7 +62,7 @@ describe('LoggingMiddleware', () => {
           userId: 'user-123',
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -96,7 +97,7 @@ describe('LoggingMiddleware', () => {
           userId: 'user-123',
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -349,7 +350,7 @@ describe('LoggingMiddleware', () => {
           userId: 'user-123',
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -385,7 +386,7 @@ describe('LoggingMiddleware', () => {
           userId: 'user-123',
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -548,7 +549,7 @@ describe('LoggingMiddleware', () => {
           userId: 'user-123',
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 

@@ -14,14 +14,14 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { conversationRouter } from '../conversation.router';
-import { prismaMock, createTestContext } from '../../../test/setup';
+import { prismaMock, createTestContext, TEST_UUIDS } from '../../../test/setup';
 
 // Test UUIDs for consistent testing
 const TEST_CONVERSATION_ID = 'conv-test-123';
 const TEST_SESSION_ID = 'session-test-456';
 const TEST_MESSAGE_ID = 'msg-test-789';
 const TEST_TOOL_CALL_ID = 'tool-test-012';
-const TEST_TENANT_ID = 'test-tenant-id';
+const TEST_TENANT_ID = TEST_UUIDS.tenant;
 const TEST_USER_ID = 'test-user-id';
 const TEST_OTHER_TENANT_ID = 'other-tenant-id';
 

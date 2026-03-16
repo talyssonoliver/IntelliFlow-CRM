@@ -9,6 +9,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import type { PrismaClient } from '@intelliflow/db';
 import type { Context } from '../../context';
+import { TEST_UUIDS } from '../../test/setup';
 
 /**
  * Create a minimal mock context for middleware tests
@@ -60,7 +61,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -86,7 +87,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -126,7 +127,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -158,7 +159,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'user1@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
         prisma: {} as PrismaClient,
         req: undefined,
@@ -170,7 +171,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'user2@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
         prisma: {} as PrismaClient,
         req: undefined,
@@ -244,7 +245,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -271,7 +272,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -298,7 +299,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -330,7 +331,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -359,7 +360,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -383,7 +384,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -414,7 +415,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -439,7 +440,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -463,7 +464,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -497,7 +498,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'attacker@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -522,7 +523,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -556,7 +557,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -589,7 +590,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -611,7 +612,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -671,7 +672,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -726,7 +727,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
         prisma: {} as PrismaClient,
         req: undefined,
@@ -750,7 +751,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'other@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
         prisma: {} as PrismaClient,
         req: undefined,
@@ -773,7 +774,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -801,7 +802,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -835,7 +836,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -864,7 +865,7 @@ describe('RateLimitMiddleware', () => {
           userId: '',
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -889,7 +890,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -976,7 +977,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 
@@ -1089,7 +1090,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
 

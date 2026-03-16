@@ -17,7 +17,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { chainVersionRouter } from '../chain-version.router';
 import { createTRPCRouter } from '../../../trpc';
-import { createTestContext, createAdminContext } from '../../../test/setup';
+import { createTestContext, createAdminContext, TEST_UUIDS } from '../../../test/setup';
 
 // Mock the tenant-context module
 vi.mock('../../../security/tenant-context', async (importOriginal) => {
@@ -196,7 +196,7 @@ describe('Chain Version Router', () => {
             name: 'v1.0.0',
           }),
           expect.any(String), // userId
-          'test-tenant-id' // tenantId
+          TEST_UUIDS.tenant // tenantId
         );
       });
     });
