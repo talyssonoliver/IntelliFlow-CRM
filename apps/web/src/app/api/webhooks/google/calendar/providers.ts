@@ -5,6 +5,8 @@
  * Easily mockable in tests without requiring @intelliflow/adapters resolution.
  */
 
+import { getCalendarWebhookService } from '../../../../../lib/calendar-webhook-service';
+
 interface CalendarWebhookService {
   processNotification(payload: unknown): Promise<{ processed: boolean; error?: string }>;
 }
@@ -34,14 +36,7 @@ export function getGoogleAdapter(): GoogleAdapter {
 
 export function getWebhookService(): CalendarWebhookService {
   if (serviceOverride) return serviceOverride;
-  const { getCalendarWebhookService } = require('../../../../../lib/calendar-webhook-service');
   return getCalendarWebhookService();
 }
 
-/** Test-only overrides */
-export function setGoogleAdapterForTests(adapter: GoogleAdapter | null): void {
-  adapterOverride = adapter;
-}
-export function setWebhookServiceForTests(service: CalendarWebhookService | null): void {
-  serviceOverride = service;
-}
+

@@ -1,20 +1,50 @@
 'use client';
 
+import { useState, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
   SidebarWithSuspense,
-  analyticsSidebarConfig,
+  createAnalyticsSidebarConfig,
+  createAnalyticsSettingsSidebarConfig,
+  isReportSettingsPage,
 } from '@/components/sidebar';
 import { ModuleGate } from '@/components/ModuleGate';
+import { AnalyticsSettingsPanel } from '@/components/analytics/AnalyticsSettingsPanel';
+import { AnalyticsSettingsSidebarNav } from '@/components/analytics/AnalyticsSettingsSidebarNav';
 
 export default function AnalyticsListLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const pathname = usePathname();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const onSettingsPage = isReportSettingsPage(pathname);
+
+  const sidebarConfig = useMemo(() => {
+    if (onSettingsPage) {
+      return createAnalyticsSettingsSidebarConfig(
+        ({ isExpanded }) => (
+          <AnalyticsSettingsSidebarNav isExpanded={isExpanded} />
+        ),
+      );
+    }
+    return createAnalyticsSidebarConfig(() => setSettingsOpen((prev) => !prev));
+  }, [onSettingsPage]);
+
   return (
     <ModuleGate moduleId="ANALYTICS">
       <SidebarProvider>
         <div className="flex min-h-[calc(100vh-4rem)]">
-          <SidebarWithSuspense config={analyticsSidebarConfig} />
+          <SidebarWithSuspense config={sidebarConfig} />
+
+          {/* Panel only needed in list mode */}
+          {!onSettingsPage && (
+            <AnalyticsSettingsPanel
+              isOpen={settingsOpen}
+              onClose={() => setSettingsOpen(false)}
+            />
+          )}
 
           {/* Main Content */}
           <SidebarInset>

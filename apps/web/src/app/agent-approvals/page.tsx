@@ -18,7 +18,9 @@ import { Card, Button, toast } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { AssignSheet } from '@/components/shared/assign-sheet';
+import { EntityHoverCard } from '@/components/shared/entity-hover-card';
 import type { AgentAction, ActionStatus } from '@/lib/agent';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 // Material Symbols icon helper component
 const Icon = ({ name, className = '' }: Readonly<{ name: string; className?: string }>) => (
@@ -415,9 +417,13 @@ function ActionCard({
               </div>
               <div>
                 <span className="text-xs text-slate-500 dark:text-slate-400">To:</span>
-                <p className="text-sm text-slate-700 dark:text-slate-300">
-                  {(action.proposedState as { recipientEmail?: string }).recipientEmail}
-                </p>
+                <EntityHoverCard
+                  email={(action.proposedState as { recipientEmail?: string }).recipientEmail ?? ''}
+                >
+                  <p className="text-sm text-primary hover:underline cursor-pointer w-fit">
+                    {(action.proposedState as { recipientEmail?: string }).recipientEmail}
+                  </p>
+                </EntityHoverCard>
               </div>
               <div>
                 <span className="text-xs text-slate-500 dark:text-slate-400">Body:</span>
@@ -782,6 +788,7 @@ function detectQueryError(pendingError: AnyQueryError, listError: AnyQueryError)
 // =============================================================================
 
 function AgentApprovalsContent() {
+  const { timezone } = useTimezoneContext();
   const searchParams = useSearchParams();
   const router = useRouter();
   const actionIdFromUrl = searchParams.get('actionId');
@@ -1286,7 +1293,7 @@ function AgentApprovalsContent() {
             </div>
           </div>
           <div className="text-xs text-slate-500 dark:text-slate-400" suppressHydrationWarning>
-            Last refresh: {new Date().toLocaleTimeString()}
+            Last refresh: {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: timezone })}
           </div>
         </div>
       </Card>

@@ -10,8 +10,9 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import React from 'react';
+import { AUTH_TOKEN_CHANGED_EVENT } from '@/lib/shared/session-cleanup';
 
 // ============================================================
 // Hoisted mocks
@@ -20,6 +21,8 @@ import React from 'react';
 const mocks = vi.hoisted(() => ({
   mockQueryClientProviderChildren: vi.fn(),
   isRedirectingRef: { current: false },
+  mockCreateWSClient: vi.fn(() => null),
+  mockTrpcCreateClient: vi.fn(() => ({})),
 }));
 
 // ============================================================
@@ -58,7 +61,7 @@ vi.mock('@tanstack/react-query', () => {
 vi.mock('@trpc/client', () => ({
   httpBatchLink: vi.fn(() => ({ type: 'httpBatchLink' })),
   splitLink: vi.fn(() => ({ type: 'splitLink' })),
-  createWSClient: vi.fn(() => null),
+  createWSClient: mocks.mockCreateWSClient,
   wsLink: vi.fn(() => ({ type: 'wsLink' })),
 }));
 
@@ -67,13 +70,19 @@ vi.mock('@/lib/trpc', () => ({
     Provider: ({ children }: Readonly<{ children: React.ReactNode }>) => (
       <div data-testid="trpc-provider">{children}</div>
     ),
-    createClient: vi.fn(() => ({})),
+    createClient: mocks.mockTrpcCreateClient,
   },
 }));
 
 vi.mock('@/lib/auth/AuthContext', () => ({
   AuthProvider: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <div data-testid="auth-provider">{children}</div>
+  ),
+}));
+
+vi.mock('@/providers/TimezoneProvider', () => ({
+  TimezoneProvider: ({ children }: Readonly<{ children: React.ReactNode }>) => (
+    <div data-testid="timezone-provider">{children}</div>
   ),
 }));
 
@@ -96,6 +105,10 @@ import { Providers } from '../providers';
 describe('Providers component (supplementary)', () => {
   beforeEach(() => {
     mocks.isRedirectingRef.current = false;
+    mocks.mockCreateWSClient.mockReset();
+    mocks.mockCreateWSClient.mockReturnValue(null);
+    mocks.mockTrpcCreateClient.mockReset();
+    mocks.mockTrpcCreateClient.mockReturnValue({});
   });
 
   describe('Rendering', () => {
@@ -114,7 +127,7 @@ describe('Providers component (supplementary)', () => {
       expect(screen.getByText('Hello')).toBeInTheDocument();
     });
 
-    it('nests providers in correct order (tRPC > QueryClient > Auth > Reminders)', () => {
+    it('nests providers in correct order (tRPC > QueryClient > Auth > Timezone > Reminders)', () => {
       render(
         <Providers>
           <div data-testid="child">Content</div>
@@ -124,12 +137,56 @@ describe('Providers component (supplementary)', () => {
       const trpcProvider = screen.getByTestId('trpc-provider');
       const queryProvider = screen.getByTestId('query-client-provider');
       const authProvider = screen.getByTestId('auth-provider');
+      const timezoneProvider = screen.getByTestId('timezone-provider');
       const remindersProvider = screen.getByTestId('reminders-provider');
 
       // Verify nesting order
       expect(trpcProvider.contains(queryProvider)).toBe(true);
       expect(queryProvider.contains(authProvider)).toBe(true);
-      expect(authProvider.contains(remindersProvider)).toBe(true);
+      expect(authProvider.contains(timezoneProvider)).toBe(true);
+      expect(timezoneProvider.contains(remindersProvider)).toBe(true);
+    });
+
+    it('creates the ws client in lazy mode so public pages do not open eager anonymous sockets', () => {
+      render(
+        <Providers>
+          <div data-testid="child">Hello</div>
+        </Providers>
+      );
+
+      expect(mocks.mockCreateWSClient).toHaveBeenCalledWith(
+        expect.objectContaining({
+          lazy: {
+            enabled: true,
+            closeMs: 30_000,
+          },
+        })
+      );
+    });
+
+    it('closes the existing ws client on auth token changes without recreating the tRPC client', async () => {
+      const close = vi.fn().mockResolvedValue(undefined);
+      mocks.mockCreateWSClient.mockReturnValue({ close } as never);
+
+      render(
+        <Providers>
+          <div data-testid="child">Hello</div>
+        </Providers>
+      );
+
+      expect(mocks.mockTrpcCreateClient).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        window.dispatchEvent(
+          new CustomEvent(AUTH_TOKEN_CHANGED_EVENT, {
+            detail: { hasToken: true },
+          })
+        );
+        await Promise.resolve();
+      });
+
+      expect(close).toHaveBeenCalledTimes(1);
+      expect(mocks.mockTrpcCreateClient).toHaveBeenCalledTimes(1);
     });
   });
 });

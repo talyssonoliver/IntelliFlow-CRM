@@ -313,7 +313,7 @@ function formatCurrency(value: number): string {
   return `$${value.toLocaleString()}`;
 }
 
-function formatRelativeTime(date: Date | string): string {
+function formatRelativeTime(date: Date | string, timezone: string = 'UTC'): string {
   const now = new Date();
   const d = typeof date === 'string' ? new Date(date) : date;
   const diffMs = now.getTime() - d.getTime();
@@ -325,7 +325,7 @@ function formatRelativeTime(date: Date | string): string {
   if (diffHours < 24) return `${diffHours}h ago`;
   const diffDays = Math.floor(diffHours / 24);
   if (diffDays < 7) return `${diffDays}d ago`;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: timezone });
 }
 
 // --- Sub-components ---

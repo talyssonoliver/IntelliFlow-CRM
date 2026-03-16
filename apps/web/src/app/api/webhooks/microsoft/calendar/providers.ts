@@ -4,6 +4,8 @@
  * Isolated module for lazy adapter/service creation.
  */
 
+import { getCalendarWebhookService } from '../../../../../lib/calendar-webhook-service';
+
 interface CalendarWebhookService {
   processNotification(payload: unknown): Promise<{ processed: boolean; error?: string }>;
 }
@@ -34,13 +36,7 @@ export function getMicrosoftAdapter(): MicrosoftAdapter {
 
 export function getWebhookService(): CalendarWebhookService {
   if (serviceOverride) return serviceOverride;
-  const { getCalendarWebhookService } = require('../../../../../lib/calendar-webhook-service');
   return getCalendarWebhookService();
 }
 
-export function setMicrosoftAdapterForTests(adapter: MicrosoftAdapter | null): void {
-  adapterOverride = adapter;
-}
-export function setWebhookServiceForTests(service: CalendarWebhookService | null): void {
-  serviceOverride = service;
-}
+
