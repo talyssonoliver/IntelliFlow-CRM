@@ -23,6 +23,12 @@ import {
   getSessionInfo,
 } from '../session-cleanup';
 
+function createTestJwt(exp: number): string {
+  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const payload = btoa(JSON.stringify({ exp }));
+  return `${header}.${payload}.${btoa('sig')}`;
+}
+
 describe('session-cleanup (additional coverage)', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -45,30 +51,41 @@ describe('session-cleanup (additional coverage)', () => {
   // =========================================================================
   describe('syncTokenToCookie', () => {
     it('sets accessToken cookie when token is provided', () => {
-      syncTokenToCookie('my-test-token');
-      expect(document.cookie).toContain('accessToken=my-test-token');
+      const token = createTestJwt(Math.floor(Date.now() / 1000) + 3600);
+      syncTokenToCookie(token);
+      expect(document.cookie).toContain(`accessToken=${token}`);
     });
 
     it('clears accessToken cookie when null is provided', () => {
-      syncTokenToCookie('temp-token');
+      const token = createTestJwt(Math.floor(Date.now() / 1000) + 3600);
+      syncTokenToCookie(token);
       syncTokenToCookie(null);
       // The cookie should be expired/removed
       // After setting with past date, check it's gone or empty
-      expect(document.cookie).not.toContain('accessToken=temp-token');
+      expect(document.cookie).not.toContain(`accessToken=${token}`);
     });
 
     it('sets cookie with samesite=lax', () => {
       // We can't directly inspect the cookie attributes in happy-dom
       // but we can verify the function doesn't throw
-      syncTokenToCookie('token123');
-      expect(document.cookie).toContain('accessToken=token123');
+      const token = createTestJwt(Math.floor(Date.now() / 1000) + 3600);
+      syncTokenToCookie(token);
+      expect(document.cookie).toContain(`accessToken=${token}`);
+    });
+
+    it('clears invalid or expired tokens instead of persisting them', () => {
+      syncTokenToCookie(createTestJwt(Math.floor(Date.now() / 1000) - 60));
+      expect(document.cookie).not.toContain('accessToken=');
+
+      syncTokenToCookie('not-a-jwt');
+      expect(document.cookie).not.toContain('accessToken=');
     });
 
     it('dispatches auth token changed event when token is set', () => {
       const handler = vi.fn();
       window.addEventListener(AUTH_TOKEN_CHANGED_EVENT, handler);
 
-      syncTokenToCookie('token123');
+      syncTokenToCookie(createTestJwt(Math.floor(Date.now() / 1000) + 3600));
 
       expect(handler).toHaveBeenCalledTimes(1);
       window.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, handler);

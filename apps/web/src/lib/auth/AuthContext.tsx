@@ -31,6 +31,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getSupabaseBrowserClient } from '../supabase-browser';
 import type { OAuthProvider } from '@intelliflow/domain';
 import { getSupabaseProviderName } from './sso-handler';
+import { isTokenUsable } from './jwt';
 import { storeSessionTokens } from '@/lib/shared/token-exchange';
 
 export type AuthMfaMethod = 'totp' | 'sms' | 'email' | 'backup';
@@ -330,9 +331,13 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
 
       // Sync token from localStorage to cookie for proxy access
       if (token) {
-        import('@/lib/shared/session-cleanup').then(({ syncTokenToCookie }) => {
-          syncTokenToCookie(token);
-        });
+        if (isTokenUsable(token)) {
+          import('@/lib/shared/session-cleanup').then(({ syncTokenToCookie }) => {
+            syncTokenToCookie(token);
+          });
+        } else {
+          document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        }
       }
     }
 
@@ -873,7 +878,9 @@ function cleanOAuthParam(): void {
 }
 
 function clearExpiredToken(): void {
-  if (typeof globalThis.window !== 'undefined') localStorage.removeItem('accessToken');
+  if (typeof globalThis.window === 'undefined') return;
+  localStorage.removeItem('accessToken');
+  document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
 }
 
 function stampRedirectTime(hasRedirectedRef: React.RefObject<boolean>): void {

@@ -14,6 +14,8 @@
  * - Clean up service workers
  */
 
+import { getTokenMaxAgeSeconds } from '@/lib/auth/jwt';
+
 // ============================================
 // Types
 // ============================================
@@ -78,11 +80,18 @@ export function syncTokenToCookie(token: string | null): void {
   if (typeof document === 'undefined') return;
 
   if (token) {
+    const maxAgeSeconds = getTokenMaxAgeSeconds(token);
+    if (!maxAgeSeconds) {
+      clearTokenCookie();
+      return;
+    }
+
     // Set cookie with the token
     // HttpOnly is false so JavaScript can read/write it
     // Secure only in production
+    // Keep cookie lifetime aligned with the JWT expiry to avoid stale SSR auth.
     const isSecure = globalThis.location.protocol === 'https:';
-    const cookieValue = `accessToken=${token}; path=/; max-age=${60 * 60 * 24}; samesite=lax${isSecure ? '; secure' : ''}`;
+    const cookieValue = `accessToken=${token}; path=/; max-age=${maxAgeSeconds}; samesite=lax${isSecure ? '; secure' : ''}`;
     document.cookie = cookieValue;
     notifyAuthTokenChanged(true);
   } else {

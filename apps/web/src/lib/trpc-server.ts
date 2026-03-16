@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { appRouter, createContext } from '@intelliflow/api';
+import { isTokenUsable } from '@/lib/auth/jwt';
 
 /**
  * Read the access token from the request cookie.
@@ -9,7 +10,8 @@ import { appRouter, createContext } from '@intelliflow/api';
  */
 export async function getAccessToken(): Promise<string | null> {
   const cookieStore = await cookies();
-  return cookieStore.get('accessToken')?.value ?? null;
+  const token = cookieStore.get('accessToken')?.value ?? null;
+  return isTokenUsable(token) ? token : null;
 }
 
 /**
