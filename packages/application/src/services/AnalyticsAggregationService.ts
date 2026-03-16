@@ -73,6 +73,26 @@ const ACTION_ICONS: Record<string, string> = {
 export class AnalyticsAggregationService {
   constructor(private readonly analyticsRepository: AnalyticsRepository) {}
 
+  /** UTC start of month — avoids server-local Date constructor (ADR-044) */
+  private static utcStartOfMonth(year: number, month: number): Date {
+    return new Date(Date.UTC(year, month, 1));
+  }
+
+  /** UTC end of month (last millisecond) */
+  private static utcEndOfMonth(year: number, month: number): Date {
+    return new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999));
+  }
+
+  /** UTC month key "YYYY-MM" from a Date */
+  private static utcMonthKey(date: Date): string {
+    return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+  }
+
+  /** UTC short month label (e.g. "Mar") */
+  private static utcMonthLabel(date: Date): string {
+    return date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
+  }
+
   /**
    * Get deals won trend for the last N months.
    * Groups raw repository results by YYYY-MM month key, fills missing months with zeros.
@@ -90,7 +110,7 @@ export class AnalyticsAggregationService {
       if (!opp.closedAt) continue;
 
       const date = new Date(opp.closedAt);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const monthKey = AnalyticsAggregationService.utcMonthKey(date);
 
       const existing = monthlyData.get(monthKey) || { count: 0, revenue: 0 };
       monthlyData.set(monthKey, {
@@ -105,10 +125,10 @@ export class AnalyticsAggregationService {
 
     for (let i = months - 1; i >= 0; i--) {
       const date = new Date(now);
-      date.setMonth(date.getMonth() - i);
+      date.setUTCMonth(date.getUTCMonth() - i);
 
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      const monthLabel = date.toLocaleDateString('en-US', { month: 'short' });
+      const monthKey = AnalyticsAggregationService.utcMonthKey(date);
+      const monthLabel = AnalyticsAggregationService.utcMonthLabel(date);
 
       const data = monthlyData.get(monthKey) || { count: 0, revenue: 0 };
 
@@ -139,13 +159,13 @@ export class AnalyticsAggregationService {
     const monthRanges: Array<{ label: string; range: DateRangeQuery }> = [];
     for (let i = months - 1; i >= 0; i--) {
       const date = new Date(now);
-      date.setMonth(date.getMonth() - i);
+      date.setUTCMonth(date.getUTCMonth() - i);
 
-      const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
-      const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+      const startOfMonth = AnalyticsAggregationService.utcStartOfMonth(date.getUTCFullYear(), date.getUTCMonth());
+      const endOfMonth = AnalyticsAggregationService.utcEndOfMonth(date.getUTCFullYear(), date.getUTCMonth());
 
       monthRanges.push({
-        label: date.toLocaleDateString('en-US', { month: 'short' }),
+        label: AnalyticsAggregationService.utcMonthLabel(date),
         range: { startDate: startOfMonth, endDate: endOfMonth },
       });
     }
@@ -303,10 +323,12 @@ export class AnalyticsAggregationService {
    */
   async getOverview(tenantId: string, dateRange?: DateRangeQuery): Promise<OverviewResult> {
     const now = new Date();
-    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+    const y = now.getUTCFullYear();
+    const m = now.getUTCMonth();
+    const currentMonthStart = AnalyticsAggregationService.utcStartOfMonth(y, m);
+    const currentMonthEnd = AnalyticsAggregationService.utcEndOfMonth(y, m);
+    const prevMonthStart = AnalyticsAggregationService.utcStartOfMonth(y, m - 1);
+    const prevMonthEnd = AnalyticsAggregationService.utcEndOfMonth(y, m - 1);
 
     const range = dateRange || { startDate: currentMonthStart, endDate: currentMonthEnd };
     const prevRange = { startDate: prevMonthStart, endDate: prevMonthEnd };
@@ -587,22 +609,14 @@ export class AnalyticsAggregationService {
     const current = new Date(dateRange.startDate);
 
     while (current <= dateRange.endDate) {
-      const startOfMonth = new Date(current.getFullYear(), current.getMonth(), 1);
-      const endOfMonth = new Date(
-        current.getFullYear(),
-        current.getMonth() + 1,
-        0,
-        23,
-        59,
-        59,
-        999
-      );
+      const startOfMonth = AnalyticsAggregationService.utcStartOfMonth(current.getUTCFullYear(), current.getUTCMonth());
+      const endOfMonth = AnalyticsAggregationService.utcEndOfMonth(current.getUTCFullYear(), current.getUTCMonth());
 
       // Clamp to actual date range
       const effectiveStart = new Date(Math.max(startOfMonth.getTime(), dateRange.startDate.getTime()));
       const effectiveEnd = new Date(Math.min(endOfMonth.getTime(), dateRange.endDate.getTime()));
 
-      const label = current.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      const label = current.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
 
       ranges.push({
         label,
@@ -610,8 +624,8 @@ export class AnalyticsAggregationService {
       });
 
       // Move to next month
-      current.setMonth(current.getMonth() + 1);
-      current.setDate(1);
+      current.setUTCMonth(current.getUTCMonth() + 1);
+      current.setUTCDate(1);
     }
 
     return ranges;
