@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Card } from '@intelliflow/ui';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import type {
   ComplianceEvent,
   ComplianceTimelineResponse,
@@ -101,6 +102,7 @@ interface EventDetailModalProps {
 }
 
 function EventDetailModal({ event, onClose }: Readonly<EventDetailModalProps>) {
+  const { timezone } = useTimezoneContext();
   const typeColors = EVENT_TYPE_COLORS[event.type];
   const statusInfo = EVENT_STATUS_ICONS[event.status];
 
@@ -130,6 +132,7 @@ function EventDetailModal({ event, onClose }: Readonly<EventDetailModalProps>) {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
+                timeZone: timezone,
               })}
             </span>
           </div>
@@ -162,6 +165,7 @@ function EventDetailModal({ event, onClose }: Readonly<EventDetailModalProps>) {
 }
 
 export function ComplianceTimeline() {
+  const { timezone } = useTimezoneContext();
   const [data, setData] = useState<ComplianceTimelineResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('month');
@@ -320,7 +324,7 @@ export function ComplianceTimeline() {
           <span className="material-symbols-outlined">chevron_left</span>
         </button>
         <h3 className="text-lg font-medium text-foreground">
-          {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+          {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: timezone })}
         </h3>
         <button
           onClick={() => navigateMonth(1)}
@@ -388,6 +392,7 @@ export function ComplianceTimeline() {
                       {new Date(event.date).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
+                        timeZone: timezone,
                       })}{' '}
                       • {event.standard}
                     </p>

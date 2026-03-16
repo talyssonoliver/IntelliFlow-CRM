@@ -14,6 +14,7 @@ import { AppointmentDetail } from '@/components/appointments';
 import type { AppointmentDetailData } from '@/components/appointments/types';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { api } from '@/lib/api';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import {
   getTypeConfig,
   formatTimeRange,
@@ -22,6 +23,7 @@ import {
 
 export default function AppointmentDetailPage() {
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+  const { timezone } = useTimezoneContext();
   const params = useParams();
   const router = useRouter();
   const appointmentId = params.id as string;
@@ -145,6 +147,7 @@ export default function AppointmentDetailPage() {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
+      timeZone: timezone,
     });
 
     return `${appointmentTypeLabel} - ${dateLabel} - ${formatTimeRange(detailData.startTime, detailData.endTime)} (${formatDuration(detailData.startTime, detailData.endTime)})`;

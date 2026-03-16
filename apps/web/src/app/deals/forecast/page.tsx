@@ -8,6 +8,7 @@ import { Card, Button, Skeleton, toast } from '@intelliflow/ui';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
 import { EntityHeader } from '@/components/shared';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 const ForecastRevenueChart = dynamic(() => import('@/components/deals/ForecastRevenueChart'), {
   ssr: false,
@@ -307,6 +308,7 @@ function PipelineByStageCard({ stages }: Readonly<{ stages: StageData[] }>) {
 }
 
 function OpportunitiesAtRiskTable({ deals }: Readonly<{ deals: ForecastDeal[] }>) {
+  const { timezone } = useTimezoneContext();
   // Filter and sort by risk level and value
   const riskyDeals = deals
     .filter((d) => d.riskLevel === 'medium' || d.riskLevel === 'high' || d.probability < 60)
@@ -402,6 +404,7 @@ function OpportunitiesAtRiskTable({ deals }: Readonly<{ deals: ForecastDeal[] }>
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',
+                      timeZone: timezone,
                     })}
                   </p>
                 </td>
@@ -493,7 +496,8 @@ function buildForecastCSV(
   deals: ForecastDeal[],
   totalPipelineValue: number,
   weightedForecast: number,
-  quarterLabel: string
+  quarterLabel: string,
+  timezone: string = 'UTC'
 ): string {
   const lines: string[] = [];
 
@@ -506,7 +510,7 @@ function buildForecastCSV(
   );
 
   for (const deal of deals) {
-    const closeDate = new Date(deal.expectedCloseDate).toLocaleDateString('en-US');
+    const closeDate = new Date(deal.expectedCloseDate).toLocaleDateString('en-US', { timeZone: timezone });
     const row = [
       `"${deal.name.replaceAll('"', '""')}"`,
       STAGE_LABELS[deal.stage] || deal.stage,
@@ -527,6 +531,7 @@ function buildForecastCSV(
 // =============================================================================
 
 export default function DealForecastPage() {
+  const { timezone } = useTimezoneContext();
   const router = useRouter();
 
   // Require authentication - redirects to login if not authenticated
@@ -694,7 +699,8 @@ export default function DealForecastPage() {
                   deals,
                   totalPipelineValue,
                   weightedForecast,
-                  currentQuarter
+                  currentQuarter,
+                  timezone
                 );
                 const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);

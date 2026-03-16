@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { EntityHoverCard } from '@/components/shared/entity-hover-card';
 import {
   Button,
   Card,
@@ -18,6 +19,7 @@ import {
 } from '@intelliflow/ui';
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
 import { PinButton } from '@/components/home/PinButton';
@@ -27,6 +29,7 @@ import { UpcomingEventsCard } from '@/components/shared';
 import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
 import { ActivityFeed, ActivityFeedItem, ActivityFeedItemActions } from '@/components/shared/activity-feed';
 import { useActivityFeed } from '@/hooks/useActivityFeed';
+import { useActivityDeepLink, isDeepLinkedActivity } from '@/hooks/useActivityDeepLink';
 import { useActivityReactions } from '@/hooks/useActivityReactions';
 import { useActivityComments } from '@/hooks/useActivityComments';
 import { QuickLogComposer } from '@/components/shared/quick-log-composer';
@@ -281,7 +284,16 @@ function ContactStatusBadge({ status }: Readonly<{ status: ContactStatus }>) {
     },
   };
 
-  const config = statusConfig[status];
+  const config = statusConfig[status] ?? {
+    label: status,
+    className:
+      'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
+    icon: (
+      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z" />
+      </svg>
+    ),
+  };
 
   return (
     <span
@@ -296,9 +308,11 @@ function ContactStatusBadge({ status }: Readonly<{ status: ContactStatus }>) {
 function ContactAiPendingState({
   compact = false,
   onAction,
+  isPending = false,
 }: Readonly<{
   compact?: boolean;
   onAction: () => void;
+  isPending?: boolean;
 }>) {
   return (
     <div
@@ -313,8 +327,8 @@ function ContactAiPendingState({
       <p className="mt-2 text-sm text-amber-700/90 dark:text-amber-300/90">
         Metrics and recommendations will appear here after a real AI analysis is available.
       </p>
-      <Button size="sm" onClick={onAction} className="mt-3">
-        View pending AI status
+      <Button size="sm" onClick={onAction} disabled={isPending} className="mt-3">
+        {isPending ? 'Analyzing...' : 'Run AI Analysis'}
       </Button>
     </div>
   );
@@ -440,15 +454,17 @@ function ContactAiInsightsTab({
   churnRiskData,
   nextBestActionData,
   onPendingAction,
+  isPending = false,
 }: Readonly<{
   aiInsights: ContactAiInsightsSummary;
   churnRiskData: ChurnRiskData | null;
   nextBestActionData: NextBestActionData | null;
   onPendingAction: () => void;
+  isPending?: boolean;
 }>) {
   return (
     <div className="space-y-6">
-      {!aiInsights && <ContactAiPendingState onAction={onPendingAction} />}
+      {!aiInsights && <ContactAiPendingState onAction={onPendingAction} isPending={isPending} />}
 
       {(churnRiskData || nextBestActionData) && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -641,6 +657,7 @@ export default function Contact360Page() {
   const utils = api.useUtils();
   const contactId = params.id as string;
   const insightIdParam = searchParams.get('insightId');
+  const { timezone } = useTimezoneContext();
 
   // Require authentication - redirects to login if not authenticated
   const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
@@ -683,6 +700,16 @@ export default function Contact360Page() {
       toast({ title: 'Failed to add note', description: err.message, variant: 'destructive' });
     },
   });
+  // @ts-ignore — tRPC recursive type instantiation exceeds TS depth limit (TS2589)
+  const scoreWithAIMutation = api.contact.scoreWithAI.useMutation({
+    onSuccess: () => {
+      toast({ title: 'AI analysis complete', description: 'Contact has been analyzed by AI.' });
+      utils.contact.getById.invalidate({ id: contactId });
+    },
+    onError: (err) => {
+      toast({ title: 'AI analysis failed', description: err.message, variant: 'destructive' });
+    },
+  });
   const reviewRequestedInsightRef = useRef<string | null>(null);
 
   // Check for auth errors
@@ -719,6 +746,28 @@ export default function Contact360Page() {
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(5);
   const [activityView, setActivityView] = useState<'timeline' | 'unified'>('timeline');
+  const { selectedActivityId } = useActivityDeepLink(activeTab, setActiveTab as (tab: 'activity') => void);
+
+  // Deep-link: auto-expand the targeted activity and scroll it into view
+  const deepLinkScrolledRef = useRef(false);
+  useEffect(() => {
+    if (!selectedActivityId || deepLinkScrolledRef.current) return;
+    // Expand using both prefixed and raw forms so either ID format matches
+    setExpandedActivities((prev) => {
+      const next = new Set(prev);
+      next.add(selectedActivityId.prefixed);
+      next.add(selectedActivityId.raw);
+      return next;
+    });
+    deepLinkScrolledRef.current = true;
+    // Scroll after render — try prefixed first, then raw
+    requestAnimationFrame(() => {
+      const el =
+        document.querySelector(`[data-activity-id="${CSS.escape(selectedActivityId.prefixed)}"]`) ||
+        document.querySelector(`[data-activity-id="${CSS.escape(selectedActivityId.raw)}"]`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }, [selectedActivityId, activeTab]);
   const [showNoteInput, setShowNoteInput] = useState(false);
   const [newNoteContent, setNewNoteContent] = useState('');
 
@@ -1068,25 +1117,54 @@ export default function Contact360Page() {
   }
 
   // Error state or no contact data (non-auth errors)
+  const fromInsight = !!insightIdParam;
+
+  // Auto-dismiss stale insight when the referenced entity no longer exists
+  const dismissInsightMutation = api.home.dismissInsight.useMutation();
+  const dismissedInsightRef = useRef(false);
+  useEffect(() => {
+    if (fromInsight && insightIdParam && (error?.data?.code === 'NOT_FOUND' || (!isLoading && !contact)) && !dismissedInsightRef.current) {
+      dismissedInsightRef.current = true;
+      dismissInsightMutation.mutate(
+        { insightId: insightIdParam, reason: 'Referenced contact no longer exists' },
+        { onError: () => { /* best-effort */ } }
+      );
+    }
+  }, [fromInsight, insightIdParam, error, isLoading, contact, dismissInsightMutation]);
+
   if ((error && !isAuthError) || !contact) {
     return (
       <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
         <Card className="p-8 text-center">
-          <span className="material-symbols-outlined text-5xl text-red-500 mb-4">error</span>
+          <span className="material-symbols-outlined text-5xl text-red-500 mb-4">
+            {fromInsight ? 'link_off' : 'error'}
+          </span>
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-            Contact Not Found
+            {fromInsight ? 'Stale Insight' : 'Contact Not Found'}
           </h2>
           <p className="text-slate-500 dark:text-slate-400 mb-4">
-            The contact you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission
-            to view it.
+            {fromInsight
+              ? 'This contact may have been deleted since the insight was generated. The insight has been dismissed automatically.'
+              : "The contact you're looking for doesn't exist or you don't have permission to view it."}
           </p>
-          <Link
-            href="/contacts"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            <span className="material-symbols-outlined text-sm">arrow_back</span>{' '}
-            Back to Contacts
-          </Link>
+          <div className="flex items-center justify-center gap-3">
+            {fromInsight && (
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                <span className="material-symbols-outlined text-sm">home</span>{' '}
+                Back to Home
+              </Link>
+            )}
+            <Link
+              href="/contacts"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm">arrow_back</span>{' '}
+              Back to Contacts
+            </Link>
+          </div>
         </Card>
       </div>
     );
@@ -1111,6 +1189,7 @@ export default function Contact360Page() {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
+      timeZone: timezone,
     });
   };
 
@@ -1620,12 +1699,14 @@ export default function Contact360Page() {
                   </svg>
                   <div className="flex flex-col">
                     <span className="text-xs text-slate-400 uppercase font-semibold">Email</span>
-                    <a
-                      href={`mailto:${contact.email}`}
-                      className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#137fec] break-all"
-                    >
-                      {contact.email}
-                    </a>
+                    <EntityHoverCard email={contact.email} displayName={`${contact.firstName} ${contact.lastName}`.trim()}>
+                      <Link
+                        href={`/email/compose?to=${encodeURIComponent(contact.email)}`}
+                        className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#137fec] break-all"
+                      >
+                        {contact.email}
+                      </Link>
+                    </EntityHoverCard>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -1677,7 +1758,9 @@ export default function Contact360Page() {
                 </div>
                 <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
                   <p className="text-lg font-bold text-slate-900 dark:text-white">
-                    {Math.round((contact.metrics.emailsOpened / contact.metrics.emailsSent) * 100)}%
+                    {contact.metrics.emailsSent > 0
+                      ? `${Math.round((contact.metrics.emailsOpened / contact.metrics.emailsSent) * 100)}%`
+                      : '—'}
                   </p>
                   <p className="text-xs text-slate-500">Open Rate</p>
                 </div>
@@ -1918,8 +2001,9 @@ export default function Contact360Page() {
 
                     {visibleActivities.map((activity) => {
                       const isExpanded = expandedActivities.has(activity.id);
+                      const isDeepLinked = isDeepLinkedActivity(activity.id, selectedActivityId);
                       return (
-                        <div key={activity.id} className="relative">
+                        <div key={activity.id} data-activity-id={activity.id} className="relative">
                           {/* Timeline dot marker */}
                           <div
                             className={`absolute w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 shadow-sm flex items-center justify-center z-10 ${getActivityIconBg(activity.type)}`}
@@ -1929,7 +2013,11 @@ export default function Contact360Page() {
                           </div>
 
                           {/* Activity Card */}
-                          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
+                          <div className={`rounded-lg p-4 transition-colors ${
+                            isDeepLinked
+                              ? 'bg-primary/5 border-2 border-primary/30 ring-1 ring-primary/20'
+                              : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                          }`}>
 
                             {/* Header */}
                             <div className="flex items-start justify-between gap-2">
@@ -2110,8 +2198,15 @@ export default function Contact360Page() {
                       />
                     ))}
                   {recentUnifiedActivities.length === 0 && !isUnifiedLoading && (
-                    <div className="flex items-center justify-center rounded-md border border-dashed border-border m-5 p-4">
+                    <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-border m-5 py-6 px-4">
+                      <span className="material-symbols-outlined text-3xl text-slate-300 dark:text-slate-600" aria-hidden="true">
+                        history
+                      </span>
                       <p className="text-xs text-muted-foreground text-center">No recent activity yet.</p>
+                      <Button variant="outline" size="sm" onClick={() => setActiveTab('activity')}>
+                        <span className="material-symbols-outlined !text-[16px] mr-1.5" aria-hidden="true">add</span>
+                        Log your first activity
+                      </Button>
                     </div>
                   )}
                   {isUnifiedLoading && (
@@ -2432,7 +2527,8 @@ export default function Contact360Page() {
               aiInsights={aiInsights}
               churnRiskData={churnRiskData}
               nextBestActionData={nextBestActionData}
-              onPendingAction={() => router.push('/agent-approvals/insights')}
+              onPendingAction={() => scoreWithAIMutation.mutate({ contactId })}
+              isPending={scoreWithAIMutation.isPending}
             />
           )}
         </section>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@intelliflow/ui';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 interface ExportReportButtonProps {
   className?: string;
@@ -125,7 +126,8 @@ function addTimelineSection(
   doc: JsPDFDoc,
   timelineData: { success: boolean; data?: { events: TimelineEvent[] } },
   yPosRef: { value: number },
-  checkNewPage: (space: number) => void
+  checkNewPage: (space: number) => void,
+  timezone: string = 'UTC'
 ): void {
   if (!timelineData.success || !timelineData.data) return;
 
@@ -149,6 +151,7 @@ function addTimelineSection(
       month: 'short',
       day: 'numeric',
       year: 'numeric',
+      timeZone: timezone,
     });
     doc.text(`${eventDate}`, 14, yPosRef.value);
     doc.text(`${event.title}`, 50, yPosRef.value);
@@ -160,6 +163,7 @@ function addTimelineSection(
 }
 
 export function ExportReportButton({ className }: Readonly<ExportReportButtonProps>) {
+  const { timezone } = useTimezoneContext();
   const [exporting, setExporting] = useState(false);
 
   const handleExport = async () => {
@@ -189,7 +193,7 @@ export function ExportReportButton({ className }: Readonly<ExportReportButtonPro
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(128, 128, 128);
-      doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth / 2, yPosRef.value, { align: 'center' });
+      doc.text(`Generated: ${new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: timezone })}`, pageWidth / 2, yPosRef.value, { align: 'center' });
       yPosRef.value += 15;
       doc.setTextColor(0, 0, 0);
 
@@ -246,7 +250,7 @@ export function ExportReportButton({ className }: Readonly<ExportReportButtonPro
       doc.setFont('helvetica', 'bold');
       doc.text('Upcoming Compliance Events', 14, yPosRef.value);
       yPosRef.value += 10;
-      addTimelineSection(doc, timelineData, yPosRef, checkNewPage);
+      addTimelineSection(doc, timelineData, yPosRef, checkNewPage, timezone);
 
       // Footer
       const pageCount = doc.getNumberOfPages();

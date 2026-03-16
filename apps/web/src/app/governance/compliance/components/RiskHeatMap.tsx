@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Card } from '@intelliflow/ui';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import type {
   Risk,
   RiskHeatMapResponse,
@@ -103,6 +104,7 @@ interface RiskDetailTooltipProps {
 }
 
 function RiskDetailTooltip({ risks, onClose }: Readonly<RiskDetailTooltipProps>) {
+  const { timezone } = useTimezoneContext();
   if (risks.length === 0) return null;
 
   return (
@@ -143,7 +145,7 @@ function RiskDetailTooltip({ risks, onClose }: Readonly<RiskDetailTooltipProps>)
               )}
               {risk.dueDate && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Due: {new Date(risk.dueDate).toLocaleDateString()}
+                  Due: {new Date(risk.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone })}
                 </p>
               )}
             </div>
@@ -155,6 +157,7 @@ function RiskDetailTooltip({ risks, onClose }: Readonly<RiskDetailTooltipProps>)
 }
 
 export function RiskHeatMap() {
+  const { timezone } = useTimezoneContext();
   const [data, setData] = useState<RiskHeatMapResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedRisks, setSelectedRisks] = useState<Risk[]>([]);
@@ -225,7 +228,7 @@ export function RiskHeatMap() {
           </div>
         </div>
         <div className="text-xs text-muted-foreground">
-          Last updated: {data?.lastUpdated ? new Date(data.lastUpdated).toLocaleTimeString() : '-'}
+          Last updated: {data?.lastUpdated ? new Date(data.lastUpdated).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: timezone }) : '-'}
         </div>
       </div>
 

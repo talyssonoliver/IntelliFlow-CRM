@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { EntityHoverCard } from '@/components/shared/entity-hover-card';
 import {
   Button,
   Card,
@@ -24,6 +25,10 @@ import {
   DialogTitle,
   DialogDescription,
   toast,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
   type ChurnRiskData,
   type NextBestActionData,
   type ChurnRiskLevel,
@@ -32,6 +37,7 @@ import {
 } from '@intelliflow/ui';
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
 import { PinButton } from '@/components/home/PinButton';
@@ -40,6 +46,7 @@ import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
 import { UpcomingEventsCard } from '@/components/shared';
 import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
 import { ActivityFeed, ActivityFeedItemActions } from '@/components/shared/activity-feed';
+import { useActivityDeepLink, isDeepLinkedActivity } from '@/hooks/useActivityDeepLink';
 import { useActivityReactions } from '@/hooks/useActivityReactions';
 import { useActivityComments } from '@/hooks/useActivityComments';
 import { QuickLogComposer } from '@/components/shared/quick-log-composer';
@@ -217,7 +224,7 @@ interface Activity {
 }
 
 // Lead status type matching domain
-type LeadStatus = 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'UNQUALIFIED' | 'CONVERTED' | 'LOST';
+type LeadStatus = 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'NEGOTIATING' | 'UNQUALIFIED' | 'CONVERTED' | 'LOST';
 type LeadSource = 'WEBSITE' | 'REFERRAL' | 'SOCIAL' | 'EMAIL' | 'COLD_CALL' | 'EVENT' | 'OTHER';
 type LeadTemperature = 'hot' | 'warm' | 'cold';
 
@@ -233,7 +240,7 @@ interface LeadWithRelations {
   firstName: string | null;
   lastName: string | null;
   email: string;
-  phone: string | { value?: string } | null;
+  phone: string | null;
   company: string | null;
   title: string | null;
   status: string;
@@ -329,6 +336,11 @@ function LeadStatusBadge({ status }: Readonly<{ status: LeadStatus }>) {
       className:
         'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800',
     },
+    NEGOTIATING: {
+      label: 'Negotiating',
+      className:
+        'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800',
+    },
     UNQUALIFIED: {
       label: 'Unqualified',
       className:
@@ -388,9 +400,13 @@ function TemperatureBadge({ temperature }: Readonly<{ temperature: LeadTemperatu
 function getLeadErrorMessage(
   isServerError: boolean,
   isNotFound: boolean,
-  errorMessage: string | undefined
+  errorMessage: string | undefined,
+  fromInsight: boolean = false
 ): string {
   if (isServerError) return 'An unexpected error occurred. Please try again.';
+  if (isNotFound && fromInsight) {
+    return 'This lead may have been deleted or converted since the insight was generated. The insight has been dismissed automatically.';
+  }
   if (isNotFound) return "The lead you're looking for doesn't exist or you don't have permission to view it.";
   return errorMessage || 'An error occurred while loading this lead.';
 }
@@ -425,7 +441,7 @@ function getCallOutcomeBadge(outcome: string | undefined): { cls: string; label:
   return { cls: 'bg-red-100 text-red-700', label: '✗ No Answer' };
 }
 
-function formatRelativeTime(dateString: string): string {
+function formatRelativeTime(dateString: string, timezone: string = 'UTC'): string {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -437,7 +453,7 @@ function formatRelativeTime(dateString: string): string {
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return `${diffDays} days ago`;
   return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric', month: 'short', day: 'numeric',
+    year: 'numeric', month: 'short', day: 'numeric', timeZone: timezone,
   });
 }
 
@@ -469,6 +485,7 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
   const router = useRouter();
   const searchParams = useSearchParams();
   const leadId = params.id as string;
+  const { timezone } = useTimezoneContext();
 
   // Require authentication - redirects to login if not authenticated
   const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
@@ -510,11 +527,36 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
   const [expandedActivities, setExpandedActivities] = useState<Set<string>>(new Set());
   const [visibleCount, setVisibleCount] = useState(5);
   const [activityView, setActivityView] = useState<'timeline' | 'unified'>('timeline');
+  const { selectedActivityId } = useActivityDeepLink(activeTab, setActiveTab as (tab: 'activity') => void);
+
+  // Deep-link: auto-expand the targeted activity and scroll it into view
+  const deepLinkScrolledRef = useRef(false);
+  useEffect(() => {
+    if (!selectedActivityId || deepLinkScrolledRef.current) return;
+    // Expand using both prefixed and raw forms so either ID format matches
+    setExpandedActivities((prev) => {
+      const next = new Set(prev);
+      next.add(selectedActivityId.prefixed);
+      next.add(selectedActivityId.raw);
+      return next;
+    });
+    deepLinkScrolledRef.current = true;
+    requestAnimationFrame(() => {
+      const el =
+        document.querySelector(`[data-activity-id="${CSS.escape(selectedActivityId.prefixed)}"]`) ||
+        document.querySelector(`[data-activity-id="${CSS.escape(selectedActivityId.raw)}"]`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }, [selectedActivityId, activeTab]);
+
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const [logCallOpen, setLogCallOpen] = useState(false);
   const [logCallTitle, setLogCallTitle] = useState('');
   const [logCallDescription, setLogCallDescription] = useState('');
+  const [convertConfirmOpen, setConvertConfirmOpen] = useState(false);
+  const [convertCreateAccount, setConvertCreateAccount] = useState(true);
+  const [convertAccountName, setConvertAccountName] = useState('');
 
   // API utils for cache invalidation
   const utils = api.useUtils();
@@ -542,11 +584,21 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
 
   const convertMutation = api.lead.convert.useMutation({
     onSuccess: (data) => {
+      setConvertConfirmOpen(false);
       toast({ title: 'Lead converted', description: 'Lead has been converted to a contact.' });
       router.push(`/contacts/${data.contactId}`);
     },
     onError: (err) => {
-      toast({ title: 'Conversion failed', description: err.message, variant: 'destructive' });
+      const msg = err.message;
+      let description = msg;
+      if (msg.includes('Only qualified')) {
+        description = 'Only leads with QUALIFIED status can be converted.';
+      } else if (msg.includes('already converted')) {
+        description = 'This lead has already been converted to a contact.';
+      } else if (msg.includes('not found')) {
+        description = 'Lead not found. It may have been deleted.';
+      }
+      toast({ title: 'Conversion failed', description, variant: 'destructive' });
     },
   });
 
@@ -619,11 +671,7 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
       normalizeAvatarSource(defaultOwnerAvatar) ??
       defaultOwnerAvatar;
 
-    // Handle phone - could be string or value object
-    const phoneValue =
-      typeof apiLead.phone === 'string'
-        ? apiLead.phone
-        : (apiLead.phone as { value?: string } | null)?.value || '';
+    const phoneValue = apiLead.phone ?? '';
 
     return {
       id: apiLead.id,
@@ -733,12 +781,12 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
     if (!insight) {
       return {
         qualificationScore: lead?.score || 0,
-        engagementLevel: 'Unknown',
+        engagementLevel: 'Not analyzed',
         engagementScore: 0,
         conversionProbability: 0,
         estimatedValue: lead?.estimatedValue || 0,
-        churnRisk: 'Unknown',
-        sentiment: 'Unknown',
+        churnRisk: 'Not analyzed',
+        sentiment: 'Not analyzed',
         sentimentTrend: null as string | null,
         lastEngagementDays: 0,
         nextBestAction: 'Gather more information about this lead',
@@ -770,6 +818,9 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
       icpMatch: insight.icpMatch || 'Not analyzed',
     };
   }, [apiLead?.aiInsight, lead?.score, lead?.estimatedValue]);
+
+  // IFC-226: Null-state detection for AI insight styling
+  const hasAiInsight = !!apiLead?.aiInsight;
 
   // Transform AI insights to ChurnRiskData format (IFC-095)
   const churnRiskData: ChurnRiskData | null = useMemo(() => {
@@ -978,6 +1029,22 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
   }
 
   // Error state or no lead data (non-auth errors)
+  const insightId = searchParams.get('insightId');
+  const fromInsight = !!insightId;
+
+  // Auto-dismiss stale insight when the referenced entity no longer exists
+  const dismissMutation = api.home.dismissInsight.useMutation();
+  const dismissedRef = useRef(false);
+  useEffect(() => {
+    if (fromInsight && insightId && (error?.data?.code === 'NOT_FOUND' || (!isLoading && !lead)) && !dismissedRef.current) {
+      dismissedRef.current = true;
+      dismissMutation.mutate(
+        { insightId, reason: 'Referenced lead no longer exists' },
+        { onError: () => { /* best-effort */ } }
+      );
+    }
+  }, [fromInsight, insightId, error, isLoading, lead, dismissMutation]);
+
   if ((error && !isAuthError) || !lead) {
     const isNotFound = error?.data?.code === 'NOT_FOUND' || !lead;
     const isServerError = error?.data?.code === 'INTERNAL_SERVER_ERROR';
@@ -986,13 +1053,13 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
       <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
         <Card className="p-8 text-center">
           <span className="material-symbols-outlined text-5xl text-red-500 mb-4">
-            {isServerError ? 'cloud_off' : 'error'}
+            {isServerError ? 'cloud_off' : fromInsight ? 'link_off' : 'error'}
           </span>
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-            {isServerError ? 'Something Went Wrong' : 'Lead Not Found'}
+            {isServerError ? 'Something Went Wrong' : fromInsight ? 'Stale Insight' : 'Lead Not Found'}
           </h2>
           <p className="text-slate-500 dark:text-slate-400 mb-4">
-            {getLeadErrorMessage(isServerError, isNotFound, error?.message)}
+            {getLeadErrorMessage(isServerError, isNotFound, error?.message, fromInsight)}
           </p>
           <div className="flex items-center justify-center gap-3">
             {isServerError && (
@@ -1002,6 +1069,14 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
               >
                 <span className="material-symbols-outlined !text-lg">refresh</span>{' '}Retry
               </button>
+            )}
+            {fromInsight && (
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                <span className="material-symbols-outlined !text-lg">home</span>{' '}Back to Home
+              </Link>
             )}
             <Link
               href="/leads"
@@ -1051,6 +1126,7 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
       year: 'numeric',
       month: 'short',
       day: 'numeric',
+      timeZone: timezone,
     });
   };
 
@@ -1235,14 +1311,40 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
           </h1>
         </div>
         <div className="flex gap-3">
-          <button
-            onClick={() => convertMutation.mutate({ leadId: lead.id })}
-            disabled={convertMutation.isPending}
-            className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
-          >
-            <span className="material-symbols-outlined !text-[18px]">transform</span>{' '}
-            {convertMutation.isPending ? 'Converting...' : 'Convert Lead'}
-          </button>
+          {lead.status !== 'CONVERTED' && (() => {
+            const isConvertible = lead.status === 'QUALIFIED';
+            const convertTooltipText =
+              lead.status === 'LOST' ? 'Lost leads cannot be converted. Reopen the lead first.'
+              : lead.status === 'UNQUALIFIED' ? 'Disqualified leads cannot be converted.'
+              : lead.status === 'NEGOTIATING' ? 'Lead is in negotiation. Qualify the lead first to convert.'
+              : 'Lead must be qualified before conversion.';
+            return (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      tabIndex={isConvertible ? undefined : 0}
+                      aria-label={isConvertible ? undefined : convertTooltipText}
+                    >
+                      <button
+                        onClick={() => setConvertConfirmOpen(true)}
+                        disabled={!isConvertible || convertMutation.isPending}
+                        className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+                      >
+                        <span className="material-symbols-outlined !text-[18px]">transform</span>{' '}
+                        {convertMutation.isPending ? 'Converting...' : 'Convert Lead'}
+                      </button>
+                    </span>
+                  </TooltipTrigger>
+                  {!isConvertible && (
+                    <TooltipContent>
+                      <p>{convertTooltipText}</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+            );
+          })()}
           <button
             onClick={() => router.push(`/leads/${lead.id}/edit`)}
             className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
@@ -1329,6 +1431,79 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
               onClick={() => archiveMutation.mutate({ id: lead.id, status: 'LOST' })}
             >
               {archiveMutation.isPending ? 'Archiving...' : 'Archive'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Convert Lead Confirmation Dialog */}
+      <AlertDialog
+        open={convertConfirmOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setConvertCreateAccount(true);
+            setConvertAccountName('');
+          }
+          setConvertConfirmOpen(open);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Convert Lead to Contact</AlertDialogTitle>
+            <AlertDialogDescription>
+              Convert {lead.firstName} {lead.lastName} to a contact record? This action
+              will change the lead status to CONVERTED and cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex flex-col gap-3 py-2">
+            <label
+              htmlFor="convert-create-account"
+              className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300"
+            >
+              <input
+                type="checkbox"
+                checked={convertCreateAccount}
+                onChange={(e) => setConvertCreateAccount(e.target.checked)}
+                id="convert-create-account"
+                className="rounded border-slate-300 dark:border-slate-600 text-[#137fec] focus:ring-[#137fec]"
+              />
+              Also create an Account record
+            </label>
+            {convertCreateAccount && (
+              <div>
+                <label
+                  htmlFor="convert-account-name"
+                  className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                >
+                  Account name
+                </label>
+                <input
+                  id="convert-account-name"
+                  type="text"
+                  value={convertAccountName}
+                  onChange={(e) => setConvertAccountName(e.target.value)}
+                  placeholder={lead.company || 'Company name'}
+                  maxLength={200}
+                  className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent"
+                />
+              </div>
+            )}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={convertMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                convertMutation.mutate({
+                  leadId: lead.id,
+                  createAccount: convertCreateAccount,
+                  accountName: convertCreateAccount && convertAccountName.trim()
+                    ? convertAccountName.trim()
+                    : undefined,
+                });
+              }}
+              disabled={convertMutation.isPending}
+            >
+              {convertMutation.isPending ? 'Converting...' : 'Convert Lead'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1454,12 +1629,14 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
                   </span>
                   <div className="flex flex-col">
                     <span className="text-xs text-slate-400 uppercase font-semibold">Email</span>
-                    <a
-                      href={`mailto:${lead.email}`}
-                      className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#137fec] break-all"
-                    >
-                      {lead.email}
-                    </a>
+                    <EntityHoverCard email={lead.email} displayName={`${lead.firstName} ${lead.lastName}`.trim()}>
+                      <Link
+                        href={`/email/compose?to=${encodeURIComponent(lead.email)}`}
+                        className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#137fec] break-all"
+                      >
+                        {lead.email}
+                      </Link>
+                    </EntityHoverCard>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -1642,13 +1819,24 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
                             {activity.description}
                           </p>
                           <p className="text-xs text-slate-500 mt-1">
-                            {activity.user} • {formatRelativeTime(activity.timestamp)}
+                            {activity.user} • {formatRelativeTime(activity.timestamp, timezone)}
                           </p>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-slate-500 text-center py-4">No activities yet</p>
+                    <div className="flex flex-col items-center gap-3 py-6">
+                      <span className="material-symbols-outlined text-3xl text-slate-300 dark:text-slate-600" aria-hidden="true">
+                        history
+                      </span>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
+                        No activities yet
+                      </p>
+                      <Button variant="outline" size="sm" onClick={() => setActiveTab('activity')}>
+                        <span className="material-symbols-outlined !text-[16px] mr-1.5" aria-hidden="true">add</span>
+                        Log your first activity
+                      </Button>
+                    </div>
                   )}
                 </div>
               </Card>
@@ -1687,7 +1875,8 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
                       {formatRelativeTime(
                         typeof lead.lastContactedAt === 'string'
                           ? lead.lastContactedAt
-                          : lead.lastContactedAt.toISOString()
+                          : lead.lastContactedAt.toISOString(),
+                        timezone
                       )}
                     </dd>
                   </div>
@@ -1860,25 +2049,32 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
                     </p>
                   </div>
 
-                  {/* Timeline */}
-                  <div className="relative pl-4 space-y-4">
+                  {/* Timeline — matches contact detail layout */}
+                  <div className="relative space-y-4" style={{ paddingLeft: 40 }}>
+                    {/* Continuous vertical timeline line */}
+                    <div className="absolute top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700" style={{ left: 19 }} />
+
                     {visibleActivities.map((activity) => {
                       const isExpanded = expandedActivities.has(activity.id);
+                      const isDeepLinked = isDeepLinkedActivity(activity.id, selectedActivityId);
                       return (
-                        <div key={activity.id} className="relative">
-                          {/* Timeline line */}
-                          <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700 -ml-4" />
+                        <div key={activity.id} data-activity-id={activity.id} className="relative">
+                          {/* Timeline dot marker */}
+                          <div
+                            className={`absolute w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 shadow-sm flex items-center justify-center z-10 ${getActivityIconBg(activity.type)}`}
+                            style={{ left: -36, top: 12 }}
+                          >
+                            <span className="material-symbols-outlined !text-[16px]">
+                              {getActivityIcon(activity.type)}
+                            </span>
+                          </div>
 
                           {/* Activity Card */}
-                          <div className="relative ml-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
-                            {/* Timeline dot */}
-                            <div
-                              className={`absolute -left-8 top-4 w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center z-10 ${getActivityIconBg(activity.type)}`}
-                            >
-                              <span className="material-symbols-outlined !text-[16px]">
-                                {getActivityIcon(activity.type)}
-                              </span>
-                            </div>
+                          <div className={`rounded-lg p-4 transition-colors ${
+                            isDeepLinked
+                              ? 'bg-primary/5 border-2 border-primary/30 ring-1 ring-primary/20'
+                              : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                          }`}>
 
                             {/* Header */}
                             <div className="flex items-start justify-between gap-2">
@@ -1890,7 +2086,7 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
                                   {activity.description}
                                 </p>
                                 <p className="text-xs text-slate-500 mt-1">
-                                  {activity.user} • {formatRelativeTime(activity.timestamp)}
+                                  {activity.user} • {formatRelativeTime(activity.timestamp, timezone)}
                                 </p>
                               </div>
                               <button
@@ -1940,7 +2136,7 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
                                           {comment.text}
                                         </p>
                                         <p className="text-xs text-slate-500 mt-1">
-                                          {comment.user} • {formatRelativeTime(comment.timestamp)}
+                                          {comment.user} • {formatRelativeTime(comment.timestamp, timezone)}
                                         </p>
                                       </div>
                                     ))}
@@ -2043,7 +2239,7 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
                       <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
                         <span>{note.author}</span>
                         <span>•</span>
-                        <span>{formatRelativeTime(note.createdAt)}</span>
+                        <span>{formatRelativeTime(note.createdAt, timezone)}</span>
                       </div>
                     </div>
                   ))
@@ -2087,7 +2283,7 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
                             {email.status === 'opened' ? `Opened ${email.openCount}x` : 'Sent'}
                           </span>
                           <span className="text-xs text-slate-500">
-                            {formatRelativeTime(email.sentAt)}
+                            {formatRelativeTime(email.sentAt, timezone)}
                           </span>
                         </div>
                       </div>
@@ -2128,7 +2324,7 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
                       <div className="flex-1">
                         <p className="font-medium text-slate-900 dark:text-white">{file.name}</p>
                         <p className="text-sm text-slate-500">
-                          {file.size} • {formatRelativeTime(file.uploadedAt)}
+                          {file.size} • {formatRelativeTime(file.uploadedAt, timezone)}
                         </p>
                       </div>
                       <button className="p-2 text-slate-500 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
@@ -2192,8 +2388,10 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
                       </span>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                        {aiInsights.conversionProbability}%
+                      <p className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>
+                        <span data-testid={hasAiInsight ? 'conversion-value' : 'conversion-null-state'}>
+                          {hasAiInsight ? `${aiInsights.conversionProbability}%` : '--'}
+                        </span>
                       </p>
                       <p className="text-xs text-slate-500">Conversion Probability</p>
                     </div>
@@ -2207,8 +2405,10 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
                       </span>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                        ${(aiInsights.estimatedValue / 1000).toFixed(0)}k
+                      <p className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>
+                        <span data-testid={hasAiInsight ? 'deal-value' : 'deal-value-null-state'}>
+                          {hasAiInsight ? `$${(aiInsights.estimatedValue / 1000).toFixed(0)}k` : '--'}
+                        </span>
                       </p>
                       <p className="text-xs text-slate-500">Est. Deal Value</p>
                     </div>
@@ -2222,8 +2422,10 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
                       </span>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                        {aiInsights.qualificationScore}
+                      <p className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>
+                        <span data-testid={hasAiInsight ? 'lead-score-value' : 'lead-score-null-state'}>
+                          {hasAiInsight ? aiInsights.qualificationScore : '--'}
+                        </span>
                       </p>
                       <p className="text-xs text-slate-500">Lead Score</p>
                     </div>
@@ -2255,8 +2457,8 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
                       <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
                         Engagement Score
                       </span>
-                      <span className="text-sm font-bold text-[#137fec]">
-                        {aiInsights.engagementScore}%
+                      <span className={`text-sm font-bold ${hasAiInsight ? 'text-[#137fec]' : 'text-slate-400 dark:text-slate-500'}`}>
+                        {hasAiInsight ? `${aiInsights.engagementScore}%` : '--'}
                       </span>
                     </div>
                     <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
@@ -2268,7 +2470,14 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
                   </div>
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-sm text-slate-600 dark:text-slate-300">Sentiment</span>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                    <span
+                      data-testid={hasAiInsight ? 'sentiment-value' : 'sentiment-null-state'}
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        hasAiInsight
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                          : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 italic'
+                      }`}
+                    >
                       {aiInsights.sentiment}
                     </span>
                   </div>
@@ -2327,10 +2536,18 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
                   <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
                     Engagement
                   </span>
-                  <span className="text-xs font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+                  <span
+                    data-testid={hasAiInsight ? 'engagement-value' : 'engagement-null-state'}
+                    className={`text-xs font-bold px-2 py-0.5 rounded ${
+                      hasAiInsight
+                        ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800'
+                        : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800/50 italic'
+                    }`}
+                  >
                     {aiInsights.engagementLevel}
                   </span>
                 </div>
+                {hasAiInsight ? (
                 <div className="flex gap-1 h-1.5">
                   {[1, 2, 3, 4, 5].map((level) => (
                     <div
@@ -2343,6 +2560,16 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
                     />
                   ))}
                 </div>
+                ) : (
+                <div className="flex gap-1 h-1.5" data-testid="engagement-bar-null-state">
+                  {[1, 2, 3, 4, 5].map((level) => (
+                    <div
+                      key={level}
+                      className={`flex-1 ${level === 1 ? 'rounded-l-full' : ''} ${level === 5 ? 'rounded-r-full' : ''} bg-slate-100 dark:bg-slate-800`}
+                    />
+                  ))}
+                </div>
+                )}
               </div>
 
               <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
@@ -2424,7 +2651,7 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
                     <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
                       <span>{note.author}</span>
                       <span>•</span>
-                      <span>{formatRelativeTime(note.createdAt)}</span>
+                      <span>{formatRelativeTime(note.createdAt, timezone)}</span>
                     </div>
                   </div>
                 ))

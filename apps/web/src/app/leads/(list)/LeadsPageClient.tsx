@@ -15,9 +15,11 @@ import {
 } from '@intelliflow/ui';
 import { type LeadStatus } from '@intelliflow/domain';
 import { PageHeader, SearchFilterBar, type FilterOption } from '@/components/shared';
+import { EntityHoverCard } from '@/components/shared/entity-hover-card';
 import { leadStatusOptions } from '@/lib/shared/filter-utils';
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { invalidateLeadsCache } from './actions';
 
 /**
@@ -84,7 +86,7 @@ const SORT_OPTIONS = [
 // =============================================================================
 
 // Format date for display
-function formatDate(date: Date | string): string {
+function formatDate(date: Date | string, timezone: string = 'UTC'): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return 'Invalid date';
 
@@ -101,6 +103,7 @@ function formatDate(date: Date | string): string {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
+    timeZone: timezone,
   });
 }
 
@@ -112,7 +115,7 @@ interface RowActionHandlers {
   onDelete: (lead: Lead) => void;
 }
 
-function createColumns(handlers: RowActionHandlers): ColumnDef<Lead>[] {
+function createColumns(handlers: RowActionHandlers, timezone: string = 'UTC'): ColumnDef<Lead>[] {
   return [
     {
       accessorKey: 'firstName',
@@ -140,13 +143,18 @@ function createColumns(handlers: RowActionHandlers): ColumnDef<Lead>[] {
       header: 'Email',
       size: 220,
       cell: ({ row }) => (
-        <a
-          href={`mailto:${row.original.email}`}
-          onClick={(e) => e.stopPropagation()}
-          className="text-sm text-primary hover:underline"
+        <EntityHoverCard
+          email={row.original.email}
+          displayName={`${row.original.firstName} ${row.original.lastName}`.trim()}
         >
-          {row.original.email}
-        </a>
+          <a
+            href={`/email/compose?to=${encodeURIComponent(row.original.email)}`}
+            onClick={(e) => e.stopPropagation()}
+            className="text-sm text-primary hover:underline"
+          >
+            {row.original.email}
+          </a>
+        </EntityHoverCard>
       ),
     },
     {
@@ -167,7 +175,7 @@ function createColumns(handlers: RowActionHandlers): ColumnDef<Lead>[] {
       size: 120,
       cell: ({ row }) => (
         <span className="text-sm text-slate-600 dark:text-slate-400">
-          {formatDate(row.original.createdAt)}
+          {formatDate(row.original.createdAt, timezone)}
         </span>
       ),
     },
@@ -195,7 +203,7 @@ function createColumns(handlers: RowActionHandlers): ColumnDef<Lead>[] {
               {
                 icon: 'mail',
                 label: 'Send Email',
-                onClick: () => window.open(`mailto:${lead.email}`),
+                onClick: () => { window.location.href = `/email/compose?to=${encodeURIComponent(lead.email)}`; },
               },
             ]}
             dropdownActions={[
@@ -329,6 +337,7 @@ interface LeadsPageClientProps {
 }
 
 export default function LeadsPageClient({ initialData: serverData }: LeadsPageClientProps = {}) {
+  const { timezone } = useTimezoneContext();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -594,9 +603,12 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
         }
 
         if (result.failed.length > 0) {
+          const firstError = result.failed[0]?.error;
           toast({
             title: 'Some updates failed',
-            description: `${result.failed.length} lead(s) could not be updated.`,
+            description: firstError
+              ? `${result.failed.length} lead(s) could not be updated: ${firstError}`
+              : `${result.failed.length} lead(s) could not be updated.`,
             variant: 'destructive',
           });
         }
@@ -700,7 +712,7 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
   );
 
   // Create columns with row handlers
-  const columns = useMemo(() => createColumns(rowActionHandlers), [rowActionHandlers]);
+  const columns = useMemo(() => createColumns(rowActionHandlers, timezone), [rowActionHandlers, timezone]);
 
   // Bulk actions for selected leads
   const bulkActions: BulkAction<Lead>[] = useMemo(

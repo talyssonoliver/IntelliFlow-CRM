@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import { useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 interface ADRStats {
   total: number;
@@ -42,7 +43,7 @@ const ACTION_ICON_MAP: Record<string, { icon: string; iconColor: string }> = {
   UPDATE: { icon: 'edit', iconColor: 'text-amber-500' },
 };
 
-function formatActivityTime(date: Date | string): string {
+function formatActivityTime(date: Date | string, timezone: string = 'UTC'): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
@@ -51,10 +52,11 @@ function formatActivityTime(date: Date | string): string {
   if (diffHours < 1) return 'Just now';
   if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
   if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
-  return d.toLocaleDateString();
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone });
 }
 
 export default function GovernancePage() {
+  const { timezone } = useTimezoneContext();
   const [adrStats, setAdrStats] = useState<ADRStats | null>(null);
   const [loading, setLoading] = useState(true);
   const { data: recentActivity = [] } = trpc.analytics.recentActivity.useQuery({ limit: 10 });
@@ -197,7 +199,7 @@ export default function GovernancePage() {
                     {activity.actorName && (
                       <p className="text-sm text-muted-foreground">by {activity.actorName}</p>
                     )}
-                    <p className="text-xs text-muted-foreground mt-1">{formatActivityTime(activity.createdAt)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{formatActivityTime(activity.createdAt, timezone)}</p>
                   </div>
                 </div>
               );

@@ -4,13 +4,21 @@
 
 import * as React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
+
+const mockUseSearchParams = vi.fn(() => new URLSearchParams('tab=ai-insights'));
+const mockUseActivityFeed = vi.fn(() => ({
+  items: [] as Array<Record<string, unknown>>,
+  isLoading: false,
+}));
 
 const mockPush = vi.fn();
 const mockReplace = vi.fn();
 const mockEnsureInsightReviewMutate = vi.fn();
 const mockLogActivityMutate = vi.fn();
 const mockAddNoteMutate = vi.fn();
+const mockScoreWithAIMutate = vi.fn();
+let mockScoreWithAIIsPending = false;
 
 const mockContactQueryState = {
   data: {
@@ -66,7 +74,7 @@ vi.mock('next/navigation', () => ({
     refresh: vi.fn(),
     prefetch: vi.fn(),
   }),
-  useSearchParams: () => new URLSearchParams('tab=ai-insights'),
+  useSearchParams: () => mockUseSearchParams(),
 }));
 
 vi.mock('@/lib/auth/AuthContext', () => ({
@@ -102,6 +110,12 @@ vi.mock('@/lib/api', () => ({
           isPending: false,
         }),
       },
+      scoreWithAI: {
+        useMutation: () => ({
+          mutate: mockScoreWithAIMutate,
+          isPending: mockScoreWithAIIsPending,
+        }),
+      },
     },
     home: {
       getInsightById: {
@@ -124,12 +138,14 @@ vi.mock('@intelliflow/ui', () => ({
     children,
     onClick,
     className,
+    disabled,
   }: Readonly<{
     children: React.ReactNode;
     onClick?: () => void;
     className?: string;
+    disabled?: boolean;
   }>) => (
-    <button type="button" onClick={onClick} className={className}>
+    <button type="button" onClick={onClick} className={className} disabled={disabled}>
       {children}
     </button>
   ),
@@ -177,10 +193,7 @@ vi.mock('@/components/shared/activity-feed', () => ({
 }));
 
 vi.mock('@/hooks/useActivityFeed', () => ({
-  useActivityFeed: () => ({
-    items: [],
-    isLoading: false,
-  }),
+  useActivityFeed: () => mockUseActivityFeed(),
 }));
 
 vi.mock('@/hooks/useActivityReactions', () => ({
@@ -213,6 +226,8 @@ describe('Contact360Page - AI null state', () => {
     vi.clearAllMocks();
     mockContactQueryState.error = null;
     mockContactQueryState.isLoading = false;
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('tab=ai-insights'));
+    mockUseActivityFeed.mockReturnValue({ items: [], isLoading: false });
   });
 
   it('shows an honest pending AI state instead of fabricated fallback values', () => {
@@ -223,11 +238,177 @@ describe('Contact360Page - AI null state', () => {
     expect(screen.getAllByText('AI analysis has not been run for this contact yet.')).toHaveLength(
       2
     );
-    expect(screen.getAllByRole('button', { name: 'View pending AI status' })).toHaveLength(2);
+    expect(screen.getAllByRole('button', { name: 'Run AI Analysis' })).toHaveLength(2);
 
     expect(screen.queryByText('Conversion Probability')).not.toBeInTheDocument();
     expect(screen.queryByText('Engagement Score')).not.toBeInTheDocument();
     expect(screen.queryByText('No AI recommendations available yet')).not.toBeInTheDocument();
     expect(screen.queryByText('Unknown')).not.toBeInTheDocument();
+  });
+});
+
+describe('Contact360Page - Empty State CTA', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockContactQueryState.error = null;
+    mockContactQueryState.isLoading = false;
+    // Override to overview tab for CTA tests
+    mockUseSearchParams.mockReturnValue(new URLSearchParams());
+    mockUseActivityFeed.mockReturnValue({ items: [], isLoading: false });
+  });
+
+  it('renders "Log your first activity" button when recentUnifiedActivities is empty and not loading (AC-004)', () => {
+    render(<Contact360Page />);
+    expect(screen.getByText('No recent activity yet.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Log your first activity/i })).toBeInTheDocument();
+  });
+
+  it('clicking CTA button switches to Activity tab (AC-005)', () => {
+    render(<Contact360Page />);
+    const ctaButton = screen.getByRole('button', { name: /Log your first activity/i });
+    fireEvent.click(ctaButton);
+    // After clicking, the Activity tab content should render (timeline view with search)
+    expect(screen.getByPlaceholderText('Search activities...')).toBeInTheDocument();
+  });
+
+  it('CTA button is NOT rendered when recentUnifiedActivities has items (AC-006)', () => {
+    mockUseActivityFeed.mockReturnValue({
+      items: [
+        {
+          id: 'act-1',
+          source: 'manual',
+          type: 'NOTE',
+          title: 'Test Activity',
+          description: 'A test',
+          timestamp: '2026-03-10T00:00:00.000Z',
+          actor: { name: 'Test User' },
+          entity: { type: 'contact', id: 'contact-1' },
+          metadata: {},
+        },
+      ],
+      isLoading: false,
+    });
+    render(<Contact360Page />);
+    expect(screen.queryByRole('button', { name: /Log your first activity/i })).not.toBeInTheDocument();
+  });
+
+  it('CTA button is NOT rendered while isUnifiedLoading is true (AC-007)', () => {
+    mockUseActivityFeed.mockReturnValue({ items: [], isLoading: true });
+    render(<Contact360Page />);
+    expect(screen.queryByRole('button', { name: /Log your first activity/i })).not.toBeInTheDocument();
+    expect(screen.getByText('Loading activity...')).toBeInTheDocument();
+  });
+});
+
+describe('Contact360Page - scoreWithAI mutation (IFC-220)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockContactQueryState.error = null;
+    mockContactQueryState.isLoading = false;
+    mockScoreWithAIIsPending = false;
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('tab=ai-insights'));
+    mockUseActivityFeed.mockReturnValue({ items: [], isLoading: false });
+  });
+
+  it('T-001: clicking "Run AI Analysis" calls scoreWithAI.mutate with contactId', () => {
+    render(<Contact360Page />);
+    const buttons = screen.getAllByRole('button', { name: 'Run AI Analysis' });
+    // Click the main tab button (first one is the banner in the tab content)
+    fireEvent.click(buttons[0]);
+    expect(mockScoreWithAIMutate).toHaveBeenCalledWith({ contactId: 'contact-1' });
+  });
+
+  it('T-002: button shows "Analyzing..." and is disabled when mutation is pending', () => {
+    mockScoreWithAIIsPending = true;
+    render(<Contact360Page />);
+    const banner = screen.getByTestId('contact-ai-pending-banner');
+    const button = banner.querySelector('button');
+    expect(button).toHaveTextContent('Analyzing...');
+    expect(button).toBeDisabled();
+  });
+
+  it('T-003: sidebar compact pending state uses onViewAiTab, not scoreWithAI', () => {
+    render(<Contact360Page />);
+    const summaryBanner = screen.getByTestId('contact-ai-pending-summary');
+    const button = summaryBanner.querySelector('button');
+    fireEvent.click(button!);
+    // Sidebar button navigates to AI tab rather than triggering mutation
+    expect(mockScoreWithAIMutate).not.toHaveBeenCalled();
+  });
+
+  it('T-004: pending banner has amber dashed border styling', () => {
+    render(<Contact360Page />);
+    const banner = screen.getByTestId('contact-ai-pending-banner');
+    expect(banner.className).toContain('border-dashed');
+    expect(banner.className).toContain('border-amber-300');
+    expect(banner.className).toContain('bg-amber-50');
+  });
+
+  it('T-005: no pending banners shown when aiInsight data exists', () => {
+    mockContactQueryState.data = {
+      ...mockContactQueryState.data,
+      aiInsight: {
+        conversionProbability: 0.75,
+        lifetimeValue: 50000,
+        churnRisk: 'LOW',
+        nextBestAction: 'Schedule follow-up',
+        sentiment: 'POSITIVE',
+        engagementScore: 85,
+        recommendations: ['Follow up this week'],
+        quietPeriodAlert: null,
+        sentimentTrend: 'IMPROVING',
+        lastEngagementDays: 3,
+      } as any,
+    };
+    render(<Contact360Page />);
+    expect(screen.queryByTestId('contact-ai-pending-banner')).not.toBeInTheDocument();
+  });
+});
+
+describe('Contact360Page - Open Rate NaN fix (IFC-253 F-01)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockContactQueryState.error = null;
+    mockContactQueryState.isLoading = false;
+    mockUseSearchParams.mockReturnValue(new URLSearchParams());
+    mockUseActivityFeed.mockReturnValue({ items: [], isLoading: false });
+  });
+
+  it('renders em dash for Open Rate when emailsSent is 0 (AC-001)', () => {
+    // activities: [] → emailsSent = 0, emailsOpened = 0 → should show —
+    mockContactQueryState.data = {
+      ...mockContactQueryState.data,
+      activities: [],
+    };
+    render(<Contact360Page />);
+
+    // Should NOT render NaN anywhere
+    const body = document.body.textContent || '';
+    expect(body).not.toContain('NaN');
+
+    // Should render em dash for Open Rate
+    expect(screen.getByText('—')).toBeInTheDocument();
+  });
+
+  it('renders correct percentage when emailsSent > 0 (AC-002)', () => {
+    // 5 EMAIL activities → emailsSent = 5, emailsOpened is hardcoded to 0 → 0%
+    mockContactQueryState.data = {
+      ...mockContactQueryState.data,
+      activities: [
+        { id: 'a1', type: 'EMAIL', title: 'Email 1', description: '', createdAt: '2026-03-01T00:00:00Z', userId: 'u1', contactId: 'c1', metadata: null },
+        { id: 'a2', type: 'EMAIL', title: 'Email 2', description: '', createdAt: '2026-03-01T00:00:00Z', userId: 'u1', contactId: 'c1', metadata: null },
+        { id: 'a3', type: 'EMAIL', title: 'Email 3', description: '', createdAt: '2026-03-01T00:00:00Z', userId: 'u1', contactId: 'c1', metadata: null },
+        { id: 'a4', type: 'EMAIL', title: 'Email 4', description: '', createdAt: '2026-03-01T00:00:00Z', userId: 'u1', contactId: 'c1', metadata: null },
+        { id: 'a5', type: 'EMAIL', title: 'Email 5', description: '', createdAt: '2026-03-01T00:00:00Z', userId: 'u1', contactId: 'c1', metadata: null },
+      ] as any,
+    };
+    render(<Contact360Page />);
+
+    // emailsOpened is hardcoded to 0, emailsSent = 5 → 0%
+    expect(screen.getByText('0%')).toBeInTheDocument();
+
+    // Should NOT render NaN anywhere
+    const body = document.body.textContent || '';
+    expect(body).not.toContain('NaN');
   });
 });

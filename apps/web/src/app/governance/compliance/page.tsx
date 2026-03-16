@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Card } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import {
   RiskHeatMap,
   ComplianceTimeline,
@@ -203,7 +204,7 @@ function OverallScoreCard() {
   );
 }
 
-function formatActivityTime(date: Date | string): string {
+function formatActivityTime(date: Date | string, timezone: string = 'UTC'): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
@@ -212,10 +213,11 @@ function formatActivityTime(date: Date | string): string {
   if (diffHours < 1) return 'Just now';
   if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
   if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
-  return d.toLocaleDateString();
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone });
 }
 
 export default function ComplianceDashboardPage() {
+  const { timezone } = useTimezoneContext();
   const [selectedStandard, setSelectedStandard] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const { data: recentActivity = [] } = trpc.analytics.recentActivity.useQuery({ limit: 10 });
@@ -353,7 +355,7 @@ export default function ComplianceDashboardPage() {
                   {activity.actorName && (
                     <p className="text-sm text-muted-foreground">by {activity.actorName}</p>
                   )}
-                  <p className="text-xs text-muted-foreground mt-1">{formatActivityTime(activity.createdAt)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{formatActivityTime(activity.createdAt, timezone)}</p>
                 </div>
               </div>
             )) : (

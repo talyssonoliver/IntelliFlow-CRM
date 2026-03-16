@@ -208,6 +208,10 @@ vi.mock('@/components/shared/entity-action-sheet', () => ({
   EntityActionSheet: () => null,
 }));
 
+vi.mock('@/components/shared/entity-hover-card', () => ({
+  EntityHoverCard: ({ children }: any) => <>{children}</>,
+}));
+
 vi.mock('@/components/shared/more-actions-button', () => ({
   MoreActionsButton: () => <button type="button">More Actions</button>,
 }));
@@ -258,6 +262,146 @@ vi.mock('@/lib/shared/avatar-utils', () => ({
 }));
 
 import Lead360Page from '../page';
+
+describe('LeadDetailPage - Null AI Insight UX (IFC-226)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockLeadQueryState.error = null;
+    mockLeadQueryState.isLoading = false;
+    mockLeadQueryState.data.activities = [];
+    mockLeadQueryState.data.aiInsight = null;
+  });
+
+  it('does not render raw "Unknown" text anywhere on the page', () => {
+    render(<Lead360Page />);
+    expect(screen.queryByText('Unknown')).not.toBeInTheDocument();
+  });
+
+  it('renders "Not analyzed" for engagement level in Lead IQ sidebar', () => {
+    render(<Lead360Page />);
+    const engagementBadge = screen.getByTestId('engagement-null-state');
+    expect(engagementBadge).toHaveTextContent('Not analyzed');
+  });
+
+  it('renders engagement null-state with muted italic styling', () => {
+    render(<Lead360Page />);
+    const engagementBadge = screen.getByTestId('engagement-null-state');
+    expect(engagementBadge.className).toContain('italic');
+    expect(engagementBadge.className).toContain('text-slate-400');
+  });
+
+  it('renders "Not analyzed" for sentiment with muted styling (not green)', () => {
+    render(<Lead360Page />);
+    // Switch to AI Insights tab
+    const aiTab = screen.getByRole('button', { name: /AI Insights/i });
+    fireEvent.click(aiTab);
+    const sentimentBadge = screen.getByTestId('sentiment-null-state');
+    expect(sentimentBadge).toHaveTextContent('Not analyzed');
+    expect(sentimentBadge.className).not.toContain('bg-green-100');
+    expect(sentimentBadge.className).toContain('italic');
+  });
+
+  it('renders "--" for conversion probability when aiInsight is null', () => {
+    render(<Lead360Page />);
+    const aiTab = screen.getByRole('button', { name: /AI Insights/i });
+    fireEvent.click(aiTab);
+    const conversionEl = screen.getByTestId('conversion-null-state');
+    expect(conversionEl).toHaveTextContent('--');
+  });
+
+  it('renders "--" for estimated deal value when aiInsight is null', () => {
+    render(<Lead360Page />);
+    const aiTab = screen.getByRole('button', { name: /AI Insights/i });
+    fireEvent.click(aiTab);
+    const dealValueEl = screen.getByTestId('deal-value-null-state');
+    expect(dealValueEl).toHaveTextContent('--');
+  });
+
+  it('renders "--" for lead score when aiInsight is null', () => {
+    render(<Lead360Page />);
+    const aiTab = screen.getByRole('button', { name: /AI Insights/i });
+    fireEvent.click(aiTab);
+    const leadScoreEl = screen.getByTestId('lead-score-null-state');
+    expect(leadScoreEl).toHaveTextContent('--');
+  });
+
+  it('renders "Run AI Analysis" CTA in AI Insights tab', () => {
+    render(<Lead360Page />);
+    const aiTab = screen.getByRole('button', { name: /AI Insights/i });
+    fireEvent.click(aiTab);
+    expect(screen.getByRole('button', { name: /Run AI Analysis/i })).toBeInTheDocument();
+  });
+
+  it('renders sidebar warning when aiInsight is null', () => {
+    render(<Lead360Page />);
+    expect(screen.getByText(/AI analysis not run yet/i)).toBeInTheDocument();
+  });
+
+  it('engagement bar uses null-state visual when aiInsight is null', () => {
+    render(<Lead360Page />);
+    const engagementBar = screen.getByTestId('engagement-bar-null-state');
+    expect(engagementBar).toBeInTheDocument();
+  });
+
+  it('all null-state elements have data-testid attributes', () => {
+    render(<Lead360Page />);
+    const aiTab = screen.getByRole('button', { name: /AI Insights/i });
+    fireEvent.click(aiTab);
+    expect(screen.getByTestId('engagement-null-state')).toBeInTheDocument();
+    expect(screen.getByTestId('sentiment-null-state')).toBeInTheDocument();
+    expect(screen.getByTestId('conversion-null-state')).toBeInTheDocument();
+    expect(screen.getByTestId('deal-value-null-state')).toBeInTheDocument();
+    expect(screen.getByTestId('lead-score-null-state')).toBeInTheDocument();
+    expect(screen.getByTestId('engagement-bar-null-state')).toBeInTheDocument();
+  });
+});
+
+describe('LeadDetailPage - Real AI Insight Rendering (IFC-226)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockLeadQueryState.error = null;
+    mockLeadQueryState.isLoading = false;
+    mockLeadQueryState.data.activities = [];
+    mockLeadQueryState.data.aiInsight = {
+      engagementScore: 85,
+      conversionProbability: 72,
+      estimatedValue: 50000,
+      churnRisk: 'LOW',
+      sentiment: 'Positive',
+      sentimentTrend: 'up',
+      lastEngagementDays: 3,
+      nextBestAction: 'Schedule follow-up',
+      recommendations: ['Send proposal'],
+      icpMatch: 'Strong',
+    } as any;
+  });
+
+  afterEach(() => {
+    mockLeadQueryState.data.aiInsight = null;
+  });
+
+  it('renders actual engagement level when aiInsight is populated', () => {
+    render(<Lead360Page />);
+    expect(screen.getByTestId('engagement-value')).toHaveTextContent('High');
+  });
+
+  it('renders sentiment with green styling when real data exists', () => {
+    render(<Lead360Page />);
+    const aiTab = screen.getByRole('button', { name: /AI Insights/i });
+    fireEvent.click(aiTab);
+    const sentimentBadge = screen.getByTestId('sentiment-value');
+    expect(sentimentBadge).toHaveTextContent('Positive');
+    expect(sentimentBadge.className).toContain('bg-green-100');
+  });
+
+  it('renders real conversion probability when aiInsight is populated', () => {
+    render(<Lead360Page />);
+    const aiTab = screen.getByRole('button', { name: /AI Insights/i });
+    fireEvent.click(aiTab);
+    const conversionEl = screen.getByTestId('conversion-value');
+    expect(conversionEl).toHaveTextContent('72%');
+  });
+});
 
 describe('LeadDetailPage - Empty State CTA', () => {
   beforeEach(() => {

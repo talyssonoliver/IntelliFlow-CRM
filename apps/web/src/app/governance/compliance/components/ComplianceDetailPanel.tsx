@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@intelliflow/ui';
 import type { ComplianceDetailResponse, ControlStatus, HistoricalScore } from '@/app/api/compliance/types';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 const STATUS_CONFIG: Record<ControlStatus, { color: string; icon: string; label: string }> = {
   passed: {
@@ -89,6 +90,7 @@ interface HistoryChartProps {
 }
 
 function HistoryChart({ scores }: Readonly<HistoryChartProps>) {
+  const { timezone } = useTimezoneContext();
   if (!scores.length) return null;
 
   const chartHeight = 120;
@@ -168,7 +170,7 @@ function HistoryChart({ scores }: Readonly<HistoryChartProps>) {
             className="fill-muted-foreground text-[7px]"
             textAnchor="middle"
           >
-            {new Date(p.date).toLocaleDateString('en-US', { month: 'short' })}
+            {new Date(p.date).toLocaleDateString('en-US', { month: 'short', timeZone: timezone })}
           </text>
         ))}
       </svg>
@@ -183,6 +185,7 @@ interface ComplianceDetailPanelProps {
 }
 
 export function ComplianceDetailPanel({ standardId, open, onClose }: Readonly<ComplianceDetailPanelProps>) {
+  const { timezone } = useTimezoneContext();
   const [detail, setDetail] = useState<ComplianceDetailResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'controls' | 'history' | 'changes'>('controls');
@@ -281,7 +284,7 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: Readonly<Co
                   <div>
                     <p className="text-muted-foreground">Next Audit</p>
                     <p className="font-medium text-foreground">
-                      {new Date(detail.nextAuditDate).toLocaleDateString()}
+                      {new Date(detail.nextAuditDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone })}
                     </p>
                   </div>
                 )}
@@ -289,7 +292,7 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: Readonly<Co
                   <div>
                     <p className="text-muted-foreground">Cert. Expiry</p>
                     <p className="font-medium text-foreground">
-                      {new Date(detail.certificationExpiry).toLocaleDateString()}
+                      {new Date(detail.certificationExpiry).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone })}
                     </p>
                   </div>
                 )}
@@ -356,7 +359,7 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: Readonly<Co
                               <p className="text-xs text-muted-foreground mt-1">{control.notes}</p>
                             )}
                             <p className="text-xs text-muted-foreground mt-1">
-                              Last assessed: {new Date(control.lastAssessed).toLocaleDateString()}
+                              Last assessed: {new Date(control.lastAssessed).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone })}
                             </p>
                           </div>
                         </div>
@@ -385,6 +388,7 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: Readonly<Co
                             {new Date(score.date).toLocaleDateString('en-US', {
                               month: 'long',
                               year: 'numeric',
+                              timeZone: timezone,
                             })}
                           </span>
                           <span className={`text-sm font-bold ${getScoreTextColor(score.score)}`}>
@@ -409,7 +413,7 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: Readonly<Co
                       <div className="pb-4">
                         <p className="text-sm font-medium text-foreground">{change.action}</p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {new Date(change.date).toLocaleDateString()} • {change.user}
+                          {new Date(change.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone })} • {change.user}
                         </p>
                       </div>
                     </div>

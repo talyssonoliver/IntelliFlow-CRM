@@ -286,7 +286,7 @@ const getAgentActionLabel = (status: string): string => {
 };
 
 // Format date for display
-const formatDate = (date: Date): string => {
+const formatDate = (date: Date, timezone: string = 'UTC'): string => {
   const now = new Date();
   const diffDays = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
@@ -300,14 +300,16 @@ const formatDate = (date: Date): string => {
     month: 'short',
     day: 'numeric',
     year: date.getFullYear() === now.getFullYear() ? undefined : 'numeric',
+    timeZone: timezone,
   });
 };
 
 // Format time for display
-const formatTime = (date: Date): string => {
+const formatTime = (date: Date, timezone: string = 'UTC'): string => {
   return date.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
+    timeZone: timezone,
   });
 };
 

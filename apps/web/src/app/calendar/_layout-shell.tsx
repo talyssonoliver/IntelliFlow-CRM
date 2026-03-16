@@ -1,23 +1,54 @@
 'use client';
 
+import { useState, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
   SidebarWithSuspense,
-  appointmentsSidebarConfig,
   SidebarPortalProvider,
   SidebarPortalTarget,
 } from '@/components/sidebar';
+import {
+  createAppointmentsSidebarConfig,
+  createAppointmentsSettingsSidebarConfig,
+  isCalendarSettingsPage,
+} from '@/components/sidebar/configs/appointments';
 import { CalendarVisibilityProvider } from '@/hooks/useCalendarVisibility';
+import { CalendarSettingsPanel } from '@/components/calendar/CalendarSettingsPanel';
+import { CalendarSettingsSidebarNav } from '@/components/calendar/CalendarSettingsSidebarNav';
 
 export default function CalendarLayoutShell({ children }: Readonly<{ children: React.ReactNode }>) {
+  const pathname = usePathname();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const onSettingsPage = isCalendarSettingsPage(pathname);
+
+  const sidebarConfig = useMemo(() => {
+    if (onSettingsPage) {
+      return createAppointmentsSettingsSidebarConfig(
+        ({ isExpanded }: { isExpanded: boolean }) => (
+          <CalendarSettingsSidebarNav isExpanded={isExpanded} />
+        ),
+      );
+    }
+    return createAppointmentsSidebarConfig(() => setSettingsOpen((prev) => !prev));
+  }, [onSettingsPage]);
+
   return (
     <CalendarVisibilityProvider>
       <SidebarPortalProvider>
         <SidebarProvider>
           <div className="flex min-h-[calc(100vh-4rem)]">
-            <SidebarWithSuspense config={appointmentsSidebarConfig} />
+            <SidebarWithSuspense config={sidebarConfig} />
+
+            {!onSettingsPage && (
+              <CalendarSettingsPanel
+                isOpen={settingsOpen}
+                onClose={() => setSettingsOpen(false)}
+              />
+            )}
 
             {/* Portal target for page-injected sidebar content */}
             <SidebarPortalTarget />

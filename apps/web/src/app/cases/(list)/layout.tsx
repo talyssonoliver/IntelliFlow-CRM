@@ -1,21 +1,51 @@
 'use client';
 
+import { useState, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
   SidebarWithSuspense,
-  casesSidebarConfig,
+  createCasesSidebarConfig,
+  createCasesSettingsSidebarConfig,
+  isCaseSettingsPage,
   SidebarPortalProvider,
   SidebarPortalTarget,
 } from '@/components/sidebar';
+import { CaseSettingsPanel } from '@/components/cases/CaseSettingsPanel';
+import { CaseSettingsSidebarNav } from '@/components/cases/CaseSettingsSidebarNav';
 
 export default function CasesListLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const pathname = usePathname();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const onSettingsPage = isCaseSettingsPage(pathname);
+
+  const sidebarConfig = useMemo(() => {
+    if (onSettingsPage) {
+      return createCasesSettingsSidebarConfig(
+        ({ isExpanded }) => (
+          <CaseSettingsSidebarNav isExpanded={isExpanded} />
+        ),
+      );
+    }
+    return createCasesSidebarConfig(() => setSettingsOpen((prev) => !prev));
+  }, [onSettingsPage]);
+
   return (
     <SidebarPortalProvider>
       <SidebarProvider>
         <div className="flex min-h-[calc(100vh-4rem)]">
-          <SidebarWithSuspense config={casesSidebarConfig} />
+          <SidebarWithSuspense config={sidebarConfig} />
+
+          {/* Panel only needed in list mode */}
+          {!onSettingsPage && (
+            <CaseSettingsPanel
+              isOpen={settingsOpen}
+              onClose={() => setSettingsOpen(false)}
+            />
+          )}
 
           {/* Portal target for page-injected sidebar content */}
           <SidebarPortalTarget />

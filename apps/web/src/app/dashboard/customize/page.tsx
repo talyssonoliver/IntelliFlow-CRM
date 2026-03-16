@@ -36,6 +36,7 @@ import {
   type WidgetTemplate,
 } from '@intelliflow/ui';
 import { widgetRegistry } from '@/components/dashboard/widgets';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 // Default widgets matching the actual dashboard layout (4-column grid)
 const defaultWidgets: Widget[] = [
@@ -113,6 +114,7 @@ function SortableWidget({
 }
 
 export default function CustomizeDashboardPage() {
+  const { timezone } = useTimezoneContext();
   const router = useRouter();
   const [widgets, setWidgets] = useState<Widget[]>(defaultWidgets);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -207,7 +209,7 @@ export default function CustomizeDashboardPage() {
     const diffMins = Math.floor(diffMs / 60000);
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins} min ago`;
-    return lastSaved.toLocaleTimeString();
+    return lastSaved.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: timezone });
   };
 
   const activeWidget = activeId ? widgets.find((w) => w.id === activeId) : null;

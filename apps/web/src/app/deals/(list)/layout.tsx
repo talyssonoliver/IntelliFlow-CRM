@@ -1,18 +1,48 @@
 'use client';
 
+import { useState, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
   SidebarWithSuspense,
-  dealsSidebarConfig,
+  createDealsSidebarConfig,
+  createDealsSettingsSidebarConfig,
+  isDealSettingsPage,
 } from '@/components/sidebar';
+import { DealSettingsPanel } from '@/components/deals/DealSettingsPanel';
+import { DealSettingsSidebarNav } from '@/components/deals/DealSettingsSidebarNav';
 
 export default function DealsListLayout({ children }: Readonly<{ readonly children: React.ReactNode }>) {
+  const pathname = usePathname();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const onSettingsPage = isDealSettingsPage(pathname);
+
+  const sidebarConfig = useMemo(() => {
+    if (onSettingsPage) {
+      return createDealsSettingsSidebarConfig(
+        ({ isExpanded }) => (
+          <DealSettingsSidebarNav isExpanded={isExpanded} />
+        ),
+      );
+    }
+    return createDealsSidebarConfig(() => setSettingsOpen((prev) => !prev));
+  }, [onSettingsPage]);
+
   return (
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)] w-full overflow-hidden">
-        <SidebarWithSuspense config={dealsSidebarConfig} />
+        <SidebarWithSuspense config={sidebarConfig} />
+
+        {/* Panel only needed in list mode */}
+        {!onSettingsPage && (
+          <DealSettingsPanel
+            isOpen={settingsOpen}
+            onClose={() => setSettingsOpen(false)}
+          />
+        )}
 
         {/* Main Content */}
         <SidebarInset>

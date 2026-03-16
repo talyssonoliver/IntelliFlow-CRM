@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { Card, Button } from '@intelliflow/ui';
 import { useEffect, useState } from 'react';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { PageHeader } from '@/components/shared';
 
 interface QualityReport {
@@ -55,6 +56,7 @@ const reportConfigs: Record<
 };
 
 export default function QualityReportDetailClient() {
+  const { timezone } = useTimezoneContext();
   const params = useParams();
   const router = useRouter();
   const reportId = params.reportId as string;
@@ -207,6 +209,7 @@ export default function QualityReportDetailClient() {
                       day: 'numeric',
                       hour: '2-digit',
                       minute: '2-digit',
+                      timeZone: timezone,
                     })}
                   </p>
                 </div>

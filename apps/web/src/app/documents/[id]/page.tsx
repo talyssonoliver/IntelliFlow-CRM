@@ -82,24 +82,25 @@ function mapAuditEntry(entry: RawAuditEntry, index: number, total: number): Audi
   };
 }
 
-function formatDateTime(dateString: string): string {
+function formatDateTime(dateString: string, timezone: string = 'UTC'): string {
   return new Date(dateString).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+    timeZone: timezone,
   });
 }
 
-function formatRelativeTime(dateString: string): string {
+function formatRelativeTime(dateString: string, timezone: string = 'UTC'): string {
   const date = new Date(dateString);
   const now = new Date();
   const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
   if (diffDays === 0) return 'Today';
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return `${diffDays} days ago`;
-  return formatDateTime(dateString);
+  return formatDateTime(dateString, timezone);
 }
 
 function getStatusConfig(status: DocumentStatus) {

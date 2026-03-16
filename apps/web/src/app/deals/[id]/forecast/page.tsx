@@ -13,6 +13,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { Card, Button, Skeleton } from '@intelliflow/ui';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import {
   ForecastHeader,
   ProbabilityGauge,
@@ -60,6 +61,7 @@ function DealForecastSkeleton() {
 // ─── Main Page ──────────────────────────────────────────────────────────────
 
 export default function DealForecastDetailPage() {
+  const { timezone } = useTimezoneContext();
   const router = useRouter();
   const params = useParams();
   const dealId = params.id as string;
@@ -187,6 +189,7 @@ export default function DealForecastDetailPage() {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',
+                      timeZone: timezone,
                     })
                   : 'Not set'}
               </dd>

@@ -5,6 +5,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Card, Button } from '@intelliflow/ui';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { EntityHeader } from '@/components/shared';
 import { ActivityFeed } from '@/components/shared/activity-feed';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
@@ -310,6 +311,7 @@ function StageProgress({
 }
 
 function AboutDealCard({ deal }: Readonly<{ deal: Deal }>) {
+  const { timezone } = useTimezoneContext();
   return (
     <Card className="p-5">
       <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 border-b pb-2">
@@ -325,6 +327,7 @@ function AboutDealCard({ deal }: Readonly<{ deal: Deal }>) {
                   month: 'short',
                   day: 'numeric',
                   year: 'numeric',
+                  timeZone: timezone,
                 })
               : 'Not set'}
           </div>

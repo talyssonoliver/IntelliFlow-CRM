@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Card, Button, Progress } from '@intelliflow/ui';
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { PageHeader } from '@/components/shared';
 import { TestRunnerModal } from '@/components/governance/test-runner-modal';
 
@@ -417,6 +418,7 @@ function ReportSelectorCard({
 }
 
 export default function QualityReportsPage() {
+  const { timezone } = useTimezoneContext();
   const [data, setData] = useState<QualityReportsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
@@ -962,6 +964,7 @@ export default function QualityReportsPage() {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',
+                      timeZone: timezone,
                     })}
                   </span>
                 </div>

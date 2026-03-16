@@ -1,18 +1,48 @@
 'use client';
 
+import { useState, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
   SidebarWithSuspense,
-  documentsSidebarConfig,
+  createDocumentsSidebarConfig,
+  createDocumentsSettingsSidebarConfig,
+  isDocumentSettingsPage,
 } from '@/components/sidebar';
+import { DocumentSettingsPanel } from '@/components/documents/DocumentSettingsPanel';
+import { DocumentSettingsSidebarNav } from '@/components/documents/DocumentSettingsSidebarNav';
 
 export default function DocumentsListLayout({ children }: Readonly<{ readonly children: React.ReactNode }>) {
+  const pathname = usePathname();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const onSettingsPage = isDocumentSettingsPage(pathname);
+
+  const sidebarConfig = useMemo(() => {
+    if (onSettingsPage) {
+      return createDocumentsSettingsSidebarConfig(
+        ({ isExpanded }) => (
+          <DocumentSettingsSidebarNav isExpanded={isExpanded} />
+        ),
+      );
+    }
+    return createDocumentsSidebarConfig(() => setSettingsOpen((prev) => !prev));
+  }, [onSettingsPage]);
+
   return (
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)]">
-        <SidebarWithSuspense config={documentsSidebarConfig} />
+        <SidebarWithSuspense config={sidebarConfig} />
+
+        {/* Panel only needed in list mode */}
+        {!onSettingsPage && (
+          <DocumentSettingsPanel
+            isOpen={settingsOpen}
+            onClose={() => setSettingsOpen(false)}
+          />
+        )}
 
         <SidebarInset>
           <main

@@ -1,22 +1,46 @@
 'use client';
 
+import { useCallback, useMemo, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
   SidebarWithSuspense,
-  notificationsSidebarConfig,
 } from '@/components/sidebar';
+import {
+  createNotificationsSidebarConfig,
+  createNotificationsSettingsSidebarConfig,
+  isNotificationSettingsPage,
+} from '@/components/sidebar/configs/notifications';
+import { NotificationSettingsPanel } from '@/components/notifications/NotificationSettingsPanel';
+import { NotificationSettingsSidebarNav } from '@/components/notifications/NotificationSettingsSidebarNav';
 
 export default function NotificationsLayoutShell({
   children,
 }: Readonly<{
   readonly children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
+  const onSettingsPage = isNotificationSettingsPage(pathname);
+
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const handleSettingsClick = useCallback(() => setSettingsOpen(true), []);
+  const handleSettingsClose = useCallback(() => setSettingsOpen(false), []);
+
+  const sidebarConfig = useMemo(() => {
+    if (onSettingsPage) {
+      return createNotificationsSettingsSidebarConfig(
+        ({ isExpanded }) => <NotificationSettingsSidebarNav isExpanded={isExpanded} />,
+      );
+    }
+    return createNotificationsSidebarConfig(handleSettingsClick);
+  }, [onSettingsPage, handleSettingsClick]);
+
   return (
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)]">
-        <SidebarWithSuspense config={notificationsSidebarConfig} />
+        <SidebarWithSuspense config={sidebarConfig} />
 
         <SidebarInset>
           <main
@@ -34,6 +58,11 @@ export default function NotificationsLayoutShell({
           </main>
         </SidebarInset>
       </div>
+
+      {/* Module Settings slide-out panel */}
+      {!onSettingsPage && (
+        <NotificationSettingsPanel isOpen={settingsOpen} onClose={handleSettingsClose} />
+      )}
     </SidebarProvider>
   );
 }

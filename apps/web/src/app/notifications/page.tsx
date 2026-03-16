@@ -18,26 +18,37 @@ import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useDebounce } from '@/hooks/useDebounce';
 import { NotificationList, NotificationFilters } from '@/components/notifications';
 
-/** Map URL ?filter= values to filter state */
+/** Map URL ?filter= and ?priority= values to filter state */
 function getInitialFilters(searchParams: URLSearchParams): {
   activeTab: string;
   typeFilter: string;
+  priorityFilter: string;
 } {
   const filter = searchParams.get('filter');
+  const priority = searchParams.get('priority');
+
+  let activeTab = 'all';
+  let typeFilter = '';
+
   switch (filter) {
     case 'unread':
-      return { activeTab: 'unread', typeFilter: '' };
+      activeTab = 'unread';
+      break;
     case 'ai-insights':
-      return { activeTab: 'all', typeFilter: 'ai_insight' };
+      typeFilter = 'ai_insight';
+      break;
     case 'mentions':
-      return { activeTab: 'all', typeFilter: 'team_mention' };
+      typeFilter = 'team_mention';
+      break;
     case 'sla-alerts':
-      return { activeTab: 'all', typeFilter: 'system_alert' };
+      typeFilter = 'system_alert';
+      break;
     case 'system':
-      return { activeTab: 'all', typeFilter: 'system_alert' };
-    default:
-      return { activeTab: 'all', typeFilter: '' };
+      typeFilter = 'system_alert';
+      break;
   }
+
+  return { activeTab, typeFilter, priorityFilter: priority ?? '' };
 }
 
 export default function NotificationsPage() {
@@ -49,7 +60,7 @@ export default function NotificationsPage() {
   // Filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState(initialFilters.typeFilter);
-  const [priorityFilter, setPriorityFilter] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState(initialFilters.priorityFilter);
   const [activeTab, setActiveTab] = useState(initialFilters.activeTab);
 
   // Debounced search for server-side filtering

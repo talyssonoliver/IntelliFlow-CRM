@@ -1,23 +1,56 @@
 'use client';
 
+import { useState, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
   SidebarWithSuspense,
-  ticketsSidebarConfig,
+  createTicketsSidebarConfig,
+  createTicketsSettingsSidebarConfig,
+  isTicketSettingsPage,
   SidebarPortalProvider,
   SidebarPortalTarget,
 } from '@/components/sidebar';
 import { ModuleGate } from '@/components/ModuleGate';
+import { TicketSettingsPanel } from '@/components/tickets/TicketSettingsPanel';
+import { TicketSettingsSidebarNav } from '@/components/tickets/TicketSettingsSidebarNav';
 
 export default function TicketsListLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const pathname = usePathname();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const onSettingsPage = isTicketSettingsPage(pathname);
+
+  const sidebarConfig = useMemo(
+    () => {
+      if (onSettingsPage) {
+        return createTicketsSettingsSidebarConfig(
+          ({ isExpanded }) => (
+            <TicketSettingsSidebarNav isExpanded={isExpanded} />
+          ),
+        );
+      }
+      return createTicketsSidebarConfig(() => setSettingsOpen((prev) => !prev));
+    },
+    [onSettingsPage]
+  );
+
   return (
     <ModuleGate moduleId="SUPPORT">
       <SidebarPortalProvider>
         <SidebarProvider>
           <div className="flex min-h-[calc(100vh-4rem)]">
-            <SidebarWithSuspense config={ticketsSidebarConfig} />
+            <SidebarWithSuspense config={sidebarConfig} />
+
+            {/* Complementary settings panel — slides in next to the sidebar */}
+            {!onSettingsPage && (
+              <TicketSettingsPanel
+                isOpen={settingsOpen}
+                onClose={() => setSettingsOpen(false)}
+              />
+            )}
 
             {/* Portal target for page-injected sidebar content */}
             <SidebarPortalTarget />

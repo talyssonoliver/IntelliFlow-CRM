@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Card,
+  Skeleton,
   ToastProvider,
   ToastViewport,
   Toast,
@@ -13,6 +14,7 @@ import {
   ToastClose,
 } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
+import { useRequireAuth } from '@/lib/auth/AuthContext';
 
 // Step configuration
 type StepId = 'personal' | 'company' | 'additional';
@@ -153,6 +155,7 @@ type ToastData = {
 };
 
 export default function CreateNewContactPage() {
+  const { isLoading: authLoading } = useRequireAuth();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<StepId>('personal');
   const [formData, setFormData] = useState<ContactFormData>(initialFormData);
@@ -310,6 +313,22 @@ export default function CreateNewContactPage() {
       setCurrentStep(step.id);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="flex flex-col gap-8 p-6">
+        <Skeleton className="h-8 w-48" />
+        <Card className="p-6">
+          <div className="space-y-4">
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <ToastProvider>
