@@ -152,7 +152,7 @@ function appendActivityId(url: string, activityId: string): string {
   return `${url}${separator}activityId=${encodeURIComponent(activityId)}`;
 }
 
-function formatRelativeTime(date: Date | string, timezone: string = 'UTC'): string {
+function formatRelativeTime(date: Date | string, timezone: string = 'Europe/London'): string {
   const diffMs = Date.now() - new Date(date).getTime();
   const diffMins = Math.floor(diffMs / 60000);
   if (diffMins < 1) return 'just now';

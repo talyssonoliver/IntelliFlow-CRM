@@ -31,12 +31,13 @@ export function formatFileSize(bytes: number): string {
 /**
  * Format ISO date string to locale-friendly display.
  */
-export function formatDate(dateString: string): string {
+export function formatDate(dateString: string, timezone: string = 'Europe/London'): string {
   try {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
+      timeZone: timezone,
     });
   } catch {
     return dateString;

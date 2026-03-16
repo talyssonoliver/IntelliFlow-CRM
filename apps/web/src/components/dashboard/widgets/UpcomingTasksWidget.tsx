@@ -16,7 +16,7 @@ const priorityColors: Record<string, string> = {
   LOW: 'text-green-600 dark:text-green-400',
 };
 
-function formatDueDate(date: Date | string | null, timezone: string = 'UTC'): string {
+function formatDueDate(date: Date | string | null, timezone: string = 'Europe/London'): string {
   if (!date) return 'No due date';
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return 'No due date';

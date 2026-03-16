@@ -62,7 +62,7 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-function formatDate(dateStr: string | null, timezone: string = 'UTC'): string {
+function formatDate(dateStr: string | null, timezone: string = 'Europe/London'): string {
   if (!dateStr) return '-';
   const d = new Date(dateStr);
   if (Number.isNaN(d.getTime())) return '-';
@@ -74,7 +74,7 @@ function formatDate(dateStr: string | null, timezone: string = 'UTC'): string {
   });
 }
 
-function formatRelativeDate(dateStr: string, timezone: string = 'UTC'): string {
+function formatRelativeDate(dateStr: string, timezone: string = 'Europe/London'): string {
   const d = new Date(dateStr);
   if (Number.isNaN(d.getTime())) return '-';
   const now = new Date();
@@ -179,7 +179,7 @@ interface RowActionHandlers {
   onDelete: (deal: Deal) => void;
 }
 
-function createColumns(handlers: Readonly<RowActionHandlers>, timezone: string = 'UTC'): ColumnDef<Deal>[] {
+function createColumns(handlers: Readonly<RowActionHandlers>, timezone: string = 'Europe/London'): ColumnDef<Deal>[] {
   return [
     {
       accessorKey: 'name',

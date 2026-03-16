@@ -14,7 +14,7 @@ interface SentimentTrendProps {
   trends: SentimentTrendPoint[];
 }
 
-function formatDate(dateStr: string, timezone: string = 'UTC'): string {
+function formatDate(dateStr: string, timezone: string = 'Europe/London'): string {
   const d = new Date(dateStr);
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: timezone });
 }

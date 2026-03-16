@@ -58,7 +58,7 @@ const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }>
   },
 };
 
-function formatTime(date: Date | string | null, timezone: string = 'UTC'): string {
+function formatTime(date: Date | string | null, timezone: string = 'Europe/London'): string {
   if (!date) return '—';
   const d = new Date(date);
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: timezone });

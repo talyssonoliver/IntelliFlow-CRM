@@ -60,7 +60,7 @@ const PRIORITY_STYLES: Record<string, { color: string; icon: string }> = {
   URGENT: { color: 'text-red-500', icon: 'priority_high' },
 };
 
-function formatDate(date: DateStringNull, timezone: string = 'UTC'): string {
+function formatDate(date: DateStringNull, timezone: string = 'Europe/London'): string {
   if (!date) return '—';
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return '—';

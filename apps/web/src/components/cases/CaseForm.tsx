@@ -84,7 +84,7 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
     clientName: '',
     assigneeId: initialData?.assigneeId ?? 'me',
     deadline: initialData?.deadline ?? '',
-    timezone: (initialData as any)?.timezone ?? userTimezone ?? 'UTC',
+    timezone: (initialData as any)?.timezone ?? userTimezone ?? 'Europe/London',
     jurisdiction: (initialData as any)?.jurisdiction ?? '',
   });
 

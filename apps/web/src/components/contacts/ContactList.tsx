@@ -56,7 +56,7 @@ function getAvatarColor(name: string) {
   return colors[hash % colors.length];
 }
 
-function formatDate(date: Date | string, timezone: string = 'UTC'): string {
+function formatDate(date: Date | string, timezone: string = 'Europe/London'): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return 'Invalid date';
   const now = new Date();
@@ -218,7 +218,7 @@ function ContactActionsCell({
 }
 
 /** Column factory — defined at module level (not inside the component) to satisfy S6478. */
-function buildContactColumns(callbacks: ContactActionCallbacks, timezone: string = 'UTC'): ColumnDef<Contact>[] {
+function buildContactColumns(callbacks: ContactActionCallbacks, timezone: string = 'Europe/London'): ColumnDef<Contact>[] {
   const { onDelete, onEdit, onCreateDeal, onCreateTicket, onScheduleMeeting } = callbacks;
   return [
     {

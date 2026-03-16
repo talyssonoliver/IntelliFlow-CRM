@@ -61,7 +61,7 @@ function formatFileSize(bytes: number | bigint): string {
   return `${(b / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function formatDate(date: Date | string, timezone: string = 'UTC'): string {
+function formatDate(date: Date | string, timezone: string = 'Europe/London'): string {
   return new Date(date).toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',

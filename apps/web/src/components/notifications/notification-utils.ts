@@ -428,7 +428,7 @@ export function getPriorityConfig(priority: string): PriorityConfig | undefined 
 }
 
 /** Format a date string into relative time (e.g., "5 min ago") */
-export function formatRelativeTime(dateInput: string | Date, timezone: string = 'UTC'): string {
+export function formatRelativeTime(dateInput: string | Date, timezone: string = 'Europe/London'): string {
   const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
   if (Number.isNaN(date.getTime())) return 'Unknown';
 

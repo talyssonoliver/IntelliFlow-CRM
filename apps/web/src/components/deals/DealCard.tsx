@@ -25,7 +25,7 @@ interface DealCardProps {
   readonly isPending?: boolean;
 }
 
-function formatDate(dateStr: string | null, timezone: string = 'UTC'): string {
+function formatDate(dateStr: string | null, timezone: string = 'Europe/London'): string {
   if (!dateStr) return 'No date';
   return new Date(dateStr).toLocaleDateString('en-US', {
     month: 'short',

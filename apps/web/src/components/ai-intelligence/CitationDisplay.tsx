@@ -21,7 +21,7 @@ interface CitationDisplayProps {
   disableLink?: boolean;
 }
 
-function formatRelativeTime(dateStr: string, timezone: string = 'UTC'): string {
+function formatRelativeTime(dateStr: string, timezone: string = 'Europe/London'): string {
   const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();

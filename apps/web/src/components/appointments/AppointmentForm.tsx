@@ -65,7 +65,7 @@ export function AppointmentForm({
   const [location, setLocation] = useState(appointment?.location || '');
   const { timezone: userTimezone } = useTimezoneContext();
   const [eventTimezone, setEventTimezone] = useState(
-    (appointment as any)?.timezone || userTimezone || 'UTC'
+    (appointment as any)?.timezone || userTimezone || 'Europe/London'
   );
   const timezoneOptions = useMemo(() => {
     try { return Intl.supportedValuesOf('timeZone'); } catch { return ['UTC']; }

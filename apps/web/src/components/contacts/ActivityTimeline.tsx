@@ -87,7 +87,7 @@ const sentimentConfig: Record<string, { icon: string; label: string; className: 
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
-function formatRelativeTime(dateString: string, timezone: string = 'UTC') {
+function formatRelativeTime(dateString: string, timezone: string = 'Europe/London') {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();

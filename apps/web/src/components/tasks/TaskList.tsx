@@ -67,7 +67,7 @@ function getDueDateStatus(date: DateStringNull): 'overdue' | 'today' | 'normal' 
   return 'normal';
 }
 
-function formatDueDate(date: DateStringNull, timezone: string = 'UTC'): string {
+function formatDueDate(date: DateStringNull, timezone: string = 'Europe/London'): string {
   if (!date) return '—';
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return '—';
@@ -97,7 +97,7 @@ function createColumns(handlers: {
   onEdit: (task: TaskListItem) => void;
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
-}, timezone: string = 'UTC'): ColumnDef<TaskListItem>[] {
+}, timezone: string = 'Europe/London'): ColumnDef<TaskListItem>[] {
   return [
     {
       accessorKey: 'title',

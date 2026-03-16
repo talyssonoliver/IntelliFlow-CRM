@@ -142,7 +142,7 @@ function EnvironmentBadge({ environment }: Readonly<{ environment: DeveloperApp[
   );
 }
 
-function formatDate(isoString: string, timezone: string = 'UTC'): string {
+function formatDate(isoString: string, timezone: string = 'Europe/London'): string {
   return new Date(isoString).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
@@ -151,7 +151,7 @@ function formatDate(isoString: string, timezone: string = 'UTC'): string {
   });
 }
 
-function formatTimestamp(isoString: string, timezone: string = 'UTC'): string {
+function formatTimestamp(isoString: string, timezone: string = 'Europe/London'): string {
   return new Date(isoString).toLocaleString('en-US', {
     month: 'short',
     day: 'numeric',

@@ -27,7 +27,7 @@ const PRIORITY_COLORS: Record<string, string> = {
   URGENT: 'text-red-500',
 };
 
-function formatDueDate(date: Date | string | null, timezone: string = 'UTC'): string | null {
+function formatDueDate(date: Date | string | null, timezone: string = 'Europe/London'): string | null {
   if (!date) return null;
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return null;

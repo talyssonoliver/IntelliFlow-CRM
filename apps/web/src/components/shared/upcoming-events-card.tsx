@@ -35,14 +35,15 @@ export interface UpcomingEventsCardProps {
   readonly standalone?: boolean;
 }
 
-interface AppointmentEvent {
+interface CalendarEvent {
   id: string;
   title: string;
-  startTime: string | Date;
-  endTime: string | Date;
-  appointmentType: string;
+  startTime: Date;
+  eventType: 'appointment' | 'task';
+  appointmentType?: string;
   status: string;
   location?: string | null;
+  priority?: string;
   attendees?: Array<{ user?: { name?: string | null; avatarUrl?: string | null } | null }>;
 }
 
@@ -59,9 +60,10 @@ const TYPE_ICONS: Record<string, { icon: string; color: string }> = {
   DEADLINE: { icon: 'schedule', color: 'text-red-500 bg-red-100 dark:bg-red-900/20' },
 };
 
+const TASK_ICON = { icon: 'task_alt', color: 'text-indigo-500 bg-indigo-100 dark:bg-indigo-900/20' };
 const DEFAULT_ICON = { icon: 'event', color: 'text-slate-500 bg-slate-100 dark:bg-slate-800' };
 
-function formatEventDate(date: Readonly<Date>, timezone: string = 'UTC') {
+function formatEventDate(date: Readonly<Date>, timezone: string = 'Europe/London') {
   return {
     month: date.toLocaleDateString('en-US', { month: 'short', timeZone: timezone }),
     day: date.getDate().toString(),
@@ -92,34 +94,77 @@ export function UpcomingEventsCard({
   standalone = true,
 }: Readonly<UpcomingEventsCardProps>) {
   // Stable reference for "now" — prevents infinite re-fetch loop.
-  // new Date() in the query input would create a different value every render,
-  // making React Query treat it as a new query key each time.
   const [now] = useState(() => new Date());
 
   // Query upcoming appointments via tRPC
-  const { data, isLoading, error } = api.appointments.list.useQuery(
+  const { data: appointmentData, isLoading: appointmentsLoading, error: appointmentsError } = api.appointments.list.useQuery(
     {
       status: ['SCHEDULED', 'CONFIRMED'],
       sortBy: 'startTime',
       sortOrder: 'asc' as const,
-      limit: maxItems + 1, // fetch one extra to detect "has more"
+      limit: maxItems + 1,
       startTimeFrom: now,
       ...(entityType === 'case' && entityId ? { caseId: entityId } : {}),
     },
     { enabled: true }
   );
 
-  const events: AppointmentEvent[] = useMemo(() => {
-    if (!data) return [];
-    const items = (data.appointments ?? []) as AppointmentEvent[];
-    return items.slice(0, maxItems);
-  }, [data, maxItems]);
+  // Query upcoming tasks with due dates
+  const { data: taskData, isLoading: tasksLoading, error: tasksError } = api.task.list.useQuery(
+    {
+      status: ['PENDING', 'IN_PROGRESS'],
+      sortBy: 'dueDate',
+      sortOrder: 'asc' as const,
+      limit: maxItems + 1,
+      dueDateFrom: now,
+    },
+    { enabled: true }
+  );
+
+  const isLoading = appointmentsLoading || tasksLoading;
+  const error = appointmentsError || tasksError;
+
+  // Merge appointments and tasks into a single sorted list
+  const events: CalendarEvent[] = useMemo(() => {
+    const merged: CalendarEvent[] = [];
+
+    // Add appointments
+    for (const a of ((appointmentData?.appointments ?? []) as Array<Record<string, unknown>>)) {
+      merged.push({
+        id: a.id as string,
+        title: a.title as string,
+        startTime: new Date(a.startTime as string),
+        eventType: 'appointment',
+        appointmentType: a.appointmentType as string,
+        status: a.status as string,
+        location: a.location as string | null | undefined,
+        attendees: a.attendees as CalendarEvent['attendees'],
+      });
+    }
+
+    // Add tasks with due dates
+    for (const t of (taskData?.tasks ?? [])) {
+      if (!t.dueDate) continue;
+      merged.push({
+        id: t.id,
+        title: t.title,
+        startTime: new Date(t.dueDate as string | Date),
+        eventType: 'task',
+        status: t.status,
+        priority: t.priority,
+      });
+    }
+
+    // Sort by startTime ascending, take maxItems
+    merged.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+    return merged.slice(0, maxItems);
+  }, [appointmentData, taskData, maxItems]);
 
   const hasMore = useMemo(() => {
-    if (!data) return false;
-    const items = data.appointments ?? [];
-    return items.length > maxItems;
-  }, [data, maxItems]);
+    const totalAvailable =
+      (appointmentData?.appointments?.length ?? 0) + (taskData?.tasks?.filter((t) => t.dueDate).length ?? 0);
+    return totalAvailable > maxItems;
+  }, [appointmentData, taskData, maxItems]);
 
   const calendarHref =
     entityType && entityId ? `/calendar?entity=${entityType}&entityId=${entityId}` : '/calendar';
@@ -215,9 +260,13 @@ export function UpcomingEventsCard({
       {events.length > 0 && (
         <div className={`${compact ? 'space-y-2' : 'space-y-1'} flex-1`}>
           {events.map((event) => {
-            const date = new Date(event.startTime);
-            const { month, day, time } = formatEventDate(date);
-            const typeInfo = TYPE_ICONS[event.appointmentType] ?? DEFAULT_ICON;
+            const { month, day, time } = formatEventDate(event.startTime);
+            const typeInfo =
+              event.eventType === 'task'
+                ? TASK_ICON
+                : TYPE_ICONS[event.appointmentType ?? ''] ?? DEFAULT_ICON;
+            const href =
+              event.eventType === 'task' ? `/tasks?id=${event.id}` : `/calendar/${event.id}`;
             const attendeeAvatars = (event.attendees ?? [])
               .map((a) => ({
                 name: a.user?.name ?? 'Attendee',
@@ -228,7 +277,7 @@ export function UpcomingEventsCard({
             return (
               <Link
                 key={event.id}
-                href={`/calendar/${event.id}`}
+                href={href}
                 className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted transition-colors group"
               >
                 {/* Date badge */}

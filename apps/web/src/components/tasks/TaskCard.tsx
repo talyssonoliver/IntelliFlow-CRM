@@ -35,7 +35,7 @@ const STATUS_STYLES: Record<string, string> = {
   CANCELLED: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
 };
 
-function formatDueDate(date: DateStringNull, timezone: string = 'UTC'): string | null {
+function formatDueDate(date: DateStringNull, timezone: string = 'Europe/London'): string | null {
   if (!date) return null;
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return null;
