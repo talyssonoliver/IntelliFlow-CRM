@@ -295,10 +295,27 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
           'Updating CRM with new lead score'
         );
 
-        // Create notifications for significant score events
+        // Create notifications + activity entries for significant score events
         if (eventTenantId && eventUserId && score !== undefined) {
           try {
             const { prisma } = await import('@intelliflow/db');
+
+            // Always create an activity entry for score changes so they appear in the feed
+            const scoreLabel = score >= 80 ? 'Hot' : score >= 50 ? 'Warm' : 'Cold';
+            await prisma.leadActivity.create({
+              data: {
+                leadId,
+                type: 'SCORE_UPDATE',
+                title: `Lead score updated to ${score} (${scoreLabel})`,
+                description: previousScore !== undefined
+                  ? `Score changed from ${previousScore} to ${score} via ${scoringModel || 'AI scoring'}.`
+                  : `Initial score set to ${score} via ${scoringModel || 'AI scoring'}.`,
+                userName: 'System',
+                sentiment: score >= 80 ? 'POSITIVE' : score >= 50 ? 'NEUTRAL' : 'NEGATIVE',
+                metadata: { score, previousScore, scoringModel, scoreLabel },
+                tenantId: eventTenantId,
+              },
+            });
 
             // Hot lead detected (score >= 80)
             if (score >= 80) {
@@ -315,7 +332,7 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
                   category: 'ALERTS',
                   sourceType: 'lead_scored',
                   sourceId: leadId,
-                  metadata: { score, previousScore, link: `/leads/${leadId}` },
+                  metadata: { notificationType: 'lead_scored', score, previousScore, actionUrl: `/leads/${leadId}` },
                 },
               });
             }
@@ -335,14 +352,14 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
                   category: 'ALERTS',
                   sourceType: 'ai_recommendation',
                   sourceId: leadId,
-                  metadata: { score, previousScore, link: `/leads/${leadId}` },
+                  metadata: { notificationType: 'lead_scored', score, previousScore, actionUrl: `/leads/${leadId}` },
                 },
               });
             }
           } catch (notifError) {
             this.logger.warn(
               { leadId, error: notifError instanceof Error ? notifError.message : String(notifError) },
-              'Failed to create lead score notification — non-blocking'
+              'Failed to create lead score notification/activity — non-blocking'
             );
           }
         }
