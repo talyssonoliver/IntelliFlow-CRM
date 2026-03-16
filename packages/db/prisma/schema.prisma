@@ -152,6 +152,9 @@ model Tenant {
   leadCustomFields       LeadCustomField[]
   leadAutomationSettings LeadAutomationSetting[]
 
+  // AI Monitoring Events (IFC-297)
+  aiMonitoringEvents     AIMonitoringEvent[]
+
   @@index([slug])
   @@index([status])
   @@map("tenants")
@@ -209,7 +212,7 @@ model User {
   role             UserRole  @default(USER)
   stripeCustomerId String?   @unique // Stripe customer ID for billing
   preferences      Json?     // User preferences (pinned items, dashboard settings)
-  timezone         String?   @default("UTC") // IANA timezone identifier (e.g. "America/New_York")
+  timezone         String?   @default("Europe/London") // IANA timezone identifier (e.g. "America/New_York")
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
@@ -1752,6 +1755,31 @@ model AuditLogEntry {
   @@index([timestamp(sort: Desc)])
   @@index([action])
   @@map("audit_log_entries")
+}
+
+/// AI Monitoring Event — persists in-memory singleton data for multi-process visibility (IFC-297)
+model AIMonitoringEvent {
+  id         String   @id @default(cuid())
+  eventType  String   // 'drift' | 'latency' | 'hallucination' | 'roi_cost' | 'roi_value'
+  model      String?  // AI model identifier
+  metric     String?  // operation/metric name
+  value      Float?   // primary numeric measurement
+  flagged    Boolean? // outcome flag (hallucinated, detected, success=false)
+  severity   String?  // 'none' | 'low' | 'medium' | 'high' | 'critical'
+  payload    Json?    // type-specific structured data
+  tenantId   String?  // nullable: global events have null
+  tenant     Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  recordedAt DateTime @default(now())
+
+  @@index([eventType])
+  @@index([model])
+  @@index([recordedAt])
+  @@index([tenantId])
+  @@index([tenantId, recordedAt])
+  @@index([eventType, recordedAt])
+  @@index([eventType, model, recordedAt])
+  @@index([eventType, severity])
+  @@map("ai_monitoring_events")
 }
 
 /// Actor type enum
@@ -3365,7 +3393,7 @@ model ReportSchedule {
   dayOfWeek   Int?     // 0-6 for weekly
   dayOfMonth  Int?     // 1-31 for monthly
   timeOfDay   String   // HH:MM format
-  timezone    String   @default("UTC")
+  timezone    String   @default("Europe/London")
   recipients  Json     // Array of email addresses
   format      String   @default("pdf") // 'pdf', 'excel', 'csv'
   isActive    Boolean  @default(true)
@@ -3929,7 +3957,7 @@ model NotificationPreference {
   quietHoursDays    Int[]    @default([0, 1, 2, 3, 4, 5, 6])  // Days of week (0=Sun, 6=Sat)
 
   // Timezone for quiet hours calculation
-  timezone          String   @default("UTC")
+  timezone          String   @default("Europe/London")
 
   // Global do not disturb
   doNotDisturb      Boolean  @default(false)

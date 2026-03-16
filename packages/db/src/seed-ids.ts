@@ -76,6 +76,13 @@ export const SEED_IDS = {
     ninaPatel: seedUUID('02', 12),
     ryanMurphy: seedUUID('02', 13),
     dianaHall: seedUUID('02', 14),
+    // Home page seed leads (previously used non-UUID 'home-lead-*' IDs)
+    jamesCarter: seedUUID('02', 15),   // 00000000-0000-4000-8000-00000000020f
+    priyaSharma: seedUUID('02', 16),   // 00000000-0000-4000-8000-000000000210
+    // Home page fallback leads (previously used non-UUID 'home-seed-lead-*' IDs)
+    homeSeedLead1: seedUUID('02', 17),
+    homeSeedLead2: seedUUID('02', 18),
+    homeSeedLead3: seedUUID('02', 19),
   },
   contacts: {
     sarahMiller: seedUUID('03', 1), // 00000000-0000-4000-8000-000000000301
@@ -130,6 +137,10 @@ export const SEED_IDS = {
     proposalDeal1: seedUUID('05', 22),
     proposalDeal2: seedUUID('05', 23),
     proposalDeal3: seedUUID('05', 24),
+    // Home page seed deals (previously used non-UUID 'home-deal-*' IDs)
+    homeDeal1: seedUUID('05', 25),   // 00000000-0000-4000-8000-000000000519
+    homeDeal2: seedUUID('05', 26),   // 00000000-0000-4000-8000-00000000051a
+    homeDeal3: seedUUID('05', 27),   // 00000000-0000-4000-8000-00000000051b
   },
   tickets: {
     systemOutage: seedUUID('06', 1), // 00000000-0000-4000-8000-000000000601
@@ -587,6 +598,12 @@ export const SEED_IDS = {
     create: seedUUID('51', 1), // 00000000-0000-4000-8000-000000005101
     update: seedUUID('51', 2),
     opportunityCreate: seedUUID('51', 3),
+    // Home page seed audit logs (previously used non-UUID 'home-audit-*' IDs)
+    homeAudit1: seedUUID('51', 4),
+    homeAudit2: seedUUID('51', 5),
+    homeAudit3: seedUUID('51', 6),
+    homeAudit4: seedUUID('51', 7),
+    homeAudit5: seedUUID('51', 8),
   },
   domainEvents: {
     leadScored: seedUUID('52', 1), // 00000000-0000-4000-8000-000000005201

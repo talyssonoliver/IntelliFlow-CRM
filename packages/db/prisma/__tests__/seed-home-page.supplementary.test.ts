@@ -160,9 +160,9 @@ describe('seed-home-page - supplementary', () => {
 
     it('should upsert 3 closed deals', async () => {
       const deals = [
-        { id: 'home-deal-1', name: 'CloudSync', value: 75000 },
-        { id: 'home-deal-2', name: 'DataFlow', value: 45000 },
-        { id: 'home-deal-3', name: 'SecureVault', value: 120000 },
+        { id: SEED_IDS.opportunities.homeDeal1, name: 'CloudSync', value: 75000 },
+        { id: SEED_IDS.opportunities.homeDeal2, name: 'DataFlow', value: 45000 },
+        { id: SEED_IDS.opportunities.homeDeal3, name: 'SecureVault', value: 120000 },
       ];
 
       for (const deal of deals) {
@@ -185,11 +185,12 @@ describe('seed-home-page - supplementary', () => {
       expect(lead).toBeNull();
 
       // Upsert 3 leads
+      const seedLeadIds = [SEED_IDS.leads.homeSeedLead1, SEED_IDS.leads.homeSeedLead2, SEED_IDS.leads.homeSeedLead3];
       for (let i = 0; i < 3; i++) {
         await mockUpsert({
-          where: { id: `home-seed-lead-${i + 1}` },
+          where: { id: seedLeadIds[i] },
           update: {},
-          create: { id: `home-seed-lead-${i + 1}`, firstName: `Lead${i}` },
+          create: { id: seedLeadIds[i], firstName: `Lead${i}` },
         });
       }
 

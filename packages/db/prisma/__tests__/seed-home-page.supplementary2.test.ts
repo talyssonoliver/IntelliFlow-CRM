@@ -127,19 +127,19 @@ describe('seed-home-page - supplementary2', () => {
       vi.clearAllMocks();
       const deals = [
         {
-          id: 'home-deal-1',
+          id: SEED_IDS.opportunities.homeDeal1,
           name: 'CloudSync Enterprise License',
           value: 75000,
           stage: 'CLOSED_WON',
         },
         {
-          id: 'home-deal-2',
+          id: SEED_IDS.opportunities.homeDeal2,
           name: 'DataFlow Analytics Subscription',
           value: 45000,
           stage: 'CLOSED_WON',
         },
         {
-          id: 'home-deal-3',
+          id: SEED_IDS.opportunities.homeDeal3,
           name: 'SecureVault Implementation',
           value: 120000,
           stage: 'CLOSED_WON',
@@ -277,14 +277,14 @@ describe('seed-home-page - supplementary2', () => {
       const leadLookup = vi
         .fn()
         .mockResolvedValueOnce(null) // no leads initially
-        .mockResolvedValueOnce({ id: 'home-seed-lead-1' }); // after creation
+        .mockResolvedValueOnce({ id: SEED_IDS.leads.homeSeedLead1 }); // after creation
 
       const lead = await leadLookup();
       expect(lead).toBeNull();
 
       const leadsToCreate = [
         {
-          id: 'home-seed-lead-1',
+          id: SEED_IDS.leads.homeSeedLead1,
           firstName: 'John',
           lastName: 'Smith',
           email: 'john.smith@techcorp.com',
@@ -294,7 +294,7 @@ describe('seed-home-page - supplementary2', () => {
           score: 92,
         },
         {
-          id: 'home-seed-lead-2',
+          id: SEED_IDS.leads.homeSeedLead2,
           firstName: 'Sarah',
           lastName: 'Johnson',
           email: 'sarah.j@innovate.io',
@@ -304,7 +304,7 @@ describe('seed-home-page - supplementary2', () => {
           score: 75,
         },
         {
-          id: 'home-seed-lead-3',
+          id: SEED_IDS.leads.homeSeedLead3,
           firstName: 'Mike',
           lastName: 'Chen',
           email: 'mike.chen@startup.co',
@@ -326,14 +326,14 @@ describe('seed-home-page - supplementary2', () => {
 
       // After creating leads, findFirst is called again to get the first lead
       const firstLead = await leadLookup();
-      expect(firstLead?.id).toBe('home-seed-lead-1');
+      expect(firstLead?.id).toBe(SEED_IDS.leads.homeSeedLead1);
     });
   });
 
   describe('seedHomePageData - audit log entries', () => {
     it('should create audit entries with ActorType.AI for LeadQualified', () => {
       const auditEntry = {
-        id: 'home-audit-3',
+        id: SEED_IDS.auditLogs.homeAudit3,
         eventType: 'LeadQualified',
         actorType: 'AI',
         actorId: null,
@@ -354,7 +354,7 @@ describe('seed-home-page - supplementary2', () => {
     it('should use Prisma.JsonNull for before state in create events', () => {
       // The source file uses Prisma.JsonNull for EmailSent and CallLogged beforeState
       const emailAudit = {
-        id: 'home-audit-4',
+        id: SEED_IDS.auditLogs.homeAudit4,
         eventType: 'EmailSent',
         beforeState: 'DbNull', // Prisma.JsonNull is mocked as 'DbNull'
         afterState: { subject: 'Follow-up: Proposal Review', to: 'contact@acmecorp.com' },
@@ -363,7 +363,7 @@ describe('seed-home-page - supplementary2', () => {
       expect(emailAudit.beforeState).toBe('DbNull');
 
       const callAudit = {
-        id: 'home-audit-5',
+        id: SEED_IDS.auditLogs.homeAudit5,
         eventType: 'CallLogged',
         beforeState: 'DbNull',
         afterState: { duration: 1800, outcome: 'Scheduled follow-up demo' },

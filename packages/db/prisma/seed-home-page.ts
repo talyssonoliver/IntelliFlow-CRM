@@ -137,7 +137,7 @@ async function seedHomePageData() {
   if (account) {
     const recentDeals = [
       {
-        id: 'home-deal-1',
+        id: SEED_IDS.opportunities.homeDeal1,
         name: 'CloudSync Enterprise License',
         stage: OpportunityStage.CLOSED_WON,
         value: 75000,
@@ -149,7 +149,7 @@ async function seedHomePageData() {
         tenantId: tenant.id,
       },
       {
-        id: 'home-deal-2',
+        id: SEED_IDS.opportunities.homeDeal2,
         name: 'DataFlow Analytics Subscription',
         stage: OpportunityStage.CLOSED_WON,
         value: 45000,
@@ -161,7 +161,7 @@ async function seedHomePageData() {
         tenantId: tenant.id,
       },
       {
-        id: 'home-deal-3',
+        id: SEED_IDS.opportunities.homeDeal3,
         name: 'SecureVault Implementation',
         stage: OpportunityStage.CLOSED_WON,
         value: 120000,
@@ -192,7 +192,7 @@ async function seedHomePageData() {
     // Create multiple leads for the home page stats
     const leadsToCreate = [
       {
-        id: 'home-seed-lead-1',
+        id: SEED_IDS.leads.homeSeedLead1,
         firstName: 'John',
         lastName: 'Smith',
         email: 'john.smith@techcorp.com',
@@ -205,7 +205,7 @@ async function seedHomePageData() {
         createdAt: yesterday,
       },
       {
-        id: 'home-seed-lead-2',
+        id: SEED_IDS.leads.homeSeedLead2,
         firstName: 'Sarah',
         lastName: 'Johnson',
         email: 'sarah.j@innovate.io',
@@ -218,7 +218,7 @@ async function seedHomePageData() {
         createdAt: yesterday,
       },
       {
-        id: 'home-seed-lead-3',
+        id: SEED_IDS.leads.homeSeedLead3,
         firstName: 'Mike',
         lastName: 'Chen',
         email: 'mike.chen@startup.co',
@@ -246,13 +246,13 @@ async function seedHomePageData() {
 
   const recentAuditLogs = [
     {
-      id: 'home-audit-1',
+      id: SEED_IDS.auditLogs.homeAudit1,
       eventType: 'DealClosed',
       eventId: `event-home-audit-1-${Date.now()}`,
       actorType: ActorType.USER,
       actorId: user.id,
       resourceType: 'Opportunity',
-      resourceId: 'home-deal-1',
+      resourceId: SEED_IDS.opportunities.homeDeal1,
       action: AuditAction.UPDATE,
       beforeState: { stage: 'NEGOTIATION' },
       afterState: { stage: 'CLOSED_WON', value: 75000 },
@@ -263,7 +263,7 @@ async function seedHomePageData() {
       timestamp: twoDaysAgo,
     },
     {
-      id: 'home-audit-2',
+      id: SEED_IDS.auditLogs.homeAudit2,
       eventType: 'TaskCompleted',
       eventId: `event-home-audit-2-${Date.now()}`,
       actorType: ActorType.USER,
@@ -280,7 +280,7 @@ async function seedHomePageData() {
       timestamp: yesterday,
     },
     {
-      id: 'home-audit-3',
+      id: SEED_IDS.auditLogs.homeAudit3,
       eventType: 'LeadQualified',
       eventId: `event-home-audit-3-${Date.now()}`,
       actorType: ActorType.AI,
@@ -297,7 +297,7 @@ async function seedHomePageData() {
       timestamp: yesterday,
     },
     {
-      id: 'home-audit-4',
+      id: SEED_IDS.auditLogs.homeAudit4,
       eventType: 'EmailSent',
       eventId: `event-home-audit-4-${Date.now()}`,
       actorType: ActorType.USER,
@@ -314,7 +314,7 @@ async function seedHomePageData() {
       timestamp: new Date(now.getTime() - 2 * 60 * 60 * 1000), // 2 hours ago
     },
     {
-      id: 'home-audit-5',
+      id: SEED_IDS.auditLogs.homeAudit5,
       eventType: 'CallLogged',
       eventId: `event-home-audit-5-${Date.now()}`,
       actorType: ActorType.USER,
