@@ -221,7 +221,7 @@ export class ReminderSchedulerService {
           <h2>🔔 Reminder: ${appointment.title}</h2>
           ${rescheduledNote}
           <p><strong>Starting in ${appointment.reminderMinutes} minutes</strong></p>
-          <p><strong>When:</strong> ${this.formatDateTime(appointment.startTime, appointment.timezone || 'UTC')} - ${this.formatDateTime(appointment.endTime, appointment.timezone || 'UTC')}</p>
+          <p><strong>When:</strong> ${this.formatDateTime(appointment.startTime, appointment.timezone || 'Europe/London')} - ${this.formatDateTime(appointment.endTime, appointment.timezone || 'Europe/London')}</p>
           ${appointment.location ? `<p><strong>Where:</strong> ${appointment.location}</p>` : ''}
           ${appointment.description ? `<p><strong>Description:</strong> ${appointment.description}</p>` : ''}
           <hr>
@@ -242,7 +242,7 @@ export class ReminderSchedulerService {
     }
 
     body += `Starting in ${appointment.reminderMinutes} minutes\n\n`;
-    body += `When: ${this.formatDateTime(appointment.startTime, appointment.timezone || 'UTC')} - ${this.formatDateTime(appointment.endTime, appointment.timezone || 'UTC')}\n`;
+    body += `When: ${this.formatDateTime(appointment.startTime, appointment.timezone || 'Europe/London')} - ${this.formatDateTime(appointment.endTime, appointment.timezone || 'Europe/London')}\n`;
 
     if (appointment.location) {
       body += `Where: ${appointment.location}\n`;
@@ -260,7 +260,7 @@ export class ReminderSchedulerService {
   /**
    * Format date/time for display
    */
-  private formatDateTime(date: Date, timezone: string = 'UTC'): string {
+  private formatDateTime(date: Date, timezone: string = 'Europe/London'): string {
     return date.toLocaleString('en-US', {
       weekday: 'long',
       year: 'numeric',

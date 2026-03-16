@@ -291,7 +291,7 @@ export class AppointmentIcsEventHandler {
       <html>
         <body style="font-family: Arial, sans-serif; line-height: 1.6;">
           <h2>You're invited to: ${appointment.title}</h2>
-          <p><strong>When:</strong> ${this.formatDateTime(appointment.startTime, appointment.timezone || 'UTC')} - ${this.formatDateTime(appointment.endTime, appointment.timezone || 'UTC')}</p>
+          <p><strong>When:</strong> ${this.formatDateTime(appointment.startTime, appointment.timezone || 'Europe/London')} - ${this.formatDateTime(appointment.endTime, appointment.timezone || 'Europe/London')}</p>
           ${appointment.location ? `<p><strong>Where:</strong> ${appointment.location}</p>` : ''}
           ${appointment.description ? `<p><strong>Description:</strong> ${appointment.description}</p>` : ''}
           <p>Please accept or decline this invitation by opening the attached calendar file.</p>
@@ -307,7 +307,7 @@ export class AppointmentIcsEventHandler {
    */
   private buildInvitationEmailBodyText(appointment: Appointment): string {
     let body = `You're invited to: ${appointment.title}\n\n`;
-    body += `When: ${this.formatDateTime(appointment.startTime, appointment.timezone || 'UTC')} - ${this.formatDateTime(appointment.endTime, appointment.timezone || 'UTC')}\n`;
+    body += `When: ${this.formatDateTime(appointment.startTime, appointment.timezone || 'Europe/London')} - ${this.formatDateTime(appointment.endTime, appointment.timezone || 'Europe/London')}\n`;
     if (appointment.location) {
       body += `Where: ${appointment.location}\n`;
     }
@@ -331,7 +331,7 @@ export class AppointmentIcsEventHandler {
         <body style="font-family: Arial, sans-serif; line-height: 1.6;">
           <h2>Appointment Rescheduled: ${appointment.title}</h2>
           <p style="color: #d97706;"><strong>This appointment has been rescheduled.</strong></p>
-          <p><strong>New Time:</strong> ${this.formatDateTime(appointment.startTime, appointment.timezone || 'UTC')} - ${this.formatDateTime(appointment.endTime, appointment.timezone || 'UTC')}</p>
+          <p><strong>New Time:</strong> ${this.formatDateTime(appointment.startTime, appointment.timezone || 'Europe/London')} - ${this.formatDateTime(appointment.endTime, appointment.timezone || 'Europe/London')}</p>
           ${appointment.location ? `<p><strong>Location:</strong> ${appointment.location}</p>` : ''}
           <p>${reason}</p>
           <p>Your calendar will be updated automatically when you open the attached file.</p>
@@ -352,7 +352,7 @@ export class AppointmentIcsEventHandler {
   ): string {
     let body = `Appointment Rescheduled: ${appointment.title}\n\n`;
     body += `This appointment has been rescheduled.\n\n`;
-    body += `New Time: ${this.formatDateTime(appointment.startTime, appointment.timezone || 'UTC')} - ${this.formatDateTime(appointment.endTime, appointment.timezone || 'UTC')}\n`;
+    body += `New Time: ${this.formatDateTime(appointment.startTime, appointment.timezone || 'Europe/London')} - ${this.formatDateTime(appointment.endTime, appointment.timezone || 'Europe/London')}\n`;
     if (appointment.location) {
       body += `Location: ${appointment.location}\n`;
     }
@@ -370,7 +370,7 @@ export class AppointmentIcsEventHandler {
         <body style="font-family: Arial, sans-serif; line-height: 1.6;">
           <h2>Appointment Cancelled: ${appointment.title}</h2>
           <p style="color: #dc2626;"><strong>This appointment has been cancelled.</strong></p>
-          <p><strong>Was scheduled for:</strong> ${this.formatDateTime(appointment.startTime, appointment.timezone || 'UTC')} - ${this.formatDateTime(appointment.endTime, appointment.timezone || 'UTC')}</p>
+          <p><strong>Was scheduled for:</strong> ${this.formatDateTime(appointment.startTime, appointment.timezone || 'Europe/London')} - ${this.formatDateTime(appointment.endTime, appointment.timezone || 'Europe/London')}</p>
           <p><strong>Reason:</strong> ${reason}</p>
           <p>Your calendar will be updated automatically when you open the attached file.</p>
           <hr>
@@ -386,7 +386,7 @@ export class AppointmentIcsEventHandler {
   private buildCancellationEmailBodyText(appointment: Appointment, reason: string): string {
     let body = `Appointment Cancelled: ${appointment.title}\n\n`;
     body += `This appointment has been cancelled.\n\n`;
-    body += `Was scheduled for: ${this.formatDateTime(appointment.startTime, appointment.timezone || 'UTC')} - ${this.formatDateTime(appointment.endTime, appointment.timezone || 'UTC')}\n`;
+    body += `Was scheduled for: ${this.formatDateTime(appointment.startTime, appointment.timezone || 'Europe/London')} - ${this.formatDateTime(appointment.endTime, appointment.timezone || 'Europe/London')}\n`;
     body += `Reason: ${reason}\n\n`;
     body += `Your calendar will be updated automatically when you open the attached file.\n`;
     return body;
@@ -395,7 +395,7 @@ export class AppointmentIcsEventHandler {
   /**
    * Format date/time for display
    */
-  private formatDateTime(date: Date, timezone: string = 'UTC'): string {
+  private formatDateTime(date: Date, timezone: string = 'Europe/London'): string {
     return date.toLocaleString('en-US', {
       weekday: 'long',
       year: 'numeric',
