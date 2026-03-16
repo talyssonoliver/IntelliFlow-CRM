@@ -60,6 +60,12 @@ export const updateContactSchema = baseContactFieldsSchema.omit({ email: true })
 
 export type UpdateContactInput = z.infer<typeof updateContactSchema>;
 
+// IFC-254 R-10: Whitelist of safe sortable Contact columns
+export const CONTACT_SORT_FIELDS = [
+  'createdAt', 'updatedAt', 'firstName', 'lastName', 'email',
+  'status', 'company', 'department', 'lastContactedAt',
+] as const;
+
 // Contact Query Schema
 export const contactQuerySchema = paginationSchema.extend({
   search: z.string().max(200).optional(),
@@ -67,6 +73,7 @@ export const contactQuerySchema = paginationSchema.extend({
   ownerId: idSchema.optional(),
   department: z.string().optional(),
   status: contactStatusSchema.optional(),
+  sortBy: z.enum(CONTACT_SORT_FIELDS).default('createdAt'),
 });
 
 export type ContactQueryInput = z.infer<typeof contactQuerySchema>;
@@ -78,7 +85,7 @@ export const contactResponseSchema = z.object({
   firstName: nameSchema,
   lastName: nameSchema,
   title: nameSchema.nullable(),
-  phone: phoneSchema, // Uses PhoneNumber Value Object transformer
+  phone: z.string().nullable(), // Plain string for response (VO transform only in input schemas)
   department: nameSchema.nullable(),
   status: contactStatusSchema,
   accountId: idSchema.nullable(),
@@ -102,7 +109,7 @@ export type ContactResponse = z.infer<typeof contactResponseSchema>;
 
 // Contact List Response Schema - consistent with pagination pattern
 export const contactListResponseSchema = z.object({
-  data: z.array(contactResponseSchema), // Renamed from 'contacts' to 'data'
+  contacts: z.array(contactResponseSchema), // Matches router return key
   total: z.number().int().nonnegative(),
   page: z.number().int().positive(),
   limit: z.number().int().positive().max(100),

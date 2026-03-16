@@ -62,6 +62,9 @@ export * from './empty-state';
 // Score Components
 export * from './score';
 
+// Metric Components (PG-177)
+export * from './metric-card';
+
 // Search
 export * from './search-input';
 
