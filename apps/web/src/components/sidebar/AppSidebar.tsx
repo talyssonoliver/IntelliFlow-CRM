@@ -88,10 +88,9 @@ export function AppSidebar({
         return true;
       }
 
-      // For items without params, only active if no relevant params in URL
-      const view = searchParams.get('view');
-      const segment = searchParams.get('segment');
-      return !view && !segment;
+      // For items without params, require exact pathname match
+      // AND no query params on the current URL — otherwise /email matches /email?folder=sent
+      return pathname === itemPath && !searchParams.toString();
     },
     [pathname, searchParams]
   );
@@ -148,6 +147,13 @@ export function AppSidebar({
         ) : null}
       </div>
 
+      {/* Before Content (e.g., action buttons) */}
+      {config.beforeContent && (
+        <div className="px-2 pt-3">
+          <config.beforeContent isExpanded={isExpanded} />
+        </div>
+      )}
+
       {/* Navigation Sections */}
       <div className="flex-1 overflow-y-auto py-4 px-2">
         <div className="flex flex-col gap-1">
@@ -189,22 +195,46 @@ export function AppSidebar({
         <AnnouncementCard announcement={announcement} onDismiss={onDismissAnnouncement} />
       )}
 
+      {/* Footer Content (e.g., storage indicator) */}
+      {config.footerContent && (
+        <div className="mt-auto border-t border-border px-2 pt-3 pb-1">
+          <config.footerContent isExpanded={isExpanded} />
+        </div>
+      )}
+
       {/* Settings Footer */}
-      {config.showSettings !== false && config.settingsHref && (
-        <div className="mt-auto border-t border-border p-2">
-          <Link
-            href={config.settingsHref}
-            className={cn(
-              'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors group',
-              'text-muted-foreground hover:text-foreground hover:bg-accent',
-              !isExpanded && 'justify-center'
-            )}
-          >
-            <span className="material-symbols-outlined text-xl transition-colors group-hover:text-primary">
-              settings
-            </span>
-            {isExpanded && <span className="font-medium">Module Settings</span>}
-          </Link>
+      {config.showSettings !== false && (config.settingsHref || config.onSettingsClick) && (
+        <div className={cn('border-t border-border p-2', !config.footerContent && 'mt-auto')}>
+          {config.onSettingsClick ? (
+            <button
+              type="button"
+              onClick={config.onSettingsClick}
+              className={cn(
+                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors group w-full',
+                'text-muted-foreground hover:text-foreground hover:bg-accent',
+                !isExpanded && 'justify-center'
+              )}
+            >
+              <span className="material-symbols-outlined text-xl transition-colors group-hover:text-primary">
+                settings
+              </span>
+              {isExpanded && <span className="font-medium">Module Settings</span>}
+            </button>
+          ) : (
+            <Link
+              href={config.settingsHref!}
+              className={cn(
+                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors group',
+                'text-muted-foreground hover:text-foreground hover:bg-accent',
+                !isExpanded && 'justify-center'
+              )}
+            >
+              <span className="material-symbols-outlined text-xl transition-colors group-hover:text-primary">
+                settings
+              </span>
+              {isExpanded && <span className="font-medium">Module Settings</span>}
+            </Link>
+          )}
         </div>
       )}
     </nav>
@@ -643,6 +673,13 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: R
           </button>
         </div>
 
+        {/* Before Content (e.g., action buttons) */}
+        {config.beforeContent && (
+          <div className="px-3 pt-3">
+            <config.beforeContent isExpanded={true} />
+          </div>
+        )}
+
         {/* Navigation */}
         <div className="flex-1 overflow-y-auto py-4 px-3">
           <div className="flex flex-col gap-1">
@@ -684,16 +721,27 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: R
         )}
 
         {/* Settings Footer */}
-        {config.showSettings !== false && config.settingsHref && (
+        {config.showSettings !== false && (config.settingsHref || config.onSettingsClick) && (
           <div className="border-t border-border p-3">
-            <Link
-              href={config.settingsHref}
-              onClick={handleItemClick}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors text-muted-foreground hover:text-foreground hover:bg-accent"
-            >
-              <span className="material-symbols-outlined text-xl">settings</span>
-              <span className="font-medium">Module Settings</span>
-            </Link>
+            {config.onSettingsClick ? (
+              <button
+                type="button"
+                onClick={() => { config.onSettingsClick!(); handleItemClick(); }}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors text-muted-foreground hover:text-foreground hover:bg-accent w-full"
+              >
+                <span className="material-symbols-outlined text-xl">settings</span>
+                <span className="font-medium">Module Settings</span>
+              </button>
+            ) : (
+              <Link
+                href={config.settingsHref!}
+                onClick={handleItemClick}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors text-muted-foreground hover:text-foreground hover:bg-accent"
+              >
+                <span className="material-symbols-outlined text-xl">settings</span>
+                <span className="font-medium">Module Settings</span>
+              </Link>
+            )}
           </div>
         )}
       </dialog>

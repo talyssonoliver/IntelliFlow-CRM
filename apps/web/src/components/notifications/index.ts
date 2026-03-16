@@ -5,6 +5,10 @@ export { NotificationFilters } from './NotificationFilters';
 export type { NotificationFiltersProps } from './NotificationFilters';
 export { NotificationBell } from './NotificationBell';
 export { NotificationItemSkeleton } from './NotificationItemSkeleton';
+export { ChannelManager } from './ChannelManager';
+export { QuietHoursScheduler } from './QuietHoursScheduler';
+export { NotificationSettingsPanel } from './NotificationSettingsPanel';
+export { NotificationSettingsSidebarNav } from './NotificationSettingsSidebarNav';
 
 // Hooks
 export { useNotificationFeed } from './hooks/useNotificationFeed';
@@ -17,6 +21,7 @@ export {
   formatRelativeTime,
   getTypesByGroup,
   getTypeFilterOptions,
+  getProactiveAlertCategory,
 } from './notification-utils';
 
 // Types

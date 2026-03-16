@@ -284,6 +284,14 @@ const TYPE_CONFIGS: Record<string, TypeConfig> = {
     label: 'Ticket Assigned',
     group: 'Ticket',
   },
+  ticket_created: {
+    icon: 'confirmation_number',
+    bgColor: 'bg-orange-50 dark:bg-orange-900/20',
+    iconColor: 'text-orange-600 dark:text-orange-400',
+    ringColor: 'ring-orange-100 dark:ring-orange-800',
+    label: 'Ticket Created',
+    group: 'Ticket',
+  },
   ticket_escalated: {
     icon: 'priority_high',
     bgColor: 'bg-red-50 dark:bg-red-900/20',
@@ -316,6 +324,15 @@ const TYPE_CONFIGS: Record<string, TypeConfig> = {
     ringColor: 'ring-emerald-100 dark:ring-emerald-800',
     label: 'Case Closed',
     group: 'Case',
+  },
+  // Contact notifications
+  contact_stale: {
+    icon: 'person_off',
+    bgColor: 'bg-amber-50 dark:bg-amber-900/20',
+    iconColor: 'text-amber-600 dark:text-amber-400',
+    ringColor: 'ring-amber-100 dark:ring-amber-800',
+    label: 'Stale Contact',
+    group: 'Contact',
   },
   // Email notifications
   email_received: {
@@ -377,6 +394,29 @@ const PRIORITY_CONFIGS: Record<NotificationPriority, PriorityConfig> = {
   },
 };
 
+/**
+ * Groups existing notification types into proactive alert subcategories.
+ * Frontend-only derivation used for labeling/filtering — no DB change.
+ */
+export const PROACTIVE_ALERT_CATEGORIES = {
+  'Time-Based': ['appointment_reminder', 'task_due_soon'],
+  'Status-Based': ['task_overdue', 'deal_at_risk', 'contact_stale', 'ticket_escalated', 'case_status_changed'],
+  'Threshold': ['lead_scored'],
+  'Compliance': ['document_approval_needed'],
+} as const;
+
+/**
+ * Returns the proactive alert subcategory ('Time-Based' | 'Status-Based' |
+ * 'Threshold' | 'Compliance') for a notification type, or undefined when
+ * the type is not a proactive alert.
+ */
+export function getProactiveAlertCategory(type: string): string | undefined {
+  for (const [category, types] of Object.entries(PROACTIVE_ALERT_CATEGORIES)) {
+    if ((types as readonly string[]).includes(type)) return category;
+  }
+  return undefined;
+}
+
 /** Get icon/color/label configuration for a notification type */
 export function getTypeConfig(type: string): TypeConfig {
   return TYPE_CONFIGS[type] || DEFAULT_CONFIG;
@@ -388,7 +428,7 @@ export function getPriorityConfig(priority: string): PriorityConfig | undefined 
 }
 
 /** Format a date string into relative time (e.g., "5 min ago") */
-export function formatRelativeTime(dateInput: string | Date): string {
+export function formatRelativeTime(dateInput: string | Date, timezone: string = 'UTC'): string {
   const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
   if (Number.isNaN(date.getTime())) return 'Unknown';
 
@@ -407,7 +447,12 @@ export function formatRelativeTime(dateInput: string | Date): string {
   const diffDays = Math.floor(diffMs / 86400000);
   if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
 
-  return date.toLocaleDateString();
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: timezone,
+  });
 }
 
 /** Group all notification types by category */

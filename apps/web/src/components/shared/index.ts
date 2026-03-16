@@ -96,6 +96,7 @@ export {
   type SortOption,
 } from './search-filter-bar';
 export { AppAvatar, type AppAvatarProps } from './app-avatar';
+export { EntityHoverCard } from './entity-hover-card';
 
 // MFA Components
 export { MfaQrGenerator, type MfaQrGeneratorProps } from './mfa-qr-generator';

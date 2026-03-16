@@ -61,11 +61,11 @@ const TYPE_ICONS: Record<string, { icon: string; color: string }> = {
 
 const DEFAULT_ICON = { icon: 'event', color: 'text-slate-500 bg-slate-100 dark:bg-slate-800' };
 
-function formatEventDate(date: Readonly<Date>) {
+function formatEventDate(date: Readonly<Date>, timezone: string = 'UTC') {
   return {
-    month: date.toLocaleDateString('en-US', { month: 'short' }),
+    month: date.toLocaleDateString('en-US', { month: 'short', timeZone: timezone }),
     day: date.getDate().toString(),
-    time: date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+    time: date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: timezone }),
   };
 }
 

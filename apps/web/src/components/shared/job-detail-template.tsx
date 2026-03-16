@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import { ApplyButton, SaveJobButton, ShareJobButton } from './apply-button';
 import type { JobListing } from '@/data/job-listings';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 export type { JobListing } from '@/data/job-listings';
 
@@ -25,6 +26,7 @@ interface JobDetailTemplateProps {
  */
 export function JobDetailTemplate({ job, relatedJobs = [] }: Readonly<JobDetailTemplateProps>) {
   const [showStickyApply, setShowStickyApply] = React.useState(false);
+  const { timezone } = useTimezoneContext();
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -41,6 +43,7 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: Readonly<JobDetailT
       year: 'numeric',
       month: 'long',
       day: 'numeric',
+      timeZone: timezone,
     });
   };
 

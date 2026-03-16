@@ -1,8 +1,8 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@intelliflow/ui';
 
-import { getTypeConfig, getPriorityConfig, formatRelativeTime } from './notification-utils';
+import { getTypeConfig, getPriorityConfig, formatRelativeTime, getProactiveAlertCategory } from './notification-utils';
 
 /** Accept tRPC-inferred notification type (Date fields from superjson) */
 interface NotificationItemProps {
@@ -29,10 +29,16 @@ export const NotificationItem = React.memo(function NotificationItem({
   const router = useRouter();
   const typeConfig = getTypeConfig(notification.type);
   const priorityConfig = getPriorityConfig(notification.priority);
+  const proactiveCategory = getProactiveAlertCategory(notification.type);
 
+  // Optimistic local state — immediately reflects "read" on click
+  // without waiting for the mutation round-trip + cache refetch.
+  // Resets when server state catches up (notification.isRead becomes true).
+  const [optimisticRead, setOptimisticRead] = useState(false);
   const isAiType = notification.type.startsWith('ai_');
-  const isUnread = !notification.isRead;
+  const isUnread = !notification.isRead && !optimisticRead;
   const actionLink = notification.actionUrl;
+  const isClickable = isUnread || !!actionLink;
   const unreadOrReadClass = isUnread
     ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
     : 'bg-slate-50/50 dark:bg-slate-800/50 border-transparent hover:bg-white dark:hover:bg-slate-800 hover:border-slate-200 dark:hover:border-slate-700';
@@ -42,6 +48,7 @@ export const NotificationItem = React.memo(function NotificationItem({
 
   const activateItem = useCallback(() => {
     if (isUnread) {
+      setOptimisticRead(true);
       onMarkAsRead(notification.id);
     }
     if (actionLink) {
@@ -72,9 +79,9 @@ export const NotificationItem = React.memo(function NotificationItem({
     <div // NOSONAR typescript:S6845,S6848 — notification item conditionally acts as a link; <a> cannot contain interactive child elements (action buttons)
       onClick={handleItemClick}
       onKeyDown={handleKeyDown}
-      role={actionLink ? 'link' : undefined} // NOSONAR typescript:S6819,S6842 — notification item is a styled div that conditionally acts as a link
-      tabIndex={actionLink ? 0 : undefined}
-      className={`group relative flex w-full items-start gap-4 rounded-xl p-4 shadow-sm border transition-all hover:shadow-md ${actionLink ? 'cursor-pointer' : ''} ${containerClass}`}
+      role={actionLink ? 'link' : isClickable ? 'button' : undefined} // NOSONAR typescript:S6819,S6842 — notification item is a styled div that conditionally acts as a link or button
+      tabIndex={isClickable ? 0 : undefined}
+      className={`group relative flex w-full items-start gap-4 rounded-xl p-4 shadow-sm border transition-all hover:shadow-md ${isClickable ? 'cursor-pointer' : ''} ${containerClass}`}
     >
       {/* Priority Indicator */}
       {priorityConfig && (
@@ -123,6 +130,12 @@ export const NotificationItem = React.memo(function NotificationItem({
           >
             {typeConfig.group}
           </span>
+          {proactiveCategory && (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400 flex items-center gap-1">
+              <span className="material-symbols-outlined text-[11px]" aria-hidden="true">notifications_active</span>
+              {proactiveCategory}
+            </span>
+          )}
           {actionLink && (
             <span className="text-xs text-primary flex items-center gap-1">
               View details{' '}
@@ -141,7 +154,7 @@ export const NotificationItem = React.memo(function NotificationItem({
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  onClick={() => onMarkAsRead(notification.id)}
+                  onClick={() => { setOptimisticRead(true); onMarkAsRead(notification.id); }}
                   aria-label="Mark as read"
                   className="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-primary"
                 >

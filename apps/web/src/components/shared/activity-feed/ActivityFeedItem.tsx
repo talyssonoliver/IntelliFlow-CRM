@@ -12,6 +12,7 @@
  */
 
 import Link from 'next/link';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 export interface ActivityFeedItemProps {
   id: string;
@@ -23,6 +24,8 @@ export interface ActivityFeedItemProps {
   actor: { id: string | null; name: string; avatarUrl?: string | null } | null;
   entity: { id: string; type: string; name: string } | null;
   metadata?: Record<string, unknown> | null;
+  /** When true, this item is the currently deep-linked / selected item */
+  isSelected?: boolean;
 }
 
 interface IconStyle {
@@ -149,7 +152,7 @@ function appendActivityId(url: string, activityId: string): string {
   return `${url}${separator}activityId=${encodeURIComponent(activityId)}`;
 }
 
-function formatRelativeTime(date: Date | string): string {
+function formatRelativeTime(date: Date | string, timezone: string = 'UTC'): string {
   const diffMs = Date.now() - new Date(date).getTime();
   const diffMins = Math.floor(diffMs / 60000);
   if (diffMins < 1) return 'just now';
@@ -158,7 +161,12 @@ function formatRelativeTime(date: Date | string): string {
   if (diffHours < 24) return `${diffHours}h ago`;
   const diffDays = Math.floor(diffHours / 24);
   if (diffDays < 7) return `${diffDays}d ago`;
-  return new Date(date).toLocaleDateString();
+  return new Date(date).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: timezone,
+  });
 }
 
 function getInitials(name: string): string {
@@ -410,7 +418,9 @@ export function ActivityFeedItem({
   actor,
   entity,
   metadata,
+  isSelected = false,
 }: Readonly<ActivityFeedItemProps>) {
+  const { timezone } = useTimezoneContext();
   const style = TYPE_ICON_STYLES[type] || DEFAULT_ICON_STYLE;
   const actorInitials = actor ? getInitials(actor.name) : null;
   const entityUrl = entity ? getEntityRoute(entity.type, entity.id) : null;
@@ -431,7 +441,14 @@ export function ActivityFeedItem({
   const primaryUrl = basePrimaryUrl ? appendActivityId(basePrimaryUrl, id) : null;
 
   return (
-    <div className="p-5 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+    <div
+      data-activity-id={id}
+      className={`p-5 transition-colors ${
+        isSelected
+          ? 'bg-primary/5 ring-2 ring-primary/30 ring-inset rounded-lg'
+          : 'hover:bg-slate-50 dark:hover:bg-slate-800/30'
+      }`}
+    >
       <div className="flex gap-3">
         {/* Avatar / Icon — size-10 matching mockup */}
         <ActivityFeedAvatar style={style} actorInitials={actorInitials} />
@@ -450,7 +467,7 @@ export function ActivityFeedItem({
               <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{title}</p>
             )}
             <span className="text-xs text-slate-400 whitespace-nowrap">
-              {formatRelativeTime(timestamp)}
+              {formatRelativeTime(timestamp, timezone)}
             </span>
           </div>
 

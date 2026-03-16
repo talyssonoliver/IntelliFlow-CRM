@@ -603,6 +603,70 @@ describe('ActivityFeedItem', () => {
     const el = screen.getByText('Unknown Entity');
     expect(el.tagName).toBe('SPAN');
   });
+
+  it('should render email item as clickable link via actionUrl in metadata', async () => {
+    const { ActivityFeedItem } = await import('../ActivityFeedItem');
+    render(
+      <ActivityFeedItem
+        id="email_abc123"
+        source="EMAIL"
+        type="EMAIL"
+        title="Your Custom Proposal from IntelliFlow"
+        description="From: user@example.com → To: ."
+        timestamp={new Date()}
+        actor={null}
+        entity={null}
+        metadata={{ status: 'PENDING', openCount: 0, clickCount: 0, actionUrl: '/email/abc123' }}
+      />
+    );
+
+    const titleLink = screen.getByRole('link', { name: 'Your Custom Proposal from IntelliFlow' });
+    expect(titleLink.getAttribute('href')).toBe('/email/abc123?activityId=email_abc123');
+  });
+
+  it('should apply selected highlight when isSelected is true', async () => {
+    const { ActivityFeedItem } = await import('../ActivityFeedItem');
+    const { container } = render(
+      <ActivityFeedItem
+        id="item-1"
+        source="EMAIL"
+        type="EMAIL"
+        title="Selected item"
+        description={null}
+        timestamp={new Date()}
+        actor={null}
+        entity={null}
+        metadata={{ actionUrl: '/email/123' }}
+        isSelected={true}
+      />
+    );
+
+    const wrapper = container.querySelector('[data-activity-id="item-1"]');
+    expect(wrapper?.className).toContain('ring-2');
+    expect(wrapper?.className).toContain('bg-primary/5');
+  });
+
+  it('should not apply selected highlight when isSelected is false', async () => {
+    const { ActivityFeedItem } = await import('../ActivityFeedItem');
+    const { container } = render(
+      <ActivityFeedItem
+        id="item-1"
+        source="EMAIL"
+        type="EMAIL"
+        title="Unselected item"
+        description={null}
+        timestamp={new Date()}
+        actor={null}
+        entity={null}
+        metadata={{ actionUrl: '/email/123' }}
+        isSelected={false}
+      />
+    );
+
+    const wrapper = container.querySelector('[data-activity-id="item-1"]');
+    expect(wrapper?.className).not.toContain('ring-2');
+    expect(wrapper?.className).toContain('hover:bg-slate-50');
+  });
 });
 
 // ---------------------------------------------------------------------------

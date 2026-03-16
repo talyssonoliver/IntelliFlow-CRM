@@ -25,6 +25,8 @@ interface ActivityFeedBaseProps {
   emptyMessage?: string;
   /** Show a vertical timeline line connecting item avatars */
   timeline?: boolean;
+  /** Activity ID to highlight and scroll to (deep-link support) */
+  selectedId?: string | null;
 }
 
 /** Internal mode: component fetches its own data */
@@ -88,7 +90,7 @@ function resolveDataSource(
 }
 
 export function ActivityFeed(props: Readonly<ActivityFeedProps>) {
-  const { height = 400, className = '', emptyMessage = 'No recent activity', timeline = false } = props;
+  const { height = 400, className = '', emptyMessage = 'No recent activity', timeline = false, selectedId } = props;
 
   // Resolve data source: internal hook or external props
   const internal = useActivityFeedConditional(props);
@@ -124,6 +126,20 @@ export function ActivityFeed(props: Readonly<ActivityFeedProps>) {
     el.addEventListener('scroll', handleScroll, { passive: true });
     return () => el.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
+
+  // Scroll to the selected item when items load and selectedId is set
+  const hasScrolledRef = useRef(false);
+  useEffect(() => {
+    if (!selectedId || items.length === 0 || hasScrolledRef.current) return;
+    const targetIndex = items.findIndex((item) => item.id === selectedId);
+    if (targetIndex >= 0) {
+      hasScrolledRef.current = true;
+      // Allow virtualizer to render first, then scroll
+      requestAnimationFrame(() => {
+        virtualizer.scrollToIndex(targetIndex, { align: 'center', behavior: 'smooth' });
+      });
+    }
+  }, [selectedId, items, virtualizer]);
 
   // Loading state — skeleton matching mockup layout (p-5 padding, size-10 avatar)
   if (isLoading) {
@@ -224,6 +240,7 @@ export function ActivityFeed(props: Readonly<ActivityFeedProps>) {
                   actor={item.actor}
                   entity={item.entity}
                   metadata={item.metadata}
+                  isSelected={selectedId === item.id}
                 />
               </div>
             );

@@ -54,6 +54,12 @@ export const settingsSidebarConfig: SidebarConfig = {
           href: '/settings/routing',
         },
         {
+          id: 'leads',
+          label: 'Leads',
+          icon: 'sell',
+          href: '/settings/leads',
+        },
+        {
           id: 'security',
           label: 'Security',
           icon: 'security',

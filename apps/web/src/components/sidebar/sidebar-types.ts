@@ -36,10 +36,16 @@ export interface SidebarConfig {
   sections: SidebarSection[];
   /** Settings link at the bottom */
   settingsHref?: string;
+  /** Callback when "Module Settings" is clicked (renders button instead of Link when provided) */
+  onSettingsClick?: () => void;
   /** Whether to show the settings link */
   showSettings?: boolean;
+  /** Optional custom content rendered above navigation sections (e.g., action buttons) */
+  beforeContent?: React.ComponentType<{ isExpanded: boolean }>;
   /** Optional custom content rendered below navigation sections */
   afterContent?: React.ComponentType<{ isExpanded: boolean }>;
+  /** Optional custom content rendered in the footer, above Module Settings */
+  footerContent?: React.ComponentType<{ isExpanded: boolean }>;
 }
 
 export interface SidebarContextValue {

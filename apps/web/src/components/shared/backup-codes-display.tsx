@@ -20,6 +20,7 @@ import {
   downloadBackupCodes,
   printBackupCodes,
 } from '@/lib/shared/backup-codes';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 // ============================================
 // Types
@@ -92,6 +93,7 @@ export function BackupCodesDisplay({
   const [acknowledged, setAcknowledged] = useState(false);
   const [copied, setCopied] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
+  const { timezone } = useTimezoneContext();
 
   const formattedCodes = formatBackupCodesForDisplay(codes);
 
@@ -151,7 +153,7 @@ export function BackupCodesDisplay({
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-sm font-medium text-slate-300">Your backup codes</h4>
           <span className="text-xs text-slate-500">
-            Generated {generatedAt.toLocaleDateString()}
+            Generated {generatedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone })}
           </span>
         </div>
 

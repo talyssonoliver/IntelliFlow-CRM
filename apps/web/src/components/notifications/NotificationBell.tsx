@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Popover, PopoverContent, PopoverTrigger, ScrollArea } from '@intelliflow/ui';
@@ -52,9 +52,13 @@ export function NotificationBell() {
     },
   });
 
+  // Track IDs optimistically marked as read in this dropdown session
+  const [optimisticReadIds, setOptimisticReadIds] = useState<Set<string>>(new Set());
+
   const handleNotificationClick = useCallback(
     (n: { id: string; isRead: boolean; actionUrl?: string | null }) => {
       if (!n.isRead) {
+        setOptimisticReadIds((prev) => new Set(prev).add(n.id));
         markAsReadMutation.mutate({ notificationIds: [n.id] });
       }
       setIsOpen(false);
@@ -65,8 +69,19 @@ export function NotificationBell() {
     [markAsReadMutation, router]
   );
 
-  const unreadCount = unreadData?.total ?? 0;
-  const recentNotifications = recentData?.notifications ?? [];
+  // Clear optimistic state when dropdown closes — server data will have caught up
+  useEffect(() => {
+    if (!isOpen && optimisticReadIds.size > 0) {
+      setOptimisticReadIds(new Set());
+    }
+  }, [isOpen, optimisticReadIds.size]);
+
+  // Apply optimistic read state to both count and notification items
+  const serverUnread = unreadData?.total ?? 0;
+  const unreadCount = Math.max(0, serverUnread - optimisticReadIds.size);
+  const recentNotifications = (recentData?.notifications ?? []).map((n) =>
+    optimisticReadIds.has(n.id) ? { ...n, isRead: true } : n
+  );
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
