@@ -4996,7 +4996,7 @@
       "Dependencies": "IFC-068",
       "Pre-requisites": "FILE:apps/web/src/components/sidebar/configs/analytics.ts;FILE:apps/web/src/app/analytics/(list)/page.tsx;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;FILE:docs/design/navigation-reachability-audit.md;DESIGN:docs/design/mockups/analytics-saved-reports.png",
       "Definition of Done": "Pages at /analytics/saved/weekly (last 7 days metrics: revenue leads tickets closed with trend indicators) /analytics/saved/monthly (last 30 days revenue breakdown by product and region) /analytics/saved/quarterly (Q4 performance summary with YoY comparison); sidebar Saved Reports links resolve; Lighthouse >=90; verified by: pnpm test",
-      "Status": "Planning",
+      "Status": "Plan Complete",
       "KPIs": "All 3 saved report routes resolve; weekly/monthly/quarterly data renders; period selector works; Lighthouse >=90",
       "Target Sprint": "16",
       "Artifacts To Track": "ARTIFACT:apps/web/src/app/analytics/saved/weekly/page.tsx;ARTIFACT:apps/web/src/app/analytics/saved/monthly/page.tsx;ARTIFACT:apps/web/src/app/analytics/saved/quarterly/page.tsx;ARTIFACT:apps/web/src/components/analytics/SavedReportView.tsx;ARTIFACT:apps/web/src/components/analytics/__tests__/SavedReportView.test.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-177/context_ack.json",

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-16T18:39:38.761Z",
+  "generated_at": "2026-03-16T18:52:20.761Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
     "total_specs_analyzed": 355,
@@ -5733,7 +5733,7 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": false,
-      "csv_status": "Planning",
+      "csv_status": "Plan Complete",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [

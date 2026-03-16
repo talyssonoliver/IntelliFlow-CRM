@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-03-16T18:39:37.085Z",
+  "last_updated": "2026-03-16T18:52:18.828Z",
   "total_tasks": 390,
   "current_sprint": 14,
   "active_sprint": "sprint-14",
