@@ -16,8 +16,9 @@ const mockCheckOutput = vi.hoisted(() => vi.fn());
 const mockGetStats = vi.hoisted(() => vi.fn());
 
 const mockPredictChurnRisk = vi.hoisted(() => vi.fn());
-const mockGenerateInsights = vi.hoisted(() => vi.fn());
+const mockGenerateInsightsWithMeta = vi.hoisted(() => vi.fn());
 const mockGenerateFallbackInsights = vi.hoisted(() => vi.fn());
+const mockLogConversationRecord = vi.hoisted(() => vi.fn());
 
 const mockCreate = vi.hoisted(() => vi.fn());
 const mockNotificationCreate = vi.hoisted(() => vi.fn());
@@ -75,10 +76,21 @@ vi.mock('../../chains/scoring.chain', () => ({
 
 vi.mock('../../chains/insight-generation.chain', () => ({
   getInsightGenerationChain: () => ({
-    generateInsights: mockGenerateInsights,
+    generateInsightsWithMeta: mockGenerateInsightsWithMeta,
     generateFallbackInsights: mockGenerateFallbackInsights,
   }),
 }));
+
+vi.mock('../../utils/conversation-record-logger', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../utils/conversation-record-logger')>();
+  return {
+    ...actual,
+    logConversationRecord: (...args: Parameters<typeof actual.logConversationRecord>) => {
+      mockLogConversationRecord(...args);
+      return actual.logConversationRecord(...args);
+    },
+  };
+});
 
 vi.mock('@intelliflow/db', () => ({
   prisma: {
@@ -137,7 +149,7 @@ function createInsightJob(overrides: Record<string, unknown> = {}) {
   return {
     id: 'job-insight-001',
     data: {
-      tenantId: 'tenant-001',
+      tenantId: '00000000-0000-4000-a000-000000000001',
       userId: 'user-001',
       dealsAtRisk: [{ id: 'deal-1', name: 'Big Deal', daysSinceUpdate: 20 }],
       hotLeads: [],
@@ -210,7 +222,11 @@ describe('Fix #14 — Hallucination checker wired into job handlers', () => {
     mockLeadAIInsightUpsert.mockResolvedValue({ id: 'lead-insight-1' });
     mockContactAIInsightUpsert.mockResolvedValue({ id: 'contact-insight-1' });
 
-    mockGenerateInsights.mockResolvedValue([createInsight()]);
+    mockGenerateInsightsWithMeta.mockResolvedValue({
+      insights: [createInsight()],
+      source: 'llm',
+      executionTimeMs: 25,
+    });
     mockGenerateFallbackInsights.mockReturnValue([createInsight({ entityId: null, entityType: null, type: 'achievement', priority: 'low', confidence: 0.4 })]);
   });
 
@@ -259,11 +275,36 @@ describe('Fix #14 — Hallucination checker wired into job handlers', () => {
   });
 
   it('does NOT call hallucinationChecker when insight generation falls back to heuristics', async () => {
-    mockGenerateInsights.mockRejectedValue(new Error('LLM down'));
+    mockGenerateInsightsWithMeta.mockRejectedValue(new Error('LLM down'));
     const job = createInsightJob();
     await processInsightJob(job);
     // Heuristic fallback — no LLM output to check
     expect(mockCheckOutput).not.toHaveBeenCalled();
+    expect(mockLogConversationRecord).not.toHaveBeenCalled();
+  });
+
+  it('does NOT call hallucinationChecker or logConversationRecord when chain reports parser fallback', async () => {
+    mockGenerateInsightsWithMeta.mockResolvedValue({
+      insights: [
+        createInsight({
+          entityId: null,
+          entityType: null,
+          type: 'achievement',
+          priority: 'low',
+          confidence: 0.4,
+          reasoning: 'Heuristic: parser fallback',
+        }),
+      ],
+      source: 'fallback',
+      executionTimeMs: 90,
+      error: 'Output parsing failure',
+    });
+
+    const job = createInsightJob();
+    await processInsightJob(job);
+
+    expect(mockCheckOutput).not.toHaveBeenCalled();
+    expect(mockLogConversationRecord).not.toHaveBeenCalled();
   });
 });
 
@@ -373,7 +414,11 @@ describe('Fix #20 — Conversation record audit logging', () => {
     mockLeadAIInsightUpsert.mockResolvedValue({ id: 'lead-insight-1' });
     mockContactAIInsightUpsert.mockResolvedValue({ id: 'contact-insight-1' });
 
-    mockGenerateInsights.mockResolvedValue([createInsight()]);
+    mockGenerateInsightsWithMeta.mockResolvedValue({
+      insights: [createInsight()],
+      source: 'llm',
+      executionTimeMs: 25,
+    });
     mockGenerateFallbackInsights.mockReturnValue([createInsight({ entityId: null, entityType: null, type: 'achievement', priority: 'low', confidence: 0.4 })]);
   });
 
@@ -431,22 +476,18 @@ describe('Fix #20 — Conversation record audit logging', () => {
   });
 
   it('prediction job calls logConversationRecord after churn risk LLM call', async () => {
-    const { logConversationRecord: logFn } = await import('../../utils/conversation-record-logger');
-    const spy = vi.spyOn({ logConversationRecord: logFn }, 'logConversationRecord');
-
     const job = createPredictionJob('CHURN_RISK');
     // Job completes successfully — conversation record logging runs internally
     const result = await processPredictionJob(job);
     expect(result).toBeDefined();
-    // We verify by checking that the job completed without error
-    // (the logger.info call is internal but tested via utility unit test above)
+    expect(mockLogConversationRecord).toHaveBeenCalled();
   });
 
   it('insight job calls logConversationRecord after LLM generates insights', async () => {
     const job = createInsightJob();
     const result = await processInsightJob(job);
     expect(result.insightsCreated).toBeGreaterThan(0);
-    // If LLM call succeeded (not fallback), checkOutput should be called
+    expect(mockLogConversationRecord).toHaveBeenCalled();
     expect(mockCheckOutput).toHaveBeenCalledTimes(1);
   });
 });

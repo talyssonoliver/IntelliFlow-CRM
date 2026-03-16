@@ -89,6 +89,8 @@ export {
 } from './chain-monitor';
 export type { ChainMonitorConfig, MonitoredResult } from './chain-monitor';
 
+export { MonitoringFlushService } from './monitoring-flush.service';
+
 /**
  * Get all Prometheus metrics from monitoring modules
  */

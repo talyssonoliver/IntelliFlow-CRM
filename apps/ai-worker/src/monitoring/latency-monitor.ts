@@ -27,6 +27,7 @@ export interface LatencyMeasurement {
   success: boolean;
   errorType?: string;
   metadata?: Record<string, unknown>;
+  tenantId?: string | null;
 }
 
 /**
@@ -379,6 +380,13 @@ export class LatencyMonitor {
       .filter((m) => m.durationMs > this.config.sloTargets.p95Ms)
       .sort((a, b) => b.durationMs - a.durationMs)
       .slice(0, limit);
+  }
+
+  /**
+   * Get measurements recorded since a given timestamp
+   */
+  getMeasurementsSince(since: Date): LatencyMeasurement[] {
+    return this.measurements.filter((m) => m.timestamp >= since);
   }
 
   /**

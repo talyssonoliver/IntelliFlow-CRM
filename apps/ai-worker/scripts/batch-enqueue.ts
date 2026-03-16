@@ -1,4 +1,5 @@
 import { Queue } from 'bullmq';
+import { DEFAULT_INSIGHT_JOB_OPTIONS } from '../src/jobs';
 
 const TENANT_ID = '00000000-0000-4000-8000-000000000001';
 const connection = { host: 'localhost', port: 6379 };
@@ -52,7 +53,7 @@ async function main() {
       tenantId: TENANT_ID,
       correlationId: `batch-${Date.now()}-${i}`,
       ...insightPayloads[i],
-    });
+    }, DEFAULT_INSIGHT_JOB_OPTIONS);
     console.log(`insight job #${job.id} queued (user: ${insightPayloads[i].userId})`);
   }
 

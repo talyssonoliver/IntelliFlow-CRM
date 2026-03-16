@@ -46,6 +46,7 @@ export interface AICost {
   outputTokens: number;
   cost: number; // USD
   metadata?: Record<string, unknown>;
+  tenantId?: string | null;
 }
 
 /**
@@ -59,6 +60,7 @@ export interface AIValue {
   confidence: number; // 0-1
   relatedCostIds: string[];
   metadata?: Record<string, unknown>;
+  tenantId?: string | null;
 }
 
 /**
@@ -432,6 +434,20 @@ export class ROITracker {
       byDay,
       averageConfidence: avgConfidence,
     };
+  }
+
+  /**
+   * Get costs recorded since a given timestamp
+   */
+  getCostsSince(since: Date): AICost[] {
+    return this.costs.filter((c) => c.timestamp >= since);
+  }
+
+  /**
+   * Get values recorded since a given timestamp
+   */
+  getValuesSince(since: Date): AIValue[] {
+    return this.values.filter((v) => v.timestamp >= since);
   }
 
   /**

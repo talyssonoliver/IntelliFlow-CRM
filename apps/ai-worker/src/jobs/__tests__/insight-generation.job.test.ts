@@ -10,7 +10,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const mockGenerateInsights = vi.hoisted(() => vi.fn());
+const mockGenerateInsightsWithMeta = vi.hoisted(() => vi.fn());
 const mockGenerateFallbackInsights = vi.hoisted(() => vi.fn());
 const mockCreate = vi.hoisted(() => vi.fn());
 const mockNotificationCreate = vi.hoisted(() => vi.fn());
@@ -20,7 +20,7 @@ const mockContactAIInsightUpsert = vi.hoisted(() => vi.fn());
 
 vi.mock('../..//chains/insight-generation.chain', () => ({
   getInsightGenerationChain: () => ({
-    generateInsights: mockGenerateInsights,
+    generateInsightsWithMeta: mockGenerateInsightsWithMeta,
     generateFallbackInsights: mockGenerateFallbackInsights,
   }),
 }));
@@ -69,7 +69,7 @@ function createInsight(overrides: Partial<GeneratedInsight> = {}): GeneratedInsi
 
 function createMockJob(data: Partial<InsightJobData> = {}) {
   const fullData: InsightJobData = {
-    tenantId: 'tenant-001',
+    tenantId: '00000000-0000-4000-a000-000000000001',
     userId: 'user-001',
     dealsAtRisk: [],
     hotLeads: [],
@@ -92,7 +92,11 @@ describe('processInsightJob', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockGenerateInsights.mockResolvedValue([createInsight()]);
+    mockGenerateInsightsWithMeta.mockResolvedValue({
+      insights: [createInsight()],
+      source: 'llm',
+      executionTimeMs: 25,
+    });
     mockGenerateFallbackInsights.mockImplementation((input: InsightJobData) => {
       if (input.dealsAtRisk.length > 0) {
         return [
@@ -144,14 +148,14 @@ describe('processInsightJob', () => {
     // Verify Prisma create was called with correct structure
     expect(mockCreate).toHaveBeenCalled();
     const firstCall = mockCreate.mock.calls[0][0];
-    expect(firstCall.data.tenantId).toBe('tenant-001');
+    expect(firstCall.data.tenantId).toBe('00000000-0000-4000-a000-000000000001');
     expect(firstCall.data.status).toBe('NEW');
     expect(firstCall.data.expiresAt).toBeInstanceOf(Date);
     expect(firstCall.data.metadata).toHaveProperty('userId', 'user-001');
   });
 
   it('should create rows with confidence 40 when chain falls back to heuristics', async () => {
-    mockGenerateInsights.mockRejectedValue(new Error('LLM down'));
+    mockGenerateInsightsWithMeta.mockRejectedValue(new Error('LLM down'));
 
     const job = createMockJob({
       dealsAtRisk: [{ id: 'deal-1', name: 'Test Deal', daysSinceUpdate: 15 }],
@@ -200,14 +204,18 @@ describe('processInsightJob', () => {
   it('should set expiresAt to 24h from now on created rows', async () => {
     const beforeTime = Date.now();
 
-    mockGenerateInsights.mockResolvedValue([
-      createInsight({
-        entityId: null,
-        entityType: 'task',
-        type: 'reminder',
-        priority: 'medium',
-      }),
-    ]);
+    mockGenerateInsightsWithMeta.mockResolvedValue({
+      insights: [
+        createInsight({
+          entityId: null,
+          entityType: 'task',
+          type: 'reminder',
+          priority: 'medium',
+        }),
+      ],
+      source: 'llm',
+      executionTimeMs: 25,
+    });
 
     const job = createMockJob({
       overdueTasksCount: 5,
@@ -235,7 +243,7 @@ describe('processInsightJob', () => {
 describe('InsightJobDataSchema', () => {
   it('should validate valid job data', () => {
     const result = InsightJobDataSchema.safeParse({
-      tenantId: 'tenant-1',
+      tenantId: '00000000-0000-4000-a000-000000000001',
       userId: 'user-1',
       dealsAtRisk: [],
       hotLeads: [],
@@ -248,6 +256,18 @@ describe('InsightJobDataSchema', () => {
   it('should reject missing required fields', () => {
     const result = InsightJobDataSchema.safeParse({
       userId: 'user-1',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('should reject non-UUID tenantId', () => {
+    const result = InsightJobDataSchema.safeParse({
+      tenantId: 'not-a-valid-uuid',
+      userId: 'user-1',
+      dealsAtRisk: [],
+      hotLeads: [],
+      overdueTasksCount: 0,
+      staleContacts: [],
     });
     expect(result.success).toBe(false);
   });

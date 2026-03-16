@@ -13,7 +13,7 @@ const VALID_TENANT_ID = '00000000-0000-4000-8000-000000000001';
 const connection = { host: 'localhost', port: 6379 };
 
 const DEAD_TENANT_IDS = new Set([
-  'test-tenant-id',
+  '344b1756-0000-4000-8000-344b17560000',
   'test-tenant',
   'default',
 ]);

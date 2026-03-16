@@ -34,7 +34,7 @@ export const INSIGHT_QUEUE = 'ai-insights';
 
 /** Schema for insight job data */
 export const InsightJobDataSchema = z.object({
-  tenantId: z.string(),
+  tenantId: z.string().uuid('tenantId must be a valid UUID'),
   userId: z.string(),
   correlationId: z.string().optional(),
   dealsAtRisk: z
@@ -290,18 +290,27 @@ function getInsightTTL(priority: string): number {
   }
 }
 
-/** Build a link path for an entity */
-function buildEntityLink(entityType: string | undefined, entityId: string | undefined): string | null {
-  if (!entityType || !entityId) return null;
-  const pluralMap: Record<string, string> = {
-    lead: 'leads',
-    contact: 'contacts',
-    opportunity: 'opportunities',
-    deal: 'opportunities',
-    account: 'accounts',
+/** Build a link path for an entity, with fallback for aggregate insight types */
+function buildEntityLink(entityType: string | undefined, entityId: string | undefined, insightType?: string): string | null {
+  if (entityType && entityId) {
+    const pluralMap: Record<string, string> = {
+      lead: 'leads',
+      contact: 'contacts',
+      opportunity: 'opportunities',
+      deal: 'opportunities',
+      account: 'accounts',
+    };
+    const plural = pluralMap[entityType] || `${entityType}s`;
+    return `/${plural}/${entityId}`;
+  }
+  // Fallback routes for aggregate/non-entity insights
+  const insightRouteMap: Record<string, string> = {
+    reminder: '/tasks?filter=overdue',
+    trend: '/dashboard',
+    warning: '/deals',
+    opportunity: '/leads',
   };
-  const plural = pluralMap[entityType] || `${entityType}s`;
-  return `/${plural}/${entityId}`;
+  return (insightType && insightRouteMap[insightType]) || null;
 }
 
 // ============================================================================
@@ -378,6 +387,15 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
       });
 
       for (const tenant of activeTenants) {
+        // Resolve a real admin recipient for this tenant (fallback to first user)
+        const adminUser = await prisma.user.findFirst({
+          where: { tenantId: tenant.tenantId, role: 'ADMIN' },
+          select: { id: true },
+        }) ?? await prisma.user.findFirst({
+          where: { tenantId: tenant.tenantId },
+          select: { id: true },
+        });
+
         // Gather heuristic data for this tenant
         const [dealsAtRisk, hotLeads, overdueCount, staleContacts] = await Promise.all([
           prisma.opportunity.findMany({
@@ -402,7 +420,7 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
 
         await queue.add('generate-insights', {
           tenantId: tenant.tenantId,
-          userId: 'system',
+          userId: adminUser?.id ?? 'system',
           dealsAtRisk: dealsAtRisk.map((d) => ({
             id: d.id,
             name: d.name,
@@ -504,10 +522,10 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
   const llmStartTime = Date.now();
 
   let insights: Awaited<ReturnType<typeof chain.generateInsights>>;
-  let usedFallback = false;
+  let usedFallback: boolean;
   try {
-    insights = await Promise.race([
-      chain.generateInsights({
+    const generation = await Promise.race([
+      chain.generateInsightsWithMeta({
         tenantId: cappedData.tenantId,
         userId: cappedData.userId,
         dealsAtRisk: cappedData.dealsAtRisk,
@@ -519,6 +537,8 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
         setTimeout(() => reject(new Error(`LLM inference timed out after ${LLM_TIMEOUT_MS}ms`)), LLM_TIMEOUT_MS)
       ),
     ]);
+    insights = generation.insights;
+    usedFallback = generation.source === 'fallback';
   } catch (error) {
     logger.warn(
       { jobId: job.id, error: error instanceof Error ? error.message : String(error) },
@@ -583,6 +603,22 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
   for (const insight of insights) {
     const expiresAt = new Date(now.getTime() + getInsightTTL(insight.priority));
 
+    // Skip if an active insight with the same title already exists for this entity —
+    // prevents repeated runs from creating "Hot Lead: X" every 6 hours.
+    const existingInsight = await prisma.aIInsight.findFirst({
+      where: {
+        tenantId,
+        title: insight.title,
+        ...(insight.entityId ? { entityId: insight.entityId } : {}),
+        status: { in: ['NEW', 'VIEWED', 'ACTED_ON'] },
+      },
+    });
+
+    if (existingInsight) {
+      // Insight already exists — skip creation
+      continue;
+    }
+
     await prisma.aIInsight.create({
       data: {
         type: mapInsightTypeToDbType(insight.type),
@@ -609,33 +645,119 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
     });
     insightsCreated++;
 
-    // Create in-app notification for critical/high priority insights
+    // Create in-app notification for critical/high priority insights.
+    // Note: Real-time WebSocket push requires the in-process notificationEmitter
+    // from apps/api, which is not accessible from this worker process.
+    // Notifications will appear on next poll/page load. For real-time push in
+    // multi-process deployments, Redis pub/sub is needed (tracked limitation).
     if (insight.priority === 'critical' || insight.priority === 'high') {
       try {
-        const entityLink = buildEntityLink(insight.entityType ?? undefined, insight.entityId ?? undefined);
-        await prisma.notification.create({
-          data: {
+        // Skip if a proactive notification already covers this topic —
+        // prevents "3 Overdue Tasks" + "Three overdue tasks requiring attention"
+        // from appearing side by side in the notification inbox.
+        const existingNotification = await prisma.notification.findFirst({
+          where: {
             tenantId,
             recipientId: userId,
-            channel: 'IN_APP',
-            subject: insight.title,
-            body: insight.description,
-            priority: insight.priority === 'critical' ? 'HIGH' : 'NORMAL',
-            status: 'PENDING',
-            category: 'ALERTS',
-            sourceType: 'ai_insight',
-            sourceId: insight.entityId ?? undefined,
-            metadata: {
-              insightPriority: insight.priority,
-              insightType: insight.type,
-              ...(entityLink ? { link: entityLink } : {}),
-            },
+            status: { in: ['PENDING', 'SENT', 'DELIVERED', 'READ'] },
+            OR: [
+              // Same entity (e.g. same lead/deal/contact)
+              ...(insight.entityId ? [{ sourceId: insight.entityId }] : []),
+              // Same topic via sourceType (e.g. task_overdue, deal_at_risk)
+              ...(insight.type === 'warning' ? [{ sourceType: 'task_overdue' }, { sourceType: 'deal_at_risk' }] : []),
+              // Same title (exact match)
+              { subject: insight.title },
+            ],
           },
         });
+
+        if (existingNotification) {
+          // Proactive notification already exists — skip creating a duplicate
+        } else {
+          const entityLink = buildEntityLink(insight.entityType ?? undefined, insight.entityId ?? undefined, insight.type);
+          await prisma.notification.create({
+            data: {
+              tenantId,
+              recipientId: userId,
+              channel: 'IN_APP',
+              subject: insight.title,
+              body: insight.description,
+              priority: insight.priority === 'critical' ? 'HIGH' : 'NORMAL',
+              status: 'PENDING',
+              category: 'ALERTS',
+              sourceType: 'ai_insight',
+              sourceId: insight.entityId ?? undefined,
+              metadata: {
+                notificationType: 'ai_insight',
+                insightPriority: insight.priority,
+                insightType: insight.type,
+                ...(entityLink ? { actionUrl: entityLink } : {}),
+              },
+            },
+          });
+        }
+
+        // Also create an activity entry so the insight appears in the activity feed —
+        // but only if one with the same title doesn't already exist for this entity.
+        if (insight.entityType === 'lead' && insight.entityId) {
+          const existingLeadActivity = await prisma.leadActivity.findFirst({
+            where: {
+              leadId: insight.entityId,
+              title: insight.title,
+              tenantId,
+            },
+          });
+          if (!existingLeadActivity) {
+            await prisma.leadActivity.create({
+              data: {
+                leadId: insight.entityId,
+                type: 'SCORE_UPDATE',
+                title: insight.title,
+                description: insight.description,
+                userName: 'AI Insights',
+                sentiment: insight.priority === 'critical' ? 'NEGATIVE' : 'POSITIVE',
+                metadata: {
+                  insightType: insight.type,
+                  insightPriority: insight.priority,
+                  confidence: insight.confidence,
+                  suggestedActions: insight.suggestedActions,
+                },
+                tenantId,
+              },
+            });
+          }
+        } else if (insight.entityType === 'contact' && insight.entityId) {
+          const existingContactActivity = await prisma.contactActivity.findFirst({
+            where: {
+              contactId: insight.entityId,
+              title: insight.title,
+              tenantId,
+            },
+          });
+          if (!existingContactActivity) {
+            await prisma.contactActivity.create({
+              data: {
+                contactId: insight.entityId,
+                type: 'NOTE',
+                title: insight.title,
+                description: insight.description,
+                userName: 'AI Insights',
+                sentiment: insight.priority === 'critical' ? 'NEGATIVE' : 'POSITIVE',
+                metadata: {
+                  insightType: insight.type,
+                  insightPriority: insight.priority,
+                  confidence: insight.confidence,
+                  suggestedActions: insight.suggestedActions,
+                },
+                tenantId,
+              },
+            });
+          }
+        }
       } catch (notifError) {
         logger.warn(
           { error: notifError instanceof Error ? notifError.message : String(notifError) },
-          'Failed to create notification for insight — non-blocking'
+          'Failed to create notification/activity for insight — non-blocking'
         );
       }
     }

@@ -28,6 +28,8 @@ import {
   processScoringJob,
   processPredictionJob,
   processInsightJob,
+  DEFAULT_INSIGHT_JOB_OPTIONS,
+  DEFAULT_SCORING_JOB_OPTIONS,
   type ScoringJobData,
   type ScoringJobResult,
   type PredictionJobData,
@@ -45,6 +47,7 @@ import {
   type AgentStatusContext,
 } from './services/agent-status';
 import { hallucinationChecker } from './monitoring';
+import { MonitoringFlushService } from './monitoring/monitoring-flush.service';
 
 // ============================================================================
 // Types
@@ -63,6 +66,8 @@ type AIJobResult = ScoringJobResult | PredictionJobResult | InsightJobResult;
 export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   private configLoaded = false;
   private dashboardServer: Server | null = null;
+  private monitoringFlushService?: MonitoringFlushService;
+  private prisma?: import('@intelliflow/db').PrismaClient;
 
   constructor() {
     super({
@@ -122,6 +127,12 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
 
     // Start Bull Board dashboard
     await this.startDashboard();
+
+    // IFC-297: Start monitoring data flush to DB
+    if (this.prisma) {
+      this.monitoringFlushService = new MonitoringFlushService(this.prisma);
+      this.monitoringFlushService.start();
+    }
   }
 
   /**
@@ -155,6 +166,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
             staleContacts: [],
             correlationId: `scheduled-insights-${Date.now()}`,
           },
+          opts: DEFAULT_INSIGHT_JOB_OPTIONS,
         }
       );
       this.logger.info({ cron: insightsCron }, 'Scheduled insight refresh job registered');
@@ -174,6 +186,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
             },
             correlationId: `scheduled-scoring-${Date.now()}`,
           },
+          opts: DEFAULT_SCORING_JOB_OPTIONS,
         }
       );
       this.logger.info({ cron: scoringCron }, 'Scheduled lead scoring job registered');
@@ -226,6 +239,11 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
    */
   protected async onStop(): Promise<void> {
     this.logger.info('Shutting down AI Worker...');
+
+    // IFC-297: Drain monitoring data before shutdown
+    if (this.monitoringFlushService) {
+      await this.monitoringFlushService.stop();
+    }
 
     // Close dashboard server
     if (this.dashboardServer) {

@@ -68,6 +68,7 @@ export interface DriftSample {
   model: string;
   metric: string;
   metadata?: Record<string, unknown>;
+  tenantId?: string | null;
 }
 
 /**

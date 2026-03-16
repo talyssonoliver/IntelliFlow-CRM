@@ -339,10 +339,11 @@ async function notifyHighChurnRisk(
         sourceType: 'ai_recommendation',
         sourceId: entityId,
         metadata: {
+          notificationType: 'ai_recommendation',
           predictionType: 'CHURN_RISK',
           confidence: prediction.confidence,
           riskLevel,
-          link: `/${entityType}s/${entityId}`,
+          actionUrl: `/${entityType}s/${entityId}`,
         },
       },
     });

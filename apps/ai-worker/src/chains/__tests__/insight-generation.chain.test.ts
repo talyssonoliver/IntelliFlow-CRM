@@ -141,6 +141,38 @@ describe('InsightGenerationChain', () => {
       });
     });
 
+    it('should normalize missing optional LLM fields instead of falling back', async () => {
+      const chain = new InsightGenerationChain();
+      (chain as any).model = {
+        invoke: vi.fn().mockResolvedValue({
+          content: JSON.stringify({
+            insights: [
+              {
+                entityType: 'task',
+                type: 'reminder',
+                title: 'Overdue tasks need attention',
+                description: 'There are 3 overdue tasks in your pipeline.',
+                confidence: 0.8,
+                priority: 'high',
+              },
+            ],
+          }),
+        }),
+      };
+
+      const result = await chain.generateInsightsWithMeta(
+        createInput({
+          overdueTasksCount: 3,
+        })
+      );
+
+      expect(result.source).toBe('llm');
+      expect(result.insights).toHaveLength(1);
+      expect(result.insights[0].entityId).toBeNull();
+      expect(result.insights[0].suggestedActions).toEqual([]);
+      expect(result.insights[0].reasoning).toContain('AI-generated insight');
+    });
+
     it('should produce achievement insight when no items flagged', async () => {
       const chain = new InsightGenerationChain();
       // Override to throw so we exercise fallback for empty input

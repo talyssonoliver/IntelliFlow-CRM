@@ -42,6 +42,7 @@ export interface HallucinationResult {
   evidence: string[];
   groundTruthSources: string[];
   score: number; // 0 = no hallucination, 1 = complete hallucination
+  tenantId?: string | null;
 }
 
 /**

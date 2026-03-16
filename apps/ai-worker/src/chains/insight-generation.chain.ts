@@ -135,21 +135,30 @@ export const GeneratedInsightSchema = z.object({
 
 export type GeneratedInsight = z.infer<typeof GeneratedInsightSchema>;
 
+export interface InsightGenerationResult {
+  insights: GeneratedInsight[];
+  source: 'llm' | 'fallback';
+  executionTimeMs: number;
+  error?: string;
+}
+
+const DEFAULT_REASONING = 'AI-generated insight based on current CRM activity.';
+
 /**
  * Output schema for LLM parsing
  */
 const LLMInsightOutputSchema = z.object({
   insights: z.array(
     z.object({
-      entityId: z.string().nullable(),
-      entityType: z.enum(INSIGHT_ENTITY_TYPES).nullable(),
+      entityId: z.string().nullable().optional().default(null),
+      entityType: z.enum(INSIGHT_ENTITY_TYPES).nullable().optional().default(null),
       type: z.enum(INSIGHT_TYPES),
       title: z.string(),
       description: z.string(),
-      suggestedActions: z.array(z.string()),
+      suggestedActions: z.array(z.string()).optional().default([]),
       confidence: z.number(),
       priority: z.enum(INSIGHT_PRIORITIES),
-      reasoning: z.string(),
+      reasoning: z.string().optional().default(DEFAULT_REASONING),
     })
   ),
 });
@@ -263,6 +272,12 @@ ANALYSIS INSTRUCTIONS:
 
 5. If no items are flagged, produce a single "achievement" insight
 
+6. Every insight MUST include:
+   - entityId: string or null
+   - entityType: one of opportunity|lead|contact|task|deal, or null
+   - suggestedActions: an array (use [] when no action is needed)
+   - reasoning: one short sentence explaining why the insight was generated
+
 {format_instructions}`,
       inputVariables: ['dealsData', 'leadsData', 'overdueTasksCount', 'contactsData'],
       partialVariables: {
@@ -277,6 +292,13 @@ ANALYSIS INSTRUCTIONS:
    * Generate insights from CRM data
    */
   async generateInsights(input: InsightGenerationInput): Promise<GeneratedInsight[]> {
+    const result = await this.generateInsightsWithMeta(input);
+    return result.insights;
+  }
+
+  async generateInsightsWithMeta(
+    input: InsightGenerationInput
+  ): Promise<InsightGenerationResult> {
     const startTime = Date.now();
 
     try {
@@ -360,23 +382,36 @@ ANALYSIS INSTRUCTIONS:
         'Insight generation completed'
       );
 
-      return parsed.insights.map((insight) => ({
-        ...insight,
-        confidence: Math.min(1, Math.max(0, insight.confidence)),
-        suggestedActions: insight.suggestedActions.slice(0, 3),
-      }));
+      return {
+        insights: parsed.insights.map((insight) => ({
+          ...insight,
+          entityId: insight.entityId ?? null,
+          entityType: insight.entityType ?? null,
+          confidence: Math.min(1, Math.max(0, insight.confidence)),
+          suggestedActions: insight.suggestedActions.slice(0, 3),
+          reasoning: insight.reasoning || DEFAULT_REASONING,
+        })),
+        source: 'llm',
+        executionTimeMs,
+      };
     } catch (error) {
       const executionTimeMs = Date.now() - startTime;
+      const errorMessage = error instanceof Error ? error.message : String(error);
 
       logger.error(
         {
-          error: error instanceof Error ? error.message : String(error),
+          error: errorMessage,
           executionTimeMs,
         },
         'Insight generation failed, using fallback heuristics'
       );
 
-      return this.generateFallbackInsights(input);
+      return {
+        insights: this.generateFallbackInsights(input),
+        source: 'fallback',
+        executionTimeMs,
+        error: errorMessage,
+      };
     }
   }
 
