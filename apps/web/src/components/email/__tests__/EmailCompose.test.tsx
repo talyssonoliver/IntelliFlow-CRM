@@ -36,8 +36,18 @@ describe('EmailCompose', () => {
       isError: false,
       error: null,
     });
-    mocks.contactList.mockReturnValue({
-      data: { items: [], total: 0 },
+    mocks.searchContacts.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+    });
+    mocks.contactSearch.mockReturnValue({
+      data: { contacts: [] },
+      isLoading: false,
+      isError: false,
+    });
+    mocks.leadList.mockReturnValue({
+      data: { leads: [] },
       isLoading: false,
       isError: false,
     });

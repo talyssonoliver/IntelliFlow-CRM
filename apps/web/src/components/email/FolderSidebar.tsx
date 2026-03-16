@@ -3,6 +3,7 @@
 import { useCallback, useRef } from 'react';
 import { Inbox, Send, FileText, Archive, AlertTriangle, Trash2, PenSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { EmailStorageIndicator } from '@/components/sidebar/configs/EmailSidebarContent';
 
 const FOLDERS = [
   { id: 'inbox', label: 'Inbox', icon: Inbox },
@@ -125,13 +126,7 @@ export function FolderSidebar({
 
       {/* Storage indicator */}
       <div className="border-t border-border p-3">
-        <div className="text-xs text-muted-foreground">
-          <span className="font-medium">Storage</span>
-          <div className="mt-1 h-1.5 w-full rounded-full bg-secondary">
-            <div className="h-full w-1/4 rounded-full bg-primary" />
-          </div>
-          <span className="mt-0.5 block">2.5 GB of 10 GB used</span>
-        </div>
+        <EmailStorageIndicator isExpanded />
       </div>
     </nav>
   );

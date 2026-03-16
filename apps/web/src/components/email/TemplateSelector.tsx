@@ -100,7 +100,7 @@ export function TemplateSelector({ onSelect, currentBody = '', className }: Read
 
       {isOpen && (
         <div // NOSONAR typescript:S6848 — popup container captures keyboard events for keyboard navigation within the template picker
-          className="absolute bottom-full left-0 z-50 mb-1 w-80 rounded-md border border-border bg-popover p-2 shadow-lg"
+          className="absolute bottom-full right-0 z-50 mb-1 w-80 rounded-md border border-border bg-popover p-2 shadow-lg"
           onKeyDown={handleKeyDown}
         >
           {/* Search input */}

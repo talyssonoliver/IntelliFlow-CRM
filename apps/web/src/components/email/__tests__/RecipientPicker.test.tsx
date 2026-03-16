@@ -22,7 +22,7 @@ describe('RecipientPicker', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.contactList.mockReturnValue({
+    mocks.contactSearch.mockReturnValue({
       data: {
         contacts: [
           createMockContact({
@@ -38,11 +38,12 @@ describe('RecipientPicker', () => {
             email: 'bob@test.com',
           }),
         ],
-        total: 2,
-        page: 1,
-        limit: 5,
-        hasMore: false,
       },
+      isLoading: false,
+      isError: false,
+    });
+    mocks.leadList.mockReturnValue({
+      data: { leads: [] },
       isLoading: false,
       isError: false,
     });

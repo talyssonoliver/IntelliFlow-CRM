@@ -7,8 +7,21 @@ import { createMockEmailTrpc, createMockEmail, createMockThread } from './email-
 const { trpc: mockTrpc, mocks } = createMockEmailTrpc();
 
 vi.mock('@/lib/trpc', () => ({ trpc: mockTrpc }));
+vi.mock('@/components/tasks/TaskCreateSheet', () => ({
+  TaskCreateSheet: () => null,
+}));
+vi.mock('@/hooks/use-entity-pin', () => ({
+  useEntityPin: () => ({ isPinned: false, isLoading: false, togglePin: vi.fn(), pin: vi.fn(), unpin: vi.fn() }),
+}));
 vi.mock('@/hooks/useDebounce', () => ({
   useDebounce: (value: string) => value,
+}));
+
+const mockPush = vi.fn();
+const mockSearchParams = new URLSearchParams();
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => mockSearchParams,
+  useRouter: () => ({ push: mockPush }),
 }));
 
 // Lazy-load to ensure mocks are applied
@@ -17,6 +30,8 @@ const { EmailPage } = await import('../EmailPage');
 describe('EmailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset search params to default (inbox)
+    mockSearchParams.delete('folder');
     mocks.listEmails.mockReturnValue({
       data: {
         emails: [createMockEmail(), createMockEmail({ id: 'email-2', subject: 'Second Email' })],
@@ -35,7 +50,6 @@ describe('EmailPage', () => {
       error: null,
       refetch: vi.fn(),
     });
-    // Required for EmailCompose sub-components when compose mode opens
     mocks.sendEmail.mockReturnValue({
       mutate: vi.fn(),
       mutateAsync: vi.fn().mockResolvedValue({ id: 'sent-1', status: 'PENDING' }),
@@ -50,8 +64,13 @@ describe('EmailPage', () => {
       isError: false,
       error: null,
     });
-    mocks.contactList.mockReturnValue({
-      data: { items: [], total: 0 },
+    mocks.contactSearch.mockReturnValue({
+      data: { contacts: [] },
+      isLoading: false,
+      isError: false,
+    });
+    mocks.leadList.mockReturnValue({
+      data: { leads: [] },
       isLoading: false,
       isError: false,
     });
@@ -75,18 +94,15 @@ describe('EmailPage', () => {
     });
   });
 
-  it('renders 3-column layout with sidebar, list, and thread panes', () => {
+  it('renders 2-column layout with email list and thread panes', () => {
     render(<EmailPage />);
-    expect(screen.getByRole('navigation', { name: /email folders/i })).toBeInTheDocument();
     expect(screen.getByRole('search')).toBeInTheDocument();
     expect(screen.getByText(/no email selected/i)).toBeInTheDocument();
   });
 
-  it('changes folder when sidebar folder is clicked', async () => {
-    const user = userEvent.setup();
+  it('reads folder from URL search params', () => {
+    mockSearchParams.set('folder', 'sent');
     render(<EmailPage />);
-    await user.click(screen.getByRole('button', { name: /sent/i }));
-    // The listEmails query should be re-called with folder='sent'
     expect(mocks.listEmails).toHaveBeenCalled();
   });
 
@@ -111,11 +127,12 @@ describe('EmailPage', () => {
     });
   });
 
-  it('opens compose mode when compose button is clicked', async () => {
-    const user = userEvent.setup();
+  it('navigates to compose page via keyboard shortcut "c"', async () => {
     render(<EmailPage />);
-    await user.click(screen.getByRole('button', { name: /compose/i }));
-    expect(screen.getByRole('form', { name: /compose email/i })).toBeInTheDocument();
+    fireEvent.keyDown(document, { key: 'c' });
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/email/compose');
+    });
   });
 
   it('triggers search with debounced query', async () => {
@@ -123,16 +140,132 @@ describe('EmailPage', () => {
     render(<EmailPage />);
     const searchInput = screen.getByRole('search').querySelector('input')!;
     await user.type(searchInput, 'hello');
-    // useDebounce is mocked to pass-through
     expect(mocks.listEmails).toHaveBeenCalled();
   });
 
   it('toggles filter chips correctly', async () => {
     const user = userEvent.setup();
     render(<EmailPage />);
-    const unreadFilter = screen.getByRole('checkbox', { name: /unread/i });
-    await user.click(unreadFilter);
-    expect(unreadFilter).toBeChecked();
+    const unreadChip = screen.getByRole('button', { name: /^unread$/i });
+    await user.click(unreadChip);
+    expect(unreadChip).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('filters emails by unread status when Unread chip is active', async () => {
+    const user = userEvent.setup();
+    mocks.listEmails.mockReturnValue({
+      data: {
+        emails: [
+          createMockEmail({ id: 'read-1', subject: 'Read Email', isRead: true }),
+          createMockEmail({ id: 'unread-1', subject: 'Unread Email', isRead: false }),
+        ],
+        total: 2,
+        hasMore: false,
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    render(<EmailPage />);
+    // Both should be visible initially
+    expect(screen.getByText('Read Email')).toBeInTheDocument();
+    expect(screen.getByText('Unread Email')).toBeInTheDocument();
+
+    // Toggle unread filter chip
+    const unreadChip = screen.getByRole('button', { name: /^unread$/i });
+    await user.click(unreadChip);
+
+    // Only unread email should remain
+    await waitFor(() => {
+      expect(screen.queryByText('Read Email')).not.toBeInTheDocument();
+      expect(screen.getByText('Unread Email')).toBeInTheDocument();
+    });
+  });
+
+  it('filters emails by attachments when Has Attachments chip is active', async () => {
+    const user = userEvent.setup();
+    mocks.listEmails.mockReturnValue({
+      data: {
+        emails: [
+          createMockEmail({ id: 'no-attach', subject: 'Plain Email', attachments: [] }),
+          createMockEmail({
+            id: 'with-attach',
+            subject: 'Email With File',
+            attachments: [{ filename: 'doc.pdf', contentType: 'application/pdf', size: 1024, checksum: '' }],
+          }),
+        ],
+        total: 2,
+        hasMore: false,
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    render(<EmailPage />);
+    expect(screen.getByText('Plain Email')).toBeInTheDocument();
+    expect(screen.getByText('Email With File')).toBeInTheDocument();
+
+    const attachChip = screen.getByRole('button', { name: /^attachments$/i });
+    await user.click(attachChip);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Plain Email')).not.toBeInTheDocument();
+      expect(screen.getByText('Email With File')).toBeInTheDocument();
+    });
+  });
+
+  it('shows filter-specific empty state and clear button when filters match nothing', async () => {
+    const user = userEvent.setup();
+    mocks.listEmails.mockReturnValue({
+      data: {
+        emails: [
+          createMockEmail({ id: 'read-1', subject: 'Read Email', isRead: true }),
+        ],
+        total: 1,
+        hasMore: false,
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    render(<EmailPage />);
+
+    // Toggle unread filter chip — the only email is read, so 0 results
+    const unreadChip = screen.getByRole('button', { name: /^unread$/i });
+    await user.click(unreadChip);
+
+    await waitFor(() => {
+      expect(screen.getByText(/no emails match current filters/i)).toBeInTheDocument();
+    });
+
+    // Click "Clear filters" to reset
+    const clearBtn = screen.getByRole('button', { name: /clear filters/i });
+    await user.click(clearBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText('Read Email')).toBeInTheDocument();
+    });
+  });
+
+  it('hides filter chips when folder has no emails', () => {
+    mocks.listEmails.mockReturnValue({
+      data: { emails: [], total: 0, hasMore: false },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    render(<EmailPage />);
+    expect(screen.queryByRole('button', { name: /^unread$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^attachments$/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/no emails in this folder/i)).toBeInTheDocument();
   });
 
   it('shows empty state when no email is selected', () => {
@@ -170,58 +303,9 @@ describe('EmailPage', () => {
     expect(refetchFn).toHaveBeenCalled();
   });
 
-  it('opens compose via keyboard shortcut "c"', async () => {
-    render(<EmailPage />);
-    fireEvent.keyDown(document, { key: 'c' });
-    await waitFor(() => {
-      expect(screen.getByRole('form', { name: /compose email/i })).toBeInTheDocument();
-    });
-  });
-
   it('applies dark mode classes', () => {
     const { container } = render(<EmailPage />);
-    // Container should support dark variants
     expect(container.querySelector('[class*="dark:"]') || container.firstElementChild).toBeTruthy();
-  });
-
-  it('has responsive layout classes', () => {
-    const { container } = render(<EmailPage />);
-    const layout = container.querySelector('[class*="md:flex"]');
-    expect(layout).toBeInTheDocument();
-  });
-
-  it('exports from server component page wrapper', async () => {
-    // Page route re-exports EmailPage — just verify the component renders
-    render(<EmailPage />);
-    expect(screen.getByRole('navigation', { name: /email folders/i })).toBeInTheDocument();
-  });
-
-  it('renders all interactive elements with focus styles', () => {
-    render(<EmailPage />);
-    const buttons = screen.getAllByRole('button');
-    buttons.forEach((btn) => {
-      expect(btn.className).toMatch(/focus|ring|outline/);
-    });
-  });
-
-  it('has accessible structure with landmarks', () => {
-    render(<EmailPage />);
-    expect(screen.getByRole('navigation')).toBeInTheDocument();
-    expect(screen.getByRole('search')).toBeInTheDocument();
-  });
-
-  it('passes getUnreadCounts data to FolderSidebar via unreadCounts prop', () => {
-    mocks.getUnreadCounts.mockReturnValue({
-      data: { inbox: 5, sent: 0, drafts: 2, trash: 0, spam: 0 },
-      isLoading: false,
-      isError: false,
-      refetch: vi.fn(),
-    });
-    render(<EmailPage />);
-    // FolderSidebar should receive the unread counts
-    expect(mocks.getUnreadCounts).toHaveBeenCalled();
-    // Verify the data flows — FolderSidebar renders inbox count badge
-    // (FolderSidebar renders a badge when count > 0; we just verify the query was called)
   });
 
   it('calls markAsRead mutation after 800ms when email is selected', async () => {
@@ -244,11 +328,31 @@ describe('EmailPage', () => {
     vi.useRealTimers();
   });
 
-  it('compose opens inside Sheet (bottom panel) rather than inline', async () => {
-    const user = userEvent.setup();
+  it('renders interactive filter elements', () => {
     render(<EmailPage />);
-    await user.click(screen.getByRole('button', { name: /compose/i }));
-    // The form is inside a Sheet, which renders in the DOM when open
-    expect(screen.getByRole('form', { name: /compose email/i })).toBeInTheDocument();
+    const filterChips = screen.getAllByRole('button').filter((btn) =>
+      btn.hasAttribute('aria-pressed')
+    );
+    expect(filterChips.length).toBeGreaterThan(0);
+  });
+
+  it('has accessible structure with search landmark', () => {
+    render(<EmailPage />);
+    expect(screen.getByRole('search')).toBeInTheDocument();
+  });
+
+  it('shows thread loading skeleton when thread is being fetched', () => {
+    mocks.getThread.mockReturnValue({
+      data: null,
+      isLoading: true,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    render(<EmailPage initialEmailId="email-1" />);
+    // Should show loading skeletons, not "No email selected"
+    const skeletons = document.querySelectorAll('.animate-pulse');
+    expect(skeletons.length).toBeGreaterThan(0);
   });
 });

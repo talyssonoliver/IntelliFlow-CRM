@@ -2,6 +2,8 @@
 
 import { useId } from 'react';
 import { ChevronDown, ChevronUp, Reply, ReplyAll, Forward, Paperclip } from 'lucide-react';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
+import { EntityHoverCard } from '@/components/shared';
 import DOMPurify from 'isomorphic-dompurify';
 import { cn } from '@/lib/utils';
 
@@ -44,43 +46,65 @@ export function EmailMessage({
   onReplyAll,
   onForward,
 }: Readonly<EmailMessageProps>) {
+  const { timezone } = useTimezoneContext();
   const headingId = useId();
   const contentId = useId();
 
   return (
     <article className="rounded-lg border border-border">
-      {/* Header — always visible */}
-      <button
-        type="button"
+      {/* Header — always visible (div instead of button to allow nested interactive elements) */}
+      <div
+        role="button"
+        tabIndex={0}
         aria-expanded={isExpanded}
         aria-controls={contentId}
         aria-label={isExpanded ? 'Collapse message' : 'Expand message'}
         className={cn(
-          'flex w-full items-center gap-3 px-4 py-3 text-left transition-colors',
+          'flex w-full items-center gap-3 px-4 py-3 text-left transition-colors cursor-pointer',
           'hover:bg-accent/50',
           'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 rounded-t-lg',
           !isExpanded && 'rounded-b-lg'
         )}
         onClick={onToggle}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onToggle();
+          }
+        }}
       >
-        {/* Avatar */}
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
-          {getInitial(message.from.name, message.from.address)}
-        </div>
+        {/* Avatar with hover card */}
+        <EntityHoverCard email={message.from.address} displayName={message.from.name} side="bottom" align="start">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary hover:ring-2 hover:ring-primary/30 transition-shadow">
+            {getInitial(message.from.name, message.from.address)}
+          </div>
+        </EntityHoverCard>
 
-        {/* Sender info */}
+        {/* Sender + recipients info */}
         <div className="flex-1 min-w-0">
-          <span id={headingId} className="text-sm font-medium">
-            {message.from.name || message.from.address}
-          </span>
+          <EntityHoverCard email={message.from.address} displayName={message.from.name} side="bottom" align="start">
+            <span id={headingId} className="text-sm font-medium hover:underline cursor-pointer">
+              {message.from.name || message.from.address}
+            </span>
+          </EntityHoverCard>
           <span className="ml-2 text-xs text-muted-foreground">
-            to {message.to.map((t) => t.name || t.address).join(', ')}
+            to{' '}
+            {message.to.map((t, i) => (
+              <span key={t.address}>
+                {i > 0 && ', '}
+                <EntityHoverCard email={t.address} displayName={t.name} side="bottom" align="start">
+                  <span className="hover:underline cursor-pointer">
+                    {t.name || t.address}
+                  </span>
+                </EntityHoverCard>
+              </span>
+            ))}
           </span>
         </div>
 
         {/* Timestamp */}
         <time dateTime={message.receivedAt} className="shrink-0 text-xs text-muted-foreground">
-          {new Date(message.receivedAt).toLocaleString()}
+          {new Date(message.receivedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: timezone })}
         </time>
 
         {/* Expand icon */}
@@ -89,7 +113,7 @@ export function EmailMessage({
         ) : (
           <ChevronDown className="h-4 w-4 text-muted-foreground" />
         )}
-      </button>
+      </div>
 
       {/* Content — only when expanded */}
       {isExpanded && (

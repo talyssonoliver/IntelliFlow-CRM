@@ -16,6 +16,12 @@ import {
 // Module-level mock setup (vi.mock is hoisted before imports)
 const { trpc: mockTrpc, mocks } = createMockEmailTrpc();
 vi.mock('@/lib/trpc', () => ({ trpc: mockTrpc }));
+vi.mock('@/components/tasks/TaskCreateSheet', () => ({
+  TaskCreateSheet: () => null,
+}));
+vi.mock('@/hooks/use-entity-pin', () => ({
+  useEntityPin: () => ({ isPinned: false, isLoading: false, togglePin: vi.fn(), pin: vi.fn(), unpin: vi.fn() }),
+}));
 vi.mock('@/hooks/useDebounce', () => ({
   useDebounce: (value: string) => value,
 }));
@@ -93,7 +99,14 @@ describe('EmailListItem formatRelativeTime branches', () => {
         onSelect={vi.fn()}
       />
     );
-    expect(screen.getByText(date.toLocaleDateString())).toBeInTheDocument();
+    // formatDate from TimezoneProvider (UTC fallback) uses en-US month short format
+    const expected = date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    });
+    expect(screen.getByText(expected)).toBeInTheDocument();
   });
 });
 
@@ -204,7 +217,8 @@ describe('EmailThread collapse branch', () => {
 // ============================================================
 describe('EmailList hasAttachments filter coverage', () => {
   const baseListProps = {
-    emails: [],
+    emails: [createMockEmail()],
+    totalUnfilteredCount: 1,
     isLoading: false,
     isError: false,
     error: null,
@@ -216,12 +230,12 @@ describe('EmailList hasAttachments filter coverage', () => {
     filters: { unread: false, hasAttachments: false },
   };
 
-  it('calls onFilterChange with toggled hasAttachments when checkbox clicked', async () => {
+  it('calls onFilterChange with hasAttachments when Attachments chip clicked', async () => {
     const onFilterChange = vi.fn();
     const user = userEvent.setup();
     render(<EmailList {...baseListProps} onFilterChange={onFilterChange} />);
 
-    await user.click(screen.getByRole('checkbox', { name: /has attachments/i }));
+    await user.click(screen.getByRole('button', { name: /^attachments$/i }));
 
     expect(onFilterChange).toHaveBeenCalledWith({ unread: false, hasAttachments: true });
   });
@@ -266,7 +280,9 @@ describe('EmailCompose handler coverage', () => {
       isError: false,
       error: null,
     });
-    mocks.contactList.mockReturnValue({ data: { items: [], total: 0 }, isLoading: false });
+    mocks.searchContacts.mockReturnValue({ data: [], isLoading: false, isError: false });
+    mocks.contactSearch.mockReturnValue({ data: { contacts: [] }, isLoading: false, isError: false });
+    mocks.leadList.mockReturnValue({ data: { leads: [] }, isLoading: false, isError: false });
     mocks.listTemplates.mockReturnValue({ data: [], isLoading: false, isError: false });
   });
 
@@ -598,11 +614,21 @@ describe('EmailCompose handler coverage', () => {
 });
 
 // ============================================================
-// EmailPage — callback handler coverage
+// EmailPage — navigation handler coverage
 // ============================================================
-describe('EmailPage callback handlers', () => {
-  beforeEach(() => {
+// EmailPage now navigates to /email/compose via router.push()
+// instead of rendering an inline compose form.
+// The global mockRouter from vitest.setup.ts is used.
+describe('EmailPage navigation handlers', () => {
+  // Access the global router mock from vitest.setup.ts
+  let mockPush: ReturnType<typeof vi.fn>;
+
+  beforeEach(async () => {
     vi.clearAllMocks();
+    // Import global router mock — vitest.setup.ts exports mockRouter
+    const setup = await import('../../../../vitest.setup');
+    mockPush = setup.mockRouter.push;
+
     mocks.listEmails.mockReturnValue({
       data: {
         emails: [
@@ -624,22 +650,6 @@ describe('EmailPage callback handlers', () => {
       error: null,
       refetch: vi.fn(),
     });
-    mocks.sendEmail.mockReturnValue({
-      mutate: vi.fn(),
-      mutateAsync: vi.fn().mockResolvedValue({ id: 'sent-1' }),
-      isPending: false,
-      isError: false,
-      error: null,
-    });
-    mocks.saveDraft.mockReturnValue({
-      mutate: vi.fn(),
-      mutateAsync: vi.fn().mockResolvedValue({ id: 'draft-1' }),
-      isPending: false,
-      isError: false,
-      error: null,
-    });
-    mocks.contactList.mockReturnValue({ data: { items: [], total: 0 }, isLoading: false });
-    mocks.listTemplates.mockReturnValue({ data: [], isLoading: false, isError: false });
     mocks.getUnreadCounts.mockReturnValue({
       data: { inbox: 0, sent: 0, drafts: 0, trash: 0, spam: 0 },
       isLoading: false,
@@ -653,23 +663,30 @@ describe('EmailPage callback handlers', () => {
       isError: false,
       error: null,
     });
+    mocks.processEmail.mockReturnValue({
+      mutate: vi.fn(),
+      mutateAsync: vi.fn().mockResolvedValue({ success: true }),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+    mocks.markAsUnread.mockReturnValue({
+      mutate: vi.fn(),
+      mutateAsync: vi.fn().mockResolvedValue({ success: true }),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+    mocks.sendEmail.mockReturnValue({
+      mutate: vi.fn(),
+      mutateAsync: vi.fn().mockResolvedValue({ id: 'sent-1', status: 'PENDING' }),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
   });
 
-  it('closes compose mode when Discard clicked (handleDiscardCompose)', async () => {
-    const user = userEvent.setup();
-    render(<EmailPage />);
-
-    // Open compose
-    await user.click(screen.getByRole('button', { name: /compose/i }));
-    expect(screen.getByRole('form', { name: /compose email/i })).toBeInTheDocument();
-
-    // Click Discard — calls handleDiscardCompose → setComposeMode(null)
-    await user.click(screen.getByRole('button', { name: /discard/i }));
-
-    expect(screen.queryByRole('form', { name: /compose email/i })).not.toBeInTheDocument();
-  });
-
-  it('opens reply compose when Reply clicked on loaded thread (handleReply)', async () => {
+  it('opens inline reply compose when Reply clicked on loaded thread', async () => {
     const thread = createMockThread();
     mocks.getThread.mockReturnValue({
       data: thread,
@@ -694,12 +711,15 @@ describe('EmailPage callback handlers', () => {
     const replyBtns = screen.getAllByRole('button', { name: /^reply$/i });
     await user.click(replyBtns[replyBtns.length - 1]);
 
+    // Inline compose should appear with body editor instead of navigating
     await waitFor(() => {
-      expect(screen.getByRole('form', { name: /compose email/i })).toBeInTheDocument();
+      expect(screen.getByRole('textbox', { name: /reply body/i })).toBeInTheDocument();
     });
+    // Send button from inline compose should be present
+    expect(screen.getByLabelText(/send reply/i)).toBeInTheDocument();
   });
 
-  it('opens replyAll compose when Reply All clicked on loaded thread (handleReplyAll)', async () => {
+  it('opens inline reply-all compose when Reply All clicked on loaded thread', async () => {
     const thread = createMockThread();
     mocks.getThread.mockReturnValue({
       data: thread,
@@ -722,12 +742,14 @@ describe('EmailPage callback handlers', () => {
     const replyAllBtns = screen.getAllByRole('button', { name: /reply all/i });
     await user.click(replyAllBtns[replyAllBtns.length - 1]);
 
+    // Inline compose should appear with body editor
     await waitFor(() => {
-      expect(screen.getByRole('form', { name: /compose email/i })).toBeInTheDocument();
+      expect(screen.getByRole('textbox', { name: /reply body/i })).toBeInTheDocument();
     });
+    expect(screen.getByLabelText(/send reply all/i)).toBeInTheDocument();
   });
 
-  it('opens forward compose when Forward clicked on loaded thread (handleForward)', async () => {
+  it('opens inline forward compose when Forward clicked on loaded thread', async () => {
     const thread = createMockThread();
     mocks.getThread.mockReturnValue({
       data: thread,
@@ -750,41 +772,18 @@ describe('EmailPage callback handlers', () => {
     const fwdBtns = screen.getAllByRole('button', { name: /^forward$/i });
     await user.click(fwdBtns[fwdBtns.length - 1]);
 
+    // Inline compose should appear with forward recipient input
     await waitFor(() => {
-      expect(screen.getByRole('form', { name: /compose email/i })).toBeInTheDocument();
+      expect(screen.getByLabelText(/forward to/i)).toBeInTheDocument();
     });
+    expect(screen.getByLabelText(/send forward/i)).toBeInTheDocument();
   });
 
-  it('handleDiscardCompose resets both composeMode and composeOriginalEmail', async () => {
-    const thread = createMockThread();
-    mocks.getThread.mockReturnValue({
-      data: thread,
-      isLoading: false,
-      isError: false,
-      error: null,
-      refetch: vi.fn(),
-    });
-
-    const user = userEvent.setup();
+  it('navigates to compose page via keyboard shortcut "c"', async () => {
     render(<EmailPage />);
-
-    // Open reply compose via Reply button
-    const emailItems = screen.getAllByRole('option');
-    await user.click(emailItems[0]);
-
+    fireEvent.keyDown(document, { key: 'c' });
     await waitFor(() => {
-      expect(screen.getAllByRole('button', { name: /^reply$/i }).length).toBeGreaterThan(0);
+      expect(mockPush).toHaveBeenCalledWith('/email/compose');
     });
-
-    await user.click(screen.getAllByRole('button', { name: /^reply$/i })[0]);
-
-    await waitFor(() => {
-      expect(screen.getByRole('form', { name: /compose email/i })).toBeInTheDocument();
-    });
-
-    // Discard closes compose (calls handleDiscardCompose)
-    await user.click(screen.getByRole('button', { name: /discard/i }));
-
-    expect(screen.queryByRole('form', { name: /compose email/i })).not.toBeInTheDocument();
   });
 });

@@ -1,8 +1,17 @@
 // @vitest-environment jsdom
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, it, expect, vi } from 'vitest';
-import { createMockThread } from './email-test-utils';
+import { createMockEmailTrpc, createMockThread } from './email-test-utils';
+
+const { trpc: mockTrpc, mocks } = createMockEmailTrpc();
+vi.mock('@/lib/trpc', () => ({ trpc: mockTrpc }));
+vi.mock('@/components/tasks/TaskCreateSheet', () => ({
+  TaskCreateSheet: () => null,
+}));
+vi.mock('@/hooks/use-entity-pin', () => ({
+  useEntityPin: () => ({ isPinned: false, isLoading: false, togglePin: vi.fn(), pin: vi.fn(), unpin: vi.fn() }),
+}));
 
 const { EmailThread } = await import('../EmailThread');
 
@@ -22,6 +31,13 @@ describe('EmailThread', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.sendEmail.mockReturnValue({
+      mutate: vi.fn(),
+      mutateAsync: vi.fn().mockResolvedValue({ id: 'sent-1', status: 'PENDING' }),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
   });
 
   it('renders thread header with subject', () => {
@@ -73,34 +89,44 @@ describe('EmailThread', () => {
     expect(screen.getByText(/test body/i)).toBeInTheDocument();
   });
 
-  it('calls onReply when reply button clicked', async () => {
+  it('opens inline reply compose when reply button clicked', async () => {
     const user = userEvent.setup();
     render(<EmailThread {...defaultProps} />);
     const replyBtns = screen.getAllByRole('button', { name: /^reply$/i });
     await user.click(replyBtns[replyBtns.length - 1]);
-    expect(defaultProps.onReply).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(screen.getByRole('textbox', { name: /reply body/i })).toBeInTheDocument();
+    });
+    expect(screen.getByLabelText(/send reply/i)).toBeInTheDocument();
   });
 
-  it('calls onForward when forward button clicked', async () => {
+  it('opens inline forward compose when forward button clicked', async () => {
     const user = userEvent.setup();
     render(<EmailThread {...defaultProps} />);
     const fwdBtns = screen.getAllByRole('button', { name: /forward/i });
     await user.click(fwdBtns[fwdBtns.length - 1]);
-    expect(defaultProps.onForward).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(screen.getByLabelText(/forward to/i)).toBeInTheDocument();
+    });
+    expect(screen.getByLabelText(/send forward/i)).toBeInTheDocument();
   });
 
-  it('calls onReplyAll when reply all button clicked', async () => {
+  it('opens inline reply-all compose when reply all button clicked', async () => {
     const user = userEvent.setup();
     render(<EmailThread {...defaultProps} />);
     const replyAllBtns = screen.getAllByRole('button', { name: /reply all/i });
     await user.click(replyAllBtns[replyAllBtns.length - 1]);
-    expect(defaultProps.onReplyAll).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(screen.getByRole('textbox', { name: /reply body/i })).toBeInTheDocument();
+    });
+    expect(screen.getByLabelText(/send reply all/i)).toBeInTheDocument();
   });
 
   it('displays sender avatar and name', () => {
     render(<EmailThread {...defaultProps} />);
-    expect(screen.getByText('John Doe')).toBeInTheDocument();
-    expect(screen.getByText('Jane Smith')).toBeInTheDocument();
+    // Names appear as both sender and recipient across thread messages
+    expect(screen.getAllByText('John Doe').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Jane Smith').length).toBeGreaterThan(0);
   });
 
   it('displays message timestamp', () => {

@@ -3,6 +3,18 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, it, expect, vi } from 'vitest';
 
+const mockUseQuery = vi.fn();
+
+vi.mock('@/lib/trpc', () => ({
+  trpc: {
+    email: {
+      getStorageUsage: {
+        useQuery: (...args: unknown[]) => mockUseQuery(...args),
+      },
+    },
+  },
+}));
+
 const { FolderSidebar } = await import('../FolderSidebar');
 
 describe('FolderSidebar', () => {
@@ -15,6 +27,11 @@ describe('FolderSidebar', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseQuery.mockReturnValue({
+      data: { usedBytes: 2684354560, limitBytes: 10737418240, planTier: 'STARTER' },
+      isLoading: false,
+      isError: false,
+    });
   });
 
   it('renders all 6 folders', () => {
@@ -62,6 +79,7 @@ describe('FolderSidebar', () => {
   it('shows storage usage indicator', () => {
     render(<FolderSidebar {...defaultProps} />);
     expect(screen.getByText(/storage/i)).toBeInTheDocument();
+    expect(screen.getByText(/2\.5 GB of 10\.0 GB used/)).toBeInTheDocument();
   });
 
   it('supports keyboard navigation between folders', async () => {

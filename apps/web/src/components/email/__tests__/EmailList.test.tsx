@@ -4,6 +4,28 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { createMockEmail } from './email-test-utils';
 
+const mockLookupUseQuery = vi.fn();
+const mockRelatedMessagesUseQuery = vi.fn();
+
+vi.mock('@/components/tasks/TaskCreateSheet', () => ({
+  TaskCreateSheet: () => null,
+}));
+vi.mock('@/hooks/use-entity-pin', () => ({
+  useEntityPin: () => ({ isPinned: false, isLoading: false, togglePin: vi.fn(), pin: vi.fn(), unpin: vi.fn() }),
+}));
+vi.mock('@/lib/trpc', () => ({
+  trpc: {
+    email: {
+      lookupByEmail: {
+        useQuery: (...args: unknown[]) => mockLookupUseQuery(...args),
+      },
+      getRelatedMessages: {
+        useQuery: (...args: unknown[]) => mockRelatedMessagesUseQuery(...args),
+      },
+    },
+  },
+}));
+
 const { EmailList } = await import('../EmailList');
 
 describe('EmailList', () => {
@@ -27,6 +49,7 @@ describe('EmailList', () => {
 
   const defaultProps = {
     emails,
+    totalUnfilteredCount: emails.length,
     isLoading: false,
     isError: false,
     error: null as Error | null,
@@ -41,6 +64,16 @@ describe('EmailList', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockLookupUseQuery.mockReturnValue({
+      data: null,
+      isLoading: false,
+      isError: false,
+    });
+    mockRelatedMessagesUseQuery.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+    });
   });
 
   it('renders email items with sender, subject, preview, timestamp', () => {
@@ -83,7 +116,7 @@ describe('EmailList', () => {
   it('toggles filter chips', async () => {
     const user = userEvent.setup();
     render(<EmailList {...defaultProps} />);
-    const unreadChip = screen.getByRole('checkbox', { name: /unread/i });
+    const unreadChip = screen.getByRole('button', { name: /^unread$/i });
     await user.click(unreadChip);
     expect(defaultProps.onFilterChange).toHaveBeenCalledWith(
       expect.objectContaining({ unread: true })
@@ -106,24 +139,24 @@ describe('EmailList', () => {
   });
 
   it('shows empty state when no emails', () => {
-    render(<EmailList {...defaultProps} emails={[]} />);
+    render(<EmailList {...defaultProps} emails={[]} totalUnfilteredCount={0} />);
     expect(screen.getByText(/no emails/i)).toBeInTheDocument();
   });
 
   it('shows empty state for no search results', () => {
-    render(<EmailList {...defaultProps} emails={[]} searchQuery="xyz" />);
+    render(<EmailList {...defaultProps} emails={[]} totalUnfilteredCount={0} searchQuery="xyz" />);
     expect(screen.getByText(/no results/i)).toBeInTheDocument();
   });
 
   it('shows loading skeleton during fetch', () => {
-    render(<EmailList {...defaultProps} isLoading={true} emails={[]} />);
+    render(<EmailList {...defaultProps} isLoading={true} emails={[]} totalUnfilteredCount={0} />);
     const skeletons = document.querySelectorAll('.animate-pulse');
     expect(skeletons.length).toBeGreaterThan(0);
   });
 
   it('shows error state with retry', async () => {
     const user = userEvent.setup();
-    render(<EmailList {...defaultProps} isError={true} error={new Error('Fail')} emails={[]} />);
+    render(<EmailList {...defaultProps} isError={true} error={new Error('Fail')} emails={[]} totalUnfilteredCount={0} />);
     expect(screen.getByText(/failed to load/i)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /retry/i }));
     expect(defaultProps.onRetry).toHaveBeenCalled();

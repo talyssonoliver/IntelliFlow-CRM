@@ -1,9 +1,16 @@
 'use client';
 
 import { useCallback, useRef } from 'react';
-import { Search, AlertCircle, RotateCcw, Inbox } from 'lucide-react';
+import { AlertCircle, RotateCcw, Inbox, FilterX } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SearchFilterBar } from '@/components/shared';
 import { EmailListItem } from './EmailListItem';
+
+const FILTER_CHIPS = [
+  { id: 'all', label: 'All' },
+  { id: 'unread', label: 'Unread' },
+  { id: 'attachments', label: 'Attachments' },
+];
 
 interface EmailData {
   id: string;
@@ -13,6 +20,7 @@ interface EmailData {
   from: { address: string; name?: string };
   receivedAt: string;
   isRead: boolean;
+  labels?: string[];
   attachments: Array<{ filename: string; contentType: string; size: number; checksum: string }>;
 }
 
@@ -23,6 +31,8 @@ interface EmailFilters {
 
 interface EmailListProps {
   emails: EmailData[];
+  /** Count of emails before client-side filters (unread/attachments) are applied. */
+  totalUnfilteredCount: number;
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
@@ -38,6 +48,7 @@ interface EmailListProps {
 
 export function EmailList({
   emails,
+  totalUnfilteredCount,
   isLoading,
   isError,
   error: _error,
@@ -51,6 +62,18 @@ export function EmailList({
   className,
 }: Readonly<EmailListProps>) {
   const listRef = useRef<HTMLDivElement>(null);
+
+  const activeChip = filters.unread ? 'unread' : filters.hasAttachments ? 'attachments' : 'all';
+
+  const handleChipChange = useCallback(
+    (chipId: string) => {
+      onFilterChange({
+        unread: chipId === 'unread',
+        hasAttachments: chipId === 'attachments',
+      });
+    },
+    [onFilterChange]
+  );
 
   const handleListKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
@@ -111,68 +134,47 @@ export function EmailList({
     );
   }
 
+  const isFilteredEmpty = emails.length === 0 && totalUnfilteredCount > 0;
+
   return (
     <div className={cn('flex w-80 flex-col border-r border-border', className)}>
-      {/* Search bar */}
-      <div className="p-3" role="search">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search emails..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full rounded-md border border-input bg-transparent py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-        </div>
-
-        {/* Filter chips */}
-        <div className="mt-2 flex gap-1.5">
-          <label
-            className={cn(
-              'inline-flex cursor-pointer items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs transition-colors',
-              filters.unread ? 'border-primary bg-primary/10 text-primary' : 'border-border'
-            )}
-          >
-            <input
-              type="checkbox"
-              aria-label="Unread"
-              checked={filters.unread}
-              onChange={() => onFilterChange({ ...filters, unread: !filters.unread })}
-              className="sr-only"
-            />{' '}
-            Unread
-          </label>
-          <label
-            className={cn(
-              'inline-flex cursor-pointer items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs transition-colors',
-              filters.hasAttachments ? 'border-primary bg-primary/10 text-primary' : 'border-border'
-            )}
-          >
-            <input
-              type="checkbox"
-              aria-label="Has Attachments"
-              checked={filters.hasAttachments}
-              onChange={() =>
-                onFilterChange({
-                  ...filters,
-                  hasAttachments: !filters.hasAttachments,
-                })
-              }
-              className="sr-only"
-            />{' '}
-            Has Attachments
-          </label>
-        </div>
-      </div>
+      {/* Search & filter bar */}
+      <SearchFilterBar
+        searchValue={searchQuery}
+        onSearchChange={onSearchChange}
+        searchPlaceholder="Search emails..."
+        searchAriaLabel="Search emails"
+        filterChips={
+          totalUnfilteredCount > 0
+            ? { options: FILTER_CHIPS, value: activeChip, onChange: handleChipChange }
+            : undefined
+        }
+        className="rounded-none border-0 border-b border-border shadow-none px-2 py-3.5 gap-3"
+      />
 
       {/* Email list */}
       {emails.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 p-4">
-          <Inbox className="h-10 w-10 text-muted-foreground/50" />
-          <p className="text-sm text-muted-foreground">
-            {searchQuery ? 'No results found' : 'No emails in this folder'}
-          </p>
+          {isFilteredEmpty ? (
+            <>
+              <FilterX className="h-10 w-10 text-muted-foreground/50" />
+              <p className="text-sm text-muted-foreground">No emails match current filters</p>
+              <button
+                type="button"
+                className="text-xs text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring rounded"
+                onClick={() => onFilterChange({ unread: false, hasAttachments: false })}
+              >
+                Clear filters
+              </button>
+            </>
+          ) : (
+            <>
+              <Inbox className="h-10 w-10 text-muted-foreground/50" />
+              <p className="text-sm text-muted-foreground">
+                {searchQuery ? 'No results found' : 'No emails in this folder'}
+              </p>
+            </>
+          )}
         </div>
       ) : (
         <div // NOSONAR — custom keyboard-navigable email list widget; role="listbox" is the correct ARIA pattern; replacing with <select multiple> would break the rich visual design

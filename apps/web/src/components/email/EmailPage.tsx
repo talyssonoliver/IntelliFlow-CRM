@@ -1,16 +1,14 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
 import { useDebounce } from '@/hooks/useDebounce';
 import { cn } from '@/lib/utils';
-import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@intelliflow/ui';
-import { FolderSidebar } from './FolderSidebar';
+import { toast } from '@intelliflow/ui';
+import { EMAIL_LABELS } from '@/components/sidebar/configs/EmailSidebarContent';
 import { EmailList } from './EmailList';
 import { EmailThread } from './EmailThread';
-import { EmailCompose } from './EmailCompose';
-
-type ComposeMode = 'new' | 'reply' | 'replyAll' | 'forward' | null;
 
 interface EmailFilters {
   unread: boolean;
@@ -22,61 +20,119 @@ interface EmailPageProps {
   className?: string;
 }
 
-/** Minimal email shape needed for compose/reply/forward context */
-interface EmailRecord {
-  id: string;
-  subject: string;
-  threadId?: string;
-  from: { address: string; name?: string };
-  to: Array<{ address: string; name?: string }>;
-  htmlBody?: string;
-  textBody?: string;
-  receivedAt: string;
-  status: string;
-}
-
 export function EmailPage({ initialEmailId, className }: Readonly<EmailPageProps>) {
-  const [selectedFolder, setSelectedFolder] = useState('inbox');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedFolder = searchParams.get('folder') ?? 'inbox';
+  const selectedLabel = searchParams.get('label') ?? undefined;
+
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(initialEmailId ?? null);
-  const [composeMode, setComposeMode] = useState<ComposeMode>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<EmailFilters>({
     unread: false,
     hasAttachments: false,
   });
-  const [composeOriginalEmail, setComposeOriginalEmail] = useState<EmailRecord | undefined>(
-    undefined
-  );
+
+  // Clear selection and search when folder or label changes (skip initial mount)
+  const prevFolderRef = useRef(selectedFolder);
+  const prevLabelRef = useRef(selectedLabel);
+  useEffect(() => {
+    if (prevFolderRef.current !== selectedFolder || prevLabelRef.current !== selectedLabel) {
+      prevFolderRef.current = selectedFolder;
+      prevLabelRef.current = selectedLabel;
+      setSelectedEmailId(null);
+      setSearchQuery('');
+      setFilters({ unread: false, hasAttachments: false });
+    }
+  }, [selectedFolder, selectedLabel]);
 
   const debouncedSearch = useDebounce(searchQuery, 300);
 
-  // Fetch emails for current folder
+  // Fetch emails for current folder/label
   const emailsQuery = trpc.email.listEmails.useQuery({
-    folder: selectedFolder,
+    folder: selectedLabel ? undefined : selectedFolder,
+    label: selectedLabel,
     search: debouncedSearch || undefined,
   });
 
+  // Apply client-side filters (unread / has attachments)
+  const allEmails = useMemo(
+    () =>
+      (emailsQuery.data?.emails ?? []).map((e) => ({
+        ...e,
+        isRead: e.isRead ?? false,
+        attachments: e.attachments.map((a) => ({ ...a, checksum: '' })),
+      })),
+    [emailsQuery.data?.emails]
+  );
+
+  const filteredEmails = useMemo(() => {
+    let result = allEmails;
+    if (filters.unread) {
+      result = result.filter((e) => !e.isRead);
+    }
+    if (filters.hasAttachments) {
+      result = result.filter((e) => e.attachments.length > 0);
+    }
+    return result;
+  }, [allEmails, filters]);
+
   // Fetch thread for selected email
   const selectedEmail = emailsQuery.data?.emails?.find((e) => e.id === selectedEmailId);
-  const threadId = selectedEmail?.threadId || selectedEmailId;
+  const realThreadId = selectedEmail?.threadId;
+  const threadId = realThreadId || selectedEmailId;
 
   const threadQuery = trpc.email.getThread.useQuery(
     { threadId: threadId! },
     { enabled: !!threadId }
   );
 
-  // Fetch unread counts per folder (refreshed every 30s)
-  const unreadQuery = trpc.email.getUnreadCounts.useQuery(
-    {},
-    {
-      refetchInterval: 30_000,
-    }
-  );
-
-  // Mark email as read after 800ms (common email client convention)
+  // Mutations
+  const utils = trpc.useUtils();
   const markAsReadMutation = trpc.email.markAsRead.useMutation({
     onSuccess: () => {
-      unreadQuery.refetch();
+      void utils.email.listEmails.invalidate();
+      void utils.email.getUnreadCounts.invalidate();
+    },
+  });
+
+  const processEmailMutation = trpc.email.processEmail.useMutation({
+    onSuccess: (_data, variables) => {
+      setSelectedEmailId(null);
+      void utils.email.listEmails.invalidate();
+      void utils.email.getUnreadCounts.invalidate();
+      const actionLabels: Record<string, string> = {
+        archive: 'Email archived',
+        delete: 'Email moved to trash',
+        permanentDelete: 'Email permanently deleted',
+        spam: 'Email marked as spam',
+      };
+      toast({ title: actionLabels[variables.action] ?? 'Email processed' });
+    },
+    onError: () => {
+      toast({ title: 'Failed to process email', variant: 'destructive' });
+    },
+  });
+
+  const setLabelsMutation = trpc.email.setLabels.useMutation({
+    onSuccess: () => {
+      void utils.email.listEmails.invalidate();
+      toast({ title: 'Labels updated' });
+    },
+    onError: () => {
+      toast({ title: 'Failed to update labels', variant: 'destructive' });
+    },
+  });
+
+  const markAsUnreadMutation = trpc.email.markAsUnread.useMutation({
+    onSuccess: () => {
+      setSelectedEmailId(null);
+      void utils.email.listEmails.invalidate();
+      void utils.email.getUnreadCounts.invalidate();
+      toast({ title: 'Email marked as unread' });
+    },
+    onError: () => {
+      toast({ title: 'Failed to mark email as unread', variant: 'destructive' });
     },
   });
 
@@ -85,7 +141,7 @@ export function EmailPage({ initialEmailId, className }: Readonly<EmailPageProps
     const timer = setTimeout(() => {
       markAsReadMutation.mutate({
         emailId: selectedEmailId,
-        threadId: threadId ?? undefined,
+        threadId: realThreadId ?? undefined,
       });
     }, 800);
     return () => clearTimeout(timer);
@@ -94,73 +150,78 @@ export function EmailPage({ initialEmailId, className }: Readonly<EmailPageProps
   // Keyboard shortcut: 'c' to compose
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      // Don't trigger if typing in an input or contenteditable
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
         return;
       }
       if (e.key === 'c' && !e.ctrlKey && !e.metaKey) {
-        setComposeMode('new');
+        router.push('/email/compose');
       }
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, []);
-
-  const handleCompose = useCallback(() => {
-    setComposeMode('new');
-    setComposeOriginalEmail(undefined);
-  }, []);
+  }, [router]);
 
   const handleReply = useCallback(
     (messageId: string) => {
-      const msg = threadQuery.data?.emails?.find((e) => e.id === messageId);
-      setComposeOriginalEmail(msg);
-      setComposeMode('reply');
+      router.push(`/email/compose?mode=reply&emailId=${messageId}`);
     },
-    [threadQuery.data]
+    [router]
   );
 
   const handleReplyAll = useCallback(
     (messageId: string) => {
-      const msg = threadQuery.data?.emails?.find((e) => e.id === messageId);
-      setComposeOriginalEmail(msg);
-      setComposeMode('replyAll');
+      router.push(`/email/compose?mode=replyAll&emailId=${messageId}`);
     },
-    [threadQuery.data]
+    [router]
   );
 
   const handleForward = useCallback(
     (messageId: string) => {
-      const msg = threadQuery.data?.emails?.find((e) => e.id === messageId);
-      setComposeOriginalEmail(msg);
-      setComposeMode('forward');
+      router.push(`/email/compose?mode=forward&emailId=${messageId}`);
     },
-    [threadQuery.data]
+    [router]
   );
 
-  const handleDiscardCompose = useCallback(() => {
-    setComposeMode(null);
-    setComposeOriginalEmail(undefined);
-  }, []);
+  const handleArchive = useCallback(() => {
+    if (!selectedEmailId) return;
+    processEmailMutation.mutate({ emailId: selectedEmailId, action: 'archive' });
+  }, [selectedEmailId, processEmailMutation]);
+
+  const handleDelete = useCallback(() => {
+    if (!selectedEmailId) return;
+    const action = selectedFolder === 'trash' ? 'permanentDelete' : 'delete';
+    processEmailMutation.mutate({ emailId: selectedEmailId, action });
+  }, [selectedEmailId, selectedFolder, processEmailMutation]);
+
+  const handleMarkUnread = useCallback(() => {
+    if (!selectedEmailId) return;
+    markAsUnreadMutation.mutate({
+      emailId: selectedEmailId,
+      threadId: realThreadId ?? undefined,
+    });
+  }, [selectedEmailId, realThreadId, markAsUnreadMutation]);
+
+  const handleSetLabels = useCallback(
+    (labels: string[]) => {
+      if (!selectedEmailId) return;
+      setLabelsMutation.mutate({ emailId: selectedEmailId, labels });
+    },
+    [selectedEmailId, setLabelsMutation]
+  );
+
+  const handleInlineSent = useCallback(() => {
+    void utils.email.listEmails.invalidate();
+    void threadQuery.refetch();
+    toast({ title: 'Reply sent' });
+  }, [utils, threadQuery]);
 
   return (
-    <div className={cn('flex h-[calc(100vh-4rem)] md:flex dark:bg-background', className)}>
-      {/* Left: Folder sidebar */}
-      <FolderSidebar
-        activeFolder={selectedFolder}
-        onFolderSelect={setSelectedFolder}
-        onCompose={handleCompose}
-        unreadCounts={unreadQuery.data ?? {}}
-      />
-
-      {/* Middle: Email list */}
+    <div className={cn('flex h-full dark:bg-background', className)}>
+      {/* Email list */}
       <EmailList
-        emails={(emailsQuery.data?.emails ?? []).map((e) => ({
-          ...e,
-          isRead: e.isRead ?? false,
-          attachments: e.attachments.map((a) => ({ ...a, checksum: '' })),
-        }))}
+        emails={filteredEmails}
+        totalUnfilteredCount={allEmails.length}
         isLoading={emailsQuery.isLoading}
         isError={emailsQuery.isError}
         error={emailsQuery.error as Error | null}
@@ -173,7 +234,7 @@ export function EmailPage({ initialEmailId, className }: Readonly<EmailPageProps
         filters={filters}
       />
 
-      {/* Right: Thread view */}
+      {/* Thread view */}
       <EmailThread
         thread={
           threadQuery.data
@@ -187,37 +248,16 @@ export function EmailPage({ initialEmailId, className }: Readonly<EmailPageProps
             : null
         }
         isLoading={threadQuery.isLoading}
+        labels={selectedEmail?.labels ?? []}
+        onLabelsChange={handleSetLabels}
         onReply={handleReply}
         onReplyAll={handleReplyAll}
         onForward={handleForward}
+        onArchive={handleArchive}
+        onDelete={handleDelete}
+        onMarkUnread={handleMarkUnread}
+        onInlineSent={handleInlineSent}
       />
-
-      {/* Compose: Sheet panel from bottom — keeps thread fully visible */}
-      <Sheet
-        open={!!composeMode}
-        onOpenChange={(open) => {
-          if (!open) handleDiscardCompose();
-        }}
-      >
-        <SheetContent
-          side="bottom"
-          className="h-[55vh] flex flex-col p-0 gap-0"
-          aria-label="Compose email"
-        >
-          <SheetTitle className="sr-only">Compose email</SheetTitle>
-          <SheetDescription className="sr-only">
-            Compose a new email or respond to an existing message.
-          </SheetDescription>
-          {composeMode && (
-            <EmailCompose
-              mode={composeMode}
-              originalEmail={composeOriginalEmail}
-              onDiscard={handleDiscardCompose}
-              onSent={handleDiscardCompose}
-            />
-          )}
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }

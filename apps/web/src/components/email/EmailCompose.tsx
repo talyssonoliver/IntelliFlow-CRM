@@ -25,6 +25,8 @@ interface OriginalEmail {
 interface EmailComposeProps {
   mode: ComposeMode;
   originalEmail?: OriginalEmail;
+  /** Pre-filled recipients for new compose (e.g. from hover card "Email" action) */
+  initialTo?: Recipient[];
   onDiscard: () => void;
   onSent?: () => void;
   className?: string;
@@ -64,15 +66,24 @@ function getDefaultRecipients(
   return { to: [], cc: [] };
 }
 
+/** Tracked formatting commands for active state detection */
+const TRACKED_COMMANDS = [
+  'bold',
+  'italic',
+  'underline',
+  'insertOrderedList',
+  'insertUnorderedList',
+] as const;
+
 export function EmailCompose({
   mode,
   originalEmail,
+  initialTo,
   onDiscard,
   onSent,
   className,
 }: Readonly<EmailComposeProps>) {
   // Forward mode: set initial body with quoted content
-  // Must be computed before useState so it can be used as the initial value
   const initialBody =
     mode === 'forward' && originalEmail?.htmlBody
       ? `<br><br><div style="border-left:2px solid #ccc;padding-left:8px;color:#666">
@@ -83,23 +94,67 @@ export function EmailCompose({
 
   const defaults = getDefaultRecipients(mode, originalEmail);
 
-  const [toRecipients, setToRecipients] = useState<Recipient[]>(defaults.to);
+  const [toRecipients, setToRecipients] = useState<Recipient[]>(initialTo && initialTo.length > 0 ? initialTo : defaults.to);
   const [ccRecipients, setCcRecipients] = useState<Recipient[]>(defaults.cc);
   const [bccRecipients, setBccRecipients] = useState<Recipient[]>([]);
   const [showCc, setShowCc] = useState(defaults.cc.length > 0);
   const [showBcc, setShowBcc] = useState(false);
   const [subject, setSubject] = useState(getDefaultSubject(mode, originalEmail?.subject));
   const [attachments, setAttachments] = useState<File[]>([]);
-  const [activeFormats] = useState<string[]>([]);
+  const [activeFormats, setActiveFormats] = useState<string[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const [statusMessage, setStatusMessage] = useState('');
   const [bodyHtml, setBodyHtml] = useState(initialBody);
   const [draftId, setDraftId] = useState<string | undefined>(undefined);
 
   const bodyRef = useRef<HTMLDivElement>(null);
+  /** Saved selection range for restoring after toolbar interactions */
+  const savedSelectionRef = useRef<Range | null>(null);
 
   const sendMutation = trpc.email.sendEmail.useMutation();
   const draftMutation = trpc.email.saveDraft.useMutation();
+
+  // Track active formatting state on selection changes
+  useEffect(() => {
+    const updateFormats = () => {
+      // Only update if focus is within the editor
+      const sel = window.getSelection();
+      if (!sel || !bodyRef.current?.contains(sel.anchorNode)) return;
+
+      const formats: string[] = [];
+      try {
+        for (const cmd of TRACKED_COMMANDS) {
+          if (document.queryCommandState(cmd)) {
+            formats.push(cmd);
+          }
+        }
+      } catch {
+        /* queryCommandState can throw in edge cases */
+      }
+      setActiveFormats(formats);
+    };
+
+    document.addEventListener('selectionchange', updateFormats);
+    return () => document.removeEventListener('selectionchange', updateFormats);
+  }, []);
+
+  /** Save the current selection so it can be restored after losing focus */
+  const saveSelection = useCallback(() => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0 && bodyRef.current?.contains(sel.anchorNode)) {
+      savedSelectionRef.current = sel.getRangeAt(0).cloneRange();
+    }
+  }, []);
+
+  /** Restore a previously saved selection */
+  const restoreSelection = useCallback(() => {
+    const range = savedSelectionRef.current;
+    if (range) {
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+    }
+  }, []);
 
   const getBodyHtml = useCallback((): string => {
     return bodyRef.current?.innerHTML || '';
@@ -162,21 +217,90 @@ export function EmailCompose({
     }
   }, [draftMutation, draftId, toRecipients, subject, getBodyHtml]);
 
-  const handleFormat = useCallback((command: string) => {
-    document.execCommand(command, false); // NOSONAR typescript:S1874
+  /**
+   * Execute a formatting command on the editor.
+   * For createLink, a URL value must be provided.
+   * The toolbar buttons use onMouseDown={preventDefault} to keep the
+   * editor selection alive, so we can just execCommand directly.
+   */
+  const handleFormat = useCallback((command: string, value?: string) => {
+    // Restore selection in case it was lost
+    restoreSelection();
     bodyRef.current?.focus();
-  }, []);
+
+    if (command === 'createLink' && value) {
+      document.execCommand('createLink', false, value);
+    } else if (command === 'createLink') {
+      // No URL provided — ignore
+      return;
+    } else {
+      document.execCommand(command, false); // NOSONAR typescript:S1874
+    }
+
+    // Update active formats immediately after command
+    const formats: string[] = [];
+    try {
+      for (const cmd of TRACKED_COMMANDS) {
+        if (document.queryCommandState(cmd)) {
+          formats.push(cmd);
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+    setActiveFormats(formats);
+  }, [restoreSelection]);
+
+  const contactLookup = trpc.email.searchContacts.useQuery(
+    { query: toRecipients[0]?.email ?? '', limit: 1 },
+    { enabled: toRecipients.length > 0 && (toRecipients[0]?.email?.length ?? 0) >= 2 }
+  );
+
+  const resolveVariables = useCallback(
+    (text: string): string => {
+      const contact = (contactLookup.data as Array<{ firstName: string; lastName: string; email: string; company: string | null }> | undefined)?.[0];
+      if (!contact) {
+        // Fall back to recipient info if no contact found
+        const r = toRecipients[0];
+        if (!r) return text;
+        return text
+          .replaceAll('{{name}}', r.name || r.email)
+          .replaceAll('{{email}}', r.email)
+          .replaceAll('{{contact.name}}', r.name || r.email)
+          .replaceAll('{{contact.email}}', r.email);
+      }
+      const fullName = `${contact.firstName} ${contact.lastName}`.trim();
+      const replacements: Record<string, string> = {
+        '{{firstName}}': contact.firstName,
+        '{{lastName}}': contact.lastName,
+        '{{name}}': fullName,
+        '{{email}}': contact.email,
+        '{{company}}': contact.company || '',
+        '{{contact.name}}': fullName,
+        '{{contact.firstName}}': contact.firstName,
+        '{{contact.lastName}}': contact.lastName,
+        '{{contact.email}}': contact.email,
+        '{{contact.company}}': contact.company || '',
+      };
+      let result = text;
+      for (const [key, value] of Object.entries(replacements)) {
+        result = result.replaceAll(key, value);
+      }
+      return result;
+    },
+    [contactLookup.data, toRecipients]
+  );
 
   const handleTemplateSelect = useCallback(
     (template: { body: string; subject: string }) => {
       if (bodyRef.current) {
-        bodyRef.current.innerHTML = DOMPurify.sanitize(template.body);
+        bodyRef.current.innerHTML = DOMPurify.sanitize(resolveVariables(template.body));
       }
       if (!subject) {
-        setSubject(template.subject);
+        setSubject(resolveVariables(template.subject));
       }
     },
-    [subject]
+    [subject, resolveVariables]
   );
 
   const handleBodyKeyDown = useCallback(
@@ -202,6 +326,18 @@ export function EmailCompose({
   const handleBodyInput = useCallback(() => {
     setBodyHtml(bodyRef.current?.innerHTML ?? '');
   }, []);
+
+  // Save selection on mouseup/keyup in the editor for toolbar interactions
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (!el) return;
+    el.addEventListener('mouseup', saveSelection);
+    el.addEventListener('keyup', saveSelection);
+    return () => {
+      el.removeEventListener('mouseup', saveSelection);
+      el.removeEventListener('keyup', saveSelection);
+    };
+  }, [saveSelection]);
 
   // Auto-save draft after 2s debounce when body changes
   const debouncedBody = useDebounce(bodyHtml, 2000);
@@ -345,7 +481,7 @@ export function EmailCompose({
       <FormatToolbar onFormat={handleFormat} activeFormats={activeFormats} />
 
       {/* Body */}
-      <div className="flex-1 px-4 py-2">
+      <div className="flex-1 overflow-y-auto px-4 py-2">
         <label className="sr-only" htmlFor="compose-body">
           Message body
         </label>
@@ -358,7 +494,7 @@ export function EmailCompose({
           aria-multiline="true"
           contentEditable
           suppressContentEditableWarning
-          className="min-h-[120px] text-sm focus:outline-none"
+          className="min-h-[120px] text-sm focus:outline-none prose prose-sm max-w-none"
           onKeyDown={handleBodyKeyDown}
           onInput={handleBodyInput}
           dangerouslySetInnerHTML={initialBody ? { __html: initialBody } : undefined}
@@ -417,7 +553,6 @@ export function EmailCompose({
             aria-label="Attach file"
             className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
             onClick={() => {
-              // Trigger attachment manager — add empty file picker logic
               const input = document.createElement('input');
               input.type = 'file';
               input.multiple = true;
