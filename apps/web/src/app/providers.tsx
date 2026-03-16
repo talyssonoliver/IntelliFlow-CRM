@@ -2,10 +2,12 @@
 
 import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from '@tanstack/react-query';
 import { httpBatchLink, splitLink, createWSClient, wsLink } from '@trpc/client';
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { trpc } from '@/lib/trpc';
 import { AuthProvider } from '@/lib/auth';
+import { TimezoneProvider } from '@/providers/TimezoneProvider';
 import { RemindersProvider } from '@/lib/cases/reminders-context';
+import { AUTH_TOKEN_CHANGED_EVENT, clearTokenCookie } from '@/lib/shared/session-cleanup';
 // NOTE: We use a custom tRPC setup instead of TRPCProvider from @intelliflow/api-client
 // because we need:
 // - WebSocket support for real-time subscriptions
@@ -54,7 +56,7 @@ function isTokenValid(token: string | null): boolean {
       console.log('[Auth] Token expired or expiring soon, clearing...');
       // Clear expired token
       localStorage.removeItem('accessToken');
-      document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      clearTokenCookie();
     }
 
     return isValid;
@@ -62,6 +64,7 @@ function isTokenValid(token: string | null): boolean {
     // Invalid token format
     console.log('[Auth] Invalid token format, clearing...');
     localStorage.removeItem('accessToken');
+    clearTokenCookie();
     return false;
   }
 }
@@ -97,6 +100,25 @@ function getWsUrl() {
 // Singleton WebSocket client (created once per browser session)
 let wsClient: ReturnType<typeof createWSClient> | null = null;
 
+function closeWsClientConnection() {
+  if (!wsClient) return;
+
+  void wsClient.close().catch((error) => {
+    console.warn('[tRPC WS] Failed to close client cleanly:', error);
+  });
+}
+
+function disposeWsClient() {
+  const client = wsClient;
+  wsClient = null;
+
+  if (!client) return;
+
+  void client.close().catch((error) => {
+    console.warn('[tRPC WS] Failed to dispose client cleanly:', error);
+  });
+}
+
 function getWsClient() {
   if (typeof globalThis.window === 'undefined') return null;
 
@@ -105,6 +127,10 @@ function getWsClient() {
     if (wsUrl) {
       wsClient = createWSClient({
         url: wsUrl,
+        lazy: {
+          enabled: true,
+          closeMs: 30_000,
+        },
         connectionParams: () => {
           // Only include Authorization if token is valid (not expired)
           const accessToken = getValidAccessToken();
@@ -145,10 +171,26 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
 
     // Clear invalid token
     localStorage.removeItem('accessToken');
-    document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    clearTokenCookie();
 
     // Redirect to login
     globalThis.location.href = '/login';
+  }, []);
+
+  useEffect(() => {
+    if (typeof globalThis.window === 'undefined') return;
+
+    const handleTokenChanged = () => {
+      console.log('[tRPC WS] Auth token changed, closing active WebSocket connection');
+      closeWsClientConnection();
+    };
+
+    globalThis.addEventListener(AUTH_TOKEN_CHANGED_EVENT, handleTokenChanged);
+
+    return () => {
+      globalThis.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, handleTokenChanged);
+      disposeWsClient();
+    };
   }, []);
 
   const [queryClient] = useState(
@@ -259,9 +301,11 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <RemindersProvider autoStart={true} checkInterval={60000}>
-            {children}
-          </RemindersProvider>
+          <TimezoneProvider>
+            <RemindersProvider autoStart={true} checkInterval={60000}>
+              {children}
+            </RemindersProvider>
+          </TimezoneProvider>
         </AuthProvider>
       </QueryClientProvider>
     </trpc.Provider>

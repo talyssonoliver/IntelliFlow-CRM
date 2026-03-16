@@ -16,40 +16,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { decrypt, PUBLIC_ROUTES, PROTECTED_ROUTES, hasRole } from '@/lib/session';
+import { PROTECTED_ROUTE_PREFIXES, matchesRoutePrefix } from './src/lib/auth/route-protection';
 
 /**
  * Protected routes requiring authentication
  */
-const protectedPatterns = [
-  '/dashboard',
-  '/leads',
-  '/contacts',
-  '/accounts',
-  '/opportunities',
-  '/tasks',
-  '/analytics',
-  '/settings',
-  '/admin',
-  '/agent-approvals',
-  '/calendar',
-  '/billing',
-  '/governance',
-  '/notifications',
-  '/cases',
-  '/deals',
-  '/documents',
-  '/email',
-  '/profile',
-  '/tickets',
-];
-
-/**
- * Check if path matches any pattern
- */
-function matchesPattern(path: string, patterns: string[]): boolean {
-  return patterns.some((pattern) => path === pattern || path.startsWith(`${pattern}/`));
-}
-
 /**
  * Next.js 16 Proxy function for authentication
  *
@@ -79,7 +50,7 @@ export async function proxy(request: NextRequest) {
   const isPublicRoute = PUBLIC_ROUTES.includes(path);
 
   // Check if route is protected
-  const isProtectedRoute = matchesPattern(path, protectedPatterns);
+  const isProtectedRoute = matchesRoutePrefix(path, PROTECTED_ROUTE_PREFIXES);
 
   // Get accessToken from cookie (set by OAuth callback via syncTokenToCookie)
   // This is a lightweight check - full validation happens client-side

@@ -6,6 +6,7 @@ import './globals.css';
 import { Providers } from './providers';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Navigation } from '@/components/navigation';
+import { RouteAccessGate } from '@/components/auth/RouteAccessGate';
 import { CookieConsentBanner, Toaster } from '@intelliflow/ui';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -96,7 +97,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                 Skip to main content
               </a>
               <Navigation />
-              <div id="main-content">{children}</div>
+              <RouteAccessGate>
+                <div id="main-content">{children}</div>
+              </RouteAccessGate>
             </div>
             <Toaster />
             <CookieConsentBanner privacyPolicyUrl="/privacy" cookiePolicyUrl="/cookies" />

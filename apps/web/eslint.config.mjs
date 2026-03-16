@@ -48,6 +48,31 @@ export default [
       'jsx-a11y/role-supports-aria-props': 'error',
     },
   },
+  // Timezone Safety: prevent server/browser-local time usage
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'src/**/__tests__/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector: "CallExpression[callee.property.name='toLocaleDateString'][arguments.length=0]",
+          message:
+            'Bare toLocaleDateString() uses browser/server timezone. Pass locale and { timeZone } option, or use timezone-utils formatDate().',
+        },
+        {
+          selector: "CallExpression[callee.property.name='toLocaleTimeString'][arguments.length=0]",
+          message:
+            'Bare toLocaleTimeString() uses browser/server timezone. Pass locale and { timeZone } option, or use timezone-utils formatTime().',
+        },
+        {
+          selector: "CallExpression[callee.property.name='toLocaleString'][arguments.length=0]",
+          message:
+            'Bare toLocaleString() on Date uses browser/server timezone. Pass locale and { timeZone } option, or use timezone-utils formatDateTime().',
+        },
+      ],
+    },
+  },
   // Test files — allow `any` for mock flexibility (consistent with root config)
   {
     files: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'src/**/*.spec.ts', 'src/**/*.spec.tsx'],
