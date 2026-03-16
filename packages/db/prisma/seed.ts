@@ -809,6 +809,7 @@ async function seedUsers(tenantId: string) {
       name: 'Admin User',
       role: UserRole.ADMIN,
       avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+      timezone: 'Europe/London',
       tenantId,
     },
     {
@@ -817,6 +818,7 @@ async function seedUsers(tenantId: string) {
       name: 'Alex Thompson',
       role: UserRole.MANAGER,
       avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=alex',
+      timezone: 'Europe/London',
       tenantId,
     },
     // Top Performers from Dashboard widgets
@@ -6072,7 +6074,7 @@ async function seedWorkspaces() {
       isActive: true,
       settings: {
         theme: 'dark',
-        timezone: 'UTC',
+        timezone: 'Europe/London',
         notifications: { email: true, slack: true },
       },
     },
@@ -9072,6 +9074,7 @@ async function seedHomePageData(tenantId: string) {
       appointmentType: AppointmentType.MEETING,
       location: 'Zoom - https://zoom.us/j/123456789',
       notes: 'Key stakeholders: CTO and VP Engineering. Focus on real-time dashboards.',
+      timezone: 'Europe/London',
       bufferMinutesBefore: 15,
       reminderMinutes: 30,
       organizerId: user.id,
