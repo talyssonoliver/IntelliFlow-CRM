@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   APPOINTMENT_TYPE_OPTIONS,
@@ -11,6 +11,7 @@ import {
 import { ConflictWarning } from './ConflictWarning';
 import { RecurrenceEditor } from './RecurrenceEditor';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
+import { TimezoneSelector } from '@/components/settings/TimezoneSelector';
 import type {
   AppointmentDetailData,
   AppointmentFormInput,
@@ -67,9 +68,6 @@ export function AppointmentForm({
   const [eventTimezone, setEventTimezone] = useState(
     (appointment as any)?.timezone || userTimezone || 'Europe/London'
   );
-  const timezoneOptions = useMemo(() => {
-    try { return Intl.supportedValuesOf('timeZone'); } catch { return ['UTC']; }
-  }, []);
   const [attendeeIds] = useState<string[]>(appointment?.attendees?.map((a) => a.userId) || []);
   const [linkedCaseIds] = useState<string[]>(appointment?.linkedCases?.map((c) => c.caseId) || []);
   const [bufferMinutesBefore, setBufferMinutesBefore] = useState(
@@ -271,22 +269,16 @@ export function AppointmentForm({
       </div>
 
       {/* Timezone */}
-      <div>
-        <label htmlFor="appt-timezone" className="block text-sm font-medium text-gray-700 mb-1">
+      <fieldset>
+        <legend className="block text-sm font-medium text-gray-700 mb-1">
           Event Timezone
-        </label>
-        <select
-          id="appt-timezone"
+        </legend>
+        <TimezoneSelector
           value={eventTimezone}
-          onChange={(e) => setEventTimezone(e.target.value)}
+          onChange={setEventTimezone}
           disabled={isSubmitting}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"
-        >
-          {timezoneOptions.map((tz) => (
-            <option key={tz} value={tz}>{tz.replaceAll('_', ' ')}</option>
-          ))}
-        </select>
-      </div>
+        />
+      </fieldset>
 
       {/* Calendar */}
       <div>

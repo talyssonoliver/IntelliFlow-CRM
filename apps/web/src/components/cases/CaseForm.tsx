@@ -7,12 +7,13 @@
  * Sections: Case Information, Client Information, Assignment & SLA
  */
 
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import type { CasePriority } from '@intelliflow/domain';
 import { CASE_PRIORITIES } from '@intelliflow/domain';
 import { api } from '@/lib/api';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
+import { TimezoneSelector } from '@/components/settings/TimezoneSelector';
 
 // ─── Hooks ───────────────────────────────────────────────────────────────────
 
@@ -71,9 +72,6 @@ const PRIORITY_LABELS: Record<CasePriority, string> = {
 
 export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }: Readonly<CaseFormProps>) {
   const { timezone: userTimezone } = useTimezoneContext();
-  const timezoneOptions = useMemo(() => {
-    try { return Intl.supportedValuesOf('timeZone'); } catch { return ['UTC']; }
-  }, []);
   const [formData, setFormData] = useState<CaseFormData>({
     subject: initialData?.subject ?? '',
     description: initialData?.description ?? '',
@@ -496,24 +494,15 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
               className={inputClasses('deadline')}
             />
           </div>
-          <div>
-            <label
-              htmlFor="case-timezone"
-              className="block text-sm font-semibold text-foreground mb-1.5"
-            >
+          <fieldset>
+            <legend className="block text-sm font-semibold text-foreground mb-1.5">
               Deadline Timezone
-            </label>
-            <select
-              id="case-timezone"
+            </legend>
+            <TimezoneSelector
               value={formData.timezone}
-              onChange={(e) => updateField('timezone', e.target.value)}
-              className={inputClasses('timezone')}
-            >
-              {timezoneOptions.map((tz) => (
-                <option key={tz} value={tz}>{tz.replaceAll('_', ' ')}</option>
-              ))}
-            </select>
-          </div>
+              onChange={(val) => updateField('timezone', val)}
+            />
+          </fieldset>
           <div className="sm:col-span-2">
             <label
               htmlFor="jurisdiction"

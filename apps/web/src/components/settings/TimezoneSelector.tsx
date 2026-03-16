@@ -28,6 +28,11 @@ interface TimezoneSelectorProps {
 
 /** Curated fallback list when Intl.supportedValuesOf is unavailable */
 const FALLBACK_TIMEZONES = [
+  'Europe/London',
+  'Europe/Paris',
+  'Europe/Berlin',
+  'Europe/Moscow',
+  'Europe/Istanbul',
   'UTC',
   'America/New_York',
   'America/Chicago',
@@ -38,11 +43,6 @@ const FALLBACK_TIMEZONES = [
   'America/Argentina/Buenos_Aires',
   'America/Toronto',
   'America/Vancouver',
-  'Europe/London',
-  'Europe/Paris',
-  'Europe/Berlin',
-  'Europe/Moscow',
-  'Europe/Istanbul',
   'Asia/Dubai',
   'Asia/Kolkata',
   'Asia/Shanghai',
@@ -114,7 +114,7 @@ export function TimezoneSelector({ value, onChange, disabled }: Readonly<Timezon
     return groupByRegion(tzList);
   }, []);
 
-  const regionOrder = ['America', 'Europe', 'Asia', 'Africa', 'Australia', 'Pacific', 'Other'];
+  const regionOrder = ['Europe', 'America', 'Asia', 'Africa', 'Australia', 'Pacific', 'Other'];
   const sortedRegions = regionOrder.filter((r) => grouped[r]?.length);
   // Include any regions not in the predefined order
   for (const region of Object.keys(grouped)) {

@@ -10,14 +10,10 @@ import {
   Input,
   Label,
   Button,
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
   Skeleton,
   toast,
 } from '@intelliflow/ui';
+import { TimezoneSelector } from '@/components/settings/TimezoneSelector';
 
 interface QuietHoursSchedulerProps {
   className?: string;
@@ -97,14 +93,6 @@ export function QuietHoursScheduler({ className }: QuietHoursSchedulerProps) {
     mutation.mutate({ quietHours });
   };
 
-  const timezones = (() => {
-    try {
-      return Intl.supportedValuesOf('timeZone');
-    } catch {
-      return [quietHours.timezone];
-    }
-  })();
-
   return (
     <div className={className}>
       <Card>
@@ -171,24 +159,13 @@ export function QuietHoursScheduler({ className }: QuietHoursSchedulerProps) {
           </div>
 
           {/* Timezone */}
-          <div className="flex items-center gap-2">
+          <div className="space-y-1">
             <Label htmlFor="timezone">Timezone</Label>
-            <Select
+            <TimezoneSelector
               value={quietHours.timezone}
-              onValueChange={(val) => setQuietHours((prev) => ({ ...prev, timezone: val }))}
+              onChange={(val) => setQuietHours((prev) => ({ ...prev, timezone: val }))}
               disabled={!quietHours.enabled}
-            >
-              <SelectTrigger id="timezone" className="w-64">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {timezones.map((tz) => (
-                  <SelectItem key={tz} value={tz}>
-                    {tz}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
           </div>
         </CardContent>
       </Card>
