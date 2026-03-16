@@ -220,7 +220,10 @@ intelliflow.com
 │   ├── /governance/compliance            Standards tracking
 │   ├── /governance/policies              Policy management
 │   └── /governance/quality-reports       Quality assessments
-│       └── /governance/quality-reports/[reportId]  Report detail
+│       ├── /governance/quality-reports/[reportId]     Report detail
+│       ├── /governance/quality-reports/lighthouse     Lighthouse scores
+│       ├── /governance/quality-reports/coverage       Coverage trends
+│       └── /governance/quality-reports/performance    Performance benchmarks
 │
 ├── NOTIFICATIONS ────────────────────────── Layout: notifications
 │   │
@@ -263,15 +266,15 @@ intelliflow.com
 | Email                 | 2       | Inbox, detail                                  |
 | AI & Automation       | 14      | Queue + 13 sub-pages                           |
 | AI Insights           | 1       | All insights (paginated, filtered)             |
-| Analytics             | 2       | Dashboard, feedback                            |
+| Analytics             | 5       | Dashboard, feedback, weekly, monthly, quarterly |
 | Settings              | 9       | Account, team, AI, integrations, routing, etc. |
 | Billing               | 7       | Overview, checkout, subscriptions, etc.        |
-| Governance            | 6       | ADR, compliance, policies, reports             |
+| Governance            | 9       | ADR, compliance, policies, reports, lighthouse, coverage, performance |
 | Notifications         | 2       | List, settings                                 |
 | Profile               | 1       | User profile                                   |
 | Support Portal        | 1       | Support-agent ticket queue                     |
 | Support / Help Center | 1       | Self-service help center                       |
-| **Total**             | **125** |                                                |
+| **Total**             | **128** |                                                |
 
 ---
 
@@ -655,10 +658,14 @@ apps/web/src/app/
 │   ├── preview/page.tsx          # /agent-approvals/preview
 │   └── sentiment/page.tsx        # /agent-approvals/sentiment
 │
-├── analytics/(list)/             # ANALYTICS (2 pages)
+├── analytics/(list)/             # ANALYTICS (5 pages)
 │   ├── layout.tsx
 │   ├── page.tsx                  # /analytics
-│   └── feedback/page.tsx         # /analytics/feedback
+│   ├── feedback/page.tsx         # /analytics/feedback
+│   └── saved/
+│       ├── weekly/page.tsx       # /analytics/saved/weekly
+│       ├── monthly/page.tsx      # /analytics/saved/monthly
+│       └── quarterly/page.tsx    # /analytics/saved/quarterly
 │
 ├── settings/                     # SETTINGS (9 pages)
 │   ├── layout.tsx                # Settings sidebar layout

@@ -273,10 +273,13 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ### 15. Analytics & Reports (2 pages)
 
-| Route                 | Page                | Description                        |
-| --------------------- | ------------------- | ---------------------------------- |
-| `/analytics`          | Analytics Dashboard | Charts, metrics, and KPIs          |
-| `/analytics/feedback` | Feedback Analytics  | NPS/CSAT/CES metrics, trend charts |
+| Route                        | Page                      | Description                                         |
+| ---------------------------- | ------------------------- | --------------------------------------------------- |
+| `/analytics`                 | Analytics Dashboard       | Charts, metrics, and KPIs                           |
+| `/analytics/feedback`        | Feedback Analytics        | NPS/CSAT/CES metrics, trend charts                  |
+| `/analytics/saved/weekly`    | Weekly Summary            | Last 7 days: revenue, leads, pipeline trends        |
+| `/analytics/saved/monthly`   | Monthly Revenue           | Last 30 days: revenue breakdown, lead sources       |
+| `/analytics/saved/quarterly` | Q4 Performance            | Quarterly performance summary with YoY comparison   |
 
 ---
 
@@ -337,16 +340,19 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ---
 
-### 20. Governance (6 pages)
+### 20. Governance (9 pages)
 
-| Route                                    | Page                | Description                   |
-| ---------------------------------------- | ------------------- | ----------------------------- |
-| `/governance`                            | Governance Overview | Compliance dashboard          |
-| `/governance/adr`                        | ADR Registry        | Architecture Decision Records |
-| `/governance/compliance`                 | Compliance          | Compliance standards tracking |
-| `/governance/policies`                   | Policies            | Policy management             |
-| `/governance/quality-reports`            | Quality Reports     | Quality assessment reports    |
-| `/governance/quality-reports/[reportId]` | Report Detail       | Individual quality report     |
+| Route                                        | Page                | Description                              |
+| -------------------------------------------- | ------------------- | ---------------------------------------- |
+| `/governance`                                | Governance Overview | Compliance dashboard                     |
+| `/governance/adr`                            | ADR Registry        | Architecture Decision Records            |
+| `/governance/compliance`                     | Compliance          | Compliance standards tracking            |
+| `/governance/policies`                       | Policies            | Policy management                        |
+| `/governance/quality-reports`                | Quality Reports     | Quality assessment reports               |
+| `/governance/quality-reports/[reportId]`     | Report Detail       | Individual quality report                |
+| `/governance/quality-reports/lighthouse`     | Lighthouse Report   | Lighthouse scores by category            |
+| `/governance/quality-reports/coverage`       | Coverage Report     | Test coverage by metric                  |
+| `/governance/quality-reports/performance`    | Performance Report  | API response times and benchmarks        |
 
 ### 21. Support Portal (2 pages)
 

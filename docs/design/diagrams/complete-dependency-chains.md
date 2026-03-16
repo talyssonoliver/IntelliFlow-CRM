@@ -2075,6 +2075,24 @@ IFC-068 Layer Stack:
 - Dependencies: IFC-090 (FeedbackSurvey Prisma model), IFC-096 (Analytics
   sidebar + export infrastructure)
 
+## Saved Report Pages Chain (Sprint 16)
+
+```
+IFC-068 (Feedback Analytics Dashboard) ──→ PG-177 (Saved Report Pages)
+
+PG-177 Layer Stack:
+  UI: SavedReportView.tsx (shared component: period selector, MetricCards, charts, export)
+  → Pages: weekly/page.tsx, monthly/page.tsx, quarterly/page.tsx
+  → Sidebar: analytics.ts (entries already existed, pages resolve dead links)
+  → Export: csv.ts (downloadCSV) + pdf.ts (exportToPDF)
+```
+
+- **PG-177**: Three saved report pages (weekly/monthly/quarterly) under
+  `/analytics/saved/*`. Uses existing tRPC analytics endpoints (getOverview,
+  getTimeSeriesData, getSalesMetrics, growthTrends, trafficSources, exportReport).
+  Shared `SavedReportView` component with period selector and CSV/PDF export.
+- Dependencies: IFC-068 (analytics tRPC endpoints and sidebar entries)
+
 ## Project Tracker Internal Dependencies
 
 ```
@@ -2189,6 +2207,21 @@ LeadScoringRule (Prisma) → lead-settings validators → lead-settings.router �
 LeadCustomField (Prisma) → lead-settings validators → lead-settings.router → /settings/leads page
 LeadAutomationSetting (Prisma) → lead-settings validators → lead-settings.router → /settings/leads page
 ModuleSettingsLayout → /settings/leads page (reusable across all module settings)
+```
+
+---
+
+## Governance Quality Report Pages Chain (PG-176)
+
+```
+PG-015 (Quality Reports list) ✅ ──► PG-176 (Quality Report Sub-Pages) ⏳
+
+PG-015 → /governance/quality-reports (parent page, sidebar, API route)
+  └── PG-176 → /governance/quality-reports/lighthouse (Lighthouse scores by category)
+  └── PG-176 → /governance/quality-reports/coverage (Test coverage by metric)
+  └── PG-176 → /governance/quality-reports/performance (API benchmarks)
+
+Data path: CI artifacts → /api/quality-reports?action=detail&id=<type> → React client components
 ```
 
 ---

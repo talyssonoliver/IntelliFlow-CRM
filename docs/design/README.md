@@ -124,6 +124,7 @@ Pipeline Kanban). Root cause analysis revealed:
 | `sentiment-analysis` | IFC-116 | Sentiment analysis dashboard |
 | `ticket-datail` | IFC-098 | Ticket detail page (note: filename typo "datail") |
 | `tickets-sla` | IFC-098 | Support tickets with SLA monitoring and escalation alerts |
+| `workflow-progress-panel` | PG-193 | Real-time N/N step progress tracker for agent workflow runs — progress bar, per-step status icons (pending/running/completed/failed), integrated into /agent-approvals/agents and /agent-approvals/logs |
 
 ## UI Components Required (from designs)
 
