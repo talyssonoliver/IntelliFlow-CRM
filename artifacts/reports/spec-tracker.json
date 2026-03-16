@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-11T21:35:58.980Z",
+  "generated_at": "2026-03-16T18:28:31.363Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 343,
-    "completed": 333,
+    "total_specs_analyzed": 355,
+    "completed": 346,
     "partially_done": 1,
-    "spec_only": 3,
-    "uncertain": 6
+    "spec_only": 4,
+    "uncertain": 4
   },
   "status_legend": {
     "COMPLETED": "All evidence confirms task is done: attestation present, CSV=Completed, plan checkboxes done",
@@ -34,12 +34,6 @@
       "recommendation": "Investigate attestation evidence. Re-run validation if needed."
     },
     {
-      "task_id": "PG-048",
-      "severity": "HIGH",
-      "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
-      "recommendation": "Investigate attestation evidence. Re-run validation if needed."
-    },
-    {
       "task_id": "PG-050",
       "severity": "MEDIUM",
       "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
@@ -52,19 +46,13 @@
       "recommendation": "Investigate attestation evidence. Re-run validation if needed."
     },
     {
-      "task_id": "PG-161",
-      "severity": "HIGH",
-      "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
-      "recommendation": "Investigate attestation evidence. Re-run validation if needed."
-    },
-    {
       "task_id": "PG-166",
       "severity": "MEDIUM",
       "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
       "recommendation": "Run /exec PG-166 when ready for implementation."
     },
     {
-      "task_id": "PG-173",
+      "task_id": "PG-178",
       "severity": "HIGH",
       "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
       "recommendation": "Investigate attestation evidence. Re-run validation if needed."
@@ -350,13 +338,13 @@
     {
       "task_id": "DOC-010",
       "title": "Create route reconciliation script comparing conformance-statement.md routes against apps/web/src/app/ directory tree",
-      "sprint": 41,
+      "sprint": 15,
       "spec_path": ".specify/sprints/sprint-15/specifications/DOC-010-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "DOC-008"
@@ -3870,6 +3858,22 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-220",
+      "title": "AI Insight Null-State UX (Contact)  -  Add Run AI Analysis button when aiInsight is null on Contact detail page. Lead detail already done 2026-03-04. Pattern: amber dashed-border banner + button wired to scoreWithAI mutation. Invalidate query on success. Follows IFC-095 (Pattern 2  -  scope oversight). Resolves WIRE-IFC-095-001.",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/IFC-220-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-095"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
       "task_id": "IFC-222",
       "title": "Implement real Twilio SMS SDK calls (Resolves R-006)",
       "sprint": 14,
@@ -3918,6 +3922,118 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-225",
+      "title": "Convert Lead UX Fix - Backend requires QUALIFIED status but Convert button always visible. Fix: (1) Disable/hide button for non-QUALIFIED leads with guidance tooltip. (2) Add confirmation dialog before conversion. (3) Add createAccount option to conversion flow. (4) Handle conversion errors gracefully. Page: leads/[id]/page.tsx line 1169.",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/IFC-225-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-226",
+      "title": "Lead Detail Null-State UX - Fix engagement/churn/sentiment showing raw 'Unknown' string when aiInsight is null. Replace with styled 'Not analyzed' state with visual distinction from real AI data. Page: leads/[id]/page.tsx lines 588, 2258.",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/IFC-226-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-236",
+      "title": "Recent Activity Empty State CTA - Overview tab shows generic 'No activities yet' with no call to action. Add 'Log your first activity' CTA button linking to Activity tab textarea. Apply same pattern to Contact detail page. Page: leads/[id]/page.tsx line 1600.",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/IFC-236-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-237",
+      "title": "Lead Router Security - Tenant Isolation & Domain Bypass. Fix 4 CRITICAL/MEDIUM security issues: (1) scoreWithAI fire-and-forget uses raw ctx.prisma instead of prismaWithTenant - cross-tenant data leak risk [S2]. (2) logActivity $transaction uses raw ctx.prisma - may bypass tenant middleware [S3]. (3) bulkUpdateStatus uses direct Prisma updateMany bypassing Lead.changeStatus() domain validation - skips status transition rules and domain events [S4]. (4) getHotLeads/getReadyForQualification pass userId as ownerId without explicit tenantId [S9]. Fix: Replace ctx.prisma with prismaWithTenant in all cases. Route bulkUpdateStatus through domain model. Add explicit tenantId to hot/ready queries.",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/IFC-237-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-252",
+      "title": "Contact Router Security — Tenant Isolation Fixes. CRITICAL: (1) search procedure has no createTenantWhereClause — cross-tenant search by name/email (R-02). (2) logActivity transaction uses raw ctx.prisma with no tenantId in WHERE — cross-tenant update (R-03). (3) bulkEmail/bulkExport no tenant filter — email exfiltration via guessed UUIDs (R-04). (4) stats ignores typedCtx tenant — no tenantId boundary (R-05). (5) getById/getByEmail double-fetch through unscoped domain repo (R-06). Cross-ref: R-01 (prismaWithTenant raw) is cross-cutting and shared with IFC-237. Audit: docs/audit/contact-detail-wiring-audit.md §15.",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/IFC-252-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-253",
+      "title": "Contact Detail NaN Fix + Auth Guard + Status Enum. CRITICAL: (1) NaN% division by zero — emailsOpened/emailsSent at line 1319 renders 'NaN%' when emailsSent=0 (F-01). (2) Create contact page missing useRequireAuth() — unauthenticated access (F-07). (3) Status enum truncated to 3 values in ContactList/ContactCard (ACTIVE/INACTIVE/ARCHIVED) but create form allows 6 values — unknown status crashes detail page statusConfig (F-08). Audit: docs/audit/contact-detail-wiring-audit.md §16.",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/IFC-253-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-254",
+      "title": "Contact Router Data Integrity Fixes. (1) Raw SQL in getTimeline has no tenant filter and .catch(() => []) swallows errors (R-09). (2) sortBy accepts arbitrary strings — enum whitelist needed (R-10). (3) filterOptions ignores status input (R-12). (4) contactListResponseSchema uses 'data' key but router returns 'contacts' (D-03). (5) phone non-nullable in response schema but mapper returns null (D-08/R-14). Audit: docs/audit/contact-detail-wiring-audit.md §15,§18.",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/IFC-254-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": false,
+      "csv_status": "Plan Complete",
+      "metric_status": "PLANNED",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-267",
+      "title": "Account Detail No-Op Action Buttons. Wire 6 non-functional buttons: (1) Create Deal button no onClick (F-05, AccountDetail.tsx:229). (2) Add Contact button no onClick in overview (F-06, AccountDetail.tsx:233). (3-4) Add Contact buttons no onClick in contacts tab header and empty state (F-07/F-08, AccountContactsList.tsx:61,85). (5-6) Create Opportunity buttons no onClick in opportunities tab header and empty state (F-10/F-11, AccountOpportunitiesList.tsx:68,116). Each button should open the appropriate create form or association dialog with accountId pre-filled. Audit: docs/audit/account-detail-wiring-audit.md sections 3-5.",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/IFC-267-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
       "task_id": "IFC-296",
       "title": "Queue Scheduler Administration — Implement queuesAdmin tRPC router with live BullMQ stats and scheduler CRUD (list/pause/resume/retry/delete), wire to /agent-approvals/agents page. Replace stub router with live Redis/BullMQ data. Add queue health panel to ActiveAgentsDashboard showing scheduler cron patterns, queue counts, and action buttons.",
       "sprint": 15,
@@ -3932,6 +4048,23 @@
         "IFC-015",
         "IFC-197",
         "PG-151"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-297",
+      "title": "AI Monitoring Data Persistence — Replace in-memory singleton monitoring data (driftDetector, latencyMonitor, hallucinationChecker, roiTracker) with DB-backed persistence via new AIMonitoringEvent model. Add ai-worker flush service to write metrics to DB periodically. Rewrite monitoring router to query DB instead of in-process singletons. Enables multi-process deployments to share monitoring data.",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/IFC-297-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-015",
+        "IFC-025"
       ],
       "real_status": "COMPLETED"
     },
@@ -4762,7 +4895,7 @@
       "dependencies": [
         "PG-046"
       ],
-      "real_status": "UNCERTAIN"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-050",
@@ -5376,7 +5509,7 @@
         "PG-129",
         "IFC-183"
       ],
-      "real_status": "UNCERTAIN"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-162",
@@ -5558,7 +5691,7 @@
         "IFC-189",
         "IFC-093"
       ],
-      "real_status": "UNCERTAIN"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-174",
@@ -5566,13 +5699,45 @@
       "sprint": 16,
       "spec_path": ".specify/sprints/sprint-16/specifications/PG-174-spec.md",
       "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-157"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-176",
+      "title": "Governance Quality Report Sub-Pages - Lighthouse Coverage and Performance views",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/PG-176-spec.md",
+      "has_spec": true,
       "has_plan": false,
       "has_attestation": false,
       "csv_status": "Spec Complete",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
-        "IFC-157"
+        "PG-015"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "PG-177",
+      "title": "Analytics Saved Report Pages - Weekly Monthly and Quarterly views",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/PG-177-spec.md",
+      "has_spec": true,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Spec Complete",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-068"
       ],
       "real_status": "SPEC_ONLY"
     },
@@ -5582,16 +5747,16 @@
       "sprint": 16,
       "spec_path": ".specify/sprints/sprint-16/specifications/PG-178-spec.md",
       "has_spec": true,
-      "has_plan": false,
-      "has_attestation": false,
-      "csv_status": "Planning",
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-104",
         "IFC-076"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "UNCERTAIN"
     },
     {
       "task_id": "PG-179",
