@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -86,7 +87,7 @@ const sentimentConfig: Record<string, { icon: string; label: string; className: 
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
-function formatRelativeTime(dateString: string) {
+function formatRelativeTime(dateString: string, timezone: string = 'UTC') {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -95,7 +96,7 @@ function formatRelativeTime(dateString: string) {
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return `${diffDays} days ago`;
   if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone });
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────────
@@ -107,6 +108,7 @@ export function ActivityTimeline({
   onLoadMore,
   onSearch,
 }: Readonly<ActivityTimelineProps>) {
+  const { timezone } = useTimezoneContext();
   const [typeFilter, setTypeFilter] = useState<ActivityType | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -270,7 +272,7 @@ export function ActivityTimeline({
                       <p className="text-xs text-slate-500 mt-1">
                         {activity.user} &bull;{' '}
                         <time dateTime={activity.timestamp}>
-                          {formatRelativeTime(activity.timestamp)}
+                          {formatRelativeTime(activity.timestamp, timezone)}
                         </time>
                       </p>
                     </div>

@@ -4,7 +4,7 @@ import React from 'react';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
-type ContactStatus = 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
+type ContactStatus = 'ACTIVE' | 'INACTIVE' | 'PROSPECT' | 'CUSTOMER' | 'FORMER_CUSTOMER';
 
 interface ContactCardContact {
   id: string;
@@ -53,11 +53,23 @@ const statusConfig: Record<ContactStatus, { label: string; className: string; ic
       'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
     icon: 'pause_circle',
   },
-  ARCHIVED: {
-    label: 'Archived',
+  PROSPECT: {
+    label: 'Prospect',
     className:
-      'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800',
-    icon: 'archive',
+      'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800',
+    icon: 'help',
+  },
+  CUSTOMER: {
+    label: 'Customer',
+    className:
+      'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800',
+    icon: 'verified',
+  },
+  FORMER_CUSTOMER: {
+    label: 'Former Customer',
+    className:
+      'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800',
+    icon: 'cancel',
   },
 };
 
@@ -67,7 +79,11 @@ export function ContactCard({ contact, onClick, onCall, onEmail, compact }: Read
   const fullName = `${contact.firstName} ${contact.lastName}`;
   const initials =
     `${contact.firstName?.[0] || ''}${contact.lastName?.[0] || ''}`.toUpperCase() || '?';
-  const status = statusConfig[contact.status] || statusConfig.ACTIVE;
+  const status = statusConfig[contact.status] ?? {
+    label: contact.status,
+    className: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
+    icon: 'help',
+  };
   const opportunities = contact._count?.opportunities ?? 0;
   const tasks = contact._count?.tasks ?? 0;
 

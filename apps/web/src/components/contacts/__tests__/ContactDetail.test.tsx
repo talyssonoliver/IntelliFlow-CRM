@@ -266,7 +266,7 @@ describe('ContactDetail', () => {
       );
 
       const emailLink = screen.getByText('sarah.connor@example.com').closest('a');
-      expect(emailLink).toHaveAttribute('href', 'mailto:sarah.connor@example.com');
+      expect(emailLink).toHaveAttribute('href', '/email/compose?to=sarah.connor%40example.com');
     });
 
     it('renders phone with tel link', () => {

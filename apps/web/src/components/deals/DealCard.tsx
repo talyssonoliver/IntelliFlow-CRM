@@ -17,6 +17,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Deal } from './types';
 import { formatCurrencyFull } from './types';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 interface DealCardProps {
   readonly deal: Deal;
@@ -24,11 +25,12 @@ interface DealCardProps {
   readonly isPending?: boolean;
 }
 
-function formatDate(dateStr: string | null): string {
+function formatDate(dateStr: string | null, timezone: string = 'UTC'): string {
   if (!dateStr) return 'No date';
   return new Date(dateStr).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
+    timeZone: timezone,
   });
 }
 
@@ -37,6 +39,7 @@ export const DealCard = React.memo(function DealCard({
   onNavigate,
   isPending,
 }: Readonly<DealCardProps>) {
+  const { timezone } = useTimezoneContext();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: deal.id,
     data: { type: 'deal', deal },
@@ -112,7 +115,7 @@ export const DealCard = React.memo(function DealCard({
         </div>
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <span className="material-symbols-outlined text-xs sm:text-sm">event</span>
-          <span>{formatDate(deal.expectedCloseDate)}</span>
+          <span>{formatDate(deal.expectedCloseDate, timezone)}</span>
         </div>
       </div>
 

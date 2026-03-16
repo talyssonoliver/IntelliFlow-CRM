@@ -17,9 +17,10 @@ interface AccountOpportunity {
 
 interface AccountOpportunitiesListProps {
   accountId: string;
+  onCreateOpportunity?: () => void;
 }
 
-export function AccountOpportunitiesList({ accountId }: Readonly<AccountOpportunitiesListProps>) {
+export function AccountOpportunitiesList({ accountId, onCreateOpportunity }: Readonly<AccountOpportunitiesListProps>) {
   const router = useRouter();
   const [cursor, setCursor] = useState<string | undefined>();
   const [stageFilter, setStageFilter] = useState<OpportunityStage | undefined>();
@@ -65,7 +66,7 @@ export function AccountOpportunitiesList({ accountId }: Readonly<AccountOpportun
           trending_up
         </span>
         <p className="text-muted-foreground">No opportunities for this account</p>
-        <Button variant="outline" size="sm" className="mt-3">
+        <Button variant="outline" size="sm" className="mt-3" onClick={onCreateOpportunity} type="button">
           <span className="material-symbols-outlined text-base mr-1">add</span>{' '}
           Create Opportunity
         </Button>
@@ -113,7 +114,7 @@ export function AccountOpportunitiesList({ accountId }: Readonly<AccountOpportun
           <option value="CLOSED_WON">Closed Won</option>
           <option value="CLOSED_LOST">Closed Lost</option>
         </select>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" onClick={onCreateOpportunity} type="button">
           <span className="material-symbols-outlined text-base mr-1">add</span>{' '}
           Create Opportunity
         </Button>

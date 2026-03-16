@@ -83,11 +83,33 @@ describe('ContactCard', () => {
       expect(screen.getByText('Inactive')).toBeInTheDocument();
     });
 
-    it('renders ARCHIVED status badge', () => {
-      const contact = createMockContact({ status: 'ARCHIVED' });
+    it('renders PROSPECT status badge', () => {
+      const contact = createMockContact({ status: 'PROSPECT' });
       render(<ContactCard contact={contact} />);
 
-      expect(screen.getByText('Archived')).toBeInTheDocument();
+      expect(screen.getByText('Prospect')).toBeInTheDocument();
+    });
+
+    it('renders CUSTOMER status badge', () => {
+      const contact = createMockContact({ status: 'CUSTOMER' });
+      render(<ContactCard contact={contact} />);
+
+      expect(screen.getByText('Customer')).toBeInTheDocument();
+    });
+
+    it('renders FORMER_CUSTOMER status badge', () => {
+      const contact = createMockContact({ status: 'FORMER_CUSTOMER' });
+      render(<ContactCard contact={contact} />);
+
+      expect(screen.getByText('Former Customer')).toBeInTheDocument();
+    });
+
+    it('handles unknown status gracefully without crashing', () => {
+      const contact = createMockContact({ status: 'UNKNOWN' as any });
+      render(<ContactCard contact={contact} />);
+
+      // Should render the raw status string as fallback label
+      expect(screen.getByText('UNKNOWN')).toBeInTheDocument();
     });
   });
 

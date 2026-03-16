@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { EntityHoverCard } from '@/components/shared/entity-hover-card';
 import {
   Card,
   Tabs,
@@ -29,7 +30,7 @@ export type TabId =
   | 'notes'
   | 'ai-insights';
 
-type ContactStatus = 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
+type ContactStatus = 'ACTIVE' | 'INACTIVE' | 'PROSPECT' | 'CUSTOMER' | 'FORMER_CUSTOMER';
 
 interface ContactOwner {
   name: string;
@@ -103,11 +104,23 @@ const statusConfig: Record<ContactStatus, { label: string; className: string; ic
     className: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400',
     icon: 'pause_circle',
   },
-  ARCHIVED: {
-    label: 'Archived',
+  PROSPECT: {
+    label: 'Prospect',
     className:
-      'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400',
-    icon: 'archive',
+      'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400',
+    icon: 'help',
+  },
+  CUSTOMER: {
+    label: 'Customer',
+    className:
+      'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400',
+    icon: 'verified',
+  },
+  FORMER_CUSTOMER: {
+    label: 'Former Customer',
+    className:
+      'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400',
+    icon: 'cancel',
   },
 };
 
@@ -218,7 +231,11 @@ export function ContactDetail({
   children,
 }: Readonly<ContactDetailProps>) {
   const fullName = `${contact.firstName} ${contact.lastName}`;
-  const status = statusConfig[contact.status] || statusConfig.ACTIVE;
+  const status = statusConfig[contact.status] ?? {
+    label: contact.status,
+    className: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
+    icon: 'help',
+  };
 
   const churnRiskData = toChurnRiskData(contact.aiInsight);
   const nbaData = toNBAData(contact.aiInsight);
@@ -324,12 +341,14 @@ export function ContactDetail({
                   </span>
                   <div>
                     <span className="text-xs text-slate-400 uppercase font-semibold">Email</span>
-                    <a
-                      href={`mailto:${contact.email}`}
-                      className="block text-sm text-slate-700 dark:text-slate-300 hover:text-primary break-all"
-                    >
-                      {contact.email}
-                    </a>
+                    <EntityHoverCard email={contact.email} displayName={`${contact.firstName} ${contact.lastName}`.trim()}>
+                      <Link
+                        href={`/email/compose?to=${encodeURIComponent(contact.email)}`}
+                        className="block text-sm text-slate-700 dark:text-slate-300 hover:text-primary break-all"
+                      >
+                        {contact.email}
+                      </Link>
+                    </EntityHoverCard>
                   </div>
                 </div>
                 {contact.phone && (

@@ -16,9 +16,10 @@ interface AccountContact {
 
 interface AccountContactsListProps {
   accountId: string;
+  onAddContact?: () => void;
 }
 
-export function AccountContactsList({ accountId }: Readonly<AccountContactsListProps>) {
+export function AccountContactsList({ accountId, onAddContact }: Readonly<AccountContactsListProps>) {
   const router = useRouter();
   const [cursor, setCursor] = useState<string | undefined>();
   const [statusFilter, setStatusFilter] = useState<ContactStatus | undefined>();
@@ -58,7 +59,7 @@ export function AccountContactsList({ accountId }: Readonly<AccountContactsListP
           person_off
         </span>
         <p className="text-muted-foreground">No contacts linked to this account</p>
-        <Button variant="outline" size="sm" className="mt-3">
+        <Button variant="outline" size="sm" className="mt-3" onClick={onAddContact} type="button">
           <span className="material-symbols-outlined text-base mr-1">person_add</span>{' '}
           Add Contact
         </Button>
@@ -82,7 +83,7 @@ export function AccountContactsList({ accountId }: Readonly<AccountContactsListP
           <option value="INACTIVE">Inactive</option>
           <option value="LEAD">Lead</option>
         </select>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" onClick={onAddContact} type="button">
           <span className="material-symbols-outlined text-base mr-1">person_add</span>{' '}
           Add Contact
         </Button>

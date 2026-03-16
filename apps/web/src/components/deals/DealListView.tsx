@@ -7,6 +7,7 @@
 
 import * as React from 'react';
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { useRouter } from 'next/navigation';
 import { ColumnDef } from '@tanstack/react-table';
 import {
@@ -61,7 +62,7 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-function formatDate(dateStr: string | null): string {
+function formatDate(dateStr: string | null, timezone: string = 'UTC'): string {
   if (!dateStr) return '-';
   const d = new Date(dateStr);
   if (Number.isNaN(d.getTime())) return '-';
@@ -69,10 +70,11 @@ function formatDate(dateStr: string | null): string {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
+    timeZone: timezone,
   });
 }
 
-function formatRelativeDate(dateStr: string): string {
+function formatRelativeDate(dateStr: string, timezone: string = 'UTC'): string {
   const d = new Date(dateStr);
   if (Number.isNaN(d.getTime())) return '-';
   const now = new Date();
@@ -82,7 +84,7 @@ function formatRelativeDate(dateStr: string): string {
   if (diffHours < 1) return 'Just now';
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone });
 }
 
 function getSortParams(sortOrder: string): { sortBy: string; sortOrder: 'asc' | 'desc' } {
@@ -177,7 +179,7 @@ interface RowActionHandlers {
   onDelete: (deal: Deal) => void;
 }
 
-function createColumns(handlers: Readonly<RowActionHandlers>): ColumnDef<Deal>[] {
+function createColumns(handlers: Readonly<RowActionHandlers>, timezone: string = 'UTC'): ColumnDef<Deal>[] {
   return [
     {
       accessorKey: 'name',
@@ -224,7 +226,7 @@ function createColumns(handlers: Readonly<RowActionHandlers>): ColumnDef<Deal>[]
       size: 110,
       cell: ({ row }) => (
         <span className="text-sm text-muted-foreground">
-          {formatDate(row.original.expectedCloseDate)}
+          {formatDate(row.original.expectedCloseDate, timezone)}
         </span>
       ),
     },
@@ -242,7 +244,7 @@ function createColumns(handlers: Readonly<RowActionHandlers>): ColumnDef<Deal>[]
       size: 100,
       cell: ({ row }) => (
         <span className="text-xs text-muted-foreground">
-          {formatRelativeDate(row.original.createdAt)}
+          {formatRelativeDate(row.original.createdAt, timezone)}
         </span>
       ),
     },
@@ -298,6 +300,7 @@ function createColumns(handlers: Readonly<RowActionHandlers>): ColumnDef<Deal>[]
 // =============================================================================
 
 export const DealListView = React.memo(function DealListView() {
+  const { timezone } = useTimezoneContext();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [stageFilter, setStageFilter] = useState<string>('');
@@ -399,7 +402,7 @@ export const DealListView = React.memo(function DealListView() {
     [router]
   );
 
-  const columns = useMemo(() => createColumns(rowActionHandlers), [rowActionHandlers]);
+  const columns = useMemo(() => createColumns(rowActionHandlers, timezone), [rowActionHandlers, timezone]);
 
   // Single deal actions
   const handleSingleDelete = useCallback(async () => {

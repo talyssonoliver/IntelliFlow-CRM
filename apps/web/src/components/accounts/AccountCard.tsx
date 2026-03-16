@@ -77,10 +77,10 @@ export interface AccountRowHandlers {
   onDelete: (id: string) => void;
 }
 
-function formatDate(date: Date | string): string {
+function formatDate(date: Date | string, timezone: string = 'UTC'): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return 'Invalid date';
-  return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+  return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: timezone });
 }
 
 function formatCompactCurrency(value: number): string {

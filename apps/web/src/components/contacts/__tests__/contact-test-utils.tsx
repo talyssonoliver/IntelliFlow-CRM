@@ -8,7 +8,7 @@ import { vi } from 'vitest';
 
 // ─── Type Definitions ───────────────────────────────────────────────────────
 
-export type ContactStatus = 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
+export type ContactStatus = 'ACTIVE' | 'INACTIVE' | 'PROSPECT' | 'CUSTOMER' | 'FORMER_CUSTOMER';
 export type ActivityType =
   | 'email'
   | 'call'

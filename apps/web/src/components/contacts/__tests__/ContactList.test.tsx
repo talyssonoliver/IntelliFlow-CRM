@@ -332,10 +332,9 @@ describe('ContactList', () => {
       windowOpen.mockRestore();
     });
 
-    it('opens mailto: link when email action clicked', async () => {
+    it('navigates to compose page when email action clicked', async () => {
       const user = userEvent.setup();
       const contacts = [createMockContact({ email: 'test@example.com' })];
-      const windowOpen = vi.spyOn(window, 'open').mockImplementation(() => null);
 
       render(
         <ContactList
@@ -352,10 +351,8 @@ describe('ContactList', () => {
 
       await user.click(screen.getByText('Send Email'));
       await waitFor(() => {
-        expect(windowOpen).toHaveBeenCalledWith('mailto:test@example.com');
+        expect(window.location.href).toContain('/email/compose?to=test%40example.com');
       });
-
-      windowOpen.mockRestore();
     });
   });
 
@@ -537,6 +534,67 @@ describe('ContactList', () => {
 
       const status = screen.getByRole('status');
       expect(status).toHaveAttribute('aria-live', 'polite');
+    });
+  });
+
+  describe('Domain Status Types (IFC-253 F-08)', () => {
+    let handlers: ReturnType<typeof createMockHandlers>;
+
+    beforeEach(() => {
+      handlers = createMockHandlers();
+      resetAllMocks(handlers);
+    });
+
+    it('accepts contacts with PROSPECT status', () => {
+      const contacts = [createMockContact({ status: 'PROSPECT' })];
+      render(
+        <ContactList
+          contacts={contacts}
+          total={1}
+          isLoading={false}
+          onRowClick={handlers.onClick}
+          onDelete={handlers.onDelete}
+          onBulkDelete={handlers.onBulkDelete}
+          onBulkEmail={handlers.onBulkEmail}
+          onBulkExport={handlers.onBulkExport}
+        />
+      );
+      // Should render without crashing
+      expect(screen.getByText('John Doe')).toBeInTheDocument();
+    });
+
+    it('accepts contacts with CUSTOMER status', () => {
+      const contacts = [createMockContact({ status: 'CUSTOMER' })];
+      render(
+        <ContactList
+          contacts={contacts}
+          total={1}
+          isLoading={false}
+          onRowClick={handlers.onClick}
+          onDelete={handlers.onDelete}
+          onBulkDelete={handlers.onBulkDelete}
+          onBulkEmail={handlers.onBulkEmail}
+          onBulkExport={handlers.onBulkExport}
+        />
+      );
+      expect(screen.getByText('John Doe')).toBeInTheDocument();
+    });
+
+    it('accepts contacts with FORMER_CUSTOMER status', () => {
+      const contacts = [createMockContact({ status: 'FORMER_CUSTOMER' })];
+      render(
+        <ContactList
+          contacts={contacts}
+          total={1}
+          isLoading={false}
+          onRowClick={handlers.onClick}
+          onDelete={handlers.onDelete}
+          onBulkDelete={handlers.onBulkDelete}
+          onBulkEmail={handlers.onBulkEmail}
+          onBulkExport={handlers.onBulkExport}
+        />
+      );
+      expect(screen.getByText('John Doe')).toBeInTheDocument();
     });
   });
 });

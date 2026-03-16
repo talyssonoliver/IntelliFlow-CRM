@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable, TableRowActions, type BulkAction, Skeleton } from '@intelliflow/ui';
+import { EntityHoverCard } from '@/components/shared/entity-hover-card';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
-type ContactStatus = 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
+type ContactStatus = 'ACTIVE' | 'INACTIVE' | 'PROSPECT' | 'CUSTOMER' | 'FORMER_CUSTOMER';
 
 interface Contact {
   id: string;
@@ -54,7 +56,7 @@ function getAvatarColor(name: string) {
   return colors[hash % colors.length];
 }
 
-function formatDate(date: Date | string): string {
+function formatDate(date: Date | string, timezone: string = 'UTC'): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return 'Invalid date';
   const now = new Date();
@@ -64,7 +66,7 @@ function formatDate(date: Date | string): string {
   if (diffHours < 1) return 'Just now';
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone });
 }
 
 // ─── Column sub-components (module-level — fixes S6478) ─────────────────────────
@@ -107,14 +109,19 @@ function ContactAccountCell({ contact }: Readonly<{ contact: Contact }>) {
 
 function ContactEmailCell({ contact }: Readonly<{ contact: Contact }>) {
   return (
-    <a
-      href={`mailto:${contact.email}`}
-      onClick={(e) => e.stopPropagation()}
-      className="text-primary hover:underline text-sm"
-      aria-label={`Send email to ${contact.firstName} ${contact.lastName}`}
+    <EntityHoverCard
+      email={contact.email}
+      displayName={`${contact.firstName} ${contact.lastName}`.trim()}
     >
-      {contact.email}
-    </a>
+      <a
+        href={`/email/compose?to=${encodeURIComponent(contact.email)}`}
+        onClick={(e) => e.stopPropagation()}
+        className="text-primary hover:underline text-sm"
+        aria-label={`Send email to ${contact.firstName} ${contact.lastName}`}
+      >
+        {contact.email}
+      </a>
+    </EntityHoverCard>
   );
 }
 
@@ -124,10 +131,10 @@ function ContactPhoneCell({ contact }: Readonly<{ contact: Contact }>) {
   );
 }
 
-function ContactAddedCell({ contact }: Readonly<{ contact: Contact }>) {
+function ContactAddedCell({ contact, timezone }: Readonly<{ contact: Contact; timezone: string }>) {
   return (
     <span className="text-sm text-slate-600 dark:text-slate-400">
-      {formatDate(contact.createdAt)}
+      {formatDate(contact.createdAt, timezone)}
     </span>
   );
 }
@@ -189,7 +196,7 @@ function ContactActionsCell({
         {
           icon: 'mail',
           label: 'Send Email',
-          onClick: () => window.open(`mailto:${contact.email}`),
+          onClick: () => { window.location.href = `/email/compose?to=${encodeURIComponent(contact.email)}`; },
         },
       ]}
       dropdownActions={[
@@ -211,7 +218,7 @@ function ContactActionsCell({
 }
 
 /** Column factory — defined at module level (not inside the component) to satisfy S6478. */
-function buildContactColumns(callbacks: ContactActionCallbacks): ColumnDef<Contact>[] {
+function buildContactColumns(callbacks: ContactActionCallbacks, timezone: string = 'UTC'): ColumnDef<Contact>[] {
   const { onDelete, onEdit, onCreateDeal, onCreateTicket, onScheduleMeeting } = callbacks;
   return [
     {
@@ -242,7 +249,7 @@ function buildContactColumns(callbacks: ContactActionCallbacks): ColumnDef<Conta
       accessorKey: 'createdAt',
       header: 'Added',
       size: 100,
-      cell: ({ row }) => <ContactAddedCell contact={row.original} />,
+      cell: ({ row }) => <ContactAddedCell contact={row.original} timezone={timezone} />,
     },
     {
       id: 'activity',
@@ -285,11 +292,12 @@ export function ContactList({
   onScheduleMeeting,
   pageSize = 10,
 }: Readonly<ContactListProps>) {
+  const { timezone } = useTimezoneContext();
   // Columns are built by a module-level factory to avoid S6478 (JSX-returning
   // functions defined inside a React component). useMemo caches the result.
   const columns = useMemo(
-    () => buildContactColumns({ onDelete, onEdit, onCreateDeal, onCreateTicket, onScheduleMeeting }),
-    [onDelete, onEdit, onCreateDeal, onCreateTicket, onScheduleMeeting]
+    () => buildContactColumns({ onDelete, onEdit, onCreateDeal, onCreateTicket, onScheduleMeeting }, timezone),
+    [onDelete, onEdit, onCreateDeal, onCreateTicket, onScheduleMeeting, timezone]
   );
 
   const bulkActions: BulkAction<Contact>[] = useMemo(
