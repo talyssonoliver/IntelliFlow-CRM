@@ -290,6 +290,39 @@ function getInsightTTL(priority: string): number {
   }
 }
 
+/**
+ * Verifies that an entity referenced by an insight still exists in the database.
+ * Returns false if the entity has been deleted/converted since the insight was generated.
+ * This prevents persisting insights with dead links that lead to "Not Found" pages.
+ */
+async function entityExists(
+  prisma: any,
+  entityType: string | null | undefined,
+  entityId: string | null | undefined,
+  tenantId: string
+): Promise<boolean> {
+  if (!entityType || !entityId) return true; // aggregate insights are always valid
+  const modelMap: Record<string, string> = {
+    lead: 'lead',
+    contact: 'contact',
+    opportunity: 'opportunity',
+    deal: 'opportunity',
+    account: 'account',
+    task: 'task',
+  };
+  const modelName = modelMap[entityType];
+  if (!modelName || !prisma[modelName]) return true; // unknown type — don't block
+  try {
+    const row = await prisma[modelName].findFirst({
+      where: { id: entityId, tenantId },
+      select: { id: true },
+    });
+    return row !== null;
+  } catch {
+    return true; // on error, don't block — let the insight through
+  }
+}
+
 /** Build a link path for an entity, with fallback for aggregate insight types */
 function buildEntityLink(entityType: string | undefined, entityId: string | undefined, insightType?: string): string | null {
   if (entityType && entityId) {
@@ -617,6 +650,20 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
     if (existingInsight) {
       // Insight already exists — skip creation
       continue;
+    }
+
+    // Verify the referenced entity still exists — entities can be deleted/converted
+    // between when the heuristic query ran and when this job processes.
+    // Prevents persisting insights with dead links (e.g. /leads/home-lead-2 → "Not Found").
+    if (insight.entityId && insight.entityType) {
+      const exists = await entityExists(prisma, insight.entityType, insight.entityId, tenantId);
+      if (!exists) {
+        logger.info(
+          { jobId: job.id, entityType: insight.entityType, entityId: insight.entityId },
+          'Skipping insight — referenced entity no longer exists'
+        );
+        continue;
+      }
     }
 
     await prisma.aIInsight.create({
