@@ -50,17 +50,17 @@ export interface TimezoneContextValue {
 }
 
 const UTC_FALLBACK: TimezoneContextValue = {
-  timezone: 'UTC',
+  timezone: 'Europe/London',
   isLoading: false,
   browserTimezone: 'UTC',
-  timezoneAbbr: 'UTC',
-  timezoneLabel: 'Coordinated Universal Time (UTC)',
-  formatDate: (input, options) => rawFormatDate(input, 'UTC', options),
-  formatTime: (input, options) => rawFormatTime(input, 'UTC', options),
-  formatDateTime: (input, options) => rawFormatDateTime(input, 'UTC', options),
-  formatDateShort: (input) => rawFormatDateShort(input, 'UTC'),
-  formatISODate: (input) => rawFormatISODate(input, 'UTC'),
-  formatTimeRange: (start, end) => rawFormatTimeRange(start, end, 'UTC'),
+  timezoneAbbr: getTimezoneAbbreviation('Europe/London'),
+  timezoneLabel: getTimezoneLabel('Europe/London'),
+  formatDate: (input, options) => rawFormatDate(input, 'Europe/London', options),
+  formatTime: (input, options) => rawFormatTime(input, 'Europe/London', options),
+  formatDateTime: (input, options) => rawFormatDateTime(input, 'Europe/London', options),
+  formatDateShort: (input) => rawFormatDateShort(input, 'Europe/London'),
+  formatISODate: (input) => rawFormatISODate(input, 'Europe/London'),
+  formatTimeRange: (start, end) => rawFormatTimeRange(start, end, 'Europe/London'),
 };
 
 const TimezoneContext = createContext<TimezoneContextValue>(UTC_FALLBACK);

@@ -204,7 +204,7 @@ function OverallScoreCard() {
   );
 }
 
-function formatActivityTime(date: Date | string, timezone: string = 'UTC'): string {
+function formatActivityTime(date: Date | string, timezone: string = 'Europe/London'): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();

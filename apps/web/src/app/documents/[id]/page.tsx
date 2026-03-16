@@ -82,7 +82,7 @@ function mapAuditEntry(entry: RawAuditEntry, index: number, total: number): Audi
   };
 }
 
-function formatDateTime(dateString: string, timezone: string = 'UTC'): string {
+function formatDateTime(dateString: string, timezone: string = 'Europe/London'): string {
   return new Date(dateString).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -93,7 +93,7 @@ function formatDateTime(dateString: string, timezone: string = 'UTC'): string {
   });
 }
 
-function formatRelativeTime(dateString: string, timezone: string = 'UTC'): string {
+function formatRelativeTime(dateString: string, timezone: string = 'Europe/London'): string {
   const date = new Date(dateString);
   const now = new Date();
   const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));

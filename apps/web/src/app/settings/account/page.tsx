@@ -20,14 +20,14 @@ export default function AccountPage() {
     },
   });
 
-  const [selectedTimezone, setSelectedTimezone] = useState('UTC');
+  const [selectedTimezone, setSelectedTimezone] = useState('Europe/London');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
 
   useEffect(() => {
     if (profileQuery.data) {
-      setSelectedTimezone(String(profileQuery.data.timezone ?? 'UTC'));
+      setSelectedTimezone(String(profileQuery.data.timezone ?? 'Europe/London'));
       setName(String(profileQuery.data.name ?? ''));
       setEmail(String(profileQuery.data.email ?? ''));
       setRole(String(profileQuery.data.role ?? ''));

@@ -86,7 +86,7 @@ const SORT_OPTIONS = [
 // =============================================================================
 
 // Format date for display
-function formatDate(date: Date | string, timezone: string = 'UTC'): string {
+function formatDate(date: Date | string, timezone: string = 'Europe/London'): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return 'Invalid date';
 
@@ -115,7 +115,7 @@ interface RowActionHandlers {
   onDelete: (lead: Lead) => void;
 }
 
-function createColumns(handlers: RowActionHandlers, timezone: string = 'UTC'): ColumnDef<Lead>[] {
+function createColumns(handlers: RowActionHandlers, timezone: string = 'Europe/London'): ColumnDef<Lead>[] {
   return [
     {
       accessorKey: 'firstName',

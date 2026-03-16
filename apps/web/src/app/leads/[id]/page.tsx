@@ -441,7 +441,7 @@ function getCallOutcomeBadge(outcome: string | undefined): { cls: string; label:
   return { cls: 'bg-red-100 text-red-700', label: '✗ No Answer' };
 }
 
-function formatRelativeTime(dateString: string, timezone: string = 'UTC'): string {
+function formatRelativeTime(dateString: string, timezone: string = 'Europe/London'): string {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();

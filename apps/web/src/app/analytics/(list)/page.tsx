@@ -313,7 +313,7 @@ function formatCurrency(value: number): string {
   return `$${value.toLocaleString()}`;
 }
 
-function formatRelativeTime(date: Date | string, timezone: string = 'UTC'): string {
+function formatRelativeTime(date: Date | string, timezone: string = 'Europe/London'): string {
   const now = new Date();
   const d = typeof date === 'string' ? new Date(date) : date;
   const diffMs = now.getTime() - d.getTime();

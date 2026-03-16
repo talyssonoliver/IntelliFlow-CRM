@@ -286,7 +286,7 @@ const getAgentActionLabel = (status: string): string => {
 };
 
 // Format date for display
-const formatDate = (date: Date, timezone: string = 'UTC'): string => {
+const formatDate = (date: Date, timezone: string = 'Europe/London'): string => {
   const now = new Date();
   const diffDays = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
@@ -305,7 +305,7 @@ const formatDate = (date: Date, timezone: string = 'UTC'): string => {
 };
 
 // Format time for display
-const formatTime = (date: Date, timezone: string = 'UTC'): string => {
+const formatTime = (date: Date, timezone: string = 'Europe/London'): string => {
   return date.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',

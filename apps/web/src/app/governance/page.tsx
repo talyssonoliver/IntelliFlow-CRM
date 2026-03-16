@@ -43,7 +43,7 @@ const ACTION_ICON_MAP: Record<string, { icon: string; iconColor: string }> = {
   UPDATE: { icon: 'edit', iconColor: 'text-amber-500' },
 };
 
-function formatActivityTime(date: Date | string, timezone: string = 'UTC'): string {
+function formatActivityTime(date: Date | string, timezone: string = 'Europe/London'): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
