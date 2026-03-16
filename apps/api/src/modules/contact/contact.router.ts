@@ -315,22 +315,13 @@ export const contactRouter = createTRPCRouter({
    * Note: For complex includes (relations), we still use Prisma directly
    * as the service returns domain entities without ORM relations
    */
+  // IFC-252: direct tenant-scoped query replaces unscoped service pre-flight
   getById: tenantProcedure.input(z.object({ id: idSchema })).query(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
-    const contactService = getContactService(ctx);
 
-    // First verify contact exists via service
-    const result = await contactService.getContactById(input.id);
-    if (result.isFailure) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: `Contact with ID ${input.id} not found`,
-      });
-    }
-
-    // For complex includes, use Prisma to get related data (Contact 360 view)
-    const contactWithRelations = await typedCtx.prismaWithTenant.contact.findUnique({
-      where: { id: input.id },
+    // Contact 360 view — tenant-scoped findFirst (compound WHERE is not a unique constraint)
+    const contactWithRelations = await typedCtx.prismaWithTenant.contact.findFirst({
+      where: createTenantWhereClause(typedCtx.tenant, { id: input.id }),
       include: {
         owner: {
           select: {
@@ -396,8 +387,15 @@ export const contactRouter = createTRPCRouter({
       },
     });
 
+    if (!contactWithRelations) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Contact with ID ${input.id} not found`,
+      });
+    }
+
     // Derive AI insights when none exist in DB (ensures entity pages always show data)
-    if (contactWithRelations && !contactWithRelations.aiInsight) {
+    if (!contactWithRelations.aiInsight) {
       const derived = deriveContactInsights({
         lastContactedAt: contactWithRelations.lastContactedAt,
         createdAt: contactWithRelations.createdAt,
@@ -444,23 +442,15 @@ export const contactRouter = createTRPCRouter({
   /**
    * Get a contact by email using ContactService
    */
+  // IFC-252: direct tenant-scoped query replaces unscoped service pre-flight
   getByEmail: tenantProcedure
     .input(z.object({ email: z.email() }))
     .query(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
-      const contactService = getContactService(ctx);
 
-      const result = await contactService.getContactByEmail(input.email);
-      if (result.isFailure) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: `Contact with email ${input.email} not found`,
-        });
-      }
-
-      // For relations, use Prisma
+      // Tenant-scoped findFirst with ownerId filter
       const contactWithRelations = await typedCtx.prismaWithTenant.contact.findFirst({
-        where: { email: input.email },
+        where: createTenantWhereClause(typedCtx.tenant, { email: input.email }),
         include: {
           owner: {
             select: {
@@ -472,6 +462,13 @@ export const contactRouter = createTRPCRouter({
           account: true,
         },
       });
+
+      if (!contactWithRelations) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Contact with email ${input.email} not found`,
+        });
+      }
 
       return contactWithRelations;
     }),
@@ -696,16 +693,24 @@ export const contactRouter = createTRPCRouter({
   /**
    * Get contact statistics using ContactService
    */
+  // IFC-252: bypasses ContactService for tenant-scoped DB-level aggregation
   stats: tenantProcedure.query(async ({ ctx }) => {
-    const contactService = getContactService(ctx);
+    const typedCtx = getTenantContext(ctx);
+    const where = { ...createTenantWhereClause(typedCtx.tenant, {}), tenantId: typedCtx.tenant.tenantId };
 
-    const stats = await contactService.getContactStatistics(ctx.user?.userId);
+    const [total, withAccounts, byDepartmentRaw] = await Promise.all([
+      typedCtx.prismaWithTenant.contact.count({ where }),
+      typedCtx.prismaWithTenant.contact.count({ where: { ...where, accountId: { not: null } } }),
+      typedCtx.prismaWithTenant.contact.groupBy({ by: ['department'], where, _count: true }),
+    ]);
 
     return {
-      total: stats.total,
-      byDepartment: stats.byDepartment,
-      withAccounts: stats.withAccount,
-      withoutAccounts: stats.withoutAccount,
+      total,
+      byDepartment: Object.fromEntries(
+        byDepartmentRaw.filter(g => g.department).map(g => [g.department!, g._count])
+      ),
+      withAccounts,
+      withoutAccounts: total - withAccounts,
     };
   }),
 
@@ -727,14 +732,14 @@ export const contactRouter = createTRPCRouter({
     const startTime = Date.now();
     const { query, limit, includeAccount } = input;
 
-    // Build optimized where clause using indexed fields
-    const where = {
+    // IFC-252: tenant isolation — ownerId scoping (defense-in-depth with RLS via IFC-237)
+    const where = createTenantWhereClause(typedCtx.tenant, {
       OR: [
         { email: { contains: query, mode: 'insensitive' as const } },
         { firstName: { contains: query, mode: 'insensitive' as const } },
         { lastName: { contains: query, mode: 'insensitive' as const } },
       ],
-    };
+    });
 
     // Execute search with minimal data fetch
     const contacts = await typedCtx.prismaWithTenant.contact.findMany({
@@ -867,12 +872,13 @@ export const contactRouter = createTRPCRouter({
   /**
    * Bulk email contacts - returns email addresses for mailto:
    */
+  // IFC-252: tenant isolation — ownerId + tenantId scoping
   bulkEmail: tenantProcedure.input(bulkEmailContactsSchema).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
     const { ids } = input;
 
     const contacts = await typedCtx.prismaWithTenant.contact.findMany({
-      where: { id: { in: ids } },
+      where: { ...createTenantWhereClause(typedCtx.tenant, { id: { in: ids } }), tenantId: typedCtx.tenant.tenantId },
       select: { id: true, email: true },
     });
 
@@ -896,12 +902,13 @@ export const contactRouter = createTRPCRouter({
   /**
    * Bulk export contacts as CSV/JSON
    */
+  // IFC-252: tenant isolation — ownerId + tenantId scoping
   bulkExport: tenantProcedure.input(bulkExportContactsSchema).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
     const { ids, format } = input;
 
     const contacts = await typedCtx.prismaWithTenant.contact.findMany({
-      where: { id: { in: ids } },
+      where: { ...createTenantWhereClause(typedCtx.tenant, { id: { in: ids } }), tenantId: typedCtx.tenant.tenantId },
       include: {
         account: { select: { name: true } },
       },
@@ -1182,8 +1189,9 @@ export const contactRouter = createTRPCRouter({
     }),
 
   // IFC-192: Log activity on a contact (updates lastContactedAt for qualifying types)
+  // IFC-252: tenant isolation — getTenantContext + prismaWithTenant.$transaction
   logActivity: tenantProcedure.input(logActivitySchema).mutation(async ({ ctx, input }) => {
-    const typedCtx = ctx as TenantAwareContext;
+    const typedCtx = getTenantContext(ctx);
     const { tenantId, userId } = typedCtx.tenant;
 
     // Verify contact exists and belongs to tenant
@@ -1200,7 +1208,7 @@ export const contactRouter = createTRPCRouter({
 
     // Transaction: create activity record + update lastContactedAt atomically
     const now = new Date();
-    const updatedContact = await ctx.prisma.$transaction(async (tx) => {
+    const updatedContact = await typedCtx.prismaWithTenant.$transaction(async (tx) => {
       // 1. Create ContactActivity record
       await tx.contactActivity.create({
         data: {
@@ -1210,15 +1218,15 @@ export const contactRouter = createTRPCRouter({
           description: input.description ?? '',
           timestamp: now,
           userId,
-          userName: ctx.user?.email ?? 'Unknown',
+          userName: typedCtx.user?.email ?? 'Unknown',
           tenantId,
         },
       });
 
       // 2. Update lastContactedAt directly via tx (atomic with activity insert)
-      // Only advance forward (monotonic) — don't overwrite a newer timestamp
+      // IFC-252: tenant-scoped WHERE with ownerId
       const updated = await tx.contact.update({
-        where: { id: input.contactId },
+        where: { id: input.contactId, ...createTenantWhereClause(typedCtx.tenant, {}) },
         data: {
           lastContactedAt: now,
           updatedAt: now,
@@ -1288,4 +1296,82 @@ export const contactRouter = createTRPCRouter({
 
     return note;
   }),
+
+  /**
+   * Score a contact with AI — derives insights and persists them.
+   * Fire-and-forget: enqueues background LLM enrichment if Redis available.
+   * IFC-220
+   */
+  scoreWithAI: tenantProcedure
+    .input(z.object({ contactId: idSchema }))
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+
+      const contact = await typedCtx.prismaWithTenant.contact.findUnique({
+        where: { id: input.contactId },
+        select: {
+          id: true,
+          lastContactedAt: true,
+          createdAt: true,
+          title: true,
+          department: true,
+          status: true,
+          lead: { select: { score: true } },
+          opportunities: { select: { value: true, stage: true } },
+        },
+      });
+
+      if (!contact) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Contact not found: ${input.contactId}`,
+        });
+      }
+
+      const derived = deriveContactInsights({
+        lastContactedAt: contact.lastContactedAt,
+        createdAt: contact.createdAt,
+        title: contact.title,
+        department: contact.department,
+        status: contact.status,
+        leadScore: contact.lead?.score,
+        opportunities: contact.opportunities?.map((o: any) => ({
+          value: Number(o.value) || 0,
+          stage: o.stage,
+        })),
+      });
+
+      const insight = await ctx.prisma.contactAIInsight.upsert({
+        where: { contactId: input.contactId },
+        create: {
+          contactId: input.contactId,
+          tenantId: typedCtx.tenant.tenantId,
+          ...derived,
+          recommendations: derived.recommendations,
+        },
+        update: {
+          ...derived,
+          recommendations: derived.recommendations,
+        },
+      });
+
+      // Fire-and-forget: enqueue background LLM enrichment (best-effort)
+      try {
+        const { Queue } = await import('bullmq');
+        const queue = new Queue('AI_PREDICTION', {
+          connection: { host: process.env.REDIS_HOST ?? 'localhost', port: 6379 },
+        });
+        await queue.add('predict', {
+          entityType: 'contact',
+          entityId: input.contactId,
+          predictionType: 'CHURN_RISK',
+          tenantId: typedCtx.tenant.tenantId,
+        });
+        await queue.close();
+      } catch {
+        // Redis/BullMQ unavailable — silently skip background enrichment
+      }
+
+      return insight;
+    }),
 });

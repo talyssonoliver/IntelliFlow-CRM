@@ -32,6 +32,12 @@ import {
   type GoalType,
 } from '@intelliflow/validators';
 import { z } from 'zod';
+import {
+  startOfDayInTimezone,
+  endOfDayInTimezone,
+  getHourInTimezone,
+  safeTimezone,
+} from '../../lib/timezone-utils';
 
 /**
  * Maps pinnable entity types to their Prisma model delegate names.
@@ -70,20 +76,9 @@ async function checkEntityExists(
 function getGreeting(timezone: string = 'UTC'): string {
   let hour: number;
   try {
-    const formatted = new Intl.DateTimeFormat('en-US', {
-      hour: 'numeric',
-      hour12: false,
-      timeZone: timezone,
-    }).format(new Date());
-    hour = Number.parseInt(formatted, 10);
+    hour = getHourInTimezone(timezone);
   } catch {
-    // Fallback to UTC if timezone is invalid
-    const formatted = new Intl.DateTimeFormat('en-US', {
-      hour: 'numeric',
-      hour12: false,
-      timeZone: 'UTC',
-    }).format(new Date());
-    hour = Number.parseInt(formatted, 10);
+    hour = getHourInTimezone('UTC');
   }
   if (hour < 12) return 'Good morning';
   if (hour < 17) return 'Good afternoon';
@@ -242,6 +237,17 @@ function mapAIInsightToResponse(row: {
   };
 }
 
+/** Deduplicate insights by title — BullMQ double-enqueue can create duplicate
+ *  AIInsight rows with different IDs but identical content. Keep the newest. */
+function deduplicateInsights<T extends { title: string }>(items: T[]): T[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    if (seen.has(item.title)) return false;
+    seen.add(item.title);
+    return true;
+  });
+}
+
 /**
  * Fire-and-forget: enqueue a BullMQ job to generate AI insights
  */
@@ -290,6 +296,11 @@ async function enqueueInsightGeneration(
     staleContacts: Array<{ id: string; name: string; daysSinceContact: number | null }>;
   }
 ): Promise<void> {
+  // Guard: reject non-UUID tenantIds (e.g. test fixtures like "test-tenant-id")
+  // to prevent FK violations when the worker persists insights.
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(tenantId)) return;
+
   try {
     const { queueName, queueConfig } = await getAIInsightsQueueConfig();
     const queue = new Queue(queueName, {
@@ -323,6 +334,10 @@ async function enqueueInsightGeneration(
       .sort((a, b) => (b.daysSinceContact ?? 999) - (a.daysSinceContact ?? 999))
       .slice(0, ENQUEUE_MAX_CONTACTS);
 
+    // Use a deterministic jobId so double-enqueue from getAIInsights +
+    // getAllInsights is deduplicated by BullMQ (same ID = same job).
+    const jobId = `insight-${tenantId}-${userId}`;
+
     await queue.add(
       'generate-insights',
       {
@@ -336,7 +351,8 @@ async function enqueueInsightGeneration(
         overdueTasksCount: data.overdueTasksCount,
         staleContacts: contacts,
         correlationId: `insight-${tenantId}-${Date.now()}`,
-      }
+      },
+      { jobId }
     );
 
     await queue.close();
@@ -540,6 +556,266 @@ function buildHeuristicInsights(
   return insights;
 }
 
+/** Shape returned by runHeuristicQueries (minus the `now` field). */
+type HeuristicData = {
+  dealsAtRisk: Array<{ id: string; name: string; updatedAt: Date }>;
+  hotLeads: Array<{
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    company: string | null;
+    score: number | null;
+  }>;
+  overdueTasksCount: number;
+  staleContacts: Array<{
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    lastContactedAt: Date | null;
+  }>;
+};
+
+/**
+ * Create proactive notifications from threshold alert data.
+ * Deduplicates by sourceType + sourceId — only creates a new alert if no
+ * active (non-archived) notification exists for the same entity.
+ * Fire-and-forget — callers should .catch(() => {}).
+ */
+async function createProactiveNotifications(
+  prisma: Context['prisma'],
+  tenantId: string,
+  userId: string,
+  dealsAtRisk: HeuristicData['dealsAtRisk'],
+  hotLeads: HeuristicData['hotLeads'],
+  overdueTasksCount: HeuristicData['overdueTasksCount'],
+  staleContacts: HeuristicData['staleContacts'],
+  now: Date,
+  timezone: string = 'UTC'
+): Promise<void> {
+  async function createIfNew(params: {
+    sourceType: string;
+    sourceId: string | null;
+    subject: string;
+    body: string;
+    priority: 'HIGH' | 'NORMAL';
+    actionUrl: string;
+  }) {
+    await prisma.$transaction(async (tx) => {
+      // Dedup by sourceType+sourceId regardless of date — prevents
+      // the same proactive alert from piling up across multiple days/loads.
+      const existing = await tx.notification.findFirst({
+        where: {
+          tenantId,
+          recipientId: userId,
+          sourceType: params.sourceType,
+          ...(params.sourceId ? { sourceId: params.sourceId } : {}),
+          status: { in: ['PENDING', 'SENT', 'DELIVERED', 'READ'] },
+        },
+      });
+      if (existing) return;
+
+      await tx.notification.create({
+        data: {
+          tenantId,
+          recipientId: userId,
+          channel: 'IN_APP',
+          subject: params.subject,
+          body: params.body,
+          priority: params.priority,
+          status: 'PENDING',
+          category: 'ALERTS',
+          sourceType: params.sourceType,
+          sourceId: params.sourceId ?? undefined,
+          metadata: {
+            notificationType: params.sourceType,
+            actionUrl: params.actionUrl,
+          },
+        },
+      });
+    });
+  }
+
+  for (const deal of dealsAtRisk) {
+    const daysSinceUpdate = Math.floor((now.getTime() - deal.updatedAt.getTime()) / 86400000);
+    await createIfNew({
+      sourceType: 'deal_at_risk',
+      sourceId: deal.id,
+      subject: `Deal at Risk: ${deal.name}`,
+      body: `Last interaction was ${daysSinceUpdate} days ago. Consider scheduling a follow-up.`,
+      priority: 'HIGH',
+      actionUrl: `/deals/${deal.id}`,
+    });
+  }
+
+  for (const lead of hotLeads) {
+    const name = `${lead.firstName || ''} ${lead.lastName || ''}`.trim() || lead.company || 'Lead';
+    await createIfNew({
+      sourceType: 'lead_scored',
+      sourceId: lead.id,
+      subject: `Hot Lead: ${name}`,
+      body: `Score of ${lead.score ?? 0} indicates strong buying signals.`,
+      priority: 'NORMAL',
+      actionUrl: `/leads/${lead.id}`,
+    });
+  }
+
+  if (overdueTasksCount > 0) {
+    await createIfNew({
+      sourceType: 'task_overdue',
+      sourceId: null,
+      subject: `${overdueTasksCount} Overdue Task${overdueTasksCount > 1 ? 's' : ''}`,
+      body: `You have tasks past their due date. Review and update your task list.`,
+      priority: 'HIGH',
+      actionUrl: '/tasks?filter=overdue',
+    });
+  }
+
+  for (const contact of staleContacts) {
+    const name = `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 'Contact';
+    const days = contact.lastContactedAt
+      ? Math.floor((now.getTime() - contact.lastContactedAt.getTime()) / 86400000)
+      : null;
+    await createIfNew({
+      sourceType: 'contact_stale',
+      sourceId: contact.id,
+      subject: `Stale Contact: ${name}`,
+      body: days
+        ? `No interaction in ${days} days. This contact has open opportunities.`
+        : `Never contacted. This contact has open opportunities.`,
+      priority: 'NORMAL',
+      actionUrl: `/contacts/${contact.id}`,
+    });
+  }
+}
+
+/**
+ * Build forward-looking smart summaries for the insights panel.
+ * These replace threshold alerts in /insights — they are informational,
+ * not urgent, and provide pipeline/trend/queue intelligence.
+ */
+async function buildSmartSummaries(
+  prisma: Context['prisma'],
+  tenantId: string,
+  userId: string,
+  heuristicData: HeuristicData,
+  now: Date
+): Promise<InsightResponseItem[]> {
+  const summaries: InsightResponseItem[] = [];
+  const weekAgo = new Date(now.getTime() - 7 * 86400000);
+  const twoWeeksAgo = new Date(now.getTime() - 14 * 86400000);
+
+  // 1. Pipeline summary — forward-looking: "what's in your pipeline"
+  const [activeDealCount, activePipelineValue] = await Promise.all([
+    prisma.opportunity.count({
+      where: { tenantId, ownerId: userId, stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] } },
+    }),
+    prisma.opportunity.aggregate({
+      where: { tenantId, ownerId: userId, stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] } },
+      _sum: { value: true },
+    }),
+  ]);
+
+  if (activeDealCount > 0) {
+    const value = Number(activePipelineValue._sum.value ?? 0);
+    summaries.push({
+      id: 'pipeline-summary',
+      type: 'opportunity',
+      source: 'heuristic',
+      title: 'Pipeline Overview',
+      description: `You have ${activeDealCount} active deal${activeDealCount > 1 ? 's' : ''} worth $${value.toLocaleString()}. Review your pipeline for next steps.`,
+      suggestedAction: 'Review pipeline',
+      entityType: null,
+      entityId: null,
+      actionUrl: '/deals',
+      requiresApproval: false,
+      priority: 'low',
+      createdAt: now,
+    });
+  }
+
+  // 2. Weekly deal trend — forward-looking: "momentum indicator"
+  const [closedThisWeek, closedLastWeek] = await Promise.all([
+    prisma.opportunity.count({
+      where: { tenantId, ownerId: userId, stage: 'CLOSED_WON', closedAt: { gte: weekAgo } },
+    }),
+    prisma.opportunity.count({
+      where: { tenantId, ownerId: userId, stage: 'CLOSED_WON', closedAt: { gte: twoWeeksAgo, lt: weekAgo } },
+    }),
+  ]);
+
+  if (closedThisWeek > 0 || closedLastWeek > 0) {
+    const trend = closedLastWeek > 0
+      ? Math.round(((closedThisWeek - closedLastWeek) / closedLastWeek) * 100)
+      : closedThisWeek > 0 ? 100 : 0;
+    const direction = trend > 0 ? 'up' : trend < 0 ? 'down' : 'steady';
+    summaries.push({
+      id: 'deal-trend',
+      type: direction === 'down' ? 'warning' : 'achievement',
+      source: 'heuristic',
+      title: `Weekly Momentum: ${direction === 'up' ? 'Rising' : direction === 'down' ? 'Declining' : 'Steady'}`,
+      description: `${closedThisWeek} deal${closedThisWeek !== 1 ? 's' : ''} closed this week${closedLastWeek > 0 ? ` (${trend > 0 ? '+' : ''}${trend}% vs last week)` : ''}.`,
+      suggestedAction: direction === 'down' ? 'Review pipeline activity' : null,
+      entityType: null,
+      entityId: null,
+      actionUrl: '/deals',
+      requiresApproval: false,
+      priority: 'low',
+      createdAt: now,
+    });
+  }
+
+  // 3. Lead qualification queue — forward-looking: "what to work on next"
+  const qualifiableLeads = await prisma.lead.count({
+    where: {
+      tenantId,
+      ownerId: userId,
+      status: { in: ['NEW', 'CONTACTED'] },
+      score: { gte: 50 },
+    },
+  });
+
+  if (qualifiableLeads > 0) {
+    summaries.push({
+      id: 'lead-queue',
+      type: 'opportunity',
+      source: 'heuristic',
+      title: `${qualifiableLeads} Lead${qualifiableLeads > 1 ? 's' : ''} Ready for Review`,
+      description: `You have leads with scores above 50 in early stages. Qualify them to move your pipeline forward.`,
+      suggestedAction: 'Review leads',
+      entityType: null,
+      entityId: null,
+      actionUrl: '/leads?sort=score&order=desc',
+      requiresApproval: false,
+      priority: 'low',
+      createdAt: now,
+    });
+  }
+
+  // 4. Achievement fallback — always provide something positive
+  if (summaries.length === 0
+      && heuristicData.dealsAtRisk.length === 0
+      && heuristicData.overdueTasksCount === 0
+      && heuristicData.hotLeads.length === 0
+      && heuristicData.staleContacts.length === 0) {
+    summaries.push({
+      id: 'all-good',
+      type: 'achievement',
+      source: 'heuristic',
+      title: "You're on track!",
+      description: 'No urgent items need your attention. Keep up the great work!',
+      suggestedAction: null,
+      entityType: null,
+      entityId: null,
+      actionUrl: null,
+      requiresApproval: false,
+      priority: 'low',
+      createdAt: now,
+    });
+  }
+
+  return summaries;
+}
+
 function normalizeConfidence(confidence: unknown, fallback: number): number {
   if (typeof confidence !== 'number' || Number.isNaN(confidence) || !Number.isFinite(confidence)) {
     return fallback;
@@ -680,7 +956,8 @@ export const homeRouter = createTRPCRouter({
     const tenantId = ctx.tenant.tenantId;
     const userId = ctx.tenant.userId;
     const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const userTz = safeTimezone(ctx.user?.timezone);
+    const todayStart = startOfDayInTimezone(userTz, now);
     const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
@@ -851,7 +1128,7 @@ export const homeRouter = createTRPCRouter({
 
     return {
       userName: user?.name || user?.email?.split('@')[0] || 'User',
-      greeting: getGreeting(ctx.user?.timezone ?? 'UTC'),
+      greeting: getGreeting(safeTimezone(ctx.user?.timezone)),
       todayDate: now,
       stats: {
         highPriorityTasksCount: highPriorityTasks,
@@ -903,8 +1180,9 @@ export const homeRouter = createTRPCRouter({
       if (duration > 200) {
         console.warn(`[home.getAIInsights] SLOW: ${duration.toFixed(2)}ms (target: <200ms)`);
       }
+      const mapped = deduplicateInsights(cachedInsights.map(mapAIInsightToResponse));
       return {
-        insights: cachedInsights.map(mapAIInsightToResponse),
+        insights: mapped.slice(0, 5),
         lastRefreshed: cachedInsights[0].createdAt,
       };
     }
@@ -917,32 +1195,20 @@ export const homeRouter = createTRPCRouter({
     });
     const { dealsAtRisk, hotLeads, overdueTasksCount, staleContacts } = heuristic;
 
-    // Build heuristic insights
-    const insights = buildHeuristicInsights(
-      dealsAtRisk,
-      hotLeads,
-      overdueTasksCount,
-      staleContacts,
+    // Step 2a: Route threshold alerts to notifications (fire-and-forget)
+    createProactiveNotifications(
+      ctx.prisma, tenantId, userId,
+      dealsAtRisk, hotLeads, overdueTasksCount, staleContacts,
+      heuristic.now,
+      safeTimezone(ctx.user?.timezone)
+    ).catch(() => {});
+
+    // Step 2b: Build forward-looking smart summaries as insights
+    const insights = await buildSmartSummaries(
+      ctx.prisma, tenantId, userId,
+      { dealsAtRisk, hotLeads, overdueTasksCount, staleContacts },
       heuristic.now
     );
-
-    // Add achievement if no urgent items
-    if (insights.length === 0) {
-      insights.push({
-        id: 'all-good',
-        type: 'achievement',
-        source: 'heuristic',
-        title: "You're on track!",
-        description: 'No urgent items need your attention. Keep up the great work!',
-        suggestedAction: null,
-        entityType: null,
-        entityId: null,
-        actionUrl: null,
-        requiresApproval: false,
-        priority: 'low',
-        createdAt: now,
-      });
-    }
 
     // Step 3: Fire-and-forget — enqueue AI insight generation for next visit
     enqueueInsightGeneration(tenantId, userId, {
@@ -994,8 +1260,9 @@ export const homeRouter = createTRPCRouter({
     const tenantId = ctx.tenant.tenantId;
     const userId = ctx.tenant.userId;
     const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+    const userTz = safeTimezone(ctx.user?.timezone);
+    const todayStart = startOfDayInTimezone(userTz, now);
+    const todayEnd = endOfDayInTimezone(userTz, now);
 
     // Read user preferences for goal type
     const user = await ctx.prisma.user.findUnique({
@@ -1364,10 +1631,11 @@ export const homeRouter = createTRPCRouter({
       });
 
       if (cachedInsights.length > 0) {
-        const total = cachedInsights.length;
-        const offset = cursor ? Number.parseInt(Buffer.from(cursor, 'base64').toString('utf-8'), 10) : 0;
+        const dedupedCached = deduplicateInsights(cachedInsights);
+        const total = dedupedCached.length;
+        const offset = cursor ? (Number.parseInt(Buffer.from(cursor, 'base64').toString('utf-8'), 10) || 0) : 0;
 
-        const page = cachedInsights.slice(offset, offset + limit).map(mapAIInsightToResponse);
+        const page = dedupedCached.slice(offset, offset + limit).map(mapAIInsightToResponse);
         const hasMore = offset + limit < total;
         const nextCursor = hasMore ? Buffer.from(String(offset + limit)).toString('base64') : null;
 
@@ -1393,12 +1661,18 @@ export const homeRouter = createTRPCRouter({
       });
       const { dealsAtRisk, hotLeads, overdueTasksCount, staleContacts } = heuristic;
 
-      // Build heuristic insights
-      const allInsights = buildHeuristicInsights(
-        dealsAtRisk,
-        hotLeads,
-        overdueTasksCount,
-        staleContacts,
+      // Route threshold alerts to notifications (fire-and-forget)
+      createProactiveNotifications(
+        ctx.prisma, tenantId, userId,
+        dealsAtRisk, hotLeads, overdueTasksCount, staleContacts,
+        heuristic.now,
+        safeTimezone(ctx.user?.timezone)
+      ).catch(() => {});
+
+      // Build forward-looking smart summaries
+      const allInsights = await buildSmartSummaries(
+        ctx.prisma, tenantId, userId,
+        { dealsAtRisk, hotLeads, overdueTasksCount, staleContacts },
         heuristic.now
       );
 
@@ -1407,7 +1681,7 @@ export const homeRouter = createTRPCRouter({
 
       const total = filtered.length;
 
-      const offset = cursor ? Number.parseInt(Buffer.from(cursor, 'base64').toString('utf-8'), 10) : 0;
+      const offset = cursor ? (Number.parseInt(Buffer.from(cursor, 'base64').toString('utf-8'), 10) || 0) : 0;
 
       const page = filtered.slice(offset, offset + limit);
       const hasMore = offset + limit < total;

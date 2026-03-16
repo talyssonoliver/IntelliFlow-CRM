@@ -7,12 +7,12 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { intelligenceRouter } from '../intelligence.router';
-import { prismaMock, createTestContext } from '../../../test/setup';
+import { prismaMock, createTestContext, TEST_UUIDS } from '../../../test/setup';
 
 function createMockAIScore(overrides: Record<string, any> = {}) {
   return {
     id: 'score-1',
-    tenantId: 'test-tenant-id',
+    tenantId: TEST_UUIDS.tenant,
     leadId: 'lead-001',
     score: 85,
     confidence: 0.92,
@@ -197,7 +197,7 @@ describe('intelligenceRouter.getLeadScoringDashboard', () => {
     expect(prismaMock.aIScore.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         }),
       })
     );

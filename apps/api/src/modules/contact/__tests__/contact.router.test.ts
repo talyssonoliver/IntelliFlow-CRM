@@ -193,20 +193,17 @@ describe('Contact Router', () => {
         lead: mockLead,
         opportunities: [mockOpportunity],
         tasks: [mockTask],
+        activities: [],
+        notes: [],
+        aiInsight: { id: 'ai-1' },
+        calendarEvents: [],
       };
 
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      // Service verifies existence
-      ctx.services!.contact!.getContactById = vi.fn().mockResolvedValue({
-        isSuccess: true,
-        isFailure: false,
-        value: createMockDomainContact(),
-      });
-
-      // Prisma returns relations
-      prismaMock.contact.findUnique.mockResolvedValue(contactWithRelations);
+      // IFC-252: findFirst with tenant WHERE (no service pre-flight)
+      prismaMock.contact.findFirst.mockResolvedValue(contactWithRelations as any);
 
       const result = await caller.getById({ id: TEST_UUIDS.contact1 });
 
@@ -217,11 +214,8 @@ describe('Contact Router', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      ctx.services!.contact!.getContactById = vi.fn().mockResolvedValue({
-        isSuccess: false,
-        isFailure: true,
-        error: { message: `Contact not found: ${TEST_UUIDS.nonExistent}` },
-      });
+      // IFC-252: findFirst returns null → NOT_FOUND
+      prismaMock.contact.findFirst.mockResolvedValue(null);
 
       await expect(caller.getById({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(
         expect.objectContaining({
@@ -242,13 +236,8 @@ describe('Contact Router', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      ctx.services!.contact!.getContactByEmail = vi.fn().mockResolvedValue({
-        isSuccess: true,
-        isFailure: false,
-        value: createMockDomainContact(),
-      });
-
-      prismaMock.contact.findFirst.mockResolvedValue(contactWithRelations);
+      // IFC-252: findFirst with tenant WHERE (no service pre-flight)
+      prismaMock.contact.findFirst.mockResolvedValue(contactWithRelations as any);
 
       const result = await caller.getByEmail({ email: 'contact@example.com' });
 
@@ -259,11 +248,8 @@ describe('Contact Router', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      ctx.services!.contact!.getContactByEmail = vi.fn().mockResolvedValue({
-        isSuccess: false,
-        isFailure: true,
-        error: { message: 'Contact with email nonexistent@example.com not found' },
-      });
+      // IFC-252: findFirst returns null → NOT_FOUND
+      prismaMock.contact.findFirst.mockResolvedValue(null);
 
       await expect(caller.getByEmail({ email: 'nonexistent@example.com' })).rejects.toThrow(
         expect.objectContaining({
@@ -604,16 +590,14 @@ describe('Contact Router', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      ctx.services!.contact!.getContactStatistics = vi.fn().mockResolvedValue({
-        total: 50,
-        withAccount: 35,
-        withoutAccount: 15,
-        convertedFromLeads: 10,
-        byDepartment: {
-          Engineering: 20,
-          Sales: 15,
-        },
-      });
+      // IFC-252: stats now uses prismaWithTenant directly
+      prismaMock.contact.count
+        .mockResolvedValueOnce(50) // total
+        .mockResolvedValueOnce(35); // withAccounts
+      (prismaMock.contact.groupBy as any).mockResolvedValue([
+        { department: 'Engineering', _count: 20 },
+        { department: 'Sales', _count: 15 },
+      ] as any);
 
       const result = await caller.stats();
 
@@ -630,13 +614,8 @@ describe('Contact Router', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      ctx.services!.contact!.getContactStatistics = vi.fn().mockResolvedValue({
-        total: 0,
-        withAccount: 0,
-        withoutAccount: 0,
-        convertedFromLeads: 0,
-        byDepartment: {},
-      });
+      prismaMock.contact.count.mockResolvedValue(0);
+      (prismaMock.contact.groupBy as any).mockResolvedValue([] as any);
 
       const result = await caller.stats();
 
@@ -1082,6 +1061,76 @@ describe('Contact Router', () => {
 
       expect(result.meetsKpi).toBe(true);
       expect(result.durationMs).toBeLessThan(1000);
+    });
+  });
+
+  describe('scoreWithAI', () => {
+    it('T-006: should derive insights and upsert ContactAIInsight', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findUnique.mockResolvedValue({
+        ...mockContact,
+        id: TEST_UUIDS.contact1,
+        lastContactedAt: new Date('2026-03-10'),
+        createdAt: new Date('2026-01-01'),
+        title: 'VP Sales',
+        department: 'Revenue',
+        status: 'ACTIVE',
+        lead: { score: 80 },
+        opportunities: [{ value: 50000, stage: 'NEGOTIATION' }],
+        tenantId: TEST_UUIDS.tenant,
+      } as any);
+
+      const mockInsight = {
+        id: 'insight-1',
+        contactId: TEST_UUIDS.contact1,
+        tenantId: TEST_UUIDS.tenant,
+        conversionProbability: 0.7,
+        lifetimeValue: 50000,
+        churnRisk: 'LOW',
+        engagementScore: 85,
+        sentiment: 'POSITIVE',
+        sentimentTrend: 'IMPROVING',
+        nextBestAction: 'Schedule follow-up meeting',
+        recommendations: ['Follow up this week'],
+        lastEngagementDays: 2,
+      };
+
+      prismaMock.contactAIInsight.upsert.mockResolvedValue(mockInsight as any);
+
+      const result = await caller.scoreWithAI({ contactId: TEST_UUIDS.contact1 });
+
+      expect(prismaMock.contact.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: TEST_UUIDS.contact1 },
+        })
+      );
+      expect(prismaMock.contactAIInsight.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { contactId: TEST_UUIDS.contact1 },
+          create: expect.objectContaining({ contactId: TEST_UUIDS.contact1 }),
+          update: expect.objectContaining({ conversionProbability: expect.any(Number) }),
+        })
+      );
+      expect(result).toEqual(mockInsight);
+    });
+
+    it('T-007: should throw NOT_FOUND for missing contact', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findUnique.mockResolvedValue(null);
+
+      await expect(
+        caller.scoreWithAI({ contactId: TEST_UUIDS.contact1 })
+      ).rejects.toThrow(TRPCError);
+
+      await expect(
+        caller.scoreWithAI({ contactId: TEST_UUIDS.contact1 })
+      ).rejects.toMatchObject({
+        code: 'NOT_FOUND',
+      });
     });
   });
 });

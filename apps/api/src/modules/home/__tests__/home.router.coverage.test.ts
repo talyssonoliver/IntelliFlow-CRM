@@ -43,6 +43,26 @@ describe('Home Router Coverage Tests (PG-163)', () => {
   beforeEach(() => {
     mockQueueAdd.mockClear();
     mockQueueClose.mockClear();
+
+    // Default mocks for createProactiveNotifications (fire-and-forget dedup checks).
+    // Individual tests can override with mockResolvedValueOnce as needed.
+    prismaMock.notification.findFirst.mockResolvedValue(null);
+    prismaMock.notification.create.mockResolvedValue({} as any);
+
+    // Transaction mock: pass prismaMock as tx so inner tx.notification.* hits existing mocks
+    (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: any) => fn(prismaMock));
+
+    // Default mocks for buildSmartSummaries Prisma calls.
+    // All return "no data" so the achievement fallback triggers unless overridden.
+    prismaMock.opportunity.count.mockResolvedValue(0);
+    prismaMock.opportunity.aggregate.mockResolvedValue({
+      _sum: { value: 0 },
+      _count: 0,
+      _avg: {},
+      _min: {},
+      _max: {},
+    } as any);
+    prismaMock.lead.count.mockResolvedValue(0);
   });
 
   // ===========================================================================
@@ -249,7 +269,7 @@ describe('Home Router Coverage Tests (PG-163)', () => {
           userId: TEST_UUIDS.user1,
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
           timezone: 'Invalid/Timezone',
         },
       });
@@ -323,11 +343,22 @@ describe('Home Router Coverage Tests (PG-163)', () => {
       prismaMock.task.count.mockResolvedValue(0);
       prismaMock.contact.findMany.mockResolvedValue([]);
 
+      // buildSmartSummaries: return 1 active deal so pipeline-summary is produced
+      prismaMock.opportunity.count.mockResolvedValueOnce(1); // activeDealCount
+      prismaMock.opportunity.aggregate.mockResolvedValueOnce({
+        _sum: { value: 5000 },
+        _count: 1,
+        _avg: {},
+        _min: {},
+        _max: {},
+      } as any);
+
       const result = await caller.getAIInsights();
 
       expect(result.insights.length).toBeGreaterThan(0);
-      expect(result.insights[0].type).toBe('warning');
-      expect(result.insights[0].title).toContain('Deal at Risk');
+      expect(result.insights[0].source).toBe('heuristic');
+      expect(result.insights[0].id).toBe('pipeline-summary');
+      expect(result.insights[0].type).toBe('opportunity');
     });
 
     it('falls back to tenant-scoped queries when user has no data', async () => {
@@ -351,10 +382,23 @@ describe('Home Router Coverage Tests (PG-163)', () => {
       prismaMock.task.count.mockResolvedValueOnce(0);
       prismaMock.contact.findMany.mockResolvedValueOnce([]);
 
+      // buildSmartSummaries: return 1 active deal so pipeline-summary is produced
+      prismaMock.opportunity.count.mockResolvedValueOnce(1); // activeDealCount
+      prismaMock.opportunity.aggregate.mockResolvedValueOnce({
+        _sum: { value: 0 },
+        _count: 1,
+        _avg: {},
+        _min: {},
+        _max: {},
+      } as any);
+
       const result = await caller.getAIInsights();
 
+      // The tenant-scoped deal triggers a proactive notification (fire-and-forget).
+      // Smart summaries are now returned as insights instead of per-deal alerts.
       expect(result.insights.length).toBeGreaterThan(0);
-      expect(result.insights[0].title).toContain('Tenant Deal');
+      expect(result.insights[0].source).toBe('heuristic');
+      expect(result.insights[0].id).toBe('pipeline-summary');
     });
 
     it('returns achievement insight when all categories empty', async () => {
@@ -395,21 +439,32 @@ describe('Home Router Coverage Tests (PG-163)', () => {
         },
       ] as any);
 
+      // Stale contact is routed to a notification (fire-and-forget).
+      // A notification dedup check should occur via $transaction.
       const result = await caller.getAIInsights();
 
-      const staleInsight = result.insights.find((i) => i.id === 'stale-contact-contact-null');
-      expect(staleInsight).toBeDefined();
-      expect(staleInsight!.description).toContain('Never contacted');
+      // With staleContacts non-empty, the achievement fallback should NOT appear —
+      // there ARE items needing attention (just routed to notifications).
+      expect((prismaMock as any).$transaction).toHaveBeenCalled();
+      const allGoodInsight = result.insights.find((i) => i.id === 'all-good');
+      expect(allGoodInsight).toBeUndefined();
     });
 
     it('BullMQ enqueue is called on cache miss', async () => {
+      // enqueueInsightGeneration requires a valid UUID tenantId
+      const uuidCtx = createTestContext({
+        user: { userId: TEST_UUIDS.user1, email: 'test@example.com', role: 'USER', tenantId: TEST_UUIDS.tenant, timezone: 'UTC' },
+        tenant: { tenantId: TEST_UUIDS.tenant, tenantType: 'user' as const, userId: TEST_UUIDS.user1, role: 'USER', canAccessAllTenantData: false },
+      });
+      const uuidCaller = homeRouter.createCaller(uuidCtx);
+
       (prismaMock.aIInsight as any).findMany.mockResolvedValue([]);
       prismaMock.opportunity.findMany.mockResolvedValue([]);
       prismaMock.lead.findMany.mockResolvedValue([]);
       prismaMock.task.count.mockResolvedValue(2);
       prismaMock.contact.findMany.mockResolvedValue([]);
 
-      await caller.getAIInsights();
+      await uuidCaller.getAIInsights();
 
       // enqueueInsightGeneration is fire-and-forget (void), wait for microtask queue
       await new Promise((resolve) => setTimeout(resolve, 50));
@@ -421,14 +476,33 @@ describe('Home Router Coverage Tests (PG-163)', () => {
     it('BullMQ failure is silently caught', async () => {
       mockQueueAdd.mockRejectedValueOnce(new Error('Redis connection refused'));
 
+      // enqueueInsightGeneration requires a valid UUID tenantId
+      const uuidCtx = createTestContext({
+        user: { userId: TEST_UUIDS.user1, email: 'test@example.com', role: 'USER', tenantId: TEST_UUIDS.tenant, timezone: 'UTC' },
+        tenant: { tenantId: TEST_UUIDS.tenant, tenantType: 'user' as const, userId: TEST_UUIDS.user1, role: 'USER', canAccessAllTenantData: false },
+      });
+      const uuidCaller = homeRouter.createCaller(uuidCtx);
+
       (prismaMock.aIInsight as any).findMany.mockResolvedValue([]);
       prismaMock.opportunity.findMany.mockResolvedValue([]);
       prismaMock.lead.findMany.mockResolvedValue([]);
       prismaMock.task.count.mockResolvedValue(1);
       prismaMock.contact.findMany.mockResolvedValue([]);
 
+      // buildSmartSummaries: return 1 active deal so pipeline-summary is produced.
+      // This is required because overdueTasksCount=1 blocks the achievement fallback,
+      // so without a summary we'd return 0 insights.
+      prismaMock.opportunity.count.mockResolvedValueOnce(2); // activeDealCount
+      prismaMock.opportunity.aggregate.mockResolvedValueOnce({
+        _sum: { value: 8000 },
+        _count: 2,
+        _avg: {},
+        _min: {},
+        _max: {},
+      } as any);
+
       // Should not throw despite BullMQ error
-      const result = await caller.getAIInsights();
+      const result = await uuidCaller.getAIInsights();
       expect(result.insights.length).toBeGreaterThan(0);
     });
   });
@@ -975,7 +1049,7 @@ describe('Home Router Coverage Tests (PG-163)', () => {
     it('paginates heuristic fallback results', async () => {
       (prismaMock.aIInsight as any).findMany.mockResolvedValue([]);
 
-      // Generate enough heuristic data for pagination
+      // Generate heuristic data (goes to notifications, not insights)
       const deals = Array.from({ length: 5 }, (_, i) => ({
         id: `deal-${i}`,
         name: `Deal ${i}`,
@@ -986,11 +1060,28 @@ describe('Home Router Coverage Tests (PG-163)', () => {
       prismaMock.task.count.mockResolvedValue(0);
       prismaMock.contact.findMany.mockResolvedValue([]);
 
-      const result = await caller.getAllInsights({ limit: 3 });
+      // buildSmartSummaries: mock all 3 summary types to produce 3 insights total.
+      // pipeline-summary (activeDealCount > 0)
+      prismaMock.opportunity.count.mockResolvedValueOnce(3); // activeDealCount
+      prismaMock.opportunity.aggregate.mockResolvedValueOnce({
+        _sum: { value: 15000 },
+        _count: 3,
+        _avg: {},
+        _min: {},
+        _max: {},
+      } as any);
+      // deal-trend (closedThisWeek > 0)
+      prismaMock.opportunity.count.mockResolvedValueOnce(2); // closedThisWeek
+      prismaMock.opportunity.count.mockResolvedValueOnce(1); // closedLastWeek
+      // lead-queue (qualifiableLeads > 0)
+      prismaMock.lead.count.mockResolvedValueOnce(4); // qualifiableLeads
 
-      expect(result.insights).toHaveLength(3);
+      // With limit=2 and 3 total summaries, pagination should produce hasMore=true
+      const result = await caller.getAllInsights({ limit: 2 });
+
+      expect(result.insights).toHaveLength(2);
       expect(result.hasMore).toBe(true);
-      expect(result.total).toBe(5);
+      expect(result.total).toBe(3);
     });
   });
 });

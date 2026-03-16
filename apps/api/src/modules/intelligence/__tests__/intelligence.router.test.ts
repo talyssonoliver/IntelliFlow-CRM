@@ -28,7 +28,7 @@ vi.mock('bullmq', () => ({
 function createMockLeadAIInsight(overrides: Record<string, any> = {}) {
   return {
     id: 'insight-lead-1',
-    tenantId: 'test-tenant-id',
+    tenantId: TEST_UUIDS.tenant,
     leadId: TEST_UUIDS.lead1,
     churnRisk: 'MEDIUM',
     conversionProbability: 65,
@@ -48,7 +48,7 @@ function createMockLeadAIInsight(overrides: Record<string, any> = {}) {
 function createMockContactAIInsight(overrides: Record<string, any> = {}) {
   return {
     id: 'insight-contact-1',
-    tenantId: 'test-tenant-id',
+    tenantId: TEST_UUIDS.tenant,
     contactId: TEST_UUIDS.contact1,
     churnRisk: 'LOW',
     conversionProbability: 80,
@@ -583,7 +583,7 @@ describe('intelligenceRouter', () => {
         expect.objectContaining({
           where: { leadId: TEST_UUIDS.lead1 },
           create: expect.objectContaining({
-            tenantId: 'test-tenant-id',
+            tenantId: TEST_UUIDS.tenant,
             leadId: TEST_UUIDS.lead1,
             churnRisk: 'MEDIUM',
             conversionProbability: 0,
@@ -663,7 +663,7 @@ describe('intelligenceRouter', () => {
         expect.objectContaining({
           where: { contactId: TEST_UUIDS.contact1 },
           create: expect.objectContaining({
-            tenantId: 'test-tenant-id',
+            tenantId: TEST_UUIDS.tenant,
             contactId: TEST_UUIDS.contact1,
             churnRisk: 'LOW',
             conversionProbability: 0,
@@ -686,7 +686,7 @@ describe('intelligenceRouter', () => {
       });
 
       const upsertCall = (prismaMock.contactAIInsight.upsert as any).mock.calls[0][0];
-      expect(upsertCall.create.tenantId).toBe('test-tenant-id');
+      expect(upsertCall.create.tenantId).toBe(TEST_UUIDS.tenant);
     });
   });
 

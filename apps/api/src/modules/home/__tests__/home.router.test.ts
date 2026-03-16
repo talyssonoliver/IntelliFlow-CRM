@@ -32,6 +32,19 @@ describe('Home Router', () => {
     // Reset is handled by setup.ts
     // Default: no cached AI insights (cache miss → heuristic fallback path)
     (prismaMock.aIInsight as any).findMany.mockResolvedValue([]);
+
+    // Default mocks for buildSmartSummaries pipeline queries
+    // (called on cache miss — tests override as needed)
+    (prismaMock.opportunity as any).count.mockResolvedValue(0);
+    (prismaMock.opportunity as any).aggregate.mockResolvedValue({ _sum: { value: null } });
+    (prismaMock.lead as any).count.mockResolvedValue(0);
+
+    // Default mocks for createProactiveNotifications dedup queries
+    (prismaMock.notification as any).findFirst.mockResolvedValue(null);
+    (prismaMock.notification as any).create.mockResolvedValue({ id: 'notif-mock' });
+
+    // Transaction mock: pass prismaMock as tx so inner tx.notification.* hits existing mocks
+    (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: any) => fn(prismaMock));
   });
 
   // =============================================================================
@@ -220,7 +233,7 @@ describe('Home Router', () => {
   // getAIInsights
   // =============================================================================
   describe('getAIInsights', () => {
-    it('should return warning insights for deals at risk', async () => {
+    it('should route deal-at-risk alerts to notifications and return smart summaries', async () => {
       const twoWeeksAgo = new Date();
       twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 20);
 
@@ -233,19 +246,31 @@ describe('Home Router', () => {
       ] as any);
       prismaMock.lead.findMany.mockResolvedValue([]);
       prismaMock.task.count.mockResolvedValue(0);
-      prismaMock.contact.findMany.mockResolvedValue([]); // IFC-192
+      prismaMock.contact.findMany.mockResolvedValue([]);
+
+      // Mock smart summary pipeline query
+      (prismaMock.opportunity as any).count.mockResolvedValue(1);
+      (prismaMock.opportunity as any).aggregate.mockResolvedValue({ _sum: { value: 50000 } });
 
       const result = await caller.getAIInsights();
 
-      expect(result.insights).toHaveLength(1);
-      expect(result.insights[0].type).toBe('warning');
-      expect(result.insights[0].title).toContain('Deal at Risk');
+      // Threshold alert routed to notifications
+      expect(prismaMock.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            sourceType: 'deal_at_risk',
+            sourceId: TEST_UUIDS.opportunity1,
+            category: 'ALERTS',
+          }),
+        })
+      );
+      // Smart summaries returned as insights (pipeline overview)
+      expect(result.insights.length).toBeGreaterThan(0);
       expect(result.insights[0].source).toBe('heuristic');
-      expect(result.insights[0].entityType).toBe('opportunity');
-      expect(result.insights[0].actionUrl).toBe(`/deals/${TEST_UUIDS.opportunity1}`);
+      expect(result.insights[0].priority).toBe('low');
     });
 
-    it('should return opportunity insights for hot leads', async () => {
+    it('should route hot lead alerts to notifications', async () => {
       prismaMock.opportunity.findMany.mockResolvedValue([]);
       prismaMock.lead.findMany.mockResolvedValue([
         {
@@ -257,28 +282,39 @@ describe('Home Router', () => {
         },
       ] as any);
       prismaMock.task.count.mockResolvedValue(0);
-      prismaMock.contact.findMany.mockResolvedValue([]); // IFC-192
+      prismaMock.contact.findMany.mockResolvedValue([]);
 
-      const result = await caller.getAIInsights();
+      await caller.getAIInsights();
 
-      expect(result.insights).toHaveLength(1);
-      expect(result.insights[0].type).toBe('opportunity');
-      expect(result.insights[0].title).toBe('Hot Lead Detected');
-      expect(result.insights[0].description).toContain('score of 85');
+      // Hot lead routed to notifications
+      expect(prismaMock.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            sourceType: 'lead_scored',
+            subject: 'Hot Lead: Hot Lead',
+          }),
+        })
+      );
     });
 
-    it('should return reminder insights for overdue tasks', async () => {
+    it('should route overdue task alerts to notifications', async () => {
       prismaMock.opportunity.findMany.mockResolvedValue([]);
       prismaMock.lead.findMany.mockResolvedValue([]);
       prismaMock.task.count.mockResolvedValue(5);
-      prismaMock.contact.findMany.mockResolvedValue([]); // IFC-192
+      prismaMock.contact.findMany.mockResolvedValue([]);
 
-      const result = await caller.getAIInsights();
+      await caller.getAIInsights();
 
-      expect(result.insights).toHaveLength(1);
-      expect(result.insights[0].type).toBe('reminder');
-      expect(result.insights[0].title).toBe('5 Overdue Tasks');
-      expect(result.insights[0].actionUrl).toBe('/tasks?filter=overdue');
+      // Overdue tasks routed to notifications
+      expect(prismaMock.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            sourceType: 'task_overdue',
+            subject: '5 Overdue Tasks',
+            priority: 'HIGH',
+          }),
+        })
+      );
     });
 
     it('should return achievement when no urgent items', async () => {
@@ -923,7 +959,7 @@ describe('Home Router', () => {
       expect(result.items[0].isAvailable).toBe(true);
       expect(prismaMock.reportDefinition.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ id: 'report-1', tenantId: 'test-tenant-id' }),
+          where: expect.objectContaining({ id: 'report-1', tenantId: TEST_UUIDS.tenant }),
         })
       );
     });
@@ -980,7 +1016,7 @@ describe('Home Router', () => {
 
       expect(prismaMock.opportunity.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ id: 'opp-1', tenantId: 'test-tenant-id' }),
+          where: expect.objectContaining({ id: 'opp-1', tenantId: TEST_UUIDS.tenant }),
           select: { id: true },
         })
       );
@@ -1210,7 +1246,7 @@ describe('Home Router', () => {
     });
 
     describe('getAIInsights edge cases', () => {
-      it('should handle lead with only company name (no first/last name)', async () => {
+      it('should create proactive notification for hot lead with company name only', async () => {
         prismaMock.opportunity.findMany.mockResolvedValue([]);
         prismaMock.lead.findMany.mockResolvedValue([
           {
@@ -1222,14 +1258,22 @@ describe('Home Router', () => {
           },
         ] as any);
         prismaMock.task.count.mockResolvedValue(0);
-        prismaMock.contact.findMany.mockResolvedValue([]); // IFC-192
+        prismaMock.contact.findMany.mockResolvedValue([]);
 
-        const result = await caller.getAIInsights();
+        await caller.getAIInsights();
 
-        expect(result.insights[0].description).toContain('ACME Corp');
+        // Proactive notification created with company name
+        expect(prismaMock.notification.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({
+              subject: 'Hot Lead: ACME Corp',
+              sourceType: 'lead_scored',
+            }),
+          })
+        );
       });
 
-      it('should handle lead with no name or company', async () => {
+      it('should create proactive notification for hot lead with no name', async () => {
         prismaMock.opportunity.findMany.mockResolvedValue([]);
         prismaMock.lead.findMany.mockResolvedValue([
           {
@@ -1241,28 +1285,44 @@ describe('Home Router', () => {
           },
         ] as any);
         prismaMock.task.count.mockResolvedValue(0);
-        prismaMock.contact.findMany.mockResolvedValue([]); // IFC-192
+        prismaMock.contact.findMany.mockResolvedValue([]);
 
-        const result = await caller.getAIInsights();
+        await caller.getAIInsights();
 
-        expect(result.insights[0].description).toContain('Lead');
+        // Proactive notification created with fallback name
+        expect(prismaMock.notification.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({
+              subject: 'Hot Lead: Lead',
+              sourceType: 'lead_scored',
+            }),
+          })
+        );
       });
 
-      it('should show singular "Task" for single overdue task', async () => {
+      it('should create proactive notification with singular "Task" for single overdue task', async () => {
         prismaMock.opportunity.findMany.mockResolvedValue([]);
         prismaMock.lead.findMany.mockResolvedValue([]);
         prismaMock.task.count.mockResolvedValue(1);
-        prismaMock.contact.findMany.mockResolvedValue([]); // IFC-192
+        prismaMock.contact.findMany.mockResolvedValue([]);
 
-        const result = await caller.getAIInsights();
+        await caller.getAIInsights();
 
-        expect(result.insights[0].title).toBe('1 Overdue Task');
+        // Proactive notification created with singular form
+        expect(prismaMock.notification.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({
+              subject: '1 Overdue Task',
+              sourceType: 'task_overdue',
+            }),
+          })
+        );
       });
     });
 
-    // IFC-192: Stale contact warning tests
-    describe('stale contact warnings (IFC-192)', () => {
-      it('should return warning for stale contact with lastContactedAt > 30 days and open opportunity', async () => {
+    // IFC-192: Stale contact proactive notifications
+    describe('stale contact proactive notifications (IFC-192)', () => {
+      it('should create notification for stale contact with lastContactedAt > 30 days', async () => {
         const fortyDaysAgo = new Date();
         fortyDaysAgo.setDate(fortyDaysAgo.getDate() - 40);
 
@@ -1278,20 +1338,22 @@ describe('Home Router', () => {
           },
         ] as any);
 
-        const result = await caller.getAIInsights();
+        await caller.getAIInsights();
 
-        expect(result.insights).toHaveLength(1);
-        expect(result.insights[0].type).toBe('warning');
-        expect(result.insights[0].title).toContain('Stale Contact');
-        expect(result.insights[0].title).toContain('Jane Smith');
-        expect(result.insights[0].description).toContain('40 days');
-        expect(result.insights[0].source).toBe('heuristic');
-        expect(result.insights[0].entityType).toBe('contact');
-        expect(result.insights[0].actionUrl).toBe(`/contacts/${TEST_UUIDS.contact1}?tab=ai-insights`);
-        expect(result.insights[0].priority).toBe('medium');
+        // Stale contact routed to notifications, not insights
+        expect(prismaMock.notification.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({
+              subject: expect.stringContaining('Stale Contact: Jane Smith'),
+              sourceType: 'contact_stale',
+              sourceId: TEST_UUIDS.contact1,
+              category: 'ALERTS',
+            }),
+          })
+        );
       });
 
-      it('should return warning for contact with lastContactedAt = null and open opportunity', async () => {
+      it('should create notification for contact with lastContactedAt = null', async () => {
         prismaMock.opportunity.findMany.mockResolvedValue([]);
         prismaMock.lead.findMany.mockResolvedValue([]);
         prismaMock.task.count.mockResolvedValue(0);
@@ -1304,46 +1366,52 @@ describe('Home Router', () => {
           },
         ] as any);
 
-        const result = await caller.getAIInsights();
+        await caller.getAIInsights();
 
-        expect(result.insights).toHaveLength(1);
-        expect(result.insights[0].description).toContain('Never contacted');
+        expect(prismaMock.notification.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({
+              body: expect.stringContaining('Never contacted'),
+              sourceType: 'contact_stale',
+            }),
+          })
+        );
       });
 
-      it('should NOT return warning for recently contacted contact (< 30 days)', async () => {
+      it('should NOT create notification for recently contacted contact', async () => {
         prismaMock.opportunity.findMany.mockResolvedValue([]);
         prismaMock.lead.findMany.mockResolvedValue([]);
         prismaMock.task.count.mockResolvedValue(0);
-        // The Prisma query filters by lastContactedAt < staleCutoff,
-        // so recently contacted contacts won't be returned by the query
         prismaMock.contact.findMany.mockResolvedValue([]);
 
         const result = await caller.getAIInsights();
 
-        // Only the "all good" achievement should show
+        // Only achievement summary, no stale contact notifications
         expect(result.insights).toHaveLength(1);
         expect(result.insights[0].type).toBe('achievement');
       });
 
-      it('should NOT return warning for stale contact with NO open opportunities', async () => {
+      it('should deduplicate notifications within same day', async () => {
         prismaMock.opportunity.findMany.mockResolvedValue([]);
         prismaMock.lead.findMany.mockResolvedValue([]);
         prismaMock.task.count.mockResolvedValue(0);
-        // The Prisma query filters by opportunities: { some: { stage: { notIn: [...] } } }
-        // so contacts without open opportunities won't be returned
-        prismaMock.contact.findMany.mockResolvedValue([]);
+        prismaMock.contact.findMany.mockResolvedValue([
+          { id: 'c1', firstName: 'Stale', lastName: 'Contact1', lastContactedAt: null },
+        ] as any);
 
-        const result = await caller.getAIInsights();
+        // Simulate existing notification today
+        (prismaMock.notification as any).findFirst.mockResolvedValue({ id: 'existing' });
 
-        expect(result.insights).toHaveLength(1);
-        expect(result.insights[0].type).toBe('achievement');
+        await caller.getAIInsights();
+
+        // Should NOT create a new notification (dedup)
+        expect(prismaMock.notification.create).not.toHaveBeenCalled();
       });
 
-      it('should cap stale contacts at 2 within the 5-insight total', async () => {
+      it('should return smart summaries capped at 5', async () => {
         const twoWeeksAgo = new Date();
         twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 20);
 
-        // 3 deals at risk + 2 hot leads + 1 overdue + 2 stale contacts = 8
         prismaMock.opportunity.findMany.mockResolvedValue([
           { id: '1', name: 'Deal 1', updatedAt: twoWeeksAgo },
           { id: '2', name: 'Deal 2', updatedAt: twoWeeksAgo },
@@ -1359,9 +1427,13 @@ describe('Home Router', () => {
           { id: 'c2', firstName: 'Stale', lastName: 'Contact2', lastContactedAt: null },
         ] as any);
 
+        // Mock smart summary queries
+        (prismaMock.opportunity as any).count.mockResolvedValue(5);
+        (prismaMock.opportunity as any).aggregate.mockResolvedValue({ _sum: { value: 50000 } });
+
         const result = await caller.getAIInsights();
 
-        // Total capped at 5
+        // Smart summaries capped at 5
         expect(result.insights.length).toBeLessThanOrEqual(5);
       });
     });
@@ -1419,7 +1491,7 @@ describe('Home Router', () => {
           userId: TEST_UUIDS.user1,
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
           timezone: 'Asia/Tokyo',
         },
       });
@@ -1441,7 +1513,7 @@ describe('Home Router', () => {
           userId: TEST_UUIDS.user1,
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
           timezone: 'America/New_York',
         },
       });
@@ -1464,7 +1536,7 @@ describe('Home Router', () => {
           userId: TEST_UUIDS.user1,
           email: 'test@example.com',
           role: 'USER',
-          tenantId: 'test-tenant-id',
+          tenantId: TEST_UUIDS.tenant,
         },
       });
       const noTzCaller = homeRouter.createCaller(noTzCtx);
@@ -1507,7 +1579,7 @@ describe('Home Router', () => {
     });
 
     it('should handle errors on daily goal endpoint', async () => {
-      prismaMock.task.count.mockRejectedValue(new Error('Database connection failed'));
+      prismaMock.user.findUnique.mockRejectedValue(new Error('Database connection failed'));
 
       await expect(caller.getDailyGoal()).rejects.toThrow();
     });
@@ -1579,11 +1651,10 @@ describe('Home Router', () => {
       expect(prismaMock.lead.findMany).not.toHaveBeenCalled();
     });
 
-    it('should run heuristic queries when no fresh insights exist', async () => {
-      // No cached insights
+    it('should create proactive notifications and return smart summaries on cache miss', async () => {
       (prismaMock.aIInsight.findMany as any).mockResolvedValue([]);
 
-      // Mock heuristic queries
+      // Mock heuristic queries: one deal at risk
       prismaMock.opportunity.findMany.mockResolvedValue([
         {
           ...mockOpportunity,
@@ -1594,16 +1665,23 @@ describe('Home Router', () => {
       prismaMock.task.count.mockResolvedValue(0);
       prismaMock.contact.findMany.mockResolvedValue([]);
 
+      // Mock smart summary queries: active pipeline
+      (prismaMock.opportunity as any).count.mockResolvedValue(3);
+      (prismaMock.opportunity as any).aggregate.mockResolvedValue({ _sum: { value: 150000 } });
+
       const result = await caller.getAIInsights();
 
+      // Smart summaries returned (pipeline overview)
       expect(result.insights.length).toBeGreaterThan(0);
-      expect(result.insights[0].type).toBe('warning');
       expect(result.insights[0].source).toBe('heuristic');
+      expect(result.insights[0].priority).toBe('low');
       // Heuristic queries WERE executed
       expect(prismaMock.opportunity.findMany).toHaveBeenCalled();
+      // Proactive notification created for deal at risk
+      expect(prismaMock.notification.create).toHaveBeenCalled();
     });
 
-    it('should return heuristic results when enqueue fails silently', async () => {
+    it('should return smart summaries even when enqueue fails silently', async () => {
       (prismaMock.aIInsight.findMany as any).mockResolvedValue([]);
 
       prismaMock.opportunity.findMany.mockResolvedValue([]);
@@ -1611,17 +1689,20 @@ describe('Home Router', () => {
       prismaMock.task.count.mockResolvedValue(2);
       prismaMock.contact.findMany.mockResolvedValue([]);
 
-      // Even if BullMQ fails, insights should still be returned
+      // Mock pipeline data to get a smart summary
+      (prismaMock.opportunity as any).count.mockResolvedValue(3);
+      (prismaMock.opportunity as any).aggregate.mockResolvedValue({ _sum: { value: 75000 } });
+
       mockQueueAdd.mockRejectedValue(new Error('Redis unavailable'));
 
       const result = await caller.getAIInsights();
 
-      // Should still get the overdue tasks insight
+      // Pipeline summary returned despite Redis failure
       expect(result.insights.length).toBeGreaterThan(0);
+      expect(result.insights[0].title).toBe('Pipeline Overview');
     });
 
-    it('should treat expired insights as cache miss', async () => {
-      // Return no fresh insights (expired ones are filtered by the query)
+    it('should return achievement when no urgent items and no pipeline data', async () => {
       (prismaMock.aIInsight.findMany as any).mockResolvedValue([]);
 
       prismaMock.opportunity.findMany.mockResolvedValue([]);
@@ -1631,9 +1712,44 @@ describe('Home Router', () => {
 
       const result = await caller.getAIInsights();
 
-      // Should get achievement since no urgent items
       expect(result.insights.length).toBe(1);
       expect(result.insights[0].type).toBe('achievement');
+      expect(result.insights[0].title).toBe("You're on track!");
+      expect(result.insights[0].priority).toBe('low');
+    });
+
+    it('should NOT return achievement when hotLeads is non-empty but summaries are empty', async () => {
+      (prismaMock.aIInsight.findMany as any).mockResolvedValue([]);
+
+      // No deals at risk, no overdue tasks, but hot leads exist
+      prismaMock.opportunity.findMany.mockResolvedValue([]);
+      prismaMock.lead.findMany.mockResolvedValue([
+        { id: 'lead-1', firstName: 'Hot', lastName: 'Lead', company: 'Acme', score: 95 },
+      ] as any);
+      prismaMock.task.count.mockResolvedValue(0);
+      prismaMock.contact.findMany.mockResolvedValue([]);
+
+      const result = await caller.getAIInsights();
+
+      // Achievement fallback should NOT appear because hotLeads is non-empty
+      const achievement = result.insights.find((i) => i.id === 'all-good');
+      expect(achievement).toBeUndefined();
+    });
+
+    it('should NOT return achievement when staleContacts is non-empty but summaries are empty', async () => {
+      (prismaMock.aIInsight.findMany as any).mockResolvedValue([]);
+
+      prismaMock.opportunity.findMany.mockResolvedValue([]);
+      prismaMock.lead.findMany.mockResolvedValue([]);
+      prismaMock.task.count.mockResolvedValue(0);
+      prismaMock.contact.findMany.mockResolvedValue([
+        { id: 'c-1', firstName: 'Stale', lastName: 'Contact', lastContactedAt: new Date('2024-01-01') },
+      ] as any);
+
+      const result = await caller.getAIInsights();
+
+      const achievement = result.insights.find((i) => i.id === 'all-good');
+      expect(achievement).toBeUndefined();
     });
 
     it('should correctly map all DB type/category values to frontend enum', () => {

@@ -77,17 +77,17 @@ describe('Contact Router - Additional Coverage', () => {
       );
     });
 
-    it('should throw INTERNAL_SERVER_ERROR in stats when service is null', async () => {
+    it('should still return stats when service is null (IFC-252: stats bypasses service)', async () => {
       const ctx = createTestContext();
       ctx.services = { ...ctx.services, contact: undefined } as any;
       const caller = contactRouter.createCaller(ctx);
 
-      await expect(caller.stats()).rejects.toThrow(
-        expect.objectContaining({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Contact service not available',
-        })
-      );
+      // IFC-252: stats uses prismaWithTenant directly, not ContactService
+      prismaMock.contact.count.mockResolvedValue(0);
+      (prismaMock.contact.groupBy as any).mockResolvedValue([] as any);
+
+      const result = await caller.stats();
+      expect(result.total).toBe(0);
     });
   });
 

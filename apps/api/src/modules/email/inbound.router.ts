@@ -61,12 +61,13 @@ const InboundEmailWebhookSchema = z.object({
 
 const ProcessEmailInputSchema = z.object({
   emailId: z.string(),
-  action: z.enum(['archive', 'spam', 'delete', 'forward']),
+  action: z.enum(['archive', 'spam', 'delete', 'permanentDelete', 'forward']),
   forwardTo: z.email().optional(),
 });
 
 const ListEmailsInputSchema = z.object({
   folder: z.string().optional(),
+  label: z.string().optional(),
   search: z.string().optional(),
   status: z
     .enum(['PENDING', 'SENT', 'DELIVERED', 'OPENED', 'CLICKED', 'BOUNCED', 'FAILED'])
@@ -114,6 +115,7 @@ export interface ParsedEmailResponse {
   status: string;
   isRead: boolean;
   readAt: string | null;
+  labels: string[];
 }
 
 // ============================================================================
@@ -122,14 +124,15 @@ export interface ParsedEmailResponse {
 
 function mapEmailRecord(record: any): ParsedEmailResponse {
   const metadata = (record.metadata as Record<string, any>) ?? {};
+  const isHtml = metadata.isHtml ?? (typeof record.body === 'string' && /<[a-z][\s\S]*>/i.test(record.body));
   return {
     id: record.id,
     from: { address: record.fromEmail, name: metadata.fromName },
     to: parseRecipients(record.toEmail),
     cc: record.ccEmails ? parseRecipients(record.ccEmails) : undefined,
     subject: record.subject,
-    textBody: metadata.isHtml ? undefined : record.body,
-    htmlBody: metadata.isHtml ? record.body : undefined,
+    textBody: isHtml ? undefined : record.body,
+    htmlBody: isHtml ? record.body : undefined,
     attachments: (record.attachments ?? []).map((a: any) => ({
       id: a.id,
       filename: a.fileName,
@@ -145,6 +148,7 @@ function mapEmailRecord(record: any): ParsedEmailResponse {
     status: record.status,
     isRead: record.isRead ?? false,
     readAt: record.readAt ? record.readAt.toISOString() : null,
+    labels: Array.isArray(metadata.labels) ? metadata.labels : [],
   };
 }
 
@@ -271,7 +275,23 @@ export const inboundEmailRouter = createTRPCRouter({
         } else if (folderLower === 'archive') {
           where.metadata = { path: ['isArchived'], equals: true };
         }
-        // 'inbox' is the default — no additional filter needed
+        // 'inbox' needs no DB-level filter; app-layer filtering below
+        // excludes archived, trashed, spam, and draft emails
+      }
+
+      // Filter by label in metadata.labels array
+      if (input.label) {
+        const labelCondition = {
+          metadata: { path: ['labels'], array_contains: [input.label] },
+        };
+        // Combine with existing metadata filter (from folder) via AND
+        if (where.metadata) {
+          const folderCondition = { metadata: where.metadata };
+          delete where.metadata;
+          where.AND = [...(where.AND ?? []), folderCondition, labelCondition];
+        } else {
+          where.AND = [...(where.AND ?? []), labelCondition];
+        }
       }
 
       // Search by subject or body
@@ -299,10 +319,20 @@ export const inboundEmailRouter = createTRPCRouter({
         (ctx as any).prisma.emailRecord.count({ where }),
       ]);
 
+      // For inbox: exclude archived, trashed, spam, and draft emails in app layer
+      // (Prisma JSON path NOT filters have SQL NULL issues with missing keys)
+      const isInbox = !input.folder || input.folder.toLowerCase() === 'inbox';
+      const filtered = isInbox
+        ? emails.filter((e: any) => {
+            const meta = (e.metadata as Record<string, any>) ?? {};
+            return !meta.isArchived && !meta.isTrashed && !meta.isSpam && !meta.isDraft;
+          })
+        : emails;
+
       return {
-        emails: emails.map(mapEmailRecord),
-        total,
-        hasMore: input.offset + emails.length < total,
+        emails: filtered.map(mapEmailRecord),
+        total: isInbox ? filtered.length : total,
+        hasMore: isInbox ? false : input.offset + emails.length < total,
       };
     }
   ),
@@ -330,19 +360,24 @@ export const inboundEmailRouter = createTRPCRouter({
         case 'archive':
           await (ctx as any).prisma.emailRecord.update({
             where: { id: emailId },
-            data: { metadata: { ...currentMeta, isArchived: true, isTrashed: false } },
+            data: { metadata: { ...currentMeta, isArchived: true, isTrashed: false, isSpam: false, isDraft: false } },
           });
           break;
         case 'spam':
           await (ctx as any).prisma.emailRecord.update({
             where: { id: emailId },
-            data: { metadata: { ...currentMeta, isSpam: true } },
+            data: { metadata: { ...currentMeta, isSpam: true, isArchived: false, isTrashed: false, isDraft: false } },
           });
           break;
         case 'delete':
           await (ctx as any).prisma.emailRecord.update({
             where: { id: emailId },
-            data: { metadata: { ...currentMeta, isTrashed: true } },
+            data: { metadata: { ...currentMeta, isTrashed: true, isArchived: false, isSpam: false, isDraft: false } },
+          });
+          break;
+        case 'permanentDelete':
+          await (ctx as any).prisma.emailRecord.delete({
+            where: { id: emailId },
           });
           break;
         case 'forward': {
@@ -426,7 +461,7 @@ export const inboundEmailRouter = createTRPCRouter({
         const tenantId = (ctx as any).tenant.tenantId;
 
         // Query emails belonging to this thread via metadata
-        const emails = await (ctx as any).prisma.emailRecord.findMany({
+        let emails = await (ctx as any).prisma.emailRecord.findMany({
           where: {
             tenantId,
             metadata: { path: ['threadId'], equals: input.threadId },
@@ -435,6 +470,18 @@ export const inboundEmailRouter = createTRPCRouter({
           orderBy: { createdAt: 'asc' },
           take: input.limit,
         });
+
+        // Fallback: if no emails found by threadId, try looking up by email ID
+        // This handles emails that don't have metadata.threadId set
+        if (emails.length === 0) {
+          const single = await (ctx as any).prisma.emailRecord.findFirst({
+            where: { id: input.threadId, tenantId },
+            include: { attachments: true },
+          });
+          if (single) {
+            emails = [single];
+          }
+        }
 
         // Collect unique participants
         const participants = new Set<string>();
@@ -760,6 +807,63 @@ export const inboundEmailRouter = createTRPCRouter({
       return { success: true };
     }),
 
+  markAsUnread: tenantProcedure
+    .input(z.object({ emailId: z.string(), threadId: z.string().optional() }))
+    .mutation(async ({ input, ctx }): Promise<{ success: boolean }> => {
+      const tenantId = (ctx as any).tenant.tenantId;
+      const prisma = (ctx as any).prisma;
+
+      if (input.threadId) {
+        await prisma.emailRecord.updateMany({
+          where: {
+            tenantId,
+            metadata: { path: ['threadId'], equals: input.threadId },
+            isRead: true,
+          },
+          data: { isRead: false, readAt: null },
+        });
+      } else {
+        await prisma.emailRecord.updateMany({
+          where: { tenantId, id: input.emailId, isRead: true },
+          data: { isRead: false, readAt: null },
+        });
+      }
+      return { success: true };
+    }),
+
+  /**
+   * Set labels on an email
+   * Replaces the labels array in metadata
+   */
+  setLabels: tenantProcedure
+    .input(
+      z.object({
+        emailId: z.string(),
+        labels: z.array(z.string()),
+      })
+    )
+    .mutation(async ({ input, ctx }): Promise<{ success: boolean }> => {
+      const tenantId = (ctx as any).tenant.tenantId;
+      const prisma = (ctx as any).prisma;
+
+      const existing = await prisma.emailRecord.findFirst({
+        where: { id: input.emailId, tenantId },
+      });
+      if (!existing) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Email not found' });
+      }
+
+      const currentMeta = (existing.metadata as Record<string, any>) ?? {};
+      await prisma.emailRecord.update({
+        where: { id: input.emailId },
+        data: {
+          metadata: { ...currentMeta, labels: input.labels },
+        },
+      });
+
+      return { success: true };
+    }),
+
   /**
    * Get unread counts per folder
    * Returns a map of folder name → unread count
@@ -787,7 +891,21 @@ export const inboundEmailRouter = createTRPCRouter({
         } else if (folderLower === 'trash') {
           where.metadata = { path: ['isTrashed'], equals: true };
         }
-        // inbox: no extra filter — all non-categorized unread emails
+
+        // Inbox: exclude archived/trashed/spam/draft via app-layer filtering
+        // (Prisma JSON path NOT filters have SQL NULL issues with missing keys)
+        if (folderLower === 'inbox') {
+          const emails = await prisma.emailRecord.findMany({
+            where,
+            select: { metadata: true },
+          });
+          const filtered = emails.filter((e: any) => {
+            const meta = (e.metadata as Record<string, any>) ?? {};
+            return !meta.isArchived && !meta.isTrashed && !meta.isSpam && !meta.isDraft;
+          });
+          return { folder, count: filtered.length };
+        }
+
         return { folder, count: await prisma.emailRecord.count({ where }) };
       });
 
@@ -797,6 +915,209 @@ export const inboundEmailRouter = createTRPCRouter({
       }
       return result;
     }),
+
+  /**
+   * Look up a CRM entity (contact, lead, or account) by email address.
+   * Used by the email hover card to show sender/recipient profile previews.
+   * Returns the first match found in order: contact → lead → null.
+   */
+  lookupByEmail: tenantProcedure
+    .input(z.object({ email: z.string().email() }))
+    .query(
+      async ({
+        input,
+        ctx,
+      }): Promise<{
+        type: 'contact' | 'lead';
+        id: string;
+        name: string;
+        email: string;
+        title?: string | null;
+        phone?: string | null;
+        status: string;
+        company?: string | null;
+        avatarUrl?: string | null;
+      } | null> => {
+        const tenantId = (ctx as any).tenant.tenantId;
+        const prisma = (ctx as any).prisma;
+
+        // 1. Check contacts first
+        const contact = await prisma.contact.findFirst({
+          where: { tenantId, email: input.email },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            title: true,
+            phone: true,
+            status: true,
+            avatarUrl: true,
+            account: { select: { name: true } },
+          },
+        });
+
+        if (contact) {
+          return {
+            type: 'contact',
+            id: contact.id,
+            name: `${contact.firstName} ${contact.lastName}`.trim(),
+            email: contact.email,
+            title: contact.title,
+            phone: contact.phone,
+            status: contact.status,
+            company: contact.account?.name ?? null,
+            avatarUrl: contact.avatarUrl ?? null,
+          };
+        }
+
+        // 2. Check leads
+        const lead = await prisma.lead.findFirst({
+          where: { tenantId, email: input.email },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            title: true,
+            phone: true,
+            status: true,
+            company: true,
+          },
+        });
+
+        if (lead) {
+          return {
+            type: 'lead',
+            id: lead.id,
+            name: `${lead.firstName} ${lead.lastName}`.trim(),
+            email: lead.email,
+            title: lead.title,
+            phone: lead.phone,
+            status: lead.status,
+            company: lead.company,
+            avatarUrl: null,
+          };
+        }
+
+        return null;
+      }
+    ),
+
+  /**
+   * Get email storage usage for the current tenant
+   * Sums email body sizes (via SQL octet_length) and attachment file sizes
+   * Returns usage in bytes and the plan-tier limit
+   */
+  getStorageUsage: tenantProcedure.query(
+    async ({
+      ctx,
+    }): Promise<{
+      usedBytes: number;
+      limitBytes: number;
+      planTier: string;
+    }> => {
+      const tenantId = (ctx as any).tenant.tenantId;
+      const prisma = (ctx as any).prisma;
+
+      // Storage limits per plan tier (in bytes)
+      const STORAGE_LIMITS: Record<string, number> = {
+        STARTER: 5 * 1024 * 1024 * 1024, // 5 GB
+        PROFESSIONAL: 25 * 1024 * 1024 * 1024, // 25 GB
+        ENTERPRISE: 100 * 1024 * 1024 * 1024, // 100 GB
+        CUSTOM: 100 * 1024 * 1024 * 1024, // 100 GB default
+      };
+
+      // 1. Sum email body sizes using SQL octet_length
+      const bodyResult: Array<{ total: bigint | null }> = await prisma.$queryRaw`
+        SELECT COALESCE(SUM(octet_length(body)), 0) AS total
+        FROM email_records
+        WHERE "tenantId" = ${tenantId}
+      `;
+      const bodyBytes = Number(bodyResult[0]?.total ?? 0);
+
+      // 2. Sum attachment file sizes via Prisma aggregate
+      const attachmentResult = await prisma.emailAttachment.aggregate({
+        where: { tenantId },
+        _sum: { fileSize: true },
+      });
+      const attachmentBytes = attachmentResult._sum.fileSize ?? 0;
+
+      const usedBytes = bodyBytes + attachmentBytes;
+
+      // 3. Look up workspace plan tier via the user's workspace membership
+      const userId = (ctx as any).tenant.userId;
+      let planTier = 'STARTER';
+
+      const membership = await prisma.workspaceMember.findFirst({
+        where: { userId },
+        select: { workspace: { select: { plan: true } } },
+        orderBy: { joinedAt: 'desc' },
+      });
+
+      if (membership?.workspace?.plan) {
+        planTier = membership.workspace.plan;
+      }
+
+      const limitBytes = STORAGE_LIMITS[planTier] ?? STORAGE_LIMITS.STARTER;
+
+      return { usedBytes, limitBytes, planTier };
+    }
+  ),
+
+  /**
+   * Get recent messages involving a specific email address for the hover card.
+   * Searches both sender (fromEmail) and recipient (toEmail) fields.
+   * Returns the latest 3 emails involving that address.
+   */
+  getRelatedMessages: tenantProcedure
+    .input(z.object({ email: z.string().email(), limit: z.number().min(1).max(5).default(3) }))
+    .query(
+      async ({
+        input,
+        ctx,
+      }): Promise<
+        Array<{
+          id: string;
+          subject: string;
+          receivedAt: string;
+          preview: string;
+        }>
+      > => {
+        const tenantId = (ctx as any).tenant.tenantId;
+        const prisma = (ctx as any).prisma;
+
+        const emails = await prisma.emailRecord.findMany({
+          where: {
+            tenantId,
+            OR: [
+              { fromEmail: input.email },
+              { toEmail: { contains: input.email, mode: 'insensitive' } },
+            ],
+          },
+          select: {
+            id: true,
+            subject: true,
+            body: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: 'desc' },
+          take: input.limit,
+        });
+
+        return emails.map((e: any) => {
+          const bodyText = typeof e.body === 'string'
+            ? e.body.replace(/<[^>]*>/g, '').slice(0, 60)
+            : '';
+          return {
+            id: e.id,
+            subject: e.subject ?? '(No subject)',
+            receivedAt: e.createdAt.toISOString(),
+            preview: bodyText || '(No preview)',
+          };
+        });
+      }
+    ),
 
   /**
    * Search contacts for recipient autocomplete
@@ -819,6 +1140,7 @@ export const inboundEmailRouter = createTRPCRouter({
           firstName: string;
           lastName: string;
           email: string;
+          company: string | null;
         }>
       > => {
         if (!input.query || input.query.length < 2) return [];
@@ -831,7 +1153,7 @@ export const inboundEmailRouter = createTRPCRouter({
               { email: { contains: input.query, mode: 'insensitive' } },
             ],
           },
-          select: { id: true, firstName: true, lastName: true, email: true },
+          select: { id: true, firstName: true, lastName: true, email: true, company: true },
           take: input.limit,
           orderBy: { firstName: 'asc' },
         });

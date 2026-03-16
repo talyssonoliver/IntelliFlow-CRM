@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createPublicContext, createTestContext, prismaMock } from '../../../test/setup';
+import { createPublicContext, createTestContext, prismaMock, TEST_UUIDS } from '../../../test/setup';
 
 // Mock the InboundEmailParser from adapters - preserve other exports via importOriginal
 vi.mock('@intelliflow/adapters', async (importOriginal) => {
@@ -198,7 +198,7 @@ Hello World`;
   describe('processEmail', () => {
     const mockExistingEmail = {
       id: 'test-email-123',
-      tenantId: 'test-tenant-id',
+      tenantId: TEST_UUIDS.tenant,
       messageId: '<msg-123@example.com>',
       fromEmail: 'sender@example.com',
       toEmail: 'inbox@intelliflow.com',
@@ -369,6 +369,8 @@ describe('getUnreadCounts', () => {
   });
 
   it('returns zero counts for all folders when no unread emails', async () => {
+    // inbox uses findMany + app-layer filter; others use count
+    (prismaMock.emailRecord.findMany as any).mockResolvedValue([]);
     (prismaMock.emailRecord.count as any).mockResolvedValue(0);
 
     const result = await caller.getUnreadCounts({});
@@ -383,8 +385,11 @@ describe('getUnreadCounts', () => {
   });
 
   it('returns actual counts for each folder', async () => {
+    // inbox uses findMany — return 5 emails with no archive/trash/spam/draft flags
+    (prismaMock.emailRecord.findMany as any).mockResolvedValueOnce(
+      Array.from({ length: 5 }, () => ({ metadata: {} }))
+    );
     (prismaMock.emailRecord.count as any)
-      .mockResolvedValueOnce(5) // inbox
       .mockResolvedValueOnce(2) // sent
       .mockResolvedValueOnce(1) // drafts
       .mockResolvedValueOnce(0) // trash
@@ -402,7 +407,10 @@ describe('getUnreadCounts', () => {
   });
 
   it('uses custom folder list when provided', async () => {
-    (prismaMock.emailRecord.count as any).mockResolvedValue(3);
+    // inbox uses findMany + app-layer filter
+    (prismaMock.emailRecord.findMany as any).mockResolvedValue(
+      Array.from({ length: 3 }, () => ({ metadata: {} }))
+    );
 
     const result = await caller.getUnreadCounts({ folders: ['inbox'] });
 

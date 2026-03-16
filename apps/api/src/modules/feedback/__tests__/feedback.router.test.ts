@@ -27,7 +27,7 @@ function getFeedbackService(ctx: BaseContext): MockFeedbackService {
 // Test UUID constants
 const TEST_UUIDS = {
   user1: '12345678-0000-4000-8000-000012345678',
-  tenant: 'test-tenant-id',
+  tenant: '344b1756-0000-4000-8000-344b17560000',
   lead1: '23456789-0000-4000-8000-000023456789',
   score1: '34567890-0000-4000-8000-000034567890',
 };
