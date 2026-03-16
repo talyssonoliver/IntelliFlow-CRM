@@ -360,6 +360,21 @@ async function cleanDatabase() {
     where: { id: { startsWith: SEED_UUID_PREFIX } },
   });
 
+  // AI Conversation Records (children first, then parent)
+  await prisma.toolCallRecord.deleteMany({
+    where: { tenantId: { startsWith: SEED_UUID_PREFIX } },
+  });
+  await prisma.messageRecord.deleteMany({
+    where: { tenantId: { startsWith: SEED_UUID_PREFIX } },
+  });
+  await prisma.conversationRecord.deleteMany({
+    where: { tenantId: { startsWith: SEED_UUID_PREFIX } },
+  });
+  // Also clean AI output reviews (depends on conversation records)
+  await prisma.aIOutputReview.deleteMany({
+    where: { id: { startsWith: SEED_UUID_PREFIX } },
+  });
+
   // =========================================================================
   // ORIGINAL MODELS
   // =========================================================================
@@ -2715,10 +2730,15 @@ async function seedConversationRecords(tenantId: string) {
   const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
   const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000);
 
-  // Helper to build conversation records concisely
+  // Helper to build conversation records concisely.
+  //
+  // sessionId uses the same pattern as agent-status.ts:
+  //   `agent-status:{tenantId}:{agentType}`
+  // This ensures real BullMQ jobs will UPSERT over seed data
+  // instead of creating duplicate rows.
   function conv(
     id: string,
-    sessionSuffix: string,
+    _sessionSuffix: string,
     agentName: string,
     agentModel: string,
     title: string,
@@ -2733,11 +2753,11 @@ async function seedConversationRecords(tenantId: string) {
   ) {
     return {
       id,
-      sessionId: `session-${sessionSuffix}-${Date.now()}`,
+      sessionId: `agent-status:${tenantId}:${agentName}`,
       title,
       contextName,
       contextType,
-      agentId: `crewai-${agentName}-v1`,
+      agentId: `ai-${agentName}-v1`,
       agentName,
       agentModel,
       userName: 'System',
@@ -2997,7 +3017,7 @@ async function seedConversationRecords(tenantId: string) {
 
   for (const c of conversations) {
     await prisma.conversationRecord.upsert({
-      where: { id: c.id },
+      where: { sessionId: c.sessionId },
       update: c,
       create: c,
     });
