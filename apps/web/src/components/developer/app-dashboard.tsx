@@ -16,6 +16,7 @@ import {
 import { generateApiKey } from '@/lib/developer/api-key-generator';
 import { findAppById, type DeveloperApp, type ApiKey } from '@/lib/developer/demo-data';
 import { AppMetrics } from '@/components/developer/app-metrics';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 interface RequestLogEntry {
   id: string;
@@ -141,21 +142,23 @@ function EnvironmentBadge({ environment }: Readonly<{ environment: DeveloperApp[
   );
 }
 
-function formatDate(isoString: string): string {
+function formatDate(isoString: string, timezone: string = 'UTC'): string {
   return new Date(isoString).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
+    timeZone: timezone,
   });
 }
 
-function formatTimestamp(isoString: string): string {
+function formatTimestamp(isoString: string, timezone: string = 'UTC'): string {
   return new Date(isoString).toLocaleString('en-US', {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
+    timeZone: timezone,
   });
 }
 
@@ -172,6 +175,7 @@ export interface AppDashboardProps {
 }
 
 export function AppDashboard({ appId }: Readonly<AppDashboardProps>) {
+  const { timezone } = useTimezoneContext();
   const app = findAppById(appId);
   const [keys, setKeys] = useState<ApiKey[]>(app?.apiKeys ?? []);
   const [revealedKeyId, setRevealedKeyId] = useState<string | null>(null);
@@ -302,7 +306,7 @@ export function AppDashboard({ appId }: Readonly<AppDashboardProps>) {
                   <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Created
                   </span>
-                  <p className="text-sm mt-1">{formatDate(app.createdAt)}</p>
+                  <p className="text-sm mt-1">{formatDate(app.createdAt, timezone)}</p>
                 </div>
                 <div>
                   <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -424,9 +428,9 @@ export function AppDashboard({ appId }: Readonly<AppDashboardProps>) {
                             : apiKey.maskedKey}
                         </code>
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>Created: {formatDate(apiKey.createdAt)}</span>
+                          <span>Created: {formatDate(apiKey.createdAt, timezone)}</span>
                           <span data-testid={`last-used-${apiKey.id}`}>
-                            Last used: {apiKey.lastUsed ? formatDate(apiKey.lastUsed) : 'Never'}
+                            Last used: {apiKey.lastUsed ? formatDate(apiKey.lastUsed, timezone) : 'Never'}
                           </span>
                         </div>
                         <div className="flex gap-1">
@@ -493,7 +497,7 @@ export function AppDashboard({ appId }: Readonly<AppDashboardProps>) {
                       {logs.map((log) => (
                         <tr key={log.id} className="border-b last:border-0">
                           <td className="py-2 px-3 text-muted-foreground whitespace-nowrap">
-                            {formatTimestamp(log.timestamp)}
+                            {formatTimestamp(log.timestamp, timezone)}
                           </td>
                           <td className="py-2 px-3">
                             <span

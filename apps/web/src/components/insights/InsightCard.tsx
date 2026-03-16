@@ -69,14 +69,6 @@ export function InsightCard({ insight, onClick }: Readonly<InsightCardProps>) {
         <h4 className="font-semibold text-slate-800 dark:text-slate-200 text-sm">
           {insight.title}
         </h4>
-        {insight.source === 'heuristic' && (
-          <span
-            data-testid="heuristic-insight-badge"
-            className="mt-1 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
-          >
-            Heuristic fallback
-          </span>
-        )}
         <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
           {insight.description}
           {insight.suggestedAction && (

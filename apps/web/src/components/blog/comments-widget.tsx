@@ -255,6 +255,7 @@ function CommentCard({
     month: 'short',
     day: 'numeric',
     year: 'numeric',
+    timeZone: 'UTC',
   });
 
   return (
@@ -356,6 +357,7 @@ function CommentCard({
                         {new Date(reply.createdAt).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',
+                          timeZone: 'UTC',
                         })}
                       </span>
                     </div>

@@ -8,17 +8,19 @@
 
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import type { SentimentTrendPoint } from '@/lib/sentiment/types';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 interface SentimentTrendProps {
   trends: SentimentTrendPoint[];
 }
 
-function formatDate(dateStr: string): string {
+function formatDate(dateStr: string, timezone: string = 'UTC'): string {
   const d = new Date(dateStr);
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: timezone });
 }
 
 export default function SentimentTrend({ trends }: Readonly<SentimentTrendProps>) {
+  const { timezone } = useTimezoneContext();
   if (!trends.length) {
     return (
       <div className="flex items-center justify-center h-48 text-muted-foreground text-sm">
@@ -29,7 +31,7 @@ export default function SentimentTrend({ trends }: Readonly<SentimentTrendProps>
 
   const chartData = trends.map((t) => ({
     ...t,
-    dateLabel: formatDate(t.date),
+    dateLabel: formatDate(t.date, timezone),
   }));
 
   return (

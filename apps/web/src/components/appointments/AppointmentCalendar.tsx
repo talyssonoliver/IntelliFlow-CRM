@@ -3,6 +3,7 @@
 import { useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import type { CalendarAppointment, CalendarTask } from './types';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 const AppointmentCalendarInner = dynamic(
   () => import('./AppointmentCalendarInner').then((m) => ({ default: m.AppointmentCalendarInner })),
@@ -46,6 +47,7 @@ export function AppointmentCalendar({
   onMoreClick,
   isLoading,
 }: Readonly<AppointmentCalendarProps>) {
+  const { timezone } = useTimezoneContext();
   const navigatePrev = useCallback(() => {
     const d = new Date(currentDate);
     if (view === 'month') d.setMonth(d.getMonth() - 1);
@@ -73,8 +75,9 @@ export function AppointmentCalendar({
           month: 'long',
           day: 'numeric',
           year: 'numeric',
+          timeZone: timezone,
         })
-      : currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      : currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: timezone });
 
   if (isLoading) {
     return (

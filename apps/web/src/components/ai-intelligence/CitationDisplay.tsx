@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Badge, cn } from '@intelliflow/ui';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import {
   getSourceIcon,
   getSourceLabel,
@@ -20,7 +21,7 @@ interface CitationDisplayProps {
   disableLink?: boolean;
 }
 
-function formatRelativeTime(dateStr: string): string {
+function formatRelativeTime(dateStr: string, timezone: string = 'UTC'): string {
   const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -32,7 +33,7 @@ function formatRelativeTime(dateStr: string): string {
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 30) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone });
 }
 
 export function CitationDisplay({
@@ -43,12 +44,13 @@ export function CitationDisplay({
   createdAt,
   disableLink = false,
 }: Readonly<CitationDisplayProps>) {
+  const { timezone } = useTimezoneContext();
   const icon = getSourceIcon(source);
   const label = getSourceLabel(source);
   const href = getSourceHref(source, sourceId);
   const relevanceClass = getRelevanceBadgeClass(relevanceScore);
   const scoreText = formatRelevanceScore(relevanceScore);
-  const timeAgo = formatRelativeTime(createdAt);
+  const timeAgo = formatRelativeTime(createdAt, timezone);
 
   const showLink = !disableLink && href !== '#';
 
@@ -78,7 +80,7 @@ export function CitationDisplay({
 
       <Badge className={cn('text-xs font-medium', relevanceClass)}>{scoreText}</Badge>
 
-      <span className="text-xs" title={new Date(createdAt).toLocaleString()}>
+      <span className="text-xs" title={new Date(createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: timezone })}>
         {timeAgo}
       </span>
     </div>

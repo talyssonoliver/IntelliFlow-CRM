@@ -20,7 +20,6 @@ import {
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { DraggablePinnedItem } from './DraggablePinnedItem';
-import { NotificationsSummaryWidget } from './NotificationsSummaryWidget';
 import {
   ActivityFeed,
   ActivityFeedTypeFilter,
@@ -471,7 +470,14 @@ export function AuthenticatedHomePage() {
     trackPinnedItemClick(entityType, entityId);
   }, []);
 
-  const visibleQuickActions = ALL_QUICK_ACTIONS.filter((a) => enabledActionIds.has(a.id));
+  const allEnabledActions = ALL_QUICK_ACTIONS.filter((a) => enabledActionIds.has(a.id));
+  const insightCount = insightsData?.insights?.length ?? 0;
+  // When insights < 4, cap quick actions at 4 to prevent the card from
+  // expanding beyond the insights card and leaving empty space.
+  const visibleQuickActions =
+    insightCount < 4 && allEnabledActions.length > 4
+      ? allEnabledActions.slice(0, 4)
+      : allEnabledActions;
 
   // Compute enabled groups and filter pinned items by those groups
   const enabledGroups = ALL_PINNED_NAV_GROUPS.filter((g) => pinnedGroupIds.has(g.id));
@@ -554,7 +560,7 @@ export function AuthenticatedHomePage() {
                     auto_awesome
                   </span>
                   <h2 className="font-bold text-slate-800 dark:text-slate-100">
-                    AI Daily Insights
+                    Insights
                   </h2>
                 </div>
                 <Link
@@ -706,8 +712,6 @@ export function AuthenticatedHomePage() {
               </div>
             </div>
 
-            {/* Notifications Summary - colSpan: 1 (PG-161) */}
-            <NotificationsSummaryWidget enabled={queryEnabled} />
           </div>
         </div>
       </main>

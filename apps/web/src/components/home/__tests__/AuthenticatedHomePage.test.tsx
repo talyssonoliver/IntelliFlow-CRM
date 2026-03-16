@@ -554,7 +554,7 @@ describe('AuthenticatedHomePage', () => {
   describe('AI Insights Section', () => {
     it('renders section header', () => {
       render(<AuthenticatedHomePage />);
-      expect(screen.getByText('AI Daily Insights')).toBeInTheDocument();
+      expect(screen.getByText('Insights')).toBeInTheDocument();
     });
 
     it('renders View All link', () => {
@@ -575,10 +575,10 @@ describe('AuthenticatedHomePage', () => {
       expect(screen.getByText(/Suggested Action: Schedule follow-up/)).toBeInTheDocument();
     });
 
-    it('labels heuristic fallback insights distinctly', () => {
+    it('does not render heuristic badge for any source', () => {
       render(<AuthenticatedHomePage />);
-      expect(screen.getAllByTestId('heuristic-insight-badge')).toHaveLength(1);
-      expect(screen.getByText('Heuristic fallback')).toBeInTheDocument();
+      expect(screen.queryByTestId('heuristic-insight-badge')).not.toBeInTheDocument();
+      expect(screen.queryByText('Heuristic fallback')).not.toBeInTheDocument();
     });
 
     it('renders insight links with correct URLs', () => {

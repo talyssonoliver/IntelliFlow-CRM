@@ -7,8 +7,10 @@ import { Skeleton } from '@intelliflow/ui';
 import { TaskCreateSheet } from '@/components/tasks/TaskCreateSheet';
 import type { WidgetProps } from './index';
 import type { TaskStatus } from '@intelliflow/domain';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 export function PendingTasksWidget(_props: Readonly<WidgetProps>) {
+  const { timezone } = useTimezoneContext();
   const [createOpen, setCreateOpen] = useState(false);
 
   const { data, isLoading } = api.task.list.useQuery({
@@ -87,6 +89,7 @@ export function PendingTasksWidget(_props: Readonly<WidgetProps>) {
                     ? new Date(task.dueDate).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
+                        timeZone: timezone,
                       })
                     : 'No due date'}
                 </p>

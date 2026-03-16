@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader } from '@intelliflow/ui';
 import type { DeveloperApp } from '@/lib/developer/demo-data';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 interface DailyApiUsage {
   date: string;
@@ -65,6 +66,7 @@ export interface AppMetricsProps {
 }
 
 export function AppMetrics({ app }: Readonly<AppMetricsProps>) {
+  const { timezone } = useTimezoneContext();
   const usage = DEMO_USAGE[app.id];
 
   if (
@@ -241,7 +243,7 @@ export function AppMetrics({ app }: Readonly<AppMetricsProps>) {
                       ).toLocaleString()}
                     </td>
                     <td className="py-2 px-3 text-muted-foreground">
-                      {key.lastUsed ? new Date(key.lastUsed).toLocaleDateString() : 'Never'}
+                      {key.lastUsed ? new Date(key.lastUsed).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone }) : 'Never'}
                     </td>
                   </tr>
                 ))}

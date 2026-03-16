@@ -23,6 +23,7 @@ import { findAppById } from '@/lib/developer/demo-data';
 import { isValidWebhookUrl } from '@/lib/developer/oauth-setup';
 import { SCOPE_OPTIONS } from '@/components/developer/app-creator';
 import { WebhookConfig } from '@/components/developer/webhook-config';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 export interface AppEditorProps {
   appId: string;
@@ -63,6 +64,7 @@ function CopyButton({ text, label }: Readonly<{ text: string; label: string }>) 
 }
 
 export function AppEditor({ appId }: Readonly<AppEditorProps>) {
+  const { timezone } = useTimezoneContext();
   const router = useRouter();
   const app = appId ? findAppById(appId) : undefined;
 
@@ -285,7 +287,7 @@ export function AppEditor({ appId }: Readonly<AppEditorProps>) {
             <div>
               <Label className="text-muted-foreground text-xs">Created</Label>
               <p data-testid="created-at" className="text-sm mt-1">
-                {new Date(app.createdAt).toLocaleDateString()}
+                {new Date(app.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone })}
               </p>
             </div>
             <div>

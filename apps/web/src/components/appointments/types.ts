@@ -146,6 +146,7 @@ export interface AppointmentFormInput {
   description?: string;
   startTime: Date;
   endTime: Date;
+  timezone?: string;
   appointmentType: AppointmentType;
   location?: string;
   attendeeIds: string[];

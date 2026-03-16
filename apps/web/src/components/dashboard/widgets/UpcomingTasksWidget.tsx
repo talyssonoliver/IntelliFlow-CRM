@@ -7,6 +7,7 @@ import { Skeleton } from '@intelliflow/ui';
 import { TaskCreateSheet } from '@/components/tasks/TaskCreateSheet';
 import type { WidgetProps } from './index';
 import type { TaskStatus } from '@intelliflow/domain';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 const priorityColors: Record<string, string> = {
   URGENT: 'text-red-600 dark:text-red-400',
@@ -15,7 +16,7 @@ const priorityColors: Record<string, string> = {
   LOW: 'text-green-600 dark:text-green-400',
 };
 
-function formatDueDate(date: Date | string | null): string {
+function formatDueDate(date: Date | string | null, timezone: string = 'UTC'): string {
   if (!date) return 'No due date';
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return 'No due date';
@@ -26,7 +27,7 @@ function formatDueDate(date: Date | string | null): string {
   if (diffDays < 0) return 'Overdue';
   if (diffDays === 0) return 'Due Today';
   if (diffDays === 1) return 'Due Tomorrow';
-  return `Due ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+  return `Due ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: timezone })}`;
 }
 
 function getDueDateColor(date: Date | string | null): string {
@@ -41,6 +42,7 @@ function getDueDateColor(date: Date | string | null): string {
 }
 
 export function UpcomingTasksWidget(_props: Readonly<WidgetProps>) {
+  const { timezone } = useTimezoneContext();
   const [createOpen, setCreateOpen] = useState(false);
 
   const { data, isLoading } = api.task.list.useQuery({
@@ -111,7 +113,7 @@ export function UpcomingTasksWidget(_props: Readonly<WidgetProps>) {
                     {task.priority?.charAt(0) + task.priority?.slice(1).toLowerCase()}
                   </span>
                   <span className={`text-xs ${getDueDateColor(task.dueDate)}`}>
-                    {formatDueDate(task.dueDate)}
+                    {formatDueDate(task.dueDate, timezone)}
                   </span>
                 </div>
               </div>

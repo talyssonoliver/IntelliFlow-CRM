@@ -58,10 +58,10 @@ const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }>
   },
 };
 
-function formatTime(date: Date | string | null): string {
+function formatTime(date: Date | string | null, timezone: string = 'UTC'): string {
   if (!date) return '—';
   const d = new Date(date);
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: timezone });
 }
 
 export function AgentWorkload() {

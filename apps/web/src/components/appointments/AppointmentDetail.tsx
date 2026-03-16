@@ -37,13 +37,14 @@ function formatReminder(minutes?: number): string {
   return `${Math.round(minutes / 60)} hours before`;
 }
 
-function formatTimelineDate(date: Readonly<Date>): string {
+function formatTimelineDate(date: Readonly<Date>, timezone: string = 'UTC'): string {
   return date.toLocaleString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+    timeZone: timezone,
   });
 }
 

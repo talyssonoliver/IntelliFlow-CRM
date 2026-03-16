@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Card } from '@intelliflow/ui';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 type ServiceStatus = 'operational' | 'degraded' | 'partial_outage' | 'major_outage';
 
@@ -66,6 +67,7 @@ function getStatusColor(status: Readonly<ServiceStatus>): string {
 }
 
 export function StatusMonitor({ services, refreshInterval = 30000 }: Readonly<StatusMonitorProps>) {
+  const { timezone } = useTimezoneContext();
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -96,7 +98,7 @@ export function StatusMonitor({ services, refreshInterval = 30000 }: Readonly<St
                 refresh
               </span>
             )}
-            <span>Updated {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Loading...'}</span>
+            <span>Updated {lastUpdated ? lastUpdated.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: timezone }) : 'Loading...'}</span>
           </div>
         </div>
 

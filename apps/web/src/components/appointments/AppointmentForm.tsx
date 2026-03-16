@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   APPOINTMENT_TYPE_OPTIONS,
@@ -10,6 +10,7 @@ import {
 } from '@/lib/appointments/appointment-utils';
 import { ConflictWarning } from './ConflictWarning';
 import { RecurrenceEditor } from './RecurrenceEditor';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import type {
   AppointmentDetailData,
   AppointmentFormInput,
@@ -62,6 +63,13 @@ export function AppointmentForm({
     return '';
   });
   const [location, setLocation] = useState(appointment?.location || '');
+  const { timezone: userTimezone } = useTimezoneContext();
+  const [eventTimezone, setEventTimezone] = useState(
+    (appointment as any)?.timezone || userTimezone || 'UTC'
+  );
+  const timezoneOptions = useMemo(() => {
+    try { return Intl.supportedValuesOf('timeZone'); } catch { return ['UTC']; }
+  }, []);
   const [attendeeIds] = useState<string[]>(appointment?.attendees?.map((a) => a.userId) || []);
   const [linkedCaseIds] = useState<string[]>(appointment?.linkedCases?.map((c) => c.caseId) || []);
   const [bufferMinutesBefore, setBufferMinutesBefore] = useState(
@@ -123,6 +131,7 @@ export function AppointmentForm({
       description: description.trim() || undefined,
       startTime: new Date(startTime),
       endTime: new Date(endTime),
+      timezone: eventTimezone || undefined,
       appointmentType,
       location: location.trim() || undefined,
       attendeeIds,
@@ -259,6 +268,24 @@ export function AppointmentForm({
           disabled={isSubmitting}
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"
         />
+      </div>
+
+      {/* Timezone */}
+      <div>
+        <label htmlFor="appt-timezone" className="block text-sm font-medium text-gray-700 mb-1">
+          Event Timezone
+        </label>
+        <select
+          id="appt-timezone"
+          value={eventTimezone}
+          onChange={(e) => setEventTimezone(e.target.value)}
+          disabled={isSubmitting}
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"
+        >
+          {timezoneOptions.map((tz) => (
+            <option key={tz} value={tz}>{tz.replaceAll('_', ' ')}</option>
+          ))}
+        </select>
       </div>
 
       {/* Calendar */}
