@@ -11,8 +11,9 @@
  * @implements AC-10 (All tabs fully implemented)
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { EntityHoverCard } from '@/components/shared/entity-hover-card';
 import {
   Card,
   toast,
@@ -33,6 +34,7 @@ import { AppAvatar } from '@/components/shared/app-avatar';
 import { AssignSheet } from '@/components/shared/assign-sheet';
 import { EscalationAlert } from './EscalationAlert';
 import { ActivityFeed } from '@/components/shared/activity-feed';
+import { useActivityDeepLink, isDeepLinkedActivity } from '@/hooks/useActivityDeepLink';
 import { TicketAssignSidebar } from './TicketAssignSidebar';
 import {
   formatSLATime,
@@ -151,6 +153,21 @@ export function TicketDetail({
   const [replyMode, setReplyMode] = useState<'public' | 'internal'>('public');
   const [replyContent, setReplyContent] = useState('');
   const [activityView, setActivityView] = useState<'timeline' | 'unified'>('timeline');
+  const { selectedActivityId } = useActivityDeepLink(activeTab, setActiveTab as (tab: 'activity') => void);
+
+  // Deep-link: scroll to the targeted activity item
+  const deepLinkScrolledRef = useRef(false);
+  useEffect(() => {
+    if (!selectedActivityId || deepLinkScrolledRef.current) return;
+    deepLinkScrolledRef.current = true;
+    requestAnimationFrame(() => {
+      const el =
+        document.querySelector(`[data-activity-id="${CSS.escape(selectedActivityId.prefixed)}"]`) ||
+        document.querySelector(`[data-activity-id="${CSS.escape(selectedActivityId.raw)}"]`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }, [selectedActivityId, activeTab]);
+
   const [resolutionType, setResolutionType] = useState('');
   const [rootCause, setRootCause] = useState('');
   const [resolutionSummary, setResolutionSummary] = useState('');
@@ -565,12 +582,14 @@ export function TicketDetail({
                     <span className="material-symbols-outlined text-[18px] text-slate-400">
                       mail
                     </span>
-                    <a
-                      href={`mailto:${ticket.customer.email}`}
-                      className="text-slate-700 dark:text-slate-300 hover:text-[#137fec]"
-                    >
-                      {ticket.customer.email}
-                    </a>
+                    <EntityHoverCard email={ticket.customer.email} displayName={ticket.customer.name}>
+                      <Link
+                        href={`/email/compose?to=${encodeURIComponent(ticket.customer.email)}`}
+                        className="text-slate-700 dark:text-slate-300 hover:text-[#137fec]"
+                      >
+                        {ticket.customer.email}
+                      </Link>
+                    </EntityHoverCard>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-[18px] text-slate-400">
@@ -828,9 +847,16 @@ export function TicketDetail({
                       />
                     ) : (
                       <>
-                        <div className="relative pl-4 border-l-2 border-slate-200 dark:border-slate-700 ml-4 space-y-6">
+                        <div className="relative space-y-6" style={{ paddingLeft: 40 }}>
+                          {/* Continuous vertical timeline line — centered through icons */}
+                          <div className="absolute top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700" style={{ left: 19 }} />
+
                           {ticket.activities.map((activity) => (
-                            <ActivityItem key={activity.id} activity={activity} />
+                            <ActivityItem
+                              key={activity.id}
+                              activity={activity}
+                              isDeepLinked={isDeepLinkedActivity(activity.id, selectedActivityId)}
+                            />
                           ))}
                         </div>
 
@@ -1383,28 +1409,27 @@ export function TicketDetail({
 
 // ─── Activity Item Component ────────────────────────────────────────────────
 
-function ActivityItem({ activity }: Readonly<{ activity: TicketActivity }>) {
+const TICKET_ACTIVITY_ICON: Record<string, { icon: string; bg: string; color: string }> = {
+  customer_message: { icon: 'chat_bubble', bg: 'bg-slate-100 dark:bg-slate-700', color: 'text-slate-600 dark:text-slate-300' },
+  agent_reply: { icon: 'reply', bg: 'bg-blue-100 dark:bg-blue-900', color: 'text-blue-600 dark:text-blue-300' },
+  internal_note: { icon: 'sticky_note_2', bg: 'bg-yellow-100 dark:bg-yellow-900', color: 'text-yellow-600 dark:text-yellow-300' },
+  system_event: { icon: 'settings', bg: 'bg-slate-200 dark:bg-slate-700', color: 'text-slate-500 dark:text-slate-400' },
+  sla_breach: { icon: 'timer_off', bg: 'bg-red-100 dark:bg-red-900', color: 'text-red-600 dark:text-red-300' },
+  priority_change: { icon: 'swap_vert', bg: 'bg-orange-100 dark:bg-orange-900', color: 'text-orange-600 dark:text-orange-300' },
+};
+
+const DEFAULT_TICKET_ICON = { icon: 'info', bg: 'bg-slate-100 dark:bg-slate-800', color: 'text-slate-500 dark:text-slate-400' };
+
+function ActivityItem({ activity, isDeepLinked = false }: Readonly<{ activity: TicketActivity; isDeepLinked?: boolean }>) {
+  const iconStyle = TICKET_ACTIVITY_ICON[activity.type] || DEFAULT_TICKET_ICON;
   return (
-    <div className="relative pl-6">
-      <div className="absolute -left-[25px] top-1 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-700 z-10">
-        {activity.type === 'customer_message' && (
-          <div className="w-full h-full rounded-full bg-slate-400" />
-        )}
-        {activity.type === 'agent_reply' && (
-          <div className="w-full h-full rounded-full bg-[#137fec]" />
-        )}
-        {activity.type === 'internal_note' && (
-          <div className="w-full h-full rounded-full bg-yellow-500" />
-        )}
-        {activity.type === 'system_event' && (
-          <div className="w-full h-full rounded-full bg-slate-300" />
-        )}
-        {activity.type === 'sla_breach' && (
-          <div className="w-full h-full rounded-full bg-red-500" />
-        )}
-        {activity.type === 'priority_change' && (
-          <div className="w-full h-full rounded-full bg-orange-500" />
-        )}
+    <div data-activity-id={activity.id} className={`relative rounded-lg transition-colors ${isDeepLinked ? 'bg-primary/5 ring-2 ring-primary/30 ring-inset p-2' : ''}`}>
+      {/* Timeline dot — centered on the vertical line (matches contacts/leads layout) */}
+      <div
+        className={`absolute w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 shadow-sm flex items-center justify-center z-10 ${iconStyle.bg}`}
+        style={{ left: -36, top: 12 }}
+      >
+        <span className={`material-symbols-outlined !text-[16px] ${iconStyle.color}`}>{iconStyle.icon}</span>
       </div>
 
       {(activity.type === 'customer_message' || activity.type === 'agent_reply') && (

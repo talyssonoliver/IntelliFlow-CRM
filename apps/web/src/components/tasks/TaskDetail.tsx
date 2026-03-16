@@ -5,6 +5,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import type { TaskStatus, TaskPriority } from '@intelliflow/domain';
 import { EntitySearchField } from './EntitySearchField';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 type DateStringNull = Date | string | null;
 
@@ -59,11 +60,11 @@ const PRIORITY_STYLES: Record<string, { color: string; icon: string }> = {
   URGENT: { color: 'text-red-500', icon: 'priority_high' },
 };
 
-function formatDate(date: DateStringNull): string {
+function formatDate(date: DateStringNull, timezone: string = 'UTC'): string {
   if (!date) return '—';
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone });
 }
 
 function getDueDateStatus(date: DateStringNull): 'overdue' | 'today' | 'normal' {
@@ -122,6 +123,7 @@ export function TaskDetail({
   isAssigning = false,
   isRescheduling = false,
 }: Readonly<TaskDetailProps>) {
+  const { timezone } = useTimezoneContext();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
   const [showAssignPanel, setShowAssignPanel] = useState(false);
@@ -214,7 +216,7 @@ export function TaskDetail({
                 className={`text-sm font-medium ${dueDateColor}`}
                 data-testid={`due-${dueStatus}`}
               >
-                {formatDate(task.dueDate)}
+                {formatDate(task.dueDate, timezone)}
                 {dueStatus === 'overdue' && <span className="ml-1 text-xs">(overdue)</span>}
               </p>
               {onReschedule && task.status !== 'COMPLETED' && task.status !== 'CANCELLED' && task.status !== 'ARCHIVED' && (
@@ -254,17 +256,17 @@ export function TaskDetail({
           </div>
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Created</p>
-            <p className="text-sm text-muted-foreground mt-0.5">{formatDate(task.createdAt)}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">{formatDate(task.createdAt, timezone)}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Updated</p>
-            <p className="text-sm text-muted-foreground mt-0.5">{formatDate(task.updatedAt)}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">{formatDate(task.updatedAt, timezone)}</p>
           </div>
           {task.completedAt && (
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wider">Completed</p>
               <p className="text-sm text-green-600 dark:text-green-400 mt-0.5">
-                {formatDate(task.completedAt)}
+                {formatDate(task.completedAt, timezone)}
               </p>
             </div>
           )}

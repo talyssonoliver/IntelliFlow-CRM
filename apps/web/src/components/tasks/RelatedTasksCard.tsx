@@ -27,11 +27,11 @@ const PRIORITY_COLORS: Record<string, string> = {
   URGENT: 'text-red-500',
 };
 
-function formatDueDate(date: Date | string | null): string | null {
+function formatDueDate(date: Date | string | null, timezone: string = 'UTC'): string | null {
   if (!date) return null;
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: timezone });
 }
 
 function getDueDateColor(date: Date | string | null): string {

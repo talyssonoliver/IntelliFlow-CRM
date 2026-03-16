@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * SLADisplay — Dual-track SLA metrics display (PG-046)
  *
@@ -10,6 +12,7 @@
 
 import type { SLAStatus } from '@intelliflow/domain';
 import { formatSLATime, getSLAConfig } from '@/lib/tickets/ticket-utils';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 interface SLADisplayProps {
   slaStatus: SLAStatus;
@@ -58,6 +61,7 @@ function SLATrack({
   timeRemaining,
   targetDue,
 }: Readonly<SLATrackProps>) {
+  const { timezone } = useTimezoneContext();
   const config = getSLAConfig(slaStatus);
   const ariaLive = getAriaLive(slaStatus);
   const timeText = formatOverdueSLA(timeRemaining);
@@ -116,7 +120,7 @@ function SLATrack({
 
       {targetDue && (
         <span className="text-[10px] text-muted-foreground">
-          Target: {new Date(targetDue).toLocaleString()}
+          Target: {new Date(targetDue).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: timezone })}
         </span>
       )}
     </div>

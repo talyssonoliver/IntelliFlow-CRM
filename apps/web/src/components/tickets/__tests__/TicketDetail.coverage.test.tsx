@@ -324,7 +324,7 @@ describe('TicketDetail Coverage', () => {
 
       fireEvent.click(screen.getAllByText(/Activity/i)[0]);
 
-      const noteInput = screen.getByPlaceholderText('Add a note, log activity...');
+      const noteInput = screen.getByPlaceholderText('Add an internal note to this ticket...');
       fireEvent.change(noteInput, { target: { value: 'Test note' } });
 
       const addNoteBtn = screen.getByText('Add Note');

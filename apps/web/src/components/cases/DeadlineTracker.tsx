@@ -8,6 +8,7 @@
 
 import { useState } from 'react';
 import { cn } from '@intelliflow/ui';
+import { parseDateInputValue } from '@/lib/shared/timezone-utils';
 import { getTaskStatusConfig, formatDeadline } from '@/lib/cases/case-utils';
 import type { CaseTaskItem } from './types';
 
@@ -44,7 +45,7 @@ export function DeadlineTracker({
     if (!title.trim()) return;
     onAddTask({
       title: title.trim(),
-      dueDate: dueDate ? new Date(dueDate) : undefined,
+      dueDate: dueDate ? parseDateInputValue(dueDate) : undefined,
     });
     setTitle('');
     setDueDate('');

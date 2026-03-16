@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import type { TaskPriority } from '@intelliflow/domain';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 export interface CalendarTask {
   readonly id: string;
@@ -30,6 +31,7 @@ const TaskCalendarInner = dynamic(
 );
 
 export function TaskCalendar({ tasks, onTaskClick, onCreateWithDate }: Readonly<TaskCalendarProps>) {
+  const { timezone } = useTimezoneContext();
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -46,7 +48,7 @@ export function TaskCalendar({ tasks, onTaskClick, onCreateWithDate }: Readonly<
     setCurrentDate(new Date());
   }, []);
 
-  const monthLabel = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const monthLabel = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: timezone });
 
   return (
     <div

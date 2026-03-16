@@ -7,11 +7,12 @@
  * Sections: Case Information, Client Information, Assignment & SLA
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import type { CasePriority } from '@intelliflow/domain';
 import { CASE_PRIORITIES } from '@intelliflow/domain';
 import { api } from '@/lib/api';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 // ─── Hooks ───────────────────────────────────────────────────────────────────
 
@@ -36,6 +37,8 @@ interface CaseFormData {
   clientName: string;
   assigneeId: string;
   deadline: string;
+  timezone: string;
+  jurisdiction: string;
 }
 
 interface CaseFormProps {
@@ -67,6 +70,10 @@ const PRIORITY_LABELS: Record<CasePriority, string> = {
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }: Readonly<CaseFormProps>) {
+  const { timezone: userTimezone } = useTimezoneContext();
+  const timezoneOptions = useMemo(() => {
+    try { return Intl.supportedValuesOf('timeZone'); } catch { return ['UTC']; }
+  }, []);
   const [formData, setFormData] = useState<CaseFormData>({
     subject: initialData?.subject ?? '',
     description: initialData?.description ?? '',
@@ -77,6 +84,8 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
     clientName: '',
     assigneeId: initialData?.assigneeId ?? 'me',
     deadline: initialData?.deadline ?? '',
+    timezone: (initialData as any)?.timezone ?? userTimezone ?? 'UTC',
+    jurisdiction: (initialData as any)?.jurisdiction ?? '',
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof CaseFormData, string>>>({});
@@ -184,6 +193,8 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
     }
     // When 'me' is selected, omit assignedTo — backend defaults to current user
     if (formData.deadline) submitData.deadline = new Date(formData.deadline);
+    if (formData.timezone) submitData.timezone = formData.timezone;
+    if (formData.jurisdiction) submitData.jurisdiction = formData.jurisdiction;
 
     await onSubmit(submitData);
   };
@@ -484,6 +495,44 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
               onChange={(e) => updateField('deadline', e.target.value)}
               className={inputClasses('deadline')}
             />
+          </div>
+          <div>
+            <label
+              htmlFor="case-timezone"
+              className="block text-sm font-semibold text-foreground mb-1.5"
+            >
+              Deadline Timezone
+            </label>
+            <select
+              id="case-timezone"
+              value={formData.timezone}
+              onChange={(e) => updateField('timezone', e.target.value)}
+              className={inputClasses('timezone')}
+            >
+              {timezoneOptions.map((tz) => (
+                <option key={tz} value={tz}>{tz.replaceAll('_', ' ')}</option>
+              ))}
+            </select>
+          </div>
+          <div className="sm:col-span-2">
+            <label
+              htmlFor="jurisdiction"
+              className="block text-sm font-semibold text-foreground mb-1.5"
+            >
+              Jurisdiction
+            </label>
+            <input
+              id="jurisdiction"
+              type="text"
+              placeholder="e.g. US-NY, UK-England, EU-GDPR"
+              value={formData.jurisdiction}
+              onChange={(e) => updateField('jurisdiction', e.target.value)}
+              maxLength={100}
+              className={inputClasses('jurisdiction')}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Legal jurisdiction for court deadlines and filing requirements
+            </p>
           </div>
         </div>
       </section>

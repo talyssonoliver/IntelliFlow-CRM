@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable, TableRowActions, type BulkAction, Skeleton } from '@intelliflow/ui';
 import type { TaskStatus, TaskPriority } from '@intelliflow/domain';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 type DateStringNull = Date | string | null;
 
@@ -66,11 +67,11 @@ function getDueDateStatus(date: DateStringNull): 'overdue' | 'today' | 'normal' 
   return 'normal';
 }
 
-function formatDueDate(date: DateStringNull): string {
+function formatDueDate(date: DateStringNull, timezone: string = 'UTC'): string {
   if (!date) return '—';
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: timezone });
 }
 
 function getEntityInfo(task: Readonly<TaskListItem>): { type: string; name: string; href: string } | null {
@@ -96,7 +97,7 @@ function createColumns(handlers: {
   onEdit: (task: TaskListItem) => void;
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
-}): ColumnDef<TaskListItem>[] {
+}, timezone: string = 'UTC'): ColumnDef<TaskListItem>[] {
   return [
     {
       accessorKey: 'title',
@@ -157,7 +158,7 @@ function createColumns(handlers: {
           status === 'overdue' ? 'text-red-600 dark:text-red-400' : todayOrDefaultClass;
         return (
           <span className={`text-sm ${colorClass}`} data-testid={`due-${status}`}>
-            {formatDueDate(row.original.dueDate)}
+            {formatDueDate(row.original.dueDate, timezone)}
           </span>
         );
       },
@@ -259,9 +260,10 @@ export function TaskList({
   onBulkDelete,
   onBulkArchive,
 }: Readonly<TaskListProps>) {
+  const { timezone } = useTimezoneContext();
   const columns = useMemo(
-    () => createColumns({ onComplete, onEdit, onDelete, onArchive }),
-    [onComplete, onEdit, onDelete, onArchive]
+    () => createColumns({ onComplete, onEdit, onDelete, onArchive }, timezone),
+    [onComplete, onEdit, onDelete, onArchive, timezone]
   );
 
   const bulkActions: BulkAction<TaskListItem>[] = useMemo(

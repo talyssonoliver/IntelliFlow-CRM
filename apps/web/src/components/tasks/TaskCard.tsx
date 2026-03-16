@@ -2,6 +2,7 @@
 
 import { Card } from '@intelliflow/ui';
 import type { TaskStatus, TaskPriority } from '@intelliflow/domain';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 type DateStringNull = Date | string | null;
 
@@ -34,11 +35,11 @@ const STATUS_STYLES: Record<string, string> = {
   CANCELLED: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
 };
 
-function formatDueDate(date: DateStringNull): string | null {
+function formatDueDate(date: DateStringNull, timezone: string = 'UTC'): string | null {
   if (!date) return null;
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: timezone });
 }
 
 function getDueDateStatus(date: DateStringNull): 'overdue' | 'today' | 'normal' {
@@ -80,9 +81,10 @@ const ENTITY_ICONS: Record<string, string> = {
 };
 
 export function TaskCard({ task, onClick }: Readonly<TaskCardProps>) {
+  const { timezone } = useTimezoneContext();
   const priority = PRIORITY_STYLES[task.priority] ?? PRIORITY_STYLES.MEDIUM;
   const statusStyle = STATUS_STYLES[task.status] ?? STATUS_STYLES.PENDING;
-  const dueDisplay = formatDueDate(task.dueDate);
+  const dueDisplay = formatDueDate(task.dueDate, timezone);
   const dueStatus = getDueDateStatus(task.dueDate);
   const entity = getEntityInfo(task);
 
