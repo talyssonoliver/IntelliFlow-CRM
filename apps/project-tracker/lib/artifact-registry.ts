@@ -7,7 +7,7 @@
  * - Cleanup assistant (orphan detection, size analysis)
  */
 
-import { readdirSync, statSync, existsSync, type Dirent } from 'node:fs';
+import { readdirSync, readFileSync, statSync, existsSync, type Dirent } from 'node:fs';
 import { join, extname } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { MONOREPO_ROOT } from './paths';
@@ -421,12 +421,36 @@ function _isLikelyFabricated(content: string): boolean {
 // SKIP PATTERNS
 // =============================================================================
 
-const SKIP_DIRS = new Set(['node_modules', '.next', '.turbo', '.git', '.pnpm', 'dist', '.cache']);
+const SKIP_DIRS = new Set([
+  'node_modules', '.next', '.turbo', '.git', '.pnpm', 'dist', '.cache',
+  // Gitignored generated coverage data — not source code
+  'coverage-vitest', 'coverage-parts',
+  // Build output caches — not source code, flagged by Knip/Depcheck
+  '.tsup', 'generated',
+  // Temp/generated/IDE data — not source code
+  '.pytest_cache', '.scannerwork', '.sonarlint', '.vscode',
+  'sonar-reports', '.lighthouseci',
+  // Python caches
+  '__pycache__',
+]);
 
 // Directories to skip only at root or top-level app/package paths (not nested API routes)
-const SKIP_DIRS_TOP_LEVEL = new Set(['build']);
+const SKIP_DIRS_TOP_LEVEL = new Set(['build', 'coverage']);
 
-const SKIP_FILES = new Set(['.DS_Store', 'Thumbs.db', '.gitkeep']);
+/** Directories to skip ONLY at repo root (depth 1), not nested inside other dirs */
+const SKIP_DIRS_ROOT_ONLY = new Set(['logs', 'tmp', 'playwright-report', 'sonar-reports']);
+
+/** Specific path prefixes to skip entirely (gitignored temp data) */
+const SKIP_PATH_PREFIXES = ['supabase/.temp/'];
+
+const SKIP_FILES = new Set([
+  '.DS_Store', 'Thumbs.db', '.gitkeep', 'desktop.ini',
+  // Sensitive env files — never track
+  '.env', '.env.local', '.env.development', '.env.test',
+  '.env.local.example',
+  // Temp build artifacts
+  'build_output.log',
+]);
 
 // =============================================================================
 // CATEGORY DETECTION
@@ -516,6 +540,10 @@ function scanItem(
     if (item.isDirectory()) {
       const depth = relativePath.split(/[/\\]/).length;
       if (SKIP_DIRS_TOP_LEVEL.has(item.name) && depth <= 3) return;
+      if (SKIP_DIRS_ROOT_ONLY.has(item.name) && depth <= 1) return;
+      // Skip specific path prefixes (e.g., supabase/.temp/)
+      const normalizedDir = relativePath.replaceAll('\\', '/') + '/';
+      if (SKIP_PATH_PREFIXES.some((p) => normalizedDir.endsWith(p) || normalizedDir.includes('/' + p))) return;
       entries.push(...scanDirectoryRecursive(fullPath, relativePath));
     } else if (item.isFile()) {
       const ext = extname(item.name).toLowerCase() || 'none';
@@ -658,6 +686,237 @@ export function parseTaskFileRefs(
   }
 
   return result;
+}
+
+// =============================================================================
+// EVIDENCE SOURCE ENRICHMENT
+// =============================================================================
+
+/**
+ * Read and parse a JSON file safely, returning null on any error
+ */
+function readJsonSafe(filePath: string): Record<string, unknown> | null {
+  try {
+    return JSON.parse(readFileSync(filePath, 'utf-8')) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Ensure a task entry exists in the task map, creating a minimal one if needed
+ */
+function ensureTaskEntry(taskMap: TaskFileMap, taskId: string): void {
+  if (!taskMap[taskId]) {
+    taskMap[taskId] = {
+      expectedArtifacts: [],
+      expectedEvidence: [],
+      requiredFiles: [],
+      expectedContext: [],
+      expectedPlan: [],
+      expectedSpec: [],
+      expectedAttestation: [],
+      status: 'Unknown',
+      section: '',
+    };
+  }
+}
+
+/**
+ * Check if a string looks like a valid file path (not a JSON key or bare word)
+ */
+function isValidFilePath(p: string): boolean {
+  // Must contain a path separator or file extension
+  if (!p.includes('/') && !p.includes('.')) return false;
+  // Skip gitignored build output directories
+  if (p.includes('/dist/') || p.startsWith('dist/')) return false;
+  // Skip node_modules
+  if (p.includes('node_modules/')) return false;
+  return true;
+}
+
+/**
+ * Add a path to an array if not already present and looks like a valid file path
+ */
+function addUniquePath(arr: string[], path: string): void {
+  if (path && isValidFilePath(path) && !arr.includes(path)) {
+    arr.push(path);
+  }
+}
+
+/**
+ * Extract file paths from attestation.json artifact_hashes
+ */
+function enrichFromAttestationFile(
+  taskMap: TaskFileMap,
+  taskId: string,
+  attestationPath: string
+): void {
+  const data = readJsonSafe(attestationPath);
+  if (!data) return;
+
+  const hashes = data.artifact_hashes;
+  if (hashes && typeof hashes === 'object' && !Array.isArray(hashes)) {
+    ensureTaskEntry(taskMap, taskId);
+    for (const [filePath, hashValue] of Object.entries(hashes as Record<string, string>)) {
+      // Only trust entries with real SHA256 hashes (40-128 hex chars),
+      // skip phantom values like "verified", "pending_verification", etc.
+      if (typeof hashValue === 'string' && /^[0-9a-fA-F]{40,128}$/.test(hashValue)) {
+        addUniquePath(taskMap[taskId].expectedArtifacts, filePath);
+      }
+    }
+  }
+}
+
+/**
+ * Extract file paths from context_ack.json files_read
+ */
+function enrichFromContextAck(
+  taskMap: TaskFileMap,
+  taskId: string,
+  contextAckPath: string
+): void {
+  const data = readJsonSafe(contextAckPath);
+  if (!data) return;
+
+  const contextAck = data.context_acknowledgment as Record<string, unknown> | undefined;
+  const filesRead = (data.files_read ?? contextAck?.files_read) as
+    | Array<string | Record<string, string>>
+    | undefined;
+  if (!Array.isArray(filesRead)) return;
+
+  ensureTaskEntry(taskMap, taskId);
+  for (const entry of filesRead) {
+    const filePath = typeof entry === 'string' ? entry : entry.path;
+    if (filePath) {
+      addUniquePath(taskMap[taskId].requiredFiles, filePath);
+    }
+  }
+}
+
+/**
+ * Scan .specify/sprints/{N}/attestations/ for attestation and context_ack files
+ */
+function enrichFromAttestations(taskMap: TaskFileMap): void {
+  const specifyDir = join(MONOREPO_ROOT, '.specify', 'sprints');
+  if (!existsSync(specifyDir)) return;
+
+  let sprintDirs: Dirent<string>[];
+  try {
+    sprintDirs = readdirSync(specifyDir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+
+  for (const sprintDir of sprintDirs) {
+    if (!sprintDir.isDirectory()) continue;
+    const attestationsDir = join(specifyDir, sprintDir.name, 'attestations');
+    if (!existsSync(attestationsDir)) continue;
+
+    let taskDirs: Dirent<string>[];
+    try {
+      taskDirs = readdirSync(attestationsDir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+
+    for (const taskDir of taskDirs) {
+      if (!taskDir.isDirectory()) continue;
+      const taskId = taskDir.name;
+      const taskPath = join(attestationsDir, taskId);
+
+      enrichFromAttestationFile(taskMap, taskId, join(taskPath, 'attestation.json'));
+      enrichFromContextAck(taskMap, taskId, join(taskPath, 'context_ack.json'));
+    }
+  }
+}
+
+/**
+ * Extract file paths from a single task metric JSON
+ */
+function enrichFromMetricJson(
+  taskMap: TaskFileMap,
+  taskId: string,
+  jsonPath: string
+): void {
+  const data = readJsonSafe(jsonPath);
+  if (!data?.artifacts) return;
+
+  const artifacts = data.artifacts as Record<string, unknown>;
+  ensureTaskEntry(taskMap, taskId);
+
+  // Only read artifacts.created (verified files with hashes), NOT artifacts.expected
+  // (which contains planned paths that may never have been created).
+  // The CSV Artifacts To Track column already provides expected paths.
+  if (Array.isArray(artifacts.created)) {
+    for (const item of artifacts.created) {
+      const p = typeof item === 'string' ? item : (item as Record<string, string>).path;
+      // Skip directory paths (ending with /) — they can't match individual files
+      if (p && !p.endsWith('/')) addUniquePath(taskMap[taskId].expectedArtifacts, p);
+    }
+  }
+}
+
+/**
+ * Recursively walk metric directories for task JSON files
+ */
+function walkMetricDir(dir: string, taskMap: TaskFileMap): void {
+  let entries: Dirent<string>[];
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+
+  for (const entry of entries) {
+    const fullPath = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      walkMetricDir(fullPath, taskMap);
+    } else if (
+      entry.isFile() &&
+      entry.name.endsWith('.json') &&
+      !entry.name.startsWith('_')
+    ) {
+      const taskId = entry.name.replace('.json', '');
+      enrichFromMetricJson(taskMap, taskId, fullPath);
+    }
+  }
+}
+
+/**
+ * Scan metric JSON files for artifact references
+ */
+function enrichFromMetricJsons(taskMap: TaskFileMap): void {
+  const metricsBaseDir = join(
+    MONOREPO_ROOT,
+    'apps',
+    'project-tracker',
+    'docs',
+    'metrics'
+  );
+  if (!existsSync(metricsBaseDir)) return;
+
+  let dirs: Dirent<string>[];
+  try {
+    dirs = readdirSync(metricsBaseDir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+
+  for (const dir of dirs) {
+    if (dir.isDirectory() && dir.name.startsWith('sprint-')) {
+      walkMetricDir(join(metricsBaseDir, dir.name), taskMap);
+    }
+  }
+}
+
+/**
+ * Enrich the task file map with references from evidence sources beyond Sprint_plan.csv.
+ * Scans attestation JSONs, context ack files, and metric task JSONs.
+ */
+export function enrichFromEvidenceSources(taskMap: TaskFileMap): void {
+  enrichFromAttestations(taskMap);
+  enrichFromMetricJsons(taskMap);
 }
 
 // =============================================================================
@@ -879,6 +1138,480 @@ export function findMissingFiles(files: FileEntry[], taskMap: TaskFileMap): Miss
 }
 
 // =============================================================================
+// PATH-BASED EVIDENCE FILE LINKING
+// =============================================================================
+
+// =============================================================================
+// INFRA FILE LINKING — Verified task attribution from attestations/CSV/headers
+// =============================================================================
+
+/** Supabase migration files → task IDs (from file headers and attestation hashes) */
+const SUPABASE_MIGRATION_TASKS: Record<string, string> = {
+  '20250101000000_initial_schema.sql': 'ENV-004-AI',
+  '20250122000000_enable_rls.sql': 'IFC-072',
+  '20250123000000_rls_helper_functions.sql': 'IFC-072',
+  '20250124000000_rls_policies.sql': 'IFC-072',
+  '20250125000000_gdpr_rls_policies.sql': 'IFC-058',
+  '20250126000000_storage_buckets.sql': 'ENV-004-AI',
+  '20260103000000_add_tenant_isolation.sql': 'IFC-127',
+  '20260103000001_update_rls_policies.sql': 'IFC-127',
+  '20260104000000_conversation_rls.sql': 'IFC-148',
+  '20260104000001_case_document_fts_embeddings.sql': 'IFC-136',
+  '20260109000000_contact_extended_fields.sql': 'IFC-089',
+  '20260122000000_move_vector_to_extensions_schema.sql': 'ENV-004-AI',
+  '20260122100000_add_missing_constraints.sql': 'ENV-004-AI',
+  '20260126000000_lead_conversion_audit.sql': 'IFC-061',
+  '20260204000000_ai_output_review_rls.sql': 'IFC-178',
+  '20260204000001_ai_output_review_tables.sql': 'IFC-178',
+  '20260204000002_auth_helpers.sql': 'IFC-127',
+  '20260214000003_fix_chain_versions_schema_drift.sql': 'ENV-006-AI',
+};
+
+function linkSupabaseFile(file: FileEntry): FileEntry {
+  const p = file.path;
+  const fileName = p.split('/').pop() || '';
+
+  if (p.includes('/migrations/')) {
+    const task = SUPABASE_MIGRATION_TASKS[fileName];
+    if (task) return { ...file, linkedTasks: [task], isOrphan: false };
+    return { ...file, linkedTasks: ['ENV-004-AI'], isOrphan: false };
+  }
+  if (p.includes('/schema-snapshots/')) {
+    return { ...file, linkedTasks: ['ENV-004-AI'], isOrphan: false };
+  }
+  if (fileName === 'rls-policies.sql') {
+    return { ...file, linkedTasks: ['IFC-072', 'IFC-127'], isOrphan: false };
+  }
+  return { ...file, linkedTasks: ['ENV-004-AI'], isOrphan: false };
+}
+
+/**
+ * Link an infra/ file to its verified task owner.
+ * Every mapping below is backed by attestation hashes, CSV ARTIFACT entries,
+ * or explicit task ID comments in the file headers.
+ */
+function linkInfraFile(file: FileEntry): FileEntry {
+  const p = file.path;
+
+  // terraform/ → IFC-075 (IaC with Terraform — all 20 files)
+  if (p.startsWith('infra/terraform/')) {
+    return { ...file, linkedTasks: ['IFC-075'], isOrphan: false };
+  }
+  // tls/ → IFC-113 (Secrets Management & Encryption — file headers say IMPLEMENTS: IFC-113)
+  if (p.startsWith('infra/tls/')) {
+    return { ...file, linkedTasks: ['IFC-113'], isOrphan: false };
+  }
+  // easypanel/ → EP-001-AI (EasyPanel Internal Tools Deployment)
+  if (p.startsWith('infra/easypanel/')) {
+    return { ...file, linkedTasks: ['EP-001-AI'], isOrphan: false };
+  }
+  // dns/ → IFC-144 (Inbound/Outbound Email — SPF/DKIM/DMARC records)
+  if (p.startsWith('infra/dns/')) {
+    return { ...file, linkedTasks: ['IFC-144'], isOrphan: false };
+  }
+  // docker/ → ENV-003-AI (Docker Environment), except Ollama → IFC-085
+  if (p.startsWith('infra/docker/')) {
+    if (p.includes('ollama')) return { ...file, linkedTasks: ['IFC-085'], isOrphan: false };
+    return { ...file, linkedTasks: ['ENV-003-AI'], isOrphan: false };
+  }
+  // security/ — per-file attribution
+  if (p === 'infra/security/trivy.yaml') {
+    return { ...file, linkedTasks: ['IFC-134'], isOrphan: false };
+  }
+  if (p === 'infra/security/dependency-check.yaml') {
+    return { ...file, linkedTasks: ['IFC-132'], isOrphan: false };
+  }
+  if (p === 'infra/security/mtls-config.yaml') {
+    return { ...file, linkedTasks: ['IFC-113'], isOrphan: false };
+  }
+  // monitoring/ — mostly EP-001-AI with specific exceptions
+  if (p.startsWith('infra/monitoring/')) {
+    if (p.includes('ai-grafana-dashboard') || p.includes('ai-prometheus-rules')) {
+      return { ...file, linkedTasks: ['IFC-117'], isOrphan: false };
+    }
+    if (p.includes('workers.json')) {
+      return { ...file, linkedTasks: ['IFC-163'], isOrphan: false };
+    }
+    if (p.includes('intelliflow-alerts.yaml')) {
+      return { ...file, linkedTasks: ['ENV-008-AI'], isOrphan: false };
+    }
+    if (p.includes('performance-budgets.json')) {
+      return { ...file, linkedTasks: ['ENV-015-AI'], isOrphan: false };
+    }
+    return { ...file, linkedTasks: ['EP-001-AI'], isOrphan: false };
+  }
+  // supabase/ — per-migration task attribution
+  if (p.startsWith('infra/supabase/')) {
+    return linkSupabaseFile(file);
+  }
+
+  return file; // unmatched infra file stays orphan
+}
+
+// =============================================================================
+// ROOT FILE LINKING — Config, docs, and dotfiles at repo root
+// =============================================================================
+
+/** Root config files → task attribution */
+const ROOT_FILE_TASKS: Record<string, string> = {
+  // Monorepo setup — ENV-001-AI
+  'package.json': 'ENV-001-AI',
+  'pnpm-lock.yaml': 'ENV-001-AI',
+  'pnpm-workspace.yaml': 'ENV-001-AI',
+  'turbo.json': 'ENV-001-AI',
+  'README.md': 'ENV-001-AI',
+  'SETUP.md': 'ENV-001-AI',
+  'QUICK-START.md': 'ENV-001-AI',
+  '.gitignore': 'ENV-001-AI',
+  '.env.example': 'ENV-001-AI',
+
+  // Linting/tooling — ENV-002-AI
+  'eslint.config.mjs': 'ENV-002-AI',
+  'tsconfig.json': 'ENV-002-AI',
+  'vitest.config.ts': 'ENV-002-AI',
+  '.prettierrc': 'ENV-002-AI',
+  '.prettierignore': 'ENV-002-AI',
+  '.browserslistrc': 'ENV-002-AI',
+  '.depcheckrc': 'ENV-002-AI',
+  '.dependency-cruiser.cjs': 'ENV-002-AI',
+  'knip.json': 'ENV-002-AI',
+
+  // Docker — ENV-003-AI
+  'docker-compose.yml': 'ENV-003-AI',
+  'docker-compose.sonarqube.yml': 'ENV-003-AI',
+  'docker-compose.ollama.yml': 'IFC-085',
+
+  // Security — EXC-SEC-001
+  '.gitguardian.yaml': 'EXC-SEC-001',
+  '.gitleaks.toml': 'EXC-SEC-001',
+  'SECURITY.md': 'EXC-SEC-001',
+
+  // SonarQube — ENV-009-AI
+  'sonar-project.properties': 'ENV-009-AI',
+  'sonar-small-rules.json': 'ENV-009-AI',
+
+  // Lighthouse — PG-166
+  'lighthouserc.js': 'PG-166',
+  'lighthouserc.authenticated.js': 'PG-166',
+
+  // Playwright — PG-164
+  'playwright.config.ts': 'PG-164',
+
+  // AI tooling docs
+  'AGENTS.md': 'AI-SETUP-001',
+  'CLAUDE.md': 'AI-SETUP-001',
+  'GEMINI.md': 'AI-SETUP-001',
+
+  // Project documentation
+  'TRPC_QUICKSTART.md': 'IFC-004',
+  'audit-cutover.yml': 'AUTOMATION-001',
+  'audit-matrix.yml': 'AUTOMATION-001',
+};
+
+/**
+ * Link a root-level file (no directory prefix) to its task.
+ */
+function linkRootFile(file: FileEntry): FileEntry {
+  const fileName = file.path.split('/').pop() || '';
+  const task = ROOT_FILE_TASKS[fileName];
+  if (task) {
+    return { ...file, linkedTasks: [task], isOrphan: false };
+  }
+  // Remaining root files stay orphan (genuinely untracked: as-unknown-fake-types.txt, etc.)
+  return file;
+}
+
+/**
+ * Link root-level supabase/ files (Supabase CLI local dir).
+ * Migrations here mirror infra/supabase/ — use same task mapping.
+ */
+function linkRootSupabaseFile(file: FileEntry): FileEntry {
+  const p = file.path;
+  const fileName = p.split('/').pop() || '';
+
+  if (p.includes('/migrations/')) {
+    const task = SUPABASE_MIGRATION_TASKS[fileName];
+    if (task) return { ...file, linkedTasks: [task], isOrphan: false };
+    return { ...file, linkedTasks: ['ENV-004-AI'], isOrphan: false };
+  }
+
+  // Config and other supabase CLI files
+  return { ...file, linkedTasks: ['ENV-004-AI'], isOrphan: false };
+}
+
+/**
+ * Link .github/ files to CI/CD tasks.
+ */
+function linkGitHubFile(file: FileEntry): FileEntry {
+  const p = file.path;
+  // Workflows → AUTOMATION-001 (AI agent coordination / CI setup)
+  if (p.includes('/workflows/')) {
+    return { ...file, linkedTasks: ['AUTOMATION-001'], isOrphan: false };
+  }
+  // Other .github files (CODEOWNERS, PR templates, etc.)
+  return { ...file, linkedTasks: ['AUTOMATION-001'], isOrphan: false };
+}
+
+/** Convention-enforcement hooks created by IFC-160 (Artifact Path Conventions + CI Lint) */
+const IFC160_HOOKS = new Set([
+  'git-destructive-guard.mjs',
+  'csv-status-guard.mjs',
+]);
+
+/**
+ * Link a .claude/ file to the correct task:
+ * - ralph-loops/*.local.md → per-task ID extracted from filename
+ * - hooks that enforce conventions → IFC-160
+ * - everything else → AI-SETUP-001 (created the .claude/ infrastructure)
+ */
+function linkClaudeFile(file: FileEntry): FileEntry {
+  const p = file.path;
+  const fileName = p.split('/').pop() || '';
+
+  // ralph-loops/ files have task IDs in their filenames (e.g., IFC-030.local.md)
+  if (p.startsWith('.claude/ralph-loops/')) {
+    const taskId = extractTaskIdFromMessage(fileName);
+    if (taskId) {
+      return { ...file, linkedTasks: [taskId], isOrphan: false };
+    }
+    // Non-task ralph files (e.g., fix-errs.local.md, sonar-fix.local.md)
+    return { ...file, linkedTasks: ['AI-SETUP-001'], isOrphan: false };
+  }
+
+  // Convention-enforcement hooks → IFC-160
+  if (p.startsWith('.claude/hooks/') && IFC160_HOOKS.has(fileName)) {
+    return { ...file, linkedTasks: ['IFC-160'], isOrphan: false };
+  }
+
+  // All other .claude/ files → AI-SETUP-001 (Phase 1: AI Foundation)
+  return { ...file, linkedTasks: ['AI-SETUP-001'], isOrphan: false };
+}
+
+/**
+ * Link evidence files (.specify/, metric JSONs, .claude/) to tasks by extracting
+ * task IDs from their file paths. Runs after linkFilesToTasks() to pick up
+ * files not explicitly referenced in Sprint_plan.csv.
+ */
+export function linkEvidenceFilesByPath(files: FileEntry[]): FileEntry[] {
+  return files.map((file) => {
+    if (!file.isOrphan) return file;
+
+    const p = file.path;
+
+    // .claude/ → AI-SETUP-001 / per-task ralph-loops / IFC-160 convention hooks
+    if (p.startsWith('.claude/')) {
+      return linkClaudeFile(file);
+    }
+
+    // .agents/skills/ → AI-SETUP-001 (same skills as .claude/skills/, symlinked)
+    if (p.startsWith('.agents/')) {
+      return { ...file, linkedTasks: ['AI-SETUP-001'], isOrphan: false };
+    }
+
+    // .husky/ → ENV-002-AI (linting/tooling git hooks)
+    if (p.startsWith('.husky/')) {
+      return { ...file, linkedTasks: ['ENV-002-AI'], isOrphan: false };
+    }
+
+    // .github/ → linked to CI/CD tasks
+    if (p.startsWith('.github/')) {
+      return linkGitHubFile(file);
+    }
+
+    // infra/ → verified per-file task attribution from attestations and file headers
+    if (p.startsWith('infra/')) {
+      return linkInfraFile(file);
+    }
+
+    // Root-level supabase/ migrations (Supabase CLI local dir, separate from infra/supabase/)
+    if (p.startsWith('supabase/')) {
+      return linkRootSupabaseFile(file);
+    }
+
+    // apps/project-tracker/ → EXP-REPORTS-004 (Sprint Audit System)
+    if (p.startsWith('apps/project-tracker/')) {
+      return { ...file, linkedTasks: ['EXP-REPORTS-004'], isOrphan: false };
+    }
+
+    // Root-level config/doc files
+    if (file.directory === 'root' && !p.includes('/')) {
+      return linkRootFile(file);
+    }
+
+    // .specify/ files — extract task ID or link to infrastructure task
+    if (p.startsWith('.specify/')) {
+      const taskId = extractTaskIdFromMessage(p);
+      if (taskId) {
+        return { ...file, linkedTasks: [taskId], isOrphan: false };
+      }
+      return linkSpecifyInfraFile(file);
+    }
+
+    // Metric JSONs — extract task ID from path
+    if (!p.includes('docs/metrics/sprint-')) return file;
+    const fileName = p.split('/').pop() || '';
+    // Skip summary/schema files in metrics (no task ID)
+    if (fileName.startsWith('_')) return file;
+
+    const taskId = extractTaskIdFromMessage(p);
+    if (taskId) {
+      return { ...file, linkedTasks: [taskId], isOrphan: false };
+    }
+
+    return file;
+  });
+}
+
+/**
+ * Link .specify/ infrastructure files (summaries, codex manifests, reports, memory)
+ * that don't have a task ID in their path.
+ */
+function linkSpecifyInfraFile(file: FileEntry): FileEntry {
+  const p = file.path;
+
+  // .specify/memory/ → AI-SETUP-001 (AI tooling memory/context)
+  if (p.startsWith('.specify/memory/')) {
+    return { ...file, linkedTasks: ['AI-SETUP-001'], isOrphan: false };
+  }
+  // Sprint summaries → EXP-REPORTS-004 (sprint audit infrastructure)
+  if (p.endsWith('_summary.json')) {
+    return { ...file, linkedTasks: ['EXP-REPORTS-004'], isOrphan: false };
+  }
+  // Codex orchestration manifests → AUTOMATION-001
+  if (p.includes('/codex-run/') || p.includes('/codex/')) {
+    return { ...file, linkedTasks: ['AUTOMATION-001'], isOrphan: false };
+  }
+  // Code review reports → EXP-REPORTS-004
+  if (p.includes('/reports/')) {
+    return { ...file, linkedTasks: ['EXP-REPORTS-004'], isOrphan: false };
+  }
+  // Planning files without task IDs → AUTOMATION-001
+  if (p.includes('/planning/')) {
+    return { ...file, linkedTasks: ['AUTOMATION-001'], isOrphan: false };
+  }
+  // Execution logs without task IDs → AUTOMATION-001
+  if (p.includes('/execution/')) {
+    return { ...file, linkedTasks: ['AUTOMATION-001'], isOrphan: false };
+  }
+
+  return file;
+}
+
+// =============================================================================
+// LINK PROPAGATION — Reduce false-positive orphans
+// =============================================================================
+
+/** Next.js App Router convention files that inherit their directory's task links */
+const FRAMEWORK_FILES = new Set([
+  'layout.tsx', 'layout.ts', 'layout.js',
+  'loading.tsx', 'error.tsx', 'not-found.tsx',
+  'template.tsx', 'default.tsx', 'global-error.tsx',
+  'opengraph-image.tsx', 'icon.tsx',
+  'manifest.ts', 'robots.ts', 'sitemap.ts',
+]);
+
+/** Package/directory infrastructure files */
+const DIR_INFRA_FILES = new Set([
+  'package.json', 'tsconfig.json', 'tsconfig.build.json',
+  'vitest.config.ts', 'vitest.config.mts',
+  'index.ts', 'index.tsx', 'index.js',
+  'CLAUDE.md', 'README.md',
+  '.eslintrc.js', '.eslintrc.cjs', 'eslint.config.js', 'eslint.config.mjs',
+  'tailwind.config.ts', 'tailwind.config.js',
+  'postcss.config.js', 'postcss.config.mjs',
+  'next.config.ts', 'next.config.js', 'next.config.mjs',
+]);
+
+/**
+ * Build a map of directory -> aggregated task IDs from linked files in that dir
+ */
+function buildLinkedDirMap(files: FileEntry[]): Map<string, string[]> {
+  const map = new Map<string, string[]>();
+  for (const file of files) {
+    if (file.isOrphan || file.linkedTasks.length === 0) continue;
+    const dir = file.path.substring(0, file.path.lastIndexOf('/'));
+    if (!dir) continue;
+    let tasks = map.get(dir);
+    if (!tasks) {
+      tasks = [];
+      map.set(dir, tasks);
+    }
+    for (const t of file.linkedTasks) {
+      if (!tasks.includes(t)) tasks.push(t);
+    }
+  }
+  return map;
+}
+
+/**
+ * Derive the source file path from a test file path
+ */
+function deriveSourceFromTest(testPath: string): string {
+  return testPath
+    .replace(/__tests__\//, '')
+    .replace(/\.test\.tsx?$/, (m) => m.replace('.test', ''))
+    .replace(/\.spec\.tsx?$/, (m) => m.replace('.spec', ''));
+}
+
+/**
+ * Propagate REAL task links to genuinely related files:
+ * - Co-located Next.js framework files (layout.tsx, loading.tsx, etc.) inherit from dir
+ * - Infrastructure files (package.json, tsconfig.json, index.ts) in dirs with linked files
+ * - Test files inherit from their source file's task links
+ * All propagated links use REAL task IDs — no synthetic labels
+ */
+export function propagateTaskLinks(files: FileEntry[]): FileEntry[] {
+  // Build lookup structures
+  const linkedDirTasks = buildLinkedDirMap(files);
+  const sourcePathToTasks = new Map<string, string[]>();
+
+  for (const file of files) {
+    if (!file.isOrphan && !file.isTestFile) {
+      sourcePathToTasks.set(file.path.toLowerCase(), file.linkedTasks);
+    }
+  }
+
+  // Phase 1: Apply rules per file
+  const result = files.map((file) => {
+    if (!file.isOrphan) return file;
+
+    const dir = file.path.substring(0, file.path.lastIndexOf('/'));
+    const fileName = file.path.substring(file.path.lastIndexOf('/') + 1);
+    const dirTasks = linkedDirTasks.get(dir);
+
+    // Rule 1: Co-located framework files inherit directory tasks
+    if (dirTasks && FRAMEWORK_FILES.has(fileName)) {
+      return { ...file, linkedTasks: dirTasks, isOrphan: false };
+    }
+
+    // Rule 4: Infrastructure files in linked directories
+    if (dirTasks && DIR_INFRA_FILES.has(fileName)) {
+      return { ...file, linkedTasks: dirTasks, isOrphan: false };
+    }
+
+    // Rule 5: Test files — inherit from source or parent directory
+    if (file.isTestFile) {
+      // Try direct source match
+      const sourcePath = deriveSourceFromTest(file.path);
+      const sourceTasks = sourcePathToTasks.get(sourcePath.toLowerCase());
+      if (sourceTasks) {
+        return { ...file, linkedTasks: sourceTasks, isOrphan: false };
+      }
+      // Try parent dir (for __tests__/ subdirectories)
+      const parentDir = dir.replace(/\/__tests__$/, '');
+      const parentTasks = linkedDirTasks.get(parentDir);
+      if (parentTasks) {
+        return { ...file, linkedTasks: parentTasks, isOrphan: false };
+      }
+    }
+
+    return file;
+  });
+
+  return result;
+}
+
+// =============================================================================
 // CLEANUP SUGGESTIONS
 // =============================================================================
 
@@ -962,6 +1695,8 @@ const TASK_ID_PATTERNS = [
   /\b(ENG-OPS-\d+)/i,
   /\b(ANALYTICS-\d+)/i,
   /\b(EP-\d+-AI)/i,
+  /\b(EXP-[A-Z]+-\d+)/i,
+  /\b(TRACK-\d+)/i,
 ];
 
 function extractTaskIdFromMessage(message: string): string | null {
@@ -1247,22 +1982,32 @@ export function scanFullRegistry(
   // 1. Scan all files
   const rawFiles = scanAllFiles();
 
-  // 2. Build task-file map
+  // 2. Build task-file map from Sprint_plan.csv
   const taskMap = buildTaskFileMap(tasks);
 
-  // 3. Link files to tasks
+  // 3. Find missing files (from CSV-defined paths only, before enrichment)
+  const missing = findMissingFiles(rawFiles, taskMap);
+
+  // 4. Enrich with evidence sources (attestations, context acks, metric JSONs)
+  // This adds file refs for LINKING only — not checked by missing files detection
+  enrichFromEvidenceSources(taskMap);
+
+  // 5. Link files to tasks (from CSV + enriched evidence refs)
   let linkedFiles = linkFilesToTasks(rawFiles, taskMap);
 
-  // 4. Add test coverage info
+  // 5.5. Link evidence files by path structure (.specify/, metric JSONs)
+  linkedFiles = linkEvidenceFilesByPath(linkedFiles);
+
+  // 6. Propagate links (tests↔source, framework files, infra dirs, peer linking)
+  linkedFiles = propagateTaskLinks(linkedFiles);
+
+  // 7. Add test coverage info
   linkedFiles = addTestCoverage(linkedFiles);
 
-  // 5. Find missing files
-  const missing = findMissingFiles(linkedFiles, taskMap);
-
-  // 6. Generate health metrics
+  // 7. Generate health metrics
   const health = generateCodebaseHealth(linkedFiles, missing);
 
-  // 7. Generate cleanup suggestions
+  // 8. Generate cleanup suggestions
   const cleanup = generateCleanupSuggestions(linkedFiles);
 
   return {

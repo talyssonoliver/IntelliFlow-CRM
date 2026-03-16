@@ -7,13 +7,17 @@
   "sprint": "sprint-15",
   "phase": "phase-1",
   "stream": null,
-  "status": "Completed",
+  "status": "DONE",
   "dependencies": {
-    "required": ["DOC-008"],
+    "required": [
+      "DOC-008"
+    ],
     "all_satisfied": true,
-    "verified_at": "2026-02-28T00:57:23.673Z"
+    "verified_at": "2026-03-16T17:52:56.636Z"
   },
-  "dependencies_resolved": ["DOC-008"],
+  "dependencies_resolved": [
+    "DOC-008"
+  ],
   "started_at": "2026-02-27T23:35:00Z",
   "completed_at": "2026-02-28T01:01:04Z",
   "target_duration_minutes": null,
@@ -23,7 +27,9 @@
     "completed_at": "2026-02-28T01:01:04Z",
     "duration_minutes": 16,
     "executor": "Claude Code",
-    "agents": ["Foundation STOA"],
+    "agents": [
+      "Foundation STOA"
+    ],
     "execution_log": ".specify/sprints/sprint-15/execution/DOC-010/20260228004513-7a2b1591/DOC-010-delivery.md",
     "retry_count": 0,
     "last_error": null
@@ -71,26 +77,8 @@
       "tools/scripts/a11y-route-reconcile.test.ts"
     ],
     "created": [
-      {
-        "path": "tools/scripts/a11y-route-reconcile.ts",
-        "sha256": "3389905d5d81755fd7b68e337546ca622006d64e3e86db4f414bd787c2446d40",
-        "created_at": "2026-02-28T00:48:00Z"
-      },
-      {
-        "path": "tools/scripts/a11y-route-reconcile.test.ts",
-        "sha256": "980a9cd29fe3b0fe85404452bfa3089cd75fa5b1ba050481cfd0006e23ff3e7e",
-        "created_at": "2026-02-28T00:46:00Z"
-      },
-      {
-        "path": "package.json",
-        "sha256": "8a39694c6ed7efca2370e82dc6cc330f6282009ec69f55d8693ef19c08d59dd9",
-        "created_at": "2026-02-28T00:49:00Z"
-      },
-      {
-        "path": ".github/workflows/pr-checks.yml",
-        "sha256": "ac26e062d82936d60ae94eb888a4860be10f53cd2a24356c2a19d6f46194a6f7",
-        "created_at": "2026-02-28T00:49:30Z"
-      }
+      "tools/scripts/a11y-route-reconcile.ts",
+      "tools/scripts/a11y-route-reconcile.test.ts"
     ],
     "missing": []
   },

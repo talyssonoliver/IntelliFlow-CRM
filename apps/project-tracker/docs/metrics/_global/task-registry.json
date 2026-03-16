@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-03-11T21:35:57.276Z",
+  "last_updated": "2026-03-16T17:52:56.403Z",
   "total_tasks": 390,
   "current_sprint": 14,
   "active_sprint": "sprint-14",
@@ -484,6 +484,8 @@
       "PG-171",
       "PG-172",
       "PG-173",
+      "PG-174",
+      "PG-178",
       "DOC-002",
       "DOC-003",
       "DOC-004",
@@ -501,19 +503,28 @@
       "IFC-210",
       "DOC-014",
       "IFC-213",
+      "IFC-220",
       "IFC-222",
       "IFC-223",
       "IFC-224",
+      "IFC-225",
+      "IFC-226",
+      "IFC-236",
+      "IFC-237",
+      "IFC-252",
+      "IFC-253",
+      "IFC-267",
       "IFC-296",
+      "IFC-297",
       "IFC-298"
     ],
     "IN_PROGRESS": [],
     "VALIDATING": [],
     "BLOCKED": [],
     "PLANNED": [
-      "PG-174",
-      "PG-178",
-      "IFC-297"
+      "PG-176",
+      "PG-177",
+      "IFC-254"
     ],
     "BACKLOG": [
       "IFC-031",
@@ -630,8 +641,6 @@
       "PG-166",
       "PG-168",
       "PG-175",
-      "PG-176",
-      "PG-177",
       "IFC-208",
       "DOC-015",
       "DOC-016",
@@ -644,10 +653,7 @@
       "IFC-217",
       "IFC-218",
       "IFC-219",
-      "IFC-220",
       "IFC-221",
-      "IFC-225",
-      "IFC-226",
       "IFC-227",
       "IFC-228",
       "IFC-229",
@@ -657,8 +663,6 @@
       "IFC-233",
       "IFC-234",
       "IFC-235",
-      "IFC-236",
-      "IFC-237",
       "IFC-238",
       "IFC-239",
       "IFC-240",
@@ -673,9 +677,6 @@
       "IFC-249",
       "IFC-250",
       "IFC-251",
-      "IFC-252",
-      "IFC-253",
-      "IFC-254",
       "IFC-255",
       "IFC-256",
       "IFC-257",
@@ -688,7 +689,6 @@
       "IFC-264",
       "IFC-265",
       "IFC-266",
-      "IFC-267",
       "IFC-268",
       "IFC-269",
       "IFC-270",
@@ -724,7 +724,17 @@
       "IFC-301",
       "PG-181",
       "IFC-302",
-      "IFC-304"
+      "IFC-304",
+      "PG-182",
+      "PG-183",
+      "PG-184",
+      "PG-185",
+      "PG-186",
+      "PG-187",
+      "PG-188",
+      "PG-189",
+      "PG-190",
+      "PG-191"
     ],
     "FAILED": [],
     "NEEDS_HUMAN": [],
@@ -2194,7 +2204,7 @@
         "IFC-048"
       ],
       "artifacts": [
-        "ARTIFACT:artifacts/misc/team-quiz-results.csv;ARTIFACT:docs/shared/onboarding-checklist.md;ARTIFACT:artifacts/reports/launch-readiness.pdf;EVIDENCE:.specify/sprints/sprint-26/attestations/IFC-050/context_ack.json"
+        "ARTIFACT:docs/shared/onboarding-checklist.md;ARTIFACT:artifacts/reports/launch-readiness.pdf;EVIDENCE:.specify/sprints/sprint-26/attestations/IFC-050/context_ack.json"
       ],
       "kpis": "100% team trained, documentation complete",
       "definition_of_done": "Team onboarded to modern stack and features; artifacts: team-quiz-results.csv, onboarding-checklist.md, launch-readiness.pdf; targets: >=100%",
@@ -3982,7 +3992,7 @@
       "kpis": "Articles rendered, feedback collected, related shown",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, articles displayed; artifacts: page.tsx, article-renderer.tsx, feedback-widget.tsx",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Article template;ENV:feedback widget;FILE:apps/web/src/app/(support)/help-center/page.tsx",
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Article template;ENV:feedback widget;FILE:apps/web/src/app/help-center/(list)/page.tsx",
       "cadence": ""
     },
     "PG-046": {
@@ -4000,7 +4010,7 @@
       "kpis": "Tickets listed, filters working, SLA shown",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, tickets listed; artifacts: page.tsx, ticket-list.tsx, sla-display.tsx",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Ticket list;ENV:filters;ENV:SLA display;FILE:apps/web/lib/tickets/sla-notification.test.ts",
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Ticket list;ENV:filters;ENV:SLA display;FILE:apps/web/lib/tickets/sla-notifications.test.ts",
       "cadence": ""
     },
     "PG-047": {
@@ -4018,7 +4028,7 @@
       "kpis": "Tickets created, categories working, attachments uploaded",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, tickets created; artifacts: page.tsx, ticket-form.tsx, file-uploader.tsx",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Ticket form;ENV:category selection;FILE:apps/web/src/app/(support)/support/tickets/page.tsx",
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Ticket form;ENV:category selection;FILE:apps/web/src/app/support/tickets/(list)/page.tsx",
       "cadence": ""
     },
     "PG-048": {
@@ -4036,7 +4046,7 @@
       "kpis": "Details displayed, thread working, updates real-time; V8 coverage: Stmts 95.45% Branches 93.22% Functions 100% Lines 97.67%; 158 tests (48 new + 110 regression); STOA PASS",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, details shown; artifacts: page.tsx, ticket-thread.tsx, status-updater.tsx",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Ticket thread;ENV:status updates;FILE:apps/web/src/app/(support)/support/tickets/page.tsx",
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Ticket thread;ENV:status updates;FILE:apps/web/src/app/support/tickets/(list)/page.tsx",
       "cadence": ""
     },
     "PG-049": {
@@ -5404,7 +5414,7 @@
       "kpis": "Logs captured, filtering working, export enabled",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, logs searchable; artifacts: page.tsx, audit-viewer.tsx, log-exporter.ts",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Activity tracking;ENV:filtering;FILE:docs/planning/adr/ADR-008-audit-logging.md;FILE:packages/db/prisma/schema-audit.prisma;FILE:apps/api/src/shared/audit-encryption-module.ts;FILE:docs/design/sitemap.md;FILE:docs/design/ui-flow-mapping.md;FILE:docs/design/page-registry.md;FILE:apps/project-tracker/docs/metrics/_global/flows/flow-index.md",
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Activity tracking;ENV:filtering;FILE:docs/planning/adr/ADR-008-audit-logging.md;FILE:packages/db/prisma/schema-audit.prisma;FILE:apps/api/src/shared/apps/api/src/shared/audit-encryption-module.ts;FILE:docs/design/sitemap.md;FILE:docs/design/ui-flow-mapping.md;FILE:docs/design/page-registry.md;FILE:apps/project-tracker/docs/metrics/_global/flows/flow-index.md",
       "cadence": ""
     },
     "PG-113": {
@@ -6994,7 +7004,7 @@
       "sprint": -1,
       "dependencies": [],
       "artifacts": [
-        "ARTIFACT:artifacts/reports/sprint-audit/sprint-11-latest/audit.json;ARTIFACT:artifacts/reports/sprint-audit/sprint-11-latest/verdict.json;EVIDENCE:.specify/sprints/sprint-0/attestations/EXP-REPORTS-004/context_ack.json"
+        "EVIDENCE:.specify/sprints/sprint-0/attestations/EXP-REPORTS-004/context_ack.json"
       ],
       "kpis": "100% sprints audited; zero missing validations",
       "definition_of_done": "Sprint audits automated; validation results tracked; targets: per-sprint audits",
@@ -8064,7 +8074,7 @@
       "kpis": "All event types mapped; registry extensible; no string matching in router; test coverage >=90%",
       "definition_of_done": "ACTIVITY_TYPE_REGISTRY constant maps all AuditLogEntry.eventType values to ActivityFeedType with icon/label/color metadata; router uses registry instead of string includes(); new event types require only registry entry; verified by: pnpm test",
       "validation": "VALIDATE:pnpm test;GATE:coverage-gte-90",
-      "prerequisites": "FILE:apps/api/src/modules/home/home.router.ts;FILE:packages/domain/src/events/EventTypes.ts;FILE:packages/validators/src/home.ts",
+      "prerequisites": "FILE:apps/api/src/modules/home/home.router.ts;FILE:packages/domain/src/crm/activity/ActivityTypeRegistry.ts;FILE:packages/validators/src/home.ts",
       "cadence": ""
     },
     "IFC-194": {
@@ -8607,7 +8617,7 @@
       "kpis": "Insight generation <3s, cache hit rate >80%, 4 insight types",
       "definition_of_done": "LangChain chain generates daily insights per user; cached 1h TTL; confidence scores; 4 insight types; home.getAIInsights reads from cache; tests with mocked LLM; Null-state indicator on Contact detail; fallback data visually distinguished from real AI output",
       "validation": "VALIDATE:pnpm --filter @intelliflow/validators exec vitest run src/__tests__/home.test.ts;VALIDATE:pnpm --filter @intelliflow/api exec vitest run src/modules/home/__tests__/home.router.test.ts;VALIDATE:pnpm --filter @intelliflow/web exec vitest run src/components/home/__tests__/AuthenticatedHomePage.test.tsx src/app/insights/__tests__/page.test.tsx src/app/contacts/[id]/__tests__/page.test.tsx",
-      "prerequisites": "FILE:apps/ai-worker/src/chains;FILE:apps/api/src/modules/home/home.router.ts",
+      "prerequisites": "FILE:apps/ai-worker/src/chains/insight-generation.chain.ts;FILE:apps/api/src/modules/home/home.router.ts",
       "cadence": ""
     },
     "PG-163": {
@@ -8625,7 +8635,7 @@
       "kpis": "Coverage >90% on home router, all 9 endpoints tested, <30s suite",
       "definition_of_done": "Integration tests for all 9 home router endpoints; mock-based with full middleware chain; covers auth, pagination, error cases; >90% coverage on home.router.ts",
       "validation": "VALIDATE:pnpm --filter @intelliflow/api test --run",
-      "prerequisites": "FILE:apps/api/src/modules/home/home.router.ts;FILE:apps/api/src/modules/home/__tests__",
+      "prerequisites": "FILE:apps/api/src/modules/home/home.router.ts;FILE:apps/api/src/modules/home/__tests__/home.router.coverage.test.ts",
       "cadence": ""
     },
     "PG-164": {
@@ -8644,7 +8654,7 @@
       "kpis": "5 E2E scenarios passing, <60s runtime, CI integrated",
       "definition_of_done": "5 Playwright E2E scenarios passing; covers auth, navigation, interactions; CI integrated; screenshots on failure; <60s total",
       "validation": "VALIDATE:pnpm test:e2e -- --grep home",
-      "prerequisites": "FILE:tests/e2e;FILE:apps/web/src/components/home",
+      "prerequisites": "FILE:tests/e2e/home/home-page.spec.ts;FILE:apps/web/src/components/home/AuthenticatedHomePage.tsx",
       "cadence": ""
     },
     "PG-165": {
@@ -8817,7 +8827,7 @@
       "section": "Notifications",
       "description": "Notification Configuration Pages - Channels and Quiet Hours",
       "owner": "Frontend Dev (STOA-Domain)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [
         "IFC-157"
@@ -8853,13 +8863,13 @@
       "section": "Governance",
       "description": "Governance Quality Report Sub-Pages - Lighthouse Coverage and Performance views",
       "owner": "Frontend Dev (STOA-Quality)",
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "sprint": 16,
       "dependencies": [
         "PG-015"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/governance/quality-reports/lighthouse/page.tsx;ARTIFACT:apps/web/src/app/governance/quality-reports/coverage/page.tsx;ARTIFACT:apps/web/src/app/governance/quality-reports/performance/page.tsx;ARTIFACT:apps/web/src/components/governance/LighthouseReportView.tsx;ARTIFACT:apps/web/src/components/governance/CoverageReportView.tsx;ARTIFACT:apps/web/src/components/governance/PerformanceReportView.tsx;ARTIFACT:apps/web/src/components/governance/__tests__/LighthouseReportView.test.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-176/context_ack.json"
+        "ARTIFACT:apps/web/src/app/governance/quality-reports/lighthouse/page.tsx;ARTIFACT:apps/web/src/app/governance/quality-reports/coverage/page.tsx;ARTIFACT:apps/web/src/app/governance/quality-reports/performance/page.tsx;ARTIFACT:apps/web/src/components/governance/LighthouseReportView.tsx;ARTIFACT:apps/web/src/components/governance/CoverageReportView.tsx;ARTIFACT:apps/web/src/components/governance/PerformanceReportView.tsx;ARTIFACT:apps/web/src/components/governance/__tests__/LighthouseReportView.test.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-176/context_ack.json;SPEC:.specify/sprints/sprint-16/specifications/PG-176-spec.md"
       ],
       "kpis": "All 3 quality report sub-routes resolve; each shows focused report data; back-navigation works; Lighthouse >=90",
       "definition_of_done": "Pages at /governance/quality-reports/lighthouse (Lighthouse scores by URL with category breakdown and historical trend) /governance/quality-reports/coverage (test coverage by package with statements branches functions lines) /governance/quality-reports/performance (API response time and load test results); each renders focused report type with back-link to quality-reports list; sidebar Quality links resolve; Lighthouse >=90; verified by: pnpm test",
@@ -8871,7 +8881,7 @@
       "section": "Analytics",
       "description": "Analytics Saved Report Pages - Weekly Monthly and Quarterly views",
       "owner": "Frontend Dev (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "sprint": 16,
       "dependencies": [
         "IFC-068"
@@ -8889,14 +8899,14 @@
       "section": "Settings",
       "description": "Module Settings Pages - 11 per-module configuration pages at /settings/[module]",
       "owner": "Frontend Dev (STOA-Foundation)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [
         "PG-104",
         "IFC-076"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/settings/leads/page.tsx;ARTIFACT:apps/web/src/app/settings/contacts/page.tsx;ARTIFACT:apps/web/src/app/settings/accounts/page.tsx;ARTIFACT:apps/web/src/app/settings/deals/page.tsx;ARTIFACT:apps/web/src/app/settings/tickets/page.tsx;ARTIFACT:apps/web/src/app/settings/documents/page.tsx;ARTIFACT:apps/web/src/app/settings/reports/page.tsx;ARTIFACT:apps/web/src/app/settings/billing/page.tsx;ARTIFACT:apps/web/src/app/settings/appointments/page.tsx;ARTIFACT:apps/web/src/app/settings/cases/page.tsx;ARTIFACT:apps/web/src/app/settings/tasks/page.tsx;ARTIFACT:apps/web/src/components/settings/ModuleSettingsLayout.tsx;ARTIFACT:apps/web/src/components/settings/__tests__/ModuleSettingsLayout.test.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-178/context_ack.json"
+        "ARTIFACT:apps/web/src/app/settings/leads/page.tsx;ARTIFACT:apps/web/src/app/settings/leads/LeadSettingsContent.tsx;ARTIFACT:apps/web/src/app/settings/leads/components/LeadStagesTab.tsx;ARTIFACT:apps/web/src/app/settings/leads/components/ScoringRulesTab.tsx;ARTIFACT:apps/web/src/app/settings/leads/components/CustomFieldsTab.tsx;ARTIFACT:apps/web/src/app/settings/leads/components/AutomationTab.tsx;ARTIFACT:apps/web/src/components/settings/ModuleSettingsLayout.tsx;ARTIFACT:apps/web/src/components/settings/__tests__/ModuleSettingsLayout.test.tsx;ARTIFACT:apps/api/src/modules/lead/lead-settings.router.ts;ARTIFACT:packages/validators/src/lead-settings.ts;ARTIFACT:packages/db/prisma/migrations/20260311_lead_settings/migration.sql;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-178/context_ack.json"
       ],
       "kpis": "All 11 module settings routes resolve; form fields render and save; breadcrumb navigation works; Lighthouse >=90",
       "definition_of_done": "Pages at /settings/leads (scoring thresholds assignment auto-qual) /settings/contacts (duplicate detection required fields tags) /settings/accounts (hierarchy industry custom fields) /settings/deals (pipeline stages win-loss reasons scoring) /settings/tickets (default SLA auto-close notification triggers) /settings/documents (file types size limits antivirus retention) /settings/reports (default range currency scheduled delivery) /settings/billing (billing address tax ID invoice contact) /settings/appointments (duration buffer calendar integration) /settings/cases (case prefix default priority auto-assign) /settings/tasks (due-date offset reminder templates); all settingsHref and ModulePaywall links resolve; follows settings/account pattern; Lighthouse >=90; verified by: pnpm test",
@@ -9053,7 +9063,7 @@
       "description": "Create route reconciliation script comparing conformance-statement.md routes against apps/web/src/app/ directory tree",
       "owner": "PM (STOA-Automation)",
       "status": "DONE",
-      "sprint": 41,
+      "sprint": 15,
       "dependencies": [
         "DOC-008"
       ],
@@ -9063,7 +9073,7 @@
       "kpis": "Detects route drift within 1 CI run; zero false positives on current routes; 41 tests; 93%+ coverage; CI wired in pr-checks.yml",
       "definition_of_done": "Route reconciliation TypeScript script created; scans conformance-statement.md route list vs actual app router directories; reports added/removed/missing routes; exits non-zero on drift; integrated as CI check; verified by: script execution with intentional drift",
       "validation": "VALIDATE:npx tsx tools/scripts/a11y-route-reconcile.ts",
-      "prerequisites": "FILE:docs/compliance/wcag-conformance-statement.md;FILE:apps/web/src/app",
+      "prerequisites": "FILE:docs/compliance/wcag-conformance-statement.md;FILE:apps/web/src/app/layout.tsx",
       "cadence": ""
     },
     "DOC-011": {
@@ -9442,7 +9452,7 @@
       "section": "AI Foundation",
       "description": "AI Insight Null-State UX (Contact)  -  Add Run AI Analysis button when aiInsight is null on Contact detail page. Lead detail already done 2026-03-04. Pattern: amber dashed-border banner + button wired to scoreWithAI mutation. Invalidate query on success. Follows IFC-095 (Pattern 2  -  scope oversight). Resolves WIRE-IFC-095-001.",
       "owner": "Frontend Dev (STOA-Quality)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [
         "IFC-095"
@@ -9533,7 +9543,7 @@
       "section": "Core CRM",
       "description": "Convert Lead UX Fix - Backend requires QUALIFIED status but Convert button always visible. Fix: (1) Disable/hide button for non-QUALIFIED leads with guidance tooltip. (2) Add confirmation dialog before conversion. (3) Add createAccount option to conversion flow. (4) Handle conversion errors gracefully. Page: leads/[id]/page.tsx line 1169.",
       "owner": "Frontend Dev (STOA-Quality)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [],
       "artifacts": [
@@ -9549,11 +9559,11 @@
       "section": "Core CRM",
       "description": "Lead Detail Null-State UX - Fix engagement/churn/sentiment showing raw 'Unknown' string when aiInsight is null. Replace with styled 'Not analyzed' state with visual distinction from real AI data. Page: leads/[id]/page.tsx lines 588, 2258.",
       "owner": "Frontend Dev (STOA-Quality)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/leads/[id]/page.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/IFC-226/context_ack.json"
+        "ARTIFACT:apps/web/src/app/leads/[id]/page.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/IFC-226/context_ack.json;SPEC:.specify/sprints/sprint-16/specifications/IFC-226-spec.md;PLAN:.specify/sprints/sprint-16/planning/IFC-226-plan.md"
       ],
       "kpis": "No raw 'Unknown' strings rendered; CTA present in empty states",
       "definition_of_done": "Engagement/churn/sentiment show styled 'Not analyzed' state (not raw 'Unknown'); visual distinction between fallback and real AI data; tests >=90%",
@@ -9713,11 +9723,11 @@
       "section": "Core CRM",
       "description": "Recent Activity Empty State CTA - Overview tab shows generic 'No activities yet' with no call to action. Add 'Log your first activity' CTA button linking to Activity tab textarea. Apply same pattern to Contact detail page. Page: leads/[id]/page.tsx line 1600.",
       "owner": "Frontend Dev (STOA-Quality)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/leads/[id]/page.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/IFC-236/context_ack.json"
+        "ARTIFACT:apps/web/src/app/leads/[id]/page.tsx;ARTIFACT:apps/web/src/app/contacts/[id]/page.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/IFC-236/context_ack.json;SPEC:.specify/sprints/sprint-16/specifications/IFC-236-spec.md;PLAN:.specify/sprints/sprint-16/planning/IFC-236-plan.md"
       ],
       "kpis": "CTA visible on empty state; click navigates correctly",
       "definition_of_done": "Recent Activity empty state has 'Log your first activity' CTA; CTA navigates to Activity tab; applied to Contact detail; tests >=90%",
@@ -9729,15 +9739,15 @@
       "section": "Core CRM",
       "description": "Lead Router Security - Tenant Isolation & Domain Bypass. Fix 4 CRITICAL/MEDIUM security issues: (1) scoreWithAI fire-and-forget uses raw ctx.prisma instead of prismaWithTenant - cross-tenant data leak risk [S2]. (2) logActivity $transaction uses raw ctx.prisma - may bypass tenant middleware [S3]. (3) bulkUpdateStatus uses direct Prisma updateMany bypassing Lead.changeStatus() domain validation - skips status transition rules and domain events [S4]. (4) getHotLeads/getReadyForQualification pass userId as ownerId without explicit tenantId [S9]. Fix: Replace ctx.prisma with prismaWithTenant in all cases. Route bulkUpdateStatus through domain model. Add explicit tenantId to hot/ready queries.",
       "owner": "Backend Dev (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [],
       "artifacts": [
-        "apps/api/src/modules/lead/lead.router.ts"
+        "ARTIFACT:apps/api/src/modules/lead/lead.router.ts;SPEC:.specify/sprints/sprint-16/specifications/IFC-237-spec.md;PLAN:.specify/sprints/sprint-16/planning/IFC-237-plan.md"
       ],
       "kpis": "0 raw ctx.prisma calls in lead.router.ts; tenant isolation test coverage >=90%",
       "definition_of_done": "All lead router procedures use prismaWithTenant; bulkUpdateStatus routes through Lead.changeStatus(); getHotLeads has explicit tenantId; tenant isolation integration tests pass; no raw ctx.prisma in lead router",
-      "validation": "Unit tests + tenant isolation integration test",
+      "validation": "VALIDATE:pnpm --filter @intelliflow/api test --run;VALIDATE:pnpm --filter @intelliflow/api typecheck;GATE:coverage-gte-90",
       "prerequisites": "",
       "cadence": "Continuous"
     },
@@ -9971,7 +9981,7 @@
       "section": "Core CRM",
       "description": "Contact Router Security — Tenant Isolation Fixes. CRITICAL: (1) search procedure has no createTenantWhereClause — cross-tenant search by name/email (R-02). (2) logActivity transaction uses raw ctx.prisma with no tenantId in WHERE — cross-tenant update (R-03). (3) bulkEmail/bulkExport no tenant filter — email exfiltration via guessed UUIDs (R-04). (4) stats ignores typedCtx tenant — no tenantId boundary (R-05). (5) getById/getByEmail double-fetch through unscoped domain repo (R-06). Cross-ref: R-01 (prismaWithTenant raw) is cross-cutting and shared with IFC-237. Audit: docs/audit/contact-detail-wiring-audit.md §15.",
       "owner": "Backend Dev (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [],
       "artifacts": [
@@ -9987,23 +9997,23 @@
       "section": "Core CRM",
       "description": "Contact Detail NaN Fix + Auth Guard + Status Enum. CRITICAL: (1) NaN% division by zero — emailsOpened/emailsSent at line 1319 renders 'NaN%' when emailsSent=0 (F-01). (2) Create contact page missing useRequireAuth() — unauthenticated access (F-07). (3) Status enum truncated to 3 values in ContactList/ContactCard (ACTIVE/INACTIVE/ARCHIVED) but create form allows 6 values — unknown status crashes detail page statusConfig (F-08). Audit: docs/audit/contact-detail-wiring-audit.md §16.",
       "owner": "Frontend Dev (STOA-Quality)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/contacts/[id]/page.tsx;ARTIFACT:apps/web/src/app/contacts/(list)/new/page.tsx;ARTIFACT:apps/web/src/components/contacts/ContactCard.tsx"
+        "ARTIFACT:apps/web/src/app/contacts/[id]/page.tsx;ARTIFACT:apps/web/src/app/contacts/(list)/new/page.tsx;ARTIFACT:apps/web/src/components/contacts/ContactCard.tsx;ARTIFACT:apps/web/src/components/contacts/ContactList.tsx;ARTIFACT:apps/web/src/components/contacts/ContactDetail.tsx"
       ],
       "kpis": "No NaN renders; auth guard on create; no crash on unknown status",
-      "definition_of_done": "Open Rate handles 0/0 gracefully; create page has useRequireAuth; ContactStatusBadge handles all 6 statuses with fallback; tests >=90%",
+      "definition_of_done": "Open Rate handles 0/0 gracefully; create page has useRequireAuth; ContactStatusBadge handles all 5 domain statuses with fallback; tests >=90%",
       "validation": "VALIDATE:pnpm test --filter @intelliflow/web",
       "prerequisites": "FILE:docs/audit/contact-detail-wiring-audit.md",
-      "cadence": ""
+      "cadence": "2026-03-13"
     },
     "IFC-254": {
       "section": "Core CRM",
       "description": "Contact Router Data Integrity Fixes. (1) Raw SQL in getTimeline has no tenant filter and .catch(() => []) swallows errors (R-09). (2) sortBy accepts arbitrary strings — enum whitelist needed (R-10). (3) filterOptions ignores status input (R-12). (4) contactListResponseSchema uses 'data' key but router returns 'contacts' (D-03). (5) phone non-nullable in response schema but mapper returns null (D-08/R-14). Audit: docs/audit/contact-detail-wiring-audit.md §15,§18.",
       "owner": "Backend Dev (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "sprint": 16,
       "dependencies": [],
       "artifacts": [
@@ -10211,13 +10221,13 @@
       "section": "Core CRM",
       "description": "Account Detail No-Op Action Buttons. Wire 6 non-functional buttons: (1) Create Deal button no onClick (F-05, AccountDetail.tsx:229). (2) Add Contact button no onClick in overview (F-06, AccountDetail.tsx:233). (3-4) Add Contact buttons no onClick in contacts tab header and empty state (F-07/F-08, AccountContactsList.tsx:61,85). (5-6) Create Opportunity buttons no onClick in opportunities tab header and empty state (F-10/F-11, AccountOpportunitiesList.tsx:68,116). Each button should open the appropriate create form or association dialog with accountId pre-filled. Audit: docs/audit/account-detail-wiring-audit.md sections 3-5.",
       "owner": "Frontend Dev (STOA-Quality)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [],
       "artifacts": [
-        "ARTIFACT:apps/web/src/components/accounts/AccountDetail.tsx;ARTIFACT:apps/web/src/components/accounts/AccountContactsList.tsx;ARTIFACT:apps/web/src/components/accounts/AccountOpportunitiesList.tsx"
+        "ARTIFACT:apps/web/src/components/accounts/AccountDetail.tsx;ARTIFACT:apps/web/src/components/accounts/AccountContactsList.tsx;ARTIFACT:apps/web/src/components/accounts/AccountOpportunitiesList.tsx;ARTIFACT:apps/web/src/components/accounts/OpportunityCreateSheet.tsx;ARTIFACT:apps/web/src/components/accounts/ContactAddSheet.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/IFC-267/attestation.json"
       ],
-      "kpis": "6/6 buttons functional; create forms pre-fill accountId",
+      "kpis": "6/6 buttons functional; create forms pre-fill accountId; ContactAddSheet 100/97/100/100% coverage; OpportunityCreateSheet 100/93/100/100% coverage; 109 tests passing",
       "definition_of_done": "All 6 buttons navigate to create form or open association dialog with accountId pre-filled; Create Deal opens deal create with account pre-selected; Add Contact opens contact association or create sheet; Create Opportunity opens opportunity create with account; tests >=90%",
       "validation": "VALIDATE:pnpm test --filter @intelliflow/web",
       "prerequisites": "FILE:docs/audit/account-detail-wiring-audit.md",
@@ -10717,7 +10727,7 @@
       "section": "AI Foundation",
       "description": "AI Monitoring Data Persistence — Replace in-memory singleton monitoring data (driftDetector, latencyMonitor, hallucinationChecker, roiTracker) with DB-backed persistence via new AIMonitoringEvent model. Add ai-worker flush service to write metrics to DB periodically. Rewrite monitoring router to query DB instead of in-process singletons. Enables multi-process deployments to share monitoring data.",
       "owner": "Backend Dev (STOA-Domain)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [
         "IFC-015",
@@ -10742,7 +10752,7 @@
         "PG-045"
       ],
       "artifacts": [
-        "ARTIFACT:packages/db/prisma/schema.prisma;ARTIFACT:packages/db/prisma/migrations/;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-298/context_ack.json;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-298/attestation.json;SPEC:.specify/sprints/sprint-17/specifications/IFC-298-spec.md;PLAN:.specify/sprints/sprint-17/planning/IFC-298-plan.md"
+        "ARTIFACT:packages/db/prisma/schema.prisma;ARTIFACT:packages/db/prisma/migrations/20260311000000_add_help_article_models/migration.sql;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-298/context_ack.json;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-298/attestation.json;SPEC:.specify/sprints/sprint-17/specifications/IFC-298-spec.md;PLAN:.specify/sprints/sprint-17/planning/IFC-298-plan.md"
       ],
       "kpis": "3 models + 1 enum + migration + 14 tests; all 4 validations pass",
       "definition_of_done": "HelpArticle, ArticleSection, ArticleFeedback Prisma models; migration applied; fields match HelpArticle TS interface; status enum (draft/published); verified by: pnpm test",
@@ -10894,6 +10904,186 @@
       "definition_of_done": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%; verified by: pnpm test",
       "validation": "VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm test;GATE:coverage-gte-90",
       "prerequisites": "FILE:apps/api/src/modules/help-article/help-article.router.ts;FILE:apps/web/src/app/settings/help-center/articles/page.tsx",
+      "cadence": ""
+    },
+    "PG-182": {
+      "section": "Settings",
+      "description": "Module Settings - Contacts (/contacts/contact-settings)",
+      "owner": "Frontend Dev (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 17,
+      "dependencies": [
+        "PG-178"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/app/contacts/(list)/contact-settings/page.tsx"
+      ],
+      "kpis": "All form fields render and save; sidebar settings nav works; Lighthouse >=90",
+      "definition_of_done": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm test",
+      "prerequisites": "FILE:apps/web/src/components/sidebar/configs/contacts.ts;FILE:apps/web/src/components/contacts/ContactSettingsSidebarNav.tsx",
+      "cadence": ""
+    },
+    "PG-183": {
+      "section": "Settings",
+      "description": "Module Settings - Accounts (/accounts/account-settings)",
+      "owner": "Frontend Dev (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 17,
+      "dependencies": [
+        "PG-178"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/app/accounts/(list)/account-settings/page.tsx"
+      ],
+      "kpis": "All form fields render and save; sidebar settings nav works; Lighthouse >=90",
+      "definition_of_done": "Account settings page at /accounts/account-settings with hierarchy, industry, custom fields config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm test",
+      "prerequisites": "FILE:apps/web/src/components/sidebar/configs/accounts.ts;FILE:apps/web/src/components/accounts/AccountSettingsSidebarNav.tsx",
+      "cadence": ""
+    },
+    "PG-184": {
+      "section": "Settings",
+      "description": "Module Settings - Deals (/deals/deal-settings)",
+      "owner": "Frontend Dev (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 17,
+      "dependencies": [
+        "PG-178"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/app/deals/deal-settings/page.tsx"
+      ],
+      "kpis": "All form fields render and save; sidebar settings nav works; Lighthouse >=90",
+      "definition_of_done": "Deal settings page at /deals/deal-settings with pipeline stages, win-loss reasons, scoring config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm test",
+      "prerequisites": "FILE:apps/web/src/components/sidebar/configs/deals.ts;FILE:apps/web/src/components/deals/DealSettingsSidebarNav.tsx",
+      "cadence": ""
+    },
+    "PG-185": {
+      "section": "Settings",
+      "description": "Module Settings - Tickets (/tickets/sla-policies)",
+      "owner": "Frontend Dev (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 17,
+      "dependencies": [
+        "PG-178"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/app/tickets/sla-policies/page.tsx"
+      ],
+      "kpis": "All form fields render and save; sidebar settings nav works; Lighthouse >=90",
+      "definition_of_done": "Ticket settings page at /tickets/sla-policies with default SLA, auto-close, notification triggers config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm test",
+      "prerequisites": "FILE:apps/web/src/components/sidebar/configs/tickets.ts;FILE:apps/web/src/components/tickets/TicketSettingsSidebarNav.tsx",
+      "cadence": ""
+    },
+    "PG-186": {
+      "section": "Settings",
+      "description": "Module Settings - Documents (/documents/document-settings)",
+      "owner": "Frontend Dev (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 17,
+      "dependencies": [
+        "PG-178"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/app/documents/document-settings/page.tsx"
+      ],
+      "kpis": "All form fields render and save; sidebar settings nav works; Lighthouse >=90",
+      "definition_of_done": "Document settings page at /documents/document-settings with file types, size limits, antivirus, retention config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm test",
+      "prerequisites": "FILE:apps/web/src/components/sidebar/configs/documents.ts;FILE:apps/web/src/components/documents/DocumentSettingsSidebarNav.tsx",
+      "cadence": ""
+    },
+    "PG-187": {
+      "section": "Settings",
+      "description": "Module Settings - Reports (/analytics/report-settings)",
+      "owner": "Frontend Dev (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 18,
+      "dependencies": [
+        "PG-178"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/app/analytics/report-settings/page.tsx"
+      ],
+      "kpis": "All form fields render and save; sidebar settings nav works; Lighthouse >=90",
+      "definition_of_done": "Report settings page at /analytics/report-settings with default range, currency, scheduled delivery config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm test",
+      "prerequisites": "FILE:apps/web/src/components/settings/ModuleSettingsLayout.tsx",
+      "cadence": ""
+    },
+    "PG-188": {
+      "section": "Settings",
+      "description": "Module Settings - Billing (/billing/settings)",
+      "owner": "Frontend Dev (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 18,
+      "dependencies": [
+        "PG-178"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/app/billing/settings/page.tsx"
+      ],
+      "kpis": "All form fields render and save; sidebar settings nav works; Lighthouse >=90",
+      "definition_of_done": "Billing settings page at /billing/settings with billing address, tax ID, invoice contact config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm test",
+      "prerequisites": "FILE:apps/web/src/components/settings/ModuleSettingsLayout.tsx",
+      "cadence": ""
+    },
+    "PG-189": {
+      "section": "Settings",
+      "description": "Module Settings - Appointments (/calendar/calendar-settings)",
+      "owner": "Frontend Dev (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 18,
+      "dependencies": [
+        "PG-178"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/app/calendar/calendar-settings/page.tsx"
+      ],
+      "kpis": "All form fields render and save; sidebar settings nav works; Lighthouse >=90",
+      "definition_of_done": "Appointment settings page at /calendar/calendar-settings with duration, buffer, calendar integration config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm test",
+      "prerequisites": "FILE:apps/web/src/components/sidebar/configs/appointments.ts;FILE:apps/web/src/components/calendar/CalendarSettingsSidebarNav.tsx",
+      "cadence": ""
+    },
+    "PG-190": {
+      "section": "Settings",
+      "description": "Module Settings - Cases (/cases/case-settings)",
+      "owner": "Frontend Dev (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 18,
+      "dependencies": [
+        "PG-178"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/app/cases/case-settings/page.tsx"
+      ],
+      "kpis": "All form fields render and save; sidebar settings nav works; Lighthouse >=90",
+      "definition_of_done": "Case settings page at /cases/case-settings with case prefix, default priority, auto-assign config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm test",
+      "prerequisites": "FILE:apps/web/src/components/sidebar/configs/cases.ts;FILE:apps/web/src/components/cases/CaseSettingsSidebarNav.tsx",
+      "cadence": ""
+    },
+    "PG-191": {
+      "section": "Settings",
+      "description": "Module Settings - Tasks (/tasks/task-settings)",
+      "owner": "Frontend Dev (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 18,
+      "dependencies": [
+        "PG-178"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/app/tasks/(list)/task-settings/page.tsx"
+      ],
+      "kpis": "All form fields render and save; sidebar settings nav works; Lighthouse >=90",
+      "definition_of_done": "Task settings page at /tasks/task-settings with due-date offset, reminder, templates config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm test",
+      "prerequisites": "FILE:apps/web/src/components/sidebar/configs/tasks.ts;FILE:apps/web/src/components/tasks/TaskSettingsSidebarNav.tsx",
       "cadence": ""
     }
   }

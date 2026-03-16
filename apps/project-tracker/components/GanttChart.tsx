@@ -743,13 +743,14 @@ export default function GanttChart({
 
       {/* Period Overview Modal */}
       {modalOpen && selectedPeriod ? (
-        <button
-          type="button"
+        <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 cursor-default"
           onClick={closeModal}
           onKeyDown={(e) => {
             if (e.key === 'Escape') closeModal();
           }}
+          role="button"
+          tabIndex={0}
           aria-label="Close modal"
         >
           <div // NOSONAR typescript:S6847 — dialog div prevents event bubbling to backdrop; role="dialog" makes it an interactive landmark
@@ -930,7 +931,7 @@ export default function GanttChart({
               </button>
             </div>
           </div>
-        </button>
+        </div>
       ) : null}
     </div>
   );
