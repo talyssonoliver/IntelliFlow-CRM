@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-03-16T18:52:18.828Z",
+  "last_updated": "2026-03-16T20:26:12.850Z",
   "total_tasks": 390,
   "current_sprint": 14,
   "active_sprint": "sprint-14",
@@ -485,6 +485,7 @@
       "PG-172",
       "PG-173",
       "PG-174",
+      "PG-177",
       "PG-178",
       "DOC-002",
       "DOC-003",
@@ -513,6 +514,7 @@
       "IFC-237",
       "IFC-252",
       "IFC-253",
+      "IFC-254",
       "IFC-267",
       "IFC-296",
       "IFC-297",
@@ -523,8 +525,7 @@
     "BLOCKED": [],
     "PLANNED": [
       "PG-176",
-      "PG-177",
-      "IFC-254"
+      "PG-193"
     ],
     "BACKLOG": [
       "IFC-031",
@@ -734,7 +735,8 @@
       "PG-188",
       "PG-189",
       "PG-190",
-      "PG-191"
+      "PG-191",
+      "PG-192"
     ],
     "FAILED": [],
     "NEEDS_HUMAN": [],
@@ -1998,7 +2000,7 @@
     },
     "IFC-040": {
       "section": "Enhancement",
-      "description": "Production Hardening",
+      "description": "Production hardening incl. HttpOnly auth sessions and release security gates",
       "owner": "DevOps + Security (STOA-Security)",
       "status": "BACKLOG",
       "sprint": 25,
@@ -2015,15 +2017,16 @@
         "IFC-130",
         "IFC-132",
         "IFC-133",
-        "IFC-134"
+        "IFC-134",
+        "IFC-169"
       ],
       "artifacts": [
-        "ARTIFACT:docs/shared/production-checklist.md;ARTIFACT:artifacts/reports/security-scan-final.pdf;ARTIFACT:artifacts/benchmarks/performance-baseline.json;ARTIFACT:docs/shared/monitoring-runbook.md;EVIDENCE:.specify/sprints/sprint-25/attestations/IFC-040/context_ack.json;ARTIFACT:docs/planning/adr/ADR-015-security-validation.md"
+        "ARTIFACT:docs/shared/production-checklist.md;ARTIFACT:artifacts/reports/security-scan-final.pdf;ARTIFACT:artifacts/benchmarks/performance-baseline.json;ARTIFACT:docs/shared/monitoring-runbook.md;ARTIFACT:apps/web/src/lib/auth/AuthContext.tsx;ARTIFACT:apps/web/src/lib/shared/session-cleanup.ts;ARTIFACT:apps/web/src/lib/session.ts;ARTIFACT:apps/web/proxy.ts;EVIDENCE:.specify/sprints/sprint-25/attestations/IFC-040/context_ack.json;ARTIFACT:docs/planning/adr/ADR-015-security-validation.md;ARTIFACT:docs/planning/adr/ADR-020-public-site-auth.md"
       ],
-      "kpis": "99.9% uptime achievable, security certified",
-      "definition_of_done": "Railway production config, Vercel optimized, monitoring active; targets: >=9%",
-      "validation": "VALIDATE:pnpm typecheck;VALIDATE:pnpm test",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:Security review complete;ENV:performance optimized;FILE:docs/shared/review-checklist.md;FILE:docs/operations/pr-checklist.md;FILE:.github/workflows/security.yml;FILE:artifacts/misc/sonar-project.properties;FILE:artifacts/metrics/blue-green-metrics.csv;FILE:artifacts/misc/vault-config.yml;FILE:artifacts/misc/backup-scripts.sh;FILE:packages/platform/src/resilience/circuit-breaker.ts;FILE:infra/supabase/migrations/20250124000000_rls_policies.sql;FILE:docs/operations/incident-response-flowchart.svg;FILE:artifacts/reports/load-test-report.html;FILE:docs/release/promotion-policy.md;FILE:.github/workflows/security-sbom.yml;FILE:docs/security/signing.md;FILE:docs/security/image-scanning.md",
+      "kpis": "99.9% uptime achievable, zero JS-readable bearer tokens in production, zero critical vulnerabilities",
+      "definition_of_done": "Railway production config, Vercel optimized, monitoring active, and browser auth migrated from localStorage/JS-readable bearer cookies to HttpOnly secure cookies or a server-managed Supabase session; artifacts: production-checklist.md, security-scan-final.pdf, AuthContext.tsx, session-cleanup.ts, session.ts, proxy.ts; targets: 99.9% uptime, zero JS-readable bearer tokens in production, zero critical vulnerabilities; verified by: pnpm typecheck, pnpm test, pnpm lint, pnpm build, security review",
+      "validation": "VALIDATE:pnpm typecheck;VALIDATE:pnpm test;VALIDATE:pnpm lint;VALIDATE:pnpm build;AUDIT:security-review;GATE:no-js-readable-bearer-token",
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:Security review complete;ENV:performance optimized;FILE:docs/shared/review-checklist.md;FILE:docs/operations/pr-checklist.md;FILE:.github/workflows/security.yml;FILE:artifacts/misc/sonar-project.properties;FILE:artifacts/metrics/blue-green-metrics.csv;FILE:artifacts/misc/vault-config.yml;FILE:artifacts/misc/backup-scripts.sh;FILE:packages/platform/src/resilience/circuit-breaker.ts;FILE:infra/supabase/migrations/20250124000000_rls_policies.sql;FILE:docs/operations/incident-response-flowchart.svg;FILE:artifacts/reports/load-test-report.html;FILE:docs/release/promotion-policy.md;FILE:.github/workflows/security-sbom.yml;FILE:docs/security/signing.md;FILE:docs/security/image-scanning.md;FILE:docs/planning/adr/ADR-020-public-site-auth.md;FILE:docs/planning/prd-public-site-auth.md;FILE:apps/web/src/lib/auth/AuthContext.tsx;FILE:apps/web/src/lib/shared/session-cleanup.ts;FILE:apps/web/src/lib/session.ts;FILE:apps/web/proxy.ts",
       "cadence": ""
     },
     "IFC-041": {
@@ -8869,7 +8872,7 @@
         "PG-015"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/governance/quality-reports/lighthouse/page.tsx;ARTIFACT:apps/web/src/app/governance/quality-reports/coverage/page.tsx;ARTIFACT:apps/web/src/app/governance/quality-reports/performance/page.tsx;ARTIFACT:apps/web/src/components/governance/LighthouseReportView.tsx;ARTIFACT:apps/web/src/components/governance/CoverageReportView.tsx;ARTIFACT:apps/web/src/components/governance/PerformanceReportView.tsx;ARTIFACT:apps/web/src/components/governance/__tests__/LighthouseReportView.test.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-176/context_ack.json;SPEC:.specify/sprints/sprint-16/specifications/PG-176-spec.md"
+        "ARTIFACT:apps/web/src/app/governance/quality-reports/lighthouse/page.tsx;ARTIFACT:apps/web/src/app/governance/quality-reports/coverage/page.tsx;ARTIFACT:apps/web/src/app/governance/quality-reports/performance/page.tsx;ARTIFACT:apps/web/src/components/governance/LighthouseReportView.tsx;ARTIFACT:apps/web/src/components/governance/CoverageReportView.tsx;ARTIFACT:apps/web/src/components/governance/PerformanceReportView.tsx;ARTIFACT:apps/web/src/components/governance/__tests__/LighthouseReportView.test.tsx;ARTIFACT:apps/web/src/components/governance/__tests__/CoverageReportView.test.tsx;ARTIFACT:apps/web/src/components/governance/__tests__/PerformanceReportView.test.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-176/context_ack.json;SPEC:.specify/sprints/sprint-16/specifications/PG-176-spec.md;PLAN:.specify/sprints/sprint-16/planning/PG-176-plan.md"
       ],
       "kpis": "All 3 quality report sub-routes resolve; each shows focused report data; back-navigation works; Lighthouse >=90",
       "definition_of_done": "Pages at /governance/quality-reports/lighthouse (Lighthouse scores by URL with category breakdown and historical trend) /governance/quality-reports/coverage (test coverage by package with statements branches functions lines) /governance/quality-reports/performance (API response time and load test results); each renders focused report type with back-link to quality-reports list; sidebar Quality links resolve; Lighthouse >=90; verified by: pnpm test",
@@ -8881,7 +8884,7 @@
       "section": "Analytics",
       "description": "Analytics Saved Report Pages - Weekly Monthly and Quarterly views",
       "owner": "Frontend Dev (STOA-Foundation)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [
         "IFC-068"
@@ -10013,7 +10016,7 @@
       "section": "Core CRM",
       "description": "Contact Router Data Integrity Fixes. (1) Raw SQL in getTimeline has no tenant filter and .catch(() => []) swallows errors (R-09). (2) sortBy accepts arbitrary strings — enum whitelist needed (R-10). (3) filterOptions ignores status input (R-12). (4) contactListResponseSchema uses 'data' key but router returns 'contacts' (D-03). (5) phone non-nullable in response schema but mapper returns null (D-08/R-14). Audit: docs/audit/contact-detail-wiring-audit.md §15,§18.",
       "owner": "Backend Dev (STOA-Domain)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [],
       "artifacts": [
@@ -11084,6 +11087,43 @@
       "definition_of_done": "Task settings page at /tasks/task-settings with due-date offset, reminder, templates config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
       "validation": "VALIDATE:pnpm test",
       "prerequisites": "FILE:apps/web/src/components/sidebar/configs/tasks.ts;FILE:apps/web/src/components/tasks/TaskSettingsSidebarNav.tsx",
+      "cadence": ""
+    },
+    "PG-192": {
+      "section": "AI Intelligence",
+      "description": "Fix missing /agent-approvals/logs page — PG-152 regression; AgentLogsViewer component exists at apps/web/src/components/ai-monitoring/AgentLogsViewer.tsx but page.tsx is absent causing 404 on route",
+      "owner": "Frontend Dev (STOA-Intelligence)",
+      "status": "BACKLOG",
+      "sprint": 16,
+      "dependencies": [
+        "PG-152"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/app/agent-approvals/logs/page.tsx"
+      ],
+      "kpis": "Route no longer 404; page loads <500ms; Lighthouse >=90; test coverage >=90%",
+      "definition_of_done": "page.tsx created at apps/web/src/app/agent-approvals/logs/page.tsx; route /agent-approvals/logs renders AgentLogsViewer with auth guard and Suspense boundary; matches PG-151/PG-150 shell pattern; Lighthouse >=90; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
+      "prerequisites": "FILE:apps/web/src/components/ai-monitoring/AgentLogsViewer.tsx;FILE:apps/web/src/components/sidebar/configs/agent-approvals.ts",
+      "cadence": ""
+    },
+    "PG-193": {
+      "section": "AI Intelligence",
+      "description": "Workflow Step Progress Panel — Add real-time N/N step progress tracker to /agent-approvals/agents and /agent-approvals/logs; reads WorkflowExecution.currentStep + stepResults from tRPC; shows named steps with status icons (pending/running/completed/failed) and a % progress bar matching the AEO workflow progress UI pattern",
+      "owner": "Frontend Dev (STOA-Intelligence)",
+      "status": "PLANNED",
+      "sprint": 0,
+      "dependencies": [
+        "PG-151",
+        "PG-192"
+      ],
+      "artifacts": [
+        "VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run"
+      ],
+      "kpis": "16",
+      "definition_of_done": "WorkflowProgressPanel component created; integrated into ActiveAgentsDashboard agent detail expand and AgentLogsViewer log detail view; reads currentStep and stepResults from WorkflowExecution via tRPC; renders progress bar + per-step status with checkmarks; WCAG AA accessible; Lighthouse >=90; verified by: pnpm test",
+      "validation": "120/240/480",
+      "prerequisites": "DESIGN:docs/design/mockups/workflow-progress-panel.png;FILE:apps/web/src/components/ai-monitoring/ActiveAgentsDashboard.tsx;FILE:apps/web/src/components/ai-monitoring/AgentLogsViewer.tsx;FILE:packages/db/generated/prisma/models/WorkflowExecution.ts",
       "cadence": ""
     }
   }
