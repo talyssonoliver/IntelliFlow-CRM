@@ -193,7 +193,7 @@ function buildPreferenceUpsertData(
     quietHoursStart: input.quietHours?.start || '22:00',
     quietHoursEnd: input.quietHours?.end || '08:00',
     quietHoursDays: input.quietHours?.daysOfWeek ?? [0, 1, 2, 3, 4, 5, 6],
-    timezone: input.quietHours?.timezone || 'UTC',
+    timezone: input.quietHours?.timezone || 'Europe/London',
     channelPreferences: channelPrefs as any,
     categoryPreferences: categoryPrefs as any,
   };
@@ -580,7 +580,7 @@ export const notificationsRouter = createTRPCRouter({
         enabled: record?.quietHoursEnabled ?? false,
         start: record?.quietHoursStart || '22:00',
         end: record?.quietHoursEnd || '08:00',
-        timezone: record?.timezone || 'UTC',
+        timezone: record?.timezone || 'Europe/London',
         daysOfWeek: record?.quietHoursDays ?? [0, 1, 2, 3, 4, 5, 6],
       },
       emailDigest: channelPrefs.emailDigest || {

@@ -208,7 +208,7 @@ async function resolveDbUser(supabaseId: string): Promise<UserSession | null> {
     role: dbUser.role,
     tenantId: dbUser.tenantId,
     stripeCustomerId: dbUser.stripeCustomerId ?? undefined,
-    timezone: dbUser.timezone ?? 'UTC',
+    timezone: dbUser.timezone ?? 'Europe/London',
   };
 }
 
@@ -341,7 +341,7 @@ async function resolveWsUser(token: string): Promise<UserSession | null> {
     name: dbUser.name ?? undefined,
     role: dbUser.role,
     tenantId: dbUser.tenantId,
-    timezone: dbUser.timezone ?? 'UTC',
+    timezone: dbUser.timezone ?? 'Europe/London',
   };
 }
 

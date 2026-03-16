@@ -38,7 +38,7 @@ export const userRouter = createTRPCRouter({
       name: user.name ?? null,
       email: user.email,
       role: user.role,
-      timezone: user.timezone ?? 'UTC',
+      timezone: user.timezone ?? 'Europe/London',
     };
   }),
 

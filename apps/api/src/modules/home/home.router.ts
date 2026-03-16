@@ -73,7 +73,7 @@ async function checkEntityExists(
   return !!result;
 }
 
-function getGreeting(timezone: string = 'UTC'): string {
+function getGreeting(timezone: string = 'Europe/London'): string {
   let hour: number;
   try {
     hour = getHourInTimezone(timezone);
@@ -246,6 +246,83 @@ function deduplicateInsights<T extends { title: string }>(items: T[]): T[] {
     seen.add(item.title);
     return true;
   });
+}
+
+/**
+ * Validates that entities referenced by insights still exist in the database.
+ * Returns only insights whose referenced entities are still present.
+ * Stale insights (referencing deleted/converted entities) are marked EXPIRED
+ * in the background to prevent repeated validation on subsequent requests.
+ */
+async function filterStaleInsights<
+  T extends { id: string; entityType?: string | null; entityId?: string | null },
+>(
+  prisma: Context['prisma'],
+  tenantId: string,
+  insights: T[]
+): Promise<T[]> {
+  // Insights without an entityId (aggregate insights like "3 Overdue Tasks") are always valid
+  const withEntity = insights.filter((i) => i.entityId && i.entityType);
+  const withoutEntity = insights.filter((i) => !i.entityId || !i.entityType);
+
+  if (withEntity.length === 0) return insights;
+
+  // Group entity IDs by type for batch lookups
+  const entityGroups = new Map<string, Set<string>>();
+  for (const insight of withEntity) {
+    const type = insight.entityType!;
+    if (!entityGroups.has(type)) entityGroups.set(type, new Set());
+    entityGroups.get(type)!.add(insight.entityId!);
+  }
+
+  // Batch-check existence per entity type
+  const existingIds = new Set<string>();
+  const modelMap: Record<string, string> = {
+    lead: 'lead',
+    contact: 'contact',
+    opportunity: 'opportunity',
+    deal: 'opportunity', // "deal" maps to opportunity table
+    account: 'account',
+    task: 'task',
+  };
+
+  await Promise.all(
+    [...entityGroups.entries()].map(async ([entityType, ids]) => {
+      const modelName = modelMap[entityType];
+      if (!modelName || !(prisma as any)[modelName]) return;
+
+      try {
+        const existing = await (prisma as any)[modelName].findMany({
+          where: { tenantId, id: { in: [...ids] } },
+          select: { id: true },
+        });
+        for (const row of existing) existingIds.add(row.id);
+      } catch {
+        // If the lookup fails (e.g. model doesn't exist), keep the insights
+        for (const id of ids) existingIds.add(id);
+      }
+    })
+  );
+
+  // Identify stale insights (entity no longer exists)
+  const staleIds: string[] = [];
+  const validWithEntity = withEntity.filter((insight) => {
+    if (existingIds.has(insight.entityId!)) return true;
+    staleIds.push(insight.id);
+    return false;
+  });
+
+  // Fire-and-forget: mark stale insights as EXPIRED so they don't reappear
+  if (staleIds.length > 0) {
+    prisma.aIInsight
+      .updateMany({
+        where: { id: { in: staleIds }, tenantId },
+        data: { status: 'EXPIRED', dismissReason: 'Referenced entity no longer exists' },
+      })
+      .catch(() => {});
+  }
+
+  return [...withoutEntity, ...validWithEntity];
 }
 
 /**
@@ -590,7 +667,7 @@ async function createProactiveNotifications(
   overdueTasksCount: HeuristicData['overdueTasksCount'],
   staleContacts: HeuristicData['staleContacts'],
   now: Date,
-  timezone: string = 'UTC'
+  timezone: string = 'Europe/London'
 ): Promise<void> {
   async function createIfNew(params: {
     sourceType: string;
@@ -1176,15 +1253,22 @@ export const homeRouter = createTRPCRouter({
     });
 
     if (cachedInsights.length > 0) {
-      const duration = performance.now() - startTime;
-      if (duration > 200) {
-        console.warn(`[home.getAIInsights] SLOW: ${duration.toFixed(2)}ms (target: <200ms)`);
+      // Validate that referenced entities still exist — prevents dead links
+      // when a lead/contact/deal has been deleted or converted since the insight was cached
+      const validInsights = await filterStaleInsights(ctx.prisma, tenantId, cachedInsights);
+
+      if (validInsights.length > 0) {
+        const duration = performance.now() - startTime;
+        if (duration > 200) {
+          console.warn(`[home.getAIInsights] SLOW: ${duration.toFixed(2)}ms (target: <200ms)`);
+        }
+        const mapped = deduplicateInsights(validInsights.map(mapAIInsightToResponse));
+        return {
+          insights: mapped.slice(0, 5),
+          lastRefreshed: validInsights[0].createdAt,
+        };
       }
-      const mapped = deduplicateInsights(cachedInsights.map(mapAIInsightToResponse));
-      return {
-        insights: mapped.slice(0, 5),
-        lastRefreshed: cachedInsights[0].createdAt,
-      };
+      // All cached insights were stale — fall through to heuristic generation
     }
 
     // Step 2: Cache miss — run heuristic queries with user→tenant fallback
@@ -1631,7 +1715,9 @@ export const homeRouter = createTRPCRouter({
       });
 
       if (cachedInsights.length > 0) {
-        const dedupedCached = deduplicateInsights(cachedInsights);
+        // Validate entity existence — filter out insights referencing deleted entities
+        const validCached = await filterStaleInsights(ctx.prisma, tenantId, cachedInsights);
+        const dedupedCached = deduplicateInsights(validCached);
         const total = dedupedCached.length;
         const offset = cursor ? (Number.parseInt(Buffer.from(cursor, 'base64').toString('utf-8'), 10) || 0) : 0;
 
@@ -1644,13 +1730,16 @@ export const homeRouter = createTRPCRouter({
           console.warn(`[home.getAllInsights] SLOW: ${duration.toFixed(2)}ms (target: <500ms)`);
         }
 
-        return {
-          insights: page,
-          nextCursor,
-          hasMore,
-          total,
-          lastRefreshed: cachedInsights[0].createdAt,
-        };
+        if (dedupedCached.length > 0) {
+          return {
+            insights: page,
+            nextCursor,
+            hasMore,
+            total,
+            lastRefreshed: validCached[0]?.createdAt ?? now,
+          };
+        }
+        // All cached insights were stale — fall through to heuristic generation
       }
 
       // Step 2: Cache miss — run heuristic queries with user→tenant fallback
@@ -1824,6 +1913,35 @@ export const homeRouter = createTRPCRouter({
         reviewId: review.id,
         requiresApproval: true,
       };
+    }),
+  /**
+   * Dismiss a stale insight — called by the frontend when an insight links to
+   * an entity that no longer exists (e.g. deleted lead/contact/deal).
+   * Also handles explicit user dismissals.
+   */
+  dismissInsight: tenantProcedure
+    .input(z.object({
+      insightId: z.string().min(1),
+      reason: z.string().max(500).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const tenantId = ctx.tenant.tenantId;
+      const now = new Date();
+
+      const updated = await ctx.prisma.aIInsight.updateMany({
+        where: {
+          id: input.insightId,
+          tenantId,
+          status: { notIn: ['DISMISSED', 'EXPIRED'] },
+        },
+        data: {
+          status: 'DISMISSED',
+          dismissedAt: now,
+          dismissReason: input.reason || 'Dismissed by user',
+        },
+      });
+
+      return { dismissed: updated.count > 0 };
     }),
 });
 

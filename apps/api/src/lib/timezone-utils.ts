@@ -35,7 +35,7 @@ export function safeTimezone(timezone: string | undefined | null): string {
  */
 export function formatISODateInTimezone(
   input: DateInput,
-  timezone: string = 'UTC'
+  timezone: string = 'Europe/London'
 ): string {
   const date = toDate(input);
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -66,7 +66,7 @@ export function formatISODateInTimezone(
  * // → Date("2026-03-15T05:00:00.000Z") — midnight ET as UTC
  */
 export function startOfDayInTimezone(
-  timezone: string = 'UTC',
+  timezone: string = 'Europe/London',
   referenceDate?: DateInput
 ): Date {
   const ref = referenceDate ? toDate(referenceDate) : new Date();
@@ -86,7 +86,7 @@ export function startOfDayInTimezone(
  * Get the end of "today" (start of tomorrow) in the user's timezone as a UTC Date.
  */
 export function endOfDayInTimezone(
-  timezone: string = 'UTC',
+  timezone: string = 'Europe/London',
   referenceDate?: DateInput
 ): Date {
   const start = startOfDayInTimezone(timezone, referenceDate);
@@ -100,7 +100,7 @@ export function endOfDayInTimezone(
  *   new Date(now.getFullYear(), now.getMonth(), 1)
  */
 export function startOfMonthInTimezone(
-  timezone: string = 'UTC',
+  timezone: string = 'Europe/London',
   referenceDate?: DateInput
 ): Date {
   const ref = referenceDate ? toDate(referenceDate) : new Date();
@@ -114,7 +114,7 @@ export function startOfMonthInTimezone(
  * Replaces the home.router.ts getGreeting() Intl usage.
  */
 export function getHourInTimezone(
-  timezone: string = 'UTC',
+  timezone: string = 'Europe/London',
   referenceDate?: DateInput
 ): number {
   const ref = referenceDate ? toDate(referenceDate) : new Date();
@@ -135,7 +135,7 @@ export function getHourInTimezone(
  */
 export function formatDateTimeInTimezone(
   input: DateInput,
-  timezone: string = 'UTC',
+  timezone: string = 'Europe/London',
   options?: Partial<Intl.DateTimeFormatOptions>
 ): string {
   const date = toDate(input);
