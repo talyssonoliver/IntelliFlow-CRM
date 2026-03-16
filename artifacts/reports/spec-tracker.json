@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-03-16T18:52:20.761Z",
+  "generated_at": "2026-03-16T20:26:14.755Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
     "total_specs_analyzed": 355,
-    "completed": 346,
+    "completed": 348,
     "partially_done": 1,
-    "spec_only": 4,
+    "spec_only": 2,
     "uncertain": 4
   },
   "status_legend": {
@@ -4012,12 +4012,12 @@
       "spec_path": ".specify/sprints/sprint-16/specifications/IFC-254-spec.md",
       "has_spec": true,
       "has_plan": true,
-      "has_attestation": false,
-      "csv_status": "Plan Complete",
-      "metric_status": "PLANNED",
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-267",
@@ -5715,9 +5715,9 @@
       "sprint": 16,
       "spec_path": ".specify/sprints/sprint-16/specifications/PG-176-spec.md",
       "has_spec": true,
-      "has_plan": false,
+      "has_plan": true,
       "has_attestation": false,
-      "csv_status": "Spec Complete",
+      "csv_status": "Plan Complete",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
@@ -5732,14 +5732,14 @@
       "spec_path": ".specify/sprints/sprint-16/specifications/PG-177-spec.md",
       "has_spec": true,
       "has_plan": true,
-      "has_attestation": false,
-      "csv_status": "Plan Complete",
+      "has_attestation": true,
+      "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-068"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-178",
