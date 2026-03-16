@@ -44,6 +44,7 @@ import {
   markAgentActive,
   markAgentIdle,
   markAgentError,
+  recordToolCall,
   type AgentStatusContext,
 } from './services/agent-status';
 import { hallucinationChecker } from './monitoring';
@@ -128,10 +129,18 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     // Start Bull Board dashboard
     await this.startDashboard();
 
-    // IFC-297: Start monitoring data flush to DB
-    if (this.prisma) {
+    // IFC-297: Initialize Prisma and start monitoring data flush to DB
+    try {
+      const { prisma } = await import('@intelliflow/db');
+      this.prisma = prisma;
       this.monitoringFlushService = new MonitoringFlushService(this.prisma);
       this.monitoringFlushService.start();
+      this.logger.info('MonitoringFlushService started — flushing metrics to DB every 60s');
+    } catch (error) {
+      this.logger.warn(
+        { error: error instanceof Error ? error.message : String(error) },
+        'Failed to initialize MonitoringFlushService — monitoring data will remain in-memory only'
+      );
     }
   }
 
@@ -141,14 +150,18 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
    * - ai-insights: Refresh insights every 6 hours for all active tenants
    * - ai-scoring: Re-score unscored/stale leads every 4 hours
    *
-   * Both use a __scheduled__ sentinel tenantId. The job handlers detect this
-   * and enumerate real data (tenants/leads) before enqueueing follow-up jobs.
+   * Uses a configurable SYSTEM_TENANT_ID (defaults to seed tenant) so that
+   * agent-status tracking can record job activity on the Active Agents dashboard.
    *
    * Jobs are added with a repeatJobKey so BullMQ deduplicates across restarts.
    */
   private async registerScheduledJobs(): Promise<void> {
     const insightsCron = process.env.AI_INSIGHTS_CRON || '0 */6 * * *'; // every 6 hours
     const scoringCron = process.env.AI_SCORING_CRON || '0 */4 * * *';   // every 4 hours
+
+    // Use a real tenant ID so agent-status tracking writes ConversationRecord rows
+    const systemTenantId = process.env.SYSTEM_TENANT_ID || '00000000-0000-4000-8000-000000000001';
+    const systemUserId = process.env.SYSTEM_USER_ID || '00000000-0000-4000-8000-000000000101';
 
     try {
       const insightQueue = this.getQueue(INSIGHT_QUEUE);
@@ -158,8 +171,8 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
         {
           name: 'scheduled-insight-refresh',
           data: {
-            tenantId: '__scheduled__',
-            userId: 'system',
+            tenantId: systemTenantId,
+            userId: systemUserId,
             dealsAtRisk: [],
             hotLeads: [],
             overdueTasksCount: 0,
@@ -179,7 +192,8 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
           name: 'scheduled-lead-scoring',
           data: {
             leadId: '00000000-0000-0000-0000-000000000000',
-            tenantId: '__scheduled__',
+            tenantId: systemTenantId,
+            userId: systemUserId,
             lead: {
               email: 'scheduled@system.internal',
               source: 'cron',
@@ -262,6 +276,9 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
    * Route jobs to appropriate handler based on queue.
    * Wraps each job with agent status tracking so the Active Agents
    * dashboard (/agent-approvals/agents) shows live data.
+   *
+   * Also records each chain execution as a ToolCallRecord so the
+   * Agent Logs page (/agent-approvals/logs) shows real tool invocations.
    */
   protected async processJob(job: Job<AIJobData>): Promise<AIJobResult> {
     const ctx = extractJobContext(job.queueName, job.data);
@@ -273,6 +290,13 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
 
     try {
       let result: AIJobResult;
+
+      // Map queue → chain tool name for ToolCallRecord
+      const chainToolName = {
+        [SCORING_QUEUE]: 'lead_scoring_chain',
+        [PREDICTION_QUEUE]: 'prediction_chain',
+        [INSIGHT_QUEUE]: 'insight_generation_chain',
+      }[job.queueName] ?? job.queueName;
 
       switch (job.queueName) {
         case SCORING_QUEUE:
@@ -288,8 +312,19 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
           throw new Error(`Unknown queue: ${job.queueName}`);
       }
 
+      const durationMs = Date.now() - startMs;
+
       if (ctx) {
-        const durationMs = Date.now() - startMs;
+        // Record the chain execution as a tool call
+        await recordToolCall(
+          ctx,
+          chainToolName,
+          { jobId: job.id, jobName: job.name, queue: job.queueName },
+          this.summarizeResult(result),
+          'SUCCESS',
+          durationMs
+        );
+
         await markAgentIdle(ctx, undefined, { durationMs, result });
 
         // Run hallucination check on AI output (heuristic, non-blocking)
@@ -303,10 +338,50 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       if (ctx) {
         const message = error instanceof Error ? error.message : String(error);
         const durationMs = Date.now() - startMs;
+
+        // Record the failed chain execution as a tool call
+        const chainToolName = {
+          [SCORING_QUEUE]: 'lead_scoring_chain',
+          [PREDICTION_QUEUE]: 'prediction_chain',
+          [INSIGHT_QUEUE]: 'insight_generation_chain',
+        }[job.queueName] ?? job.queueName;
+
+        await recordToolCall(
+          ctx,
+          chainToolName,
+          { jobId: job.id, jobName: job.name, queue: job.queueName },
+          { error: message },
+          'FAILED',
+          durationMs
+        );
+
         await markAgentError(ctx, message, durationMs);
       }
       throw error;
     }
+  }
+
+  /**
+   * Extract key metrics from a job result for the tool call output record.
+   */
+  private summarizeResult(result: AIJobResult): Record<string, unknown> {
+    const r = result as Record<string, unknown>;
+    const summary: Record<string, unknown> = {};
+
+    // Scoring result
+    if ('score' in r) summary.score = r.score;
+    if ('tier' in r) summary.tier = r.tier;
+    if ('confidence' in r) summary.confidence = r.confidence;
+
+    // Insight result
+    if ('insightsCreated' in r) summary.insightsCreated = r.insightsCreated;
+
+    // Prediction result
+    if ('prediction' in r) summary.prediction = r.prediction;
+
+    if ('processingTimeMs' in r) summary.processingTimeMs = r.processingTimeMs;
+
+    return Object.keys(summary).length > 0 ? summary : { completed: true };
   }
 
   /**

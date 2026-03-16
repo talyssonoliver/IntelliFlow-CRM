@@ -74,9 +74,9 @@ export function extractJobContext(
   switch (queueName) {
     case SCORING_QUEUE: {
       const d = jobData as ScoringJobData;
-      // Scoring jobs may optionally carry tenantId/userId
-      tenantId = (d as Record<string, unknown>).tenantId as string | undefined;
-      userId = (d as Record<string, unknown>).userId as string | undefined;
+      const raw = d as Record<string, unknown>;
+      tenantId = raw.tenantId as string | undefined;
+      userId = raw.userId as string | undefined;
       agentType = 'scoring';
       const name =
         [d.lead.firstName, d.lead.lastName].filter(Boolean).join(' ') || d.lead.email;
@@ -284,6 +284,64 @@ export async function markAgentIdle(
     logger.warn(
       { error: error instanceof Error ? error.message : String(error), agentType: ctx.agentType },
       'Failed to mark agent idle'
+    );
+  }
+}
+
+/**
+ * Record a tool call for an agent's conversation.
+ * Creates a ToolCallRecord row so the Agent Logs page shows tool invocations.
+ */
+export async function recordToolCall(
+  ctx: AgentStatusContext,
+  toolName: string,
+  input: unknown,
+  output: unknown,
+  status: 'PENDING' | 'RUNNING' | 'SUCCESS' | 'FAILED' | 'CANCELLED',
+  durationMs?: number
+): Promise<void> {
+  try {
+    const prisma = await getPrisma();
+    const sessionId = `agent-status:${ctx.tenantId}:${ctx.agentType}`;
+
+    const record = await prisma.conversationRecord.findUnique({
+      where: { sessionId },
+      select: { id: true },
+    });
+
+    if (!record) {
+      logger.debug({ agentType: ctx.agentType }, 'No conversation record found for tool call — skipping');
+      return;
+    }
+
+    const now = new Date();
+    const startedAt = durationMs != null ? new Date(now.getTime() - durationMs) : now;
+
+    await prisma.toolCallRecord.create({
+      data: {
+        id: randomUUID(),
+        conversationId: record.id,
+        tenantId: ctx.tenantId,
+        toolName,
+        toolInput: input as any,
+        toolOutput: output as any,
+        status,
+        startedAt,
+        completedAt: status === 'PENDING' || status === 'RUNNING' ? null : now,
+        durationMs: durationMs ?? null,
+      },
+    });
+
+    await prisma.conversationRecord.update({
+      where: { id: record.id },
+      data: { toolCallCount: { increment: 1 } },
+    });
+
+    logger.debug({ agentType: ctx.agentType, toolName, status }, 'Tool call recorded');
+  } catch (error) {
+    logger.warn(
+      { error: error instanceof Error ? error.message : String(error), agentType: ctx.agentType, toolName },
+      'Failed to record tool call'
     );
   }
 }

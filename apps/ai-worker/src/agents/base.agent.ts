@@ -6,6 +6,7 @@ import { aiConfig } from '../config/ai.config';
 import { costTracker } from '../utils/cost-tracker';
 import { countMessagesTokens, countTokens } from '../utils/token-counter';
 import { getOpenAIClientSettings } from '../utils/openai-client';
+import { ConversationRecordCallbackHandler } from '../callbacks/conversation-record.handler';
 import pino from 'pino';
 
 /**
@@ -83,6 +84,9 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
   protected model: LLMModel;
   protected config: BaseAgentConfig;
   protected executionCount: number = 0;
+
+  /** Optional callback handler for recording LLM calls to the database. */
+  private conversationCallback?: ConversationRecordCallbackHandler;
 
   constructor(config: BaseAgentConfig) {
     this.config = {
@@ -258,19 +262,44 @@ You MUST NOT:
   }
 
   /**
+   * Attach a conversation-record callback handler so LLM calls are
+   * persisted to the database for the Agent Logs page.
+   *
+   * Called by AIWorker.processJob() when agent-status context is available.
+   */
+  public attachConversationRecording(options: {
+    sessionId: string;
+    tenantId: string;
+    model?: string;
+  }): void {
+    this.conversationCallback = new ConversationRecordCallbackHandler(options);
+  }
+
+  /**
    * Invoke the LLM with messages
    */
   protected async invokeLLM(messages: BaseMessage[]): Promise<string> {
     const startTime = Date.now();
 
+    // Notify callback handler of LLM start (input messages)
+    if (this.conversationCallback) {
+      const prompt = messages.map((m) => `[${m._getType()}] ${m.content}`).join('\n');
+      await this.conversationCallback.handleLLMStart(
+        { id: ['langchain', 'llms', this.config.name], lc: 1, type: 'not_implemented' },
+        [prompt],
+        `run-${Date.now()}`
+      ).catch(() => {});
+    }
+
     try {
       const response = await this.model.invoke(messages);
       const duration = Date.now() - startTime;
+      const responseText = response.content as string;
 
       // Track costs for OpenAI with accurate token counting
       if (aiConfig.provider === 'openai' && aiConfig.costTracking.enabled) {
         const inputTokens = countMessagesTokens(messages, aiConfig.openai.model);
-        const outputTokens = countTokens(response.content as string, aiConfig.openai.model);
+        const outputTokens = countTokens(responseText, aiConfig.openai.model);
 
         costTracker.recordUsage({
           model: aiConfig.openai.model,
@@ -283,8 +312,21 @@ You MUST NOT:
         });
       }
 
-      return response.content as string;
+      // Notify callback handler of LLM end (response)
+      if (this.conversationCallback) {
+        await this.conversationCallback.handleLLMEnd(
+          { generations: [[{ text: responseText }]] },
+          `run-${Date.now()}`
+        ).catch(() => {});
+      }
+
+      return responseText;
     } catch (error) {
+      // Notify callback handler of LLM error
+      if (this.conversationCallback && error instanceof Error) {
+        await this.conversationCallback.handleLLMError(error, `run-${Date.now()}`).catch(() => {});
+      }
+
       logger.error(
         {
           agentName: this.config.name,
