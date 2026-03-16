@@ -43,6 +43,12 @@ vi.mock('next/server', () => ({
 
 import { proxy, proxyConfig } from '../../proxy';
 
+function createTestJwt(exp: number): string {
+  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const payload = btoa(JSON.stringify({ exp }));
+  return `${header}.${payload}.${btoa('sig')}`;
+}
+
 function mkReq(
   path: string,
   opts: { accessToken?: string; session?: string; searchParams?: Record<string, string> } = {}
@@ -129,10 +135,18 @@ describe('root proxy.ts', () => {
       expect(mockRedirect).not.toHaveBeenCalled();
     });
     it('passes through with accessToken cookie', async () => {
-      await proxy(mkReq('/dashboard', { accessToken: 'tok123' }));
+      const accessToken = createTestJwt(Math.floor(Date.now() / 1000) + 3600);
+      await proxy(mkReq('/dashboard', { accessToken }));
       expect(mockNextFn).toHaveBeenCalled();
       // Should not redirect since hasAnyAuthArtifact is true
       // (role check may still redirect, but no login redirect)
+    });
+
+    it('redirects to login and clears expired accessToken cookie', async () => {
+      const expiredAccessToken = createTestJwt(Math.floor(Date.now() / 1000) - 60);
+      const response = await proxy(mkReq('/dashboard', { accessToken: expiredAccessToken }));
+      expect(mockRedirect).toHaveBeenCalled();
+      expect(response.cookies.delete).toHaveBeenCalledWith('accessToken');
     });
   });
 

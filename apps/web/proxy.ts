@@ -16,6 +16,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { decrypt, PUBLIC_ROUTES, PROTECTED_ROUTES, hasRole } from '@/lib/session';
+import { isTokenUsable } from '@/lib/auth/jwt';
 import { PROTECTED_ROUTE_PREFIXES, matchesRoutePrefix } from './src/lib/auth/route-protection';
 
 /**
@@ -62,10 +63,25 @@ export async function proxy(request: NextRequest) {
   const session = sessionCookie ? await decrypt(sessionCookie) : null;
 
   const hasValidSession = !!session;
-  const hasAnyAuthArtifact = !!accessToken || !!session;
+  const hasUsableAccessToken = isTokenUsable(accessToken ?? null);
+  const hasStaleAccessToken = Boolean(accessToken && !hasUsableAccessToken);
+  const hasStaleSession = Boolean(sessionCookie && !hasValidSession);
+  const hasAnyAuthArtifact = hasUsableAccessToken || hasValidSession;
+
+  const clearStaleAuthArtifacts = (response: NextResponse) => {
+    if (hasStaleAccessToken) {
+      response.cookies.delete('accessToken');
+    }
+
+    if (hasStaleSession) {
+      response.cookies.delete('session');
+    }
+
+    return response;
+  };
 
   console.log(
-    `[Proxy] Path: ${path}, hasAccessToken: ${!!accessToken}, hasSession: ${!!session}, hasValidSession: ${hasValidSession}`
+    `[Proxy] Path: ${path}, hasAccessToken: ${hasUsableAccessToken}, hasSession: ${!!session}, hasValidSession: ${hasValidSession}`
   );
 
   // Protected route without auth -> redirect to login immediately
@@ -74,7 +90,7 @@ export async function proxy(request: NextRequest) {
     console.log(`[Proxy] Protected route without auth, redirecting to login: ${path}`);
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', path);
-    return NextResponse.redirect(loginUrl);
+    return clearStaleAuthArtifacts(NextResponse.redirect(loginUrl));
   }
 
   // Check role-based access (only if we have a full session)
@@ -92,20 +108,17 @@ export async function proxy(request: NextRequest) {
   if (path === '/login' || path === '/signup') {
     if (hasValidSession && !request.nextUrl.searchParams.has('logged_out')) {
       console.log(`[Proxy] Authenticated user on auth page, redirecting to dashboard`);
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      return clearStaleAuthArtifacts(NextResponse.redirect(new URL('/dashboard', request.url)));
     }
 
-    if (accessToken && !hasValidSession) {
+    if (hasStaleAccessToken || hasStaleSession) {
       console.log(`[Proxy] Stale access token without session on auth page, clearing cookies`);
-      const res = NextResponse.next();
-      res.cookies.delete('accessToken');
-      res.cookies.delete('session');
-      return res;
+      return clearStaleAuthArtifacts(NextResponse.next());
     }
   }
 
   // Add user info to headers for server components (if session available)
-  const response = NextResponse.next();
+  const response = clearStaleAuthArtifacts(NextResponse.next());
 
   if (session) {
     response.headers.set('x-user-id', session.userId);
