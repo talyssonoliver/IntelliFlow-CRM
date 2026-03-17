@@ -20,6 +20,7 @@ export {
   createSubscription,
   updateSubscription,
   cancelSubscription,
+  pauseSubscription,
   getSubscription,
   listSubscriptions,
 } from './subscriptions';

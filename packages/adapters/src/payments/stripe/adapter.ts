@@ -36,6 +36,7 @@ import {
   createSubscription as createSubscriptionHandler,
   updateSubscription as updateSubscriptionHandler,
   cancelSubscription as cancelSubscriptionHandler,
+  pauseSubscription as pauseSubscriptionHandler,
   getSubscription as getSubscriptionHandler,
   listSubscriptions as listSubscriptionsHandler,
   getInvoice as getInvoiceHandler,
@@ -98,6 +99,10 @@ export interface PaymentServicePort {
   cancelSubscription(
     subscriptionId: string,
     atPeriodEnd?: boolean
+  ): Promise<Result<StripeSubscription, DomainError>>;
+  pauseSubscription(
+    subscriptionId: string,
+    resumesAt: Date
   ): Promise<Result<StripeSubscription, DomainError>>;
   getSubscription(subscriptionId: string): Promise<Result<StripeSubscription | null, DomainError>>;
   listSubscriptions(customerId: string): Promise<Result<StripeSubscription[], DomainError>>;
@@ -198,6 +203,10 @@ export class StripeAdapter implements PaymentServicePort {
 
   cancelSubscription(subscriptionId: string, atPeriodEnd?: boolean) {
     return cancelSubscriptionHandler(this.config, subscriptionId, atPeriodEnd);
+  }
+
+  pauseSubscription(subscriptionId: string, resumesAt: Date) {
+    return pauseSubscriptionHandler(this.config, subscriptionId, resumesAt);
   }
 
   getSubscription(subscriptionId: string) {

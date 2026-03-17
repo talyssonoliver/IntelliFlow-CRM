@@ -96,6 +96,27 @@ export async function cancelSubscription(
   }
 }
 
+export async function pauseSubscription(
+  config: StripeConfig,
+  subscriptionId: string,
+  resumesAt: Date
+): Promise<Result<StripeSubscription, DomainError>> {
+  try {
+    const body = new URLSearchParams();
+    body.append('pause_collection[behavior]', 'void');
+    body.append('pause_collection[resumes_at]', Math.floor(resumesAt.getTime() / 1000).toString());
+
+    const response = await makeRequest(config, 'POST', `/subscriptions/${subscriptionId}`, body);
+    if (response.isFailure) return Result.fail(response.error);
+
+    return Result.ok(mapToSubscription(response.value));
+  } catch (error) {
+    return Result.fail(
+      new StripeConnectionError(error instanceof Error ? error.message : 'Unknown error')
+    );
+  }
+}
+
 export async function getSubscription(
   config: StripeConfig,
   subscriptionId: string
