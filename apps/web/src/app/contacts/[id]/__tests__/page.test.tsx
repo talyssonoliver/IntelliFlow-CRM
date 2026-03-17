@@ -129,6 +129,12 @@ vi.mock('@/lib/api', () => ({
           isPending: false,
         }),
       },
+      dismissInsight: {
+        useMutation: () => ({
+          mutate: vi.fn(),
+          isPending: false,
+        }),
+      },
     },
   },
 }));
@@ -209,6 +215,10 @@ vi.mock('@/hooks/useActivityComments', () => ({
     addComment: vi.fn(),
     isAdding: false,
   }),
+}));
+
+vi.mock('@/components/shared/entity-hover-card', () => ({
+  EntityHoverCard: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 vi.mock('@/components/shared/quick-log-composer', () => ({

@@ -1082,6 +1082,20 @@ export default function Contact360Page() {
     'CONTACT_ACTIVITY'
   );
 
+  // Auto-dismiss stale insight when the referenced entity no longer exists
+  const fromInsight = !!insightIdParam;
+  const dismissInsightMutation = api.home.dismissInsight.useMutation();
+  const dismissedInsightRef = useRef(false);
+  useEffect(() => {
+    if (fromInsight && insightIdParam && (error?.data?.code === 'NOT_FOUND' || (!isLoading && !contact)) && !dismissedInsightRef.current) {
+      dismissedInsightRef.current = true;
+      dismissInsightMutation.mutate(
+        { insightId: insightIdParam, reason: 'Referenced contact no longer exists' },
+        { onError: () => { /* best-effort */ } }
+      );
+    }
+  }, [fromInsight, insightIdParam, error, isLoading, contact, dismissInsightMutation]);
+
   // Loading state
   if (isLoading) {
     return (
@@ -1117,20 +1131,6 @@ export default function Contact360Page() {
   }
 
   // Error state or no contact data (non-auth errors)
-  const fromInsight = !!insightIdParam;
-
-  // Auto-dismiss stale insight when the referenced entity no longer exists
-  const dismissInsightMutation = api.home.dismissInsight.useMutation();
-  const dismissedInsightRef = useRef(false);
-  useEffect(() => {
-    if (fromInsight && insightIdParam && (error?.data?.code === 'NOT_FOUND' || (!isLoading && !contact)) && !dismissedInsightRef.current) {
-      dismissedInsightRef.current = true;
-      dismissInsightMutation.mutate(
-        { insightId: insightIdParam, reason: 'Referenced contact no longer exists' },
-        { onError: () => { /* best-effort */ } }
-      );
-    }
-  }, [fromInsight, insightIdParam, error, isLoading, contact, dismissInsightMutation]);
 
   if ((error && !isAuthError) || !contact) {
     return (
