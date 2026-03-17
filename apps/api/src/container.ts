@@ -63,6 +63,8 @@ import {
   CloseDealLostUseCase,
   ExperimentService,
   NotificationService,
+  ConversationSearchService,
+  type ConversationRepositoryPort,
 } from '@intelliflow/application';
 import {
   getAuditLogger,
@@ -376,6 +378,18 @@ const createServices = (prismaClient: PrismaClient) => {
   // IFC-297: AI Monitoring persistence service
   const aiMonitoringService = new AIMonitoringService(prismaClient);
 
+  // IFC-148: Conversation Search Service
+  // Stub repository implementation — replace with PrismaConversationRepository once adapter is built
+  const stubConversationRepository: ConversationRepositoryPort = {
+    findById: async () => null,
+    findBySessionId: async () => null,
+    search: async () => ({ conversations: [], total: 0 }),
+    searchByEmbedding: async () => [],
+    findByContext: async () => [],
+    exportUserConversations: async () => [],
+  };
+  const conversationSearchService = new ConversationSearchService(stubConversationRepository);
+
   return {
     leadService,
     contactService,
@@ -416,6 +430,8 @@ const createServices = (prismaClient: PrismaClient) => {
     adapters,
     // IFC-297: AI Monitoring persistence service
     aiMonitoringService,
+    // IFC-148: Conversation Search Service
+    conversationSearchService,
   };
 };
 

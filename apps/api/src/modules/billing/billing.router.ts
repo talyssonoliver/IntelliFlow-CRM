@@ -24,6 +24,7 @@ import {
   updatePaymentMethodInputSchema,
   updateSubscriptionInputSchema,
   cancelSubscriptionInputSchema,
+  pauseSubscriptionInputSchema,
   getUpcomingInvoiceInputSchema,
   updateBillingInformationInputSchema,
 } from '@intelliflow/validators';
@@ -182,6 +183,10 @@ interface IStripeAdapter {
   cancelSubscription(
     subscriptionId: string,
     atPeriodEnd?: boolean
+  ): Promise<StripeResult<StripeSubscription>>;
+  pauseSubscription(
+    subscriptionId: string,
+    resumesAt: Date
   ): Promise<StripeResult<StripeSubscription>>;
   createSubscription(params: {
     customerId: string;
@@ -759,6 +764,68 @@ export const billingRouter = createTRPCRouter({
 
       invalidateBillingCache(user.stripeCustomerId);
       return result.value;
+    }),
+
+  /**
+   * Pause subscription for a specified duration
+   *
+   * Uses Stripe's pause_collection to temporarily suspend billing.
+   * CRM data and AI training progress are preserved during pause.
+   */
+  pauseSubscription: protectedProcedure
+    .input(pauseSubscriptionInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const user = ctx.user;
+
+      if (!user?.stripeCustomerId) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'No billing account found.',
+        });
+      }
+
+      const stripe = await getStripeAdapter();
+
+      // Get current subscription
+      const subsResult = await stripe.listSubscriptions(user.stripeCustomerId);
+
+      if (subsResult.isFailure) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: subsResult.error.message,
+        });
+      }
+
+      const activeSubscription = subsResult.value.find(
+        (sub) => sub.status === 'active' || sub.status === 'trialing'
+      );
+
+      if (!activeSubscription) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'No active subscription found.',
+        });
+      }
+
+      // Calculate resume date
+      const resumesAt = new Date();
+      resumesAt.setMonth(resumesAt.getMonth() + input.durationMonths);
+
+      const result = await stripe.pauseSubscription(activeSubscription.id, resumesAt);
+
+      if (result.isFailure) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: result.error.message,
+        });
+      }
+
+      invalidateBillingCache(user.stripeCustomerId);
+      return {
+        ...result.value,
+        pauseDurationMonths: input.durationMonths,
+        resumesAt,
+      };
     }),
 
   /**
