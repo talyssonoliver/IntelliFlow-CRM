@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ScoreLeadUseCase, ScoreLeadInput } from '../src/usecases/leads/ScoreLeadUseCase';
-import { InMemoryLeadRepository } from '../../adapters/src/repositories/InMemoryLeadRepository';
-import { InMemoryEventBus } from '../../adapters/src/external/InMemoryEventBus';
-import { MockAIService } from '../../adapters/src/external/MockAIService';
+import { ScoreLeadUseCase, ScoreLeadInput } from '../ScoreLeadUseCase';
+import { InMemoryLeadRepository } from '../../../../../adapters/src/repositories/InMemoryLeadRepository';
+import { InMemoryEventBus } from '../../../../../adapters/src/external/InMemoryEventBus';
+import { MockAIService } from '../../../../../adapters/src/external/MockAIService';
 import { Lead, LeadScoredEvent } from '@intelliflow/domain';
 
 describe('ScoreLeadUseCase', () => {

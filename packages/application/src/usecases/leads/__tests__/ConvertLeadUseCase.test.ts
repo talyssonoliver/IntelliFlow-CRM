@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ConvertLeadUseCase, ConvertLeadInput } from '../src/usecases/leads/ConvertLeadUseCase';
-import { InMemoryLeadRepository } from '../../adapters/src/repositories/InMemoryLeadRepository';
-import { InMemoryEventBus } from '../../adapters/src/external/InMemoryEventBus';
+import { ConvertLeadUseCase, ConvertLeadInput } from '../ConvertLeadUseCase';
+import { InMemoryLeadRepository } from '../../../../../adapters/src/repositories/InMemoryLeadRepository';
+import { InMemoryEventBus } from '../../../../../adapters/src/external/InMemoryEventBus';
 import { Lead, LeadConvertedEvent } from '@intelliflow/domain';
 
 describe('ConvertLeadUseCase', () => {
