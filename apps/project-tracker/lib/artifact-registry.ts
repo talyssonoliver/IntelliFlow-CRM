@@ -447,8 +447,8 @@ const SKIP_DIRS_TOP_LEVEL = new Set(['build', 'coverage']);
 /** Directories to skip ONLY at repo root (depth 1), not nested inside other dirs */
 const SKIP_DIRS_ROOT_ONLY = new Set(['logs', 'tmp', 'playwright-report', 'sonar-reports']);
 
-/** Specific path prefixes to skip entirely (gitignored temp data) */
-const SKIP_PATH_PREFIXES = ['supabase/.temp/'];
+/** Specific path prefixes to skip entirely (gitignored temp data, archived files) */
+const SKIP_PATH_PREFIXES = ['supabase/.temp/', 'artifacts/old/'];
 
 const SKIP_FILES = new Set([
   '.DS_Store', 'Thumbs.db', '.gitkeep', 'desktop.ini',
@@ -457,6 +457,8 @@ const SKIP_FILES = new Set([
   '.env.local.example',
   // Temp build artifacts
   'build_output.log',
+  // TypeScript incremental build cache — generated, not source
+  'tsconfig.tsbuildinfo',
 ]);
 
 // =============================================================================
@@ -999,10 +1001,12 @@ function linkGlobPath(
   pathToTasks: Record<string, string[]>
 ): void {
   const normalizedPath = path.replaceAll('\\', '/').toLowerCase();
+  // Replace ** first with placeholder to avoid single-* replacing the * in .*
   const regexPattern = normalizedPath
     .replaceAll('.', String.raw`\.`)
-    .replaceAll('**', '.*')
-    .replaceAll('*', '[^/]*');
+    .replaceAll('**', '\x00GLOBSTAR\x00')
+    .replaceAll('*', '[^/]*')
+    .replaceAll('\x00GLOBSTAR\x00', '.*');
   const regex = new RegExp(`^${regexPattern}$`, 'i');
 
   for (const file of files) {

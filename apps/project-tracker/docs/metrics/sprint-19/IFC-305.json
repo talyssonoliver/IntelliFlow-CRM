@@ -1,0 +1,74 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-305",
+  "section": "Core CRM",
+  "description": "Componentize CRM entity detail pages (Leads, Contacts) — extract shared SOLID-compliant components from 5284 lines of duplicated god-files; wire bypassed shared components (EntityHeader, SearchFilterBar, ActivityFeed); create cross-entity reusable components (EntityProfileCard, ActivityFilterBar, AiInsightMetricsGrid, ai-insight-transforms utility, EntityErrorState, EntityDetailSkeleton, ConfirmationDialog); reduce page files from 2691/2593 to ~200 lines each",
+  "owner": "Frontend Dev (STOA-Quality)",
+  "sprint": "sprint-19",
+  "phase": null,
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [
+      "IFC-226"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-03-17T23:34:02.631Z"
+  },
+  "dependencies_resolved": [
+    "IFC-226"
+  ],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 360,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "page_file_reduction": {
+      "target": ">=80%",
+      "actual": "",
+      "met": false,
+      "unit": "percent"
+    },
+    "component_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false,
+      "unit": "percent"
+    },
+    "shared_components_wired": {
+      "target": ">=3 bypassed components wired",
+      "actual": "",
+      "met": false
+    },
+    "duplication_eliminated": {
+      "target": ">=1500 lines",
+      "actual": "",
+      "met": false,
+      "unit": "lines"
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/components/leads/LeadDetail.tsx",
+      "apps/web/src/components/shared/entity-profile-card.tsx",
+      "apps/web/src/lib/shared/ai-insight-transforms.ts",
+      ".specify/sprints/sprint-19/attestations/IFC-305/context_ack.json"
+    ],
+    "created": [],
+    "missing": [
+      "apps/web/src/components/leads/LeadDetail.tsx",
+      "apps/web/src/components/shared/entity-profile-card.tsx",
+      "apps/web/src/lib/shared/ai-insight-transforms.ts",
+      ".specify/sprints/sprint-19/attestations/IFC-305/context_ack.json"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-16T00:30:00Z"
+    }
+  ],
+  "notes": "Cross-entity refactoring: leads/[id]/page.tsx (2691 lines) + contacts/[id]/page.tsx (2593 lines) are god-files violating SRP. ContactDetail.tsx (503 lines, model pattern) exists but was never wired. EntityHeader, SearchFilterBar, ActivityFeed shared components exist but are bypassed. AI insight transforms (churnRisk/NBA/engagement) copy-pasted 3 times. This task extracts ~15 shared/entity-specific components following SOLID principles."
+}
