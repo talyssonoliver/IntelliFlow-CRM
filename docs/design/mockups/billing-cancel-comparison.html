@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cancel Subscription — 3-Step Flow Preview</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: { "primary": "#137fec", "background-light": "#f6f7f8" },
+        fontFamily: { "display": ["Inter", "sans-serif"] },
+        borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+      },
+    },
+  }
+</script>
+<style>
+  .tab-active { background: #137fec; color: white; }
+  .tab-inactive { background: white; color: #334155; border: 1px solid #e2e8f0; }
+  .tab-inactive:hover { background: #f1f5f9; }
+  .fade-in { animation: fadeIn 0.3s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body class="font-display bg-background-light text-slate-900 antialiased">
+
+<!-- Header -->
+<div class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
+  <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="size-8 text-primary flex items-center justify-center">
+        <span class="material-symbols-outlined text-2xl">analytics</span>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold tracking-tight">Cancel Subscription — 3-Step Flow</h1>
+        <p class="text-xs text-slate-500">Click tabs to preview each step</p>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="showStep(1)" id="tab-1" class="tab-active px-4 py-2 rounded-lg text-sm font-semibold transition-all">Step 1: Your Plan</button>
+      <button onclick="showStep(2)" id="tab-2" class="tab-inactive px-4 py-2 rounded-lg text-sm font-semibold transition-all">Step 2: Feedback</button>
+      <button onclick="showStep(3)" id="tab-3" class="tab-inactive px-4 py-2 rounded-lg text-sm font-semibold transition-all">Step 3: Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="max-w-5xl mx-auto px-6 py-8">
+
+  <!-- Page Header (always visible) -->
+  <div class="flex flex-col gap-4 mb-6">
+    <nav class="flex items-center gap-2 text-xs text-slate-400">
+      <span class="hover:text-primary cursor-pointer">Billing</span>
+      <span>/</span>
+      <span class="text-slate-600">Cancel Subscription</span>
+    </nav>
+    <div>
+      <h2 class="text-2xl font-bold tracking-tight">Cancel Subscription</h2>
+      <p class="text-sm text-slate-500 mt-1">We're sorry to see you go. Please review what you'll lose before confirming.</p>
+    </div>
+  </div>
+
+  <!-- Card container -->
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+
+    <!-- Stepper (always visible) -->
+    <div class="px-8 pt-8 pb-6 border-b border-slate-200">
+      <div class="relative flex items-center justify-between w-full max-w-2xl mx-auto">
+        <div class="absolute left-0 top-5 w-full h-0.5 bg-slate-100 -z-10"></div>
+
+        <button onclick="showStep(1)" id="step-circle-1" class="flex flex-col items-center gap-2 cursor-pointer">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white shadow-sm transition-all bg-[#137fec] text-white">1</div>
+          <span class="text-sm font-bold text-slate-900">Your Plan</span>
+        </button>
+
+        <button onclick="showStep(2)" id="step-circle-2" class="flex flex-col items-center gap-2 cursor-not-allowed">
+          <div id="step-dot-2" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white shadow-sm transition-all bg-slate-100 text-slate-400 border-2 border-slate-200">2</div>
+          <span id="step-label-2" class="text-sm font-medium text-slate-500">Feedback</span>
+        </button>
+
+        <button onclick="showStep(3)" id="step-circle-3" class="flex flex-col items-center gap-2 cursor-not-allowed">
+          <div id="step-dot-3" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white shadow-sm transition-all bg-slate-100 text-slate-400 border-2 border-slate-200">3</div>
+          <span id="step-label-3" class="text-sm font-medium text-slate-500">Confirm</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step Content -->
+    <div class="p-8">
+
+      <!-- ============================== -->
+      <!-- STEP 1: Your Plan              -->
+      <!-- ============================== -->
+      <div id="content-1" class="flex flex-col gap-8 fade-in">
+        <div class="flex flex-col gap-6">
+          <!-- Current plan -->
+          <div class="flex flex-col gap-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-bold text-slate-900">Your Current Plan</h3>
+              <span class="inline-flex items-center rounded-full border border-green-300 text-green-700 px-2.5 py-0.5 text-xs font-medium">Active</span>
+            </div>
+            <div>
+              <p class="text-xl font-bold">Professional</p>
+              <p class="text-sm text-slate-500">Active until 15 Apr 2026</p>
+            </div>
+          </div>
+
+          <!-- Retention offer -->
+          <div class="flex items-start gap-4 p-4 rounded-xl border border-blue-200 bg-blue-50">
+            <span class="material-symbols-outlined text-2xl text-blue-600">local_offer</span>
+            <div>
+              <p class="font-semibold text-blue-800">Before you go!</p>
+              <p class="text-sm text-blue-700 mt-1">Stay and get 20% off your next 3 months.</p>
+            </div>
+          </div>
+
+          <!-- Dynamic feature loss cards (Professional plan) -->
+          <div class="flex flex-col gap-4">
+            <h4 class="text-base font-semibold text-slate-800">What you'll lose access to:</h4>
+            <div class="flex flex-col gap-3">
+
+              <div class="flex items-start gap-4 bg-white p-4 rounded-xl border border-red-100 shadow-sm">
+                <div class="flex items-center justify-center rounded-lg bg-red-50 text-red-500 shrink-0 size-10 mt-0.5">
+                  <span class="material-symbols-outlined text-xl">warning</span>
+                </div>
+                <div class="flex flex-col">
+                  <p class="text-sm font-bold text-slate-900">Up to 25 users</p>
+                  <p class="text-sm text-slate-600 leading-relaxed mt-0.5">Your team members will lose access to their accounts and all shared data.</p>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-4 bg-white p-4 rounded-xl border border-red-100 shadow-sm">
+                <div class="flex items-center justify-center rounded-lg bg-red-50 text-red-500 shrink-0 size-10 mt-0.5">
+                  <span class="material-symbols-outlined text-xl">warning</span>
+                </div>
+                <div class="flex flex-col">
+                  <p class="text-sm font-bold text-slate-900">10,000 contacts <span class="text-slate-500 font-normal">(10,000)</span></p>
+                  <p class="text-sm text-slate-600 leading-relaxed mt-0.5">You will lose access to your contact database, enrichment data, and lead profiles.</p>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-4 bg-white p-4 rounded-xl border border-red-100 shadow-sm">
+                <div class="flex items-center justify-center rounded-lg bg-red-50 text-red-500 shrink-0 size-10 mt-0.5">
+                  <span class="material-symbols-outlined text-xl">warning</span>
+                </div>
+                <div class="flex flex-col">
+                  <p class="text-sm font-bold text-slate-900">Advanced AI insights</p>
+                  <p class="text-sm text-slate-600 leading-relaxed mt-0.5">AI-powered insights, drift monitoring, and predictive analytics will be deactivated.</p>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-4 bg-white p-4 rounded-xl border border-red-100 shadow-sm">
+                <div class="flex items-center justify-center rounded-lg bg-red-50 text-red-500 shrink-0 size-10 mt-0.5">
+                  <span class="material-symbols-outlined text-xl">warning</span>
+                </div>
+                <div class="flex flex-col">
+                  <p class="text-sm font-bold text-slate-900">10,000 AI predictions/month <span class="text-slate-500 font-normal">(10,000)</span></p>
+                  <p class="text-sm text-slate-600 leading-relaxed mt-0.5">AI predictions for deal outcomes, lead conversion, and revenue forecasting will stop immediately.</p>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-4 bg-white p-4 rounded-xl border border-red-100 shadow-sm">
+                <div class="flex items-center justify-center rounded-lg bg-red-50 text-red-500 shrink-0 size-10 mt-0.5">
+                  <span class="material-symbols-outlined text-xl">warning</span>
+                </div>
+                <div class="flex flex-col">
+                  <p class="text-sm font-bold text-slate-900">Priority support (4h response)</p>
+                  <p class="text-sm text-slate-600 leading-relaxed mt-0.5">Priority support with 4-hour response time will be downgraded.</p>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-4 bg-white p-4 rounded-xl border border-red-100 shadow-sm">
+                <div class="flex items-center justify-center rounded-lg bg-red-50 text-red-500 shrink-0 size-10 mt-0.5">
+                  <span class="material-symbols-outlined text-xl">warning</span>
+                </div>
+                <div class="flex flex-col">
+                  <p class="text-sm font-bold text-slate-900">Workflow automation</p>
+                  <p class="text-sm text-slate-600 leading-relaxed mt-0.5">All active workflows, email sequences, and automated lead routing rules will be deactivated immediately.</p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer: Step 1 -->
+        <div class="flex items-center justify-between pt-6 border-t border-slate-200 mt-2">
+          <a href="#" class="px-5 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">Back to Billing</a>
+          <button onclick="showStep(2)" class="flex items-center gap-2 bg-[#137fec] hover:bg-[#0e6ac7] text-white font-bold py-2.5 px-6 rounded-lg shadow-sm shadow-[#137fec]/30 transition-all active:scale-95">
+            <span>Continue Cancellation</span>
+            <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ============================== -->
+      <!-- STEP 2: Feedback               -->
+      <!-- ============================== -->
+      <div id="content-2" class="hidden flex flex-col gap-8 fade-in">
+        <div class="flex flex-col gap-6">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-bold text-slate-900">Why are you canceling?</h3>
+            <span class="text-xs text-slate-500">Please select a reason</span>
+          </div>
+
+          <fieldset class="flex flex-col gap-3">
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:border-primary cursor-pointer transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+              <input class="size-4 text-primary border-slate-300 focus:ring-primary" name="reason_preview" type="radio" value="too_expensive"/>
+              <span class="text-sm font-medium text-slate-700">It's too expensive</span>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:border-primary cursor-pointer transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+              <input class="size-4 text-primary border-slate-300 focus:ring-primary" name="reason_preview" type="radio" value="missing_features"/>
+              <span class="text-sm font-medium text-slate-700">Missing necessary features</span>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:border-primary cursor-pointer transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+              <input class="size-4 text-primary border-slate-300 focus:ring-primary" name="reason_preview" type="radio" value="switching"/>
+              <span class="text-sm font-medium text-slate-700">Switching to another CRM</span>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:border-primary cursor-pointer transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+              <input class="size-4 text-primary border-slate-300 focus:ring-primary" name="reason_preview" type="radio" value="no_longer_needed"/>
+              <span class="text-sm font-medium text-slate-700">Temporary project completed</span>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:border-primary cursor-pointer transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+              <input class="size-4 text-primary border-slate-300 focus:ring-primary" name="reason_preview" type="radio" value="technical"/>
+              <span class="text-sm font-medium text-slate-700">Technical issues</span>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:border-primary cursor-pointer transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+              <input class="size-4 text-primary border-slate-300 focus:ring-primary" name="reason_preview" type="radio" value="other"/>
+              <span class="text-sm font-medium text-slate-700">Other reason</span>
+            </label>
+          </fieldset>
+
+          <!-- Additional feedback -->
+          <div class="space-y-1.5">
+            <label class="block text-sm font-semibold text-slate-700">Additional feedback (optional)</label>
+            <textarea placeholder="Any additional feedback..." rows="3" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] placeholder-slate-400 transition-shadow resize-none"></textarea>
+          </div>
+        </div>
+
+        <!-- Footer: Step 2 -->
+        <div class="flex items-center justify-between pt-6 border-t border-slate-200 mt-2">
+          <button onclick="showStep(1)" class="px-5 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">Previous</button>
+          <button onclick="showStep(3)" class="flex items-center gap-2 bg-[#137fec] hover:bg-[#0e6ac7] text-white font-bold py-2.5 px-6 rounded-lg shadow-sm shadow-[#137fec]/30 transition-all active:scale-95">
+            <span>Next Step</span>
+            <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ============================== -->
+      <!-- STEP 3: Confirm                -->
+      <!-- ============================== -->
+      <div id="content-3" class="hidden flex flex-col gap-8 fade-in">
+        <div class="flex flex-col gap-6">
+          <!-- Warning card -->
+          <div class="flex items-start gap-4 p-5 rounded-xl border border-red-200 bg-red-50/50">
+            <span class="material-symbols-outlined text-2xl text-red-600 mt-0.5">warning</span>
+            <div class="flex flex-col gap-1">
+              <p class="font-semibold text-red-800">Confirm Cancellation</p>
+              <p class="text-sm text-red-700">Your subscription will remain active until 15 Apr 2026. After that, you'll lose access to all Professional features.</p>
+            </div>
+          </div>
+
+          <!-- Summary -->
+          <div class="text-sm text-slate-600">
+            <span class="font-medium text-slate-700">Reason: </span>It's too expensive<br/>
+            <span class="font-medium text-slate-700">Feedback: </span>Looking for a more affordable option.
+          </div>
+        </div>
+
+        <!-- Footer: Step 3 — 3 buttons -->
+        <div class="flex items-center justify-between pt-6 border-t border-slate-200 mt-2">
+          <button onclick="showStep(2)" class="px-5 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">Previous</button>
+          <div class="flex items-center gap-3">
+            <button class="px-6 py-2.5 rounded-lg text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 transition-colors">Confirm Cancellation</button>
+            <a href="#" class="flex items-center gap-2 bg-[#137fec] hover:bg-[#0e6ac7] text-white font-bold py-2.5 px-6 rounded-lg shadow-sm shadow-[#137fec]/30 transition-all active:scale-95">Keep My Plan</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Design notes -->
+  <div class="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-5">
+    <h4 class="text-sm font-semibold text-blue-800 flex items-center gap-2 mb-3">
+      <span class="material-symbols-outlined text-lg">info</span>
+      Design Decisions
+    </h4>
+    <ul class="text-sm text-blue-700 space-y-1.5 list-disc list-inside">
+      <li><strong>Step 1</strong> — Plan overview + dynamic feature loss cards (from user's actual plan features) + retention offer</li>
+      <li><strong>Step 2</strong> — Radio buttons (not dropdown) for reason selection + optional feedback textarea. Matches leads/new stepper pattern</li>
+      <li><strong>Step 3</strong> — Confirmation with 3-button footer: Previous (ghost), Confirm Cancellation (red destructive), Keep My Plan (primary blue)</li>
+      <li><strong>Stepper</strong> — Identical to <code>/leads/new</code> pattern: clickable completed steps, disabled upcoming steps, checkmark on completed</li>
+      <li><strong>Feature cards</strong> — Dynamically rendered from plan's <code>included: true</code> features with contextual loss descriptions</li>
+      <li><strong>Confirmation modal</strong> — Placeholder for future implementation after "Confirm Cancellation" click</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+  function showStep(num) {
+    // Hide all content
+    for (let i = 1; i <= 3; i++) {
+      document.getElementById('content-' + i).className = 'hidden';
+      document.getElementById('tab-' + i).className = 'tab-inactive px-4 py-2 rounded-lg text-sm font-semibold transition-all';
+    }
+    // Show selected
+    document.getElementById('content-' + num).className = 'flex flex-col gap-8 fade-in';
+    document.getElementById('tab-' + num).className = 'tab-active px-4 py-2 rounded-lg text-sm font-semibold transition-all';
+
+    // Update stepper dots
+    for (let i = 1; i <= 3; i++) {
+      const dot = document.getElementById('step-dot-' + i);
+      const label = document.getElementById('step-label-' + i);
+      const circle = document.getElementById('step-circle-' + i);
+      if (!dot) continue; // step 1 doesn't have these IDs
+
+      if (i < num) {
+        // Completed
+        dot.className = 'w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white shadow-sm transition-all bg-[#137fec] text-white hover:bg-[#0e6ac7]';
+        dot.innerHTML = '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>';
+        label.className = 'text-sm font-bold text-slate-900';
+        circle.className = 'flex flex-col items-center gap-2 cursor-pointer';
+      } else if (i === num) {
+        // Current
+        dot.className = 'w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white shadow-sm transition-all bg-[#137fec] text-white';
+        dot.innerHTML = i;
+        label.className = 'text-sm font-bold text-slate-900';
+        circle.className = 'flex flex-col items-center gap-2 cursor-pointer';
+      } else {
+        // Upcoming
+        dot.className = 'w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white shadow-sm transition-all bg-slate-100 text-slate-400 border-2 border-slate-200';
+        dot.innerHTML = i;
+        label.className = 'text-sm font-medium text-slate-500';
+        circle.className = 'flex flex-col items-center gap-2 cursor-not-allowed';
+      }
+    }
+
+    // Update step 1 circle
+    const step1Dot = document.querySelector('#step-circle-1 > div');
+    const step1Label = document.querySelector('#step-circle-1 > span');
+    if (num > 1) {
+      step1Dot.className = 'w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white shadow-sm transition-all bg-[#137fec] text-white hover:bg-[#0e6ac7]';
+      step1Dot.innerHTML = '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>';
+    } else {
+      step1Dot.className = 'w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white shadow-sm transition-all bg-[#137fec] text-white';
+      step1Dot.innerHTML = '1';
+    }
+  }
+</script>
+
+</body>
+</html>
