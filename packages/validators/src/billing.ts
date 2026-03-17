@@ -215,6 +215,18 @@ export const cancelSubscriptionInputSchema = z.object({
 export type CancelSubscriptionInput = z.infer<typeof cancelSubscriptionInputSchema>;
 
 /**
+ * Pause subscription
+ */
+export const PAUSE_DURATIONS = [1, 2, 3] as const;
+export type PauseDuration = (typeof PAUSE_DURATIONS)[number];
+
+export const pauseSubscriptionInputSchema = z.object({
+  durationMonths: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+});
+
+export type PauseSubscriptionInput = z.infer<typeof pauseSubscriptionInputSchema>;
+
+/**
  * Get upcoming invoice preview (proration)
  */
 export const getUpcomingInvoiceInputSchema = z.object({

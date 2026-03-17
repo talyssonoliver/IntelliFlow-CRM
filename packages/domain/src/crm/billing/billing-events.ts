@@ -158,6 +158,56 @@ export class InvoiceUncollectibleEvent extends DomainEvent {
   }
 }
 
+export class SubscriptionCanceledEvent extends DomainEvent {
+  readonly eventType = 'subscription.canceled';
+
+  constructor(
+    public readonly subscriptionId: string,
+    public readonly customerId: string,
+    public readonly reason: string | undefined,
+    public readonly cancelAtPeriodEnd: boolean,
+    public readonly effectiveDate: Date,
+    public readonly tenantId: string
+  ) {
+    super();
+  }
+
+  toPayload(): Record<string, unknown> {
+    return {
+      subscriptionId: this.subscriptionId,
+      customerId: this.customerId,
+      reason: this.reason,
+      cancelAtPeriodEnd: this.cancelAtPeriodEnd,
+      effectiveDate: this.effectiveDate.toISOString(),
+      tenantId: this.tenantId,
+    };
+  }
+}
+
+export class SubscriptionPausedEvent extends DomainEvent {
+  readonly eventType = 'subscription.paused';
+
+  constructor(
+    public readonly subscriptionId: string,
+    public readonly customerId: string,
+    public readonly pauseDurationMonths: number,
+    public readonly resumesAt: Date,
+    public readonly tenantId: string
+  ) {
+    super();
+  }
+
+  toPayload(): Record<string, unknown> {
+    return {
+      subscriptionId: this.subscriptionId,
+      customerId: this.customerId,
+      pauseDurationMonths: this.pauseDurationMonths,
+      resumesAt: this.resumesAt.toISOString(),
+      tenantId: this.tenantId,
+    };
+  }
+}
+
 export class ReceiptIssuedEvent extends DomainEvent {
   readonly eventType = 'receipt.issued';
 

@@ -48,3 +48,6 @@ export * from './ExperimentService';
 
 // Calendar Webhook Service (IFC-224)
 export * from './CalendarWebhookService';
+
+// Conversation Search Service (IFC-148)
+export * from './ConversationSearchService';
