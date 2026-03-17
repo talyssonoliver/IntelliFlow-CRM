@@ -309,3 +309,7 @@ tmp-*.mjs
 tmp_*.json
 packages/tmp-*.txt
 build-output.txt
+
+# TypeScript incremental build info (generated output, not source)
+tsconfig.tsbuildinfo
+**/tsconfig.tsbuildinfo
