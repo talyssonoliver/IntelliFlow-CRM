@@ -2,12 +2,13 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Button, Card, cn } from '@intelliflow/ui';
+import { Button, cn } from '@intelliflow/ui';
 import pricingData from '@/data/pricing-data.json';
+import { PlanCard } from '@/components/billing/plan-card';
+import { PlanComparisonTable, PlanFaq } from '@/components/billing/plan-comparison-table';
 
 export default function PricingPage() {
   const [billing, setBilling] = React.useState<'monthly' | 'annual'>('annual');
-  const [openFaq, setOpenFaq] = React.useState<number | null>(null);
 
   return (
     <>
@@ -60,94 +61,23 @@ export default function PricingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             {pricingData.tiers.map((tier) => {
               const price = billing === 'monthly' ? tier.price.monthly : tier.price.annual;
+              const isCustom = !!tier.price.custom;
 
               return (
-                <Card
+                <PlanCard
                   key={tier.id}
-                  className={cn(
-                    'relative p-8 flex flex-col',
-                    tier.mostPopular
-                      ? 'border-[#137fec] border-2 shadow-xl'
-                      : 'hover:border-[#137fec] hover:shadow-lg transition-all'
-                  )}
-                >
-                  {/* Most Popular Badge */}
-                  {tier.mostPopular && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                      <span className="bg-[#10b981] text-white px-4 py-1 rounded-full text-sm font-medium">
-                        Most Popular
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Icon */}
-                  <div className="w-12 h-12 bg-[#137fec]/10 dark:bg-[#137fec]/20 rounded-lg flex items-center justify-center mb-4">
-                    <span className="material-symbols-outlined text-2xl text-[#137fec]">
-                      {tier.icon}
-                    </span>
-                  </div>
-
-                  {/* Tier Name */}
-                  <h3 className="text-2xl font-semibold text-slate-900 dark:text-white mb-2">
-                    {tier.name}
-                  </h3>
-
-                  {/* Description */}
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
-                    {tier.description}
-                  </p>
-
-                  {/* Price */}
-                  <div className="mb-6">
-                    {tier.price.custom ? (
-                      <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                        {tier.price.label}
-                      </div>
-                    ) : (
-                      <>
-                        <div className="text-4xl font-bold text-slate-900 dark:text-white">
-                          £{price}{' '}
-                          <span className="text-lg text-slate-600 dark:text-slate-400">
-                            /user/mo
-                          </span>
-                        </div>
-                        {billing === 'annual' && (
-                          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                            Billed annually
-                          </p>
-                        )}
-                      </>
-                    )}
-                  </div>
-
-                  {/* Features List */}
-                  <ul className="space-y-3 mb-8 flex-1">
-                    {tier.features.map((feature, index) => (
-                      <li
-                        key={index} // NOSONAR typescript:S6479
-                        className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400"
-                      >
-                        <span className="material-symbols-outlined text-[#137fec] text-base mt-0.5 flex-shrink-0">
-                          check_circle
-                        </span>
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  {/* CTA Button */}
-                  <Button
-                    asChild
-                    className={cn(
-                      'w-full',
-                      tier.mostPopular
-                        ? 'bg-[#137fec] hover:bg-[#0e6ac7] text-white'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700'
-                    )}
-                  >
-                    <Link href={tier.ctaLink}>{tier.cta}</Link>
-                  </Button>
-                </Card>
+                  variant="public"
+                  name={tier.name}
+                  description={tier.description}
+                  icon={tier.icon}
+                  price={isCustom ? (tier.price.label ?? 'Contact Sales') : `£${price}`}
+                  priceSubtext={!isCustom && billing === 'annual' ? 'Billed annually' : undefined}
+                  features={tier.features}
+                  cta={tier.cta}
+                  ctaLink={tier.ctaLink}
+                  isPopular={tier.mostPopular}
+                  isCustom={isCustom}
+                />
               );
             })}
           </div>
@@ -157,132 +87,21 @@ export default function PricingPage() {
       {/* Comparison Table */}
       <section className="py-16 lg:py-24 bg-slate-50 dark:bg-slate-900">
         <div className="container px-4 lg:px-6 mx-auto max-w-7xl">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-              Compare Plans
-            </h2>
-            <p className="text-base text-slate-600 dark:text-slate-400">
-              Detailed feature comparison across all plans
-            </p>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table
-              role="table"
-              className="w-full border-collapse bg-white dark:bg-slate-800 rounded-lg shadow-sm"
-            >
-              <thead className="sticky top-0 bg-slate-50 dark:bg-slate-900">
-                <tr>
-                  <th
-                    scope="col"
-                    className="text-left p-4 font-semibold text-slate-900 dark:text-white"
-                  >
-                    Feature
-                  </th>
-                  <th
-                    scope="col"
-                    className="text-center p-4 font-semibold text-slate-900 dark:text-white"
-                  >
-                    Starter
-                  </th>
-                  <th
-                    scope="col"
-                    className="text-center p-4 font-semibold text-slate-900 dark:text-white"
-                  >
-                    Professional
-                  </th>
-                  <th
-                    scope="col"
-                    className="text-center p-4 font-semibold text-slate-900 dark:text-white"
-                  >
-                    Enterprise
-                  </th>
-                  <th
-                    scope="col"
-                    className="text-center p-4 font-semibold text-slate-900 dark:text-white"
-                  >
-                    Custom
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {pricingData.comparisonFeatures.map((category, catIndex) => (
-                  <React.Fragment key={catIndex}>{/* NOSONAR typescript:S6479 */}
-                    {/* Category Header */}
-                    <tr className="bg-slate-50 dark:bg-slate-900">
-                      <td colSpan={5} className="p-4 font-semibold text-slate-900 dark:text-white">
-                        {category.category}
-                      </td>
-                    </tr>
-
-                    {/* Features */}
-                    {category.features.map((feature, featIndex) => (
-                      <tr
-                        key={featIndex} // NOSONAR typescript:S6479
-                        className="border-t border-slate-200 dark:border-slate-700"
-                      >
-                        <td className="p-4 text-slate-600 dark:text-slate-400">{feature.name}</td>
-                        <td className="p-4 text-center">{renderFeatureValue(feature.starter)}</td>
-                        <td className="p-4 text-center">
-                          {renderFeatureValue(feature.professional)}
-                        </td>
-                        <td className="p-4 text-center">
-                          {renderFeatureValue(feature.enterprise)}
-                        </td>
-                        <td className="p-4 text-center">{renderFeatureValue(feature.custom)}</td>
-                      </tr>
-                    ))}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <PlanComparisonTable />
         </div>
       </section>
 
       {/* FAQ Section */}
       <section className="py-16 lg:py-24">
-        <div className="container px-4 lg:px-6 mx-auto max-w-4xl">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-base text-slate-600 dark:text-slate-400">
-              Everything you need to know about our pricing
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {pricingData.faqs.map((faq, index) => (
-              <div
-                key={index} // NOSONAR typescript:S6479
-                className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden"
-              >
-                <button
-                  className="w-full text-left p-6 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                  onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                  aria-expanded={openFaq === index}
-                >
-                  <span className="font-semibold text-slate-900 dark:text-white">
-                    {faq.question}
-                  </span>
-                  <span className="material-symbols-outlined text-slate-600 dark:text-slate-400">
-                    {openFaq === index ? 'expand_less' : 'expand_more'}
-                  </span>
-                </button>
-                {openFaq === index && (
-                  <div className="px-6 pb-6 text-slate-600 dark:text-slate-400">{faq.answer}</div>
-                )}
-              </div>
-            ))}
-          </div>
+        <div className="container px-4 lg:px-6 mx-auto">
+          <PlanFaq />
         </div>
       </section>
 
       {/* CTA Section */}
       <section
         data-testid="cta-section"
-        className="py-16 lg:py-24 bg-gradient-to-r from-[#137fec] to-[#0e6ac7]"
+        className="py-16 lg:py-24 bg-linear-to-r from-ds-primary to-ds-primary-hover"
       >
         <div className="container px-4 lg:px-6 mx-auto max-w-4xl text-center">
           <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
@@ -295,15 +114,14 @@ export default function PricingPage() {
             <Button
               asChild
               size="lg"
-              className="bg-white text-[#137fec] hover:bg-white/90 min-w-[200px]"
+              className="bg-white text-ds-primary hover:bg-white/80 min-w-50"
             >
               <Link href="/signup">Start Free Trial</Link>
             </Button>
             <Button
               asChild
-              variant="outline"
               size="lg"
-              className="border-white text-white hover:bg-white/10 min-w-[200px]"
+              className="border-white text-white hover:bg-white/40 min-w-50"
             >
               <Link href="/contact">Contact Sales</Link>
             </Button>
@@ -312,16 +130,4 @@ export default function PricingPage() {
       </section>
     </>
   );
-}
-
-// Helper function to render feature values
-function renderFeatureValue(value: boolean | string) {
-  if (typeof value === 'boolean') {
-    return value ? (
-      <span className="material-symbols-outlined text-[#10b981]">check_circle</span>
-    ) : (
-      <span className="text-slate-400">—</span>
-    );
-  }
-  return <span className="text-slate-600 dark:text-slate-400 text-sm">{value}</span>;
 }
