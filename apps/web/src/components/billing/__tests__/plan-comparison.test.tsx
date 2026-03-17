@@ -4,6 +4,9 @@
 /**
  * PlanComparison Component Tests
  *
+ * Tests the plan selection grid with billing toggle, comparison table,
+ * FAQ, and links to /billing/upgrade.
+ *
  * @implements PG-172 (Billing Ghost Pages — Plans)
  */
 
@@ -13,7 +16,11 @@ import { createMockSubscription } from '@/test/fixtures/billing-data';
 
 const mockSubscription = createMockSubscription();
 
-type MockQueryReturn<T> = { data: T | null | undefined; isLoading: boolean; error: Error | null };
+type MockQueryReturn<T> = {
+  data: T | null | undefined;
+  isLoading: boolean;
+  error: Error | null;
+};
 
 const mockGetSubscription = vi.fn<() => MockQueryReturn<typeof mockSubscription>>(() => ({
   data: mockSubscription,
@@ -34,8 +41,14 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 }));
 
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: Readonly<{ children: React.ReactNode; href: string; [key: string]: unknown }>) => (
-    <a href={href} {...props}>{children}</a>
+  default: ({
+    children,
+    href,
+    ...props
+  }: Readonly<{ children: React.ReactNode; href: string; [key: string]: unknown }>) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -44,26 +57,34 @@ import { PlanComparison } from '../plan-comparison';
 describe('PlanComparison', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetSubscription.mockReturnValue({ data: mockSubscription, isLoading: false, error: null });
+    mockGetSubscription.mockReturnValue({
+      data: mockSubscription,
+      isLoading: false,
+      error: null,
+    });
   });
 
   it('shows loading skeleton when data is loading', () => {
     mockGetSubscription.mockReturnValue({ data: undefined, isLoading: true, error: null });
     render(<PlanComparison />);
-    expect(screen.queryByText('Starter')).not.toBeInTheDocument();
+    expect(screen.queryByText('Monthly')).not.toBeInTheDocument();
   });
 
   it('shows error state when query fails', () => {
-    mockGetSubscription.mockReturnValue({ data: null, isLoading: false, error: new Error('fail') });
+    mockGetSubscription.mockReturnValue({
+      data: null,
+      isLoading: false,
+      error: new Error('fail'),
+    });
     render(<PlanComparison />);
     expect(screen.getByText(/failed to load/i)).toBeInTheDocument();
   });
 
   it('renders 3 plan cards', () => {
     render(<PlanComparison />);
-    expect(screen.getByText('Starter')).toBeInTheDocument();
-    expect(screen.getByText('Professional')).toBeInTheDocument();
-    expect(screen.getByText('Enterprise')).toBeInTheDocument();
+    expect(screen.getAllByText('Starter').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Professional').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Enterprise').length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows Popular badge on Professional plan', () => {
@@ -71,47 +92,58 @@ describe('PlanComparison', () => {
     expect(screen.getByText('Popular')).toBeInTheDocument();
   });
 
-  it('has monthly/annual billing toggle', () => {
+  it('has monthly/annual billing toggle with Save 17% badge', () => {
     render(<PlanComparison />);
     expect(screen.getByText('Monthly')).toBeInTheDocument();
     expect(screen.getByText('Annual')).toBeInTheDocument();
+    expect(screen.getByText('Save 17%')).toBeInTheDocument();
   });
 
   it('updates prices when toggling to annual', () => {
     render(<PlanComparison />);
     fireEvent.click(screen.getByText('Annual'));
-    // Annual prices should now show /year
     expect(screen.getAllByText(/\/year/).length).toBeGreaterThan(0);
   });
 
   it('shows annual savings percentage', () => {
     render(<PlanComparison />);
     fireEvent.click(screen.getByText('Annual'));
-    // Savings should be visible
     expect(screen.getAllByText(/saved/).length).toBeGreaterThan(0);
   });
 
   it('highlights current plan with disabled CTA', () => {
     render(<PlanComparison />);
-    // Professional is current plan
     const currentBtn = screen.getByRole('button', { name: /current plan/i });
     expect(currentBtn).toBeDisabled();
   });
 
-  it('shows Upgrade/Downgrade CTAs for other plans', () => {
+  it('links Upgrade to /billing/upgrade?plan=enterprise', () => {
     render(<PlanComparison />);
-    // Starter should show Downgrade, Enterprise should show Upgrade
-    const links = screen.getAllByRole('link');
-    const upgradeLink = links.find(l => l.getAttribute('href')?.includes('/billing/upgrade?plan=enterprise'));
-    const downgradeLink = links.find(l => l.getAttribute('href')?.includes('/billing/upgrade?plan=starter'));
-    expect(upgradeLink).toBeDefined();
-    expect(downgradeLink).toBeDefined();
+    const upgradeLink = screen.getByRole('link', { name: /upgrade/i });
+    expect(upgradeLink).toHaveAttribute('href', '/billing/upgrade?plan=enterprise');
+  });
+
+  it('links Downgrade to /billing/upgrade?plan=starter', () => {
+    render(<PlanComparison />);
+    const downgradeLink = screen.getByRole('link', { name: /downgrade/i });
+    expect(downgradeLink).toHaveAttribute('href', '/billing/upgrade?plan=starter');
   });
 
   it('renders feature lists for each plan', () => {
     render(<PlanComparison />);
-    // Feature from starter
     expect(screen.getAllByText(/users/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/contacts/i).length).toBeGreaterThan(0);
+  });
+
+  it('renders the comparison table', () => {
+    render(<PlanComparison />);
+    expect(screen.getByText('Compare Plans')).toBeInTheDocument();
+    expect(screen.getByText('Core CRM')).toBeInTheDocument();
+  });
+
+  it('renders the FAQ section', () => {
+    render(<PlanComparison />);
+    expect(screen.getByText('Frequently Asked Questions')).toBeInTheDocument();
+    expect(screen.getByText('Can I change plans later?')).toBeInTheDocument();
   });
 });

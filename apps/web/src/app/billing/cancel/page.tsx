@@ -9,7 +9,7 @@ export default function BillingCancelPage() {
       <PageHeader
         breadcrumbs={[{ label: 'Billing', href: '/billing' }, { label: 'Cancel Subscription' }]}
         title="Cancel Subscription"
-        description="We're sorry to see you go."
+        description="We're sorry to see you go. Please review what you'll lose before confirming."
       />
       <CancelFlow />
     </>

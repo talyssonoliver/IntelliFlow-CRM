@@ -80,10 +80,13 @@ describe('UpgradeFlow', () => {
     expect(screen.getByText(/failed to load/i)).toBeInTheDocument();
   });
 
-  it('shows subscribe first message when no subscription', () => {
+  it('shows plan grid with Get Started CTAs when no subscription', () => {
     mockGetSubscription.mockReturnValue({ data: null, isLoading: false, error: null });
     render(<UpgradeFlow />);
-    expect(screen.getByText(/no active subscription/i)).toBeInTheDocument();
+    expect(screen.getAllByText('Starter').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Professional').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Enterprise').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Get Started').length).toBe(3);
   });
 
   it('pre-selects plan from URL param', () => {
