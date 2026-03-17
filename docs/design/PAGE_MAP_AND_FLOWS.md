@@ -164,11 +164,12 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ---
 
-### 7. CRM Core — Deals (5 pages)
+### 7. CRM Core — Deals (6 pages)
 
 | Route                  | Page              | Description                 |
 | ---------------------- | ----------------- | --------------------------- |
 | `/deals`               | Deals List        | Pipeline view and deal list |
+| `/deals/new`           | New Deal          | Deal create form with entity search |
 | `/deals/[id]`          | Deal Detail       | Deal overview with stages   |
 | `/deals/[id]/forecast` | Deal Forecast     | AI-powered deal probability |
 | `/deals/forecast`      | Forecast Overview | Sales forecasting dashboard |

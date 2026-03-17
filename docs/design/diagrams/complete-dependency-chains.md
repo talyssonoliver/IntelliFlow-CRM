@@ -303,6 +303,18 @@ Cross-Domain: Lead → Deal Conversion (IFC-062 ✅):
   IFC-061 (Lead Convert Use Case) ✅ ──► IFC-062 (Lead to Deal) ✅ ──► lead.convertToDeal endpoint
   IFC-104 (Opportunity Domain) ✅ ────────────┘                        (sourceLeadId traceability)
 
+Deal Create Form (IFC-279 ✅):
+  /deals/new (page.tsx) → DealForm → trpc.opportunity.create → OpportunityService.createOpportunity()
+  Account search: EntitySearchField(account) → api.account.list
+  Contact search: EntitySearchField(contact) → api.contact.list
+  Success: router.push('/deals/[newId]') + notification dispatch
+
+Deal Detail Page (IFC-278 ✅):
+  DealDetailPage → api.opportunity.getById (enriched with owner/account/contact includes)
+  ProductsCard → api.opportunity.getProducts
+  StakeholdersCard → Link to /accounts/[accountId], /contacts/[contactId]
+  useRequireAuth() guard, loading skeleton, error state
+
 Deal Won Closure Workflow (IFC-065 ✅):
   IFC-091 (Deals Pipeline Kanban) ✅ ──┐
                                        ├──► IFC-065 (Deal Won Closure) ✅

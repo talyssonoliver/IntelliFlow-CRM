@@ -98,3 +98,56 @@ fabricate data:
 
 If infrastructure is unavailable, display "pending" or "not available" — never
 populate with fake/sample values.
+
+## Daily Operating Model (from ops/intelliflow_deep_daily_ops_and_integrity.md)
+
+**Core principle**: Treat every task outcome as a claim until it has an Evidence Pack.
+
+### Evidence Pack (required per task)
+
+- Spec: `.specify/specifications/<TASK>.md`
+- Plan: `.specify/planning/<TASK>.md`
+- Validation output + timestamps: `artifacts/status/<TASK>.json`
+- Code change reference: PR/commit hash
+- ADR link (if architecture changed)
+
+**Rule: Completed without Evidence Pack is not Completed.**
+
+### Acceptance Checklist (before "done-done")
+
+**A) Plan alignment**: Code implements the Spec's explicit acceptance criteria. No new behavior outside Spec/Plan (update Spec or revert).
+
+**B) Scope control** — overengineering flags:
+- New abstractions with only one implementation
+- Generic frameworks with no immediate consumers
+- New infra when config change would suffice
+- Big refactor touching unrelated areas
+
+**C) Test integrity**: Tests exist, executed, no `--passWithNoTests`, no disabled suites, no placeholder expects.
+
+**D) Architecture integrity**: Domain logic stays in domain, adapters are thin, ports are explicit contracts.
+
+**E) Non-functional**: No secrets, no new unsafe patterns, no unbounded retries.
+
+### Detecting Plan Gaps
+
+If the same missing step occurs twice → make it a first-class artifact (doc/gate/task).
+
+### Fake Results Prevention
+
+- Require per-task run attestation: when started, which gates ran, which tests ran, which commit hash
+- Logs are append-only and timestamped (new run = new run-id)
+- Reject "Completed" if attestation missing
+
+### Debt Ledger
+
+Record in `docs/debt-ledger.yaml`: Debt ID, origin task, category, severity, owner, **expiry date** (mandatory), remediation plan.
+
+**Rule: No expiry date = not acceptable debt.**
+
+### Health Metrics
+
+- Throughput: completed/day
+- Needs Human rate: (Needs Human / started) — high rate = weak plan/gates/docs
+- Rework rate: (% completed later rejected) — high throughput + high rework = fake progress
+- Debt inflow vs outflow: inflow > outflow for 2+ weeks = quality collapse ahead
