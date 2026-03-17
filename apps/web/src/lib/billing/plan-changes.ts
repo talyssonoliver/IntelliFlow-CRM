@@ -505,10 +505,10 @@ export const CANCELLATION_REASONS = [
 ] as const;
 
 export const CANCELLATION_REASON_LABELS: Record<(typeof CANCELLATION_REASONS)[number], string> = {
-  too_expensive: 'Too expensive',
-  missing_features: 'Missing features I need',
-  switching_competitor: 'Switching to a competitor',
-  no_longer_needed: 'No longer need a CRM',
+  too_expensive: "It's too expensive",
+  missing_features: 'Missing necessary features',
+  switching_competitor: 'Switching to another CRM',
+  no_longer_needed: 'Temporary project completed',
   technical_issues: 'Technical issues',
-  other: 'Other',
+  other: 'Other reason',
 };

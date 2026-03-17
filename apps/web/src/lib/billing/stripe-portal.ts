@@ -208,18 +208,19 @@ export interface Plan {
 }
 
 /**
- * Available pricing plans
- * These should match Stripe product/price IDs in production
+ * Stripe-specific plan overlay (fields not suitable for public pricing JSON)
  */
-export const PLANS: Plan[] = [
-  {
-    id: 'starter',
+import pricingData from '@/data/pricing-data.json';
+
+interface StripePlanOverlay {
+  priceId: string;
+  maxUsers: number | null;
+  features: PlanFeature[];
+}
+
+const STRIPE_PLAN_OVERLAY: Record<string, StripePlanOverlay> = {
+  starter: {
     priceId: 'price_starter_monthly',
-    name: 'Starter',
-    description: 'Perfect for small teams getting started',
-    priceMonthly: 2900, // £29
-    priceAnnual: 28800, // £24/mo billed annually
-    currency: 'GBP',
     maxUsers: 5,
     features: [
       { name: 'Up to 5 users', included: true },
@@ -232,16 +233,9 @@ export const PLANS: Plan[] = [
       { name: 'Dedicated account manager', included: false },
     ],
   },
-  {
-    id: 'professional',
+  professional: {
     priceId: 'price_professional_monthly',
-    name: 'Professional',
-    description: 'Best for growing sales teams',
-    priceMonthly: 7900, // £79
-    priceAnnual: 78000, // £65/mo billed annually
-    currency: 'GBP',
     maxUsers: 25,
-    popular: true,
     features: [
       { name: 'Up to 25 users', included: true },
       { name: '10,000 contacts', included: true, limit: '10,000' },
@@ -253,15 +247,9 @@ export const PLANS: Plan[] = [
       { name: 'Dedicated account manager', included: false },
     ],
   },
-  {
-    id: 'enterprise',
+  enterprise: {
     priceId: 'price_enterprise_monthly',
-    name: 'Enterprise',
-    description: 'For large organizations with custom needs',
-    priceMonthly: 19900, // £199
-    priceAnnual: 198000, // £165/mo billed annually
-    currency: 'GBP',
-    maxUsers: null, // unlimited
+    maxUsers: null,
     features: [
       { name: 'Unlimited users', included: true },
       { name: 'Unlimited contacts', included: true },
@@ -273,7 +261,29 @@ export const PLANS: Plan[] = [
       { name: 'Dedicated account manager', included: true },
     ],
   },
-];
+};
+
+/**
+ * Available pricing plans — derived from pricing-data.json (single source of truth)
+ * with Stripe-specific overlay for billing integration.
+ */
+export const PLANS: Plan[] = pricingData.tiers
+  .filter((t) => t.id in STRIPE_PLAN_OVERLAY)
+  .map((t) => {
+    const overlay = STRIPE_PLAN_OVERLAY[t.id]!;
+    return {
+      id: t.id,
+      priceId: overlay.priceId,
+      name: t.name,
+      description: t.description,
+      priceMonthly: (t.price.monthly as number) * 100,
+      priceAnnual: (t.price.annual as number) * 12 * 100,
+      currency: pricingData.metadata.currency,
+      features: overlay.features,
+      popular: t.mostPopular,
+      maxUsers: overlay.maxUsers,
+    };
+  });
 
 /**
  * Get plan by ID
