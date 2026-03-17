@@ -39,13 +39,13 @@ def _load_dotenv(path: Path, allowed_keys: set[str] | None = None) -> dict[str, 
     never logs secret values.
     """
     if not path.exists():
-        return {"path": os.path.relpath(path, REPO_ROOT).replaceAll("\\", "/"), "loaded": False, "keys_loaded": 0}
+        return {"path": os.path.relpath(path, REPO_ROOT).replace("\\", "/"), "loaded": False, "keys_loaded": 0}
 
     keys_loaded = 0
     try:
         content = path.read_text(encoding="utf-8", errors="ignore")
     except Exception:
-        return {"path": os.path.relpath(path, REPO_ROOT).replaceAll("\\", "/"), "loaded": False, "keys_loaded": 0}
+        return {"path": os.path.relpath(path, REPO_ROOT).replace("\\", "/"), "loaded": False, "keys_loaded": 0}
 
     for line in content.splitlines():
         raw = line.strip()
@@ -69,7 +69,7 @@ def _load_dotenv(path: Path, allowed_keys: set[str] | None = None) -> dict[str, 
         os.environ[key] = value
         keys_loaded += 1
 
-    return {"path": os.path.relpath(path, REPO_ROOT).replaceAll("\\", "/"), "loaded": True, "keys_loaded": keys_loaded}
+    return {"path": os.path.relpath(path, REPO_ROOT).replace("\\", "/"), "loaded": True, "keys_loaded": keys_loaded}
 
 
 def _docker_container_running(container_name: str) -> bool:
@@ -106,7 +106,7 @@ def _configure_stdio() -> None:
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).replaceAll(microsecond=0).isoformat()
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
 
 def _run_cmd_capture(args: list[str]) -> tuple[int, str, str]:
@@ -719,7 +719,7 @@ def _render_summary_md(summary: dict[str, Any]) -> str:
         reason = ""
         if status == "skipped":
             reason = t.get("skipped_reason") or ""
-            reason = reason.replaceAll("|", "\\|")
+            reason = reason.replace("|", "\\|")
         evidence = f"`{tool_id}.log`"
         lines.append(
             f"| {tier} | `{tool_id}` | {enabled} | {required} | {status} | {exit_display} | {source} | {reason} | {evidence} |"
@@ -811,7 +811,7 @@ def main(argv: list[str] | None = None) -> int:
             affected_meta = {
                 "base_ref": affected_result.base_ref,
                 "merge_base": affected_result.merge_base,
-                "report_dir": os.path.relpath(affected.DEFAULT_OUTPUT_DIR, REPO_ROOT).replaceAll("\\", "/"),
+                "report_dir": os.path.relpath(affected.DEFAULT_OUTPUT_DIR, REPO_ROOT).replace("\\", "/"),
                 "warnings": warnings,
             }
         except Exception as e:
@@ -945,14 +945,14 @@ def main(argv: list[str] | None = None) -> int:
         "run_id": run_id,
         "mode": mode,
         "scope": scope,
-        "matrix_path": os.path.relpath(matrix_path, REPO_ROOT).replaceAll("\\", "/"),
+        "matrix_path": os.path.relpath(matrix_path, REPO_ROOT).replace("\\", "/"),
         "matrix_sha256": matrix_sha256,
         "tiers_requested": sorted([str(t) for t in tiers]),
         "generated_at": _utc_now(),
         "started_at": started_at,
         "finished_at": finished_at,
         "commit_sha": commit_sha,
-        "tool_versions_path": os.path.relpath(tool_versions_path, REPO_ROOT).replaceAll("\\", "/")
+        "tool_versions_path": os.path.relpath(tool_versions_path, REPO_ROOT).replace("\\", "/")
         if tool_versions_path.exists()
         else None,
         "affected": affected_meta,
