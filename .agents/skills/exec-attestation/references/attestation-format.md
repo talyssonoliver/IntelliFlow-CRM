@@ -7,7 +7,7 @@
 
 ```json
 {
-  "$schema": "https://intelliflow-crm.com/schemas/attestation.schema.json",
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
   "schema_version": "1.0.0",
   "task_id": "<TASK_ID>",
   "run_id": "<task_id>-validation-<YYYYMMDD>-<HHMMSS>",
