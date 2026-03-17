@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-03-16T20:26:14.755Z",
+  "generated_at": "2026-03-17T23:34:04.339Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 355,
-    "completed": 348,
+    "total_specs_analyzed": 358,
+    "completed": 352,
     "partially_done": 1,
-    "spec_only": 2,
+    "spec_only": 1,
     "uncertain": 4
   },
   "status_legend": {
@@ -50,6 +50,12 @@
       "severity": "MEDIUM",
       "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
       "recommendation": "Run /exec PG-166 when ready for implementation."
+    },
+    {
+      "task_id": "PG-176",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 50% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     },
     {
       "task_id": "PG-178",
@@ -4034,6 +4040,34 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-278",
+      "title": "Deal Detail Page — Replace SAMPLE_DEAL with Real API Data. CRITICAL: Entire deal detail page (deals/[id]/page.tsx 792 lines) is 100% hardcoded with SAMPLE_DEAL constant (lines 116-150) — zero API calls. The dealId from useParams() is captured but never used for data fetch (line 684). Must: (1) Replace SAMPLE_DEAL with trpc.opportunity.getById query using dealId param. (2) Add useRequireAuth() guard (F-03 — detail page is the only unguarded page). (3) Fix STAGES constant to match domain 7-stage enum (F-04 — uses CLOSED instead of CLOSED_WON/CLOSED_LOST, omits NEEDS_ANALYSIS). (4) Fix StageProgress to use deal prop instead of SAMPLE_DEAL.value directly (F-05). (5) Remove _SAMPLE_ACTIVITIES dead code (F-06). (6) Add clickable links to account/contact detail pages (F-07). (7) Wire real owner data from getById relation include. Router getById exists (IFC-186). Cross-entity patterns from Lead 360 wiring (2026-03-04) should be followed. Audit: docs/audit/deal-detail-wiring-audit.md section 1.",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/IFC-278-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": false,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-279",
+      "title": "Deal Create Form + /deals/new Route. No deal creation form exists — both 'New Deal' buttons (deals/(list)/page.tsx lines 454 and 492) link to /deals/new which is a 404 (F-02). Must: (1) Create page at apps/web/src/app/deals/new/page.tsx or deals/(list)/new/page.tsx. (2) Form fields: name, value (money input), stage (default PROSPECTING), probability, expectedCloseDate (date picker), accountId (account search combobox), contactId (contact search combobox). (3) Wire to trpc.opportunity.create mutation. (4) Add useRequireAuth(). (5) Validate with createOpportunitySchema. (6) Success: navigate to /deals/[newId]. Audit: docs/audit/deal-detail-wiring-audit.md section 1 F-02.",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/IFC-279-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
       "task_id": "IFC-296",
       "title": "Queue Scheduler Administration — Implement queuesAdmin tRPC router with live BullMQ stats and scheduler CRUD (list/pause/resume/retry/delete), wire to /agent-approvals/agents page. Replace stub router with live Redis/BullMQ data. Add queue health panel to ActiveAgentsDashboard showing scheduler cron patterns, queue counts, and action buttons.",
       "sprint": 15,
@@ -5716,14 +5750,14 @@
       "spec_path": ".specify/sprints/sprint-16/specifications/PG-176-spec.md",
       "has_spec": true,
       "has_plan": true,
-      "has_attestation": false,
-      "csv_status": "Plan Complete",
+      "has_attestation": true,
+      "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-015"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-177",
@@ -5771,6 +5805,22 @@
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-007"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-192",
+      "title": "Fix missing /agent-approvals/logs page — PG-152 regression; AgentLogsViewer component exists at apps/web/src/components/ai-monitoring/AgentLogsViewer.tsx but page.tsx is absent causing 404 on route",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/PG-192-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-152"
       ],
       "real_status": "COMPLETED"
     },
