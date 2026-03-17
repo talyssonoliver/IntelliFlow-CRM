@@ -13,7 +13,7 @@
       "IFC-278:FS;IFC-280:FS"
     ],
     "all_satisfied": false,
-    "verified_at": "2026-03-16T20:26:13.260Z"
+    "verified_at": "2026-03-17T23:34:02.652Z"
   },
   "dependencies_resolved": [],
   "started_at": null,
@@ -40,10 +40,10 @@
       ".specify/sprints/sprint-20/attestations/IFC-286/context_ack.json"
     ],
     "created": [
+      "apps/web/src/app/deals/[id]/__tests__/page.test.tsx",
       "apps/api/src/__tests__/contract/opportunity.contract.test.ts"
     ],
     "missing": [
-      "apps/web/src/app/deals/[id]/__tests__/page.test.tsx",
       "tests/e2e/deal-crud.spec.ts",
       ".specify/sprints/sprint-20/attestations/IFC-286/context_ack.json"
     ]

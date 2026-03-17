@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/dependency-graph.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-03-16T20:26:13.538Z",
+  "last_updated": "2026-03-17T23:34:02.786Z",
   "description": "Cross-sprint dependency tracking for all tasks",
   "nodes": {
     "EXC-INIT-001": {
@@ -1286,7 +1286,10 @@
       "dependencies": [
         "IFC-072"
       ],
-      "dependents": []
+      "dependents": [
+        "IFC-306",
+        "PG-194"
+      ]
     },
     "IFC-074": {
       "task_id": "IFC-074",
@@ -1657,7 +1660,8 @@
         "GOV-001"
       ],
       "dependents": [
-        "IFC-126"
+        "IFC-126",
+        "PG-194"
       ]
     },
     "PG-001": {
@@ -5168,7 +5172,7 @@
     "PG-176": {
       "task_id": "PG-176",
       "sprint": 16,
-      "status": "PLANNED",
+      "status": "DONE",
       "dependencies": [
         "PG-015"
       ],
@@ -5574,7 +5578,9 @@
       "sprint": 16,
       "status": "DONE",
       "dependencies": [],
-      "dependents": []
+      "dependents": [
+        "IFC-305"
+      ]
     },
     "IFC-227": {
       "task_id": "IFC-227",
@@ -5948,14 +5954,14 @@
     "IFC-278": {
       "task_id": "IFC-278",
       "sprint": 16,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": [],
       "dependents": []
     },
     "IFC-279": {
       "task_id": "IFC-279",
       "sprint": 16,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": [],
       "dependents": []
     },
@@ -6299,7 +6305,7 @@
     "PG-192": {
       "task_id": "PG-192",
       "sprint": 16,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": [
         "PG-152"
       ],
@@ -6314,6 +6320,37 @@
       "dependencies": [
         "PG-151",
         "PG-192"
+      ],
+      "dependents": []
+    },
+    "IFC-305": {
+      "task_id": "IFC-305",
+      "sprint": 19,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-226"
+      ],
+      "dependents": []
+    },
+    "IFC-306": {
+      "task_id": "IFC-306",
+      "sprint": 19,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-073"
+      ],
+      "dependents": [
+        "PG-194"
+      ]
+    },
+    "PG-194": {
+      "task_id": "PG-194",
+      "sprint": 20,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-073",
+        "IFC-100",
+        "IFC-306"
       ],
       "dependents": []
     }
@@ -10547,10 +10584,44 @@
       "from_sprint": 16,
       "to_sprint": 0,
       "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-226",
+      "to_task": "IFC-305",
+      "from_sprint": 16,
+      "to_sprint": 19,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-073",
+      "to_task": "IFC-306",
+      "from_sprint": 2,
+      "to_sprint": 19,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-073",
+      "to_task": "PG-194",
+      "from_sprint": 2,
+      "to_sprint": 20,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-100",
+      "to_task": "PG-194",
+      "from_sprint": 6,
+      "to_sprint": 20,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-306",
+      "to_task": "PG-194",
+      "from_sprint": 19,
+      "to_sprint": 20,
+      "dependency_type": "REQUIRED"
     }
   ],
   "blocked_tasks": [
-    "PG-193",
     "PG-060",
     "PG-061",
     "PG-062",
@@ -10578,6 +10649,7 @@
     "IFC-275",
     "IFC-276",
     "IFC-286",
+    "PG-194",
     "IFC-036",
     "IFC-037",
     "PG-077",
@@ -10632,19 +10704,16 @@
     "PG-120"
   ],
   "ready_to_start": [
+    "PG-193",
     "IFC-204",
     "PG-168",
     "PG-175",
-    "PG-176",
     "IFC-232",
     "IFC-238",
     "IFC-239",
     "IFC-268",
     "IFC-269",
-    "IFC-278",
-    "IFC-279",
     "IFC-281",
-    "PG-192",
     "IFC-031",
     "PG-051",
     "PG-052",
@@ -10695,6 +10764,8 @@
     "PG-065",
     "PG-069",
     "PG-166",
+    "IFC-305",
+    "IFC-306",
     "IFC-087",
     "PG-073",
     "PG-127",
@@ -10838,8 +10909,6 @@
         "IFC-239",
         "IFC-268",
         "IFC-269",
-        "IFC-278",
-        "IFC-279",
         "IFC-281"
       ]
     },

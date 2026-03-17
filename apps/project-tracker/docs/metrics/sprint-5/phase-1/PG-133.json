@@ -16,7 +16,7 @@
       "IFC-184"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-03-16T20:26:13.456Z"
+    "verified_at": "2026-03-17T23:34:02.756Z"
   },
   "status_history": [
     {
@@ -68,19 +68,19 @@
     "created": [
       "apps/web/src/components/contacts/ContactList.tsx",
       "apps/web/src/components/contacts/ContactCard.tsx",
-      "apps/web/src/components/contacts/ContactDetail.tsx",
       "apps/web/src/components/contacts/ContactForm.tsx",
       "apps/web/src/components/contacts/RelationshipGraph.tsx",
       "apps/web/src/components/contacts/ActivityTimeline.tsx",
       "apps/web/src/components/contacts/index.ts",
       "apps/web/src/components/contacts/__tests__/ContactList.test.tsx",
       "apps/web/src/components/contacts/__tests__/ContactCard.test.tsx",
-      "apps/web/src/components/contacts/__tests__/ContactDetail.test.tsx",
       "apps/web/src/components/contacts/__tests__/ContactForm.test.tsx",
       "apps/web/src/components/contacts/__tests__/RelationshipGraph.test.tsx",
       "apps/web/src/components/contacts/__tests__/ActivityTimeline.test.tsx"
     ],
     "missing": [
+      "apps/web/src/components/contacts/ContactDetail.tsx",
+      "apps/web/src/components/contacts/__tests__/ContactDetail.test.tsx",
       "apps/web/src/components/contacts/__tests__/contact-test-utils.ts"
     ]
   },
