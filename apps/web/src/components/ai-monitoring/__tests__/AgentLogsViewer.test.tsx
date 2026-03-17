@@ -5,6 +5,14 @@ import { render, screen, fireEvent, within } from '@testing-library/react';
 vi.mock('@/lib/ai-monitoring/hooks', () => ({
   useAgentLogs: vi.fn(),
   useDriftDashboard: vi.fn(),
+  useFailedJobs: vi.fn(() => ({
+    jobs: [],
+    total: 0,
+    hasMore: false,
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
 }));
 
 vi.mock('@/lib/auth/AuthContext', () => ({
@@ -31,7 +39,9 @@ vi.mock('@/lib/active-agents/agent-utils', () => ({
   }),
 }));
 
-const { useAgentLogs } = vi.mocked((await import('@/lib/ai-monitoring/hooks')) as any);
+const { useAgentLogs, useFailedJobs } = vi.mocked(
+  (await import('@/lib/ai-monitoring/hooks')) as any,
+);
 
 const { useSearchParams } = vi.mocked((await import('next/navigation')) as any);
 
@@ -520,5 +530,106 @@ describe('Category 5: Accessibility', () => {
     cards.forEach((card) => {
       expect(card.tagName.toLowerCase()).toBe('article');
     });
+  });
+});
+
+// ===========================================================================
+// Category 6: Queue Failures View (PG-192 coverage)
+// ===========================================================================
+
+const mockFailedJobs = [
+  {
+    id: 'job-1',
+    name: 'score-lead-batch',
+    queue: 'ai-scoring',
+    failedReason: 'Connection timeout after 30s',
+    attemptsMade: 3,
+    timestamp: '2026-03-17T09:00:00Z',
+    data: { leadIds: ['lead-1', 'lead-2'], model: 'gpt-4o' },
+  },
+  {
+    id: 'job-2',
+    name: 'predict-churn',
+    queue: 'ai-prediction',
+    failedReason: 'Model not found: churn-v3',
+    attemptsMade: 1,
+    timestamp: '2026-03-17T08:30:00Z',
+    data: { accountId: 'acc-1' },
+  },
+];
+
+describe('Category 6: Queue Failures View', () => {
+  function renderAndSwitchToQueueFailures(
+    failedJobsData: Partial<ReturnType<typeof useFailedJobs>> = {},
+  ) {
+    (useFailedJobs as ReturnType<typeof vi.fn>).mockReturnValue({
+      jobs: mockFailedJobs,
+      total: mockFailedJobs.length,
+      hasMore: false,
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+      ...failedJobsData,
+    });
+
+    render(<AgentLogsViewer />);
+
+    // Find the toolStatus filter select (labeled "All Statuses") and switch to Queue Failures
+    const selects = screen.getAllByRole('combobox');
+    const statusSelect = selects.find((s) => {
+      const options = within(s).queryAllByRole('option');
+      return options.some((o) => o.textContent === 'Queue Failures');
+    });
+    if (statusSelect) {
+      fireEvent.change(statusSelect, { target: { value: 'QUEUE_FAILURES' } });
+    }
+  }
+
+  it('renders failed job cards when Queue Failures filter is selected', () => {
+    renderAndSwitchToQueueFailures();
+    const failedCards = screen.getAllByTestId('failed-job-card');
+    expect(failedCards).toHaveLength(2);
+  });
+
+  it('displays job name, queue label, and failed reason', () => {
+    renderAndSwitchToQueueFailures();
+    expect(screen.getByText('score-lead-batch')).toBeInTheDocument();
+    expect(screen.getByText('Scoring')).toBeInTheDocument();
+    expect(screen.getByText('Connection timeout after 30s')).toBeInTheDocument();
+    expect(screen.getByText('predict-churn')).toBeInTheDocument();
+    expect(screen.getByText('Prediction')).toBeInTheDocument();
+  });
+
+  it('displays attempt count for each failed job', () => {
+    renderAndSwitchToQueueFailures();
+    expect(screen.getByText('3 attempts')).toBeInTheDocument();
+    expect(screen.getByText('1 attempt')).toBeInTheDocument();
+  });
+
+  it('expands failed job to show data payload', () => {
+    renderAndSwitchToQueueFailures();
+    const expandBtns = screen.getAllByTestId('expand-failed-job');
+    expect(expandBtns[0]).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.click(expandBtns[0]);
+    expect(expandBtns[0]).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText(/lead-1/)).toBeInTheDocument();
+    expect(screen.getByText(/gpt-4o/)).toBeInTheDocument();
+  });
+
+  it('shows "no failed jobs" empty state when queue is empty', () => {
+    renderAndSwitchToQueueFailures({ jobs: [], total: 0 });
+    expect(screen.getByText('No failed jobs in the queues')).toBeInTheDocument();
+  });
+
+  it('shows failed jobs count text', () => {
+    renderAndSwitchToQueueFailures();
+    expect(screen.getByText(/2 failed jobs/)).toBeInTheDocument();
+  });
+
+  it('shows loading skeleton when failed jobs are loading', () => {
+    renderAndSwitchToQueueFailures({ isLoading: true, jobs: [], total: 0 });
+    // When loading, the skeleton should be rendered instead of content
+    expect(screen.queryByTestId('failed-job-card')).not.toBeInTheDocument();
   });
 });

@@ -4,10 +4,11 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 
 export interface EntitySearchFieldProps {
-  readonly entityType: 'lead' | 'contact' | 'opportunity';
+  readonly entityType: 'lead' | 'contact' | 'opportunity' | 'account';
   readonly value: string;
   readonly valueName: string;
   readonly onChange: (id: string, name: string) => void;
+  readonly accountId?: string;
   readonly disabled?: boolean;
 }
 
@@ -24,6 +25,7 @@ const ENTITY_LABELS: Record<string, string> = {
   lead: 'Lead',
   contact: 'Contact',
   opportunity: 'Deal',
+  account: 'Account',
 };
 
 export function EntitySearchField({
@@ -31,6 +33,7 @@ export function EntitySearchField({
   value,
   valueName,
   onChange,
+  accountId,
   disabled,
 }: Readonly<EntitySearchFieldProps>) {
   const [open, setOpen] = useState(false);
@@ -58,12 +61,16 @@ export function EntitySearchField({
     { enabled: entityType === 'lead' && open && debouncedSearch.length > 0 }
   );
   const contactQuery = api.contact.list.useQuery(
-    { search: debouncedSearch, limit: 5, page: 1 },
+    { search: debouncedSearch, limit: 5, page: 1, accountId },
     { enabled: entityType === 'contact' && open && debouncedSearch.length > 0 }
   );
   const opportunityQuery = api.opportunity.list.useQuery(
     { search: debouncedSearch, limit: 5, page: 1 },
     { enabled: entityType === 'opportunity' && open && debouncedSearch.length > 0 }
+  );
+  const accountQuery = api.account.list.useQuery(
+    { search: debouncedSearch, limit: 5, page: 1 },
+    { enabled: entityType === 'account' && open && debouncedSearch.length > 0 }
   );
 
   const getResults = useCallback((): Array<{ id: string; name: string }> => {
@@ -91,8 +98,16 @@ export function EntitySearchField({
         })) ?? []
       );
     }
+    if (entityType === 'account' && accountQuery.data) {
+      return (
+        accountQuery.data.accounts?.map((a: { id: string; name: string }) => ({
+          id: a.id,
+          name: a.name,
+        })) ?? []
+      );
+    }
     return [];
-  }, [entityType, leadQuery.data, contactQuery.data, opportunityQuery.data]);
+  }, [entityType, leadQuery.data, contactQuery.data, opportunityQuery.data, accountQuery.data]);
 
   const results = getResults();
   let isLoading: boolean;
@@ -100,6 +115,8 @@ export function EntitySearchField({
     isLoading = leadQuery.isLoading;
   } else if (entityType === 'contact') {
     isLoading = contactQuery.isLoading;
+  } else if (entityType === 'account') {
+    isLoading = accountQuery.isLoading;
   } else {
     isLoading = opportunityQuery.isLoading;
   }
