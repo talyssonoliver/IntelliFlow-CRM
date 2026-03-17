@@ -26,6 +26,11 @@ import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
 import { mapTicketToDetailData } from '@/lib/tickets/ticket-detail-mapper';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const CUID_RE = /^c[a-z0-9]{8,}$/;
+
+function isValidEntityId(id: string): boolean {
+  return UUID_RE.test(id) || CUID_RE.test(id);
+}
 
 export default function TicketDetailPage() {
   const params = useParams();
@@ -35,8 +40,10 @@ export default function TicketDetailPage() {
 
   const utils = api.useUtils();
 
-  // tRPC queries
-  const { data: ticket, isLoading } = api.ticket.getById.useQuery({ id: ticketId });
+  const validId = isValidEntityId(ticketId);
+
+  // tRPC queries — only fire when the URL param looks like a real ID
+  const { data: ticket, isLoading } = api.ticket.getById.useQuery({ id: ticketId }, { enabled: validId });
   const { data: assigneeOptions = [], isLoading: isAssigneeOptionsLoading } =
     api.ticket.assignees.useQuery();
 
@@ -184,11 +191,11 @@ export default function TicketDetailPage() {
   );
 
   // Loading skeleton
-  if (isLoading) {
+  if (validId && isLoading) {
     return <TicketDetailSkeleton />;
   }
 
-  if (!ticket) {
+  if (!validId || !ticket) {
     return (
       <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
         <Card className="p-8 text-center">
