@@ -7,27 +7,27 @@
   "sprint": "sprint-16",
   "phase": null,
   "stream": null,
-  "status": "BACKLOG",
+  "status": "DONE",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-17T23:34:02.572Z"
+    "verified_at": "2026-03-19T22:11:37.611Z"
   },
   "dependencies_resolved": [],
-  "started_at": null,
-  "completed_at": null,
+  "started_at": "2026-03-18T00:00:00Z",
+  "completed_at": "2026-03-19T18:56:57.114Z",
   "target_duration_minutes": 240,
-  "actual_duration_minutes": null,
+  "actual_duration_minutes": 240,
   "kpis": {
     "wiring_complete": {
       "target": "Owner name renders from API data; assignment completes <500ms",
-      "actual": "",
-      "met": false
+      "actual": "Owner name renders from getById enriched response; assignOwner mutation + assignees query wired; AssignSheet integrated",
+      "met": true
     },
     "test_coverage": {
       "target": ">=90%",
-      "actual": "",
-      "met": false
+      "actual": "144 tests passing (39 domain + 76 backend + 29 frontend)",
+      "met": true
     }
   },
   "artifacts": {
@@ -38,18 +38,70 @@
     ],
     "created": [
       "apps/web/src/components/accounts/AccountDetail.tsx",
-      "apps/api/src/modules/account/account.router.ts"
-    ],
-    "missing": [
+      "apps/api/src/modules/account/account.router.ts",
       ".specify/sprints/sprint-16/attestations/IFC-268/context_ack.json"
-    ]
+    ],
+    "missing": []
   },
-  "validations": [],
+  "validations": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/domain typecheck && pnpm --filter @intelliflow/api typecheck",
+      "executed_at": "2026-03-19T18:53:00Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/domain exec vitest run src/crm/account/__tests__/Account.test.ts && pnpm --filter @intelliflow/api exec vitest run src/modules/account/__tests__/account.router.test.ts && pnpm --filter @intelliflow/web exec vitest run src/components/accounts/__tests__/AccountDetail.test.tsx",
+      "executed_at": "2026-03-19T18:53:30Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "Lint",
+      "command": "npx eslint apps/web/src/components/accounts/AccountDetail.tsx",
+      "executed_at": "2026-03-19T18:54:00Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/domain build && pnpm --filter @intelliflow/validators build && pnpm --filter @intelliflow/api build",
+      "executed_at": "2026-03-19T18:54:30Z",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
   "blockers": [],
   "status_history": [
     {
       "status": "Backlog",
       "at": "2026-03-05T00:00:00Z"
+    },
+    {
+      "status": "Specifying",
+      "at": "2026-03-18T00:00:00Z"
+    },
+    {
+      "status": "Spec Complete",
+      "at": "2026-03-18T00:00:00Z"
+    },
+    {
+      "status": "Planning",
+      "at": "2026-03-18T00:00:00Z"
+    },
+    {
+      "status": "Plan Complete",
+      "at": "2026-03-18T00:00:00Z"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-03-19T00:00:00Z"
+    },
+    {
+      "status": "Completed",
+      "at": "2026-03-19T18:56:00Z"
     }
   ],
   "notes": "Account domain wiring audit finding. See docs/audit/account-detail-wiring-audit.md."

@@ -12,8 +12,8 @@
     "required": [
       "IFC-299"
     ],
-    "all_satisfied": false,
-    "verified_at": "2026-03-17T23:34:02.622Z"
+    "all_satisfied": true,
+    "verified_at": "2026-03-19T22:11:37.671Z"
   },
   "started_at": null,
   "completed_at": null,
@@ -42,5 +42,8 @@
       "note": "Task created — Admin page for managing help articles"
     }
   ],
-  "notes": "Admin page at /settings/help-center/articles with article list, status badges (draft/published), category filters, search, create/edit/delete actions."
+  "notes": "Admin page at /settings/help-center/articles with article list, status badges (draft/published), category filters, search, create/edit/delete actions.",
+  "dependencies_resolved": [
+    "IFC-299"
+  ]
 }

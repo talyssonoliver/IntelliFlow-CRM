@@ -3343,6 +3343,21 @@ PG-180:
   notes: 'Help Article Admin List Page'
 
 
+PG-178:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+  acceptance_owner: 'Tech Lead'
+  debt_allowed: no
+  evidence_required:
+    - apps/web/src/app/settings/leads/page.tsx
+    - apps/web/src/app/settings/leads/LeadSettingsContent.tsx
+    - apps/web/src/components/settings/ModuleSettingsLayout.tsx
+  notes: 'Module Settings Pages - 11 per-module configuration pages'
+
 # -----------------------------------------------------------------------------
 # METADATA
 # -----------------------------------------------------------------------------

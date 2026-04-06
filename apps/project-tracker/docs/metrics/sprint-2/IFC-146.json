@@ -9,7 +9,7 @@
       "IFC-000",
       "ENV-018-AI"
     ],
-    "verified_at": "2026-03-17T23:34:02.442Z",
+    "verified_at": "2026-03-19T22:11:37.397Z",
     "all_satisfied": true,
     "notes": "Feasibility assessment and sprint planning available"
   },
@@ -46,10 +46,11 @@
     "created": [
       "docs/planning/prd-template.md",
       "docs/planning/user-journey-template.md",
-      "docs/planning/definition-of-ready.md",
-      "artifacts/logs/backlog-updates-log.csv"
+      "docs/planning/definition-of-ready.md"
     ],
-    "missing": []
+    "missing": [
+      "artifacts/logs/backlog-updates-log.csv"
+    ]
   },
   "validations": [
     {

@@ -9,7 +9,7 @@
       "BRAND-001",
       "ENV-002-AI"
     ],
-    "verified_at": "2026-03-17T23:34:02.425Z",
+    "verified_at": "2026-03-19T22:11:37.376Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -39,11 +39,11 @@
       "docs/design-system/token-mapping.md",
       "docs/design-system/token-naming.md"
     ],
-    "created": [
+    "created": [],
+    "missing": [
       "docs/design-system/token-mapping.md",
       "docs/design-system/token-naming.md"
-    ],
-    "missing": []
+    ]
   },
   "validations": [
     {

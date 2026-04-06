@@ -12,8 +12,8 @@
     "required": [
       "IFC-299"
     ],
-    "all_satisfied": false,
-    "verified_at": "2026-03-17T23:34:02.624Z"
+    "all_satisfied": true,
+    "verified_at": "2026-03-19T22:11:37.675Z"
   },
   "started_at": null,
   "completed_at": null,
@@ -40,5 +40,8 @@
       "note": "Task created — Swap static data for tRPC queries in help article page"
     }
   ],
-  "notes": "Replace static DEFAULT_HELP_ARTICLES imports in [article]/page.tsx with tRPC queries (helpArticle.getBySlug, helpArticle.getByCategory, helpArticle.getRelated). Same UI, DB data source. Remove static data dependency."
+  "notes": "Replace static DEFAULT_HELP_ARTICLES imports in [article]/page.tsx with tRPC queries (helpArticle.getBySlug, helpArticle.getByCategory, helpArticle.getRelated). Same UI, DB data source. Remove static data dependency.",
+  "dependencies_resolved": [
+    "IFC-299"
+  ]
 }

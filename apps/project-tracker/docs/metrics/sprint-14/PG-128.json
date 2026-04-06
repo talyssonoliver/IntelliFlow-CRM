@@ -48,7 +48,7 @@
     "required": [
       "IFC-086"
     ],
-    "verified_at": "2026-03-17T23:34:02.514Z",
+    "verified_at": "2026-03-19T22:11:37.516Z",
     "status": {
       "IFC-086": "Completed"
     },
@@ -67,15 +67,7 @@
     "retry_count": 0
   },
   "artifacts": {
-    "created": [
-      "apps/web/src/app/settings/ai/page.tsx",
-      "apps/web/src/app/settings/ai/AISettingsContent.tsx",
-      "apps/web/src/app/settings/ai/components/ChainVersionsDashboard.tsx",
-      "apps/web/src/app/settings/ai/components/ChainVersionsTable.tsx",
-      "apps/web/src/app/settings/ai/components/ZepBudgetGauge.tsx",
-      "apps/web/src/app/settings/ai/components/VersionAuditLog.tsx",
-      "apps/web/src/app/settings/ai/hooks/useChainVersions.ts"
-    ],
+    "created": [],
     "expected": [
       "apps/web/src/app/settings/ai/page.tsx",
       "apps/web/src/app/settings/ai/AISettingsContent.tsx",
@@ -85,7 +77,15 @@
       "apps/web/src/app/settings/ai/components/VersionAuditLog.tsx",
       "apps/web/src/app/settings/ai/hooks/useChainVersions.ts"
     ],
-    "missing": []
+    "missing": [
+      "apps/web/src/app/settings/ai/page.tsx",
+      "apps/web/src/app/settings/ai/AISettingsContent.tsx",
+      "apps/web/src/app/settings/ai/components/ChainVersionsDashboard.tsx",
+      "apps/web/src/app/settings/ai/components/ChainVersionsTable.tsx",
+      "apps/web/src/app/settings/ai/components/ZepBudgetGauge.tsx",
+      "apps/web/src/app/settings/ai/components/VersionAuditLog.tsx",
+      "apps/web/src/app/settings/ai/hooks/useChainVersions.ts"
+    ]
   },
   "kpis": {
     "page_load": {
