@@ -259,6 +259,7 @@ override.tf.json
 
 # Package-level coverage artifacts (regenerated during tests)
 packages/*/artifacts/coverage/
+packages/*/artifacts/coverage-vitest/
 packages/*/coverage/
 apps/*/coverage-output.txt
 apps/*/coverage-report.json
