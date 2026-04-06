@@ -25,135 +25,116 @@ model Tenant {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 
-  // Relations
-  users                User[]
-  leads                Lead[]
-  contacts             Contact[]
-  accounts             Account[]
-  opportunities        Opportunity[]
-  tasks                Task[]
-  tickets              Ticket[]
-  auditLogs            AuditLog[]
-  auditLogEntries      AuditLogEntry[]
-  calendarEvents       CalendarEvent[]
-  dealRenewals         DealRenewal[]          @relation("DealRenewals")
-  contactNotes         ContactNote[]
-  conversationRecords  ConversationRecord[]
-  pipelineStageConfigs PipelineStageConfig[]
-  chainVersions        ChainVersion[]
-  domainEvents         DomainEvent[]
-  aiOutputReviews      AIOutputReview[]
-  experiments          Experiment[]
-  slaPolicies          SLAPolicy[]
-  aiScores             AIScore[]
-  teamMessages         TeamMessage[]
-  pipelineSnapshots    PipelineSnapshot[]
-  trafficSources       TrafficSource[]
-  growthMetrics        GrowthMetric[]
-  ticketNextSteps      TicketNextStep[]
-  relatedTickets       RelatedTicket[]
-  ticketAIInsights     TicketAIInsight[]
-  salesPerformances    SalesPerformance[]
-  teams                Team[]
-  teamMembers          TeamMember[]
-  emailTemplates       EmailTemplate[]
-  feedbackSurveys      FeedbackSurvey[]
-  accountHealthScores  AccountHealthScore[]
-  agentSkills          AgentSkill[]
-  slABreaches          SLABreach[]
-  escalationHistories  EscalationHistory[]
-  reportDefinitions    ReportDefinition[]
-  aiInsights           AIInsight[]
-  performanceMetrics   PerformanceMetric[]
-  modules              TenantModule[]
-
-  // DBA-002: Back-relations for models with tenantId in DB
-  dealProducts         DealProduct[]
-  dealFiles            DealFile[]
-  agentActions         AgentAction[]
-
-  // DBA-003..007: Back-relations for models with NOT NULL tenantId in DB
-  activityEvents       ActivityEvent[]
-  contactActivities    ContactActivity[]
-  messageRecords       MessageRecord[]
-  toolCallRecords      ToolCallRecord[]
-  securityEvents       SecurityEvent[]
-  apiUsageRecords      APIUsageRecord[]
-  // DBA-117: Back-relations for 19 models with tenantId in DB but missing from Prisma
-  apiKeys              APIKey[]
-  businessRules        BusinessRule[]
-  businessRuleExecs    BusinessRuleExecution[]
-  chatConversations    ChatConversation[]
-  dashboardConfigs     DashboardConfig[]
-  dealsWonMetrics      DealsWonMetric[]
-  documentAccessLogs   DocumentAccessLog[]
-  documentShares       DocumentShare[]
-  documents            Document[]
-  emailAttachments     EmailAttachment[]
-  reportExecutions     ReportExecution[]
-  reportSchedules      ReportSchedule[]
-  slaNotifications     SLANotification[]
-  ticketAttachments    TicketAttachment[]
-  ticketCategories     TicketCategory[]
-  webhookDeliveries    WebhookDelivery[]
-  webhookEndpoints     WebhookEndpoint[]
-  workflowDefinitions  WorkflowDefinition[]
-  workflowExecutions   WorkflowExecution[]
-  // DBA-118: Back-relations for models with tenantId but missing Tenant @relation
-  leadActivities       LeadActivity[]
-  leadNotes            LeadNote[]
-  leadFiles            LeadFile[]
-  appointments         Appointment[]
-  appointmentAttendees AppointmentAttendee[]
-  appointmentCases     AppointmentCase[]
-  cases                Case[]
-  caseTasks            CaseTask[]
-  ticketActivities     TicketActivity[]
-  userRoleAssignments  UserRoleAssignment[]
-  userPermissions      UserPermission[]
-  leadAIInsights       LeadAIInsight[]
-  contactAIInsights    ContactAIInsight[]
-  autoResponseDrafts   AutoResponseDraft[]
-  emailRecords         EmailRecord[]
-  chatMessages         ChatMessage[]
-  callRecords          CallRecord[]
-  agentAvailabilities  AgentAvailability[]
-  routingRules         RoutingRule[]
-  routingAudits        RoutingAudit[]
-  notifications        Notification[]
-  notifPreferences     NotificationPreference[]
-  notifTemplates       NotificationTemplate[]
-  notificationDLQ      NotificationDLQ[]
-  leadConversionAudits LeadConversionAudit[]
-
-  // DBA-021: Back-relations for CaseDocument models (tenant_id exists in DB)
-  caseDocuments        CaseDocument[]
-  caseDocumentACLs     CaseDocumentACL[]
-  caseDocumentAudits   CaseDocumentAudit[]
-
-  // Custom calendars
-  calendars            Calendar[]
-
-  // Activity reactions & comments
-  activityReactions    ActivityReaction[]
-  activityComments     ActivityComment[]
-
-  // User sessions (Fix #9 — session persistence)
-  sessions             Session[]
-
-  // Help center
-  helpArticles         HelpArticle[]
-  articleSections      ArticleSection[]
-  articleFeedback      ArticleFeedback[]
-
-  // Lead Settings (PG-178)
-  leadStageConfigs       LeadStageConfig[]
-  leadScoringRules       LeadScoringRule[]
-  leadCustomFields       LeadCustomField[]
-  leadAutomationSettings LeadAutomationSetting[]
-
-  // AI Monitoring Events (IFC-297)
-  aiMonitoringEvents     AIMonitoringEvent[]
+  // Relations — all reverse relation fields @ignore'd to shrink generated Tenant.ts
+  // (FK constraints preserved in DB; child-side relations untouched)
+  users                User[]                     @ignore
+  leads                Lead[]                     @ignore
+  contacts             Contact[]                  @ignore
+  accounts             Account[]                  @ignore
+  opportunities        Opportunity[]              @ignore
+  tasks                Task[]                     @ignore
+  tickets              Ticket[]                   @ignore
+  auditLogs            AuditLog[]                 @ignore
+  auditLogEntries      AuditLogEntry[]            @ignore
+  calendarEvents       CalendarEvent[]            @ignore
+  dealRenewals         DealRenewal[]              @relation("DealRenewals") @ignore
+  contactNotes         ContactNote[]              @ignore
+  conversationRecords  ConversationRecord[]       @ignore
+  pipelineStageConfigs PipelineStageConfig[]      @ignore
+  chainVersions        ChainVersion[]             @ignore
+  domainEvents         DomainEvent[]              @ignore
+  aiOutputReviews      AIOutputReview[]           @ignore
+  experiments          Experiment[]               @ignore
+  slaPolicies          SLAPolicy[]                @ignore
+  aiScores             AIScore[]                  @ignore
+  teamMessages         TeamMessage[]              @ignore
+  pipelineSnapshots    PipelineSnapshot[]         @ignore
+  trafficSources       TrafficSource[]            @ignore
+  growthMetrics        GrowthMetric[]             @ignore
+  ticketNextSteps      TicketNextStep[]           @ignore
+  relatedTickets       RelatedTicket[]            @ignore
+  ticketAIInsights     TicketAIInsight[]          @ignore
+  salesPerformances    SalesPerformance[]         @ignore
+  teams                Team[]                     @ignore
+  teamMembers          TeamMember[]               @ignore
+  emailTemplates       EmailTemplate[]            @ignore
+  feedbackSurveys      FeedbackSurvey[]           @ignore
+  accountHealthScores  AccountHealthScore[]       @ignore
+  agentSkills          AgentSkill[]               @ignore
+  slABreaches          SLABreach[]                @ignore
+  escalationHistories  EscalationHistory[]        @ignore
+  reportDefinitions    ReportDefinition[]         @ignore
+  aiInsights           AIInsight[]                @ignore
+  performanceMetrics   PerformanceMetric[]        @ignore
+  modules              TenantModule[]             @ignore
+  dealProducts         DealProduct[]              @ignore
+  dealFiles            DealFile[]                 @ignore
+  agentActions         AgentAction[]              @ignore
+  activityEvents       ActivityEvent[]            @ignore
+  contactActivities    ContactActivity[]          @ignore
+  messageRecords       MessageRecord[]            @ignore
+  toolCallRecords      ToolCallRecord[]           @ignore
+  securityEvents       SecurityEvent[]            @ignore
+  apiUsageRecords      APIUsageRecord[]           @ignore
+  apiKeys              APIKey[]                   @ignore
+  businessRules        BusinessRule[]             @ignore
+  businessRuleExecs    BusinessRuleExecution[]    @ignore
+  chatConversations    ChatConversation[]         @ignore
+  dashboardConfigs     DashboardConfig[]          @ignore
+  dealsWonMetrics      DealsWonMetric[]           @ignore
+  documentAccessLogs   DocumentAccessLog[]        @ignore
+  documentShares       DocumentShare[]            @ignore
+  documents            Document[]                 @ignore
+  emailAttachments     EmailAttachment[]          @ignore
+  reportExecutions     ReportExecution[]          @ignore
+  reportSchedules      ReportSchedule[]           @ignore
+  slaNotifications     SLANotification[]          @ignore
+  ticketAttachments    TicketAttachment[]         @ignore
+  ticketCategories     TicketCategory[]           @ignore
+  webhookDeliveries    WebhookDelivery[]          @ignore
+  webhookEndpoints     WebhookEndpoint[]          @ignore
+  workflowDefinitions  WorkflowDefinition[]       @ignore
+  workflowExecutions   WorkflowExecution[]        @ignore
+  leadActivities       LeadActivity[]             @ignore
+  leadNotes            LeadNote[]                 @ignore
+  leadFiles            LeadFile[]                 @ignore
+  appointments         Appointment[]              @ignore
+  appointmentAttendees AppointmentAttendee[]      @ignore
+  appointmentCases     AppointmentCase[]          @ignore
+  cases                Case[]                     @ignore
+  caseTasks            CaseTask[]                 @ignore
+  ticketActivities     TicketActivity[]           @ignore
+  userRoleAssignments  UserRoleAssignment[]       @ignore
+  userPermissions      UserPermission[]           @ignore
+  leadAIInsights       LeadAIInsight[]            @ignore
+  contactAIInsights    ContactAIInsight[]         @ignore
+  autoResponseDrafts   AutoResponseDraft[]        @ignore
+  emailRecords         EmailRecord[]              @ignore
+  chatMessages         ChatMessage[]              @ignore
+  callRecords          CallRecord[]               @ignore
+  agentAvailabilities  AgentAvailability[]        @ignore
+  routingRules         RoutingRule[]              @ignore
+  routingAudits        RoutingAudit[]             @ignore
+  notifications        Notification[]             @ignore
+  notifPreferences     NotificationPreference[]   @ignore
+  notifTemplates       NotificationTemplate[]     @ignore
+  notificationDLQ      NotificationDLQ[]          @ignore
+  leadConversionAudits LeadConversionAudit[]      @ignore
+  caseDocuments        CaseDocument[]             @ignore
+  caseDocumentACLs     CaseDocumentACL[]          @ignore
+  caseDocumentAudits   CaseDocumentAudit[]        @ignore
+  calendars            Calendar[]                 @ignore
+  activityReactions    ActivityReaction[]         @ignore
+  activityComments     ActivityComment[]          @ignore
+  sessions             Session[]                  @ignore
+  helpArticles         HelpArticle[]              @ignore
+  articleSections      ArticleSection[]           @ignore
+  articleFeedback      ArticleFeedback[]          @ignore
+  leadStageConfigs       LeadStageConfig[]        @ignore
+  leadScoringRules       LeadScoringRule[]        @ignore
+  leadCustomFields       LeadCustomField[]        @ignore
+  leadAutomationSettings LeadAutomationSetting[]  @ignore
+  aiMonitoringEvents     AIMonitoringEvent[]      @ignore
 
   @@index([slug])
   @@index([status])
@@ -479,6 +460,7 @@ model Contact {
   tags          String[]  @default([])
   contactNotes  String?   @db.Text  // Free-form notes field
   lastContactedAt DateTime?  // IFC-192: Auto-updated on qualifying interactions
+  avatarUrl     String?
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -567,6 +549,7 @@ model Opportunity {
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
   closedAt      DateTime?
+  deletedAt     DateTime?
 
   // Multi-tenancy
   tenantId      String
@@ -599,6 +582,7 @@ model Opportunity {
   @@index([contactId, stage])
   // HOME-PERF: Composite index for getWelcomeSummary deal trend queries
   @@index([tenantId, ownerId, stage, closedAt])
+  @@index([deletedAt])
   @@map("opportunities")
 }
 
@@ -3808,6 +3792,7 @@ model CaseDocumentACL {
   @@index([documentId])
   @@index([principalId])
   @@index([expiresAt])
+  @@index([tenantId])
   @@map("case_document_acl")
 }
 
@@ -3841,6 +3826,7 @@ model CaseDocumentAudit {
   @@index([userId])
   @@index([createdAt])
   @@index([eventType])
+  @@index([tenantId])
   @@map("case_document_audit")
 }
 

@@ -36,11 +36,11 @@ describe('HelpArticle Schema Validation', () => {
       expect(_input).toBeDefined();
     });
 
-    it('should have tenant relation', () => {
-      const _input: Partial<Prisma.HelpArticleCreateInput> = {
-        tenant: { connect: { id: 'test-tenant' } },
+    it('should have tenantId field', () => {
+      const _input: Partial<Prisma.HelpArticleUncheckedCreateInput> = {
+        tenantId: 'test-tenant',
       };
-      expect(_input.tenant).toBeDefined();
+      expect(_input.tenantId).toBeDefined();
     });
 
     it('should have sections and feedback relations via include type', () => {
@@ -77,11 +77,11 @@ describe('HelpArticle Schema Validation', () => {
       expect(_include.article).toBe(true);
     });
 
-    it('should have tenant relation', () => {
-      const _input: Partial<Prisma.ArticleSectionCreateInput> = {
-        tenant: { connect: { id: 'test-tenant' } },
+    it('should have tenantId field', () => {
+      const _input: Partial<Prisma.ArticleSectionUncheckedCreateInput> = {
+        tenantId: 'test-tenant',
       };
-      expect(_input.tenant).toBeDefined();
+      expect(_input.tenantId).toBeDefined();
     });
   });
 
@@ -108,11 +108,11 @@ describe('HelpArticle Schema Validation', () => {
       expect(_include.article).toBe(true);
     });
 
-    it('should have tenant relation', () => {
-      const _input: Partial<Prisma.ArticleFeedbackCreateInput> = {
-        tenant: { connect: { id: 'test-tenant' } },
+    it('should have tenantId field', () => {
+      const _input: Partial<Prisma.ArticleFeedbackUncheckedCreateInput> = {
+        tenantId: 'test-tenant',
       };
-      expect(_input.tenant).toBeDefined();
+      expect(_input.tenantId).toBeDefined();
     });
   });
 

@@ -16,7 +16,7 @@ import type { Prisma } from '../../generated/prisma/client';
 
 // Use Prisma's CreateInput types to verify model fields exist at compile time.
 // If a field is missing from the schema, TypeScript will error on these types.
-type ReviewCreateInput = Prisma.AIOutputReviewCreateInput;
+type ReviewCreateInput = Prisma.AIOutputReviewUncheckedCreateInput;
 type AuditCreateInput = Prisma.AIOutputReviewAuditCreateInput;
 
 describe('AI Output Review Schema Validation', () => {
@@ -42,12 +42,11 @@ describe('AI Output Review Schema Validation', () => {
       expect(_input).toBeDefined();
     });
 
-    it('should have tenant relation', () => {
-      // If tenant relation doesn't exist, this type would error
+    it('should have tenantId field', () => {
       const _input: Partial<ReviewCreateInput> = {
-        tenant: { connect: { id: 'test' } },
+        tenantId: 'test',
       };
-      expect(_input.tenant).toBeDefined();
+      expect(_input.tenantId).toBeDefined();
     });
 
     it('should have auditEntries relation via include type', () => {
