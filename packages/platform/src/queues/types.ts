@@ -163,7 +163,7 @@ export const QUEUE_NAMES = {
   AI_SCORING: 'ai-scoring',
   AI_PREDICTION: 'ai-prediction',
   AI_INSIGHTS: 'ai-insights',
-  EMAIL_NOTIFICATIONS: 'intelliflow:email-notifications',
+  EMAIL_NOTIFICATIONS: 'intelliflow-notifications-email',
   WEBHOOK_DELIVERY: 'intelliflow:webhook-delivery',
   DATA_SYNC: 'intelliflow:data-sync',
 } as const;
