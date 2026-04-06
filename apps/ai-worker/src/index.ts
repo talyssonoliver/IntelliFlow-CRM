@@ -386,11 +386,16 @@ async function main() {
   }
 }
 
-// Run the worker if this file is executed directly
-// NOSONAR: S7785 - Top-level await not available in CommonJS modules
-if (require.main === module) {
+// Run the worker if this file is executed directly.
+// `require.main === module` works for plain `node` but is always false under
+// `tsx watch` (which transpiles to ESM). Detect tsx by checking if any argv
+// entry ends with our source file path.
+const isDirectExecution =
+  require.main === module ||
+  process.argv.some((arg) => arg.replace(/\\/g, '/').endsWith('/ai-worker/src/index.ts') || arg === 'src/index.ts');
+
+if (isDirectExecution) {
   (async () => {
-    // NOSONAR
     try {
       await main();
     } catch (error: unknown) {
