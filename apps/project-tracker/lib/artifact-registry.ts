@@ -1196,6 +1196,32 @@ function linkSupabaseFile(file: FileEntry): FileEntry {
   return { ...file, linkedTasks: ['ENV-004-AI'], isOrphan: false };
 }
 
+/** Link an infra/docker/ file — ENV-003-AI for most, IFC-085 for Ollama files. */
+function linkInfraDockerFile(file: FileEntry): FileEntry {
+  if (file.path.includes('ollama')) {
+    return { ...file, linkedTasks: ['IFC-085'], isOrphan: false };
+  }
+  return { ...file, linkedTasks: ['ENV-003-AI'], isOrphan: false };
+}
+
+/** Link an infra/monitoring/ file — IFC-117/163/ENV-008-AI/ENV-015-AI or fallback EP-001-AI. */
+function linkInfraMonitoringFile(file: FileEntry): FileEntry {
+  const p = file.path;
+  if (p.includes('ai-grafana-dashboard') || p.includes('ai-prometheus-rules')) {
+    return { ...file, linkedTasks: ['IFC-117'], isOrphan: false };
+  }
+  if (p.includes('workers.json')) {
+    return { ...file, linkedTasks: ['IFC-163'], isOrphan: false };
+  }
+  if (p.includes('intelliflow-alerts.yaml')) {
+    return { ...file, linkedTasks: ['ENV-008-AI'], isOrphan: false };
+  }
+  if (p.includes('performance-budgets.json')) {
+    return { ...file, linkedTasks: ['ENV-015-AI'], isOrphan: false };
+  }
+  return { ...file, linkedTasks: ['EP-001-AI'], isOrphan: false };
+}
+
 /**
  * Link an infra/ file to its verified task owner.
  * Every mapping below is backed by attestation hashes, CSV ARTIFACT entries,
@@ -1222,8 +1248,7 @@ function linkInfraFile(file: FileEntry): FileEntry {
   }
   // docker/ → ENV-003-AI (Docker Environment), except Ollama → IFC-085
   if (p.startsWith('infra/docker/')) {
-    if (p.includes('ollama')) return { ...file, linkedTasks: ['IFC-085'], isOrphan: false };
-    return { ...file, linkedTasks: ['ENV-003-AI'], isOrphan: false };
+    return linkInfraDockerFile(file);
   }
   // security/ — per-file attribution
   if (p === 'infra/security/trivy.yaml') {
@@ -1237,19 +1262,7 @@ function linkInfraFile(file: FileEntry): FileEntry {
   }
   // monitoring/ — mostly EP-001-AI with specific exceptions
   if (p.startsWith('infra/monitoring/')) {
-    if (p.includes('ai-grafana-dashboard') || p.includes('ai-prometheus-rules')) {
-      return { ...file, linkedTasks: ['IFC-117'], isOrphan: false };
-    }
-    if (p.includes('workers.json')) {
-      return { ...file, linkedTasks: ['IFC-163'], isOrphan: false };
-    }
-    if (p.includes('intelliflow-alerts.yaml')) {
-      return { ...file, linkedTasks: ['ENV-008-AI'], isOrphan: false };
-    }
-    if (p.includes('performance-budgets.json')) {
-      return { ...file, linkedTasks: ['ENV-015-AI'], isOrphan: false };
-    }
-    return { ...file, linkedTasks: ['EP-001-AI'], isOrphan: false };
+    return linkInfraMonitoringFile(file);
   }
   // supabase/ — per-migration task attribution
   if (p.startsWith('infra/supabase/')) {
@@ -1398,6 +1411,28 @@ function linkClaudeFile(file: FileEntry): FileEntry {
   return { ...file, linkedTasks: ['AI-SETUP-001'], isOrphan: false };
 }
 
+/** Link a .specify/ file — extract task ID from path or delegate to infra helper. */
+function linkSpecifyFileByPath(file: FileEntry): FileEntry {
+  const taskId = extractTaskIdFromMessage(file.path);
+  if (taskId) {
+    return { ...file, linkedTasks: [taskId], isOrphan: false };
+  }
+  return linkSpecifyInfraFile(file);
+}
+
+/** Link a docs/metrics/sprint-* JSON file by extracting its task ID from the path. */
+function linkMetricJsonFile(file: FileEntry): FileEntry {
+  const p = file.path;
+  if (!p.includes('docs/metrics/sprint-')) return file;
+  const fileName = p.split('/').pop() || '';
+  if (fileName.startsWith('_')) return file;
+  const taskId = extractTaskIdFromMessage(p);
+  if (taskId) {
+    return { ...file, linkedTasks: [taskId], isOrphan: false };
+  }
+  return file;
+}
+
 /**
  * Link evidence files (.specify/, metric JSONs, .claude/) to tasks by extracting
  * task IDs from their file paths. Runs after linkFilesToTasks() to pick up
@@ -1410,9 +1445,7 @@ export function linkEvidenceFilesByPath(files: FileEntry[]): FileEntry[] {
     const p = file.path;
 
     // .claude/ → AI-SETUP-001 / per-task ralph-loops / IFC-160 convention hooks
-    if (p.startsWith('.claude/')) {
-      return linkClaudeFile(file);
-    }
+    if (p.startsWith('.claude/')) return linkClaudeFile(file);
 
     // .agents/skills/ → AI-SETUP-001 (same skills as .claude/skills/, symlinked)
     if (p.startsWith('.agents/')) {
@@ -1425,19 +1458,13 @@ export function linkEvidenceFilesByPath(files: FileEntry[]): FileEntry[] {
     }
 
     // .github/ → linked to CI/CD tasks
-    if (p.startsWith('.github/')) {
-      return linkGitHubFile(file);
-    }
+    if (p.startsWith('.github/')) return linkGitHubFile(file);
 
     // infra/ → verified per-file task attribution from attestations and file headers
-    if (p.startsWith('infra/')) {
-      return linkInfraFile(file);
-    }
+    if (p.startsWith('infra/')) return linkInfraFile(file);
 
     // Root-level supabase/ migrations (Supabase CLI local dir, separate from infra/supabase/)
-    if (p.startsWith('supabase/')) {
-      return linkRootSupabaseFile(file);
-    }
+    if (p.startsWith('supabase/')) return linkRootSupabaseFile(file);
 
     // apps/project-tracker/ → EXP-REPORTS-004 (Sprint Audit System)
     if (p.startsWith('apps/project-tracker/')) {
@@ -1445,31 +1472,13 @@ export function linkEvidenceFilesByPath(files: FileEntry[]): FileEntry[] {
     }
 
     // Root-level config/doc files
-    if (file.directory === 'root' && !p.includes('/')) {
-      return linkRootFile(file);
-    }
+    if (file.directory === 'root' && !p.includes('/')) return linkRootFile(file);
 
     // .specify/ files — extract task ID or link to infrastructure task
-    if (p.startsWith('.specify/')) {
-      const taskId = extractTaskIdFromMessage(p);
-      if (taskId) {
-        return { ...file, linkedTasks: [taskId], isOrphan: false };
-      }
-      return linkSpecifyInfraFile(file);
-    }
+    if (p.startsWith('.specify/')) return linkSpecifyFileByPath(file);
 
     // Metric JSONs — extract task ID from path
-    if (!p.includes('docs/metrics/sprint-')) return file;
-    const fileName = p.split('/').pop() || '';
-    // Skip summary/schema files in metrics (no task ID)
-    if (fileName.startsWith('_')) return file;
-
-    const taskId = extractTaskIdFromMessage(p);
-    if (taskId) {
-      return { ...file, linkedTasks: [taskId], isOrphan: false };
-    }
-
-    return file;
+    return linkMetricJsonFile(file);
   });
 }
 
@@ -1629,6 +1638,37 @@ export function propagateTaskLinks(files: FileEntry[]): FileEntry[] {
 const SOURCE_EXTS = new Set(['.ts', '.tsx', '.js', '.jsx']);
 const IMPORT_RE = /(?:from|require\()\s*['"]([^'"]+)['"]/g;
 
+/** Add all artifact_hashes keys from one task's attestation.json into `paths`. */
+function collectAttestationPathsFromTask(
+  attDir: string,
+  taskDir: Dirent,
+  paths: Set<string>
+): void {
+  const attFile = join(attDir, taskDir.name, 'attestation.json');
+  const data = readJsonSafe(attFile);
+  if (!data) return;
+  const hashes = data.artifact_hashes;
+  if (hashes && typeof hashes === 'object' && !Array.isArray(hashes)) {
+    for (const p of Object.keys(hashes as Record<string, string>)) {
+      paths.add(p.toLowerCase());
+    }
+  }
+}
+
+/** Add all attestation paths from one sprint directory into `paths`. */
+function collectAttestationPathsFromSprint(
+  specifyDir: string,
+  sprintDir: Dirent,
+  paths: Set<string>
+): void {
+  const attDir = join(specifyDir, sprintDir.name, 'attestations');
+  if (!existsSync(attDir)) return;
+  for (const taskDir of readdirSync(attDir, { withFileTypes: true })) {
+    if (!taskDir.isDirectory()) continue;
+    collectAttestationPathsFromTask(attDir, taskDir, paths);
+  }
+}
+
 /**
  * Build a set of all file paths mentioned in any attestation artifact_hashes.
  * Used to determine if an orphan was created through proper exec pipeline.
@@ -1641,21 +1681,7 @@ function buildAttestationPathSet(): Set<string> {
   try {
     for (const sprintDir of readdirSync(specifyDir, { withFileTypes: true })) {
       if (!sprintDir.isDirectory()) continue;
-      const attDir = join(specifyDir, sprintDir.name, 'attestations');
-      if (!existsSync(attDir)) continue;
-
-      for (const taskDir of readdirSync(attDir, { withFileTypes: true })) {
-        if (!taskDir.isDirectory()) continue;
-        const attFile = join(attDir, taskDir.name, 'attestation.json');
-        const data = readJsonSafe(attFile);
-        if (!data) continue;
-        const hashes = data.artifact_hashes;
-        if (hashes && typeof hashes === 'object' && !Array.isArray(hashes)) {
-          for (const p of Object.keys(hashes as Record<string, string>)) {
-            paths.add(p.toLowerCase());
-          }
-        }
-      }
+      collectAttestationPathsFromSprint(specifyDir, sprintDir, paths);
     }
   } catch {
     // Skip on read errors
@@ -1667,7 +1693,7 @@ function buildAttestationPathSet(): Set<string> {
  * Build a set of basenames imported by linked source files.
  * Regex-based — covers `import from '...'` and `require('...')`.
  */
-function buildImportedBasenames(files: FileEntry[]): Set<string> {
+function _buildImportedBasenames(files: FileEntry[]): Set<string> {
   const imported = new Set<string>();
 
   for (const file of files) {
@@ -1760,25 +1786,28 @@ export function computeAuditSignals(files: FileEntry[]): FileEntry[] {
   });
 }
 
-/**
- * Compute isImported signal for orphan files by scanning linked source files
- * for import statements. Only reads files in directories that contain orphans
- * to limit I/O. Call separately from the main scan (e.g., on orphan tab load).
- */
-export function computeImportSignals(files: FileEntry[]): FileEntry[] {
-  // Collect directories that have orphans
+/** Collect all directories (and their parents) that contain source orphan files. */
+function collectOrphanDirs(files: FileEntry[]): Set<string> {
   const orphanDirs = new Set<string>();
   for (const f of files) {
-    if (f.isOrphan && SOURCE_EXTS.has(f.extension)) {
-      const dir = f.path.substring(0, f.path.lastIndexOf('/'));
-      orphanDirs.add(dir);
-      // Also add parent dir for __tests__/ cases
-      const parent = dir.substring(0, dir.lastIndexOf('/'));
-      if (parent) orphanDirs.add(parent);
-    }
+    if (!f.isOrphan || !SOURCE_EXTS.has(f.extension)) continue;
+    const dir = f.path.substring(0, f.path.lastIndexOf('/'));
+    orphanDirs.add(dir);
+    // Also add parent dir for __tests__/ cases
+    const parent = dir.substring(0, dir.lastIndexOf('/'));
+    if (parent) orphanDirs.add(parent);
   }
+  return orphanDirs;
+}
 
-  // Only scan linked files in/near orphan directories (limits I/O)
+/**
+ * Scan linked source files that live in or near orphan directories and collect
+ * the basenames they import. Limits file I/O to directories that matter.
+ */
+function collectImportedBasenamesNearOrphans(
+  files: FileEntry[],
+  orphanDirs: Set<string>
+): Set<string> {
   const importedBasenames = new Set<string>();
   for (const file of files) {
     if (file.isOrphan || !SOURCE_EXTS.has(file.extension)) continue;
@@ -1800,6 +1829,17 @@ export function computeImportSignals(files: FileEntry[]): FileEntry[] {
       if (basename) importedBasenames.add(basename.toLowerCase());
     }
   }
+  return importedBasenames;
+}
+
+/**
+ * Compute isImported signal for orphan files by scanning linked source files
+ * for import statements. Only reads files in directories that contain orphans
+ * to limit I/O. Call separately from the main scan (e.g., on orphan tab load).
+ */
+export function computeImportSignals(files: FileEntry[]): FileEntry[] {
+  const orphanDirs = collectOrphanDirs(files);
+  const importedBasenames = collectImportedBasenamesNearOrphans(files, orphanDirs);
 
   return files.map((file) => {
     if (!file.isOrphan || !file.auditSignals) return file;
