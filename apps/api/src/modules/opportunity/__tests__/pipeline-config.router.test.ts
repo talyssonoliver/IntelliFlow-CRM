@@ -14,6 +14,15 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+vi.mock('../../security/audit-logger', () => ({
+  getAuditLogger: vi.fn(() => ({
+    logAction: vi.fn().mockResolvedValue('audit-id'),
+    logBulkOperation: vi.fn().mockResolvedValue('audit-id'),
+    logPermissionDenied: vi.fn().mockResolvedValue('audit-id'),
+  })),
+}));
+
 import { pipelineConfigRouter } from '../pipeline-config.router';
 import { prismaMock, createTestContext, TEST_UUIDS } from '../../../test/setup';
 import {
@@ -44,7 +53,8 @@ describe('Pipeline Config Router', () => {
   const caller = pipelineConfigRouter.createCaller(ctx);
 
   beforeEach(() => {
-    // Reset is handled by setup.ts
+    // Make prisma.$extends return the same mock so tenantMiddleware works in tests
+    (prismaMock.$extends as ReturnType<typeof vi.fn>).mockReturnValue(prismaMock);
     // Add defaults for pipelineStageConfig
     prismaMock.pipelineStageConfig.findMany?.mockResolvedValue?.([]);
     prismaMock.pipelineStageConfig.findUnique?.mockResolvedValue?.(null);

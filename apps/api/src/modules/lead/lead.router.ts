@@ -308,7 +308,11 @@ function mapPrismaLeadToResponse(lead: {
     status: lead.status,
     score: lead.score,
     scoreConfidence: 1,
-    scoreTier: lead.score >= LEAD_SCORE_THRESHOLDS.HOT ? 'hot' : lead.score >= LEAD_SCORE_THRESHOLDS.WARM ? 'warm' : 'cold',
+    scoreTier: (() => {
+      if (lead.score >= LEAD_SCORE_THRESHOLDS.HOT) return 'hot';
+      if (lead.score >= LEAD_SCORE_THRESHOLDS.WARM) return 'warm';
+      return 'cold';
+    })(),
     ownerId: lead.ownerId,
     tenantId: lead.tenantId,
     createdAt: lead.createdAt,
@@ -453,6 +457,30 @@ export const leadRouter = createTRPCRouter({
       userId: typedCtx.tenant.userId,
       userName: ctx.user?.email ?? 'System',
     });
+
+    // Fire-and-forget: enqueue AI lead scoring (best-effort)
+    (async () => {
+      const { Queue } = await import('bullmq');
+      const { QUEUE_NAMES } = await import('@intelliflow/platform/queues');
+      const queue = new Queue(QUEUE_NAMES.AI_SCORING, {
+        connection: { host: process.env.REDIS_HOST || 'localhost', port: Number.parseInt(process.env.REDIS_PORT || '6379', 10) },
+      });
+      await queue.add('score-lead', {
+        leadId: result.value.id.value,
+        tenantId: typedCtx.tenant.tenantId,
+        lead: {
+          email: input.email,
+          source: input.source,
+          firstName: input.firstName,
+          lastName: input.lastName,
+          company: input.company,
+          title: input.title,
+          phone: input.phone?.value,
+        },
+        correlationId: `lead-create-${result.value.id.value}`,
+      });
+      await queue.close();
+    })().catch(() => {});
 
     return mapLeadToResponse(result.value);
   }),
@@ -638,6 +666,32 @@ export const leadRouter = createTRPCRouter({
       }
       throw new TRPCError({ code: 'BAD_REQUEST', message: msg });
     }
+
+    // Fire-and-forget: re-score lead after update (best-effort)
+    const typedCtx = getTenantContext(ctx);
+    (async () => {
+      const { Queue } = await import('bullmq');
+      const { QUEUE_NAMES } = await import('@intelliflow/platform/queues');
+      const lead = result.value;
+      const queue = new Queue(QUEUE_NAMES.AI_SCORING, {
+        connection: { host: process.env.REDIS_HOST || 'localhost', port: Number.parseInt(process.env.REDIS_PORT || '6379', 10) },
+      });
+      await queue.add('score-lead', {
+        leadId: id,
+        tenantId: typedCtx.tenant.tenantId,
+        lead: {
+          email: lead.email.value,
+          source: lead.source,
+          firstName: lead.firstName,
+          lastName: lead.lastName,
+          company: lead.company,
+          title: lead.title,
+          phone: lead.phone?.value,
+        },
+        correlationId: `lead-update-${id}`,
+      });
+      await queue.close();
+    })().catch(() => {});
 
     return mapLeadToResponse(result.value);
   }),
@@ -1146,7 +1200,7 @@ export const leadRouter = createTRPCRouter({
       const ownerIds = (ownerCounts ?? []).map((o) => o.ownerId).filter(Boolean);
       const owners =
         ownerIds.length > 0
-          ? await ctx.prisma.user.findMany({
+          ? await ctx.prismaWithTenant.user.findMany({
               where: { id: { in: ownerIds } },
               select: { id: true, name: true, email: true },
             })

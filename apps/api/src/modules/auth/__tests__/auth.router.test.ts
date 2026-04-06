@@ -10,6 +10,71 @@ import { authRouter } from '../auth.router';
 import type { UserSession } from '../../../context';
 import { createTestContext, prismaMock } from '../../../test/setup';
 
+const {
+  mockLoginLimiter,
+  mockAuditLogger,
+  mockMfaService,
+  mockSessionService,
+  mockSignIn,
+  mockSignOut,
+  mockSignOutUser,
+  mockGetSession,
+  mockVerifyToken,
+  mockSignInWithOAuth,
+  mockExchangeCodeForSession,
+  mockVerifyOtp,
+  mockSupabaseSignUp,
+  mockSupabaseResend,
+  mockResetPasswordForEmail,
+  mockUpdateUserPassword,
+} = vi.hoisted(() => ({
+  mockLoginLimiter: {
+    checkAllowed: vi.fn(),
+    recordFailed: vi.fn(),
+    recordSuccess: vi.fn(),
+  },
+  mockAuditLogger: {
+    logLoginFailure: vi.fn(),
+    logLoginSuccess: vi.fn(),
+    log: vi.fn(),
+  },
+  mockMfaService: {
+    isUserMfaEnabled: vi.fn(),
+    getAvailableMfaMethods: vi.fn(),
+    createChallenge: vi.fn(),
+    getChallengeInfo: vi.fn(),
+    verifyChallenge: vi.fn(),
+    generateTotpSecret: vi.fn(),
+    sendSmsOtp: vi.fn(),
+    sendEmailOtp: vi.fn(),
+    getUserMfaSettings: vi.fn(),
+    verifyTotp: vi.fn(),
+    verifyTotpTimingSafe: vi.fn(),
+    saveUserMfaSettings: vi.fn(),
+    generateBackupCodes: vi.fn(),
+    hashBackupCodes: vi.fn(),
+  },
+  mockSessionService: {
+    parseDeviceInfo: vi.fn(),
+    createSession: vi.fn(),
+    getUserSessions: vi.fn(),
+    revokeSession: vi.fn(),
+    revokeAllUserSessions: vi.fn(),
+  },
+  mockSignIn: vi.fn(),
+  mockSignOut: vi.fn(),
+  mockSignOutUser: vi.fn(),
+  mockGetSession: vi.fn(),
+  mockVerifyToken: vi.fn(),
+  mockSignInWithOAuth: vi.fn(),
+  mockExchangeCodeForSession: vi.fn(),
+  mockVerifyOtp: vi.fn(),
+  mockSupabaseSignUp: vi.fn(),
+  mockSupabaseResend: vi.fn(),
+  mockResetPasswordForEmail: vi.fn(),
+  mockUpdateUserPassword: vi.fn(),
+}));
+
 // Test UUIDs for valid input
 const TEST_UUIDS = {
   user: '12345678-1234-4000-8000-000000000001',
@@ -36,53 +101,6 @@ const mockSupabaseSession = {
   expires_at: Math.floor(Date.now() / 1000) + 3600,
   user: mockSupabaseUser,
 };
-
-// Mock services - using vi.fn() without initial implementation
-const mockLoginLimiter = {
-  checkAllowed: vi.fn(),
-  recordFailed: vi.fn(),
-  recordSuccess: vi.fn(),
-};
-
-const mockAuditLogger = {
-  logLoginFailure: vi.fn(),
-  logLoginSuccess: vi.fn(),
-  log: vi.fn(),
-};
-
-const mockMfaService = {
-  isUserMfaEnabled: vi.fn(),
-  getAvailableMfaMethods: vi.fn(),
-  createChallenge: vi.fn(),
-  getChallengeInfo: vi.fn(),
-  verifyChallenge: vi.fn(),
-  generateTotpSecret: vi.fn(),
-  sendSmsOtp: vi.fn(),
-  sendEmailOtp: vi.fn(),
-  getUserMfaSettings: vi.fn(),
-  verifyTotp: vi.fn(),
-  verifyTotpTimingSafe: vi.fn(),
-  saveUserMfaSettings: vi.fn(),
-  generateBackupCodes: vi.fn(),
-  hashBackupCodes: vi.fn(),
-};
-
-const mockSessionService = {
-  parseDeviceInfo: vi.fn(),
-  createSession: vi.fn(),
-  getUserSessions: vi.fn(),
-  revokeSession: vi.fn(),
-  revokeAllUserSessions: vi.fn(),
-};
-
-// Mock the Supabase functions
-const mockSignIn = vi.fn();
-const mockSignOut = vi.fn();
-const mockSignOutUser = vi.fn();
-const mockGetSession = vi.fn();
-const mockVerifyToken = vi.fn();
-const mockSignInWithOAuth = vi.fn();
-const mockExchangeCodeForSession = vi.fn();
 
 // Mock the service factory functions
 vi.mock('../../../security/login-limiter', () => ({
@@ -113,14 +131,6 @@ vi.mock('../../../middleware/rate-limit', async (importOriginal) => {
 });
 
 // IFC-120: Mock supabaseAdmin for new auth flows
-const mockVerifyOtp = vi
-  .fn()
-  .mockResolvedValue({ data: { user: { email: 'test@example.com' } }, error: null });
-const mockSupabaseSignUp = vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
-const mockSupabaseResend = vi.fn().mockResolvedValue({ data: {}, error: null });
-const mockResetPasswordForEmail = vi.fn().mockResolvedValue({ data: {}, error: null });
-const mockUpdateUserPassword = vi.fn().mockResolvedValue({ data: {}, error: null });
-
 // Mock Supabase
 vi.mock('../../../lib/supabase', () => ({
   signIn: (...args: unknown[]) => mockSignIn(...args),
@@ -248,6 +258,25 @@ describe('authRouter', () => {
       user: mockSupabaseUser,
       error: null,
     });
+    mockVerifyOtp.mockResolvedValue({
+      data: { user: { email: 'test@example.com' } },
+      error: null,
+    });
+    mockSupabaseSignUp.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
+    mockSupabaseResend.mockResolvedValue({ data: {}, error: null });
+    mockResetPasswordForEmail.mockResolvedValue({ data: {}, error: null });
+    mockUpdateUserPassword.mockResolvedValue({ data: {}, error: null });
+
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: TEST_UUIDS.user,
+      email: 'test@example.com',
+      name: 'Test User',
+      role: 'USER',
+      tenantId: TEST_UUIDS.tenant,
+      avatarUrl: null,
+      stripeCustomerId: null,
+      timezone: 'UTC',
+    } as any);
   }
 
   beforeEach(() => {
@@ -276,6 +305,12 @@ describe('authRouter', () => {
       expect(mockLoginLimiter.checkAllowed).toHaveBeenCalled();
       expect(mockLoginLimiter.recordSuccess).toHaveBeenCalled();
       expect(mockAuditLogger.logLoginSuccess).toHaveBeenCalled();
+      expect(mockSessionService.createSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: TEST_UUIDS.user,
+          tenantId: TEST_UUIDS.tenant,
+        })
+      );
     });
 
     it('should return MFA challenge when MFA is enabled', async () => {
@@ -388,7 +423,12 @@ describe('authRouter', () => {
       expect(result.success).toBe(true);
       expect(result.user.email).toBe('test@example.com');
       expect(result.session).toBeDefined();
-      expect(mockSessionService.createSession).toHaveBeenCalled();
+      expect(mockSessionService.createSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: TEST_UUIDS.user,
+          tenantId: TEST_UUIDS.tenant,
+        })
+      );
       expect(mockAuditLogger.logLoginSuccess).toHaveBeenCalled();
     });
 
@@ -427,6 +467,12 @@ describe('authRouter', () => {
       expect(result.user).toBeDefined();
       expect(result.session).toBeDefined();
       expect(mockMfaService.verifyChallenge).toHaveBeenCalledWith(TEST_UUIDS.challenge, '123456');
+      expect(mockSessionService.createSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: TEST_UUIDS.user,
+          tenantId: TEST_UUIDS.tenant,
+        })
+      );
     });
 
     it('should reject invalid MFA code', async () => {
@@ -735,6 +781,8 @@ describe('authRouter', () => {
         email: 'test@example.com',
         name: 'Test User',
         role: 'USER',
+        tenantId: TEST_UUIDS.tenant,
+        avatarUrl: null,
       } as any); // test-only mock — partial user shape
       // Create context with Authorization header
       const mockHeaders = new Map([

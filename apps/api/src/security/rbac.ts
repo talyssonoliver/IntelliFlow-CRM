@@ -51,6 +51,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     appointment: ['read', 'write', 'delete', 'export', 'manage', 'admin'],
     session: ['read', 'write', 'delete', 'manage', 'admin'],
     system: ['read', 'write', 'admin'],
+    pipeline_config: ['read', 'write', 'delete', 'manage', 'admin'],
   },
   MANAGER: {
     lead: ['read', 'write', 'delete', 'export', 'manage'],
@@ -63,6 +64,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     appointment: ['read', 'write', 'delete', 'export', 'manage'],
     session: ['read', 'write', 'delete', 'manage'],
     system: ['read'],
+    pipeline_config: ['read', 'write', 'manage'],
   },
   SALES_REP: {
     lead: ['read', 'write', 'delete', 'export'],
@@ -75,6 +77,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     appointment: ['read', 'write', 'delete'],
     session: ['read', 'write', 'delete'],
     system: [],
+    pipeline_config: ['read'],
   },
   USER: {
     lead: ['read', 'write'],
@@ -87,6 +90,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     appointment: ['read', 'write'],
     session: ['read', 'write', 'delete'],
     system: [],
+    pipeline_config: ['read'],
   },
   VIEWER: {
     lead: ['read'],
@@ -99,6 +103,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     appointment: ['read'],
     session: ['read'],
     system: [],
+    pipeline_config: ['read'],
   },
 };
 

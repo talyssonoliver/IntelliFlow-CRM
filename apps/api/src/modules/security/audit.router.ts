@@ -14,7 +14,7 @@
  */
 
 import { z } from 'zod';
-import { createTRPCRouter, protectedProcedure, adminProcedure } from '../../trpc';
+import { createTRPCRouter, tenantProcedure, adminProcedure } from '../../trpc';
 import { TRPCError } from '@trpc/server';
 
 // Input schemas
@@ -62,7 +62,7 @@ export const auditRouter = createTRPCRouter({
    *
    * Requires: Manager or Admin role
    */
-  search: protectedProcedure.input(searchAuditLogsSchema).query(async ({ ctx, input }) => {
+  search: tenantProcedure.input(searchAuditLogsSchema).query(async ({ ctx, input }) => {
     // Check if user has permission to view audit logs
     if (!['ADMIN', 'MANAGER'].includes(ctx.user.role)) {
       throw new TRPCError({
@@ -99,7 +99,7 @@ export const auditRouter = createTRPCRouter({
     }
 
     const [logs, total] = await Promise.all([
-      ctx.prisma.auditLogEntry.findMany({
+      ctx.prismaWithTenant.auditLogEntry.findMany({
         where,
         orderBy: { timestamp: 'desc' },
         take: input.limit,
@@ -114,7 +114,7 @@ export const auditRouter = createTRPCRouter({
           },
         },
       }),
-      ctx.prisma.auditLogEntry.count({ where }),
+      ctx.prismaWithTenant.auditLogEntry.count({ where }),
     ]);
 
     return {
@@ -129,8 +129,8 @@ export const auditRouter = createTRPCRouter({
    *
    * Requires: Read access to the resource
    */
-  getByResource: protectedProcedure.input(getByResourceSchema).query(async ({ ctx, input }) => {
-    const logs = await ctx.prisma.auditLogEntry.findMany({
+  getByResource: tenantProcedure.input(getByResourceSchema).query(async ({ ctx, input }) => {
+    const logs = await ctx.prismaWithTenant.auditLogEntry.findMany({
       where: {
         resourceType: input.resourceType,
         resourceId: input.resourceId,
@@ -145,7 +145,7 @@ export const auditRouter = createTRPCRouter({
   /**
    * Get current user's activity log
    */
-  getMyActivity: protectedProcedure
+  getMyActivity: tenantProcedure
     .input(
       z.object({
         limit: z.number().min(1).max(100).default(50),
@@ -154,7 +154,7 @@ export const auditRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const [logs, total] = await Promise.all([
-        ctx.prisma.auditLogEntry.findMany({
+        ctx.prismaWithTenant.auditLogEntry.findMany({
           where: {
             actorId: ctx.user.userId,
           },
@@ -162,7 +162,7 @@ export const auditRouter = createTRPCRouter({
           take: input.limit,
           skip: input.offset,
         }),
-        ctx.prisma.auditLogEntry.count({
+        ctx.prismaWithTenant.auditLogEntry.count({
           where: { actorId: ctx.user.userId },
         }),
       ]);

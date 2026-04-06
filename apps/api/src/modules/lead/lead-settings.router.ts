@@ -63,7 +63,7 @@ function generateFieldKey(fieldName: string): string {
 const stagesRouter = createTRPCRouter({
   getAll: tenantProcedure.query(async ({ ctx }) => {
     const tenantId = ctx.tenant.tenantId;
-    const existing = await ctx.prisma.leadStageConfig.findMany({
+    const existing = await ctx.prismaWithTenant.leadStageConfig.findMany({
       where: { tenantId, isActive: true },
       orderBy: { sortOrder: 'asc' },
     });
@@ -81,12 +81,12 @@ const stagesRouter = createTRPCRouter({
       isActive: true,
     }));
 
-    await ctx.prisma.leadStageConfig.createMany({
+    await ctx.prismaWithTenant.leadStageConfig.createMany({
       data: defaults,
       skipDuplicates: true,
     });
 
-    return ctx.prisma.leadStageConfig.findMany({
+    return ctx.prismaWithTenant.leadStageConfig.findMany({
       where: { tenantId, isActive: true },
       orderBy: { sortOrder: 'asc' },
     });
@@ -107,7 +107,7 @@ const stagesRouter = createTRPCRouter({
         });
       }
 
-      return ctx.prisma.$transaction(async (tx) => {
+      return ctx.prismaWithTenant.$transaction(async (tx) => {
         // Deactivate all existing stages
         await tx.leadStageConfig.updateMany({
           where: { tenantId },
@@ -135,7 +135,7 @@ const stagesRouter = createTRPCRouter({
   resetToDefaults: tenantProcedure.mutation(async ({ ctx }) => {
     const tenantId = ctx.tenant.tenantId;
 
-    return ctx.prisma.$transaction(async (tx) => {
+    return ctx.prismaWithTenant.$transaction(async (tx) => {
       await tx.leadStageConfig.deleteMany({ where: { tenantId } });
 
       const defaults = LEAD_STATUSES.map((status, index) => ({
@@ -163,14 +163,14 @@ const stagesRouter = createTRPCRouter({
 const scoringRulesRouter = createTRPCRouter({
   getAll: tenantProcedure.query(async ({ ctx }) => {
     const tenantId = ctx.tenant.tenantId;
-    const existing = await ctx.prisma.leadScoringRule.findMany({
+    const existing = await ctx.prismaWithTenant.leadScoringRule.findMany({
       where: { tenantId, isActive: true },
     });
 
     if (existing.length > 0) return existing;
 
     // Seed defaults
-    await ctx.prisma.leadScoringRule.createMany({
+    await ctx.prismaWithTenant.leadScoringRule.createMany({
       data: DEFAULT_SCORING_RULES.map((rule) => ({
         ...rule,
         tenantId,
@@ -179,7 +179,7 @@ const scoringRulesRouter = createTRPCRouter({
       skipDuplicates: true,
     });
 
-    return ctx.prisma.leadScoringRule.findMany({
+    return ctx.prismaWithTenant.leadScoringRule.findMany({
       where: { tenantId, isActive: true },
     });
   }),
@@ -189,7 +189,7 @@ const scoringRulesRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const tenantId = ctx.tenant.tenantId;
 
-      return ctx.prisma.$transaction(async (tx) => {
+      return ctx.prismaWithTenant.$transaction(async (tx) => {
         // Deactivate all existing rules
         await tx.leadScoringRule.updateMany({
           where: { tenantId },
@@ -216,7 +216,7 @@ const scoringRulesRouter = createTRPCRouter({
   resetToDefaults: tenantProcedure.mutation(async ({ ctx }) => {
     const tenantId = ctx.tenant.tenantId;
 
-    return ctx.prisma.$transaction(async (tx) => {
+    return ctx.prismaWithTenant.$transaction(async (tx) => {
       await tx.leadScoringRule.deleteMany({ where: { tenantId } });
 
       await tx.leadScoringRule.createMany({
@@ -238,7 +238,7 @@ const scoringRulesRouter = createTRPCRouter({
 
 const customFieldsRouter = createTRPCRouter({
   list: tenantProcedure.query(async ({ ctx }) => {
-    return ctx.prisma.leadCustomField.findMany({
+    return ctx.prismaWithTenant.leadCustomField.findMany({
       where: { tenantId: ctx.tenant.tenantId, isActive: true },
       orderBy: { sortOrder: 'asc' },
     });
@@ -251,7 +251,7 @@ const customFieldsRouter = createTRPCRouter({
       const fieldKey = generateFieldKey(input.fieldName);
 
       // Check for duplicate
-      const existing = await ctx.prisma.leadCustomField.findUnique({
+      const existing = await ctx.prismaWithTenant.leadCustomField.findUnique({
         where: { tenantId_fieldKey: { tenantId, fieldKey } },
       });
       if (existing) {
@@ -262,12 +262,12 @@ const customFieldsRouter = createTRPCRouter({
       }
 
       // Get next sort order
-      const maxSort = await ctx.prisma.leadCustomField.aggregate({
+      const maxSort = await ctx.prismaWithTenant.leadCustomField.aggregate({
         where: { tenantId },
         _max: { sortOrder: true },
       });
 
-      return ctx.prisma.leadCustomField.create({
+      return ctx.prismaWithTenant.leadCustomField.create({
         data: {
           fieldName: input.fieldName,
           fieldKey,
@@ -284,14 +284,14 @@ const customFieldsRouter = createTRPCRouter({
     .input(updateLeadCustomFieldSchema)
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
-      const existing = await ctx.prisma.leadCustomField.findFirst({
+      const existing = await ctx.prismaWithTenant.leadCustomField.findFirst({
         where: { id, tenantId: ctx.tenant.tenantId },
       });
       if (!existing) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Custom field not found' });
       }
 
-      return ctx.prisma.leadCustomField.update({
+      return ctx.prismaWithTenant.leadCustomField.update({
         where: { id },
         data: {
           fieldName: data.fieldName,
@@ -305,14 +305,14 @@ const customFieldsRouter = createTRPCRouter({
   delete: tenantProcedure
     .input(deleteLeadCustomFieldSchema)
     .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.prisma.leadCustomField.findFirst({
+      const existing = await ctx.prismaWithTenant.leadCustomField.findFirst({
         where: { id: input.id, tenantId: ctx.tenant.tenantId },
       });
       if (!existing) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Custom field not found' });
       }
 
-      return ctx.prisma.leadCustomField.update({
+      return ctx.prismaWithTenant.leadCustomField.update({
         where: { id: input.id },
         data: { isActive: false },
       });
@@ -324,14 +324,14 @@ const customFieldsRouter = createTRPCRouter({
 const automationRouter = createTRPCRouter({
   get: tenantProcedure.query(async ({ ctx }) => {
     const tenantId = ctx.tenant.tenantId;
-    const existing = await ctx.prisma.leadAutomationSetting.findUnique({
+    const existing = await ctx.prismaWithTenant.leadAutomationSetting.findUnique({
       where: { tenantId },
     });
 
     if (existing) return existing;
 
     // Create defaults
-    return ctx.prisma.leadAutomationSetting.create({
+    return ctx.prismaWithTenant.leadAutomationSetting.create({
       data: {
         tenantId,
         autoAssignment: true,
@@ -345,7 +345,7 @@ const automationRouter = createTRPCRouter({
     .input(leadAutomationSettingsSchema)
     .mutation(async ({ ctx, input }) => {
       const tenantId = ctx.tenant.tenantId;
-      return ctx.prisma.leadAutomationSetting.upsert({
+      return ctx.prismaWithTenant.leadAutomationSetting.upsert({
         where: { tenantId },
         create: { ...input, tenantId },
         update: input,

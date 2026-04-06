@@ -237,7 +237,7 @@ export const taskRouter = createTRPCRouter({
     }).catch(() => {}); // Non-blocking
 
     // Fire-and-forget: notification failure must not block the task creation response
-    createNotification(ctx.prisma, {
+    createNotification(ctx.prismaWithTenant, {
       userId: typedCtx.tenant.userId,
       tenantId: typedCtx.tenant.tenantId,
       type: 'task_assigned',
@@ -606,7 +606,7 @@ export const taskRouter = createTRPCRouter({
     }).catch(() => {});
 
     // Fire-and-forget: notification failure must not block the task completion response
-    createNotification(ctx.prisma, {
+    createNotification(ctx.prismaWithTenant, {
       userId: typedCtx.tenant.userId,
       tenantId: typedCtx.tenant.tenantId,
       type: 'task_completed',
@@ -775,7 +775,8 @@ export const taskRouter = createTRPCRouter({
         result = await taskService.assignToOpportunity(
           input.taskId,
           input.entityId,
-          typedCtx.tenant.userId
+          typedCtx.tenant.userId,
+          typedCtx.tenant.tenantId
         );
         break;
     }
@@ -794,7 +795,7 @@ export const taskRouter = createTRPCRouter({
     }).catch(() => {});
 
     // Fire-and-forget: notification failure must not block the task assignment response
-    createNotification(ctx.prisma, {
+    createNotification(ctx.prismaWithTenant, {
       userId: typedCtx.tenant.userId,
       tenantId: typedCtx.tenant.tenantId,
       type: 'task_assigned',

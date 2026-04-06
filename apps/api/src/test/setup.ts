@@ -223,14 +223,19 @@ function normalizeHeaders(headers?: HeaderLike): Headers | undefined {
   return {
     get(name: string): string | null {
       const key = Object.keys(headerSource).find((candidate) => candidate.toLowerCase() === name.toLowerCase());
-      const value =
-        typeof headerSource.get === 'function'
-          ? headerSource.get(name)
-          : key
-            ? headerSource[key]
-            : undefined;
 
-      return typeof value === 'string' ? value : value == null ? null : String(value);
+      let value: unknown;
+      if (typeof headerSource.get === 'function') {
+        value = headerSource.get(name);
+      } else if (key) {
+        value = headerSource[key];
+      } else {
+        value = undefined;
+      }
+
+      if (typeof value === 'string') return value;
+      if (value == null) return null;
+      return String(value);
     },
     has(name: string): boolean {
       if (typeof headerSource.has === 'function') {
@@ -416,6 +421,7 @@ export const mockContact = {
   contactType: 'customer',
   tags: ['enterprise', 'vip'],
   contactNotes: 'Key technical contact',
+  avatarUrl: null,
   lastContactedAt: null, // IFC-192
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
@@ -445,6 +451,7 @@ export const mockOpportunity = {
   probability: 60,
   expectedCloseDate: new Date('2024-12-31'),
   closedAt: null,
+  deletedAt: null,
   description: 'Large enterprise opportunity',
   accountId: TEST_UUIDS.account1,
   contactId: TEST_UUIDS.contact1,

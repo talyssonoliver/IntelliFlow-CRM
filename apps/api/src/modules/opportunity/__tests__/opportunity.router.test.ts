@@ -11,6 +11,15 @@ import { TEST_UUIDS } from '../../../test/setup';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { Prisma } from '@intelliflow/db';
+
+vi.mock('../../security/audit-logger', () => ({
+  getAuditLogger: vi.fn(() => ({
+    logAction: vi.fn().mockResolvedValue('audit-id'),
+    logBulkOperation: vi.fn().mockResolvedValue('audit-id'),
+    logPermissionDenied: vi.fn().mockResolvedValue('audit-id'),
+  })),
+}));
+
 import { opportunityRouter } from '../opportunity.router';
 import {
   prismaMock,
@@ -52,7 +61,8 @@ describe('Opportunity Router', () => {
   const caller = opportunityRouter.createCaller(ctx);
 
   beforeEach(() => {
-    // Reset is handled by setup.ts
+    // Make prisma.$extends return the same mock so tenantMiddleware works in tests
+    (prismaMock.$extends as ReturnType<typeof vi.fn>).mockReturnValue(prismaMock);
   });
 
   describe('create', () => {
@@ -142,33 +152,52 @@ describe('Opportunity Router', () => {
   });
 
   describe('getById', () => {
-    it('should return opportunity with related data', async () => {
-      const mockDomainOpp = createMockDomainOpportunity();
+    it('should return enriched opportunity with owner/account/contact relations', async () => {
+      const enrichedRecord = {
+        ...mockOpportunity,
+        id: TEST_UUIDS.opportunity1,
+        name: 'Big Deal',
+        value: new Prisma.Decimal(50000),
+        currency: 'GBP',
+        probability: 60,
+        stage: 'PROPOSAL',
+        expectedCloseDate: new Date('2025-06-30'),
+        description: null,
+        accountId: TEST_UUIDS.account1,
+        contactId: TEST_UUIDS.contact1,
+        ownerId: TEST_UUIDS.user1,
+        weightedValue: new Prisma.Decimal(30000),
+        isClosed: false,
+        isWon: false,
+        isLost: false,
+        owner: { id: TEST_UUIDS.user1, name: 'Test Owner', email: 'owner@test.com' },
+        account: { id: TEST_UUIDS.account1, name: 'Test Account', website: 'https://test.com' },
+        contact: { id: TEST_UUIDS.contact1, firstName: 'John', lastName: 'Doe', title: 'CEO', email: 'john@test.com' },
+      };
 
-      ctx.services!.opportunity!.getOpportunityById = vi.fn().mockResolvedValue({
-        isSuccess: true,
-        isFailure: false,
-        value: mockDomainOpp,
-      });
+      prismaMock.opportunity.findUnique.mockResolvedValue(enrichedRecord as any);
 
       const result = await caller.getById({ id: TEST_UUIDS.opportunity1 });
 
       expect(result.id).toBe(TEST_UUIDS.opportunity1);
       expect(result.name).toBe('Big Deal');
-      expect(ctx.services!.opportunity!.getOpportunityById).toHaveBeenCalledWith(
-        TEST_UUIDS.opportunity1
+      expect(result.owner).toEqual({ id: TEST_UUIDS.user1, name: 'Test Owner', email: 'owner@test.com' });
+      expect(result.account).toEqual({ id: TEST_UUIDS.account1, name: 'Test Account', website: 'https://test.com' });
+      expect(result.contact).toEqual({ id: TEST_UUIDS.contact1, firstName: 'John', lastName: 'Doe', title: 'CEO', email: 'john@test.com' });
+      expect(prismaMock.opportunity.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: TEST_UUIDS.opportunity1 },
+          include: expect.objectContaining({
+            owner: expect.any(Object),
+            account: expect.any(Object),
+            contact: expect.any(Object),
+          }),
+        })
       );
     });
 
     it('should throw NOT_FOUND for non-existent opportunity', async () => {
-      ctx.services!.opportunity!.getOpportunityById = vi.fn().mockResolvedValue({
-        isSuccess: false,
-        isFailure: true,
-        error: {
-          code: 'NOT_FOUND_ERROR',
-          message: `Opportunity not found: ${TEST_UUIDS.nonExistent}`,
-        },
-      });
+      prismaMock.opportunity.findUnique.mockResolvedValue(null);
 
       await expect(caller.getById({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(
         expect.objectContaining({
@@ -356,7 +385,8 @@ describe('Opportunity Router', () => {
       expect(result.success).toBe(true);
       expect(result.id).toBe(TEST_UUIDS.opportunity1);
       expect(ctx.services!.opportunity!.deleteOpportunity).toHaveBeenCalledWith(
-        TEST_UUIDS.opportunity1
+        TEST_UUIDS.opportunity1,
+        TEST_UUIDS.tenant
       );
     });
 
@@ -518,6 +548,7 @@ describe('Opportunity Router', () => {
       expect(ctx.services!.opportunity!.changeStage).toHaveBeenCalledWith(
         TEST_UUIDS.opportunity1,
         'NEGOTIATION',
+        expect.any(String),
         expect.any(String)
       );
     });

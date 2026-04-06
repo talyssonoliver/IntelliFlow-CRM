@@ -59,7 +59,6 @@ function ilike(query: string) {
   return { contains: query, mode: 'insensitive' as const };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma client type is complex; using any for cross-entity fan-out queries
 type PrismaAny = any;
 
 async function searchLeads(
@@ -191,7 +190,7 @@ async function searchDeals(
     entityType: 'DEAL' as const,
     id: r.id,
     title: r.name,
-    subtitle: `${r.stage} · $${Number(r.value).toLocaleString()}`,
+    subtitle: `${r.stage} · $${Number(r.value).toLocaleString('en-GB')}`,
     href: `/deals/${r.id}`,
   }));
 }
@@ -284,7 +283,7 @@ export const globalSearchRouter = createTRPCRouter({
     .input(globalSearchInputSchema)
     .query(async ({ ctx, input }): Promise<GlobalSearchResponse> => {
       const tenantId = ctx.tenant.tenantId;
-      const prisma = ctx.prisma;
+      const prisma = ctx.prismaWithTenant;
 
       if (!prisma) {
         throw new TRPCError({

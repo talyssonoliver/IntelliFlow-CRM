@@ -16,7 +16,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure, publicProcedure } from '../../trpc';
+import { createTRPCRouter, tenantProcedure, publicProcedure } from '../../trpc';
 import {
   listInvoicesInputSchema,
   getInvoiceInputSchema,
@@ -30,7 +30,7 @@ import {
 } from '@intelliflow/validators';
 import { callStripeAPI } from '../../shared/external-service-wrapper';
 import { mapErrorToTRPCError } from '../../shared/error-mapper';
-import { PLAN_TIERS, type PlanTier } from '@intelliflow/domain';
+import { PLAN_TIERS, type PlanTier, SubscriptionCanceledEvent, SubscriptionPausedEvent } from '@intelliflow/domain';
 import { formatDateTimeInTimezone } from '../../lib/timezone-utils';
 
 // ============================================
@@ -294,7 +294,7 @@ export const billingRouter = createTRPCRouter({
    * Returns null if user has no Stripe customer ID or no active subscription.
    * Uses server-side cache to avoid hitting Stripe on every page load.
    */
-  getSubscription: protectedProcedure.query(async ({ ctx }) => {
+  getSubscription: tenantProcedure.query(async ({ ctx }) => {
     const user = ctx.user;
 
     if (!user?.stripeCustomerId) {
@@ -336,7 +336,7 @@ export const billingRouter = createTRPCRouter({
    * Acceptable for MVP (Stripe limits ~100 invoices by default). Optimize with Stripe
    * cursor-based pagination (starting_after param) when customers exceed this threshold.
    */
-  listInvoices: protectedProcedure.input(listInvoicesInputSchema).query(async ({ ctx, input }) => {
+  listInvoices: tenantProcedure.input(listInvoicesInputSchema).query(async ({ ctx, input }) => {
     const user = ctx.user;
 
     if (!user?.stripeCustomerId) {
@@ -388,7 +388,7 @@ export const billingRouter = createTRPCRouter({
    *
    * @implements PG-028 (Invoice Detail)
    */
-  getInvoice: protectedProcedure.input(getInvoiceInputSchema).query(async ({ ctx, input }) => {
+  getInvoice: tenantProcedure.input(getInvoiceInputSchema).query(async ({ ctx, input }) => {
     const user = ctx.user;
 
     if (!user?.stripeCustomerId) {
@@ -429,7 +429,7 @@ export const billingRouter = createTRPCRouter({
    *
    * @implements PG-028 (Invoice Detail)
    */
-  payInvoice: protectedProcedure.input(payInvoiceInputSchema).mutation(async ({ ctx, input }) => {
+  payInvoice: tenantProcedure.input(payInvoiceInputSchema).mutation(async ({ ctx, input }) => {
     const user = ctx.user;
 
     if (!user?.stripeCustomerId) {
@@ -487,7 +487,7 @@ export const billingRouter = createTRPCRouter({
    *
    * Returns cached data when available.
    */
-  getPaymentMethods: protectedProcedure.query(async ({ ctx }) => {
+  getPaymentMethods: tenantProcedure.query(async ({ ctx }) => {
     const user = ctx.user;
 
     if (!user?.stripeCustomerId) {
@@ -527,7 +527,7 @@ export const billingRouter = createTRPCRouter({
   /**
    * Attach a new payment method to the customer
    */
-  updatePaymentMethod: protectedProcedure
+  updatePaymentMethod: tenantProcedure
     .input(updatePaymentMethodInputSchema)
     .mutation(async ({ ctx, input }) => {
       const user = ctx.user;
@@ -576,7 +576,7 @@ export const billingRouter = createTRPCRouter({
   /**
    * Detach a payment method from the customer
    */
-  removePaymentMethod: protectedProcedure
+  removePaymentMethod: tenantProcedure
     .input(updatePaymentMethodInputSchema.pick({ paymentMethodId: true }))
     .mutation(async ({ ctx, input }) => {
       const user = ctx.user;
@@ -642,7 +642,7 @@ export const billingRouter = createTRPCRouter({
   /**
    * Update subscription (change plan or quantity)
    */
-  updateSubscription: protectedProcedure
+  updateSubscription: tenantProcedure
     .input(updateSubscriptionInputSchema)
     .mutation(async ({ ctx, input }) => {
       const user = ctx.user;
@@ -718,7 +718,7 @@ export const billingRouter = createTRPCRouter({
   /**
    * Cancel subscription
    */
-  cancelSubscription: protectedProcedure
+  cancelSubscription: tenantProcedure
     .input(cancelSubscriptionInputSchema)
     .mutation(async ({ ctx, input }) => {
       const user = ctx.user;
@@ -762,6 +762,18 @@ export const billingRouter = createTRPCRouter({
         });
       }
 
+      // Emit domain event
+      const cancelEvent = new SubscriptionCanceledEvent(
+        activeSubscription.id,
+        user.stripeCustomerId,
+        input.reason,
+        input.atPeriodEnd,
+        new Date(result.value.currentPeriodEnd),
+        user.tenantId
+      );
+      const eventBus = ctx.container?.adapters?.eventBus;
+      if (eventBus) await eventBus.publish(cancelEvent);
+
       invalidateBillingCache(user.stripeCustomerId);
       return result.value;
     }),
@@ -772,7 +784,7 @@ export const billingRouter = createTRPCRouter({
    * Uses Stripe's pause_collection to temporarily suspend billing.
    * CRM data and AI training progress are preserved during pause.
    */
-  pauseSubscription: protectedProcedure
+  pauseSubscription: tenantProcedure
     .input(pauseSubscriptionInputSchema)
     .mutation(async ({ ctx, input }) => {
       const user = ctx.user;
@@ -820,6 +832,17 @@ export const billingRouter = createTRPCRouter({
         });
       }
 
+      // Emit domain event
+      const pauseEvent = new SubscriptionPausedEvent(
+        activeSubscription.id,
+        user.stripeCustomerId,
+        input.durationMonths,
+        resumesAt,
+        user.tenantId
+      );
+      const eventBus = ctx.container?.adapters?.eventBus;
+      if (eventBus) await eventBus.publish(pauseEvent);
+
       invalidateBillingCache(user.stripeCustomerId);
       return {
         ...result.value,
@@ -831,7 +854,7 @@ export const billingRouter = createTRPCRouter({
   /**
    * Get upcoming invoice (proration preview)
    */
-  getUpcomingInvoice: protectedProcedure
+  getUpcomingInvoice: tenantProcedure
     .input(getUpcomingInvoiceInputSchema)
     .query(async ({ ctx }) => {
       const user = ctx.user;
@@ -860,7 +883,7 @@ export const billingRouter = createTRPCRouter({
    * Creates a Stripe customer if user doesn't have one,
    * and updates the user record with the customer ID.
    */
-  ensureCustomer: protectedProcedure.mutation(async ({ ctx }) => {
+  ensureCustomer: tenantProcedure.mutation(async ({ ctx }) => {
     const stripe = await getStripeAdapter();
     const user = ctx.user;
 
@@ -897,7 +920,7 @@ export const billingRouter = createTRPCRouter({
     }
 
     // Update user with stripeCustomerId
-    await ctx.prisma.user.update({
+    await ctx.prismaWithTenant.user.update({
       where: { id: user.userId },
       data: { stripeCustomerId: result.value.id },
     });
@@ -908,30 +931,158 @@ export const billingRouter = createTRPCRouter({
   /**
    * Get usage metrics for the current billing period
    *
-   * Note: This would integrate with analytics/metering in production.
-   * For now, returns mock data.
+   * Queries real data from the database:
+   * - Active users: count of users in the tenant
+   * - Contacts: count of contacts in the tenant
+   * - API calls: count of audit log entries this billing period
+   * - Storage: estimated from document + attachment counts
+   *
+   * Limits are derived from the subscription's plan tier.
    */
-  getUsageMetrics: protectedProcedure.query(async ({ ctx }) => {
+  getUsageMetrics: tenantProcedure.query(async ({ ctx }) => {
     const user = ctx.user;
 
-    if (!user?.stripeCustomerId) {
-      return null;
+    // Plan tier limits — aligned with pricing-data.json comparisonFeatures
+    // "Unlimited" is represented as -1 (frontend renders as "Unlimited")
+    const PLAN_LIMITS: Record<string, {
+      maxUsers: number;
+      contacts: number;
+      aiPredictions: number;
+      storageGB: number;
+    }> = {
+      free: { maxUsers: 5, contacts: 500, aiPredictions: 500, storageGB: 0.5 },
+      starter: { maxUsers: 5, contacts: 1000, aiPredictions: 1000, storageGB: 1 },
+      professional: { maxUsers: 25, contacts: 10000, aiPredictions: 10000, storageGB: 5 },
+      enterprise: { maxUsers: -1, contacts: -1, aiPredictions: -1, storageGB: -1 },
+    };
+
+    // Resolve plan tier from subscription (default to free if no subscription)
+    let planKey = 'free';
+
+    if (user?.stripeCustomerId) {
+      try {
+        const stripe = await getStripeAdapter();
+        const subsResult = await callStripeAPI(() => stripe.listSubscriptions(user.stripeCustomerId!));
+
+        if (subsResult.isSuccess && subsResult.value.length > 0) {
+          const activeSub = subsResult.value.find(
+            (s) => s.status === 'active' || s.status === 'trialing'
+          ) ?? subsResult.value[0];
+          const parts = activeSub.priceId.split('_');
+          if (parts.length >= 2 && parts[1] in PLAN_LIMITS) {
+            planKey = parts[1];
+          }
+        }
+      } catch {
+        // Stripe unavailable — fall back to free tier limits
+      }
     }
 
-    // Mock usage data - would come from analytics in production
+    // Super admin (no stripeCustomerId, dev/seed environment) gets enterprise limits
+    if (!user?.stripeCustomerId && user.role === 'SUPER_ADMIN') {
+      planKey = 'enterprise';
+    }
+
+    const limits = PLAN_LIMITS[planKey]!;
+    const tenantId = user.tenantId;
+
+    // Billing period start (first day of current month)
+    const periodStart = new Date();
+    periodStart.setDate(1);
+    periodStart.setHours(0, 0, 0, 0);
+
+    // Query ALL entity counts in parallel using ctx.prisma with explicit tenantId filter
+    const db = ctx.prisma;
+    const [
+      // CRM entities
+      userCount, contactCount, leadCount, accountCount,
+      dealCount, taskCount, ticketCount, caseCount,
+      documentCount, calendarEventCount,
+      // AI entities
+      aiScoreCount, aiScoreThisPeriod,
+      conversationCount, messageCount, toolCallCount,
+      aiInsightCount, leadAIInsightCount, contactAIInsightCount,
+      aiOutputReviewCount, aiMonitoringEventCount,
+      agentActionCount, chainVersionCount, experimentCount,
+      // Activity
+      auditLogCount, notificationCount,
+    ] = await Promise.all([
+      // CRM
+      db.user.count({ where: { tenantId } }),
+      db.contact.count({ where: { tenantId } }),
+      db.lead.count({ where: { tenantId } }),
+      db.account.count({ where: { tenantId } }),
+      db.opportunity.count({ where: { tenantId } }),
+      db.task.count({ where: { tenantId } }),
+      db.ticket.count({ where: { tenantId } }),
+      db.case.count({ where: { tenantId } }),
+      db.document.count({ where: { tenantId } }),
+      db.calendarEvent.count({ where: { tenantId } }),
+      // AI — total + this period
+      db.aIScore.count({ where: { tenantId } }),
+      db.aIScore.count({ where: { tenantId, createdAt: { gte: periodStart } } }),
+      db.conversationRecord.count({ where: { tenantId } }),
+      db.messageRecord.count({ where: { tenantId } }),
+      db.toolCallRecord.count({ where: { tenantId } }),
+      db.aIInsight.count({ where: { tenantId } }),
+      db.leadAIInsight.count({ where: { tenantId } }),
+      db.contactAIInsight.count({ where: { tenantId } }),
+      db.aIOutputReview.count({ where: { tenantId } }),
+      db.aIMonitoringEvent.count({ where: { tenantId } }),
+      db.agentAction.count({ where: { tenantId } }),
+      db.chainVersion.count({ where: { tenantId } }),
+      db.experiment.count({ where: { tenantId } }),
+      // Activity this period
+      db.auditLogEntry.count({ where: { tenantId, timestamp: { gte: periodStart } } }),
+      db.notification.count({ where: { tenantId, createdAt: { gte: periodStart } } }),
+    ]);
+
+    // Estimate storage: ~50KB per document average
+    const estimatedStorageGB = Math.round((documentCount * 50) / (1024 * 1024) * 100) / 100;
+
     return {
-      apiCalls: {
-        current: 8500,
-        limit: 10000,
+      // Plan-limited metrics (with progress bars)
+      planLimits: {
+        activeUsers: { current: userCount, limit: limits.maxUsers },
+        contacts: { current: contactCount, limit: limits.contacts },
+        aiPredictions: { current: aiScoreThisPeriod, limit: limits.aiPredictions },
+        storage: { current: estimatedStorageGB, limit: limits.storageGB },
       },
-      storage: {
-        current: 2.4,
-        limit: 5,
-        unit: 'GB' as const,
+      // CRM data counts
+      crm: {
+        leads: leadCount,
+        contacts: contactCount,
+        accounts: accountCount,
+        deals: dealCount,
+        tasks: taskCount,
+        tickets: ticketCount,
+        cases: caseCount,
       },
-      activeUsers: {
-        current: 12,
-        limit: 25,
+      // AI usage — the full picture
+      ai: {
+        scores: aiScoreCount,
+        scoresThisPeriod: aiScoreThisPeriod,
+        conversations: conversationCount,
+        messages: messageCount,
+        toolCalls: toolCallCount,
+        insights: aiInsightCount,
+        leadInsights: leadAIInsightCount,
+        contactInsights: contactAIInsightCount,
+        outputReviews: aiOutputReviewCount,
+        monitoringEvents: aiMonitoringEventCount,
+        agentActions: agentActionCount,
+        chainVersions: chainVersionCount,
+        experiments: experimentCount,
+      },
+      // Activity this period
+      activity: {
+        auditLogs: auditLogCount,
+        notifications: notificationCount,
+      },
+      // Content counts
+      content: {
+        documents: documentCount,
+        calendarEvents: calendarEventCount,
       },
     };
   }),
@@ -942,7 +1093,7 @@ export const billingRouter = createTRPCRouter({
    * Returns customer name, email, and billing address from the
    * default payment method. Uses server-side cache.
    */
-  getBillingInformation: protectedProcedure.query(async ({ ctx }) => {
+  getBillingInformation: tenantProcedure.query(async ({ ctx }) => {
     const user = ctx.user;
 
     if (!user?.stripeCustomerId) {
@@ -1008,7 +1159,7 @@ export const billingRouter = createTRPCRouter({
   /**
    * Update billing information (customer name, email)
    */
-  updateBillingInformation: protectedProcedure
+  updateBillingInformation: tenantProcedure
     .input(updateBillingInformationInputSchema)
     .mutation(async ({ ctx, input }) => {
       const user = ctx.user;
@@ -1062,7 +1213,7 @@ export const billingRouter = createTRPCRouter({
    * Creates a new subscription for the authenticated user.
    * In production, this would create a Stripe checkout session.
    */
-  createCheckoutSubscription: protectedProcedure
+  createCheckoutSubscription: tenantProcedure
     .input(
       z.object({
         planId: z.string(),
@@ -1103,7 +1254,7 @@ export const billingRouter = createTRPCRouter({
         customerId = result.value.id;
 
         // Update user with stripeCustomerId
-        await ctx.prisma.user.update({
+        await ctx.prismaWithTenant.user.update({
           where: { id: user.userId },
           data: { stripeCustomerId: customerId },
         });
@@ -1167,7 +1318,7 @@ export const billingRouter = createTRPCRouter({
    *
    * @implements PG-031 (Receipts)
    */
-  sendReceiptEmail: protectedProcedure
+  sendReceiptEmail: tenantProcedure
     .input(
       z.object({
         receiptId: z.string().min(1, 'Receipt ID is required'),

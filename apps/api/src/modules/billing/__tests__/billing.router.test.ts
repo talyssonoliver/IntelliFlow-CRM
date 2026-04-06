@@ -439,9 +439,10 @@ describe('billingRouter', () => {
 
       const result = await caller.getUsageMetrics();
       expect(result).not.toBeNull();
-      expect(result?.apiCalls).toBeDefined();
-      expect(result?.storage).toBeDefined();
-      expect(result?.activeUsers).toBeDefined();
+      expect(result?.planLimits).toBeDefined();
+      expect(result?.crm).toBeDefined();
+      expect(result?.activity).toBeDefined();
+      expect(result?.content).toBeDefined();
     });
   });
 

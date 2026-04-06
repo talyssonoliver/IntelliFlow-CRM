@@ -32,6 +32,7 @@ import { calculateForecastAccuracy } from '../../shared/forecast-algorithm';
 import { type Context } from '../../context';
 import { getTenantContext, createTenantWhereClause } from '../../security/tenant-context';
 import { createNotification } from '../notifications/notifications.router';
+import { getAuditLogger } from '../../security/audit-logger';
 
 /**
  * Helper to get opportunity service from context
@@ -296,7 +297,7 @@ function buildOpportunityWhereClause(input: {
   dateFrom?: Date;
   dateTo?: Date;
 }): any {
-  const where: any = {};
+  const where: any = { deletedAt: null };
 
   if (input.search) {
     where.OR = [
@@ -477,7 +478,7 @@ async function executeMoveStage(
   }
 
   const opportunityService = getOpportunityService(ctx);
-  return opportunityService.changeStage(input.id, input.targetStage, userId);
+  return opportunityService.changeStage(input.id, input.targetStage, userId, tenantId);
 }
 
 export const opportunityRouter = createTRPCRouter({
@@ -499,7 +500,7 @@ export const opportunityRouter = createTRPCRouter({
     }
 
     // Fire-and-forget notification
-    createNotification(ctx.prisma, {
+    createNotification(ctx.prismaWithTenant, {
       userId: typedCtx.tenant.userId,
       tenantId: typedCtx.tenant.tenantId,
       type: 'deal_assigned',
@@ -512,25 +513,61 @@ export const opportunityRouter = createTRPCRouter({
       actionUrl: `/deals/${result.value.id.value}`,
     }, ctx.services?.notificationOrchestrator).catch((err) => console.error('[opportunity.router] Notification failed:', err));
 
+    // IFC-281: Fire-and-forget audit logging
+    const auditLogger = getAuditLogger(ctx.prisma);
+    auditLogger.logAction('CREATE', 'opportunity', result.value.id.value, typedCtx.tenant.tenantId, {
+      actorId: typedCtx.tenant.userId,
+      afterState: { name: result.value.name, stage: result.value.stage, value: result.value.value.amount },
+    }).catch((err) => console.error('[opportunity.router] Audit log failed:', err));
+
     return mapOpportunityToResponse(result.value);
   }),
 
   /**
-   * Get a single opportunity by ID
+   * Get a single opportunity by ID — enriched with owner/account/contact relations
    */
   getById: tenantProcedure.input(z.object({ id: idSchema })).query(async ({ ctx, input }) => {
-    const opportunityService = getOpportunityService(ctx);
+    const typedCtx = getTenantContext(ctx);
+    const record = await typedCtx.prismaWithTenant.opportunity.findUnique({
+      where: { id: input.id },
+      include: {
+        owner: { select: { id: true, name: true, email: true } },
+        account: { select: { id: true, name: true, website: true } },
+        contact: { select: { id: true, firstName: true, lastName: true, title: true, email: true } },
+      },
+    });
 
-    const result = await opportunityService.getOpportunityById(input.id);
-
-    if (result.isFailure) {
+    if (!record || record.deletedAt !== null) {
       throw new TRPCError({
         code: 'NOT_FOUND',
-        message: result.error.message,
+        message: `Opportunity not found: ${input.id}`,
       });
     }
 
-    return mapOpportunityToResponse(result.value);
+    const numericValue = Number(record.value);
+    return {
+      id: record.id,
+      name: record.name,
+      value: numericValue,
+      currency: 'USD',
+      probability: record.probability,
+      stage: record.stage,
+      expectedCloseDate: record.expectedCloseDate,
+      accountId: record.accountId,
+      contactId: record.contactId,
+      ownerId: record.ownerId,
+      tenantId: record.tenantId,
+      weightedValue: numericValue * (record.probability / 100),
+      isClosed: record.stage === 'CLOSED_WON' || record.stage === 'CLOSED_LOST',
+      isWon: record.stage === 'CLOSED_WON',
+      isLost: record.stage === 'CLOSED_LOST',
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+      description: record.description,
+      owner: record.owner,
+      account: record.account,
+      contact: record.contact,
+    };
   }),
 
   /**
@@ -604,30 +641,141 @@ export const opportunityRouter = createTRPCRouter({
         value: data.value?.amount,
         probability: data.probability?.value,
       },
-      typedCtx.tenant.userId
+      typedCtx.tenant.userId,
+      typedCtx.tenant.tenantId
     );
 
     if (result.isFailure) {
       throwOpportunityUpdateError(result.error);
     }
 
+    // IFC-281: Fire-and-forget audit logging
+    const auditLogger = getAuditLogger(ctx.prisma);
+    auditLogger.logAction('UPDATE', 'opportunity', id, typedCtx.tenant.tenantId, {
+      actorId: typedCtx.tenant.userId,
+      afterState: { name: result.value.name, stage: result.value.stage },
+    }).catch((err) => console.error('[opportunity.router] Audit log failed:', err));
+
     return mapOpportunityToResponse(result.value);
   }),
 
   /**
-   * Delete an opportunity
+   * Delete an opportunity (soft-delete — moves to trash)
    */
   delete: tenantProcedure.input(z.object({ id: idSchema })).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
     const opportunityService = getOpportunityService(ctx);
 
-    const result = await opportunityService.deleteOpportunity(input.id);
+    const result = await opportunityService.deleteOpportunity(input.id, typedCtx.tenant.tenantId);
 
     if (result.isFailure) {
       throwOpportunityDeleteError(result.error);
     }
 
+    // IFC-281: Fire-and-forget audit logging
+    const auditLogger = getAuditLogger(ctx.prisma);
+    auditLogger.logAction('DELETE', 'opportunity', input.id, typedCtx.tenant.tenantId, {
+      actorId: typedCtx.tenant.userId,
+    }).catch((err) => console.error('[opportunity.router] Audit log failed:', err));
+
     return { success: true, id: input.id };
   }),
+
+  /**
+   * List soft-deleted (trashed) opportunities with search + pagination
+   */
+  listTrashed: tenantProcedure
+    .input(
+      z.object({
+        search: z.string().optional(),
+        sortBy: z.string().optional().default('deletedAt'),
+        sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
+        page: z.number().int().positive().optional().default(1),
+        limit: z.number().int().positive().max(100).optional().default(15),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const { page, limit, sortBy, sortOrder, search } = input;
+      const skip = (page - 1) * limit;
+
+      const baseWhere: any = { deletedAt: { not: null } };
+      if (search) {
+        baseWhere.name = { contains: search, mode: 'insensitive' };
+      }
+      const where = createTenantWhereClause(typedCtx.tenant, baseWhere);
+
+      const [opportunities, total] = await Promise.all([
+        typedCtx.prismaWithTenant.opportunity.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy: { [sortBy]: sortOrder },
+          include: {
+            owner: { select: { id: true, name: true, email: true } },
+            account: { select: { id: true, name: true } },
+            contact: { select: { id: true, firstName: true, lastName: true } },
+          },
+        }),
+        typedCtx.prismaWithTenant.opportunity.count({ where }),
+      ]);
+
+      return {
+        opportunities,
+        total,
+        page,
+        limit,
+        hasMore: skip + opportunities.length < total,
+      };
+    }),
+
+  /**
+   * Restore a soft-deleted opportunity from trash
+   */
+  restore: tenantProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const opportunityService = getOpportunityService(ctx);
+
+      const result = await opportunityService.restoreOpportunity(input.id, typedCtx.tenant.tenantId);
+
+      if (result.isFailure) {
+        throwOpportunityDeleteError(result.error);
+      }
+
+      return { success: true, id: input.id };
+    }),
+
+  /**
+   * Permanently delete a trashed opportunity (cannot be undone)
+   */
+  permanentDelete: tenantProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const opportunityService = getOpportunityService(ctx);
+
+      const result = await opportunityService.permanentDeleteOpportunity(
+        input.id,
+        typedCtx.tenant.tenantId
+      );
+
+      if (result.isFailure) {
+        throwOpportunityDeleteError(result.error);
+      }
+
+      // IFC-281: Fire-and-forget audit logging
+      const auditLogger = getAuditLogger(ctx.prisma);
+      auditLogger
+        .logAction('DELETE', 'opportunity', input.id, typedCtx.tenant.tenantId, {
+          actorId: typedCtx.tenant.userId,
+          metadata: { permanent: true },
+        })
+        .catch((err) => console.error('[opportunity.router] Audit log failed:', err));
+
+      return { success: true, id: input.id };
+    }),
 
   /**
    * Move opportunity to a new pipeline stage
@@ -638,6 +786,13 @@ export const opportunityRouter = createTRPCRouter({
    */
   moveStage: tenantProcedure.input(moveStageSchema).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
+
+    // IFC-281: Capture previous stage BEFORE mutation for audit trail
+    const preMutationRecord = await typedCtx.prismaWithTenant.opportunity.findUnique({
+      where: { id: input.id },
+      select: { stage: true },
+    });
+    const previousStage = preMutationRecord?.stage ?? undefined;
 
     const result = await executeMoveStage(
       ctx,
@@ -651,7 +806,7 @@ export const opportunityRouter = createTRPCRouter({
     }
 
     const notif = resolveStageNotification(input.targetStage);
-    createNotification(ctx.prisma, {
+    createNotification(ctx.prismaWithTenant, {
       userId: typedCtx.tenant.userId,
       tenantId: typedCtx.tenant.tenantId,
       type: notif.type,
@@ -663,6 +818,14 @@ export const opportunityRouter = createTRPCRouter({
       entityName: result.value.name,
       actionUrl: `/deals/${result.value.id.value}`,
     }, ctx.services?.notificationOrchestrator).catch((err) => console.error('[opportunity.router] Notification failed:', err));
+
+    // IFC-281: Fire-and-forget audit logging with stage transition metadata
+    const auditLogger = getAuditLogger(ctx.prisma);
+    auditLogger.logAction('UPDATE', 'opportunity', result.value.id.value, typedCtx.tenant.tenantId, {
+      actorId: typedCtx.tenant.userId,
+      metadata: { targetStage: input.targetStage, previousStage },
+      afterState: { name: result.value.name, stage: result.value.stage },
+    }).catch((err) => console.error('[opportunity.router] Audit log failed:', err));
 
     return mapOpportunityToResponse(result.value);
   }),
@@ -733,6 +896,7 @@ export const opportunityRouter = createTRPCRouter({
         }),
         typedCtx.prismaWithTenant.opportunity.groupBy({
           by: ['stage'],
+          where: { deletedAt: null },
           _count: true,
           _sum: { value: true },
           _avg: { probability: true },
@@ -776,16 +940,19 @@ export const opportunityRouter = createTRPCRouter({
   stats: tenantProcedure.query(async ({ ctx }) => {
     const typedCtx = getTenantContext(ctx);
     const [total, byStage, totalValue, avgProbability] = await Promise.all([
-      typedCtx.prismaWithTenant.opportunity.count(),
+      typedCtx.prismaWithTenant.opportunity.count({ where: { deletedAt: null } }),
       typedCtx.prismaWithTenant.opportunity.groupBy({
         by: ['stage'],
+        where: { deletedAt: null },
         _count: true,
         _sum: { value: true },
       }),
       typedCtx.prismaWithTenant.opportunity.aggregate({
+        where: { deletedAt: null },
         _sum: { value: true },
       }),
       typedCtx.prismaWithTenant.opportunity.aggregate({
+        where: { deletedAt: null },
         _avg: { probability: true },
       }),
     ]);
@@ -820,6 +987,7 @@ export const opportunityRouter = createTRPCRouter({
         stage: {
           notIn: ['CLOSED_WON', 'CLOSED_LOST'],
         },
+        deletedAt: null,
       },
       include: {
         owner: {
@@ -851,6 +1019,7 @@ export const opportunityRouter = createTRPCRouter({
         closedAt: {
           gte: sixMonthsAgo,
         },
+        deletedAt: null,
       },
       select: {
         id: true,
@@ -962,7 +1131,7 @@ export const opportunityRouter = createTRPCRouter({
 
       // Fetch activity events for last 30 days
       const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      thirtyDaysAgo.setUTCDate(thirtyDaysAgo.getUTCDate() - 30);
 
       const activities = await typedCtx.prismaWithTenant.activityEvent.findMany({
         where: {

@@ -13,7 +13,7 @@
 
 import type { PrismaClient } from '@intelliflow/db';
 import { container, type Container, apiPrisma } from './container';
-import { verifyToken } from './lib/supabase';
+import { supabaseAdmin, verifyToken } from './lib/supabase';
 
 /**
  * User session interface (will be replaced with actual auth implementation)
@@ -96,6 +96,7 @@ export interface BaseContext {
  */
 export interface Context {
   prisma: PrismaClient;
+  prismaWithTenant?: PrismaClient;
   container?: Container;
   services?: Partial<Services>;
   security?: Partial<SecurityServices>;
@@ -185,8 +186,58 @@ function buildServicesFromContainer(): Services {
  * Attempt to resolve a UserSession from a verified Supabase user ID.
  * Returns null when the DB user does not exist.
  */
-async function resolveDbUser(supabaseId: string): Promise<UserSession | null> {
-  const dbUser = await apiPrisma.user.findUnique({
+type UserProvisioningPrisma = Pick<PrismaClient, 'tenant' | 'user'>;
+
+const DEFAULT_BOOTSTRAP_ADMIN_EMAILS = ['talyssondasilvaoliveira@gmail.com'];
+
+function normalizeEmail(email: string | undefined): string | null {
+  return email?.trim().toLowerCase() || null;
+}
+
+function getBootstrapAdminEmails(): Set<string> {
+  const configured = [
+    process.env.BOOTSTRAP_ADMIN_EMAILS,
+    process.env.INITIAL_ADMIN_EMAILS,
+    process.env.OWNER_EMAIL,
+  ]
+    .filter((value): value is string => Boolean(value))
+    .flatMap((value) =>
+      value
+        .split(',')
+        .map((entry) => normalizeEmail(entry))
+        .filter((entry): entry is string => Boolean(entry))
+    );
+
+  return new Set([...DEFAULT_BOOTSTRAP_ADMIN_EMAILS, ...configured]);
+}
+
+function resolveProvisionedRole(email: string | undefined): 'ADMIN' | 'USER' {
+  const normalized = normalizeEmail(email);
+  return normalized && getBootstrapAdminEmails().has(normalized) ? 'ADMIN' : 'USER';
+}
+
+async function syncSupabaseUserRole(
+  userId: string,
+  userMetadata: Record<string, unknown>,
+  role: UserSession['role']
+): Promise<void> {
+  try {
+    await supabaseAdmin.auth.admin.updateUserById(userId, {
+      user_metadata: {
+        ...userMetadata,
+        role,
+      },
+    });
+  } catch (error) {
+    console.warn('[Auth] Failed to sync Supabase user role metadata:', error);
+  }
+}
+
+async function resolveDbUserWith(
+  prisma: UserProvisioningPrisma,
+  supabaseId: string
+): Promise<UserSession | null> {
+  const dbUser = await prisma.user.findUnique({
     where: { id: supabaseId },
     select: {
       id: true,
@@ -212,6 +263,44 @@ async function resolveDbUser(supabaseId: string): Promise<UserSession | null> {
   };
 }
 
+async function maybePromoteBootstrapAdmin(
+  prisma: UserProvisioningPrisma,
+  session: UserSession,
+  supabaseUser?: {
+    user_metadata?: Record<string, unknown>;
+  }
+): Promise<UserSession> {
+  if (resolveProvisionedRole(session.email) !== 'ADMIN' || session.role === 'ADMIN') {
+    return session;
+  }
+
+  const updated = await prisma.user.update({
+    where: { id: session.userId },
+    data: { role: 'ADMIN' },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      tenantId: true,
+      stripeCustomerId: true,
+      timezone: true,
+    },
+  });
+
+  await syncSupabaseUserRole(updated.id, supabaseUser?.user_metadata ?? {}, updated.role);
+
+  return {
+    userId: updated.id,
+    email: updated.email,
+    name: updated.name ?? undefined,
+    role: updated.role,
+    tenantId: updated.tenantId,
+    stripeCustomerId: updated.stripeCustomerId ?? undefined,
+    timezone: updated.timezone ?? 'Europe/London',
+  };
+}
+
 /**
  * Auto-provision a new user (JIT — Just In Time user creation for OAuth).
  * Returns a minimal UserSession on failure.
@@ -232,17 +321,19 @@ function extractAvatarUrl(meta: Record<string, unknown>): string | null {
   return (meta.avatar_url as string | undefined) || (meta.picture as string | undefined) || null;
 }
 
-async function provisionNewUser(supabaseUser: {
+async function provisionNewUserWith(
+  prisma: UserProvisioningPrisma,
+  supabaseUser: {
   id: string;
   email?: string;
   user_metadata?: Record<string, unknown>;
 }): Promise<UserSession> {
   try {
-    let defaultTenant = await apiPrisma.tenant.findUnique({ where: { slug: 'default' } });
+    let defaultTenant = await prisma.tenant.findUnique({ where: { slug: 'default' } });
 
     if (!defaultTenant) {
       console.log('[Auth] Creating default tenant...');
-      defaultTenant = await apiPrisma.tenant.create({
+      defaultTenant = await prisma.tenant.create({
         data: { name: 'Default Organization', slug: 'default', status: 'ACTIVE' },
       });
     }
@@ -250,22 +341,26 @@ async function provisionNewUser(supabaseUser: {
     const meta = supabaseUser.user_metadata ?? {};
     const userName = extractUserName(meta, supabaseUser.email);
     const avatarUrl = extractAvatarUrl(meta);
+    const role = resolveProvisionedRole(supabaseUser.email);
 
-    const newUser = await apiPrisma.user.create({
+    const newUser = await prisma.user.create({
       data: {
         id: supabaseUser.id,
         email: supabaseUser.email || '',
         name: userName,
         avatarUrl,
-        role: 'USER',
+        role,
         tenantId: defaultTenant.id,
       },
     });
+
+    await syncSupabaseUserRole(newUser.id, meta, newUser.role);
 
     console.log('[Auth] Auto-provisioned new user:', {
       id: newUser.id,
       email: newUser.email,
       name: newUser.name,
+      role: newUser.role,
       tenantId: newUser.tenantId,
     });
 
@@ -287,6 +382,22 @@ async function provisionNewUser(supabaseUser: {
   }
 }
 
+export async function ensureAppUserSession(
+  prisma: UserProvisioningPrisma,
+  supabaseUser: {
+    id: string;
+    email?: string;
+    user_metadata?: Record<string, unknown>;
+  }
+): Promise<UserSession> {
+  const existing = await resolveDbUserWith(prisma, supabaseUser.id);
+  if (existing) {
+    return maybePromoteBootstrapAdmin(prisma, existing, supabaseUser);
+  }
+
+  return provisionNewUserWith(prisma, supabaseUser);
+}
+
 /**
  * Resolve a UserSession from a raw JWT token.
  * Returns null when the token is invalid or the Supabase user cannot be verified.
@@ -301,12 +412,7 @@ async function resolveUserFromToken(token: string): Promise<UserSession | null> 
 
   if (!supabaseUser) return null;
 
-  const existing = await resolveDbUser(supabaseUser.id);
-  if (existing) return existing;
-
-  // User exists in Supabase Auth but not in DB — auto-provision (JIT for OAuth)
-  console.log('[Auth] User not found in database, auto-provisioning:', supabaseUser.id);
-  return provisionNewUser(supabaseUser);
+  return ensureAppUserSession(apiPrisma, supabaseUser);
 }
 
 /**
@@ -328,21 +434,7 @@ async function resolveWsUser(token: string): Promise<UserSession | null> {
   const { user: supabaseUser, error } = await verifyToken(token);
   if (error || !supabaseUser) return null;
 
-  const dbUser = await apiPrisma.user.findUnique({
-    where: { id: supabaseUser.id },
-    select: { id: true, email: true, name: true, role: true, tenantId: true, timezone: true },
-  });
-
-  if (!dbUser) return null;
-
-  return {
-    userId: dbUser.id,
-    email: dbUser.email,
-    name: dbUser.name ?? undefined,
-    role: dbUser.role,
-    tenantId: dbUser.tenantId,
-    timezone: dbUser.timezone ?? 'Europe/London',
-  };
+  return ensureAppUserSession(apiPrisma, supabaseUser);
 }
 
 /**

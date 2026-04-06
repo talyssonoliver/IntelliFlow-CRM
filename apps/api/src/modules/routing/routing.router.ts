@@ -59,7 +59,7 @@ export const routingRouter = createTRPCRouter({
         where.isActive = input.isActive;
       }
 
-      const rules = await ctx.prisma.routingRule.findMany({
+      const rules = await ctx.prismaWithTenant.routingRule.findMany({
         where,
         take: input.limit + 1,
         ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
@@ -79,7 +79,7 @@ export const routingRouter = createTRPCRouter({
    * Get a single routing rule by ID
    */
   get: tenantProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
-    const rule = await ctx.prisma.routingRule.findFirst({
+    const rule = await ctx.prismaWithTenant.routingRule.findFirst({
       where: { id: input.id, tenantId: ctx.tenant.tenantId },
     });
     return rule;
@@ -89,7 +89,7 @@ export const routingRouter = createTRPCRouter({
    * Create a new routing rule
    */
   create: tenantProcedure.input(createRoutingRuleSchema).mutation(async ({ ctx, input }) => {
-    return ctx.prisma.routingRule.create({
+    return ctx.prismaWithTenant.routingRule.create({
       data: {
         tenantId: ctx.tenant.tenantId,
         name: input.name,
@@ -111,7 +111,7 @@ export const routingRouter = createTRPCRouter({
     const tenantId = ctx.tenant.tenantId;
 
     // Verify rule exists and belongs to this tenant
-    const existing = await ctx.prisma.routingRule.findFirst({
+    const existing = await ctx.prismaWithTenant.routingRule.findFirst({
       where: { id, tenantId },
     });
     if (!existing) {
@@ -126,7 +126,7 @@ export const routingRouter = createTRPCRouter({
     if (data.conditions !== undefined) updateData.conditions = data.conditions as any;
     if (data.actions !== undefined) updateData.actions = data.actions as any;
 
-    return ctx.prisma.routingRule.update({
+    return ctx.prismaWithTenant.routingRule.update({
       where: { id },
       data: updateData,
     });
@@ -136,14 +136,14 @@ export const routingRouter = createTRPCRouter({
    * Delete a routing rule
    */
   delete: tenantProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    const existing = await ctx.prisma.routingRule.findFirst({
+    const existing = await ctx.prismaWithTenant.routingRule.findFirst({
       where: { id: input.id, tenantId: ctx.tenant.tenantId },
     });
     if (!existing) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Routing rule not found' });
     }
 
-    return ctx.prisma.routingRule.delete({ where: { id: input.id } });
+    return ctx.prismaWithTenant.routingRule.delete({ where: { id: input.id } });
   }),
 
   /**
@@ -160,7 +160,7 @@ export const routingRouter = createTRPCRouter({
 
       // Verify all rules belong to this tenant before reordering
       const ruleIds = input.rules.map((r) => r.id);
-      const ownedCount = await ctx.prisma.routingRule.count({
+      const ownedCount = await ctx.prismaWithTenant.routingRule.count({
         where: { id: { in: ruleIds }, tenantId },
       });
       if (ownedCount !== ruleIds.length) {
@@ -170,9 +170,9 @@ export const routingRouter = createTRPCRouter({
         });
       }
 
-      await ctx.prisma.$transaction(
+      await ctx.prismaWithTenant.$transaction(
         input.rules.map((rule) =>
-          ctx.prisma.routingRule.update({
+          ctx.prismaWithTenant.routingRule.update({
             where: { id: rule.id },
             data: { priority: rule.priority },
           })
@@ -187,14 +187,14 @@ export const routingRouter = createTRPCRouter({
   toggle: tenantProcedure
     .input(z.object({ id: z.string(), isActive: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.prisma.routingRule.findFirst({
+      const existing = await ctx.prismaWithTenant.routingRule.findFirst({
         where: { id: input.id, tenantId: ctx.tenant.tenantId },
       });
       if (!existing) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Routing rule not found' });
       }
 
-      return ctx.prisma.routingRule.update({
+      return ctx.prismaWithTenant.routingRule.update({
         where: { id: input.id },
         data: { isActive: input.isActive },
       });
@@ -213,7 +213,7 @@ export const routingRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      const audits = await ctx.prisma.routingAudit.findMany({
+      const audits = await ctx.prismaWithTenant.routingAudit.findMany({
         where: { tenantId: ctx.tenant.tenantId },
         take: input.limit + 1,
         ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
@@ -242,14 +242,14 @@ export const routingRouter = createTRPCRouter({
    */
   getAgentWorkload: tenantProcedure.query(async ({ ctx }) => {
     const tenantId = ctx.tenant.tenantId;
-    const agents = await ctx.prisma.agentAvailability.findMany({
+    const agents = await ctx.prismaWithTenant.agentAvailability.findMany({
       where: { tenantId },
       orderBy: { currentCapacity: 'asc' },
     });
 
     // Get skills for all agents
     const userIds = agents.map((a) => a.userId);
-    const skills = await ctx.prisma.agentSkill.findMany({
+    const skills = await ctx.prismaWithTenant.agentSkill.findMany({
       where: { userId: { in: userIds }, tenantId },
     });
 
@@ -290,7 +290,7 @@ export const routingRouter = createTRPCRouter({
         where.source = input.source;
       }
 
-      return ctx.prisma.lead.findMany({
+      return ctx.prismaWithTenant.lead.findMany({
         where,
         take: input.limit,
         orderBy: { score: 'desc' },
@@ -323,7 +323,7 @@ export const routingRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const tenantId = ctx.tenant.tenantId;
 
-      return ctx.prisma.$transaction(async (tx) => {
+      return ctx.prismaWithTenant.$transaction(async (tx) => {
         // Verify lead belongs to this tenant
         const lead = await tx.lead.findFirst({
           where: { id: input.leadId, tenantId },

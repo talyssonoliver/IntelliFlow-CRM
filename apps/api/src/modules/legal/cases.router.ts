@@ -101,7 +101,7 @@ export const casesRouter = createTRPCRouter({
     }
 
     const [cases, total] = await Promise.all([
-      ctx.prisma.case.findMany({
+      ctx.prismaWithTenant.case.findMany({
         where,
         include: {
           tasks: { orderBy: { dueDate: 'asc' } },
@@ -112,7 +112,7 @@ export const casesRouter = createTRPCRouter({
         skip: offset,
         take: limit,
       }),
-      ctx.prisma.case.count({ where }),
+      ctx.prismaWithTenant.case.count({ where }),
     ]);
 
     const now = new Date();
@@ -189,7 +189,7 @@ export const casesRouter = createTRPCRouter({
     assertTenantContext(ctx);
     const tenantId = ctx.tenant.tenantId;
 
-    const caseData = await ctx.prisma.case.findFirst({
+    const caseData = await ctx.prismaWithTenant.case.findFirst({
       where: { id: input.id, tenantId },
       include: {
         tasks: { orderBy: { dueDate: 'asc' } },
@@ -284,31 +284,31 @@ export const casesRouter = createTRPCRouter({
 
     const [statusCounts, priorityCounts, overdueCount, closedThisMonth, allCases] =
       await Promise.all([
-        ctx.prisma.case.groupBy({
+        ctx.prismaWithTenant.case.groupBy({
           by: ['status'],
           where: { tenantId },
           _count: true,
         }),
-        ctx.prisma.case.groupBy({
+        ctx.prismaWithTenant.case.groupBy({
           by: ['priority'],
           where: { tenantId },
           _count: true,
         }),
-        ctx.prisma.case.count({
+        ctx.prismaWithTenant.case.count({
           where: {
             tenantId,
             deadline: { lt: now },
             status: { notIn: ['CLOSED', 'CANCELLED'] },
           },
         }),
-        ctx.prisma.case.count({
+        ctx.prismaWithTenant.case.count({
           where: {
             tenantId,
             status: 'CLOSED',
             closedAt: { gte: startOfMonth },
           },
         }),
-        ctx.prisma.case.count({ where: { tenantId } }),
+        ctx.prismaWithTenant.case.count({ where: { tenantId } }),
       ]);
 
     const byStatus: Record<string, number> = {};
@@ -345,7 +345,7 @@ export const casesRouter = createTRPCRouter({
       throw new TRPCError({ code: 'BAD_REQUEST', message: 'Assignee is required' });
     }
 
-    const caseData = await ctx.prisma.case.create({
+    const caseData = await ctx.prismaWithTenant.case.create({
       data: {
         title: input.title,
         description: input.description,
@@ -366,7 +366,7 @@ export const casesRouter = createTRPCRouter({
 
     // Notify assignee
     if (assignedTo) {
-      createNotification(ctx.prisma, {
+      createNotification(ctx.prismaWithTenant, {
         userId: assignedTo,
         tenantId,
         type: 'case_assigned',
@@ -390,7 +390,7 @@ export const casesRouter = createTRPCRouter({
     assertTenantContext(ctx);
     const tenantId = ctx.tenant.tenantId;
 
-    const existing = await ctx.prisma.case.findFirst({
+    const existing = await ctx.prismaWithTenant.case.findFirst({
       where: { id: input.id, tenantId },
     });
 
@@ -400,7 +400,7 @@ export const casesRouter = createTRPCRouter({
 
     const { id, ...updateData } = input;
 
-    const caseData = await ctx.prisma.case.update({
+    const caseData = await ctx.prismaWithTenant.case.update({
       where: { id },
       data: updateData,
       include: {
@@ -420,7 +420,7 @@ export const casesRouter = createTRPCRouter({
     assertTenantContext(ctx);
     const tenantId = ctx.tenant.tenantId;
 
-    const existing = await ctx.prisma.case.findFirst({
+    const existing = await ctx.prismaWithTenant.case.findFirst({
       where: { id: input.caseId, tenantId },
     });
 
@@ -448,14 +448,14 @@ export const casesRouter = createTRPCRouter({
       data.closedAt = new Date();
     }
 
-    const caseData = await ctx.prisma.case.update({
+    const caseData = await ctx.prismaWithTenant.case.update({
       where: { id: input.caseId },
       data,
     });
 
     // Notify on status change
     const statusChangeUserId = existing.assignedTo || (ctx.user as { id?: string })?.id || 'system';
-    createNotification(ctx.prisma, {
+    createNotification(ctx.prismaWithTenant, {
       userId: statusChangeUserId,
       tenantId,
       type: 'case_status_changed',
@@ -478,7 +478,7 @@ export const casesRouter = createTRPCRouter({
     assertTenantContext(ctx);
     const tenantId = ctx.tenant.tenantId;
 
-    const existing = await ctx.prisma.case.findFirst({
+    const existing = await ctx.prismaWithTenant.case.findFirst({
       where: { id: input.caseId, tenantId },
     });
 
@@ -490,7 +490,7 @@ export const casesRouter = createTRPCRouter({
       throw new TRPCError({ code: 'BAD_REQUEST', message: 'Case is already closed or cancelled' });
     }
 
-    const caseData = await ctx.prisma.case.update({
+    const caseData = await ctx.prismaWithTenant.case.update({
       where: { id: input.caseId },
       data: {
         status: 'CLOSED',
@@ -501,7 +501,7 @@ export const casesRouter = createTRPCRouter({
 
     // Notify on case closure
     const closeUserId = existing.assignedTo || (ctx.user as { id?: string })?.id || 'system';
-    createNotification(ctx.prisma, {
+    createNotification(ctx.prismaWithTenant, {
       userId: closeUserId,
       tenantId,
       type: 'case_closed',
@@ -524,7 +524,7 @@ export const casesRouter = createTRPCRouter({
     assertTenantContext(ctx);
     const tenantId = ctx.tenant.tenantId;
 
-    const existing = await ctx.prisma.case.findFirst({
+    const existing = await ctx.prismaWithTenant.case.findFirst({
       where: { id: input.caseId, tenantId },
     });
 
@@ -539,7 +539,7 @@ export const casesRouter = createTRPCRouter({
       });
     }
 
-    const task = await ctx.prisma.caseTask.create({
+    const task = await ctx.prismaWithTenant.caseTask.create({
       data: {
         caseId: input.caseId,
         title: input.title,
@@ -560,7 +560,7 @@ export const casesRouter = createTRPCRouter({
     assertTenantContext(ctx);
     const tenantId = ctx.tenant.tenantId;
 
-    const caseData = await ctx.prisma.case.findFirst({
+    const caseData = await ctx.prismaWithTenant.case.findFirst({
       where: { id: input.caseId, tenantId },
     });
 
@@ -568,7 +568,7 @@ export const casesRouter = createTRPCRouter({
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Case not found' });
     }
 
-    const task = await ctx.prisma.caseTask.findFirst({
+    const task = await ctx.prismaWithTenant.caseTask.findFirst({
       where: { id: input.taskId, caseId: input.caseId },
     });
 
@@ -576,7 +576,7 @@ export const casesRouter = createTRPCRouter({
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Task not found' });
     }
 
-    const updated = await ctx.prisma.caseTask.update({
+    const updated = await ctx.prismaWithTenant.caseTask.update({
       where: { id: input.taskId },
       data: { status: 'COMPLETED', completedAt: new Date() },
     });
@@ -591,7 +591,7 @@ export const casesRouter = createTRPCRouter({
     assertTenantContext(ctx);
     const tenantId = ctx.tenant.tenantId;
 
-    const caseData = await ctx.prisma.case.findFirst({
+    const caseData = await ctx.prismaWithTenant.case.findFirst({
       where: { id: input.caseId, tenantId },
     });
 
@@ -599,7 +599,7 @@ export const casesRouter = createTRPCRouter({
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Case not found' });
     }
 
-    await ctx.prisma.caseTask.delete({
+    await ctx.prismaWithTenant.caseTask.delete({
       where: { id: input.taskId },
     });
 
@@ -614,12 +614,12 @@ export const casesRouter = createTRPCRouter({
     const tenantId = ctx.tenant.tenantId;
 
     const [statusCounts, priorityCounts] = await Promise.all([
-      ctx.prisma.case.groupBy({
+      ctx.prismaWithTenant.case.groupBy({
         by: ['status'],
         where: { tenantId },
         _count: true,
       }),
-      ctx.prisma.case.groupBy({
+      ctx.prismaWithTenant.case.groupBy({
         by: ['priority'],
         where: { tenantId },
         _count: true,
@@ -647,7 +647,7 @@ export const casesRouter = createTRPCRouter({
     assertTenantContext(ctx);
     const tenantId = ctx.tenant.tenantId;
 
-    const users = await ctx.prisma.user.findMany({
+    const users = await ctx.prismaWithTenant.user.findMany({
       where: { tenantId },
       select: {
         id: true,

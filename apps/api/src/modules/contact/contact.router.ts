@@ -429,7 +429,7 @@ export const contactRouter = createTRPCRouter({
       };
 
       // Fire-and-forget: persist so future visits read from DB
-      ctx.prisma.contactAIInsight
+      ctx.prismaWithTenant.contactAIInsight
         ?.upsert({
           where: { contactId: contactWithRelations.id },
           create: {
@@ -1309,7 +1309,7 @@ export const contactRouter = createTRPCRouter({
       });
     }
 
-    const note = await ctx.prisma.contactNote.create({
+    const note = await ctx.prismaWithTenant.contactNote.create({
       data: {
         content: input.content,
         author: ctx.user?.email ?? 'Unknown',
@@ -1365,7 +1365,7 @@ export const contactRouter = createTRPCRouter({
         })),
       });
 
-      const insight = await ctx.prisma.contactAIInsight.upsert({
+      const insight = await ctx.prismaWithTenant.contactAIInsight.upsert({
         where: { contactId: input.contactId },
         create: {
           contactId: input.contactId,
@@ -1382,8 +1382,9 @@ export const contactRouter = createTRPCRouter({
       // Fire-and-forget: enqueue background LLM enrichment (best-effort)
       try {
         const { Queue } = await import('bullmq');
-        const queue = new Queue('AI_PREDICTION', {
-          connection: { host: process.env.REDIS_HOST ?? 'localhost', port: 6379 },
+        const { QUEUE_NAMES } = await import('@intelliflow/platform/queues');
+        const queue = new Queue(QUEUE_NAMES.AI_PREDICTION, {
+          connection: { host: process.env.REDIS_HOST ?? 'localhost', port: Number.parseInt(process.env.REDIS_PORT || '6379', 10) },
         });
         await queue.add('predict', {
           entityType: 'contact',

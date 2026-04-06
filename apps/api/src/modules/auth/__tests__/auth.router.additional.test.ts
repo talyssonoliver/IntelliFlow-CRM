@@ -5,54 +5,70 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TRPCError } from '@trpc/server';
 
-const mockSignIn = vi.fn();
-const mockSignOut = vi.fn();
-const mockSignOutUser = vi.fn();
-const mockGetSession = vi.fn();
-const mockSignInWithOAuth = vi.fn();
-const mockExchangeCodeForSession = vi.fn();
-const mockVerifyToken = vi.fn();
-
-// IFC-120: Module-scope mocks for supabaseAdmin (closure pattern required for vi.mock)
-const mockVerifyOtp = vi.fn().mockResolvedValue({ data: {}, error: { message: 'Token expired' } });
-const mockSupabaseSignUp = vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
-const mockSupabaseResend = vi.fn().mockResolvedValue({ data: {}, error: null });
-const mockResetPasswordForEmail = vi.fn().mockResolvedValue({ data: {}, error: null });
-const mockUpdateUserPassword = vi.fn().mockResolvedValue({ data: {}, error: null });
-
-const mockLoginLimiter = {
-  checkAllowed: vi.fn(),
-  recordFailed: vi.fn().mockReturnValue({ isLocked: false }),
-  recordSuccess: vi.fn(),
-};
-const mockAuditLogger = {
-  logLoginFailure: vi.fn(),
-  logLoginSuccess: vi.fn(),
-  log: vi.fn(),
-};
-const mockMfaService = {
-  isUserMfaEnabled: vi.fn(),
-  getAvailableMfaMethods: vi.fn(),
-  createChallenge: vi.fn(),
-  getChallengeInfo: vi.fn(),
-  verifyChallenge: vi.fn(),
-  generateTotpSecret: vi.fn(),
-  sendSmsOtp: vi.fn(),
-  sendEmailOtp: vi.fn(),
-  verifyTotp: vi.fn(),
-  verifyTotpTimingSafe: vi.fn(),
-  getUserMfaSettings: vi.fn(),
-  saveUserMfaSettings: vi.fn(),
-  generateBackupCodes: vi.fn(),
-  hashBackupCodes: vi.fn(),
-};
-const mockSessionService = {
-  parseDeviceInfo: vi.fn().mockReturnValue({}),
-  createSession: vi.fn().mockResolvedValue({ id: 'sess-1' }),
-  getUserSessions: vi.fn().mockResolvedValue([]),
-  revokeSession: vi.fn().mockResolvedValue(true),
-  revokeAllUserSessions: vi.fn().mockResolvedValue(1),
-};
+const {
+  mockSignIn,
+  mockSignOut,
+  mockSignOutUser,
+  mockGetSession,
+  mockSignInWithOAuth,
+  mockExchangeCodeForSession,
+  mockVerifyToken,
+  mockVerifyOtp,
+  mockSupabaseSignUp,
+  mockSupabaseResend,
+  mockResetPasswordForEmail,
+  mockUpdateUserPassword,
+  mockLoginLimiter,
+  mockAuditLogger,
+  mockMfaService,
+  mockSessionService,
+} = vi.hoisted(() => ({
+  mockSignIn: vi.fn(),
+  mockSignOut: vi.fn(),
+  mockSignOutUser: vi.fn(),
+  mockGetSession: vi.fn(),
+  mockSignInWithOAuth: vi.fn(),
+  mockExchangeCodeForSession: vi.fn(),
+  mockVerifyToken: vi.fn(),
+  mockVerifyOtp: vi.fn(),
+  mockSupabaseSignUp: vi.fn(),
+  mockSupabaseResend: vi.fn(),
+  mockResetPasswordForEmail: vi.fn(),
+  mockUpdateUserPassword: vi.fn(),
+  mockLoginLimiter: {
+    checkAllowed: vi.fn(),
+    recordFailed: vi.fn(),
+    recordSuccess: vi.fn(),
+  },
+  mockAuditLogger: {
+    logLoginFailure: vi.fn(),
+    logLoginSuccess: vi.fn(),
+    log: vi.fn(),
+  },
+  mockMfaService: {
+    isUserMfaEnabled: vi.fn(),
+    getAvailableMfaMethods: vi.fn(),
+    createChallenge: vi.fn(),
+    getChallengeInfo: vi.fn(),
+    verifyChallenge: vi.fn(),
+    generateTotpSecret: vi.fn(),
+    sendSmsOtp: vi.fn(),
+    sendEmailOtp: vi.fn(),
+    verifyTotp: vi.fn(),
+    verifyTotpTimingSafe: vi.fn(),
+    getUserMfaSettings: vi.fn(),
+    saveUserMfaSettings: vi.fn(),
+    generateBackupCodes: vi.fn(),
+    hashBackupCodes: vi.fn(),
+  },
+  mockSessionService: {
+    parseDeviceInfo: vi.fn(),
+    createSession: vi.fn(),
+    getUserSessions: vi.fn(),
+    revokeSession: vi.fn(),
+    revokeAllUserSessions: vi.fn(),
+  },
+}));
 
 vi.mock('../../../lib/supabase', () => ({
   signIn: (...args: any[]) => mockSignIn(...args),
@@ -91,12 +107,32 @@ vi.mock('../../../services/session.service', () => ({
 }));
 
 import { authRouter } from '../auth.router';
-import { createTestContext, createPublicContext } from '../../../test/setup';
+import { createTestContext, createPublicContext, prismaMock } from '../../../test/setup';
 
 describe('authRouter additional coverage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockLoginLimiter.recordFailed.mockReturnValue({ isLocked: false });
+    mockVerifyOtp.mockResolvedValue({ data: {}, error: { message: 'Token expired' } });
+    mockSupabaseSignUp.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
+    mockSupabaseResend.mockResolvedValue({ data: {}, error: null });
+    mockResetPasswordForEmail.mockResolvedValue({ data: {}, error: null });
+    mockUpdateUserPassword.mockResolvedValue({ data: {}, error: null });
+    mockSessionService.parseDeviceInfo.mockReturnValue({});
+    mockSessionService.createSession.mockResolvedValue({ id: 'sess-1' });
+    mockSessionService.getUserSessions.mockResolvedValue([]);
+    mockSessionService.revokeSession.mockResolvedValue(true);
+    mockSessionService.revokeAllUserSessions.mockResolvedValue(1);
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: 'user-1',
+      email: 'test@example.com',
+      name: 'Test User',
+      role: 'USER',
+      tenantId: '12345678-1234-4000-8000-000000000001',
+      avatarUrl: null,
+      stripeCustomerId: null,
+      timezone: 'UTC',
+    } as any);
   });
 
   describe('oauthCallback - exchange failure', () => {

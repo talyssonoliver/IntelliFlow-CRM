@@ -341,7 +341,7 @@ export const notificationsRouter = createTRPCRouter({
         cursor,
       });
 
-      const records = await ctx.prisma.notification.findMany({
+      const records = await ctx.prismaWithTenant.notification.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         take: limit + 1,
@@ -352,10 +352,10 @@ export const notificationsRouter = createTRPCRouter({
       const notifications = items.map(mapDbToNotification);
 
       const [unreadCount, total] = await Promise.all([
-        ctx.prisma.notification.count({
+        ctx.prismaWithTenant.notification.count({
           where: { tenantId, recipientId: userId, status: 'PENDING' },
         }),
-        ctx.prisma.notification.count({
+        ctx.prismaWithTenant.notification.count({
           where: { tenantId, recipientId: userId },
         }),
       ]);
@@ -386,10 +386,10 @@ export const notificationsRouter = createTRPCRouter({
     const baseWhere = { tenantId, recipientId: userId, status: 'PENDING' as const };
 
     const [total, highCount, normalCount, lowCount] = await Promise.all([
-      ctx.prisma.notification.count({ where: baseWhere }),
-      ctx.prisma.notification.count({ where: { ...baseWhere, priority: 'HIGH' } }),
-      ctx.prisma.notification.count({ where: { ...baseWhere, priority: 'NORMAL' } }),
-      ctx.prisma.notification.count({ where: { ...baseWhere, priority: 'LOW' } }),
+      ctx.prismaWithTenant.notification.count({ where: baseWhere }),
+      ctx.prismaWithTenant.notification.count({ where: { ...baseWhere, priority: 'HIGH' } }),
+      ctx.prismaWithTenant.notification.count({ where: { ...baseWhere, priority: 'NORMAL' } }),
+      ctx.prismaWithTenant.notification.count({ where: { ...baseWhere, priority: 'LOW' } }),
     ]);
 
     const duration = performance.now() - startTime;
@@ -422,7 +422,7 @@ export const notificationsRouter = createTRPCRouter({
       const { notificationIds } = input;
       const orchestrator = ctx.services?.notificationOrchestrator;
 
-      let updatedCount = 0;
+      let updatedCount: number;
 
       if (orchestrator) {
         // Use orchestrator — marks as read with audit logging + domain events
@@ -432,7 +432,7 @@ export const notificationsRouter = createTRPCRouter({
         updatedCount = results.filter((r) => r.status === 'fulfilled').length;
       } else {
         // Fallback to direct Prisma for backward compat (tests, etc.)
-        const result = await ctx.prisma.notification.updateMany({
+        const result = await ctx.prismaWithTenant.notification.updateMany({
           where: {
             id: { in: notificationIds },
             tenantId,
@@ -478,7 +478,7 @@ export const notificationsRouter = createTRPCRouter({
     if (orchestrator) {
       updatedCount = await orchestrator.markAllAsRead(tenantId, userId);
     } else {
-      const result = await ctx.prisma.notification.updateMany({
+      const result = await ctx.prismaWithTenant.notification.updateMany({
         where: {
           tenantId,
           recipientId: userId,
@@ -525,10 +525,10 @@ export const notificationsRouter = createTRPCRouter({
       let deletedCount: number;
 
       if (permanent) {
-        const result = await ctx.prisma.notification.deleteMany({ where: baseWhere });
+        const result = await ctx.prismaWithTenant.notification.deleteMany({ where: baseWhere });
         deletedCount = result.count;
       } else {
-        const result = await ctx.prisma.notification.updateMany({
+        const result = await ctx.prismaWithTenant.notification.updateMany({
           where: baseWhere,
           data: { status: 'ARCHIVED' as any },
         });
@@ -558,7 +558,7 @@ export const notificationsRouter = createTRPCRouter({
     const userId = ctx.tenant.userId;
     const tenantId = ctx.tenant.tenantId;
 
-    const record = await ctx.prisma.notificationPreference.findUnique({
+    const record = await ctx.prismaWithTenant.notificationPreference.findUnique({
       where: { tenantId_userId: { tenantId, userId } },
     });
 
@@ -604,7 +604,7 @@ export const notificationsRouter = createTRPCRouter({
       const userId = ctx.tenant.userId;
       const tenantId = ctx.tenant.tenantId;
 
-      const existing = await ctx.prisma.notificationPreference.findUnique({
+      const existing = await ctx.prismaWithTenant.notificationPreference.findUnique({
         where: { tenantId_userId: { tenantId, userId } },
       });
 
@@ -628,7 +628,7 @@ export const notificationsRouter = createTRPCRouter({
         updatedCategoryPrefs
       );
 
-      await ctx.prisma.notificationPreference.upsert({
+      await ctx.prismaWithTenant.notificationPreference.upsert({
         where: { tenantId_userId: { tenantId, userId } },
         create: createData,
         update: updateData as any,
@@ -680,25 +680,25 @@ export const notificationsRouter = createTRPCRouter({
       let result;
       switch (action) {
         case 'mark_read':
-          result = await ctx.prisma.notification.updateMany({
+          result = await ctx.prismaWithTenant.notification.updateMany({
             where,
             data: { status: 'READ', readAt: new Date() },
           });
           break;
         case 'mark_unread':
-          result = await ctx.prisma.notification.updateMany({
+          result = await ctx.prismaWithTenant.notification.updateMany({
             where,
             data: { status: 'PENDING', readAt: null },
           });
           break;
         case 'archive':
-          result = await ctx.prisma.notification.updateMany({
+          result = await ctx.prismaWithTenant.notification.updateMany({
             where,
             data: { status: 'ARCHIVED' as any },
           });
           break;
         case 'delete':
-          result = await ctx.prisma.notification.deleteMany({ where });
+          result = await ctx.prismaWithTenant.notification.deleteMany({ where });
           break;
         /* v8 ignore next 4 -- Zod enum validation prevents reaching default */
         default:

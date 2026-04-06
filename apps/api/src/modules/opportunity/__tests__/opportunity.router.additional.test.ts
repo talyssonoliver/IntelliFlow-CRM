@@ -12,10 +12,23 @@ const mockCreateTenantWhereClause = vi.fn();
 vi.mock('../../../security/tenant-context', () => ({
   getTenantContext: (...args: any[]) => mockGetTenantContext(...args),
   createTenantWhereClause: (...args: any[]) => mockCreateTenantWhereClause(...args),
+  // Required by tenantMiddleware in trpc.ts — return the prisma client unchanged
+  createTenantScopedPrisma: vi.fn((prisma: unknown) => prisma),
+  hasTenantContext: vi.fn(() => true),
+  assertTenantContext: vi.fn(),
+  extractTenantContext: vi.fn(),
 }));
 
 vi.mock('../../../shared/mappers', () => ({
   mapOpportunityToResponse: (opp: any) => opp,
+}));
+
+vi.mock('../../../security/audit-logger', () => ({
+  getAuditLogger: vi.fn(() => ({
+    logAction: vi.fn().mockResolvedValue('audit-id'),
+    logBulkOperation: vi.fn().mockResolvedValue('audit-id'),
+    logPermissionDenied: vi.fn().mockResolvedValue('audit-id'),
+  })),
 }));
 
 import { opportunityRouter } from '../opportunity.router';
@@ -320,7 +333,7 @@ describe('opportunityRouter additional coverage', () => {
   });
 
   describe('getOpportunityService - missing service', () => {
-    it('should throw INTERNAL_SERVER_ERROR when service unavailable', async () => {
+    it('should throw INTERNAL_SERVER_ERROR when service unavailable for mutations', async () => {
       const ctxNoService = createTestContext({
         services: {} as any,
       });
@@ -331,9 +344,10 @@ describe('opportunityRouter additional coverage', () => {
       });
       const caller = opportunityRouter.createCaller(ctxNoService);
 
-      await expect(caller.getById({ id: OPP_ID })).rejects.toThrow(
-        'Opportunity service not available'
-      );
+      // getById now uses Prisma directly, so test service-dependent procedure (delete) instead
+      await expect(
+        caller.delete({ id: OPP_ID })
+      ).rejects.toThrow('Opportunity service not available');
     });
   });
 });

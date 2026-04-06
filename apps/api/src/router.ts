@@ -53,6 +53,7 @@ import { userRouter } from './modules/user/user.router';
 import { calendarRouter } from './modules/calendar/calendar.router';
 import { calendarWebhooksRouter } from './modules/calendar/calendar-webhook.router';
 import { dsarRouter } from './modules/privacy/dsar.router';
+import { helpArticleRouter } from './modules/help-article/help-article.router';
 
 /**
  * Main application router
@@ -197,6 +198,9 @@ export const appRouter = createTRPCRouter({
 
   // Privacy & GDPR (Fix #17 — IFC-140)
   privacy: dsarRouter,
+
+  // Support Help Center (IFC-299)
+  helpArticle: helpArticleRouter,
 });
 
 /**

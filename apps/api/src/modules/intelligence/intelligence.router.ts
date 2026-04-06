@@ -226,7 +226,7 @@ function buildEntityName(
 function dateRangeSince(dateRange: '7d' | '30d' | '90d'): Date {
   const daysMap = { '7d': 7, '30d': 30, '90d': 90 };
   const since = new Date();
-  since.setDate(since.getDate() - daysMap[dateRange]);
+  since.setUTCDate(since.getUTCDate() - daysMap[dateRange]);
   return since;
 }
 
@@ -486,7 +486,7 @@ export const intelligenceRouter = createTRPCRouter({
       const tenantId = typedCtx.tenant.tenantId;
       const since = dateRangeSince(input.dateRange);
 
-      const allInsights = await fetchAllInsightRows(ctx.prisma, tenantId, since, input.entityType);
+      const allInsights = await fetchAllInsightRows(ctx.prismaWithTenant, tenantId, since, input.entityType);
       allInsights.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
 
       // Stats
@@ -923,7 +923,7 @@ export const intelligenceRouter = createTRPCRouter({
       );
 
       // Upsert AI insight
-      const aiInsight = await ctx.prisma.leadAIInsight.upsert({
+      const aiInsight = await ctx.prismaWithTenant.leadAIInsight.upsert({
         where: { leadId },
         create: {
           tenantId: typedCtx.tenant.tenantId,
@@ -999,7 +999,7 @@ export const intelligenceRouter = createTRPCRouter({
       );
 
       // Upsert AI insight
-      const aiInsight = await ctx.prisma.contactAIInsight.upsert({
+      const aiInsight = await ctx.prismaWithTenant.contactAIInsight.upsert({
         where: { contactId },
         create: {
           tenantId: typedCtx.tenant.tenantId,
@@ -1058,7 +1058,7 @@ export const intelligenceRouter = createTRPCRouter({
         MINIMAL: 4,
       };
 
-      const allInsights = await fetchAllInsightRows(ctx.prisma, tenantId, since, input.entityType);
+      const allInsights = await fetchAllInsightRows(ctx.prismaWithTenant, tenantId, since, input.entityType);
       allInsights.sort((a, b) => {
         const riskDiff = (riskOrder[a.churnRisk] ?? 4) - (riskOrder[b.churnRisk] ?? 4);
         return riskDiff === 0 ? b.updatedAt.getTime() - a.updatedAt.getTime() : riskDiff;
@@ -1155,10 +1155,10 @@ export const intelligenceRouter = createTRPCRouter({
 
       const daysMap = { '7d': 7, '30d': 30, '90d': 90 };
       const since = new Date();
-      since.setDate(since.getDate() - daysMap[input.dateRange]);
+      since.setUTCDate(since.getUTCDate() - daysMap[input.dateRange]);
 
       // Fetch all AI scores for the tenant within the date range
-      const allScores = await ctx.prisma.aIScore.findMany({
+      const allScores = await ctx.prismaWithTenant.aIScore.findMany({
         where: {
           tenantId,
           createdAt: { gte: since },
@@ -1274,7 +1274,7 @@ export const intelligenceRouter = createTRPCRouter({
       if (input.dateRange !== 'all') {
         const daysMap: Record<string, number> = { '24h': 1, '7d': 7, '30d': 30 };
         since = new Date();
-        since.setDate(since.getDate() - (daysMap[input.dateRange] ?? 7));
+        since.setUTCDate(since.getUTCDate() - (daysMap[input.dateRange] ?? 7));
       }
 
       const searchTerm = input.query.trim();
@@ -1299,7 +1299,7 @@ export const intelligenceRouter = createTRPCRouter({
 
       try {
         const searches = buildRagSearchPromises(
-          ctx.prisma,
+          ctx.prismaWithTenant,
           searchSources,
           tenantId,
           searchTerm,

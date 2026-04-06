@@ -235,7 +235,7 @@ describe('Home Router', () => {
   describe('getAIInsights', () => {
     it('should route deal-at-risk alerts to notifications and return smart summaries', async () => {
       const twoWeeksAgo = new Date();
-      twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 20);
+      twoWeeksAgo.setUTCDate(twoWeeksAgo.getUTCDate() - 20);
 
       prismaMock.opportunity.findMany.mockResolvedValue([
         {
@@ -332,7 +332,7 @@ describe('Home Router', () => {
 
     it('should limit insights to 5 max', async () => {
       const twoWeeksAgo = new Date();
-      twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 20);
+      twoWeeksAgo.setUTCDate(twoWeeksAgo.getUTCDate() - 20);
 
       // 3 deals at risk
       prismaMock.opportunity.findMany.mockResolvedValue([
@@ -1324,7 +1324,7 @@ describe('Home Router', () => {
     describe('stale contact proactive notifications (IFC-192)', () => {
       it('should create notification for stale contact with lastContactedAt > 30 days', async () => {
         const fortyDaysAgo = new Date();
-        fortyDaysAgo.setDate(fortyDaysAgo.getDate() - 40);
+        fortyDaysAgo.setUTCDate(fortyDaysAgo.getUTCDate() - 40);
 
         prismaMock.opportunity.findMany.mockResolvedValue([]);
         prismaMock.lead.findMany.mockResolvedValue([]);
@@ -1410,7 +1410,7 @@ describe('Home Router', () => {
 
       it('should return smart summaries capped at 5', async () => {
         const twoWeeksAgo = new Date();
-        twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 20);
+        twoWeeksAgo.setUTCDate(twoWeeksAgo.getUTCDate() - 20);
 
         prismaMock.opportunity.findMany.mockResolvedValue([
           { id: '1', name: 'Deal 1', updatedAt: twoWeeksAgo },
@@ -1636,6 +1636,8 @@ describe('Home Router', () => {
       };
 
       (prismaMock.aIInsight.findMany as any).mockResolvedValue([freshInsight]);
+      // filterStaleInsights verifies referenced entities still exist
+      prismaMock.opportunity.findMany.mockResolvedValue([{ id: 'deal-123' }] as any);
 
       const result = await caller.getAIInsights();
 
@@ -1646,8 +1648,8 @@ describe('Home Router', () => {
       expect(result.insights[0].suggestedAction).toBe('Schedule a call');
       expect(result.insights[0].actionUrl).toBe('/deals/deal-123');
 
-      // Verify heuristic queries were NOT executed
-      expect(prismaMock.opportunity.findMany).not.toHaveBeenCalled();
+      // Verify heuristic queries were NOT executed (lead.findMany is not called by filterStaleInsights
+      // since no lead insights exist — only opportunity.findMany is called for entity existence check)
       expect(prismaMock.lead.findMany).not.toHaveBeenCalled();
     });
 

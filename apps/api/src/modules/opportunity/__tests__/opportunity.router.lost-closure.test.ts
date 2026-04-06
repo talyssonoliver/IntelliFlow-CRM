@@ -6,9 +6,18 @@
  */
 
 import { TEST_UUIDS } from '../../../test/setup';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+vi.mock('../../../security/audit-logger', () => ({
+  getAuditLogger: vi.fn(() => ({
+    logAction: vi.fn().mockResolvedValue('audit-id'),
+    logBulkOperation: vi.fn().mockResolvedValue('audit-id'),
+    logPermissionDenied: vi.fn().mockResolvedValue('audit-id'),
+  })),
+}));
+
 import { opportunityRouter } from '../opportunity.router';
-import { createTestContext } from '../../../test/setup';
+import { createTestContext, prismaMock } from '../../../test/setup';
 import { Result } from '@intelliflow/domain';
 import { ValidationError, NotFoundError } from '@intelliflow/application';
 
@@ -39,6 +48,11 @@ const createMockDomainOpportunity = (overrides: Record<string, unknown> = {}) =>
 });
 
 describe('Opportunity Router - Lost Closure (IFC-066)', () => {
+  beforeEach(() => {
+    // IFC-281: prisma.$extends must return mock so tenantMiddleware produces prismaWithTenant
+    (prismaMock.$extends as ReturnType<typeof vi.fn>).mockReturnValue(prismaMock);
+  });
+
   describe('moveStage CLOSED_LOST', () => {
     it('should route CLOSED_LOST through closeDealLost.execute and return mapped response', async () => {
       const ctx = createTestContext();

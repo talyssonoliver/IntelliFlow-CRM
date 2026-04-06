@@ -19,6 +19,7 @@ import {
   createAuthenticatedRateLimitMiddleware,
   createAuthEndpointRateLimitMiddleware,
 } from './middleware/rate-limit';
+import { createTenantScopedPrisma } from './security/tenant-context';
 
 /**
  * Initialize tRPC with context type
@@ -269,8 +270,9 @@ const tenantMiddleware = t.middleware(async ({ ctx, next }) => {
   return next({
     ctx: {
       ...ctx,
+      user: ctx.user, // Re-assert non-null type after guard
       tenant,
-      prismaWithTenant: ctx.prisma, // In dev, use same prisma (RLS not fully configured)
+      prismaWithTenant: createTenantScopedPrisma(ctx.prisma, tenant),
     },
   });
 });

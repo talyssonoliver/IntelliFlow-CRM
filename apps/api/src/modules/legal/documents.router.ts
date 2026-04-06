@@ -14,7 +14,7 @@ import {
 import { PrismaCaseDocumentRepository } from '@intelliflow/adapters';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure } from '../../trpc';
+import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { container } from '../../container';
 
 // ============================================================================
@@ -75,14 +75,14 @@ export const documentsRouter = createTRPCRouter({
   /**
    * Create a new document
    */
-  create: protectedProcedure.input(createDocumentInputSchema).mutation(async ({ ctx, input }) => {
+  create: tenantProcedure.input(createDocumentInputSchema).mutation(async ({ ctx, input }) => {
     const userId = ctx.user?.userId;
     const tenantId = ctx.user?.tenantId;
     if (!userId || !tenantId) {
       throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
     }
 
-    const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+    const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
     // Generate storageKey server-side (AC-011)
     const extension = input.mimeType.split('/').pop() || 'bin';
@@ -113,13 +113,43 @@ export const documentsRouter = createTRPCRouter({
     // Persist to database
     await documentRepo.save(document);
 
+    // Fire-and-forget: enqueue text extraction / OCR (best-effort)
+    (async () => {
+      const { Queue } = await import('bullmq');
+      const connection = {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+      };
+      const imageMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/tiff'];
+      const isImage = imageMimes.includes(input.mimeType);
+      const queueName = isImage ? 'intelliflow-ocr-processing' : 'intelliflow-text-extraction';
+      const formatMap: Record<string, string> = {
+        'application/pdf': 'pdf',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+        'application/msword': 'docx',
+        'text/plain': 'txt',
+        'text/html': 'html',
+      };
+      const queue = new Queue(queueName, { connection });
+      await queue.add(isImage ? 'ocr-process' : 'extract-text', {
+        documentId: document.id,
+        sourceUrl: `storage://${storageKey}`,
+        format: isImage ? input.mimeType.split('/')[1] : (formatMap[input.mimeType] || 'txt'),
+        tenantId,
+        userId,
+        language: 'en',
+        options: { extractMetadata: true, generateEmbeddings: true },
+      });
+      await queue.close();
+    })().catch(() => {});
+
     return document.toJSON();
   }),
 
   /**
    * Create a new version of the document
    */
-  createVersion: protectedProcedure
+  createVersion: tenantProcedure
     .input(createVersionInputSchema)
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
@@ -127,7 +157,7 @@ export const documentsRouter = createTRPCRouter({
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
       }
 
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
       // Find document
       const document = await documentRepo.findById(input.documentId);
@@ -166,7 +196,7 @@ export const documentsRouter = createTRPCRouter({
   /**
    * Get document by ID
    */
-  getById: protectedProcedure
+  getById: tenantProcedure
     .input(z.object({ id: z.uuid() }))
     .query(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
@@ -174,7 +204,7 @@ export const documentsRouter = createTRPCRouter({
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
       }
 
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
       const document = await documentRepo.findById(input.id);
       if (!document) {
@@ -197,7 +227,7 @@ export const documentsRouter = createTRPCRouter({
   /**
    * List documents accessible by current user
    */
-  list: protectedProcedure
+  list: tenantProcedure
     .input(
       z
         .object({
@@ -217,7 +247,7 @@ export const documentsRouter = createTRPCRouter({
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
       }
 
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
       let documents: CaseDocument[];
 
@@ -255,13 +285,13 @@ export const documentsRouter = createTRPCRouter({
   /**
    * Grant access to a user or role
    */
-  grantAccess: protectedProcedure.input(grantAccessInputSchema).mutation(async ({ ctx, input }) => {
+  grantAccess: tenantProcedure.input(grantAccessInputSchema).mutation(async ({ ctx, input }) => {
     const userId = ctx.user?.userId;
     if (!userId) {
       throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
     }
 
-    const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+    const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
     const document = await documentRepo.findById(input.documentId);
     if (!document) {
@@ -290,7 +320,7 @@ export const documentsRouter = createTRPCRouter({
   /**
    * Revoke access from a user or role
    */
-  revokeAccess: protectedProcedure
+  revokeAccess: tenantProcedure
     .input(z.object({ documentId: z.uuid(), principalId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
@@ -298,7 +328,7 @@ export const documentsRouter = createTRPCRouter({
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
       }
 
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
       const document = await documentRepo.findById(input.documentId);
       if (!document) {
@@ -324,7 +354,7 @@ export const documentsRouter = createTRPCRouter({
   /**
    * Submit document for review
    */
-  submitForReview: protectedProcedure
+  submitForReview: tenantProcedure
     .input(z.object({ documentId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
@@ -332,7 +362,7 @@ export const documentsRouter = createTRPCRouter({
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
       }
 
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
       const document = await documentRepo.findById(input.documentId);
       if (!document) {
@@ -357,7 +387,7 @@ export const documentsRouter = createTRPCRouter({
   /**
    * Approve document
    */
-  approve: protectedProcedure
+  approve: tenantProcedure
     .input(z.object({ documentId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
@@ -365,7 +395,7 @@ export const documentsRouter = createTRPCRouter({
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
       }
 
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
       const document = await documentRepo.findById(input.documentId);
       if (!document) {
@@ -393,13 +423,13 @@ export const documentsRouter = createTRPCRouter({
   /**
    * Sign document with e-signature
    */
-  sign: protectedProcedure.input(signDocumentInputSchema).mutation(async ({ ctx, input }) => {
+  sign: tenantProcedure.input(signDocumentInputSchema).mutation(async ({ ctx, input }) => {
     const userId = ctx.user?.userId;
     if (!userId) {
       throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
     }
 
-    const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+    const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
     const document = await documentRepo.findById(input.documentId);
     if (!document) {
@@ -445,7 +475,7 @@ export const documentsRouter = createTRPCRouter({
   /**
    * Archive document
    */
-  archive: protectedProcedure
+  archive: tenantProcedure
     .input(z.object({ documentId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
@@ -453,7 +483,7 @@ export const documentsRouter = createTRPCRouter({
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
       }
 
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
       const document = await documentRepo.findById(input.documentId);
       if (!document) {
@@ -478,7 +508,7 @@ export const documentsRouter = createTRPCRouter({
   /**
    * Place legal hold on document
    */
-  placeLegalHold: protectedProcedure
+  placeLegalHold: tenantProcedure
     .input(placeLegalHoldInputSchema)
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
@@ -491,7 +521,7 @@ export const documentsRouter = createTRPCRouter({
         });
       }
 
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
       const document = await documentRepo.findById(input.documentId);
       if (!document) {
@@ -508,7 +538,7 @@ export const documentsRouter = createTRPCRouter({
   /**
    * Release legal hold
    */
-  releaseLegalHold: protectedProcedure
+  releaseLegalHold: tenantProcedure
     .input(z.object({ documentId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
@@ -521,7 +551,7 @@ export const documentsRouter = createTRPCRouter({
         });
       }
 
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
       const document = await documentRepo.findById(input.documentId);
       if (!document) {
@@ -538,7 +568,7 @@ export const documentsRouter = createTRPCRouter({
   /**
    * Soft delete document
    */
-  delete: protectedProcedure
+  delete: tenantProcedure
     .input(z.object({ documentId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
@@ -546,7 +576,7 @@ export const documentsRouter = createTRPCRouter({
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
       }
 
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
       const document = await documentRepo.findById(input.documentId);
       if (!document) {
@@ -566,7 +596,7 @@ export const documentsRouter = createTRPCRouter({
   /**
    * Get a signed URL for document preview/download (AC-004)
    */
-  getSignedUrl: protectedProcedure
+  getSignedUrl: tenantProcedure
     .input(z.object({ documentId: z.uuid() }))
     .query(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
@@ -574,7 +604,7 @@ export const documentsRouter = createTRPCRouter({
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
       }
 
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
       const document = await documentRepo.findById(input.documentId);
       if (!document) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
@@ -599,7 +629,7 @@ export const documentsRouter = createTRPCRouter({
   /**
    * Get audit trail for document
    */
-  getAuditTrail: protectedProcedure
+  getAuditTrail: tenantProcedure
     .input(z.object({ documentId: z.uuid() }))
     .query(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
@@ -608,7 +638,7 @@ export const documentsRouter = createTRPCRouter({
       }
 
       // Check VIEW access (AC-008)
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
       const document = await documentRepo.findById(input.documentId);
       if (!document) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
@@ -617,7 +647,7 @@ export const documentsRouter = createTRPCRouter({
         throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied to audit trail' });
       }
 
-      const auditLogs = await ctx.prisma.caseDocumentAudit.findMany({
+      const auditLogs = await ctx.prismaWithTenant.caseDocumentAudit.findMany({
         where: { documentId: input.documentId },
         orderBy: { createdAt: 'desc' },
       });
@@ -628,7 +658,7 @@ export const documentsRouter = createTRPCRouter({
   /**
    * Bulk download documents - returns storage keys
    */
-  bulkDownload: protectedProcedure
+  bulkDownload: tenantProcedure
     .input(bulkDownloadDocumentsSchema)
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
@@ -636,7 +666,7 @@ export const documentsRouter = createTRPCRouter({
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
       }
 
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
       const { ids } = input;
 
       const successful: string[] = [];
@@ -677,7 +707,7 @@ export const documentsRouter = createTRPCRouter({
   /**
    * Bulk archive documents
    */
-  bulkArchive: protectedProcedure
+  bulkArchive: tenantProcedure
     .input(bulkArchiveDocumentsSchema)
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
@@ -685,7 +715,7 @@ export const documentsRouter = createTRPCRouter({
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
       }
 
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
       const { ids } = input;
 
       const successful: string[] = [];
@@ -725,7 +755,7 @@ export const documentsRouter = createTRPCRouter({
   /**
    * Bulk delete documents (soft delete)
    */
-  bulkDelete: protectedProcedure
+  bulkDelete: tenantProcedure
     .input(bulkDeleteDocumentsSchema)
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
@@ -733,7 +763,7 @@ export const documentsRouter = createTRPCRouter({
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
       }
 
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
       const { ids } = input;
 
       const successful: string[] = [];

@@ -9,7 +9,7 @@
  * - Analytics and metrics
  *
  * Security:
- * - All endpoints require authentication via protectedProcedure
+ * - All endpoints require authentication via tenantProcedure
  * - Tenant isolation enforced at query level
  * - Audit logging for all mutations
  */
@@ -17,7 +17,7 @@
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure, adminProcedure } from '../../trpc';
+import { createTRPCRouter, tenantProcedure, adminProcedure } from '../../trpc';
 
 // ============================================
 // Input Schemas
@@ -136,7 +136,7 @@ export const conversationRouter = createTRPCRouter({
   /**
    * Start a new conversation
    */
-  create: protectedProcedure.input(CreateConversationSchema).mutation(async ({ ctx, input }) => {
+  create: tenantProcedure.input(CreateConversationSchema).mutation(async ({ ctx, input }) => {
     const sessionId =
       input.sessionId || `conv_${Date.now()}_${randomUUID().replaceAll('-', '').slice(0, 8)}`;
 
@@ -144,7 +144,7 @@ export const conversationRouter = createTRPCRouter({
     const ipAddress = ctx.req?.headers?.get('x-forwarded-for') || undefined;
     const userAgent = ctx.req?.headers?.get('user-agent') || undefined;
 
-    const conversation = await ctx.prisma.conversationRecord.create({
+    const conversation = await ctx.prismaWithTenant.conversationRecord.create({
       data: {
         tenantId: ctx.user.tenantId,
         sessionId,
@@ -170,8 +170,8 @@ export const conversationRouter = createTRPCRouter({
   /**
    * Get a conversation by ID with messages and tool calls
    */
-  getById: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
-    const conversation = await ctx.prisma.conversationRecord.findFirst({
+  getById: tenantProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
+    const conversation = await ctx.prismaWithTenant.conversationRecord.findFirst({
       where: {
         id: input.id,
         tenantId: ctx.user.tenantId,
@@ -203,10 +203,10 @@ export const conversationRouter = createTRPCRouter({
   /**
    * Get a conversation by session ID
    */
-  getBySessionId: protectedProcedure
+  getBySessionId: tenantProcedure
     .input(z.object({ sessionId: z.string() }))
     .query(async ({ ctx, input }) => {
-      const conversation = await ctx.prisma.conversationRecord.findFirst({
+      const conversation = await ctx.prismaWithTenant.conversationRecord.findFirst({
         where: {
           sessionId: input.sessionId,
           tenantId: ctx.user.tenantId,
@@ -228,7 +228,7 @@ export const conversationRouter = createTRPCRouter({
   /**
    * Search conversations with filters
    */
-  search: protectedProcedure.input(SearchConversationsSchema).query(async ({ ctx, input }) => {
+  search: tenantProcedure.input(SearchConversationsSchema).query(async ({ ctx, input }) => {
     const where: Record<string, unknown> = {
       tenantId: ctx.user.tenantId,
       status: input.status || { not: 'DELETED' },
@@ -255,7 +255,7 @@ export const conversationRouter = createTRPCRouter({
     }
 
     const [conversations, total] = await Promise.all([
-      ctx.prisma.conversationRecord.findMany({
+      ctx.prismaWithTenant.conversationRecord.findMany({
         where,
         orderBy: { startedAt: 'desc' },
         take: input.limit,
@@ -283,7 +283,7 @@ export const conversationRouter = createTRPCRouter({
           endedAt: true,
         },
       }),
-      ctx.prisma.conversationRecord.count({ where }),
+      ctx.prismaWithTenant.conversationRecord.count({ where }),
     ]);
 
     return {
@@ -298,9 +298,9 @@ export const conversationRouter = createTRPCRouter({
   /**
    * Add a message to a conversation
    */
-  addMessage: protectedProcedure.input(AddMessageSchema).mutation(async ({ ctx, input }) => {
+  addMessage: tenantProcedure.input(AddMessageSchema).mutation(async ({ ctx, input }) => {
     // Verify conversation exists and belongs to tenant
-    const conversation = await ctx.prisma.conversationRecord.findFirst({
+    const conversation = await ctx.prismaWithTenant.conversationRecord.findFirst({
       where: {
         id: input.conversationId,
         tenantId: ctx.user.tenantId,
@@ -315,9 +315,9 @@ export const conversationRouter = createTRPCRouter({
       });
     }
 
-    const [message] = await ctx.prisma.$transaction([
+    const [message] = await ctx.prismaWithTenant.$transaction([
       // Create message
-      ctx.prisma.messageRecord.create({
+      ctx.prismaWithTenant.messageRecord.create({
         data: {
           tenantId: ctx.user.tenantId,
           conversationId: input.conversationId,
@@ -334,7 +334,7 @@ export const conversationRouter = createTRPCRouter({
         },
       }),
       // Update conversation metrics
-      ctx.prisma.conversationRecord.update({
+      ctx.prismaWithTenant.conversationRecord.update({
         where: { id: input.conversationId },
         data: {
           messageCount: { increment: 1 },
@@ -353,11 +353,11 @@ export const conversationRouter = createTRPCRouter({
   /**
    * Record a tool call
    */
-  recordToolCall: protectedProcedure
+  recordToolCall: tenantProcedure
     .input(RecordToolCallSchema)
     .mutation(async ({ ctx, input }) => {
       // Verify conversation exists
-      const conversation = await ctx.prisma.conversationRecord.findFirst({
+      const conversation = await ctx.prismaWithTenant.conversationRecord.findFirst({
         where: {
           id: input.conversationId,
           tenantId: ctx.user.tenantId,
@@ -371,8 +371,8 @@ export const conversationRouter = createTRPCRouter({
         });
       }
 
-      const [toolCall] = await ctx.prisma.$transaction([
-        ctx.prisma.toolCallRecord.create({
+      const [toolCall] = await ctx.prismaWithTenant.$transaction([
+        ctx.prismaWithTenant.toolCallRecord.create({
           data: {
             tenantId: ctx.user.tenantId,
             conversationId: input.conversationId,
@@ -395,7 +395,7 @@ export const conversationRouter = createTRPCRouter({
             rollbackData: input.rollbackData as object | undefined,
           },
         }),
-        ctx.prisma.conversationRecord.update({
+        ctx.prismaWithTenant.conversationRecord.update({
           where: { id: input.conversationId },
           data: {
             toolCallCount: { increment: 1 },
@@ -409,10 +409,10 @@ export const conversationRouter = createTRPCRouter({
   /**
    * Update tool call status and result
    */
-  updateToolCall: protectedProcedure
+  updateToolCall: tenantProcedure
     .input(UpdateToolCallSchema)
     .mutation(async ({ ctx, input }) => {
-      const existingCall = await ctx.prisma.toolCallRecord.findFirst({
+      const existingCall = await ctx.prismaWithTenant.toolCallRecord.findFirst({
         where: { id: input.id },
         include: { conversation: true },
       });
@@ -424,7 +424,7 @@ export const conversationRouter = createTRPCRouter({
         });
       }
 
-      const toolCall = await ctx.prisma.toolCallRecord.update({
+      const toolCall = await ctx.prismaWithTenant.toolCallRecord.update({
         where: { id: input.id },
         data: {
           status: input.status,
@@ -445,10 +445,10 @@ export const conversationRouter = createTRPCRouter({
   /**
    * Approve or reject a tool call (human-in-the-loop)
    */
-  approveToolCall: protectedProcedure
+  approveToolCall: tenantProcedure
     .input(ApproveToolCallSchema)
     .mutation(async ({ ctx, input }) => {
-      const existingCall = await ctx.prisma.toolCallRecord.findFirst({
+      const existingCall = await ctx.prismaWithTenant.toolCallRecord.findFirst({
         where: {
           id: input.id,
           requiresApproval: true,
@@ -464,7 +464,7 @@ export const conversationRouter = createTRPCRouter({
         });
       }
 
-      const toolCall = await ctx.prisma.toolCallRecord.update({
+      const toolCall = await ctx.prismaWithTenant.toolCallRecord.update({
         where: { id: input.id },
         data: {
           approvalStatus: input.approved ? 'APPROVED' : 'REJECTED',
@@ -481,7 +481,7 @@ export const conversationRouter = createTRPCRouter({
   /**
    * End a conversation
    */
-  endConversation: protectedProcedure
+  endConversation: tenantProcedure
     .input(
       z.object({
         id: z.string(),
@@ -491,7 +491,7 @@ export const conversationRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const conversation = await ctx.prisma.conversationRecord.findFirst({
+      const conversation = await ctx.prismaWithTenant.conversationRecord.findFirst({
         where: {
           id: input.id,
           tenantId: ctx.user.tenantId,
@@ -506,7 +506,7 @@ export const conversationRouter = createTRPCRouter({
         });
       }
 
-      const updated = await ctx.prisma.conversationRecord.update({
+      const updated = await ctx.prismaWithTenant.conversationRecord.update({
         where: { id: input.id },
         data: {
           status: 'ENDED',
@@ -523,7 +523,7 @@ export const conversationRouter = createTRPCRouter({
   /**
    * Escalate a conversation to human support
    */
-  escalate: protectedProcedure
+  escalate: tenantProcedure
     .input(
       z.object({
         id: z.string(),
@@ -532,7 +532,7 @@ export const conversationRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const conversation = await ctx.prisma.conversationRecord.findFirst({
+      const conversation = await ctx.prismaWithTenant.conversationRecord.findFirst({
         where: {
           id: input.id,
           tenantId: ctx.user.tenantId,
@@ -547,7 +547,7 @@ export const conversationRouter = createTRPCRouter({
         });
       }
 
-      const updated = await ctx.prisma.conversationRecord.update({
+      const updated = await ctx.prismaWithTenant.conversationRecord.update({
         where: { id: input.id },
         data: {
           wasEscalated: true,
@@ -563,14 +563,14 @@ export const conversationRouter = createTRPCRouter({
   /**
    * Get pending tool calls requiring approval
    */
-  getPendingApprovals: protectedProcedure
+  getPendingApprovals: tenantProcedure
     .input(
       z.object({
         limit: z.number().min(1).max(50).optional().default(10),
       })
     )
     .query(async ({ ctx, input }) => {
-      const pendingCalls = await ctx.prisma.toolCallRecord.findMany({
+      const pendingCalls = await ctx.prismaWithTenant.toolCallRecord.findMany({
         where: {
           requiresApproval: true,
           approvalStatus: 'PENDING',
@@ -654,7 +654,7 @@ export const conversationRouter = createTRPCRouter({
           totalConversations > 0 ? (escalatedConversations / totalConversations) * 100 : 0,
         avgMessagesPerConversation: avgMessagesPerConversation._avg.messageCount || 0,
         avgRating: avgRating._avg.userRating || null,
-        toolCallsByType: toolCallsByType.map((t) => ({
+        toolCallsByType: toolCallsByType.map((t: any) => ({
           type: t.toolType,
           count: t._count,
         })),
@@ -672,7 +672,7 @@ export const conversationRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - input.olderThanDays);
+      cutoffDate.setUTCDate(cutoffDate.getUTCDate() - input.olderThanDays);
 
       const result = await ctx.prisma.conversationRecord.updateMany({
         where: {

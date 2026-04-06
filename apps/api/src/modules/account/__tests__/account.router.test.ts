@@ -38,6 +38,7 @@ const createMockDomainAccount = (overrides: Record<string, unknown> = {}) => ({
   updatedAt: new Date(),
   getDomainEvents: () => [],
   clearDomainEvents: () => {},
+  assignOwner: vi.fn().mockReturnValue({ isSuccess: true, isFailure: false }),
   ...overrides,
 });
 
@@ -47,6 +48,9 @@ describe('Account Router', () => {
 
   beforeEach(() => {
     // Reset is handled by setup.ts
+    // Ensure $extends returns the mock itself so tenant-scoped prisma works
+    (prismaMock as any).$extends = vi.fn().mockReturnValue(prismaMock);
+    (prismaMock as any).$executeRawUnsafe = vi.fn().mockResolvedValue(undefined);
   });
 
   describe('create', () => {
@@ -135,11 +139,37 @@ describe('Account Router', () => {
         value: mockDomainAccount,
       });
 
+      prismaMock.account.findUnique.mockResolvedValue({
+        _count: { contacts: 3, opportunities: 2 },
+        owner: { id: TEST_UUIDS.user1, name: 'Jane Smith', email: 'jane@co.com' },
+      } as any);
+
       const result = await caller.getById({ id: TEST_UUIDS.account1 });
 
       expect(result.id).toBe(TEST_UUIDS.account1);
       expect(result.name).toBe('TechCorp Inc');
+      expect(result.owner).toEqual({ id: TEST_UUIDS.user1, name: 'Jane Smith', email: 'jane@co.com' });
+      expect(result._count).toEqual({ contacts: 3, opportunities: 2 });
       expect(ctx.services!.account!.getAccountById).toHaveBeenCalledWith(TEST_UUIDS.account1);
+    });
+
+    it('should return owner with null name gracefully', async () => {
+      const mockDomainAccount = createMockDomainAccount();
+
+      ctx.services!.account!.getAccountById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainAccount,
+      });
+
+      prismaMock.account.findUnique.mockResolvedValue({
+        _count: { contacts: 0, opportunities: 0 },
+        owner: { id: TEST_UUIDS.user1, name: null, email: 'jane@co.com' },
+      } as any);
+
+      const result = await caller.getById({ id: TEST_UUIDS.account1 });
+
+      expect(result.owner).toEqual({ id: TEST_UUIDS.user1, name: null, email: 'jane@co.com' });
     });
 
     it('should throw NOT_FOUND for non-existent account', async () => {
@@ -1547,6 +1577,76 @@ describe('Account Router', () => {
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Account service not available',
         })
+      );
+    });
+  });
+
+  describe('assignees', () => {
+    it('should return tenant-scoped user list', async () => {
+      prismaMock.user.findMany.mockResolvedValue([
+        { id: 'u1', name: 'Alice', email: 'alice@co.com', role: 'ADMIN', avatarUrl: null } as any,
+        { id: 'u2', name: null, email: 'bob@co.com', role: 'SALES_REP', avatarUrl: 'https://avatar.com/bob.jpg' } as any,
+      ]);
+
+      const result = await caller.assignees();
+
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual({ id: 'u1', name: 'Alice', title: 'Administrator', avatar: null });
+      expect(result[1]).toEqual({ id: 'u2', name: 'bob@co.com', title: 'Sales Representative', avatar: 'https://avatar.com/bob.jpg' });
+    });
+  });
+
+  describe('assignOwner', () => {
+    const newOwnerUuid = TEST_UUIDS.user2 ?? '00000000-0000-0000-0000-000000000099';
+
+    it('should update ownerId and return success with owner', async () => {
+      prismaMock.account.findFirst.mockResolvedValue(mockAccount as any);
+      prismaMock.user.findFirst.mockResolvedValue({ id: newOwnerUuid, name: 'New Owner', email: 'new@co.com', tenantId: TEST_UUIDS.tenant } as any);
+      prismaMock.account.update.mockResolvedValue({ ...mockAccount, ownerId: newOwnerUuid } as any);
+
+      const mockDomainAccount = createMockDomainAccount();
+      mockDomainAccount.assignOwner = vi.fn().mockReturnValue({ isSuccess: true, isFailure: false });
+      ctx.services!.account!.getAccountById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainAccount,
+      });
+
+      const result = await caller.assignOwner({ id: TEST_UUIDS.account1, ownerId: newOwnerUuid });
+
+      expect(result.success).toBe(true);
+      expect(result.ownerId).toBe(newOwnerUuid);
+    });
+
+    it('should throw NOT_FOUND for non-existent account', async () => {
+      prismaMock.account.findFirst.mockResolvedValue(null);
+
+      await expect(
+        caller.assignOwner({ id: TEST_UUIDS.nonExistent, ownerId: newOwnerUuid })
+      ).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+    });
+
+    it('should throw NOT_FOUND when target user does not exist', async () => {
+      prismaMock.account.findFirst.mockResolvedValue(mockAccount as any);
+      prismaMock.user.findFirst.mockResolvedValue(null);
+
+      await expect(
+        caller.assignOwner({ id: TEST_UUIDS.account1, ownerId: newOwnerUuid })
+      ).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+    });
+
+    it('should reject cross-tenant user assignment (masked as NOT_FOUND)', async () => {
+      prismaMock.account.findFirst.mockResolvedValue(mockAccount as any);
+      prismaMock.user.findFirst.mockResolvedValue(null);
+
+      await expect(
+        caller.assignOwner({ id: TEST_UUIDS.account1, ownerId: TEST_UUIDS.nonExistent })
+      ).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
       );
     });
   });

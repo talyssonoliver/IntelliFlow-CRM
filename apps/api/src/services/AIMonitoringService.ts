@@ -14,7 +14,7 @@ interface DriftMetricsOpts extends DateRangeOpts {
   limit?: number;
 }
 
-interface LatencyMetricsOpts extends DateRangeOpts {}
+type LatencyMetricsOpts = DateRangeOpts;
 
 interface LatencyTrendOpts extends DateRangeOpts {
   periodMinutes?: number;
@@ -25,7 +25,7 @@ interface HallucinationReportOpts extends DateRangeOpts {
   limit?: number;
 }
 
-interface ROIMetricsOpts extends DateRangeOpts {}
+type ROIMetricsOpts = DateRangeOpts;
 
 export class AIMonitoringService {
   constructor(private readonly prisma: PrismaClient) {}

@@ -49,7 +49,7 @@ async function getRepositoryClass(): Promise<new (prisma: any) => AutoResponseDr
  */
 async function getRepository(ctx: Context): Promise<AutoResponseDraftRepository> {
   const RepositoryClass = await getRepositoryClass();
-  return new RepositoryClass(ctx.prisma);
+  return new RepositoryClass(ctx.prismaWithTenant);
 }
 
 /**
@@ -431,7 +431,7 @@ export const autoResponseRouter = createTRPCRouter({
 
       // Send notification to the escalation target
       try {
-        await createNotification(ctx.prisma, {
+        await createNotification(ctx.prismaWithTenant, {
           userId: input.escalatedTo,
           tenantId: typedCtx.tenant.tenantId,
           type: 'ai_action_pending',
@@ -776,9 +776,17 @@ export const autoResponseRouter = createTRPCRouter({
    * SECURITY: Uses protectedProcedure for admin/manager analytics
    */
   getStatsByStatus: protectedProcedure
-    .input(z.object({ tenantId: idSchema }))
+    .input(z.object({ tenantId: idSchema }).optional())
     .query(async ({ ctx, input }) => {
       const repository = await getRepository(ctx);
+      const tenantId = input?.tenantId ?? ctx.user?.tenantId;
+
+      if (!tenantId) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Tenant context is required',
+        });
+      }
 
       const statuses = [
         'DRAFT',
@@ -793,7 +801,7 @@ export const autoResponseRouter = createTRPCRouter({
 
       const stats: Record<string, number> = {};
       for (const status of statuses) {
-        stats[status] = await repository.countByStatus(input.tenantId, status);
+        stats[status] = await repository.countByStatus(tenantId, status);
       }
 
       return stats;

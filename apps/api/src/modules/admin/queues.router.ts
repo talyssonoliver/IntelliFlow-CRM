@@ -77,23 +77,33 @@ export const queuesAdminRouter = createTRPCRouter({
       const { Queue } = await import('bullmq');
       const connection = getBullMQConnectionOptions();
 
-      const queues = await Promise.all(
-        AI_QUEUE_NAMES.map(async (name) => {
-          const q = new Queue(name, { connection });
-          try {
-            const [counts, paused, schedulers] = await Promise.all([
-              q.getJobCounts(),
-              q.isPaused(),
-              q.getJobSchedulers(),
-            ]);
-            return formatQueueStats(name, counts, paused, schedulers);
-          } finally {
-            await q.close();
-          }
-        })
+      // Timeout guard: BullMQ hangs forever if Redis is unreachable
+      // (maxRetriesPerRequest: null required by BullMQ = infinite retries).
+      const REDIS_TIMEOUT_MS = 5_000;
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Redis connection timeout')), REDIS_TIMEOUT_MS)
       );
 
-      return { queues };
+      const fetchQueues = async () => {
+        const queues = await Promise.all(
+          AI_QUEUE_NAMES.map(async (name) => {
+            const q = new Queue(name, { connection });
+            try {
+              const [counts, paused, schedulers] = await Promise.all([
+                q.getJobCounts(),
+                q.isPaused(),
+                q.getJobSchedulers(),
+              ]);
+              return formatQueueStats(name, counts, paused, schedulers);
+            } finally {
+              await q.close();
+            }
+          })
+        );
+        return { queues };
+      };
+
+      return await Promise.race([fetchQueues(), timeoutPromise]);
     } catch (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',

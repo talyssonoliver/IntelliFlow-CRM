@@ -44,7 +44,7 @@ async function getRepositoryClass(): Promise<new (prisma: any) => IAIOutputRevie
 
 async function getRepository(ctx: Context): Promise<IAIOutputReviewRepository> {
   const RepositoryClass = await getRepositoryClass();
-  return new RepositoryClass(ctx.prisma);
+  return new RepositoryClass(ctx.prismaWithTenant);
 }
 
 // ============================================================
@@ -228,13 +228,13 @@ export const aiReviewRouter = createTRPCRouter({
 
     // Execute queries in parallel
     const [rows, total] = await Promise.all([
-      (ctx.prisma as any).aIOutputReview.findMany({
+      (ctx.prismaWithTenant as any).aIOutputReview.findMany({
         where,
         orderBy,
         skip: offset,
         take: limit,
       }),
-      (ctx.prisma as any).aIOutputReview.count({ where }),
+      (ctx.prismaWithTenant as any).aIOutputReview.count({ where }),
     ]);
 
     return {
@@ -481,12 +481,12 @@ export const aiReviewRouter = createTRPCRouter({
 
       // Run groupBy and SLA breached count in parallel
       const [statusCounts, slaBreachedCount] = await Promise.all([
-        (ctx.prisma as any).aIOutputReview.groupBy({
+        (ctx.prismaWithTenant as any).aIOutputReview.groupBy({
           by: ['status'],
           where,
           _count: { status: true },
         }),
-        (ctx.prisma as any).aIOutputReview.count({
+        (ctx.prismaWithTenant as any).aIOutputReview.count({
           where: {
             ...where,
             slaDeadline: { lt: new Date() },

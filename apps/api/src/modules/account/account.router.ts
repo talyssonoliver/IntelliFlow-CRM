@@ -22,6 +22,7 @@ import {
   getAccountActivityInputSchema,
   getHierarchyInputSchema,
   setParentSchema,
+  assignOwnerSchema,
 } from '@intelliflow/validators/account';
 import { mapAccountToResponse } from '../../shared/mappers';
 import { type Context } from '../../context';
@@ -100,19 +101,23 @@ export const accountRouter = createTRPCRouter({
       });
     }
 
-    // Fetch counts for contacts and opportunities
-    const _count = await typedCtx.prismaWithTenant.account.findUnique({
+    // Fetch counts and owner relation in a single query
+    const enriched = await typedCtx.prismaWithTenant.account.findUnique({
       where: { id: input.id },
       select: {
         _count: {
           select: { contacts: true, opportunities: true },
+        },
+        owner: {
+          select: { id: true, name: true, email: true },
         },
       },
     });
 
     return {
       ...mapAccountToResponse(result.value),
-      _count: _count?._count ?? { contacts: 0, opportunities: 0 },
+      _count: enriched?._count ?? { contacts: 0, opportunities: 0 },
+      owner: enriched?.owner ?? null,
     };
   }),
 
@@ -337,17 +342,20 @@ export const accountRouter = createTRPCRouter({
    */
   stats: tenantProcedure.query(async ({ ctx }) => {
     const typedCtx = getTenantContext(ctx);
+    const scopedWhere = createTenantWhereClause(typedCtx.tenant, {});
     const [total, byIndustry, withContacts, withOpportunities, totalRevenue] = await Promise.all([
-      typedCtx.prismaWithTenant.account.count(),
+      typedCtx.prismaWithTenant.account.count({ where: scopedWhere }),
       typedCtx.prismaWithTenant.account.groupBy({
         by: ['industry'],
         _count: true,
         where: {
+          ...scopedWhere,
           industry: { not: null },
         },
       }),
       typedCtx.prismaWithTenant.account.count({
         where: {
+          ...scopedWhere,
           contacts: {
             some: {},
           },
@@ -355,12 +363,14 @@ export const accountRouter = createTRPCRouter({
       }),
       typedCtx.prismaWithTenant.account.count({
         where: {
+          ...scopedWhere,
           opportunities: {
             some: {},
           },
         },
       }),
       typedCtx.prismaWithTenant.account.aggregate({
+        where: scopedWhere,
         _sum: { revenue: true },
       }),
     ]);
@@ -441,7 +451,7 @@ export const accountRouter = createTRPCRouter({
       const ownerIds = (ownerCounts ?? []).map((o) => o.ownerId).filter(Boolean);
       const owners =
         ownerIds.length > 0
-          ? await ctx.prisma.user.findMany({
+          ? await ctx.prismaWithTenant.user.findMany({
               where: { id: { in: ownerIds } },
               select: { id: true, name: true, email: true },
             })
@@ -604,4 +614,106 @@ export const accountRouter = createTRPCRouter({
 
     return mapAccountToResponse(result.value);
   }),
+
+  /**
+   * List assignable users for account owner assignment (IFC-268)
+   */
+  assignees: tenantProcedure.query(async ({ ctx }) => {
+    const typedCtx = getTenantContext(ctx);
+
+    const users = await typedCtx.prismaWithTenant.user.findMany({
+      where: { tenantId: typedCtx.tenant.tenantId },
+      select: { id: true, name: true, email: true, role: true, avatarUrl: true },
+      orderBy: [{ name: 'asc' }, { email: 'asc' }],
+    });
+
+    return users.map((u) => ({
+      id: u.id,
+      name: (u.name ?? u.email).trim(),
+      title: getAccountOwnerTitle(u.role),
+      avatar: u.avatarUrl ?? null,
+    }));
+  }),
+
+  /**
+   * Assign or reassign account owner (IFC-268)
+   */
+  assignOwner: tenantProcedure.input(assignOwnerSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const accountService = getAccountService(ctx);
+
+    // Verify account exists and belongs to tenant
+    const existingAccount = await typedCtx.prismaWithTenant.account.findFirst({
+      where: { id: input.id, tenantId: typedCtx.tenant.tenantId },
+    });
+
+    if (!existingAccount) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Account not found',
+      });
+    }
+
+    // Verify target user exists and belongs to same tenant
+    const targetUser = await typedCtx.prismaWithTenant.user.findFirst({
+      where: { id: input.ownerId, tenantId: typedCtx.tenant.tenantId },
+      select: { id: true, name: true, email: true },
+    });
+
+    if (!targetUser) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Target user not found',
+      });
+    }
+
+    // Load domain entity and assign owner
+    const accountResult = await accountService.getAccountById(input.id);
+    if (accountResult.isFailure) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: accountResult.error.message,
+      });
+    }
+
+    const account = accountResult.value;
+    const assignResult = account.assignOwner(input.ownerId, typedCtx.user!.userId);
+
+    if (assignResult.isFailure) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: assignResult.error.message,
+      });
+    }
+
+    // Persist via direct Prisma update
+    await typedCtx.prismaWithTenant.account.update({
+      where: { id: input.id },
+      data: { ownerId: input.ownerId },
+    });
+
+    return {
+      success: true as const,
+      id: input.id,
+      ownerId: input.ownerId,
+      owner: {
+        id: targetUser.id,
+        name: targetUser.name,
+        email: targetUser.email,
+      },
+    };
+  }),
 });
+
+function getAccountOwnerTitle(role: string): string {
+  switch (role) {
+    case 'ADMIN':
+      return 'Administrator';
+    case 'MANAGER':
+      return 'Sales Manager';
+    case 'SALES_REP':
+      return 'Sales Representative';
+    default:
+      return 'Team Member';
+  }
+}

@@ -18,7 +18,7 @@ import {
 
 const slaPolicyRouter = createTRPCRouter({
   list: tenantProcedure.query(async ({ ctx }) => {
-    return ctx.prisma.sLAPolicy.findMany({
+    return ctx.prismaWithTenant.sLAPolicy.findMany({
       where: { tenantId: ctx.tenant.tenantId },
       orderBy: { name: 'asc' },
     });
@@ -27,7 +27,7 @@ const slaPolicyRouter = createTRPCRouter({
   getById: tenantProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      return ctx.prisma.sLAPolicy.findFirst({
+      return ctx.prismaWithTenant.sLAPolicy.findFirst({
         where: { id: input.id, tenantId: ctx.tenant.tenantId },
       });
     }),
@@ -35,7 +35,7 @@ const slaPolicyRouter = createTRPCRouter({
   create: tenantProcedure
     .input(createSlaPolicySchema)
     .mutation(async ({ ctx, input }) => {
-      return ctx.prisma.sLAPolicy.create({
+      return ctx.prismaWithTenant.sLAPolicy.create({
         data: { ...input, tenantId: ctx.tenant.tenantId },
       });
     }),
@@ -44,25 +44,25 @@ const slaPolicyRouter = createTRPCRouter({
     .input(updateSlaPolicySchema)
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
-      const existing = await ctx.prisma.sLAPolicy.findFirst({
+      const existing = await ctx.prismaWithTenant.sLAPolicy.findFirst({
         where: { id, tenantId: ctx.tenant.tenantId },
       });
       if (!existing) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'SLA policy not found' });
       }
-      return ctx.prisma.sLAPolicy.update({ where: { id }, data });
+      return ctx.prismaWithTenant.sLAPolicy.update({ where: { id }, data });
     }),
 
   delete: tenantProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.prisma.sLAPolicy.findFirst({
+      const existing = await ctx.prismaWithTenant.sLAPolicy.findFirst({
         where: { id: input.id, tenantId: ctx.tenant.tenantId },
       });
       if (!existing) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'SLA policy not found' });
       }
-      return ctx.prisma.sLAPolicy.update({
+      return ctx.prismaWithTenant.sLAPolicy.update({
         where: { id: input.id },
         data: { isActive: false },
       });
@@ -72,7 +72,7 @@ const slaPolicyRouter = createTRPCRouter({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const tenantId = ctx.tenant.tenantId;
-      return ctx.prisma.$transaction(async (tx) => {
+      return ctx.prismaWithTenant.$transaction(async (tx) => {
         await tx.sLAPolicy.updateMany({
           where: { tenantId },
           data: { isDefault: false },
@@ -87,7 +87,7 @@ const slaPolicyRouter = createTRPCRouter({
 
 const categoryRouter = createTRPCRouter({
   list: tenantProcedure.query(async ({ ctx }) => {
-    return ctx.prisma.ticketCategory.findMany({
+    return ctx.prismaWithTenant.ticketCategory.findMany({
       where: { tenantId: ctx.tenant.tenantId },
       orderBy: { sortOrder: 'asc' },
     });
@@ -96,7 +96,7 @@ const categoryRouter = createTRPCRouter({
   getById: tenantProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      return ctx.prisma.ticketCategory.findFirst({
+      return ctx.prismaWithTenant.ticketCategory.findFirst({
         where: { id: input.id, tenantId: ctx.tenant.tenantId },
       });
     }),
@@ -104,7 +104,7 @@ const categoryRouter = createTRPCRouter({
   create: tenantProcedure
     .input(createTicketCategorySchema)
     .mutation(async ({ ctx, input }) => {
-      return ctx.prisma.ticketCategory.create({
+      return ctx.prismaWithTenant.ticketCategory.create({
         data: {
           ...input,
           parentId: input.parentId ?? null,
@@ -120,25 +120,25 @@ const categoryRouter = createTRPCRouter({
     .input(updateTicketCategorySchema)
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
-      const existing = await ctx.prisma.ticketCategory.findFirst({
+      const existing = await ctx.prismaWithTenant.ticketCategory.findFirst({
         where: { id, tenantId: ctx.tenant.tenantId },
       });
       if (!existing) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Ticket category not found' });
       }
-      return ctx.prisma.ticketCategory.update({ where: { id }, data });
+      return ctx.prismaWithTenant.ticketCategory.update({ where: { id }, data });
     }),
 
   delete: tenantProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.prisma.ticketCategory.findFirst({
+      const existing = await ctx.prismaWithTenant.ticketCategory.findFirst({
         where: { id: input.id, tenantId: ctx.tenant.tenantId },
       });
       if (!existing) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Ticket category not found' });
       }
-      const activeChildren = await ctx.prisma.ticketCategory.count({
+      const activeChildren = await ctx.prismaWithTenant.ticketCategory.count({
         where: { parentId: input.id, isActive: true, tenantId: ctx.tenant.tenantId },
       });
       if (activeChildren > 0) {
@@ -147,7 +147,7 @@ const categoryRouter = createTRPCRouter({
           message: `Cannot delete: ${activeChildren} active child categories exist`,
         });
       }
-      return ctx.prisma.ticketCategory.update({
+      return ctx.prismaWithTenant.ticketCategory.update({
         where: { id: input.id },
         data: { isActive: false },
       });
@@ -158,7 +158,7 @@ const categoryRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const tenantId = ctx.tenant.tenantId;
       const ids = input.items.map((i) => i.id);
-      const ownedCount = await ctx.prisma.ticketCategory.count({
+      const ownedCount = await ctx.prismaWithTenant.ticketCategory.count({
         where: { id: { in: ids }, tenantId },
       });
       if (ownedCount !== ids.length) {
@@ -167,9 +167,9 @@ const categoryRouter = createTRPCRouter({
           message: 'One or more categories do not belong to this tenant',
         });
       }
-      await ctx.prisma.$transaction(
+      await ctx.prismaWithTenant.$transaction(
         input.items.map((item) =>
-          ctx.prisma.ticketCategory.update({
+          ctx.prismaWithTenant.ticketCategory.update({
             where: { id: item.id },
             data: { sortOrder: item.sortOrder },
           })

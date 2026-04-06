@@ -61,11 +61,11 @@ function getAssigneeTitle(role?: string | null): string {
  * Notify the assigned agent (in-app) and enqueue an email notification via BullMQ.
  */
 function notifyAssignee(
-  ctx: Context,
+  ctx: Context & { prismaWithTenant: Context['prisma'] },
   params: { assigneeId: string; tenantId: string; ticketId: string; subject: string }
 ) {
   // In-app notification
-  createNotification(ctx.prisma, {
+  createNotification(ctx.prismaWithTenant, {
     userId: params.assigneeId,
     tenantId: params.tenantId,
     type: 'ticket_assigned',
@@ -117,7 +117,7 @@ function notifyAssignee(
  * If routing succeeds, sends an assignment notification to the routed agent.
  */
 function autoRouteNewTicket(
-  ctx: Context,
+  ctx: Context & { prismaWithTenant: Context['prisma'] },
   params: { ticketId: string; tenantId: string; category?: string; subject: string }
 ) {
   const routingService = (ctx.services as Record<string, any>)?.ticketRouting;
@@ -131,7 +131,7 @@ function autoRouteNewTicket(
     if (candidates.length === 0) return; // No agents available — leave unassigned
 
     // Check for a matching routing rule first
-    const ticket = await ctx.prisma.ticket.findUnique({
+    const ticket = await ctx.prismaWithTenant.ticket.findUnique({
       where: { id: params.ticketId },
       select: { priority: true, status: true },
     });
@@ -197,11 +197,11 @@ function autoRouteNewTicket(
  * Enhancement 2: Notify ADMIN and MANAGER users when a ticket is created unassigned.
  */
 function notifyTeamUnassigned(
-  ctx: Context,
+  ctx: Context & { prismaWithTenant: Context['prisma'] },
   params: { tenantId: string; ticketId: string; subject: string; priority: string }
 ) {
   (async () => {
-    const teamMembers = await ctx.prisma.user.findMany({
+    const teamMembers = await ctx.prismaWithTenant.user.findMany({
       where: {
         tenantId: params.tenantId,
         role: { in: ['ADMIN', 'MANAGER'] },
@@ -212,7 +212,7 @@ function notifyTeamUnassigned(
     const priorityLabel: 'high' | 'normal' = params.priority === 'CRITICAL' || params.priority === 'HIGH' ? 'high' : 'normal';
 
     for (const member of teamMembers) {
-      createNotification(ctx.prisma, {
+      createNotification(ctx.prismaWithTenant, {
         userId: member.id,
         tenantId: params.tenantId,
         type: 'ticket_created',
@@ -234,7 +234,7 @@ function notifyTeamUnassigned(
  * is created for them, linking the ticket to their activity timeline.
  */
 function writeContactActivity(
-  ctx: Context,
+  ctx: Context & { prismaWithTenant: Context['prisma'] },
   params: {
     tenantId: string;
     contactEmail: string;
@@ -245,14 +245,14 @@ function writeContactActivity(
 ) {
   (async () => {
     // Look up the contact by email
-    const contact = await ctx.prisma.contact.findFirst({
+    const contact = await ctx.prismaWithTenant.contact.findFirst({
       where: { email: params.contactEmail, tenantId: params.tenantId },
       select: { id: true },
     });
     if (!contact) return;
 
     // Write to the contact's activity log
-    await ctx.prisma.contactActivity.create({
+    await ctx.prismaWithTenant.contactActivity.create({
       data: {
         contactId: contact.id,
         tenantId: params.tenantId,
@@ -420,7 +420,7 @@ export const ticketRouter = createTRPCRouter({
       // Fire-and-forget: notification failure must not block the ticket update response
       if (updateData.priority && ['URGENT', 'CRITICAL'].includes(updateData.priority)) {
         const tenantId = ctx.tenant.tenantId;
-        createNotification(ctx.prisma, {
+        createNotification(ctx.prismaWithTenant, {
           userId: ticket.assigneeId || 'system',
           tenantId,
           type: 'ticket_escalated',
@@ -664,7 +664,7 @@ export const ticketRouter = createTRPCRouter({
     assertTenantContext(ctx);
     const tenantId = ctx.tenant.tenantId;
 
-    const users = await ctx.prisma.user.findMany({
+    const users = await ctx.prismaWithTenant.user.findMany({
       where: { tenantId },
       select: {
         id: true,
@@ -727,17 +727,17 @@ export const ticketRouter = createTRPCRouter({
 
       // Get counts for each filter option
       const [statusCounts, priorityCounts, slaCounts] = await Promise.all([
-        ctx.prisma.ticket.groupBy({
+        ctx.prismaWithTenant.ticket.groupBy({
           by: ['status'],
           where: baseWhere,
           _count: true,
         }),
-        ctx.prisma.ticket.groupBy({
+        ctx.prismaWithTenant.ticket.groupBy({
           by: ['priority'],
           where: baseWhere,
           _count: true,
         }),
-        ctx.prisma.ticket.groupBy({
+        ctx.prismaWithTenant.ticket.groupBy({
           by: ['slaStatus'],
           where: baseWhere,
           _count: true,
@@ -772,7 +772,7 @@ export const ticketRouter = createTRPCRouter({
       const tenantId = ctx.tenant.tenantId;
 
       // Verify ticket exists and belongs to tenant
-      const ticket = await ctx.prisma.ticket.findFirst({
+      const ticket = await ctx.prismaWithTenant.ticket.findFirst({
         where: { id: input.ticketId, tenantId },
         select: { id: true },
       });
@@ -799,7 +799,7 @@ export const ticketRouter = createTRPCRouter({
       };
       const dbFileType = fileTypeMap[input.fileType] ?? 'OTHER';
 
-      const attachment = await ctx.prisma.ticketAttachment.create({
+      const attachment = await ctx.prismaWithTenant.ticketAttachment.create({
         data: {
           name: input.name,
           size: input.size,

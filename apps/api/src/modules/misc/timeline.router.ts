@@ -21,7 +21,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure } from '../../trpc';
+import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { deadlineDomainService } from '../../services';
 import { startOfDayInTimezone, safeTimezone } from '../../lib/timezone-utils';
 
@@ -250,7 +250,7 @@ export type TimelineEvent = z.infer<typeof timelineEventSchema>;
 // =============================================================================
 
 type TimelineQueryInput = z.infer<typeof timelineQuerySchema>;
-type PrismaContext = { prisma: any; user: { userId: string } };
+type PrismaContext = { prisma: any; prismaWithTenant: any; user: { userId: string } };
 
 /** Build the Prisma WHERE clause for task queries in the timeline. */
 function buildTaskTimelineWhere(opts: {
@@ -359,7 +359,7 @@ async function fetchTaskEvents(
     priorities,
   });
 
-  const tasks = await ctx.prisma.task.findMany({
+  const tasks = await ctx.prismaWithTenant.task.findMany({
     where: taskWhere,
     include: { owner: { select: { id: true, name: true, email: true, avatarUrl: true } } },
     orderBy: { createdAt: sortOrder },
@@ -431,7 +431,7 @@ async function fetchAppointmentEvents(
   if (Object.keys(dateFilter).length > 0) appointmentWhere.startTime = dateFilter;
   if (!includeCompleted) appointmentWhere.status = { notIn: ['COMPLETED', 'CANCELLED', 'NO_SHOW'] };
 
-  const appointments = await ctx.prisma.appointment.findMany({
+  const appointments = await ctx.prismaWithTenant.appointment.findMany({
     where: appointmentWhere,
     orderBy: { startTime: sortOrder },
   });
@@ -504,7 +504,7 @@ async function fetchAuditEvents(
 
   const auditWhere = buildAuditLogWhere(effectiveOpportunityId, dateFilter);
 
-  const auditLogs = await ctx.prisma.auditLogEntry.findMany({
+  const auditLogs = await ctx.prismaWithTenant.auditLogEntry.findMany({
     where: auditWhere,
     orderBy: { timestamp: sortOrder },
     take: 100,
@@ -562,7 +562,7 @@ async function fetchAgentActionEvents(
     domainEventWhere.payload = { path: ['status'], array_contains: agentActionStatus };
   }
 
-  const domainEvents = await ctx.prisma.domainEvent.findMany({
+  const domainEvents = await ctx.prismaWithTenant.domainEvent.findMany({
     where: domainEventWhere,
     orderBy: { occurredAt: sortOrder },
   });
@@ -632,7 +632,7 @@ async function fetchDocumentEvents(
   if (effectiveOpportunityId) documentWhere.relatedCaseId = effectiveOpportunityId;
   if (Object.keys(dateFilter).length > 0) documentWhere.createdAt = dateFilter;
 
-  const documents = await ctx.prisma.caseDocument.findMany({
+  const documents = await ctx.prismaWithTenant.caseDocument.findMany({
     where: documentWhere,
     orderBy: { createdAt: sortOrder },
     take: 50,
@@ -711,7 +711,7 @@ export const timelineRouter = createTRPCRouter({
    * Aggregates events from multiple sources and returns in chronological order.
    * Respects user permissions - only shows events the user has access to.
    */
-  getEvents: protectedProcedure.input(timelineQuerySchema).query(async ({ ctx, input }) => {
+  getEvents: tenantProcedure.input(timelineQuerySchema).query(async ({ ctx, input }) => {
     const startTime = performance.now();
 
     const { dealId, caseId, opportunityId, fromDate, toDate, page, limit, sortOrder } = input;
@@ -779,7 +779,7 @@ export const timelineRouter = createTRPCRouter({
    *
    * Returns counts by event type, priority, and status
    */
-  getStats: protectedProcedure
+  getStats: tenantProcedure
     .input(
       z.object({
         dealId: z.string().optional(),
@@ -810,11 +810,11 @@ export const timelineRouter = createTRPCRouter({
         pendingAgentActions,
         totalDocuments,
       ] = await Promise.all([
-        ctx.prisma.task.count({ where: taskWhere }),
-        ctx.prisma.task.count({
+        ctx.prismaWithTenant.task.count({ where: taskWhere }),
+        ctx.prismaWithTenant.task.count({
           where: { ...taskWhere, status: 'COMPLETED' },
         }),
-        ctx.prisma.task.count({
+        ctx.prismaWithTenant.task.count({
           where: {
             ...taskWhere,
             dueDate: { lt: now },
@@ -822,7 +822,7 @@ export const timelineRouter = createTRPCRouter({
           },
         }),
         effectiveOpportunityId
-          ? ctx.prisma.appointment.count({
+          ? ctx.prismaWithTenant.appointment.count({
               where: {
                 linkedCases: { some: { caseId: effectiveOpportunityId } },
                 startTime: { gte: now },
@@ -830,7 +830,7 @@ export const timelineRouter = createTRPCRouter({
               },
             })
           : Promise.resolve(0),
-        ctx.prisma.domainEvent.count({
+        ctx.prismaWithTenant.domainEvent.count({
           where: {
             eventType: { startsWith: 'AgentAction' },
             ...(effectiveOpportunityId && { aggregateId: effectiveOpportunityId }),
@@ -838,7 +838,7 @@ export const timelineRouter = createTRPCRouter({
           },
         }),
         effectiveOpportunityId
-          ? ctx.prisma.caseDocument.count({
+          ? ctx.prismaWithTenant.caseDocument.count({
               where: {
                 relatedCaseId: effectiveOpportunityId,
                 deletedAt: null,
@@ -875,7 +875,7 @@ export const timelineRouter = createTRPCRouter({
    *
    * Returns tasks and appointments due in the next N days
    */
-  getUpcomingDeadlines: protectedProcedure
+  getUpcomingDeadlines: tenantProcedure
     .input(
       z.object({
         dealId: z.string().optional(),
@@ -891,7 +891,7 @@ export const timelineRouter = createTRPCRouter({
       const effectiveOpportunityId = input.opportunityId || input.dealId || input.caseId;
       const now = new Date();
       const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + input.daysAhead);
+      futureDate.setUTCDate(futureDate.getUTCDate() + input.daysAhead);
 
       const deadlines: Array<{
         id: string;
@@ -916,7 +916,7 @@ export const timelineRouter = createTRPCRouter({
         taskWhere.opportunityId = effectiveOpportunityId;
       }
 
-      const tasks = await ctx.prisma.task.findMany({
+      const tasks = await ctx.prismaWithTenant.task.findMany({
         where: taskWhere,
         orderBy: { dueDate: 'asc' },
         take: input.limit,
@@ -950,7 +950,7 @@ export const timelineRouter = createTRPCRouter({
         };
       }
 
-      const appointments = await ctx.prisma.appointment.findMany({
+      const appointments = await ctx.prismaWithTenant.appointment.findMany({
         where: appointmentWhere,
         orderBy: { startTime: 'asc' },
         take: input.limit,
@@ -989,7 +989,7 @@ export const timelineRouter = createTRPCRouter({
    *
    * Task: IFC-147 - Deadline Aggregate with business day calculations
    */
-  computeDeadline: protectedProcedure
+  computeDeadline: tenantProcedure
     .input(
       z.object({
         triggerDate: z.coerce.date(),
@@ -1037,7 +1037,7 @@ export const timelineRouter = createTRPCRouter({
    * Uses domain DeadlineEngine for business day validation
    * considering weekends and UK bank holidays
    */
-  isBusinessDay: protectedProcedure
+  isBusinessDay: tenantProcedure
     .input(z.object({ date: z.coerce.date() }))
     .query(async ({ input }) => {
       const isBusinessDay = deadlineDomainService.isBusinessDay(input.date);
@@ -1056,7 +1056,7 @@ export const timelineRouter = createTRPCRouter({
    *
    * Uses domain DeadlineEngine for proper business day calculation
    */
-  getNextBusinessDay: protectedProcedure
+  getNextBusinessDay: tenantProcedure
     .input(z.object({ date: z.coerce.date() }))
     .query(async ({ input }) => {
       const nextBusinessDay = deadlineDomainService.getNextBusinessDay(input.date);
@@ -1076,7 +1076,7 @@ export const timelineRouter = createTRPCRouter({
    * Uses domain DeadlineEngine to validate rule configuration
    * and compute the resulting due date
    */
-  validateDeadlineRule: protectedProcedure
+  validateDeadlineRule: tenantProcedure
     .input(
       z.object({
         name: z.string().min(1),
@@ -1126,7 +1126,7 @@ export const timelineRouter = createTRPCRouter({
    *
    * Returns agent actions with pending_approval status
    */
-  getPendingAgentActions: protectedProcedure
+  getPendingAgentActions: tenantProcedure
     .input(
       z.object({
         dealId: z.string().optional(),
@@ -1149,7 +1149,7 @@ export const timelineRouter = createTRPCRouter({
         where.aggregateId = effectiveOpportunityId;
       }
 
-      const events = await ctx.prisma.domainEvent.findMany({
+      const events = await ctx.prismaWithTenant.domainEvent.findMany({
         where,
         orderBy: { occurredAt: 'desc' },
         take: input.limit,

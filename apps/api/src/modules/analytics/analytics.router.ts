@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { type Context } from '../../context';
+import { getTenantContext } from '../../security/tenant-context';
 
 /**
  * Helper to get analytics service from context
@@ -321,4 +322,43 @@ export const analyticsRouter = createTRPCRouter({
         }
       );
     }),
+
+  /**
+   * Top performers — ranked by closed-won deal value
+   */
+  topPerformers: tenantProcedure.query(async ({ ctx }) => {
+    const typedCtx = getTenantContext(ctx);
+    const prismaWT = typedCtx.prismaWithTenant;
+
+    const closedWonByOwner = await prismaWT.opportunity.groupBy({
+      by: ['ownerId'],
+      where: { stage: 'CLOSED_WON' },
+      _count: true,
+      _sum: { value: true },
+      orderBy: { _sum: { value: 'desc' } },
+      take: 5,
+    });
+
+    const userIds = closedWonByOwner
+      .map((o) => o.ownerId)
+      .filter((id): id is string => id != null);
+
+    const users =
+      userIds.length > 0
+        ? await prismaWT.user.findMany({
+            where: { id: { in: userIds } },
+            select: { id: true, name: true },
+          })
+        : [];
+
+    const userMap = new Map(users.map((u) => [u.id, u.name]));
+
+    return closedWonByOwner.map((item, index) => ({
+      rank: index + 1,
+      userId: item.ownerId ?? '',
+      name: userMap.get(item.ownerId!) ?? 'Unknown',
+      dealCount: item._count,
+      totalRevenue: item._sum.value?.toString() ?? '0',
+    }));
+  }),
 });

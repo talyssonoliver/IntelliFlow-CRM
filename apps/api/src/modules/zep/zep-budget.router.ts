@@ -48,13 +48,14 @@ const auditEntrySchema = z.object({
  * Helper to get Prisma client from context
  */
 function getPrisma(ctx: Context) {
-  if (!ctx.prisma) {
+  const client = ctx.prismaWithTenant ?? ctx.prisma;
+  if (!client) {
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: 'Database client not available',
     });
   }
-  return ctx.prisma;
+  return client;
 }
 
 export const zepBudgetRouter = createTRPCRouter({

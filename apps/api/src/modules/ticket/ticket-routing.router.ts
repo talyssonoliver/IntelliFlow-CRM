@@ -40,7 +40,7 @@ export const ticketRoutingRouter = createTRPCRouter({
     const tenantId = ctx.tenant.tenantId;
 
     // Fetch the ticket to get subject, description, priority
-    const ticket = await ctx.prisma.ticket.findFirst({
+    const ticket = await ctx.prismaWithTenant.ticket.findFirst({
       where: { id: input.ticketId, tenantId },
     });
 

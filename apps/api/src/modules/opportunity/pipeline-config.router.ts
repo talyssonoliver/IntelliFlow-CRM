@@ -23,6 +23,7 @@ import {
 } from '@intelliflow/validators/opportunity';
 import { OPPORTUNITY_STAGES } from '@intelliflow/domain';
 import { getTenantContext } from '../../security/tenant-context';
+import { getAuditLogger } from '../../security/audit-logger';
 
 /**
  * Get default configuration for a stage
@@ -114,9 +115,10 @@ export const pipelineConfigRouter = createTRPCRouter({
         },
       });
 
+      let configResult;
       if (existingConfig) {
         // Update existing config
-        const updated = await typedCtx.prismaWithTenant.pipelineStageConfig.update({
+        configResult = await typedCtx.prismaWithTenant.pipelineStageConfig.update({
           where: {
             tenantId_stageKey: {
               tenantId,
@@ -128,24 +130,31 @@ export const pipelineConfigRouter = createTRPCRouter({
             ...(sortOrder !== undefined && { order: sortOrder }),
           },
         });
-        return updated;
+      } else {
+        // Create new config with defaults merged with input
+        const stageIndex = OPPORTUNITY_STAGES.indexOf(stageKey);
+        const defaults = getDefaultStageConfig(stageKey, stageIndex);
+        configResult = await typedCtx.prismaWithTenant.pipelineStageConfig.create({
+          data: {
+            tenantId,
+            stageKey,
+            displayName: updateData.displayName ?? defaults.displayName,
+            color: updateData.color ?? defaults.color,
+            order: sortOrder ?? defaults.order,
+            probability: updateData.probability ?? defaults.probability,
+            isActive: updateData.isActive ?? defaults.isActive,
+          },
+        });
       }
 
-      // Create new config with defaults merged with input
-      const stageIndex = OPPORTUNITY_STAGES.indexOf(stageKey);
-      const defaults = getDefaultStageConfig(stageKey, stageIndex);
-      const created = await typedCtx.prismaWithTenant.pipelineStageConfig.create({
-        data: {
-          tenantId,
-          stageKey,
-          displayName: updateData.displayName ?? defaults.displayName,
-          color: updateData.color ?? defaults.color,
-          order: sortOrder ?? defaults.order,
-          probability: updateData.probability ?? defaults.probability,
-          isActive: updateData.isActive ?? defaults.isActive,
-        },
-      });
-      return created;
+      // IFC-281: Fire-and-forget audit logging
+      const auditLogger = getAuditLogger(ctx.prisma);
+      auditLogger.logAction('UPDATE', 'pipeline_config', stageKey, tenantId, {
+        actorId: typedCtx.tenant.userId,
+        afterState: { displayName: configResult.displayName, color: configResult.color, probability: configResult.probability },
+      }).catch((err) => console.error('[pipeline-config.router] Audit log failed:', err));
+
+      return configResult;
     }),
 
   /**
@@ -194,6 +203,13 @@ export const pipelineConfigRouter = createTRPCRouter({
       })
     );
 
+    // IFC-281: Fire-and-forget audit logging for bulk update
+    const auditLogger = getAuditLogger(ctx.prisma);
+    const stageKeys = input.stages.map((s) => s.stage);
+    auditLogger.logBulkOperation('BULK_UPDATE', 'pipeline_config', stageKeys, tenantId, {
+      actorId: typedCtx.tenant.userId,
+    }).catch((err) => console.error('[pipeline-config.router] Audit log failed:', err));
+
     return { success: true, updatedCount: results.length };
   }),
 
@@ -209,6 +225,13 @@ export const pipelineConfigRouter = createTRPCRouter({
     const { count } = await typedCtx.prismaWithTenant.pipelineStageConfig.deleteMany({
       where: { tenantId },
     });
+
+    // IFC-281: Fire-and-forget audit logging
+    const auditLogger = getAuditLogger(ctx.prisma);
+    auditLogger.logAction('DELETE', 'pipeline_config', 'all', tenantId, {
+      actorId: typedCtx.tenant.userId,
+      metadata: { deletedCount: count },
+    }).catch((err) => console.error('[pipeline-config.router] Audit log failed:', err));
 
     return { success: true, deletedCount: count };
   }),

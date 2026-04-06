@@ -430,21 +430,3 @@ export function calculateForecastAccuracy(
     isAtRisk: report.overallAccuracy < TARGET,
   };
 }
-
-export const ForecastAlgorithms = {
-  calculateWeightedPipelineValue,
-  calculateTotalPipelineValue,
-  calculateStageBreakdown,
-  generateForecast,
-  calculateWinRate,
-  calculateStageConversionRates,
-  calculateAverageDealSize,
-  calculateAverageSalesCycle,
-  generateWinRateMetrics,
-  backtestForecastAccuracy,
-  adjustProbabilitiesFromHistory,
-  calculateForecastAccuracy,
-  DEFAULT_STAGE_PROBABILITIES,
-};
-
-export default ForecastAlgorithms;

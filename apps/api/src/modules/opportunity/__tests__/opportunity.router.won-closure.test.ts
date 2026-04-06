@@ -6,9 +6,18 @@
  */
 
 import { TEST_UUIDS } from '../../../test/setup';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+vi.mock('../../../security/audit-logger', () => ({
+  getAuditLogger: vi.fn(() => ({
+    logAction: vi.fn().mockResolvedValue('audit-id'),
+    logBulkOperation: vi.fn().mockResolvedValue('audit-id'),
+    logPermissionDenied: vi.fn().mockResolvedValue('audit-id'),
+  })),
+}));
+
 import { opportunityRouter } from '../opportunity.router';
-import { createTestContext } from '../../../test/setup';
+import { createTestContext, prismaMock } from '../../../test/setup';
 import { Result } from '@intelliflow/domain';
 import { ValidationError, NotFoundError } from '@intelliflow/application';
 
@@ -39,6 +48,11 @@ const createMockDomainOpportunity = (overrides: Record<string, unknown> = {}) =>
 });
 
 describe('Opportunity Router - Won Closure (IFC-065)', () => {
+  beforeEach(() => {
+    // IFC-281: prisma.$extends must return mock so tenantMiddleware produces prismaWithTenant
+    (prismaMock.$extends as ReturnType<typeof vi.fn>).mockReturnValue(prismaMock);
+  });
+
   describe('moveStage CLOSED_WON', () => {
     it('should succeed and return mapped opportunity response', async () => {
       const ctx = createTestContext();

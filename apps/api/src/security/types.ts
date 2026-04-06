@@ -98,7 +98,8 @@ export type ResourceType =
   | 'ai_score'
   | 'appointment'
   | 'session'
-  | 'system';
+  | 'system'
+  | 'pipeline_config';
 
 /**
  * Permission actions

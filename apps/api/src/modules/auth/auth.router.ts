@@ -53,6 +53,7 @@ import {
   updateUserPassword,
   type OAuthProvider,
 } from '../../lib/supabase';
+import { ensureAppUserSession, type Context, type UserSession } from '../../context';
 import { getLoginLimiter } from '../../security/login-limiter';
 import { getAuditLogger } from '../../security/audit-logger';
 import { getMfaService } from '../../services/mfa.service';
@@ -241,6 +242,50 @@ function resolveMfaChallengeUserId(
   return 'userId' in info && info.userId ? (info.userId as string) : 'unknown';
 }
 
+type SupabaseAuthUser = {
+  id: string;
+  email?: string;
+  user_metadata?: Record<string, unknown>;
+};
+
+type AuthenticatedAppUser = {
+  session: UserSession;
+  avatar: string | null;
+};
+
+async function resolveAuthenticatedAppUser(
+  prisma: Context['prisma'],
+  supabaseUser: SupabaseAuthUser
+): Promise<AuthenticatedAppUser> {
+  const session = await ensureAppUserSession(prisma, supabaseUser);
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { avatarUrl: true },
+  });
+
+  let metadataAvatar: string | null = null;
+  if (typeof supabaseUser.user_metadata?.avatar_url === 'string') {
+    metadataAvatar = supabaseUser.user_metadata.avatar_url;
+  } else if (typeof supabaseUser.user_metadata?.picture === 'string') {
+    metadataAvatar = supabaseUser.user_metadata.picture;
+  }
+
+  return {
+    session,
+    avatar: dbUser?.avatarUrl || metadataAvatar,
+  };
+}
+
+function buildAuthUserPayload(user: AuthenticatedAppUser) {
+  return {
+    id: user.session.userId,
+    email: user.session.email,
+    name: user.session.name ?? null,
+    role: user.session.role,
+    avatar: user.avatar,
+  };
+}
+
 // ============================================
 // Auth Router
 // ============================================
@@ -316,23 +361,24 @@ export const authRouter = createTRPCRouter({
       // If MFA is globally required but the user has not enrolled, signal
       // the frontend to redirect to MFA setup. We intentionally do NOT block
       // login here — that is a product decision left to the frontend.
+      const appUser = await resolveAuthenticatedAppUser(ctx.prisma, user);
       const mfaRequiredGlobally = process.env.MFA_REQUIRED === 'true';
       if (mfaRequiredGlobally) {
         // Record success and create session so the user is authenticated
         loginLimiter.recordSuccess(input.email, ipAddress);
         const deviceInfoEnroll = sessionService.parseDeviceInfo(userAgent);
         await sessionService.createSession({
-          userId: user.id,
-          tenantId: user.id,
+          userId: appUser.session.userId,
+          tenantId: appUser.session.tenantId,
           deviceInfo: deviceInfoEnroll,
           ipAddress,
           userAgent,
           refreshToken: session.refresh_token,
           rememberMe: input.rememberMe,
         });
-        await auditLogger.logLoginSuccess(user.id, {
-          userId: user.id,
-          email: user.email || input.email,
+        await auditLogger.logLoginSuccess(appUser.session.userId, {
+          userId: appUser.session.userId,
+          email: appUser.session.email,
           ipAddress,
           userAgent,
           mfaUsed: false,
@@ -340,13 +386,7 @@ export const authRouter = createTRPCRouter({
 
         const enrollResponse: LoginResponse = {
           success: true,
-          user: {
-            id: user.id,
-            email: user.email || input.email,
-            name: user.user_metadata?.name || null,
-            role: user.user_metadata?.role || 'USER',
-            avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
-          },
+          user: buildAuthUserPayload(appUser),
           session: {
             accessToken: session.access_token,
             refreshToken: session.refresh_token,
@@ -365,8 +405,8 @@ export const authRouter = createTRPCRouter({
       // Create application session
       const deviceInfo = sessionService.parseDeviceInfo(userAgent);
       await sessionService.createSession({
-        userId: user.id,
-        tenantId: user.id, // For now, use user ID as tenant ID
+        userId: appUser.session.userId,
+        tenantId: appUser.session.tenantId,
         deviceInfo,
         ipAddress,
         userAgent,
@@ -375,9 +415,9 @@ export const authRouter = createTRPCRouter({
       });
 
       // Log successful login
-      await auditLogger.logLoginSuccess(user.id, {
-        userId: user.id,
-        email: user.email || input.email,
+      await auditLogger.logLoginSuccess(appUser.session.userId, {
+        userId: appUser.session.userId,
+        email: appUser.session.email,
         ipAddress,
         userAgent,
         mfaUsed: false,
@@ -386,13 +426,7 @@ export const authRouter = createTRPCRouter({
       // Return success response
       const response: LoginResponse = {
         success: true,
-        user: {
-          id: user.id,
-          email: user.email || input.email,
-          name: user.user_metadata?.name || null,
-          role: user.user_metadata?.role || 'USER',
-          avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
-        },
+        user: buildAuthUserPayload(appUser),
         session: {
           accessToken: session.access_token,
           refreshToken: session.refresh_token,
@@ -555,12 +589,13 @@ export const authRouter = createTRPCRouter({
       getHeaderFromContext(oauthHeaders, 'x-forwarded-for') ||
       getHeaderFromContext(oauthHeaders, 'x-real-ip');
     const userAgent = getHeaderFromContext(oauthHeaders, 'user-agent');
+    const appUser = await resolveAuthenticatedAppUser(ctx.prisma, user);
 
     // Create application session
     const deviceInfo = sessionService.parseDeviceInfo(userAgent);
     await sessionService.createSession({
-      userId: user.id,
-      tenantId: user.id,
+      userId: appUser.session.userId,
+      tenantId: appUser.session.tenantId,
       deviceInfo,
       ipAddress,
       userAgent,
@@ -569,9 +604,9 @@ export const authRouter = createTRPCRouter({
     });
 
     // Log successful login
-    await auditLogger.logLoginSuccess(user.id, {
-      userId: user.id,
-      email: user.email || 'unknown',
+    await auditLogger.logLoginSuccess(appUser.session.userId, {
+      userId: appUser.session.userId,
+      email: appUser.session.email,
       ipAddress,
       userAgent,
       mfaUsed: false,
@@ -579,12 +614,7 @@ export const authRouter = createTRPCRouter({
 
     return {
       success: true,
-      user: {
-        id: user.id,
-        email: user.email || '',
-        name: user.user_metadata?.name || null,
-        role: user.user_metadata?.role || 'USER',
-      },
+      user: buildAuthUserPayload(appUser),
       session: {
         accessToken: session.access_token,
         refreshToken: session.refresh_token,
@@ -638,12 +668,13 @@ export const authRouter = createTRPCRouter({
         message: 'Session expired. Please log in again.',
       });
     }
+    const appUser = await resolveAuthenticatedAppUser(ctx.prisma, session.user);
 
     // Create application session
     const deviceInfo = sessionService.parseDeviceInfo(userAgent);
     await sessionService.createSession({
-      userId: session.user.id,
-      tenantId: session.user.id,
+      userId: appUser.session.userId,
+      tenantId: appUser.session.tenantId,
       deviceInfo,
       ipAddress,
       userAgent,
@@ -652,9 +683,9 @@ export const authRouter = createTRPCRouter({
     });
 
     // Log successful MFA login
-    await auditLogger.logLoginSuccess(session.user.id, {
-      userId: session.user.id,
-      email: session.user.email || 'unknown',
+    await auditLogger.logLoginSuccess(appUser.session.userId, {
+      userId: appUser.session.userId,
+      email: appUser.session.email,
       ipAddress,
       userAgent,
       mfaUsed: true,
@@ -662,12 +693,7 @@ export const authRouter = createTRPCRouter({
 
     return {
       success: true,
-      user: {
-        id: session.user.id,
-        email: session.user.email || '',
-        name: session.user.user_metadata?.name || null,
-        role: session.user.user_metadata?.role || 'USER',
-      },
+      user: buildAuthUserPayload(appUser),
       session: {
         accessToken: session.access_token,
         refreshToken: session.refresh_token,
@@ -1126,25 +1152,11 @@ export const authRouter = createTRPCRouter({
       return { authenticated: false };
     }
 
-    // Look up user in database to get role
-    const dbUser = await ctx.prisma.user.findUnique({
-      where: { id: supabaseUser.id },
-      select: { id: true, email: true, name: true, role: true, avatarUrl: true },
-    });
+    const appUser = await resolveAuthenticatedAppUser(ctx.prisma, supabaseUser);
 
     return {
       authenticated: true,
-      user: {
-        id: supabaseUser.id,
-        email: supabaseUser.email || '',
-        name: dbUser?.name || supabaseUser.user_metadata?.name || null,
-        role: dbUser?.role || supabaseUser.user_metadata?.role || 'USER',
-        avatar:
-          dbUser?.avatarUrl ||
-          supabaseUser.user_metadata?.avatar_url ||
-          supabaseUser.user_metadata?.picture ||
-          null,
-      },
+      user: buildAuthUserPayload(appUser),
       expiresAt: new Date(Date.now() + 3600 * 1000), // Token expiry from Supabase
     };
   }),

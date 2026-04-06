@@ -7,14 +7,14 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure } from '../../trpc';
+import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { updateTimezoneInputSchema } from '@intelliflow/validators';
 
 export const userRouter = createTRPCRouter({
   /**
    * Get the authenticated user's profile (name, email, role, timezone).
    */
-  getProfile: protectedProcedure.query(async ({ ctx }) => {
+  getProfile: tenantProcedure.query(async ({ ctx }) => {
     if (!ctx.user?.userId) {
       throw new TRPCError({
         code: 'UNAUTHORIZED',
@@ -22,7 +22,7 @@ export const userRouter = createTRPCRouter({
       });
     }
 
-    const user = await ctx.prisma.user.findUnique({
+    const user = await ctx.prismaWithTenant.user.findUnique({
       where: { id: ctx.user.userId },
       select: { name: true, email: true, role: true, timezone: true },
     });
@@ -46,7 +46,7 @@ export const userRouter = createTRPCRouter({
    * Update the authenticated user's timezone.
    * Validates the timezone is a valid IANA identifier.
    */
-  updateTimezone: protectedProcedure
+  updateTimezone: tenantProcedure
     .input(updateTimezoneInputSchema)
     .mutation(async ({ ctx, input }) => {
       if (!ctx.user?.userId) {
@@ -56,7 +56,7 @@ export const userRouter = createTRPCRouter({
         });
       }
 
-      await ctx.prisma.user.update({
+      await ctx.prismaWithTenant.user.update({
         where: { id: ctx.user.userId },
         data: { timezone: input.timezone },
       });

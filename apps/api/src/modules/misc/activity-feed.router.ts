@@ -172,7 +172,7 @@ export const activityFeedRouter = createTRPCRouter({
       const userId = ctx.tenant.userId;
       const userName = ctx.user?.email ?? 'Unknown';
 
-      const existing = await ctx.prisma.activityReaction.findUnique({
+      const existing = await ctx.prismaWithTenant.activityReaction.findUnique({
         where: {
           activityId_activitySource_userId_emoji: {
             activityId: input.activityId,
@@ -184,11 +184,11 @@ export const activityFeedRouter = createTRPCRouter({
       });
 
       if (existing) {
-        await ctx.prisma.activityReaction.delete({
+        await ctx.prismaWithTenant.activityReaction.delete({
           where: { id: existing.id },
         });
       } else {
-        await ctx.prisma.activityReaction.create({
+        await ctx.prismaWithTenant.activityReaction.create({
           data: {
             activityId: input.activityId,
             activitySource: input.activitySource,
@@ -201,7 +201,7 @@ export const activityFeedRouter = createTRPCRouter({
       }
 
       // Return updated reactions for this activity
-      const reactions = await ctx.prisma.activityReaction.findMany({
+      const reactions = await ctx.prismaWithTenant.activityReaction.findMany({
         where: {
           activityId: input.activityId,
           activitySource: input.activitySource,
@@ -242,7 +242,7 @@ export const activityFeedRouter = createTRPCRouter({
         where.activitySource = input.activitySource;
       }
 
-      const reactions = await ctx.prisma.activityReaction.findMany({ where });
+      const reactions = await ctx.prismaWithTenant.activityReaction.findMany({ where });
 
       // Group by activityId, then by emoji
       const result: Record<string, { emoji: string; count: number; users: string[] }[]> = {};
@@ -273,7 +273,7 @@ export const activityFeedRouter = createTRPCRouter({
       const userId = ctx.tenant.userId;
       const userName = ctx.user?.email ?? 'Unknown';
 
-      const comment = await ctx.prisma.activityComment.create({
+      const comment = await ctx.prismaWithTenant.activityComment.create({
         data: {
           activityId: input.activityId,
           activitySource: input.activitySource,
@@ -304,7 +304,7 @@ export const activityFeedRouter = createTRPCRouter({
         where.activitySource = input.activitySource;
       }
 
-      const comments = await ctx.prisma.activityComment.findMany({
+      const comments = await ctx.prismaWithTenant.activityComment.findMany({
         where,
         orderBy: { createdAt: 'asc' },
       });

@@ -94,10 +94,11 @@ export function extractTenantContext(user: Context['user']): TenantContext {
  * See: supabase/migrations/20260203120000_enable_rls_policies.sql
  *   → get_current_tenant_id() reads current_setting('app.current_tenant_id', true)
  *
- * NOTE: Do NOT use `SET LOCAL` here — Prisma 7 with the pg adapter does not
- * wrap every operation in an explicit transaction, so SET LOCAL would be a
- * no-op between implicit transactions. `SET` (session-scoped) persists for
- * the connection lifetime, which is safe with PgBouncer in session mode.
+ * Uses session-scoped `SET` (not `SET LOCAL`) so the variable persists for
+ * the connection lifetime. This avoids wrapping every query in a transaction
+ * which would double round trips and cause severe performance degradation.
+ * Safe with Supabase's default PgBouncer session mode and with the
+ * @prisma/adapter-pg connection management.
  */
 export function createTenantScopedPrisma(
   prisma: PrismaClient,
@@ -115,7 +116,8 @@ export function createTenantScopedPrisma(
     query: {
       $allModels: {
         async $allOperations({ args, query }) {
-          // Set the session variable that all RLS policies read.
+          // Set the session variable that RLS policies read.
+          // Session-scoped SET persists for the connection lifetime.
           await prisma.$executeRawUnsafe(
             `SET app.current_tenant_id = '${tenantContext.tenantId}'`
           );
@@ -123,7 +125,7 @@ export function createTenantScopedPrisma(
         },
       },
     },
-  }) as PrismaClient;
+  }) as unknown as PrismaClient;
 }
 
 /**
@@ -275,17 +277,19 @@ export async function verifyTenantAccess(
 /**
  * Create a where clause filter for tenant isolation
  *
+ * Always includes tenantId for defense-in-depth (RLS may not be effective
+ * when the SET and the query land on different pool connections).
  * Automatically adds ownerId filter for non-admin users.
  */
 export function createTenantWhereClause<T extends Record<string, unknown>>(
   tenant: TenantContext,
   additionalWhere?: T
-): T & { ownerId?: string | { in: string[] } } {
-  const base = additionalWhere ?? ({} as T);
+): T & { tenantId: string; ownerId?: string | { in: string[] } } {
+  const base = { ...(additionalWhere ?? ({} as T)), tenantId: tenant.tenantId };
 
-  // Admin can access all
+  // Admin can access all within tenant
   if (tenant.role === 'ADMIN') {
-    return base as T & { ownerId?: string | { in: string[] } };
+    return base as T & { tenantId: string; ownerId?: string | { in: string[] } };
   }
 
   // Manager can access team members

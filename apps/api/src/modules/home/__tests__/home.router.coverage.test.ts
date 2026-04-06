@@ -20,6 +20,7 @@ import { TRPCError } from '@trpc/server';
 import { homeRouter } from '../home.router';
 import {
   prismaMock,
+  createAdminContext,
   createTestContext,
   createPublicContext,
   TEST_UUIDS,
@@ -313,6 +314,9 @@ describe('Home Router Coverage Tests (PG-163)', () => {
       ];
 
       (prismaMock.aIInsight as any).findMany.mockResolvedValue(cachedRows);
+      // filterStaleInsights verifies referenced entities still exist
+      prismaMock.opportunity.findMany.mockResolvedValue([{ id: 'opp-1' }] as any);
+      prismaMock.lead.findMany.mockResolvedValue([{ id: 'lead-1' }] as any);
 
       const result = await caller.getAIInsights();
 
@@ -322,10 +326,6 @@ describe('Home Router Coverage Tests (PG-163)', () => {
       expect(result.insights[1].type).toBe('opportunity'); // recommendation → opportunity
       expect(result.insights[1].suggestedAction).toBeNull(); // empty array → null
       expect(result.lastRefreshed).toEqual(now);
-
-      // Cache hit should NOT trigger heuristic queries
-      expect(prismaMock.opportunity.findMany).not.toHaveBeenCalled();
-      expect(prismaMock.lead.findMany).not.toHaveBeenCalled();
     });
 
     it('falls back to heuristic insights on cache miss with user data', async () => {
@@ -361,7 +361,8 @@ describe('Home Router Coverage Tests (PG-163)', () => {
       expect(result.insights[0].type).toBe('opportunity');
     });
 
-    it('falls back to tenant-scoped queries when user has no data', async () => {
+    it('falls back to tenant-scoped queries when an admin has no direct data', async () => {
+      const adminCaller = homeRouter.createCaller(createAdminContext());
       (prismaMock.aIInsight as any).findMany.mockResolvedValue([]);
 
       // First call (user-scoped) — all empty
@@ -392,7 +393,7 @@ describe('Home Router Coverage Tests (PG-163)', () => {
         _max: {},
       } as any);
 
-      const result = await caller.getAIInsights();
+      const result = await adminCaller.getAIInsights();
 
       // The tenant-scoped deal triggers a proactive notification (fire-and-forget).
       // Smart summaries are now returned as insights instead of per-deal alerts.

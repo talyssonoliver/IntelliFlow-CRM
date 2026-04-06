@@ -18,7 +18,7 @@ export const calendarRouter = createTRPCRouter({
    * List all custom calendars for the current tenant
    */
   list: tenantProcedure.query(async ({ ctx }) => {
-    const calendars = await ctx.prisma.calendar.findMany({
+    const calendars = await ctx.prismaWithTenant.calendar.findMany({
       where: { tenantId: ctx.tenant.tenantId },
       orderBy: { createdAt: 'asc' },
       select: {
@@ -36,7 +36,7 @@ export const calendarRouter = createTRPCRouter({
    * Create a new custom calendar
    */
   create: tenantProcedure.input(createCalendarSchema).mutation(async ({ ctx, input }) => {
-    const calendar = await ctx.prisma.calendar.create({
+    const calendar = await ctx.prismaWithTenant.calendar.create({
       data: {
         name: input.name,
         color: input.color,
@@ -58,7 +58,7 @@ export const calendarRouter = createTRPCRouter({
    * Update a custom calendar (name and/or color). Owner-only.
    */
   update: tenantProcedure.input(updateCalendarSchema).mutation(async ({ ctx, input }) => {
-    const existing = await ctx.prisma.calendar.findFirst({
+    const existing = await ctx.prismaWithTenant.calendar.findFirst({
       where: { id: input.id, tenantId: ctx.tenant.tenantId },
     });
 
@@ -76,7 +76,7 @@ export const calendarRouter = createTRPCRouter({
       });
     }
 
-    const calendar = await ctx.prisma.calendar.update({
+    const calendar = await ctx.prismaWithTenant.calendar.update({
       where: { id: input.id },
       data: {
         ...(input.name !== undefined && { name: input.name }),
@@ -98,7 +98,7 @@ export const calendarRouter = createTRPCRouter({
    * Resets calendarId to null on all linked appointments and tasks.
    */
   delete: tenantProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    const existing = await ctx.prisma.calendar.findFirst({
+    const existing = await ctx.prismaWithTenant.calendar.findFirst({
       where: { id: input.id, tenantId: ctx.tenant.tenantId },
     });
 
@@ -117,16 +117,16 @@ export const calendarRouter = createTRPCRouter({
     }
 
     // Reset calendarId on linked items, then delete
-    await ctx.prisma.$transaction([
-      ctx.prisma.appointment.updateMany({
+    await ctx.prismaWithTenant.$transaction([
+      ctx.prismaWithTenant.appointment.updateMany({
         where: { calendarId: input.id },
         data: { calendarId: null },
       }),
-      ctx.prisma.task.updateMany({
+      ctx.prismaWithTenant.task.updateMany({
         where: { calendarId: input.id },
         data: { calendarId: null },
       }),
-      ctx.prisma.calendar.delete({
+      ctx.prismaWithTenant.calendar.delete({
         where: { id: input.id },
       }),
     ]);

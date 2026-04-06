@@ -19,7 +19,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure } from '../../trpc';
+import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { AppointmentDomainService } from '../../services';
 import {
   ConflictDetectionError,
@@ -296,7 +296,7 @@ export const appointmentsRouter = createTRPCRouter({
    * - Recurrence validation
    * - Sophisticated conflict detection via ConflictDetector
    */
-  create: protectedProcedure.input(createAppointmentSchema).mutation(async ({ ctx, input }) => {
+  create: tenantProcedure.input(createAppointmentSchema).mutation(async ({ ctx, input }) => {
     const startTime = performance.now();
 
     try {
@@ -329,7 +329,7 @@ export const appointmentsRouter = createTRPCRouter({
         const allAttendees = [ctx.user.userId, ...input.attendeeIds];
 
         // Fetch existing appointments for conflict detection
-        const dbAppointments = await ctx.prisma.appointment.findMany({
+        const dbAppointments = await ctx.prismaWithTenant.appointment.findMany({
           where: {
             AND: [
               {
@@ -363,7 +363,7 @@ export const appointmentsRouter = createTRPCRouter({
 
         if (conflictResult.hasConflicts) {
           // Get conflict details from database
-          const conflictDetails = await ctx.prisma.appointment.findMany({
+          const conflictDetails = await ctx.prismaWithTenant.appointment.findMany({
             where: { id: { in: conflictResult.conflicts.map((c) => c.appointmentId) } },
             select: { id: true, title: true, startTime: true, endTime: true },
           });
@@ -422,7 +422,7 @@ export const appointmentsRouter = createTRPCRouter({
 
     // Create the appointment
     const tenantId = ctx.user.tenantId;
-    const appointment = await ctx.prisma.appointment.create({
+    const appointment = await ctx.prismaWithTenant.appointment.create({
       data: {
         title: input.title,
         description: input.description,
@@ -460,7 +460,7 @@ export const appointmentsRouter = createTRPCRouter({
     );
 
     // Notify organizer of scheduled appointment
-    createNotification(ctx.prisma, {
+    createNotification(ctx.prismaWithTenant, {
       userId: ctx.user.userId,
       tenantId,
       type: 'appointment_scheduled',
@@ -479,8 +479,8 @@ export const appointmentsRouter = createTRPCRouter({
   /**
    * Get a single appointment by ID
    */
-  getById: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
-    const appointment = await ctx.prisma.appointment.findUnique({
+  getById: tenantProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
+    const appointment = await ctx.prismaWithTenant.appointment.findUnique({
       where: { id: input.id },
       include: {
         attendees: true,
@@ -501,7 +501,7 @@ export const appointmentsRouter = createTRPCRouter({
   /**
    * List appointments with filtering
    */
-  list: protectedProcedure.input(listAppointmentsSchema).query(async ({ ctx, input }) => {
+  list: tenantProcedure.input(listAppointmentsSchema).query(async ({ ctx, input }) => {
     const {
       page,
       limit,
@@ -542,7 +542,7 @@ export const appointmentsRouter = createTRPCRouter({
     }
 
     const [appointments, total] = await Promise.all([
-      ctx.prisma.appointment.findMany({
+      ctx.prismaWithTenant.appointment.findMany({
         where,
         skip,
         take: limit,
@@ -552,7 +552,7 @@ export const appointmentsRouter = createTRPCRouter({
           linkedCases: true,
         },
       }),
-      ctx.prisma.appointment.count({ where }),
+      ctx.prismaWithTenant.appointment.count({ where }),
     ]);
 
     // Enrich attendees with user data for display
@@ -561,7 +561,7 @@ export const appointmentsRouter = createTRPCRouter({
         appointments.flatMap((a) => [a.organizerId, ...a.attendees.map((att) => att.userId)])
       ),
     ];
-    const users = await ctx.prisma.user.findMany({
+    const users = await ctx.prismaWithTenant.user.findMany({
       where: { id: { in: allUserIds } },
       select: { id: true, name: true, avatarUrl: true },
     });
@@ -588,10 +588,10 @@ export const appointmentsRouter = createTRPCRouter({
   /**
    * Update appointment details
    */
-  update: protectedProcedure.input(updateAppointmentSchema).mutation(async ({ ctx, input }) => {
+  update: tenantProcedure.input(updateAppointmentSchema).mutation(async ({ ctx, input }) => {
     const { id, ...data } = input;
 
-    const existing = await ctx.prisma.appointment.findUnique({
+    const existing = await ctx.prismaWithTenant.appointment.findUnique({
       where: { id },
     });
 
@@ -609,7 +609,7 @@ export const appointmentsRouter = createTRPCRouter({
       });
     }
 
-    const appointment = await ctx.prisma.appointment.update({
+    const appointment = await ctx.prismaWithTenant.appointment.update({
       where: { id },
       data,
       include: {
@@ -627,10 +627,10 @@ export const appointmentsRouter = createTRPCRouter({
    * Uses domain ConflictDetector for sophisticated conflict detection
    * when checking the new time slot
    */
-  reschedule: protectedProcedure.input(rescheduleSchema).mutation(async ({ ctx, input }) => {
+  reschedule: tenantProcedure.input(rescheduleSchema).mutation(async ({ ctx, input }) => {
     const startTime = performance.now();
 
-    const existing = await ctx.prisma.appointment.findUnique({
+    const existing = await ctx.prismaWithTenant.appointment.findUnique({
       where: { id: input.id },
       include: {
         attendees: true,
@@ -671,7 +671,7 @@ export const appointmentsRouter = createTRPCRouter({
       const allAttendees = [existing.organizerId, ...existing.attendees.map((a) => a.userId)];
 
       // Fetch existing appointments for conflict detection
-      const dbAppointments = await ctx.prisma.appointment.findMany({
+      const dbAppointments = await ctx.prismaWithTenant.appointment.findMany({
         where: {
           AND: [
             {
@@ -706,7 +706,7 @@ export const appointmentsRouter = createTRPCRouter({
 
       if (conflictResult.hasConflicts) {
         // Get conflict details from database
-        const conflictDetails = await ctx.prisma.appointment.findMany({
+        const conflictDetails = await ctx.prismaWithTenant.appointment.findMany({
           where: { id: { in: conflictResult.conflicts.map((c) => c.appointmentId) } },
           select: { id: true, title: true, startTime: true, endTime: true },
         });
@@ -731,7 +731,7 @@ export const appointmentsRouter = createTRPCRouter({
       }
     }
 
-    const appointment = await ctx.prisma.appointment.update({
+    const appointment = await ctx.prismaWithTenant.appointment.update({
       where: { id: input.id },
       data: {
         startTime: input.newStartTime,
@@ -758,7 +758,7 @@ export const appointmentsRouter = createTRPCRouter({
     ).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
 
     // Notify organizer of rescheduled appointment
-    createNotification(ctx.prisma, {
+    createNotification(ctx.prismaWithTenant, {
       userId: existing.organizerId,
       tenantId: ctx.user.tenantId,
       type: 'appointment_rescheduled',
@@ -783,10 +783,10 @@ export const appointmentsRouter = createTRPCRouter({
   /**
    * Confirm an appointment
    */
-  confirm: protectedProcedure
+  confirm: tenantProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.prisma.appointment.findUnique({
+      const existing = await ctx.prismaWithTenant.appointment.findUnique({
         where: { id: input.id },
       });
 
@@ -804,7 +804,7 @@ export const appointmentsRouter = createTRPCRouter({
         });
       }
 
-      const appointment = await ctx.prisma.appointment.update({
+      const appointment = await ctx.prismaWithTenant.appointment.update({
         where: { id: input.id },
         data: { status: 'CONFIRMED' },
         include: {
@@ -819,10 +819,10 @@ export const appointmentsRouter = createTRPCRouter({
   /**
    * Complete an appointment
    */
-  complete: protectedProcedure
+  complete: tenantProcedure
     .input(z.object({ id: z.string(), notes: z.string().max(5000).optional() }))
     .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.prisma.appointment.findUnique({
+      const existing = await ctx.prismaWithTenant.appointment.findUnique({
         where: { id: input.id },
       });
 
@@ -847,7 +847,7 @@ export const appointmentsRouter = createTRPCRouter({
         });
       }
 
-      const appointment = await ctx.prisma.appointment.update({
+      const appointment = await ctx.prismaWithTenant.appointment.update({
         where: { id: input.id },
         data: {
           status: 'COMPLETED',
@@ -866,10 +866,10 @@ export const appointmentsRouter = createTRPCRouter({
   /**
    * Cancel an appointment
    */
-  cancel: protectedProcedure
+  cancel: tenantProcedure
     .input(z.object({ id: z.string(), reason: z.string().max(500).optional() }))
     .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.prisma.appointment.findUnique({
+      const existing = await ctx.prismaWithTenant.appointment.findUnique({
         where: { id: input.id },
       });
 
@@ -894,7 +894,7 @@ export const appointmentsRouter = createTRPCRouter({
         });
       }
 
-      const appointment = await ctx.prisma.appointment.update({
+      const appointment = await ctx.prismaWithTenant.appointment.update({
         where: { id: input.id },
         data: {
           status: 'CANCELLED',
@@ -918,10 +918,10 @@ export const appointmentsRouter = createTRPCRouter({
   /**
    * Mark appointment as no-show
    */
-  markNoShow: protectedProcedure
+  markNoShow: tenantProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.prisma.appointment.findUnique({
+      const existing = await ctx.prismaWithTenant.appointment.findUnique({
         where: { id: input.id },
       });
 
@@ -939,7 +939,7 @@ export const appointmentsRouter = createTRPCRouter({
         });
       }
 
-      const appointment = await ctx.prisma.appointment.update({
+      const appointment = await ctx.prismaWithTenant.appointment.update({
         where: { id: input.id },
         data: { status: 'NO_SHOW' },
         include: {
@@ -954,10 +954,10 @@ export const appointmentsRouter = createTRPCRouter({
   /**
    * Delete an appointment
    */
-  delete: protectedProcedure
+  delete: tenantProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.prisma.appointment.findUnique({
+      const existing = await ctx.prismaWithTenant.appointment.findUnique({
         where: { id: input.id },
       });
 
@@ -968,7 +968,7 @@ export const appointmentsRouter = createTRPCRouter({
         });
       }
 
-      await ctx.prisma.appointment.delete({
+      await ctx.prismaWithTenant.appointment.delete({
         where: { id: input.id },
       });
 
@@ -984,11 +984,11 @@ export const appointmentsRouter = createTRPCRouter({
    * - Proper buffer time handling
    * - Conflict type classification (EXACT, PARTIAL, BUFFER)
    */
-  checkConflicts: protectedProcedure.input(checkConflictsSchema).query(async ({ ctx, input }) => {
+  checkConflicts: tenantProcedure.input(checkConflictsSchema).query(async ({ ctx, input }) => {
     const startTime = performance.now();
 
     // Fetch existing appointments for the attendees
-    const dbAppointments = await ctx.prisma.appointment.findMany({
+    const dbAppointments = await ctx.prismaWithTenant.appointment.findMany({
       where: {
         AND: [
           {
@@ -1022,7 +1022,7 @@ export const appointmentsRouter = createTRPCRouter({
     );
 
     // Map conflict IDs to appointment details
-    const conflictDetails = await ctx.prisma.appointment.findMany({
+    const conflictDetails = await ctx.prismaWithTenant.appointment.findMany({
       where: { id: { in: result.conflicts.map((c) => c.appointmentId) } },
       select: {
         id: true,
@@ -1062,13 +1062,13 @@ export const appointmentsRouter = createTRPCRouter({
    *
    * Uses domain ConflictDetector.checkAvailability for sophisticated slot finding
    */
-  checkAvailability: protectedProcedure
+  checkAvailability: tenantProcedure
     .input(checkAvailabilitySchema)
     .query(async ({ ctx, input }) => {
       const startTime = performance.now();
 
       // Get all appointments for the attendee in the time range
-      const dbAppointments = await ctx.prisma.appointment.findMany({
+      const dbAppointments = await ctx.prismaWithTenant.appointment.findMany({
         where: {
           AND: [
             {
@@ -1127,14 +1127,14 @@ export const appointmentsRouter = createTRPCRouter({
    * - Buffer time handling
    * - Weekend exclusion
    */
-  findNextSlot: protectedProcedure.input(findNextSlotSchema).query(async ({ ctx, input }) => {
+  findNextSlot: tenantProcedure.input(findNextSlotSchema).query(async ({ ctx, input }) => {
     const startTime = performance.now();
 
     const searchEndDate = new Date(input.startFrom);
-    searchEndDate.setDate(searchEndDate.getDate() + input.maxDaysAhead);
+    searchEndDate.setUTCDate(searchEndDate.getUTCDate() + input.maxDaysAhead);
 
     // Get all appointments for the attendee in the search range
-    const dbAppointments = await ctx.prisma.appointment.findMany({
+    const dbAppointments = await ctx.prismaWithTenant.appointment.findMany({
       where: {
         AND: [
           {
@@ -1195,10 +1195,10 @@ export const appointmentsRouter = createTRPCRouter({
   /**
    * Link appointment to a case
    */
-  linkToCase: protectedProcedure
+  linkToCase: tenantProcedure
     .input(z.object({ appointmentId: z.string(), caseId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.prisma.appointment.findUnique({
+      const existing = await ctx.prismaWithTenant.appointment.findUnique({
         where: { id: input.appointmentId },
       });
 
@@ -1210,7 +1210,7 @@ export const appointmentsRouter = createTRPCRouter({
       }
 
       // Check if already linked
-      const existingLink = await ctx.prisma.appointmentCase.findUnique({
+      const existingLink = await ctx.prismaWithTenant.appointmentCase.findUnique({
         where: {
           appointmentId_caseId: {
             appointmentId: input.appointmentId,
@@ -1223,7 +1223,7 @@ export const appointmentsRouter = createTRPCRouter({
         return { success: true, message: 'Already linked' };
       }
 
-      await ctx.prisma.appointmentCase.create({
+      await ctx.prismaWithTenant.appointmentCase.create({
         data: {
           tenantId: ctx.user.tenantId,
           appointmentId: input.appointmentId,
@@ -1237,10 +1237,10 @@ export const appointmentsRouter = createTRPCRouter({
   /**
    * Unlink appointment from a case
    */
-  unlinkFromCase: protectedProcedure
+  unlinkFromCase: tenantProcedure
     .input(z.object({ appointmentId: z.string(), caseId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.prisma.appointmentCase.findUnique({
+      const existing = await ctx.prismaWithTenant.appointmentCase.findUnique({
         where: {
           appointmentId_caseId: {
             appointmentId: input.appointmentId,
@@ -1256,7 +1256,7 @@ export const appointmentsRouter = createTRPCRouter({
         });
       }
 
-      await ctx.prisma.appointmentCase.delete({
+      await ctx.prismaWithTenant.appointmentCase.delete({
         where: { id: existing.id },
       });
 
@@ -1266,10 +1266,10 @@ export const appointmentsRouter = createTRPCRouter({
   /**
    * Add attendee to appointment
    */
-  addAttendee: protectedProcedure
+  addAttendee: tenantProcedure
     .input(z.object({ appointmentId: z.string(), userId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.prisma.appointment.findUnique({
+      const existing = await ctx.prismaWithTenant.appointment.findUnique({
         where: { id: input.appointmentId },
       });
 
@@ -1281,7 +1281,7 @@ export const appointmentsRouter = createTRPCRouter({
       }
 
       // Check if already added
-      const existingAttendee = await ctx.prisma.appointmentAttendee.findUnique({
+      const existingAttendee = await ctx.prismaWithTenant.appointmentAttendee.findUnique({
         where: {
           appointmentId_userId: {
             appointmentId: input.appointmentId,
@@ -1294,7 +1294,7 @@ export const appointmentsRouter = createTRPCRouter({
         return { success: true, message: 'Already added' };
       }
 
-      await ctx.prisma.appointmentAttendee.create({
+      await ctx.prismaWithTenant.appointmentAttendee.create({
         data: {
           tenantId: ctx.user.tenantId,
           appointmentId: input.appointmentId,
@@ -1308,10 +1308,10 @@ export const appointmentsRouter = createTRPCRouter({
   /**
    * Remove attendee from appointment
    */
-  removeAttendee: protectedProcedure
+  removeAttendee: tenantProcedure
     .input(z.object({ appointmentId: z.string(), userId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.prisma.appointmentAttendee.findUnique({
+      const existing = await ctx.prismaWithTenant.appointmentAttendee.findUnique({
         where: {
           appointmentId_userId: {
             appointmentId: input.appointmentId,
@@ -1327,7 +1327,7 @@ export const appointmentsRouter = createTRPCRouter({
         });
       }
 
-      await ctx.prisma.appointmentAttendee.delete({
+      await ctx.prismaWithTenant.appointmentAttendee.delete({
         where: { id: existing.id },
       });
 
@@ -1337,13 +1337,13 @@ export const appointmentsRouter = createTRPCRouter({
   /**
    * Get upcoming appointments
    */
-  upcoming: protectedProcedure
+  upcoming: tenantProcedure
     .input(z.object({ limit: z.number().min(1).max(50).optional().default(10) }))
     .query(async ({ ctx, input }) => {
       const now = new Date();
 
       const scopeFilter = userScopeFilter(ctx.user);
-      const appointments = await ctx.prisma.appointment.findMany({
+      const appointments = await ctx.prismaWithTenant.appointment.findMany({
         where: {
           ...scopeFilter,
           startTime: { gte: now },
@@ -1363,28 +1363,28 @@ export const appointmentsRouter = createTRPCRouter({
   /**
    * Get appointment statistics
    */
-  stats: protectedProcedure.query(async ({ ctx }) => {
+  stats: tenantProcedure.query(async ({ ctx }) => {
     const scopeFilter = userScopeFilter(ctx.user);
     const [total, byStatus, byType, upcoming, overdue] = await Promise.all([
-      ctx.prisma.appointment.count({ where: scopeFilter }),
-      ctx.prisma.appointment.groupBy({
+      ctx.prismaWithTenant.appointment.count({ where: scopeFilter }),
+      ctx.prismaWithTenant.appointment.groupBy({
         by: ['status'],
         where: scopeFilter,
         _count: true,
       }),
-      ctx.prisma.appointment.groupBy({
+      ctx.prismaWithTenant.appointment.groupBy({
         by: ['appointmentType'],
         where: scopeFilter,
         _count: true,
       }),
-      ctx.prisma.appointment.count({
+      ctx.prismaWithTenant.appointment.count({
         where: {
           ...scopeFilter,
           startTime: { gte: new Date() },
           status: { in: ['SCHEDULED', 'CONFIRMED'] },
         },
       }),
-      ctx.prisma.appointment.count({
+      ctx.prismaWithTenant.appointment.count({
         where: {
           ...scopeFilter,
           endTime: { lt: new Date() },

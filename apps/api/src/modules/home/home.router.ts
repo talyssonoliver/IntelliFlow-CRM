@@ -259,13 +259,36 @@ async function filterStaleInsights<
 >(
   prisma: Context['prisma'],
   tenantId: string,
-  insights: T[]
+  insights: T[],
+  timezone: string = 'UTC'
 ): Promise<T[]> {
-  // Insights without an entityId (aggregate insights like "3 Overdue Tasks") are always valid
+  // Separate entity-linked insights from aggregate ones
   const withEntity = insights.filter((i) => i.entityId && i.entityType);
   const withoutEntity = insights.filter((i) => !i.entityId || !i.entityType);
 
-  if (withEntity.length === 0) return insights;
+  // Re-validate aggregate task insights (e.g. "3 Overdue Tasks") against current count.
+  // These have entityType='task' but no entityId, so entity-existence checks don't apply.
+  const aggregateTaskInsights = withoutEntity.filter((i) => i.entityType === 'task');
+  let validWithoutEntity = withoutEntity;
+  if (aggregateTaskInsights.length > 0) {
+    const overdueCutoff = startOfDayInTimezone(timezone, new Date());
+    const currentOverdue = await prisma.task.count({
+      where: { tenantId, dueDate: { lt: overdueCutoff }, status: { notIn: ['COMPLETED', 'CANCELLED'] } },
+    });
+    if (currentOverdue === 0) {
+      const staleAggregateIds = aggregateTaskInsights.map((i) => i.id);
+      validWithoutEntity = withoutEntity.filter((i) => i.entityType !== 'task');
+      // Fire-and-forget: expire stale aggregate task insights
+      prisma.aIInsight
+        .updateMany({
+          where: { id: { in: staleAggregateIds }, tenantId },
+          data: { status: 'EXPIRED', dismissReason: 'No overdue tasks remain' },
+        })
+        .catch(() => {});
+    }
+  }
+
+  if (withEntity.length === 0) return validWithoutEntity;
 
   // Group entity IDs by type for batch lookups
   const entityGroups = new Map<string, Set<string>>();
@@ -322,7 +345,7 @@ async function filterStaleInsights<
       .catch(() => {});
   }
 
-  return [...withoutEntity, ...validWithEntity];
+  return [...validWithoutEntity, ...validWithEntity];
 }
 
 /**
@@ -443,19 +466,23 @@ async function enqueueInsightGeneration(
 
 /**
  * Run the 4 heuristic queries to gather CRM data for insight generation.
- * Uses progressive fallback: user-scoped first, tenant-scoped if empty.
- * This ensures admin/manager users (or users without personal records)
- * still see team-wide insights.
+ * Uses progressive fallback only for admin/manager users.
+ * Regular users should not silently widen to tenant-wide data.
  */
 async function runHeuristicQueries(
   prisma: Context['prisma'],
   tenantId: string,
   userId: string,
-  opts: { dealTake: number; leadTake: number; contactTake: number }
+  opts: { dealTake: number; leadTake: number; contactTake: number },
+  allowTenantFallback: boolean,
+  timezone: string = 'UTC'
 ) {
   const now = new Date();
   const riskCutoff = new Date(now.getTime() - DEAL_RISK_DAYS * 24 * 60 * 60 * 1000);
   const staleCutoff = new Date(now.getTime() - STALE_CONTACT_DAYS * 24 * 60 * 60 * 1000);
+  // Use start-of-day in user's timezone to match task.stats overdue definition.
+  // Tasks due today are NOT overdue — only tasks due before today are.
+  const overdueCutoff = startOfDayInTimezone(timezone, now);
 
   // Helper to run all 4 queries with optional ownerId filter
   async function fetchAll(ownerFilter: string | undefined) {
@@ -485,7 +512,7 @@ async function runHeuristicQueries(
       prisma.task.count({
         where: {
           ...(ownerFilter ? { ownerId: ownerFilter } : { tenantId }),
-          dueDate: { lt: now },
+          dueDate: { lt: overdueCutoff },
           status: { notIn: ['COMPLETED', 'CANCELLED'] },
         },
       }),
@@ -515,6 +542,10 @@ async function runHeuristicQueries(
     staleContacts.length > 0;
 
   if (hasUserData) {
+    return { dealsAtRisk, hotLeads, overdueTasksCount, staleContacts, now };
+  }
+
+  if (!allowTenantFallback) {
     return { dealsAtRisk, hotLeads, overdueTasksCount, staleContacts, now };
   }
 
@@ -552,35 +583,58 @@ function buildHeuristicInsights(
 ): InsightResponseItem[] {
   const insights: InsightResponseItem[] = [];
 
-  dealsAtRisk.forEach((deal) => {
+  dealsAtRisk.forEach((deal, idx) => {
     const daysSinceUpdate = Math.floor(
       (now.getTime() - deal.updatedAt.getTime()) / (24 * 60 * 60 * 1000)
     );
+    const isCritical = daysSinceUpdate > 21;
+    const title = isCritical
+      ? `${deal.name} — ${daysSinceUpdate} Days Without Activity`
+      : `Deal Needs Attention: ${deal.name}`;
+    const description = isCritical
+      ? `${deal.name} has had no activity for ${daysSinceUpdate} days. This deal is at serious risk of going cold.`
+      : `${deal.name} hasn't been updated in ${daysSinceUpdate} days. A timely touchpoint can keep momentum going.`;
+    const actions = isCritical
+      ? ['Call the decision-maker directly', 'Send a value-recap email', 'Escalate internally for support']
+      : ['Schedule a check-in call', 'Send a progress update', 'Review the deal timeline'];
     insights.push({
       id: `deal-risk-${deal.id}`,
       type: 'warning',
       source: 'heuristic',
-      title: `Deal at Risk: ${deal.name}`,
-      description: `Last interaction was ${daysSinceUpdate} days ago. Consider scheduling a follow-up.`,
-      suggestedAction: 'Schedule a check-in call',
+      title,
+      description,
+      suggestedAction: actions[idx % actions.length],
       entityType: 'opportunity',
       entityId: deal.id,
       actionUrl: `/deals/${deal.id}`,
       requiresApproval: false,
-      priority: 'high',
+      priority: isCritical ? 'high' : 'medium',
       createdAt: now,
     });
   });
 
-  hotLeads.forEach((lead) => {
+  hotLeads.forEach((lead, idx) => {
     const name = `${lead.firstName || ''} ${lead.lastName || ''}`.trim() || lead.company || 'Lead';
+    const score = lead.score ?? 0;
+    // Vary title, description, and action based on score tier and position
+    const isTopTier = score >= 90;
+    const title = isTopTier ? `High-Priority Lead: ${name}` : `Hot Lead: ${name}`;
+    const actions = isTopTier
+      ? ['Schedule a discovery call', 'Prepare a tailored proposal', 'Send a personalized intro email']
+      : ['Send personalized follow-up', 'Schedule an introductory call', 'Research their company needs'];
+    const action = actions[idx % actions.length];
+    const descriptions = isTopTier
+      ? [`${name} scored ${score} — one of your strongest prospects. Prioritize direct outreach.`,
+         `${name} shows exceptional buying signals (score: ${score}). A discovery call could accelerate conversion.`]
+      : [`${name} has a score of ${score}, indicating genuine interest. Engage before momentum fades.`,
+         `${name} scored ${score} and may be evaluating options. Timely follow-up can make the difference.`];
     insights.push({
       id: `hot-lead-${lead.id}`,
       type: 'opportunity',
       source: 'heuristic',
-      title: 'Hot Lead Detected',
-      description: `${name} has a high score of ${lead.score}. This lead shows strong buying signals.`,
-      suggestedAction: 'Send personalized follow-up',
+      title,
+      description: descriptions[idx % descriptions.length],
+      suggestedAction: action,
       entityType: 'lead',
       entityId: lead.id,
       actionUrl: `/leads/${lead.id}?tab=ai-insights`,
@@ -607,25 +661,40 @@ function buildHeuristicInsights(
     });
   }
 
-  staleContacts.forEach((contact) => {
-    const name = `${contact.firstName} ${contact.lastName}`.trim();
+  staleContacts.forEach((contact, idx) => {
+    const name = `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 'Unnamed Contact';
     const days = contact.lastContactedAt
       ? Math.floor((now.getTime() - contact.lastContactedAt.getTime()) / (24 * 60 * 60 * 1000))
       : null;
+    const isVeryStale = days !== null && days > 30;
+    let title: string;
+    let description: string;
+    let actions: string[];
+    if (days === null) {
+      title = `New Contact Needs Outreach: ${name}`;
+      description = `${name} has never been contacted but has open opportunities. Initial outreach could unlock pipeline value.`;
+      actions = ['Send an introductory email', 'Schedule a first meeting', 'Add to outreach sequence'];
+    } else if (isVeryStale) {
+      title = `Re-engage ${name} — ${days} Days Silent`;
+      description = `${name} has gone ${days} days without interaction and has active opportunities at stake. Re-engagement is overdue.`;
+      actions = ['Send a re-engagement email', 'Call to re-establish contact', 'Review their opportunity status'];
+    } else {
+      title = `Follow Up with ${name}`;
+      description = `It's been ${days} days since your last interaction with ${name}. Their open opportunities need attention.`;
+      actions = ['Schedule a check-in call', 'Send a quick update email', 'Review their open opportunities'];
+    }
     insights.push({
       id: `stale-contact-${contact.id}`,
       type: 'warning',
       source: 'heuristic',
-      title: `Stale Contact: ${name}`,
-      description: days
-        ? `No interaction in ${days} days. This contact has open opportunities.`
-        : `Never contacted. This contact has open opportunities.`,
-      suggestedAction: 'Schedule a follow-up',
+      title,
+      description,
+      suggestedAction: actions[idx % actions.length],
       entityType: 'contact',
       entityId: contact.id,
       actionUrl: `/contacts/${contact.id}?tab=ai-insights`,
       requiresApproval: false,
-      priority: 'medium',
+      priority: isVeryStale ? 'high' : 'medium',
       createdAt: now,
     });
   });
@@ -766,6 +835,121 @@ async function createProactiveNotifications(
 }
 
 /**
+ * Builds the pipeline overview summary insight if active deals exist.
+ */
+async function buildPipelineSummaryInsight(
+  prisma: Context['prisma'],
+  tenantId: string,
+  userId: string,
+  now: Date
+): Promise<InsightResponseItem | null> {
+  const [activeDealCount, activePipelineValue] = await Promise.all([
+    prisma.opportunity.count({
+      where: { tenantId, ownerId: userId, stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] } },
+    }),
+    prisma.opportunity.aggregate({
+      where: { tenantId, ownerId: userId, stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] } },
+      _sum: { value: true },
+    }),
+  ]);
+
+  if (activeDealCount === 0) return null;
+
+  const value = Number(activePipelineValue._sum.value ?? 0);
+  const dealPlural = activeDealCount > 1 ? 's' : '';
+  return {
+    id: 'pipeline-summary',
+    type: 'opportunity',
+    source: 'heuristic',
+    title: 'Pipeline Overview',
+    description: `You have ${activeDealCount} active deal${dealPlural} worth $${value.toLocaleString('en-GB')}. Review your pipeline for next steps.`,
+    suggestedAction: 'Review pipeline',
+    entityType: null,
+    entityId: null,
+    actionUrl: '/deals',
+    requiresApproval: false,
+    priority: 'low',
+    createdAt: now,
+  };
+}
+
+/**
+ * Builds the weekly deal momentum trend insight if any deals were closed in the past two weeks.
+ */
+/**
+ * Computes the percentage trend and direction labels for weekly deal momentum.
+ */
+function computeDealTrend(
+  closedThisWeek: number,
+  closedLastWeek: number
+): { trend: number; direction: 'up' | 'down' | 'steady'; momentumLabel: string } {
+  let trend: number;
+  if (closedLastWeek > 0) {
+    trend = Math.round(((closedThisWeek - closedLastWeek) / closedLastWeek) * 100);
+  } else if (closedThisWeek > 0) {
+    trend = 100;
+  } else {
+    trend = 0;
+  }
+  let direction: 'up' | 'down' | 'steady';
+  if (trend > 0) {
+    direction = 'up';
+  } else if (trend < 0) {
+    direction = 'down';
+  } else {
+    direction = 'steady';
+  }
+  let momentumLabel: string;
+  if (direction === 'up') {
+    momentumLabel = 'Rising';
+  } else if (direction === 'down') {
+    momentumLabel = 'Declining';
+  } else {
+    momentumLabel = 'Steady';
+  }
+  return { trend, direction, momentumLabel };
+}
+
+async function buildDealTrendInsight(
+  prisma: Context['prisma'],
+  tenantId: string,
+  userId: string,
+  weekAgo: Date,
+  twoWeeksAgo: Date,
+  now: Date
+): Promise<InsightResponseItem | null> {
+  const [closedThisWeek, closedLastWeek] = await Promise.all([
+    prisma.opportunity.count({
+      where: { tenantId, ownerId: userId, stage: 'CLOSED_WON', closedAt: { gte: weekAgo } },
+    }),
+    prisma.opportunity.count({
+      where: { tenantId, ownerId: userId, stage: 'CLOSED_WON', closedAt: { gte: twoWeeksAgo, lt: weekAgo } },
+    }),
+  ]);
+
+  if (closedThisWeek === 0 && closedLastWeek === 0) return null;
+
+  const { trend, direction, momentumLabel } = computeDealTrend(closedThisWeek, closedLastWeek);
+  const trendSign = trend > 0 ? '+' : '';
+  const vsLastWeekSuffix = closedLastWeek > 0 ? ` (${trendSign}${trend}% vs last week)` : '';
+  const dealPlural = closedThisWeek !== 1 ? 's' : '';
+  return {
+    id: 'deal-trend',
+    type: direction === 'down' ? 'warning' : 'achievement',
+    source: 'heuristic',
+    title: `Weekly Momentum: ${momentumLabel}`,
+    description: `${closedThisWeek} deal${dealPlural} closed this week${vsLastWeekSuffix}.`,
+    suggestedAction: direction === 'down' ? 'Review pipeline activity' : null,
+    entityType: null,
+    entityId: null,
+    actionUrl: '/deals',
+    requiresApproval: false,
+    priority: 'low',
+    createdAt: now,
+  };
+}
+
+/**
  * Build forward-looking smart summaries for the insights panel.
  * These replace threshold alerts in /insights — they are informational,
  * not urgent, and provide pipeline/trend/queue intelligence.
@@ -782,64 +966,12 @@ async function buildSmartSummaries(
   const twoWeeksAgo = new Date(now.getTime() - 14 * 86400000);
 
   // 1. Pipeline summary — forward-looking: "what's in your pipeline"
-  const [activeDealCount, activePipelineValue] = await Promise.all([
-    prisma.opportunity.count({
-      where: { tenantId, ownerId: userId, stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] } },
-    }),
-    prisma.opportunity.aggregate({
-      where: { tenantId, ownerId: userId, stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] } },
-      _sum: { value: true },
-    }),
-  ]);
-
-  if (activeDealCount > 0) {
-    const value = Number(activePipelineValue._sum.value ?? 0);
-    summaries.push({
-      id: 'pipeline-summary',
-      type: 'opportunity',
-      source: 'heuristic',
-      title: 'Pipeline Overview',
-      description: `You have ${activeDealCount} active deal${activeDealCount > 1 ? 's' : ''} worth $${value.toLocaleString()}. Review your pipeline for next steps.`,
-      suggestedAction: 'Review pipeline',
-      entityType: null,
-      entityId: null,
-      actionUrl: '/deals',
-      requiresApproval: false,
-      priority: 'low',
-      createdAt: now,
-    });
-  }
+  const pipelineInsight = await buildPipelineSummaryInsight(prisma, tenantId, userId, now);
+  if (pipelineInsight) summaries.push(pipelineInsight);
 
   // 2. Weekly deal trend — forward-looking: "momentum indicator"
-  const [closedThisWeek, closedLastWeek] = await Promise.all([
-    prisma.opportunity.count({
-      where: { tenantId, ownerId: userId, stage: 'CLOSED_WON', closedAt: { gte: weekAgo } },
-    }),
-    prisma.opportunity.count({
-      where: { tenantId, ownerId: userId, stage: 'CLOSED_WON', closedAt: { gte: twoWeeksAgo, lt: weekAgo } },
-    }),
-  ]);
-
-  if (closedThisWeek > 0 || closedLastWeek > 0) {
-    const trend = closedLastWeek > 0
-      ? Math.round(((closedThisWeek - closedLastWeek) / closedLastWeek) * 100)
-      : closedThisWeek > 0 ? 100 : 0;
-    const direction = trend > 0 ? 'up' : trend < 0 ? 'down' : 'steady';
-    summaries.push({
-      id: 'deal-trend',
-      type: direction === 'down' ? 'warning' : 'achievement',
-      source: 'heuristic',
-      title: `Weekly Momentum: ${direction === 'up' ? 'Rising' : direction === 'down' ? 'Declining' : 'Steady'}`,
-      description: `${closedThisWeek} deal${closedThisWeek !== 1 ? 's' : ''} closed this week${closedLastWeek > 0 ? ` (${trend > 0 ? '+' : ''}${trend}% vs last week)` : ''}.`,
-      suggestedAction: direction === 'down' ? 'Review pipeline activity' : null,
-      entityType: null,
-      entityId: null,
-      actionUrl: '/deals',
-      requiresApproval: false,
-      priority: 'low',
-      createdAt: now,
-    });
-  }
+  const trendInsight = await buildDealTrendInsight(prisma, tenantId, userId, weekAgo, twoWeeksAgo, now);
+  if (trendInsight) summaries.push(trendInsight);
 
   // 3. Lead qualification queue — forward-looking: "what to work on next"
   const qualifiableLeads = await prisma.lead.count({
@@ -852,11 +984,12 @@ async function buildSmartSummaries(
   });
 
   if (qualifiableLeads > 0) {
+    const leadPlural = qualifiableLeads > 1 ? 's' : '';
     summaries.push({
       id: 'lead-queue',
       type: 'opportunity',
       source: 'heuristic',
-      title: `${qualifiableLeads} Lead${qualifiableLeads > 1 ? 's' : ''} Ready for Review`,
+      title: `${qualifiableLeads} Lead${leadPlural} Ready for Review`,
       description: `You have leads with scores above 50 in early stages. Qualify them to move your pipeline forward.`,
       suggestedAction: 'Review leads',
       entityType: null,
@@ -868,12 +1001,23 @@ async function buildSmartSummaries(
     });
   }
 
-  // 4. Achievement fallback — always provide something positive
-  if (summaries.length === 0
-      && heuristicData.dealsAtRisk.length === 0
-      && heuristicData.overdueTasksCount === 0
-      && heuristicData.hotLeads.length === 0
-      && heuristicData.staleContacts.length === 0) {
+  // 4. When aggregate summaries are empty, include entity-level heuristic insights
+  //    (deals at risk, hot leads, overdue tasks, stale contacts) so the page is not blank.
+  //    This covers the case where admins/managers have no direct records but still need
+  //    team-wide visibility from the heuristic pipeline.
+  if (summaries.length === 0) {
+    const heuristicInsights = buildHeuristicInsights(
+      heuristicData.dealsAtRisk,
+      heuristicData.hotLeads,
+      heuristicData.overdueTasksCount,
+      heuristicData.staleContacts,
+      now
+    );
+    summaries.push(...heuristicInsights);
+  }
+
+  // 5. Achievement fallback — show when nothing needs attention at all
+  if (summaries.length === 0) {
     summaries.push({
       id: 'all-good',
       type: 'achievement',
@@ -1057,12 +1201,12 @@ export const homeRouter = createTRPCRouter({
       dealsClosedLastMonth,
     ] = await Promise.all([
       // User name (timezone comes from ctx.user session)
-      ctx.prisma.user.findUnique({
+      ctx.prismaWithTenant.user.findUnique({
         where: { id: userId },
         select: { name: true, email: true },
       }),
       // High priority tasks not completed (includes URGENT)
-      ctx.prisma.task.count({
+      ctx.prismaWithTenant.task.count({
         where: {
           tenantId,
           ownerId: userId,
@@ -1071,7 +1215,7 @@ export const homeRouter = createTRPCRouter({
         },
       }),
       // Overdue tasks
-      ctx.prisma.task.count({
+      ctx.prismaWithTenant.task.count({
         where: {
           tenantId,
           ownerId: userId,
@@ -1080,7 +1224,7 @@ export const homeRouter = createTRPCRouter({
         },
       }),
       // New leads since yesterday
-      ctx.prisma.lead.count({
+      ctx.prismaWithTenant.lead.count({
         where: {
           tenantId,
           ownerId: userId,
@@ -1088,7 +1232,7 @@ export const homeRouter = createTRPCRouter({
         },
       }),
       // New leads this week
-      ctx.prisma.lead.count({
+      ctx.prismaWithTenant.lead.count({
         where: {
           tenantId,
           ownerId: userId,
@@ -1096,7 +1240,7 @@ export const homeRouter = createTRPCRouter({
         },
       }),
       // New leads this month
-      ctx.prisma.lead.count({
+      ctx.prismaWithTenant.lead.count({
         where: {
           tenantId,
           ownerId: userId,
@@ -1104,14 +1248,14 @@ export const homeRouter = createTRPCRouter({
         },
       }),
       // Total leads (all time)
-      ctx.prisma.lead.count({
+      ctx.prismaWithTenant.lead.count({
         where: {
           tenantId,
           ownerId: userId,
         },
       }),
       // Appointments today
-      ctx.prisma.appointment.count({
+      ctx.prismaWithTenant.appointment.count({
         where: {
           OR: [{ organizerId: userId }, { attendees: { some: { userId } } }],
           startTime: { gte: todayStart },
@@ -1120,7 +1264,7 @@ export const homeRouter = createTRPCRouter({
         },
       }),
       // Deals closed this week
-      ctx.prisma.opportunity.count({
+      ctx.prismaWithTenant.opportunity.count({
         where: {
           tenantId,
           ownerId: userId,
@@ -1129,7 +1273,7 @@ export const homeRouter = createTRPCRouter({
         },
       }),
       // Deals closed last week (for comparison)
-      ctx.prisma.opportunity.count({
+      ctx.prismaWithTenant.opportunity.count({
         where: {
           tenantId,
           ownerId: userId,
@@ -1138,7 +1282,7 @@ export const homeRouter = createTRPCRouter({
         },
       }),
       // Deals closed this month
-      ctx.prisma.opportunity.count({
+      ctx.prismaWithTenant.opportunity.count({
         where: {
           tenantId,
           ownerId: userId,
@@ -1147,7 +1291,7 @@ export const homeRouter = createTRPCRouter({
         },
       }),
       // Deals closed last month (for comparison)
-      ctx.prisma.opportunity.count({
+      ctx.prismaWithTenant.opportunity.count({
         where: {
           tenantId,
           ownerId: userId,
@@ -1229,7 +1373,7 @@ export const homeRouter = createTRPCRouter({
     const now = new Date();
 
     // Step 1: Check AIInsight table for cached AI insights (expiresAt encodes priority-based TTL)
-    const cachedInsights = await ctx.prisma.aIInsight.findMany({
+    const cachedInsights = await ctx.prismaWithTenant.aIInsight.findMany({
       where: {
         tenantId,
         status: { notIn: ['DISMISSED', 'EXPIRED'] },
@@ -1255,7 +1399,8 @@ export const homeRouter = createTRPCRouter({
     if (cachedInsights.length > 0) {
       // Validate that referenced entities still exist — prevents dead links
       // when a lead/contact/deal has been deleted or converted since the insight was cached
-      const validInsights = await filterStaleInsights(ctx.prisma, tenantId, cachedInsights);
+      const userTz = safeTimezone(ctx.user?.timezone);
+      const validInsights = await filterStaleInsights(ctx.prismaWithTenant, tenantId, cachedInsights, userTz);
 
       if (validInsights.length > 0) {
         const duration = performance.now() - startTime;
@@ -1272,16 +1417,17 @@ export const homeRouter = createTRPCRouter({
     }
 
     // Step 2: Cache miss — run heuristic queries with user→tenant fallback
-    const heuristic = await runHeuristicQueries(ctx.prisma, tenantId, userId, {
+    const userTz = safeTimezone(ctx.user?.timezone);
+    const heuristic = await runHeuristicQueries(ctx.prismaWithTenant, tenantId, userId, {
       dealTake: 3,
       leadTake: 2,
       contactTake: 2,
-    });
+    }, ctx.tenant.canAccessAllTenantData, userTz);
     const { dealsAtRisk, hotLeads, overdueTasksCount, staleContacts } = heuristic;
 
     // Step 2a: Route threshold alerts to notifications (fire-and-forget)
     createProactiveNotifications(
-      ctx.prisma, tenantId, userId,
+      ctx.prismaWithTenant, tenantId, userId,
       dealsAtRisk, hotLeads, overdueTasksCount, staleContacts,
       heuristic.now,
       safeTimezone(ctx.user?.timezone)
@@ -1289,7 +1435,7 @@ export const homeRouter = createTRPCRouter({
 
     // Step 2b: Build forward-looking smart summaries as insights
     const insights = await buildSmartSummaries(
-      ctx.prisma, tenantId, userId,
+      ctx.prismaWithTenant, tenantId, userId,
       { dealsAtRisk, hotLeads, overdueTasksCount, staleContacts },
       heuristic.now
     );
@@ -1349,7 +1495,7 @@ export const homeRouter = createTRPCRouter({
     const todayEnd = endOfDayInTimezone(userTz, now);
 
     // Read user preferences for goal type
-    const user = await ctx.prisma.user.findUnique({
+    const user = await ctx.prismaWithTenant.user.findUnique({
       where: { id: userId },
       select: { preferences: true },
     });
@@ -1375,7 +1521,7 @@ export const homeRouter = createTRPCRouter({
 
     switch (goalType) {
       case 'revenue': {
-        const todayRevenue = await ctx.prisma.opportunity.aggregate({
+        const todayRevenue = await ctx.prismaWithTenant.opportunity.aggregate({
           where: {
             tenantId,
             ownerId: userId,
@@ -1388,7 +1534,7 @@ export const homeRouter = createTRPCRouter({
         break;
       }
       case 'calls': {
-        currentValue = await ctx.prisma.callRecord.count({
+        currentValue = await ctx.prismaWithTenant.callRecord.count({
           where: {
             tenantId,
             userId,
@@ -1399,7 +1545,7 @@ export const homeRouter = createTRPCRouter({
         break;
       }
       case 'meetings': {
-        currentValue = await ctx.prisma.appointment.count({
+        currentValue = await ctx.prismaWithTenant.appointment.count({
           where: {
             tenantId,
             OR: [{ organizerId: userId }, { attendees: { some: { userId } } }],
@@ -1410,7 +1556,7 @@ export const homeRouter = createTRPCRouter({
         break;
       }
       case 'tasks': {
-        currentValue = await ctx.prisma.task.count({
+        currentValue = await ctx.prismaWithTenant.task.count({
           where: {
             tenantId,
             ownerId: userId,
@@ -1430,7 +1576,7 @@ export const homeRouter = createTRPCRouter({
     // Format remaining based on goal type
     const remainingFormatted =
       goalType === 'revenue'
-        ? `$${remainingToTarget.toLocaleString()}`
+        ? `$${remainingToTarget.toLocaleString('en-GB')}`
         : `${remainingToTarget} ${unit}`;
 
     const duration = performance.now() - startTime;
@@ -1468,7 +1614,7 @@ export const homeRouter = createTRPCRouter({
       const { type, targetValue, label, customUnit } = input;
 
       // Get current preferences
-      const user = await ctx.prisma.user.findUnique({
+      const user = await ctx.prismaWithTenant.user.findUnique({
         where: { id: userId },
         select: { preferences: true },
       });
@@ -1476,7 +1622,7 @@ export const homeRouter = createTRPCRouter({
       const prefs = (user?.preferences as any) || {};
 
       // Merge dailyGoal into preferences
-      await ctx.prisma.user.update({
+      await ctx.prismaWithTenant.user.update({
         where: { id: userId },
         data: {
           preferences: {
@@ -1497,7 +1643,7 @@ export const homeRouter = createTRPCRouter({
     const tenantId = ctx.tenant.tenantId;
 
     // Get pinned items from user preferences
-    const user = await ctx.prisma.user.findUnique({
+    const user = await ctx.prismaWithTenant.user.findUnique({
       where: { id: userId },
       select: { preferences: true },
     });
@@ -1508,7 +1654,7 @@ export const homeRouter = createTRPCRouter({
     // PG-159: Check entity existence in parallel for stale pin detection
     const existenceResults = await Promise.all(
       pinnedItems.map((item: any) =>
-        checkEntityExists(ctx.prisma, item.entityType, item.entityId, tenantId)
+        checkEntityExists(ctx.prismaWithTenant, item.entityType, item.entityId, tenantId)
       )
     );
 
@@ -1537,7 +1683,7 @@ export const homeRouter = createTRPCRouter({
     const { entityType, entityId, title, subtitle, icon, url } = input;
 
     // Get current preferences
-    const user = await ctx.prisma.user.findUnique({
+    const user = await ctx.prismaWithTenant.user.findUnique({
       where: { id: userId },
       select: { preferences: true },
     });
@@ -1574,7 +1720,7 @@ export const homeRouter = createTRPCRouter({
     });
 
     // Update user preferences
-    await ctx.prisma.user.update({
+    await ctx.prismaWithTenant.user.update({
       where: { id: userId },
       data: {
         preferences: { ...prefs, pinnedItems },
@@ -1592,7 +1738,7 @@ export const homeRouter = createTRPCRouter({
     const { entityType, entityId } = input;
 
     // Get current preferences
-    const user = await ctx.prisma.user.findUnique({
+    const user = await ctx.prismaWithTenant.user.findUnique({
       where: { id: userId },
       select: { preferences: true },
     });
@@ -1613,7 +1759,7 @@ export const homeRouter = createTRPCRouter({
     }
 
     // Update user preferences
-    await ctx.prisma.user.update({
+    await ctx.prismaWithTenant.user.update({
       where: { id: userId },
       data: {
         preferences: { ...prefs, pinnedItems: newPinnedItems },
@@ -1633,7 +1779,7 @@ export const homeRouter = createTRPCRouter({
       const { items: newOrder } = input;
 
       // Get current preferences
-      const user = await ctx.prisma.user.findUnique({
+      const user = await ctx.prismaWithTenant.user.findUnique({
         where: { id: userId },
         select: { preferences: true },
       });
@@ -1653,7 +1799,7 @@ export const homeRouter = createTRPCRouter({
         .sort((a: any, b: any) => a.position - b.position);
 
       // Update user preferences
-      await ctx.prisma.user.update({
+      await ctx.prismaWithTenant.user.update({
         where: { id: userId },
         data: {
           preferences: { ...prefs, pinnedItems: reorderedItems },
@@ -1691,7 +1837,7 @@ export const homeRouter = createTRPCRouter({
           })
         : undefined;
 
-      const cachedInsights = await ctx.prisma.aIInsight.findMany({
+      const cachedInsights = await ctx.prismaWithTenant.aIInsight.findMany({
         where: {
           tenantId,
           status: { notIn: ['DISMISSED', 'EXPIRED'] },
@@ -1714,9 +1860,11 @@ export const homeRouter = createTRPCRouter({
         },
       });
 
+      const userTz = safeTimezone(ctx.user?.timezone);
+
       if (cachedInsights.length > 0) {
         // Validate entity existence — filter out insights referencing deleted entities
-        const validCached = await filterStaleInsights(ctx.prisma, tenantId, cachedInsights);
+        const validCached = await filterStaleInsights(ctx.prismaWithTenant, tenantId, cachedInsights, userTz);
         const dedupedCached = deduplicateInsights(validCached);
         const total = dedupedCached.length;
         const offset = cursor ? (Number.parseInt(Buffer.from(cursor, 'base64').toString('utf-8'), 10) || 0) : 0;
@@ -1743,16 +1891,16 @@ export const homeRouter = createTRPCRouter({
       }
 
       // Step 2: Cache miss — run heuristic queries with user→tenant fallback
-      const heuristic = await runHeuristicQueries(ctx.prisma, tenantId, userId, {
+      const heuristic = await runHeuristicQueries(ctx.prismaWithTenant, tenantId, userId, {
         dealTake: 50,
         leadTake: 50,
         contactTake: 50,
-      });
+      }, ctx.tenant.canAccessAllTenantData, userTz);
       const { dealsAtRisk, hotLeads, overdueTasksCount, staleContacts } = heuristic;
 
       // Route threshold alerts to notifications (fire-and-forget)
       createProactiveNotifications(
-        ctx.prisma, tenantId, userId,
+        ctx.prismaWithTenant, tenantId, userId,
         dealsAtRisk, hotLeads, overdueTasksCount, staleContacts,
         heuristic.now,
         safeTimezone(ctx.user?.timezone)
@@ -1760,7 +1908,7 @@ export const homeRouter = createTRPCRouter({
 
       // Build forward-looking smart summaries
       const allInsights = await buildSmartSummaries(
-        ctx.prisma, tenantId, userId,
+        ctx.prismaWithTenant, tenantId, userId,
         { dealsAtRisk, hotLeads, overdueTasksCount, staleContacts },
         heuristic.now
       );
@@ -1827,7 +1975,7 @@ export const homeRouter = createTRPCRouter({
       const tenantId = ctx.tenant.tenantId;
       const userId = ctx.tenant.userId;
 
-      const resolved = await resolveInsightById(ctx.prisma, tenantId, userId, input.insightId);
+      const resolved = await resolveInsightById(ctx.prismaWithTenant, tenantId, userId, input.insightId);
       if (!resolved) {
         throw new TRPCError({
           code: 'NOT_FOUND',
@@ -1850,7 +1998,7 @@ export const homeRouter = createTRPCRouter({
       const tenantId = ctx.tenant.tenantId;
       const userId = ctx.tenant.userId;
 
-      const resolved = await resolveInsightById(ctx.prisma, tenantId, userId, input.insightId);
+      const resolved = await resolveInsightById(ctx.prismaWithTenant, tenantId, userId, input.insightId);
       if (!resolved) {
         throw new TRPCError({
           code: 'NOT_FOUND',
@@ -1867,7 +2015,7 @@ export const homeRouter = createTRPCRouter({
         };
       }
 
-      const existing = await (ctx.prisma as any).aIOutputReview.findFirst({
+      const existing = await (ctx.prismaWithTenant as any).aIOutputReview.findFirst({
         where: {
           tenantId,
           outputType: 'NEXT_BEST_ACTION',
@@ -1887,7 +2035,7 @@ export const homeRouter = createTRPCRouter({
         };
       }
 
-      const review = await (ctx.prisma as any).aIOutputReview.create({
+      const review = await (ctx.prismaWithTenant as any).aIOutputReview.create({
         data: {
           tenantId,
           outputType: 'NEXT_BEST_ACTION',
@@ -1928,7 +2076,7 @@ export const homeRouter = createTRPCRouter({
       const tenantId = ctx.tenant.tenantId;
       const now = new Date();
 
-      const updated = await ctx.prisma.aIInsight.updateMany({
+      const updated = await ctx.prismaWithTenant.aIInsight.updateMany({
         where: {
           id: input.insightId,
           tenantId,
