@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useState, useMemo, useCallback, Suspense, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@intelliflow/ui';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, EmptyState } from '@intelliflow/ui';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 // Material Symbols icon helper component
 const Icon = ({ name, className = '' }: Readonly<{ name: string; className?: string }>) => (
@@ -82,7 +82,7 @@ const generateSampleEvents = (): TimelineEvent[] => {
   const now = new Date();
   const addDays = (days: number): Date => {
     const date = new Date(now);
-    date.setDate(date.getDate() + days);
+    date.setUTCDate(date.getUTCDate() + days);
     return date;
   };
 
@@ -348,22 +348,15 @@ function TimelineEventCard({
         aria-hidden="true"
       />
 
-      {/* Event card */}
-      <div // NOSONAR — contains nested interactive elements; converting to <button> would create invalid nested buttons
-        role="button"
-        tabIndex={0}
+      {/* Event card — uses <button> for semantic interactivity; nested buttons use e.stopPropagation() to prevent conflict */}
+      <button
+        type="button"
         className={`
           ml-4 p-4 rounded-lg border shadow-sm cursor-pointer w-full text-left
           hover:shadow-md transition-shadow
           ${isOverdue ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-white'}
         `}
         onClick={onClick}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onClick?.();
-          }
-        }}
         aria-expanded={isExpanded}
       >
         {/* Header row */}
@@ -489,7 +482,7 @@ function TimelineEventCard({
             </div>
           </section>
         )}
-      </div>
+      </button>
     </li>
   );
 }
@@ -788,9 +781,8 @@ function CaseTimeline({
         </CardHeader>
         <CardContent>
           {filteredEvents.length === 0 ? (
-            <div className="text-center py-12">
-              <Icon name="calendar_today" className="text-5xl text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">No events match your filters</p>
+            <div className="text-center">
+              <EmptyState entity="timeline" variant="filtered" phase="passive" />
               {(filters.eventTypes.length > 0 || filters.priorityFilter.length > 0) && (
                 <button
                   onClick={() =>
@@ -851,9 +843,22 @@ function CaseTimeline({
   );
 }
 
+interface RawTimelineEvent {
+  id: string;
+  type: string;
+  title: string;
+  description?: string | null;
+  timestamp: string | number | Date;
+  priority?: string | null;
+  isOverdue?: boolean | null;
+  task?: { status: string } | null;
+  appointment?: { status: string; endTime: string | number | Date } | null;
+  agentAction?: { status: string; actionId?: string | null; agentName?: string | null; confidence?: number | null } | null;
+  actor?: { name?: string | null } | null;
+}
+
 // Transform API timeline event to component format
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function transformApiEvent(apiEvent: any): TimelineEvent {
+function transformApiEvent(apiEvent: RawTimelineEvent): TimelineEvent {
   // Note: tRPC serializes Date as string over JSON, so we handle both types
   // Map API event type to component event type
   let type: TimelineEventType = 'task';
@@ -921,8 +926,8 @@ function transformApiEvent(apiEvent: any): TimelineEvent {
     status,
     priority,
     assignedTo: apiEvent.actor?.name || undefined,
-    agentActionId: apiEvent.agentAction?.actionId,
-    agentName: apiEvent.agentAction?.agentName,
+    agentActionId: apiEvent.agentAction?.actionId ?? undefined,
+    agentName: apiEvent.agentAction?.agentName ?? undefined,
     confidenceScore: apiEvent.agentAction?.confidence
       ? Math.round(apiEvent.agentAction.confidence * 100)
       : undefined,

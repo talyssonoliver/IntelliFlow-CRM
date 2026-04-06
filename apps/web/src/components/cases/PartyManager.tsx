@@ -8,7 +8,7 @@
  */
 
 import { useState } from 'react';
-import { cn } from '@intelliflow/ui';
+import { cn, EmptyState } from '@intelliflow/ui';
 import type { PartyData, PartyRole } from './types';
 import { PARTY_ROLES } from './types';
 
@@ -97,7 +97,7 @@ export function PartyManager({ parties, onUpdate, disabled }: Readonly<PartyMana
   return (
     <div>
       {parties.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-4 text-center">No parties</p>
+        <EmptyState entity="contacts" phase="passive" className="py-2" />
       ) : (
         <ul className="space-y-3 mb-4">
           {parties.map((party) => (
@@ -157,8 +157,6 @@ export function PartyManager({ parties, onUpdate, disabled }: Readonly<PartyMana
               onChange={(e) => setName(e.target.value)}
               placeholder="Name *"
               className="w-full px-3 py-1.5 text-sm border rounded-md bg-background"
-              // eslint-disable-next-line jsx-a11y/no-autofocus
-              autoFocus
               required
               aria-label="Party name"
             />

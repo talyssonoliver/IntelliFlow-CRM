@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Button, Card, cn } from '@intelliflow/ui';
+import { Button, Card, EmptyState, cn } from '@intelliflow/ui';
 import { AppAvatar } from '@/components/shared/app-avatar';
 
 interface Comment {
@@ -212,17 +212,7 @@ export function CommentsWidget({ postSlug: _postSlug, className }: Readonly<Comm
       </div>
 
       {comments.length === 0 && (
-        <div className="text-center py-12">
-          <span
-            className="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600 mb-3"
-            aria-hidden="true"
-          >
-            chat_bubble_outline
-          </span>
-          <p className="text-slate-500 dark:text-slate-400">
-            No comments yet. Be the first to share your thoughts!
-          </p>
-        </div>
+        <EmptyState entity="comments" phase="passive" />
       )}
     </section>
   );

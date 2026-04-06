@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Button } from '@intelliflow/ui';
+import { Button, EmptyState } from '@intelliflow/ui';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { canUserModifyACL, formatDate } from './document-utils';
 import type { ACLManagerProps, AccessLevel } from './types';
@@ -67,20 +67,14 @@ export function ACLManager({
     setRevokeTarget(null);
   }, []);
 
-  const revokeDialogRef = useFocusTrap<HTMLDivElement>(!!revokeTarget);
+  const revokeDialogRef = useFocusTrap<HTMLDialogElement>(!!revokeTarget);
 
   // ─── Empty State ──────────────────────────────────────────────────────────
 
   if (currentACL.length === 0 && !isAdmin) {
     return (
-      <div className="text-center py-12" data-testid="acl-empty-state">
-        <span className="material-symbols-outlined text-5xl text-slate-400">lock</span>
-        <h3 className="mt-4 text-lg font-medium text-slate-900 dark:text-white">
-          No access entries
-        </h3>
-        <p className="mt-2 text-sm text-slate-500">
-          No users have been granted access to this document.
-        </p>
+      <div data-testid="acl-empty-state">
+        <EmptyState entity="documents" phase="passive" />
       </div>
     );
   }
@@ -256,17 +250,20 @@ export function ACLManager({
 
       {/* Revoke Confirmation Dialog */}
       {revokeTarget && (
-        <div // NOSONAR typescript:S6847 — role="dialog" makes this an interactive landmark; keydown handler is required for keyboard accessibility (Escape to close)
+        <dialog
           ref={revokeDialogRef}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          role="dialog" // NOSONAR typescript:S6819 — custom modal with backdrop overlay; <dialog> element lacks consistent cross-browser CSS support
+          open
+          className="appearance-none bg-transparent border-none p-0 m-0 max-w-none max-h-none fixed inset-0 z-50 flex items-center justify-center bg-black/50"
           aria-modal="true"
           aria-label="Confirm revoke access"
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') cancelRevoke();
-          }}
         >
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+          <div
+            role="none"
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') cancelRevoke();
+            }}
+            className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
+          >
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Revoke access?</h3>
             <p className="mt-2 text-sm text-slate-500">
               Are you sure you want to revoke access for{' '}
@@ -282,7 +279,7 @@ export function ACLManager({
               </Button>
             </div>
           </div>
-        </div>
+        </dialog>
       )}
     </div>
   );

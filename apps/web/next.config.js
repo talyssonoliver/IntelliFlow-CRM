@@ -17,6 +17,7 @@ const nextConfig = {
     '@intelliflow/db',
     '@bull-board/api',
     'bullmq',
+    'ioredis',
   ],
 
   // Compiler options

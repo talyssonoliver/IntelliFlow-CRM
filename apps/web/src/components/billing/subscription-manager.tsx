@@ -27,6 +27,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  EmptyState,
 } from '@intelliflow/ui';
 import {
   type Plan,
@@ -638,20 +639,14 @@ function CancelDialog({
 function NoSubscriptionState({ onSelectPlan }: Readonly<{ onSelectPlan: () => void }>) {
   return (
     <Card className="border-dashed">
-      <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-          <span className="material-symbols-outlined text-3xl text-slate-400">credit_card_off</span>
+      <CardContent className="py-12">
+        <EmptyState entity="subscriptions" phase="passive" />
+        <div className="flex justify-center mt-4">
+          <Button onClick={onSelectPlan} className="bg-[#137fec] hover:bg-[#0e6ac7]">
+            <span className="material-symbols-outlined mr-2">rocket_launch</span>{' '}
+            View Plans
+          </Button>
         </div>
-        <h3 className="mb-2 text-lg font-semibold text-slate-900 dark:text-white">
-          No Active Subscription
-        </h3>
-        <p className="mb-6 max-w-sm text-sm text-slate-500 dark:text-slate-400">
-          Choose a plan to unlock AI-powered features and take your CRM to the next level.
-        </p>
-        <Button onClick={onSelectPlan} className="bg-[#137fec] hover:bg-[#0e6ac7]">
-          <span className="material-symbols-outlined mr-2">rocket_launch</span>{' '}
-          View Plans
-        </Button>
       </CardContent>
     </Card>
   );

@@ -192,12 +192,13 @@ export function ContactForm({
         aria-label="Form progress"
         className="px-8 pt-8 pb-6 border-b border-slate-200 dark:border-slate-700"
       >
-        <div
-          role="progressbar" // NOSONAR typescript:S6819 — step indicator with child step elements; <progress> cannot contain child nodes
-          aria-valuenow={currentStepIndex + 1}
-          aria-valuemin={1}
-          aria-valuemax={steps.length}
+        <progress
+          value={currentStepIndex + 1}
+          max={steps.length}
           aria-label={`Step ${currentStepIndex + 1} of ${steps.length}`}
+          className="sr-only"
+        />
+        <div
           className="relative flex items-center justify-between w-full max-w-2xl mx-auto"
         >
           <div
@@ -394,13 +395,15 @@ export function ContactForm({
                   </legend>
                   <div role="radiogroup" aria-label="Contact status" className="space-y-2">
                     {statusOptions.map((opt) => (
-                      // eslint-disable-next-line jsx-a11y/label-has-associated-control -- label wraps radio input
                       <label
                         key={opt.value}
+                        htmlFor={`status-${opt.value}`}
+                        aria-label={opt.label}
                         className="flex items-start gap-3 p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
                       >
                         <input
                           type="radio"
+                          id={`status-${opt.value}`}
                           name="status"
                           value={opt.value}
                           checked={formData.status === opt.value}
@@ -408,7 +411,7 @@ export function ContactForm({
                           onChange={() => updateField('status', opt.value)}
                           className="mt-1 text-primary focus:ring-primary"
                         />
-                        <div>
+                        <div aria-hidden="true">
                           <span className="text-sm font-medium text-slate-900 dark:text-white">
                             {opt.label}
                           </span>

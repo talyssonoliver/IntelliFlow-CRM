@@ -1,13 +1,29 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Popover, PopoverContent, PopoverTrigger, ScrollArea } from '@intelliflow/ui';
+import { EmptyState, Popover, PopoverContent, PopoverTrigger, ScrollArea, Skeleton } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useNotificationSubscription } from './hooks/useNotificationSubscription';
 import { formatRelativeTime, getTypeConfig } from './notification-utils';
+
+function NotificationBellSkeleton() {
+  return (
+    <div className="divide-y divide-slate-100 dark:divide-slate-700">
+      {Array.from({ length: 3 }, (_, i) => (
+        <div key={i} className="flex items-start gap-3 px-4 py-3">
+          <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
+          <div className="flex-1 space-y-1.5">
+            <Skeleton className="h-3.5 w-3/4" />
+            <Skeleton className="h-3 w-16" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 /**
  * Header bell icon with unread count badge and dropdown preview.
@@ -21,6 +37,7 @@ export function NotificationBell() {
   const router = useRouter();
   const utils = trpc.useUtils();
   const [isOpen, setIsOpen] = useState(false);
+  const prevIsOpenRef = useRef(false);
 
   // Unread count with polling fallback
   const { data: unreadData } = trpc.notifications.getUnreadCount.useQuery(undefined, {
@@ -29,10 +46,20 @@ export function NotificationBell() {
   });
 
   // Unread notifications — lazy-loaded on dropdown open
-  const { data: recentData } = trpc.notifications.list.useQuery(
+  const { data: recentData, isLoading } = trpc.notifications.list.useQuery(
     { limit: 5, isRead: false },
     { enabled: isAuthenticated && isOpen }
   );
+
+  // Invalidate notification list on every popover open so cached data shows
+  // instantly while a background refetch brings in fresh results.
+  useEffect(() => {
+    if (isOpen && !prevIsOpenRef.current && isAuthenticated) {
+      utils.notifications.list.invalidate();
+      utils.notifications.getUnreadCount.invalidate();
+    }
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen, isAuthenticated, utils]);
 
   // Real-time subscription invalidation
   const handleNewNotification = useCallback(() => {
@@ -113,9 +140,10 @@ export function NotificationBell() {
           {unreadCount > 0 && <span className="text-xs text-slate-500">{unreadCount} unread</span>}
         </div>
         <ScrollArea className="max-h-80">
-          {recentNotifications.length === 0 ? (
-            <div className="p-4 text-center text-sm text-slate-500">No unread notifications</div>
-          ) : (
+          {(() => {
+            if (isLoading) return <NotificationBellSkeleton />;
+            if (recentNotifications.length === 0) return <EmptyState entity="notifications" phase="passive" className="py-2" />;
+            return (
             <div className="divide-y divide-slate-100 dark:divide-slate-700">
               {recentNotifications.map((n) => {
                 const typeConfig = getTypeConfig(n.type);
@@ -148,7 +176,8 @@ export function NotificationBell() {
                 );
               })}
             </div>
-          )}
+            );
+          })()}
         </ScrollArea>
         <div className="border-t border-slate-200 dark:border-slate-700 p-2">
           <Link

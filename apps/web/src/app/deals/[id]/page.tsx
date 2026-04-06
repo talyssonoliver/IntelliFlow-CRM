@@ -1,12 +1,15 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Card, Button } from '@intelliflow/ui';
+import { Card, Button, Skeleton, EmptyState } from '@intelliflow/ui';
+import { type OpportunityStage } from '@intelliflow/domain';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
-import { EntityHeader } from '@/components/shared';
+import { useRequireAuth } from '@/lib/auth/AuthContext';
+import { api } from '@/lib/api';
+import { EntityHeader, AppAvatar } from '@/components/shared';
 import { ActivityFeed } from '@/components/shared/activity-feed';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
@@ -21,186 +24,53 @@ const Icon = ({ name, className = '' }: Readonly<{ name: string; className?: str
 );
 
 // =============================================================================
-// Types
+// Types — derived from the getById router response
 // =============================================================================
 
-type StageId =
-  | 'PROSPECTING'
-  | 'QUALIFICATION'
-  | 'PROPOSAL'
-  | 'NEGOTIATION'
-  | 'CLOSED_WON'
-  | 'CLOSED_LOST';
-
-interface Deal {
+interface DealDetail {
   id: string;
   name: string;
   value: number;
-  stage: StageId;
-  stageIndex: number;
+  currency: string;
+  stage: string;
   probability: number;
-  expectedCloseDate: string | null;
-  source: string;
-  owner: {
-    name: string;
-    avatar: string;
-  };
-  account: {
-    name: string;
-    location: string;
-  };
-  contact: {
-    name: string;
-    title: string;
-    avatar: string;
-  };
-  products: Array<{
-    name: string;
-    description: string;
-    price: number;
-  }>;
-  nextSteps: Array<{
-    id: string;
-    title: string;
-    dueDate: string;
-    completed: boolean;
-  }>;
-  files: Array<{
-    name: string;
-    size: string;
-    date: string;
-    type: 'pdf' | 'doc' | 'xls';
-  }>;
-}
-
-type ActivityType = 'email' | 'call' | 'stage_change' | 'note' | 'task' | 'agent_action';
-type AgentActionStatus = 'pending_approval' | 'approved' | 'rejected' | 'rolled_back' | 'expired';
-
-interface ActivityEvent {
-  id: string;
-  type: ActivityType;
-  title: string;
-  description?: string;
-  timestamp: string;
-  date: string; // 'today' | 'yesterday' | date string
-  attachment?: {
-    name: string;
-    type: string;
-  };
-  stageChange?: {
-    from: string;
-    to: string;
-  };
-  // Agent action specific
-  agentActionId?: string;
-  agentName?: string;
-  confidenceScore?: number;
-  agentStatus?: AgentActionStatus;
+  expectedCloseDate: Date | string | null;
+  description: string | null;
+  accountId: string;
+  contactId: string | null;
+  ownerId: string;
+  tenantId: string;
+  weightedValue: number;
+  isClosed: boolean;
+  isWon: boolean;
+  isLost: boolean;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  owner: { id: string; name: string | null; email: string } | null;
+  account: { id: string; name: string; website: string | null } | null;
+  contact: { id: string; firstName: string; lastName: string; title: string | null; email: string } | null;
 }
 
 // =============================================================================
-// Constants
+// Constants — Domain-aligned 7-stage enum
 // =============================================================================
 
-const STAGES = [
-  { id: 'PROSPECTING', label: 'Prospecting' },
-  { id: 'QUALIFICATION', label: 'Qualification' },
-  { id: 'PROPOSAL', label: 'Proposal' },
-  { id: 'NEGOTIATION', label: 'Negotiation' },
-  { id: 'CLOSED', label: 'Closed' },
-] as const;
-
-// =============================================================================
-// Sample Data
-// =============================================================================
-
-const SAMPLE_DEAL: Deal = {
-  id: 'DL-4920',
-  name: 'Acme Corp Software License',
-  value: 125000,
-  stage: 'PROPOSAL',
-  stageIndex: 2,
-  probability: 60,
-  expectedCloseDate: '2025-01-24',
-  source: 'Web Referral',
-  owner: {
-    name: 'Jane Doe',
-    avatar: 'JD',
-  },
-  account: {
-    name: 'Acme Corp',
-    location: 'San Francisco, CA',
-  },
-  contact: {
-    name: 'Robert Fox',
-    title: 'CTO',
-    avatar: 'RF',
-  },
-  products: [
-    { name: 'Enterprise License', description: 'Qty: 100 Seats', price: 100000 },
-    { name: 'Implementation', description: 'Standard Package', price: 25000 },
-  ],
-  nextSteps: [
-    { id: '1', title: 'Send revised contract', dueDate: 'Due Tomorrow', completed: false },
-    { id: '2', title: 'Schedule tech review', dueDate: 'Jan 20, 2025', completed: false },
-  ],
-  files: [
-    { name: 'Acme_MSA_v3.pdf', size: '2.4 MB', date: 'Dec 15', type: 'pdf' },
-    { name: 'Requirements_Doc.docx', size: '1.1 MB', date: 'Dec 10', type: 'doc' },
-  ],
+const STAGE_LABELS: Record<OpportunityStage, string> = {
+  PROSPECTING: 'Prospecting',
+  QUALIFICATION: 'Qualification',
+  NEEDS_ANALYSIS: 'Needs Analysis',
+  PROPOSAL: 'Proposal',
+  NEGOTIATION: 'Negotiation',
+  CLOSED_WON: 'Won',
+  CLOSED_LOST: 'Lost',
 };
 
-const _SAMPLE_ACTIVITIES: ActivityEvent[] = [
-  {
-    id: 'agent-1',
-    type: 'agent_action',
-    title: 'AI: Advance deal to negotiation stage',
-    description: 'Pipeline Intelligence Agent detected positive signals from recent communication',
-    timestamp: '11:30 AM',
-    date: 'today',
-    agentActionId: 'action-3',
-    agentName: 'Pipeline Intelligence Agent',
-    confidenceScore: 92,
-    agentStatus: 'pending_approval',
-  },
-  {
-    id: '1',
-    type: 'email',
-    title: 'Email Sent: Proposal V2',
-    description: 'Attached the updated pricing model as discussed in the meeting.',
-    timestamp: '10:42 AM',
-    date: 'today',
-    attachment: { name: 'Proposal_Acme_v2.pdf', type: 'pdf' },
-  },
-  {
-    id: 'agent-2',
-    type: 'agent_action',
-    title: 'AI: Schedule follow-up meeting',
-    description: 'Task Automation Agent identified optimal meeting time based on calendars',
-    timestamp: '9:15 AM',
-    date: 'today',
-    agentActionId: 'action-4',
-    agentName: 'Task Automation Agent',
-    confidenceScore: 78,
-    agentStatus: 'approved',
-  },
-  {
-    id: '2',
-    type: 'call',
-    title: 'Call with Robert Fox',
-    description:
-      'Discussed timeline for implementation. They are keen to start by Nov 1st. Need to adjust contract start date.',
-    timestamp: '2:15 PM',
-    date: 'yesterday',
-  },
-  {
-    id: '3',
-    type: 'stage_change',
-    title: 'Stage Changed',
-    timestamp: '9:30 AM',
-    date: 'yesterday',
-    stageChange: { from: 'Qualification', to: 'Proposal' },
-  },
+const ACTIVE_STAGES: OpportunityStage[] = [
+  'PROSPECTING',
+  'QUALIFICATION',
+  'NEEDS_ANALYSIS',
+  'PROPOSAL',
+  'NEGOTIATION',
 ];
 
 // =============================================================================
@@ -216,54 +86,34 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-function getActivityIcon(type: Readonly<ActivityType>): React.ReactNode {
-  switch (type) {
-    case 'email':
-      return <Icon name="mail" className="text-xl text-primary" />;
-    case 'call':
-      return <Icon name="phone" className="text-xl text-green-600" />;
-    case 'stage_change':
-      return <Icon name="trending_up" className="text-xl text-orange-500" />;
-    case 'note':
-      return <Icon name="chat" className="text-xl text-blue-500" />;
-    case 'task':
-      return <Icon name="check_circle" className="text-xl text-purple-500" />;
-    case 'agent_action':
-      return <Icon name="smart_toy" className="text-xl text-purple-600" />;
-    default:
-      return <Icon name="description" className="text-xl text-slate-400" />;
-  }
-}
-
-function getAgentStatusBadge(status: Readonly<AgentActionStatus>): { label: string; className: string } {
-  switch (status) {
-    case 'pending_approval':
-      return { label: 'Pending Review', className: 'bg-amber-100 text-amber-800' };
-    case 'approved':
-      return { label: 'Approved', className: 'bg-green-100 text-green-800' };
-    case 'rejected':
-      return { label: 'Rejected', className: 'bg-red-100 text-red-800' };
-    case 'rolled_back':
-      return { label: 'Rolled Back', className: 'bg-purple-100 text-purple-800' };
-    case 'expired':
-      return { label: 'Expired', className: 'bg-slate-100 text-slate-600' };
-    default:
-      return { label: status, className: 'bg-slate-100 text-slate-600' };
-  }
-}
-
 // =============================================================================
 // Components
 // =============================================================================
 
 function StageProgress({
-  currentStageIndex,
+  value,
+  stage,
   probability,
 }: Readonly<{
-  currentStageIndex: number;
+  value: number;
+  stage: OpportunityStage;
   probability: number;
 }>) {
-  const progressWidth = ((currentStageIndex + 1) / STAGES.length) * 100;
+  const isClosedWon = stage === 'CLOSED_WON';
+  const isClosedLost = stage === 'CLOSED_LOST';
+  const isClosed = isClosedWon || isClosedLost;
+
+  const stageIndex = isClosed ? ACTIVE_STAGES.length - 1 : ACTIVE_STAGES.indexOf(stage);
+  const progressWidth = isClosed ? 100 : ((stageIndex + 1) / ACTIVE_STAGES.length) * 100;
+
+  let barColor: string;
+  if (isClosedWon) {
+    barColor = 'bg-green-500';
+  } else if (isClosedLost) {
+    barColor = 'bg-red-500';
+  } else {
+    barColor = 'bg-primary';
+  }
 
   return (
     <Card className="p-6">
@@ -271,15 +121,18 @@ function StageProgress({
         <div>
           <p className="text-sm font-medium text-slate-500">Total Value</p>
           <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">
-            {formatCurrency(SAMPLE_DEAL.value)}
+            {formatCurrency(value)}
           </p>
         </div>
         <div className="text-right">
           <p className="text-sm font-medium text-slate-900 dark:text-white">
-            {STAGES[currentStageIndex].label}
+            {STAGE_LABELS[stage]}
           </p>
           <p className="text-xs text-slate-500">
-            Stage {currentStageIndex + 1} of {STAGES.length} &bull; {probability}% Probability
+            {isClosed
+              ? `${STAGE_LABELS[stage]}`
+              : `Stage ${stageIndex + 1} of ${ACTIVE_STAGES.length}`}
+            {' '}&bull; {probability}% Probability
           </p>
         </div>
       </div>
@@ -287,12 +140,12 @@ function StageProgress({
       {/* Progress Bar */}
       <div className="relative w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
         <div
-          className="absolute top-0 left-0 h-full bg-primary rounded-full transition-all duration-300"
+          className={`absolute top-0 left-0 h-full ${barColor} rounded-full transition-all duration-300`}
           style={{ width: `${progressWidth}%` }}
         />
         {/* Stage dividers */}
         <div className="absolute top-0 left-0 w-full h-full flex justify-between px-[10%]">
-          {[...new Array(STAGES.length - 1)].map((_, i) => (
+          {[...new Array(ACTIVE_STAGES.length - 1)].map((_, i) => (
             <div key={i} className="w-0.5 h-full bg-white dark:bg-slate-900 opacity-50" /> // NOSONAR typescript:S6479
           ))}
         </div>
@@ -300,9 +153,9 @@ function StageProgress({
 
       {/* Stage Labels */}
       <div className="flex justify-between mt-2 text-xs font-medium text-slate-500 px-1">
-        {STAGES.map((stage, index) => (
-          <span key={stage.id} className={index <= currentStageIndex ? 'text-primary' : ''}>
-            {stage.label}
+        {ACTIVE_STAGES.map((s, index) => (
+          <span key={s} className={index <= stageIndex || isClosed ? 'text-primary' : ''}>
+            {STAGE_LABELS[s]}
           </span>
         ))}
       </div>
@@ -310,7 +163,7 @@ function StageProgress({
   );
 }
 
-function AboutDealCard({ deal }: Readonly<{ deal: Deal }>) {
+function AboutDealCard({ deal }: Readonly<{ deal: DealDetail }>) {
   const { timezone } = useTimezoneContext();
   return (
     <Card className="p-5">
@@ -335,26 +188,24 @@ function AboutDealCard({ deal }: Readonly<{ deal: Deal }>) {
         <div>
           <p className="text-xs text-slate-500 mb-1">Owner</p>
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs font-medium">
-              {deal.owner.avatar}
-            </div>
-            <span className="text-sm font-medium text-slate-900 dark:text-white">
-              {deal.owner.name}
-            </span>
+            {deal.owner ? (
+              <>
+                <AppAvatar name={deal.owner.name ?? 'Unknown'} className="w-6 h-6" />
+                <span className="text-sm font-medium text-slate-900 dark:text-white">
+                  {deal.owner.name ?? 'Unknown'}
+                </span>
+              </>
+            ) : (
+              <span className="text-sm text-slate-400">Unassigned</span>
+            )}
           </div>
-        </div>
-        <div>
-          <p className="text-xs text-slate-500 mb-1">Source</p>
-          <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-600">
-            {deal.source}
-          </span>
         </div>
       </div>
     </Card>
   );
 }
 
-function StakeholdersCard({ deal }: Readonly<{ deal: Deal }>) {
+function StakeholdersCard({ deal }: Readonly<{ deal: DealDetail }>) {
   return (
     <Card className="p-5">
       <div className="flex items-center justify-between mb-4 border-b pb-2">
@@ -370,16 +221,33 @@ function StakeholdersCard({ deal }: Readonly<{ deal: Deal }>) {
             <Icon name="apartment" className="text-xl" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-bold text-slate-900 dark:text-white">{deal.account.name}</p>
-            <p className="text-xs text-slate-500">{deal.account.location}</p>
-            <div className="flex gap-2 mt-2">
-              <button className="text-slate-400 hover:text-primary">
-                <Icon name="open_in_new" className="text-base" />
-              </button>
-              <button className="text-slate-400 hover:text-primary">
-                <Icon name="language" className="text-base" />
-              </button>
-            </div>
+            {deal.account ? (
+              <>
+                <Link
+                  href={`/accounts/${deal.accountId}`}
+                  className="text-sm font-bold text-slate-900 dark:text-white hover:text-primary"
+                >
+                  {deal.account.name}
+                </Link>
+                <div className="flex gap-2 mt-2">
+                  <Link href={`/accounts/${deal.accountId}`} className="text-slate-400 hover:text-primary">
+                    <Icon name="open_in_new" className="text-base" />
+                  </Link>
+                  {deal.account.website && (
+                    <a
+                      href={deal.account.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-slate-400 hover:text-primary"
+                    >
+                      <Icon name="language" className="text-base" />
+                    </a>
+                  )}
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-slate-400">No account linked</p>
+            )}
           </div>
         </div>
 
@@ -387,210 +255,66 @@ function StakeholdersCard({ deal }: Readonly<{ deal: Deal }>) {
 
         {/* Contact */}
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-sm font-medium">
-            {deal.contact.avatar}
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-bold text-slate-900 dark:text-white">{deal.contact.name}</p>
-            <p className="text-xs text-slate-500">{deal.contact.title}</p>
-            <div className="flex gap-3 mt-2">
-              <button className="bg-primary/10 hover:bg-primary/20 p-1.5 rounded text-primary transition-colors">
-                <Icon name="mail" className="text-base" />
-              </button>
-              <button className="bg-primary/10 hover:bg-primary/20 p-1.5 rounded text-primary transition-colors">
-                <Icon name="phone" className="text-base" />
-              </button>
-            </div>
-          </div>
+          {deal.contact ? (
+            <>
+              <AppAvatar
+                name={`${deal.contact.firstName} ${deal.contact.lastName}`}
+                className="w-10 h-10"
+              />
+              <div className="flex-1">
+                <Link
+                  href={`/contacts/${deal.contactId}`}
+                  className="text-sm font-bold text-slate-900 dark:text-white hover:text-primary"
+                >
+                  {deal.contact.firstName} {deal.contact.lastName}
+                </Link>
+                <p className="text-xs text-slate-500">{deal.contact.title}</p>
+                <div className="flex gap-3 mt-2">
+                  <a
+                    href={`mailto:${deal.contact.email}`}
+                    className="bg-primary/10 hover:bg-primary/20 p-1.5 rounded text-primary transition-colors"
+                  >
+                    <Icon name="mail" className="text-base" />
+                  </a>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                <Icon name="person_off" className="text-xl text-slate-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-slate-400">No contact linked</p>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </Card>
   );
 }
 
-function _ActivityTimeline({
-  activities,
-  dealId,
-}: Readonly<{
-  activities: ActivityEvent[];
-  dealId: string;
-}>) {
-  const [activeTab, setActiveTab] = useState<'activity' | 'notes' | 'emails'>('activity');
+function ProductsCard({ dealId }: Readonly<{ dealId: string }>) {
+  const { data, isLoading } = api.opportunity.getProducts.useQuery({ opportunityId: dealId });
 
-  const groupedActivities = useMemo(() => {
-    const groups: { [key: string]: ActivityEvent[] } = {};
-    activities.forEach((activity) => {
-      const key = activity.date;
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(activity);
-    });
-    return groups;
-  }, [activities]);
-
-  const getDateLabel = (date: string): string => {
-    if (date === 'today') return 'Today';
-    if (date === 'yesterday') return 'Yesterday';
-    return date;
-  };
-
-  return (
-    <div className="space-y-4">
-      {/* Activity Header with View All */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Activity</h3>
-        <Link
-          href={`/cases/timeline?dealId=${dealId}`}
-          className="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1"
-        >
-          View All
-          <Icon name="chevron_right" className="text-base" />
-        </Link>
-      </div>
-
-      {/* Activity Input */}
-      <Card className="p-4">
-        <div className="flex gap-4 border-b pb-3 mb-3">
-          {(['activity', 'notes', 'emails'] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`pb-3 -mb-3.5 font-medium text-sm transition-colors ${
-                activeTab === tab
-                  ? 'text-primary border-b-2 border-primary font-semibold'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-3">
-          <input
-            type="text"
-            placeholder="Log a call, note, or task..."
-            className="flex-1 bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
-          />
-          <button className="p-2.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
-            <Icon name="phone" className="text-xl" />
-          </button>
-          <button className="p-2.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
-            <Icon name="check_circle" className="text-xl" />
-          </button>
-          <Button>Save</Button>
+  if (isLoading) {
+    return (
+      <Card className="p-5">
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">
+          Products
+        </h3>
+        <div className="space-y-3">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
         </div>
       </Card>
+    );
+  }
 
-      {/* Timeline */}
-      <div className="flex flex-col gap-4 relative pl-4 border-l-2 border-slate-200 ml-4 pb-10">
-        {Object.entries(groupedActivities).map(([date, events]) => (
-          <div key={date} className="relative pl-6">
-            {/* Date marker */}
-            <div className="absolute -left-[29px] top-1 bg-white border-2 border-slate-200 rounded-full p-1 z-10">
-              {date === 'today' ? (
-                <Icon name="calendar_today" className="text-base text-slate-500" />
-              ) : (
-                <Icon name="schedule" className="text-base text-slate-500" />
-              )}
-            </div>
+  const products = data?.products ?? [];
+  const totalValue = data?.totalValue ?? 0;
 
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
-              {getDateLabel(date)}
-            </h4>
-
-            <div className="space-y-4">
-              {events.map((event) => (
-                <Card key={event.id} className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      {getActivityIcon(event.type)}
-                      <span className="font-semibold text-sm text-slate-900 dark:text-white">
-                        {event.title}
-                      </span>
-                    </div>
-                    <span className="text-xs text-slate-500">{event.timestamp}</span>
-                  </div>
-
-                  {event.description && (
-                    <p className="text-sm text-slate-600 mb-3">{event.description}</p>
-                  )}
-
-                  {/* Agent Action Details */}
-                  {event.type === 'agent_action' && event.agentStatus && (
-                    <div className="mb-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <Icon name="smart_toy" className="text-base text-purple-600" />
-                          <span className="font-medium text-purple-800 text-sm">
-                            {event.agentName}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {event.confidenceScore && (
-                            <span
-                              className={`px-2 py-0.5 text-xs rounded-full ${(() => {
-                                if (event.confidenceScore >= 80) return 'bg-green-100 text-green-700';
-                                if (event.confidenceScore >= 60) return 'bg-amber-100 text-amber-700';
-                                return 'bg-red-100 text-red-700';
-                              })()}`}
-                            >
-                              {event.confidenceScore}% confidence
-                            </span>
-                          )}
-                          <span
-                            className={`px-2 py-0.5 text-xs rounded-full font-medium ${
-                              getAgentStatusBadge(event.agentStatus).className
-                            }`}
-                          >
-                            {getAgentStatusBadge(event.agentStatus).label}
-                          </span>
-                        </div>
-                      </div>
-
-                      {event.agentStatus === 'pending_approval' && event.agentActionId && (
-                        <Link
-                          href={`/agent-approvals?actionId=${event.agentActionId}`}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors mt-2"
-                        >
-                          <Icon name="open_in_new" className="text-xs" />
-                          Review & Approve
-                        </Link>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Attachment */}
-                  {event.attachment && (
-                    <div className="flex items-center gap-2 p-2 bg-slate-50 rounded border border-slate-100 max-w-fit">
-                      <Icon name="description" className="text-base text-red-500" />
-                      <span className="text-xs font-medium text-slate-700">
-                        {event.attachment.name}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Stage Change */}
-                  {event.stageChange && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="px-2 py-0.5 bg-slate-100 rounded text-slate-600">
-                        {event.stageChange.from}
-                      </span>
-                      <Icon name="chevron_right" className="text-base text-slate-400" />
-                      <span className="px-2 py-0.5 bg-primary/10 text-primary font-medium rounded">
-                        {event.stageChange.to}
-                      </span>
-                    </div>
-                  )}
-                </Card>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ProductsCard({ products, total }: Readonly<{ products: Deal['products']; total: number }>) {
   return (
     <Card className="p-5">
       <div className="flex items-center justify-between mb-4">
@@ -601,48 +325,41 @@ function ProductsCard({ products, total }: Readonly<{ products: Deal['products']
           <Icon name="add" className="text-base" />
         </button>
       </div>
-      <div className="space-y-3">
-        {products.map((product, index) => (
-          <div
-            key={index} // NOSONAR typescript:S6479
-            className={`flex justify-between items-start text-sm ${
-              index > 0 ? 'border-t border-slate-50 pt-3' : ''
-            }`}
-          >
-            <div>
-              <p className="font-medium text-slate-900 dark:text-white">{product.name}</p>
-              <p className="text-xs text-slate-500">{product.description}</p>
-            </div>
-            <p className="font-semibold text-slate-900 dark:text-white">
-              {formatCurrency(product.price)}
-            </p>
+      {products.length === 0 ? (
+        <EmptyState entity="products" phase="passive" className="py-2" />
+      ) : (
+        <>
+          <div className="space-y-3">
+            {products.map((product, index) => (
+              <div
+                key={product.id}
+                className={`flex justify-between items-start text-sm ${
+                  index > 0 ? 'border-t border-slate-50 pt-3' : ''
+                }`}
+              >
+                <div>
+                  <p className="font-medium text-slate-900 dark:text-white">
+                    {product.name}
+                  </p>
+                  <p className="text-xs text-slate-500">{product.description}</p>
+                </div>
+                <p className="font-semibold text-slate-900 dark:text-white">
+                  {formatCurrency(Number(product.totalPrice))}
+                </p>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-      <div className="mt-4 pt-4 border-t border-dashed border-slate-200 flex justify-between items-center">
-        <span className="text-sm font-medium text-slate-500">Total</span>
-        <span className="text-lg font-bold text-primary">{formatCurrency(total)}</span>
-      </div>
+          <div className="mt-4 pt-4 border-t border-dashed border-slate-200 flex justify-between items-center">
+            <span className="text-sm font-medium text-slate-500">Total</span>
+            <span className="text-lg font-bold text-primary">{formatCurrency(totalValue)}</span>
+          </div>
+        </>
+      )}
     </Card>
   );
 }
 
-// NextStepsCard replaced by RelatedTasksCard
-
-function FilesCard({ files }: Readonly<{ files: Deal['files'] }>) {
-  const getFileIcon = (type: string) => {
-    switch (type) {
-      case 'pdf':
-        return 'bg-red-50 text-red-600';
-      case 'doc':
-        return 'bg-blue-50 text-blue-600';
-      case 'xls':
-        return 'bg-green-50 text-green-600';
-      default:
-        return 'bg-slate-50 text-slate-600';
-    }
-  };
-
+function FilesCard() {
   return (
     <Card className="p-5">
       <div className="flex items-center justify-between mb-4">
@@ -653,28 +370,51 @@ function FilesCard({ files }: Readonly<{ files: Deal['files'] }>) {
           <Icon name="upload" className="text-base" />
         </button>
       </div>
-      <div className="space-y-2">
-        {files.map((file, index) => (
-          <button
-            key={index} // NOSONAR typescript:S6479
-            type="button"
-            className="flex w-full items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors group"
-          >
-            <div className={`p-1.5 rounded ${getFileIcon(file.type)}`}>
-              <Icon name="description" className="text-xl" />
-            </div>
-            <div className="flex-1 min-w-0 text-left">
-              <p className="text-sm font-medium text-slate-900 truncate group-hover:text-primary">
-                {file.name}
-              </p>
-              <p className="text-xs text-slate-500">
-                {file.size} &bull; {file.date}
-              </p>
-            </div>
-          </button>
-        ))}
-      </div>
+      <EmptyState entity="files" phase="passive" className="py-2" />
     </Card>
+  );
+}
+
+function DealDetailSkeleton() {
+  return (
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="mx-auto flex flex-col gap-6">
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-32 w-full" />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-3 flex flex-col gap-6">
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-48 w-full" />
+          </div>
+          <div className="lg:col-span-6">
+            <Skeleton className="h-96 w-full" />
+          </div>
+          <div className="lg:col-span-3 flex flex-col gap-6">
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DealNotFoundError() {
+  return (
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="mx-auto max-w-lg text-center py-20">
+        <Icon name="error_outline" className="text-6xl text-slate-300 mb-4" />
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+          Deal not found or you don&apos;t have access
+        </h2>
+        <p className="text-slate-500 mb-6">
+          The deal you&apos;re looking for may have been deleted or you may not have permission to view it.
+        </p>
+        <Link href="/deals">
+          <Button>Back to Deals</Button>
+        </Link>
+      </div>
+    </div>
   );
 }
 
@@ -686,21 +426,32 @@ export default function DealDetailPage() {
   const params = useParams();
   const dealId = params.id as string;
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
+  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
 
-  // In production, fetch deal data based on dealId
-  const deal = SAMPLE_DEAL;
+  const { data: deal, isLoading, error } = api.opportunity.getById.useQuery(
+    { id: dealId },
+    { enabled: isAuthenticated && !authLoading && !!dealId }
+  );
+
+  if (authLoading || isLoading) return <DealDetailSkeleton />;
+  if (error || !deal) return <DealNotFoundError />;
+
+  // Cast the tRPC-inferred type to our explicit DealDetail interface
+  // This is a single validated boundary cast rather than scattered field-level casts
+  const d = deal as DealDetail;
+  const stage = d.stage as OpportunityStage;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mx-auto flex flex-col gap-6">
         {/* Header using EntityHeader */}
         <EntityHeader
-          breadcrumbs={[{ label: 'Deals', href: '/deals' }, { label: deal.name }]}
-          title={deal.name}
-          entityId={deal.id}
+          breadcrumbs={[{ label: 'Deals', href: '/deals' }, { label: d.name }]}
+          title={d.name}
+          entityId={d.id}
           badges={[
-            { label: STAGES[deal.stageIndex].label, variant: 'status' },
-            { label: `${deal.probability}%`, variant: 'info' },
+            { label: STAGE_LABELS[stage], variant: 'status' },
+            { label: `${d.probability}%`, variant: 'info' },
           ]}
           actions={[
             {
@@ -730,8 +481,8 @@ export default function DealDetailPage() {
             <div className="flex items-center gap-2">
               <PinButton
                 entityType="opportunity"
-                entityId={deal.id}
-                title={deal.name}
+                entityId={d.id}
+                title={d.name}
                 url={`/deals/${dealId}`}
               />
               <MoreActionsButton onClick={() => setActionSheetOpen(true)} />
@@ -744,9 +495,9 @@ export default function DealDetailPage() {
           onOpenChange={setActionSheetOpen}
           entity={{
             type: 'opportunity',
-            id: deal.id,
-            title: deal.name,
-            subtitle: deal.account.name,
+            id: d.id,
+            title: d.name,
+            subtitle: d.account?.name ?? '',
             icon: 'handshake',
             url: `/deals/${dealId}`,
           }}
@@ -758,14 +509,18 @@ export default function DealDetailPage() {
         />
 
         {/* Stage Progress */}
-        <StageProgress currentStageIndex={deal.stageIndex} probability={deal.probability} />
+        <StageProgress
+          value={d.value}
+          stage={stage}
+          probability={d.probability}
+        />
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Left Sidebar */}
           <div className="lg:col-span-3 flex flex-col gap-6">
-            <AboutDealCard deal={deal} />
-            <StakeholdersCard deal={deal} />
+            <AboutDealCard deal={d} />
+            <StakeholdersCard deal={d} />
           </div>
 
           {/* Center - Activity Timeline */}
@@ -787,9 +542,9 @@ export default function DealDetailPage() {
 
           {/* Right Sidebar */}
           <div className="lg:col-span-3 flex flex-col gap-6">
-            <ProductsCard products={deal.products} total={deal.value} />
+            <ProductsCard dealId={dealId} />
             <RelatedTasksCard entityType="opportunity" entityId={dealId} title="Next Steps" />
-            <FilesCard files={deal.files} />
+            <FilesCard />
           </div>
         </div>
       </div>

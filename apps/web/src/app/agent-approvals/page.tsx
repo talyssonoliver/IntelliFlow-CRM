@@ -14,7 +14,7 @@
 import Link from 'next/link';
 import { useState, useMemo, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Card, Button, toast } from '@intelliflow/ui';
+import { Card, Button, toast, EmptyState } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { AssignSheet } from '@/components/shared/assign-sheet';
@@ -804,13 +804,7 @@ function AgentApprovalsContent() {
   const [escalateReason, setEscalateReason] = useState('');
   const [escalateSlaHours, setEscalateSlaHours] = useState(48);
 
-  // Get user ID for queries - use a fallback for demo purposes
-  const userId = user?.id || '00000000-0000-4000-8000-000000000001';
-  // tenantId is required by getStatsByStatus (protectedProcedure, not tenantProcedure).
-  // AuthUser does not expose tenantId — it is resolved server-side from the JWT via tRPC context.
-  // Until the autoResponse router is migrated to tenantProcedure (IFC-149 follow-up), this
-  // falls back to the seeded default tenant. PG-084 OAuth integration will provide the real value.
-  const tenantId = '00000000-0000-4000-8000-000000000001';
+  const userId = user?.id ?? null;
 
   // ==========================================================================
   // tRPC Queries & Mutations - WIRED TO BACKEND
@@ -825,7 +819,7 @@ function AgentApprovalsContent() {
 
   // Fetch pending approvals for current user
   const pendingQuery = trpc.autoResponse.getPendingForApprover.useQuery(
-    { approverId: userId },
+    { approverId: userId ?? '' },
     {
       enabled: isAuthenticated && !authLoading && !!userId,
       refetchInterval: 30000, // Refresh every 30 seconds
@@ -842,13 +836,10 @@ function AgentApprovalsContent() {
   );
 
   // Fetch statistics by status
-  const statsQuery = trpc.autoResponse.getStatsByStatus.useQuery(
-    { tenantId },
-    {
-      enabled: isAuthenticated && !authLoading,
-      refetchInterval: 60000,
-    }
-  );
+  const statsQuery = trpc.autoResponse.getStatsByStatus.useQuery(undefined, {
+    enabled: isAuthenticated && !authLoading,
+    refetchInterval: 60000,
+  });
 
   // Team members for escalation assignment
   const assigneesQuery = trpc.ticket.assignees.useQuery(undefined, {
@@ -930,6 +921,15 @@ function AgentApprovalsContent() {
 
   const handleApprove = useCallback(
     async (actionId: string) => {
+      if (!userId) {
+        toast({
+          title: 'Authentication Required',
+          description: 'Sign in required to approve agent actions.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       try {
         await approveMutation.mutateAsync({
           draftId: actionId,
@@ -947,6 +947,15 @@ function AgentApprovalsContent() {
 
   const handleReject = useCallback(
     async (actionId: string, feedback: string) => {
+      if (!userId) {
+        toast({
+          title: 'Authentication Required',
+          description: 'Sign in required to reject agent actions.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       try {
         await rejectMutation.mutateAsync({
           draftId: actionId,
@@ -971,6 +980,15 @@ function AgentApprovalsContent() {
   const handleEscalateConfirm = useCallback(
     async (escalateToId: string) => {
       if (!escalatingActionId || !escalateReason.trim()) return;
+      if (!userId) {
+        toast({
+          title: 'Authentication Required',
+          description: 'Sign in required to escalate agent actions.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       try {
         await escalateMutation.mutateAsync({
           draftId: escalatingActionId,
@@ -993,6 +1011,15 @@ function AgentApprovalsContent() {
 
   const handleRollback = useCallback(
     async (actionId: string, reason: string) => {
+      if (!userId) {
+        toast({
+          title: 'Authentication Required',
+          description: 'Sign in required to roll back agent actions.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       try {
         await rollbackMutation.mutateAsync({
           draftId: actionId,
@@ -1233,19 +1260,7 @@ function AgentApprovalsContent() {
         )}
         {!isLoading && filteredActions.length === 0 && (
           <Card className="p-12">
-            <div className="flex flex-col items-center justify-center text-center">
-              <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
-                <Icon name="smart_toy" className="text-3xl text-slate-400" />
-              </div>
-              <h2 className="text-lg font-medium text-slate-900 dark:text-white mb-1">
-                No actions found
-              </h2>
-              <p className="text-slate-500 dark:text-slate-400 max-w-sm">
-                {filterStatus === 'all'
-                  ? 'No auto-response drafts to review at this time. Check back later.'
-                  : `No ${filterStatus} actions found. Try a different filter.`}
-              </p>
-            </div>
+            <EmptyState entity="agents" phase="passive" />
           </Card>
         )}
         {!isLoading &&
@@ -1288,7 +1303,7 @@ function AgentApprovalsContent() {
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {isAuthenticated
                   ? `Connected as ${user?.email || 'unknown'} • Real-time updates enabled`
-                  : 'Not authenticated • Using demo mode'}
+                  : 'Not authenticated • Sign in required'}
               </p>
             </div>
           </div>

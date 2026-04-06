@@ -90,7 +90,7 @@ const SORT_OPTIONS = [
 // =============================================================================
 
 const TICKET_STATUS_OPTIONS: StatusOption[] = TICKET_STATUSES.map((status) => {
-  const configs: Record<string, { color: string; icon: string; description: string }> = {
+  const configs: Record<string, { color: StatusOption['color']; icon: string; description: string }> = {
     OPEN: { color: 'blue', icon: 'inbox', description: 'Ticket awaiting action' },
     IN_PROGRESS: { color: 'amber', icon: 'pending', description: 'Actively being worked on' },
     WAITING_ON_CUSTOMER: {
@@ -99,7 +99,7 @@ const TICKET_STATUS_OPTIONS: StatusOption[] = TICKET_STATUSES.map((status) => {
       description: 'Awaiting customer response',
     },
     WAITING_ON_THIRD_PARTY: {
-      color: 'indigo',
+      color: 'purple',
       icon: 'business',
       description: 'Awaiting third party',
     },
@@ -604,22 +604,16 @@ export function TicketList({
     <>
       {/* Stats Cards — clickable to filter */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <Card
+        <button
+          type="button"
           className={cn(
-            'p-4 border-border cursor-pointer transition-all duration-200 hover:shadow-md',
+            'rounded-lg border bg-card text-card-foreground shadow-sm',
+            'p-4 border-border cursor-pointer transition-all duration-200 hover:shadow-md text-left',
             statusFilter === 'OPEN'
               ? 'bg-primary/5 border-primary ring-1 ring-primary/30'
-              : 'bg-card hover:bg-accent/50'
+              : 'hover:bg-accent/50'
           )}
           onClick={() => onStatusChange?.(statusFilter === 'OPEN' ? '' : 'OPEN')}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              onStatusChange?.(statusFilter === 'OPEN' ? '' : 'OPEN');
-            }
-          }}
           aria-pressed={statusFilter === 'OPEN'}
           aria-label={`Filter by Open tickets: ${stats.open}`}
         >
@@ -634,23 +628,17 @@ export function TicketList({
               <p className="text-2xl font-bold text-foreground">{stats.open}</p>
             </div>
           </div>
-        </Card>
-        <Card
+        </button>
+        <button
+          type="button"
           className={cn(
-            'p-4 border-border cursor-pointer transition-all duration-200 hover:shadow-md',
+            'rounded-lg border bg-card text-card-foreground shadow-sm',
+            'p-4 border-border cursor-pointer transition-all duration-200 hover:shadow-md text-left',
             statusFilter === 'IN_PROGRESS'
               ? 'bg-amber-500/5 border-amber-500 ring-1 ring-amber-500/30'
-              : 'bg-card hover:bg-accent/50'
+              : 'hover:bg-accent/50'
           )}
           onClick={() => onStatusChange?.(statusFilter === 'IN_PROGRESS' ? '' : 'IN_PROGRESS')}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              onStatusChange?.(statusFilter === 'IN_PROGRESS' ? '' : 'IN_PROGRESS');
-            }
-          }}
           aria-pressed={statusFilter === 'IN_PROGRESS'}
           aria-label={`Filter by In Progress tickets: ${stats.inProgress}`}
         >
@@ -663,23 +651,17 @@ export function TicketList({
               <p className="text-2xl font-bold text-foreground">{stats.inProgress}</p>
             </div>
           </div>
-        </Card>
-        <Card
+        </button>
+        <button
+          type="button"
           className={cn(
-            'p-4 border-border cursor-pointer transition-all duration-200 hover:shadow-md',
+            'rounded-lg border bg-card text-card-foreground shadow-sm',
+            'p-4 border-border cursor-pointer transition-all duration-200 hover:shadow-md text-left',
             slaFilter === 'BREACHED'
               ? 'bg-red-500/5 border-red-500 ring-1 ring-red-500/30'
-              : 'bg-card hover:bg-accent/50'
+              : 'hover:bg-accent/50'
           )}
           onClick={() => onSLAChange?.(slaFilter === 'BREACHED' ? 'all' : 'BREACHED')}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              onSLAChange?.(slaFilter === 'BREACHED' ? 'all' : 'BREACHED');
-            }
-          }}
           aria-pressed={slaFilter === 'BREACHED'}
           aria-label={`Filter by SLA Breached tickets: ${stats.breached}`}
         >
@@ -692,23 +674,17 @@ export function TicketList({
               <p className="text-2xl font-bold text-destructive">{stats.breached}</p>
             </div>
           </div>
-        </Card>
-        <Card
+        </button>
+        <button
+          type="button"
           className={cn(
-            'p-4 border-border cursor-pointer transition-all duration-200 hover:shadow-md',
+            'rounded-lg border bg-card text-card-foreground shadow-sm',
+            'p-4 border-border cursor-pointer transition-all duration-200 hover:shadow-md text-left',
             statusFilter === 'RESOLVED'
               ? 'bg-green-500/5 border-green-500 ring-1 ring-green-500/30'
-              : 'bg-card hover:bg-accent/50'
+              : 'hover:bg-accent/50'
           )}
           onClick={() => onStatusChange?.(statusFilter === 'RESOLVED' ? '' : 'RESOLVED')}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              onStatusChange?.(statusFilter === 'RESOLVED' ? '' : 'RESOLVED');
-            }
-          }}
           aria-pressed={statusFilter === 'RESOLVED'}
           aria-label={`Filter by Resolved tickets: ${stats.resolvedToday}`}
         >
@@ -721,7 +697,7 @@ export function TicketList({
               <p className="text-2xl font-bold text-foreground">{stats.resolvedToday}</p>
             </div>
           </div>
-        </Card>
+        </button>
       </div>
 
       {/* Search and Filters */}
@@ -764,6 +740,7 @@ export function TicketList({
       <DataTable
         columns={columns}
         data={tickets}
+        entity="tickets"
         emptyMessage="No tickets match your filters"
         emptyIcon="confirmation_number"
         onRowClick={onRowClick}

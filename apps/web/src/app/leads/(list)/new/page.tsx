@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Card,
+  Skeleton,
   ToastProvider,
   ToastViewport,
   Toast,
@@ -12,7 +13,8 @@ import {
   ToastDescription,
   ToastClose,
 } from '@intelliflow/ui';
-import { trpc } from '@/lib/trpc';
+import { api } from '@/lib/api';
+import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useFormUnsavedChanges } from '@/hooks/useUnsavedChanges';
 
 // Step configuration
@@ -140,6 +142,7 @@ type ToastData = {
 
 export default function CreateNewLeadPage() {
   const router = useRouter();
+  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
   const [currentStep, setCurrentStep] = useState<StepId>('basic');
   const [formData, setFormData] = useState<LeadFormData>(initialFormData);
   const [errors, setErrors] = useState<Partial<Record<keyof LeadFormData, string>>>({});
@@ -161,6 +164,18 @@ export default function CreateNewLeadPage() {
     formName: 'newLeadForm',
     isDirty,
   });
+
+  // Auth gate — show skeleton while checking authentication or if not authenticated
+  // useRequireAuth() handles the redirect to /login internally via useEffect,
+  // but we must prevent the form from rendering during the redirect frame
+  if (authLoading || !isAuthenticated) {
+    return (
+      <div className="flex flex-col gap-8 p-8">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-[400px] w-full rounded-xl" />
+      </div>
+    );
+  }
 
   // Update form field
   const updateField = (field: keyof LeadFormData, value: string) => {
@@ -212,7 +227,7 @@ export default function CreateNewLeadPage() {
   };
 
   // tRPC mutation for creating leads (IFC-004 integration)
-  const createLead = trpc.lead.create.useMutation({
+  const createLead = api.lead.create.useMutation({
     onSuccess: () => {
       // Show success toast
       setToast({

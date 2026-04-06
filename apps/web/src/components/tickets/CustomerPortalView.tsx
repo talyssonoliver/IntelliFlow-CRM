@@ -9,7 +9,7 @@
  */
 
 import { useState } from 'react';
-import { Card } from '@intelliflow/ui';
+import { Card, EmptyState } from '@intelliflow/ui';
 import { SLAIndicator } from './SLAIndicator';
 import { getStatusConfig } from '@/lib/tickets/ticket-utils';
 import type { TicketDetailData, TicketActivity } from './types';
@@ -107,7 +107,7 @@ export function CustomerPortalView({
         </h2>
 
         {publicActivities.length === 0 ? (
-          <p className="text-sm text-muted-foreground italic">No messages yet.</p>
+          <EmptyState entity="chats" phase="passive" className="py-2" />
         ) : (
           <div className="space-y-4">
             {publicActivities.map((activity) => {

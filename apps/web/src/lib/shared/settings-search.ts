@@ -48,7 +48,7 @@ export const SETTINGS_ITEMS: SettingItem[] = [
     id: 'ai',
     title: 'AI Chains',
     description: 'Manage AI chain versions, rollout strategies, and memory budget',
-    href: '/settings/ai',
+    href: '/agent-approvals/ai-settings',
     icon: 'auto_awesome',
     color: 'bg-primary/90',
     keywords: ['llm', 'model', 'chain', 'version', 'rollback', 'experiment', 'budget'],

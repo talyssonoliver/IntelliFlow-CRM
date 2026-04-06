@@ -129,16 +129,26 @@ describe('PlanComparison', () => {
     expect(downgradeLink).toHaveAttribute('href', '/billing/upgrade?plan=starter');
   });
 
-  it('renders feature lists for each plan', () => {
+  it('renders features in comparison table (compact cards hide features)', () => {
     render(<PlanComparison />);
-    expect(screen.getAllByText(/users/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/contacts/i).length).toBeGreaterThan(0);
+    // Features appear in the comparison table, not in compact plan cards
+    expect(screen.getByText('Core CRM')).toBeInTheDocument();
+    expect(screen.getByText('AI & Insights')).toBeInTheDocument();
   });
 
   it('renders the comparison table', () => {
     render(<PlanComparison />);
     expect(screen.getByText('Compare Plans')).toBeInTheDocument();
     expect(screen.getByText('Core CRM')).toBeInTheDocument();
+  });
+
+  it('shows Custom tier with Contact Sales CTA', () => {
+    render(<PlanComparison />);
+    expect(screen.getAllByText('Custom').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByRole('link', { name: /contact sales/i })).toHaveAttribute(
+      'href',
+      '/contact?plan=custom'
+    );
   });
 
   it('renders the FAQ section', () => {

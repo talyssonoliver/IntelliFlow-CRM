@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { DataTable, TableRowActions, type BulkAction, Skeleton } from '@intelliflow/ui';
+import { DataTable, TableRowActions, type BulkAction, Skeleton, EmptyState } from '@intelliflow/ui';
 import type { TaskStatus, TaskPriority } from '@intelliflow/domain';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
@@ -60,8 +60,8 @@ function getDueDateStatus(date: DateStringNull): 'overdue' | 'today' | 'normal' 
   if (!date) return 'normal';
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const dueDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const dueDay = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
   if (dueDay < today) return 'overdue';
   if (dueDay.getTime() === today.getTime()) return 'today';
   return 'normal';
@@ -313,20 +313,12 @@ export function TaskList({
 
   if (tasks.length === 0) {
     return (
-      <div
-        className="flex flex-col items-center justify-center py-12 text-center"
-        data-testid="task-list-empty"
-      >
-        <span
-          className="material-symbols-outlined text-4xl text-muted-foreground mb-2"
-          aria-hidden="true"
-        >
-          task_alt
-        </span>
-        <p className="text-muted-foreground">No tasks found</p>
-        <p className="text-sm text-muted-foreground mt-1">
-          Try adjusting your filters or create a new task
-        </p>
+      <div data-testid="task-list-empty">
+        <EmptyState
+          entity="tasks"
+          variant="filtered"
+          phase="passive"
+        />
       </div>
     );
   }
@@ -335,6 +327,7 @@ export function TaskList({
     <DataTable
       columns={columns}
       data={tasks as TaskListItem[]}
+      entity="tasks"
       onRowClick={(row) => onRowClick(row.id)}
       enableRowSelection
       bulkActions={bulkActions}

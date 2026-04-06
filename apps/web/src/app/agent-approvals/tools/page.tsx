@@ -10,7 +10,7 @@
 
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, Button, Skeleton, cn } from '@intelliflow/ui';
+import { Card, CardContent, Button, Skeleton, cn, EmptyState } from '@intelliflow/ui';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
 
@@ -419,11 +419,8 @@ function AgentToolsDashboard() {
       {/* Tool List */}
       {filteredTools.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center p-8 text-center">
-            <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2">
-              build
-            </span>
-            <p className="text-sm text-muted-foreground">No tools match the current filter</p>
+          <CardContent className="p-8">
+            <EmptyState entity="agents" variant="filtered" phase="passive" />
           </CardContent>
         </Card>
       ) : (

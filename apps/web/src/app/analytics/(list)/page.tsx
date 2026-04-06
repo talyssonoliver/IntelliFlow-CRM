@@ -11,7 +11,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { Card } from '@intelliflow/ui';
+import { Card, EmptyState } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { downloadCSV } from '@/lib/export/csv';
@@ -310,7 +310,7 @@ const STAGE_COLORS: Record<string, string> = {
 function formatCurrency(value: number): string {
   if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
   if (value >= 1_000) return `$${(value / 1_000).toFixed(1)}k`;
-  return `$${value.toLocaleString()}`;
+  return `$${value.toLocaleString('en-GB')}`;
 }
 
 function formatRelativeTime(date: Date | string, timezone: string = 'Europe/London'): string {
@@ -476,18 +476,6 @@ function QuickStat({
   );
 }
 
-function EmptyState({ message }: Readonly<{ message: string }>) {
-  return (
-    <div className="h-64 flex items-center justify-center border-2 border-dashed border-border rounded-lg">
-      <div className="text-center">
-        <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2">
-          bar_chart
-        </span>
-        <p className="text-muted-foreground">{message}</p>
-      </div>
-    </div>
-  );
-}
 
 interface FunnelStage {
   stage: string;
@@ -538,7 +526,7 @@ function PipelineFunnelContent({
       </div>
     );
   }
-  return <EmptyState message="No pipeline data for this period" />;
+  return <EmptyState entity="activity" phase="passive" description="No pipeline data for this period" />;
 }
 
 interface TimeSeriesEntry {
@@ -587,7 +575,7 @@ function RevenueTrendContent({
       </ResponsiveContainer>
     </div>
   );
-  return <EmptyState message="No revenue data for this period" />;
+  return <EmptyState entity="activity" phase="passive" description="No revenue data for this period" />;
 }
 
 interface RecentActivityItem {
@@ -632,5 +620,5 @@ function RecentActivityContent({
       ))}
     </div>
   );
-  return <EmptyState message="No recent activity" />;
+  return <EmptyState entity="activity" phase="passive" description="No recent activity" />;
 }

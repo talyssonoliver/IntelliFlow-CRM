@@ -88,10 +88,33 @@ describe('IFC-209: sitemap defect fixes', () => {
     }
   });
 
-  // TC-NEW-05: Total entry count is 23
-  it('total sitemap entry count is exactly 23', () => {
-    // 13 static + 2 blog + 5 careers + 3 LP = 23
-    expect(sitemapEntries.length).toBe(23);
+  // TC-NEW-04c: Press release entries
+  it('includes all 4 press release ID entries', async () => {
+    const pressReleasesData = await import('@/data/press-releases.json');
+    const releaseIds = pressReleasesData.releases.map((r: { id: string }) => r.id);
+
+    expect(releaseIds.length).toBe(4);
+    for (const id of releaseIds) {
+      const entry = sitemapEntries.find((e) => new URL(e.url).pathname === `/press/${id}`);
+      expect(entry, `Missing sitemap entry for press release ID: ${id}`).toBeDefined();
+    }
+  });
+
+  // TC-NEW-04d: Press release timestamps match release dates
+  it('press release timestamps match date from data source', async () => {
+    const pressReleasesData = await import('@/data/press-releases.json');
+
+    for (const release of pressReleasesData.releases) {
+      const entry = sitemapEntries.find((e) => new URL(e.url).pathname === `/press/${release.id}`);
+      expect(entry, `Missing entry for /press/${release.id}`).toBeDefined();
+      expect(String(entry!.lastModified)).toBe(release.date);
+    }
+  });
+
+  // TC-NEW-05: Total entry count is 28
+  it('total sitemap entry count is exactly 28', () => {
+    // 14 static + 2 blog + 5 careers + 3 LP + 4 press = 28
+    expect(sitemapEntries.length).toBe(28);
   });
 
   // TC-NEW-06: No dynamic/static URL overlap

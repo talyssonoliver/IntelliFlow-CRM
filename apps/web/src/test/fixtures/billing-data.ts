@@ -76,10 +76,50 @@ interface MockBillingInformation {
   } | null;
 }
 
+interface MockUsageLimitMetric {
+  current: number;
+  limit: number;
+}
+
 interface MockUsageMetrics {
-  apiCalls: { current: number; limit: number };
-  storage: { current: number; limit: number; unit: 'GB' | 'MB' };
-  activeUsers: { current: number; limit: number };
+  planLimits: {
+    activeUsers: MockUsageLimitMetric;
+    contacts: MockUsageLimitMetric;
+    aiPredictions: MockUsageLimitMetric;
+    storage: MockUsageLimitMetric;
+  };
+  crm: {
+    leads: number;
+    contacts: number;
+    accounts: number;
+    deals: number;
+    tasks: number;
+    tickets: number;
+    cases: number;
+  };
+  ai: {
+    scores: number;
+    scoresThisPeriod: number;
+    conversations: number;
+    messages: number;
+    toolCalls: number;
+    insights: number;
+    leadInsights: number;
+    contactInsights: number;
+    outputReviews: number;
+    monitoringEvents: number;
+    agentActions: number;
+    chainVersions: number;
+    experiments: number;
+  };
+  activity: {
+    auditLogs: number;
+    notifications: number;
+  };
+  content: {
+    documents: number;
+    calendarEvents: number;
+  };
 }
 
 // ============================================
@@ -152,9 +192,44 @@ export function createMockBillingInformation(
 
 export function createMockUsageMetrics(overrides?: Partial<MockUsageMetrics>): MockUsageMetrics {
   return {
-    apiCalls: { current: 8500, limit: 10000 },
-    storage: { current: 2.4, limit: 5, unit: 'GB' },
-    activeUsers: { current: 12, limit: 25 },
+    planLimits: {
+      activeUsers: { current: 12, limit: 25 },
+      contacts: { current: 4200, limit: 10000 },
+      aiPredictions: { current: 8500, limit: 10000 },
+      storage: { current: 2.4, limit: 5 },
+    },
+    crm: {
+      leads: 156,
+      contacts: 4200,
+      accounts: 89,
+      deals: 234,
+      tasks: 512,
+      tickets: 78,
+      cases: 23,
+    },
+    ai: {
+      scores: 12500,
+      scoresThisPeriod: 8500,
+      conversations: 142,
+      messages: 1834,
+      toolCalls: 567,
+      insights: 89,
+      leadInsights: 156,
+      contactInsights: 98,
+      outputReviews: 34,
+      monitoringEvents: 2341,
+      agentActions: 78,
+      chainVersions: 12,
+      experiments: 5,
+    },
+    activity: {
+      auditLogs: 3456,
+      notifications: 891,
+    },
+    content: {
+      documents: 67,
+      calendarEvents: 245,
+    },
     ...overrides,
   };
 }

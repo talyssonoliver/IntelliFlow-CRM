@@ -66,9 +66,3 @@ export function createAccountsSettingsSidebarConfig(
     sections: VIEW_SECTIONS,
   };
 }
-
-/** @deprecated Use createAccountsSidebarConfig(onSettingsClick) instead */
-export const accountsSidebarConfig: SidebarConfig = {
-  ...createAccountsSidebarConfig(() => {}),
-  settingsHref: '/settings/accounts',
-};

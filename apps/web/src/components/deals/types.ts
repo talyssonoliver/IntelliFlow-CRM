@@ -23,6 +23,11 @@ export interface Deal {
   readonly createdAt: string;
 }
 
+export interface TrashedDeal extends Deal {
+  /** ISO datetime string when the deal was soft-deleted */
+  readonly deletedAt: string;
+}
+
 export interface PipelineStats {
   readonly totalDeals: number;
   readonly totalValue: number;

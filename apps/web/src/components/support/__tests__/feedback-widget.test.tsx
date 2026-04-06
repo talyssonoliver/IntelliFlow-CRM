@@ -3,6 +3,32 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FeedbackWidget } from '../feedback-widget';
 
+// Mock tRPC client — submitFeedback mutation (IFC-303)
+const mockMutate = vi.fn();
+let shouldSimulateError = false;
+
+vi.mock('@/lib/trpc', () => ({
+  trpc: {
+    helpArticle: {
+      submitFeedback: {
+        useMutation: (opts?: { onSuccess?: () => void; onError?: () => void }) => {
+          return {
+            mutate: (...args: unknown[]) => {
+              mockMutate(...args);
+              if (shouldSimulateError) {
+                opts?.onError?.();
+              } else {
+                opts?.onSuccess?.();
+              }
+            },
+            isLoading: false,
+          };
+        },
+      },
+    },
+  },
+}));
+
 describe('FeedbackWidget', () => {
   it('renders "Was this helpful?" prompt text', () => {
     render(<FeedbackWidget articleId="test-1" />);
@@ -98,5 +124,44 @@ describe('FeedbackWidget', () => {
     await user.click(screen.getByRole('button', { name: /yes/i }));
     const confirmation = screen.getByText(/thank you/i);
     expect(document.activeElement).toBe(confirmation.closest('[tabindex]') || confirmation);
+  });
+
+  // ─── tRPC wiring tests (IFC-303) ───────────────────────────────────────
+
+  it('calls submitFeedback mutation with correct articleId and value on Yes click', async () => {
+    mockMutate.mockClear();
+    const user = userEvent.setup();
+    render(<FeedbackWidget articleId="article-123" />);
+    await user.click(screen.getByRole('button', { name: /yes/i }));
+    expect(mockMutate).toHaveBeenCalledWith({ articleId: 'article-123', value: 'helpful' });
+  });
+
+  it('calls submitFeedback mutation with correct articleId and value on No click', async () => {
+    mockMutate.mockClear();
+    const user = userEvent.setup();
+    render(<FeedbackWidget articleId="article-456" />);
+    await user.click(screen.getByRole('button', { name: /no/i }));
+    expect(mockMutate).toHaveBeenCalledWith({ articleId: 'article-456', value: 'not_helpful' });
+  });
+
+  it('fires onFeedback callback alongside tRPC mutation', async () => {
+    mockMutate.mockClear();
+    const user = userEvent.setup();
+    const onFeedback = vi.fn();
+    render(<FeedbackWidget articleId="article-789" onFeedback={onFeedback} />);
+    await user.click(screen.getByRole('button', { name: /yes/i }));
+    expect(mockMutate).toHaveBeenCalledTimes(1);
+    expect(onFeedback).toHaveBeenCalledWith('helpful');
+  });
+
+  it('shows error message when mutation fails', async () => {
+    shouldSimulateError = true;
+    const user = userEvent.setup();
+    render(<FeedbackWidget articleId="test-err" />);
+    await user.click(screen.getByRole('button', { name: /yes/i }));
+    expect(screen.getByText(/something went wrong/i)).toBeInTheDocument();
+    // Buttons should still be visible for retry
+    expect(screen.getByRole('button', { name: /yes/i })).toBeInTheDocument();
+    shouldSimulateError = false;
   });
 });

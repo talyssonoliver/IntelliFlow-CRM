@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Card, Skeleton, toast } from '@intelliflow/ui';
+import { Card, Skeleton, toast, EmptyState } from '@intelliflow/ui';
 import { api } from '@/lib/api';
 import { TaskCreateSheet } from './TaskCreateSheet';
 
@@ -38,8 +38,8 @@ function getDueDateColor(date: Date | string | null): string {
   if (!date) return 'text-muted-foreground';
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const dueDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const dueDay = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
   if (dueDay < today) return 'text-red-600 dark:text-red-400';
   if (dueDay.getTime() === today.getTime()) return 'text-amber-600 dark:text-amber-400';
   return 'text-muted-foreground';
@@ -99,9 +99,7 @@ export function RelatedTasksCard({
             {title}
           </h3>
         </div>
-        <p className="text-sm text-muted-foreground text-center py-2">
-          No tasks linked to this account
-        </p>
+        <EmptyState entity="tasks" phase="passive" className="py-2" />
       </Card>
     );
   }
@@ -150,17 +148,11 @@ export function RelatedTasksCard({
         {error && <p className="text-sm text-destructive text-center py-2">Failed to load tasks</p>}
 
         {!isLoading && !error && displayTasks.length === 0 && (
-          <div className="text-center py-4">
-            <p className="text-sm text-muted-foreground mb-2">No tasks yet</p>
-            {showAddButton && (
-              <button
-                onClick={() => setCreateOpen(true)}
-                className="text-sm text-primary hover:underline"
-              >
-                Add a task
-              </button>
-            )}
-          </div>
+          <EmptyState
+            entity="tasks"
+            phase="passive"
+            className="py-2"
+          />
         )}
 
         {!isLoading && !error && displayTasks.length > 0 && (

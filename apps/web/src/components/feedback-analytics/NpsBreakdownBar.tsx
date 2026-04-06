@@ -16,6 +16,7 @@ import {
   CartesianGrid,
   Tooltip,
 } from 'recharts';
+import { EmptyState } from '@intelliflow/ui';
 import type { NpsBreakdownBarProps } from '@/lib/feedback-survey/types';
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -26,11 +27,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export default function NpsBreakdownBar({ distribution }: Readonly<NpsBreakdownBarProps>) {
   if (distribution.total === 0) {
-    return (
-      <div className="flex h-64 items-center justify-center rounded-lg border bg-card p-6">
-        <p className="text-muted-foreground">No NPS data available</p>
-      </div>
-    );
+    return <EmptyState entity="insights" phase="passive" className="py-4" />;
   }
 
   const data = [

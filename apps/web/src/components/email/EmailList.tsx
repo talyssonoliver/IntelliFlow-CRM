@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useRef } from 'react';
-import { AlertCircle, RotateCcw, Inbox, FilterX } from 'lucide-react';
+import { AlertCircle, RotateCcw } from 'lucide-react';
+import { EmptyState } from '@intelliflow/ui';
 import { cn } from '@/lib/utils';
 import { SearchFilterBar } from '@/components/shared';
 import { EmailListItem } from './EmailListItem';
@@ -61,9 +62,16 @@ export function EmailList({
   filters,
   className,
 }: Readonly<EmailListProps>) {
-  const listRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
 
-  const activeChip = filters.unread ? 'unread' : filters.hasAttachments ? 'attachments' : 'all';
+  let activeChip: string;
+  if (filters.unread) {
+    activeChip = 'unread';
+  } else if (filters.hasAttachments) {
+    activeChip = 'attachments';
+  } else {
+    activeChip = 'all';
+  }
 
   const handleChipChange = useCallback(
     (chipId: string) => {
@@ -157,8 +165,7 @@ export function EmailList({
         <div className="flex flex-1 flex-col items-center justify-center gap-2 p-4">
           {isFilteredEmpty ? (
             <>
-              <FilterX className="h-10 w-10 text-muted-foreground/50" />
-              <p className="text-sm text-muted-foreground">No emails match current filters</p>
+              <EmptyState entity="emails" variant="filtered" phase="passive" />
               <button
                 type="button"
                 className="text-xs text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring rounded"
@@ -168,31 +175,33 @@ export function EmailList({
               </button>
             </>
           ) : (
-            <>
-              <Inbox className="h-10 w-10 text-muted-foreground/50" />
-              <p className="text-sm text-muted-foreground">
-                {searchQuery ? 'No results found' : 'No emails in this folder'}
-              </p>
-            </>
+            <EmptyState
+              entity="emails"
+              variant={searchQuery ? 'filtered' : 'folder'}
+              phase="passive"
+            />
           )}
         </div>
       ) : (
-        <div // NOSONAR — custom keyboard-navigable email list widget; role="listbox" is the correct ARIA pattern; replacing with <select multiple> would break the rich visual design
-          ref={listRef}
-          role="listbox"
-          aria-label="Email list"
-          tabIndex={0}
-          className="flex-1 space-y-0.5 overflow-auto p-1"
+        <div
+          role="none"
           onKeyDown={handleListKeyDown}
+          className="flex-1 overflow-auto"
         >
-          {emails.map((email) => (
-            <EmailListItem
-              key={email.id}
-              email={email}
-              isSelected={selectedEmailId === email.id}
-              onSelect={onEmailSelect}
-            />
-          ))}
+          <ul
+            ref={listRef}
+            aria-label="Email list"
+            className="space-y-0.5 p-1 list-none"
+          >
+            {emails.map((email) => (
+              <EmailListItem
+                key={email.id}
+                email={email}
+                isSelected={selectedEmailId === email.id}
+                onSelect={onEmailSelect}
+              />
+            ))}
+          </ul>
         </div>
       )}
     </div>

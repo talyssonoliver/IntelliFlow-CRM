@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { EmptyState } from '@intelliflow/ui';
 import {
   getTypeConfig,
   getStatusConfig,
@@ -281,7 +282,7 @@ export function AppointmentDetail({
                         </div>
                       </div>
                     ) : (
-                      <p className="text-sm text-slate-500">No linked cases.</p>
+                      <EmptyState entity="cases" phase="passive" className="py-2" />
                     )}
 
                     {!isTerminal && (
@@ -381,7 +382,7 @@ export function AppointmentDetail({
                   </div>
 
                   {appointment.linkedCases.length === 0 && (
-                    <p className="text-sm text-slate-500">No linked cases.</p>
+                    <EmptyState entity="cases" phase="passive" className="py-2" />
                   )}
 
                   <div className="space-y-3">

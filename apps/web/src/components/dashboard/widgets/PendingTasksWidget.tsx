@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
-import { Skeleton } from '@intelliflow/ui';
+import { EmptyState, Skeleton } from '@intelliflow/ui';
 import { TaskCreateSheet } from '@/components/tasks/TaskCreateSheet';
 import type { WidgetProps } from './index';
 import type { TaskStatus } from '@intelliflow/domain';
@@ -57,9 +57,7 @@ export function PendingTasksWidget(_props: Readonly<WidgetProps>) {
           </>
         )}
         {!isLoading && tasks.length === 0 && (
-          <div className="text-center py-4">
-            <p className="text-sm text-muted-foreground">No pending tasks</p>
-          </div>
+          <EmptyState entity="tasks" phase="passive" className="py-2" />
         )}
         {!isLoading &&
           tasks.map((task) => (

@@ -1,35 +1,22 @@
 'use client';
 
+import { trpc } from '@/lib/trpc';
 import type { WidgetProps } from './index';
 
-interface PipelineStage {
-  name: string;
-  value: string;
-  deals: number;
-  percentage: number;
-  color: string;
-}
-
-const stages: PipelineStage[] = [
-  {
-    name: 'Qualification',
-    value: '$12,400',
-    deals: 8,
-    percentage: 15,
-    color: 'bg-stage-qualification',
-  },
-  { name: 'Proposal', value: '$34,200', deals: 12, percentage: 40, color: 'bg-stage-proposal' },
-  {
-    name: 'Negotiation',
-    value: '$120,000',
-    deals: 4,
-    percentage: 25,
-    color: 'bg-stage-negotiation',
-  },
-  { name: 'Closed Won', value: '$40,000', deals: 2, percentage: 20, color: 'bg-stage-won' },
-];
+const STAGE_COLORS: Record<string, string> = {
+  QUALIFICATION: 'bg-stage-qualification',
+  PROPOSAL: 'bg-stage-proposal',
+  NEGOTIATION: 'bg-stage-negotiation',
+  CLOSED_WON: 'bg-stage-won',
+  DISCOVERY: 'bg-blue-400',
+  DEMO: 'bg-indigo-400',
+};
 
 export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
+  const { data, isLoading } = trpc.opportunity.getPipeline.useQuery({
+    includeClosedStages: false,
+  });
+
   return (
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-6">
@@ -40,22 +27,44 @@ export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
       </div>
 
       <div className="space-y-4 flex-1">
-        {stages.map((stage) => (
-          <div key={stage.name}>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-foreground">{stage.name}</span>
-              <span className="text-sm text-muted-foreground">
-                {stage.value} ({stage.deals} Deals)
-              </span>
-            </div>
-            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-              <div
-                className={`h-full ${stage.color} rounded-full transition-all`}
-                style={{ width: `${stage.percentage}%` }}
-              />
-            </div>
-          </div>
-        ))}
+        {isLoading
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="h-4 w-24 bg-muted rounded" />
+                  <div className="h-4 w-32 bg-muted rounded" />
+                </div>
+                <div className="w-full h-2 bg-muted rounded-full" />
+              </div>
+            ))
+          : data?.stages.map((stage) => {
+              const total = Number(data.totalPipelineValue) || 1;
+              const stageValue = Number(stage.totalValue);
+              const percentage = total > 0 ? Math.round((stageValue / total) * 100) : 0;
+              return (
+                <div key={stage.stageKey}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-foreground">
+                      {stage.displayName}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      {stageValue.toLocaleString('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                        maximumFractionDigits: 0,
+                      })}{' '}
+                      ({stage.count} Deals)
+                    </span>
+                  </div>
+                  <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={`h-full ${STAGE_COLORS[stage.stageKey] || 'bg-primary'} rounded-full transition-all`}
+                      style={{ width: `${Math.max(percentage, 2)}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
       </div>
     </div>
   );

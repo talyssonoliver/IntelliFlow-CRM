@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { ColumnDef } from '@tanstack/react-table';
-import { DataTable, TableRowActions, type BulkAction, Skeleton } from '@intelliflow/ui';
+import { DataTable, EmptyState, TableRowActions, type BulkAction, Skeleton } from '@intelliflow/ui';
 import { EntityHoverCard } from '@/components/shared/entity-hover-card';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -349,12 +349,7 @@ export function ContactList({
 
   if (contacts.length === 0) {
     return (
-      <div className="text-center py-12">
-        <span className="material-symbols-outlined text-5xl text-slate-300 mb-4" aria-hidden="true">
-          person_off
-        </span>
-        <p className="text-slate-500 dark:text-slate-400">No contacts found</p>
-      </div>
+      <EmptyState entity="contacts" phase="passive" />
     );
   }
 
@@ -363,6 +358,7 @@ export function ContactList({
       <DataTable
         columns={columns}
         data={contacts}
+        entity="contacts"
         emptyMessage="No contacts match your search criteria"
         emptyIcon="person_off"
         onRowClick={onRowClick}

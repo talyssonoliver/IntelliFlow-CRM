@@ -1,5 +1,5 @@
 import type { SidebarConfig, SidebarItem } from '../sidebar-types';
-import { MODULE_ICONS, VIEW_ICONS, STATUS_ICONS, FEATURE_ICONS } from '../icon-reference';
+import { MODULE_ICONS, VIEW_ICONS, FEATURE_ICONS } from '../icon-reference';
 import type { ModuleSettingsNavItem } from '@/components/shared/module-settings-nav';
 
 /** Section with its navigation items (compatible with both sidebar and panel) */
@@ -157,13 +157,3 @@ export function createAgentApprovalsSettingsSidebarConfig(
     sections,
   };
 }
-
-/** @deprecated Use createAgentApprovalsSidebarConfig() instead */
-export const agentApprovalsSidebarConfig: SidebarConfig = {
-  moduleId: 'agentApprovals',
-  moduleTitle: 'AI & Agents',
-  moduleIcon: MODULE_ICONS.agentApprovals,
-  settingsHref: '/settings/ai',
-  showSettings: true,
-  sections: [],
-};

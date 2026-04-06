@@ -33,7 +33,7 @@ const settingsNavItems: SettingsNavItem[] = [
   },
   {
     label: 'AI Chains',
-    href: '/settings/ai',
+    href: '/agent-approvals/ai-settings',
     icon: 'auto_awesome',
     description: 'Manage AI chain versions',
   },

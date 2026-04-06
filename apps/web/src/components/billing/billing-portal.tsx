@@ -87,11 +87,8 @@ function SubscriptionOverviewCard() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <EmptyState icon="credit_card_off" message="No active subscription" />
+          <EmptyState icon="credit_card_off" entity="subscriptions" />
           <div className="text-center mt-2">
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 max-w-sm mx-auto">
-              Choose a plan to get started with IntelliFlow CRM and unlock powerful features.
-            </p>
             <Button asChild>
               <Link href="/upgrade">
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
@@ -226,7 +223,7 @@ function PaymentMethodSection() {
       </CardHeader>
       <CardContent className="space-y-3">
         {!paymentMethods || paymentMethods.length === 0 ? (
-          <EmptyState icon="credit_card_off" message="No payment method on file" />
+          <EmptyState icon="credit_card_off" entity="payment-methods" />
         ) : (
           paymentMethods.map((pm) => (
             <div
@@ -317,7 +314,7 @@ function BillingInformationCard() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <EmptyState icon="info" message="No billing information on file" />
+          <EmptyState icon="info" entity="invoices" message="No billing information on file" />
         </CardContent>
       </Card>
     );

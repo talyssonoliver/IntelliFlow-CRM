@@ -12,6 +12,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
+  EmptyState,
 } from '@intelliflow/ui';
 import { generateApiKey } from '@/lib/developer/api-key-generator';
 import { findAppById, type DeveloperApp, type ApiKey } from '@/lib/developer/demo-data';
@@ -364,15 +365,7 @@ export function AppDashboard({ appId }: Readonly<AppDashboardProps>) {
               </CardHeader>
               <CardContent>
                 {keys.length === 0 ? (
-                  <div className="text-center py-8">
-                    <span
-                      className="material-symbols-outlined text-3xl text-muted-foreground"
-                      aria-hidden="true"
-                    >
-                      key_off
-                    </span>
-                    <p className="text-sm text-muted-foreground mt-2">No API keys generated yet.</p>
-                  </div>
+                  <EmptyState entity="insights" phase="passive" className="py-4" />
                 ) : (
                   <div className="space-y-3">
                     {keys.map((apiKey) => (
@@ -472,15 +465,7 @@ export function AppDashboard({ appId }: Readonly<AppDashboardProps>) {
             </CardHeader>
             <CardContent>
               {logs.length === 0 ? (
-                <div className="text-center py-8">
-                  <span
-                    className="material-symbols-outlined text-3xl text-muted-foreground"
-                    aria-hidden="true"
-                  >
-                    receipt_long
-                  </span>
-                  <p className="text-sm text-muted-foreground mt-2">No request logs available.</p>
-                </div>
+                <EmptyState entity="insights" phase="passive" className="py-4" />
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">

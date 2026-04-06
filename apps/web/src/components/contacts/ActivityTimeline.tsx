@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { EmptyState } from '@intelliflow/ui';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -161,8 +162,7 @@ export function ActivityTimeline({
 
   if (isLoading) {
     return (
-      <div
-        role="status" // NOSONAR typescript:S6819 — loading state indicator; <output> is for form computation results
+      <output
         aria-busy="true"
         className="space-y-4 p-6"
       >
@@ -170,7 +170,7 @@ export function ActivityTimeline({
         {[1, 2, 3].map((i) => (
           <div key={i} className="h-20 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
         ))}
-      </div>
+      </output>
     );
   }
 
@@ -195,22 +195,27 @@ export function ActivityTimeline({
       {/* Type Filters (radio group) */}
       <div role="radiogroup" aria-label="Filter by activity type" className="flex flex-wrap gap-2">
         {activityTypeFilters.map((filter) => (
-          <button
+          <label
             key={filter.value}
-            role="radio" // NOSONAR typescript:S6819 — styled button acts as radio button in a radiogroup; <input type="radio"> cannot contain icon/label children
-            aria-checked={typeFilter === filter.value}
-            onClick={() => setTypeFilter(filter.value)}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors cursor-pointer ${
               typeFilter === filter.value
                 ? 'bg-primary text-white'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
             }`}
           >
+            <input
+              type="radio"
+              name="activity-type-filter"
+              value={filter.value}
+              checked={typeFilter === filter.value}
+              onChange={() => setTypeFilter(filter.value)}
+              className="sr-only"
+            />
             <span className="material-symbols-outlined text-sm" aria-hidden="true">
               {filter.icon}
             </span>
             {filter.label}
-          </button>
+          </label>
         ))}
       </div>
 
@@ -308,15 +313,7 @@ export function ActivityTimeline({
           })}
         </ol>
       ) : (
-        <div className="text-center py-12">
-          <span
-            className="material-symbols-outlined text-4xl text-slate-300 mb-4"
-            aria-hidden="true"
-          >
-            search_off
-          </span>
-          <p className="text-slate-500">No activities match your filters</p>
-        </div>
+        <EmptyState entity="activity" variant="filtered" phase="passive" />
       )}
 
       {/* Infinite scroll trigger */}

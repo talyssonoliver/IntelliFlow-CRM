@@ -12,9 +12,12 @@ export function TotalLeadsWidget({ initialData }: Readonly<WidgetProps>) {
     error,
   } = trpc.lead.stats.useQuery(undefined, {
     enabled: isAuthenticated && !authLoading,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...(initialData == null ? {} : { initialData: initialData as any }),
+    ...(initialData == null ? {} : { initialData: initialData as NonNullable<Parameters<typeof trpc.lead.stats.useQuery>[1]>['initialData'] }),
   });
+  const { data: overview } = trpc.analytics.getOverview.useQuery(
+    {},
+    { enabled: isAuthenticated && !authLoading }
+  );
 
   if (isLoading || authLoading) {
     return (
@@ -33,20 +36,35 @@ export function TotalLeadsWidget({ initialData }: Readonly<WidgetProps>) {
     return null;
   }
 
+  const total = stats.total;
+  const delta = Number(overview?.leadDelta ?? 0);
+  const previous = total - delta;
+  const deltaPercent = previous > 0 ? Math.round((delta / previous) * 100) : 0;
+  const isPositive = deltaPercent >= 0;
+
   return (
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-start justify-between">
         <div className="w-12 h-12 rounded-lg bg-ds-primary/10 flex items-center justify-center">
           <span className="material-symbols-outlined text-2xl text-ds-primary">group</span>
         </div>
-        <span className="inline-flex items-center gap-1 text-sm font-medium text-green-600">
-          <span className="material-symbols-outlined text-lg">trending_up</span>{' '}
-          +12%
-        </span>
+        {deltaPercent !== 0 && (
+          <span
+            className={`inline-flex items-center gap-1 text-sm font-medium ${
+              isPositive ? 'text-green-600' : 'text-red-600'
+            }`}
+          >
+            <span className="material-symbols-outlined text-lg">
+              {isPositive ? 'trending_up' : 'trending_down'}
+            </span>{' '}
+            {isPositive ? '+' : ''}
+            {deltaPercent}%
+          </span>
+        )}
       </div>
       <p className="text-sm text-slate-500 dark:text-slate-400 mt-4">Total Leads</p>
       <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1">
-        {stats.total.toLocaleString()}
+        {total.toLocaleString('en-GB')}
       </p>
     </div>
   );

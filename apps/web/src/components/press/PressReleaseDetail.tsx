@@ -1,6 +1,8 @@
 import Link from 'next/link';
+import { Breadcrumbs } from '@/components/shared/page-header';
 import { MarkdownRenderer } from '@/components/blog/markdown-renderer';
 import { ShareButtons } from '@/components/blog/share-buttons';
+import { formatPressDate, getCategoryStyle } from '@/lib/press/utils';
 
 export interface PressRelease {
   id: string;
@@ -28,25 +30,6 @@ export interface PressReleaseDetailProps {
   };
 }
 
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    timeZone: 'UTC',
-  });
-}
-
-function getCategoryColor(category: string): string {
-  const colors: Record<string, string> = {
-    Product: '#137fec',
-    Security: '#10b981',
-    Partnership: '#8b5cf6',
-    Company: '#f59e0b',
-  };
-  return colors[category] || '#6b7280';
-}
-
 export function PressReleaseDetail({
   release,
   relatedReleases,
@@ -56,53 +39,28 @@ export function PressReleaseDetail({
     return null;
   }
 
-  const categoryColor = getCategoryColor(release.category);
-
   return (
     <>
       {/* Breadcrumb Navigation */}
-      <nav
-        aria-label="Breadcrumb"
-        className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700"
-      >
+      <div className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
         <div className="container px-4 lg:px-6 mx-auto max-w-4xl py-3">
-          <ol className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400">
-            <li>
-              <Link href="/" className="hover:text-[#137fec] transition-colors">
-                Home
-              </Link>
-            </li>
-            <li aria-hidden="true" className="mx-1">
-              <span className="material-symbols-outlined text-xs" aria-hidden="true">
-                chevron_right
-              </span>
-            </li>
-            <li>
-              <Link href="/press" className="hover:text-[#137fec] transition-colors">
-                Press
-              </Link>
-            </li>
-            <li aria-hidden="true" className="mx-1">
-              <span className="material-symbols-outlined text-xs" aria-hidden="true">
-                chevron_right
-              </span>
-            </li>
-            <li
-              aria-current="page"
-              className="text-slate-900 dark:text-white font-medium truncate max-w-xs"
-            >
-              {release.title}
-            </li>
-          </ol>
+          <Breadcrumbs
+            className="mb-0"
+            items={[
+              { label: 'Home', href: '/' },
+              { label: 'Press', href: '/press' },
+              { label: release.title },
+            ]}
+          />
         </div>
-      </nav>
+      </div>
 
       <article aria-labelledby="pr-title" className="bg-white dark:bg-slate-800">
         {/* Back Link */}
         <div className="container px-4 lg:px-6 mx-auto max-w-4xl pt-6">
           <Link
             href="/press"
-            className="inline-flex items-center gap-1 text-sm text-[#137fec] hover:text-[#0e6ac7] font-medium transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-primary hover:text-primary-hover font-medium transition-colors"
           >
             <span className="material-symbols-outlined text-base" aria-hidden="true">
               arrow_back
@@ -115,16 +73,12 @@ export function PressReleaseDetail({
         <header className="container px-4 lg:px-6 mx-auto max-w-4xl pt-8 pb-6">
           <div className="flex items-center gap-3 mb-4">
             <span
-              className="px-3 py-1 text-xs font-semibold rounded-full"
-              style={{
-                backgroundColor: `${categoryColor}15`,
-                color: categoryColor,
-              }}
+              className={`px-3 py-1 text-xs font-semibold rounded-full ${getCategoryStyle(release.category)}`}
             >
               {release.category}
             </span>
             <time dateTime={release.date} className="text-sm text-slate-500 dark:text-slate-400">
-              {formatDate(release.date)}
+              {formatPressDate(release.date)}
             </time>
             {release.readTime && (
               <span className="text-sm text-slate-400 dark:text-slate-500">{release.readTime}</span>
@@ -159,7 +113,7 @@ export function PressReleaseDetail({
             </h2>
             <div className="space-y-6">
               {release.quotes.map((quote, index) => (
-                <blockquote key={index} className="border-l-4 border-[#137fec] pl-6 py-2"> {/* NOSONAR typescript:S6479 */}
+                <blockquote key={index} className="border-l-4 border-primary pl-6 py-2"> {/* NOSONAR typescript:S6479 */}
                   <p className="text-lg text-slate-700 dark:text-slate-300 italic mb-2">
                     &ldquo;{quote.text}&rdquo;
                   </p>
@@ -196,7 +150,7 @@ export function PressReleaseDetail({
             </div>
             <a
               href={`mailto:${pressContact.email}`}
-              className="flex items-center gap-2 text-[#137fec] hover:text-[#0e6ac7] transition-colors"
+              className="flex items-center gap-2 text-primary hover:text-primary-hover transition-colors"
             >
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 mail
@@ -205,7 +159,7 @@ export function PressReleaseDetail({
             </a>
             <a
               href={`tel:${pressContact.phone.replaceAll(/[^+\d]/g, '')}`}
-              className="flex items-center gap-2 text-[#137fec] hover:text-[#0e6ac7] transition-colors"
+              className="flex items-center gap-2 text-primary hover:text-primary-hover transition-colors"
             >
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 phone
@@ -240,20 +194,16 @@ export function PressReleaseDetail({
                   key={related.id}
                   href={`/press/${related.id}`}
                   aria-label={`Read full press release: ${related.title}`}
-                  className="block p-6 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-[#137fec] hover:shadow-md transition-all"
+                  className="block p-6 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-primary hover:shadow-md transition-all"
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <span
-                      className="px-2 py-0.5 text-xs font-semibold rounded-full"
-                      style={{
-                        backgroundColor: `${getCategoryColor(related.category)}15`,
-                        color: getCategoryColor(related.category),
-                      }}
+                      className={`px-2 py-0.5 text-xs font-semibold rounded-full ${getCategoryStyle(related.category)}`}
                     >
                       {related.category}
                     </span>
                     <span className="text-xs text-slate-500 dark:text-slate-400">
-                      {formatDate(related.date)}
+                      {formatPressDate(related.date)}
                     </span>
                   </div>
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">

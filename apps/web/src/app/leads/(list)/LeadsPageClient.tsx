@@ -390,8 +390,7 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
     },
     {
       enabled: isAuthenticated && !authLoading,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      initialData: isDefaultQuery && serverData ? (serverData as any) : undefined,
+      initialData: isDefaultQuery && serverData ? (serverData as NonNullable<Parameters<typeof api.lead.list.useQuery>[1]>['initialData']) : undefined,
     }
   );
 
@@ -863,6 +862,7 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
         <DataTable
           columns={columns}
           data={leads}
+          entity="leads"
           emptyMessage={emptyMessage}
           emptyIcon="person_search"
           onRowClick={handleRowClick}

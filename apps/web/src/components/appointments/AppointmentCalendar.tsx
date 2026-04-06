@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
+import { EmptyState } from '@intelliflow/ui';
 import dynamic from 'next/dynamic';
 import type { CalendarAppointment, CalendarTask } from './types';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
@@ -51,16 +52,16 @@ export function AppointmentCalendar({
   const navigatePrev = useCallback(() => {
     const d = new Date(currentDate);
     if (view === 'month') d.setMonth(d.getMonth() - 1);
-    else if (view === 'week') d.setDate(d.getDate() - 7);
-    else d.setDate(d.getDate() - 1);
+    else if (view === 'week') d.setUTCDate(d.getUTCDate() - 7);
+    else d.setUTCDate(d.getUTCDate() - 1);
     onDateChange(d);
   }, [currentDate, view, onDateChange]);
 
   const navigateNext = useCallback(() => {
     const d = new Date(currentDate);
     if (view === 'month') d.setMonth(d.getMonth() + 1);
-    else if (view === 'week') d.setDate(d.getDate() + 7);
-    else d.setDate(d.getDate() + 1);
+    else if (view === 'week') d.setUTCDate(d.getUTCDate() + 7);
+    else d.setUTCDate(d.getUTCDate() + 1);
     onDateChange(d);
   }, [currentDate, view, onDateChange]);
 
@@ -183,14 +184,8 @@ export function AppointmentCalendar({
       </div>
 
       {appointments.length === 0 && (!tasks || tasks.length === 0) && !isLoading && (
-        <div
-          className="text-center py-12 text-slate-500 dark:text-slate-400"
-          data-testid="calendar-empty"
-        >
-          <span className="material-symbols-outlined text-4xl mb-2" aria-hidden="true">
-            calendar_month
-          </span>
-          <p className="text-sm">No events this period</p>
+        <div data-testid="calendar-empty">
+          <EmptyState entity="appointments" phase="passive" />
         </div>
       )}
     </div>

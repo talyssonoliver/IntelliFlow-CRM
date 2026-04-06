@@ -8,7 +8,7 @@
  * Displays agent cards with capacity gauges, skills, and availability status.
  */
 
-import { Card, CardContent, Progress, Skeleton } from '@intelliflow/ui';
+import { Card, CardContent, EmptyState, Progress, Skeleton } from '@intelliflow/ui';
 import { useRouting } from '@/app/settings/routing/hooks/useRouting';
 import type { AgentStatusType } from '@intelliflow/domain';
 
@@ -84,10 +84,8 @@ export function AgentWorkload() {
   if (!agentWorkload || agentWorkload.length === 0) {
     return (
       <Card>
-        <CardContent className="p-6 text-center text-muted-foreground">
-          <span className="material-symbols-outlined text-[36px] mb-2 block">groups_off</span>
-          <p>No agents configured</p>
-          <p className="text-sm mt-1">Agent availability will appear here once configured.</p>
+        <CardContent className="p-6">
+          <EmptyState entity="agents" phase="passive" />
         </CardContent>
       </Card>
     );

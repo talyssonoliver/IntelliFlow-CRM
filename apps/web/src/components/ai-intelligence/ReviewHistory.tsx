@@ -14,7 +14,7 @@
  */
 
 import { useState, useCallback, useId, useMemo } from 'react';
-import { Card, CardContent, Badge, Button, Skeleton, cn } from '@intelliflow/ui';
+import { Card, CardContent, Badge, Button, EmptyState, Skeleton, cn } from '@intelliflow/ui';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useReviewHistory } from '@/lib/ai-review/hooks';
 import { ReviewCard } from '@/components/ai-review/ReviewCard';
@@ -67,14 +67,14 @@ const BUCKET_ORDER = ['Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days', 'Olde
 
 function groupByDateBucket(reviews: ReviewResponse[]): DateGroup[] {
   const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfToday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   const buckets = new Map<string, ReviewResponse[]>();
 
   for (const review of reviews) {
     const date = new Date(review.updatedAt);
     const diffMs =
       startOfToday.getTime() -
-      new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+      new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())).getTime();
     const diffDays = Math.floor(diffMs / 86400000);
 
     let label: string;
@@ -289,7 +289,7 @@ export function ReviewHistory() {
       if (afterDate && updated < new Date(afterDate)) return false;
       if (beforeDate) {
         const endOfDay = new Date(beforeDate);
-        endOfDay.setDate(endOfDay.getDate() + 1);
+        endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
         if (updated >= endOfDay) return false;
       }
       return true;
@@ -570,20 +570,7 @@ export function ReviewHistory() {
 
       {/* Timeline Groups */}
       {filteredReviews.length === 0 && !isLoading ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <span
-              className="material-symbols-outlined text-4xl text-muted-foreground mb-3 block"
-              aria-hidden="true"
-            >
-              history_toggle_off
-            </span>
-            <p className="text-lg font-medium text-foreground mb-1">No completed reviews found</p>
-            <p className="text-sm text-muted-foreground">
-              Completed reviews will appear here once AI outputs have been reviewed.
-            </p>
-          </CardContent>
-        </Card>
+        <EmptyState entity="insights" phase="passive" />
       ) : (
         dateGroups.map((group) => (
           <TimelineGroup key={group.label} label={group.label} count={group.reviews.length}>

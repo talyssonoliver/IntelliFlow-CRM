@@ -27,7 +27,7 @@ export const settingsSidebarConfig: SidebarConfig = {
           id: 'ai',
           label: 'AI Chains',
           icon: 'auto_awesome',
-          href: '/settings/ai',
+          href: '/agent-approvals/ai-settings',
         },
         {
           id: 'integrations',

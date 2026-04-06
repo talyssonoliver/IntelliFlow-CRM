@@ -53,6 +53,66 @@ function stopAllPropagation(e: React.SyntheticEvent) {
   e.stopPropagation();
 }
 
+function resolveEntityType(type: string | undefined): 'contact' | 'lead' | 'none' {
+  if (type === 'contact') return 'contact';
+  if (type === 'lead') return 'lead';
+  return 'none';
+}
+
+function buildEmailHref(messageId: string, currentFolder: string | null): string {
+  const folderParam = currentFolder ? `?folder=${encodeURIComponent(currentFolder)}` : '';
+  return `/email/${messageId}${folderParam}`;
+}
+
+interface RelatedMessagesProps {
+  isLoading: boolean;
+  shouldFetch: boolean;
+  messages: Array<{ id: string; subject: string; receivedAt: string; preview: string }>;
+  currentFolder: string | null;
+}
+
+function RelatedMessagesList({ isLoading, shouldFetch, messages, currentFolder }: Readonly<RelatedMessagesProps>) {
+  if (isLoading && shouldFetch) {
+    return (
+      <div className="space-y-1.5">
+        {[0, 1].map((i) => (
+          <div key={i} className="space-y-1">
+            <div className="h-3 w-3/4 rounded bg-slate-100 dark:bg-slate-800 animate-pulse" />
+            <div className="h-2.5 w-1/2 rounded bg-slate-100 dark:bg-slate-800 animate-pulse" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+  if (messages.length > 0) {
+    return (
+      <ul className="space-y-1">
+        {messages.map((msg) => (
+          <li key={msg.id}>
+            <a
+              href={buildEmailHref(msg.id, currentFolder)}
+              className="block rounded px-1.5 py-1 -mx-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="text-xs text-slate-700 dark:text-slate-300 truncate flex-1">
+                  {msg.subject}
+                </p>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0">
+                  {formatRelativeDate(msg.receivedAt)}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                {msg.preview}
+              </p>
+            </a>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  return <p className="text-xs text-slate-400 dark:text-slate-500 italic">No messages yet</p>;
+}
+
 export function EntityHoverCard({
   email,
   displayName,
@@ -108,11 +168,10 @@ export function EntityHoverCard({
 
   const cardName = entity?.name || displayName || email.split('@')[0];
   const cardEmail = entity?.email || email;
-  const entityHref = entity
-    ? entity.type === 'contact'
-      ? `/contacts/${entity.id}`
-      : `/leads/${entity.id}`
-    : null;
+  let entityHref: string | null = null;
+  if (entity) {
+    entityHref = entity.type === 'contact' ? `/contacts/${entity.id}` : `/leads/${entity.id}`;
+  }
 
   // Keep entity data cached for the TaskCreateSheet (which lives outside the card)
   entityCacheRef.current = { type: entity?.type, id: entity?.id, name: cardName };
@@ -129,11 +188,6 @@ export function EntityHoverCard({
     url: entityHref ?? '',
   });
 
-  function emailHref(messageId: string): string {
-    const folderParam = currentFolder ? `?folder=${encodeURIComponent(currentFolder)}` : '';
-    return `/email/${messageId}${folderParam}`;
-  }
-
   return (
     <>
       <HoverCard open={isHoverOpen} openDelay={600} closeDelay={250} onOpenChange={handleHoverOpenChange}>
@@ -147,13 +201,14 @@ export function EntityHoverCard({
           )}
         >
         {/* Defensive wrapper: stop all events from leaking through the portal to underlying elements (e.g. table rows) */}
-        {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
         <div
+          role="none"
           onPointerDown={stopAllPropagation}
           onPointerUp={stopAllPropagation}
           onClick={stopAllPropagation}
           onMouseDown={stopAllPropagation}
           onMouseUp={stopAllPropagation}
+          onKeyDown={stopAllPropagation}
         >
         <TooltipProvider delayDuration={400}>
           {/* Header — horizontal layout like Gmail/Outlook */}
@@ -210,7 +265,7 @@ export function EntityHoverCard({
               href={`/email/compose?to=${encodeURIComponent(cardEmail)}`}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-xs font-medium rounded hover:bg-[#0e6ac7] transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
             >
-              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">mail</span>
+              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">mail</span>{' '}
               Send Email
             </a>
 
@@ -256,14 +311,13 @@ export function EntityHoverCard({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <DropdownMenuTrigger asChild>
-                      <div
-                        role="button"
-                        tabIndex={0}
+                      <button
+                        type="button"
                         className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors cursor-pointer"
                         aria-label="More actions"
                       >
                         <span className="material-symbols-outlined text-[20px]" aria-hidden="true">more_horiz</span>
-                      </div>
+                      </button>
                     </DropdownMenuTrigger>
                   </TooltipTrigger>
                   <TooltipContent side="bottom" className="text-xs">More actions</TooltipContent>
@@ -279,7 +333,7 @@ export function EntityHoverCard({
                   )}
                   <DropdownMenuItem asChild>
                     <a href={`/email/compose?to=${encodeURIComponent(cardEmail)}`}>
-                      <span className="material-symbols-outlined text-[16px] mr-2" aria-hidden="true">forward_to_inbox</span>
+                      <span className="material-symbols-outlined text-[16px] mr-2" aria-hidden="true">forward_to_inbox</span>{' '}
                       Send Message
                     </a>
                   </DropdownMenuItem>
@@ -303,7 +357,7 @@ export function EntityHoverCard({
                 href={entityHref}
                 className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-0.5"
               >
-                Open detailed view
+                Open detailed view{' '}
                 <span className="material-symbols-outlined text-xs" aria-hidden="true">arrow_outward</span>
               </a>
             </div>
@@ -314,41 +368,12 @@ export function EntityHoverCard({
             <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wide font-medium mb-1.5">
               Related Messages
             </p>
-            {messagesQuery.isLoading && shouldFetch ? (
-              <div className="space-y-1.5">
-                {[0, 1].map((i) => (
-                  <div key={i} className="space-y-1">
-                    <div className="h-3 w-3/4 rounded bg-slate-100 dark:bg-slate-800 animate-pulse" />
-                    <div className="h-2.5 w-1/2 rounded bg-slate-100 dark:bg-slate-800 animate-pulse" />
-                  </div>
-                ))}
-              </div>
-            ) : messages.length > 0 ? (
-              <ul className="space-y-1">
-                {messages.map((msg) => (
-                  <li key={msg.id}>
-                    <a
-                      href={emailHref(msg.id)}
-                      className="block rounded px-1.5 py-1 -mx-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                    >
-                      <div className="flex items-baseline justify-between gap-2">
-                        <p className="text-xs text-slate-700 dark:text-slate-300 truncate flex-1">
-                          {msg.subject}
-                        </p>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0">
-                          {formatRelativeDate(msg.receivedAt)}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                        {msg.preview}
-                      </p>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-xs text-slate-400 dark:text-slate-500 italic">No messages yet</p>
-            )}
+            <RelatedMessagesList
+              isLoading={messagesQuery.isLoading}
+              shouldFetch={shouldFetch}
+              messages={messages}
+              currentFolder={currentFolder}
+            />
           </div>
         </TooltipProvider>
         </div>
@@ -360,7 +385,7 @@ export function EntityHoverCard({
       <TaskCreateSheet
         open={isTaskSheetOpen}
         onOpenChange={handleTaskSheetChange}
-        defaultEntityType={entityCacheRef.current.type === 'contact' ? 'contact' : entityCacheRef.current.type === 'lead' ? 'lead' : 'none'}
+        defaultEntityType={resolveEntityType(entityCacheRef.current.type)}
         defaultEntityId={entityCacheRef.current.id}
         defaultEntityName={entityCacheRef.current.name}
       />

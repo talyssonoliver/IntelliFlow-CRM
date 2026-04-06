@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Card, Button, Progress } from '@intelliflow/ui';
+import { Card, Button, EmptyState, Progress } from '@intelliflow/ui';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { PageHeader } from '@/components/shared';
@@ -984,17 +984,13 @@ export default function QualityReportsPage() {
       )}
 
       {!loading && !data?.reports?.length && (
-        <Card className="p-12 text-center">
-          <span className="material-symbols-outlined text-5xl text-muted-foreground mb-4">
-            info
-          </span>
-          <h3 className="text-lg font-semibold text-foreground mb-2">No Reports Available</h3>
-          <p className="text-muted-foreground mb-4">
-            Quality reports are generated during CI/CD pipeline execution.
-          </p>
-          <Button onClick={() => setShowGenerateModal(true)} className="mt-2">
-            Generate Reports Now
-          </Button>
+        <Card>
+          <EmptyState entity="reports" phase="passive" />
+          <div className="flex justify-center pb-8">
+            <Button onClick={() => setShowGenerateModal(true)}>
+              Generate Reports Now
+            </Button>
+          </div>
         </Card>
       )}
     </>

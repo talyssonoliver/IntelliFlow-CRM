@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import pressData from '@/data/press-releases.json';
+import { formatPressDate, getCategoryStyle } from '@/lib/press/utils';
 
 /**
  * Press Page
@@ -35,25 +36,6 @@ export const metadata: Metadata = {
   },
 };
 
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    timeZone: 'UTC',
-  });
-}
-
-function getCategoryColor(category: string): string {
-  const colors: Record<string, string> = {
-    Product: '#137fec',
-    Security: '#10b981',
-    Partnership: '#8b5cf6',
-    Company: '#f59e0b',
-  };
-  return colors[category] || '#6b7280';
-}
-
 export default function PressPage() {
   const { releases, mediaKit, pressContact, companyFacts, awards } = pressData;
   const featuredRelease = releases.find((r) => r.featured);
@@ -62,13 +44,13 @@ export default function PressPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#0f172a] via-[#0d1b2a] to-[#0b1f37] py-16 lg:py-24">
-        <div className="absolute -left-40 top-10 h-80 w-80 rounded-full bg-[#137fec]/20 blur-3xl opacity-50" />
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-[#0d1b2a] to-[#0b1f37] py-16 lg:py-24">
+        <div className="absolute -left-40 top-10 h-80 w-80 rounded-full bg-primary/20 blur-3xl opacity-50" />
         <div className="absolute right-0 bottom-0 h-96 w-96 rounded-full bg-indigo-500/20 blur-3xl opacity-40" />
 
         <div className="container relative z-10 px-4 lg:px-6 mx-auto max-w-6xl">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#7cc4ff] font-medium backdrop-blur mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-sky-300 font-medium backdrop-blur mb-6">
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 newspaper
               </span>{' '}
@@ -88,9 +70,9 @@ export default function PressPage() {
               <a
                 href={mediaKit.downloadUrl}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg
-                  bg-[#137fec] text-white font-semibold hover:bg-[#0e6ac7]
-                  transition-colors focus:outline-none focus:ring-2 focus:ring-[#7cc4ff]
-                  focus:ring-offset-2 focus:ring-offset-[#0f172a]"
+                  bg-primary text-primary-foreground font-semibold hover:bg-primary-hover
+                  transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50
+                  focus:ring-offset-2 focus:ring-offset-slate-900"
                 download
               >
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
@@ -102,8 +84,8 @@ export default function PressPage() {
                 href={`mailto:${pressContact.email}`}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg
                   border border-white/30 text-white font-semibold hover:bg-white/10
-                  transition-colors focus:outline-none focus:ring-2 focus:ring-[#7cc4ff]
-                  focus:ring-offset-2 focus:ring-offset-[#0f172a]"
+                  transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50
+                  focus:ring-offset-2 focus:ring-offset-slate-900"
               >
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   mail
@@ -120,7 +102,7 @@ export default function PressPage() {
         <section className="py-12 lg:py-16 bg-white dark:bg-slate-800">
           <div className="container px-4 lg:px-6 mx-auto max-w-6xl">
             <div className="text-center mb-8">
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#137fec]/10 text-[#137fec] text-sm font-medium rounded-full">
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary text-sm font-medium rounded-full">
                 <span className="material-symbols-outlined text-base" aria-hidden="true">
                   star
                 </span>{' '}
@@ -128,20 +110,16 @@ export default function PressPage() {
               </span>
             </div>
 
-            <Card className="p-8 lg:p-12 border-2 border-[#137fec]/20 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900">
+            <Card className="p-8 lg:p-12 border-2 border-primary/20 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900">
               <div className="max-w-3xl mx-auto text-center">
                 <div className="flex items-center justify-center gap-3 mb-4">
                   <span
-                    className="px-3 py-1 text-xs font-semibold rounded-full"
-                    style={{
-                      backgroundColor: `${getCategoryColor(featuredRelease.category)}15`,
-                      color: getCategoryColor(featuredRelease.category),
-                    }}
+                    className={`px-3 py-1 text-xs font-semibold rounded-full ${getCategoryStyle(featuredRelease.category)}`}
                   >
                     {featuredRelease.category}
                   </span>
                   <span className="text-sm text-slate-500 dark:text-slate-400">
-                    {formatDate(featuredRelease.date)}
+                    {formatPressDate(featuredRelease.date)}
                   </span>
                 </div>
 
@@ -155,7 +133,7 @@ export default function PressPage() {
 
                 <Link
                   href={`/press/${featuredRelease.id}`}
-                  className="inline-flex items-center gap-2 text-[#137fec] font-semibold hover:underline"
+                  className="inline-flex items-center gap-2 text-primary font-semibold hover:underline"
                 >
                   Read Full Release{' '}
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
@@ -185,20 +163,16 @@ export default function PressPage() {
               <Card
                 key={release.id}
                 className="p-6 border border-slate-200 dark:border-slate-700 bg-white
-                  dark:bg-slate-800 hover:border-[#137fec] hover:shadow-md transition-all"
+                  dark:bg-slate-800 hover:border-primary hover:shadow-md transition-all"
               >
                 <div className="flex items-center gap-3 mb-3">
                   <span
-                    className="px-2 py-0.5 text-xs font-semibold rounded-full"
-                    style={{
-                      backgroundColor: `${getCategoryColor(release.category)}15`,
-                      color: getCategoryColor(release.category),
-                    }}
+                    className={`px-2 py-0.5 text-xs font-semibold rounded-full ${getCategoryStyle(release.category)}`}
                   >
                     {release.category}
                   </span>
                   <span className="text-sm text-slate-500 dark:text-slate-400">
-                    {formatDate(release.date)}
+                    {formatPressDate(release.date)}
                   </span>
                 </div>
 
@@ -210,7 +184,7 @@ export default function PressPage() {
 
                 <Link
                   href={`/press/${release.id}`}
-                  className="inline-flex items-center gap-1 text-[#137fec] text-sm font-medium hover:underline"
+                  className="inline-flex items-center gap-1 text-primary text-sm font-medium hover:underline"
                 >
                   Read more{' '}
                   <span className="material-symbols-outlined text-base" aria-hidden="true">
@@ -230,8 +204,8 @@ export default function PressPage() {
             {/* Company Facts */}
             <div>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3">
-                <span className="w-10 h-10 rounded-lg bg-[#137fec]/10 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[#137fec]" aria-hidden="true">
+                <span className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-primary" aria-hidden="true">
                     info
                   </span>
                 </span>{' '}
@@ -244,7 +218,7 @@ export default function PressPage() {
                     key={index} // NOSONAR typescript:S6479
                     className="p-4 text-center border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900"
                   >
-                    <p className="text-2xl font-bold text-[#137fec] mb-1">{fact.value}</p>
+                    <p className="text-2xl font-bold text-primary mb-1">{fact.value}</p>
                     <p className="text-sm text-slate-600 dark:text-slate-400">{fact.label}</p>
                   </Card>
                 ))}
@@ -288,7 +262,7 @@ export default function PressPage() {
       </section>
 
       {/* Media Kit & Contact */}
-      <section className="py-16 lg:py-20 bg-gradient-to-r from-[#137fec] to-[#0e6ac7]">
+      <section className="py-16 lg:py-20 bg-gradient-to-r from-primary to-primary-hover">
         <div className="container px-4 lg:px-6 mx-auto max-w-5xl">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-white">
             {/* Media Kit */}
@@ -298,9 +272,9 @@ export default function PressPage() {
               <a
                 href={mediaKit.downloadUrl}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white
-                  text-[#137fec] font-semibold rounded-lg hover:bg-slate-100
+                  text-primary font-semibold rounded-lg hover:bg-slate-100
                   transition-colors focus:outline-none focus:ring-2 focus:ring-white
-                  focus:ring-offset-2 focus:ring-offset-[#137fec]"
+                  focus:ring-offset-2 focus:ring-offset-primary"
                 download
               >
                 <span className="material-symbols-outlined" aria-hidden="true">

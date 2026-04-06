@@ -4,7 +4,7 @@
  * CostTracker — AI operation cost and ROI summary (PG-146)
  */
 
-import { Card, CardContent, CardHeader, CardTitle, Skeleton, cn } from '@intelliflow/ui';
+import { Card, CardContent, CardHeader, CardTitle, EmptyState, Skeleton, cn } from '@intelliflow/ui';
 import type { ROIData } from '@/lib/ai-monitoring/types';
 
 interface CostTrackerProps {
@@ -48,9 +48,9 @@ export function CostTracker({ roi, isLoading }: Readonly<CostTrackerProps>) {
           </div>
           );
           if (roi === null) return (
-          <p className="text-sm text-muted-foreground text-center py-4" data-testid="no-cost-data">
-            No cost data available
-          </p>
+          <div data-testid="no-cost-data">
+            <EmptyState entity="insights" phase="passive" className="py-4" />
+          </div>
           );
           return (
           <div className="space-y-3">

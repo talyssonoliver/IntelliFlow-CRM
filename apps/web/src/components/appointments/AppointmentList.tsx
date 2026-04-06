@@ -1,5 +1,6 @@
 'use client';
 
+import { EmptyState } from '@intelliflow/ui';
 import {
   getTypeConfig,
   getStatusConfig,
@@ -261,9 +262,8 @@ export function AppointmentList({
 
       {/* Table */}
       {appointments.length === 0 ? (
-        <div className="text-center py-12 text-gray-500" data-testid="list-empty">
-          <span className="material-symbols-outlined text-4xl mb-2">calendar_month</span>
-          <p className="text-sm">No appointments found</p>
+        <div data-testid="list-empty">
+          <EmptyState entity="appointments" phase="passive" />
         </div>
       ) : (
         <div className="border rounded-lg overflow-hidden">
@@ -401,6 +401,6 @@ function toDateInputValue(date: Readonly<Date>): string {
   const d = new Date(date);
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 }

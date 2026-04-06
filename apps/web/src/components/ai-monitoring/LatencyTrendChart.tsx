@@ -18,7 +18,7 @@ import {
   Tooltip,
   ReferenceLine,
 } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from '@intelliflow/ui';
+import { Card, CardContent, CardHeader, CardTitle, EmptyState } from '@intelliflow/ui';
 import type { LatencyTrendPoint } from '@/lib/ai-monitoring/types';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
@@ -37,9 +37,9 @@ export default function LatencyTrendChart({ trend, p95Target, p99Target }: Reado
           <CardTitle className="text-base">Latency Trend</CardTitle>
         </CardHeader>
         <CardContent className="pb-4">
-          <p className="text-sm text-muted-foreground text-center py-8" data-testid="empty-trend">
-            No trend data available
-          </p>
+          <div data-testid="empty-trend">
+            <EmptyState entity="insights" phase="passive" className="py-4" />
+          </div>
         </CardContent>
       </Card>
     );
@@ -47,7 +47,7 @@ export default function LatencyTrendChart({ trend, p95Target, p99Target }: Reado
 
   const formatTime = (ts: string) => {
     const d = new Date(ts);
-    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+    return `${d.getUTCHours().toString().padStart(2, '0')}:${d.getUTCMinutes().toString().padStart(2, '0')}`;
   };
 
   return (

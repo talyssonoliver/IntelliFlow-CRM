@@ -13,7 +13,8 @@ export { ValueSummary } from './ValueSummary';
 export { DealQuickView } from './DealQuickView';
 export { DealListView } from './DealListView';
 export { LossReasonModal } from './LossReasonModal';
-export type { Deal, PipelineStats, DealFiltersValue } from './types';
+export { TrashList } from './TrashList';
+export type { Deal, TrashedDeal, PipelineStats, DealFiltersValue } from './types';
 export {
   formatCurrencyFull,
   formatCurrencyCompact,

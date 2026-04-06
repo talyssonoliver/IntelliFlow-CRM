@@ -10,7 +10,7 @@
 
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, Button, Skeleton, cn } from '@intelliflow/ui';
+import { Card, CardContent, Button, EmptyState, Skeleton, cn } from '@intelliflow/ui';
 import { PageHeader, SearchFilterBar, useMultiFilterState } from '@/components/shared';
 import { useActiveAgentsDashboard } from '@/lib/active-agents/hooks';
 import { api } from '@/lib/api';
@@ -158,7 +158,7 @@ function AgentCard({ agent, onReset, onDelete, isActing }: Readonly<AgentCardPro
               href={`/agent-approvals/logs/${agentId}`}
               className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs hover:bg-muted transition-colors"
             >
-              <span className="material-symbols-outlined text-sm">description</span>
+              <span className="material-symbols-outlined text-sm">description</span>{' '}
               Logs
             </Link>
             {agent.status === 'error' && (
@@ -170,7 +170,7 @@ function AgentCard({ agent, onReset, onDelete, isActing }: Readonly<AgentCardPro
                 onClick={() => onReset(agentId)}
                 aria-label={`Reset ${getAgentTypeLabel(agent.type)}`}
               >
-                <span className="material-symbols-outlined text-sm mr-1">restart_alt</span>
+                <span className="material-symbols-outlined text-sm mr-1">restart_alt</span>{' '}
                 Reset
               </Button>
             )}
@@ -396,14 +396,7 @@ export function ActiveAgentsDashboard() {
 
           {/* Agent List */}
           {filteredAgents.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center p-8 text-center">
-                <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2">
-                  smart_toy
-                </span>
-                <p className="text-sm text-muted-foreground">No active agents</p>
-              </CardContent>
-            </Card>
+            <EmptyState entity="agents" phase="passive" />
           ) : (
             <div className="space-y-3">
               {filteredAgents.map((agent) => (

@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
   Button,
+  EmptyState,
   Skeleton,
   Badge,
   Tooltip,
@@ -193,7 +194,7 @@ export function QueueSchedulerPanel({
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
-            <span className="material-symbols-outlined text-lg" aria-hidden="true">queue</span>
+            <span className="material-symbols-outlined text-lg" aria-hidden="true">queue</span>{' '}
             Queue Scheduler
           </CardTitle>
           <Button
@@ -207,31 +208,32 @@ export function QueueSchedulerPanel({
         </div>
       </CardHeader>
       <CardContent className="pb-4">
-        {isLoading ? (
-          <PanelSkeleton />
-        ) : isUnavailable ? (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            Queue monitoring unavailable
-          </p>
-        ) : !data ? (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            No queue data available
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {data.queues.map((queue) => (
-              <QueueRow
-                key={queue.name}
-                queue={queue}
-                isPending={isPending[queue.name] ?? false}
-                onPause={onPause}
-                onResume={onResume}
-                onRetryFailed={onRetryFailed}
-                onDeleteScheduler={onDeleteScheduler}
-              />
-            ))}
-          </div>
-        )}
+        {(() => {
+          if (isLoading) return <PanelSkeleton />;
+          if (isUnavailable) {
+            return (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Queue monitoring unavailable
+              </p>
+            );
+          }
+          if (!data) return <EmptyState entity="agents" phase="passive" className="py-4" />;
+          return (
+            <div className="space-y-2">
+              {data.queues.map((queue) => (
+                <QueueRow
+                  key={queue.name}
+                  queue={queue}
+                  isPending={isPending[queue.name] ?? false}
+                  onPause={onPause}
+                  onResume={onResume}
+                  onRetryFailed={onRetryFailed}
+                  onDeleteScheduler={onDeleteScheduler}
+                />
+              ))}
+            </div>
+          );
+        })()}
       </CardContent>
     </Card>
   );

@@ -73,30 +73,20 @@ function TreeNode({
       className={`outline-none ${level > 0 ? 'ml-6 border-l border-border pl-3' : ''}`}
       onFocus={() => onFocus(node.id)}
     >
-      <button
-        type="button"
-        tabIndex={0}
-        className={`flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors w-full text-left
+      {/* Row — div intentionally avoids nesting buttons; individual buttons handle their own interactions */}
+      <div
+        className={`flex items-center gap-2 px-3 py-2 rounded-md transition-colors w-full
           ${isCurrent ? 'bg-primary/10 ring-1 ring-primary/30' : 'hover:bg-muted/50'}
           ${isFocused ? 'ring-2 ring-ring' : ''}`}
-        onClick={() => {
-          if (hasChildren) onToggle(node.id);
-          onFocus(node.id);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            if (hasChildren) onToggle(node.id);
-            onFocus(node.id);
-          }
-        }}
       >
         {hasChildren ? (
           <button
+            type="button"
             className="p-0.5 rounded hover:bg-muted"
             onClick={(e) => {
               e.stopPropagation();
               onToggle(node.id);
+              onFocus(node.id);
             }}
             aria-label={isExpanded ? 'Collapse' : 'Expand'}
           >
@@ -111,6 +101,7 @@ function TreeNode({
         <span className={`w-2 h-2 rounded-full shrink-0 ${tierConfig.dot}`} />
 
         <button
+          type="button"
           className="text-sm font-medium text-foreground hover:text-primary hover:underline text-left truncate"
           onClick={(e) => {
             e.stopPropagation();
@@ -136,28 +127,28 @@ function TreeNode({
         <span className="text-[10px] text-muted-foreground shrink-0">
           {node._count.contacts}C &middot; {node._count.opportunities}O
         </span>
-      </button>
+      </div>
 
       {hasChildren && isExpanded ? (
-        <ul
-          role="group" // NOSONAR typescript:S6819 — tree node group in a treeview pattern; <fieldset> is inappropriate for tree hierarchy
-          className="mt-0.5"
-        >
-          {node.children.map((child) => (
-            <TreeNode
-              key={child.id}
-              node={child}
-              currentId={currentId}
-              level={level + 1}
-              expandedNodes={expandedNodes}
-              focusedNodeId={focusedNodeId}
-              onToggle={onToggle}
-              onFocus={onFocus}
-              onNavigate={onNavigate}
-              nodeRefs={nodeRefs}
-            />
-          ))}
-        </ul>
+        <fieldset className="contents">
+          <legend className="sr-only">{node.name} child accounts</legend>
+          <ul className="mt-0.5">
+            {node.children.map((child) => (
+              <TreeNode
+                key={child.id}
+                node={child}
+                currentId={currentId}
+                level={level + 1}
+                expandedNodes={expandedNodes}
+                focusedNodeId={focusedNodeId}
+                onToggle={onToggle}
+                onFocus={onFocus}
+                onNavigate={onNavigate}
+                nodeRefs={nodeRefs}
+              />
+            ))}
+          </ul>
+        </fieldset>
       ) : null}
     </li>
   );
@@ -414,8 +405,6 @@ export function AccountHierarchy({ accountId }: Readonly<AccountHierarchyProps>)
             placeholder="Search accounts..."
             value={pickerSearch}
             onChange={(e) => setPickerSearch(e.target.value)}
-            // eslint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus
           />
           {pickerQuery.isLoading ? <Skeleton className="h-8 w-full" /> : null}
           {pickerQuery.data?.accounts ? (

@@ -83,13 +83,3 @@ export function createTicketsSettingsSidebarConfig(
     sections: MANAGEMENT_SECTIONS,
   };
 }
-
-/** @deprecated Use createTicketsSidebarConfig(onSettingsClick) instead */
-export const ticketsSidebarConfig: SidebarConfig = {
-  moduleId: 'tickets',
-  moduleTitle: 'Tickets',
-  moduleIcon: MODULE_ICONS.tickets,
-  settingsHref: '/settings/tickets',
-  showSettings: true,
-  sections: MANAGEMENT_SECTIONS,
-};

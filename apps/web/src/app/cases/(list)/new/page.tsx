@@ -18,11 +18,11 @@ export default function NewCasePage() {
   const router = useRouter();
 
   const createMutation = api.cases.create.useMutation({
-    onSuccess: (data) => {
+    onSuccess: (data: { id: string }) => {
       toast({ title: 'Case Created', description: 'Your case has been created successfully.' });
       router.push(`/cases/${data.id}`);
     },
-    onError: (error) => {
+    onError: (error: { message: string }) => {
       toast({ title: 'Failed to create case', description: error.message, variant: 'destructive' });
     },
   });

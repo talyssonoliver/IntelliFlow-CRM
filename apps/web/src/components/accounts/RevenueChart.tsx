@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Card } from '@intelliflow/ui';
+import { Card, EmptyState } from '@intelliflow/ui';
 import { formatCurrency } from '@/lib/pricing/calculator';
 
 interface OpportunityForChart {
@@ -54,14 +54,7 @@ export function RevenueChart({ stageBreakdown, opportunities }: Readonly<Revenue
   const hasMonthlyData = monthlyData.length > 0;
 
   if (!hasStageData && !hasMonthlyData) {
-    return (
-      <div className="text-center py-12">
-        <span className="material-symbols-outlined text-4xl text-muted-foreground mb-3">
-          bar_chart
-        </span>
-        <p className="text-muted-foreground">No opportunity data available for charting</p>
-      </div>
-    );
+    return <EmptyState entity="deals" phase="passive" />;
   }
 
   const totalValue = hasStageData

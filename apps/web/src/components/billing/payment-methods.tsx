@@ -23,6 +23,7 @@ import {
   CardContent,
   Button,
   Badge,
+  EmptyState,
   Skeleton,
   Dialog,
   DialogContent,
@@ -211,31 +212,6 @@ function PaymentMethodCard({
           <span className="sr-only">Remove card</span>
         </Button>
       </div>
-    </div>
-  );
-}
-
-/**
- * Empty State Component
- */
-function EmptyState({ onAddCard }: Readonly<{ onAddCard: () => void }>) {
-  return (
-    <div className="text-center py-12">
-      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-        <span className="material-symbols-outlined text-3xl text-slate-400" aria-hidden="true">
-          credit_card_off
-        </span>
-      </div>
-      <h3 className="text-lg font-semibold text-foreground mb-2">No payment methods</h3>
-      <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-        Add a payment method to manage your subscription and make purchases.
-      </p>
-      <Button onClick={onAddCard}>
-        <span className="material-symbols-outlined text-lg mr-2" aria-hidden="true">
-          add
-        </span>{' '}
-        Add Payment Method
-      </Button>
     </div>
   );
 }
@@ -719,7 +695,15 @@ export function PaymentMethods({ className }: Readonly<PaymentMethodsProps>) {
 
           {/* Empty State */}
           {!isLoading && !error && sortedPaymentMethods.length === 0 && (
-            <EmptyState onAddCard={() => setIsAddDialogOpen(true)} />
+            <div className="flex flex-col items-center">
+              <EmptyState entity="payment-methods" phase="passive" />
+              <Button onClick={() => setIsAddDialogOpen(true)}>
+                <span className="material-symbols-outlined text-lg mr-2" aria-hidden="true">
+                  add
+                </span>{' '}
+                Add Payment Method
+              </Button>
+            </div>
           )}
 
           {/* Payment Methods List */}

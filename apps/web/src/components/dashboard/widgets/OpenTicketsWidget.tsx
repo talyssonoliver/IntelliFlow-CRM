@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
+import { api } from '@/lib/api';
 import type { WidgetProps } from './index';
 
 /**
@@ -10,36 +11,21 @@ import type { WidgetProps } from './index';
 
 interface TicketMetrics {
   total: number;
-  urgent: number; // CRITICAL + HIGH priority with BREACHED or AT_RISK SLA
+  urgent: number;
   breached: number;
 }
 
-// TODO: Replace with real API call to fetch ticket metrics
-// For now, simulating SLA calculations with mock data
-function useTicketMetrics(): TicketMetrics {
-  const [metrics, setMetrics] = useState<TicketMetrics>({
-    total: 0,
-    urgent: 0,
-    breached: 0,
-  });
-
-  useEffect(() => {
-    // Simulated metrics - in production, this would call the API:
-    // const data = await fetch('/api/tickets/metrics').then(r => r.json());
-    // The API would use slaTrackingService to calculate real-time SLA status
-
-    setMetrics({
-      total: 42, // Open + In Progress tickets
-      urgent: 3, // Critical/High priority with SLA at risk or breached
-      breached: 1, // Tickets with breached SLA
-    });
-  }, []);
-
-  return metrics;
-}
-
 export function OpenTicketsWidget(_props: Readonly<WidgetProps>) {
-  const metrics = useTicketMetrics();
+  const { data, isLoading } = api.ticket.stats.useQuery({ timeWindow: 'all' });
+
+  const metrics = useMemo<TicketMetrics>(
+    () => ({
+      total: data?.total ?? 0,
+      urgent: (data?.bySLAStatus?.AT_RISK ?? 0) + (data?.bySLAStatus?.BREACHED ?? 0),
+      breached: data?.slaBreached ?? 0,
+    }),
+    [data]
+  );
 
   return (
     <div className="p-6 h-full flex flex-col">
@@ -54,7 +40,7 @@ export function OpenTicketsWidget(_props: Readonly<WidgetProps>) {
         </span>
       </div>
       <p className="text-sm text-muted-foreground mt-4">Open Tickets</p>
-      <p className="text-3xl font-bold text-foreground mt-1">{metrics.total}</p>
+      <p className="text-3xl font-bold text-foreground mt-1">{isLoading ? '...' : metrics.total}</p>
       {metrics.breached > 0 && (
         <p className="text-xs text-destructive mt-2">
           {metrics.breached} SLA breach{metrics.breached === 1 ? '' : 'es'}

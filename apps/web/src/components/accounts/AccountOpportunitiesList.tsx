@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Skeleton, Badge, Card } from '@intelliflow/ui';
+import { Button, EmptyState, Skeleton, Badge, Card } from '@intelliflow/ui';
 import { api } from '@/lib/api';
 import type { OpportunityStage } from '@intelliflow/domain';
 import { formatCurrency } from '@/lib/pricing/calculator';
@@ -61,16 +61,15 @@ export function AccountOpportunitiesList({ accountId, onCreateOpportunity }: Rea
 
   if (opportunities.length === 0 && !stageFilter) {
     return (
-      <div className="text-center py-12">
-        <span className="material-symbols-outlined text-4xl text-muted-foreground mb-3">
-          trending_up
-        </span>
-        <p className="text-muted-foreground">No opportunities for this account</p>
-        <Button variant="outline" size="sm" className="mt-3" onClick={onCreateOpportunity} type="button">
-          <span className="material-symbols-outlined text-base mr-1">add</span>{' '}
-          Create Opportunity
-        </Button>
-      </div>
+      <>
+        <EmptyState entity="deals" phase="passive" className="py-4" />
+        <div className="flex justify-center">
+          <Button variant="outline" size="sm" onClick={onCreateOpportunity} type="button">
+            <span className="material-symbols-outlined text-base mr-1">add</span>{' '}
+            Create Opportunity
+          </Button>
+        </div>
+      </>
     );
   }
 

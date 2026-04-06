@@ -7,6 +7,7 @@
  */
 
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts'; // NOSONAR typescript:S1874
+import { EmptyState } from '@intelliflow/ui';
 import type { SentimentDistributionChartProps } from '@/lib/feedback-survey/types';
 
 const COLORS = {
@@ -17,11 +18,7 @@ const COLORS = {
 
 export default function SentimentDistributionChart({ sentiment }: Readonly<SentimentDistributionChartProps>) {
   if (sentiment.total === 0) {
-    return (
-      <div className="flex h-64 items-center justify-center rounded-lg border bg-card p-6">
-        <p className="text-muted-foreground">No sentiment data available</p>
-      </div>
-    );
+    return <EmptyState entity="insights" phase="passive" className="py-4" />;
   }
 
   const data = [

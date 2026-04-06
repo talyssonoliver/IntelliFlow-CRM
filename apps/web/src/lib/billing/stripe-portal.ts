@@ -47,10 +47,50 @@ export interface BillingPaymentMethod {
   isDefault: boolean;
 }
 
+export interface UsageLimitMetric {
+  current: number;
+  limit: number; // -1 = unlimited
+}
+
 export interface UsageMetrics {
-  apiCalls: { current: number; limit: number };
-  storage: { current: number; limit: number; unit: 'GB' | 'MB' };
-  activeUsers: { current: number; limit: number };
+  planLimits: {
+    activeUsers: UsageLimitMetric;
+    contacts: UsageLimitMetric;
+    aiPredictions: UsageLimitMetric;
+    storage: UsageLimitMetric;
+  };
+  crm: {
+    leads: number;
+    contacts: number;
+    accounts: number;
+    deals: number;
+    tasks: number;
+    tickets: number;
+    cases: number;
+  };
+  ai: {
+    scores: number;
+    scoresThisPeriod: number;
+    conversations: number;
+    messages: number;
+    toolCalls: number;
+    insights: number;
+    leadInsights: number;
+    contactInsights: number;
+    outputReviews: number;
+    monitoringEvents: number;
+    agentActions: number;
+    chainVersions: number;
+    experiments: number;
+  };
+  activity: {
+    auditLogs: number;
+    notifications: number;
+  };
+  content: {
+    documents: number;
+    calendarEvents: number;
+  };
 }
 
 // ============================================

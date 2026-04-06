@@ -68,9 +68,3 @@ export function createAppointmentsSettingsSidebarConfig(
     sections: VIEW_SECTIONS,
   };
 }
-
-/** @deprecated Use createAppointmentsSidebarConfig(onSettingsClick) instead */
-export const appointmentsSidebarConfig: SidebarConfig = {
-  ...createAppointmentsSidebarConfig(() => {}),
-  settingsHref: '/settings/appointments',
-};

@@ -14,7 +14,7 @@
  */
 
 import { useState, Suspense, lazy } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, Button, Skeleton, cn } from '@intelliflow/ui';
+import { Card, CardContent, CardHeader, CardTitle, Button, EmptyState, Skeleton, cn } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared';
 import { useLatencyDashboard } from '@/lib/ai-monitoring/hooks';
 import type { LatencyFilters, LatencyPhase, LatencyPercentiles } from '@/lib/ai-monitoring/types';
@@ -152,26 +152,15 @@ export function LatencyMonitorDashboard() {
             <p className="text-sm text-blue-700 dark:text-blue-400 flex items-center gap-2">
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 info
-              </span>
+              </span>{' '}
               Monitoring data unavailable — AI worker runs in a separate process. Data will appear
               when both services are colocated or Redis-backed persistence is enabled.
             </p>
           </div>
         ) : (
-          <Card className="mt-6">
-            <CardContent className="p-6 text-center" data-testid="empty-state">
-              <span
-                className="material-symbols-outlined text-4xl text-muted-foreground mb-2"
-                aria-hidden="true"
-              >
-                speed
-              </span>
-              <p className="text-lg font-medium text-muted-foreground">No latency data yet</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Start using AI features to populate monitoring data.
-              </p>
-            </CardContent>
-          </Card>
+          <div data-testid="empty-state" className="mt-6">
+            <EmptyState entity="insights" phase="passive" />
+          </div>
         )}
       </div>
     );
@@ -203,7 +192,7 @@ export function LatencyMonitorDashboard() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
         <StatCard
           label="Sample Count"
-          value={sampleCount.toLocaleString()}
+          value={sampleCount.toLocaleString('en-GB')}
           icon="analytics"
           colorClass="bg-blue-100 dark:bg-blue-900/30"
           isLoading={isLoading}
@@ -237,11 +226,9 @@ export function LatencyMonitorDashboard() {
 
       {/* Time range filter + model select */}
       <div className="flex flex-wrap items-center gap-2 mt-6">
-        <div
-          className="flex flex-wrap gap-1.5"
-          role="group" // NOSONAR typescript:S6819 — ARIA group for time-range filter chips; <fieldset> would require <legend> and changes layout
-          aria-label="Filter by time range"
-        >
+        <fieldset className="contents">
+          <legend className="sr-only">Filter by time range</legend>
+          <div className="flex flex-wrap gap-1.5">
           {TIME_RANGES.map((range) => (
             <button
               key={range}
@@ -258,7 +245,8 @@ export function LatencyMonitorDashboard() {
               {range.toUpperCase()}
             </button>
           ))}
-        </div>
+          </div>
+        </fieldset>
         {modelNames.length > 0 && (
           <select
             value={modelFilter ?? ''}

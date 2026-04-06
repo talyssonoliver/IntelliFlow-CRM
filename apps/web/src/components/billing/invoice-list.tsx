@@ -18,6 +18,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  EmptyState,
   Skeleton,
   Table,
   TableBody,
@@ -90,9 +91,8 @@ function StatusBadge({ status }: Readonly<{ status: string }>) {
 
 function InvoiceListSkeleton() {
   return (
-    <div
+    <output
       className="space-y-3"
-      role="status" // NOSONAR typescript:S6819 — loading skeleton container; <output> is for form outputs, not loading states
       aria-busy="true"
       aria-live="polite"
     >
@@ -109,27 +109,7 @@ function InvoiceListSkeleton() {
           </div>
         </div>
       ))}
-    </div>
-  );
-}
-
-// ============================================
-// Empty State
-// ============================================
-
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-        <span className="material-symbols-outlined text-3xl text-slate-400" aria-hidden="true">
-          receipt_long
-        </span>
-      </div>
-      <h3 className="mb-2 text-lg font-semibold text-slate-900 dark:text-white">No invoices yet</h3>
-      <p className="max-w-sm text-sm text-slate-500 dark:text-slate-400">
-        When you subscribe to a plan or make payments, your invoices will appear here.
-      </p>
-    </div>
+    </output>
   );
 }
 
@@ -285,7 +265,7 @@ export function InvoiceList({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <EmptyState />
+          <EmptyState entity="invoices" phase="passive" />
         </CardContent>
       </Card>
     );

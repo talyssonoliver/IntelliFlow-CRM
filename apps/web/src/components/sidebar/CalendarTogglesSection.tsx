@@ -52,8 +52,6 @@ export function CalendarTogglesSection({ isExpanded }: Readonly<CalendarTogglesS
                   }}
                   placeholder="Calendar name"
                   className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                  // eslint-disable-next-line jsx-a11y/no-autofocus
-                  autoFocus
                 />
                 <div>
                   <p className="text-xs text-muted-foreground mb-1.5">Color</p>
@@ -95,11 +93,9 @@ export function CalendarTogglesSection({ isExpanded }: Readonly<CalendarTogglesS
           </Popover>
         </div>
       )}
-      <div
-        className="flex flex-col gap-0.5"
-        role="group" // NOSONAR typescript:S6819 — ARIA group for calendar toggles; <fieldset> would require <legend> and changes layout
-        aria-label="My Calendars"
-      >
+      <fieldset className="contents">
+        <legend className="sr-only">My Calendars</legend>
+        <div className="flex flex-col gap-0.5">
         {calendars.map((cal) => (
           <div
             key={cal.id}
@@ -112,8 +108,7 @@ export function CalendarTogglesSection({ isExpanded }: Readonly<CalendarTogglesS
             <button
               onClick={() => toggle(cal.id)}
               className="flex items-center gap-3 flex-1 min-w-0"
-              role="checkbox" // NOSONAR typescript:S6819 — styled button acts as checkbox toggle; <input type="checkbox"> cannot contain icon/label children
-              aria-checked={cal.checked}
+              aria-pressed={cal.checked}
               aria-label={cal.label}
             >
               {isExpanded ? (
@@ -153,7 +148,8 @@ export function CalendarTogglesSection({ isExpanded }: Readonly<CalendarTogglesS
             )}
           </div>
         ))}
-      </div>
+        </div>
+      </fieldset>
     </div>
   );
 }

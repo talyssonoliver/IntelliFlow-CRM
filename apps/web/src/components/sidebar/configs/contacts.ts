@@ -66,9 +66,3 @@ export function createContactsSettingsSidebarConfig(
     sections: VIEW_SECTIONS,
   };
 }
-
-/** @deprecated Use createContactsSidebarConfig(onSettingsClick) instead */
-export const contactsSidebarConfig: SidebarConfig = {
-  ...createContactsSidebarConfig(() => {}),
-  settingsHref: '/settings/contacts',
-};

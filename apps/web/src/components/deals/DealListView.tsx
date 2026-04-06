@@ -592,6 +592,7 @@ export const DealListView = React.memo(function DealListView() {
         <DataTable
           columns={columns}
           data={deals}
+          entity="deals"
           emptyMessage={emptyMessage}
           emptyIcon="handshake"
           onRowClick={handleRowClick}

@@ -88,10 +88,16 @@ export function useSidebarPortalOptional(): SidebarPortalContextValue | null {
  * @example
  * ```tsx
  * // In a page component
- * import { useSidebarConfig, leadsSidebarConfig } from '@/components/sidebar';
+ * import { useMemo } from 'react';
+ * import { useSidebarConfig, createLeadsSidebarConfig } from '@/components/sidebar';
  *
  * export default function LeadsPage() {
- *   useSidebarConfig(leadsSidebarConfig);
+ *   const sidebarConfig = useMemo(
+ *     () => createLeadsSidebarConfig(() => {}),
+ *     []
+ *   );
+ *
+ *   useSidebarConfig(sidebarConfig);
  *   return <div>Leads content...</div>;
  * }
  * ```

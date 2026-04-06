@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { DataTable, Pagination, Skeleton } from '@intelliflow/ui';
+import { DataTable, EmptyState, Pagination, Skeleton } from '@intelliflow/ui';
 import { PageHeader, SearchFilterBar } from '@/components/shared';
 import {
   createAccountColumns,
@@ -148,17 +148,7 @@ function AccountsContent({
   }
   if (accounts.length === 0) {
     return (
-      <div className="text-center py-16">
-        <span className="material-symbols-outlined text-5xl text-muted-foreground mb-3">
-          domain
-        </span>
-        <h3 className="text-lg font-semibold text-foreground mb-1">No accounts found</h3>
-        <p className="text-muted-foreground text-sm">
-          {hasFilters
-            ? 'Try adjusting your search or filters.'
-            : 'Create your first account to get started.'}
-        </p>
-      </div>
+      <EmptyState entity="accounts" variant={hasFilters ? 'filtered' : 'empty'} phase="passive" />
     );
   }
   return (
@@ -166,6 +156,7 @@ function AccountsContent({
       <DataTable
         columns={columns}
         data={accounts}
+        entity="accounts"
         onRowClick={handleRowClick}
         hidePagination
         pageSize={pageSize}
@@ -228,8 +219,7 @@ export default function AccountsPageClient({
   // Stats query — hydrated with server-prefetched data when available
   const { data: stats, isLoading: statsLoading } = api.account.stats.useQuery(undefined, {
     enabled: isAuthenticated && !authLoading,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...(serverStats == null ? {} : { initialData: serverStats as any }),
+    ...(serverStats == null ? {} : { initialData: serverStats as NonNullable<Parameters<typeof api.account.stats.useQuery>[1]>['initialData'] }),
   });
 
   // Reset to page 1 when filters change

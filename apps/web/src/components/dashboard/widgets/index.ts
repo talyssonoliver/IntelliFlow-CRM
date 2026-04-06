@@ -18,7 +18,6 @@ import { ActiveLeadsWidget } from './ActiveLeadsWidget';
 import { ConversionRateWidget } from './ConversionRateWidget';
 import { PendingTasksWidget } from './PendingTasksWidget';
 import { RecentActivityWidget } from './RecentActivityWidget';
-import { PipelineWidget } from './PipelineWidget';
 import { TopPerformersWidget } from './TopPerformersWidget';
 import { UpcomingEventsWidget } from './UpcomingEventsWidget';
 import { TeamChatWidget } from './TeamChatWidget';
@@ -47,7 +46,6 @@ export const widgetRegistry: Record<string, ComponentType<WidgetProps>> = {
   'active-leads': ActiveLeadsWidget,
   'conversion-rate': ConversionRateWidget,
   'pending-tasks': PendingTasksWidget,
-  pipeline: PipelineWidget,
   'top-performers': TopPerformersWidget,
   'upcoming-events': UpcomingEventsWidget,
   'team-chat': TeamChatWidget,
@@ -68,7 +66,6 @@ export { ActiveLeadsWidget } from './ActiveLeadsWidget';
 export { ConversionRateWidget } from './ConversionRateWidget';
 export { PendingTasksWidget } from './PendingTasksWidget';
 export { RecentActivityWidget } from './RecentActivityWidget';
-export { PipelineWidget } from './PipelineWidget';
 export { TopPerformersWidget } from './TopPerformersWidget';
 export { UpcomingEventsWidget } from './UpcomingEventsWidget';
 export { TeamChatWidget } from './TeamChatWidget';

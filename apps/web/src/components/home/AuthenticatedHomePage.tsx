@@ -28,7 +28,7 @@ import {
 } from '@/components/shared/activity-feed';
 import type { ActivityFeedType } from '@intelliflow/domain';
 import type { PinnableEntityType } from '@intelliflow/validators';
-import { toast } from '@intelliflow/ui';
+import { toast, EmptyState } from '@intelliflow/ui';
 import {
   trackWelcomeCtaClick,
   trackInsightClick,
@@ -236,7 +236,7 @@ function InsightsSection({ isLoading, insights, onInsightClick }: Readonly<Insig
 
   if (!insights || insights.length === 0) {
     return (
-      <p className="text-sm text-slate-500 dark:text-slate-400 p-3">No insights at this time.</p>
+      <EmptyState entity="insights" phase="passive" className="py-4" />
     );
   }
 
@@ -268,7 +268,6 @@ function GoalSection({ isLoading, goal }: Readonly<GoalSectionProps>) {
         <svg
           className="size-full -rotate-90"
           viewBox="0 0 36 36"
-          role="img" // NOSONAR typescript:S6819 — SVG chart element, <img> cannot render SVG paths
           aria-labelledby="goal-progress-title"
         >
           <title id="goal-progress-title">{`${progress}% of ${goal?.label || 'goal'} target reached`}</title>
@@ -348,7 +347,7 @@ function PinnedSection({
 
   if (!items || items.length === 0) {
     return (
-      <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">No pinned items</p>
+      <EmptyState entity="pinned" phase="passive" className="py-4" />
     );
   }
 
@@ -374,7 +373,7 @@ function PinnedSection({
 
 export function AuthenticatedHomePage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const hour = new Date().getHours();
+  const hour = new Date().getUTCHours();
   const greetingIcon = getGreetingIcon(hour);
 
   // Local state
@@ -639,9 +638,9 @@ export function AuthenticatedHomePage() {
                   );
                 })}
                 {visibleQuickActions.length === 0 && (
-                  <p className="col-span-2 text-sm text-slate-500 dark:text-slate-400 text-center py-4">
-                    No actions selected. Click settings to add some.
-                  </p>
+                  <div className="col-span-2">
+                    <EmptyState entity="pinned" phase="passive" className="py-2" />
+                  </div>
                 )}
               </div>
             </div>

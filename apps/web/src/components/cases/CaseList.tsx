@@ -542,6 +542,7 @@ export function CaseList({
           <DataTable
             columns={columns}
             data={cases}
+            entity="cases"
             emptyMessage="No cases match your search criteria"
             emptyIcon="gavel"
             onRowClick={onRowClick}
@@ -552,8 +553,7 @@ export function CaseList({
           />
 
           {total > 0 && (
-            <div
-              role="status" // NOSONAR typescript:S6819 — live region for pagination status; <output> is for form computation results
+            <output
               aria-live="polite"
               className="mt-3 flex items-center justify-between text-sm text-muted-foreground"
             >
@@ -581,7 +581,7 @@ export function CaseList({
                   Next
                 </button>
               </div>
-            </div>
+            </output>
           )}
         </>
       )}

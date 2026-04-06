@@ -7,6 +7,7 @@
  */
 
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import { EmptyState } from '@intelliflow/ui';
 import type { ChurnTrendPoint } from '@/lib/churn-risk/types';
 
 interface ChurnTrendChartProps {
@@ -16,9 +17,9 @@ interface ChurnTrendChartProps {
 function ChurnTrendChart({ trends }: Readonly<ChurnTrendChartProps>) {
   if (trends.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground text-center py-8" data-testid="no-trends">
-        No trend data available
-      </p>
+      <div data-testid="no-trends">
+        <EmptyState entity="insights" phase="passive" className="py-4" />
+      </div>
     );
   }
 

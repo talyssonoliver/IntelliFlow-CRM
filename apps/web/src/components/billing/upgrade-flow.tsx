@@ -3,9 +3,9 @@
 /**
  * Upgrade Flow Component
  *
- * Plan change confirmation with proration preview.
- * Shows plan selection when no plan is pre-selected via ?plan= param.
- * When no subscription exists, shows plans with "Get Started" CTAs.
+ * Two modes:
+ * 1. No ?plan= param → shows full plan cards (non-compact, with features) for selection
+ * 2. ?plan=X param → shows confirmation with proration preview
  *
  * @implements PG-172 (Billing Ghost Pages — Upgrade)
  */
@@ -20,7 +20,9 @@ import {
   PLANS,
   getPlanById,
   getPlanByPriceId,
+  getAnnualSavingsPercent,
   formatCurrency,
+  type Plan,
 } from '@/lib/billing/stripe-portal';
 import {
   comparePlans,
@@ -28,91 +30,179 @@ import {
   getDaysRemainingInPeriod,
   getPlanChangeDirection,
   getPlanChangeDirectionDisplay,
+  getPlanPriceForInterval,
+  canChangeToPlan,
   getFeatureChangeBadge,
   formatPriceDifference,
-  canChangeToPlan,
-  getPlanPriceForInterval,
 } from '@/lib/billing/plan-changes';
+import pricingData from '@/data/pricing-data.json';
 import { PlanCard } from './plan-card';
 import { ErrorState, CardSkeleton } from './billing-shared';
 
-export function UpgradeFlow() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const preselectedPlanId = searchParams.get('plan');
-  const [selectedPlanId, setSelectedPlanId] = React.useState<string | null>(preselectedPlanId);
+// =============================================
+// Helpers
+// =============================================
 
-  const {
-    data: subscription,
-    isLoading,
-    error,
-  } = trpc.billing.getSubscription.useQuery(undefined, {
-    enabled: isAuthenticated && !authLoading,
-    staleTime: 5 * 60 * 1000,
-    retry: 1,
-  });
-
-  const updateMutation = trpc.billing.updateSubscription.useMutation({
-    onSuccess: () => {
-      router.push('/billing');
-    },
-  });
-
-  if (isLoading || authLoading) {
-    return (
-      <div className="max-w-2xl mx-auto space-y-6">
-        <CardSkeleton rows={3} />
-        <CardSkeleton rows={2} />
-      </div>
-    );
+function directionBannerClass(variant: string): string {
+  if (variant === 'success') {
+    return 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800';
   }
-
-  if (error) {
-    return <ErrorState message="Failed to load subscription data. Please try again later." />;
+  if (variant === 'warning') {
+    return 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800';
   }
+  return 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700';
+}
 
-  // No subscription — show plan grid with "Get Started" CTAs
-  if (!subscription) {
-    return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {PLANS.map((plan) => {
-            const priceInfo = getPlanPriceForInterval(plan, 'monthly');
-            return (
-              <PlanCard
-                key={plan.id}
-                variant="billing"
-                id={plan.id}
-                name={plan.name}
-                description={plan.description}
-                priceFormatted={priceInfo.formattedPerMonth}
-                features={plan.features}
-                isPopular={plan.popular}
-                isCurrent={false}
-                direction="upgrade"
-                directionLabel="Get Started"
-                directionIcon="arrow_forward"
-                changeAllowed={true}
-                href={`/billing/checkout?plan=${plan.id}`}
-              />
-            );
-          })}
+function priceDiffClass(isIncrease: boolean, isDecrease: boolean): string {
+  if (isIncrease) return 'font-medium text-amber-600';
+  if (isDecrease) return 'font-medium text-green-600';
+  return 'font-medium';
+}
+
+// =============================================
+// Mode 1: Plan selection view
+// =============================================
+
+interface PlanSelectionViewProps {
+  currentPlanId: string | null;
+  subscriptionQuantity: number;
+}
+
+function PlanSelectionView({ currentPlanId, subscriptionQuantity }: Readonly<PlanSelectionViewProps>) {
+  const [interval, setInterval] = React.useState<'monthly' | 'annual'>('annual');
+
+  return (
+    <div className="space-y-8">
+      {/* Billing interval toggle */}
+      <div className="flex justify-center">
+        <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 p-1 bg-slate-50 dark:bg-slate-800">
+          <button
+            type="button"
+            onClick={() => setInterval('monthly')}
+            className={cn(
+              'px-4 py-2 text-sm font-medium rounded-md transition-colors',
+              interval === 'monthly'
+                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+            )}
+          >
+            Monthly
+          </button>
+          <button
+            type="button"
+            onClick={() => setInterval('annual')}
+            className={cn(
+              'px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-2',
+              interval === 'annual'
+                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+            )}
+          >
+            Annual{' '}
+            <span className="text-xs bg-[#10b981] text-white px-2 py-0.5 rounded">
+              Save 17%
+            </span>
+          </button>
         </div>
       </div>
-    );
-  }
 
-  const currentPlan = getPlanByPriceId(subscription.priceId);
-  const currentPlanId = currentPlan?.id ?? null;
-  const targetPlan = selectedPlanId ? getPlanById(selectedPlanId) : null;
+      {/* Full plan cards (non-compact — with features) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {PLANS.map((plan) => {
+          const isCurrent = plan.id === currentPlanId;
+          const direction = getPlanChangeDirection(currentPlanId, plan.id);
+          const directionDisplay = getPlanChangeDirectionDisplay(direction);
+          const priceInfo = getPlanPriceForInterval(plan, interval);
+          const savings = getAnnualSavingsPercent(plan);
+          const changeCheck = canChangeToPlan(currentPlanId, plan.id, subscriptionQuantity);
+
+          return (
+            <PlanCard
+              key={plan.id}
+              variant="billing"
+              id={plan.id}
+              name={plan.name}
+              description={plan.description}
+              priceFormatted={priceInfo.formattedPerMonth}
+              priceSubtext={interval === 'annual' ? priceInfo.formatted : undefined}
+              savingsBadge={
+                interval === 'annual' && priceInfo.savings ? priceInfo.savings : undefined
+              }
+              savingsPercent={interval === 'annual' ? savings : undefined}
+              features={plan.features}
+              isPopular={plan.popular}
+              isCurrent={isCurrent}
+              direction={direction}
+              directionLabel={directionDisplay.label}
+              directionIcon={directionDisplay.icon}
+              changeAllowed={changeCheck.allowed}
+              changeBlockedReason={changeCheck.reason}
+              href={`/billing/upgrade?plan=${plan.id}`}
+            />
+          );
+        })}
+
+        {/* Custom tier */}
+        {(() => {
+          const customTier = pricingData.tiers.find((t) => t.id === 'custom');
+          if (!customTier) return null;
+          return (
+            <PlanCard
+              key="custom"
+              variant="billing"
+              id="custom"
+              name={customTier.name}
+              description={customTier.description}
+              priceFormatted="Contact Sales"
+              priceSubtext={
+                interval === 'annual' ? 'Volume discounts on annual contracts' : undefined
+              }
+              savingsBadge={interval === 'annual' ? 'Custom annual pricing' : undefined}
+              features={customTier.features.map((f) => ({ name: f, included: true }))}
+              isCurrent={false}
+              direction="upgrade"
+              directionLabel="Contact Sales"
+              directionIcon="handshake"
+              changeAllowed={true}
+              href="/contact?plan=custom"
+            />
+          );
+        })()}
+      </div>
+    </div>
+  );
+}
+
+// =============================================
+// Mode 2: Confirmation view
+// =============================================
+
+interface ConfirmViewProps {
+  targetPlan: Plan;
+  currentPlan: Plan | null;
+  currentPlanId: string | null;
+  periodEnd: Date | null;
+  onConfirm: () => void;
+  isPending: boolean;
+}
+
+function ConfirmView({
+  targetPlan,
+  currentPlan,
+  currentPlanId,
+  periodEnd,
+  onConfirm,
+  isPending,
+}: Readonly<ConfirmViewProps>) {
+  const isSamePlan = targetPlan.id === currentPlanId;
+  const isNewSubscription = !currentPlan && !periodEnd;
   const comparison =
-    targetPlan && currentPlanId ? comparePlans(currentPlanId, targetPlan.id) : null;
-
-  // Proration estimate
-  const daysRemaining = getDaysRemainingInPeriod(new Date(subscription.currentPeriodEnd));
+    !isNewSubscription && currentPlanId && !isSamePlan
+      ? comparePlans(currentPlanId, targetPlan.id)
+      : null;
+  const daysRemaining = periodEnd ? getDaysRemainingInPeriod(periodEnd) : 0;
   const prorationAmount =
-    currentPlan && targetPlan
+    currentPlan && !isSamePlan
       ? estimateProration(currentPlan, targetPlan, daysRemaining, 30)
       : 0;
   const priceDiff = comparison
@@ -120,26 +210,23 @@ export function UpgradeFlow() {
     : null;
   const dirDisplay = comparison ? getPlanChangeDirectionDisplay(comparison.direction) : null;
 
-  function handleConfirm() {
-    if (!selectedPlanId) return;
-    updateMutation.mutate({
-      planId: selectedPlanId,
-      billingCycle: 'monthly',
-    } as Record<string, unknown>);
+  let confirmLabel: string;
+  if (isPending) {
+    confirmLabel = 'Processing...';
+  } else if (isNewSubscription) {
+    confirmLabel = `Subscribe to ${targetPlan.name}`;
+  } else {
+    confirmLabel = `Confirm ${dirDisplay?.label ?? 'Change'}`;
   }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      {/* Direction indicator */}
+      {/* Direction indicator (plan change only) */}
       {dirDisplay && comparison && (
         <div
           className={cn(
             'flex items-center gap-3 p-4 rounded-lg border',
-            dirDisplay.variant === 'success'
-              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-              : dirDisplay.variant === 'warning'
-                ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
-                : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+            directionBannerClass(dirDisplay.variant)
           )}
         >
           <span className="material-symbols-outlined text-xl" aria-hidden="true">
@@ -152,86 +239,68 @@ export function UpgradeFlow() {
         </div>
       )}
 
-      {/* Current plan */}
-      <Card className="border border-slate-200 dark:border-slate-800">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold">Current Plan</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-semibold text-lg">{currentPlan?.name ?? 'Unknown'}</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                {currentPlan
-                  ? formatCurrency(currentPlan.priceMonthly, currentPlan.currency) + '/mo'
-                  : '--'}
-              </p>
-            </div>
-            <Badge variant="outline">{currentPlan?.name ?? 'Unknown'}</Badge>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Target plan selection (when no ?plan= param) */}
-      {!selectedPlanId && (
+      {/* Current plan (only when switching) */}
+      {currentPlan && !isSamePlan && (
         <Card className="border border-slate-200 dark:border-slate-800">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold">Select a Plan</CardTitle>
+            <CardTitle className="text-base font-semibold">Current Plan</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {PLANS.filter((p) => p.id !== currentPlanId).map((plan) => {
-              const direction = getPlanChangeDirection(currentPlanId, plan.id);
-              const directionDisplay = getPlanChangeDirectionDisplay(direction);
-              const changeCheck = canChangeToPlan(
-                currentPlanId,
-                plan.id,
-                subscription?.quantity ?? 0
-              );
-
-              return (
-                <button
-                  key={plan.id}
-                  type="button"
-                  onClick={() => changeCheck.allowed && setSelectedPlanId(plan.id)}
-                  disabled={!changeCheck.allowed}
-                  title={changeCheck.reason}
-                  className={cn(
-                    'w-full p-4 text-left border rounded-lg transition-colors flex items-center justify-between',
-                    changeCheck.allowed
-                      ? 'border-slate-200 dark:border-slate-700 hover:border-primary cursor-pointer'
-                      : 'border-slate-100 dark:border-slate-800 opacity-50 cursor-not-allowed'
-                  )}
-                >
-                  <div>
-                    <p className="font-medium">{plan.name}</p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {formatCurrency(plan.priceMonthly, plan.currency)}/mo
-                    </p>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      direction === 'upgrade' && 'text-green-700 border-green-300',
-                      direction === 'downgrade' && 'text-amber-700 border-amber-300'
-                    )}
-                  >
-                    <span
-                      className="material-symbols-outlined text-sm mr-1"
-                      aria-hidden="true"
-                    >
-                      {directionDisplay.icon}
-                    </span>
-                    {directionDisplay.label}
-                  </Badge>
-                </button>
-              );
-            })}
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-semibold text-lg">{currentPlan.name}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  {formatCurrency(currentPlan.priceMonthly, currentPlan.currency)}{' '}
+                  <span className="text-slate-400">/mo</span>
+                </p>
+              </div>
+              <Badge variant="outline">{currentPlan.name}</Badge>
+            </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Proration preview */}
-      {targetPlan && (
+      {/* New plan details */}
+      <Card className="border border-slate-200 dark:border-slate-800">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold">
+            {isNewSubscription ? 'Selected Plan' : 'New Plan'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-semibold text-lg">{targetPlan.name}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                {targetPlan.description}
+              </p>
+            </div>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white">
+              {formatCurrency(targetPlan.priceMonthly, targetPlan.currency)}{' '}
+              <span className="text-sm font-normal text-slate-500">/mo</span>
+            </p>
+          </div>
+
+          <ul className="space-y-2 pt-3 border-t border-slate-200 dark:border-slate-700">
+            {targetPlan.features
+              .filter((f) => f.included)
+              .map((feature) => (
+                <li key={feature.name} className="flex items-center gap-2 text-sm">
+                  <span
+                    className="material-symbols-outlined text-green-600 dark:text-green-400 text-lg"
+                    aria-hidden="true"
+                  >
+                    check_circle
+                  </span>
+                  <span className="text-slate-700 dark:text-slate-300">{feature.name}</span>
+                </li>
+              ))}
+          </ul>
+        </CardContent>
+      </Card>
+
+      {/* Proration preview (plan change only) */}
+      {!isNewSubscription && !isSamePlan && (
         <Card className="border border-slate-200 dark:border-slate-800">
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-semibold">Estimated Cost</CardTitle>
@@ -242,22 +311,14 @@ export function UpgradeFlow() {
                 New plan ({targetPlan.name})
               </span>
               <span className="font-medium">
-                {formatCurrency(targetPlan.priceMonthly, targetPlan.currency)}/mo
+                {formatCurrency(targetPlan.priceMonthly, targetPlan.currency)}{' '}
+                <span>/mo</span>
               </span>
             </div>
             {priceDiff && (
               <div className="flex justify-between text-sm">
                 <span className="text-slate-600 dark:text-slate-400">Price difference</span>
-                <span
-                  className={cn(
-                    'font-medium',
-                    priceDiff.isIncrease
-                      ? 'text-amber-600'
-                      : priceDiff.isDecrease
-                        ? 'text-green-600'
-                        : ''
-                  )}
-                >
+                <span className={priceDiffClass(priceDiff.isIncrease, priceDiff.isDecrease)}>
                   {priceDiff.formatted}
                 </span>
               </div>
@@ -274,7 +335,7 @@ export function UpgradeFlow() {
         </Card>
       )}
 
-      {/* Feature comparison */}
+      {/* Feature comparison (plan change only) */}
       {comparison && (
         <Card className="border border-slate-200 dark:border-slate-800">
           <CardHeader className="pb-3">
@@ -304,7 +365,7 @@ export function UpgradeFlow() {
                           aria-hidden="true"
                         >
                           {badge.icon}
-                        </span>
+                        </span>{' '}
                         {badge.label}
                       </Badge>
                     </li>
@@ -320,24 +381,95 @@ export function UpgradeFlow() {
         Estimated amount — final charge calculated by payment provider.
       </p>
 
-      {/* Confirm button */}
-      {targetPlan && (
-        <div className="flex gap-3">
-          <Button variant="outline" className="flex-1" asChild>
-            <Link href="/billing/plans">Cancel</Link>
-          </Button>
-          <Button
-            className="flex-1"
-            onClick={handleConfirm}
-            disabled={updateMutation.isPending}
-            aria-label="Confirm plan change"
-          >
-            {updateMutation.isPending
-              ? 'Processing...'
-              : `Confirm ${dirDisplay?.label ?? 'Change'}`}
-          </Button>
-        </div>
-      )}
+      {/* Confirm buttons */}
+      <div className="flex gap-3">
+        <Button variant="outline" className="flex-1" asChild>
+          <Link href="/billing/plans">Cancel</Link>
+        </Button>
+        <Button
+          className="flex-1"
+          onClick={onConfirm}
+          disabled={isPending}
+          aria-label="Confirm plan change"
+        >
+          {confirmLabel}
+        </Button>
+      </div>
     </div>
+  );
+}
+
+// =============================================
+// Main export
+// =============================================
+
+export function UpgradeFlow() {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const planId = searchParams.get('plan');
+
+  const {
+    data: subscription,
+    isLoading,
+    error,
+  } = trpc.billing.getSubscription.useQuery(undefined, {
+    enabled: isAuthenticated && !authLoading,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+
+  const updateMutation = trpc.billing.updateSubscription.useMutation({
+    onSuccess: () => {
+      router.push('/billing');
+    },
+  });
+
+  if (isLoading || authLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <CardSkeleton rows={6} />
+        <CardSkeleton rows={6} />
+        <CardSkeleton rows={6} />
+        <CardSkeleton rows={6} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return <ErrorState message="Failed to load subscription data. Please try again later." />;
+  }
+
+  const currentPlan = subscription ? getPlanByPriceId(subscription.priceId) : null;
+  const currentPlanId = currentPlan?.id ?? null;
+  const targetPlan = planId ? getPlanById(planId) : null;
+
+  // MODE 1: No ?plan= param → full plan selection
+  if (!planId || !targetPlan) {
+    return (
+      <PlanSelectionView
+        currentPlanId={currentPlanId}
+        subscriptionQuantity={subscription?.quantity ?? 0}
+      />
+    );
+  }
+
+  // MODE 2: ?plan=X → confirmation with proration
+  function handleConfirm() {
+    updateMutation.mutate({
+      planId,
+      billingCycle: 'monthly',
+    } as Record<string, unknown>);
+  }
+
+  return (
+    <ConfirmView
+      targetPlan={targetPlan}
+      currentPlan={currentPlan ?? null}
+      currentPlanId={currentPlanId}
+      periodEnd={subscription ? new Date(subscription.currentPeriodEnd) : null}
+      onConfirm={handleConfirm}
+      isPending={updateMutation.isPending}
+    />
   );
 }

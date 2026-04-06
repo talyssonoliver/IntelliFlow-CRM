@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
   ConfirmationDialog,
+  EmptyState,
 } from '@intelliflow/ui';
 
 export interface CustomField {
@@ -131,18 +132,13 @@ export function CustomFieldsTab({
         <Button onClick={openCreateDialog} size="sm">
           <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
             add
-          </span>
+          </span>{' '}
           Add Field
         </Button>
       </div>
 
       {fields.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          <span className="material-symbols-outlined text-4xl mb-2 block" aria-hidden="true">
-            list_alt
-          </span>
-          <p className="text-sm">No custom fields yet. Add one to get started.</p>
-        </div>
+        <EmptyState entity="rules" phase="passive" />
       ) : (
         <div className="border rounded-lg overflow-hidden">
           <table className="w-full">

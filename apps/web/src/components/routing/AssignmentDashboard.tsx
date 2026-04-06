@@ -9,7 +9,7 @@
  * Auto-refreshes via 30-second polling from useRouting hook.
  */
 
-import { Card, CardContent, CardHeader, CardTitle, Skeleton } from '@intelliflow/ui';
+import { Card, CardContent, CardHeader, CardTitle, EmptyState, Skeleton } from '@intelliflow/ui';
 import { useRouting } from '@/app/settings/routing/hooks/useRouting';
 
 interface AssignmentItem {
@@ -114,10 +114,7 @@ export function AssignmentDashboard() {
               </div>
             );
             if (!assignments || assignments.length === 0) return (
-              <div className="text-center py-8 text-muted-foreground">
-                <span className="material-symbols-outlined text-[36px] mb-2 block">inbox</span>
-                <p>No assignments yet</p>
-              </div>
+              <EmptyState entity="leads" phase="passive" />
             );
             return (
             <div className="overflow-x-auto">

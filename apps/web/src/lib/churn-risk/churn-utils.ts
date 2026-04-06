@@ -24,23 +24,6 @@ export function getRiskBadgeClass(level: ChurnRiskLevel): string {
   }
 }
 
-export function getRiskColor(level: ChurnRiskLevel): string {
-  switch (level) {
-    case 'CRITICAL':
-      return 'text-destructive';
-    case 'HIGH':
-      return 'text-orange-600 dark:text-orange-400';
-    case 'MEDIUM':
-      return 'text-amber-600 dark:text-amber-400';
-    case 'LOW':
-      return 'text-primary';
-    case 'MINIMAL':
-      return 'text-success';
-    default:
-      return 'text-muted-foreground';
-  }
-}
-
 export function getEngagementColor(score: number): string {
   if (score < 30) return 'bg-destructive';
   if (score < 60) return 'bg-amber-500';

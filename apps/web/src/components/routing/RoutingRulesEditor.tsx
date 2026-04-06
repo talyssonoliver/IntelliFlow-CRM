@@ -32,6 +32,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  EmptyState,
   Input,
   Label,
   Select,
@@ -137,13 +138,11 @@ function SortableRule({
     .join(' → ');
 
   return (
-    <div
+    <li
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-3 p-3 border rounded-lg bg-card hover:bg-accent/50 transition-colors"
-      role="option" // NOSONAR typescript:S6819 — custom drag-and-drop sortable option; <option> cannot have drag listeners
-      aria-selected={false}
-      aria-grabbed={false} // NOSONAR typescript:S1874
+      className="flex items-center gap-3 p-3 border rounded-lg bg-card hover:bg-accent/50 transition-colors list-none"
+      aria-label={`Routing rule: ${rule.name}`}
     >
       <button
         className="cursor-grab text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring rounded"
@@ -196,7 +195,7 @@ function SortableRule({
           <span className="material-symbols-outlined text-[18px]">delete</span>
         </Button>
       </div>
-    </div>
+    </li>
   );
 }
 
@@ -497,13 +496,7 @@ export function RoutingRulesEditor() {
       </CardHeader>
       <CardContent>
         {!rules || rules.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <span className="material-symbols-outlined text-[48px] mb-4 block">rule</span>
-            <p>No routing rules configured</p>
-            <p className="text-sm mt-1">
-              Create your first rule to start routing leads automatically.
-            </p>
-          </div>
+          <EmptyState entity="rules" phase="passive" />
         ) : (
           <DndContext
             sensors={sensors}
@@ -511,9 +504,8 @@ export function RoutingRulesEditor() {
             onDragEnd={handleDragEnd}
           >
             <SortableContext items={rules.map((r) => r.id)} strategy={verticalListSortingStrategy}>
-              <div
-                className="space-y-2"
-                role="listbox" // NOSONAR typescript:S6819 — drag-and-drop sortable list; <select> cannot contain custom drag handles
+              <ul
+                className="space-y-2 list-none p-0"
                 aria-label="Routing rules list"
               >
                 {rules.map(parseRoutingRule).map((rule) => (
@@ -526,7 +518,7 @@ export function RoutingRulesEditor() {
                     onToggle={(id, isActive) => toggleRule.mutate({ id, isActive })}
                   />
                 ))}
-              </div>
+              </ul>
             </SortableContext>
           </DndContext>
         )}

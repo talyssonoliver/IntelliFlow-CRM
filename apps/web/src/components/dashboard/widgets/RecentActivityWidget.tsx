@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { EmptyState } from '@intelliflow/ui';
 import type { WidgetProps } from './index';
 import { useActivityFeed } from '@/hooks/useActivityFeed';
 import {
@@ -60,9 +61,7 @@ export function RecentActivityWidget({ config }: Readonly<WidgetProps>) {
             />
           ))}
         {displayActivities.length === 0 && !isLoading && (
-          <div className="flex flex-1 items-center justify-center rounded-md border border-dashed border-border m-5 p-4">
-            <p className="text-xs text-muted-foreground text-center">No recent activity yet.</p>
-          </div>
+          <EmptyState entity="activity" phase="passive" className="py-2" />
         )}
         {isLoading && (
           <div className="flex flex-1 items-center justify-center">

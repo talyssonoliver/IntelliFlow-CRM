@@ -8,6 +8,7 @@
  */
 
 import { Suspense, lazy, useState, useCallback } from 'react';
+import { EmptyState } from '@intelliflow/ui';
 import { useFeedbackSurveyDashboard } from '@/lib/feedback-survey/hooks';
 import type { FeedbackDashboardFilters } from '@/lib/feedback-survey/types';
 
@@ -24,17 +25,17 @@ type SurveyTab = 'All' | 'NPS' | 'CSAT' | 'CES' | 'CUSTOM';
 const PERIOD_MAP: Record<PeriodKey, () => Date> = {
   '7d': () => {
     const d = new Date();
-    d.setDate(d.getDate() - 7);
+    d.setUTCDate(d.getUTCDate() - 7);
     return d;
   },
   '30d': () => {
     const d = new Date();
-    d.setDate(d.getDate() - 30);
+    d.setUTCDate(d.getUTCDate() - 30);
     return d;
   },
   '90d': () => {
     const d = new Date();
-    d.setDate(d.getDate() - 90);
+    d.setUTCDate(d.getUTCDate() - 90);
     return d;
   },
   ytd: () => new Date(new Date().getFullYear(), 0, 1),
@@ -94,14 +95,7 @@ export default function FeedbackAnalyticsPage() {
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-bold">Feedback Analytics</h1>
-        <div className="flex h-64 items-center justify-center rounded-lg border bg-card p-6">
-          <div className="text-center">
-            <p className="text-lg font-medium text-muted-foreground">No responses yet</p>
-            <p className="text-sm text-muted-foreground">
-              Survey responses will appear here once customers start providing feedback.
-            </p>
-          </div>
-        </div>
+        <EmptyState entity="insights" phase="passive" />
       </div>
     );
   }

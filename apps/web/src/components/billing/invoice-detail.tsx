@@ -22,6 +22,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  EmptyState,
   Skeleton,
   Table,
   TableBody,
@@ -294,11 +295,7 @@ function NotFoundState() {
 
 function LineItemsTable({ items, currency }: Readonly<{ items: InvoiceLineItem[]; currency: string }>) {
   if (items.length === 0) {
-    return (
-      <div className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-        No line items available
-      </div>
-    );
+    return <EmptyState entity="invoices" phase="passive" className="py-4" />;
   }
 
   return (

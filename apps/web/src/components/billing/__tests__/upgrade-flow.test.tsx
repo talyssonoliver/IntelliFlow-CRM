@@ -13,7 +13,11 @@ import { createMockSubscription } from '@/test/fixtures/billing-data';
 
 const mockSubscription = createMockSubscription();
 
-type MockQueryReturn<T> = { data: T | null | undefined; isLoading: boolean; error: Error | null };
+type MockQueryReturn<T> = {
+  data: T | null | undefined;
+  isLoading: boolean;
+  error: Error | null;
+};
 
 const mockGetSubscription = vi.fn<() => MockQueryReturn<typeof mockSubscription>>(() => ({
   data: mockSubscription,
@@ -22,25 +26,24 @@ const mockGetSubscription = vi.fn<() => MockQueryReturn<typeof mockSubscription>
 }));
 
 const mockMutate = vi.fn();
-const mockUpdateSubscription = vi.fn(() => ({
-  mutate: mockMutate,
-  mutateAsync: mockMutate,
-  isLoading: false,
-  isPending: false,
-  isSuccess: false,
-  error: null,
-  data: null,
-  reset: vi.fn(),
-}));
+const mockPush = vi.fn();
 
 vi.mock('@/lib/trpc', () => ({
   trpc: {
     billing: {
       getSubscription: { useQuery: () => mockGetSubscription() },
-      updateSubscription: { useMutation: (opts?: Record<string, unknown>) => {
-        const result = mockUpdateSubscription();
-        return { ...result, mutate: (...args: unknown[]) => { mockMutate(...args); if (opts && typeof (opts as Record<string, unknown>).onSuccess === 'function') (opts as { onSuccess: () => void }).onSuccess(); } };
-      }},
+      updateSubscription: {
+        useMutation: (opts?: Record<string, unknown>) => ({
+          mutate: (...args: unknown[]) => {
+            mockMutate(...args);
+            if (opts && typeof (opts as Record<string, unknown>).onSuccess === 'function')
+              (opts as { onSuccess: () => void }).onSuccess();
+          },
+          isPending: false,
+          isSuccess: false,
+          error: null,
+        }),
+      },
     },
   },
 }));
@@ -50,14 +53,20 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 }));
 
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: Readonly<{ children: React.ReactNode; href: string; [key: string]: unknown }>) => (
-    <a href={href} {...props}>{children}</a>
+  default: ({
+    children,
+    href,
+    ...props
+  }: Readonly<{ children: React.ReactNode; href: string; [key: string]: unknown }>) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
 vi.mock('next/navigation', () => ({
   useSearchParams: vi.fn(() => new URLSearchParams('plan=enterprise')),
-  useRouter: vi.fn(() => ({ push: vi.fn() })),
+  useRouter: vi.fn(() => ({ push: mockPush, replace: vi.fn() })),
 }));
 
 import { UpgradeFlow } from '../upgrade-flow';
@@ -65,56 +74,100 @@ import { UpgradeFlow } from '../upgrade-flow';
 describe('UpgradeFlow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetSubscription.mockReturnValue({ data: mockSubscription, isLoading: false, error: null });
+    mockGetSubscription.mockReturnValue({
+      data: mockSubscription,
+      isLoading: false,
+      error: null,
+    });
   });
+
+  // --- Guard states ---
 
   it('shows loading skeleton when data is loading', () => {
     mockGetSubscription.mockReturnValue({ data: undefined, isLoading: true, error: null });
     render(<UpgradeFlow />);
-    expect(screen.queryByText('Change Plan')).not.toBeInTheDocument();
+    expect(screen.queryByText('Estimated Cost')).not.toBeInTheDocument();
   });
 
   it('shows error state when query fails', () => {
-    mockGetSubscription.mockReturnValue({ data: null, isLoading: false, error: new Error('fail') });
+    mockGetSubscription.mockReturnValue({
+      data: null,
+      isLoading: false,
+      error: new Error('fail'),
+    });
     render(<UpgradeFlow />);
     expect(screen.getByText(/failed to load/i)).toBeInTheDocument();
   });
 
-  it('shows plan grid with Get Started CTAs when no subscription', () => {
-    mockGetSubscription.mockReturnValue({ data: null, isLoading: false, error: null });
+  // --- Mode 1: No ?plan= → full plan cards ---
+
+  it('shows full plan cards when no ?plan= param', async () => {
+    const { useSearchParams } = await import('next/navigation');
+    vi.mocked(useSearchParams).mockReturnValue(
+      new URLSearchParams('') as unknown as ReturnType<typeof useSearchParams>
+    );
     render(<UpgradeFlow />);
     expect(screen.getAllByText('Starter').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Professional').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Enterprise').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText('Get Started').length).toBe(3);
   });
 
-  it('pre-selects plan from URL param', () => {
+  it('shows Custom tier card when no ?plan= param', async () => {
+    const { useSearchParams } = await import('next/navigation');
+    vi.mocked(useSearchParams).mockReturnValue(
+      new URLSearchParams('') as unknown as ReturnType<typeof useSearchParams>
+    );
     render(<UpgradeFlow />);
-    expect(screen.getByText(/New plan \(Enterprise\)/)).toBeInTheDocument();
+    expect(screen.getAllByText('Custom').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('shows current plan summary', () => {
+  it('shows plan cards with features (non-compact) when no ?plan= param', async () => {
+    const { useSearchParams } = await import('next/navigation');
+    vi.mocked(useSearchParams).mockReturnValue(
+      new URLSearchParams('') as unknown as ReturnType<typeof useSearchParams>
+    );
     render(<UpgradeFlow />);
-    expect(screen.getAllByText('Professional').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText('Current Plan')).toBeInTheDocument();
+    // Features should be visible (non-compact cards)
+    expect(screen.getAllByText(/users/i).length).toBeGreaterThan(0);
   });
 
-  it('shows proration preview', () => {
+  it('shows plan cards when no subscription (new user)', async () => {
+    const { useSearchParams } = await import('next/navigation');
+    vi.mocked(useSearchParams).mockReturnValue(
+      new URLSearchParams('') as unknown as ReturnType<typeof useSearchParams>
+    );
+    mockGetSubscription.mockReturnValue({ data: null, isLoading: false, error: null });
+    render(<UpgradeFlow />);
+    expect(screen.getAllByText('Upgrade').length).toBe(3);
+  });
+
+  it('does not show Compare Plans or FAQ', async () => {
+    const { useSearchParams } = await import('next/navigation');
+    vi.mocked(useSearchParams).mockReturnValue(
+      new URLSearchParams('') as unknown as ReturnType<typeof useSearchParams>
+    );
+    render(<UpgradeFlow />);
+    expect(screen.queryByText('Compare Plans')).not.toBeInTheDocument();
+    expect(screen.queryByText('Frequently Asked Questions')).not.toBeInTheDocument();
+  });
+
+  // --- Mode 2: ?plan=X → confirmation ---
+
+  it('shows confirmation view with ?plan= param', () => {
     render(<UpgradeFlow />);
     expect(screen.getByText('Estimated Cost')).toBeInTheDocument();
     expect(screen.getByText(/estimated prorated charge/i)).toBeInTheDocument();
   });
 
-  it('shows disclaimer about estimated pricing', () => {
+  it('shows current plan summary when switching plans', () => {
     render(<UpgradeFlow />);
-    expect(screen.getByText(/final charge calculated by payment provider/i)).toBeInTheDocument();
+    expect(screen.getAllByText('Professional').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Current Plan')).toBeInTheDocument();
   });
 
-  it('shows feature comparison', () => {
+  it('shows new plan card with features', () => {
     render(<UpgradeFlow />);
-    // Should show features from target plan
-    expect(screen.getAllByText(/users/i).length).toBeGreaterThan(0);
+    expect(screen.getByText('New Plan')).toBeInTheDocument();
   });
 
   it('shows direction indicator', () => {
@@ -124,21 +177,15 @@ describe('UpgradeFlow', () => {
 
   it('calls updateSubscription on confirm', () => {
     render(<UpgradeFlow />);
-    const confirmBtn = screen.getByRole('button', { name: /confirm/i });
-    fireEvent.click(confirmBtn);
+    fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
     expect(mockMutate).toHaveBeenCalled();
-  });
-
-  it('shows plan selection when no URL param', async () => {
-    const { useSearchParams } = await import('next/navigation');
-    vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams('') as unknown as ReturnType<typeof useSearchParams>);
-    render(<UpgradeFlow />);
-    expect(screen.getByText('Select a Plan')).toBeInTheDocument();
   });
 
   it('shows downgrade direction for lower plan', async () => {
     const { useSearchParams } = await import('next/navigation');
-    vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams('plan=starter') as unknown as ReturnType<typeof useSearchParams>);
+    vi.mocked(useSearchParams).mockReturnValue(
+      new URLSearchParams('plan=starter') as unknown as ReturnType<typeof useSearchParams>
+    );
     render(<UpgradeFlow />);
     expect(screen.getByText('Downgrade')).toBeInTheDocument();
   });
@@ -146,5 +193,24 @@ describe('UpgradeFlow', () => {
   it('shows price difference for target plan', () => {
     render(<UpgradeFlow />);
     expect(screen.getByText(/price difference/i)).toBeInTheDocument();
+  });
+
+  it('has Cancel link back to /billing/plans', () => {
+    render(<UpgradeFlow />);
+    const cancelLink = screen.getByRole('link', { name: /cancel/i });
+    expect(cancelLink).toHaveAttribute('href', '/billing/plans');
+  });
+
+  it('shows Subscribe button for new subscriptions', () => {
+    mockGetSubscription.mockReturnValue({ data: null, isLoading: false, error: null });
+    render(<UpgradeFlow />);
+    expect(screen.getByText(/Subscribe to Enterprise/)).toBeInTheDocument();
+  });
+
+  it('does not show proration for new subscriptions', () => {
+    mockGetSubscription.mockReturnValue({ data: null, isLoading: false, error: null });
+    render(<UpgradeFlow />);
+    expect(screen.queryByText('Estimated Cost')).not.toBeInTheDocument();
+    expect(screen.queryByText('Current Plan')).not.toBeInTheDocument();
   });
 });

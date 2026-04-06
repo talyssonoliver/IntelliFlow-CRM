@@ -12,6 +12,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { metadata } from '../layout';
 
 // Mock next/navigation
 const mockPush = vi.fn();
@@ -272,6 +273,31 @@ describe('SignUpPage', () => {
       // Error handling is done via role="alert" in the registration form
       const form = screen.getByRole('form', { name: /registration form/i });
       expect(form).toBeInTheDocument();
+    });
+  });
+
+  describe('Signup Metadata', () => {
+    it('should have correct SEO metadata', () => {
+      expect(metadata.title).toBe('Sign Up');
+      expect(metadata.description).toContain('IntelliFlow CRM');
+      expect(metadata.description).toContain('14-day free trial');
+    });
+
+    it('should have Open Graph metadata', () => {
+      expect(metadata.openGraph).toBeDefined();
+      expect(metadata.openGraph?.url).toBe('https://intelliflow-crm.com/signup');
+      expect(metadata.openGraph?.siteName).toBe('IntelliFlow CRM');
+      expect((metadata.openGraph as Record<string, unknown>)?.type).toBe('website');
+    });
+
+    it('should have Twitter metadata', () => {
+      expect(metadata.twitter).toBeDefined();
+      expect((metadata.twitter as Record<string, unknown>)?.card).toBe('summary_large_image');
+      expect(metadata.twitter?.title).toBeDefined();
+    });
+
+    it('should have canonical URL', () => {
+      expect(metadata.alternates?.canonical).toBe('/signup');
     });
   });
 });

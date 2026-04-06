@@ -10,6 +10,7 @@
 import { useState } from 'react';
 import type { TicketActivity } from './types';
 import { cn } from '@/lib/utils';
+import { EmptyState } from '@intelliflow/ui';
 
 export interface TicketThreadProps {
   ticketId: string;
@@ -80,7 +81,7 @@ export function TicketThread({
       {/* Activity List */}
       <div className="flex flex-col gap-3">
         {activities.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">No activity yet</div>
+          <EmptyState entity="activity" phase="passive" />
         ) : (
           activities.map((activity) => (
             <ActivityItem key={activity.id} activity={activity} />

@@ -6,7 +6,7 @@
  */
 
 import { useState, Suspense, lazy } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, Button, Skeleton, cn } from '@intelliflow/ui';
+import { Card, CardContent, CardHeader, CardTitle, Button, EmptyState, Skeleton, cn } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared';
 import { useDriftDashboard, useFailedJobs } from '@/lib/ai-monitoring/hooks';
 import type { DriftFilters } from '@/lib/ai-monitoring/types';
@@ -138,7 +138,7 @@ export function DriftDashboard() {
           <p className="text-sm text-blue-700 dark:text-blue-400 flex items-center gap-2">
             <span className="material-symbols-outlined text-base" aria-hidden="true">
               info
-            </span>
+            </span>{' '}
             Monitoring data unavailable — AI worker runs in a separate process. Data will appear when
             both services are colocated or Redis-backed persistence is enabled.
           </p>
@@ -198,13 +198,11 @@ export function DriftDashboard() {
           label="Failed Jobs"
           value={failedJobs.error ? '—' : failedJobs.total}
           icon="report_problem"
-          colorClass={
-            failedJobs.error
-              ? 'bg-slate-100 dark:bg-slate-800'
-              : failedJobs.total > 0
-                ? 'bg-red-100 dark:bg-red-900/30'
-                : 'bg-green-100 dark:bg-green-900/30'
-          }
+          colorClass={(() => {
+            if (failedJobs.error) return 'bg-slate-100 dark:bg-slate-800';
+            if (failedJobs.total > 0) return 'bg-red-100 dark:bg-red-900/30';
+            return 'bg-green-100 dark:bg-green-900/30';
+          })()}
           isLoading={failedJobs.isLoading}
         />
         <StatCard
@@ -218,11 +216,8 @@ export function DriftDashboard() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2 mt-6">
-        <div
-          className="flex flex-wrap gap-1.5"
-          role="group" // NOSONAR typescript:S6819 — ARIA group for filter chips; <fieldset> would require <legend> and changes layout
-          aria-label="Filter by severity"
-        >
+        <fieldset className="contents flex flex-wrap gap-1.5">
+          <legend className="sr-only">Filter by severity</legend>
           {SEVERITY_FILTERS.map((sev) => (
             <button
               key={sev}
@@ -239,7 +234,7 @@ export function DriftDashboard() {
               {sev}
             </button>
           ))}
-        </div>
+        </fieldset>
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as DriftFilters['sortBy'])}
@@ -280,12 +275,9 @@ export function DriftDashboard() {
           <CardContent className="pb-4">
             {(() => {
               if (!isLoading && history.length === 0) return (
-              <p
-                className="text-sm text-muted-foreground text-center py-8"
-                data-testid="empty-state"
-              >
-                No drift metrics tracked yet. Start using AI features to populate monitoring data.
-              </p>
+              <div data-testid="empty-state">
+                <EmptyState entity="insights" phase="passive" />
+              </div>
               );
               if (isLoading) return (
               <div className="space-y-3">

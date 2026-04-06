@@ -1,8 +1,11 @@
 'use client';
 
+import { trpc } from '@/lib/trpc';
 import type { WidgetProps } from './index';
 
 export function ActiveDealsWidget(_props: Readonly<WidgetProps>) {
+  const { data, isLoading } = trpc.analytics.getOverview.useQuery({});
+
   return (
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-start justify-between">
@@ -11,7 +14,9 @@ export function ActiveDealsWidget(_props: Readonly<WidgetProps>) {
         </div>
       </div>
       <p className="text-sm text-muted-foreground mt-4">Active Deals</p>
-      <p className="text-3xl font-bold text-foreground mt-1">18</p>
+      <p className="text-3xl font-bold text-foreground mt-1">
+        {isLoading ? '...' : (data?.openOpportunities ?? 0)}
+      </p>
     </div>
   );
 }

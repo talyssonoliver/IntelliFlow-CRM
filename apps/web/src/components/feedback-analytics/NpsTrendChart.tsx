@@ -16,15 +16,12 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
+import { EmptyState } from '@intelliflow/ui';
 import type { NpsTrendChartProps } from '@/lib/feedback-survey/types';
 
 export default function NpsTrendChart({ trends, granularity }: Readonly<NpsTrendChartProps>) {
   if (trends.length === 0) {
-    return (
-      <div className="flex h-64 items-center justify-center rounded-lg border bg-card p-6">
-        <p className="text-muted-foreground">No trend data available</p>
-      </div>
-    );
+    return <EmptyState entity="insights" phase="passive" className="py-4" />;
   }
 
   const data = trends.map((t) => ({

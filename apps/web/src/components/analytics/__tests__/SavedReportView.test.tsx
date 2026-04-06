@@ -107,7 +107,7 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 }));
 
 vi.mock('@/hooks/useAnalyticsDateRange', () => ({
-  useAnalyticsDateRange: (period: string) => ({
+  useAnalyticsDateRange: (_period: string) => ({
     startDate: `2026-03-01T00:00:00Z`,
     endDate: `2026-03-16T00:00:00Z`,
   }),

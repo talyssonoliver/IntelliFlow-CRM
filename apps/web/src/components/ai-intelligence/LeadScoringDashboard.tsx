@@ -14,6 +14,7 @@ import {
   Card,
   CardContent,
   Button,
+  EmptyState,
   Skeleton,
   cn,
   ConfidenceIndicator,
@@ -496,17 +497,8 @@ export function LeadScoringDashboard() {
         </div>
         );
         if (filteredLeads.length === 0) return (
-        <div
-          className="bg-white dark:bg-slate-900 p-8 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm text-center"
-          data-testid="empty-state"
-        >
-          <span
-            className="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600 mb-2"
-            aria-hidden="true"
-          >
-            leaderboard
-          </span>
-          <p className="text-sm text-slate-500">No lead scoring data available</p>
+        <div data-testid="empty-state">
+          <EmptyState entity="insights" phase="passive" />
         </div>
         );
         return (

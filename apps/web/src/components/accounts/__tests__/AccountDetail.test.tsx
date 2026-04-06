@@ -31,6 +31,8 @@ vi.mock('next/link', () => ({
 const getByIdMock = vi.fn();
 const activityMock = vi.fn();
 const oppsMock = vi.fn();
+const assigneesMock = vi.fn();
+const assignOwnerMutateMock = vi.fn();
 
 vi.mock('@/lib/api', () => ({
   api: {
@@ -38,6 +40,13 @@ vi.mock('@/lib/api', () => ({
       getById: { useQuery: (...args: unknown[]) => getByIdMock(...args) },
       getActivity: { useQuery: (...args: unknown[]) => activityMock(...args) },
       getOpportunities: { useQuery: (...args: unknown[]) => oppsMock(...args) },
+      assignees: { useQuery: (...args: unknown[]) => assigneesMock(...args) },
+      assignOwner: {
+        useMutation: (_opts?: unknown) => ({
+          mutateAsync: assignOwnerMutateMock,
+          isPending: false,
+        }),
+      },
       delete: {
         useMutation: (_opts?: unknown) => ({
           mutate: vi.fn(),
@@ -49,6 +58,7 @@ vi.mock('@/lib/api', () => ({
     },
     useUtils: () => ({
       account: {
+        getById: { invalidate: vi.fn() },
         list: { invalidate: vi.fn() },
         stats: { invalidate: vi.fn() },
       },
@@ -56,8 +66,30 @@ vi.mock('@/lib/api', () => ({
   },
 }));
 
+vi.mock('@/lib/auth', () => ({
+  useAuth: () => ({ user: { id: 'current-user', name: 'Current User', email: 'current@co.com' } }),
+}));
+
+vi.mock('@/components/shared/assign-sheet', () => ({
+  AssignSheet: ({ open, onAssign, title }: { open: boolean; onAssign: (id: string) => void; title: string }) =>
+    open ? (
+      <div data-testid="assign-owner-sheet">
+        <span>{title}</span>
+        <button data-testid="assign-owner-confirm" onClick={() => onAssign('user-2')}>
+          Assign
+        </button>
+      </div>
+    ) : null,
+}));
+
+vi.mock('@/components/shared/app-avatar', () => ({
+  AppAvatar: ({ name, ...props }: { name: string; className?: string; fallbackClassName?: string }) => (
+    <div data-testid="app-avatar" data-name={name} {...props} />
+  ),
+}));
+
 vi.mock('@/lib/pricing/calculator', () => ({
-  formatCurrency: (v: number) => `$${v.toLocaleString()}`,
+  formatCurrency: (v: number) => `$${v.toLocaleString('en-GB')}`,
 }));
 
 vi.mock('../AccountCard', () => ({
@@ -182,6 +214,7 @@ const mockAccount = {
   revenue: 5000000,
   description: 'A tech company',
   ownerId: 'owner-1',
+  owner: { id: 'owner-1', name: 'Jane Smith', email: 'jane@example.com' },
   createdAt: '2026-01-01T00:00:00Z',
   updatedAt: '2026-02-01T00:00:00Z',
   _count: { contacts: 5, opportunities: 3 },
@@ -197,6 +230,8 @@ describe('AccountDetail', () => {
     getByIdMock.mockReset();
     activityMock.mockReset();
     oppsMock.mockReset();
+    assigneesMock.mockReset();
+    assignOwnerMutateMock.mockReset();
     mockPush.mockReset();
 
     getByIdMock.mockReturnValue({
@@ -206,6 +241,10 @@ describe('AccountDetail', () => {
     });
     activityMock.mockReturnValue({ data: null, isLoading: false, error: null });
     oppsMock.mockReturnValue({ data: null, isLoading: false, error: null });
+    assigneesMock.mockReturnValue({
+      data: [{ id: 'user-2', name: 'Bob Lee', title: 'Sales Rep', avatar: null }],
+      isLoading: false,
+    });
   });
 
   it('shows loading skeleton while fetching', () => {
@@ -379,6 +418,81 @@ describe('AccountDetail', () => {
     await waitFor(() => {
       const sheet = screen.getByTestId('opp-create-sheet');
       expect(sheet).toHaveAttribute('data-account-id', '00000000-0000-4000-8000-000000000001');
+    });
+  });
+
+  // IFC-268: Owner Display & Assignment Tests
+  it('renders owner name from API data when owner relation is present', () => {
+    render(<AccountDetail {...defaultProps} />);
+    expect(screen.getByText('Jane Smith')).toBeInTheDocument();
+  });
+
+  it('renders owner email as fallback when owner name is null', () => {
+    getByIdMock.mockReturnValue({
+      data: { ...mockAccount, owner: { id: 'owner-1', name: null, email: 'jane@example.com' } },
+      isLoading: false,
+      error: null,
+    });
+    render(<AccountDetail {...defaultProps} />);
+    expect(screen.getAllByText('jane@example.com').length).toBeGreaterThan(0);
+  });
+
+  it('renders "No owner assigned" when owner is null', () => {
+    getByIdMock.mockReturnValue({
+      data: { ...mockAccount, ownerId: null, owner: null },
+      isLoading: false,
+      error: null,
+    });
+    render(<AccountDetail {...defaultProps} />);
+    expect(screen.getByText('No owner assigned')).toBeInTheDocument();
+  });
+
+  it('renders AppAvatar for owner display', () => {
+    render(<AccountDetail {...defaultProps} />);
+    expect(screen.getByTestId('app-avatar')).toBeInTheDocument();
+  });
+
+  it('renders "Reassign Owner" button when owner exists', () => {
+    render(<AccountDetail {...defaultProps} />);
+    expect(screen.getByText('Reassign Owner')).toBeInTheDocument();
+  });
+
+  it('renders "Assign Owner" button when no owner assigned', () => {
+    getByIdMock.mockReturnValue({
+      data: { ...mockAccount, ownerId: null, owner: null },
+      isLoading: false,
+      error: null,
+    });
+    render(<AccountDetail {...defaultProps} />);
+    expect(screen.getByText('Assign Owner')).toBeInTheDocument();
+  });
+
+  it('clicking assign button opens the AssignSheet', async () => {
+    const user = userEvent.setup();
+    render(<AccountDetail {...defaultProps} />);
+    const btn = screen.getByText('Reassign Owner').closest('button')!;
+    await user.click(btn);
+    await waitFor(() => {
+      expect(screen.getByTestId('assign-owner-sheet')).toBeInTheDocument();
+    });
+  });
+
+  it('selecting a user calls assignOwner mutation', async () => {
+    assignOwnerMutateMock.mockResolvedValue({ success: true });
+    const user = userEvent.setup();
+    render(<AccountDetail {...defaultProps} />);
+    const btn = screen.getByText('Reassign Owner').closest('button')!;
+    await user.click(btn);
+    await waitFor(() => {
+      expect(screen.getByTestId('assign-owner-sheet')).toBeInTheDocument();
+    });
+    const confirmBtn = screen.getByTestId('assign-owner-confirm');
+    await user.click(confirmBtn);
+    await waitFor(() => {
+      expect(assignOwnerMutateMock).toHaveBeenCalledWith({
+        id: '00000000-0000-4000-8000-000000000001',
+        ownerId: 'user-2',
+      });
     });
   });
 });

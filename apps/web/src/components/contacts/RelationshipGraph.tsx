@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { EmptyState } from '@intelliflow/ui';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -159,7 +160,7 @@ export function RelationshipGraph({
           )}
         </ul>
       ) : (
-        <p className="text-sm text-slate-500 dark:text-slate-400 py-4">No relationships yet</p>
+        <EmptyState entity="contacts" phase="passive" className="py-2" />
       )}
     </div>
   );

@@ -13,7 +13,7 @@
  * - Last updated date
  */
 
-import { Card, Skeleton } from '@intelliflow/ui';
+import { Card, Skeleton, EmptyState } from '@intelliflow/ui';
 import type { ChainType } from '@intelliflow/domain';
 import type { ChainVersionSummary } from '@intelliflow/validators';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
@@ -95,14 +95,12 @@ export function ChainVersionsDashboard({
             key={chainType}
             className={`p-4 border-l-4 ${config.color} hover:shadow-md transition-shadow cursor-pointer`}
             onClick={() => version && onViewVersion?.(version.id)}
-            role={version ? 'button' : undefined}
             tabIndex={version ? 0 : undefined}
           >
             {/* Header */}
             <div className="flex items-center gap-2 mb-3">
               <span
                 className="text-2xl"
-                role="img" // NOSONAR typescript:S6819 — emoji icon in span; <img> cannot render emoji characters
                 aria-label={config.label}
               >
                 {config.icon}
@@ -152,10 +150,7 @@ export function ChainVersionsDashboard({
                 </div>
               </div>
             ) : (
-              <div className="py-4 text-center">
-                <p className="text-sm text-muted-foreground">No active version</p>
-                <p className="text-xs text-muted-foreground mt-1">Create a draft and activate it</p>
-              </div>
+              <EmptyState entity="insights" phase="passive" className="py-2" />
             )}
           </Card>
         );

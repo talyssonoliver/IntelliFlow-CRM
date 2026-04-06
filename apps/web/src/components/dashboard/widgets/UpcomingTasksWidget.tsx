@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
-import { Skeleton } from '@intelliflow/ui';
+import { EmptyState, Skeleton } from '@intelliflow/ui';
 import { TaskCreateSheet } from '@/components/tasks/TaskCreateSheet';
 import type { WidgetProps } from './index';
 import type { TaskStatus } from '@intelliflow/domain';
@@ -21,8 +21,8 @@ function formatDueDate(date: Date | string | null, timezone: string = 'Europe/Lo
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return 'No due date';
   const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const dueDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const dueDay = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
   const diffDays = Math.round((dueDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   if (diffDays < 0) return 'Overdue';
   if (diffDays === 0) return 'Due Today';
@@ -34,8 +34,8 @@ function getDueDateColor(date: Date | string | null): string {
   if (!date) return '';
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const dueDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const dueDay = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
   if (dueDay < today) return 'text-red-600 dark:text-red-400';
   if (dueDay.getTime() === today.getTime()) return 'text-amber-600 dark:text-amber-400';
   return 'text-slate-500 dark:text-slate-400';
@@ -81,9 +81,7 @@ export function UpcomingTasksWidget(_props: Readonly<WidgetProps>) {
           </>
         )}
         {!isLoading && tasks.length === 0 && (
-          <div className="text-center py-4">
-            <p className="text-sm text-slate-500 dark:text-slate-400">No upcoming tasks</p>
-          </div>
+          <EmptyState entity="tasks" phase="passive" className="py-2" />
         )}
         {!isLoading &&
           tasks.map((task) => (

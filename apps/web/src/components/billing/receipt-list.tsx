@@ -17,6 +17,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  EmptyState,
   Skeleton,
   Table,
   TableBody,
@@ -72,24 +73,6 @@ function ReceiptListSkeleton() {
           </div>
         </div>
       ))}
-    </div>
-  );
-}
-
-// ============================================
-// Empty State
-// ============================================
-
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-        <span className="material-symbols-outlined text-3xl text-slate-400">receipt</span>
-      </div>
-      <h3 className="mb-2 text-lg font-semibold text-slate-900 dark:text-white">No receipts yet</h3>
-      <p className="max-w-sm text-sm text-slate-500 dark:text-slate-400">
-        When you make payments, your receipts will appear here.
-      </p>
     </div>
   );
 }
@@ -239,7 +222,7 @@ export function ReceiptList({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <EmptyState />
+          <EmptyState entity="receipts" phase="passive" />
         </CardContent>
       </Card>
     );

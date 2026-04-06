@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { blogPosts } from '@/data/blog-posts';
 import { jobListings } from '@/data/job-listings';
 import landingPagesData from '@/data/landing-pages.json';
+import pressData from '@/data/press-releases.json';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://intelliflow-crm.com';
 
@@ -120,5 +121,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticRoutes, ...blogRoutes, ...careersRoutes, ...lpRoutes];
+  // Press release detail pages — timestamps from JSON data
+  const pressRoutes: MetadataRoute.Sitemap = pressData.releases.map((release) => ({
+    url: `${BASE_URL}/press/${release.id}`,
+    lastModified: release.date,
+    changeFrequency: 'monthly' as const,
+    priority: 0.5,
+  }));
+
+  return [...staticRoutes, ...blogRoutes, ...careersRoutes, ...lpRoutes, ...pressRoutes];
 }

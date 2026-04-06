@@ -9,7 +9,7 @@
  */
 
 import { useState, useCallback, type KeyboardEvent as ReactKeyboardEvent } from 'react';
-import { Card, CardContent, Button, Skeleton, cn } from '@intelliflow/ui';
+import { Card, CardContent, Button, EmptyState, Skeleton, cn } from '@intelliflow/ui';
 import { PageHeader, SearchFilterBar, useMultiFilterState } from '@/components/shared';
 import { useAgentLogs, useFailedJobs } from '@/lib/ai-monitoring/hooks';
 import { getAgentTypeIcon, getAgentTypeLabel } from '@/lib/active-agents/agent-utils';
@@ -115,8 +115,8 @@ function TranscriptView({ messages }: Readonly<TranscriptViewProps>) {
 
   if (messages.length === 0) {
     return (
-      <div data-testid="transcript-content" className="p-4 text-sm text-muted-foreground italic">
-        No messages recorded
+      <div data-testid="transcript-content">
+        <EmptyState entity="agents" phase="passive" className="py-4" />
       </div>
     );
   }
@@ -134,16 +134,9 @@ function TranscriptView({ messages }: Readonly<TranscriptViewProps>) {
             ? msg.content.slice(0, MESSAGE_TRUNCATE_LENGTH) + '...'
             : msg.content;
 
-        return (
-          <div // NOSONAR typescript:S6845,S6848 — system messages are conditionally interactive; role="button" and tabIndex enable keyboard expand/collapse
-            key={`${msg.role}-${idx}`}
-            data-testid="message-bubble"
-            role={isSystem ? 'button' : undefined}
-            tabIndex={isSystem ? 0 : undefined}
-            className={messageBubbleClass(isUser, isSystem, isTool, isExpanded)}
-            onClick={isSystem ? () => toggleMessage(idx) : undefined}
-            onKeyDown={isSystem ? makeSystemKeyDownHandler(idx, toggleMessage) : undefined}
-          >
+        const bubbleClass = messageBubbleClass(isUser, isSystem, isTool, isExpanded);
+        const bubbleContent = (
+          <>
             <span className="text-xs font-semibold uppercase text-muted-foreground block mb-0.5">
               {msg.role}
             </span>
@@ -160,6 +153,27 @@ function TranscriptView({ messages }: Readonly<TranscriptViewProps>) {
                 {isExpanded ? 'Show less' : 'Show more'}
               </button>
             )}
+          </>
+        );
+
+        return isSystem ? (
+          <button
+            type="button"
+            key={`${msg.role}-${idx}`}
+            data-testid="message-bubble"
+            className={bubbleClass}
+            onClick={() => toggleMessage(idx)}
+            onKeyDown={makeSystemKeyDownHandler(idx, toggleMessage)}
+          >
+            {bubbleContent}
+          </button>
+        ) : (
+          <div
+            key={`${msg.role}-${idx}`}
+            data-testid="message-bubble"
+            className={bubbleClass}
+          >
+            {bubbleContent}
           </div>
         );
       })}
@@ -314,34 +328,6 @@ function LogsSkeleton() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Empty State
-// ---------------------------------------------------------------------------
-
-interface LogsEmptyStateProps {
-  hasFilters: boolean;
-  onClearFilters: () => void;
-}
-
-function LogsEmptyState({ hasFilters, onClearFilters }: Readonly<LogsEmptyStateProps>) {
-  return (
-    <Card data-testid="empty-state">
-      <CardContent className="flex flex-col items-center justify-center p-8 text-center">
-        <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2">
-          description
-        </span>
-        <p className="text-sm text-muted-foreground mb-4">
-          {hasFilters ? 'No logs match your filters' : 'No logs recorded yet'}
-        </p>
-        {hasFilters && (
-          <Button variant="outline" onClick={onClearFilters}>
-            Clear filters
-          </Button>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Failed Job Card (BullMQ DLQ visibility)
@@ -409,6 +395,107 @@ function FailedJobCard({ job }: Readonly<{ job: FailedJob }>) {
 }
 
 // ---------------------------------------------------------------------------
+// Sub-renderers (extracted to reduce AgentLogsViewer cognitive complexity)
+// ---------------------------------------------------------------------------
+
+interface QueueFailuresContentProps {
+  jobs: FailedJob[];
+  hasMore: boolean;
+  onLoadMore: () => void;
+}
+
+function QueueFailuresContent({ jobs, hasMore, onLoadMore }: Readonly<QueueFailuresContentProps>) {
+  if (jobs.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-2">
+          <EmptyState entity="agents" phase="passive" className="py-4" />
+        </CardContent>
+      </Card>
+    );
+  }
+  return (
+    <>
+      <div className="space-y-3">
+        {jobs.map((job) => (
+          <FailedJobCard key={`${job.queue}-${job.id}`} job={job} />
+        ))}
+      </div>
+      {hasMore && (
+        <div className="flex justify-center">
+          <Button data-testid="load-more" variant="outline" onClick={onLoadMore}>
+            Load More
+          </Button>
+        </div>
+      )}
+    </>
+  );
+}
+
+interface AgentLogsContentProps {
+  logs: AgentLog[];
+  expandedLogIds: Set<string>;
+  onToggle: (id: string) => void;
+  hasMore: boolean;
+  onLoadMore: () => void;
+  hasFilters: boolean;
+  onClearFilters: () => void;
+}
+
+function AgentLogsContent({
+  logs,
+  expandedLogIds,
+  onToggle,
+  hasMore,
+  onLoadMore,
+  hasFilters,
+  onClearFilters,
+}: Readonly<AgentLogsContentProps>) {
+  if (logs.length === 0) {
+    return (
+      <div data-testid="empty-state">
+        <EmptyState entity="agents" variant={hasFilters ? 'filtered' : 'empty'} phase="passive" />
+        {hasFilters && (
+          <div className="flex justify-center mt-4">
+            <Button variant="outline" onClick={onClearFilters}>
+              Clear filters
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
+  return (
+    <>
+      <div className="space-y-3">
+        {logs.map((log) => (
+          <LogEntryCard
+            key={log.id}
+            log={log}
+            isExpanded={expandedLogIds.has(log.id)}
+            onToggle={() => onToggle(log.id)}
+          />
+        ))}
+      </div>
+      {hasMore && (
+        <div className="flex justify-center">
+          <Button data-testid="load-more" variant="outline" onClick={onLoadMore}>
+            Load More
+          </Button>
+        </div>
+      )}
+    </>
+  );
+}
+
+function getTotalLabel(isQueueFailuresView: boolean, activeTotal: number): string {
+  if (isQueueFailuresView) {
+    return activeTotal === 1 ? 'failed job' : 'failed jobs';
+  }
+  return activeTotal === 1 ? 'log' : 'logs';
+}
+
+// ---------------------------------------------------------------------------
 // Main Component
 // ---------------------------------------------------------------------------
 
@@ -464,24 +551,32 @@ export function AgentLogsViewer({ agentId }: Readonly<AgentLogsViewerProps>) {
     setOffset((prev) => prev + DEFAULT_LIMIT);
   }, []);
 
+  const handleClearFilters = useCallback(() => {
+    filterState.set('search', '');
+    filterState.set('toolStatus', '');
+  }, [filterState]);
+
+  const pageHeader = (
+    <PageHeader
+      breadcrumbs={BREADCRUMBS}
+      title="Agent Logs"
+      description="View AI agent conversation transcripts and tool call records"
+      actions={[{ label: 'Refresh', icon: 'refresh', variant: 'secondary', onClick: activeRefetch }]}
+    />
+  );
+
   // Error state
   if (activeError && !activeLoading) {
+    const errorMsg = isQueueFailuresView
+      ? 'Failed to load queue failures — Redis may be unavailable'
+      : 'Failed to load agent logs';
     return (
       <div className="flex flex-col gap-6">
-        <PageHeader
-          breadcrumbs={BREADCRUMBS}
-          title="Agent Logs"
-          description="View AI agent conversation transcripts and tool call records"
-          actions={[{ label: 'Refresh', icon: 'refresh', variant: 'secondary', onClick: activeRefetch }]}
-        />
+        {pageHeader}
         <Card data-testid="error-message">
           <CardContent className="flex flex-col items-center justify-center p-8 text-center">
             <span className="material-symbols-outlined text-4xl text-red-500 mb-2">error</span>
-            <p className="text-sm text-muted-foreground mb-4">
-              {isQueueFailuresView
-                ? 'Failed to load queue failures — Redis may be unavailable'
-                : 'Failed to load agent logs'}
-            </p>
+            <p className="text-sm text-muted-foreground mb-4">{errorMsg}</p>
             <Button data-testid="retry-button" onClick={activeRefetch} variant="outline">
               Try again
             </Button>
@@ -491,17 +586,11 @@ export function AgentLogsViewer({ agentId }: Readonly<AgentLogsViewerProps>) {
     );
   }
 
-  const hasFilters = filterState.values.search || filterState.values.toolStatus;
+  const hasFilters = !!(filterState.values.search || filterState.values.toolStatus);
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        breadcrumbs={BREADCRUMBS}
-        title="Agent Logs"
-        description="View AI agent conversation transcripts and tool call records"
-        actions={[{ label: 'Refresh', icon: 'refresh', variant: 'secondary', onClick: activeRefetch }]}
-      />
-
+      {pageHeader}
 
       {/* Filters */}
       <SearchFilterBar
@@ -540,75 +629,31 @@ export function AgentLogsViewer({ agentId }: Readonly<AgentLogsViewerProps>) {
       {/* Total count */}
       {!activeLoading && (
         <p className="text-sm text-muted-foreground">
-          {activeTotal} {isQueueFailuresView
-            ? (activeTotal === 1 ? 'failed job' : 'failed jobs')
-            : (activeTotal === 1 ? 'log' : 'logs')}{' '}
-          found
+          {activeTotal} {getTotalLabel(isQueueFailuresView, activeTotal)} found
         </p>
       )}
 
       {/* Loading */}
       {activeLoading && <LogsSkeleton />}
 
-      {/* Queue Failures view */}
-      {!activeLoading && isQueueFailuresView && failedJobs.jobs.length === 0 && (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center p-8 text-center">
-            <span className="material-symbols-outlined text-4xl text-green-500 mb-2">
-              check_circle
-            </span>
-            <p className="text-sm text-muted-foreground">No failed jobs in the queues</p>
-          </CardContent>
-        </Card>
-      )}
-      {!activeLoading && isQueueFailuresView && failedJobs.jobs.length > 0 && (
-        <>
-          <div className="space-y-3">
-            {failedJobs.jobs.map((job) => (
-              <FailedJobCard key={`${job.queue}-${job.id}`} job={job} />
-            ))}
-          </div>
-          {activeHasMore && (
-            <div className="flex justify-center">
-              <Button data-testid="load-more" variant="outline" onClick={handleLoadMore}>
-                Load More
-              </Button>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Agent Logs view */}
-      {!activeLoading && !isQueueFailuresView && logs.length === 0 && (
-        <LogsEmptyState
-          hasFilters={!!hasFilters}
-          onClearFilters={() => {
-            filterState.set('search', '');
-            filterState.set('toolStatus', '');
-          }}
+      {/* Content — queue failures or agent logs */}
+      {!activeLoading && isQueueFailuresView && (
+        <QueueFailuresContent
+          jobs={failedJobs.jobs}
+          hasMore={activeHasMore}
+          onLoadMore={handleLoadMore}
         />
       )}
-      {!activeLoading && !isQueueFailuresView && logs.length > 0 && (
-        <>
-          <div className="space-y-3">
-            {logs.map((log) => (
-              <LogEntryCard
-                key={log.id}
-                log={log}
-                isExpanded={expandedLogIds.has(log.id)}
-                onToggle={() => toggleExpand(log.id)}
-              />
-            ))}
-          </div>
-
-          {activeHasMore && (
-            <div className="flex justify-center">
-              <Button data-testid="load-more" variant="outline" onClick={handleLoadMore}>
-                Load More
-              </Button>
-            </div>
-          )}
-        </>
+      {!activeLoading && !isQueueFailuresView && (
+        <AgentLogsContent
+          logs={logs}
+          expandedLogIds={expandedLogIds}
+          onToggle={toggleExpand}
+          hasMore={activeHasMore}
+          onLoadMore={handleLoadMore}
+          hasFilters={hasFilters}
+          onClearFilters={handleClearFilters}
+        />
       )}
     </div>
   );

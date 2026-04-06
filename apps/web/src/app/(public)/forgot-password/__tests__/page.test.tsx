@@ -5,6 +5,7 @@
  */
 import { render, screen, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { metadata } from '../layout';
 
 // ============================================
 // Mocks
@@ -426,6 +427,31 @@ describe('ForgotPasswordPage (IFC-120)', () => {
       });
 
       expect(screen.getByText('Failed to resend. Please try again.')).toBeTruthy();
+    });
+  });
+
+  describe('Forgot Password Metadata', () => {
+    it('should have correct SEO metadata', () => {
+      expect(metadata.title).toBe('Forgot Password');
+      expect(metadata.description).toContain('IntelliFlow CRM');
+      expect(metadata.description).toContain('reset');
+    });
+
+    it('should have Open Graph metadata', () => {
+      expect(metadata.openGraph).toBeDefined();
+      expect(metadata.openGraph?.url).toBe('https://intelliflow-crm.com/forgot-password');
+      expect(metadata.openGraph?.siteName).toBe('IntelliFlow CRM');
+      expect((metadata.openGraph as Record<string, unknown>)?.type).toBe('website');
+    });
+
+    it('should have Twitter metadata', () => {
+      expect(metadata.twitter).toBeDefined();
+      expect((metadata.twitter as Record<string, unknown>)?.card).toBe('summary_large_image');
+      expect(metadata.twitter?.title).toBeDefined();
+    });
+
+    it('should have canonical URL', () => {
+      expect(metadata.alternates?.canonical).toBe('/forgot-password');
     });
   });
 });

@@ -16,6 +16,7 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
+import { EmptyState } from '@intelliflow/ui';
 import type { ScoreTrendPoint } from '@/lib/lead-scoring/types';
 
 interface LeadScoringTrendChartProps {
@@ -25,9 +26,9 @@ interface LeadScoringTrendChartProps {
 function LeadScoringTrendChart({ trends }: Readonly<LeadScoringTrendChartProps>) {
   if (trends.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground text-center py-8" data-testid="no-trends">
-        No trend data available
-      </p>
+      <div data-testid="no-trends">
+        <EmptyState entity="insights" phase="passive" className="py-4" />
+      </div>
     );
   }
 

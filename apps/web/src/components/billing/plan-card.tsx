@@ -56,6 +56,7 @@ interface BillingPlanCardProps {
   changeAllowed?: boolean;
   changeBlockedReason?: string;
   href?: string;
+  compact?: boolean;
 }
 
 export type PlanCardProps = PublicPlanCardProps | BillingPlanCardProps;
@@ -178,6 +179,7 @@ function BillingPlanCard({
   changeAllowed = true,
   changeBlockedReason,
   href,
+  compact = false,
 }: BillingPlanCardProps) {
   return (
     <Card
@@ -225,57 +227,67 @@ function BillingPlanCard({
           )}
         </div>
 
-        <ul className="space-y-2 pt-4 border-t border-slate-200 dark:border-slate-700">
-          {features.map((feature) => (
-            <li key={feature.name} className="flex items-start gap-2 text-sm">
-              <span
-                className={cn(
-                  'material-symbols-outlined text-lg mt-0.5',
-                  feature.included
-                    ? 'text-green-600 dark:text-green-400'
-                    : 'text-slate-300 dark:text-slate-600'
-                )}
-                aria-hidden="true"
-              >
-                {feature.included ? 'check_circle' : 'cancel'}
-              </span>
-              <span
-                className={cn(
-                  feature.included
-                    ? 'text-slate-700 dark:text-slate-300'
-                    : 'text-slate-400 dark:text-slate-500 line-through'
-                )}
-              >
-                {feature.name}
-              </span>
-            </li>
-          ))}
-        </ul>
+        {!compact && (
+          <ul className="space-y-2 pt-4 border-t border-slate-200 dark:border-slate-700">
+            {features.map((feature) => (
+              <li key={feature.name} className="flex items-start gap-2 text-sm">
+                <span
+                  className={cn(
+                    'material-symbols-outlined text-lg mt-0.5',
+                    feature.included
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-slate-300 dark:text-slate-600'
+                  )}
+                  aria-hidden="true"
+                >
+                  {feature.included ? 'check_circle' : 'cancel'}
+                </span>
+                <span
+                  className={cn(
+                    feature.included
+                      ? 'text-slate-700 dark:text-slate-300'
+                      : 'text-slate-400 dark:text-slate-500 line-through'
+                  )}
+                >
+                  {feature.name}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </CardContent>
 
       <CardFooter className="pt-4">
-        {isCurrent ? (
-          <Button className="w-full" disabled aria-label="Current Plan">
-            Current Plan
-          </Button>
-        ) : changeAllowed && href ? (
-          <Button
-            className="w-full"
-            variant={direction === 'upgrade' ? 'default' : 'outline'}
-            asChild
-          >
-            <Link href={href}>
-              <span className="material-symbols-outlined text-lg mr-1" aria-hidden="true">
-                {directionIcon}
-              </span>
+        {(() => {
+          if (isCurrent) {
+            return (
+              <Button className="w-full" disabled aria-label="Current Plan">
+                Current Plan
+              </Button>
+            );
+          }
+          if (changeAllowed && href) {
+            return (
+              <Button
+                className="w-full"
+                variant={direction === 'upgrade' ? 'default' : 'outline'}
+                asChild
+              >
+                <Link href={href}>
+                  <span className="material-symbols-outlined text-lg mr-1" aria-hidden="true">
+                    {directionIcon}
+                  </span>
+                  {directionLabel}
+                </Link>
+              </Button>
+            );
+          }
+          return (
+            <Button className="w-full" disabled title={changeBlockedReason}>
               {directionLabel}
-            </Link>
-          </Button>
-        ) : (
-          <Button className="w-full" disabled title={changeBlockedReason}>
-            {directionLabel}
-          </Button>
-        )}
+            </Button>
+          );
+        })()}
       </CardFooter>
     </Card>
   );

@@ -15,6 +15,7 @@ import {
   CardTitle,
   Badge,
   Button,
+  EmptyState,
   Skeleton,
   cn,
 } from '@intelliflow/ui';
@@ -338,17 +339,9 @@ export function ChurnDashboard() {
     );
   } else if (filteredCustomers.length === 0) {
     customerListContent = (
-      <Card>
-        <CardContent className="p-8 text-center" data-testid="empty-state">
-          <span
-            className="material-symbols-outlined text-4xl text-muted-foreground mb-2"
-            aria-hidden="true"
-          >
-            shield
-          </span>
-          <p className="text-sm text-muted-foreground">No churn risk data available</p>
-        </CardContent>
-      </Card>
+      <div data-testid="empty-state">
+        <EmptyState entity="insights" phase="passive" />
+      </div>
     );
   } else {
     customerListContent = (
@@ -417,11 +410,8 @@ export function ChurnDashboard() {
 
       {/* Date Range + SearchFilterBar */}
       <div className="flex flex-col gap-3">
-        <div
-          className="flex items-center gap-2"
-          role="group" // NOSONAR typescript:S6819 — ARIA group for date-range filter buttons; <fieldset> requires <legend> and changes layout
-          aria-label="Date range"
-        >
+        <fieldset className="contents flex items-center gap-2">
+          <legend className="sr-only">Date range</legend>
           {DATE_RANGES.map((dr) => (
             <Button
               key={dr}
@@ -432,7 +422,7 @@ export function ChurnDashboard() {
               {dr}
             </Button>
           ))}
-        </div>
+        </fieldset>
 
         <SearchFilterBar
           searchValue={filterState.values.search}

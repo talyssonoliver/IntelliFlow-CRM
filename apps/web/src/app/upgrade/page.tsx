@@ -26,11 +26,71 @@ import {
   CRM_MODULES,
 } from '@intelliflow/domain';
 import { trpc } from '@/lib/trpc';
-import { useAuth } from '@/lib/auth/AuthContext';
+import { useAuth, useRequireAuth } from '@/lib/auth/AuthContext';
 import { useEnabledModules } from '@/hooks/useEnabledModules';
-import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { PublicFooter } from '@/components/public/PublicFooter';
 import pricingData from '@/data/pricing-data.json';
+
+/** Derive the Card border/shadow className for a pricing tier card. */
+function getTierCardClassName(isRequired: boolean, isCurrentPlan: boolean): string {
+  if (isRequired) {
+    return 'border-2 border-primary shadow-lg ring-2 ring-primary/10';
+  }
+  if (isCurrentPlan) {
+    return 'border-2 border-slate-300 dark:border-slate-600';
+  }
+  return 'border hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md';
+}
+
+interface TierCtaProps {
+  isCurrentPlan: boolean;
+  isAdmin: boolean;
+  isRequired: boolean;
+  meetsRequirement: boolean | null | undefined;
+  tierName: string;
+}
+
+/** CTA button rendered at the bottom of each pricing tier card. */
+function TierCta({ isCurrentPlan, isAdmin, isRequired, meetsRequirement, tierName }: TierCtaProps) {
+  if (isCurrentPlan) {
+    return (
+      <Button variant="outline" disabled className="w-full">
+        Current Plan
+      </Button>
+    );
+  }
+
+  if (isAdmin) {
+    return (
+      <Button
+        asChild
+        className={cn(
+          'w-full',
+          (isRequired || (meetsRequirement && !isCurrentPlan))
+            ? 'bg-primary hover:bg-primary/90'
+            : ''
+        )}
+        variant={isRequired || meetsRequirement ? 'default' : 'outline'}
+      >
+        <Link href="/billing/subscriptions">
+          {isRequired ? 'Upgrade Now' : `Select ${tierName}`}
+        </Link>
+      </Button>
+    );
+  }
+
+  return (
+    <Button
+      asChild
+      className="w-full"
+      variant={isRequired || meetsRequirement ? 'default' : 'outline'}
+    >
+      <Link href="/billing/subscriptions">
+        View Plan
+      </Link>
+    </Button>
+  );
+}
 
 /** Plan tier display labels */
 const PLAN_LABELS: Record<string, string> = {
@@ -188,11 +248,7 @@ function UpgradePageContent() {
                 key={tier.id}
                 className={cn(
                   'relative p-6 flex flex-col transition-all',
-                  isRequired
-                    ? 'border-2 border-primary shadow-lg ring-2 ring-primary/10'
-                    : isCurrentPlan
-                      ? 'border-2 border-slate-300 dark:border-slate-600'
-                      : 'border hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md'
+                  getTierCardClassName(isRequired, isCurrentPlan)
                 )}
               >
                 {/* Badges */}
@@ -301,36 +357,13 @@ function UpgradePageContent() {
                 </ul>
 
                 {/* CTA */}
-                {isCurrentPlan ? (
-                  <Button variant="outline" disabled className="w-full">
-                    Current Plan
-                  </Button>
-                ) : isAdmin ? (
-                  <Button
-                    asChild
-                    className={cn(
-                      'w-full',
-                      (isRequired || (meetsRequirement && !isCurrentPlan))
-                        ? 'bg-primary hover:bg-primary/90'
-                        : ''
-                    )}
-                    variant={isRequired || meetsRequirement ? 'default' : 'outline'}
-                  >
-                    <Link href="/billing/subscriptions">
-                      {isRequired ? 'Upgrade Now' : `Select ${tier.name}`}
-                    </Link>
-                  </Button>
-                ) : (
-                  <Button
-                    asChild
-                    className="w-full"
-                    variant={isRequired || meetsRequirement ? 'default' : 'outline'}
-                  >
-                    <Link href="/billing/subscriptions">
-                      View Plan
-                    </Link>
-                  </Button>
-                )}
+                <TierCta
+                  isCurrentPlan={isCurrentPlan}
+                  isAdmin={isAdmin}
+                  isRequired={isRequired}
+                  meetsRequirement={meetsRequirement}
+                  tierName={tier.name}
+                />
               </Card>
             );
           })}
@@ -426,7 +459,7 @@ function UpgradePageContent() {
                 <Link href="/billing/subscriptions">
                   <span className="material-symbols-outlined text-lg mr-2" aria-hidden="true">
                     credit_card
-                  </span>
+                  </span>{' '}
                   Manage Subscription
                 </Link>
               </Button>
@@ -435,7 +468,7 @@ function UpgradePageContent() {
               <Link href="/pricing">
                 <span className="material-symbols-outlined text-lg mr-2" aria-hidden="true">
                   compare
-                </span>
+                </span>{' '}
                 Full Plan Comparison
               </Link>
             </Button>

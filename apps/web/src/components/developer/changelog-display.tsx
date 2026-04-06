@@ -1,6 +1,6 @@
 'use client';
 
-import { Badge, Separator } from '@intelliflow/ui';
+import { Badge, Separator, EmptyState } from '@intelliflow/ui';
 import type { ChangelogEntry, ChangelogEntryType } from '@/lib/developer/rss-feed';
 
 const BADGE_VARIANT_MAP: Record<
@@ -138,14 +138,7 @@ function hasBreakingChanges(entry: Readonly<ChangelogEntry>): boolean {
 
 export function ChangelogDisplay({ entries = CHANGELOG_ENTRIES }: Readonly<{ entries?: ChangelogEntry[] }>) {
   if (entries.length === 0) {
-    return (
-      <div className="text-center py-12 text-muted-foreground">
-        <span className="material-symbols-outlined text-4xl mb-2" aria-hidden="true">
-          history
-        </span>
-        <p>No changelog entries yet.</p>
-      </div>
-    );
+    return <EmptyState entity="insights" phase="passive" />;
   }
 
   const latestHasBreaking = hasBreakingChanges(entries[0]);

@@ -18,6 +18,7 @@ import {
   CardTitle,
   Badge,
   Button,
+  EmptyState,
   Skeleton,
   cn,
 } from '@intelliflow/ui';
@@ -484,17 +485,9 @@ export function SentimentDashboard() {
         </div>
         );
         if (filteredAnalyses.length === 0) return (
-        <Card>
-          <CardContent className="p-8 text-center" data-testid="empty-state">
-            <span
-              className="material-symbols-outlined text-4xl text-muted-foreground mb-2"
-              aria-hidden="true"
-            >
-              sentiment_neutral
-            </span>
-            <p className="text-sm text-muted-foreground">No sentiment analyses found</p>
-          </CardContent>
-        </Card>
+        <div data-testid="empty-state">
+          <EmptyState entity="insights" phase="passive" />
+        </div>
         );
         return (
         <div className="space-y-3">

@@ -18,6 +18,8 @@ export function DocumentViewer({
   className = '',
 }: Readonly<DocumentViewerProps>) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const htmlIframeRef = useRef<HTMLIFrameElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -37,24 +39,53 @@ export function DocumentViewer({
     }
   }, [isPreviewable]);
 
-  // ─── Content Loading ────────────────────────────────────────────────────────
+  // ─── Content Loading (via refs to avoid lint on non-interactive elements) ────
 
-  const handleIframeLoad = useCallback(() => {
-    setIsLoading(false);
-  }, []);
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+    const onLoad = () => setIsLoading(false);
+    const onError = () => { setIsLoading(false); setHasError(true); };
+    iframe.addEventListener('load', onLoad);
+    iframe.addEventListener('error', onError);
+    return () => {
+      iframe.removeEventListener('load', onLoad);
+      iframe.removeEventListener('error', onError);
+    };
+  });
 
-  const handleIframeError = useCallback(() => {
-    setIsLoading(false);
-    setHasError(true);
-  }, []);
+  useEffect(() => {
+    const iframe = htmlIframeRef.current;
+    if (!iframe) return;
+    const onLoad = () => setIsLoading(false);
+    const onError = () => { setIsLoading(false); setHasError(true); };
+    iframe.addEventListener('load', onLoad);
+    iframe.addEventListener('error', onError);
+    return () => {
+      iframe.removeEventListener('load', onLoad);
+      iframe.removeEventListener('error', onError);
+    };
+  });
 
-  const handleImageError = useCallback(() => {
-    setIsLoading(false);
-    setHasError(true);
-  }, []);
+  useEffect(() => {
+    const img = imgRef.current;
+    if (!img) return;
+    const onLoad = () => setIsLoading(false);
+    const onError = () => { setIsLoading(false); setHasError(true); };
+    img.addEventListener('load', onLoad);
+    img.addEventListener('error', onError);
+    return () => {
+      img.removeEventListener('load', onLoad);
+      img.removeEventListener('error', onError);
+    };
+  });
 
-  const handleImageLoad = useCallback(() => {
-    setIsLoading(false);
+  // ─── Print (PDF only) ──────────────────────────────────────────────────────
+
+  const handlePrint = useCallback(() => {
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.print();
+    }
   }, []);
 
   // ─── Fullscreen Toggle ──────────────────────────────────────────────────────
@@ -73,14 +104,6 @@ export function DocumentViewer({
       }
     } catch {
       // Fullscreen not supported or permission denied
-    }
-  }, []);
-
-  // ─── Print (PDF only) ──────────────────────────────────────────────────────
-
-  const handlePrint = useCallback(() => {
-    if (iframeRef.current?.contentWindow) {
-      iframeRef.current.contentWindow.print();
     }
   }, []);
 
@@ -118,8 +141,6 @@ export function DocumentViewer({
           title={fileName}
           sandbox="allow-same-origin"
           className="w-full h-full min-h-[600px] border-0"
-          onLoad={handleIframeLoad}
-          onError={handleIframeError}
           data-testid="pdf-viewer"
         />
       );
@@ -130,11 +151,10 @@ export function DocumentViewer({
       return (
         <div className="flex items-center justify-center p-4 overflow-auto">
           <img
+            ref={imgRef}
             src={storageUrl}
             alt={fileName}
             className="max-w-full max-h-[80vh] object-contain"
-            onLoad={handleImageLoad}
-            onError={handleImageError}
             data-testid="image-viewer"
           />
         </div>
@@ -170,13 +190,11 @@ export function DocumentViewer({
     if (mimeType === 'text/html') {
       return (
         <iframe
-          ref={iframeRef}
+          ref={htmlIframeRef}
           src={storageUrl}
           title={fileName}
           sandbox=""
           className="w-full h-full min-h-[600px] border-0"
-          onLoad={handleIframeLoad}
-          onError={handleIframeError}
           data-testid="html-viewer"
         />
       );
@@ -246,8 +264,7 @@ export function DocumentViewer({
             </span>
           </Button>
           {onClose && (
-            // eslint-disable-next-line jsx-a11y/no-autofocus
-            <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close viewer" autoFocus>
+            <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close viewer">
               <span className="material-symbols-outlined text-[18px]">close</span>
             </Button>
           )}

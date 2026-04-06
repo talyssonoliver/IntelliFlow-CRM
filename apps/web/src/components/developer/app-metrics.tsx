@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardContent, CardHeader } from '@intelliflow/ui';
+import { Card, CardContent, CardHeader, EmptyState } from '@intelliflow/ui';
 import type { DeveloperApp } from '@/lib/developer/demo-data';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
@@ -24,7 +24,7 @@ function generateDailyBreakdown(baseCalls: number, days: number): DailyApiUsage[
   const today = new Date('2026-02-24');
   for (let i = days - 1; i >= 0; i--) {
     const date = new Date(today);
-    date.setDate(date.getDate() - i);
+    date.setUTCDate(date.getUTCDate() - i);
     const variation = 0.7 + Math.sin(i * 0.5) * 0.3;
     const calls = Math.round((baseCalls / days) * variation);
     breakdown.push({
@@ -76,18 +76,7 @@ export function AppMetrics({ app }: Readonly<AppMetricsProps>) {
     return (
       <Card>
         <CardContent className="pt-6">
-          <div className="text-center py-8">
-            <span
-              className="material-symbols-outlined text-4xl text-muted-foreground"
-              aria-hidden="true"
-            >
-              analytics
-            </span>
-            <p className="text-sm text-muted-foreground mt-2">No usage data available.</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Generate an API key and start making requests to see metrics here.
-            </p>
-          </div>
+          <EmptyState entity="insights" phase="passive" />
         </CardContent>
       </Card>
     );
@@ -115,7 +104,7 @@ export function AppMetrics({ app }: Readonly<AppMetricsProps>) {
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
               Total API Calls
             </p>
-            <p className="text-2xl font-bold mt-1">{usage.totalCallsThisMonth.toLocaleString()}</p>
+            <p className="text-2xl font-bold mt-1">{usage.totalCallsThisMonth.toLocaleString('en-GB')}</p>
             {monthChange !== 0 && (
               <p className={`text-xs mt-1 ${monthChange > 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {monthChange > 0 ? '+' : ''}
@@ -159,7 +148,6 @@ export function AppMetrics({ app }: Readonly<AppMetricsProps>) {
           <CardContent>
             <div
               className="flex items-end gap-0.5 h-32"
-              role="img" // NOSONAR typescript:S6819 — SVG-less chart built from divs; <img> cannot contain dynamic bar elements
               aria-label="Daily API calls chart"
             >
               {usage.dailyBreakdown.map((day) => {
@@ -191,7 +179,6 @@ export function AppMetrics({ app }: Readonly<AppMetricsProps>) {
           <CardContent>
             <div
               className="flex h-4 rounded overflow-hidden"
-              role="img" // NOSONAR typescript:S6819 — segmented bar chart built from divs; <img> cannot contain dynamic segment elements
               aria-label="Error breakdown by category"
             >
               {errorBreakdown.map((segment) => (
@@ -240,7 +227,7 @@ export function AppMetrics({ app }: Readonly<AppMetricsProps>) {
                       {Math.round(
                         usage.totalCallsThisMonth *
                           (idx === 0 ? 0.65 : 0.35 / Math.max(app.apiKeys.length - 1, 1))
-                      ).toLocaleString()}
+                      ).toLocaleString('en-GB')}
                     </td>
                     <td className="py-2 px-3 text-muted-foreground">
                       {key.lastUsed ? new Date(key.lastUsed).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone }) : 'Never'}

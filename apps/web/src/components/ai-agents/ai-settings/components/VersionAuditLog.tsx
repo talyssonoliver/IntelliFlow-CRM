@@ -27,6 +27,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  EmptyState,
 } from '@intelliflow/ui';
 import type { ChainVersionAuditAction } from '@intelliflow/domain';
 import { CHAIN_VERSION_AUDIT_ACTIONS } from '@intelliflow/domain';
@@ -112,12 +113,7 @@ export function VersionAuditLog({ auditLog, isLoading }: Readonly<VersionAuditLo
       </div>
 
       {filteredLog.length === 0 ? (
-        <div className="py-12 text-center text-muted-foreground">
-          <p>No audit entries found</p>
-          {actionFilter !== 'all' && (
-            <p className="text-sm mt-1">Try selecting a different action filter</p>
-          )}
-        </div>
+        <EmptyState entity="insights" variant="filtered" phase="passive" />
       ) : (
         <>
           <Table>

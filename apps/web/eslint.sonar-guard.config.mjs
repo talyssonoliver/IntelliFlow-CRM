@@ -8,6 +8,14 @@ export default [
     plugins: {
       react: reactPlugin,
     },
+    languageOptions: {
+      parserOptions: {
+        // Disable type-aware linting for the sonar guard — these a11y and
+        // spacing rules don't need TypeScript project service, and loading
+        // the full TS program causes OOM on large file sets.
+        projectService: false,
+      },
+    },
     rules: {
       // Sonar accessibility parity for new code in web UI.
       'jsx-a11y/prefer-tag-over-role': 'error',

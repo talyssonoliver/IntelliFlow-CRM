@@ -66,9 +66,3 @@ export function createTasksSettingsSidebarConfig(
     sections: VIEW_SECTIONS,
   };
 }
-
-/** @deprecated Use createTasksSidebarConfig(onSettingsClick) instead */
-export const tasksSidebarConfig: SidebarConfig = {
-  ...createTasksSidebarConfig(() => {}),
-  settingsHref: '/settings/tasks',
-};

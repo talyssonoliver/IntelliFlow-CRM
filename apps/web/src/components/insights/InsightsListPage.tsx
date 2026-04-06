@@ -12,7 +12,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { Card } from '@intelliflow/ui';
+import { Card, EmptyState } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { InsightCard, type SerializedAIInsight } from './InsightCard';
 import { InsightTypeBadge } from './InsightTypeBadge';
@@ -54,19 +54,11 @@ function InsightsLoadingState() {
 function InsightsEmptyState({ selectedType }: Readonly<{ selectedType: string | null }>) {
   return (
     <Card className="p-12">
-      <div className="flex flex-col items-center justify-center text-center">
-        <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
-          <Icon name="lightbulb" className="text-3xl text-slate-400" />
-        </div>
-        <h2 className="text-lg font-medium text-slate-900 dark:text-white mb-1">
-          No insights found
-        </h2>
-        <p className="text-slate-500 dark:text-slate-400 max-w-sm">
-          {selectedType
-            ? `No ${selectedType} insights at this time. Try a different filter.`
-            : 'No AI insights at this time. Check back later.'}
-        </p>
-      </div>
+      <EmptyState
+        entity="insights"
+        variant={selectedType ? 'filtered' : 'empty'}
+        phase="passive"
+      />
     </Card>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useParams, notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Card, CardContent } from '@intelliflow/ui';
+import { Card, CardContent, EmptyState } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared/page-header';
 import { ArticleRenderer } from '@/components/support/article-renderer';
 import { FeedbackWidget } from '@/components/support/feedback-widget';
@@ -132,15 +132,7 @@ function CategoryListingView({
         />
 
         {articles.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <span
-              className="material-symbols-outlined text-4xl text-muted-foreground mb-3"
-              aria-hidden="true"
-            >
-              article
-            </span>
-            <p className="text-muted-foreground text-sm">No articles in this category yet.</p>
-          </div>
+          <EmptyState entity="documents" phase="passive" />
         ) : (
           <ul className="grid gap-4 list-none p-0">
             {articles.map((article) => {

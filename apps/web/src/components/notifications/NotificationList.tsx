@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 
+import { EmptyState } from '@intelliflow/ui';
 import { NotificationItem } from './NotificationItem';
 import { NotificationItemSkeleton } from './NotificationItemSkeleton';
 import { useNotificationFeed } from './hooks/useNotificationFeed';
@@ -85,22 +86,12 @@ export function NotificationList({ filters, onMarkAsRead, onDismiss }: Readonly<
   // Empty state
   if (items.length === 0) {
     return (
-      <div
-        id="notification-list"
-        className="flex flex-col items-center justify-center py-16 text-center"
-      >
-        <span
-          className="material-symbols-outlined text-slate-300 dark:text-slate-600 mb-4"
-          style={{ fontSize: '64px' }}
-        >
-          notifications_off
-        </span>
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">
-          No notifications
-        </h3>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          {hasActiveFilters ? 'No notifications match your filters.' : "You're all caught up!"}
-        </p>
+      <div id="notification-list">
+        <EmptyState
+          entity="notifications"
+          variant={hasActiveFilters ? 'filtered' : 'empty'}
+          phase="passive"
+        />
       </div>
     );
   }

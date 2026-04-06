@@ -14,7 +14,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Skeleton, cn } from '@intelliflow/ui';
+import { Skeleton, cn, EmptyState } from '@intelliflow/ui';
 import {
   getStatusConfig,
   getPriorityConfig,
@@ -488,12 +488,7 @@ export function CaseDetail({
                           </p>
                         </div>
                       )}
-                      <div className="py-8 text-center text-sm text-muted-foreground">
-                        <span className="material-symbols-outlined text-3xl mb-2 block">
-                          timeline
-                        </span>
-                        {' '}No timeline entries yet. Log an activity above to get started.
-                      </div>
+                      <EmptyState entity="timeline" phase="passive" />
                     </div>
                   )}
                 </div>

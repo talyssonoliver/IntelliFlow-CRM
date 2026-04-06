@@ -1,6 +1,3 @@
-// Main header components
-export { PublicHeader } from './PublicHeader';
-
 // Sub-components
 export { Logo } from './logo';
 export { SearchBar } from './search-bar';

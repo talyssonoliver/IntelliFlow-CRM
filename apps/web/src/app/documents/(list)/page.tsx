@@ -495,6 +495,7 @@ export default function DocumentsPage() {
         <DataTable
           columns={columns}
           data={filteredDocuments}
+          entity="documents"
           emptyMessage={searchQuery ? 'No documents match your search' : 'No documents found'}
           emptyIcon="description"
           onRowClick={handleRowClick}

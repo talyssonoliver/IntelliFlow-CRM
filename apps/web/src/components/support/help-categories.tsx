@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle, Badge } from '@intelliflow/ui';
+import { Card, CardContent, CardHeader, CardTitle, Badge, EmptyState } from '@intelliflow/ui';
 import type { HelpCategory } from '@/lib/support/help-categories';
 
 export interface HelpCategoriesProps {
@@ -10,15 +10,7 @@ export interface HelpCategoriesProps {
 
 export function HelpCategories({ categories }: Readonly<HelpCategoriesProps>) {
   if (categories.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <span className="material-symbols-outlined text-4xl text-muted-foreground mb-3" aria-hidden="true">
-          search_off
-        </span>
-        <p className="text-muted-foreground text-lg">No results found</p>
-        <p className="text-muted-foreground text-sm mt-1">Try adjusting your search terms</p>
-      </div>
-    );
+    return <EmptyState entity="search" phase="passive" />;
   }
 
   const sorted = [...categories].sort((a, b) => {

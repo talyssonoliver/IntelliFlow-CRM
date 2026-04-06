@@ -13,6 +13,7 @@
 
 import { useRef, useCallback, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { EmptyState } from '@intelliflow/ui';
 import { useActivityFeed, type UseActivityFeedOptions } from '@/hooks/useActivityFeed';
 import { ActivityFeedItem, type ActivityFeedItemProps } from './ActivityFeedItem';
 
@@ -172,10 +173,12 @@ export function ActivityFeed(props: Readonly<ActivityFeedProps>) {
   // Empty state
   if (items.length === 0) {
     return (
-      <div className={`p-8 text-center text-slate-500 dark:text-slate-400 ${className}`}>
-        <span className="material-symbols-outlined text-4xl mb-2 block">inbox</span>
-        <p>{emptyMessage}</p>
-      </div>
+      <EmptyState
+        entity="activity"
+        phase="passive"
+        description={emptyMessage}
+        className={className}
+      />
     );
   }
 

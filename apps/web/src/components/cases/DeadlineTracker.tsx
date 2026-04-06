@@ -7,7 +7,7 @@
  */
 
 import { useState } from 'react';
-import { cn } from '@intelliflow/ui';
+import { cn, EmptyState } from '@intelliflow/ui';
 import { parseDateInputValue } from '@/lib/shared/timezone-utils';
 import { getTaskStatusConfig, formatDeadline } from '@/lib/cases/case-utils';
 import type { CaseTaskItem } from './types';
@@ -84,7 +84,7 @@ export function DeadlineTracker({
 
       {/* Task List */}
       {sortedTasks.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-4 text-center">No tasks yet</p>
+        <EmptyState entity="tasks" phase="passive" className="py-2" />
       ) : (
         <ul className="space-y-2 mb-4">
           {sortedTasks.map((task) => {
@@ -150,8 +150,6 @@ export function DeadlineTracker({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Task title..."
               className="w-full px-3 py-1.5 text-sm border rounded-md bg-background"
-              // eslint-disable-next-line jsx-a11y/no-autofocus
-              autoFocus
               aria-label="Task title"
             />
             <input

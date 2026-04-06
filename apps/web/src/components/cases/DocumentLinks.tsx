@@ -7,7 +7,7 @@
  * Fetches documents via tRPC `api.documents.list` filtered by caseId.
  */
 
-import { Skeleton, cn } from '@intelliflow/ui';
+import { Skeleton, cn, EmptyState } from '@intelliflow/ui';
 import { api } from '@/lib/api';
 
 interface DocumentLinksProps {
@@ -98,13 +98,7 @@ export function DocumentLinks({ caseId }: Readonly<DocumentLinksProps>) {
     | undefined;
 
   if (!documents || documents.length === 0) {
-    return (
-      <div className="py-8 text-center text-sm text-muted-foreground">
-        <span className="material-symbols-outlined text-3xl mb-2 block">description</span>
-        <p>No documents attached to this case yet.</p>
-        <p className="text-xs mt-1">Upload or link documents from the Documents page.</p>
-      </div>
-    );
+    return <EmptyState entity="documents" phase="passive" />;
   }
 
   return (

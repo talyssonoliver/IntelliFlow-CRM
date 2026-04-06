@@ -34,6 +34,7 @@ import {
   type ChurnRiskLevel,
   type NBAActionType,
   type NBAPriority,
+  EmptyState,
 } from '@intelliflow/ui';
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
@@ -479,7 +480,1877 @@ function SourceBadge({ source }: Readonly<{ source: LeadSource }>) {
   );
 }
 
-export default function Lead360Page() { // NOSONAR typescript:S3776
+// --- Pure helpers moved to module level to reduce Lead360Page cognitive complexity ---
+
+function getTemperature(score: number): LeadTemperature {
+  if (score >= 70) return 'hot';
+  if (score >= 40) return 'warm';
+  return 'cold';
+}
+
+function getOwnerTitle(role: string | undefined): string {
+  const roleMap: Record<string, string> = {
+    SALES_REP: 'Sales Representative',
+    MANAGER: 'Manager',
+    ADMIN: 'Administrator',
+    USER: 'Team Member',
+  };
+  return roleMap[role || ''] || 'Team Member';
+}
+
+function formatDate(dateString: string, timezone: string): string {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    timeZone: timezone,
+  });
+}
+
+function getActivityIcon(type: Readonly<ActivityType>): string {
+  const icons: Record<ActivityType, string> = {
+    web_form: 'web',
+    score_update: 'psychology',
+    email: 'mail',
+    call: 'call',
+    note: 'edit_note',
+    meeting: 'event',
+    status_change: 'person_add',
+    qualification: 'verified',
+  };
+  return icons[type];
+}
+
+function getActivityIconBg(type: Readonly<ActivityType>): string {
+  const colors: Record<ActivityType, string> = {
+    web_form: 'bg-blue-100 dark:bg-slate-800 text-blue-600',
+    score_update: 'bg-purple-100 dark:bg-slate-800 text-purple-600',
+    email: 'bg-orange-100 dark:bg-slate-800 text-orange-600',
+    call: 'bg-green-100 dark:bg-slate-800 text-green-600',
+    note: 'bg-amber-100 dark:bg-slate-800 text-amber-600',
+    meeting: 'bg-indigo-100 dark:bg-slate-800 text-indigo-600',
+    status_change: 'bg-slate-100 dark:bg-slate-800 text-slate-500',
+    qualification: 'bg-teal-100 dark:bg-slate-800 text-teal-600',
+  };
+  return colors[type];
+}
+
+function getSentimentTrendStyle(trend?: string): string {
+  switch (trend) {
+    case 'improving':
+      return 'text-green-600';
+    case 'declining':
+      return 'text-red-600';
+    default:
+      return 'text-slate-600';
+  }
+}
+
+// ─── Sub-components extracted to reduce cognitive complexity ─────────────────
+
+function LeadLoadingSkeleton() {
+  return (
+    <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
+      <div className="mb-6">
+        <Skeleton className="h-4 w-48 mb-2" />
+        <Skeleton className="h-8 w-64" />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Profile card skeleton */}
+        <div className="lg:col-span-3">
+          <Card className="p-6">
+            <div className="flex flex-col items-center text-center gap-3 mb-4">
+              <Skeleton className="h-16 w-16 rounded-full" />
+              <Skeleton className="h-5 w-36" />
+              <Skeleton className="h-4 w-28" />
+            </div>
+            <div className="mt-3">
+              <div className="flex justify-between mb-1.5">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-3 w-8" />
+              </div>
+              <Skeleton className="h-2 w-full rounded-full" />
+            </div>
+          </Card>
+        </div>
+        {/* Tabs + content skeleton */}
+        <div className="lg:col-span-6">
+          <Card className="p-6">
+            <div className="flex gap-4 mb-6 border-b pb-3">
+              <Skeleton className="h-5 w-20" />
+              <Skeleton className="h-5 w-20" />
+              <Skeleton className="h-5 w-20" />
+            </div>
+            <Skeleton className="h-32 w-full mb-4 rounded-lg" />
+            <Skeleton className="h-32 w-full rounded-lg" />
+          </Card>
+        </div>
+        {/* Sidebar skeleton */}
+        <div className="lg:col-span-3 flex flex-col gap-4">
+          <Card className="p-5">
+            <Skeleton className="h-5 w-20 mb-4" />
+            <Skeleton className="h-2 w-full rounded-full mb-2" />
+            <Skeleton className="h-4 w-3/4 mb-4" />
+            <Skeleton className="h-2 w-full rounded-full" />
+          </Card>
+          <Card className="p-5">
+            <Skeleton className="h-5 w-16 mb-3" />
+            <Skeleton className="h-10 w-full rounded mb-2" />
+            <Skeleton className="h-10 w-full rounded" />
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LeadAuthRedirect() {
+  return (
+    <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
+      <Card className="p-8 text-center">
+        <span className="material-symbols-outlined text-5xl text-slate-400 mb-4 animate-spin">
+          progress_activity
+        </span>
+        <p className="text-slate-500 dark:text-slate-400">Redirecting to login...</p>
+      </Card>
+    </div>
+  );
+}
+
+function LeadErrorView({
+  errorIcon,
+  errorTitle,
+  errorMessage,
+  isServerError,
+  fromInsight,
+}: {
+  errorIcon: string;
+  errorTitle: string;
+  errorMessage: string;
+  isServerError: boolean;
+  fromInsight: boolean;
+}) {
+  return (
+    <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
+      <Card className="p-8 text-center">
+        <span className="material-symbols-outlined text-5xl text-red-500 mb-4">
+          {errorIcon}
+        </span>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+          {errorTitle}
+        </h2>
+        <p className="text-slate-500 dark:text-slate-400 mb-4">
+          {errorMessage}
+        </p>
+        <div className="flex items-center justify-center gap-3">
+          {isServerError && (
+            <button
+              onClick={() => globalThis.location.reload()}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              <span className="material-symbols-outlined !text-lg">refresh</span>{' '}Retry
+            </button>
+          )}
+          {fromInsight && (
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              <span className="material-symbols-outlined !text-lg">home</span>{' '}Back to Home
+            </Link>
+          )}
+          <Link
+            href="/leads"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            <span className="material-symbols-outlined !text-lg">arrow_back</span>{' '}Back to Leads
+          </Link>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+type LeadDialogsLead = { id: string; firstName: string; lastName: string; company: string };
+
+function LeadConvertButton({
+  lead,
+  convertMutation,
+  onOpenConvert,
+}: {
+  lead: LeadDialogsLead & { status: string };
+  convertMutation: { isPending: boolean };
+  onOpenConvert: () => void;
+}) {
+  if (lead.status === 'CONVERTED') return null;
+  const isConvertible = lead.status === 'QUALIFIED';
+  let convertTooltipText: string;
+  if (lead.status === 'LOST') {
+    convertTooltipText = 'Lost leads cannot be converted. Reopen the lead first.';
+  } else if (lead.status === 'UNQUALIFIED') {
+    convertTooltipText = 'Disqualified leads cannot be converted.';
+  } else if (lead.status === 'NEGOTIATING') {
+    convertTooltipText = 'Lead is in negotiation. Qualify the lead first to convert.';
+  } else {
+    convertTooltipText = 'Lead must be qualified before conversion.';
+  }
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span
+            tabIndex={isConvertible ? undefined : 0}
+            aria-label={isConvertible ? undefined : convertTooltipText}
+          >
+            <button
+              onClick={onOpenConvert}
+              disabled={!isConvertible || convertMutation.isPending}
+              className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+            >
+              <span className="material-symbols-outlined !text-[18px]">transform</span>{' '}
+              {convertMutation.isPending ? 'Converting...' : 'Convert Lead'}
+            </button>
+          </span>
+        </TooltipTrigger>
+        {!isConvertible && (
+          <TooltipContent>
+            <p>{convertTooltipText}</p>
+          </TooltipContent>
+        )}
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+function LeadDialogs({
+  lead,
+  deleteConfirmOpen,
+  setDeleteConfirmOpen,
+  deleteMutation,
+  archiveConfirmOpen,
+  setArchiveConfirmOpen,
+  archiveMutation,
+  convertConfirmOpen,
+  setConvertConfirmOpen,
+  convertMutation,
+  convertCreateAccount,
+  setConvertCreateAccount,
+  convertAccountName,
+  setConvertAccountName,
+  logCallOpen,
+  setLogCallOpen,
+  logCallTitle,
+  setLogCallTitle,
+  logCallDescription,
+  setLogCallDescription,
+  logActivityMutation,
+}: {
+  lead: LeadDialogsLead;
+  deleteConfirmOpen: boolean;
+  setDeleteConfirmOpen: (v: boolean) => void;
+  deleteMutation: { isPending: boolean; mutate: (args: { id: string }) => void };
+  archiveConfirmOpen: boolean;
+  setArchiveConfirmOpen: (v: boolean) => void;
+  archiveMutation: { isPending: boolean; mutate: (args: { id: string; status: 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'NEGOTIATING' | 'UNQUALIFIED' | 'CONVERTED' | 'LOST' }) => void };
+  convertConfirmOpen: boolean;
+  setConvertConfirmOpen: (v: boolean) => void;
+  convertMutation: { isPending: boolean; mutate: (args: { leadId: string; createAccount: boolean; accountName?: string }) => void };
+  convertCreateAccount: boolean;
+  setConvertCreateAccount: (v: boolean) => void;
+  convertAccountName: string;
+  setConvertAccountName: (v: string) => void;
+  logCallOpen: boolean;
+  setLogCallOpen: (v: boolean) => void;
+  logCallTitle: string;
+  setLogCallTitle: (v: string) => void;
+  logCallDescription: string;
+  setLogCallDescription: (v: string) => void;
+  logActivityMutation: { isPending: boolean; mutate: (args: { leadId: string; type: 'QUALIFICATION' | 'EMAIL' | 'CALL' | 'MEETING' | 'NOTE' | 'STATUS_CHANGE' | 'WEB_FORM' | 'SCORE_UPDATE'; title: string; description?: string }) => void };
+}) {
+  return (
+    <>
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Lead</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently delete {lead.firstName} {lead.lastName}? This
+              action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteMutation.mutate({ id: lead.id })}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Archive Confirmation Dialog */}
+      <AlertDialog open={archiveConfirmOpen} onOpenChange={setArchiveConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive Lead</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to archive {lead.firstName} {lead.lastName}? The lead will be
+              moved to Lost status.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => archiveMutation.mutate({ id: lead.id, status: 'LOST' })}
+            >
+              {archiveMutation.isPending ? 'Archiving...' : 'Archive'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Convert Lead Confirmation Dialog */}
+      <AlertDialog
+        open={convertConfirmOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setConvertCreateAccount(true);
+            setConvertAccountName('');
+          }
+          setConvertConfirmOpen(open);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Convert Lead to Contact</AlertDialogTitle>
+            <AlertDialogDescription>
+              Convert {lead.firstName} {lead.lastName} to a contact record? This action
+              will change the lead status to CONVERTED and cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex flex-col gap-3 py-2">
+            <label
+              htmlFor="convert-create-account"
+              className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300"
+            >
+              <input
+                type="checkbox"
+                checked={convertCreateAccount}
+                onChange={(e) => setConvertCreateAccount(e.target.checked)}
+                id="convert-create-account"
+                className="rounded border-slate-300 dark:border-slate-600 text-[#137fec] focus:ring-[#137fec]"
+              />{' '}
+              Also create an Account record
+            </label>
+            {convertCreateAccount && (
+              <div>
+                <label
+                  htmlFor="convert-account-name"
+                  className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                >
+                  Account name
+                </label>
+                <input
+                  id="convert-account-name"
+                  type="text"
+                  value={convertAccountName}
+                  onChange={(e) => setConvertAccountName(e.target.value)}
+                  placeholder={lead.company || 'Company name'}
+                  maxLength={200}
+                  className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent"
+                />
+              </div>
+            )}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={convertMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                convertMutation.mutate({
+                  leadId: lead.id,
+                  createAccount: convertCreateAccount,
+                  accountName: convertCreateAccount && convertAccountName.trim()
+                    ? convertAccountName.trim()
+                    : undefined,
+                });
+              }}
+              disabled={convertMutation.isPending}
+            >
+              {convertMutation.isPending ? 'Converting...' : 'Convert Lead'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Log Call Dialog */}
+      <Dialog open={logCallOpen} onOpenChange={setLogCallOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Log Call</DialogTitle>
+            <DialogDescription>
+              Record a call with {lead.firstName} {lead.lastName}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-2">
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="log-call-title"
+                className="text-sm font-medium text-slate-700 dark:text-slate-300"
+              >
+                Call Title{' '}<span className="text-red-500">*</span>
+              </label>
+              <input
+                id="log-call-title"
+                type="text"
+                value={logCallTitle}
+                onChange={(e) => setLogCallTitle(e.target.value)}
+                placeholder="e.g. Discovery call, Follow-up"
+                className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="log-call-description"
+                className="text-sm font-medium text-slate-700 dark:text-slate-300"
+              >
+                Notes{' '}<span className="text-slate-400 text-xs font-normal">(optional)</span>
+              </label>
+              <textarea
+                id="log-call-description"
+                value={logCallDescription}
+                onChange={(e) => setLogCallDescription(e.target.value)}
+                placeholder="Call summary, outcomes, next steps..."
+                rows={3}
+                className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent resize-none"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <button
+              onClick={() => {
+                setLogCallOpen(false);
+                setLogCallTitle('');
+                setLogCallDescription('');
+              }}
+              className="px-4 py-2 rounded-md border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                if (!logCallTitle.trim()) return;
+                logActivityMutation.mutate({
+                  leadId: lead.id,
+                  type: 'CALL',
+                  title: logCallTitle.trim(),
+                  description: logCallDescription.trim() || undefined,
+                });
+              }}
+              disabled={!logCallTitle.trim() || logActivityMutation.isPending}
+              className="px-4 py-2 rounded-md bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {logActivityMutation.isPending ? 'Saving...' : 'Log Call'}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ─── Sub-components for Lead360Page tab panels and layout sections ────────────
+
+interface LeadProfileData {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  company: string;
+  title: string;
+  location: string;
+  website: string;
+  status: LeadStatus;
+  source: LeadSource;
+  score: number;
+  temperature: LeadTemperature;
+  createdAt: string | Date;
+  lastContactedAt: string | Date;
+  avatarUrl: string;
+  estimatedValue: number;
+  tags: string[];
+  owner: { name: string; title: string; avatarUrl: string };
+}
+
+interface LeadMetrics {
+  estimatedValue: number;
+  emailsSent: number;
+  emailsOpened: number;
+  meetings: number;
+  touchpoints: number;
+}
+
+function LeadProfileCard({ lead, leadMetrics }: { lead: LeadProfileData; leadMetrics: LeadMetrics }) {
+  return (
+    <Card className="overflow-hidden">
+      <div className="h-24 bg-gradient-to-r from-blue-100 to-indigo-50 dark:from-slate-800 dark:to-slate-800" />
+      <div className="px-5 pb-6 relative">
+        <div className="relative -mt-10 mb-3">
+          <AppAvatar
+            name={`${lead.firstName} ${lead.lastName}`}
+            src={lead.avatarUrl}
+            className="w-20 h-20 border-4 border-white dark:border-slate-900 shadow-sm"
+            fallbackClassName="text-2xl font-bold text-slate-500 bg-slate-200 dark:bg-slate-700"
+          />
+        </div>
+        <div className="mb-4">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+            {lead.firstName} {lead.lastName}
+          </h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
+            {lead.title}
+          </p>
+          <div className="flex items-center gap-1 text-[#137fec] text-sm font-medium mt-1">
+            <span className="material-symbols-outlined !text-sm">domain</span>
+            <span>{lead.company}</span>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2 mb-6">
+          <LeadStatusBadge status={lead.status} />
+          <TemperatureBadge temperature={lead.temperature} />
+          {lead.tags.map((tag) => (
+            <span
+              key={tag}
+              className="px-2 py-1 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-medium"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+        <div className="space-y-4">
+          <div className="flex items-start gap-3">
+            <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">mail</span>
+            <div className="flex flex-col">
+              <span className="text-xs text-slate-400 uppercase font-semibold">Email</span>
+              <EntityHoverCard email={lead.email} displayName={`${lead.firstName} ${lead.lastName}`.trim()}>
+                <Link
+                  href={`/email/compose?to=${encodeURIComponent(lead.email)}`}
+                  className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#137fec] break-all"
+                >
+                  {lead.email}
+                </Link>
+              </EntityHoverCard>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">call</span>
+            <div className="flex flex-col">
+              <span className="text-xs text-slate-400 uppercase font-semibold">Phone</span>
+              <a
+                href={`tel:${lead.phone.replaceAll(/\D/g, '')}`}
+                className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#137fec]"
+              >
+                {lead.phone}
+              </a>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">location_on</span>
+            <div className="flex flex-col">
+              <span className="text-xs text-slate-400 uppercase font-semibold">Location</span>
+              <span className="text-sm text-slate-700 dark:text-slate-300">{lead.location}</span>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">language</span>
+            <div className="flex flex-col">
+              <span className="text-xs text-slate-400 uppercase font-semibold">Website</span>
+              <a
+                href={`https://${lead.website}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-[#137fec] hover:underline"
+              >
+                {lead.website}
+              </a>
+            </div>
+          </div>
+        </div>
+        {/* Metrics Grid */}
+        <div className="grid grid-cols-2 gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+          <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
+            <p className="text-lg font-bold text-slate-900 dark:text-white">
+              ${(leadMetrics.estimatedValue / 1000).toFixed(0)}k
+            </p>
+            <p className="text-xs text-slate-500">Est. Value</p>
+          </div>
+          <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
+            <p className="text-lg font-bold text-slate-900 dark:text-white">{lead.score}</p>
+            <p className="text-xs text-slate-500">Lead Score</p>
+          </div>
+          <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
+            <p className="text-lg font-bold text-slate-900 dark:text-white">
+              {leadMetrics.emailsSent > 0
+                ? Math.round((leadMetrics.emailsOpened / leadMetrics.emailsSent) * 100)
+                : 0}
+              %
+            </p>
+            <p className="text-xs text-slate-500">Open Rate</p>
+          </div>
+          <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
+            <p className="text-lg font-bold text-slate-900 dark:text-white">
+              {leadMetrics.touchpoints}
+            </p>
+            <p className="text-xs text-slate-500">Touchpoints</p>
+          </div>
+        </div>
+      </div>
+      {/* Map placeholder */}
+      <div className="h-32 w-full bg-cover bg-center border-t border-slate-200 dark:border-slate-800 relative">
+        <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-50 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center">
+          <div className="text-center">
+            <span className="material-symbols-outlined text-[#137fec] !text-3xl mb-1">location_on</span>
+            <button className="bg-white/90 text-slate-900 text-xs font-bold px-3 py-1.5 rounded shadow-sm hover:bg-white transition">
+              View Map
+            </button>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function LeadOwnerCard({ owner }: { owner: { name: string; title: string; avatarUrl: string } }) {
+  return (
+    <Card className="p-5">
+      <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase mb-3 tracking-wider">
+        Lead Owner
+      </h3>
+      <div className="flex items-center gap-3">
+        <AppAvatar
+          name={owner.name}
+          src={owner.avatarUrl}
+          className="w-10 h-10"
+          fallbackClassName="text-sm font-bold bg-slate-200 dark:bg-slate-700"
+        />
+        <div>
+          <p className="text-sm font-bold text-slate-900 dark:text-white">{owner.name}</p>
+          <p className="text-xs text-slate-500">{owner.title}</p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function LeadLeftSidebar({ lead, leadMetrics }: { lead: LeadProfileData; leadMetrics: LeadMetrics }) {
+  return (
+    <aside className="lg:col-span-3 flex flex-col gap-6">
+      <LeadProfileCard lead={lead} leadMetrics={leadMetrics} />
+      <LeadOwnerCard owner={lead.owner} />
+    </aside>
+  );
+}
+
+// ─── Tab panel sub-components ─────────────────────────────────────────────────
+
+interface LeadOverviewTabProps {
+  lead: LeadProfileData;
+  activities: Activity[];
+  leadMetrics: LeadMetrics;
+  leadId: string;
+  timezone: string;
+  onViewAllActivity: () => void;
+  onViewAllTasks: () => void;
+}
+
+function LeadOverviewTab({
+  lead,
+  activities,
+  leadId,
+  timezone,
+  onViewAllActivity,
+  onViewAllTasks,
+}: LeadOverviewTabProps) {
+  return (
+    <div className="space-y-6">
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Recent Activity</h3>
+          <button onClick={onViewAllActivity} className="text-sm text-[#137fec] hover:underline">
+            View All
+          </button>
+        </div>
+        <div className="space-y-4">
+          {activities.length > 0 ? (
+            activities.slice(0, 3).map((activity) => (
+              <div key={activity.id} className="flex items-start gap-3">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${getActivityIconBg(activity.type)}`}
+                >
+                  <span className="material-symbols-outlined !text-[16px]">
+                    {getActivityIcon(activity.type)}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">{activity.title}</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">{activity.description}</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {activity.user} • {formatRelativeTime(activity.timestamp, timezone)}
+                  </p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <EmptyState entity="activity" phase="passive" />
+          )}
+        </div>
+      </Card>
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Lead Information</h3>
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <dt className="text-sm text-slate-500 dark:text-slate-400">Status</dt>
+            <dd className="text-sm font-medium mt-1"><LeadStatusBadge status={lead.status} /></dd>
+          </div>
+          <div>
+            <dt className="text-sm text-slate-500 dark:text-slate-400">Source</dt>
+            <dd className="text-sm font-medium mt-1"><SourceBadge source={lead.source} /></dd>
+          </div>
+          <div>
+            <dt className="text-sm text-slate-500 dark:text-slate-400">Temperature</dt>
+            <dd className="text-sm font-medium mt-1"><TemperatureBadge temperature={lead.temperature} /></dd>
+          </div>
+          <div>
+            <dt className="text-sm text-slate-500 dark:text-slate-400">Lead Owner</dt>
+            <dd className="text-sm font-medium text-slate-900 dark:text-white">{lead.owner.name}</dd>
+          </div>
+          <div>
+            <dt className="text-sm text-slate-500 dark:text-slate-400">Last Contacted</dt>
+            <dd className="text-sm font-medium text-slate-900 dark:text-white">
+              {formatRelativeTime(
+                typeof lead.lastContactedAt === 'string'
+                  ? lead.lastContactedAt
+                  : lead.lastContactedAt.toISOString(),
+                timezone
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-sm text-slate-500 dark:text-slate-400">Created</dt>
+            <dd className="text-sm font-medium text-slate-900 dark:text-white">
+              {formatDate(
+                typeof lead.createdAt === 'string'
+                  ? lead.createdAt
+                  : lead.createdAt.toISOString(),
+                timezone
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-sm text-slate-500 dark:text-slate-400">Company</dt>
+            <dd className="text-sm font-medium"><span className="text-[#137fec]">{lead.company}</span></dd>
+          </div>
+          <div>
+            <dt className="text-sm text-slate-500 dark:text-slate-400">Lead Score</dt>
+            <dd className="text-sm font-medium text-slate-900 dark:text-white">{lead.score}/100</dd>
+          </div>
+        </dl>
+      </Card>
+      <RelatedTasksCard
+        entityType="lead"
+        entityId={leadId}
+        title="Open Tasks"
+        maxItems={2}
+        onViewAll={onViewAllTasks}
+      />
+    </div>
+  );
+}
+
+// ─── Activity rich preview (module-level to avoid inline function) ────────────
+
+function ActivityRichPreview({ activity }: { activity: Activity }) {
+  if (!activity.metadata) return null;
+  const meta = activity.metadata;
+  if (activity.type === 'web_form') {
+    return (
+      <div className="mt-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 border border-slate-100 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400">
+        <p><span className="font-semibold">Message:</span>{' '}"{meta.message}"</p>
+      </div>
+    );
+  }
+  if (activity.type === 'score_update') {
+    return (
+      <div className="mt-2 flex items-center gap-2">
+        <span className="text-xs text-slate-500">Score changed from</span>
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">{meta.oldScore}</span>
+        <span className="material-symbols-outlined text-slate-400 !text-sm">arrow_forward</span>
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">{meta.newScore}</span>
+      </div>
+    );
+  }
+  if (activity.type === 'email') {
+    return (
+      <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
+        {meta.subject && <p className="text-sm font-medium text-slate-900 dark:text-white mb-1">{meta.subject}</p>}
+        {meta.preview && <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">{meta.preview}</p>}
+        <div className="flex gap-2 mt-2">
+          {meta.opened && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-600 border border-blue-100">
+              <span className="material-symbols-outlined !text-[14px] mr-1">done_all</span>{' '}
+              Opened{meta.openCount && meta.openCount > 1 ? ` ${meta.openCount}x` : ''}
+            </span>
+          )}
+          {meta.clicked && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
+              Clicked Link
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  }
+  if (activity.type === 'call') {
+    const callOutcome = getCallOutcomeBadge(meta.outcome);
+    return (
+      <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${callOutcome.cls}`}>
+              {callOutcome.label}
+            </span>
+            {meta.duration && <span className="text-sm text-slate-500">{meta.duration}</span>}
+          </div>
+          {meta.recordingUrl && (
+            <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded transition-colors">
+              <span className="material-symbols-outlined !text-[16px]">play_arrow</span>{' '}Play Recording
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+  if (activity.type === 'meeting') {
+    return (
+      <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
+        {meta.location && (
+          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-2">
+            <span className="material-symbols-outlined !text-[16px]">location_on</span>{' '}
+            {meta.location}
+            {meta.duration && <span className="text-slate-400">• {meta.duration}</span>}
+          </div>
+        )}
+        {meta.attendees && meta.attendees.length > 0 && (
+          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+            <span className="material-symbols-outlined !text-[16px]">group</span>{' '}
+            {meta.attendees.join(', ')}
+          </div>
+        )}
+      </div>
+    );
+  }
+  return null;
+}
+
+// ─── Activity timeline item ───────────────────────────────────────────────────
+
+interface ActivityTimelineItemProps {
+  activity: Activity;
+  isExpanded: boolean;
+  isDeepLinked: boolean;
+  timezone: string;
+  onToggleExpand: (id: string) => void;
+  renderActions: (activity: Activity) => React.ReactNode;
+}
+
+function ActivityTimelineItem({
+  activity,
+  isExpanded,
+  isDeepLinked,
+  timezone,
+  onToggleExpand,
+  renderActions,
+}: ActivityTimelineItemProps) {
+  return (
+    <div key={activity.id} data-activity-id={activity.id} className="relative">
+      {/* Timeline dot marker */}
+      <div
+        className={`absolute w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 shadow-sm flex items-center justify-center z-10 ${getActivityIconBg(activity.type)}`}
+        style={{ left: -36, top: 12 }}
+      >
+        <span className="material-symbols-outlined !text-[16px]">{getActivityIcon(activity.type)}</span>
+      </div>
+      {/* Activity Card */}
+      <div className={`rounded-lg p-4 transition-colors ${
+        isDeepLinked
+          ? 'bg-primary/5 border-2 border-primary/30 ring-1 ring-primary/20'
+          : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+      }`}>
+        {/* Header */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">{activity.title}</p>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">{activity.description}</p>
+            <p className="text-xs text-slate-500 mt-1">
+              {activity.user} • {formatRelativeTime(activity.timestamp, timezone)}
+            </p>
+          </div>
+          <button
+            onClick={() => onToggleExpand(activity.id)}
+            className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"
+          >
+            <span className={`material-symbols-outlined !text-[18px] transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
+              expand_more
+            </span>
+          </button>
+        </div>
+        {/* Reactions */}
+        {activity.reactions && activity.reactions.length > 0 && (
+          <div className="flex items-center gap-2 mt-2">
+            {activity.reactions.map((reaction) => (
+              <span
+                key={`${activity.id}-${reaction.emoji}`}
+                className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded-full text-xs"
+              >
+                {reaction.emoji} {reaction.count}
+              </span>
+            ))}
+          </div>
+        )}
+        {/* Expanded Content */}
+        {isExpanded && (
+          <div className="mt-3">
+            <ActivityRichPreview activity={activity} />
+            {activity.comments && activity.comments.length > 0 && (
+              <div className="mt-3 space-y-2">
+                <p className="text-xs font-semibold text-slate-500 uppercase">Comments</p>
+                {activity.comments.map((comment) => (
+                  <div
+                    key={`${activity.id}-${comment.timestamp}`}
+                    className="p-2 bg-slate-50 dark:bg-slate-800/50 rounded border border-slate-100 dark:border-slate-700"
+                  >
+                    <p className="text-sm text-slate-600 dark:text-slate-400">{comment.text}</p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {comment.user} • {formatRelativeTime(comment.timestamp, timezone)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+            {renderActions(activity)}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Activity tab filter bar ──────────────────────────────────────────────────
+
+interface ActivityFilterBarProps {
+  searchQuery: string;
+  onSearchChange: (q: string) => void;
+  activityTypeFilter: ActivityType | 'all';
+  onTypeFilterChange: (f: ActivityType | 'all') => void;
+  personFilter: string;
+  onPersonFilterChange: (p: string) => void;
+  personFilters: { value: string; label: string }[];
+  aiInsightsSentimentTrend: string | null;
+  aiInsightsLastEngagementDays: number;
+  onClearFilters: () => void;
+}
+
+function ActivityFilterBar({
+  searchQuery,
+  onSearchChange,
+  activityTypeFilter,
+  onTypeFilterChange,
+  personFilter,
+  onPersonFilterChange,
+  personFilters,
+  aiInsightsSentimentTrend,
+  aiInsightsLastEngagementDays,
+  onClearFilters,
+}: ActivityFilterBarProps) {
+  return (
+    <div className="mb-6 space-y-4">
+      <div className="relative">
+        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 !text-[18px] text-slate-400">search</span>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="Search activities..."
+          className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec] placeholder:text-slate-400"
+        />
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {activityTypeFilters.map((filter) => (
+          <button
+            key={filter.value}
+            onClick={() => onTypeFilterChange(filter.value)}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              activityTypeFilter === filter.value
+                ? 'bg-[#137fec] text-white'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+          >
+            <span>{filter.icon}</span>{' '}{filter.label}
+          </button>
+        ))}
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-slate-500 font-medium">Filter by:</span>
+        <select
+          value={personFilter}
+          onChange={(e) => onPersonFilterChange(e.target.value)}
+          className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec]"
+        >
+          {personFilters.map((filter) => (
+            <option key={filter.value} value={filter.value}>{filter.label}</option>
+          ))}
+        </select>
+        {(activityTypeFilter !== 'all' || personFilter !== 'all' || searchQuery) && (
+          <button onClick={onClearFilters} className="text-xs text-[#137fec] hover:underline">
+            Clear filters
+          </button>
+        )}
+      </div>
+      {aiInsightsSentimentTrend && (
+        <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 rounded-lg border border-blue-100 dark:border-slate-700">
+          <div className="w-8 h-8 rounded-full bg-[#137fec]/10 flex items-center justify-center">
+            <span className="material-symbols-outlined !text-[18px] text-[#137fec]">auto_awesome</span>
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-medium text-slate-900 dark:text-white">
+              Sentiment is{' '}
+              <span className={getSentimentTrendStyle(aiInsightsSentimentTrend)}>
+                {aiInsightsSentimentTrend}
+              </span>
+            </p>
+            <p className="text-xs text-slate-500">
+              Last engagement: {aiInsightsLastEngagementDays} day
+              {aiInsightsLastEngagementDays === 1 ? '' : 's'} ago
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Activity tab ─────────────────────────────────────────────────────────────
+
+interface LeadActivityTabProps {
+  leadId: string;
+  activities: Activity[];
+  activityView: 'timeline' | 'unified';
+  onActivityViewChange: (v: 'timeline' | 'unified') => void;
+  searchQuery: string;
+  onSearchChange: (q: string) => void;
+  activityTypeFilter: ActivityType | 'all';
+  onTypeFilterChange: (f: ActivityType | 'all') => void;
+  personFilter: string;
+  onPersonFilterChange: (p: string) => void;
+  personFilters: { value: string; label: string }[];
+  filteredActivities: Activity[];
+  visibleActivities: Activity[];
+  expandedActivities: Set<string>;
+  onToggleExpand: (id: string) => void;
+  visibleCount: number;
+  onLoadMore: () => void;
+  hasMore: boolean;
+  timezone: string;
+  selectedActivityId: { prefixed: string; raw: string } | null;
+  aiInsightsSentimentTrend: string | null;
+  aiInsightsLastEngagementDays: number;
+  onClearFilters: () => void;
+  renderActions: (activity: Activity) => React.ReactNode;
+}
+
+function LeadActivityTab({
+  leadId,
+  activityView,
+  onActivityViewChange,
+  searchQuery,
+  onSearchChange,
+  activityTypeFilter,
+  onTypeFilterChange,
+  personFilter,
+  onPersonFilterChange,
+  personFilters,
+  filteredActivities,
+  visibleActivities,
+  expandedActivities,
+  onToggleExpand,
+  visibleCount,
+  onLoadMore,
+  hasMore,
+  timezone,
+  selectedActivityId,
+  aiInsightsSentimentTrend,
+  aiInsightsLastEngagementDays,
+  onClearFilters,
+  renderActions,
+}: LeadActivityTabProps) {
+  return (
+    <Card className="p-6">
+      {/* View Toggle */}
+      <div className="flex items-center gap-1 mb-4 bg-slate-100 dark:bg-slate-800 rounded-lg p-1 w-fit">
+        <button
+          onClick={() => onActivityViewChange('timeline')}
+          className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+            activityView === 'timeline'
+              ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
+          }`}
+        >
+          <span className="material-symbols-outlined text-sm align-middle mr-1">timeline</span>{' '}Timeline
+        </button>
+        <button
+          onClick={() => onActivityViewChange('unified')}
+          className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+            activityView === 'unified'
+              ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
+          }`}
+        >
+          <span className="material-symbols-outlined text-sm align-middle mr-1">dynamic_feed</span>{' '}All Sources
+        </button>
+      </div>
+      {activityView === 'unified' ? (
+        <ActivityFeed
+          entityType="LEAD"
+          entityId={leadId}
+          height={500}
+          emptyMessage="No activity found across all sources"
+        />
+      ) : (
+        <>
+          <ActivityFilterBar
+            searchQuery={searchQuery}
+            onSearchChange={onSearchChange}
+            activityTypeFilter={activityTypeFilter}
+            onTypeFilterChange={onTypeFilterChange}
+            personFilter={personFilter}
+            onPersonFilterChange={onPersonFilterChange}
+            personFilters={personFilters}
+            aiInsightsSentimentTrend={aiInsightsSentimentTrend}
+            aiInsightsLastEngagementDays={aiInsightsLastEngagementDays}
+            onClearFilters={onClearFilters}
+          />
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm text-slate-500">
+              Showing {visibleActivities.length} of {filteredActivities.length} activities
+            </p>
+          </div>
+          <div className="relative space-y-4" style={{ paddingLeft: 40 }}>
+            <div className="absolute top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700" style={{ left: 19 }} />
+            {visibleActivities.map((activity) => (
+              <ActivityTimelineItem
+                key={activity.id}
+                activity={activity}
+                isExpanded={expandedActivities.has(activity.id)}
+                isDeepLinked={isDeepLinkedActivity(activity.id, selectedActivityId)}
+                timezone={timezone}
+                onToggleExpand={onToggleExpand}
+                renderActions={renderActions}
+              />
+            ))}
+          </div>
+          {hasMore && (
+            <button
+              onClick={onLoadMore}
+              className="w-full mt-6 py-3 text-sm text-[#137fec] font-medium hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-slate-700"
+            >
+              Load more activities ({filteredActivities.length - visibleCount} remaining)
+            </button>
+          )}
+          {filteredActivities.length === 0 && (
+            <EmptyState entity="activity" variant="filtered" phase="passive" />
+          )}
+        </>
+      )}
+    </Card>
+  );
+}
+
+// ─── Notes tab ────────────────────────────────────────────────────────────────
+
+interface LeadNotesTabProps {
+  notes: { id: string; content: string; author: string; createdAt: string }[];
+  activityNote: string;
+  onActivityNoteChange: (v: string) => void;
+  onAddNote: () => void;
+  leadId: string;
+  addNoteMutation: { isPending: boolean; mutate: (args: { leadId: string; content: string }) => void };
+  timezone: string;
+}
+
+function LeadNotesTab({
+  notes,
+  activityNote,
+  onActivityNoteChange,
+  onAddNote,
+  leadId,
+  addNoteMutation,
+  timezone,
+}: LeadNotesTabProps) {
+  return (
+    <Card className="p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Notes</h3>
+      </div>
+      <div className="mb-4">
+        <textarea
+          value={activityNote}
+          onChange={(e) => onActivityNoteChange(e.target.value)}
+          onKeyDown={(e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+              e.preventDefault();
+              if (activityNote.trim()) addNoteMutation.mutate({ leadId, content: activityNote.trim() });
+            }
+          }}
+          placeholder="Write a note..."
+          className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec] min-h-[80px] p-3 placeholder:text-slate-400"
+        />
+        <div className="flex justify-between items-center mt-2">
+          <span className="text-[10px] text-slate-400">Ctrl+Enter to submit</span>
+          <button
+            onClick={onAddNote}
+            disabled={addNoteMutation.isPending || !activityNote.trim()}
+            className="inline-flex items-center gap-2 px-4 py-1.5 text-sm font-semibold text-white bg-[#137fec] hover:bg-blue-600 rounded-lg transition-colors disabled:opacity-50"
+          >
+            <span className="material-symbols-outlined !text-[18px]">add</span>{' '}
+            {addNoteMutation.isPending ? 'Adding...' : 'Add Note'}
+          </button>
+        </div>
+      </div>
+      <div className="space-y-4">
+        {notes.length > 0 ? (
+          notes.map((note) => (
+            <div key={note.id} className="pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0">
+              <p className="text-sm text-slate-600 dark:text-slate-400">{note.content}</p>
+              <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
+                <span>{note.author}</span><span>•</span>
+                <span>{formatRelativeTime(note.createdAt, timezone)}</span>
+              </div>
+            </div>
+          ))
+        ) : (
+          <EmptyState entity="notes" phase="passive" />
+        )}
+      </div>
+    </Card>
+  );
+}
+
+// ─── Emails tab ───────────────────────────────────────────────────────────────
+
+interface LeadEmailsTabProps {
+  emails: { id: string; subject: string; status: string; sentAt: string; openCount: number }[];
+  timezone: string;
+}
+
+function LeadEmailsTab({ emails, timezone }: LeadEmailsTabProps) {
+  return (
+    <Card className="p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Emails</h3>
+        <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
+          <span className="material-symbols-outlined !text-[18px]">send</span>{' '}Compose
+        </button>
+      </div>
+      <div className="space-y-3">
+        {emails.length > 0 ? (
+          emails.map((email) => (
+            <div
+              key={email.id}
+              className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-colors"
+            >
+              <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                <span className="material-symbols-outlined !text-[20px] text-orange-600">mail</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-slate-900 dark:text-white truncate">{email.subject}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${email.status === 'opened' ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                    {email.status === 'opened' ? `Opened ${email.openCount}x` : 'Sent'}
+                  </span>
+                  <span className="text-xs text-slate-500">{formatRelativeTime(email.sentAt, timezone)}</span>
+                </div>
+              </div>
+              <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg">
+                <span className="material-symbols-outlined !text-[18px]">open_in_new</span>
+              </button>
+            </div>
+          ))
+        ) : (
+          <EmptyState entity="emails" phase="passive" />
+        )}
+      </div>
+    </Card>
+  );
+}
+
+// ─── Files tab ────────────────────────────────────────────────────────────────
+
+interface LeadFilesTabProps {
+  files: { id: string; name: string; size: string; uploadedAt: string }[];
+  timezone: string;
+}
+
+function LeadFilesTab({ files, timezone }: LeadFilesTabProps) {
+  return (
+    <Card className="p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Files</h3>
+        <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
+          <span className="material-symbols-outlined !text-[18px]">upload</span>{' '}Upload
+        </button>
+      </div>
+      <div className="space-y-3">
+        {files.length > 0 ? (
+          files.map((file) => (
+            <div key={file.id} className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+              <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <span className="material-symbols-outlined !text-[20px] text-red-600">description</span>
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-slate-900 dark:text-white">{file.name}</p>
+                <p className="text-sm text-slate-500">{file.size} • {formatRelativeTime(file.uploadedAt, timezone)}</p>
+              </div>
+              <button className="p-2 text-slate-500 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
+                <span className="material-symbols-outlined !text-[18px]">download</span>
+              </button>
+            </div>
+          ))
+        ) : (
+          <EmptyState entity="files" phase="passive" />
+        )}
+      </div>
+    </Card>
+  );
+}
+
+// ─── AI Insights tab ─────────────────────────────────────────────────────────
+
+interface AiInsightsData {
+  qualificationScore: number;
+  engagementLevel: string;
+  engagementScore: number;
+  conversionProbability: number;
+  estimatedValue: number;
+  churnRisk: string;
+  sentiment: string;
+  sentimentTrend: string | null;
+  lastEngagementDays: number;
+  nextBestAction: string;
+  nextBestActions: { icon: string; label: string; primary: boolean }[];
+  recommendations: string[];
+  icpMatch: string;
+}
+
+interface LeadAIInsightsTabProps {
+  hasAiInsight: boolean;
+  aiInsights: AiInsightsData;
+  churnRiskData: import('@intelliflow/ui').ChurnRiskData | null;
+  nextBestActionData: import('@intelliflow/ui').NextBestActionData | null;
+  onRunAnalysis: () => void;
+  scoreWithAIMutation: { isPending: boolean };
+  leadId: string;
+}
+
+function LeadAIInsightsTab({
+  hasAiInsight,
+  aiInsights,
+  churnRiskData,
+  nextBestActionData,
+  onRunAnalysis,
+  scoreWithAIMutation,
+}: LeadAIInsightsTabProps) {
+  return (
+    <div className="space-y-6">
+      {!hasAiInsight && (
+        <div className="rounded-lg border border-dashed border-amber-300 bg-amber-50 dark:bg-amber-950/20 p-4">
+          <p className="text-sm text-amber-700 dark:text-amber-400 mb-3">
+            AI analysis has not been run for this lead yet.
+          </p>
+          <Button size="sm" onClick={onRunAnalysis} disabled={scoreWithAIMutation.isPending}>
+            {scoreWithAIMutation.isPending ? 'Analyzing...' : 'Run AI Analysis'}
+          </Button>
+        </div>
+      )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {churnRiskData && (
+          <ChurnRiskCard data={churnRiskData} title="Churn Risk Assessment" showFactors showConfidence showSLA />
+        )}
+        {nextBestActionData && (
+          <NextBestActionCard data={nextBestActionData} title="Recommended Action" showRationale showConfidence />
+        )}
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+              <span className="material-symbols-outlined !text-[20px] text-green-600">trending_up</span>
+            </div>
+            <div>
+              <p className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>
+                <span data-testid={hasAiInsight ? 'conversion-value' : 'conversion-null-state'}>
+                  {hasAiInsight ? `${aiInsights.conversionProbability}%` : '--'}
+                </span>
+              </p>
+              <p className="text-xs text-slate-500">Conversion Probability</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-[#137fec]/10 flex items-center justify-center">
+              <span className="material-symbols-outlined !text-[20px] text-[#137fec]">payments</span>
+            </div>
+            <div>
+              <p className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>
+                <span data-testid={hasAiInsight ? 'deal-value' : 'deal-value-null-state'}>
+                  {hasAiInsight ? `$${(aiInsights.estimatedValue / 1000).toFixed(0)}k` : '--'}
+                </span>
+              </p>
+              <p className="text-xs text-slate-500">Est. Deal Value</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+              <span className="material-symbols-outlined !text-[20px] text-purple-600">grade</span>
+            </div>
+            <div>
+              <p className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>
+                <span data-testid={hasAiInsight ? 'lead-score-value' : 'lead-score-null-state'}>
+                  {hasAiInsight ? aiInsights.qualificationScore : '--'}
+                </span>
+              </p>
+              <p className="text-xs text-slate-500">Lead Score</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">AI Recommendations</h3>
+        <ul className="space-y-3">
+          {aiInsights.recommendations.map((rec, index) => (
+            <li key={`rec-${index}`} className="flex items-start gap-3"> {/* NOSONAR typescript:S6479 */}
+              <div className="w-6 h-6 rounded-full bg-[#137fec]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-xs font-medium text-[#137fec]">{index + 1}</span>
+              </div>
+              <p className="text-slate-600 dark:text-slate-400">{rec}</p>
+            </li>
+          ))}
+        </ul>
+      </Card>
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Engagement Analysis</h3>
+        <div className="space-y-4">
+          <div>
+            <div className="flex justify-between mb-1.5">
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Engagement Score</span>
+              <span className={`text-sm font-bold ${hasAiInsight ? 'text-[#137fec]' : 'text-slate-400 dark:text-slate-500'}`}>
+                {hasAiInsight ? `${aiInsights.engagementScore}%` : '--'}
+              </span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
+              <div className="bg-[#137fec] h-2 rounded-full" style={{ width: `${aiInsights.engagementScore}%` }} />
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-2">
+            <span className="text-sm text-slate-600 dark:text-slate-300">Sentiment</span>
+            <span
+              data-testid={hasAiInsight ? 'sentiment-value' : 'sentiment-null-state'}
+              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                hasAiInsight
+                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                  : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 italic'
+              }`}
+            >
+              {aiInsights.sentiment}
+            </span>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// ─── Right sidebar ────────────────────────────────────────────────────────────
+
+interface LeadRightSidebarProps {
+  hasAiInsight: boolean;
+  aiInsights: AiInsightsData;
+  notes: { id: string; content: string; author: string; createdAt: string }[];
+  leadId: string;
+  timezone: string;
+  onViewAIInsights: () => void;
+  onViewNotes: () => void;
+  onViewTasks: () => void;
+}
+
+function LeadRightSidebar({
+  hasAiInsight,
+  aiInsights,
+  notes,
+  leadId,
+  timezone,
+  onViewAIInsights,
+  onViewNotes,
+  onViewTasks,
+}: LeadRightSidebarProps) {
+  return (
+    <aside className="lg:col-span-3 flex flex-col gap-6">
+      {/* Lead IQ (AI Insights) */}
+      <Card className="p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[#137fec]">auto_awesome</span>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">Lead IQ</h3>
+          </div>
+          <span className="text-[10px] bg-[#137fec]/10 text-[#137fec] px-1.5 py-0.5 rounded font-bold">BETA</span>
+        </div>
+        {!hasAiInsight && (
+          <p className="text-xs text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-1">
+            <span className="material-symbols-outlined !text-[14px]">warning</span>{' '}AI analysis not run yet
+          </p>
+        )}
+        <div className="space-y-5">
+          <div>
+            <div className="flex justify-between mb-1.5">
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Lead Score</span>
+              <span className="text-sm font-bold text-green-600">{aiInsights.qualificationScore}/100</span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
+              <div className="bg-green-500 h-2 rounded-full" style={{ width: `${aiInsights.qualificationScore}%` }} />
+            </div>
+            <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">{aiInsights.icpMatch}</p>
+          </div>
+          <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Engagement</span>
+              <span
+                data-testid={hasAiInsight ? 'engagement-value' : 'engagement-null-state'}
+                className={`text-xs font-bold px-2 py-0.5 rounded ${
+                  hasAiInsight
+                    ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800'
+                    : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800/50 italic'
+                }`}
+              >
+                {aiInsights.engagementLevel}
+              </span>
+            </div>
+            {hasAiInsight ? (
+              <div className="flex gap-1 h-1.5">
+                {[1, 2, 3, 4, 5].map((level) => (
+                  <div
+                    key={level}
+                    className={`flex-1 ${level === 1 ? 'rounded-l-full' : ''} ${level === 5 ? 'rounded-r-full' : ''} ${
+                      aiInsights.engagementScore >= level * 20 ? 'bg-[#137fec]' : 'bg-[#137fec]/30'
+                    }`}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex gap-1 h-1.5" data-testid="engagement-bar-null-state">
+                {[1, 2, 3, 4, 5].map((level) => (
+                  <div
+                    key={level}
+                    className={`flex-1 ${level === 1 ? 'rounded-l-full' : ''} ${level === 5 ? 'rounded-r-full' : ''} bg-slate-100 dark:bg-slate-800`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
+          <div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Recommended Next Steps</p>
+            <div className="space-y-2">
+              {aiInsights.nextBestActions.map((action) => (
+                <button
+                  key={action.label}
+                  className={`w-full text-left p-2 rounded border transition-colors group ${
+                    action.primary
+                      ? 'bg-blue-50 dark:bg-slate-800/50 border-blue-100 dark:border-slate-700 hover:border-[#137fec]/50'
+                      : 'bg-slate-50 dark:bg-slate-800/30 border-slate-100 dark:border-slate-700 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className={`material-symbols-outlined !text-[18px] ${action.primary ? 'text-[#137fec]' : 'text-slate-500'}`}>
+                      {action.icon}
+                    </span>
+                    <span className={`text-sm font-medium ${action.primary ? 'text-slate-700 dark:text-slate-200 group-hover:text-[#137fec]' : 'text-slate-600 dark:text-slate-300 group-hover:text-slate-900'}`}>
+                      {action.label}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <button onClick={onViewAIInsights} className="w-full mt-4 text-sm text-[#137fec] hover:underline text-center">
+          View Full Analysis
+        </button>
+      </Card>
+      {/* Tasks Widget */}
+      <RelatedTasksCard
+        entityType="lead"
+        entityId={leadId}
+        maxItems={2}
+        compact
+        onViewAll={onViewTasks}
+      />
+      {/* Upcoming Event */}
+      <UpcomingEventsCard entityType="lead" entityId={leadId} maxItems={1} compact />
+      {/* Notes Widget */}
+      <Card className="p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base font-bold text-slate-900 dark:text-white">Notes</h3>
+          <button
+            onClick={onViewNotes}
+            className="w-6 h-6 rounded hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500"
+            title="Add note"
+          >
+            <span className="material-symbols-outlined !text-[20px]">add</span>
+          </button>
+        </div>
+        <div className="space-y-4">
+          {notes.length > 0 ? (
+            notes.slice(0, 2).map((note) => (
+              <div key={note.id} className="pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0">
+                <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">{note.content}</p>
+                <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
+                  <span>{note.author}</span><span>•</span>
+                  <span>{formatRelativeTime(note.createdAt, timezone)}</span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <EmptyState entity="notes" phase="passive" className="py-2" />
+          )}
+        </div>
+        {notes.length > 2 && (
+          <button
+            onClick={onViewNotes}
+            className="w-full mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs font-medium text-[#137fec] hover:text-[#0f6dd0] transition-colors text-center"
+          >
+            View all notes ({notes.length})
+          </button>
+        )}
+      </Card>
+      {/* Similar Leads */}
+      <Card className="p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base font-bold text-slate-900 dark:text-white">Similar Leads</h3>
+        </div>
+        <EmptyState entity="leads" phase="passive" className="py-2" />
+      </Card>
+    </aside>
+  );
+}
+
+// ─── Tab bar ──────────────────────────────────────────────────────────────────
+
+interface LeadTabBarProps {
+  tabs: Tab[];
+  activeTab: TabId;
+  onTabChange: (id: TabId) => void;
+  leadId: string;
+  logActivityMutation: { isPending: boolean; mutate: (args: { leadId: string; type: 'NOTE'; title: string; description: string }) => void };
+}
+
+function LeadTabBar({ tabs, activeTab, onTabChange, leadId, logActivityMutation }: LeadTabBarProps) {
+  return (
+    <Card>
+      <div className="flex border-b border-slate-200 dark:border-slate-800 px-2 overflow-x-auto">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => onTabChange(tab.id)}
+            className={`px-4 py-4 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
+              activeTab === tab.id
+                ? 'text-[#137fec] border-[#137fec]'
+                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 border-transparent'
+            }`}
+          >
+            {tab.label}
+            {tab.count !== undefined && tab.count > 0 && (
+              <span className="ml-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] px-1.5 py-0.5 rounded-full">
+                {tab.count}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+      <QuickLogComposer
+        placeholder="Log a call, email, or internal note..."
+        isSubmitting={logActivityMutation.isPending}
+        onSubmit={(note) => {
+          logActivityMutation.mutate({ leadId, type: 'NOTE', title: 'Note Added', description: note });
+        }}
+      />
+    </Card>
+  );
+}
+
+// ─── Page header ──────────────────────────────────────────────────────────────
+
+interface LeadPageHeaderProps {
+  lead: LeadProfileData;
+  convertMutation: { isPending: boolean };
+  onOpenConvert: () => void;
+  onEdit: () => void;
+  onLogCall: () => void;
+  onOpenActionSheet: () => void;
+}
+
+function LeadPageHeader({
+  lead,
+  convertMutation,
+  onOpenConvert,
+  onEdit,
+  onLogCall,
+  onOpenActionSheet,
+}: LeadPageHeaderProps) {
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div>
+        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
+          <Link href="/leads" className="hover:text-[#137fec]">Leads</Link>
+          <span className="material-symbols-outlined !text-sm">chevron_right</span>
+          <span className="font-medium text-slate-900 dark:text-white">
+            {lead.firstName} {lead.lastName}
+          </span>
+        </div>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+          {lead.firstName} {lead.lastName}
+        </h1>
+      </div>
+      <div className="flex gap-3">
+        <LeadConvertButton lead={lead} convertMutation={convertMutation} onOpenConvert={onOpenConvert} />
+        <button
+          onClick={onEdit}
+          className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+        >
+          <span className="material-symbols-outlined !text-[18px]">edit</span>{' '}Edit
+        </button>
+        <button
+          onClick={onLogCall}
+          className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none"
+        >
+          <span className="material-symbols-outlined !text-[18px]">call</span>{' '}Log Call
+        </button>
+        <PinButton
+          entityType="lead"
+          entityId={lead.id}
+          title={`${lead.firstName} ${lead.lastName}`}
+          subtitle={lead.company || undefined}
+          icon="person"
+          url={`/leads/${lead.id}`}
+        />
+        <MoreActionsButton onClick={onOpenActionSheet} />
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+const LEAD_VALID_TABS: TabId[] = ['overview', 'activity', 'tasks', 'notes', 'emails', 'files', 'ai-insights'];
+function resolveInitialLeadTab(tabParam: TabId | null): TabId {
+  return tabParam && LEAD_VALID_TABS.includes(tabParam) ? tabParam : 'overview';
+}
+
+function transformLeadTasks(tasks: LeadWithRelations['tasks'] | undefined) {
+  if (!tasks) return [];
+  return tasks.map((task) => {
+    let dueDate = '';
+    if (task.dueDate) {
+      dueDate = typeof task.dueDate === 'string' ? task.dueDate : task.dueDate.toISOString();
+    }
+    return {
+      id: task.id,
+      title: task.title,
+      dueDate,
+      priority: task.priority?.toLowerCase() || 'medium',
+      completed: task.status === 'COMPLETED',
+    };
+  });
+}
+
+function transformLeadForUI(apiLead: LeadWithRelations) {
+  const normalizedLeadAvatar =
+    normalizeAvatarSource(apiLead.avatarUrl) ??
+    normalizeAvatarSource(defaultLeadAvatar) ??
+    defaultLeadAvatar;
+  const normalizedOwnerAvatar =
+    normalizeAvatarSource(apiLead.owner?.avatarUrl) ??
+    normalizeAvatarSource(defaultOwnerAvatar) ??
+    defaultOwnerAvatar;
+  return {
+    id: apiLead.id,
+    firstName: apiLead.firstName || '',
+    lastName: apiLead.lastName || '',
+    email: apiLead.email,
+    phone: apiLead.phone ?? '',
+    company: apiLead.company || '',
+    title: apiLead.title || '',
+    location: apiLead.location || '',
+    website: apiLead.website || '',
+    status: apiLead.status as LeadStatus,
+    source: apiLead.source as LeadSource,
+    score: apiLead.score,
+    temperature: getTemperature(apiLead.score),
+    createdAt: apiLead.createdAt,
+    lastContactedAt: apiLead.lastContactedAt || apiLead.createdAt,
+    avatarUrl: normalizedLeadAvatar,
+    estimatedValue: apiLead.estimatedValue || 0,
+    tags: apiLead.tags || [],
+    owner: apiLead.owner
+      ? {
+          name: apiLead.owner.name || 'Unknown',
+          title: getOwnerTitle(apiLead.owner?.role),
+          avatarUrl: normalizedOwnerAvatar,
+        }
+      : {
+          name: 'Unassigned',
+          title: '',
+          avatarUrl: normalizedOwnerAvatar,
+        },
+  };
+}
+
+function getConvertErrorDescription(msg: string): string {
+  if (msg.includes('Only qualified')) return 'Only leads with QUALIFIED status can be converted.';
+  if (msg.includes('already converted')) return 'This lead has already been converted to a contact.';
+  if (msg.includes('not found')) return 'Lead not found. It may have been deleted.';
+  return msg;
+}
+
+function isLeadAuthError(error: { data?: { code?: string } | null; message?: string } | null | undefined): boolean {
+  if (!error) return false;
+  return (
+    error.data?.code === 'UNAUTHORIZED' ||
+    (error.message?.toLowerCase().includes('authentication') ?? false) ||
+    (error.message?.toLowerCase().includes('unauthorized') ?? false)
+  );
+}
+
+export default function Lead360Page() {
   // Get lead ID from URL params
   const params = useParams();
   const router = useRouter();
@@ -501,10 +2372,7 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
   );
 
   // Check for auth errors
-  const isAuthError =
-    error?.data?.code === 'UNAUTHORIZED' ||
-    error?.message?.toLowerCase().includes('authentication') ||
-    error?.message?.toLowerCase().includes('unauthorized');
+  const isAuthError = isLeadAuthError(error);
 
   // Redirect to login for auth errors
   useEffect(() => {
@@ -516,9 +2384,8 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
   // Cast to extended type (will be properly typed after Prisma regeneration)
   const apiLead = rawApiLead as LeadWithRelations | undefined;
 
-  const validTabs: TabId[] = ['overview', 'activity', 'tasks', 'notes', 'emails', 'files', 'ai-insights'];
   const tabParam = searchParams.get('tab') as TabId | null;
-  const [activeTab, setActiveTab] = useState<TabId>(tabParam && validTabs.includes(tabParam) ? tabParam : 'overview');
+  const [activeTab, setActiveTab] = useState<TabId>(resolveInitialLeadTab(tabParam));
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
   const [activityNote, setActivityNote] = useState('');
   const [activityTypeFilter, setActivityTypeFilter] = useState<ActivityType | 'all'>('all');
@@ -589,16 +2456,7 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
       router.push(`/contacts/${data.contactId}`);
     },
     onError: (err) => {
-      const msg = err.message;
-      let description = msg;
-      if (msg.includes('Only qualified')) {
-        description = 'Only leads with QUALIFIED status can be converted.';
-      } else if (msg.includes('already converted')) {
-        description = 'This lead has already been converted to a contact.';
-      } else if (msg.includes('not found')) {
-        description = 'Lead not found. It may have been deleted.';
-      }
-      toast({ title: 'Conversion failed', description, variant: 'destructive' });
+      toast({ title: 'Conversion failed', description: getConvertErrorDescription(err.message), variant: 'destructive' });
     },
   });
 
@@ -625,7 +2483,6 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
     },
   });
 
-  // @ts-ignore — tRPC recursive type instantiation exceeds TS depth limit (TS2589)
   const logActivityMutation = api.lead.logActivity.useMutation({
     onSuccess: () => {
       toast({ title: 'Activity logged', description: 'Activity has been recorded.' });
@@ -642,69 +2499,11 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
     },
   });
 
-  // Calculate temperature based on score
-  const getTemperature = (score: number): LeadTemperature => {
-    if (score >= 70) return 'hot';
-    if (score >= 40) return 'warm';
-    return 'cold';
-  };
-
-  const getOwnerTitle = (role: string | undefined): string => {
-    const roleMap: Record<string, string> = {
-      SALES_REP: 'Sales Representative',
-      MANAGER: 'Manager',
-      ADMIN: 'Administrator',
-      USER: 'Team Member',
-    };
-    return roleMap[role || ''] || 'Team Member';
-  };
-
   // Transform API data to UI format
-  const lead = useMemo(() => {
-    if (!apiLead) return null;
-    const normalizedLeadAvatar =
-      normalizeAvatarSource(apiLead.avatarUrl) ??
-      normalizeAvatarSource(defaultLeadAvatar) ??
-      defaultLeadAvatar;
-    const normalizedOwnerAvatar =
-      normalizeAvatarSource(apiLead.owner?.avatarUrl) ??
-      normalizeAvatarSource(defaultOwnerAvatar) ??
-      defaultOwnerAvatar;
-
-    const phoneValue = apiLead.phone ?? '';
-
-    return {
-      id: apiLead.id,
-      firstName: apiLead.firstName || '',
-      lastName: apiLead.lastName || '',
-      email: apiLead.email,
-      phone: phoneValue,
-      company: apiLead.company || '',
-      title: apiLead.title || '',
-      location: apiLead.location || '',
-      website: apiLead.website || '',
-      status: apiLead.status as LeadStatus,
-      source: apiLead.source as LeadSource,
-      score: apiLead.score,
-      temperature: getTemperature(apiLead.score),
-      createdAt: apiLead.createdAt,
-      lastContactedAt: apiLead.lastContactedAt || apiLead.createdAt,
-      avatarUrl: normalizedLeadAvatar,
-      estimatedValue: apiLead.estimatedValue || 0,
-      tags: apiLead.tags || [],
-      owner: apiLead.owner
-        ? {
-            name: apiLead.owner.name || 'Unknown',
-            title: getOwnerTitle(apiLead.owner?.role),
-            avatarUrl: normalizedOwnerAvatar,
-          }
-        : {
-            name: 'Unassigned',
-            title: '',
-            avatarUrl: normalizedOwnerAvatar,
-          },
-    };
-  }, [apiLead]);
+  const lead = useMemo(
+    () => apiLead ? transformLeadForUI(apiLead) : null,
+    [apiLead]
+  );
 
   // Transform activities from API to UI format
   const activities: Activity[] = useMemo(() => {
@@ -747,20 +2546,10 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
   }, [apiLead?.files]);
 
   // Transform tasks from API
-  const tasks = useMemo(() => {
-    if (!apiLead?.tasks) return [];
-    return apiLead.tasks.map((task) => ({
-      id: task.id,
-      title: task.title,
-      dueDate: (() => {
-        if (!task.dueDate) return '';
-        if (typeof task.dueDate === 'string') return task.dueDate;
-        return task.dueDate.toISOString();
-      })(),
-      priority: task.priority?.toLowerCase() || 'medium',
-      completed: task.status === 'COMPLETED',
-    }));
-  }, [apiLead?.tasks]);
+  const tasks = useMemo(
+    () => transformLeadTasks(apiLead?.tasks),
+    [apiLead?.tasks]
+  );
 
   // Derive emails from email activities
   const emails = useMemo(() => {
@@ -957,82 +2746,9 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
     'LEAD_ACTIVITY'
   );
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
-        <div className="mb-6">
-          <Skeleton className="h-4 w-48 mb-2" />
-          <Skeleton className="h-8 w-64" />
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Profile card skeleton */}
-          <div className="lg:col-span-3">
-            <Card className="p-6">
-              <div className="flex flex-col items-center text-center gap-3 mb-4">
-                <Skeleton className="h-16 w-16 rounded-full" />
-                <Skeleton className="h-5 w-36" />
-                <Skeleton className="h-4 w-28" />
-              </div>
-              <div className="mt-3">
-                <div className="flex justify-between mb-1.5">
-                  <Skeleton className="h-3 w-16" />
-                  <Skeleton className="h-3 w-8" />
-                </div>
-                <Skeleton className="h-2 w-full rounded-full" />
-              </div>
-            </Card>
-          </div>
-          {/* Tabs + content skeleton */}
-          <div className="lg:col-span-6">
-            <Card className="p-6">
-              <div className="flex gap-4 mb-6 border-b pb-3">
-                <Skeleton className="h-5 w-20" />
-                <Skeleton className="h-5 w-20" />
-                <Skeleton className="h-5 w-20" />
-              </div>
-              <Skeleton className="h-32 w-full mb-4 rounded-lg" />
-              <Skeleton className="h-32 w-full rounded-lg" />
-            </Card>
-          </div>
-          {/* Sidebar skeleton */}
-          <div className="lg:col-span-3 flex flex-col gap-4">
-            <Card className="p-5">
-              <Skeleton className="h-5 w-20 mb-4" />
-              <Skeleton className="h-2 w-full rounded-full mb-2" />
-              <Skeleton className="h-4 w-3/4 mb-4" />
-              <Skeleton className="h-2 w-full rounded-full" />
-            </Card>
-            <Card className="p-5">
-              <Skeleton className="h-5 w-16 mb-3" />
-              <Skeleton className="h-10 w-full rounded mb-2" />
-              <Skeleton className="h-10 w-full rounded" />
-            </Card>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Auth error - show redirecting state
-  if (error && isAuthError) {
-    return (
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
-        <Card className="p-8 text-center">
-          <span className="material-symbols-outlined text-5xl text-slate-400 mb-4 animate-spin">
-            progress_activity
-          </span>
-          <p className="text-slate-500 dark:text-slate-400">Redirecting to login...</p>
-        </Card>
-      </div>
-    );
-  }
-
-  // Error state or no lead data (non-auth errors)
+  // Auto-dismiss stale insight when the referenced entity no longer exists
   const insightId = searchParams.get('insightId');
   const fromInsight = !!insightId;
-
-  // Auto-dismiss stale insight when the referenced entity no longer exists
   const dismissMutation = api.home.dismissInsight.useMutation();
   const dismissedRef = useRef(false);
   useEffect(() => {
@@ -1045,48 +2761,36 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
     }
   }, [fromInsight, insightId, error, isLoading, lead, dismissMutation]);
 
+  // Loading state
+  if (isLoading) {
+    return <LeadLoadingSkeleton />;
+  }
+
+  // Auth error - show redirecting state
+  if (error && isAuthError) {
+    return <LeadAuthRedirect />;
+  }
+
+  // Error state or no lead data (non-auth errors)
   if ((error && !isAuthError) || !lead) {
     const isNotFound = error?.data?.code === 'NOT_FOUND' || !lead;
     const isServerError = error?.data?.code === 'INTERNAL_SERVER_ERROR';
-
+    let errorIcon: string;
+    if (isServerError) { errorIcon = 'cloud_off'; }
+    else if (fromInsight) { errorIcon = 'link_off'; }
+    else { errorIcon = 'error'; }
+    let errorTitle: string;
+    if (isServerError) { errorTitle = 'Something Went Wrong'; }
+    else if (fromInsight) { errorTitle = 'Stale Insight'; }
+    else { errorTitle = 'Lead Not Found'; }
     return (
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
-        <Card className="p-8 text-center">
-          <span className="material-symbols-outlined text-5xl text-red-500 mb-4">
-            {isServerError ? 'cloud_off' : fromInsight ? 'link_off' : 'error'}
-          </span>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-            {isServerError ? 'Something Went Wrong' : fromInsight ? 'Stale Insight' : 'Lead Not Found'}
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400 mb-4">
-            {getLeadErrorMessage(isServerError, isNotFound, error?.message, fromInsight)}
-          </p>
-          <div className="flex items-center justify-center gap-3">
-            {isServerError && (
-              <button
-                onClick={() => globalThis.location.reload()}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                <span className="material-symbols-outlined !text-lg">refresh</span>{' '}Retry
-              </button>
-            )}
-            {fromInsight && (
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                <span className="material-symbols-outlined !text-lg">home</span>{' '}Back to Home
-              </Link>
-            )}
-            <Link
-              href="/leads"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
-            >
-              <span className="material-symbols-outlined !text-lg">arrow_back</span>{' '}Back to Leads
-            </Link>
-          </div>
-        </Card>
-      </div>
+      <LeadErrorView
+        errorIcon={errorIcon}
+        errorTitle={errorTitle}
+        errorMessage={getLeadErrorMessage(isServerError, isNotFound, error?.message, fromInsight)}
+        isServerError={isServerError}
+        fromInsight={fromInsight}
+      />
     );
   }
 
@@ -1120,163 +2824,7 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
     });
   };
 
-  // Format date helper (formatRelativeTime is defined at module level)
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      timeZone: timezone,
-    });
-  };
-
-  // Activity icon and color helpers
-  const getActivityIcon = (type: Readonly<ActivityType>): string => {
-    const icons: Record<ActivityType, string> = {
-      web_form: 'web',
-      score_update: 'psychology',
-      email: 'mail',
-      call: 'call',
-      note: 'edit_note',
-      meeting: 'event',
-      status_change: 'person_add',
-      qualification: 'verified',
-    };
-    return icons[type];
-  };
-
-  const getActivityIconBg = (type: Readonly<ActivityType>): string => {
-    const colors: Record<ActivityType, string> = {
-      web_form: 'bg-blue-100 dark:bg-slate-800 text-blue-600',
-      score_update: 'bg-purple-100 dark:bg-slate-800 text-purple-600',
-      email: 'bg-orange-100 dark:bg-slate-800 text-orange-600',
-      call: 'bg-green-100 dark:bg-slate-800 text-green-600',
-      note: 'bg-amber-100 dark:bg-slate-800 text-amber-600',
-      meeting: 'bg-indigo-100 dark:bg-slate-800 text-indigo-600',
-      status_change: 'bg-slate-100 dark:bg-slate-800 text-slate-500',
-      qualification: 'bg-teal-100 dark:bg-slate-800 text-teal-600',
-    };
-    return colors[type];
-  };
-
-  const getSentimentTrendStyle = (trend?: string) => {
-    switch (trend) {
-      case 'improving':
-        return 'text-green-600';
-      case 'declining':
-        return 'text-red-600';
-      default:
-        return 'text-slate-600';
-    }
-  };
-
-  // Render activity rich preview
-  const renderRichPreview = (activity: Activity) => {
-    if (!activity.metadata) return null;
-    const meta = activity.metadata;
-
-    switch (activity.type) {
-      case 'web_form':
-        return (
-          <div className="mt-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 border border-slate-100 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400">
-            <p>
-              <span className="font-semibold">Message:</span>{' '}"{meta.message}"
-            </p>
-          </div>
-        );
-
-      case 'score_update':
-        return (
-          <div className="mt-2 flex items-center gap-2">
-            <span className="text-xs text-slate-500">Score changed from</span>
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
-              {meta.oldScore}
-            </span>
-            <span className="material-symbols-outlined text-slate-400 !text-sm">arrow_forward</span>
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
-              {meta.newScore}
-            </span>
-          </div>
-        );
-
-      case 'email':
-        return (
-          <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
-            {meta.subject && (
-              <p className="text-sm font-medium text-slate-900 dark:text-white mb-1">
-                {meta.subject}
-              </p>
-            )}
-            {meta.preview && (
-              <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
-                {meta.preview}
-              </p>
-            )}
-            <div className="flex gap-2 mt-2">
-              {meta.opened && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-600 border border-blue-100">
-                  <span className="material-symbols-outlined !text-[14px] mr-1">done_all</span>{' '}
-                  Opened{meta.openCount && meta.openCount > 1 ? ` ${meta.openCount}x` : ''}
-                </span>
-              )}
-              {meta.clicked && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
-                  Clicked Link
-                </span>
-              )}
-            </div>
-          </div>
-        );
-
-      case 'call': {
-        const callOutcome = getCallOutcomeBadge(meta.outcome);
-        return (
-          <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${callOutcome.cls}`}
-                >
-                  {callOutcome.label}
-                </span>
-                {meta.duration && <span className="text-sm text-slate-500">{meta.duration}</span>}
-              </div>
-              {meta.recordingUrl && (
-                <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded transition-colors">
-                  <span className="material-symbols-outlined !text-[16px]">play_arrow</span>{' '}
-                  Play Recording
-                </button>
-              )}
-            </div>
-          </div>
-        );
-      }
-
-      case 'meeting':
-        return (
-          <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
-            {meta.location && (
-              <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-2">
-                <span className="material-symbols-outlined !text-[16px]">location_on</span>{' '}
-                {meta.location}
-                {meta.duration && <span className="text-slate-400">• {meta.duration}</span>}
-              </div>
-            )}
-            {meta.attendees && meta.attendees.length > 0 && (
-              <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                <span className="material-symbols-outlined !text-[16px]">group</span>{' '}
-                {meta.attendees.join(', ')}
-              </div>
-            )}
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  // Render inline actions for activity using shared component
+  // renderActivityActions closure — depends on hook results from Lead360Page scope
   const renderActivityActions = (activity: Activity) => (
     <ActivityFeedItemActions
       activityId={activity.id}
@@ -1294,82 +2842,14 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
 
   return (
     <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
-      {/* Header with breadcrumb and actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-            <Link href="/leads" className="hover:text-[#137fec]">
-              Leads
-            </Link>
-            <span className="material-symbols-outlined !text-sm">chevron_right</span>
-            <span className="font-medium text-slate-900 dark:text-white">
-              {lead.firstName} {lead.lastName}
-            </span>
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-            {lead.firstName} {lead.lastName}
-          </h1>
-        </div>
-        <div className="flex gap-3">
-          {lead.status !== 'CONVERTED' && (() => {
-            const isConvertible = lead.status === 'QUALIFIED';
-            const convertTooltipText =
-              lead.status === 'LOST' ? 'Lost leads cannot be converted. Reopen the lead first.'
-              : lead.status === 'UNQUALIFIED' ? 'Disqualified leads cannot be converted.'
-              : lead.status === 'NEGOTIATING' ? 'Lead is in negotiation. Qualify the lead first to convert.'
-              : 'Lead must be qualified before conversion.';
-            return (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span
-                      tabIndex={isConvertible ? undefined : 0}
-                      aria-label={isConvertible ? undefined : convertTooltipText}
-                    >
-                      <button
-                        onClick={() => setConvertConfirmOpen(true)}
-                        disabled={!isConvertible || convertMutation.isPending}
-                        className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
-                      >
-                        <span className="material-symbols-outlined !text-[18px]">transform</span>{' '}
-                        {convertMutation.isPending ? 'Converting...' : 'Convert Lead'}
-                      </button>
-                    </span>
-                  </TooltipTrigger>
-                  {!isConvertible && (
-                    <TooltipContent>
-                      <p>{convertTooltipText}</p>
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
-            );
-          })()}
-          <button
-            onClick={() => router.push(`/leads/${lead.id}/edit`)}
-            className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-          >
-            <span className="material-symbols-outlined !text-[18px]">edit</span>{' '}
-            Edit
-          </button>
-          <button
-            onClick={() => setLogCallOpen(true)}
-            className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none"
-          >
-            <span className="material-symbols-outlined !text-[18px]">call</span>{' '}
-            Log Call
-          </button>
-          <PinButton
-            entityType="lead"
-            entityId={lead.id}
-            title={`${lead.firstName} ${lead.lastName}`}
-            subtitle={lead.company || undefined}
-            icon="person"
-            url={`/leads/${lead.id}`}
-          />
-          <MoreActionsButton onClick={() => setActionSheetOpen(true)} />
-        </div>
-      </div>
+      <LeadPageHeader
+        lead={lead}
+        convertMutation={convertMutation}
+        onOpenConvert={() => setConvertConfirmOpen(true)}
+        onEdit={() => router.push(`/leads/${lead.id}/edit`)}
+        onLogCall={() => setLogCallOpen(true)}
+        onOpenActionSheet={() => setActionSheetOpen(true)}
+      />
 
       <EntityActionSheet
         open={actionSheetOpen}
@@ -1384,1307 +2864,136 @@ export default function Lead360Page() { // NOSONAR typescript:S3776
         }}
         extraActions={[
           { label: 'Archive', icon: 'archive', onClick: () => setArchiveConfirmOpen(true) },
-          {
-            label: 'Delete',
-            icon: 'delete',
-            onClick: () => setDeleteConfirmOpen(true),
-            destructive: true,
-          },
+          { label: 'Delete', icon: 'delete', onClick: () => setDeleteConfirmOpen(true), destructive: true },
         ]}
       />
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Lead</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to permanently delete {lead.firstName} {lead.lastName}? This
-              action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteMutation.mutate({ id: lead.id })}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Archive Confirmation Dialog */}
-      <AlertDialog open={archiveConfirmOpen} onOpenChange={setArchiveConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Archive Lead</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to archive {lead.firstName} {lead.lastName}? The lead will be
-              moved to Lost status.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => archiveMutation.mutate({ id: lead.id, status: 'LOST' })}
-            >
-              {archiveMutation.isPending ? 'Archiving...' : 'Archive'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Convert Lead Confirmation Dialog */}
-      <AlertDialog
-        open={convertConfirmOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setConvertCreateAccount(true);
-            setConvertAccountName('');
-          }
-          setConvertConfirmOpen(open);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Convert Lead to Contact</AlertDialogTitle>
-            <AlertDialogDescription>
-              Convert {lead.firstName} {lead.lastName} to a contact record? This action
-              will change the lead status to CONVERTED and cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="flex flex-col gap-3 py-2">
-            <label
-              htmlFor="convert-create-account"
-              className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300"
-            >
-              <input
-                type="checkbox"
-                checked={convertCreateAccount}
-                onChange={(e) => setConvertCreateAccount(e.target.checked)}
-                id="convert-create-account"
-                className="rounded border-slate-300 dark:border-slate-600 text-[#137fec] focus:ring-[#137fec]"
-              />
-              Also create an Account record
-            </label>
-            {convertCreateAccount && (
-              <div>
-                <label
-                  htmlFor="convert-account-name"
-                  className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
-                >
-                  Account name
-                </label>
-                <input
-                  id="convert-account-name"
-                  type="text"
-                  value={convertAccountName}
-                  onChange={(e) => setConvertAccountName(e.target.value)}
-                  placeholder={lead.company || 'Company name'}
-                  maxLength={200}
-                  className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent"
-                />
-              </div>
-            )}
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={convertMutation.isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                convertMutation.mutate({
-                  leadId: lead.id,
-                  createAccount: convertCreateAccount,
-                  accountName: convertCreateAccount && convertAccountName.trim()
-                    ? convertAccountName.trim()
-                    : undefined,
-                });
-              }}
-              disabled={convertMutation.isPending}
-            >
-              {convertMutation.isPending ? 'Converting...' : 'Convert Lead'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Log Call Dialog */}
-      <Dialog open={logCallOpen} onOpenChange={setLogCallOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Log Call</DialogTitle>
-            <DialogDescription>
-              Record a call with {lead.firstName} {lead.lastName}.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col gap-4 py-2">
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="log-call-title"
-                className="text-sm font-medium text-slate-700 dark:text-slate-300"
-              >
-                Call Title{' '}<span className="text-red-500">*</span>
-              </label>
-              <input
-                id="log-call-title"
-                type="text"
-                value={logCallTitle}
-                onChange={(e) => setLogCallTitle(e.target.value)}
-                placeholder="e.g. Discovery call, Follow-up"
-                className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent"
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="log-call-description"
-                className="text-sm font-medium text-slate-700 dark:text-slate-300"
-              >
-                Notes{' '}<span className="text-slate-400 text-xs font-normal">(optional)</span>
-              </label>
-              <textarea
-                id="log-call-description"
-                value={logCallDescription}
-                onChange={(e) => setLogCallDescription(e.target.value)}
-                placeholder="Call summary, outcomes, next steps..."
-                rows={3}
-                className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent resize-none"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <button
-              onClick={() => {
-                setLogCallOpen(false);
-                setLogCallTitle('');
-                setLogCallDescription('');
-              }}
-              className="px-4 py-2 rounded-md border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => {
-                if (!logCallTitle.trim()) return;
-                logActivityMutation.mutate({
-                  leadId: lead.id,
-                  type: 'CALL',
-                  title: logCallTitle.trim(),
-                  description: logCallDescription.trim() || undefined,
-                });
-              }}
-              disabled={!logCallTitle.trim() || logActivityMutation.isPending}
-              className="px-4 py-2 rounded-md bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {logActivityMutation.isPending ? 'Saving...' : 'Log Call'}
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <LeadDialogs
+        lead={lead}
+        deleteConfirmOpen={deleteConfirmOpen}
+        setDeleteConfirmOpen={setDeleteConfirmOpen}
+        deleteMutation={deleteMutation}
+        archiveConfirmOpen={archiveConfirmOpen}
+        setArchiveConfirmOpen={setArchiveConfirmOpen}
+        archiveMutation={archiveMutation}
+        convertConfirmOpen={convertConfirmOpen}
+        setConvertConfirmOpen={setConvertConfirmOpen}
+        convertMutation={convertMutation}
+        convertCreateAccount={convertCreateAccount}
+        setConvertCreateAccount={setConvertCreateAccount}
+        convertAccountName={convertAccountName}
+        setConvertAccountName={setConvertAccountName}
+        logCallOpen={logCallOpen}
+        setLogCallOpen={setLogCallOpen}
+        logCallTitle={logCallTitle}
+        setLogCallTitle={setLogCallTitle}
+        logCallDescription={logCallDescription}
+        setLogCallDescription={setLogCallDescription}
+        logActivityMutation={logActivityMutation}
+      />
 
       {/* Main 3-column grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Sidebar - Lead Profile */}
-        <aside className="lg:col-span-3 flex flex-col gap-6">
-          {/* Profile Card */}
-          <Card className="overflow-hidden">
-            <div className="h-24 bg-gradient-to-r from-blue-100 to-indigo-50 dark:from-slate-800 dark:to-slate-800" />
-            <div className="px-5 pb-6 relative">
-              <div className="relative -mt-10 mb-3">
-                <AppAvatar
-                  name={`${lead.firstName} ${lead.lastName}`}
-                  src={lead.avatarUrl}
-                  className="w-20 h-20 border-4 border-white dark:border-slate-900 shadow-sm"
-                  fallbackClassName="text-2xl font-bold text-slate-500 bg-slate-200 dark:bg-slate-700"
-                />
-              </div>
-              <div className="mb-4">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                  {lead.firstName} {lead.lastName}
-                </h2>
-                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
-                  {lead.title}
-                </p>
-                <div className="flex items-center gap-1 text-[#137fec] text-sm font-medium mt-1">
-                  <span className="material-symbols-outlined !text-sm">domain</span>
-                  <span>{lead.company}</span>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2 mb-6">
-                <LeadStatusBadge status={lead.status} />
-                <TemperatureBadge temperature={lead.temperature} />
-                {lead.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-2 py-1 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-medium"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">
-                    mail
-                  </span>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-slate-400 uppercase font-semibold">Email</span>
-                    <EntityHoverCard email={lead.email} displayName={`${lead.firstName} ${lead.lastName}`.trim()}>
-                      <Link
-                        href={`/email/compose?to=${encodeURIComponent(lead.email)}`}
-                        className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#137fec] break-all"
-                      >
-                        {lead.email}
-                      </Link>
-                    </EntityHoverCard>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">
-                    call
-                  </span>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-slate-400 uppercase font-semibold">Phone</span>
-                    <a
-                      href={`tel:${lead.phone.replaceAll(/\D/g, '')}`}
-                      className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#137fec]"
-                    >
-                      {lead.phone}
-                    </a>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">
-                    location_on
-                  </span>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-slate-400 uppercase font-semibold">Location</span>
-                    <span className="text-sm text-slate-700 dark:text-slate-300">
-                      {lead.location}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">
-                    language
-                  </span>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-slate-400 uppercase font-semibold">Website</span>
-                    <a
-                      href={`https://${lead.website}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-[#137fec] hover:underline"
-                    >
-                      {lead.website}
-                    </a>
-                  </div>
-                </div>
-              </div>
-              {/* Metrics Grid */}
-              <div className="grid grid-cols-2 gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
-                <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                  <p className="text-lg font-bold text-slate-900 dark:text-white">
-                    ${(leadMetrics.estimatedValue / 1000).toFixed(0)}k
-                  </p>
-                  <p className="text-xs text-slate-500">Est. Value</p>
-                </div>
-                <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                  <p className="text-lg font-bold text-slate-900 dark:text-white">{lead.score}</p>
-                  <p className="text-xs text-slate-500">Lead Score</p>
-                </div>
-                <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                  <p className="text-lg font-bold text-slate-900 dark:text-white">
-                    {leadMetrics.emailsSent > 0
-                      ? Math.round((leadMetrics.emailsOpened / leadMetrics.emailsSent) * 100)
-                      : 0}
-                    %
-                  </p>
-                  <p className="text-xs text-slate-500">Open Rate</p>
-                </div>
-                <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                  <p className="text-lg font-bold text-slate-900 dark:text-white">
-                    {leadMetrics.touchpoints}
-                  </p>
-                  <p className="text-xs text-slate-500">Touchpoints</p>
-                </div>
-              </div>
-            </div>
-            {/* Map placeholder */}
-            <div className="h-32 w-full bg-cover bg-center border-t border-slate-200 dark:border-slate-800 relative">
-              <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-50 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center">
-                <div className="text-center">
-                  <span className="material-symbols-outlined text-[#137fec] !text-3xl mb-1">
-                    location_on
-                  </span>
-                  <button className="bg-white/90 text-slate-900 text-xs font-bold px-3 py-1.5 rounded shadow-sm hover:bg-white transition">
-                    View Map
-                  </button>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          {/* Lead Owner */}
-          <Card className="p-5">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase mb-3 tracking-wider">
-              Lead Owner
-            </h3>
-            <div className="flex items-center gap-3">
-              <AppAvatar
-                name={lead.owner.name}
-                src={lead.owner.avatarUrl}
-                className="w-10 h-10"
-                fallbackClassName="text-sm font-bold bg-slate-200 dark:bg-slate-700"
-              />
-              <div>
-                <p className="text-sm font-bold text-slate-900 dark:text-white">
-                  {lead.owner.name}
-                </p>
-                <p className="text-xs text-slate-500">{lead.owner.title}</p>
-              </div>
-            </div>
-          </Card>
-        </aside>
+        <LeadLeftSidebar lead={lead} leadMetrics={leadMetrics} />
 
         {/* Center Content - Tabs and Content */}
         <section className="lg:col-span-6 flex flex-col gap-6">
-          {/* Tabs and Activity Input */}
-          <Card>
-            <div className="flex border-b border-slate-200 dark:border-slate-800 px-2 overflow-x-auto">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-4 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'text-[#137fec] border-[#137fec]'
-                      : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 border-transparent'
-                  }`}
-                >
-                  {tab.label}
-                  {tab.count !== undefined && tab.count > 0 && (
-                    <span className="ml-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] px-1.5 py-0.5 rounded-full">
-                      {tab.count}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-            <QuickLogComposer
-              placeholder="Log a call, email, or internal note..."
-              isSubmitting={logActivityMutation.isPending}
-              onSubmit={(note) => {
-                logActivityMutation.mutate({
-                  leadId,
-                  type: 'NOTE',
-                  title: 'Note Added',
-                  description: note,
-                });
-              }}
-            />
-          </Card>
+          <LeadTabBar
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            leadId={leadId}
+            logActivityMutation={logActivityMutation}
+          />
 
-          {/* Overview Tab */}
           {activeTab === 'overview' && (
-            <div className="space-y-6">
-              <Card className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                    Recent Activity
-                  </h3>
-                  <button
-                    onClick={() => setActiveTab('activity')}
-                    className="text-sm text-[#137fec] hover:underline"
-                  >
-                    View All
-                  </button>
-                </div>
-                <div className="space-y-4">
-                  {activities.length > 0 ? (
-                    activities.slice(0, 3).map((activity) => (
-                      <div key={activity.id} className="flex items-start gap-3">
-                        <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${getActivityIconBg(activity.type)}`}
-                        >
-                          <span className="material-symbols-outlined !text-[16px]">
-                            {getActivityIcon(activity.type)}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900 dark:text-white">
-                            {activity.title}
-                          </p>
-                          <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
-                            {activity.description}
-                          </p>
-                          <p className="text-xs text-slate-500 mt-1">
-                            {activity.user} • {formatRelativeTime(activity.timestamp, timezone)}
-                          </p>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="flex flex-col items-center gap-3 py-6">
-                      <span className="material-symbols-outlined text-3xl text-slate-300 dark:text-slate-600" aria-hidden="true">
-                        history
-                      </span>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
-                        No activities yet
-                      </p>
-                      <Button variant="outline" size="sm" onClick={() => setActiveTab('activity')}>
-                        <span className="material-symbols-outlined !text-[16px] mr-1.5" aria-hidden="true">add</span>
-                        Log your first activity
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </Card>
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                  Lead Information
-                </h3>
-                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <dt className="text-sm text-slate-500 dark:text-slate-400">Status</dt>
-                    <dd className="text-sm font-medium mt-1">
-                      <LeadStatusBadge status={lead.status} />
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm text-slate-500 dark:text-slate-400">Source</dt>
-                    <dd className="text-sm font-medium mt-1">
-                      <SourceBadge source={lead.source} />
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm text-slate-500 dark:text-slate-400">Temperature</dt>
-                    <dd className="text-sm font-medium mt-1">
-                      <TemperatureBadge temperature={lead.temperature} />
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm text-slate-500 dark:text-slate-400">Lead Owner</dt>
-                    <dd className="text-sm font-medium text-slate-900 dark:text-white">
-                      {lead.owner.name}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm text-slate-500 dark:text-slate-400">Last Contacted</dt>
-                    <dd className="text-sm font-medium text-slate-900 dark:text-white">
-                      {formatRelativeTime(
-                        typeof lead.lastContactedAt === 'string'
-                          ? lead.lastContactedAt
-                          : lead.lastContactedAt.toISOString(),
-                        timezone
-                      )}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm text-slate-500 dark:text-slate-400">Created</dt>
-                    <dd className="text-sm font-medium text-slate-900 dark:text-white">
-                      {formatDate(
-                        typeof lead.createdAt === 'string'
-                          ? lead.createdAt
-                          : lead.createdAt.toISOString()
-                      )}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm text-slate-500 dark:text-slate-400">Company</dt>
-                    <dd className="text-sm font-medium">
-                      <span className="text-[#137fec]">{lead.company}</span>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm text-slate-500 dark:text-slate-400">Lead Score</dt>
-                    <dd className="text-sm font-medium text-slate-900 dark:text-white">
-                      {lead.score}/100
-                    </dd>
-                  </div>
-                </dl>
-              </Card>
-              <RelatedTasksCard
-                entityType="lead"
-                entityId={leadId}
-                title="Open Tasks"
-                maxItems={2}
-                onViewAll={() => setActiveTab('tasks')}
-              />
-            </div>
+            <LeadOverviewTab
+              lead={lead}
+              activities={activities}
+              leadMetrics={leadMetrics}
+              leadId={leadId}
+              timezone={timezone}
+              onViewAllActivity={() => setActiveTab('activity')}
+              onViewAllTasks={() => setActiveTab('tasks')}
+            />
           )}
 
-          {/* Activity Tab - Timeline with Filters */}
           {activeTab === 'activity' && (
-            <Card className="p-6">
-              {/* View Toggle: Timeline (single-source) vs Unified (7-source IFC-069) */}
-              <div className="flex items-center gap-1 mb-4 bg-slate-100 dark:bg-slate-800 rounded-lg p-1 w-fit">
-                <button
-                  onClick={() => setActivityView('timeline')}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                    activityView === 'timeline'
-                      ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-sm align-middle mr-1">
-                    timeline
-                  </span>{' '}
-                  Timeline
-                </button>
-                <button
-                  onClick={() => setActivityView('unified')}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                    activityView === 'unified'
-                      ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-sm align-middle mr-1">
-                    dynamic_feed
-                  </span>{' '}
-                  All Sources
-                </button>
-              </div>
-
-              {activityView === 'unified' ? (
-                <ActivityFeed
-                  entityType="LEAD"
-                  entityId={leadId}
-                  height={500}
-                  emptyMessage="No activity found across all sources"
-                />
-              ) : (
-                <>
-                  {/* Filters and Search Bar */}
-                  <div className="mb-6 space-y-4">
-                    {/* Search */}
-                    <div className="relative">
-                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 !text-[18px] text-slate-400">
-                        search
-                      </span>
-                      <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search activities..."
-                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec] placeholder:text-slate-400"
-                      />
-                    </div>
-
-                    {/* Type Filters */}
-                    <div className="flex flex-wrap gap-2">
-                      {activityTypeFilters.map((filter) => (
-                        <button
-                          key={filter.value}
-                          onClick={() => setActivityTypeFilter(filter.value)}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                            activityTypeFilter === filter.value
-                              ? 'bg-[#137fec] text-white'
-                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                          }`}
-                        >
-                          <span>{filter.icon}</span>{' '}
-                          {filter.label}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Person Filter */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-slate-500 font-medium">Filter by:</span>
-                      <select
-                        value={personFilter}
-                        onChange={(e) => setPersonFilter(e.target.value)}
-                        className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec]"
-                      >
-                        {personFilters.map((filter) => (
-                          <option key={filter.value} value={filter.value}>
-                            {filter.label}
-                          </option>
-                        ))}
-                      </select>
-                      {(activityTypeFilter !== 'all' || personFilter !== 'all' || searchQuery) && (
-                        <button
-                          onClick={() => {
-                            setActivityTypeFilter('all');
-                            setPersonFilter('all');
-                            setSearchQuery('');
-                          }}
-                          className="text-xs text-[#137fec] hover:underline"
-                        >
-                          Clear filters
-                        </button>
-                      )}
-                    </div>
-
-                    {/* AI Insights Banner */}
-                    {aiInsights.sentimentTrend && (
-                      <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 rounded-lg border border-blue-100 dark:border-slate-700">
-                        <div className="w-8 h-8 rounded-full bg-[#137fec]/10 flex items-center justify-center">
-                          <span className="material-symbols-outlined !text-[18px] text-[#137fec]">
-                            auto_awesome
-                          </span>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-slate-900 dark:text-white">
-                            Sentiment is{' '}
-                            <span className={getSentimentTrendStyle(aiInsights.sentimentTrend)}>
-                              {aiInsights.sentimentTrend}
-                            </span>
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            Last engagement: {aiInsights.lastEngagementDays} day
-                            {aiInsights.lastEngagementDays === 1 ? '' : 's'} ago
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Results count */}
-                  <div className="flex items-center justify-between mb-4">
-                    <p className="text-sm text-slate-500">
-                      Showing {visibleActivities.length} of {filteredActivities.length} activities
-                    </p>
-                  </div>
-
-                  {/* Timeline — matches contact detail layout */}
-                  <div className="relative space-y-4" style={{ paddingLeft: 40 }}>
-                    {/* Continuous vertical timeline line */}
-                    <div className="absolute top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700" style={{ left: 19 }} />
-
-                    {visibleActivities.map((activity) => {
-                      const isExpanded = expandedActivities.has(activity.id);
-                      const isDeepLinked = isDeepLinkedActivity(activity.id, selectedActivityId);
-                      return (
-                        <div key={activity.id} data-activity-id={activity.id} className="relative">
-                          {/* Timeline dot marker */}
-                          <div
-                            className={`absolute w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 shadow-sm flex items-center justify-center z-10 ${getActivityIconBg(activity.type)}`}
-                            style={{ left: -36, top: 12 }}
-                          >
-                            <span className="material-symbols-outlined !text-[16px]">
-                              {getActivityIcon(activity.type)}
-                            </span>
-                          </div>
-
-                          {/* Activity Card */}
-                          <div className={`rounded-lg p-4 transition-colors ${
-                            isDeepLinked
-                              ? 'bg-primary/5 border-2 border-primary/30 ring-1 ring-primary/20'
-                              : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-                          }`}>
-
-                            {/* Header */}
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex-1">
-                                <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                                  {activity.title}
-                                </p>
-                                <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
-                                  {activity.description}
-                                </p>
-                                <p className="text-xs text-slate-500 mt-1">
-                                  {activity.user} • {formatRelativeTime(activity.timestamp, timezone)}
-                                </p>
-                              </div>
-                              <button
-                                onClick={() => toggleExpand(activity.id)}
-                                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"
-                              >
-                                <span
-                                  className={`material-symbols-outlined !text-[18px] transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                                >
-                                  expand_more
-                                </span>
-                              </button>
-                            </div>
-
-                            {/* Reactions */}
-                            {activity.reactions && activity.reactions.length > 0 && (
-                              <div className="flex items-center gap-2 mt-2">
-                                {activity.reactions.map((reaction) => (
-                                  <span
-                                    key={`${activity.id}-${reaction.emoji}`}
-                                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded-full text-xs"
-                                  >
-                                    {reaction.emoji} {reaction.count}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-
-                            {/* Expanded Content */}
-                            {isExpanded && (
-                              <div className="mt-3">
-                                {/* Rich Preview */}
-                                {renderRichPreview(activity)}
-
-                                {/* Comments */}
-                                {activity.comments && activity.comments.length > 0 && (
-                                  <div className="mt-3 space-y-2">
-                                    <p className="text-xs font-semibold text-slate-500 uppercase">
-                                      Comments
-                                    </p>
-                                    {activity.comments.map((comment) => (
-                                      <div
-                                        key={`${activity.id}-${comment.timestamp}`}
-                                        className="p-2 bg-slate-50 dark:bg-slate-800/50 rounded border border-slate-100 dark:border-slate-700"
-                                      >
-                                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                                          {comment.text}
-                                        </p>
-                                        <p className="text-xs text-slate-500 mt-1">
-                                          {comment.user} • {formatRelativeTime(comment.timestamp, timezone)}
-                                        </p>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-
-                                {/* Inline Actions */}
-                                {renderActivityActions(activity)}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Load More */}
-                  {hasMore && (
-                    <button
-                      onClick={() => setVisibleCount((prev) => prev + 5)}
-                      className="w-full mt-6 py-3 text-sm text-[#137fec] font-medium hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-slate-700"
-                    >
-                      Load more activities ({filteredActivities.length - visibleCount} remaining)
-                    </button>
-                  )}
-
-                  {filteredActivities.length === 0 && (
-                    <div className="text-center py-12">
-                      <span className="material-symbols-outlined !text-[48px] text-slate-300 mb-4">
-                        search_off
-                      </span>
-                      <p className="text-slate-500">No activities match your filters</p>
-                      <button
-                        onClick={() => {
-                          setActivityTypeFilter('all');
-                          setPersonFilter('all');
-                          setSearchQuery('');
-                        }}
-                        className="mt-2 text-sm text-[#137fec] hover:underline"
-                      >
-                        Clear filters
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-            </Card>
+            <LeadActivityTab
+              leadId={leadId}
+              activities={activities}
+              activityView={activityView}
+              onActivityViewChange={setActivityView}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              activityTypeFilter={activityTypeFilter}
+              onTypeFilterChange={setActivityTypeFilter}
+              personFilter={personFilter}
+              onPersonFilterChange={setPersonFilter}
+              personFilters={personFilters}
+              filteredActivities={filteredActivities}
+              visibleActivities={visibleActivities}
+              expandedActivities={expandedActivities}
+              onToggleExpand={toggleExpand}
+              visibleCount={visibleCount}
+              onLoadMore={() => setVisibleCount((prev) => prev + 5)}
+              hasMore={hasMore}
+              timezone={timezone}
+              selectedActivityId={selectedActivityId}
+              aiInsightsSentimentTrend={aiInsights.sentimentTrend}
+              aiInsightsLastEngagementDays={aiInsights.lastEngagementDays}
+              onClearFilters={() => { setActivityTypeFilter('all'); setPersonFilter('all'); setSearchQuery(''); }}
+              renderActions={renderActivityActions}
+            />
           )}
 
-          {/* Tasks Tab */}
           {activeTab === 'tasks' && (
             <RelatedTasksCard entityType="lead" entityId={leadId} maxItems={20} />
           )}
 
-          {/* Notes Tab */}
           {activeTab === 'notes' && (
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Notes</h3>
-              </div>
-              <div className="mb-4">
-                <textarea
-                  value={activityNote}
-                  onChange={(e) => setActivityNote(e.target.value)}
-                  onKeyDown={(e) => {
-                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                      e.preventDefault();
-                      if (activityNote.trim()) {
-                        addNoteMutation.mutate({ leadId, content: activityNote.trim() });
-                      }
-                    }
-                  }}
-                  placeholder="Write a note..."
-                  className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec] min-h-[80px] p-3 placeholder:text-slate-400"
-                />
-                <div className="flex justify-between items-center mt-2">
-                  <span className="text-[10px] text-slate-400">Ctrl+Enter to submit</span>
-                  <button
-                    onClick={() => {
-                      if (activityNote.trim()) {
-                        addNoteMutation.mutate({ leadId, content: activityNote.trim() });
-                      }
-                    }}
-                    disabled={addNoteMutation.isPending || !activityNote.trim()}
-                    className="inline-flex items-center gap-2 px-4 py-1.5 text-sm font-semibold text-white bg-[#137fec] hover:bg-blue-600 rounded-lg transition-colors disabled:opacity-50"
-                  >
-                    <span className="material-symbols-outlined !text-[18px]">add</span>{' '}
-                    {addNoteMutation.isPending ? 'Adding...' : 'Add Note'}
-                  </button>
-                </div>
-              </div>
-              <div className="space-y-4">
-                {notes.length > 0 ? (
-                  notes.map((note) => (
-                    <div
-                      key={note.id}
-                      className="pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0"
-                    >
-                      <p className="text-sm text-slate-600 dark:text-slate-400">{note.content}</p>
-                      <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
-                        <span>{note.author}</span>
-                        <span>•</span>
-                        <span>{formatRelativeTime(note.createdAt, timezone)}</span>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-slate-500 text-center py-8">No notes yet</p>
-                )}
-              </div>
-            </Card>
+            <LeadNotesTab
+              notes={notes}
+              activityNote={activityNote}
+              onActivityNoteChange={setActivityNote}
+              onAddNote={() => { if (activityNote.trim()) addNoteMutation.mutate({ leadId, content: activityNote.trim() }); }}
+              leadId={leadId}
+              addNoteMutation={addNoteMutation}
+              timezone={timezone}
+            />
           )}
 
-          {/* Emails Tab */}
           {activeTab === 'emails' && (
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Emails</h3>
-                <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
-                  <span className="material-symbols-outlined !text-[18px]">send</span>{' '}
-                  Compose
-                </button>
-              </div>
-              <div className="space-y-3">
-                {emails.length > 0 ? (
-                  emails.map((email) => (
-                    <div
-                      key={email.id}
-                      className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-colors"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                        <span className="material-symbols-outlined !text-[20px] text-orange-600">
-                          mail
-                        </span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-slate-900 dark:text-white truncate">
-                          {email.subject}
-                        </p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${email.status === 'opened' ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-600'}`}
-                          >
-                            {email.status === 'opened' ? `Opened ${email.openCount}x` : 'Sent'}
-                          </span>
-                          <span className="text-xs text-slate-500">
-                            {formatRelativeTime(email.sentAt, timezone)}
-                          </span>
-                        </div>
-                      </div>
-                      <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg">
-                        <span className="material-symbols-outlined !text-[18px]">open_in_new</span>
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-slate-500 text-center py-8">No emails yet</p>
-                )}
-              </div>
-            </Card>
+            <LeadEmailsTab emails={emails} timezone={timezone} />
           )}
 
-          {/* Files Tab */}
           {activeTab === 'files' && (
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Files</h3>
-                <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
-                  <span className="material-symbols-outlined !text-[18px]">upload</span>{' '}
-                  Upload
-                </button>
-              </div>
-              <div className="space-y-3">
-                {files.length > 0 ? (
-                  files.map((file) => (
-                    <div
-                      key={file.id}
-                      className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                        <span className="material-symbols-outlined !text-[20px] text-red-600">
-                          description
-                        </span>
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-slate-900 dark:text-white">{file.name}</p>
-                        <p className="text-sm text-slate-500">
-                          {file.size} • {formatRelativeTime(file.uploadedAt, timezone)}
-                        </p>
-                      </div>
-                      <button className="p-2 text-slate-500 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
-                        <span className="material-symbols-outlined !text-[18px]">download</span>
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-slate-500 text-center py-8">No files yet</p>
-                )}
-              </div>
-            </Card>
+            <LeadFilesTab files={files} timezone={timezone} />
           )}
 
-          {/* AI Insights Tab (IFC-095) */}
           {activeTab === 'ai-insights' && (
-            <div className="space-y-6">
-              {/* No AI analysis banner */}
-              {!apiLead?.aiInsight && (
-                <div className="rounded-lg border border-dashed border-amber-300 bg-amber-50 dark:bg-amber-950/20 p-4">
-                  <p className="text-sm text-amber-700 dark:text-amber-400 mb-3">
-                    AI analysis has not been run for this lead yet.
-                  </p>
-                  <Button
-                    size="sm"
-                    onClick={() => scoreWithAIMutation.mutate({ leadId: lead.id })}
-                    disabled={scoreWithAIMutation.isPending}
-                  >
-                    {scoreWithAIMutation.isPending ? 'Analyzing...' : 'Run AI Analysis'}
-                  </Button>
-                </div>
-              )}
-              {/* Churn Risk and Next Best Action Cards */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {churnRiskData && (
-                  <ChurnRiskCard
-                    data={churnRiskData}
-                    title="Churn Risk Assessment"
-                    showFactors={true}
-                    showConfidence={true}
-                    showSLA={true}
-                  />
-                )}
-                {nextBestActionData && (
-                  <NextBestActionCard
-                    data={nextBestActionData}
-                    title="Recommended Action"
-                    showRationale={true}
-                    showConfidence={true}
-                  />
-                )}
-              </div>
-
-              {/* Quick Stats Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Card className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                      <span className="material-symbols-outlined !text-[20px] text-green-600">
-                        trending_up
-                      </span>
-                    </div>
-                    <div>
-                      <p className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>
-                        <span data-testid={hasAiInsight ? 'conversion-value' : 'conversion-null-state'}>
-                          {hasAiInsight ? `${aiInsights.conversionProbability}%` : '--'}
-                        </span>
-                      </p>
-                      <p className="text-xs text-slate-500">Conversion Probability</p>
-                    </div>
-                  </div>
-                </Card>
-                <Card className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-[#137fec]/10 flex items-center justify-center">
-                      <span className="material-symbols-outlined !text-[20px] text-[#137fec]">
-                        payments
-                      </span>
-                    </div>
-                    <div>
-                      <p className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>
-                        <span data-testid={hasAiInsight ? 'deal-value' : 'deal-value-null-state'}>
-                          {hasAiInsight ? `$${(aiInsights.estimatedValue / 1000).toFixed(0)}k` : '--'}
-                        </span>
-                      </p>
-                      <p className="text-xs text-slate-500">Est. Deal Value</p>
-                    </div>
-                  </div>
-                </Card>
-                <Card className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                      <span className="material-symbols-outlined !text-[20px] text-purple-600">
-                        grade
-                      </span>
-                    </div>
-                    <div>
-                      <p className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>
-                        <span data-testid={hasAiInsight ? 'lead-score-value' : 'lead-score-null-state'}>
-                          {hasAiInsight ? aiInsights.qualificationScore : '--'}
-                        </span>
-                      </p>
-                      <p className="text-xs text-slate-500">Lead Score</p>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                  AI Recommendations
-                </h3>
-                <ul className="space-y-3">
-                  {aiInsights.recommendations.map((rec, index) => (
-                    <li key={`rec-${index}`} className="flex items-start gap-3"> {/* NOSONAR typescript:S6479 */}
-                      <div className="w-6 h-6 rounded-full bg-[#137fec]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-xs font-medium text-[#137fec]">{index + 1}</span>
-                      </div>
-                      <p className="text-slate-600 dark:text-slate-400">{rec}</p>
-                    </li>
-                  ))}
-                </ul>
-              </Card>
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                  Engagement Analysis
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between mb-1.5">
-                      <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                        Engagement Score
-                      </span>
-                      <span className={`text-sm font-bold ${hasAiInsight ? 'text-[#137fec]' : 'text-slate-400 dark:text-slate-500'}`}>
-                        {hasAiInsight ? `${aiInsights.engagementScore}%` : '--'}
-                      </span>
-                    </div>
-                    <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-                      <div
-                        className="bg-[#137fec] h-2 rounded-full"
-                        style={{ width: `${aiInsights.engagementScore}%` }}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-sm text-slate-600 dark:text-slate-300">Sentiment</span>
-                    <span
-                      data-testid={hasAiInsight ? 'sentiment-value' : 'sentiment-null-state'}
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        hasAiInsight
-                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                          : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 italic'
-                      }`}
-                    >
-                      {aiInsights.sentiment}
-                    </span>
-                  </div>
-                </div>
-              </Card>
-            </div>
+            <LeadAIInsightsTab
+              hasAiInsight={hasAiInsight}
+              aiInsights={aiInsights}
+              churnRiskData={churnRiskData}
+              nextBestActionData={nextBestActionData}
+              onRunAnalysis={() => scoreWithAIMutation.mutate({ leadId: lead.id })}
+              scoreWithAIMutation={scoreWithAIMutation}
+              leadId={leadId}
+            />
           )}
         </section>
 
-        {/* Right Sidebar - Lead IQ, Tasks, Upcoming, Similar Leads */}
-        <aside className="lg:col-span-3 flex flex-col gap-6">
-          {/* Lead IQ (AI Insights) */}
-          <Card className="p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#137fec]">auto_awesome</span>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">Lead IQ</h3>
-              </div>
-              <span className="text-[10px] bg-[#137fec]/10 text-[#137fec] px-1.5 py-0.5 rounded font-bold">
-                BETA
-              </span>
-            </div>
-            {!apiLead?.aiInsight && (
-              <p className="text-xs text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-1">
-                <span className="material-symbols-outlined !text-[14px]">warning</span>{' '}
-                AI analysis not run yet
-              </p>
-            )}
-            <div className="space-y-5">
-              {/* Lead Score */}
-              <div>
-                <div className="flex justify-between mb-1.5">
-                  <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                    Lead Score
-                  </span>
-                  <span className="text-sm font-bold text-green-600">
-                    {aiInsights.qualificationScore}/100
-                  </span>
-                </div>
-                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-                  <div
-                    className="bg-green-500 h-2 rounded-full"
-                    style={{ width: `${aiInsights.qualificationScore}%` }}
-                  />
-                </div>
-                <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                  {aiInsights.icpMatch}
-                </p>
-              </div>
-
-              <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
-
-              {/* Engagement */}
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                    Engagement
-                  </span>
-                  <span
-                    data-testid={hasAiInsight ? 'engagement-value' : 'engagement-null-state'}
-                    className={`text-xs font-bold px-2 py-0.5 rounded ${
-                      hasAiInsight
-                        ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800'
-                        : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800/50 italic'
-                    }`}
-                  >
-                    {aiInsights.engagementLevel}
-                  </span>
-                </div>
-                {hasAiInsight ? (
-                <div className="flex gap-1 h-1.5">
-                  {[1, 2, 3, 4, 5].map((level) => (
-                    <div
-                      key={level}
-                      className={`flex-1 ${level === 1 ? 'rounded-l-full' : ''} ${level === 5 ? 'rounded-r-full' : ''} ${
-                        aiInsights.engagementScore >= level * 20
-                          ? 'bg-[#137fec]'
-                          : 'bg-[#137fec]/30'
-                      }`}
-                    />
-                  ))}
-                </div>
-                ) : (
-                <div className="flex gap-1 h-1.5" data-testid="engagement-bar-null-state">
-                  {[1, 2, 3, 4, 5].map((level) => (
-                    <div
-                      key={level}
-                      className={`flex-1 ${level === 1 ? 'rounded-l-full' : ''} ${level === 5 ? 'rounded-r-full' : ''} bg-slate-100 dark:bg-slate-800`}
-                    />
-                  ))}
-                </div>
-                )}
-              </div>
-
-              <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
-
-              {/* Recommended Next Steps */}
-              <div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                  Recommended Next Steps
-                </p>
-                <div className="space-y-2">
-                  {aiInsights.nextBestActions.map((action) => (
-                    <button
-                      key={action.label}
-                      className={`w-full text-left p-2 rounded border transition-colors group ${
-                        action.primary
-                          ? 'bg-blue-50 dark:bg-slate-800/50 border-blue-100 dark:border-slate-700 hover:border-[#137fec]/50'
-                          : 'bg-slate-50 dark:bg-slate-800/30 border-slate-100 dark:border-slate-700 hover:border-slate-300'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`material-symbols-outlined !text-[18px] ${action.primary ? 'text-[#137fec]' : 'text-slate-500'}`}
-                        >
-                          {action.icon}
-                        </span>
-                        <span
-                          className={`text-sm font-medium ${action.primary ? 'text-slate-700 dark:text-slate-200 group-hover:text-[#137fec]' : 'text-slate-600 dark:text-slate-300 group-hover:text-slate-900'}`}
-                        >
-                          {action.label}
-                        </span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={() => setActiveTab('ai-insights')}
-              className="w-full mt-4 text-sm text-[#137fec] hover:underline text-center"
-            >
-              View Full Analysis
-            </button>
-          </Card>
-
-          {/* Tasks Widget */}
-          <RelatedTasksCard
-            entityType="lead"
-            entityId={leadId}
-            maxItems={2}
-            compact
-            onViewAll={() => setActiveTab('tasks')}
-          />
-
-          {/* Upcoming Event */}
-          <UpcomingEventsCard entityType="lead" entityId={leadId} maxItems={1} compact />
-
-          {/* Notes Widget */}
-          <Card className="p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Notes</h3>
-              <button
-                onClick={() => setActiveTab('notes')}
-                className="w-6 h-6 rounded hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500"
-                title="Add note"
-              >
-                <span className="material-symbols-outlined !text-[20px]">add</span>
-              </button>
-            </div>
-            <div className="space-y-4">
-              {notes.length > 0 ? (
-                notes.slice(0, 2).map((note) => (
-                  <div
-                    key={note.id}
-                    className="pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0"
-                  >
-                    <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
-                      {note.content}
-                    </p>
-                    <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
-                      <span>{note.author}</span>
-                      <span>•</span>
-                      <span>{formatRelativeTime(note.createdAt, timezone)}</span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-slate-500 text-center py-2">No notes yet</p>
-              )}
-            </div>
-            {notes.length > 2 && (
-              <button
-                onClick={() => setActiveTab('notes')}
-                className="w-full mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs font-medium text-[#137fec] hover:text-[#0f6dd0] transition-colors text-center"
-              >
-                View all notes ({notes.length})
-              </button>
-            )}
-          </Card>
-
-          {/* Similar Leads */}
-          <Card className="p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Similar Leads</h3>
-            </div>
-            <div className="text-center py-4">
-              <span className="material-symbols-outlined !text-[32px] text-slate-300 dark:text-slate-600 mb-2">
-                group
-              </span>
-              <p className="text-sm text-slate-500 dark:text-slate-400">No similar leads found</p>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                AI similarity matching coming soon
-              </p>
-            </div>
-          </Card>
-        </aside>
+        <LeadRightSidebar
+          hasAiInsight={hasAiInsight}
+          aiInsights={aiInsights}
+          notes={notes}
+          leadId={leadId}
+          timezone={timezone}
+          onViewAIInsights={() => setActiveTab('ai-insights')}
+          onViewNotes={() => setActiveTab('notes')}
+          onViewTasks={() => setActiveTab('tasks')}
+        />
       </div>
     </div>
   );

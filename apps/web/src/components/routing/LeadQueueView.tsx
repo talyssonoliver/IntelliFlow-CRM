@@ -15,6 +15,7 @@ import {
   CardHeader,
   CardTitle,
   Checkbox,
+  EmptyState,
   Input,
   Select,
   SelectContent,
@@ -132,10 +133,7 @@ export function LeadQueueView() {
         )}
 
         {sortedLeads.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <span className="material-symbols-outlined text-[36px] mb-2 block">group_off</span>
-            <p>No unassigned leads</p>
-          </div>
+          <EmptyState entity="leads" variant="filtered" phase="passive" />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -180,7 +178,7 @@ export function LeadQueueView() {
                       </span>
                     </td>
                     <td className="py-2 text-muted-foreground">
-                      {lead.estimatedValue ? `$${lead.estimatedValue.toLocaleString()}` : '—'}
+                      {lead.estimatedValue ? `$${lead.estimatedValue.toLocaleString('en-GB')}` : '—'}
                     </td>
                   </tr>
                 ))}

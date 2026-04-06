@@ -127,6 +127,9 @@ vi.mock('@/lib/api', () => ({
       ensureInsightReview: {
         useMutation: () => ({ mutate: vi.fn(), isPending: false }),
       },
+      dismissInsight: {
+        useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+      },
     },
   },
 }));
@@ -202,6 +205,21 @@ vi.mock('@intelliflow/ui', () => ({
     <div>{children}</div>
   ),
   TooltipProvider: ({ children }: Readonly<{ children: React.ReactNode }>) => <>{children}</>,
+  EmptyState: ({
+    entity,
+    _phase,
+    className,
+    children,
+  }: Readonly<{
+    entity?: string;
+    _phase?: string;
+    className?: string;
+    children?: React.ReactNode;
+  }>) => (
+    <div data-testid={`empty-state-${entity}`} className={className}>
+      {children || `No ${entity} yet`}
+    </div>
+  ),
 }));
 
 vi.mock('@/components/shared/entity-action-sheet', () => ({
@@ -444,5 +462,14 @@ describe('LeadDetailPage - Empty State CTA', () => {
     ];
     render(<Lead360Page />);
     expect(screen.queryByRole('button', { name: /Log your first activity/i })).not.toBeInTheDocument();
+  });
+
+  it('renders LeadStatusBadge with "Negotiating" label for NEGOTIATING status (AC-005, AC-006)', () => {
+    mockLeadQueryState.data.status = 'NEGOTIATING';
+    render(<Lead360Page />);
+    const negotiatingElements = screen.getAllByText('Negotiating');
+    expect(negotiatingElements.length).toBeGreaterThan(0);
+    // Reset for other tests
+    mockLeadQueryState.data.status = 'NEW';
   });
 });

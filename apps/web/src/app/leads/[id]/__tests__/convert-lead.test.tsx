@@ -125,6 +125,9 @@ vi.mock('@/lib/api', () => ({
       ensureInsightReview: {
         useMutation: () => ({ mutate: vi.fn(), isPending: false }),
       },
+      dismissInsight: {
+        useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+      },
     },
   },
 }));

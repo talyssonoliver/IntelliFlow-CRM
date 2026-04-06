@@ -10,7 +10,7 @@
  */
 
 import { useState, useCallback, lazy, Suspense } from 'react';
-import { Card, CardContent, Badge, Button, Skeleton, cn } from '@intelliflow/ui';
+import { Card, CardContent, Badge, Button, EmptyState, Skeleton, cn } from '@intelliflow/ui';
 import { PageHeader, SearchFilterBar } from '@/components/shared';
 import { useExperimentsDashboard, useExperimentActions } from '@/lib/experiments/hooks';
 import {
@@ -218,19 +218,8 @@ export function ExperimentsDashboard() {
           description="Manage experiments, track statistical significance, and compare AI vs manual scoring."
         />
         <Card className="mt-6">
-          <CardContent className="p-12 text-center">
-            <span
-              className="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 mb-4"
-              aria-hidden="true"
-            >
-              science
-            </span>
-            <p className="text-slate-700 dark:text-slate-200 font-medium mb-1">
-              No experiments yet
-            </p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Create your first A/B experiment to get started.
-            </p>
+          <CardContent>
+            <EmptyState entity="experiments" phase="passive" />
           </CardContent>
         </Card>
       </div>
@@ -356,16 +345,19 @@ export function ExperimentsDashboard() {
                     <span>{exp.progressPercent}%</span>
                   </div>
                   <div
-                    role="progressbar" // NOSONAR typescript:S6819 — custom styled progress with inner fill child; <progress> cannot contain child elements
-                    aria-valuenow={exp.progressPercent}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-label={`Sample collection progress: ${exp.progressPercent}%`}
                     className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden"
+                    aria-label={`Sample collection progress: ${exp.progressPercent}%`}
                   >
+                    <progress
+                      value={exp.progressPercent}
+                      max={100}
+                      aria-label={`Sample collection progress: ${exp.progressPercent}%`}
+                      className="sr-only"
+                    />
                     <div
                       className="h-full bg-blue-500 dark:bg-blue-400 rounded-full transition-all"
                       style={{ width: `${exp.progressPercent}%` }}
+                      aria-hidden="true"
                     />
                   </div>
                 </div>

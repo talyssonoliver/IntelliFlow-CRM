@@ -7,6 +7,7 @@
  */
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { metadata } from '../layout';
 
 // ============================================
 // Mock Setup
@@ -117,5 +118,30 @@ describe('LegacyEmailVerifyPage (IFC-120)', () => {
     mockSearchParams = new URLSearchParams();
     render(<LegacyEmailVerifyPage />);
     expect(screen.queryByText(/resend verification email/i)).toBeNull();
+  });
+
+  describe('Verify Email Metadata', () => {
+    it('should have correct SEO metadata', () => {
+      expect(metadata.title).toBe('Verify Email');
+      expect(metadata.description).toContain('IntelliFlow CRM');
+      expect(metadata.description).toContain('Verify');
+    });
+
+    it('should have Open Graph metadata', () => {
+      expect(metadata.openGraph).toBeDefined();
+      expect(metadata.openGraph?.url).toBe('https://intelliflow-crm.com/verify-email');
+      expect(metadata.openGraph?.siteName).toBe('IntelliFlow CRM');
+      expect((metadata.openGraph as Record<string, unknown>)?.type).toBe('website');
+    });
+
+    it('should have Twitter metadata', () => {
+      expect(metadata.twitter).toBeDefined();
+      expect((metadata.twitter as Record<string, unknown>)?.card).toBe('summary_large_image');
+      expect(metadata.twitter?.title).toBeDefined();
+    });
+
+    it('should have canonical URL', () => {
+      expect(metadata.alternates?.canonical).toBe('/verify-email');
+    });
   });
 });

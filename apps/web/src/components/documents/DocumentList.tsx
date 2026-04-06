@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { DataTable, ConfirmationDialog, Button, toast } from '@intelliflow/ui';
+import { DataTable, ConfirmationDialog, Button, toast, EmptyState } from '@intelliflow/ui';
 import { formatFileSize, formatDate, getStatusConfig, getMimeTypeIcon } from './document-utils';
 import type {
   DocumentListProps,
@@ -361,15 +361,14 @@ export function DocumentList({
 
   if (isLoading) {
     return (
-      <div
+      <output
         className="space-y-4"
-        role="status" // NOSONAR typescript:S6819 — loading skeleton region; <output> is for form computation results
         aria-label="Loading documents"
       >
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="h-16 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" /> // NOSONAR typescript:S6479
         ))}
-      </div>
+      </output>
     );
   }
 
@@ -386,10 +385,8 @@ export function DocumentList({
 
   if (documents.length === 0 && !isLoading) {
     return (
-      <div className="text-center py-12" data-testid="empty-state">
-        <span className="material-symbols-outlined text-5xl text-slate-400">folder_off</span>
-        <h3 className="mt-4 text-lg font-medium text-slate-900 dark:text-white">No documents</h3>
-        <p className="mt-2 text-sm text-slate-500">Upload your first document to get started.</p>
+      <div data-testid="empty-state">
+        <EmptyState entity="documents" phase="passive" />
       </div>
     );
   }
@@ -431,16 +428,12 @@ export function DocumentList({
       )}
 
       {/* Data Table */}
-      <div
-        role="table" // NOSONAR typescript:S6819 — wrapper div needed to pass aria-label; DataTable renders its own <table> internally
-        aria-label="Documents table"
-      >
-        <DataTable
-          columns={columns}
-          data={paginatedDocuments}
-          onRowClick={(row) => onDocumentSelect?.(row.id)}
-        />
-      </div>
+      <DataTable
+        columns={columns}
+        data={paginatedDocuments}
+        entity="documents"
+        onRowClick={(row) => onDocumentSelect?.(row.id)}
+      />
 
       {/* Pagination */}
       {totalPages > 1 && (

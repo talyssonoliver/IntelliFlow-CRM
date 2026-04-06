@@ -83,7 +83,6 @@ export function ComplementarySidebar({
 
   return (
     <aside
-      role="complementary"
       aria-label={title || 'Detail panel'}
       aria-hidden={!isOpen}
       className={cn(

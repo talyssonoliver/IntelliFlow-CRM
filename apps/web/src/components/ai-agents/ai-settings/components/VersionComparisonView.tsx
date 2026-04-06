@@ -17,7 +17,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { Card, Button, Badge, Skeleton, Label } from '@intelliflow/ui';
+import { Card, Button, Badge, Skeleton, Label, EmptyState } from '@intelliflow/ui';
 import type { ChainVersionSummary } from '@intelliflow/validators';
 import type { VersionComparison } from '../hooks/useChainVersions';
 
@@ -262,10 +262,8 @@ export function VersionComparisonView({
           )}
 
           {comparison.differences.length === 0 && (
-            <Card className="p-4 text-center">
-              <p className="text-muted-foreground">
-                No differences found between the two versions.
-              </p>
+            <Card className="p-4">
+              <EmptyState entity="insights" phase="passive" />
             </Card>
           )}
         </div>

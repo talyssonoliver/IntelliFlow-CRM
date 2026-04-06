@@ -118,8 +118,6 @@ export function SsoEntryForm({ onResolve, isLoading = false }: Readonly<SsoEntry
           disabled={isDisabled}
           className="w-full bg-white/5 border-white/10 text-white placeholder:text-slate-400 focus:ring-[#7cc4ff] focus:border-transparent"
           autoComplete="email"
-          // eslint-disable-next-line jsx-a11y/no-autofocus
-          autoFocus
         />
         <p id="sso-help-text" className="text-xs text-slate-400">
           Enter your work email to find your organization&apos;s SSO provider

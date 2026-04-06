@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Card, Skeleton } from '@intelliflow/ui';
+import { Card, EmptyState, Skeleton } from '@intelliflow/ui';
 import { AppAvatar } from './app-avatar';
 import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
 import { api } from '@/lib/api';
@@ -63,10 +63,10 @@ const TYPE_ICONS: Record<string, { icon: string; color: string }> = {
 const TASK_ICON = { icon: 'task_alt', color: 'text-indigo-500 bg-indigo-100 dark:bg-indigo-900/20' };
 const DEFAULT_ICON = { icon: 'event', color: 'text-slate-500 bg-slate-100 dark:bg-slate-800' };
 
-function formatEventDate(date: Readonly<Date>, timezone: string = 'Europe/London') {
+function formatEventDate(date: Date, timezone: string = 'Europe/London') {
   return {
     month: date.toLocaleDateString('en-US', { month: 'short', timeZone: timezone }),
-    day: date.getDate().toString(),
+    day: date.getUTCDate().toString(),
     time: date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: timezone }),
   };
 }
@@ -129,7 +129,8 @@ export function UpcomingEventsCard({
     const merged: CalendarEvent[] = [];
 
     // Add appointments
-    for (const a of ((appointmentData?.appointments ?? []) as Array<Record<string, unknown>>)) {
+    const appointments = (appointmentData?.appointments ?? []) as unknown as Array<Record<string, unknown>>;
+    for (const a of appointments) {
       merged.push({
         id: a.id as string,
         title: a.title as string,
@@ -243,17 +244,7 @@ export function UpcomingEventsCard({
 
       {/* Empty state */}
       {events.length === 0 && (
-        <div className="text-center py-4">
-          <p className="text-sm text-muted-foreground">No upcoming events</p>
-          {showAddButton && (
-            <Link
-              href={getAddHref(entityType, entityId)}
-              className="text-sm text-primary hover:underline mt-1 inline-block"
-            >
-              Schedule an event
-            </Link>
-          )}
-        </div>
+        <EmptyState entity="appointments" phase="passive" className="py-2" />
       )}
 
       {/* Event list — matches hover/spacing pattern of other widgets */}

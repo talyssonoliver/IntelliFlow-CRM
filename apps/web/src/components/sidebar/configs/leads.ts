@@ -84,9 +84,3 @@ export function createLeadsSettingsSidebarConfig(
     ],
   };
 }
-
-/** @deprecated Use createLeadsSidebarConfig(onSettingsClick) instead */
-export const leadsSidebarConfig: SidebarConfig = {
-  ...createLeadsSidebarConfig(() => {}),
-  settingsHref: '/settings/leads',
-};

@@ -105,6 +105,20 @@
       "category": "Core CRM",
       "features": [
         {
+          "name": "Users",
+          "starter": "5",
+          "professional": "25",
+          "enterprise": "Unlimited",
+          "custom": "Custom"
+        },
+        {
+          "name": "Contacts",
+          "starter": "1,000",
+          "professional": "10,000",
+          "enterprise": "Unlimited",
+          "custom": "Custom"
+        },
+        {
           "name": "Contacts & Companies",
           "starter": true,
           "professional": true,
@@ -138,11 +152,18 @@
           "professional": true,
           "enterprise": true,
           "custom": true
+        },
+        {
+          "name": "Data Retention",
+          "starter": "1 year",
+          "professional": "3 years",
+          "enterprise": "Unlimited",
+          "custom": "Custom"
         }
       ]
     },
     {
-      "category": "AI & Automation",
+      "category": "AI & Insights",
       "features": [
         {
           "name": "AI Lead Scoring",
@@ -159,14 +180,14 @@
           "custom": "Custom"
         },
         {
-          "name": "Workflow Automation",
+          "name": "AI Explainability",
           "starter": false,
           "professional": true,
           "enterprise": true,
           "custom": true
         },
         {
-          "name": "AI Explainability",
+          "name": "Churn & Next Best Action",
           "starter": false,
           "professional": true,
           "enterprise": true,
@@ -178,6 +199,39 @@
           "professional": false,
           "enterprise": true,
           "custom": true
+        },
+        {
+          "name": "RAG Search",
+          "starter": false,
+          "professional": false,
+          "enterprise": true,
+          "custom": true
+        }
+      ]
+    },
+    {
+      "category": "Automation",
+      "features": [
+        {
+          "name": "Workflow Automation",
+          "starter": false,
+          "professional": true,
+          "enterprise": "Advanced",
+          "custom": "Custom"
+        },
+        {
+          "name": "Email Sequences",
+          "starter": false,
+          "professional": true,
+          "enterprise": true,
+          "custom": true
+        },
+        {
+          "name": "Automated Lead Routing",
+          "starter": false,
+          "professional": true,
+          "enterprise": true,
+          "custom": true
         }
       ]
     },
@@ -186,6 +240,13 @@
       "features": [
         {
           "name": "Data Encryption",
+          "starter": true,
+          "professional": true,
+          "enterprise": true,
+          "custom": true
+        },
+        {
+          "name": "MFA",
           "starter": true,
           "professional": true,
           "enterprise": true,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { Button } from '@intelliflow/ui';
+import { Button, EmptyState } from '@intelliflow/ui';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { formatFileSize, formatDate } from './document-utils';
 import type { VersionHistoryProps, DocumentVersion } from './types';
@@ -64,18 +64,14 @@ export function VersionHistory({
     setRestoreTarget(null);
   }, []);
 
-  const restoreDialogRef = useFocusTrap<HTMLDivElement>(!!restoreTarget);
+  const restoreDialogRef = useFocusTrap<HTMLDialogElement>(!!restoreTarget);
 
   // ─── Empty State ──────────────────────────────────────────────────────────
 
   if (versions.length === 0) {
     return (
-      <div className="text-center py-12" data-testid="version-empty-state">
-        <span className="material-symbols-outlined text-5xl text-slate-400">history</span>
-        <h3 className="mt-4 text-lg font-medium text-slate-900 dark:text-white">
-          No version history
-        </h3>
-        <p className="mt-2 text-sm text-slate-500">No version history available.</p>
+      <div data-testid="version-empty-state">
+        <EmptyState entity="documents" phase="passive" />
       </div>
     );
   }
@@ -89,17 +85,20 @@ export function VersionHistory({
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
           aria-hidden="true"
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') cancelRestore();
-          }}
         >
-          <div
+          <dialog
             ref={restoreDialogRef}
-            role="dialog" // NOSONAR typescript:S6819 — custom modal within full-screen backdrop; <dialog> element lacks consistent cross-browser CSS support
+            open
             aria-modal="true"
             aria-label="Confirm restore"
-            className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
+            className="appearance-none bg-transparent border-none p-0 m-0 max-w-none max-h-none bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
           >
+            <div
+              role="none"
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') cancelRestore();
+              }}
+            >
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
               Restore version?
             </h3>
@@ -114,7 +113,8 @@ export function VersionHistory({
               </Button>
               <Button onClick={confirmRestore}>Restore</Button>
             </div>
-          </div>
+            </div>
+          </dialog>
         </div>
       )}
 
@@ -142,21 +142,14 @@ export function VersionHistory({
                 aria-hidden="true"
               />
 
-              <div // NOSONAR
-                className={`rounded-lg p-4 cursor-pointer transition-colors ${
+              <button
+                type="button"
+                className={`w-full text-left rounded-lg p-4 cursor-pointer transition-colors ${
                   isCurrent
                     ? 'bg-primary/5 border border-primary/20'
                     : 'bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
                 onClick={() => onVersionSelect?.(version.id)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    onVersionSelect?.(version.id);
-                  }
-                }}
-                tabIndex={0}
-                role="button"
                 aria-label={`Version ${version.versionNumber}${isCurrent ? ' (current)' : ''}`}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -216,7 +209,7 @@ export function VersionHistory({
                     </Button>
                   )}
                 </div>
-              </div>
+              </button>
             </li>
           );
         })}

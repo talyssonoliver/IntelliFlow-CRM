@@ -31,6 +31,9 @@ import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
 import { ActivityFeed } from '@/components/shared/activity-feed';
 import { OpportunityCreateSheet } from './OpportunityCreateSheet';
 import { ContactAddSheet } from './ContactAddSheet';
+import { AssignSheet } from '@/components/shared/assign-sheet';
+import { AppAvatar } from '@/components/shared/app-avatar';
+import { useAuth } from '@/lib/auth';
 
 interface AccountDetailProps {
   accountId: string;
@@ -97,6 +100,8 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [createDealOpen, setCreateDealOpen] = useState(false);
   const [addContactOpen, setAddContactOpen] = useState(false);
+  const [assignOwnerOpen, setAssignOwnerOpen] = useState(false);
+  const { user } = useAuth();
   const isValidId = UUID_RE.test(accountId);
 
   const {
@@ -123,6 +128,20 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
     },
     onError: (error: { message: string }) => {
       toast({ title: 'Delete failed', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const { data: assigneeOptions = [], isLoading: isAssigneesLoading } =
+    api.account.assignees.useQuery(undefined, { enabled: isAuthenticated });
+
+  const assignOwnerMutation = api.account.assignOwner.useMutation({
+    onSuccess: () => {
+      utils.account.getById.invalidate({ id: accountId });
+      utils.account.list.invalidate();
+      toast({ title: 'Owner Assigned', description: 'Account owner has been updated.' });
+    },
+    onError: (error: { message: string }) => {
+      toast({ title: 'Assignment failed', description: error.message, variant: 'destructive' });
     },
   });
 
@@ -403,7 +422,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
                       Employees
                     </span>
                     <span className="text-sm text-slate-700 dark:text-slate-300">
-                      {account.employees?.toLocaleString() ?? '—'}
+                      {account.employees?.toLocaleString('en-GB') ?? '—'}
                     </span>
                   </div>
                 </div>
@@ -452,7 +471,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
                 </div>
                 <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
                   <p className="text-lg font-bold text-slate-900 dark:text-white">
-                    {account.employees?.toLocaleString() ?? '—'}
+                    {account.employees?.toLocaleString('en-GB') ?? '—'}
                   </p>
                   <p className="text-xs text-slate-500">Employees</p>
                 </div>
@@ -465,20 +484,46 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
             <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase mb-3 tracking-wider">
               Account Owner
             </h3>
-            {account.ownerId ? (
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-medium">
-                  <span className="material-symbols-outlined !text-[20px]">person</span>
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">Owner Assigned</p>
-                  <p className="text-xs text-slate-500">Account Manager</p>
+            {account.owner ? (
+              <div className="flex items-center gap-3 mb-3">
+                <AppAvatar
+                  name={account.owner.name ?? account.owner.email}
+                  className="size-10"
+                  fallbackClassName="text-sm font-semibold text-slate-700 dark:text-slate-200 bg-slate-200 dark:bg-slate-700"
+                />
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                    {account.owner.name ?? account.owner.email}
+                  </p>
+                  <p className="text-xs text-slate-500 truncate">{account.owner.email}</p>
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-slate-500 text-center py-2">No owner assigned</p>
+              <p className="text-sm text-slate-500 text-center py-2 mb-3">No owner assigned</p>
             )}
+            <button
+              type="button"
+              onClick={() => setAssignOwnerOpen(true)}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              <span className="material-symbols-outlined !text-[18px]">person_add</span>
+              {account.owner ? 'Reassign Owner' : 'Assign Owner'}
+            </button>
           </Card>
+          <AssignSheet
+            open={assignOwnerOpen}
+            onOpenChange={setAssignOwnerOpen}
+            title="Assign Account Owner"
+            description={`Select an owner for "${account.name}"`}
+            currentUserId={user?.id ?? null}
+            currentUserName={user?.name ?? null}
+            assignees={assigneeOptions}
+            isAssigning={assignOwnerMutation.isPending}
+            isLoadingOptions={isAssigneesLoading}
+            onAssign={async (userId) => {
+              await assignOwnerMutation.mutateAsync({ id: accountId, ownerId: userId });
+            }}
+          />
         </aside>
 
         {/* ─── Center Content ─── */}
@@ -542,7 +587,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
                 <div>
                   <p className="text-xs text-slate-400 uppercase font-semibold mb-1">Employees</p>
                   <p className="text-sm text-slate-900 dark:text-white">
-                    {account.employees?.toLocaleString() ?? '—'}
+                    {account.employees?.toLocaleString('en-GB') ?? '—'}
                   </p>
                 </div>
                 <div>

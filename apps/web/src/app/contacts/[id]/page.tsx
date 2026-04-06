@@ -16,6 +16,7 @@ import {
   type ChurnRiskLevel,
   type NBAActionType,
   type NBAPriority,
+  EmptyState,
 } from '@intelliflow/ui';
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
@@ -649,6 +650,539 @@ function ContactAiSummaryCard({
   );
 }
 
+// ─── Module-level pure helpers (extracted to reduce cognitive complexity of Contact360Page) ───
+
+function formatContactDate(dateString: string, timezone: string): string {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    timeZone: timezone,
+  });
+}
+
+function formatContactRelativeTime(dateString: string, timezone: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+  return formatContactDate(dateString, timezone);
+}
+
+function getStageColor(stage: string): string {
+  switch (stage) {
+    case 'Closed Won':
+      return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+    case 'Closed Lost':
+      return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+    case 'Negotiation':
+      return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
+    case 'Proposal':
+      return 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400';
+    default:
+      return 'bg-[#137fec]/10 text-[#137fec]';
+  }
+}
+
+function getActivityIcon(type: ActivityType): React.ReactNode {
+  const icons: Record<ActivityType, React.ReactNode> = {
+    email: (
+      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M4 20q-.825 0-1.412-.587Q2 18.825 2 18V6q0-.825.588-1.412Q3.175 4 4 4h16q.825 0 1.413.588Q22 5.175 22 6v12q0 .825-.587 1.413Q20.825 20 20 20Zm8-7 8-5V6l-8 5-8-5v2Z" />
+      </svg>
+    ),
+    call: (
+      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M19.95 21q-3.125 0-6.175-1.362-3.05-1.363-5.55-3.863-2.5-2.5-3.862-5.55Q3 7.175 3 4.05q0-.45.3-.75t.75-.3H8.1q.35 0 .625.238.275.237.325.562l.65 3.5q.05.4-.025.675-.075.275-.275.475L6.65 11.2q.7 1.3 1.65 2.475.95 1.175 2.1 2.175l2.65-2.65q.225-.225.525-.325.3-.1.625-.025l3.3.7q.35.1.563.363.212.262.212.587v4.05q0 .45-.3.75t-.75.3Z" />
+      </svg>
+    ),
+    meeting: (
+      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z" />
+      </svg>
+    ),
+    chat: (
+      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z" />
+      </svg>
+    ),
+    document: (
+      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M6 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6H6Zm0 2h7v5h5v11H6V4Zm2 8v2h8v-2H8Zm0 4v2h5v-2H8Z" />
+      </svg>
+    ),
+    deal: (
+      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M21 18v1c0 1.1-.9 2-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14c1.1 0 2 .9 2 2v1h-9a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
+      </svg>
+    ),
+    ticket: (
+      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M22 10V6a2 2 0 0 0-2-2H4c-1.1 0-1.99.9-1.99 2v4c1.1 0 1.99.9 1.99 2s-.89 2-2 2v4c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-4c-1.1 0-2-.9-2-2s.9-2 2-2zm-9 7.5h-2v-2h2v2zm0-4.5h-2v-2h2v2zm0-4.5h-2v-2h2v2z" />
+      </svg>
+    ),
+    note: (
+      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M5 21q-.825 0-1.412-.587Q3 19.825 3 19V5q0-.825.588-1.413Q4.175 3 5 3h14q.825 0 1.413.587Q21 4.175 21 5v10l-6 6Zm0-2h9v-5h5V5H5v14Z" />
+      </svg>
+    ),
+  };
+  return icons[type];
+}
+
+function getActivityIconBg(type: ActivityType): string {
+  const colors: Record<ActivityType, string> = {
+    email: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600',
+    call: 'bg-green-100 dark:bg-green-900/30 text-green-600',
+    meeting: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600',
+    chat: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600',
+    document: 'bg-orange-100 dark:bg-orange-900/30 text-orange-600',
+    deal: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600',
+    ticket: 'bg-pink-100 dark:bg-pink-900/30 text-pink-600',
+    note: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600',
+  };
+  return colors[type];
+}
+
+function getSentimentColor(sentiment?: string): string {
+  switch (sentiment) {
+    case 'positive': return 'text-green-500';
+    case 'negative': return 'text-red-500';
+    default: return 'text-slate-400';
+  }
+}
+
+function getChannelIcon(channel?: string): string {
+  switch (channel) {
+    case 'whatsapp': return '💬';
+    case 'teams': return '👥';
+    case 'slack': return '💼';
+    default: return '💬';
+  }
+}
+
+function getCallOutcomeStyle(outcome?: string): string {
+  switch (outcome) {
+    case 'connected': return 'bg-green-100 text-green-700';
+    case 'voicemail': return 'bg-yellow-100 text-yellow-700';
+    default: return 'bg-red-100 text-red-700';
+  }
+}
+
+function getCallOutcomeLabel(outcome?: string): string {
+  switch (outcome) {
+    case 'connected': return '✓ Connected';
+    case 'voicemail': return '📞 Voicemail';
+    default: return '✗ No Answer';
+  }
+}
+
+function getTicketStatusStyle(status?: string): string {
+  switch (status) {
+    case 'Resolved': return 'bg-green-100 text-green-700';
+    case 'Open': return 'bg-blue-100 text-blue-700';
+    default: return 'bg-yellow-100 text-yellow-700';
+  }
+}
+
+function getPriorityStyle(priority?: string): string {
+  switch (priority) {
+    case 'High': return 'text-red-600';
+    case 'Medium': return 'text-yellow-600';
+    default: return 'text-slate-500';
+  }
+}
+
+function getSentimentTrendStyle(trend?: string): string {
+  switch (trend) {
+    case 'improving': return 'text-green-600';
+    case 'declining': return 'text-red-600';
+    default: return 'text-slate-600';
+  }
+}
+
+function getSentimentEmoji(sentiment?: string): string {
+  switch (sentiment) {
+    case 'positive': return '😊';
+    case 'negative': return '😟';
+    default: return '😐';
+  }
+}
+
+function renderRichPreview(activity: Activity): React.ReactNode {
+  if (!activity.metadata) return null;
+  const meta = activity.metadata;
+
+  switch (activity.type) {
+    case 'email':
+      return (
+        <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
+          {meta.subject && (
+            <p className="text-sm font-medium text-slate-900 dark:text-white mb-1">
+              {meta.subject}
+            </p>
+          )}
+          {meta.preview && (
+            <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
+              {meta.preview}
+            </p>
+          )}
+          {meta.openCount && (
+            <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+              </svg>{' '}
+              Opened {meta.openCount} times
+            </p>
+          )}
+        </div>
+      );
+
+    case 'call':
+      return (
+        <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getCallOutcomeStyle(meta.outcome)}`}
+              >
+                {getCallOutcomeLabel(meta.outcome)}
+              </span>
+              {meta.duration && <span className="text-sm text-slate-500">{meta.duration}</span>}
+            </div>
+            {meta.recordingUrl && (
+              <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded transition-colors">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z" />
+                </svg>{' '}
+                Play Recording
+              </button>
+            )}
+          </div>
+        </div>
+      );
+
+    case 'meeting':
+      return (
+        <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
+          {meta.location && (
+            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-2">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z" />
+              </svg>
+              {meta.location}
+              {meta.duration && <span className="text-slate-400">• {meta.duration}</span>}
+            </div>
+          )}
+          {meta.attendees && meta.attendees.length > 0 && (
+            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-2">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+              </svg>
+              {meta.attendees.join(', ')}
+            </div>
+          )}
+          {meta.notes && (
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
+              <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Meeting Notes</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">{meta.notes}</p>
+            </div>
+          )}
+        </div>
+      );
+
+    case 'chat':
+      return (
+        <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-lg">{getChannelIcon(meta.channel)}</span>
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300 capitalize">
+              {meta.channel}
+            </span>
+            {meta.messageCount && (
+              <span className="text-xs text-slate-500">• {meta.messageCount} messages</span>
+            )}
+          </div>
+          {meta.preview && (
+            <p className="text-sm text-slate-600 dark:text-slate-400">{meta.preview}</p>
+          )}
+        </div>
+      );
+
+    case 'document':
+      return (
+        <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700 flex items-center gap-3">
+          <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded flex items-center justify-center">
+            <svg className="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M6 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6H6Zm0 2h7v5h5v11H6V4Z" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-medium text-slate-900 dark:text-white">{meta.fileName}</p>
+            <p className="text-xs text-slate-500">{meta.fileSize}</p>
+          </div>
+          <button className="p-2 text-slate-500 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z" />
+            </svg>
+          </button>
+        </div>
+      );
+
+    case 'ticket':
+      return (
+        <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-mono text-slate-600 dark:text-slate-400">
+                {meta.ticketId}
+              </span>
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getTicketStatusStyle(meta.status)}`}
+              >
+                {meta.status}
+              </span>
+            </div>
+            <span className={`text-xs font-medium ${getPriorityStyle(meta.priority)}`}>
+              {meta.priority} Priority
+            </span>
+          </div>
+        </div>
+      );
+
+    default:
+      return null;
+  }
+}
+
+// ─── Sub-components extracted to reduce cognitive complexity ─────────────────
+
+function ContactLoadingSkeleton() {
+  return (
+    <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
+      <div className="mb-6">
+        <Skeleton className="h-4 w-48 mb-2" />
+        <Skeleton className="h-8 w-64" />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1">
+          <Skeleton className="h-64 w-full rounded-xl" />
+        </div>
+        <div className="lg:col-span-2">
+          <Skeleton className="h-96 w-full rounded-xl" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ContactAuthRedirect() {
+  return (
+    <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
+      <Card className="p-8 text-center">
+        <span className="material-symbols-outlined text-5xl text-slate-400 mb-4 animate-spin">
+          progress_activity
+        </span>
+        <p className="text-slate-500 dark:text-slate-400">Redirecting to login...</p>
+      </Card>
+    </div>
+  );
+}
+
+function ContactNotFoundError({ fromInsight }: { fromInsight: boolean }) {
+  return (
+    <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
+      <Card className="p-8 text-center">
+        <span className="material-symbols-outlined text-5xl text-red-500 mb-4">
+          {fromInsight ? 'link_off' : 'error'}
+        </span>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+          {fromInsight ? 'Stale Insight' : 'Contact Not Found'}
+        </h2>
+        <p className="text-slate-500 dark:text-slate-400 mb-4">
+          {fromInsight
+            ? 'This contact may have been deleted since the insight was generated. The insight has been dismissed automatically.'
+            : "The contact you're looking for doesn't exist or you don't have permission to view it."}
+        </p>
+        <div className="flex items-center justify-center gap-3">
+          {fromInsight && (
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm">home</span>{' '}
+              Back to Home
+            </Link>
+          )}
+          <Link
+            href="/contacts"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            <span className="material-symbols-outlined text-sm">arrow_back</span>{' '}
+            Back to Contacts
+          </Link>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Returns true when a stale linked insight should be auto-dismissed. */
+const CONTACT_VALID_TABS: TabId[] = ['overview', 'activity', 'tasks', 'deals', 'tickets', 'documents', 'notes', 'ai-insights'];
+function resolveInitialContactTab(tabParam: TabId | null): TabId {
+  return tabParam && CONTACT_VALID_TABS.includes(tabParam) ? tabParam : 'overview';
+}
+
+function transformFeedToActivities(feedItems: Array<{ id: string; type: string; title: string; description?: string | null; timestamp: string | Date; actor?: { name?: string | null } | null; metadata?: Record<string, unknown> | null }>): Activity[] {
+  return feedItems.map((item) => ({
+    id: item.id,
+    type: (item.type.toLowerCase()) as ActivityType,
+    title: item.title,
+    description: item.description || '',
+    timestamp: typeof item.timestamp === 'string' ? item.timestamp : new Date(item.timestamp).toISOString(),
+    user: item.actor?.name || 'System',
+    metadata: item.metadata as Activity['metadata'],
+    sentiment: item.metadata?.sentiment
+      ? mapSentiment(String(item.metadata.sentiment).toUpperCase())
+      : undefined,
+    reactions: [],
+    comments: [],
+  }));
+}
+
+function buildChurnRiskData(insight: ContactWithRelations['aiInsight'] | undefined): ChurnRiskData | null {
+  if (!insight) return null;
+  const levelMap: Record<string, ChurnRiskLevel> = { LOW: 'LOW', MEDIUM: 'MEDIUM', HIGH: 'HIGH', CRITICAL: 'CRITICAL', MINIMAL: 'MINIMAL' };
+  const level = levelMap[insight.churnRisk] || 'LOW';
+  const scoreMap: Record<ChurnRiskLevel, number> = { CRITICAL: 90, HIGH: 70, MEDIUM: 50, LOW: 25, MINIMAL: 10 };
+  const slaMap: Record<ChurnRiskLevel, number> = { CRITICAL: 24, HIGH: 48, MEDIUM: 168, LOW: 336, MINIMAL: 720 };
+  let trend: 'IMPROVING' | 'DECLINING' | 'STABLE';
+  if (insight.sentimentTrend === 'IMPROVING') { trend = 'IMPROVING'; }
+  else if (insight.sentimentTrend === 'DECLINING') { trend = 'DECLINING'; }
+  else { trend = 'STABLE'; }
+  let engagementImpact: 'HIGH' | 'MEDIUM' | 'LOW';
+  if (insight.engagementScore < 30) { engagementImpact = 'HIGH'; }
+  else if (insight.engagementScore < 60) { engagementImpact = 'MEDIUM'; }
+  else { engagementImpact = 'LOW'; }
+  let daysImpact: 'HIGH' | 'MEDIUM' | 'LOW';
+  if (insight.lastEngagementDays > 30) { daysImpact = 'HIGH'; }
+  else if (insight.lastEngagementDays > 14) { daysImpact = 'MEDIUM'; }
+  else { daysImpact = 'LOW'; }
+  return {
+    score: scoreMap[level], level, confidence: 0.85, slaHours: slaMap[level], trend,
+    factors: [
+      { factor: 'Engagement Score', impact: engagementImpact, value: `${insight.engagementScore}%` },
+      { factor: 'Days Since Contact', impact: daysImpact, value: `${insight.lastEngagementDays} days` },
+    ],
+  };
+}
+
+function transformContactForUI(apiContact: ContactWithRelations) {
+  const normalizedContactAvatar =
+    normalizeAvatarSource(apiContact.avatarUrl) ??
+    normalizeAvatarSource(defaultContactAvatar) ??
+    defaultContactAvatar;
+  const normalizedOwnerAvatar =
+    normalizeAvatarSource(apiContact.owner?.avatarUrl) ??
+    normalizeAvatarSource(defaultOwnerAvatar) ??
+    defaultOwnerAvatar;
+
+  return {
+    id: apiContact.id,
+    firstName: apiContact.firstName || '',
+    lastName: apiContact.lastName || '',
+    email: apiContact.email,
+    phone: apiContact.phone || '',
+    company: apiContact.account?.name || '',
+    title: apiContact.title || '',
+    department: apiContact.department || '',
+    location: '',
+    timezone: '',
+    status: (apiContact.status || 'ACTIVE') as ContactStatus,
+    isOnline: false,
+    isVIP: false,
+    hasActiveDeal: (apiContact.opportunities?.length || 0) > 0,
+    createdAt:
+      typeof apiContact.createdAt === 'string'
+        ? apiContact.createdAt
+        : apiContact.createdAt.toISOString(),
+    lastContactedAt:
+      typeof apiContact.updatedAt === 'string'
+        ? apiContact.updatedAt
+        : apiContact.updatedAt.toISOString(),
+    avatarUrl: normalizedContactAvatar,
+    owner: apiContact.owner
+      ? {
+          name: apiContact.owner.name || 'Unknown',
+          title: 'Account Executive',
+          avatarUrl: normalizedOwnerAvatar,
+        }
+      : {
+          name: 'Unassigned',
+          title: '',
+          avatarUrl: normalizedOwnerAvatar,
+        },
+    account: apiContact.account
+      ? {
+          id: apiContact.account.id,
+          name: apiContact.account.name,
+          industry: apiContact.account.industry || 'Unknown',
+          website: apiContact.account.website || '',
+        }
+      : null,
+    metrics: {
+      totalDeals: apiContact.opportunities?.length || 0,
+      totalValue: apiContact.opportunities?.reduce((sum, opp) => sum + (opp.value || 0), 0) || 0,
+      openTasks: apiContact.tasks?.filter((t) => t.status !== 'COMPLETED').length || 0,
+      emailsSent: apiContact.activities?.filter((a) => a.type === 'EMAIL').length || 0,
+      emailsOpened: 0,
+      meetings: apiContact.activities?.filter((a) => a.type === 'MEETING').length || 0,
+    },
+    tags: [],
+  };
+}
+
+function filterContactActivities(
+  activities: Activity[],
+  activityTypeFilter: string,
+  personFilter: string,
+  searchQuery: string,
+) {
+  return activities.filter((activity) => {
+    if (activityTypeFilter !== 'all' && activity.type !== activityTypeFilter) return false;
+    if (personFilter !== 'all' && activity.user !== personFilter) return false;
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const matchesTitle = activity.title.toLowerCase().includes(query);
+      const matchesDescription = activity.description.toLowerCase().includes(query);
+      const matchesUser = activity.user.toLowerCase().includes(query);
+      const matchesMetadata =
+        activity.metadata?.subject?.toLowerCase().includes(query) ||
+        activity.metadata?.preview?.toLowerCase().includes(query) ||
+        activity.metadata?.notes?.toLowerCase().includes(query);
+      if (!matchesTitle && !matchesDescription && !matchesUser && !matchesMetadata) return false;
+    }
+    return true;
+  });
+}
+
+function shouldDismissStaleInsight(
+  fromInsight: boolean,
+  insightIdParam: string | null,
+  errorCode: string | undefined,
+  isLoading: boolean,
+  contact: unknown,
+  alreadyDismissed: boolean,
+): boolean {
+  if (!fromInsight || !insightIdParam || alreadyDismissed) return false;
+  return errorCode === 'NOT_FOUND' || (!isLoading && !contact);
+}
+
 export default function Contact360Page() {
   // Get contact ID from URL params
   const params = useParams();
@@ -700,24 +1234,21 @@ export default function Contact360Page() {
       toast({ title: 'Failed to add note', description: err.message, variant: 'destructive' });
     },
   });
-  // @ts-ignore — tRPC recursive type instantiation exceeds TS depth limit (TS2589)
   const scoreWithAIMutation = api.contact.scoreWithAI.useMutation({
-    onSuccess: () => {
+    onSuccess: (() => {
       toast({ title: 'AI analysis complete', description: 'Contact has been analyzed by AI.' });
       utils.contact.getById.invalidate({ id: contactId });
-    },
-    onError: (err) => {
+    }) as () => void,
+    onError: ((err: { message: string }) => {
       toast({ title: 'AI analysis failed', description: err.message, variant: 'destructive' });
-    },
+    }) as (err: { message: string }) => void,
   });
   const reviewRequestedInsightRef = useRef<string | null>(null);
 
   // Check for auth errors
-  // @ts-ignore — tRPC recursive type instantiation exceeds TS depth limit (TS2345)
   const isAuthError = isUnauthorizedContactError(error);
 
   useRedirectOnUnauthorizedContactError({
-    // @ts-ignore — tRPC recursive type instantiation exceeds TS depth limit (TS2322)
     error,
     isAuthError,
     isLoading,
@@ -735,9 +1266,8 @@ export default function Contact360Page() {
   // Cast to extended type
   const apiContact = rawApiContact as ContactWithRelations | undefined;
 
-  const validTabs: TabId[] = ['overview', 'activity', 'tasks', 'deals', 'tickets', 'documents', 'notes', 'ai-insights'];
   const tabParam = searchParams.get('tab') as TabId | null;
-  const [activeTab, setActiveTab] = useState<TabId>(tabParam && validTabs.includes(tabParam) ? tabParam : 'overview');
+  const [activeTab, setActiveTab] = useState<TabId>(resolveInitialContactTab(tabParam));
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
   // Activity note state managed by QuickLogComposer
   const [expandedActivities, setExpandedActivities] = useState<Set<string>>(new Set());
@@ -780,89 +1310,16 @@ export default function Contact360Page() {
   const recentUnifiedActivities = contactFeedItems.slice(0, 3);
 
   // Transform API data to UI format
-  const contact = useMemo(() => {
-    if (!apiContact) return null;
-    const normalizedContactAvatar =
-      normalizeAvatarSource(apiContact.avatarUrl) ??
-      normalizeAvatarSource(defaultContactAvatar) ??
-      defaultContactAvatar;
-    const normalizedOwnerAvatar =
-      normalizeAvatarSource(apiContact.owner?.avatarUrl) ??
-      normalizeAvatarSource(defaultOwnerAvatar) ??
-      defaultOwnerAvatar;
-
-    return {
-      id: apiContact.id,
-      firstName: apiContact.firstName || '',
-      lastName: apiContact.lastName || '',
-      email: apiContact.email,
-      phone: apiContact.phone || '',
-      company: apiContact.account?.name || '',
-      title: apiContact.title || '',
-      department: apiContact.department || '',
-      location: '', // Not in API yet
-      timezone: '', // Not in API yet
-      status: (apiContact.status || 'ACTIVE') as ContactStatus,
-      isOnline: false,
-      isVIP: false,
-      hasActiveDeal: (apiContact.opportunities?.length || 0) > 0,
-      createdAt:
-        typeof apiContact.createdAt === 'string'
-          ? apiContact.createdAt
-          : apiContact.createdAt.toISOString(),
-      lastContactedAt:
-        typeof apiContact.updatedAt === 'string'
-          ? apiContact.updatedAt
-          : apiContact.updatedAt.toISOString(),
-      avatarUrl: normalizedContactAvatar,
-      owner: apiContact.owner
-        ? {
-            name: apiContact.owner.name || 'Unknown',
-            title: 'Account Executive',
-            avatarUrl: normalizedOwnerAvatar,
-          }
-        : {
-            name: 'Unassigned',
-            title: '',
-            avatarUrl: normalizedOwnerAvatar,
-          },
-      account: apiContact.account
-        ? {
-            id: apiContact.account.id,
-            name: apiContact.account.name,
-            industry: apiContact.account.industry || 'Unknown',
-            website: apiContact.account.website || '',
-          }
-        : null,
-      metrics: {
-        totalDeals: apiContact.opportunities?.length || 0,
-        totalValue: apiContact.opportunities?.reduce((sum, opp) => sum + (opp.value || 0), 0) || 0,
-        openTasks: apiContact.tasks?.filter((t) => t.status !== 'COMPLETED').length || 0,
-        emailsSent: apiContact.activities?.filter((a) => a.type === 'EMAIL').length || 0,
-        emailsOpened: 0, // Not tracked in current schema
-        meetings: apiContact.activities?.filter((a) => a.type === 'MEETING').length || 0,
-      },
-      tags: [], // Not in API yet
-    };
-  }, [apiContact]);
+  const contact = useMemo(
+    () => apiContact ? transformContactForUI(apiContact) : null,
+    [apiContact]
+  );
 
   // Transform unified feed items to Timeline UI format
-  const activities: Activity[] = useMemo(() => {
-    return contactFeedItems.map((item) => ({
-      id: item.id,
-      type: (item.type.toLowerCase()) as ActivityType,
-      title: item.title,
-      description: item.description || '',
-      timestamp: typeof item.timestamp === 'string' ? item.timestamp : new Date(item.timestamp).toISOString(),
-      user: item.actor?.name || 'System',
-      metadata: item.metadata as Activity['metadata'],
-      sentiment: item.metadata?.sentiment
-        ? mapSentiment(String(item.metadata.sentiment).toUpperCase())
-        : undefined,
-      reactions: [],
-      comments: [],
-    }));
-  }, [contactFeedItems]);
+  const activities: Activity[] = useMemo(
+    () => transformFeedToActivities(contactFeedItems),
+    [contactFeedItems]
+  );
 
   // Transform notes from API
   const notes = useMemo(() => {
@@ -930,68 +1387,10 @@ export default function Contact360Page() {
   }, [apiContact?.aiInsight]);
 
   // Transform AI insights to ChurnRiskData format (IFC-095)
-  const churnRiskData: ChurnRiskData | null = useMemo(() => {
-    const insight = apiContact?.aiInsight;
-    if (!insight) return null;
-
-    // Map database churn risk level to component format
-    const levelMap: Record<string, ChurnRiskLevel> = {
-      LOW: 'LOW',
-      MEDIUM: 'MEDIUM',
-      HIGH: 'HIGH',
-      CRITICAL: 'CRITICAL',
-      MINIMAL: 'MINIMAL',
-    };
-    const level = levelMap[insight.churnRisk] || 'LOW';
-
-    // Map level to score range
-    const scoreMap: Record<ChurnRiskLevel, number> = {
-      CRITICAL: 90,
-      HIGH: 70,
-      MEDIUM: 50,
-      LOW: 25,
-      MINIMAL: 10,
-    };
-
-    // Map level to SLA hours
-    const slaMap: Record<ChurnRiskLevel, number> = {
-      CRITICAL: 24,
-      HIGH: 48,
-      MEDIUM: 168,
-      LOW: 336,
-      MINIMAL: 720,
-    };
-
-    return {
-      score: scoreMap[level],
-      level,
-      confidence: 0.85, // Default confidence
-      slaHours: slaMap[level],
-      trend: (() => {
-        if (insight.sentimentTrend === 'IMPROVING') return 'IMPROVING';
-        if (insight.sentimentTrend === 'DECLINING') return 'DECLINING';
-        return 'STABLE';
-      })(),
-      factors: [
-        {
-          factor: 'Engagement Score',
-          impact: (() => {
-            if (insight.engagementScore < 30) return 'HIGH';
-            return insight.engagementScore < 60 ? 'MEDIUM' : 'LOW';
-          })(),
-          value: `${insight.engagementScore}%`,
-        },
-        {
-          factor: 'Days Since Contact',
-          impact: (() => {
-            if (insight.lastEngagementDays > 30) return 'HIGH';
-            return insight.lastEngagementDays > 14 ? 'MEDIUM' : 'LOW';
-          })(),
-          value: `${insight.lastEngagementDays} days`,
-        },
-      ],
-    };
-  }, [apiContact?.aiInsight]);
+  const churnRiskData: ChurnRiskData | null = useMemo(
+    () => buildChurnRiskData(apiContact?.aiInsight),
+    [apiContact?.aiInsight]
+  );
 
   // Transform AI insights to NextBestActionData format (IFC-095)
   const nextBestActionData: NextBestActionData | null = useMemo(() => {
@@ -1041,27 +1440,10 @@ export default function Contact360Page() {
   );
 
   // Filter and search activities
-  const filteredActivities = useMemo(() => {
-    return activities.filter((activity) => {
-      // Type filter
-      if (activityTypeFilter !== 'all' && activity.type !== activityTypeFilter) return false;
-      // Person filter
-      if (personFilter !== 'all' && activity.user !== personFilter) return false;
-      // Search filter
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        const matchesTitle = activity.title.toLowerCase().includes(query);
-        const matchesDescription = activity.description.toLowerCase().includes(query);
-        const matchesUser = activity.user.toLowerCase().includes(query);
-        const matchesMetadata =
-          activity.metadata?.subject?.toLowerCase().includes(query) ||
-          activity.metadata?.preview?.toLowerCase().includes(query) ||
-          activity.metadata?.notes?.toLowerCase().includes(query);
-        if (!matchesTitle && !matchesDescription && !matchesUser && !matchesMetadata) return false;
-      }
-      return true;
-    });
-  }, [activities, activityTypeFilter, personFilter, searchQuery]);
+  const filteredActivities = useMemo(
+    () => filterContactActivities(activities, activityTypeFilter, personFilter, searchQuery),
+    [activities, activityTypeFilter, personFilter, searchQuery]
+  );
 
   // Visible activities (for infinite scroll simulation)
   const visibleActivities = filteredActivities.slice(0, visibleCount);
@@ -1087,10 +1469,10 @@ export default function Contact360Page() {
   const dismissInsightMutation = api.home.dismissInsight.useMutation();
   const dismissedInsightRef = useRef(false);
   useEffect(() => {
-    if (fromInsight && insightIdParam && (error?.data?.code === 'NOT_FOUND' || (!isLoading && !contact)) && !dismissedInsightRef.current) {
+    if (shouldDismissStaleInsight(fromInsight, insightIdParam, error?.data?.code, isLoading, contact, dismissedInsightRef.current)) {
       dismissedInsightRef.current = true;
       dismissInsightMutation.mutate(
-        { insightId: insightIdParam, reason: 'Referenced contact no longer exists' },
+        { insightId: insightIdParam!, reason: 'Referenced contact no longer exists' },
         { onError: () => { /* best-effort */ } }
       );
     }
@@ -1098,76 +1480,17 @@ export default function Contact360Page() {
 
   // Loading state
   if (isLoading) {
-    return (
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
-        <div className="mb-6">
-          <Skeleton className="h-4 w-48 mb-2" />
-          <Skeleton className="h-8 w-64" />
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1">
-            <Skeleton className="h-64 w-full rounded-xl" />
-          </div>
-          <div className="lg:col-span-2">
-            <Skeleton className="h-96 w-full rounded-xl" />
-          </div>
-        </div>
-      </div>
-    );
+    return <ContactLoadingSkeleton />;
   }
 
   // Auth error - show redirecting state
   if (error && isAuthError) {
-    return (
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
-        <Card className="p-8 text-center">
-          <span className="material-symbols-outlined text-5xl text-slate-400 mb-4 animate-spin">
-            progress_activity
-          </span>
-          <p className="text-slate-500 dark:text-slate-400">Redirecting to login...</p>
-        </Card>
-      </div>
-    );
+    return <ContactAuthRedirect />;
   }
 
   // Error state or no contact data (non-auth errors)
-
   if ((error && !isAuthError) || !contact) {
-    return (
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
-        <Card className="p-8 text-center">
-          <span className="material-symbols-outlined text-5xl text-red-500 mb-4">
-            {fromInsight ? 'link_off' : 'error'}
-          </span>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-            {fromInsight ? 'Stale Insight' : 'Contact Not Found'}
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400 mb-4">
-            {fromInsight
-              ? 'This contact may have been deleted since the insight was generated. The insight has been dismissed automatically.'
-              : "The contact you're looking for doesn't exist or you don't have permission to view it."}
-          </p>
-          <div className="flex items-center justify-center gap-3">
-            {fromInsight && (
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                <span className="material-symbols-outlined text-sm">home</span>{' '}
-                Back to Home
-              </Link>
-            )}
-            <Link
-              href="/contacts"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
-            >
-              <span className="material-symbols-outlined text-sm">arrow_back</span>{' '}
-              Back to Contacts
-            </Link>
-          </div>
-        </Card>
-      </div>
-    );
+    return <ContactNotFoundError fromInsight={fromInsight} />;
   }
 
   // Toggle activity expansion
@@ -1181,344 +1504,6 @@ export default function Contact360Page() {
       }
       return next;
     });
-  };
-
-  // Format date helper
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      timeZone: timezone,
-    });
-  };
-
-  const formatRelativeTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-    return formatDate(dateString);
-  };
-
-  const getStageColor = (stage: string) => {
-    switch (stage) {
-      case 'Closed Won':
-        return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
-      case 'Closed Lost':
-        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-      case 'Negotiation':
-        return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
-      case 'Proposal':
-        return 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400';
-      default:
-        return 'bg-[#137fec]/10 text-[#137fec]';
-    }
-  };
-
-  const getActivityIcon = (type: ActivityType) => {
-    const icons: Record<ActivityType, React.ReactNode> = {
-      email: (
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M4 20q-.825 0-1.412-.587Q2 18.825 2 18V6q0-.825.588-1.412Q3.175 4 4 4h16q.825 0 1.413.588Q22 5.175 22 6v12q0 .825-.587 1.413Q20.825 20 20 20Zm8-7 8-5V6l-8 5-8-5v2Z" />
-        </svg>
-      ),
-      call: (
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M19.95 21q-3.125 0-6.175-1.362-3.05-1.363-5.55-3.863-2.5-2.5-3.862-5.55Q3 7.175 3 4.05q0-.45.3-.75t.75-.3H8.1q.35 0 .625.238.275.237.325.562l.65 3.5q.05.4-.025.675-.075.275-.275.475L6.65 11.2q.7 1.3 1.65 2.475.95 1.175 2.1 2.175l2.65-2.65q.225-.225.525-.325.3-.1.625-.025l3.3.7q.35.1.563.363.212.262.212.587v4.05q0 .45-.3.75t-.75.3Z" />
-        </svg>
-      ),
-      meeting: (
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z" />
-        </svg>
-      ),
-      chat: (
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z" />
-        </svg>
-      ),
-      document: (
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M6 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6H6Zm0 2h7v5h5v11H6V4Zm2 8v2h8v-2H8Zm0 4v2h5v-2H8Z" />
-        </svg>
-      ),
-      deal: (
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M21 18v1c0 1.1-.9 2-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14c1.1 0 2 .9 2 2v1h-9a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
-        </svg>
-      ),
-      ticket: (
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M22 10V6a2 2 0 0 0-2-2H4c-1.1 0-1.99.9-1.99 2v4c1.1 0 1.99.9 1.99 2s-.89 2-2 2v4c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-4c-1.1 0-2-.9-2-2s.9-2 2-2zm-9 7.5h-2v-2h2v2zm0-4.5h-2v-2h2v2zm0-4.5h-2v-2h2v2z" />
-        </svg>
-      ),
-      note: (
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M5 21q-.825 0-1.412-.587Q3 19.825 3 19V5q0-.825.588-1.413Q4.175 3 5 3h14q.825 0 1.413.587Q21 4.175 21 5v10l-6 6Zm0-2h9v-5h5V5H5v14Z" />
-        </svg>
-      ),
-    };
-    return icons[type];
-  };
-
-  const getActivityIconBg = (type: ActivityType) => {
-    const colors: Record<ActivityType, string> = {
-      email: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600',
-      call: 'bg-green-100 dark:bg-green-900/30 text-green-600',
-      meeting: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600',
-      chat: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600',
-      document: 'bg-orange-100 dark:bg-orange-900/30 text-orange-600',
-      deal: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600',
-      ticket: 'bg-pink-100 dark:bg-pink-900/30 text-pink-600',
-      note: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600',
-    };
-    return colors[type];
-  };
-
-  const getSentimentColor = (sentiment?: string) => {
-    switch (sentiment) {
-      case 'positive':
-        return 'text-green-500';
-      case 'negative':
-        return 'text-red-500';
-      default:
-        return 'text-slate-400';
-    }
-  };
-
-  const getChannelIcon = (channel?: string) => {
-    switch (channel) {
-      case 'whatsapp':
-        return '💬';
-      case 'teams':
-        return '👥';
-      case 'slack':
-        return '💼';
-      default:
-        return '💬';
-    }
-  };
-
-  // Helper for call outcome styling
-  const getCallOutcomeStyle = (outcome?: string) => {
-    switch (outcome) {
-      case 'connected':
-        return 'bg-green-100 text-green-700';
-      case 'voicemail':
-        return 'bg-yellow-100 text-yellow-700';
-      default:
-        return 'bg-red-100 text-red-700';
-    }
-  };
-
-  const getCallOutcomeLabel = (outcome?: string) => {
-    switch (outcome) {
-      case 'connected':
-        return '✓ Connected';
-      case 'voicemail':
-        return '📞 Voicemail';
-      default:
-        return '✗ No Answer';
-    }
-  };
-
-  // Helper for ticket status styling
-  const getTicketStatusStyle = (status?: string) => {
-    switch (status) {
-      case 'Resolved':
-        return 'bg-green-100 text-green-700';
-      case 'Open':
-        return 'bg-blue-100 text-blue-700';
-      default:
-        return 'bg-yellow-100 text-yellow-700';
-    }
-  };
-
-  // Helper for priority styling
-  const getPriorityStyle = (priority?: string) => {
-    switch (priority) {
-      case 'High':
-        return 'text-red-600';
-      case 'Medium':
-        return 'text-yellow-600';
-      default:
-        return 'text-slate-500';
-    }
-  };
-
-  // Helper for sentiment trend styling
-  const getSentimentTrendStyle = (trend?: string) => {
-    switch (trend) {
-      case 'improving':
-        return 'text-green-600';
-      case 'declining':
-        return 'text-red-600';
-      default:
-        return 'text-slate-600';
-    }
-  };
-
-  // Helper for sentiment emoji
-  const getSentimentEmoji = (sentiment?: string) => {
-    switch (sentiment) {
-      case 'positive':
-        return '😊';
-      case 'negative':
-        return '😟';
-      default:
-        return '😐';
-    }
-  };
-
-  // Render activity rich preview
-  const renderRichPreview = (activity: Activity) => {
-    if (!activity.metadata) return null;
-    const meta = activity.metadata;
-
-    switch (activity.type) {
-      case 'email':
-        return (
-          <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
-            {meta.subject && (
-              <p className="text-sm font-medium text-slate-900 dark:text-white mb-1">
-                {meta.subject}
-              </p>
-            )}
-            {meta.preview && (
-              <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
-                {meta.preview}
-              </p>
-            )}
-            {meta.openCount && (
-              <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
-                </svg>{' '}
-                Opened {meta.openCount} times
-              </p>
-            )}
-          </div>
-        );
-
-      case 'call':
-        return (
-          <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getCallOutcomeStyle(meta.outcome)}`}
-                >
-                  {getCallOutcomeLabel(meta.outcome)}
-                </span>
-                {meta.duration && <span className="text-sm text-slate-500">{meta.duration}</span>}
-              </div>
-              {meta.recordingUrl && (
-                <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded transition-colors">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>{' '}
-                  Play Recording
-                </button>
-              )}
-            </div>
-          </div>
-        );
-
-      case 'meeting':
-        return (
-          <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
-            {meta.location && (
-              <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-2">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z" />
-                </svg>
-                {meta.location}
-                {meta.duration && <span className="text-slate-400">• {meta.duration}</span>}
-              </div>
-            )}
-            {meta.attendees && meta.attendees.length > 0 && (
-              <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-2">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
-                </svg>
-                {meta.attendees.join(', ')}
-              </div>
-            )}
-            {meta.notes && (
-              <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
-                <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Meeting Notes</p>
-                <p className="text-sm text-slate-600 dark:text-slate-400">{meta.notes}</p>
-              </div>
-            )}
-          </div>
-        );
-
-      case 'chat':
-        return (
-          <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-lg">{getChannelIcon(meta.channel)}</span>
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300 capitalize">
-                {meta.channel}
-              </span>
-              {meta.messageCount && (
-                <span className="text-xs text-slate-500">• {meta.messageCount} messages</span>
-              )}
-            </div>
-            {meta.preview && (
-              <p className="text-sm text-slate-600 dark:text-slate-400">{meta.preview}</p>
-            )}
-          </div>
-        );
-
-      case 'document':
-        return (
-          <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700 flex items-center gap-3">
-            <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded flex items-center justify-center">
-              <svg className="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M6 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6H6Zm0 2h7v5h5v11H6V4Z" />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-slate-900 dark:text-white">{meta.fileName}</p>
-              <p className="text-xs text-slate-500">{meta.fileSize}</p>
-            </div>
-            <button className="p-2 text-slate-500 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z" />
-              </svg>
-            </button>
-          </div>
-        );
-
-      case 'ticket':
-        return (
-          <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-mono text-slate-600 dark:text-slate-400">
-                  {meta.ticketId}
-                </span>
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getTicketStatusStyle(meta.status)}`}
-                >
-                  {meta.status}
-                </span>
-              </div>
-              <span className={`text-xs font-medium ${getPriorityStyle(meta.priority)}`}>
-                {meta.priority} Priority
-              </span>
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
-    }
   };
 
   // Render inline actions for activity using shared component
@@ -2039,7 +2024,7 @@ export default function Contact360Page() {
                                   {activity.description}
                                 </p>
                                 <p className="text-xs text-slate-500 mt-1">
-                                  {activity.user} • {formatRelativeTime(activity.timestamp)}
+                                  {activity.user} • {formatContactRelativeTime(activity.timestamp, timezone)}
                                 </p>
                               </div>
                               <button
@@ -2091,7 +2076,7 @@ export default function Contact360Page() {
                                           {comment.text}
                                         </p>
                                         <p className="text-xs text-slate-500 mt-1">
-                                          {comment.user} • {formatRelativeTime(comment.timestamp)}
+                                          {comment.user} • {formatContactRelativeTime(comment.timestamp, timezone)}
                                         </p>
                                       </div>
                                     ))}
@@ -2119,26 +2104,7 @@ export default function Contact360Page() {
                   )}
 
                   {filteredActivities.length === 0 && (
-                    <div className="text-center py-12">
-                      <svg
-                        className="w-12 h-12 text-slate-300 mx-auto mb-4"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
-                      </svg>
-                      <p className="text-slate-500">No activities match your filters</p>
-                      <button
-                        onClick={() => {
-                          setActivityTypeFilter('all');
-                          setPersonFilter('all');
-                          setSearchQuery('');
-                        }}
-                        className="mt-2 text-sm text-[#137fec] hover:underline"
-                      >
-                        Clear filters
-                      </button>
-                    </div>
+                    <EmptyState entity="activity" variant="filtered" phase="passive" />
                   )}
                 </>
               )}
@@ -2198,16 +2164,7 @@ export default function Contact360Page() {
                       />
                     ))}
                   {recentUnifiedActivities.length === 0 && !isUnifiedLoading && (
-                    <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-border m-5 py-6 px-4">
-                      <span className="material-symbols-outlined text-3xl text-slate-300 dark:text-slate-600" aria-hidden="true">
-                        history
-                      </span>
-                      <p className="text-xs text-muted-foreground text-center">No recent activity yet.</p>
-                      <Button variant="outline" size="sm" onClick={() => setActiveTab('activity')}>
-                        <span className="material-symbols-outlined !text-[16px] mr-1.5" aria-hidden="true">add</span>
-                        Log your first activity
-                      </Button>
-                    </div>
+                    <EmptyState entity="activity" phase="passive" />
                   )}
                   {isUnifiedLoading && (
                     <div className="flex items-center justify-center p-6">
@@ -2248,13 +2205,13 @@ export default function Contact360Page() {
                   <div>
                     <dt className="text-sm text-slate-500 dark:text-slate-400">Last Contacted</dt>
                     <dd className="text-sm font-medium text-slate-900 dark:text-white">
-                      {formatRelativeTime(contact.lastContactedAt)}
+                      {formatContactRelativeTime(contact.lastContactedAt, timezone)}
                     </dd>
                   </div>
                   <div>
                     <dt className="text-sm text-slate-500 dark:text-slate-400">Created</dt>
                     <dd className="text-sm font-medium text-slate-900 dark:text-white">
-                      {formatDate(contact.createdAt)}
+                      {formatContactDate(contact.createdAt, timezone)}
                     </dd>
                   </div>
                   <div>
@@ -2307,7 +2264,7 @@ export default function Contact360Page() {
                         </div>
                         <div className="text-right ml-4">
                           <p className="font-semibold text-slate-900 dark:text-white">
-                            ${deal.value.toLocaleString()}
+                            ${deal.value.toLocaleString('en-GB')}
                           </p>
                           <p className="text-xs text-slate-500">{deal.probability}%</p>
                         </div>
@@ -2352,13 +2309,13 @@ export default function Contact360Page() {
                           {deal.stage}
                         </span>
                         <span className="text-xs text-slate-500">
-                          Close: {formatDate(deal.closeDate)}
+                          Close: {formatContactDate(deal.closeDate, timezone)}
                         </span>
                       </div>
                     </div>
                     <div className="text-right ml-4">
                       <p className="font-semibold text-slate-900 dark:text-white">
-                        ${deal.value.toLocaleString()}
+                        ${deal.value.toLocaleString('en-GB')}
                       </p>
                       <p className="text-xs text-slate-500">{deal.probability}% probability</p>
                     </div>
@@ -2402,7 +2359,7 @@ export default function Contact360Page() {
                     </div>
                   </div>
                   <span className="text-xs text-slate-500">
-                    {formatRelativeTime('2024-12-15T14:00:00Z')}
+                    {formatContactRelativeTime('2024-12-15T14:00:00Z', timezone)}
                   </span>
                 </div>
               </div>
@@ -2513,7 +2470,7 @@ export default function Contact360Page() {
                     <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
                       <span>{note.author}</span>
                       <span>•</span>
-                      <span>{formatRelativeTime(note.createdAt)}</span>
+                      <span>{formatContactRelativeTime(note.createdAt, timezone)}</span>
                     </div>
                   </div>
                 ))}
@@ -2569,12 +2526,12 @@ export default function Contact360Page() {
                   <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
                     <span>{note.author}</span>
                     <span>•</span>
-                    <span>{formatRelativeTime(note.createdAt)}</span>
+                    <span>{formatContactRelativeTime(note.createdAt, timezone)}</span>
                   </div>
                 </div>
               ))}
               {notes.length === 0 && (
-                <p className="text-sm text-slate-500 text-center py-2">No notes yet</p>
+                <EmptyState entity="notes" phase="passive" className="py-2" />
               )}
             </div>
             {notes.length > 2 && (

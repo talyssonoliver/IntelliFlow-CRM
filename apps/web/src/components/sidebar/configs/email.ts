@@ -71,6 +71,3 @@ export function createEmailSettingsSidebarConfig(
     sections: FOLDER_SECTIONS(unreadCounts),
   };
 }
-
-/** Static config for backward compatibility (no dynamic badges) */
-export const emailSidebarConfig = createEmailSidebarConfig();

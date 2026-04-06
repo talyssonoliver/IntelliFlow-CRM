@@ -6,8 +6,7 @@
 
 'use client';
 
-import { Button, Card, CardContent, Skeleton } from '@intelliflow/ui';
-import { Settings2 } from 'lucide-react';
+import { Button, Card, CardContent, Skeleton, EmptyState } from '@intelliflow/ui';
 
 interface ConfigEmptyStateProps {
   title: string;
@@ -20,9 +19,7 @@ export function ConfigEmptyState({ title, description, actionLabel, onAction }: 
   return (
     <Card>
       <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-        <Settings2 className="mb-4 h-12 w-12 text-muted-foreground" />
-        <h3 className="mb-2 text-lg font-semibold">{title}</h3>
-        <p className="mb-6 max-w-sm text-sm text-muted-foreground">{description}</p>
+        <EmptyState entity="rules" phase="passive" title={title} description={description} />
         <Button onClick={onAction}>{actionLabel}</Button>
       </CardContent>
     </Card>

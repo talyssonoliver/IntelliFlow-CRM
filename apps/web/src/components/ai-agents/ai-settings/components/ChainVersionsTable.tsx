@@ -29,6 +29,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  EmptyState,
 } from '@intelliflow/ui';
 import type { ChainType, ChainVersionStatus } from '@intelliflow/domain';
 import { CHAIN_TYPES, CHAIN_VERSION_STATUSES } from '@intelliflow/domain';
@@ -175,14 +176,7 @@ export function ChainVersionsTable({
 
       {/* Table */}
       {versions.length === 0 ? (
-        <div className="py-12 text-center text-muted-foreground">
-          <p>No versions found</p>
-          <p className="text-sm mt-1">
-            {selectedChainType !== 'all' || selectedStatus !== 'all'
-              ? 'Try adjusting your filters'
-              : 'Create a new version to get started'}
-          </p>
-        </div>
+        <EmptyState entity="insights" variant="filtered" phase="passive" />
       ) : (
         <>
           <Table>

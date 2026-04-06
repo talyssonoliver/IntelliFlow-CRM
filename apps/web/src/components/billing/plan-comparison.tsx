@@ -25,13 +25,14 @@ import {
   getPlanChangeDirectionDisplay,
   canChangeToPlan,
 } from '@/lib/billing/plan-changes';
+import pricingData from '@/data/pricing-data.json';
 import { PlanCard } from './plan-card';
 import { PlanComparisonTable, PlanFaq } from './plan-comparison-table';
 import { ErrorState, CardSkeleton } from './billing-shared';
 
 export function PlanComparison() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const [interval, setInterval] = React.useState<'monthly' | 'annual'>('monthly');
+  const [interval, setInterval] = React.useState<'monthly' | 'annual'>('annual');
 
   const {
     data: subscription,
@@ -87,14 +88,14 @@ export function PlanComparison() {
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
             )}
           >
-            Annual
+            Annual{' '}
             <span className="text-xs bg-[#10b981] text-white px-2 py-0.5 rounded">Save 17%</span>
           </button>
         </div>
       </div>
 
       {/* Plan cards grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {PLANS.map((plan) => {
           const isCurrent = plan.id === currentPlanId;
           const direction = getPlanChangeDirection(currentPlanId, plan.id);
@@ -129,9 +130,40 @@ export function PlanComparison() {
               changeAllowed={changeCheck.allowed}
               changeBlockedReason={changeCheck.reason}
               href={`/billing/upgrade?plan=${plan.id}`}
+              compact
             />
           );
         })}
+
+        {/* Custom tier (from pricing-data.json, not in PLANS) */}
+        {(() => {
+          const customTier = pricingData.tiers.find((t) => t.id === 'custom');
+          if (!customTier) return null;
+          return (
+            <PlanCard
+              key="custom"
+              variant="billing"
+              id="custom"
+              name={customTier.name}
+              description={customTier.description}
+              priceFormatted="Contact Sales"
+              priceSubtext={
+                interval === 'annual'
+                  ? 'Volume discounts on annual contracts'
+                  : undefined
+              }
+              savingsBadge={interval === 'annual' ? 'Custom annual pricing' : undefined}
+              features={[]}
+              isCurrent={false}
+              compact
+              direction="upgrade"
+              directionLabel="Contact Sales"
+              directionIcon="handshake"
+              changeAllowed={true}
+              href="/contact?plan=custom"
+            />
+          );
+        })()}
       </div>
 
       {/* Comparison table + FAQ */}

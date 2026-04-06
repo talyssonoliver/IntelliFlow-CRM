@@ -5,7 +5,7 @@
  * Pattern: apps/web/src/components/ai-intelligence/ChurnTrendChart.tsx (lazy-loaded Recharts)
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from '@intelliflow/ui';
+import { Card, CardContent, CardHeader, CardTitle, EmptyState } from '@intelliflow/ui';
 import {
   ResponsiveContainer,
   LineChart,
@@ -23,7 +23,7 @@ interface ModelPerformanceChartProps {
 
 function formatDate(timestamp: string): string {
   const d = new Date(timestamp);
-  return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
+  return `${d.getUTCMonth() + 1}/${d.getUTCDate()} ${d.getUTCHours()}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
 }
 
 export default function ModelPerformanceChart({ history }: Readonly<ModelPerformanceChartProps>) {
@@ -42,9 +42,9 @@ export default function ModelPerformanceChart({ history }: Readonly<ModelPerform
       </CardHeader>
       <CardContent className="pb-4">
         {chartData.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8" data-testid="no-chart-data">
-            No performance data available
-          </p>
+          <div data-testid="no-chart-data">
+            <EmptyState entity="insights" phase="passive" className="py-4" />
+          </div>
         ) : (
           <div className="h-[200px]" data-testid="performance-chart">
             <ResponsiveContainer width="100%" height="100%">

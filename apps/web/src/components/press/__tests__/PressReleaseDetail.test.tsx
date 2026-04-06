@@ -156,15 +156,7 @@ describe('Breadcrumb Navigation', () => {
     expect(nav.tagName).toBe('NAV');
   });
 
-  it('renders <ol> with Home, Press, and current title crumbs', () => {
-    renderComponent();
-    const nav = screen.getByLabelText('Breadcrumb');
-    const list = within(nav).getByRole('list');
-    const items = within(list).getAllByRole('listitem');
-    expect(items.length).toBe(3);
-  });
-
-  it('Home links to /, Press links to /press', () => {
+  it('renders Home and Press as links, and the title as current page text', () => {
     renderComponent();
     const nav = screen.getByLabelText('Breadcrumb');
     const links = within(nav).getAllByRole('link');
@@ -175,9 +167,11 @@ describe('Breadcrumb Navigation', () => {
   it('terminal crumb has aria-current="page"', () => {
     renderComponent();
     const nav = screen.getByLabelText('Breadcrumb');
-    const items = within(nav).getAllByRole('listitem');
-    const lastItem = items[items.length - 1];
-    expect(lastItem).toHaveAttribute('aria-current', 'page');
+    const currentItem = nav.querySelector('[aria-current="page"]');
+    expect(currentItem).toBeTruthy();
+    expect(currentItem!.textContent).toContain(
+      'IntelliFlow CRM Launches AI-Powered Lead Scoring Engine'
+    );
   });
 
   it('separators have aria-hidden="true"', () => {
@@ -333,7 +327,7 @@ describe('Accessibility', () => {
     });
   });
 
-  it('heading hierarchy: h1 → h2 (no skipping)', () => {
+  it('heading hierarchy: h1 -> h2 (no skipping)', () => {
     const { container } = renderComponent();
     const headings = container.querySelectorAll('h1, h2, h3, h4, h5, h6');
     const levels = Array.from(headings).map((h) => parseInt(h.tagName[1]));
@@ -357,10 +351,28 @@ describe('Dark Mode', () => {
 // ─── Test Group 11: Brand Consistency ───────────────────────────────────────
 
 describe('Brand Consistency', () => {
-  it('uses IntelliFlow brand colors (#137fec or #0e6ac7)', () => {
+  it('uses CSS variable classes (text-primary, bg-primary) instead of hardcoded hex', () => {
     const { container } = renderComponent();
     const html = container.innerHTML;
-    expect(html).toMatch(/#137fec|#0e6ac7|137fec|0e6ac7/);
+    // Should use CSS variable classes, not raw hex values
+    expect(html).toMatch(/text-primary|bg-primary|border-primary/);
+    // Should NOT contain hardcoded brand hex colors in class attributes
+    const classAttrs = Array.from(container.querySelectorAll('[class]')).map(
+      (el) => el.getAttribute('class') ?? ''
+    );
+    const hasHardcodedHex = classAttrs.some(
+      (cls) => cls.includes('#137fec') || cls.includes('#0e6ac7')
+    );
+    expect(hasHardcodedHex).toBe(false);
+  });
+
+  it('does not use inline style for category badge colors', () => {
+    const { container } = renderComponent();
+    // Category badges should use Tailwind classes, not inline style={{ color, backgroundColor }}
+    const badges = container.querySelectorAll('.rounded-full');
+    badges.forEach((badge) => {
+      expect(badge).not.toHaveAttribute('style');
+    });
   });
 
   it('uses Material Symbols icons (material-symbols-outlined)', () => {

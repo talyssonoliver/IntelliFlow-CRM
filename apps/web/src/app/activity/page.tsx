@@ -31,7 +31,6 @@ export default function ActivityPage() {
       setSearchInput(q);
     }
     // Only react to URL changes, not searchInput changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const feedTypes = useMemo(

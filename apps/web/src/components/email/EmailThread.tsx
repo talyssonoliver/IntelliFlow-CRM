@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { Archive, Trash2, MailOpen, Inbox, Tag } from 'lucide-react';
+import { Archive, Trash2, MailOpen, Tag } from 'lucide-react';
+import { EmptyState } from '@intelliflow/ui';
 import { cn } from '@/lib/utils';
 import { EMAIL_LABELS } from '@/components/sidebar/configs/EmailSidebarContent';
 import { EmailMessage } from './EmailMessage';
@@ -156,16 +157,12 @@ export function EmailThread({
   // Empty state
   if (!thread) {
     return (
-      <div
-        className={cn(
-          'flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground',
-          className
-        )}
-      >
-        <Inbox className="h-12 w-12 opacity-30" />
-        <p className="text-sm">No email selected</p>
-        <p className="text-xs">Select an email from the list to view its thread</p>
-      </div>
+      <EmptyState
+        entity="emails"
+        variant="selection"
+        phase="passive"
+        className={cn('flex-1', className)}
+      />
     );
   }
 

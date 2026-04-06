@@ -128,6 +128,3 @@ export function createNotificationsSettingsSidebarConfig(
     sections: CENTER_SECTIONS,
   };
 }
-
-/** Static config for backward compatibility */
-export const notificationsSidebarConfig = createNotificationsSidebarConfig();

@@ -99,9 +99,8 @@ export function TemplateSelector({ onSelect, currentBody = '', className }: Read
       </button>
 
       {isOpen && (
-        <div // NOSONAR typescript:S6848 — popup container captures keyboard events for keyboard navigation within the template picker
+        <div
           className="absolute bottom-full right-0 z-50 mb-1 w-80 rounded-md border border-border bg-popover p-2 shadow-lg"
-          onKeyDown={handleKeyDown}
         >
           {/* Search input */}
           <div className="relative mb-2">
@@ -114,9 +113,8 @@ export function TemplateSelector({ onSelect, currentBody = '', className }: Read
                 setSearchQuery(e.target.value);
                 setHighlightIndex(-1);
               }}
+              onKeyDown={handleKeyDown}
               className="w-full rounded-md border border-input bg-transparent py-1.5 pl-7 pr-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-              // eslint-disable-next-line jsx-a11y/no-autofocus
-              autoFocus
             />
           </div>
 
@@ -128,51 +126,53 @@ export function TemplateSelector({ onSelect, currentBody = '', className }: Read
           ) : (
             <ul
               className="max-h-48 space-y-0.5 overflow-auto"
-              role="listbox" // NOSONAR typescript:S6819 — custom styled template listbox; <select> cannot contain rich content
             >
               {filteredTemplates.map((template, i) => (
                 <li
                   key={template.id}
-                  role="option" // NOSONAR typescript:S6819,S6842 — listbox option; <option> cannot contain custom styles or padding
-                  aria-selected={i === highlightIndex}
                   data-highlighted={i === highlightIndex ? true : undefined}
-                  tabIndex={-1}
-                  className={cn(
-                    'cursor-pointer rounded-md px-2 py-1.5 text-sm',
-                    'hover:bg-accent hover:text-accent-foreground',
-                    i === highlightIndex && 'bg-accent text-accent-foreground'
-                  )}
-                  onFocus={() => setHighlightIndex(i)}
-                  onClick={() => handleSelect(template)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      handleSelect(template);
-                    }
-                  }}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">{template.name}</span>
-                    <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[10px]">
-                      {template.category}
-                    </span>
-                  </div>
-                  <div className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
-                    {template.body.replaceAll(/<[^<>]*>/g, '').slice(0, 60)}...
-                  </div>
-                  {/* Merge variables */}
-                  {template.variables.length > 0 && (
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {template.variables.map((v) => (
-                        <span
-                          key={v}
-                          className="rounded bg-primary/10 px-1 py-0.5 text-[10px] font-mono text-primary"
-                        >
-                          {`{{${v}}}`}
-                        </span>
-                      ))}
+                  <button
+                    type="button"
+                    aria-pressed={i === highlightIndex}
+                    tabIndex={-1}
+                    className={cn(
+                      'w-full text-left cursor-pointer rounded-md px-2 py-1.5 text-sm',
+                      'hover:bg-accent hover:text-accent-foreground',
+                      i === highlightIndex && 'bg-accent text-accent-foreground'
+                    )}
+                    onFocus={() => setHighlightIndex(i)}
+                    onClick={() => handleSelect(template)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleSelect(template);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{template.name}</span>
+                      <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[10px]">
+                        {template.category}
+                      </span>
                     </div>
-                  )}
+                    <div className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
+                      {template.body.replaceAll(/<[^<>]*>/g, '').slice(0, 60)}...
+                    </div>
+                    {/* Merge variables */}
+                    {template.variables.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {template.variables.map((v) => (
+                          <span
+                            key={v}
+                            className="rounded bg-primary/10 px-1 py-0.5 text-[10px] font-mono text-primary"
+                          >
+                            {`{{${v}}}`}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </button>
                 </li>
               ))}
             </ul>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Skeleton, Badge } from '@intelliflow/ui';
+import { Button, EmptyState, Skeleton, Badge } from '@intelliflow/ui';
 import { api } from '@/lib/api';
 import type { ContactStatus } from '@intelliflow/domain';
 
@@ -54,16 +54,15 @@ export function AccountContactsList({ accountId, onAddContact }: Readonly<Accoun
 
   if (contacts.length === 0 && !statusFilter) {
     return (
-      <div className="text-center py-12">
-        <span className="material-symbols-outlined text-4xl text-muted-foreground mb-3">
-          person_off
-        </span>
-        <p className="text-muted-foreground">No contacts linked to this account</p>
-        <Button variant="outline" size="sm" className="mt-3" onClick={onAddContact} type="button">
-          <span className="material-symbols-outlined text-base mr-1">person_add</span>{' '}
-          Add Contact
-        </Button>
-      </div>
+      <>
+        <EmptyState entity="contacts" phase="passive" className="py-4" />
+        <div className="flex justify-center">
+          <Button variant="outline" size="sm" onClick={onAddContact} type="button">
+            <span className="material-symbols-outlined text-base mr-1">person_add</span>{' '}
+            Add Contact
+          </Button>
+        </div>
+      </>
     );
   }
 

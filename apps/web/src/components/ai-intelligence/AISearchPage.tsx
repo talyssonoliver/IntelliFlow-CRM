@@ -9,7 +9,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, Badge, Button, Skeleton, Input, cn } from '@intelliflow/ui';
+import { Card, CardContent, Badge, Button, EmptyState, Skeleton, Input, cn } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared';
 import { useAISearch } from '@/lib/ai-search/hooks';
 import { SourceHighlight } from './SourceHighlight';
@@ -461,14 +461,8 @@ export function AISearchPage() {
 
       {hasQuery && !isLoading && !error && results.length === 0 && (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <span className="material-symbols-outlined text-5xl text-muted-foreground mb-4">
-              search_off
-            </span>
-            <p className="text-lg font-medium text-muted-foreground">No results found</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Try different keywords or broader filters.
-            </p>
+          <CardContent>
+            <EmptyState entity="search" phase="passive" />
           </CardContent>
         </Card>
       )}
@@ -509,7 +503,6 @@ function SearchResultCard({ result, query }: Readonly<{ result: SearchResultItem
   const card = (
     <Card
       className={cn('transition-shadow', isLinked && 'hover:shadow-md cursor-pointer')}
-      role="listitem"
     >
       <CardContent className="p-4">
         <div className="flex flex-col gap-2">

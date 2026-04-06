@@ -6,7 +6,6 @@ import { trpc } from '@/lib/trpc';
 import { useDebounce } from '@/hooks/useDebounce';
 import { cn } from '@/lib/utils';
 import { toast } from '@intelliflow/ui';
-import { EMAIL_LABELS } from '@/components/sidebar/configs/EmailSidebarContent';
 import { EmailList } from './EmailList';
 import { EmailThread } from './EmailThread';
 

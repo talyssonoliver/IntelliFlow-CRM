@@ -13,7 +13,7 @@
 import Link from 'next/link';
 import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Card, Button } from '@intelliflow/ui';
+import { Card, Button, EmptyState } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import type { AgentAction, ActionStatus } from '@/lib/agent';
@@ -877,19 +877,7 @@ function AgentApprovalsPreviewContent() {
         )}
         {!isLoading && filteredActions.length === 0 && (
           <Card className="p-12">
-            <div className="flex flex-col items-center justify-center text-center">
-              <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
-                <Icon name="smart_toy" className="text-3xl text-slate-400" />
-              </div>
-              <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-1">
-                No actions found
-              </h3>
-              <p className="text-slate-500 dark:text-slate-400 max-w-sm">
-                {filterStatus === 'all'
-                  ? 'No pending agent tool actions to review. Actions appear here when AI agents propose CRM changes that require human approval.'
-                  : `No ${filterStatus} actions found. Try a different filter.`}
-              </p>
-            </div>
+            <EmptyState entity="agents" phase="passive" />
           </Card>
         )}
         {!isLoading &&

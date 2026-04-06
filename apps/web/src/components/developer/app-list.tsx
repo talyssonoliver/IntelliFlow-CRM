@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, Badge, Button } from '@intelliflow/ui';
+import { Card, CardContent, CardHeader, Badge, Button, EmptyState } from '@intelliflow/ui';
 import { generateApiKey } from '@/lib/developer/api-key-generator';
 import { DEMO_APPS, type DeveloperApp } from '@/lib/developer/demo-data';
 
@@ -57,14 +57,8 @@ export function AppList() {
 
   if (apps.length === 0) {
     return (
-      <div className="text-center py-12">
-        <span
-          className="material-symbols-outlined text-4xl text-muted-foreground"
-          aria-hidden="true"
-        >
-          apps
-        </span>
-        <p className="mt-2 text-muted-foreground">No developer apps registered yet.</p>
+      <div>
+        <EmptyState entity="insights" phase="passive" />
         <Link
           href="/developers/apps/new"
           className="mt-4 inline-block text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"

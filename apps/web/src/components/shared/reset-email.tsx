@@ -44,7 +44,6 @@ export interface EmailInputProps {
   onBlur?: () => void;
   error?: string;
   disabled?: boolean;
-  autoFocus?: boolean;
   className?: string;
 }
 
@@ -78,7 +77,6 @@ export function EmailInput({
   onBlur,
   error,
   disabled = false,
-  autoFocus = false,
   className,
 }: Readonly<EmailInputProps>) {
   return (
@@ -100,8 +98,6 @@ export function EmailInput({
           onChange={(e) => onChange(e.target.value)}
           onBlur={onBlur}
           disabled={disabled}
-          // eslint-disable-next-line jsx-a11y/no-autofocus
-          autoFocus={autoFocus}
           autoComplete="email"
           placeholder="you@example.com"
           aria-invalid={!!error}
@@ -195,8 +191,6 @@ export function ForgotPasswordForm({
         onBlur={handleBlur}
         error={touched ? error : undefined}
         disabled={isLoading}
-        // eslint-disable-next-line jsx-a11y/no-autofocus
-        autoFocus
       />
 
       <button
