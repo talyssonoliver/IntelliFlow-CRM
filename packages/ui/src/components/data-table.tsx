@@ -16,6 +16,8 @@ import {
 } from '@tanstack/react-table';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './table';
 import { Button } from './button';
+import { EmptyState } from './empty-state';
+import type { EmptyStateEntity } from './entity-empty-state-config';
 import { Checkbox } from './checkbox';
 import {
   DropdownMenu,
@@ -24,6 +26,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './dropdown-menu';
+export { ConfirmationDialog } from './confirmation-dialog';
+export type { ConfirmationDialogProps } from './confirmation-dialog';
+export { StatusSelectDialog } from './status-select-dialog';
+export type { StatusOption, StatusSelectDialogProps } from './status-select-dialog';
 
 // =============================================================================
 // Types
@@ -38,14 +44,6 @@ export interface BulkAction<T> {
   onClick?: (selectedRows: T[]) => void | Promise<void>;
 }
 
-export interface StatusOption {
-  value: string;
-  label: string;
-  color?: string;
-  icon?: string;
-  description?: string;
-}
-
 export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -53,6 +51,8 @@ export interface DataTableProps<TData, TValue> {
   pageSize?: number;
   emptyMessage?: string;
   emptyIcon?: string;
+  /** CRM entity type — renders rich illustrated empty state automatically */
+  entity?: EmptyStateEntity;
   onRowClick?: (row: TData) => void;
   enableRowSelection?: boolean;
   bulkActions?: BulkAction<TData>[];
@@ -173,207 +173,6 @@ export function TableRowActions<T>({
 }
 
 // =============================================================================
-// Dialog Components
-// =============================================================================
-
-export interface ConfirmationDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: string;
-  description?: string;
-  confirmLabel?: string;
-  cancelLabel?: string;
-  variant?: 'default' | 'destructive';
-  onConfirm: () => void | Promise<void>;
-  isLoading?: boolean;
-  icon?: string;
-  children?: React.ReactNode;
-}
-
-export function ConfirmationDialog({
-  open,
-  onOpenChange,
-  title,
-  description,
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
-  variant = 'default',
-  onConfirm,
-  isLoading,
-  icon,
-}: Readonly<ConfirmationDialogProps>) {
-  if (!open) return null;
-
-  return (
-    <div
-      role="button" // NOSONAR typescript:S6819 — backdrop overlay needs div for full-screen layout
-      tabIndex={0}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 cursor-default"
-      onClick={() => onOpenChange(false)}
-      onKeyDown={(e) => {
-        if (e.key === 'Escape') onOpenChange(false);
-      }}
-      aria-label="Close dialog"
-    >
-      <div // NOSONAR typescript:S6847 — dialog div prevents event bubbling to backdrop; role="dialog" makes it an interactive landmark
-        role="dialog" // NOSONAR typescript:S6819 — custom modal overlay; <dialog> element lacks cross-browser CSS layout support
-        aria-modal="true"
-        aria-labelledby="confirmation-dialog-title"
-        aria-describedby={description ? 'confirmation-dialog-desc' : undefined}
-        className="bg-white dark:bg-slate-900 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-start gap-4">
-          {icon && (
-            <div
-              className={`p-2 rounded-full ${variant === 'destructive' ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' : 'bg-primary/10 text-primary'}`}
-            >
-              <span className="material-symbols-outlined text-xl" aria-hidden="true">
-                {icon}
-              </span>
-            </div>
-          )}
-          <div className="flex-1">
-            <h2 id="confirmation-dialog-title" className="text-lg font-semibold">
-              {title}
-            </h2>
-            {description && (
-              <p
-                id="confirmation-dialog-desc"
-                className="mt-2 text-slate-600 dark:text-slate-400 text-sm"
-              >
-                {description}
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="mt-6 flex justify-end gap-3">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-            {cancelLabel}
-          </Button>
-          <Button
-            variant={variant === 'destructive' ? 'destructive' : 'default'}
-            onClick={async () => {
-              await onConfirm();
-            }}
-            disabled={isLoading}
-          >
-            {isLoading && (
-              <span
-                className="material-symbols-outlined text-sm mr-2 animate-spin"
-                aria-hidden="true"
-              >
-                progress_activity
-              </span>
-            )}
-            {confirmLabel}
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export interface StatusSelectDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: string;
-  description?: string;
-  options: StatusOption[];
-  currentValue?: string;
-  onSelect?: (value: string) => void | Promise<void>;
-  onConfirm?: (value: string) => void | Promise<void>;
-  isLoading?: boolean;
-}
-
-export function StatusSelectDialog({
-  open,
-  onOpenChange,
-  title,
-  description,
-  options,
-  currentValue,
-  onSelect,
-  onConfirm,
-}: Readonly<StatusSelectDialogProps>) {
-  const [selectedValue, setSelectedValue] = React.useState(currentValue || '');
-
-  if (!open) return null;
-
-  const handleConfirm = () => {
-    if (onConfirm) {
-      onConfirm(selectedValue);
-    } else if (onSelect) {
-      onSelect(selectedValue);
-    }
-    onOpenChange(false);
-  };
-
-  return (
-    <button
-      type="button"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 cursor-default"
-      onClick={() => onOpenChange(false)}
-      onKeyDown={(e) => {
-        if (e.key === 'Escape') onOpenChange(false);
-      }}
-      aria-label="Close dialog"
-    >
-      <dialog // NOSONAR typescript:S6847 — <dialog> is the correct semantic element; click/keydown handlers prevent event bubbling to backdrop
-        open
-        aria-modal="true"
-        aria-labelledby="status-dialog-title"
-        aria-describedby={description ? 'status-dialog-desc' : undefined}
-        className="bg-white dark:bg-slate-900 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => {
-          if (e.key === 'Escape') onOpenChange(false);
-        }}
-      >
-        <h2 id="status-dialog-title" className="text-lg font-semibold">
-          {title}
-        </h2>
-        {description && (
-          <p id="status-dialog-desc" className="mt-2 text-slate-600 dark:text-slate-400">
-            {description}
-          </p>
-        )}
-        <fieldset className="mt-4 space-y-2 border-0 p-0 m-0">
-          <legend className="sr-only">{title}</legend>
-          {options.map((option) => (
-            <label
-              key={option.value}
-              className={`flex items-center w-full px-4 py-2 rounded cursor-pointer ${
-                selectedValue === option.value
-                  ? 'bg-primary text-primary-foreground'
-                  : 'hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-            >
-              <input
-                type="radio"
-                name="status-select"
-                value={option.value}
-                checked={selectedValue === option.value}
-                onChange={() => setSelectedValue(option.value)}
-                className="sr-only"
-              />
-              {option.label}
-            </label>
-          ))}
-        </fieldset>
-        <div className="mt-6 flex justify-end gap-3">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleConfirm}>Confirm</Button>
-        </div>
-      </dialog>
-    </button>
-  );
-}
-
-// =============================================================================
 // Bulk Actions Bar Component
 // =============================================================================
 
@@ -483,6 +282,7 @@ export function DataTable<TData, TValue>({
   pageSize = 10,
   emptyMessage = 'No results found.',
   emptyIcon = 'search_off',
+  entity,
   onRowClick,
   enableRowSelection,
   bulkActions,
@@ -635,12 +435,20 @@ export function DataTable<TData, TValue>({
             ) : (
               <TableRow className="bg-white dark:bg-slate-900 hover:bg-white">
                 <TableCell colSpan={allColumns.length} className="h-48">
-                  <div className="flex flex-col items-center justify-center text-center">
-                    <span className="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 mb-3">
-                      {emptyIcon}
-                    </span>
-                    <p className="text-slate-500 dark:text-slate-400">{emptyMessage}</p>
-                  </div>
+                  {entity ? (
+                    <EmptyState
+                      entity={entity}
+                      phase="passive"
+                      description={emptyMessage !== 'No results found.' ? emptyMessage : undefined}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <span className="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 mb-3">
+                        {emptyIcon}
+                      </span>
+                      <p className="text-slate-500 dark:text-slate-400">{emptyMessage}</p>
+                    </div>
+                  )}
                 </TableCell>
               </TableRow>
             )}

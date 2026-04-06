@@ -58,6 +58,19 @@ export * from './intelligence';
 // Status & State Components
 export * from './status-badge';
 export * from './empty-state';
+export * from './entity-empty-state-config';
+export * from './empty-state-illustrations';
+
+// Dialog Components
+export * from './confirmation-dialog';
+export * from './status-select-dialog';
+
+// Avatar & Icon Components
+export * from './entity-avatar';
+export * from './icon-badge';
+
+// Error State
+export * from './error-state';
 
 // Score Components
 export * from './score';
