@@ -20,7 +20,7 @@ import {
   testEnvSchema,
   validateEnv,
   safeValidateEnv,
-} from '../env';
+} from '../config';
 
 /** Minimal valid env object that satisfies the base envSchema */
 const minimalValidEnv = {

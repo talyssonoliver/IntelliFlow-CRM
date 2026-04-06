@@ -15,13 +15,6 @@ import {
   COMMUNICATION_DIRECTIONS,
 } from '@intelliflow/domain';
 
-// Re-export label/icon maps from domain for convenience
-export {
-  TIMELINE_EVENT_TYPE_LABELS,
-  TIMELINE_EVENT_TYPE_ICONS,
-  AGENT_ACTION_STATUS_LABELS,
-} from '@intelliflow/domain';
-
 // =============================================================================
 // Enum Schemas - derived from domain constants (single source of truth)
 // =============================================================================

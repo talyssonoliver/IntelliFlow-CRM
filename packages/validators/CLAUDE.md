@@ -40,7 +40,7 @@ src/
 ├── appointment.ts         # Appointment schemas
 ├── auth.ts                # Auth schemas
 ├── ai.ts / ai-review.ts   # AI output schemas
-├── env.ts                 # Environment config schemas
+├── config.ts              # Environment config schemas (DRY from domain constants)
 ├── common.ts              # Shared utility schemas
 └── index.ts               # Barrel exports
 ```

@@ -97,3 +97,6 @@ export * from './calendar';
 
 // Lead Settings Schemas (PG-178)
 export * from './lead-settings';
+
+// Help Article Schemas (IFC-299)
+export * from './help-article';

@@ -230,3 +230,10 @@ export const getHierarchyInputSchema = z.object({
 });
 
 export type GetHierarchyInput = z.infer<typeof getHierarchyInputSchema>;
+
+export const assignOwnerSchema = z.object({
+  id: idSchema,
+  ownerId: idSchema,
+});
+
+export type AssignOwnerInput = z.infer<typeof assignOwnerSchema>;
