@@ -15,6 +15,16 @@ import {
   OpportunityReopenedEvent,
 } from './OpportunityEvents';
 
+const DEFAULT_STAGE_PROBABILITIES: Record<OpportunityStage, number> = {
+  PROSPECTING: 10,
+  QUALIFICATION: 20,
+  NEEDS_ANALYSIS: 40,
+  PROPOSAL: 60,
+  NEGOTIATION: 80,
+  CLOSED_WON: 100,
+  CLOSED_LOST: 0,
+};
+
 export class OpportunityAlreadyClosedError extends DomainError {
   readonly code = 'OPPORTUNITY_ALREADY_CLOSED';
   constructor() {
@@ -58,11 +68,14 @@ interface OpportunityProps {
   createdAt: Date;
   updatedAt: Date;
   closedAt?: Date;
+  deletedAt?: Date | null;
 }
 
 export interface CreateOpportunityProps {
   name: string;
   value: number | Money;
+  stage?: OpportunityStage;
+  probability?: number | Percentage;
   accountId: string;
   contactId?: string;
   sourceLeadId?: string;
@@ -142,6 +155,14 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     return this.props.closedAt;
   }
 
+  get deletedAt(): Date | null | undefined {
+    return this.props.deletedAt;
+  }
+
+  get isDeleted(): boolean {
+    return !!this.props.deletedAt;
+  }
+
   get isClosed(): boolean {
     return this.props.stage === 'CLOSED_WON' || this.props.stage === 'CLOSED_LOST';
   }
@@ -187,8 +208,11 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
       moneyValue = props.value;
     }
 
-    // Create default probability for prospecting stage
-    const probabilityResult = Percentage.create(10);
+    const initialStage = props.stage ?? 'PROSPECTING';
+    const probabilityResult = Opportunity.resolveInitialProbability(
+      initialStage,
+      props.probability
+    );
     if (probabilityResult.isFailure) {
       return Result.fail(probabilityResult.error);
     }
@@ -199,7 +223,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     const opportunity = new Opportunity(opportunityId, {
       name: props.name,
       value: moneyValue,
-      stage: 'PROSPECTING',
+      stage: initialStage,
       probability: probabilityResult.value,
       expectedCloseDate: props.expectedCloseDate,
       description: props.description,
@@ -242,7 +266,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     this.props.updatedAt = new Date();
 
     // Auto-adjust probability based on stage
-    const probabilityResult = this.getDefaultProbabilityForStage(newStage);
+    const probabilityResult = Opportunity.getDefaultProbabilityForStage(newStage);
     if (probabilityResult.isFailure) {
       return Result.fail(probabilityResult.error);
     }
@@ -399,7 +423,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
 
     this.props.stage = 'PROSPECTING';
 
-    const probabilityResult = this.getDefaultProbabilityForStage('PROSPECTING');
+    const probabilityResult = Opportunity.getDefaultProbabilityForStage('PROSPECTING');
     if (probabilityResult.isFailure) {
       return Result.fail(probabilityResult.error);
     }
@@ -419,17 +443,30 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
   }
 
   // Private helpers
-  private getDefaultProbabilityForStage(stage: OpportunityStage): Result<Percentage, DomainError> {
-    const stageProb: Record<OpportunityStage, number> = {
-      PROSPECTING: 10,
-      QUALIFICATION: 20,
-      NEEDS_ANALYSIS: 40,
-      PROPOSAL: 60,
-      NEGOTIATION: 80,
-      CLOSED_WON: 100,
-      CLOSED_LOST: 0,
-    };
-    return Percentage.create(stageProb[stage]);
+  private static resolveInitialProbability(
+    stage: OpportunityStage,
+    probability?: number | Percentage
+  ): Result<Percentage, DomainError> {
+    if (probability === undefined) {
+      return Opportunity.getDefaultProbabilityForStage(stage);
+    }
+
+    if (typeof probability === 'number') {
+      const percentageResult = Percentage.create(probability);
+      if (percentageResult.isFailure) {
+        return Result.fail(new InvalidProbabilityError(percentageResult.error.message));
+      }
+
+      return Result.ok(percentageResult.value);
+    }
+
+    return Result.ok(probability);
+  }
+
+  private static getDefaultProbabilityForStage(
+    stage: OpportunityStage
+  ): Result<Percentage, DomainError> {
+    return Percentage.create(DEFAULT_STAGE_PROBABILITIES[stage]);
   }
 
   // Serialization
@@ -449,6 +486,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
       closedAt: this.closedAt?.toISOString(),
+      deletedAt: this.deletedAt?.toISOString() ?? null,
     };
   }
 }

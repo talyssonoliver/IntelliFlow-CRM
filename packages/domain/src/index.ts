@@ -135,5 +135,8 @@ export * from './crm/activity';
 // CRM Domain - Billing (IFC-198)
 export * from './crm/billing';
 
+// CRM Domain - Tickets
+export * from './crm/ticket';
+
 // Automation Domain - Routing (PG-132)
 export * from './automation/RoutingConstants';

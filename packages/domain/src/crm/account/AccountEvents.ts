@@ -120,3 +120,28 @@ export class AccountIndustryCategorizedEvent extends DomainEvent {
     };
   }
 }
+
+/**
+ * Event: Account owner was reassigned
+ */
+export class AccountOwnerAssignedEvent extends DomainEvent {
+  readonly eventType = 'account.owner_assigned';
+
+  constructor(
+    public readonly accountId: AccountId,
+    public readonly previousOwnerId: string,
+    public readonly newOwnerId: string,
+    public readonly assignedBy: string
+  ) {
+    super();
+  }
+
+  toPayload(): Record<string, unknown> {
+    return {
+      accountId: this.accountId.value,
+      previousOwnerId: this.previousOwnerId,
+      newOwnerId: this.newOwnerId,
+      assignedBy: this.assignedBy,
+    };
+  }
+}

@@ -18,44 +18,72 @@ export interface OpportunityRepository {
   save(opportunity: Opportunity): Promise<void>;
 
   /**
-   * Find an opportunity by ID
+   * Find an opportunity by ID, optionally scoped to a tenant.
+   * IFC-281: callers that gate mutations MUST pass tenantId to prevent cross-tenant leaks.
    */
-  findById(id: OpportunityId): Promise<Opportunity | null>;
+  findById(id: OpportunityId, tenantId?: string): Promise<Opportunity | null>;
 
   /**
-   * Find all opportunities for an owner
+   * Find all opportunities for an owner within a tenant
    */
-  findByOwnerId(ownerId: string): Promise<Opportunity[]>;
+  findByOwnerId(ownerId: string, tenantId?: string): Promise<Opportunity[]>;
 
   /**
-   * Find opportunities by account
+   * Find opportunities by account, optionally within a tenant
    */
-  findByAccountId(accountId: string): Promise<Opportunity[]>;
+  findByAccountId(accountId: string, tenantId?: string): Promise<Opportunity[]>;
 
   /**
-   * Find opportunities by stage
+   * Find opportunities by stage, optionally within a tenant
    */
-  findByStage(stage: OpportunityStage, ownerId?: string): Promise<Opportunity[]>;
+  findByStage(stage: OpportunityStage, tenantId?: string, ownerId?: string): Promise<Opportunity[]>;
 
   /**
-   * Find opportunities by contact
+   * Find opportunities by contact, optionally within a tenant
    */
-  findByContactId(contactId: string): Promise<Opportunity[]>;
+  findByContactId(contactId: string, tenantId?: string): Promise<Opportunity[]>;
 
   /**
-   * Delete an opportunity
+   * Delete an opportunity within a tenant
+   * IFC-281: tenantId required to prevent cross-tenant deletes
    */
-  delete(id: OpportunityId): Promise<void>;
+  delete(id: OpportunityId, tenantId: string): Promise<void>;
 
   /**
-   * Find opportunities closing soon
+   * Soft-delete an opportunity (sets deletedAt)
    */
-  findClosingSoon(days: number, ownerId?: string): Promise<Opportunity[]>;
+  softDelete(id: OpportunityId): Promise<void>;
 
   /**
-   * Find high-value opportunities
+   * Restore a soft-deleted opportunity (clears deletedAt)
    */
-  findHighValue(minValue: number, ownerId?: string): Promise<Opportunity[]>;
+  restore(id: OpportunityId): Promise<void>;
+
+  /**
+   * Find an opportunity by ID including soft-deleted records
+   */
+  findByIdIncludingDeleted(id: OpportunityId): Promise<Opportunity | null>;
+
+  /**
+   * Find soft-deleted (trashed) opportunities for a tenant
+   */
+  findTrashed(params: {
+    tenantId: string;
+    search?: string;
+    skip?: number;
+    take?: number;
+    orderBy?: Record<string, string>;
+  }): Promise<{ items: Opportunity[]; total: number }>;
+
+  /**
+   * Find opportunities closing soon within a tenant
+   */
+  findClosingSoon(days: number, tenantId?: string, ownerId?: string): Promise<Opportunity[]>;
+
+  /**
+   * Find high-value opportunities, optionally within a tenant
+   */
+  findHighValue(minValue: number, tenantId?: string, ownerId?: string): Promise<Opportunity[]>;
 }
 
 /**

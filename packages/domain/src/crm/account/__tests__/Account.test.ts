@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { Account, InvalidRevenueError, InvalidEmployeeCountError } from '../Account';
+import { Account, InvalidRevenueError, InvalidEmployeeCountError, SameOwnerError } from '../Account';
 import { AccountId } from '../AccountId';
 import { WebsiteUrl } from '../../../shared/WebsiteUrl';
 import {
@@ -16,6 +16,7 @@ import {
   AccountUpdatedEvent,
   AccountRevenueUpdatedEvent,
   AccountIndustryCategorizedEvent,
+  AccountOwnerAssignedEvent,
 } from '../AccountEvents';
 
 describe('Account Aggregate', () => {
@@ -628,6 +629,63 @@ describe('Account Aggregate', () => {
 
       account.clearDomainEvents();
       expect(account.getDomainEvents()).toHaveLength(0);
+    });
+  });
+
+  describe('assignOwner()', () => {
+    it('should change ownerId and emit AccountOwnerAssignedEvent', () => {
+      const result = Account.create({
+        name: 'Assign Corp',
+        ownerId: 'user-1',
+        tenantId: 'tenant-123',
+      });
+
+      const account = result.value;
+      account.clearDomainEvents();
+
+      const assignResult = account.assignOwner('user-2', 'admin-1');
+
+      expect(assignResult.isSuccess).toBe(true);
+      expect(account.ownerId).toBe('user-2');
+
+      const events = account.getDomainEvents();
+      expect(events).toHaveLength(1);
+      expect(events[0]).toBeInstanceOf(AccountOwnerAssignedEvent);
+
+      const event = events[0] as AccountOwnerAssignedEvent;
+      expect(event.previousOwnerId).toBe('user-1');
+      expect(event.newOwnerId).toBe('user-2');
+      expect(event.assignedBy).toBe('admin-1');
+    });
+
+    it('should return SameOwnerError when assigning to current owner', () => {
+      const result = Account.create({
+        name: 'Same Owner Corp',
+        ownerId: 'user-1',
+        tenantId: 'tenant-123',
+      });
+
+      const account = result.value;
+      account.clearDomainEvents();
+
+      const assignResult = account.assignOwner('user-1', 'admin-1');
+
+      expect(assignResult.isFailure).toBe(true);
+      expect(assignResult.error).toBeInstanceOf(SameOwnerError);
+      expect(assignResult.error.code).toBe('SAME_OWNER');
+      expect(account.ownerId).toBe('user-1');
+      expect(account.getDomainEvents()).toHaveLength(0);
+    });
+
+    it('should include all required fields in AccountOwnerAssignedEvent.toPayload', () => {
+      const accountId = AccountId.generate();
+      const event = new AccountOwnerAssignedEvent(accountId, 'prev-owner', 'new-owner', 'admin-1');
+      const payload = event.toPayload();
+
+      expect(payload).toHaveProperty('accountId', accountId.value);
+      expect(payload).toHaveProperty('previousOwnerId', 'prev-owner');
+      expect(payload).toHaveProperty('newOwnerId', 'new-owner');
+      expect(payload).toHaveProperty('assignedBy', 'admin-1');
     });
   });
 });

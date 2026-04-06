@@ -61,6 +61,42 @@ describe('Opportunity Aggregate', () => {
       expect(opportunity.isLost).toBe(false);
     });
 
+    it('should honor provided initial stage and probability', () => {
+      const result = Opportunity.create({
+        name: 'Proposal Deal',
+        value: 125000,
+        stage: 'PROPOSAL',
+        probability: 60,
+        accountId: 'account-123',
+        ownerId: 'owner-789',
+        tenantId: 'tenant-123',
+      });
+
+      expect(result.isSuccess).toBe(true);
+
+      const opportunity = result.value;
+      expect(opportunity.stage).toBe('PROPOSAL');
+      expect(opportunity.probability.value).toBe(60);
+      expect(opportunity.weightedValue.amount).toBe(75000);
+    });
+
+    it('should default probability from the provided initial stage when omitted', () => {
+      const result = Opportunity.create({
+        name: 'Negotiation Deal',
+        value: 100000,
+        stage: 'NEGOTIATION',
+        accountId: 'account-123',
+        ownerId: 'owner-789',
+        tenantId: 'tenant-123',
+      });
+
+      expect(result.isSuccess).toBe(true);
+
+      const opportunity = result.value;
+      expect(opportunity.stage).toBe('NEGOTIATION');
+      expect(opportunity.probability.value).toBe(80);
+    });
+
     it('should create an opportunity with minimal data', () => {
       const result = Opportunity.create({
         name: 'Minimal Deal',
@@ -80,6 +116,7 @@ describe('Opportunity Aggregate', () => {
       expect(opportunity.expectedCloseDate).toBeUndefined();
       expect(opportunity.description).toBeUndefined();
       expect(opportunity.stage).toBe('PROSPECTING');
+      expect(opportunity.probability.value).toBe(10);
     });
 
     it('should fail with zero value', () => {
@@ -812,6 +849,105 @@ describe('Opportunity Aggregate', () => {
       expect(opportunity.isClosed).toBe(true);
       expect(opportunity.isWon).toBe(true);
       expect(opportunity.closedAt).toBe(closedAt);
+    });
+  });
+
+  describe('soft-delete (deletedAt)', () => {
+    it('should reconstitute with deletedAt and expose isDeleted', () => {
+      const id = OpportunityId.generate();
+      const deletedAt = new Date('2026-03-10T00:00:00Z');
+      const moneyResult = Money.create(50000, 'USD');
+      const probabilityResult = Percentage.create(40);
+      expect(moneyResult.isSuccess).toBe(true);
+      expect(probabilityResult.isSuccess).toBe(true);
+
+      const opportunity = Opportunity.reconstitute(id, {
+        name: 'Trashed Deal',
+        value: moneyResult.value,
+        stage: 'PROPOSAL',
+        probability: probabilityResult.value,
+        accountId: 'account-123',
+        ownerId: 'owner-456',
+        tenantId: 'tenant-123',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt,
+      });
+
+      expect(opportunity.isDeleted).toBe(true);
+      expect(opportunity.deletedAt).toBe(deletedAt);
+    });
+
+    it('should return isDeleted false when deletedAt is null', () => {
+      const id = OpportunityId.generate();
+      const moneyResult = Money.create(50000, 'USD');
+      const probabilityResult = Percentage.create(40);
+      expect(moneyResult.isSuccess).toBe(true);
+      expect(probabilityResult.isSuccess).toBe(true);
+
+      const opportunity = Opportunity.reconstitute(id, {
+        name: 'Active Deal',
+        value: moneyResult.value,
+        stage: 'PROPOSAL',
+        probability: probabilityResult.value,
+        accountId: 'account-123',
+        ownerId: 'owner-456',
+        tenantId: 'tenant-123',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: null,
+      });
+
+      expect(opportunity.isDeleted).toBe(false);
+      expect(opportunity.deletedAt).toBeNull();
+    });
+
+    it('should include deletedAt in toJSON output', () => {
+      const id = OpportunityId.generate();
+      const deletedAt = new Date('2026-03-10T00:00:00Z');
+      const moneyResult = Money.create(50000, 'USD');
+      const probabilityResult = Percentage.create(40);
+      expect(moneyResult.isSuccess).toBe(true);
+      expect(probabilityResult.isSuccess).toBe(true);
+
+      const opportunity = Opportunity.reconstitute(id, {
+        name: 'Trashed Deal',
+        value: moneyResult.value,
+        stage: 'PROPOSAL',
+        probability: probabilityResult.value,
+        accountId: 'account-123',
+        ownerId: 'owner-456',
+        tenantId: 'tenant-123',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt,
+      });
+
+      const json = opportunity.toJSON();
+      expect(json).toHaveProperty('deletedAt');
+      expect(json.deletedAt).toBeDefined();
+    });
+
+    it('should return isDeleted false when deletedAt is undefined', () => {
+      const id = OpportunityId.generate();
+      const moneyResult = Money.create(50000, 'USD');
+      const probabilityResult = Percentage.create(40);
+      expect(moneyResult.isSuccess).toBe(true);
+      expect(probabilityResult.isSuccess).toBe(true);
+
+      const opportunity = Opportunity.reconstitute(id, {
+        name: 'Active Deal No DeletedAt',
+        value: moneyResult.value,
+        stage: 'PROPOSAL',
+        probability: probabilityResult.value,
+        accountId: 'account-123',
+        ownerId: 'owner-456',
+        tenantId: 'tenant-123',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      expect(opportunity.isDeleted).toBe(false);
     });
   });
 

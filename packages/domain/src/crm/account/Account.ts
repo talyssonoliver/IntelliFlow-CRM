@@ -8,6 +8,7 @@ import {
   AccountRevenueUpdatedEvent,
   AccountIndustryCategorizedEvent,
   AccountHierarchyUpdatedEvent,
+  AccountOwnerAssignedEvent,
 } from './AccountEvents';
 
 export class InvalidRevenueError extends DomainError {
@@ -28,6 +29,13 @@ export class InvalidHierarchyError extends DomainError {
   readonly code = 'INVALID_HIERARCHY';
   constructor(message: string) {
     super(message);
+  }
+}
+
+export class SameOwnerError extends DomainError {
+  readonly code = 'SAME_OWNER';
+  constructor(ownerId: string) {
+    super(`Account is already owned by user: ${ownerId}`);
   }
 }
 
@@ -278,6 +286,22 @@ export class Account extends AggregateRoot<AccountId> {
     this.props.updatedAt = new Date();
 
     this.addDomainEvent(new AccountIndustryCategorizedEvent(this.id, industry, categorizedBy));
+  }
+
+  assignOwner(newOwnerId: string, assignedBy: string): Result<void, SameOwnerError> {
+    if (newOwnerId === this.props.ownerId) {
+      return Result.fail(new SameOwnerError(newOwnerId));
+    }
+
+    const previousOwnerId = this.props.ownerId;
+    this.props.ownerId = newOwnerId;
+    this.props.updatedAt = new Date();
+
+    this.addDomainEvent(
+      new AccountOwnerAssignedEvent(this.id, previousOwnerId, newOwnerId, assignedBy)
+    );
+
+    return Result.ok(undefined);
   }
 
   // Serialization
