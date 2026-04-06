@@ -63,6 +63,26 @@ describe('OpportunityService', () => {
       expect(result.value.stage).toBe('PROSPECTING');
     });
 
+    it('should preserve provided initial stage and probability through the create flow', async () => {
+      const result = await service.createOpportunity({
+        name: 'Proposal Opportunity',
+        value: 50000,
+        stage: 'PROPOSAL',
+        probability: 60,
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+      });
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.stage).toBe('PROPOSAL');
+      expect(result.value.probability.value).toBe(60);
+
+      const savedOpportunity = await opportunityRepository.findById(result.value.id);
+      expect(savedOpportunity).not.toBeNull();
+      expect(savedOpportunity?.stage).toBe('PROPOSAL');
+      expect(savedOpportunity?.probability.value).toBe(60);
+    });
+
     it('should fail if account not found', async () => {
       const fakeAccountId = '00000000-0000-0000-0000-000000000000';
 
@@ -168,7 +188,7 @@ describe('OpportunityService', () => {
       await opportunityRepository.save(opp);
 
       // Advance from PROSPECTING to QUALIFICATION
-      const result = await service.advanceStage(opp.id.value, 'user');
+      const result = await service.advanceStage(opp.id.value, 'user', '');
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.stage).toBe('QUALIFICATION');
@@ -188,7 +208,7 @@ describe('OpportunityService', () => {
       opp.markAsWon('user'); // CLOSED_WON
       await opportunityRepository.save(opp);
 
-      const result = await service.advanceStage(opp.id.value, 'user');
+      const result = await service.advanceStage(opp.id.value, 'user', '');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('terminal stage');
@@ -197,7 +217,7 @@ describe('OpportunityService', () => {
     it('should fail if opportunity not found', async () => {
       const fakeId = '00000000-0000-0000-0000-000000000000';
 
-      const result = await service.advanceStage(fakeId, 'user');
+      const result = await service.advanceStage(fakeId, 'user', '');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Opportunity not found');
@@ -214,7 +234,7 @@ describe('OpportunityService', () => {
       }).value;
       await opportunityRepository.save(opp);
 
-      const result = await service.changeStage(opp.id.value, 'QUALIFICATION', 'user');
+      const result = await service.changeStage(opp.id.value, 'QUALIFICATION', 'user', '');
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.stage).toBe('QUALIFICATION');
@@ -230,7 +250,7 @@ describe('OpportunityService', () => {
       await opportunityRepository.save(opp);
 
       // Try to jump from PROSPECTING to NEGOTIATION (invalid)
-      const result = await service.changeStage(opp.id.value, 'NEGOTIATION', 'user');
+      const result = await service.changeStage(opp.id.value, 'NEGOTIATION', 'user', '');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Invalid stage transition');
@@ -246,7 +266,7 @@ describe('OpportunityService', () => {
       opp.changeStage('QUALIFICATION', 'user');
       await opportunityRepository.save(opp);
 
-      const result = await service.changeStage(opp.id.value, 'PROSPECTING', 'user');
+      const result = await service.changeStage(opp.id.value, 'PROSPECTING', 'user', '');
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.stage).toBe('PROSPECTING');
@@ -263,7 +283,7 @@ describe('OpportunityService', () => {
       }).value;
       await opportunityRepository.save(opp);
 
-      const result = await service.updateValue(opp.id.value, 75000, 'user');
+      const result = await service.updateValue(opp.id.value, 75000, 'user', '');
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.value.amount).toBe(75000);
@@ -278,7 +298,7 @@ describe('OpportunityService', () => {
       }).value;
       await opportunityRepository.save(opp);
 
-      const result = await service.updateValue(opp.id.value, -1000, 'user');
+      const result = await service.updateValue(opp.id.value, -1000, 'user', '');
 
       expect(result.isFailure).toBe(true);
     });
@@ -286,7 +306,7 @@ describe('OpportunityService', () => {
     it('should fail if opportunity not found', async () => {
       const fakeId = '00000000-0000-0000-0000-000000000000';
 
-      const result = await service.updateValue(fakeId, 100000, 'user');
+      const result = await service.updateValue(fakeId, 100000, 'user', '');
 
       expect(result.isFailure).toBe(true);
     });
@@ -303,7 +323,7 @@ describe('OpportunityService', () => {
       await opportunityRepository.save(opp);
 
       // PROSPECTING default is 10%, tolerance is 20%
-      const result = await service.updateProbability(opp.id.value, 25, 'user');
+      const result = await service.updateProbability(opp.id.value, 25, 'user', '');
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.probability.value).toBe(25);
@@ -319,7 +339,7 @@ describe('OpportunityService', () => {
       await opportunityRepository.save(opp);
 
       // PROSPECTING default is 10%, trying 90% (too far)
-      const result = await service.updateProbability(opp.id.value, 90, 'user');
+      const result = await service.updateProbability(opp.id.value, 90, 'user', '');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('too far from stage default');
@@ -328,7 +348,7 @@ describe('OpportunityService', () => {
     it('should fail if opportunity not found', async () => {
       const fakeId = '00000000-0000-0000-0000-000000000000';
 
-      const result = await service.updateProbability(fakeId, 50, 'user');
+      const result = await service.updateProbability(fakeId, 50, 'user', '');
 
       expect(result.isFailure).toBe(true);
     });
@@ -345,9 +365,9 @@ describe('OpportunityService', () => {
       await opportunityRepository.save(opp);
 
       const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + 30);
+      futureDate.setUTCDate(futureDate.getUTCDate() + 30);
 
-      const result = await service.updateExpectedCloseDate(opp.id.value, futureDate, 'user');
+      const result = await service.updateExpectedCloseDate(opp.id.value, futureDate, 'user', '');
 
       expect(result.isSuccess).toBe(true);
     });
@@ -362,9 +382,9 @@ describe('OpportunityService', () => {
       await opportunityRepository.save(opp);
 
       const pastDate = new Date();
-      pastDate.setDate(pastDate.getDate() - 30);
+      pastDate.setUTCDate(pastDate.getUTCDate() - 30);
 
-      const result = await service.updateExpectedCloseDate(opp.id.value, pastDate, 'user');
+      const result = await service.updateExpectedCloseDate(opp.id.value, pastDate, 'user', '');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('cannot be in the past');
@@ -373,7 +393,7 @@ describe('OpportunityService', () => {
     it('should fail if opportunity not found', async () => {
       const fakeId = '00000000-0000-0000-0000-000000000000';
 
-      const result = await service.updateExpectedCloseDate(fakeId, new Date(), 'user');
+      const result = await service.updateExpectedCloseDate(fakeId, new Date(), 'user', '');
 
       expect(result.isFailure).toBe(true);
     });
@@ -393,7 +413,7 @@ describe('OpportunityService', () => {
       opp.changeStage('NEGOTIATION', 'user');
       await opportunityRepository.save(opp);
 
-      const result = await service.markAsWon(opp.id.value, 'user');
+      const result = await service.markAsWon(opp.id.value, 'user', '');
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.isWon).toBe(true);
@@ -410,7 +430,7 @@ describe('OpportunityService', () => {
       }).value;
       await opportunityRepository.save(opp);
 
-      const result = await service.markAsWon(opp.id.value, 'user');
+      const result = await service.markAsWon(opp.id.value, 'user', '');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Must be in NEGOTIATION stage');
@@ -419,7 +439,7 @@ describe('OpportunityService', () => {
     it('should fail if opportunity not found', async () => {
       const fakeId = '00000000-0000-0000-0000-000000000000';
 
-      const result = await service.markAsWon(fakeId, 'user');
+      const result = await service.markAsWon(fakeId, 'user', '');
 
       expect(result.isFailure).toBe(true);
     });
@@ -438,7 +458,8 @@ describe('OpportunityService', () => {
       const result = await service.markAsLost(
         opp.id.value,
         'Competitor had better pricing and features',
-        'user'
+        'user',
+        ''
       );
 
       expect(result.isSuccess).toBe(true);
@@ -456,7 +477,7 @@ describe('OpportunityService', () => {
       }).value;
       await opportunityRepository.save(opp);
 
-      const result = await service.markAsLost(opp.id.value, 'No', 'user');
+      const result = await service.markAsLost(opp.id.value, 'No', 'user', '');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('at least 10 characters');
@@ -465,7 +486,7 @@ describe('OpportunityService', () => {
     it('should fail if opportunity not found', async () => {
       const fakeId = '00000000-0000-0000-0000-000000000000';
 
-      const result = await service.markAsLost(fakeId, 'Reason for losing', 'user');
+      const result = await service.markAsLost(fakeId, 'Reason for losing', 'user', '');
 
       expect(result.isFailure).toBe(true);
     });
@@ -482,7 +503,7 @@ describe('OpportunityService', () => {
       opp.markAsLost('Budget constraints prevented purchase', 'user');
       await opportunityRepository.save(opp);
 
-      const result = await service.reopenOpportunity(opp.id.value, 'user');
+      const result = await service.reopenOpportunity(opp.id.value, 'user', '');
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.stage).toBe('PROSPECTING');
@@ -498,7 +519,7 @@ describe('OpportunityService', () => {
       }).value;
       await opportunityRepository.save(opp);
 
-      const result = await service.reopenOpportunity(opp.id.value, 'user');
+      const result = await service.reopenOpportunity(opp.id.value, 'user', '');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Only lost opportunities can be reopened');
@@ -507,7 +528,7 @@ describe('OpportunityService', () => {
     it('should fail if opportunity not found', async () => {
       const fakeId = '00000000-0000-0000-0000-000000000000';
 
-      const result = await service.reopenOpportunity(fakeId, 'user');
+      const result = await service.reopenOpportunity(fakeId, 'user', '');
 
       expect(result.isFailure).toBe(true);
     });
@@ -531,7 +552,7 @@ describe('OpportunityService', () => {
       await opportunityRepository.save(opp1);
       await opportunityRepository.save(opp2);
 
-      const forecast = await service.getPipelineForecast('owner-1');
+      const forecast = await service.getPipelineForecast('owner-1', 'test-tenant');
 
       expect(forecast.totalPipelineValue).toBe(300000);
       expect(forecast.byStage['PROSPECTING'].count).toBe(1);
@@ -555,13 +576,13 @@ describe('OpportunityService', () => {
       await opportunityRepository.save(opp1);
       await opportunityRepository.save(opp2);
 
-      const forecast = await service.getPipelineForecast('owner-1');
+      const forecast = await service.getPipelineForecast('owner-1', 'test-tenant');
 
       expect(forecast.totalPipelineValue).toBe(100000);
     });
 
     it('should handle empty repository', async () => {
-      const forecast = await service.getPipelineForecast('owner-1');
+      const forecast = await service.getPipelineForecast('owner-1', 'test-tenant');
 
       expect(forecast.totalPipelineValue).toBe(0);
       expect(forecast.weightedPipelineValue).toBe(0);
@@ -606,7 +627,7 @@ describe('OpportunityService', () => {
       await opportunityRepository.save(opp2);
       await opportunityRepository.save(opp3);
 
-      const stats = await service.getWinRateStatistics('owner-1');
+      const stats = await service.getWinRateStatistics('owner-1', 'test-tenant');
 
       expect(stats.totalClosed).toBe(3);
       expect(stats.wonCount).toBe(2);
@@ -625,7 +646,7 @@ describe('OpportunityService', () => {
       }).value;
       await opportunityRepository.save(opp);
 
-      const stats = await service.getWinRateStatistics('owner-1');
+      const stats = await service.getWinRateStatistics('owner-1', 'test-tenant');
 
       expect(stats.totalClosed).toBe(0);
       expect(stats.winRate).toBe(0);
@@ -643,7 +664,7 @@ describe('OpportunityService', () => {
       }).value;
       await opportunityRepository.save(opp);
 
-      const result = await service.deleteOpportunity(opp.id.value);
+      const result = await service.deleteOpportunity(opp.id.value, '');
 
       expect(result.isSuccess).toBe(true);
 
@@ -665,7 +686,7 @@ describe('OpportunityService', () => {
       opp.markAsWon('user');
       await opportunityRepository.save(opp);
 
-      const result = await service.deleteOpportunity(opp.id.value);
+      const result = await service.deleteOpportunity(opp.id.value, '');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Cannot delete won opportunities');
@@ -681,7 +702,7 @@ describe('OpportunityService', () => {
       opp.markAsLost('Lost for test purposes', 'user');
       await opportunityRepository.save(opp);
 
-      const result = await service.deleteOpportunity(opp.id.value);
+      const result = await service.deleteOpportunity(opp.id.value, '');
 
       expect(result.isSuccess).toBe(true);
     });
@@ -689,7 +710,7 @@ describe('OpportunityService', () => {
     it('should fail if opportunity not found', async () => {
       const fakeId = '00000000-0000-0000-0000-000000000000';
 
-      const result = await service.deleteOpportunity(fakeId);
+      const result = await service.deleteOpportunity(fakeId, '');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Opportunity not found');

@@ -147,13 +147,13 @@ export class OpportunityService {
   /**
    * Get opportunity by ID
    */
-  async getOpportunityById(opportunityId: string): Promise<Result<Opportunity, DomainError>> {
+  async getOpportunityById(opportunityId: string, tenantId: string): Promise<Result<Opportunity, DomainError>> {
     const oppIdResult = OpportunityId.create(opportunityId);
     if (oppIdResult.isFailure) {
       return Result.fail(oppIdResult.error);
     }
 
-    const opportunity = await this.opportunityRepository.findById(oppIdResult.value);
+    const opportunity = await this.opportunityRepository.findById(oppIdResult.value, tenantId);
     if (!opportunity) {
       return Result.fail(new NotFoundError(`Opportunity not found: ${opportunityId}`));
     }
@@ -328,12 +328,13 @@ export class OpportunityService {
       accountId?: string;
       contactId?: string | null;
     },
-    updatedBy: string
+    updatedBy: string,
+    tenantId: string
   ): Promise<Result<Opportunity, DomainError>> {
     const oppIdResult = OpportunityId.create(opportunityId);
     if (oppIdResult.isFailure) return Result.fail(oppIdResult.error);
 
-    const opportunity = await this.opportunityRepository.findById(oppIdResult.value);
+    const opportunity = await this.opportunityRepository.findById(oppIdResult.value, tenantId);
     if (!opportunity) {
       return Result.fail(new NotFoundError(`Opportunity not found: ${opportunityId}`));
     }
@@ -364,14 +365,15 @@ export class OpportunityService {
    */
   async advanceStage(
     opportunityId: string,
-    advancedBy: string
+    advancedBy: string,
+    tenantId: string
   ): Promise<Result<Opportunity, DomainError>> {
     const oppIdResult = OpportunityId.create(opportunityId);
     if (oppIdResult.isFailure) {
       return Result.fail(oppIdResult.error);
     }
 
-    const opportunity = await this.opportunityRepository.findById(oppIdResult.value);
+    const opportunity = await this.opportunityRepository.findById(oppIdResult.value, tenantId);
     if (!opportunity) {
       return Result.fail(new ValidationError(`Opportunity not found: ${opportunityId}`));
     }
@@ -384,7 +386,7 @@ export class OpportunityService {
       );
     }
 
-    return this.changeStage(opportunityId, nextStage, advancedBy);
+    return this.changeStage(opportunityId, nextStage, advancedBy, tenantId);
   }
 
   /**
@@ -393,14 +395,15 @@ export class OpportunityService {
   async changeStage(
     opportunityId: string,
     newStage: OpportunityStage,
-    changedBy: string
+    changedBy: string,
+    tenantId: string
   ): Promise<Result<Opportunity, DomainError>> {
     const oppIdResult = OpportunityId.create(opportunityId);
     if (oppIdResult.isFailure) {
       return Result.fail(oppIdResult.error);
     }
 
-    const opportunity = await this.opportunityRepository.findById(oppIdResult.value);
+    const opportunity = await this.opportunityRepository.findById(oppIdResult.value, tenantId);
     if (!opportunity) {
       return Result.fail(new ValidationError(`Opportunity not found: ${opportunityId}`));
     }
@@ -437,14 +440,15 @@ export class OpportunityService {
   async updateValue(
     opportunityId: string,
     newValue: number,
-    updatedBy: string
+    updatedBy: string,
+    tenantId: string
   ): Promise<Result<Opportunity, DomainError>> {
     const oppIdResult = OpportunityId.create(opportunityId);
     if (oppIdResult.isFailure) {
       return Result.fail(oppIdResult.error);
     }
 
-    const opportunity = await this.opportunityRepository.findById(oppIdResult.value);
+    const opportunity = await this.opportunityRepository.findById(oppIdResult.value, tenantId);
     if (!opportunity) {
       return Result.fail(new ValidationError(`Opportunity not found: ${opportunityId}`));
     }
@@ -471,14 +475,15 @@ export class OpportunityService {
   async updateProbability(
     opportunityId: string,
     newProbability: number,
-    updatedBy: string
+    updatedBy: string,
+    tenantId: string
   ): Promise<Result<Opportunity, DomainError>> {
     const oppIdResult = OpportunityId.create(opportunityId);
     if (oppIdResult.isFailure) {
       return Result.fail(oppIdResult.error);
     }
 
-    const opportunity = await this.opportunityRepository.findById(oppIdResult.value);
+    const opportunity = await this.opportunityRepository.findById(oppIdResult.value, tenantId);
     if (!opportunity) {
       return Result.fail(new ValidationError(`Opportunity not found: ${opportunityId}`));
     }
@@ -521,14 +526,15 @@ export class OpportunityService {
   async updateExpectedCloseDate(
     opportunityId: string,
     newDate: Date,
-    changedBy: string
+    changedBy: string,
+    tenantId: string
   ): Promise<Result<Opportunity, DomainError>> {
     const oppIdResult = OpportunityId.create(opportunityId);
     if (oppIdResult.isFailure) {
       return Result.fail(oppIdResult.error);
     }
 
-    const opportunity = await this.opportunityRepository.findById(oppIdResult.value);
+    const opportunity = await this.opportunityRepository.findById(oppIdResult.value, tenantId);
     if (!opportunity) {
       return Result.fail(new ValidationError(`Opportunity not found: ${opportunityId}`));
     }
@@ -559,14 +565,15 @@ export class OpportunityService {
    */
   async markAsWon(
     opportunityId: string,
-    closedBy: string
+    closedBy: string,
+    tenantId: string
   ): Promise<Result<Opportunity, DomainError>> {
     const oppIdResult = OpportunityId.create(opportunityId);
     if (oppIdResult.isFailure) {
       return Result.fail(oppIdResult.error);
     }
 
-    const opportunity = await this.opportunityRepository.findById(oppIdResult.value);
+    const opportunity = await this.opportunityRepository.findById(oppIdResult.value, tenantId);
     if (!opportunity) {
       return Result.fail(new ValidationError(`Opportunity not found: ${opportunityId}`));
     }
@@ -602,14 +609,15 @@ export class OpportunityService {
   async markAsLost(
     opportunityId: string,
     reason: string,
-    closedBy: string
+    closedBy: string,
+    tenantId: string
   ): Promise<Result<Opportunity, DomainError>> {
     const oppIdResult = OpportunityId.create(opportunityId);
     if (oppIdResult.isFailure) {
       return Result.fail(oppIdResult.error);
     }
 
-    const opportunity = await this.opportunityRepository.findById(oppIdResult.value);
+    const opportunity = await this.opportunityRepository.findById(oppIdResult.value, tenantId);
     if (!opportunity) {
       return Result.fail(new ValidationError(`Opportunity not found: ${opportunityId}`));
     }
@@ -640,14 +648,15 @@ export class OpportunityService {
    */
   async reopenOpportunity(
     opportunityId: string,
-    reopenedBy: string
+    reopenedBy: string,
+    tenantId: string
   ): Promise<Result<Opportunity, DomainError>> {
     const oppIdResult = OpportunityId.create(opportunityId);
     if (oppIdResult.isFailure) {
       return Result.fail(oppIdResult.error);
     }
 
-    const opportunity = await this.opportunityRepository.findById(oppIdResult.value);
+    const opportunity = await this.opportunityRepository.findById(oppIdResult.value, tenantId);
     if (!opportunity) {
       return Result.fail(new ValidationError(`Opportunity not found: ${opportunityId}`));
     }
@@ -672,8 +681,8 @@ export class OpportunityService {
   /**
    * Get pipeline forecast
    */
-  async getPipelineForecast(ownerId?: string): Promise<PipelineForecast> {
-    const opportunities = ownerId ? await this.opportunityRepository.findByOwnerId(ownerId) : [];
+  async getPipelineForecast(ownerId?: string, tenantId?: string): Promise<PipelineForecast> {
+    const opportunities = ownerId && tenantId ? await this.opportunityRepository.findByOwnerId(ownerId, tenantId) : [];
 
     const activeOpportunities = opportunities.filter((o) => !o.isClosed);
 
@@ -728,35 +737,35 @@ export class OpportunityService {
   /**
    * Get opportunities closing soon
    */
-  async getOpportunitiesClosingSoon(days: number = 7, ownerId?: string): Promise<Opportunity[]> {
-    return this.opportunityRepository.findClosingSoon(days, ownerId);
+  async getOpportunitiesClosingSoon(days: number = 7, tenantId: string, ownerId?: string): Promise<Opportunity[]> {
+    return this.opportunityRepository.findClosingSoon(days, tenantId, ownerId);
   }
 
   /**
    * Get high-value opportunities
    */
-  async getHighValueOpportunities(minValue: number, ownerId?: string): Promise<Opportunity[]> {
-    return this.opportunityRepository.findHighValue(minValue, ownerId);
+  async getHighValueOpportunities(minValue: number, tenantId: string, ownerId?: string): Promise<Opportunity[]> {
+    return this.opportunityRepository.findHighValue(minValue, tenantId, ownerId);
   }
 
   /**
    * Get opportunities by account
    */
-  async getOpportunitiesByAccount(accountId: string): Promise<Opportunity[]> {
-    return this.opportunityRepository.findByAccountId(accountId);
+  async getOpportunitiesByAccount(accountId: string, tenantId: string): Promise<Opportunity[]> {
+    return this.opportunityRepository.findByAccountId(accountId, tenantId);
   }
 
   /**
    * Get opportunities by contact
    */
-  async getOpportunitiesByContact(contactId: string): Promise<Opportunity[]> {
-    return this.opportunityRepository.findByContactId(contactId);
+  async getOpportunitiesByContact(contactId: string, tenantId: string): Promise<Opportunity[]> {
+    return this.opportunityRepository.findByContactId(contactId, tenantId);
   }
 
   /**
    * Get win rate statistics
    */
-  async getWinRateStatistics(ownerId?: string): Promise<{
+  async getWinRateStatistics(ownerId?: string, tenantId?: string): Promise<{
     totalClosed: number;
     wonCount: number;
     lostCount: number;
@@ -764,7 +773,7 @@ export class OpportunityService {
     totalWonValue: number;
     averageWonValue: number;
   }> {
-    const opportunities = ownerId ? await this.opportunityRepository.findByOwnerId(ownerId) : [];
+    const opportunities = ownerId && tenantId ? await this.opportunityRepository.findByOwnerId(ownerId, tenantId) : [];
 
     const closedOpportunities = opportunities.filter((o) => o.isClosed);
     const wonOpportunities = closedOpportunities.filter((o) => o.isWon);
@@ -788,13 +797,13 @@ export class OpportunityService {
   /**
    * Delete opportunity with business rules
    */
-  async deleteOpportunity(opportunityId: string): Promise<Result<void, DomainError>> {
+  async deleteOpportunity(opportunityId: string, tenantId: string): Promise<Result<void, DomainError>> {
     const oppIdResult = OpportunityId.create(opportunityId);
     if (oppIdResult.isFailure) {
       return Result.fail(oppIdResult.error);
     }
 
-    const opportunity = await this.opportunityRepository.findById(oppIdResult.value);
+    const opportunity = await this.opportunityRepository.findById(oppIdResult.value, tenantId);
     if (!opportunity) {
       return Result.fail(new ValidationError(`Opportunity not found: ${opportunityId}`));
     }
@@ -807,9 +816,70 @@ export class OpportunityService {
     }
 
     try {
-      await this.opportunityRepository.delete(oppIdResult.value);
+      await this.opportunityRepository.softDelete(oppIdResult.value);
     } catch {
       return Result.fail(new PersistenceError('Failed to delete opportunity'));
+    }
+
+    return Result.ok(undefined);
+  }
+
+  /**
+   * Restore a soft-deleted opportunity from trash
+   */
+  async restoreOpportunity(opportunityId: string, tenantId: string): Promise<Result<void, DomainError>> {
+    const oppIdResult = OpportunityId.create(opportunityId);
+    if (oppIdResult.isFailure) {
+      return Result.fail(oppIdResult.error);
+    }
+
+    const opportunity = await this.opportunityRepository.findByIdIncludingDeleted(oppIdResult.value);
+    if (!opportunity) {
+      return Result.fail(new NotFoundError(`Opportunity not found: ${opportunityId}`));
+    }
+
+    if (opportunity.tenantId !== tenantId) {
+      return Result.fail(new NotFoundError(`Opportunity not found: ${opportunityId}`));
+    }
+
+    try {
+      await this.opportunityRepository.restore(oppIdResult.value);
+    } catch {
+      return Result.fail(new PersistenceError('Failed to restore opportunity'));
+    }
+
+    return Result.ok(undefined);
+  }
+
+  /**
+   * Permanently delete a soft-deleted opportunity
+   * Only records already in trash (deletedAt set) can be permanently deleted
+   */
+  async permanentDeleteOpportunity(opportunityId: string, tenantId: string): Promise<Result<void, DomainError>> {
+    const oppIdResult = OpportunityId.create(opportunityId);
+    if (oppIdResult.isFailure) {
+      return Result.fail(oppIdResult.error);
+    }
+
+    const opportunity = await this.opportunityRepository.findByIdIncludingDeleted(oppIdResult.value);
+    if (!opportunity) {
+      return Result.fail(new NotFoundError(`Opportunity not found: ${opportunityId}`));
+    }
+
+    if (opportunity.tenantId !== tenantId) {
+      return Result.fail(new NotFoundError(`Opportunity not found: ${opportunityId}`));
+    }
+
+    if (!opportunity.isDeleted) {
+      return Result.fail(
+        new ValidationError('Can only permanently delete deals that are in trash')
+      );
+    }
+
+    try {
+      await this.opportunityRepository.delete(oppIdResult.value, tenantId);
+    } catch {
+      return Result.fail(new PersistenceError('Failed to permanently delete opportunity'));
     }
 
     return Result.ok(undefined);

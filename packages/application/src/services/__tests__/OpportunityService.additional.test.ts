@@ -696,7 +696,7 @@ describe('OpportunityService (additional coverage)', () => {
       const now = new Date();
       const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
       const closeDate = new Date(endOfMonth);
-      closeDate.setDate(closeDate.getDate() - 1); // 1 day before end of month
+      closeDate.setUTCDate(closeDate.getUTCDate() - 1); // 1 day before end of month
 
       const opp = Opportunity.create({
         name: 'Closing This Month',
@@ -707,7 +707,7 @@ describe('OpportunityService (additional coverage)', () => {
       }).value;
       await opportunityRepository.save(opp);
 
-      const forecast = await service.getPipelineForecast('owner-1');
+      const forecast = await service.getPipelineForecast('owner-1', 'test-tenant');
 
       expect(forecast.closingThisMonth).toBeGreaterThan(0);
     });
@@ -720,7 +720,7 @@ describe('OpportunityService (additional coverage)', () => {
         0
       );
       const closeDate = new Date(currentQuarterEnd);
-      closeDate.setDate(closeDate.getDate() - 1);
+      closeDate.setUTCDate(closeDate.getUTCDate() - 1);
 
       const opp = Opportunity.create({
         name: 'Closing This Quarter',
@@ -731,7 +731,7 @@ describe('OpportunityService (additional coverage)', () => {
       }).value;
       await opportunityRepository.save(opp);
 
-      const forecast = await service.getPipelineForecast('owner-1');
+      const forecast = await service.getPipelineForecast('owner-1', 'test-tenant');
 
       expect(forecast.closingThisQuarter).toBeGreaterThan(0);
     });
@@ -755,7 +755,7 @@ describe('OpportunityService (additional coverage)', () => {
       // PROSPECTING stage with default 10% probability
       await opportunityRepository.save(opp);
 
-      const forecast = await service.getPipelineForecast('owner-1');
+      const forecast = await service.getPipelineForecast('owner-1', 'test-tenant');
 
       expect(forecast.totalPipelineValue).toBe(100000);
       // weightedValue = 100000 * 0.10 = 10000
@@ -781,7 +781,7 @@ describe('OpportunityService (additional coverage)', () => {
       await opportunityRepository.save(opp1);
       await opportunityRepository.save(opp2);
 
-      const forecast = await service.getPipelineForecast('owner-1');
+      const forecast = await service.getPipelineForecast('owner-1', 'test-tenant');
 
       expect(forecast.byStage['PROSPECTING'].count).toBe(1);
       expect(forecast.byStage['PROSPECTING'].totalValue).toBe(50000);
@@ -821,14 +821,14 @@ describe('OpportunityService (additional coverage)', () => {
       opp.markAsLost('Budget constraints prevented purchase', 'user');
       await opportunityRepository.save(opp);
 
-      const result = await service.advanceStage(opp.id.value, 'user');
+      const result = await service.advanceStage(opp.id.value, 'user', '');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('terminal stage');
     });
 
     it('should fail with invalid ID', async () => {
-      const result = await service.advanceStage('not-a-uuid', 'user');
+      const result = await service.advanceStage('not-a-uuid', 'user', '');
 
       expect(result.isFailure).toBe(true);
     });
@@ -839,14 +839,14 @@ describe('OpportunityService (additional coverage)', () => {
   // =========================================================================
   describe('changeStage() - extended', () => {
     it('should fail with invalid ID', async () => {
-      const result = await service.changeStage('not-a-uuid', 'QUALIFICATION', 'user');
+      const result = await service.changeStage('not-a-uuid', 'QUALIFICATION', 'user', '');
 
       expect(result.isFailure).toBe(true);
     });
 
     it('should fail if opportunity not found', async () => {
       const fakeId = '00000000-0000-0000-0000-000000000000';
-      const result = await service.changeStage(fakeId, 'QUALIFICATION', 'user');
+      const result = await service.changeStage(fakeId, 'QUALIFICATION', 'user', '');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Opportunity not found');
@@ -858,7 +858,7 @@ describe('OpportunityService (additional coverage)', () => {
   // =========================================================================
   describe('updateValue() - extended', () => {
     it('should fail with invalid ID', async () => {
-      const result = await service.updateValue('not-a-uuid', 100, 'user');
+      const result = await service.updateValue('not-a-uuid', 100, 'user', '');
 
       expect(result.isFailure).toBe(true);
     });
@@ -869,7 +869,7 @@ describe('OpportunityService (additional coverage)', () => {
   // =========================================================================
   describe('updateProbability() - extended', () => {
     it('should fail with invalid ID', async () => {
-      const result = await service.updateProbability('not-a-uuid', 50, 'user');
+      const result = await service.updateProbability('not-a-uuid', 50, 'user', '');
 
       expect(result.isFailure).toBe(true);
     });
@@ -889,7 +889,7 @@ describe('OpportunityService (additional coverage)', () => {
       await opportunityRepository.save(opp);
 
       // CLOSED_WON and CLOSED_LOST skip the tolerance check
-      const result = await service.updateProbability(opp.id.value, 50, 'user');
+      const result = await service.updateProbability(opp.id.value, 50, 'user', '');
 
       // domain entity may reject updating probability on closed opportunity
       // The main thing is the tolerance check is skipped
@@ -903,8 +903,8 @@ describe('OpportunityService (additional coverage)', () => {
   describe('updateExpectedCloseDate() - extended', () => {
     it('should fail with invalid ID', async () => {
       const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + 30);
-      const result = await service.updateExpectedCloseDate('not-a-uuid', futureDate, 'user');
+      futureDate.setUTCDate(futureDate.getUTCDate() + 30);
+      const result = await service.updateExpectedCloseDate('not-a-uuid', futureDate, 'user', '');
 
       expect(result.isFailure).toBe(true);
     });
@@ -915,7 +915,7 @@ describe('OpportunityService (additional coverage)', () => {
   // =========================================================================
   describe('markAsWon() - extended', () => {
     it('should fail with invalid ID', async () => {
-      const result = await service.markAsWon('not-a-uuid', 'user');
+      const result = await service.markAsWon('not-a-uuid', 'user', '');
 
       expect(result.isFailure).toBe(true);
     });
@@ -926,7 +926,7 @@ describe('OpportunityService (additional coverage)', () => {
   // =========================================================================
   describe('markAsLost() - extended', () => {
     it('should fail with invalid ID', async () => {
-      const result = await service.markAsLost('not-a-uuid', 'Valid reason text', 'user');
+      const result = await service.markAsLost('not-a-uuid', 'Valid reason text', 'user', '');
 
       expect(result.isFailure).toBe(true);
     });
@@ -940,7 +940,7 @@ describe('OpportunityService (additional coverage)', () => {
       }).value;
       await opportunityRepository.save(opp);
 
-      const result = await service.markAsLost(opp.id.value, '', 'user');
+      const result = await service.markAsLost(opp.id.value, '', 'user', '');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('at least 10 characters');
@@ -955,7 +955,7 @@ describe('OpportunityService (additional coverage)', () => {
       }).value;
       await opportunityRepository.save(opp);
 
-      const result = await service.markAsLost(opp.id.value, '   ', 'user');
+      const result = await service.markAsLost(opp.id.value, '   ', 'user', '');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('at least 10 characters');
@@ -967,7 +967,7 @@ describe('OpportunityService (additional coverage)', () => {
   // =========================================================================
   describe('reopenOpportunity() - extended', () => {
     it('should fail with invalid ID', async () => {
-      const result = await service.reopenOpportunity('not-a-uuid', 'user');
+      const result = await service.reopenOpportunity('not-a-uuid', 'user', '');
 
       expect(result.isFailure).toBe(true);
     });
@@ -978,7 +978,7 @@ describe('OpportunityService (additional coverage)', () => {
   // =========================================================================
   describe('deleteOpportunity() - extended', () => {
     it('should fail with invalid ID', async () => {
-      const result = await service.deleteOpportunity('not-a-uuid');
+      const result = await service.deleteOpportunity('not-a-uuid', '');
 
       expect(result.isFailure).toBe(true);
     });
@@ -1018,7 +1018,7 @@ describe('OpportunityService (additional coverage)', () => {
 
       opportunityRepository.save = vi.fn().mockRejectedValue(new Error('DB down'));
 
-      const result = await service.changeStage(opp.id.value, 'QUALIFICATION', 'user');
+      const result = await service.changeStage(opp.id.value, 'QUALIFICATION', 'user', '');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Failed to save opportunity');
@@ -1035,7 +1035,7 @@ describe('OpportunityService (additional coverage)', () => {
 
       opportunityRepository.save = vi.fn().mockRejectedValue(new Error('DB down'));
 
-      const result = await service.updateValue(opp.id.value, 75000, 'user');
+      const result = await service.updateValue(opp.id.value, 75000, 'user', '');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Failed to save opportunity');
@@ -1052,7 +1052,7 @@ describe('OpportunityService (additional coverage)', () => {
 
       opportunityRepository.save = vi.fn().mockRejectedValue(new Error('DB down'));
 
-      const result = await service.updateProbability(opp.id.value, 15, 'user');
+      const result = await service.updateProbability(opp.id.value, 15, 'user', '');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Failed to save opportunity');
@@ -1070,9 +1070,9 @@ describe('OpportunityService (additional coverage)', () => {
       opportunityRepository.save = vi.fn().mockRejectedValue(new Error('DB down'));
 
       const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + 30);
+      futureDate.setUTCDate(futureDate.getUTCDate() + 30);
 
-      const result = await service.updateExpectedCloseDate(opp.id.value, futureDate, 'user');
+      const result = await service.updateExpectedCloseDate(opp.id.value, futureDate, 'user', '');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Failed to save opportunity');
@@ -1093,7 +1093,7 @@ describe('OpportunityService (additional coverage)', () => {
 
       opportunityRepository.save = vi.fn().mockRejectedValue(new Error('DB down'));
 
-      const result = await service.markAsWon(opp.id.value, 'user');
+      const result = await service.markAsWon(opp.id.value, 'user', '');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Failed to save opportunity');
@@ -1113,7 +1113,8 @@ describe('OpportunityService (additional coverage)', () => {
       const result = await service.markAsLost(
         opp.id.value,
         'Competition had better offering',
-        'user'
+        'user',
+        ''
       );
 
       expect(result.isFailure).toBe(true);
@@ -1132,7 +1133,7 @@ describe('OpportunityService (additional coverage)', () => {
 
       opportunityRepository.save = vi.fn().mockRejectedValue(new Error('DB down'));
 
-      const result = await service.reopenOpportunity(opp.id.value, 'user');
+      const result = await service.reopenOpportunity(opp.id.value, 'user', '');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Failed to save opportunity');
@@ -1147,9 +1148,9 @@ describe('OpportunityService (additional coverage)', () => {
       }).value;
       await opportunityRepository.save(opp);
 
-      opportunityRepository.delete = vi.fn().mockRejectedValue(new Error('DB down'));
+      opportunityRepository.softDelete = vi.fn().mockRejectedValue(new Error('DB down'));
 
-      const result = await service.deleteOpportunity(opp.id.value);
+      const result = await service.deleteOpportunity(opp.id.value, '');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Failed to delete opportunity');

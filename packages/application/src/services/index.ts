@@ -51,3 +51,6 @@ export * from './CalendarWebhookService';
 
 // Conversation Search Service (IFC-148)
 export * from './ConversationSearchService';
+
+// Feedback Service
+export * from './FeedbackService';

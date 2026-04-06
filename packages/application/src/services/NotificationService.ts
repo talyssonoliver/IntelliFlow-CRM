@@ -310,7 +310,7 @@ export class NotificationService {
       throw new Error(`Notification not found: ${notificationId}`);
     }
 
-    if (notification.status === 'delivered' || notification.status === 'sent') {
+    if (notification.status === 'delivered' || notification.status === 'sent' || notification.status === 'pending') {
       notification.markAsRead();
       await this.notificationRepo.save(notification);
 

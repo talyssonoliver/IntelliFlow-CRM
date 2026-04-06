@@ -117,7 +117,7 @@ export class TaskService {
     }
 
     if (props.opportunityId) {
-      const validation = await this.validateAssignment('opportunity', props.opportunityId);
+      const validation = await this.validateAssignment('opportunity', props.opportunityId, props.tenantId);
       if (!validation.isValid) {
         return Result.fail(
           new ValidationError(validation.reason ?? 'Invalid opportunity assignment')
@@ -462,9 +462,10 @@ export class TaskService {
   async assignToOpportunity(
     taskId: string,
     opportunityId: string,
-    assignedBy: string
+    assignedBy: string,
+    tenantId?: string
   ): Promise<Result<Task, DomainError>> {
-    const validation = await this.validateAssignment('opportunity', opportunityId);
+    const validation = await this.validateAssignment('opportunity', opportunityId, tenantId);
     if (!validation.isValid) {
       return Result.fail(
         new ValidationError(validation.reason ?? 'Invalid opportunity assignment')
@@ -583,10 +584,10 @@ export class TaskService {
 
     const now = new Date();
     const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
 
     const nextWeek = new Date(now);
-    nextWeek.setDate(nextWeek.getDate() + 7);
+    nextWeek.setUTCDate(nextWeek.getUTCDate() + 7);
 
     const nextMonth = new Date(now);
     nextMonth.setMonth(nextMonth.getMonth() + 1);
@@ -720,7 +721,8 @@ export class TaskService {
 
   private selectValidationPromise(
     entityType: TaskEntityType,
-    entityId: string
+    entityId: string,
+    tenantId?: string
   ): Promise<TaskAssignmentValidation> | null {
     switch (entityType) {
       case 'lead':
@@ -728,7 +730,7 @@ export class TaskService {
       case 'contact':
         return this.validateContactAssignment(entityId);
       case 'opportunity':
-        return this.validateOpportunityAssignment(entityId);
+        return this.validateOpportunityAssignment(entityId, tenantId);
       default:
         return null;
     }
@@ -739,9 +741,10 @@ export class TaskService {
    */
   private async validateAssignment(
     entityType: TaskEntityType,
-    entityId: string
+    entityId: string,
+    tenantId?: string
   ): Promise<TaskAssignmentValidation> {
-    const validationPromise = this.selectValidationPromise(entityType, entityId);
+    const validationPromise = this.selectValidationPromise(entityType, entityId, tenantId);
     if (!validationPromise) {
       return { entityType, entityId, isValid: false, reason: 'Unknown entity type' };
     }
@@ -792,13 +795,13 @@ export class TaskService {
     return { entityType, entityId, isValid: true };
   }
 
-  private async validateOpportunityAssignment(entityId: string): Promise<TaskAssignmentValidation> {
+  private async validateOpportunityAssignment(entityId: string, tenantId?: string): Promise<TaskAssignmentValidation> {
     const entityType = 'opportunity' as const;
     const oppIdResult = OpportunityId.create(entityId);
     if (oppIdResult.isFailure) {
       return { entityType, entityId, isValid: false, reason: 'Invalid opportunity ID format' };
     }
-    const opportunity = await this.opportunityRepository.findById(oppIdResult.value);
+    const opportunity = await this.opportunityRepository.findById(oppIdResult.value, tenantId);
     if (!opportunity) {
       return { entityType, entityId, isValid: false, reason: `Opportunity not found: ${entityId}` };
     }

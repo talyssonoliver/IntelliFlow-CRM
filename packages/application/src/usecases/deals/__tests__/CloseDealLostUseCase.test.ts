@@ -137,7 +137,8 @@ describe('CloseDealLostUseCase', () => {
       expect(mockOpportunityService.markAsLost).toHaveBeenCalledWith(
         defaultInput.opportunityId,
         defaultInput.reason,
-        defaultInput.closedBy
+        defaultInput.closedBy,
+        defaultInput.tenantId
       );
     });
 
@@ -225,7 +226,8 @@ describe('CloseDealLostUseCase', () => {
       expect(mockOpportunityService.markAsLost).toHaveBeenCalledWith(
         defaultInput.opportunityId,
         '  Lost to competitor pricing  ',
-        defaultInput.closedBy
+        defaultInput.closedBy,
+        defaultInput.tenantId
       );
     });
   });

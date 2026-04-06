@@ -47,7 +47,7 @@ export class CloseDealLostUseCase {
 
   async execute(input: CloseDealLostInput): Promise<Result<Opportunity, DomainError>> {
     // 1. Read pre-loss stage BEFORE mutation (for stageAtLoss in enriched event)
-    const findResult = await this.opportunityService.getOpportunityById(input.opportunityId);
+    const findResult = await this.opportunityService.getOpportunityById(input.opportunityId, input.tenantId);
     const stageAtLoss = findResult.isSuccess ? findResult.value.stage : 'PROSPECTING';
 
     // 2. Delegate domain transition to OpportunityService.markAsLost()
@@ -55,7 +55,8 @@ export class CloseDealLostUseCase {
     const result = await this.opportunityService.markAsLost(
       input.opportunityId,
       input.reason,
-      input.closedBy
+      input.closedBy,
+      input.tenantId
     );
 
     if (result.isFailure) {
