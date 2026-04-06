@@ -360,21 +360,16 @@ Quarterly review covering:
 
 ## 8. Remediation Priority Matrix
 
-| Severity     | Finding           | Description                                                                | Sprint | Task                   |
-| ------------ | ----------------- | -------------------------------------------------------------------------- | ------ | ---------------------- |
-| **Critical** | F-001/F-002/F-003 | Missing legal pages (`/privacy`, `/terms`, `/cookies`) — GDPR Art. 12 risk | 17     | PG-050, PG-051, PG-052 |
-| **High**     | F-004             | `/press/[id]` broken in-page link — 404 for users                          | 15     | PG-179                 |
-| **High**     | F-005             | Lighthouse SEO at `warn` not `error` — no CI enforcement                   | 15     | IFC-208                |
-| **High**     | F-006             | No `og:image` on any page — degrades social sharing                        | 15     | IFC-208                |
-| **High**     | G-01–G-03         | Ghost links to billing subpages                                            | 16     | PG-172                 |
-| **Medium**   | F-007             | `sitemap.ts` `lastModified: new Date()` — pollutes crawl signals           | 15     | IFC-209                |
-| **Medium**   | F-008             | Sitemap missing 4/6 blog slugs                                             | 15     | IFC-209                |
-| **Medium**   | F-009             | Dynamic routes missing from sitemap                                        | 15     | IFC-209                |
-| **Medium**   | G-04–G-10         | Ghost links to ticket/notification subpages                                | 16     | PG-173, PG-174         |
-| **Low**      | F-010             | `/pricing` metadata incomplete                                             | 15     | IFC-210                |
-| **Low**      | F-011             | `/about`, `/features` missing OG/Twitter tags                              | 15     | IFC-210                |
-| **Low**      | F-012             | Auth-flow pages with no metadata                                           | 15     | IFC-210                |
-| **Low**      | G-11–G-28         | Ghost links to settings/analytics subpages                                 | 16     | PG-175–PG-178          |
+> **Last verified**: 2026-03-19. Fixed findings removed; see git history for
+> original full table.
+
+| Severity     | Finding   | Description                                                                              | Sprint | Task             | Status          |
+| ------------ | --------- | ---------------------------------------------------------------------------------------- | ------ | ---------------- | --------------- |
+| **Critical** | F-002/F-003 | Missing legal pages (`/terms`, `/cookies`) — GDPR Art. 12 risk                         | 17     | PG-051, PG-052   | Backlog         |
+| **High**     | F-005     | Lighthouse SEO at `warn` not `error` — no CI enforcement                                 | 21     | IFC-208          | Backlog         |
+| **High**     | F-006     | No `og:image` on any page — degrades social sharing                                      | 21     | IFC-208          | Backlog         |
+| **Medium**   | F-009     | `/press/[id]` dynamic routes missing from sitemap (4 public press release detail pages)  | 15     | IFC-209          | Fixed           |
+| **Low**      | F-012     | `/signup`, `/forgot-password`, `/verify-email` still missing metadata                    | 15     | IFC-210          | Fixed           |
 
 ### Audit Automation
 

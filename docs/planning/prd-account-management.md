@@ -1,7 +1,7 @@
 # PRD: Account Management & Hierarchy
 
 **Version:** 1.0 **Date:** 2026-02-08 **Owners:** Product Lead, Domain Lead
-**Related Tasks:** IFC-103, IFC-107, IFC-185, IFC-267, PG-134 **Decision Records:**
+**Related Tasks:** IFC-103, IFC-107, IFC-185, IFC-267, IFC-268, PG-134 **Decision Records:**
 ADR-026-account-hierarchy.md **Implements:** FLOW-046
 
 ## Summary
