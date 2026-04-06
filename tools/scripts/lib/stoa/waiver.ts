@@ -137,13 +137,13 @@ export function getWaiverStatus(
 // Waiver Behavior in Strict Mode
 // ============================================================================
 
-export type WaiverStrictModeBehavior = 'PASS' | 'WARN' | 'FAIL';
+export type WaiverStrictModeBehavior = 'PASS' | 'FAIL';
 
 /**
  * Determine behavior for a waiver in strict mode.
  *
- * From Framework.md 5.5.3:
- * - approved: true → WARN (tool skipped, logged)
+ * From Framework.md 5.5.3 (binary gate policy — no WARN):
+ * - approved: true + valid → PASS (waiver accepted)
  * - approved: false → FAIL
  * - Expired → FAIL
  */
@@ -154,16 +154,11 @@ export function getStrictModeBehavior(
   const status = getWaiverStatus(waiver);
 
   if (status === 'approved_valid') {
-    // In strict mode, even approved waivers produce WARN
-    return strictMode ? 'WARN' : 'PASS';
+    return 'PASS';
   }
 
-  // Pending or expired waivers
-  if (strictMode) {
-    return 'FAIL';
-  }
-
-  return 'WARN';
+  // Pending or expired waivers always FAIL
+  return 'FAIL';
 }
 
 // ============================================================================
@@ -241,7 +236,7 @@ export function approveWaiver(
     approved: true,
     owner: approver,
     expiresAt: newExpiry ? newExpiry.toISOString() : waiver.expiresAt,
-    strictModeBehavior: 'WARN', // Approved waivers become WARN instead of FAIL
+    strictModeBehavior: 'FAIL', // Waiver record stays FAIL; runtime behavior computed by getStrictModeBehavior
   };
 }
 

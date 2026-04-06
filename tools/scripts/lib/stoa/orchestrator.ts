@@ -64,8 +64,12 @@ export async function runPreflightChecks(
   const csvPath = resolveSprintPlanPath(repoRoot);
   const pathResolution = {
     path: csvPath,
-    source: csvPath?.includes('_global') ? 'canonical' : csvPath ? 'fallback' : 'not_found',
-    severity: 'PASS' as const,
+    source: (() => {
+      if (csvPath?.includes('_global')) return 'canonical';
+      if (csvPath) return 'fallback';
+      return 'not_found';
+    })(),
+    severity: 'PASS' as 'PASS' | 'FAIL',
     message: '',
   };
 
@@ -73,10 +77,8 @@ export async function runPreflightChecks(
     pathResolution.severity = 'FAIL';
     pathResolution.message = 'Sprint_plan.csv not found';
   } else if (!csvPath.includes('_global')) {
-    pathResolution.severity = strictMode ? 'FAIL' : 'WARN';
-    pathResolution.message = strictMode
-      ? 'Using root fallback in strict mode (FAIL)'
-      : 'Using root fallback (WARN)';
+    pathResolution.severity = 'FAIL';
+    pathResolution.message = 'Using root fallback (FAIL — canonical _global path required)';
   } else {
     pathResolution.message = `Canonical path resolved: ${csvPath}`;
   }
@@ -178,6 +180,69 @@ export function loadTaskFromCsv(taskId: string, repoRoot: string): Task | null {
 }
 
 // ============================================================================
+// CSV patch helpers
+// ============================================================================
+
+function buildCsvPatchProposal(
+  task: Task,
+  finalVerdict: string,
+  runId: string,
+  taskId: string,
+  primaryStoa: string,
+  evidenceDir: string,
+  repoRoot: string
+): CsvPatchProposal | undefined {
+  if (task.status === 'Completed' || finalVerdict !== 'PASS') return undefined;
+
+  const proposal = createStatusChangeProposal(
+    runId,
+    taskId,
+    task.status || 'Unknown',
+    finalVerdict,
+    `All gates passed. Primary STOA (${primaryStoa}) verdict: PASS`,
+    [`${evidenceDir}/summary.json`]
+  );
+
+  appendToPatchHistory(repoRoot, {
+    proposal,
+    appliedAt: null,
+    appliedBy: null,
+    rejected: false,
+  });
+
+  log(`CSV patch proposal created for status change: ${task.status} → Completed`);
+  return proposal;
+}
+
+// ============================================================================
+// Waiver helpers
+// ============================================================================
+
+async function createWaivers(
+  waiverRequired: string[],
+  matrix: AuditMatrix,
+  runId: string,
+  evidenceDir: string
+): Promise<WaiverRecord[]> {
+  const waivers: WaiverRecord[] = [];
+
+  for (const toolId of waiverRequired) {
+    const tool = getToolById(matrix, toolId);
+    if (tool) {
+      const waiver = createWaiverRecord(toolId, tool, runId);
+      waivers.push(waiver);
+      log(`Created waiver for: ${toolId} (${waiver.reason})`);
+    }
+  }
+
+  if (waivers.length > 0) {
+    await saveWaivers(evidenceDir, waivers);
+  }
+
+  return waivers;
+}
+
+// ============================================================================
 // Main Orchestration
 // ============================================================================
 
@@ -269,21 +334,7 @@ export async function runStoaOrchestration(
   // -------------------------------------------------------------------------
   logSection('Phase 4: Waiver Creation');
 
-  const waivers: WaiverRecord[] = [];
-
-  for (const toolId of gateSelection.waiverRequired) {
-    const tool = getToolById(matrix, toolId);
-
-    if (tool) {
-      const waiver = createWaiverRecord(toolId, tool, runId);
-      waivers.push(waiver);
-      log(`Created waiver for: ${toolId} (${waiver.reason})`);
-    }
-  }
-
-  if (waivers.length > 0) {
-    await saveWaivers(evidenceDir, waivers);
-  }
+  const waivers = await createWaivers(gateSelection.waiverRequired, matrix, runId, evidenceDir);
 
   // -------------------------------------------------------------------------
   // Phase 5: Gate Execution
@@ -350,28 +401,9 @@ export async function runStoaOrchestration(
   logSection('Phase 7: Evidence Bundle');
 
   // Create CSV patch proposal if status should change
-  let csvPatchProposal: CsvPatchProposal | undefined;
-
-  if (task.status !== 'Completed' && finalVerdict === 'PASS') {
-    csvPatchProposal = createStatusChangeProposal(
-      runId,
-      taskId,
-      task.status || 'Unknown',
-      finalVerdict,
-      `All gates passed. Primary STOA (${stoaAssignment.primaryStoa}) verdict: PASS`,
-      [`${evidenceDir}/summary.json`]
-    );
-
-    // Record proposal in history
-    appendToPatchHistory(repoRoot, {
-      proposal: csvPatchProposal,
-      appliedAt: null,
-      appliedBy: null,
-      rejected: false,
-    });
-
-    log(`CSV patch proposal created for status change: ${task.status} → Completed`);
-  }
+  const csvPatchProposal = buildCsvPatchProposal(
+    task, finalVerdict, runId, taskId, stoaAssignment.primaryStoa, evidenceDir, repoRoot
+  );
 
   const evidenceBundle = await createEvidenceBundle(
     repoRoot,
@@ -403,7 +435,7 @@ export async function runStoaOrchestration(
   // -------------------------------------------------------------------------
   logSection('Orchestration Complete');
 
-  const success = finalVerdict === 'PASS' || (finalVerdict === 'WARN' && !strictMode);
+  const success = finalVerdict === 'PASS';
 
   log(`Success: ${success ? 'Yes' : 'No'}`);
   log(`Evidence: ${evidenceDir}`);
@@ -454,7 +486,7 @@ STOA Orchestrator
 Usage: tsx orchestrator.ts <task-id> [options]
 
 Options:
-  --strict     Enable strict mode (WARN becomes FAIL)
+  --strict     Enable strict mode (all gates binary PASS/FAIL)
   --dry-run    Don't execute gates, just log what would happen
   --help, -h   Show this help message
 

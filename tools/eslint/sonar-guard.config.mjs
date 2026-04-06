@@ -3,8 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import tseslint from 'typescript-eslint';
 
-const configDir = dirname(fileURLToPath(import.meta.url));
-const repoRoot = resolve(configDir, '../..');
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 
 export default [
   ...baseConfig,
@@ -13,7 +12,8 @@ export default [
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        projectService: true,
+        // No projectService — these rules don't need type information
+        // and loading the full TS program causes OOM on large file sets
         tsconfigRootDir: repoRoot,
       },
     },
@@ -21,7 +21,6 @@ export default [
       'sonarjs/cognitive-complexity': ['error', 15],
       'no-nested-ternary': 'error',
       'sonarjs/no-nested-template-literals': 'error',
-      '@typescript-eslint/prefer-readonly': 'error',
     },
   },
 ];

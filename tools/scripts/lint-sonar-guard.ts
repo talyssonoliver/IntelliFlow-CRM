@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+
 const TRACKED_EXTENSIONS = /\.(ts|tsx)$/i;
 const EXCLUDED_PATH_SEGMENTS = [
   '/node_modules/',
@@ -87,19 +88,34 @@ function quoteFiles(files: string[]): string {
   return files.map((file) => `"${file.replaceAll(/"/g, '\\"')}"`).join(' ');
 }
 
-function runCommand(command: string): void {
+/**
+ * Run a command, returning true on success and false on failure.
+ * Does NOT exit the process — callers accumulate failures.
+ */
+function tryCommand(command: string): boolean {
   try {
     execSync(command, { stdio: 'inherit' });
-  } catch (error) {
-    const status =
-      typeof error === 'object' &&
-      error !== null &&
-      'status' in error &&
-      typeof (error as { status?: number }).status === 'number'
-        ? (error as { status: number }).status
-        : 1;
-    process.exit(status);
+    return true;
+  } catch {
+    return false;
   }
+}
+
+/**
+ * Run eslint in batches to avoid Windows command-line length limits (~8191 chars).
+ * Splits the file list into chunks and runs eslint for each chunk.
+ * Returns true only if ALL batches pass.
+ */
+function runEslintBatched(baseCommand: string, files: string[], batchSize = 80): boolean {
+  let allPassed = true;
+  for (let i = 0; i < files.length; i += batchSize) {
+    const batch = files.slice(i, i + batchSize);
+    const command = `${baseCommand} ${quoteFiles(batch)}`;
+    if (!tryCommand(command)) {
+      allPassed = false;
+    }
+  }
+  return allPassed;
 }
 
 function main() {
@@ -112,8 +128,7 @@ function main() {
 
   console.log(`sonar-guard: checking ${files.length} changed TS/TSX files.`);
 
-  const rootCommand = `pnpm exec eslint --config tools/eslint/sonar-guard.config.mjs --max-warnings=0 ${quoteFiles(files)}`;
-  runCommand(rootCommand);
+  let allPassed = runEslintBatched('pnpm exec eslint --config tools/eslint/sonar-guard.config.mjs --max-warnings=0', files);
 
   const webTsxFiles = files
     .filter((file) => file.startsWith('apps/web/src/'))
@@ -122,8 +137,12 @@ function main() {
 
   if (webTsxFiles.length > 0) {
     console.log(`sonar-guard: running web accessibility guard on ${webTsxFiles.length} file(s).`);
-    const webCommand = `pnpm --filter web exec eslint --config eslint.sonar-guard.config.mjs --max-warnings=0 ${quoteFiles(webTsxFiles)}`;
-    runCommand(webCommand);
+    const webPassed = runEslintBatched('pnpm --filter web exec eslint --config eslint.sonar-guard.config.mjs --max-warnings=0', webTsxFiles, 30);
+    if (!webPassed) allPassed = false;
+  }
+
+  if (!allPassed) {
+    process.exit(1);
   }
 }
 

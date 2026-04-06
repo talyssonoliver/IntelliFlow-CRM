@@ -246,10 +246,9 @@ function checkOwnerApproval(task: TaskRecord, context: TaskContext): Attestation
   }
 
   // If we have MATOP evidence, that serves as automated approval
-  // PASS or WARN both indicate gates passed (WARN = waivers pending)
   if (
     context.matopEvidence &&
-    (context.matopEvidence.verdict === 'PASS' || context.matopEvidence.verdict === 'WARN')
+    (context.matopEvidence.verdict === 'PASS')
   ) {
     return {
       name: 'Owner Approval',
@@ -333,13 +332,12 @@ function checkPrerequisitesMet(task: TaskRecord, context: TaskContext): Attestat
     .filter(Boolean);
   const evidence: string[] = prereqs.map((p) => `Prereq: ${p}`);
 
-  // KEY INSIGHT: If MATOP already validated this task with PASS or WARN,
+  // KEY INSIGHT: If MATOP already validated this task with PASS,
   // the prerequisites WERE satisfied at validation time.
-  // WARN = gates passed but waivers pending (not prereq issues)
   // We trust the evidence - no need for manual re-verification.
   if (
     context.matopEvidence &&
-    (context.matopEvidence.verdict === 'PASS' || context.matopEvidence.verdict === 'WARN')
+    (context.matopEvidence.verdict === 'PASS')
   ) {
     return {
       name: 'Prerequisites Met',
@@ -376,11 +374,10 @@ function checkDefinitionOfDoneMet(task: TaskRecord, context: TaskContext): Attes
 
   const evidence: string[] = [];
 
-  // If we have MATOP evidence with PASS or WARN, DoD is considered met
-  // WARN = gates passed, waivers pending (not DoD failures)
+  // If we have MATOP evidence with PASS, DoD is considered met
   if (
     context.matopEvidence &&
-    (context.matopEvidence.verdict === 'PASS' || context.matopEvidence.verdict === 'WARN')
+    (context.matopEvidence.verdict === 'PASS')
   ) {
     evidence.push(`MATOP verdict: ${context.matopEvidence.verdict}`);
     evidence.push(`Evidence: ${context.matopEvidence.evidenceDir}`);
@@ -432,11 +429,10 @@ function checkKpisPassing(task: TaskRecord, context: TaskContext): AttestationCr
     evidence.push(`KPI: ${kpi}`);
   }
 
-  // If we have MATOP PASS or WARN, assume KPIs are met
-  // WARN = gates passed, waivers pending (not KPI failures)
+  // If we have MATOP PASS, assume KPIs are met
   if (
     context.matopEvidence &&
-    (context.matopEvidence.verdict === 'PASS' || context.matopEvidence.verdict === 'WARN')
+    (context.matopEvidence.verdict === 'PASS')
   ) {
     return {
       name: 'KPIs Passing',
@@ -453,6 +449,48 @@ function checkKpisPassing(task: TaskRecord, context: TaskContext): AttestationCr
     evidence,
     recommendation: 'Run validation to verify KPIs are still passing',
   };
+}
+
+function checkGlobArtifact(trimmedArtifact: string, repoRoot: string, found: string[], missing: string[]): void {
+  const parentDir = trimmedArtifact.replace(/\/?\*.*$/, '');
+  const fullParentPath = join(repoRoot, parentDir);
+
+  if (!existsSync(fullParentPath) || !statSync(fullParentPath).isDirectory()) {
+    missing.push(trimmedArtifact);
+    return;
+  }
+  try {
+    const files = readdirSync(fullParentPath);
+    if (files.length > 0) {
+      found.push(`${trimmedArtifact} (${files.length} files in ${parentDir})`);
+    } else {
+      missing.push(`${trimmedArtifact} (directory empty)`);
+    }
+  } catch {
+    missing.push(`${trimmedArtifact} (cannot read directory)`);
+  }
+}
+
+function checkFileArtifact(trimmedArtifact: string, repoRoot: string, found: string[], missing: string[]): void {
+  const fullPath = join(repoRoot, trimmedArtifact);
+
+  if (!existsSync(fullPath)) {
+    missing.push(trimmedArtifact);
+    return;
+  }
+  try {
+    const stat = statSync(fullPath);
+    if (stat.isFile()) {
+      const content = readFileSync(fullPath);
+      const hash = createHash('sha256').update(content).digest('hex').slice(0, 12);
+      found.push(`${trimmedArtifact} (sha256: ${hash}...)`);
+    } else if (stat.isDirectory()) {
+      const files = readdirSync(fullPath);
+      found.push(`${trimmedArtifact} (directory, ${files.length} items)`);
+    }
+  } catch {
+    found.push(`${trimmedArtifact} (exists)`);
+  }
 }
 
 function checkArtifactsTracked(
@@ -474,49 +512,10 @@ function checkArtifactsTracked(
 
   for (const artifact of task.artifactsToTrack) {
     const trimmedArtifact = artifact.trim();
-
-    // Handle glob patterns (contains * or **)
     if (trimmedArtifact.includes('*')) {
-      // For glob patterns, check if parent directory exists and has files
-      const parentDir = trimmedArtifact.replace(/\/?\*.*$/, '');
-      const fullParentPath = join(repoRoot, parentDir);
-
-      if (existsSync(fullParentPath) && statSync(fullParentPath).isDirectory()) {
-        try {
-          const files = readdirSync(fullParentPath);
-          if (files.length > 0) {
-            found.push(`${trimmedArtifact} (${files.length} files in ${parentDir})`);
-          } else {
-            missing.push(`${trimmedArtifact} (directory empty)`);
-          }
-        } catch {
-          missing.push(`${trimmedArtifact} (cannot read directory)`);
-        }
-      } else {
-        missing.push(trimmedArtifact);
-      }
-      continue;
-    }
-
-    const fullPath = join(repoRoot, trimmedArtifact);
-
-    if (existsSync(fullPath)) {
-      // Get file hash for evidence
-      try {
-        const stat = statSync(fullPath);
-        if (stat.isFile()) {
-          const content = readFileSync(fullPath);
-          const hash = createHash('sha256').update(content).digest('hex').slice(0, 12);
-          found.push(`${trimmedArtifact} (sha256: ${hash}...)`);
-        } else if (stat.isDirectory()) {
-          const files = readdirSync(fullPath);
-          found.push(`${trimmedArtifact} (directory, ${files.length} items)`);
-        }
-      } catch {
-        found.push(`${trimmedArtifact} (exists)`);
-      }
+      checkGlobArtifact(trimmedArtifact, repoRoot, found, missing);
     } else {
-      missing.push(trimmedArtifact);
+      checkFileArtifact(trimmedArtifact, repoRoot, found, missing);
     }
   }
 
@@ -566,15 +565,6 @@ function checkValidationPassing(task: TaskRecord, context: TaskContext): Attesta
         description: 'Validation method executed and passing',
         status: 'pass',
         evidence,
-      };
-    } else if (context.matopEvidence.verdict === 'WARN') {
-      // WARN verdict means all gates passed but waivers are pending
-      // For Sprint 0 completion, this is acceptable
-      return {
-        name: 'Validation Passing',
-        description: 'Validation method executed and passing',
-        status: 'pass', // Gates passed - waivers are non-blocking for completion
-        evidence: [...evidence, 'Note: Waiver approvals pending but gates passed'],
       };
     } else {
       return {
@@ -678,6 +668,55 @@ export function attestSprint(sprint: string, repoRoot: string): SprintAttestatio
 // Report Generation
 // ============================================================================
 
+function criterionIcon(status: string): string {
+  switch (status) {
+    case 'pass': return '✅';
+    case 'warn': return '⚠️';
+    case 'fail': return '❌';
+    case 'skip': return '⏭️';
+    case 'pending': return '🕐';
+    default: return '❓';
+  }
+}
+
+function overallStatusLabel(overallStatus: string): string {
+  if (overallStatus === 'valid') return '✅ Valid';
+  if (overallStatus === 'needs_review') return '⚠️ Review';
+  return '❌ Invalid';
+}
+
+function renderAttestationMatrixRow(a: TaskAttestation): string {
+  const c = a.criteria;
+  const overall = overallStatusLabel(a.overallStatus);
+  return `| ${a.taskId} | ${criterionIcon(c.ownerApproval.status)} | ${criterionIcon(c.dependenciesClean.status)} | ${criterionIcon(c.prerequisitesMet.status)} | ${criterionIcon(c.definitionOfDoneMet.status)} | ${criterionIcon(c.kpisPassing.status)} | ${criterionIcon(c.artifactsTracked.status)} | ${criterionIcon(c.validationPassing.status)} | ${overall} |\n`;
+}
+
+function renderTaskNeedsAttention(a: TaskAttestation): string {
+  let section = `### ${a.taskId}\n\n`;
+  section += `**Status:** ${a.overallStatus}\n\n`;
+
+  const failing = Object.entries(a.criteria)
+    .filter(([_, c]) => c.status === 'fail' || c.status === 'warn')
+    .map(([key, c]) => ({ key, ...c }));
+
+  for (const c of failing) {
+    section += `#### ${c.name}\n`;
+    section += `- **Status:** ${c.status.toUpperCase()}\n`;
+    if (c.evidence.length > 0) {
+      section += `- **Evidence:**\n`;
+      for (const e of c.evidence) {
+        section += `  - ${e}\n`;
+      }
+    }
+    if (c.recommendation) {
+      section += `- **Recommendation:** ${c.recommendation}\n`;
+    }
+    section += '\n';
+  }
+
+  return section;
+}
+
 export function generateAttestationMarkdown(report: SprintAttestationReport): string {
   let md = `# Sprint ${report.sprint} Completion Attestation Report
 
@@ -700,31 +739,7 @@ export function generateAttestationMarkdown(report: SprintAttestationReport): st
 `;
 
   for (const a of report.attestations) {
-    const icon = (status: string) => {
-      switch (status) {
-        case 'pass':
-          return '✅';
-        case 'warn':
-          return '⚠️';
-        case 'fail':
-          return '❌';
-        case 'skip':
-          return '⏭️';
-        case 'pending':
-          return '🕐';
-        default:
-          return '❓';
-      }
-    };
-
-    const overall =
-      a.overallStatus === 'valid'
-        ? '✅ Valid'
-        : a.overallStatus === 'needs_review'
-          ? '⚠️ Review'
-          : '❌ Invalid';
-
-    md += `| ${a.taskId} | ${icon(a.criteria.ownerApproval.status)} | ${icon(a.criteria.dependenciesClean.status)} | ${icon(a.criteria.prerequisitesMet.status)} | ${icon(a.criteria.definitionOfDoneMet.status)} | ${icon(a.criteria.kpisPassing.status)} | ${icon(a.criteria.artifactsTracked.status)} | ${icon(a.criteria.validationPassing.status)} | ${overall} |\n`;
+    md += renderAttestationMatrixRow(a);
   }
 
   // Add details for tasks needing attention
@@ -732,29 +747,8 @@ export function generateAttestationMarkdown(report: SprintAttestationReport): st
 
   if (needsAttention.length > 0) {
     md += `\n## Tasks Requiring Attention\n\n`;
-
     for (const a of needsAttention) {
-      md += `### ${a.taskId}\n\n`;
-      md += `**Status:** ${a.overallStatus}\n\n`;
-
-      const failing = Object.entries(a.criteria)
-        .filter(([_, c]) => c.status === 'fail' || c.status === 'warn')
-        .map(([key, c]) => ({ key, ...c }));
-
-      for (const c of failing) {
-        md += `#### ${c.name}\n`;
-        md += `- **Status:** ${c.status.toUpperCase()}\n`;
-        if (c.evidence.length > 0) {
-          md += `- **Evidence:**\n`;
-          for (const e of c.evidence) {
-            md += `  - ${e}\n`;
-          }
-        }
-        if (c.recommendation) {
-          md += `- **Recommendation:** ${c.recommendation}\n`;
-        }
-        md += '\n';
-      }
+      md += renderTaskNeedsAttention(a);
     }
   }
 

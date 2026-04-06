@@ -146,6 +146,230 @@ function collectGatesForStoas(stoas: StoaRole[]): string[] {
 }
 
 // ============================================================================
+// STOA Verdict Generation
+// ============================================================================
+
+function generateAllStoaVerdicts(
+  allStoas: StoaRole[],
+  taskId: string,
+  execute: string[],
+  waiverRequired: string[],
+  skipped: string[],
+  gateResults: GateExecutionResult[],
+  waivers: WaiverRecord[],
+  strictMode: boolean,
+  evidenceDir: string
+): StoaVerdict[] {
+  const stoaVerdicts: StoaVerdict[] = [];
+
+  for (const stoa of allStoas) {
+    const stoaGates = STOA_GATE_PROFILES[stoa] || [];
+    const relevantResults = gateResults.filter((r) => stoaGates.includes(r.toolId));
+    const relevantWaivers = waivers.filter((w) => stoaGates.includes(w.toolId));
+
+    const verdict = generateStoaVerdict(
+      stoa,
+      taskId,
+      {
+        execute: stoaGates.filter((g) => execute.includes(g)),
+        waiverRequired: stoaGates.filter((g) => waiverRequired.includes(g)),
+        skipped: stoaGates.filter((g) => skipped.includes(g)),
+      },
+      relevantResults.length > 0 ? relevantResults : gateResults,
+      relevantWaivers,
+      strictMode
+    );
+
+    stoaVerdicts.push(verdict);
+    writeStoaVerdict(evidenceDir, verdict);
+
+    const icon = verdict.verdict === 'PASS' ? '✓' : '✗';
+    log(`${icon} ${stoa}: ${verdict.verdict}`);
+  }
+
+  return stoaVerdicts;
+}
+
+// ============================================================================
+// CSV Patch Application
+// ============================================================================
+
+interface PatchApplicationResult {
+  csvPatchProposal: CsvPatchProposal | undefined;
+  csvPatchApplied: ApplyPatchResult | undefined;
+}
+
+async function applyMatopCsvPatch(
+  finalVerdict: string,
+  task: TaskRecord,
+  runId: string,
+  taskId: string,
+  allStoas: StoaRole[],
+  evidenceDir: string,
+  repoRoot: string,
+  dryRun: boolean
+): Promise<PatchApplicationResult> {
+  if (finalVerdict !== 'PASS' || task.status === 'Completed') {
+    return { csvPatchProposal: undefined, csvPatchApplied: undefined };
+  }
+
+  logSection('Phase 9: CSV Patch & Auto-Apply');
+
+  const csvPatchProposal = createStatusChangeProposal(
+    runId,
+    taskId,
+    task.status || 'Unknown',
+    finalVerdict,
+    `MATOP consensus: ${allStoas.length} STOAs returned ${finalVerdict}`,
+    [`${evidenceDir}/summary.json`]
+  );
+
+  writeFileSync(join(evidenceDir, 'csv-patch-proposal.json'), JSON.stringify(csvPatchProposal, null, 2));
+  log(`Proposed: ${task.status} → Completed`);
+
+  let csvPatchApplied: ApplyPatchResult | undefined;
+
+  if (!dryRun) {
+    csvPatchApplied = applyCsvPatch(repoRoot, csvPatchProposal, 'matop-auto');
+
+    if (csvPatchApplied.success) {
+      log(`Applied: Sprint_plan.csv updated`);
+      log(`  Status: ${task.status} → Completed`);
+      log(`  Applied by: ${csvPatchApplied.appliedBy}`);
+      log(`  Applied at: ${csvPatchApplied.appliedAt}`);
+    } else {
+      log(`Failed to apply patch: ${csvPatchApplied.error}`);
+      appendToPatchHistory(repoRoot, { proposal: csvPatchProposal, appliedAt: null, appliedBy: null, rejected: false });
+    }
+
+    writeFileSync(join(evidenceDir, 'csv-patch-applied.json'), JSON.stringify(csvPatchApplied, null, 2));
+  } else {
+    log(`Dry run: patch NOT applied`);
+    appendToPatchHistory(repoRoot, { proposal: csvPatchProposal, appliedAt: null, appliedBy: null, rejected: false });
+  }
+
+  return { csvPatchProposal, csvPatchApplied };
+}
+
+// ============================================================================
+// Waiver Creation
+// ============================================================================
+
+async function createMatopWaivers(
+  waiverRequired: string[],
+  matrix: ReturnType<typeof loadAuditMatrix>,
+  runId: string,
+  evidenceDir: string
+): Promise<WaiverRecord[]> {
+  if (waiverRequired.length === 0) return [];
+
+  logSection('Phase 5: Create Waivers');
+  const waivers: WaiverRecord[] = [];
+
+  for (const toolId of waiverRequired) {
+    const tool = getToolById(matrix, toolId);
+    if (tool) {
+      const waiver = createWaiverRecord(toolId, tool, runId);
+      waivers.push(waiver);
+      log(`Waiver: ${toolId} (${waiver.reason})`);
+    }
+  }
+
+  await saveWaivers(evidenceDir, waivers);
+  return waivers;
+}
+
+// ============================================================================
+// Gate Classification
+// ============================================================================
+
+interface GateClassification {
+  execute: string[];
+  waiverRequired: string[];
+  skipped: string[];
+}
+
+type GateBucket = 'execute' | 'waiverRequired' | 'skipped';
+
+function classifyOneTool(tool: ReturnType<typeof getToolById>): GateBucket {
+  if (!tool) return 'skipped';
+  if (!tool.enabled) return tool.required ? 'waiverRequired' : 'skipped';
+  if (tool.requires_env && tool.requires_env.length > 0) {
+    const missing = tool.requires_env.filter((v) => !process.env[v]);
+    if (missing.length > 0) return tool.required ? 'waiverRequired' : 'skipped';
+  }
+  return 'execute';
+}
+
+function classifyGates(allGates: string[], matrix: ReturnType<typeof loadAuditMatrix>): GateClassification {
+  const execute: string[] = [];
+  const waiverRequired: string[] = [];
+  const skipped: string[] = [];
+
+  for (const toolId of allGates) {
+    const bucket = classifyOneTool(getToolById(matrix, toolId));
+    if (bucket === 'execute') execute.push(toolId);
+    else if (bucket === 'waiverRequired') waiverRequired.push(toolId);
+    else skipped.push(toolId);
+  }
+
+  return { execute, waiverRequired, skipped };
+}
+
+// ============================================================================
+// Remediation Phase
+// ============================================================================
+
+function processRemediation(
+  nonPassVerdicts: StoaVerdict[],
+  runId: string,
+  repoRoot: string,
+  evidenceDir: string,
+  gateResults: GateExecutionResult[]
+): RemediationResult | undefined {
+  if (nonPassVerdicts.length === 0) {
+    log('No remediation needed (all STOAs passed)');
+    return undefined;
+  }
+
+  const allRemediationReports: string[] = [];
+  let remediation: RemediationResult | undefined;
+
+  for (const verdict of nonPassVerdicts) {
+    const stoaRemediation = processVerdictRemediation(
+      verdict,
+      runId,
+      repoRoot,
+      evidenceDir,
+      gateResults.map((g) => ({
+        toolId: g.toolId,
+        exitCode: g.exitCode,
+        logPath: g.logPath || '',
+      }))
+    );
+
+    if (!remediation) {
+      remediation = stoaRemediation;
+    } else {
+      remediation.actions.push(...stoaRemediation.actions);
+      remediation.debtEntries.push(...stoaRemediation.debtEntries);
+    }
+
+    for (const action of stoaRemediation.actions) {
+      log(`  [${verdict.stoa}] ${action}`);
+    }
+
+    allRemediationReports.push(generateRemediationReport(stoaRemediation, verdict));
+  }
+
+  const combinedReport = allRemediationReports.join('\n---\n\n');
+  writeFileSync(join(evidenceDir, 'remediation.md'), combinedReport);
+  log('Remediation report: remediation.md');
+
+  return remediation;
+}
+
+// ============================================================================
 // Main MATOP Execution
 // ============================================================================
 
@@ -221,42 +445,7 @@ async function executeMatop(
   log(`Total unique gates from ${allStoas.length} STOAs: ${allGates.length}`);
 
   // Classify gates
-  const execute: string[] = [];
-  const waiverRequired: string[] = [];
-  const skipped: string[] = [];
-
-  for (const toolId of allGates) {
-    const tool = getToolById(matrix, toolId);
-
-    if (!tool) {
-      skipped.push(toolId);
-      continue;
-    }
-
-    if (!tool.enabled) {
-      if (tool.required) {
-        waiverRequired.push(toolId);
-      } else {
-        skipped.push(toolId);
-      }
-      continue;
-    }
-
-    // Check env vars
-    if (tool.requires_env && tool.requires_env.length > 0) {
-      const missing = tool.requires_env.filter((v) => !process.env[v]);
-      if (missing.length > 0) {
-        if (tool.required) {
-          waiverRequired.push(toolId);
-        } else {
-          skipped.push(toolId);
-        }
-        continue;
-      }
-    }
-
-    execute.push(toolId);
-  }
+  const { execute, waiverRequired, skipped } = classifyGates(allGates, matrix);
 
   log(`Gates to execute: ${execute.length}`);
   log(`Gates requiring waiver: ${waiverRequired.length}`);
@@ -280,74 +469,27 @@ async function executeMatop(
   // =========================================================================
   // Phase 5: Create Waivers
   // =========================================================================
-  const waivers: WaiverRecord[] = [];
-
-  if (waiverRequired.length > 0) {
-    logSection('Phase 5: Create Waivers');
-
-    for (const toolId of waiverRequired) {
-      const tool = getToolById(matrix, toolId);
-      if (tool) {
-        const waiver = createWaiverRecord(toolId, tool, runId);
-        waivers.push(waiver);
-        log(`Waiver: ${toolId} (${waiver.reason})`);
-      }
-    }
-
-    await saveWaivers(evidenceDir, waivers);
-  }
+  const waivers = await createMatopWaivers(waiverRequired, matrix, runId, evidenceDir);
 
   // =========================================================================
   // Phase 6: Execute Gates
   // =========================================================================
   logSection('Phase 6: Execute Gates');
 
-  const gateResults = await runGates(execute, {
-    repoRoot,
-    evidenceDir,
-    matrix,
-    dryRun,
-  });
+  const gateResults = await runGates(execute, { repoRoot, evidenceDir, matrix, dryRun });
 
   const summary = summarizeGateResults(gateResults);
   log(`\nGate Results: ${summary.passed}/${summary.total} passed`);
-
-  if (summary.failedGates.length > 0) {
-    log(`Failed: ${summary.failedGates.join(', ')}`);
-  }
+  if (summary.failedGates.length > 0) log(`Failed: ${summary.failedGates.join(', ')}`);
 
   // =========================================================================
   // Phase 7: Generate STOA Verdicts
   // =========================================================================
   logSection('Phase 7: STOA Verdicts');
 
-  const stoaVerdicts: StoaVerdict[] = [];
-
-  for (const stoa of allStoas) {
-    // Filter results to gates relevant to this STOA
-    const stoaGates = STOA_GATE_PROFILES[stoa] || [];
-    const relevantResults = gateResults.filter((r) => stoaGates.includes(r.toolId));
-    const relevantWaivers = waivers.filter((w) => stoaGates.includes(w.toolId));
-
-    const verdict = generateStoaVerdict(
-      stoa,
-      taskId,
-      {
-        execute: stoaGates.filter((g) => execute.includes(g)),
-        waiverRequired: stoaGates.filter((g) => waiverRequired.includes(g)),
-        skipped: stoaGates.filter((g) => skipped.includes(g)),
-      },
-      relevantResults.length > 0 ? relevantResults : gateResults, // Use all if STOA has no specific gates
-      relevantWaivers,
-      strictMode
-    );
-
-    stoaVerdicts.push(verdict);
-    writeStoaVerdict(evidenceDir, verdict);
-
-    const icon = verdict.verdict === 'PASS' ? '✓' : '✗';
-    log(`${icon} ${stoa}: ${verdict.verdict}`);
-  }
+  const stoaVerdicts = generateAllStoaVerdicts(
+    allStoas, taskId, execute, waiverRequired, skipped, gateResults, waivers, strictMode, evidenceDir
+  );
 
   // =========================================================================
   // Phase 8: Aggregate Final Verdict
@@ -360,62 +502,9 @@ async function executeMatop(
   // =========================================================================
   // Phase 9: CSV Patch Proposal & Auto-Apply
   // =========================================================================
-  let csvPatchProposal: CsvPatchProposal | undefined;
-  let csvPatchApplied: ApplyPatchResult | undefined;
-
-  if (finalVerdict === 'PASS' && task.status !== 'Completed') {
-    logSection('Phase 9: CSV Patch & Auto-Apply');
-
-    csvPatchProposal = createStatusChangeProposal(
-      runId,
-      taskId,
-      task.status || 'Unknown',
-      finalVerdict,
-      `MATOP consensus: ${allStoas.length} STOAs returned ${finalVerdict}`,
-      [`${evidenceDir}/summary.json`]
-    );
-
-    writeFileSync(
-      join(evidenceDir, 'csv-patch-proposal.json'),
-      JSON.stringify(csvPatchProposal, null, 2)
-    );
-
-    log(`Proposed: ${task.status} → Completed`);
-
-    // Auto-apply the patch (unless dry run)
-    if (!dryRun) {
-      csvPatchApplied = applyCsvPatch(repoRoot, csvPatchProposal, 'matop-auto');
-
-      if (csvPatchApplied.success) {
-        log(`Applied: Sprint_plan.csv updated`);
-        log(`  Status: ${task.status} → Completed`);
-        log(`  Applied by: ${csvPatchApplied.appliedBy}`);
-        log(`  Applied at: ${csvPatchApplied.appliedAt}`);
-      } else {
-        log(`Failed to apply patch: ${csvPatchApplied.error}`);
-        // Still record the proposal in history as unapplied
-        appendToPatchHistory(repoRoot, {
-          proposal: csvPatchProposal,
-          appliedAt: null,
-          appliedBy: null,
-          rejected: false,
-        });
-      }
-
-      writeFileSync(
-        join(evidenceDir, 'csv-patch-applied.json'),
-        JSON.stringify(csvPatchApplied, null, 2)
-      );
-    } else {
-      log(`Dry run: patch NOT applied`);
-      appendToPatchHistory(repoRoot, {
-        proposal: csvPatchProposal,
-        appliedAt: null,
-        appliedBy: null,
-        rejected: false,
-      });
-    }
-  }
+  const { csvPatchProposal, csvPatchApplied } = await applyMatopCsvPatch(
+    finalVerdict, task, runId, taskId, allStoas, evidenceDir, repoRoot, dryRun
+  );
 
   // =========================================================================
   // Phase 10: Generate Evidence Hashes
@@ -432,49 +521,8 @@ async function executeMatop(
   logSection('Phase 11: Remediation');
 
   // Process remediation for any STOA that has non-PASS verdict
-  let remediation: RemediationResult | undefined;
   const nonPassVerdicts = stoaVerdicts.filter((v) => v.verdict !== 'PASS');
-
-  if (nonPassVerdicts.length > 0) {
-    // Process each non-PASS verdict
-    const allRemediationReports: string[] = [];
-
-    for (const verdict of nonPassVerdicts) {
-      const stoaRemediation = processVerdictRemediation(
-        verdict,
-        runId,
-        repoRoot,
-        evidenceDir,
-        gateResults.map((g) => ({
-          toolId: g.toolId,
-          exitCode: g.exitCode,
-          logPath: g.logPath || '',
-        }))
-      );
-
-      // Use the first one as the primary remediation result
-      if (!remediation) {
-        remediation = stoaRemediation;
-      } else {
-        // Merge additional actions and entries
-        remediation.actions.push(...stoaRemediation.actions);
-        remediation.debtEntries.push(...stoaRemediation.debtEntries);
-      }
-
-      for (const action of stoaRemediation.actions) {
-        log(`  [${verdict.stoa}] ${action}`);
-      }
-
-      allRemediationReports.push(generateRemediationReport(stoaRemediation, verdict));
-    }
-
-    // Write combined remediation report
-    const combinedReport = allRemediationReports.join('\n---\n\n');
-    writeFileSync(join(evidenceDir, 'remediation.md'), combinedReport);
-    log(`Remediation report: remediation.md`);
-  } else {
-    log(`No remediation needed (all STOAs passed)`);
-  }
+  const remediation = processRemediation(nonPassVerdicts, runId, repoRoot, evidenceDir, gateResults);
 
   // =========================================================================
   // Write Summary
@@ -512,6 +560,23 @@ async function executeMatop(
   writeFileSync(join(evidenceDir, 'summary.json'), JSON.stringify(summaryData, null, 2));
 
   // Human-readable summary
+  let csvPatchSection = '';
+  if (csvPatchProposal) {
+    let appliedStatus: string;
+    if (csvPatchApplied?.success) {
+      appliedStatus = 'Yes';
+    } else if (csvPatchApplied) {
+      appliedStatus = `No (${csvPatchApplied.error})`;
+    } else {
+      appliedStatus = 'Dry run';
+    }
+    csvPatchSection = `## CSV Patch\n- **Proposed:** ${task.status} → Completed\n- **Applied:** ${appliedStatus}`;
+  }
+
+  const remediationSection = remediation
+    ? '## Remediation\n' + remediation.actions.map((a) => `- ${a}`).join('\n') + '\n'
+    : '';
+
   const summaryMd = `# MATOP Run Summary
 
 **Task:** ${taskId}
@@ -533,15 +598,9 @@ ${stoaVerdicts.map((v) => `- **${v.stoa}:** ${v.verdict}`).join('\n')}
 
 ## Final Verdict: **${finalVerdict}**
 
-${csvPatchProposal ? `## CSV Patch\n- **Proposed:** ${task.status} → Completed\n- **Applied:** ${csvPatchApplied?.success ? 'Yes' : csvPatchApplied ? `No (${csvPatchApplied.error})` : 'Dry run'}` : ''}
+${csvPatchSection}
 
-${
-  remediation
-    ? `## Remediation
-${remediation.actions.map((a) => `- ${a}`).join('\n')}
-`
-    : ''
-}
+${remediationSection}
 `;
 
   writeFileSync(join(evidenceDir, 'summary.md'), summaryMd);
@@ -588,7 +647,7 @@ Arguments:
 
 Options:
   --dry-run   Don't execute gates, just show what would happen
-  --strict    Enable strict mode (WARN becomes FAIL)
+  --strict    Enable strict mode (all gates binary PASS/FAIL)
   --help      Show this help message
 
 Examples:
@@ -602,7 +661,7 @@ The orchestrator will:
   3. Collect all required gates from all STOAs
   4. Execute gates and capture transcripts
   5. Generate STOA verdicts
-  6. Aggregate final verdict (PASS/WARN/FAIL/NEEDS_HUMAN)
+  6. Aggregate final verdict (PASS/FAIL/NEEDS_HUMAN)
   7. Create CSV patch proposal if PASS
   8. AUTO-APPLY patch to Sprint_plan.csv (unless --dry-run)
   9. Generate evidence bundle with SHA256 hashes

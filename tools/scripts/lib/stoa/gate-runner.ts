@@ -189,6 +189,68 @@ export async function runGate(
 }
 
 // ============================================================================
+// Gate task builder
+// ============================================================================
+
+interface GatePrepareOptions {
+  toolId: string;
+  tool: AuditMatrixTool | undefined;
+  context: CommandContext;
+  gatesDir: string;
+  repoRoot: string;
+  dryRun: boolean;
+}
+
+/** Prepare a single gate — returns an immediate result for invalid/dry-run, or a task fn */
+function prepareGateTask(
+  opts: Readonly<GatePrepareOptions>,
+  results: GateExecutionResult[]
+): (() => Promise<GateExecutionResult>) | null {
+  const { toolId, tool, context, gatesDir, repoRoot, dryRun } = opts;
+
+  if (!tool || !tool.command) {
+    results.push({ toolId, exitCode: -1, logPath: '', passed: false, duration: 0, stderr: 'No command defined' });
+    return null;
+  }
+
+  const command = substituteCommandTemplate(tool.command, context);
+  const logPath = join(gatesDir, `${toolId}.log`);
+
+  if (dryRun) {
+    console.log(`[DRY RUN] Would execute: ${command}`);
+    results.push({ toolId, exitCode: 0, logPath: normalizeRepoPath(logPath), passed: true, duration: 0 });
+    return null;
+  }
+
+  const timeoutMs = tool.timeout_seconds ? tool.timeout_seconds * 1000 : DEFAULT_TIMEOUT_MS;
+
+  return async () => {
+    console.log(`Running gate: ${toolId}...`);
+    const result = await runGate(toolId, command, logPath, repoRoot, timeoutMs);
+    const status = result.passed ? '✓' : '✗';
+    console.log(`  ${status} ${toolId}: ${result.passed ? 'PASS' : 'FAIL'} (${result.duration}ms)`);
+    return result;
+  };
+}
+
+/** Execute a tier's task functions in parallel with bounded concurrency */
+async function executeTierTasks(
+  tasks: Array<() => Promise<GateExecutionResult>>,
+  parallelLimit: number,
+  results: GateExecutionResult[]
+): Promise<void> {
+  if (tasks.length === 1) {
+    results.push(await tasks[0]());
+    return;
+  }
+  for (let i = 0; i < tasks.length; i += parallelLimit) {
+    const batch = tasks.slice(i, i + parallelLimit);
+    const batchResults = await Promise.all(batch.map((fn) => fn()));
+    results.push(...batchResults);
+  }
+}
+
+// ============================================================================
 // Batch Gate Execution
 // ============================================================================
 
@@ -204,12 +266,16 @@ export interface GateRunnerOptions {
 
 /**
  * Run all selected gates and collect results.
+ *
+ * Gates run in parallel (up to `parallelLimit` concurrency) when they share the
+ * same `order` value in the audit matrix. Gates with different order values run
+ * sequentially to respect declared dependencies between tiers.
  */
 export async function runGates(
   gateIds: string[],
   options: GateRunnerOptions
 ): Promise<GateExecutionResult[]> {
-  const { repoRoot, evidenceDir, matrix, dryRun, commandContext } = options;
+  const { repoRoot, evidenceDir, matrix, dryRun, parallelLimit = 4, commandContext } = options;
   const gatesDir = getGatesDir(evidenceDir);
 
   // Order gates for execution
@@ -221,52 +287,33 @@ export async function runGates(
     gatesDir: normalizeRepoPath(gatesDir),
   };
 
-  const results: GateExecutionResult[] = [];
-
+  // Group gates by their order value — same order runs in parallel
+  const orderGroups = new Map<number, string[]>();
   for (const toolId of orderedGates) {
     const tool = getToolById(matrix, toolId);
+    const order = tool?.order ?? 999;
+    const group = orderGroups.get(order) || [];
+    group.push(toolId);
+    orderGroups.set(order, group);
+  }
 
-    if (!tool || !tool.command) {
-      // No command to run
-      results.push({
-        toolId,
-        exitCode: -1,
-        logPath: '',
-        passed: false,
-        duration: 0,
-        stderr: 'No command defined',
-      });
-      continue;
+  const sortedOrders = [...orderGroups.keys()].sort((a, b) => a - b);
+  const results: GateExecutionResult[] = [];
+
+  for (const order of sortedOrders) {
+    const group = orderGroups.get(order) || [];
+    const tasks: Array<() => Promise<GateExecutionResult>> = [];
+
+    for (const toolId of group) {
+      const tool = getToolById(matrix, toolId);
+      const task = prepareGateTask(
+        { toolId, tool, context, gatesDir, repoRoot, dryRun: dryRun ?? false },
+        results
+      );
+      if (task) tasks.push(task);
     }
 
-    // Substitute placeholders in command template
-    const command = substituteCommandTemplate(tool.command, context);
-
-    const logPath = join(gatesDir, `${toolId}.log`);
-
-    if (dryRun) {
-      // Dry run - don't actually execute
-      console.log(`[DRY RUN] Would execute: ${command}`);
-      results.push({
-        toolId,
-        exitCode: 0,
-        logPath: normalizeRepoPath(logPath),
-        passed: true,
-        duration: 0,
-      });
-      continue;
-    }
-
-    // Calculate timeout
-    const timeoutMs = tool.timeout_seconds ? tool.timeout_seconds * 1000 : DEFAULT_TIMEOUT_MS;
-
-    console.log(`Running gate: ${toolId}...`);
-    const result = await runGate(toolId, command, logPath, repoRoot, timeoutMs);
-    results.push(result);
-
-    // Log result
-    const status = result.passed ? '✓' : '✗';
-    console.log(`  ${status} ${toolId}: ${result.passed ? 'PASS' : 'FAIL'} (${result.duration}ms)`);
+    await executeTierTasks(tasks, parallelLimit, results);
   }
 
   return results;
