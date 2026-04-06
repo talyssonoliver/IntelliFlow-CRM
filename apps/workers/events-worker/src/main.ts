@@ -29,6 +29,7 @@ import {
   createCaseEscalationRule,
   createTaskAssignmentRule,
 } from '@intelliflow/platform';
+import { MaintenanceScheduler } from './maintenance/scheduled-jobs';
 
 // ============================================================================
 // Types
@@ -57,6 +58,7 @@ interface EventJobResult {
 
 export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
   private outboxPoller: OutboxPoller | null = null;
+  private maintenanceScheduler: MaintenanceScheduler | null = null;
   private readonly eventDispatcher: EventDispatcher;
   private readonly repository: OutboxRepository;
   private readonly workerConfig: EventsWorkerConfig;
@@ -130,6 +132,26 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
     // Start polling
     await this.outboxPoller.start();
 
+    // Start maintenance scheduler (SLA checks, reminders, cleanup)
+    try {
+      const { prisma } = await import('@intelliflow/db');
+      this.maintenanceScheduler = new MaintenanceScheduler(prisma, this.logger, {
+        slaCheckIntervalMs: Number(process.env.SLA_CHECK_INTERVAL_MS) || 60_000,
+        followUpCheckIntervalMs: Number(process.env.FOLLOWUP_CHECK_INTERVAL_MS) || 15 * 60_000,
+        staleDealCheckIntervalMs: Number(process.env.STALE_DEAL_CHECK_INTERVAL_MS) || 60 * 60_000,
+        sessionCleanupIntervalMs: Number(process.env.SESSION_CLEANUP_INTERVAL_MS) || 30 * 60_000,
+        appointmentReminderIntervalMs: Number(process.env.APPT_REMINDER_INTERVAL_MS) || 5 * 60_000,
+        staleLeadDays: Number(process.env.STALE_LEAD_DAYS) || 7,
+        staleDealDays: Number(process.env.STALE_DEAL_DAYS) || 14,
+      });
+      this.maintenanceScheduler.start();
+    } catch (error) {
+      this.logger.warn(
+        { error: error instanceof Error ? error.message : String(error) },
+        'Failed to start maintenance scheduler — maintenance jobs will not run'
+      );
+    }
+
     this.logger.info('Events worker initialized');
   }
 
@@ -138,6 +160,9 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
    */
   protected async onStop(): Promise<void> {
     this.logger.info('Stopping events worker');
+
+    // Stop maintenance scheduler
+    this.maintenanceScheduler?.stop();
 
     // Stop polling
     await this.outboxPoller?.stop();
@@ -245,6 +270,83 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
   }
 
   /**
+   * Create activity and notifications for a lead score change event.
+   */
+  private async handleLeadScoredNotifications(
+    leadId: string,
+    score: number,
+    previousScore: number | undefined,
+    scoringModel: string | undefined,
+    eventTenantId: string,
+    eventUserId: string
+  ): Promise<void> {
+    const { prisma } = await import('@intelliflow/db');
+
+    let scoreLabel: string;
+    if (score >= 80) scoreLabel = 'Hot';
+    else if (score >= 50) scoreLabel = 'Warm';
+    else scoreLabel = 'Cold';
+
+    let sentiment: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE';
+    if (score >= 80) sentiment = 'POSITIVE';
+    else if (score >= 50) sentiment = 'NEUTRAL';
+    else sentiment = 'NEGATIVE';
+
+    await prisma.leadActivity.create({
+      data: {
+        leadId,
+        type: 'SCORE_UPDATE',
+        title: `Lead score updated to ${score} (${scoreLabel})`,
+        description: previousScore !== undefined
+          ? `Score changed from ${previousScore} to ${score} via ${scoringModel || 'AI scoring'}.`
+          : `Initial score set to ${score} via ${scoringModel || 'AI scoring'}.`,
+        userName: 'System',
+        sentiment,
+        metadata: { score, previousScore, scoringModel, scoreLabel },
+        tenantId: eventTenantId,
+      },
+    });
+
+    if (score >= 80) {
+      this.logger.info({ leadId, score }, 'High score detected - creating hot lead notification');
+      await prisma.notification.create({
+        data: {
+          tenantId: eventTenantId,
+          recipientId: eventUserId,
+          channel: 'IN_APP',
+          subject: `Hot lead detected: score ${score}`,
+          body: `Lead ${leadId} scored ${score}/100 — prioritize for immediate outreach.`,
+          priority: 'HIGH',
+          status: 'PENDING',
+          category: 'ALERTS',
+          sourceType: 'lead_scored',
+          sourceId: leadId,
+          metadata: { notificationType: 'lead_scored', score, previousScore, actionUrl: `/leads/${leadId}` },
+        },
+      });
+    }
+
+    if (score >= 50 && (previousScore === undefined || previousScore < 50)) {
+      this.logger.info({ leadId, score, previousScore }, 'Lead warming up - creating notification');
+      await prisma.notification.create({
+        data: {
+          tenantId: eventTenantId,
+          recipientId: eventUserId,
+          channel: 'IN_APP',
+          subject: `Lead warming up: score ${score}`,
+          body: `Lead ${leadId} crossed the engagement threshold (${previousScore ?? 0} → ${score}). Consider adding to active pipeline.`,
+          priority: 'NORMAL',
+          status: 'PENDING',
+          category: 'ALERTS',
+          sourceType: 'ai_recommendation',
+          sourceId: leadId,
+          metadata: { notificationType: 'lead_scored', score, previousScore, actionUrl: `/leads/${leadId}` },
+        },
+      });
+    }
+  }
+
+  /**
    * Register domain event handlers
    */
   private registerEventHandlers(): void {
@@ -298,64 +400,14 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
         // Create notifications + activity entries for significant score events
         if (eventTenantId && eventUserId && score !== undefined) {
           try {
-            const { prisma } = await import('@intelliflow/db');
-
-            // Always create an activity entry for score changes so they appear in the feed
-            const scoreLabel = score >= 80 ? 'Hot' : score >= 50 ? 'Warm' : 'Cold';
-            await prisma.leadActivity.create({
-              data: {
-                leadId,
-                type: 'SCORE_UPDATE',
-                title: `Lead score updated to ${score} (${scoreLabel})`,
-                description: previousScore !== undefined
-                  ? `Score changed from ${previousScore} to ${score} via ${scoringModel || 'AI scoring'}.`
-                  : `Initial score set to ${score} via ${scoringModel || 'AI scoring'}.`,
-                userName: 'System',
-                sentiment: score >= 80 ? 'POSITIVE' : score >= 50 ? 'NEUTRAL' : 'NEGATIVE',
-                metadata: { score, previousScore, scoringModel, scoreLabel },
-                tenantId: eventTenantId,
-              },
-            });
-
-            // Hot lead detected (score >= 80)
-            if (score >= 80) {
-              this.logger.info({ leadId, score }, 'High score detected - creating hot lead notification');
-              await prisma.notification.create({
-                data: {
-                  tenantId: eventTenantId,
-                  recipientId: eventUserId,
-                  channel: 'IN_APP',
-                  subject: `Hot lead detected: score ${score}`,
-                  body: `Lead ${leadId} scored ${score}/100 — prioritize for immediate outreach.`,
-                  priority: 'HIGH',
-                  status: 'PENDING',
-                  category: 'ALERTS',
-                  sourceType: 'lead_scored',
-                  sourceId: leadId,
-                  metadata: { notificationType: 'lead_scored', score, previousScore, actionUrl: `/leads/${leadId}` },
-                },
-              });
-            }
-
-            // Lead warming up (crossed 50 threshold)
-            if (score >= 50 && (previousScore === undefined || previousScore < 50)) {
-              this.logger.info({ leadId, score, previousScore }, 'Lead warming up - creating notification');
-              await prisma.notification.create({
-                data: {
-                  tenantId: eventTenantId,
-                  recipientId: eventUserId,
-                  channel: 'IN_APP',
-                  subject: `Lead warming up: score ${score}`,
-                  body: `Lead ${leadId} crossed the engagement threshold (${previousScore ?? 0} → ${score}). Consider adding to active pipeline.`,
-                  priority: 'NORMAL',
-                  status: 'PENDING',
-                  category: 'ALERTS',
-                  sourceType: 'ai_recommendation',
-                  sourceId: leadId,
-                  metadata: { notificationType: 'lead_scored', score, previousScore, actionUrl: `/leads/${leadId}` },
-                },
-              });
-            }
+            await this.handleLeadScoredNotifications(
+              leadId,
+              score,
+              previousScore,
+              scoringModel,
+              eventTenantId,
+              eventUserId
+            );
           } catch (notifError) {
             this.logger.warn(
               { leadId, error: notifError instanceof Error ? notifError.message : String(notifError) },

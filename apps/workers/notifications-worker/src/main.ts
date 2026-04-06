@@ -18,6 +18,7 @@ import { z } from 'zod';
 import { BaseWorker, type ComponentHealth } from '@intelliflow/worker-shared';
 import { EmailChannel, createEmailChannel, type EmailPayload } from './channels/email';
 import { SMSChannel, createSMSChannel, type SMSPayload } from './channels/sms';
+import { WebhookChannel, createWebhookChannel, type WebhookPayload } from './channels/webhook';
 
 // ============================================================================
 // Queue Names
@@ -96,6 +97,7 @@ interface NotificationsWorkerConfig {
 export class NotificationsWorker extends BaseWorker<NotificationJob, NotificationResult> {
   private emailChannel: EmailChannel | null = null;
   private smsChannel: SMSChannel | null = null;
+  private webhookChannel: WebhookChannel | null = null;
   private readonly workerConfig: NotificationsWorkerConfig;
   private sentByChannel: Record<string, number> = {};
   private failedByChannel: Record<string, number> = {};
@@ -173,7 +175,13 @@ export class NotificationsWorker extends BaseWorker<NotificationJob, Notificatio
       }
     }
 
-    // Webhook delivery is fully implemented and fires HTTP POST to recipient URLs.
+    // Initialize webhook channel
+    if (this.workerConfig.enableWebhook) {
+      this.webhookChannel = createWebhookChannel(this.logger);
+      await this.webhookChannel.initialize();
+      this.logger.info('Webhook channel initialized');
+    }
+
     // Push notifications require FCM/APNs credentials (ENABLE_PUSH=true).
 
     this.logger.info('Notifications worker initialized');
@@ -201,6 +209,12 @@ export class NotificationsWorker extends BaseWorker<NotificationJob, Notificatio
     if (this.smsChannel) {
       await this.smsChannel.close();
       this.smsChannel = null;
+    }
+
+    // Close webhook channel
+    if (this.webhookChannel) {
+      await this.webhookChannel.close();
+      this.webhookChannel = null;
     }
   }
 
@@ -277,6 +291,7 @@ export class NotificationsWorker extends BaseWorker<NotificationJob, Notificatio
 
     const emailStats = this.emailChannel?.getStats();
     const smsStats = this.smsChannel?.getStats();
+    const webhookStats = this.webhookChannel?.getStats();
 
     return {
       email: {
@@ -294,9 +309,9 @@ export class NotificationsWorker extends BaseWorker<NotificationJob, Notificatio
         lastCheck: new Date().toISOString(),
       },
       webhook: {
-        status: this.workerConfig.enableWebhook ? 'ok' : 'degraded',
-        message: this.workerConfig.enableWebhook
-          ? `Sent: ${this.sentByChannel.webhook}`
+        status: this.channelHealthStatus(this.webhookChannel, webhookStats),
+        message: this.webhookChannel
+          ? `Sent: ${webhookStats?.sent || 0}, Failed: ${webhookStats?.failed || 0}, Circuit: ${webhookStats?.circuitState || 'N/A'}`
           : 'Webhook channel disabled',
         lastCheck: new Date().toISOString(),
       },
@@ -487,56 +502,66 @@ export class NotificationsWorker extends BaseWorker<NotificationJob, Notificatio
       };
     }
 
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10_000);
-
-      const response = await fetch(notification.recipient.webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          notificationId: notification.notificationId,
-          tenantId: notification.tenantId,
-          ...notification.content,
-          metadata: notification.metadata,
-        }),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeout);
-
-      if (!response.ok) {
-        this.failedByChannel.webhook++;
-        return {
-          notificationId: notification.notificationId,
-          channel: 'WEBHOOK',
-          success: false,
-          failedAt: new Date().toISOString(),
-          error: `Webhook returned HTTP ${response.status}`,
-          providerResponse: { status: response.status, statusText: response.statusText },
-          deliveryTimeMs: Date.now() - startTime,
-        };
-      }
-
-      this.sentByChannel.webhook++;
-      return {
-        notificationId: notification.notificationId,
-        channel: 'WEBHOOK',
-        success: true,
-        deliveredAt: new Date().toISOString(),
-        providerResponse: { status: response.status },
-        deliveryTimeMs: Date.now() - startTime,
-      };
-    } catch (error) {
+    if (!this.webhookChannel) {
       this.failedByChannel.webhook++;
-      const message = error instanceof Error ? error.message : 'Unknown webhook error';
       return {
         notificationId: notification.notificationId,
         channel: 'WEBHOOK',
         success: false,
         failedAt: new Date().toISOString(),
-        error: `Webhook delivery failed: ${message}`,
+        error: 'Webhook channel not initialized',
         deliveryTimeMs: Date.now() - startTime,
+      };
+    }
+
+    const webhookPayload: WebhookPayload = {
+      url: notification.recipient.webhookUrl,
+      method: 'POST',
+      body: {
+        notificationId: notification.notificationId,
+        tenantId: notification.tenantId,
+        ...notification.content,
+        metadata: notification.metadata,
+      },
+      timeout: 30000,
+      retryOnStatus: [429, 500, 502, 503, 504],
+    };
+
+    const result = await this.webhookChannel.deliver(webhookPayload, {
+      correlationId: notification.notificationId,
+      tenantId: notification.tenantId,
+      ...notification.metadata,
+    });
+
+    if (result.success) {
+      this.sentByChannel.webhook++;
+      return {
+        notificationId: notification.notificationId,
+        channel: 'WEBHOOK',
+        success: true,
+        deliveredAt: result.deliveredAt,
+        providerResponse: {
+          requestId: result.requestId,
+          statusCode: result.statusCode,
+          responseBody: result.responseBody,
+          attempts: result.attempts,
+        },
+        deliveryTimeMs: result.deliveryTimeMs,
+      };
+    } else {
+      this.failedByChannel.webhook++;
+      return {
+        notificationId: notification.notificationId,
+        channel: 'WEBHOOK',
+        success: false,
+        failedAt: result.deliveredAt,
+        error: result.error,
+        providerResponse: {
+          requestId: result.requestId,
+          statusCode: result.statusCode,
+          attempts: result.attempts,
+        },
+        deliveryTimeMs: result.deliveryTimeMs,
       };
     }
   }
@@ -653,3 +678,5 @@ export { EmailChannel, createEmailChannel } from './channels/email';
 export type { EmailPayload, EmailDeliveryResult } from './channels/email';
 export { SMSChannel, createSMSChannel } from './channels/sms';
 export type { SMSPayload, SMSDeliveryResult, SMSChannelConfig } from './channels/sms';
+export { WebhookChannel, createWebhookChannel } from './channels/webhook';
+export type { WebhookPayload, WebhookDeliveryResult, WebhookChannelConfig } from './channels/webhook';
