@@ -46,8 +46,50 @@ function toPercentage(value: number | null): Percentage {
 }
 
 /**
+ * Helper to reconstitute an Opportunity from a Prisma record
+ */
+function reconstituteOpportunity(record: {
+  id: string;
+  name: string;
+  value: Decimal | null;
+  stage: string;
+  probability: number;
+  expectedCloseDate: Date | null;
+  description: string | null;
+  accountId: string;
+  contactId: string | null;
+  ownerId: string;
+  tenantId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  closedAt?: Date | null;
+  sourceLeadId?: string | null;
+  deletedAt?: Date | null;
+}): Opportunity {
+  return Opportunity.reconstitute(createOpportunityId(record.id), {
+    name: record.name,
+    value: toMoney(record.value),
+    stage: record.stage as OpportunityStage,
+    probability: toPercentage(record.probability),
+    expectedCloseDate: record.expectedCloseDate ?? undefined,
+    description: record.description ?? undefined,
+    accountId: record.accountId,
+    contactId: record.contactId ?? undefined,
+    ownerId: record.ownerId,
+    tenantId: record.tenantId,
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt,
+    closedAt: record.closedAt ?? undefined,
+    sourceLeadId: record.sourceLeadId ?? undefined,
+    deletedAt: record.deletedAt ?? null,
+  });
+}
+
+/**
  * Prisma Opportunity Repository
  * Implements OpportunityRepository port using Prisma ORM
+ *
+ * IFC-281: All query methods require tenantId for tenant isolation.
  */
 export class PrismaOpportunityRepository implements OpportunityRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -78,229 +120,173 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
     });
   }
 
-  async findById(id: OpportunityId): Promise<Opportunity | null> {
-    const record = await this.prisma.opportunity.findUnique({
-      where: { id: id.value },
+  async findById(id: OpportunityId, tenantId?: string): Promise<Opportunity | null> {
+    const record = await this.prisma.opportunity.findFirst({
+      where: { id: id.value, deletedAt: null, ...(tenantId ? { tenantId } : {}) } as any,
     });
 
     if (!record) return null;
 
-    return Opportunity.reconstitute(createOpportunityId(record.id), {
-      name: record.name,
-      value: toMoney(record.value),
-      stage: record.stage as OpportunityStage,
-      probability: toPercentage(record.probability),
-      expectedCloseDate: record.expectedCloseDate ?? undefined,
-      description: record.description ?? undefined,
-      accountId: record.accountId,
-      contactId: record.contactId ?? undefined,
-      ownerId: record.ownerId,
-      tenantId: record.tenantId,
-      createdAt: record.createdAt,
-      updatedAt: record.updatedAt,
-      closedAt: record.closedAt ?? undefined,
-      sourceLeadId: record.sourceLeadId ?? undefined,
-    });
+    return reconstituteOpportunity(record);
   }
 
-  async findByAccountId(accountId: string): Promise<Opportunity[]> {
+  async findByAccountId(accountId: string, tenantId?: string): Promise<Opportunity[]> {
     const records = await this.prisma.opportunity.findMany({
-      where: { accountId },
+      where: { accountId, deletedAt: null, ...(tenantId ? { tenantId } : {}) } as any,
       orderBy: { expectedCloseDate: 'asc' },
     });
 
-    return records.map((record) =>
-      Opportunity.reconstitute(createOpportunityId(record.id), {
-        name: record.name,
-        value: toMoney(record.value),
-        stage: record.stage as OpportunityStage,
-        probability: toPercentage(record.probability),
-        expectedCloseDate: record.expectedCloseDate ?? undefined,
-        description: record.description ?? undefined,
-        accountId: record.accountId,
-        contactId: record.contactId ?? undefined,
-        ownerId: record.ownerId,
-        tenantId: record.tenantId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-        closedAt: record.closedAt ?? undefined,
-      })
-    );
+    return records.map(reconstituteOpportunity);
   }
 
-  async findByOwnerId(ownerId: string): Promise<Opportunity[]> {
+  async findByOwnerId(ownerId: string, tenantId?: string): Promise<Opportunity[]> {
     const records = await this.prisma.opportunity.findMany({
-      where: { ownerId },
+      where: { ownerId, deletedAt: null, ...(tenantId ? { tenantId } : {}) } as any,
       orderBy: { expectedCloseDate: 'asc' },
     });
 
-    return records.map((record) =>
-      Opportunity.reconstitute(createOpportunityId(record.id), {
-        name: record.name,
-        value: toMoney(record.value),
-        stage: record.stage as OpportunityStage,
-        probability: toPercentage(record.probability),
-        expectedCloseDate: record.expectedCloseDate ?? undefined,
-        description: record.description ?? undefined,
-        accountId: record.accountId,
-        contactId: record.contactId ?? undefined,
-        ownerId: record.ownerId,
-        tenantId: record.tenantId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-        closedAt: record.closedAt ?? undefined,
-      })
-    );
+    return records.map(reconstituteOpportunity);
   }
 
-  async findByStage(stage: OpportunityStage, ownerId?: string): Promise<Opportunity[]> {
+  async findByStage(stage: OpportunityStage, tenantId?: string, ownerId?: string): Promise<Opportunity[]> {
     const records = await this.prisma.opportunity.findMany({
       where: {
         stage,
+        deletedAt: null,
+        ...(tenantId ? { tenantId } : {}),
         ...(ownerId ? { ownerId } : {}),
-      },
+      } as any,
       orderBy: { expectedCloseDate: 'asc' },
     });
 
-    return records.map((record) =>
-      Opportunity.reconstitute(createOpportunityId(record.id), {
-        name: record.name,
-        value: toMoney(record.value),
-        stage: record.stage as OpportunityStage,
-        probability: toPercentage(record.probability),
-        expectedCloseDate: record.expectedCloseDate ?? undefined,
-        description: record.description ?? undefined,
-        accountId: record.accountId,
-        contactId: record.contactId ?? undefined,
-        ownerId: record.ownerId,
-        tenantId: record.tenantId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-        closedAt: record.closedAt ?? undefined,
-      })
-    );
+    return records.map(reconstituteOpportunity);
   }
 
-  async findClosingSoon(days: number, ownerId?: string): Promise<Opportunity[]> {
+  async findClosingSoon(days: number, tenantId?: string, ownerId?: string): Promise<Opportunity[]> {
     const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + days);
+    futureDate.setUTCDate(futureDate.getUTCDate() + days);
 
     const records = await this.prisma.opportunity.findMany({
       where: {
         expectedCloseDate: { lte: futureDate },
         closedAt: null,
+        deletedAt: null,
+        ...(tenantId ? { tenantId } : {}),
         ...(ownerId ? { ownerId } : {}),
-      },
+      } as any,
       orderBy: { expectedCloseDate: 'asc' },
     });
 
-    return records.map((record) =>
-      Opportunity.reconstitute(createOpportunityId(record.id), {
-        name: record.name,
-        value: toMoney(record.value),
-        stage: record.stage as OpportunityStage,
-        probability: toPercentage(record.probability),
-        expectedCloseDate: record.expectedCloseDate ?? undefined,
-        description: record.description ?? undefined,
-        accountId: record.accountId,
-        contactId: record.contactId ?? undefined,
-        ownerId: record.ownerId,
-        tenantId: record.tenantId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-        closedAt: record.closedAt ?? undefined,
-      })
-    );
+    return records.map(reconstituteOpportunity);
   }
 
-  async delete(id: OpportunityId): Promise<void> {
-    await this.prisma.opportunity.delete({
-      where: { id: id.value },
+  async delete(id: OpportunityId, tenantId: string): Promise<void> {
+    const { count } = await this.prisma.opportunity.deleteMany({
+      where: { id: id.value, tenantId },
     });
+
+    if (count === 0) {
+      throw new Error(`Opportunity not found or tenant mismatch: ${id.value}`);
+    }
   }
 
-  async sumValueByStage(ownerId?: string): Promise<Record<string, number>> {
+  async sumValueByStage(tenantId?: string, ownerId?: string): Promise<Record<string, number>> {
     const results = await this.prisma.opportunity.groupBy({
       by: ['stage'],
-      where: ownerId ? { ownerId } : undefined,
+      where: { deletedAt: null, ...(tenantId ? { tenantId } : {}), ...(ownerId ? { ownerId } : {}) } as any,
       _sum: { value: true },
     });
 
     return results.reduce(
       (acc, result) => {
-        acc[result.stage] = Number(result._sum.value ?? 0);
+        acc[result.stage] = Number(result._sum?.value ?? 0);
         return acc;
       },
       {} as Record<string, number>
     );
   }
 
-  async countByStage(ownerId?: string): Promise<Record<string, number>> {
+  async countByStage(tenantId?: string, ownerId?: string): Promise<Record<string, number>> {
     const results = await this.prisma.opportunity.groupBy({
       by: ['stage'],
-      where: ownerId ? { ownerId } : undefined,
+      where: { deletedAt: null, ...(tenantId ? { tenantId } : {}), ...(ownerId ? { ownerId } : {}) } as any,
       _count: true,
     });
 
     return results.reduce(
       (acc, result) => {
-        acc[result.stage] = result._count;
+        acc[result.stage] = typeof result._count === 'number' ? result._count : 0;
         return acc;
       },
       {} as Record<string, number>
     );
   }
 
-  async findByContactId(contactId: string): Promise<Opportunity[]> {
+  async findByContactId(contactId: string, tenantId?: string): Promise<Opportunity[]> {
     const records = await this.prisma.opportunity.findMany({
-      where: { contactId },
+      where: { contactId, deletedAt: null, ...(tenantId ? { tenantId } : {}) } as any,
       orderBy: { expectedCloseDate: 'asc' },
     });
 
-    return records.map((record) =>
-      Opportunity.reconstitute(createOpportunityId(record.id), {
-        name: record.name,
-        value: toMoney(record.value),
-        stage: record.stage as OpportunityStage,
-        probability: toPercentage(record.probability),
-        expectedCloseDate: record.expectedCloseDate ?? undefined,
-        description: record.description ?? undefined,
-        accountId: record.accountId,
-        contactId: record.contactId ?? undefined,
-        ownerId: record.ownerId,
-        tenantId: record.tenantId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-        closedAt: record.closedAt ?? undefined,
-      })
-    );
+    return records.map(reconstituteOpportunity);
   }
 
-  async findHighValue(minValue: number, ownerId?: string): Promise<Opportunity[]> {
+  async findHighValue(minValue: number, tenantId?: string, ownerId?: string): Promise<Opportunity[]> {
     const records = await this.prisma.opportunity.findMany({
       where: {
         value: { gte: new Decimal(minValue) },
+        deletedAt: null,
+        ...(tenantId ? { tenantId } : {}),
         ...(ownerId ? { ownerId } : {}),
-      },
+      } as any,
       orderBy: { value: 'desc' },
     });
 
-    return records.map((record) =>
-      Opportunity.reconstitute(createOpportunityId(record.id), {
-        name: record.name,
-        value: toMoney(record.value),
-        stage: record.stage as OpportunityStage,
-        probability: toPercentage(record.probability),
-        expectedCloseDate: record.expectedCloseDate ?? undefined,
-        description: record.description ?? undefined,
-        accountId: record.accountId,
-        contactId: record.contactId ?? undefined,
-        ownerId: record.ownerId,
-        tenantId: record.tenantId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-        closedAt: record.closedAt ?? undefined,
-      })
-    );
+    return records.map(reconstituteOpportunity);
+  }
+
+  async softDelete(id: OpportunityId): Promise<void> {
+    await this.prisma.opportunity.update({
+      where: { id: id.value },
+      data: { deletedAt: new Date() } as any,
+    });
+  }
+
+  async restore(id: OpportunityId): Promise<void> {
+    await this.prisma.opportunity.update({
+      where: { id: id.value },
+      data: { deletedAt: null } as any,
+    });
+  }
+
+  async findByIdIncludingDeleted(id: OpportunityId): Promise<Opportunity | null> {
+    const record = await this.prisma.opportunity.findUnique({
+      where: { id: id.value },
+    });
+    if (!record) return null;
+    return reconstituteOpportunity(record);
+  }
+
+  async findTrashed(params: {
+    tenantId: string;
+    search?: string;
+    skip?: number;
+    take?: number;
+    orderBy?: Record<string, string>;
+  }): Promise<{ items: Opportunity[]; total: number }> {
+    const where: any = { tenantId: params.tenantId, deletedAt: { not: null } };
+    if (params.search) {
+      where.name = { contains: params.search, mode: 'insensitive' };
+    }
+    const [records, total] = await Promise.all([
+      this.prisma.opportunity.findMany({
+        where,
+        skip: params.skip,
+        take: params.take,
+        orderBy: params.orderBy as any,
+      }),
+      this.prisma.opportunity.count({ where }),
+    ]);
+    return { items: records.map(reconstituteOpportunity), total };
   }
 }

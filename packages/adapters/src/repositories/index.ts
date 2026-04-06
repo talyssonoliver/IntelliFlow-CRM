@@ -45,6 +45,12 @@ export * from './PrismaExperimentRepository';
 // Notification Audit Logger (IFC-157)
 export * from './PrismaNotificationAuditLogger';
 
+// Lead Conversion Repository (IFC-*)
+export * from './PrismaLeadConversionRepository';
+
+// Ticket Repositories
+export * from './PrismaTicketRepository';
+
 // In-memory implementations (testing)
 export * from './InMemoryLeadRepository';
 export * from './InMemoryContactRepository';
@@ -56,3 +62,4 @@ export * from './InMemoryCaseDocumentRepository';
 export * from './InMemoryNotificationRepository';
 export * from './InMemoryNotificationPreferenceRepository';
 export * from './InMemoryAnalyticsRepository';
+export * from './InMemoryTicketRepository';

@@ -123,6 +123,15 @@ export * from './feature-flags';
 // Audit Adapters (IFC-125)
 export * from './audit';
 
+// Event Bus Adapter (Transactional Outbox)
+// ContextAccessors is canonically defined in event-metadata; exclude the duplicate from OutboxEventBusAdapter
+export { OutboxEventBusAdapter } from './events/OutboxEventBusAdapter';
+export type { OutboxEventBusAdapterOptions } from './events/OutboxEventBusAdapter';
+export * from './events/event-metadata';
+
+// Outbound Webhook Adapter
+export * from './webhooks/outbound';
+
 // Shared utilities (IFC-125)
 export { detectScoreBias } from './shared/bias-detector';
 export type { BiasMetric, BiasViolation, LeadScoringBiasCheck } from './shared/bias-detector';

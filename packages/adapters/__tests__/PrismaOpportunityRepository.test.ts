@@ -37,8 +37,11 @@ import { PrismaOpportunityRepository } from '../src/repositories/PrismaOpportuni
 type OpportunityPrismaDelegateDouble = {
   upsert: ReturnType<typeof vi.fn>;
   findUnique: ReturnType<typeof vi.fn>;
+  findFirst: ReturnType<typeof vi.fn>;
   findMany: ReturnType<typeof vi.fn>;
   delete: ReturnType<typeof vi.fn>;
+  deleteMany: ReturnType<typeof vi.fn>;
+  update: ReturnType<typeof vi.fn>;
   groupBy: ReturnType<typeof vi.fn>;
 };
 
@@ -51,8 +54,11 @@ const createMockPrismaClient = (): OpportunityPrismaClientDouble => {
   const opportunity: OpportunityPrismaDelegateDouble = {
     upsert: vi.fn(),
     findUnique: vi.fn(),
+    findFirst: vi.fn(),
     findMany: vi.fn(),
     delete: vi.fn(),
+    deleteMany: vi.fn(),
+    update: vi.fn(),
     groupBy: vi.fn(),
   };
 
@@ -201,13 +207,13 @@ describe('PrismaOpportunityRepository', () => {
         closedAt: null,
       };
 
-      const findUniqueMock = mockPrisma.opportunity.findUnique;
-      findUniqueMock.mockResolvedValue(mockRecord);
+      const findFirstMock = mockPrisma.opportunity.findFirst;
+      findFirstMock.mockResolvedValue(mockRecord);
 
-      const result = await repository.findById(testOpportunityId);
+      const result = await repository.findById(testOpportunityId, 'tenant-123');
 
-      expect(findUniqueMock).toHaveBeenCalledWith({
-        where: { id: testOpportunityId.value },
+      expect(findFirstMock).toHaveBeenCalledWith({
+        where: expect.objectContaining({ id: testOpportunityId.value, tenantId: 'tenant-123' }),
       });
 
       expect(result).not.toBeNull();
@@ -218,8 +224,8 @@ describe('PrismaOpportunityRepository', () => {
     });
 
     it('should return null when not found', async () => {
-      const findUniqueMock = mockPrisma.opportunity.findUnique;
-      findUniqueMock.mockResolvedValue(null);
+      const findFirstMock = mockPrisma.opportunity.findFirst;
+      findFirstMock.mockResolvedValue(null);
 
       const result = await repository.findById(testOpportunityId);
 
@@ -244,8 +250,8 @@ describe('PrismaOpportunityRepository', () => {
         closedAt: null,
       };
 
-      const findUniqueMock = mockPrisma.opportunity.findUnique;
-      findUniqueMock.mockResolvedValue(mockRecord);
+      const findFirstMock = mockPrisma.opportunity.findFirst;
+      findFirstMock.mockResolvedValue(mockRecord);
 
       const result = await repository.findById(testOpportunityId);
 
@@ -299,7 +305,7 @@ describe('PrismaOpportunityRepository', () => {
       const results = await repository.findByAccountId('account-123');
 
       expect(findManyMock).toHaveBeenCalledWith({
-        where: { accountId: 'account-123' },
+        where: { accountId: 'account-123', deletedAt: null },
         orderBy: { expectedCloseDate: 'asc' },
       });
 
@@ -345,7 +351,7 @@ describe('PrismaOpportunityRepository', () => {
       const results = await repository.findByOwnerId('owner-123');
 
       expect(findManyMock).toHaveBeenCalledWith({
-        where: { ownerId: 'owner-123' },
+        where: { ownerId: 'owner-123', deletedAt: null },
         orderBy: { expectedCloseDate: 'asc' },
       });
 
@@ -380,7 +386,7 @@ describe('PrismaOpportunityRepository', () => {
       const results = await repository.findByStage('QUALIFICATION');
 
       expect(findManyMock).toHaveBeenCalledWith({
-        where: { stage: 'QUALIFICATION' },
+        where: { stage: 'QUALIFICATION', deletedAt: null },
         orderBy: { expectedCloseDate: 'asc' },
       });
 
@@ -411,10 +417,10 @@ describe('PrismaOpportunityRepository', () => {
       const findManyMock = mockPrisma.opportunity.findMany;
       findManyMock.mockResolvedValue(mockRecords);
 
-      const results = await repository.findByStage('PROPOSAL', 'owner-123');
+      const results = await repository.findByStage('PROPOSAL', undefined, 'owner-123');
 
       expect(findManyMock).toHaveBeenCalledWith({
-        where: { stage: 'PROPOSAL', ownerId: 'owner-123' },
+        where: { stage: 'PROPOSAL', ownerId: 'owner-123', deletedAt: null },
         orderBy: { expectedCloseDate: 'asc' },
       });
 
@@ -452,6 +458,7 @@ describe('PrismaOpportunityRepository', () => {
         where: {
           expectedCloseDate: { lte: expect.any(Date) },
           closedAt: null,
+          deletedAt: null,
         },
         orderBy: { expectedCloseDate: 'asc' },
       });
@@ -465,13 +472,14 @@ describe('PrismaOpportunityRepository', () => {
       const findManyMock = mockPrisma.opportunity.findMany;
       findManyMock.mockResolvedValue(mockRecords);
 
-      const results = await repository.findClosingSoon(30, 'owner-123');
+      const results = await repository.findClosingSoon(30, undefined, 'owner-123');
 
       expect(findManyMock).toHaveBeenCalledWith({
         where: {
           expectedCloseDate: { lte: expect.any(Date) },
           closedAt: null,
           ownerId: 'owner-123',
+          deletedAt: null,
         },
         orderBy: { expectedCloseDate: 'asc' },
       });
@@ -481,22 +489,24 @@ describe('PrismaOpportunityRepository', () => {
   });
 
   describe('delete()', () => {
-    it('should call prisma.opportunity.delete with correct ID', async () => {
-      const deleteMock = mockPrisma.opportunity.delete;
-      deleteMock.mockResolvedValue({});
+    it('should call prisma.opportunity.deleteMany with correct ID and tenantId', async () => {
+      const deleteManyMock = mockPrisma.opportunity.deleteMany;
+      deleteManyMock.mockResolvedValue({ count: 1 });
 
-      await repository.delete(testOpportunityId);
+      await repository.delete(testOpportunityId, 'tenant-123');
 
-      expect(deleteMock).toHaveBeenCalledWith({
-        where: { id: testOpportunityId.value },
+      expect(deleteManyMock).toHaveBeenCalledWith({
+        where: { id: testOpportunityId.value, tenantId: 'tenant-123' },
       });
     });
 
     it('should propagate prisma errors', async () => {
-      const deleteMock = mockPrisma.opportunity.delete;
-      deleteMock.mockRejectedValue(new Error('Record not found'));
+      const deleteManyMock = mockPrisma.opportunity.deleteMany;
+      deleteManyMock.mockResolvedValue({ count: 0 });
 
-      await expect(repository.delete(testOpportunityId)).rejects.toThrow('Record not found');
+      await expect(repository.delete(testOpportunityId, 'tenant-123')).rejects.toThrow(
+        'Opportunity not found or tenant mismatch'
+      );
     });
   });
 
@@ -515,7 +525,7 @@ describe('PrismaOpportunityRepository', () => {
 
       expect(groupByMock).toHaveBeenCalledWith({
         by: ['stage'],
-        where: undefined,
+        where: { deletedAt: null },
         _sum: { value: true },
       });
 
@@ -532,11 +542,11 @@ describe('PrismaOpportunityRepository', () => {
       const groupByMock = mockPrisma.opportunity.groupBy;
       groupByMock.mockResolvedValue(mockResults);
 
-      const sums = await repository.sumValueByStage('owner-123');
+      const sums = await repository.sumValueByStage(undefined, 'owner-123');
 
       expect(groupByMock).toHaveBeenCalledWith({
         by: ['stage'],
-        where: { ownerId: 'owner-123' },
+        where: { ownerId: 'owner-123', deletedAt: null },
         _sum: { value: true },
       });
 
@@ -579,7 +589,7 @@ describe('PrismaOpportunityRepository', () => {
 
       expect(groupByMock).toHaveBeenCalledWith({
         by: ['stage'],
-        where: undefined,
+        where: { deletedAt: null },
         _count: true,
       });
 
@@ -596,11 +606,11 @@ describe('PrismaOpportunityRepository', () => {
       const groupByMock = mockPrisma.opportunity.groupBy;
       groupByMock.mockResolvedValue(mockResults);
 
-      const counts = await repository.countByStage('owner-123');
+      const counts = await repository.countByStage(undefined, 'owner-123');
 
       expect(groupByMock).toHaveBeenCalledWith({
         by: ['stage'],
-        where: { ownerId: 'owner-123' },
+        where: { ownerId: 'owner-123', deletedAt: null },
         _count: true,
       });
 
@@ -636,8 +646,8 @@ describe('PrismaOpportunityRepository', () => {
         closedAt: null,
       };
 
-      const findUniqueMock = mockPrisma.opportunity.findUnique;
-      findUniqueMock.mockResolvedValue(mockRecord);
+      const findFirstMock = mockPrisma.opportunity.findFirst;
+      findFirstMock.mockResolvedValue(mockRecord);
 
       await expect(repository.findById(testOpportunityId)).rejects.toThrow(/Invalid OpportunityId/);
     });
@@ -664,8 +674,8 @@ describe('PrismaOpportunityRepository', () => {
 
       const upsertMock = mockPrisma.opportunity.upsert;
       upsertMock.mockResolvedValue(mockRecord);
-      const findUniqueMock = mockPrisma.opportunity.findUnique;
-      findUniqueMock.mockResolvedValue(mockRecord);
+      const findFirstMock = mockPrisma.opportunity.findFirst;
+      findFirstMock.mockResolvedValue(mockRecord);
 
       await repository.save(testOpportunity);
       const found = await repository.findById(testOpportunity.id);
