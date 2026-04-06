@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-03-17T23:34:04.339Z",
+  "generated_at": "2026-03-19T22:11:39.907Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 358,
-    "completed": 352,
-    "partially_done": 1,
-    "spec_only": 1,
+    "total_specs_analyzed": 365,
+    "completed": 357,
+    "partially_done": 2,
+    "spec_only": 2,
     "uncertain": 4
   },
   "status_legend": {
@@ -3984,6 +3984,20 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-238",
+      "title": "Lead Detail Status Type Fix + Auth Guard. Fix 2 CRITICAL issues: (1) LeadStatus type union at leads/[id]/page.tsx line 139 omits NEGOTIATING - runtime crash when lead has this status [S1]. (2) leads/(list)/new/page.tsx missing useRequireAuth() hook - unauthenticated users can access create lead form [F1]. Also fix trpc vs api import inconsistency in create page [F8]. Fix: Add NEGOTIATING to LeadStatus type, add useRequireAuth() to create page, standardize import.",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/IFC-238-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
       "task_id": "IFC-252",
       "title": "Contact Router Security — Tenant Isolation Fixes. CRITICAL: (1) search procedure has no createTenantWhereClause — cross-tenant search by name/email (R-02). (2) logActivity transaction uses raw ctx.prisma with no tenantId in WHERE — cross-tenant update (R-03). (3) bulkEmail/bulkExport no tenant filter — email exfiltration via guessed UUIDs (R-04). (4) stats ignores typedCtx tenant — no tenantId boundary (R-05). (5) getById/getByEmail double-fetch through unscoped domain repo (R-06). Cross-ref: R-01 (prismaWithTenant raw) is cross-cutting and shared with IFC-237. Audit: docs/audit/contact-detail-wiring-audit.md §15.",
       "sprint": 16,
@@ -4040,13 +4054,27 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-268",
+      "title": "Account Owner Display & Assignment. (1) Owner card shows literal 'Owner Assigned' and 'Account Manager' text instead of actual owner name/title — ownerId exists but owner relation not included in getById (F-01). (2) No owner assignment UI or mutation (F-02). Fix: include owner relation in getById query; display real owner name and role; add owner assignment combobox or dialog with user search mutation. Audit: docs/audit/account-detail-wiring-audit.md section 2.",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/IFC-268-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
       "task_id": "IFC-278",
       "title": "Deal Detail Page — Replace SAMPLE_DEAL with Real API Data. CRITICAL: Entire deal detail page (deals/[id]/page.tsx 792 lines) is 100% hardcoded with SAMPLE_DEAL constant (lines 116-150) — zero API calls. The dealId from useParams() is captured but never used for data fetch (line 684). Must: (1) Replace SAMPLE_DEAL with trpc.opportunity.getById query using dealId param. (2) Add useRequireAuth() guard (F-03 — detail page is the only unguarded page). (3) Fix STAGES constant to match domain 7-stage enum (F-04 — uses CLOSED instead of CLOSED_WON/CLOSED_LOST, omits NEEDS_ANALYSIS). (4) Fix StageProgress to use deal prop instead of SAMPLE_DEAL.value directly (F-05). (5) Remove _SAMPLE_ACTIVITIES dead code (F-06). (6) Add clickable links to account/contact detail pages (F-07). (7) Wire real owner data from getById relation include. Router getById exists (IFC-186). Cross-entity patterns from Lead 360 wiring (2026-03-04) should be followed. Audit: docs/audit/deal-detail-wiring-audit.md section 1.",
       "sprint": 16,
       "spec_path": ".specify/sprints/sprint-16/specifications/IFC-278-spec.md",
       "has_spec": true,
       "has_plan": true,
-      "has_attestation": false,
+      "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
       "acceptance_criteria_count": 0,
@@ -4058,6 +4086,20 @@
       "title": "Deal Create Form + /deals/new Route. No deal creation form exists — both 'New Deal' buttons (deals/(list)/page.tsx lines 454 and 492) link to /deals/new which is a 404 (F-02). Must: (1) Create page at apps/web/src/app/deals/new/page.tsx or deals/(list)/new/page.tsx. (2) Form fields: name, value (money input), stage (default PROSPECTING), probability, expectedCloseDate (date picker), accountId (account search combobox), contactId (contact search combobox). (3) Wire to trpc.opportunity.create mutation. (4) Add useRequireAuth(). (5) Validate with createOpportunitySchema. (6) Success: navigate to /deals/[newId]. Audit: docs/audit/deal-detail-wiring-audit.md section 1 F-02.",
       "sprint": 16,
       "spec_path": ".specify/sprints/sprint-16/specifications/IFC-279-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-281",
+      "title": "Deal Backend Tenant Isolation & Audit Logging. (1) CRITICAL: PrismaOpportunityRepository.findById() (line 82) has NO tenantId WHERE clause — cross-tenant read/write/delete possible via getById/update/delete/moveStage/dealForecast (B-01). Fix: add tenantId to findById() and findByOwnerId() WHERE clauses. (2) CRITICAL: Zero auditLogger.log() calls across all 16 opportunity + pipeline-config procedures (B-02). Add audit logging to create/update/delete/moveStage (especially CLOSED_WON/CLOSED_LOST) and pipeline config changes. (3) Create notification in create procedure uses raw ctx.prisma instead of prismaWithTenant (B-03). Audit: docs/audit/deal-detail-wiring-audit.md sections 5-6.",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/IFC-281-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
@@ -4115,6 +4157,38 @@
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-045"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-299",
+      "title": "Help Article CRUD tRPC Router",
+      "sprint": 17,
+      "spec_path": ".specify/sprints/sprint-17/specifications/IFC-299-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-298"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-303",
+      "title": "Article Feedback tRPC Mutation",
+      "sprint": 17,
+      "spec_path": ".specify/sprints/sprint-17/specifications/IFC-303-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-298"
       ],
       "real_status": "COMPLETED"
     },
@@ -5744,6 +5818,22 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "PG-175",
+      "title": "Deals Trash Page - Soft-deleted deals list with restore and permanent delete",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/PG-175-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "In Progress",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-135"
+      ],
+      "real_status": "PARTIALLY_DONE"
+    },
+    {
       "task_id": "PG-176",
       "title": "Governance Quality Report Sub-Pages - Lighthouse Coverage and Performance views",
       "sprint": 16,
@@ -5823,6 +5913,23 @@
         "PG-152"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-193",
+      "title": "Workflow Step Progress Panel — Add real-time N/N step progress tracker to /agent-approvals/agents and /agent-approvals/logs; reads WorkflowExecution.currentStep + stepResults from tRPC; shows named steps with status icons (pending/running/completed/failed) and a % progress bar matching the AEO workflow progress UI pattern",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/PG-193-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": false,
+      "csv_status": "Planning",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-151",
+        "PG-192"
+      ],
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "PM-OPS-001",

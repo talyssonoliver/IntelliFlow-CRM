@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-16T18:30:13.152Z",
+  "timestamp": "2026-03-18T01:30:09.451Z",
   "knip": {
     "success": true,
     "data": {
@@ -16,101 +16,33 @@
       "unlisted": [],
       "exports": [
         {
-          "file": "lighthouserc.authenticated.js",
+          "file": "packages/application/src/usecases/scheduling/ScheduleAppointment.ts",
           "exports": [
-            "default"
+            "ScheduleAppointmentUseCase"
           ]
         },
         {
-          "file": "lighthouserc.js",
+          "file": "packages/application/src/usecases/scheduling/RescheduleAppointment.ts",
           "exports": [
-            "default"
+            "RescheduleAppointmentUseCase"
           ]
         },
         {
-          "file": "tools/lighthouse/lhci-auth.js",
+          "file": "packages/application/src/usecases/scheduling/CancelAppointment.ts",
           "exports": [
-            "default"
+            "CancelAppointmentUseCase"
           ]
         },
         {
-          "file": "packages/domain/src/timeline/TimelineConstants.ts",
+          "file": "packages/application/src/usecases/scheduling/CompleteAppointment.ts",
           "exports": [
-            "TIMELINE_EVENT_TYPE_LABELS",
-            "TIMELINE_EVENT_TYPE_ICONS",
-            "AGENT_ACTION_STATUS_LABELS"
+            "CompleteAppointmentUseCase"
           ]
         },
         {
-          "file": "apps/web/src/components/sidebar/configs/accounts.ts",
+          "file": "packages/application/src/usecases/scheduling/CheckConflicts.ts",
           "exports": [
-            "accountsSidebarConfig"
-          ]
-        },
-        {
-          "file": "apps/web/src/components/sidebar/configs/contacts.ts",
-          "exports": [
-            "contactsSidebarConfig"
-          ]
-        },
-        {
-          "file": "apps/web/src/components/sidebar/configs/agent-approvals.ts",
-          "exports": [
-            "agentApprovalsSidebarConfig"
-          ]
-        },
-        {
-          "file": "apps/web/src/components/sidebar/configs/appointments.ts",
-          "exports": [
-            "appointmentsSidebarConfig"
-          ]
-        },
-        {
-          "file": "apps/web/src/components/sidebar/configs/email.ts",
-          "exports": [
-            "emailSidebarConfig"
-          ]
-        },
-        {
-          "file": "apps/web/src/components/sidebar/configs/notifications.ts",
-          "exports": [
-            "notificationsSidebarConfig"
-          ]
-        },
-        {
-          "file": "apps/web/src/components/sidebar/configs/tasks.ts",
-          "exports": [
-            "tasksSidebarConfig"
-          ]
-        },
-        {
-          "file": "apps/web/src/lib/churn-risk/churn-utils.ts",
-          "exports": [
-            "getRiskColor"
-          ]
-        },
-        {
-          "file": "apps/web/src/components/sidebar/configs/leads.ts",
-          "exports": [
-            "leadsSidebarConfig"
-          ]
-        },
-        {
-          "file": "apps/web/src/components/sidebar/configs/tickets.ts",
-          "exports": [
-            "ticketsSidebarConfig"
-          ]
-        },
-        {
-          "file": "apps/api/src/shared/forecast-algorithm.ts",
-          "exports": [
-            "default"
-          ]
-        },
-        {
-          "file": "apps/project-tracker/lib/TaskDataContext.tsx",
-          "exports": [
-            "useSprintStatusCounts"
+            "CheckConflictsUseCase"
           ]
         }
       ],
@@ -138,7 +70,7 @@
     "summary": {
       "unusedFiles": 0,
       "unusedDeps": 4,
-      "unusedExports": 18,
+      "unusedExports": 5,
       "unusedTypes": 3
     }
   },

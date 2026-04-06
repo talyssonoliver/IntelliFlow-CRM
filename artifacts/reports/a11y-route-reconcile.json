@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-15T15:40:19.368Z",
+  "timestamp": "2026-03-19T19:11:26.600Z",
   "docRoutes": [
     "/",
     "/about",
@@ -121,6 +121,9 @@
     "/analytics/feedback",
     "/analytics/report-settings",
     "/analytics/report-templates",
+    "/analytics/saved/monthly",
+    "/analytics/saved/quarterly",
+    "/analytics/saved/weekly",
     "/analytics/scheduled-reports",
     "/auth/callback",
     "/billing",
@@ -162,6 +165,8 @@
     "/deals/deal-settings",
     "/deals/deal-stages",
     "/deals/forecast",
+    "/deals/new",
+    "/deals/trash",
     "/developers/apps",
     "/developers/apps/new",
     "/docs",
@@ -190,6 +195,9 @@
     "/governance/compliance",
     "/governance/policies",
     "/governance/quality-reports",
+    "/governance/quality-reports/coverage",
+    "/governance/quality-reports/lighthouse",
+    "/governance/quality-reports/performance",
     "/help-center",
     "/help-center/search",
     "/insights",
@@ -355,6 +363,9 @@
     "/agent-approvals/tools",
     "/analytics/report-settings",
     "/analytics/report-templates",
+    "/analytics/saved/monthly",
+    "/analytics/saved/quarterly",
+    "/analytics/saved/weekly",
     "/analytics/scheduled-reports",
     "/billing/cancel",
     "/billing/plans",
@@ -374,6 +385,8 @@
     "/deals/deal-automation",
     "/deals/deal-settings",
     "/deals/deal-stages",
+    "/deals/new",
+    "/deals/trash",
     "/developers/apps",
     "/developers/apps/new",
     "/docs",
@@ -392,6 +405,9 @@
     "/email/email-settings",
     "/email/signatures",
     "/email/templates",
+    "/governance/quality-reports/coverage",
+    "/governance/quality-reports/lighthouse",
+    "/governance/quality-reports/performance",
     "/help-center/search",
     "/leads/lead-settings",
     "/leads/pipeline",
@@ -424,7 +440,7 @@
     {
       "name": "COUNT_MATCH",
       "severity": "PASS",
-      "message": "Doc routes: 88, FS routes: 159"
+      "message": "Doc routes: 88, FS routes: 167"
     },
     {
       "name": "STATEMENT_COVERS_DISK",
@@ -434,7 +450,7 @@
     {
       "name": "DISK_COVERED_BY_STATEMENT",
       "severity": "WARN",
-      "message": "71 route(s) on disk not in conformance statement",
+      "message": "79 route(s) on disk not in conformance statement",
       "details": [
         "/404",
         "/accounts/account-settings",
@@ -448,6 +464,9 @@
         "/agent-approvals/tools",
         "/analytics/report-settings",
         "/analytics/report-templates",
+        "/analytics/saved/monthly",
+        "/analytics/saved/quarterly",
+        "/analytics/saved/weekly",
         "/analytics/scheduled-reports",
         "/billing/cancel",
         "/billing/plans",
@@ -467,6 +486,8 @@
         "/deals/deal-automation",
         "/deals/deal-settings",
         "/deals/deal-stages",
+        "/deals/new",
+        "/deals/trash",
         "/developers/apps",
         "/developers/apps/new",
         "/docs",
@@ -485,6 +506,9 @@
         "/email/email-settings",
         "/email/signatures",
         "/email/templates",
+        "/governance/quality-reports/coverage",
+        "/governance/quality-reports/lighthouse",
+        "/governance/quality-reports/performance",
         "/help-center/search",
         "/leads/lead-settings",
         "/leads/pipeline",
@@ -512,7 +536,7 @@
     {
       "name": "TOTAL_COUNT",
       "severity": "INFO",
-      "message": "Total: 88 matched, 0 doc-only, 71 fs-only"
+      "message": "Total: 88 matched, 0 doc-only, 79 fs-only"
     }
   ],
   "exitCode": 0
