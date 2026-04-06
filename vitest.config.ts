@@ -100,6 +100,7 @@ export default defineConfig({
       'packages/adapters/vitest.config.ts',
       'packages/application/vitest.config.ts',
       'packages/domain/vitest.config.ts',
+      'packages/db/vitest.config.ts',
       'packages/validators/vitest.config.ts',
       'packages/webhooks/vitest.config.ts',
       // Integration tests project - requires database/services
@@ -192,6 +193,7 @@ export default defineConfig({
             'packages/adapters/**',
             'packages/application/**',
             'packages/domain/**',
+            'packages/db/**',
             'packages/validators/**',
             'packages/webhooks/**',
             'tests/architecture/**',

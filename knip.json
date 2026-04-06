@@ -73,7 +73,7 @@
     },
     "packages/validators": {
       "entry": [
-        "src/{index,lead,contact,account,opportunity,task,ticket,common,env,base-schemas,ai-review,case,timeline}.ts"
+        "src/{index,lead,contact,account,opportunity,task,ticket,common,config,base-schemas,ai-review,case,timeline}.ts"
       ],
       "project": ["src/**/*.ts"]
     }
@@ -120,6 +120,9 @@
   ],
   "tags": ["-knipignore"],
   "ignoreIssues": {
+    "lighthouserc.js": ["exports"],
+    "lighthouserc.authenticated.js": ["exports"],
+    "tools/lighthouse/lhci-auth.js": ["exports"],
     "apps/api/src/test/**": ["exports", "types"],
     "apps/web/src/lib/test-runner/**": ["exports", "types"],
     "apps/project-tracker/lib/data-sync/orchestrator.ts": ["exports"],
