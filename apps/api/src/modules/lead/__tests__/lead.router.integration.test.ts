@@ -70,18 +70,18 @@ describeIntegration('Lead Router - Integration Tests', () => {
       const result = await caller.list({ page: 1, limit: 10 });
 
       // Should return actual seeded leads
-      expect(result.leads.length).toBeGreaterThan(0);
+      expect(result.data.length).toBeGreaterThan(0);
       expect(result.total).toBeGreaterThan(0);
       expect(result.page).toBe(1);
       expect(result.limit).toBe(10);
 
       // Verify leads have tenantId
-      for (const lead of result.leads) {
+      for (const lead of result.data) {
         expect(lead.tenantId).toBeDefined();
       }
 
       // Verify we get actual seed data
-      const sarahMillerLead = result.leads.find(
+      const sarahMillerLead = result.data.find(
         (l: { id: string }) => l.id === SEED_IDS.leads.sarahMiller
       );
       expect(sarahMillerLead).toBeDefined();
@@ -95,7 +95,7 @@ describeIntegration('Lead Router - Integration Tests', () => {
       const result = await caller.list({ status: ['QUALIFIED'] });
 
       // Verify all returned leads have QUALIFIED status
-      for (const lead of result.leads) {
+      for (const lead of result.data) {
         expect(lead.status).toBe('QUALIFIED');
       }
     });
@@ -107,7 +107,7 @@ describeIntegration('Lead Router - Integration Tests', () => {
       const result = await caller.list({ minScore: 80, maxScore: 100 });
 
       // Verify all returned leads have score in range
-      for (const lead of result.leads) {
+      for (const lead of result.data) {
         expect(lead.score).toBeGreaterThanOrEqual(80);
         expect(lead.score).toBeLessThanOrEqual(100);
       }
@@ -120,7 +120,7 @@ describeIntegration('Lead Router - Integration Tests', () => {
       const result = await caller.list({ search: 'TechCorp' });
 
       // Should find Sarah Miller who works at TechCorp Industries
-      const sarahMillerLead = result.leads.find(
+      const sarahMillerLead = result.data.find(
         (l: { id: string }) => l.id === SEED_IDS.leads.sarahMiller
       );
       expect(sarahMillerLead).toBeDefined();

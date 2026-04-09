@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { Prisma } from '@intelliflow/db';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import { loadBullMQ } from '../../lib/load-bullmq';
 import {
   createLeadSchema,
   updateLeadSchema,
@@ -307,11 +308,11 @@ function mapPrismaLeadToResponse(lead: {
     source: lead.source,
     status: lead.status,
     score: lead.score,
-    scoreConfidence: 1,
+    scoreConfidence: (lead as Record<string, unknown>).scoreConfidence as number ?? null,
     scoreTier: (() => {
-      if (lead.score >= LEAD_SCORE_THRESHOLDS.HOT) return 'hot';
-      if (lead.score >= LEAD_SCORE_THRESHOLDS.WARM) return 'warm';
-      return 'cold';
+      if (lead.score >= LEAD_SCORE_THRESHOLDS.HOT) return 'HOT';
+      if (lead.score >= LEAD_SCORE_THRESHOLDS.WARM) return 'WARM';
+      return 'COLD';
     })(),
     ownerId: lead.ownerId,
     tenantId: lead.tenantId,
@@ -460,8 +461,8 @@ export const leadRouter = createTRPCRouter({
 
     // Fire-and-forget: enqueue AI lead scoring (best-effort)
     (async () => {
-      const { Queue } = await import('bullmq');
-      const { QUEUE_NAMES } = await import('@intelliflow/platform/queues');
+      const { Queue } = await loadBullMQ();
+      const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
       const queue = new Queue(QUEUE_NAMES.AI_SCORING, {
         connection: { host: process.env.REDIS_HOST || 'localhost', port: Number.parseInt(process.env.REDIS_PORT || '6379', 10) },
       });
@@ -634,7 +635,7 @@ export const leadRouter = createTRPCRouter({
     ]);
 
     return {
-      leads,
+      data: leads,
       total,
       page,
       limit,
@@ -670,8 +671,8 @@ export const leadRouter = createTRPCRouter({
     // Fire-and-forget: re-score lead after update (best-effort)
     const typedCtx = getTenantContext(ctx);
     (async () => {
-      const { Queue } = await import('bullmq');
-      const { QUEUE_NAMES } = await import('@intelliflow/platform/queues');
+      const { Queue } = await loadBullMQ();
+      const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
       const lead = result.value;
       const queue = new Queue(QUEUE_NAMES.AI_SCORING, {
         connection: { host: process.env.REDIS_HOST || 'localhost', port: Number.parseInt(process.env.REDIS_PORT || '6379', 10) },
@@ -1055,10 +1056,10 @@ export const leadRouter = createTRPCRouter({
       }),
     ]);
 
-    // Calculate score-based metrics
-    const hotLeads = leads.filter((l) => l.score >= 70).length;
-    const warmLeads = leads.filter((l) => l.score >= 40 && l.score < 70).length;
-    const coldLeads = leads.filter((l) => l.score < 40).length;
+    // Calculate score-based metrics using unified thresholds (single source of truth)
+    const hotLeads = leads.filter((l) => l.score >= LEAD_SCORE_THRESHOLDS.HOT).length;
+    const warmLeads = leads.filter((l) => l.score >= LEAD_SCORE_THRESHOLDS.WARM && l.score < LEAD_SCORE_THRESHOLDS.HOT).length;
+    const coldLeads = leads.filter((l) => l.score < LEAD_SCORE_THRESHOLDS.WARM).length;
 
     const totalScore = leads.reduce((sum, l) => sum + l.score, 0);
     const averageScore = leads.length > 0 ? Math.round((totalScore / leads.length) * 100) / 100 : 0;

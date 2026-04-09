@@ -48,7 +48,7 @@ const leadResponseSchema = z.object({
  * Lead list response contract schema
  */
 const leadListResponseSchema = z.object({
-  leads: z.array(z.any()), // Lead objects with relations
+  data: z.array(z.any()), // Lead objects with relations
   total: z.number().int().min(0),
   page: z.number().int().min(1),
   limit: z.number().int().min(1),

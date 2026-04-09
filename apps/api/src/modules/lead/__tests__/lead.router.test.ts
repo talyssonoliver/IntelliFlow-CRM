@@ -144,7 +144,7 @@ describe('Lead Router', () => {
 
       const result = await caller.list({ page: 1, limit: 20 });
 
-      expect(result.leads).toHaveLength(2);
+      expect(result.data).toHaveLength(2);
       expect(result.total).toBe(10);
       expect(result.page).toBe(1);
       expect(result.limit).toBe(20);
