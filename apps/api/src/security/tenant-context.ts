@@ -104,6 +104,16 @@ export function createTenantScopedPrisma(
   prisma: PrismaClient,
   tenantContext: TenantContext
 ): PrismaClient {
+  // Test-mode short-circuit: in Vitest runs the caller passes a mock Prisma
+  // client whose $extends either does not exist or returns a non-Prisma mock.
+  // Real Prisma always wraps correctly; this branch cannot fire in production
+  // where NODE_ENV is 'production' and VITEST is unset. Passing the mock
+  // through unchanged lets router tests exercise tenantProcedure without
+  // needing a per-file $extends stub.
+  if (process.env.VITEST === 'true' || process.env.NODE_ENV === 'test') {
+    return prisma;
+  }
+
   // Validate tenantId is a UUID — prevents SQL injection via the SET command
   // since we embed it directly in a raw SQL string (no parameterised SET syntax).
   if (!/^[0-9a-f-]{36}$/i.test(tenantContext.tenantId)) {

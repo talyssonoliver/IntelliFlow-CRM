@@ -116,18 +116,34 @@ describe('Tenant Context', () => {
 
   describe('createTenantScopedPrisma', () => {
     it('should return a Prisma client with extensions', () => {
-      const tenant: TenantContext = {
-        tenantId: TEST_TENANT_ID,
-        tenantType: 'user',
-        userId: TEST_USER_ID,
-        role: 'ADMIN',
-        canAccessAllTenantData: true,
-      };
+      // This test asserts the production path that actually calls $extends.
+      // The function has a short-circuit for VITEST/NODE_ENV=test (see
+      // tenant-context.ts) so the wrapper does not crash on mock Prisma
+      // clients in every router test. Temporarily un-set those to force the
+      // production branch and verify $extends is invoked.
+      const prevVitest = process.env.VITEST;
+      const prevNodeEnv = process.env.NODE_ENV;
+      delete process.env.VITEST;
+      process.env.NODE_ENV = 'production';
+      try {
+        const tenant: TenantContext = {
+          tenantId: TEST_TENANT_ID,
+          tenantType: 'user',
+          userId: TEST_USER_ID,
+          role: 'ADMIN',
+          canAccessAllTenantData: true,
+        };
 
-      const scopedPrisma = createTenantScopedPrisma(mockPrisma as any /* test-only mock */, tenant);
+        const scopedPrisma = createTenantScopedPrisma(mockPrisma as any /* test-only mock */, tenant);
 
-      expect(mockPrisma.$extends).toHaveBeenCalled();
-      expect(scopedPrisma).toBeDefined();
+        expect(mockPrisma.$extends).toHaveBeenCalled();
+        expect(scopedPrisma).toBeDefined();
+      } finally {
+        if (prevVitest === undefined) delete process.env.VITEST;
+        else process.env.VITEST = prevVitest;
+        if (prevNodeEnv === undefined) delete process.env.NODE_ENV;
+        else process.env.NODE_ENV = prevNodeEnv;
+      }
     });
   });
 
@@ -302,7 +318,10 @@ describe('Tenant Context', () => {
 
       const result = createTenantWhereClause(tenant, { status: 'ACTIVE' });
 
-      expect(result).toEqual({ status: 'ACTIVE' });
+      // Defense-in-depth: tenantId is always included (see function comment)
+      // even for ADMIN — RLS SET may land on a different pool connection than
+      // the query, so the application-layer filter is always applied.
+      expect(result).toEqual({ status: 'ACTIVE', tenantId: TEST_TENANT_ID });
       expect(result.ownerId).toBeUndefined();
     });
 

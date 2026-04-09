@@ -401,6 +401,17 @@ describe('billingRouter', () => {
   // ============================================
 
   describe('getUsageMetrics', () => {
+    // Build a prisma mock where every model's `count` resolves to 0.
+    // The router queries ~25 different models in parallel inside getUsageMetrics,
+    // so we provide a zero-count default rather than enumerating each model.
+    const createUsageMetricsPrismaMock = () =>
+      new Proxy(
+        {},
+        {
+          get: () => ({ count: vi.fn().mockResolvedValue(0) }),
+        }
+      );
+
     it('returns null when user has no stripeCustomerId', async () => {
       const mockContext = {
         user: {
@@ -410,7 +421,7 @@ describe('billingRouter', () => {
           tenantId: 'tenant_123',
           stripeCustomerId: undefined,
         } as UserSession,
-        prisma: {} as unknown,
+        prisma: createUsageMetricsPrismaMock() as unknown,
       };
 
       const caller = billingRouter.createCaller(
@@ -422,6 +433,12 @@ describe('billingRouter', () => {
     });
 
     it('returns usage metrics when user has subscription', async () => {
+      mockStripeAdapterMethods.listSubscriptions.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: [mockSubscription],
+      });
+
       const mockContext = {
         user: {
           userId: 'user_123',
@@ -430,7 +447,7 @@ describe('billingRouter', () => {
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
         } as UserSession,
-        prisma: {} as unknown,
+        prisma: createUsageMetricsPrismaMock() as unknown,
       };
 
       const caller = billingRouter.createCaller(

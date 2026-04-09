@@ -16,10 +16,16 @@ import { experimentRouter } from '../experiment.router';
 import { createTestContext } from '../../../test/setup';
 import { TRPCError } from '@trpc/server';
 
-// Mock the tenant context helper
-vi.mock('../../../security/tenant-context', () => ({
-  getTenantContext: vi.fn((ctx: any) => ctx),
-}));
+// Mock the tenant context helper — keep the real module's other exports
+// (createTenantScopedPrisma, tenantContextMiddleware, createTenantWhereClause)
+// because trpc.ts also imports from this path, and only override getTenantContext.
+vi.mock('../../../security/tenant-context', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../../security/tenant-context')>();
+  return {
+    ...actual,
+    getTenantContext: vi.fn((ctx: any) => ctx),
+  };
+});
 
 // Mock the validators - provide real schemas that the router expects
 vi.mock('@intelliflow/validators', () => {

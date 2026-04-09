@@ -73,14 +73,8 @@ const TEST_DRAFT_ID = '00000000-0000-4000-8000-000000000301';
 const TEST_LEAD_ID = '00000000-0000-4000-8000-000000000201';
 
 function createCallerContext() {
-  // Minimal prisma stub with $extends so tenantMiddleware's
-  // createTenantScopedPrisma(ctx.prisma, tenant) call does not throw.
-  const prismaStub: any = {
-    $extends: () => prismaStub,
-    $executeRawUnsafe: vi.fn().mockResolvedValue(undefined),
-  };
   return {
-    prisma: prismaStub,
+    prisma: {} as any,
     user: {
       userId: TEST_USER_ID,
       email: 'test@example.com',
@@ -94,7 +88,7 @@ function createCallerContext() {
       role: 'SALES_REP',
       canAccessAllTenantData: false,
     },
-    prismaWithTenant: prismaStub,
+    prismaWithTenant: {} as any,
   } as any;
 }
 

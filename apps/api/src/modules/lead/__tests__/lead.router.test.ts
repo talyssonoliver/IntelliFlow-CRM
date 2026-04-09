@@ -654,15 +654,16 @@ describe('Lead Router', () => {
         { status: 'QUALIFIED', _count: 25 },
         { status: 'CONVERTED', _count: 20 },
       ] as any);
+      // Thresholds from LEAD_SCORE_THRESHOLDS: HOT >= 80, WARM >= 50, COLD < 50
       prismaMock.lead.findMany.mockResolvedValue([
-        { score: 80 },
-        { score: 75 },
-        { score: 70 }, // 3 hot leads (>=70)
+        { score: 95 },
+        { score: 85 },
+        { score: 80 }, // 3 hot leads (>=80)
+        { score: 70 },
         { score: 60 },
-        { score: 50 },
-        { score: 45 }, // 3 warm leads (40-69)
+        { score: 50 }, // 3 warm leads (50-79)
         { score: 30 },
-        { score: 20 }, // 2 cold leads (<40)
+        { score: 20 }, // 2 cold leads (<50)
       ] as any);
 
       const ctx = createTestContext();

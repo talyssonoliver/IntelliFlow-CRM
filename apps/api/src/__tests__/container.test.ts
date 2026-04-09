@@ -334,6 +334,11 @@ vi.mock('@intelliflow/application', () => ({
       return { name: 'notificationOrchestrator' };
     }
   },
+  ConversationSearchService: class {
+    constructor() {
+      return { name: 'conversationSearchService' };
+    }
+  },
 }));
 
 vi.mock('../services/TicketService', () => ({

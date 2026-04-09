@@ -13,12 +13,7 @@ import { TRPCError } from '@trpc/server';
 import { feedbackSurveyRouter } from '../feedbackSurvey.router';
 import type { UserSession, Context } from '../../../context';
 
-// Minimal prisma stub with $extends so tenantMiddleware's
-// createTenantScopedPrisma(ctx.prisma, tenant) call does not throw.
-const mockPrisma: any = {
-  $extends: () => mockPrisma,
-  $executeRawUnsafe: vi.fn().mockResolvedValue(undefined),
-};
+const mockPrisma = {} as Context['prisma'];
 
 const mockFeedbackSurveyService = {
   getDashboardSummary: vi.fn(),

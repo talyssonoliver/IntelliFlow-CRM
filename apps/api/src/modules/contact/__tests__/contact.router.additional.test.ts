@@ -238,6 +238,7 @@ describe('Contact Router - Additional Coverage', () => {
       expect(ctx.services!.contact!.associateWithAccount).toHaveBeenCalledWith(
         TEST_UUIDS.contact1,
         TEST_UUIDS.account2,
+        expect.any(String),
         expect.any(String)
       );
     });

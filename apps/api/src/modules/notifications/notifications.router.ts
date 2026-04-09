@@ -580,7 +580,7 @@ export const notificationsRouter = createTRPCRouter({
         enabled: record?.quietHoursEnabled ?? false,
         start: record?.quietHoursStart || '22:00',
         end: record?.quietHoursEnd || '08:00',
-        timezone: record?.timezone || 'Europe/London',
+        timezone: record?.timezone || 'UTC',
         daysOfWeek: record?.quietHoursDays ?? [0, 1, 2, 3, 4, 5, 6],
       },
       emailDigest: channelPrefs.emailDigest || {

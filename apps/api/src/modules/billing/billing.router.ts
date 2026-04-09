@@ -942,6 +942,12 @@ export const billingRouter = createTRPCRouter({
   getUsageMetrics: tenantProcedure.query(async ({ ctx }) => {
     const user = ctx.user;
 
+    // No subscription = no usage metrics. SUPER_ADMIN skips this check so the
+    // dev/seed environment can still surface counts without a Stripe customer.
+    if (!user?.stripeCustomerId && user?.role !== 'SUPER_ADMIN') {
+      return null;
+    }
+
     // Plan tier limits — aligned with pricing-data.json comparisonFeatures
     // "Unlimited" is represented as -1 (frontend renders as "Unlimited")
     const PLAN_LIMITS: Record<string, {

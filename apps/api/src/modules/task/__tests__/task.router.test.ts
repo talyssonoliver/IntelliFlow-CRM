@@ -808,7 +808,8 @@ describe('Task Router', () => {
       expect(ctx.services!.task!.assignToOpportunity).toHaveBeenCalledWith(
         TEST_UUIDS.task1,
         TEST_UUIDS.opportunity1,
-        TEST_UUIDS.user1
+        TEST_UUIDS.user1,
+        expect.any(String)
       );
     });
 

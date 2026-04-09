@@ -14,12 +14,8 @@ import { TRPCError } from '@trpc/server';
 import { analyticsRouter } from '../analytics.router';
 import type { UserSession, Context } from '../../../context';
 
-// Mock prisma client with $extends stub so tenantMiddleware's
-// createTenantScopedPrisma(ctx.prisma, tenant) call does not throw.
-const mockPrisma: any = {
-  $extends: () => mockPrisma,
-  $executeRawUnsafe: vi.fn().mockResolvedValue(undefined),
-};
+// Mock prisma client
+const mockPrisma = {} as Context['prisma'];
 
 // Mock analytics service methods (matches AnalyticsAggregationService interface)
 const mockAnalyticsService = {
