@@ -46,7 +46,7 @@ fi
 
 # Run linting
 echo "📋 Linting code..."
-pnpm run lint --filter=!project-tracker || {
+pnpm run lint "--filter=!@intelliflow/project-tracker" || {
   echo "❌ Linting failed. Please fix errors before committing."
   exit 1
 }
