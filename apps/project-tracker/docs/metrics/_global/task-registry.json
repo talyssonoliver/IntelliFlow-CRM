@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-03-19T22:11:37.274Z",
+  "last_updated": "2026-04-09T20:20:23.786Z",
   "total_tasks": 393,
   "current_sprint": 14,
   "active_sprint": "sprint-14",
@@ -123,6 +123,7 @@
     },
     "sprint-24": {
       "total": 5,
+      "total_tasks": 5,
       "completed": 0,
       "in_progress": 0,
       "backlog": 3,
@@ -134,6 +135,7 @@
     },
     "sprint-15": {
       "total": 1,
+      "total_tasks": 1,
       "completed": 0,
       "in_progress": 0,
       "backlog": 1,
@@ -485,6 +487,7 @@
       "PG-172",
       "PG-173",
       "PG-174",
+      "PG-175",
       "PG-176",
       "PG-177",
       "PG-178",
@@ -514,11 +517,13 @@
       "IFC-236",
       "IFC-237",
       "IFC-238",
+      "IFC-239",
       "IFC-252",
       "IFC-253",
       "IFC-254",
       "IFC-267",
       "IFC-268",
+      "IFC-269",
       "IFC-278",
       "IFC-279",
       "IFC-281",
@@ -527,16 +532,13 @@
       "IFC-298",
       "IFC-299",
       "IFC-303",
-      "PG-192"
-    ],
-    "IN_PROGRESS": [
-      "PG-175"
-    ],
-    "VALIDATING": [],
-    "BLOCKED": [],
-    "PLANNED": [
+      "PG-192",
       "PG-193"
     ],
+    "IN_PROGRESS": [],
+    "VALIDATING": [],
+    "BLOCKED": [],
+    "PLANNED": [],
     "BACKLOG": [
       "IFC-031",
       "IFC-032",
@@ -673,7 +675,6 @@
       "IFC-233",
       "IFC-234",
       "IFC-235",
-      "IFC-239",
       "IFC-240",
       "IFC-241",
       "IFC-242",
@@ -698,7 +699,6 @@
       "IFC-264",
       "IFC-265",
       "IFC-266",
-      "IFC-269",
       "IFC-270",
       "IFC-271",
       "IFC-272",
@@ -740,7 +740,9 @@
       "PG-191",
       "IFC-305",
       "IFC-306",
-      "PG-194"
+      "PG-194",
+      "IFC-307",
+      "IFC-308"
     ],
     "FAILED": [],
     "NEEDS_HUMAN": [],
@@ -8852,7 +8854,7 @@
       "section": "Core CRM",
       "description": "Deals Trash Page - Soft-deleted deals list with restore and permanent delete",
       "owner": "Frontend Dev (STOA-Domain)",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [
         "PG-135"
@@ -9778,7 +9780,7 @@
       "section": "Core CRM",
       "description": "Lead Router Data Integrity Fixes. Fix 5 HIGH issues: (1) update procedure ambiguous status field handling - may silently drop or bypass domain validation [S5]. (2) Score tier thresholds inconsistent - domain LeadScore uses 80/50 but router stats query uses 70/40 [S6]. (3) sortBy accepts arbitrary strings with no enum validation - Prisma orderBy injection risk [S7]. (4) leadListResponseSchema expects 'data' key but router returns 'leads' [W4]. (5) leadResponseSchema missing Lead 360 fields (aiInsight, activities, notes, files, tasks) [D5]. Fix: Explicitly handle status in update, unify thresholds, add sortBy enum, fix schema keys.",
       "owner": "Backend Dev (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [],
       "artifacts": [
@@ -10260,7 +10262,7 @@
       "section": "Core CRM",
       "description": "Account Backend Tenant Isolation & Security. (1) CRITICAL: filterOptions uses raw ctx.prisma instead of prismaWithTenant for user lookup — tenant data leak (B-01, account.router.ts:445). (2) PrismaAccountRepository has NO tenantId filter on any method — single-layer defense (B-02). (3) existsByName blocks same name across all tenants — should be per-tenant (B-03). (4) sortBy parameter unsanitized — potential Prisma orderBy injection (B-04). (5) TOCTOU window in update/delete without transaction (B-05). (6) Zero audit logging on all account mutations (B-07). Audit: docs/audit/account-detail-wiring-audit.md sections 11-12.",
       "owner": "Backend Dev (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [],
       "artifacts": [
@@ -11115,7 +11117,7 @@
       "section": "AI Intelligence",
       "description": "Workflow Step Progress Panel — Add real-time N/N step progress tracker to /agent-approvals/agents and /agent-approvals/logs; reads WorkflowExecution.currentStep + stepResults from tRPC; shows named steps with status icons (pending/running/completed/failed) and a % progress bar matching the AEO workflow progress UI pattern",
       "owner": "Frontend Dev (STOA-Intelligence)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 16,
       "dependencies": [
         "PG-151",
@@ -11184,6 +11186,44 @@
       "definition_of_done": "ComplianceCards load scores from API not hardcoded; overall score computed from live data; ISO 14001 card removed; ComplianceTimeline renders events from compliance-calendar.json; RiskHeatMap fetches from /api/compliance/risks; ComplianceDetailPanel shows real controls; Lighthouse >=90; test coverage >=90%; verified by: pnpm test",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter web typecheck;VALIDATE:pnpm --filter web test --run;GATE:coverage-gte-90",
       "prerequisites": "FILE:apps/web/src/app/governance/compliance/page.tsx;FILE:apps/web/src/app/governance/compliance/components/ComplianceTimeline.tsx;FILE:apps/web/src/app/api/compliance/timeline/route.ts;FILE:apps/web/src/app/api/compliance/[standardId]/route.ts;FILE:apps/web/src/app/api/compliance/risks/route.ts;DESIGN:docs/design/README.md",
+      "cadence": ""
+    },
+    "IFC-307": {
+      "section": "AI & Intelligence",
+      "description": "Contact Enrichment Pipeline — Automated background job that periodically enriches contact/lead data from external providers (Clearbit, Apollo). Includes: BullMQ queue intelliflow-contact-enrichment, enrichment adapter with rate limiting, on-create trigger in contact.router.ts, periodic cron sweep for stale profiles (>30 days), cost tracking via CostTracker, field updates (company, title, social profiles, industry)",
+      "owner": "Tech Lead (STOA-Domain)",
+      "status": "BACKLOG",
+      "sprint": 22,
+      "dependencies": [
+        "IFC-168",
+        "IFC-131"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/ai-worker/src/chains/enrichment.chain.ts;ARTIFACT:apps/ai-worker/src/jobs/enrichment.job.ts;ARTIFACT:packages/adapters/src/enrichment/enrichment-provider.ts;EVIDENCE:.specify/sprints/sprint-22/attestations/IFC-307/context_ack.json"
+      ],
+      "kpis": "Enrichment rate >=60%; API cost <$0.05 per call; Queue p95 <5s; Coverage >=90%",
+      "definition_of_done": "External enrichment provider adapter with rate limiting; BullMQ queue intelliflow-contact-enrichment wired with producer on contact create; periodic cron sweep for stale profiles; cost tracking per call via CostTracker; contact fields updated: company, title, social profiles, industry; >=90% test coverage; all 4 validations pass",
+      "validation": "VALIDATE:pnpm typecheck;VALIDATE:pnpm test --run;VALIDATE:pnpm lint;VALIDATE:pnpm build;GATE:coverage-gte-90",
+      "prerequisites": "FILE:apps/ai-worker/src/jobs/enrichment.job.ts;FILE:packages/adapters/src/enrichment/enrichment-provider.ts;FILE:apps/api/src/modules/contact/contact.router.ts",
+      "cadence": ""
+    },
+    "IFC-308": {
+      "section": "AI & Intelligence",
+      "description": "Scheduled Report Generation — BullMQ cron job that generates daily/weekly analytics snapshots and emails summary reports to team leads. Includes: report template system (pipeline summary, lead conversion, revenue trends, SLA compliance), PDF/HTML report rendering, email delivery via notifications worker, configurable schedule per tenant, report archive storage",
+      "owner": "Tech Lead (STOA-Domain)",
+      "status": "BACKLOG",
+      "sprint": 24,
+      "dependencies": [
+        "IFC-168",
+        "IFC-024"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/ai-worker/src/jobs/report-generation.job.ts;ARTIFACT:apps/api/src/modules/analytics/report-templates.ts;EVIDENCE:.specify/sprints/sprint-24/attestations/IFC-308/context_ack.json"
+      ],
+      "kpis": ">=4 report templates; >=99% delivery reliability; Generation p95 <30s; Coverage >=90%",
+      "definition_of_done": "4+ report templates (pipeline, leads, revenue, SLA); PDF/HTML rendering; email delivery via notifications worker; configurable schedule per tenant; report archive in storage; >=90% test coverage; all 4 validations pass",
+      "validation": "VALIDATE:pnpm typecheck;VALIDATE:pnpm test --run;VALIDATE:pnpm lint;VALIDATE:pnpm build;GATE:coverage-gte-90",
+      "prerequisites": "FILE:apps/ai-worker/src/jobs/report-generation.job.ts;FILE:apps/api/src/modules/analytics/analytics.router.ts;FILE:apps/api/src/modules/analytics/report-templates.ts",
       "cadence": ""
     }
   }

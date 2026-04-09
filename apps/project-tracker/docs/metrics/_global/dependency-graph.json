@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/dependency-graph.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-03-19T22:11:38.018Z",
+  "last_updated": "2026-04-09T20:20:24.276Z",
   "description": "Cross-sprint dependency tracking for all tasks",
   "nodes": {
     "EXC-INIT-001": {
@@ -711,7 +711,8 @@
         "IFC-023"
       ],
       "dependents": [
-        "IFC-026"
+        "IFC-026",
+        "IFC-308"
       ]
     },
     "IFC-025": {
@@ -3601,7 +3602,9 @@
       "dependencies": [
         "IFC-106"
       ],
-      "dependents": []
+      "dependents": [
+        "IFC-307"
+      ]
     },
     "IFC-132": {
       "task_id": "IFC-132",
@@ -4224,7 +4227,9 @@
       "dependents": [
         "IFC-174",
         "IFC-212",
-        "IFC-214"
+        "IFC-214",
+        "IFC-307",
+        "IFC-308"
       ]
     },
     "IFC-169": {
@@ -5163,7 +5168,7 @@
     "PG-175": {
       "task_id": "PG-175",
       "sprint": 16,
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "dependencies": [
         "PG-135"
       ],
@@ -5673,7 +5678,7 @@
     "IFC-239": {
       "task_id": "IFC-239",
       "sprint": 16,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": [],
       "dependents": []
     },
@@ -5885,7 +5890,7 @@
     "IFC-269": {
       "task_id": "IFC-269",
       "sprint": 16,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": [],
       "dependents": []
     },
@@ -6316,7 +6321,7 @@
     "PG-193": {
       "task_id": "PG-193",
       "sprint": 16,
-      "status": "PLANNED",
+      "status": "DONE",
       "dependencies": [
         "PG-151",
         "PG-192"
@@ -6351,6 +6356,26 @@
         "IFC-073",
         "IFC-100",
         "IFC-306"
+      ],
+      "dependents": []
+    },
+    "IFC-307": {
+      "task_id": "IFC-307",
+      "sprint": 22,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-168",
+        "IFC-131"
+      ],
+      "dependents": []
+    },
+    "IFC-308": {
+      "task_id": "IFC-308",
+      "sprint": 24,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-168",
+        "IFC-024"
       ],
       "dependents": []
     }
@@ -10612,6 +10637,34 @@
       "from_sprint": 19,
       "to_sprint": 20,
       "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-168",
+      "to_task": "IFC-307",
+      "from_sprint": 14,
+      "to_sprint": 22,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-131",
+      "to_task": "IFC-307",
+      "from_sprint": 4,
+      "to_sprint": 22,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-168",
+      "to_task": "IFC-308",
+      "from_sprint": 14,
+      "to_sprint": 24,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-024",
+      "to_task": "IFC-308",
+      "from_sprint": 14,
+      "to_sprint": 24,
+      "dependency_type": "REQUIRED"
     }
   ],
   "blocked_tasks": [
@@ -10696,9 +10749,6 @@
   ],
   "ready_to_start": [
     "IFC-232",
-    "IFC-239",
-    "IFC-269",
-    "PG-193",
     "IFC-031",
     "PG-051",
     "PG-052",
@@ -10790,6 +10840,7 @@
     "IFC-262",
     "IFC-263",
     "IFC-283",
+    "IFC-307",
     "IFC-046",
     "IFC-083",
     "PG-089",
@@ -10802,6 +10853,7 @@
     "IFC-264",
     "IFC-277",
     "IFC-285",
+    "IFC-308",
     "IFC-048",
     "PG-101",
     "PG-102",
@@ -10889,13 +10941,7 @@
     "sprint-13": {},
     "sprint-14": {},
     "sprint-15": {},
-    "sprint-16": {
-      "group-1": [
-        "IFC-232",
-        "IFC-239",
-        "IFC-269"
-      ]
-    },
+    "sprint-16": {},
     "sprint-17": {
       "group-1": [
         "PG-051",
