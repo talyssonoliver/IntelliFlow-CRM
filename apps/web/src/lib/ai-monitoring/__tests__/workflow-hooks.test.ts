@@ -124,18 +124,32 @@ describe('useWorkflowProgress — data mapping', () => {
     expect(result.data?.completedPercent).toBe(50);
   });
 
-  it('maps unknown raw step statuses to pending', () => {
-    const weird = {
+  it('passes canonical backend step statuses through unchanged (trusts API contract)', () => {
+    // PG-193 audit fix: the hook used to defensively re-normalise via
+    // mapStepStatus. It no longer does — the backend is the canonical source
+    // of truth for step status. Verify all five canonical values flow
+    // through untouched.
+    const canonical = {
       ...sampleExecution,
       steps: [
-        { stepNumber: 1, stepId: 1, name: 'Lead Scoring', type: 'score', status: 'garbage' },
+        { stepNumber: 1, stepId: 1, name: 'a', type: 'score', status: 'completed' },
+        { stepNumber: 2, stepId: 2, name: 'b', type: 'condition', status: 'running' },
+        { stepNumber: 3, stepId: 3, name: 'c', type: 'assign', status: 'failed' },
+        { stepNumber: 4, stepId: 4, name: 'd', type: 'notify', status: 'pending' },
+        { stepNumber: 5, stepId: 5, name: 'e', type: 'approval', status: 'skipped' },
       ],
-      completedCount: 0,
-      totalSteps: 1,
+      completedCount: 1,
+      totalSteps: 5,
     };
-    mockGetExecution.mockReturnValue(stubQuery({ data: weird }));
+    mockGetExecution.mockReturnValue(stubQuery({ data: canonical }));
     const result = useWorkflowProgress({ executionId: 'exec-1' });
-    expect(result.data?.steps[0].status).toBe('pending');
+    expect(result.data?.steps.map((s) => s.status)).toEqual([
+      'completed',
+      'running',
+      'failed',
+      'pending',
+      'skipped',
+    ]);
   });
 
   it('returns null data when backend returns null', () => {

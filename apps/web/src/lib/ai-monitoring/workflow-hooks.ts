@@ -14,7 +14,6 @@
 import { api } from '@/lib/api';
 import {
   computeProgressPercent,
-  mapStepStatus,
   type WorkflowExecutionStatus,
   type WorkflowMergedStep,
   type WorkflowProgressData,
@@ -80,13 +79,17 @@ interface RawExecution {
 // Mapping helpers
 // ---------------------------------------------------------------------------
 
+// The backend (workflow.router.ts `mergeSteps`) already emits canonical
+// lowercase step statuses, so we trust the API contract here and cast
+// directly. Frontend-side normalisation of unknown values is still available
+// via `mapStepStatus` in workflow-types.ts if the contract ever loosens.
 function toMergedStep(step: RawExecutionStep): WorkflowMergedStep {
   return {
     stepNumber: step.stepNumber,
     stepId: step.stepId,
     name: step.name,
     type: step.type,
-    status: mapStepStatus(step.status) as WorkflowStepStatus,
+    status: step.status as WorkflowStepStatus,
     result: step.result ?? null,
     error: step.error,
     startedAt: step.startedAt,
