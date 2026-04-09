@@ -224,7 +224,7 @@ vi.mock('../modules/calendar/calendar-webhook.service', () => ({
   },
 }));
 
-vi.mock('@intelliflow/platform', () => ({
+vi.mock('@intelliflow/platform/feature-flags', () => ({
   InMemoryFeatureFlagProvider: {
     fromConfig: vi.fn().mockReturnValue({
       isEnabled: vi.fn().mockReturnValue(true),

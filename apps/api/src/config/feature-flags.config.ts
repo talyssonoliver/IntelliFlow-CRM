@@ -5,7 +5,7 @@
  * This is the central place to add/remove/configure flags.
  */
 
-import type { FeatureFlagsConfig } from '@intelliflow/platform';
+import type { FeatureFlagsConfig } from '@intelliflow/platform/feature-flags';
 
 export function loadFeatureFlagsConfig(): FeatureFlagsConfig {
   return {

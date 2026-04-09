@@ -40,7 +40,7 @@ import {
   IcsGenerationService,
   CalendarSyncServiceAdapter,
 } from '@intelliflow/adapters';
-import { InMemoryFeatureFlagProvider } from '@intelliflow/platform';
+import { InMemoryFeatureFlagProvider } from '@intelliflow/platform/feature-flags';
 import { TicketService } from './services/TicketService';
 import { TicketRoutingService } from './services/TicketRoutingService';
 import { LeadRoutingService } from './services/LeadRoutingService';

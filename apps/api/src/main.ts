@@ -7,6 +7,7 @@
  */
 
 import { startTracing } from './tracing/otel';
+import { initializeSentry } from './tracing/sentry';
 import { disconnectPrisma } from '@intelliflow/db';
 import { shutdownAllQueues } from '@intelliflow/platform/queues';
 import { startApiServer } from './http-server';
@@ -14,6 +15,11 @@ import { startApiServer } from './http-server';
 if (process.env.OTEL_ENABLED !== 'false') {
   startTracing();
 }
+initializeSentry()
+  .catch((err) => {
+    console.error('[API] Sentry initialization failed:', err);
+  })
+  .then(() => startApiServer());
 
 process.on('SIGTERM', async () => {
   console.log('[API] SIGTERM received — shutting down gracefully');
@@ -21,5 +27,3 @@ process.on('SIGTERM', async () => {
   await disconnectPrisma();
   process.exit(0);
 });
-
-startApiServer();
