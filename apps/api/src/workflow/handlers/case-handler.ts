@@ -35,7 +35,7 @@ import {
   type IWorkflowEngine,
   type WorkflowHandle,
   type RuleExecutionResult,
-} from '@intelliflow/platform';
+} from '@intelliflow/platform/workflow';
 
 // ============================================================================
 // Helper Functions

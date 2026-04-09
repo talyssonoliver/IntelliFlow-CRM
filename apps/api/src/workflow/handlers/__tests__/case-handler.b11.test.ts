@@ -42,7 +42,7 @@ vi.mock('@intelliflow/domain', () => {
   };
 });
 
-vi.mock('@intelliflow/platform', () => ({
+vi.mock('@intelliflow/platform/workflow', () => ({
   WorkflowEngineFactory: { getEngine: vi.fn().mockReturnValue(null) },
   getRulesEngine: vi.fn().mockReturnValue({ evaluate: vi.fn().mockResolvedValue([]) }),
   getCaseEventWorkflowEngine: vi.fn().mockReturnValue('temporal'),
@@ -60,7 +60,7 @@ import {
   type EventContext,
   type HandlerDependencies,
 } from '../case-handler';
-import { getCaseEventWorkflowEngine, getRulesEngine } from '@intelliflow/platform';
+import { getCaseEventWorkflowEngine, getRulesEngine } from '@intelliflow/platform/workflow';
 
 const UUID = '550e8400-e29b-41d4-a716-446655440000';
 

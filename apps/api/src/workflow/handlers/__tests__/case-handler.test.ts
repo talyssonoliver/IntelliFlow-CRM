@@ -63,7 +63,7 @@ vi.mock('@intelliflow/domain', () => {
   };
 });
 
-vi.mock('@intelliflow/platform', () => ({
+vi.mock('@intelliflow/platform/workflow', () => ({
   WorkflowEngineFactory: {
     getEngine: vi.fn().mockReturnValue(null),
   },
@@ -79,7 +79,7 @@ import {
   getRulesEngine,
   getCaseEventWorkflowEngine,
   isRulesEngineEvent,
-} from '@intelliflow/platform';
+} from '@intelliflow/platform/workflow';
 
 const validUUID = '550e8400-e29b-41d4-a716-446655440000';
 const validUUID2 = '550e8400-e29b-41d4-a716-446655440001';
