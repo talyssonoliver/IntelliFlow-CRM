@@ -51,6 +51,8 @@ describe('Account Router', () => {
     // Ensure $extends returns the mock itself so tenant-scoped prisma works
     (prismaMock as any).$extends = vi.fn().mockReturnValue(prismaMock);
     (prismaMock as any).$executeRawUnsafe = vi.fn().mockResolvedValue(undefined);
+    // Support $transaction for B-05 TOCTOU wrapping — pass prismaMock as tx client
+    (prismaMock as any).$transaction = vi.fn().mockImplementation(async (cb: (tx: any) => Promise<any>) => cb(prismaMock));
   });
 
   describe('create', () => {
@@ -139,7 +141,7 @@ describe('Account Router', () => {
         value: mockDomainAccount,
       });
 
-      prismaMock.account.findUnique.mockResolvedValue({
+      prismaMock.account.findFirst.mockResolvedValue({
         _count: { contacts: 3, opportunities: 2 },
         owner: { id: TEST_UUIDS.user1, name: 'Jane Smith', email: 'jane@co.com' },
       } as any);
@@ -150,7 +152,7 @@ describe('Account Router', () => {
       expect(result.name).toBe('TechCorp Inc');
       expect(result.owner).toEqual({ id: TEST_UUIDS.user1, name: 'Jane Smith', email: 'jane@co.com' });
       expect(result._count).toEqual({ contacts: 3, opportunities: 2 });
-      expect(ctx.services!.account!.getAccountById).toHaveBeenCalledWith(TEST_UUIDS.account1);
+      expect(ctx.services!.account!.getAccountById).toHaveBeenCalledWith(TEST_UUIDS.account1, expect.any(String));
     });
 
     it('should return owner with null name gracefully', async () => {
@@ -162,7 +164,7 @@ describe('Account Router', () => {
         value: mockDomainAccount,
       });
 
-      prismaMock.account.findUnique.mockResolvedValue({
+      prismaMock.account.findFirst.mockResolvedValue({
         _count: { contacts: 0, opportunities: 0 },
         owner: { id: TEST_UUIDS.user1, name: null, email: 'jane@co.com' },
       } as any);
@@ -304,7 +306,7 @@ describe('Account Router', () => {
     });
 
     it('should throw NOT_FOUND when updating non-existent account', async () => {
-      ctx.services!.account!.getAccountById = vi.fn().mockResolvedValue({
+      ctx.services!.account!.updateAccountInfo = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
         error: { code: 'NOT_FOUND_ERROR', message: `Account not found: ${TEST_UUIDS.nonExistent}` },
@@ -365,7 +367,7 @@ describe('Account Router', () => {
 
       expect(result.success).toBe(true);
       expect(result.id).toBe(TEST_UUIDS.account1);
-      expect(ctx.services!.account!.deleteAccount).toHaveBeenCalledWith(TEST_UUIDS.account1);
+      expect(ctx.services!.account!.deleteAccount).toHaveBeenCalledWith(TEST_UUIDS.account1, expect.any(String));
     });
 
     it('should throw PRECONDITION_FAILED if account has contacts', async () => {
@@ -423,7 +425,7 @@ describe('Account Router', () => {
     });
 
     it('should throw NOT_FOUND for non-existent account', async () => {
-      ctx.services!.account!.getAccountById = vi.fn().mockResolvedValue({
+      ctx.services!.account!.deleteAccount = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
         error: { code: 'NOT_FOUND_ERROR', message: `Account not found: ${TEST_UUIDS.nonExistent}` },
@@ -797,6 +799,7 @@ describe('Account Router', () => {
         expect.objectContaining({
           website: 'https://updated.com',
         }),
+        expect.any(String),
         expect.any(String)
       );
       expect(result.website).toBe('https://updated.com');
@@ -1602,7 +1605,7 @@ describe('Account Router', () => {
     it('should update ownerId and return success with owner', async () => {
       prismaMock.account.findFirst.mockResolvedValue(mockAccount as any);
       prismaMock.user.findFirst.mockResolvedValue({ id: newOwnerUuid, name: 'New Owner', email: 'new@co.com', tenantId: TEST_UUIDS.tenant } as any);
-      prismaMock.account.update.mockResolvedValue({ ...mockAccount, ownerId: newOwnerUuid } as any);
+      prismaMock.account.updateMany.mockResolvedValue({ count: 1 } as any);
 
       const mockDomainAccount = createMockDomainAccount();
       mockDomainAccount.assignOwner = vi.fn().mockReturnValue({ isSuccess: true, isFailure: false });

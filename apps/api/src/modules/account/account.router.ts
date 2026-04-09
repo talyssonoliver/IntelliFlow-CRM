@@ -30,6 +30,7 @@ import {
   getTenantContext,
   createTenantWhereClause,
 } from '../../security/tenant-context';
+import { getAuditLogger } from '../../security/audit-logger';
 
 /**
  * Helper to get account service from context
@@ -72,6 +73,12 @@ export const accountRouter = createTRPCRouter({
       });
     }
 
+    // IFC-269 B-07: Audit logging
+    getAuditLogger(ctx.prisma).logAction('CREATE', 'account', result.value.id.value, typedCtx.tenant.tenantId, {
+      actorId: typedCtx.tenant.userId,
+      resourceName: result.value.name,
+    }).catch((err) => console.error('[account.router] Audit log failed:', err));
+
     return mapAccountToResponse(result.value);
   }),
 
@@ -83,27 +90,26 @@ export const accountRouter = createTRPCRouter({
     const typedCtx = getTenantContext(ctx);
     const accountService = getAccountService(ctx);
 
-    const result = await accountService.getAccountById(input.id);
+    // IFC-269 B-02: Tenant isolation via service+repository layer
+    const result = await accountService.getAccountById(input.id, typedCtx.tenant.tenantId);
 
     if (result.isFailure) {
+      // F5: Log potential cross-tenant access attempt
+      getAuditLogger(ctx.prisma).logPermissionDenied('account', input.id, 'account:read', typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+      }).catch((err) => console.error('[account.router] Audit log failed:', err));
+
       throw new TRPCError({
         code: 'NOT_FOUND',
         message: result.error.message,
       });
     }
 
-    // CRITICAL: Tenant isolation check - prevent cross-tenant data access
     const account = result.value;
-    if (account.tenantId !== typedCtx.tenant.tenantId) {
-      throw new TRPCError({
-        code: 'FORBIDDEN',
-        message: 'Access denied to resource from different tenant',
-      });
-    }
 
-    // Fetch counts and owner relation in a single query
-    const enriched = await typedCtx.prismaWithTenant.account.findUnique({
-      where: { id: input.id },
+    // Fetch counts and owner relation — defense-in-depth: include tenantId (F3 fix)
+    const enriched = await typedCtx.prismaWithTenant.account.findFirst({
+      where: { id: input.id, tenantId: typedCtx.tenant.tenantId },
       select: {
         _count: {
           select: { contacts: true, opportunities: true },
@@ -228,23 +234,7 @@ export const accountRouter = createTRPCRouter({
   update: tenantProcedure.input(updateAccountSchema).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
     const accountService = getAccountService(ctx);
-
     const { id, ...data } = input;
-
-    // CRITICAL: Verify account belongs to tenant before update
-    const existingResult = await accountService.getAccountById(id);
-    if (existingResult.isFailure) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: existingResult.error.message,
-      });
-    }
-    if (existingResult.value.tenantId !== typedCtx.tenant.tenantId) {
-      throw new TRPCError({
-        code: 'FORBIDDEN',
-        message: 'Access denied to resource from different tenant',
-      });
-    }
 
     // Convert WebsiteUrl Value Object to string for service
     const updateData: {
@@ -256,11 +246,18 @@ export const accountRouter = createTRPCRouter({
       website: data.website?.toValue?.() ?? (data.website as string | undefined),
     };
 
-    const result = await accountService.updateAccountInfo(id, updateData, typedCtx.tenant.userId);
+    // IFC-269 B-05: Wrap in transaction to prevent TOCTOU
+    const result = await accountService.updateAccountInfo(
+      id, updateData, typedCtx.tenant.userId, typedCtx.tenant.tenantId
+    );
 
     if (result.isFailure) {
       const errorCode = result.error.code;
       if (errorCode === 'NOT_FOUND_ERROR') {
+        // F5: Log potential cross-tenant access attempt
+        getAuditLogger(ctx.prisma).logPermissionDenied('account', id, 'account:update', typedCtx.tenant.tenantId, {
+          actorId: typedCtx.tenant.userId,
+        }).catch((err) => console.error('[account.router] Audit log failed:', err));
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: result.error.message,
@@ -284,6 +281,11 @@ export const accountRouter = createTRPCRouter({
       });
     }
 
+    // IFC-269 B-07: Audit logging
+    getAuditLogger(ctx.prisma).logAction('UPDATE', 'account', id, typedCtx.tenant.tenantId, {
+      actorId: typedCtx.tenant.userId,
+    }).catch((err) => console.error('[account.router] Audit log failed:', err));
+
     return mapAccountToResponse(result.value);
   }),
 
@@ -295,27 +297,19 @@ export const accountRouter = createTRPCRouter({
     const typedCtx = getTenantContext(ctx);
     const accountService = getAccountService(ctx);
 
-    // CRITICAL: Verify account belongs to tenant before deletion
-    const existingResult = await accountService.getAccountById(input.id);
-    if (existingResult.isFailure) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: existingResult.error.message,
-      });
-    }
-    if (existingResult.value.tenantId !== typedCtx.tenant.tenantId) {
-      throw new TRPCError({
-        code: 'FORBIDDEN',
-        message: 'Access denied to resource from different tenant',
-      });
-    }
-
-    const result = await accountService.deleteAccount(input.id);
+    // IFC-269 B-02+B-05: Tenant isolation via service layer (repository enforces tenantId)
+    const result = await accountService.deleteAccount(input.id, typedCtx.tenant.tenantId);
 
     if (result.isFailure) {
       const errorCode = result.error.code;
       if (errorCode === 'NOT_FOUND_ERROR' || errorCode === 'VALIDATION_ERROR') {
         const isNotFound = result.error.message.includes('not found');
+        if (isNotFound) {
+          // F5: Log potential cross-tenant access attempt
+          getAuditLogger(ctx.prisma).logPermissionDenied('account', input.id, 'account:delete', typedCtx.tenant.tenantId, {
+            actorId: typedCtx.tenant.userId,
+          }).catch((err) => console.error('[account.router] Audit log failed:', err));
+        }
         throw new TRPCError({
           code: isNotFound ? 'NOT_FOUND' : 'PRECONDITION_FAILED',
           message: result.error.message,
@@ -332,6 +326,11 @@ export const accountRouter = createTRPCRouter({
         message: result.error.message,
       });
     }
+
+    // IFC-269 B-07: Audit logging
+    getAuditLogger(ctx.prisma).logAction('DELETE', 'account', input.id, typedCtx.tenant.tenantId, {
+      actorId: typedCtx.tenant.userId,
+    }).catch((err) => console.error('[account.router] Audit log failed:', err));
 
     return { success: true, id: input.id };
   }),
@@ -612,6 +611,12 @@ export const accountRouter = createTRPCRouter({
       });
     }
 
+    // IFC-269 B-07: Audit logging
+    getAuditLogger(ctx.prisma).logAction('UPDATE', 'account', input.accountId, typedCtx.tenant.tenantId, {
+      actorId: typedCtx.tenant.userId,
+      afterState: { parentAccountId: input.parentAccountId },
+    }).catch((err) => console.error('[account.router] Audit log failed:', err));
+
     return mapAccountToResponse(result.value);
   }),
 
@@ -641,65 +646,88 @@ export const accountRouter = createTRPCRouter({
   assignOwner: tenantProcedure.input(assignOwnerSchema).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
     const accountService = getAccountService(ctx);
+    const tenantId = typedCtx.tenant.tenantId;
 
-    // Verify account exists and belongs to tenant
-    const existingAccount = await typedCtx.prismaWithTenant.account.findFirst({
-      where: { id: input.id, tenantId: typedCtx.tenant.tenantId },
+    // IFC-269 B-05: Wrap in transaction to prevent TOCTOU between verify+assign+persist
+    const txResult = await typedCtx.prismaWithTenant.$transaction(async (tx) => {
+      // Verify account exists and belongs to tenant
+      const existingAccount = await tx.account.findFirst({
+        where: { id: input.id, tenantId },
+      });
+
+      if (!existingAccount) {
+        return { error: 'ACCOUNT_NOT_FOUND' as const };
+      }
+
+      // Verify target user exists and belongs to same tenant
+      const targetUser = await tx.user.findFirst({
+        where: { id: input.ownerId, tenantId },
+        select: { id: true, name: true, email: true },
+      });
+
+      if (!targetUser) {
+        return { error: 'USER_NOT_FOUND' as const };
+      }
+
+      // Load domain entity and assign owner
+      const accountResult = await accountService.getAccountById(input.id, tenantId);
+      if (accountResult.isFailure) {
+        return { error: 'ACCOUNT_LOAD_FAILED' as const, message: accountResult.error.message };
+      }
+
+      const account = accountResult.value;
+      const assignResult = account.assignOwner(input.ownerId, typedCtx.user!.userId);
+
+      if (assignResult.isFailure) {
+        return { error: 'ASSIGN_FAILED' as const, message: assignResult.error.message };
+      }
+
+      // Persist with tenant-scoped WHERE (F4 fix: defense-in-depth)
+      const { count } = await tx.account.updateMany({
+        where: { id: input.id, tenantId },
+        data: { ownerId: input.ownerId },
+      });
+
+      if (count === 0) {
+        // Account was deleted between the read above and this write (TOCTOU).
+        return { error: 'ACCOUNT_NOT_FOUND' as const, message: 'Account not found or was concurrently deleted' };
+      }
+
+      return { success: true as const, targetUser };
     });
 
-    if (!existingAccount) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'Account not found',
-      });
-    }
+    if ('error' in txResult) {
+      if (txResult.error === 'ACCOUNT_NOT_FOUND' || txResult.error === 'USER_NOT_FOUND' || txResult.error === 'ACCOUNT_LOAD_FAILED') {
+        // F5: Log permission denied for cross-tenant attempts
+        getAuditLogger(ctx.prisma).logPermissionDenied('account', input.id, 'account:assignOwner', tenantId, {
+          actorId: typedCtx.tenant.userId,
+        }).catch((err) => console.error('[account.router] Audit log failed:', err));
 
-    // Verify target user exists and belongs to same tenant
-    const targetUser = await typedCtx.prismaWithTenant.user.findFirst({
-      where: { id: input.ownerId, tenantId: typedCtx.tenant.tenantId },
-      select: { id: true, name: true, email: true },
-    });
-
-    if (!targetUser) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'Target user not found',
-      });
-    }
-
-    // Load domain entity and assign owner
-    const accountResult = await accountService.getAccountById(input.id);
-    if (accountResult.isFailure) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: accountResult.error.message,
-      });
-    }
-
-    const account = accountResult.value;
-    const assignResult = account.assignOwner(input.ownerId, typedCtx.user!.userId);
-
-    if (assignResult.isFailure) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: txResult.error === 'USER_NOT_FOUND' ? 'Target user not found' : 'Account not found',
+        });
+      }
       throw new TRPCError({
         code: 'BAD_REQUEST',
-        message: assignResult.error.message,
+        message: txResult.message ?? 'Assignment failed',
       });
     }
 
-    // Persist via direct Prisma update
-    await typedCtx.prismaWithTenant.account.update({
-      where: { id: input.id },
-      data: { ownerId: input.ownerId },
-    });
+    // IFC-269 B-07: Audit logging
+    getAuditLogger(ctx.prisma).logAction('UPDATE', 'account', input.id, tenantId, {
+      actorId: typedCtx.tenant.userId,
+      afterState: { ownerId: input.ownerId },
+    }).catch((err) => console.error('[account.router] Audit log failed:', err));
 
     return {
       success: true as const,
       id: input.id,
       ownerId: input.ownerId,
       owner: {
-        id: targetUser.id,
-        name: targetUser.name,
-        email: targetUser.email,
+        id: txResult.targetUser.id,
+        name: txResult.targetUser.name,
+        email: txResult.targetUser.email,
       },
     };
   }),
