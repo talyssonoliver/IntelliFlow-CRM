@@ -43,7 +43,7 @@ vi.mock('bullmq', () => {
   return { Queue: MockQueue };
 });
 
-vi.mock('@intelliflow/platform/queues', () => ({
+vi.mock('@intelliflow/platform/queues/connection', () => ({
   getBullMQConnectionOptions: vi.fn(() => ({
     host: 'localhost',
     port: 6379,

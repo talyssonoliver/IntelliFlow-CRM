@@ -8,7 +8,8 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '../../trpc';
-import { getBullMQConnectionOptions } from '@intelliflow/platform/queues';
+import { getBullMQConnectionOptions } from '@intelliflow/platform/queues/connection';
+import { loadBullMQ } from '../../lib/load-bullmq';
 
 // ---------------------------------------------------------------------------
 // Constants & Schemas
@@ -26,7 +27,7 @@ async function withQueue<T>(
   name: string,
   fn: (q: InstanceType<typeof import('bullmq').Queue>) => Promise<T>
 ): Promise<T> {
-  const { Queue } = await import('bullmq');
+  const { Queue } = await loadBullMQ();
   const q = new Queue(name, { connection: getBullMQConnectionOptions() });
   try {
     return await fn(q);
@@ -74,7 +75,7 @@ export const queuesAdminRouter = createTRPCRouter({
   list: protectedProcedure.query(async () => {
     try {
       // Single import, then create all 3 queues from the same constructor
-      const { Queue } = await import('bullmq');
+      const { Queue } = await loadBullMQ();
       const connection = getBullMQConnectionOptions();
 
       // Timeout guard: BullMQ hangs forever if Redis is unreachable
