@@ -22,7 +22,39 @@
  * @see https://docs.sentry.io/platforms/node/
  */
 
-import * as Sentry from '@sentry/node';
+type SentryNodeModule = typeof import('@sentry/node');
+type SentrySeverityLevel = 'fatal' | 'error' | 'warning' | 'log' | 'info' | 'debug';
+type SentryUser = { id: string; email?: string; username?: string } | null;
+type SentryErrorContext = {
+  user?: { id: string; email?: string };
+  tags?: Record<string, string>;
+  extra?: Record<string, unknown>;
+};
+
+interface SentryFacade {
+  captureException(error: Error, context?: SentryErrorContext): string;
+  captureMessage(message: string, level?: SentrySeverityLevel): string | undefined;
+  startSpan(name: string, operation: string): unknown;
+  setUser(user: SentryUser): void;
+  setTag(key: string, value: string): void;
+  setContext(key: string, value: Record<string, unknown>): void;
+  flush(timeout: number): Promise<boolean>;
+  close(timeout: number): Promise<void>;
+}
+
+const noopSentryFacade: SentryFacade = {
+  captureException: () => '',
+  captureMessage: () => undefined,
+  startSpan: () => undefined,
+  setUser: () => {},
+  setTag: () => {},
+  setContext: () => {},
+  flush: async () => true,
+  close: async () => {},
+};
+
+let sentryFacade: SentryFacade = noopSentryFacade;
+let sentryModulePromise: Promise<SentryNodeModule> | null = null;
 
 /**
  * Sentry configuration
@@ -45,6 +77,41 @@ function envString(value: string | undefined, fallback: string): string {
 function envNumber(value: string | undefined, fallback: number): number {
   const parsed = Number.parseFloat(value ?? '');
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function loadSentryNode(): Promise<SentryNodeModule> {
+  // Keep Sentry out of the Next.js route bundle; load it only in the Node API runtime.
+  sentryModulePromise ??= import(/* webpackIgnore: true */ '@sentry/node');
+  return sentryModulePromise;
+}
+
+function bindSentryFacade(Sentry: SentryNodeModule): void {
+  sentryFacade = {
+    captureException: (error, context) =>
+      Sentry.captureException(error, {
+        user: context?.user,
+        tags: context?.tags,
+        extra: context?.extra,
+      }),
+    captureMessage: (message, level = 'info') => Sentry.captureMessage(message, level),
+    startSpan: (name, operation) =>
+      Sentry.startSpan(
+        {
+          name,
+          op: operation,
+        },
+        () => {
+          // Span implementation
+        }
+      ),
+    setUser: (user) => Sentry.setUser(user),
+    setTag: (key, value) => Sentry.setTag(key, value),
+    setContext: (key, value) => Sentry.setContext(key, value),
+    flush: (timeout) => Sentry.flush(timeout),
+    close: async (timeout) => {
+      await Sentry.close(timeout);
+    },
+  };
 }
 
 /**
@@ -76,7 +143,7 @@ function getSentryConfig(): SentryConfig {
  *
  * Safe to call multiple times (only initializes once).
  */
-export function initializeSentry(): void {
+export async function initializeSentry(): Promise<void> {
   const config = getSentryConfig();
 
   // Skip initialization in development or if disabled
@@ -92,6 +159,9 @@ export function initializeSentry(): void {
   }
 
   try {
+    const Sentry = await loadSentryNode();
+    bindSentryFacade(Sentry);
+
     Sentry.init({
       dsn: config.dsn,
       environment: config.environment,
@@ -107,7 +177,7 @@ export function initializeSentry(): void {
       debug: config.debug,
 
       // Before sending to Sentry, scrub sensitive data
-      beforeSend(event, hint) {
+      beforeSend(event) {
         // Remove sensitive headers
         if (event.request?.headers) {
           delete event.request.headers.authorization;
@@ -128,7 +198,7 @@ export function initializeSentry(): void {
       },
 
       // Before sending breadcrumbs
-      beforeBreadcrumb(breadcrumb, hint) {
+      beforeBreadcrumb(breadcrumb) {
         // Filter out noisy breadcrumbs
         if (breadcrumb.category === 'console' && breadcrumb.level === 'debug') {
           return null;
@@ -157,19 +227,8 @@ export function initializeSentry(): void {
  * @param error - Error to capture
  * @param context - Additional context (user, tags, etc.)
  */
-export function captureException(
-  error: Error,
-  context?: {
-    user?: { id: string; email?: string };
-    tags?: Record<string, string>;
-    extra?: Record<string, unknown>;
-  }
-): string {
-  return Sentry.captureException(error, {
-    user: context?.user,
-    tags: context?.tags,
-    extra: context?.extra,
-  });
+export function captureException(error: Error, context?: SentryErrorContext): string {
+  return sentryFacade.captureException(error, context);
 }
 
 /**
@@ -180,9 +239,9 @@ export function captureException(
  */
 export function captureMessage(
   message: string,
-  level: Sentry.SeverityLevel = 'info'
+  level: SentrySeverityLevel = 'info'
 ): string | undefined {
-  return Sentry.captureMessage(message, level);
+  return sentryFacade.captureMessage(message, level);
 }
 
 /**
@@ -192,15 +251,7 @@ export function captureMessage(
  * @param operation - Operation type (http.request, db.query, etc.)
  */
 export function startSpan(name: string, operation: string) {
-  return Sentry.startSpan(
-    {
-      name,
-      op: operation,
-    },
-    () => {
-      // Span implementation
-    }
-  );
+  return sentryFacade.startSpan(name, operation);
 }
 
 /**
@@ -208,8 +259,8 @@ export function startSpan(name: string, operation: string) {
  *
  * @param user - User information
  */
-export function setUser(user: { id: string; email?: string; username?: string } | null): void {
-  Sentry.setUser(user);
+export function setUser(user: SentryUser): void {
+  sentryFacade.setUser(user);
 }
 
 /**
@@ -219,7 +270,7 @@ export function setUser(user: { id: string; email?: string; username?: string } 
  * @param value - Tag value
  */
 export function setTag(key: string, value: string): void {
-  Sentry.setTag(key, value);
+  sentryFacade.setTag(key, value);
 }
 
 /**
@@ -229,7 +280,7 @@ export function setTag(key: string, value: string): void {
  * @param value - Context value
  */
 export function setContext(key: string, value: Record<string, unknown>): void {
-  Sentry.setContext(key, value);
+  sentryFacade.setContext(key, value);
 }
 
 /**
@@ -242,7 +293,7 @@ export function setContext(key: string, value: Record<string, unknown>): void {
  */
 export async function flushSentry(timeout = 2000): Promise<boolean> {
   try {
-    const result = await Sentry.flush(timeout);
+    const result = await sentryFacade.flush(timeout);
     console.log('[Sentry] Flushed pending events');
     return result;
   } catch (error) {
@@ -258,7 +309,7 @@ export async function flushSentry(timeout = 2000): Promise<boolean> {
  */
 export async function closeSentry(): Promise<void> {
   try {
-    await Sentry.close(2000);
+    await sentryFacade.close(2000);
     console.log('[Sentry] Closed gracefully');
   } catch (error) {
     console.error('[Sentry] Error during shutdown:', error);

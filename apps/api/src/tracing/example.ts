@@ -32,7 +32,7 @@ export function initializeObservability() {
   startTracing();
 
   // Initialize Sentry error tracking
-  initializeSentry();
+  void initializeSentry();
 
   console.log('[Example] Observability initialized successfully');
 }

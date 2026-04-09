@@ -70,7 +70,7 @@ describe('Sentry integration (sentry.ts)', () => {
     process.env.SENTRY_DSN = 'https://example@dsn.ingest.sentry.io/123';
 
     const { initializeSentry } = await import('./sentry.js');
-    initializeSentry();
+    await initializeSentry();
 
     expect(sentryInit).not.toHaveBeenCalled();
   });
@@ -80,7 +80,7 @@ describe('Sentry integration (sentry.ts)', () => {
     delete process.env.SENTRY_DSN;
 
     const { initializeSentry } = await import('./sentry.js');
-    initializeSentry();
+    await initializeSentry();
 
     expect(sentryInit).not.toHaveBeenCalled();
     expect(console.warn).toHaveBeenCalled();
@@ -96,7 +96,7 @@ describe('Sentry integration (sentry.ts)', () => {
     const { initializeSentry, flushSentry, closeSentry, captureException, captureMessage } =
       await import('./sentry.js');
 
-    initializeSentry();
+    await initializeSentry();
 
     expect(sentryInit).toHaveBeenCalledTimes(1);
 
@@ -150,8 +150,11 @@ describe('Sentry integration (sentry.ts)', () => {
   });
 
   it('flushSentry returns false when flush throws', async () => {
+    process.env.NODE_ENV = 'production';
+    process.env.SENTRY_DSN = 'https://example@dsn.ingest.sentry.io/123';
     sentryFlush.mockRejectedValueOnce(new Error('fail'));
-    const { flushSentry } = await import('./sentry.js');
+    const { initializeSentry, flushSentry } = await import('./sentry.js');
+    await initializeSentry();
     const ok = await flushSentry(1);
     expect(ok).toBe(false);
   });
