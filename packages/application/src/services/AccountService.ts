@@ -27,6 +27,8 @@ export const ACCOUNT_TIER_THRESHOLDS = {
   STARTUP: 0,
 } as const;
 
+const THIRTY_DAYS_IN_MS = 30 * 24 * 60 * 60 * 1000;
+
 /**
  * Account hierarchy relationship (legacy — kept for backward compatibility)
  */
@@ -89,8 +91,8 @@ export class AccountService {
    * Create a new account with validation
    */
   async createAccount(props: CreateAccountProps): Promise<Result<Account, DomainError>> {
-    // Check for duplicate name
-    const existingAccount = await this.accountRepository.existsByName(props.name);
+    // Check for duplicate name within tenant (IFC-269 B-03)
+    const existingAccount = await this.accountRepository.existsByName(props.name, props.tenantId);
     if (existingAccount) {
       return Result.fail(new ValidationError(`Account with name "${props.name}" already exists`));
     }
@@ -119,13 +121,13 @@ export class AccountService {
   /**
    * Get account by ID
    */
-  async getAccountById(accountId: string): Promise<Result<Account, DomainError>> {
+  async getAccountById(accountId: string, tenantId: string): Promise<Result<Account, DomainError>> {
     const accountIdResult = AccountId.create(accountId);
     if (accountIdResult.isFailure) {
       return Result.fail(accountIdResult.error);
     }
 
-    const account = await this.accountRepository.findById(accountIdResult.value);
+    const account = await this.accountRepository.findById(accountIdResult.value, tenantId);
     if (!account) {
       return Result.fail(new NotFoundError(`Account not found: ${accountId}`));
     }
@@ -143,21 +145,22 @@ export class AccountService {
       website?: string;
       description?: string;
     },
-    updatedBy: string
+    updatedBy: string,
+    tenantId: string
   ): Promise<Result<Account, DomainError>> {
     const accountIdResult = AccountId.create(accountId);
     if (accountIdResult.isFailure) {
       return Result.fail(accountIdResult.error);
     }
 
-    const account = await this.accountRepository.findById(accountIdResult.value);
+    const account = await this.accountRepository.findById(accountIdResult.value, tenantId);
     if (!account) {
       return Result.fail(new NotFoundError(`Account not found: ${accountId}`));
     }
 
-    // Check for name uniqueness if changing name
+    // Check for name uniqueness within tenant if changing name (IFC-269 B-03)
     if (updates.name && updates.name !== account.name) {
-      const existingAccount = await this.accountRepository.existsByName(updates.name);
+      const existingAccount = await this.accountRepository.existsByName(updates.name, tenantId);
       if (existingAccount) {
         return Result.fail(
           new ValidationError(`Account with name "${updates.name}" already exists`)
@@ -184,14 +187,15 @@ export class AccountService {
   async updateRevenue(
     accountId: string,
     newRevenue: number,
-    updatedBy: string
+    updatedBy: string,
+    tenantId: string
   ): Promise<Result<Account, DomainError>> {
     const accountIdResult = AccountId.create(accountId);
     if (accountIdResult.isFailure) {
       return Result.fail(accountIdResult.error);
     }
 
-    const account = await this.accountRepository.findById(accountIdResult.value);
+    const account = await this.accountRepository.findById(accountIdResult.value, tenantId);
     if (!account) {
       return Result.fail(new ValidationError(`Account not found: ${accountId}`));
     }
@@ -218,14 +222,15 @@ export class AccountService {
   async updateEmployeeCount(
     accountId: string,
     newCount: number,
-    updatedBy: string
+    updatedBy: string,
+    tenantId: string
   ): Promise<Result<Account, DomainError>> {
     const accountIdResult = AccountId.create(accountId);
     if (accountIdResult.isFailure) {
       return Result.fail(accountIdResult.error);
     }
 
-    const account = await this.accountRepository.findById(accountIdResult.value);
+    const account = await this.accountRepository.findById(accountIdResult.value, tenantId);
     if (!account) {
       return Result.fail(new ValidationError(`Account not found: ${accountId}`));
     }
@@ -252,14 +257,15 @@ export class AccountService {
   async categorizeIndustry(
     accountId: string,
     industry: string,
-    categorizedBy: string
+    categorizedBy: string,
+    tenantId: string
   ): Promise<Result<Account, DomainError>> {
     const accountIdResult = AccountId.create(accountId);
     if (accountIdResult.isFailure) {
       return Result.fail(accountIdResult.error);
     }
 
-    const account = await this.accountRepository.findById(accountIdResult.value);
+    const account = await this.accountRepository.findById(accountIdResult.value, tenantId);
     if (!account) {
       return Result.fail(new ValidationError(`Account not found: ${accountId}`));
     }
@@ -293,14 +299,15 @@ export class AccountService {
    * Calculate account health score
    */
   async calculateAccountHealth(
-    accountId: string
+    accountId: string,
+    tenantId: string
   ): Promise<Result<AccountHealthScore, DomainError>> {
     const accountIdResult = AccountId.create(accountId);
     if (accountIdResult.isFailure) {
       return Result.fail(accountIdResult.error);
     }
 
-    const account = await this.accountRepository.findById(accountIdResult.value);
+    const account = await this.accountRepository.findById(accountIdResult.value, tenantId);
     if (!account) {
       return Result.fail(new ValidationError(`Account not found: ${accountId}`));
     }
@@ -321,8 +328,7 @@ export class AccountService {
     const contactEngagementScore = Math.min(100, contactCount * 20);
 
     // Calculate recent activity score (based on opportunities)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const thirtyDaysAgo = new Date(Date.now() - THIRTY_DAYS_IN_MS);
 
     const recentOpportunities = opportunities.filter((o) => o.updatedAt >= thirtyDaysAgo);
     const recentActivityScore = Math.min(100, recentOpportunities.length * 25);
@@ -346,9 +352,10 @@ export class AccountService {
    */
   async getHighValueAccounts(
     minRevenue: number = ACCOUNT_TIER_THRESHOLDS.MID_MARKET,
-    ownerId?: string
+    ownerId?: string,
+    tenantId?: string
   ): Promise<Account[]> {
-    const accounts = ownerId ? await this.accountRepository.findByOwnerId(ownerId) : [];
+    const accounts = ownerId && tenantId ? await this.accountRepository.findByOwnerId(ownerId, tenantId) : [];
 
     return accounts.filter((a) => (a.revenue ?? 0) >= minRevenue);
   }
@@ -356,14 +363,14 @@ export class AccountService {
   /**
    * Get accounts by industry
    */
-  async getAccountsByIndustry(industry: string): Promise<Account[]> {
-    return this.accountRepository.findByIndustry(industry);
+  async getAccountsByIndustry(industry: string, tenantId: string): Promise<Account[]> {
+    return this.accountRepository.findByIndustry(industry, tenantId);
   }
 
   /**
    * Get account with full context (contacts, opportunities)
    */
-  async getAccountWithContext(accountId: string): Promise<
+  async getAccountWithContext(accountId: string, tenantId: string): Promise<
     Result<
       {
         account: Account;
@@ -383,7 +390,7 @@ export class AccountService {
       return Result.fail(accountIdResult.error);
     }
 
-    const account = await this.accountRepository.findById(accountIdResult.value);
+    const account = await this.accountRepository.findById(accountIdResult.value, tenantId);
     if (!account) {
       return Result.fail(new ValidationError(`Account not found: ${accountId}`));
     }
@@ -411,14 +418,14 @@ export class AccountService {
   /**
    * Get account statistics
    */
-  async getAccountStatistics(ownerId?: string): Promise<{
+  async getAccountStatistics(ownerId?: string, tenantId?: string): Promise<{
     total: number;
     byTier: Record<AccountTier, number>;
     byIndustry: Record<string, number>;
     totalRevenue: number;
     averageRevenue: number;
   }> {
-    const accounts = ownerId ? await this.accountRepository.findByOwnerId(ownerId) : [];
+    const accounts = ownerId && tenantId ? await this.accountRepository.findByOwnerId(ownerId, tenantId) : [];
 
     const byTier: Record<AccountTier, number> = {
       ENTERPRISE: 0,
@@ -455,13 +462,13 @@ export class AccountService {
   /**
    * Delete account with business rules
    */
-  async deleteAccount(accountId: string): Promise<Result<void, DomainError>> {
+  async deleteAccount(accountId: string, tenantId: string): Promise<Result<void, DomainError>> {
     const accountIdResult = AccountId.create(accountId);
     if (accountIdResult.isFailure) {
       return Result.fail(accountIdResult.error);
     }
 
-    const account = await this.accountRepository.findById(accountIdResult.value);
+    const account = await this.accountRepository.findById(accountIdResult.value, tenantId);
     if (!account) {
       return Result.fail(new ValidationError(`Account not found: ${accountId}`));
     }
@@ -488,7 +495,7 @@ export class AccountService {
     }
 
     try {
-      await this.accountRepository.delete(accountIdResult.value);
+      await this.accountRepository.delete(accountIdResult.value, tenantId);
     } catch {
       return Result.fail(new PersistenceError('Failed to delete account'));
     }
@@ -536,14 +543,9 @@ export class AccountService {
       return Result.fail(accountIdResult.error);
     }
 
-    // Verify account exists
-    const account = await this.accountRepository.findById(accountIdResult.value);
+    // Verify account exists within tenant (IFC-269: repository-level isolation)
+    const account = await this.accountRepository.findById(accountIdResult.value, tenantId);
     if (!account) {
-      return Result.fail(new NotFoundError(`Account with ID ${accountId} not found`));
-    }
-
-    // Verify tenant isolation
-    if (account.tenantId !== tenantId) {
       return Result.fail(new NotFoundError(`Account with ID ${accountId} not found`));
     }
 
@@ -625,14 +627,9 @@ export class AccountService {
       return Result.fail(accountIdResult.error);
     }
 
-    // Verify account exists
-    const account = await this.accountRepository.findById(accountIdResult.value);
+    // Verify account exists within tenant (IFC-269: repository-level isolation)
+    const account = await this.accountRepository.findById(accountIdResult.value, tenantId);
     if (!account) {
-      return Result.fail(new NotFoundError(`Account with ID ${accountId} not found`));
-    }
-
-    // Verify tenant isolation
-    if (account.tenantId !== tenantId) {
       return Result.fail(new NotFoundError(`Account with ID ${accountId} not found`));
     }
 
@@ -728,14 +725,9 @@ export class AccountService {
       return Result.fail(accountIdResult.error);
     }
 
-    // Verify account exists
-    const account = await this.accountRepository.findById(accountIdResult.value);
+    // Verify account exists within tenant (IFC-269: repository-level isolation)
+    const account = await this.accountRepository.findById(accountIdResult.value, tenantId);
     if (!account) {
-      return Result.fail(new NotFoundError(`Account with ID ${accountId} not found`));
-    }
-
-    // Verify tenant isolation
-    if (account.tenantId !== tenantId) {
       return Result.fail(new NotFoundError(`Account with ID ${accountId} not found`));
     }
 
@@ -824,12 +816,10 @@ export class AccountService {
     const id = AccountId.create(accountId);
     if (id.isFailure) return Result.fail(new ValidationError(id.error.message));
 
-    const rawRecord = await this.accountRepository.findWithChildren(id.value, maxDepth);
+    const rawRecord = await this.accountRepository.findWithChildren(id.value, maxDepth, tenantId);
     if (!rawRecord) return Result.fail(new NotFoundError(`Account not found: ${accountId}`));
-    if (rawRecord.tenantId !== tenantId)
-      return Result.fail(new NotFoundError(`Account not found: ${accountId}`));
 
-    const ancestors = await this.accountRepository.findAncestors(id.value);
+    const ancestors = await this.accountRepository.findAncestors(id.value, tenantId);
     const ancestorList = ancestors.map((a) => ({ id: a.id.value, name: a.name }));
 
     const mapToNode = (record: AccountHierarchyRecord): HierarchyNode => ({
@@ -856,10 +846,8 @@ export class AccountService {
     const id = AccountId.create(accountId);
     if (id.isFailure) return Result.fail(new ValidationError(id.error.message));
 
-    const account = await this.accountRepository.findById(id.value);
+    const account = await this.accountRepository.findById(id.value, tenantId);
     if (!account) return Result.fail(new NotFoundError(`Account not found: ${accountId}`));
-    if (account.tenantId !== tenantId)
-      return Result.fail(new NotFoundError(`Account not found: ${accountId}`));
 
     if (parentAccountId === null) {
       account.removeParent(userId);
@@ -871,22 +859,19 @@ export class AccountService {
     const parentId = AccountId.create(parentAccountId);
     if (parentId.isFailure) return Result.fail(new ValidationError(parentId.error.message));
 
-    const parent = await this.accountRepository.findById(parentId.value);
+    const parent = await this.accountRepository.findById(parentId.value, tenantId);
     if (!parent)
       return Result.fail(new NotFoundError(`Parent account not found: ${parentAccountId}`));
-    if (parent.tenantId !== tenantId) {
-      return Result.fail(new ValidationError('Cannot set parent from different tenant'));
-    }
 
     // Cycle detection: walk ancestors of proposed parent
-    const parentAncestors = await this.accountRepository.findAncestors(parentId.value);
+    const parentAncestors = await this.accountRepository.findAncestors(parentId.value, tenantId);
     const ancestorIds = parentAncestors.map((a) => a.id.value);
     if (ancestorIds.includes(accountId) || parentAccountId === accountId) {
       return Result.fail(new ValidationError('Circular hierarchy detected'));
     }
 
     // Depth check: parent's depth + 1 (for this account) must not exceed 5
-    const parentDepth = await this.accountRepository.getHierarchyDepth(parentId.value);
+    const parentDepth = await this.accountRepository.getHierarchyDepth(parentId.value, tenantId);
     if (parentDepth + 1 >= 5) {
       return Result.fail(new ValidationError('Maximum hierarchy depth (5 levels) exceeded'));
     }

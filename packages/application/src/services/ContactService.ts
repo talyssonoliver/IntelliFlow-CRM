@@ -83,7 +83,7 @@ export class ContactService {
         return Result.fail(accountIdResult.error);
       }
 
-      const account = await this.accountRepository.findById(accountIdResult.value);
+      const account = await this.accountRepository.findById(accountIdResult.value, props.tenantId);
       if (!account) {
         return Result.fail(new ValidationError(`Account not found: ${props.accountId}`));
       }
@@ -209,7 +209,8 @@ export class ContactService {
   async associateWithAccount(
     contactId: string,
     accountId: string,
-    associatedBy: string
+    associatedBy: string,
+    tenantId: string
   ): Promise<Result<Contact, DomainError>> {
     const contactIdResult = ContactId.create(contactId);
     if (contactIdResult.isFailure) {
@@ -223,7 +224,7 @@ export class ContactService {
 
     const [contact, account] = await Promise.all([
       this.contactRepository.findById(contactIdResult.value),
-      this.accountRepository.findById(accountIdResult.value),
+      this.accountRepository.findById(accountIdResult.value, tenantId),
     ]);
 
     if (!contact) {
@@ -500,7 +501,7 @@ export class ContactService {
 
     // If secondary has account but primary doesn't, associate primary with that account
     if (!primary.hasAccount && secondary.hasAccount) {
-      await this.associateWithAccount(primaryContactId, secondary.accountId!, mergedBy);
+      await this.associateWithAccount(primaryContactId, secondary.accountId!, mergedBy, primary.tenantId);
       fieldsUpdated.push('accountId');
     }
 

@@ -402,6 +402,45 @@ describe('AccountService (additional coverage)', () => {
       // Closed opportunity should not count toward opportunity value
       expect(result.value.opportunityValue).toBe(0);
     });
+
+    it('uses an absolute 30-day recent-activity window', async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-04-07T12:00:00.000Z'));
+
+      try {
+        const account = Account.create({
+          name: 'Recent Activity Window',
+          ownerId: 'owner-1',
+        } as any).value;
+        await accountRepository.save(account);
+
+        const recentOpportunity = Opportunity.create({
+          name: 'Recent Opp',
+          value: 1000,
+          accountId: account.id.value,
+          ownerId: 'owner-1',
+        }).value;
+        (recentOpportunity as any).props.updatedAt = new Date('2026-03-08T12:00:00.000Z');
+
+        const staleOpportunity = Opportunity.create({
+          name: 'Stale Opp',
+          value: 1000,
+          accountId: account.id.value,
+          ownerId: 'owner-1',
+        }).value;
+        (staleOpportunity as any).props.updatedAt = new Date('2026-03-08T11:59:59.000Z');
+
+        await opportunityRepository.save(recentOpportunity);
+        await opportunityRepository.save(staleOpportunity);
+
+        const result = await service.calculateAccountHealth(account.id.value);
+
+        expect(result.isSuccess).toBe(true);
+        expect(result.value.recentActivity).toBe(25);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
   });
 
   // =========================================================================

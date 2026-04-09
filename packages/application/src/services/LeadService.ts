@@ -326,7 +326,7 @@ export class LeadService {
     let accountId: string | null = null;
     if (accountName) {
       // Check if account already exists
-      const existingAccounts = await this.accountRepository.findByName(accountName);
+      const existingAccounts = await this.accountRepository.findByName(accountName, lead.tenantId);
       if (existingAccounts.length > 0) {
         accountId = existingAccounts[0].id.value;
       } else {

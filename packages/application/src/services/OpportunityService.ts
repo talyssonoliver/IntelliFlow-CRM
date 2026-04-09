@@ -100,7 +100,7 @@ export class OpportunityService {
       return Result.fail(accountIdResult.error);
     }
 
-    const account = await this.accountRepository.findById(accountIdResult.value);
+    const account = await this.accountRepository.findById(accountIdResult.value, props.tenantId);
     if (!account) {
       return Result.fail(new ValidationError(`Account not found: ${props.accountId}`));
     }
@@ -226,10 +226,10 @@ export class OpportunityService {
     };
   }
 
-  private async validateAccountId(accountId: string): Promise<DomainError | null> {
+  private async validateAccountId(accountId: string, tenantId: string): Promise<DomainError | null> {
     const accountIdResult = AccountId.create(accountId);
     if (accountIdResult.isFailure) return accountIdResult.error;
-    const account = await this.accountRepository.findById(accountIdResult.value);
+    const account = await this.accountRepository.findById(accountIdResult.value, tenantId);
     if (!account) return new NotFoundError(`Account not found: ${accountId}`);
     return null;
   }
@@ -279,9 +279,9 @@ export class OpportunityService {
   private async validateForeignKeys(data: {
     accountId?: string;
     contactId?: string | null;
-  }): Promise<DomainError | null> {
-    if (data.accountId !== undefined) {
-      const accountError = await this.validateAccountId(data.accountId);
+  }, tenantId?: string): Promise<DomainError | null> {
+    if (data.accountId !== undefined && tenantId) {
+      const accountError = await this.validateAccountId(data.accountId, tenantId);
       if (accountError) return accountError;
     }
     if (data.contactId !== undefined && data.contactId !== null) {
@@ -339,7 +339,7 @@ export class OpportunityService {
       return Result.fail(new NotFoundError(`Opportunity not found: ${opportunityId}`));
     }
 
-    const fkError = await this.validateForeignKeys(data);
+    const fkError = await this.validateForeignKeys(data, tenantId);
     if (fkError) return Result.fail(fkError);
 
     const updateError = this.applyScalarUpdates(opportunity, data, updatedBy);
@@ -816,7 +816,7 @@ export class OpportunityService {
     }
 
     try {
-      await this.opportunityRepository.softDelete(oppIdResult.value);
+      await this.opportunityRepository.softDelete(oppIdResult.value, tenantId);
     } catch {
       return Result.fail(new PersistenceError('Failed to delete opportunity'));
     }
@@ -842,8 +842,14 @@ export class OpportunityService {
       return Result.fail(new NotFoundError(`Opportunity not found: ${opportunityId}`));
     }
 
+    if (!opportunity.isDeleted) {
+      return Result.fail(
+        new ValidationError('Can only restore deals that are in trash')
+      );
+    }
+
     try {
-      await this.opportunityRepository.restore(oppIdResult.value);
+      await this.opportunityRepository.restore(oppIdResult.value, tenantId);
     } catch {
       return Result.fail(new PersistenceError('Failed to restore opportunity'));
     }

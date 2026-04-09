@@ -242,7 +242,7 @@ export class ConvertLeadToContactUseCase {
     lead: Lead
   ): Promise<Result<string, DomainError>> {
     // Check if account already exists
-    const existingAccounts = await this.accountRepository.findByName(accountName);
+    const existingAccounts = await this.accountRepository.findByName(accountName, lead.tenantId);
     if (existingAccounts.length > 0) {
       return Result.ok(existingAccounts[0].id.value);
     }
