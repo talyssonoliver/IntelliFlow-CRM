@@ -5,13 +5,13 @@
   "description": "Contact Router Data Integrity Fixes. (1) Raw SQL in getTimeline has no tenant filter and .catch(() => []) swallows errors (R-09). (2) sortBy accepts arbitrary strings — enum whitelist needed (R-10). (3) filterOptions ignores status input (R-12). (4) contactListResponseSchema uses 'data' key but router returns 'contacts' (D-03). (5) phone non-nullable in response schema but mapper returns null (D-08/R-14). Audit: docs/audit/contact-detail-wiring-audit.md §15,§18.",
   "owner": "Backend Dev (STOA-Domain)",
   "sprint": "sprint-16",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "DONE",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.609Z"
+    "verified_at": "2026-04-09T20:20:24.044Z"
   },
   "dependencies_resolved": [],
   "started_at": "2026-03-16T19:30:12.013Z",

@@ -5,13 +5,13 @@
   "description": "Lead Detail Null-State UX - Fix engagement/churn/sentiment showing raw 'Unknown' string when aiInsight is null. Replace with styled 'Not analyzed' state with visual distinction from real AI data. Page: leads/[id]/page.tsx lines 588, 2258.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-16",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "DONE",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.600Z"
+    "verified_at": "2026-04-09T20:20:24.037Z"
   },
   "dependencies_resolved": [],
   "started_at": "2026-03-15T18:00:00Z",
@@ -79,19 +79,19 @@
       "at": "2026-03-05T00:00:00Z"
     },
     {
-      "status": "Specifying",
+      "status": "In Progress",
       "at": "2026-03-15T18:00:00Z"
     },
     {
-      "status": "Spec Complete",
+      "status": "In Progress",
       "at": "2026-03-15T18:10:00Z"
     },
     {
-      "status": "Planning",
+      "status": "Planned",
       "at": "2026-03-15T18:15:00Z"
     },
     {
-      "status": "Plan Complete",
+      "status": "Planned",
       "at": "2026-03-15T18:20:00Z"
     },
     {

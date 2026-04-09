@@ -5,13 +5,13 @@
   "description": "Lead Detail Status Type Fix + Auth Guard. Fix 2 CRITICAL issues: (1) LeadStatus type union at leads/[id]/page.tsx line 139 omits NEGOTIATING - runtime crash when lead has this status [S1]. (2) leads/(list)/new/page.tsx missing useRequireAuth() hook - unauthenticated users can access create lead form [F1]. Also fix trpc vs api import inconsistency in create page [F8]. Fix: Add NEGOTIATING to LeadStatus type, add useRequireAuth() to create page, standardize import.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-16",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "DONE",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.604Z"
+    "verified_at": "2026-04-09T20:20:24.040Z"
   },
   "dependencies_resolved": [],
   "started_at": "2026-03-18T12:00:00Z",
@@ -89,19 +89,19 @@
       "at": "2026-03-05T00:00:00Z"
     },
     {
-      "status": "Specifying",
+      "status": "In Progress",
       "at": "2026-03-18T12:00:00Z"
     },
     {
-      "status": "Spec Complete",
+      "status": "In Progress",
       "at": "2026-03-18T12:05:00Z"
     },
     {
-      "status": "Planning",
+      "status": "Planned",
       "at": "2026-03-18T12:10:00Z"
     },
     {
-      "status": "Plan Complete",
+      "status": "Planned",
       "at": "2026-03-18T12:20:00Z"
     },
     {

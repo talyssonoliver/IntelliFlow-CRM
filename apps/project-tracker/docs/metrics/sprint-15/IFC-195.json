@@ -10,7 +10,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.564Z",
+    "verified_at": "2026-04-09T20:20:24.010Z",
     "required": [
       "IFC-182"
     ]
@@ -28,22 +28,22 @@
     "created": [
       {
         "path": ".specify/sprints/sprint-15/specifications/IFC-195-spec.md",
-        "sha256": "pending",
+        "sha256": "ef91e6d0d383384b9b7cd9b5b08046467acf1b8995b018153217d552583f7d86",
         "created_at": "2026-02-27T13:00:00Z"
       },
       {
         "path": ".specify/sprints/sprint-15/context/IFC-195/IFC-195-agent-selection.json",
-        "sha256": "pending",
+        "sha256": "b29e0e388f94cfb3387b14762421357c00dabf74cd463f2d0ff1e9cd21dd9aac",
         "created_at": "2026-02-27T12:30:00Z"
       },
       {
         "path": ".specify/sprints/sprint-15/planning/IFC-195-plan.md",
-        "sha256": "pending",
+        "sha256": "310dfbf73b9647bd672e4dbc2ce4581db8e788286173adb51787260d607dabd0",
         "created_at": "2026-02-27T14:30:00Z"
       },
       {
         "path": ".specify/sprints/sprint-15/context/IFC-195/IFC-195-plan-session.json",
-        "sha256": "pending",
+        "sha256": "7487366fcb3905a42d5287b29beffd24ea73e136807e1487369b97cacd1ba7fd",
         "created_at": "2026-02-27T14:30:00Z"
       }
     ],
@@ -108,22 +108,22 @@
       "note": "Task execution started"
     },
     {
-      "status": "Specifying",
+      "status": "In Progress",
       "at": "2026-02-27T12:00:00+00:00",
       "note": "Spec session started - 4 agents selected"
     },
     {
-      "status": "Spec Complete",
+      "status": "In Progress",
       "at": "2026-02-27T13:00:00+00:00",
       "note": "Specification finalized with consensus from Backend-Architect, Frontend-Lead, Domain-Expert, Test-Engineer"
     },
     {
-      "status": "Planning",
+      "status": "In Progress",
       "at": "2026-02-27T14:00:00+00:00",
       "note": "Plan session started - dependency deep verification passed"
     },
     {
-      "status": "Plan Complete",
+      "status": "Planned",
       "at": "2026-02-27T14:30:00+00:00",
       "note": "TDD plan finalized - 10 steps, 9 files, plan-reviewer APPROVE after 5 ERROR fixes"
     },

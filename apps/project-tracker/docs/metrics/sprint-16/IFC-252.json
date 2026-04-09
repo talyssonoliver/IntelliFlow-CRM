@@ -5,13 +5,13 @@
   "description": "Contact Router Security — Tenant Isolation Fixes. CRITICAL: (1) search procedure has no createTenantWhereClause — cross-tenant search by name/email (R-02). (2) logActivity transaction uses raw ctx.prisma with no tenantId in WHERE — cross-tenant update (R-03). (3) bulkEmail/bulkExport no tenant filter — email exfiltration via guessed UUIDs (R-04). (4) stats ignores typedCtx tenant — no tenantId boundary (R-05). (5) getById/getByEmail double-fetch through unscoped domain repo (R-06). Cross-ref: R-01 (prismaWithTenant raw) is cross-cutting and shared with IFC-237. Audit: docs/audit/contact-detail-wiring-audit.md §15.",
   "owner": "Backend Dev (STOA-Domain)",
   "sprint": "sprint-16",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "DONE",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.606Z"
+    "verified_at": "2026-04-09T20:20:24.042Z"
   },
   "dependencies_resolved": [],
   "started_at": "2026-03-12T22:06:12.217Z",

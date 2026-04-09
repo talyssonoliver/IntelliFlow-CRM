@@ -5,7 +5,7 @@
   "description": "Press Release Detail Page - dynamic /press/[id] route for individual press releases linked from /press index page (content audit finding F-004)",
   "owner": "CRM FE (STOA-Foundation)",
   "sprint": "sprint-15",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "DONE",
   "dependencies": {
@@ -13,7 +13,7 @@
       "PG-007"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.574Z"
+    "verified_at": "2026-04-09T20:20:24.018Z"
   },
   "dependencies_resolved": [
     "PG-007"
@@ -93,19 +93,19 @@
       "at": "2026-02-25T23:00:00Z"
     },
     {
-      "status": "Specifying",
+      "status": "In Progress",
       "at": "2026-03-01T18:56:00Z"
     },
     {
-      "status": "Spec Complete",
+      "status": "In Progress",
       "at": "2026-03-01T19:30:00Z"
     },
     {
-      "status": "Planning",
+      "status": "Planned",
       "at": "2026-03-01T20:00:00Z"
     },
     {
-      "status": "Plan Complete",
+      "status": "Planned",
       "at": "2026-03-01T20:30:00Z"
     },
     {

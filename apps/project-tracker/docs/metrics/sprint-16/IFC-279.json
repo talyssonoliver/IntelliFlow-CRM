@@ -5,13 +5,13 @@
   "description": "Deal Create Form + /deals/new Route. No deal creation form exists — both 'New Deal' buttons (deals/(list)/page.tsx lines 454 and 492) link to /deals/new which is a 404 (F-02). Must: (1) Create page at apps/web/src/app/deals/new/page.tsx or deals/(list)/new/page.tsx. (2) Form fields: name, value (money input), stage (default PROSPECTING), probability, expectedCloseDate (date picker), accountId (account search combobox), contactId (contact search combobox). (3) Wire to trpc.opportunity.create mutation. (4) Add useRequireAuth(). (5) Validate with createOpportunitySchema. (6) Success: navigate to /deals/[newId]. Audit: docs/audit/deal-detail-wiring-audit.md section 1 F-02.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-16",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "DONE",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.614Z"
+    "verified_at": "2026-04-09T20:20:24.048Z"
   },
   "dependencies_resolved": [],
   "started_at": "2026-03-17T07:36:47.608Z",

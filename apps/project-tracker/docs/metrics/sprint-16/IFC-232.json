@@ -5,13 +5,13 @@
   "description": "Sidebar Broken Links Cleanup - 1 remaining broken navigation link: /deals/trash has no page.tsx (sidebar config deals.ts links to it but route 404s). Original 17 broken nav links and 6 settings links resolved by PG-025/PG-045/PG-174 and other sprint work. Fix: create trash/deleted-deals page at apps/web/src/app/deals/trash/page.tsx OR remove the sidebar item from deals.ts if soft-delete is not yet supported.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-16",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.601Z"
+    "verified_at": "2026-04-09T20:20:24.038Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

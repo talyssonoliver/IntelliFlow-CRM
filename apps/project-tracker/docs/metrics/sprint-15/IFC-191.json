@@ -10,7 +10,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.562Z",
+    "verified_at": "2026-04-09T20:20:24.009Z",
     "required": [
       "IFC-182"
     ]
@@ -21,7 +21,7 @@
     "retry_count": 0,
     "last_error": null,
     "executor": "exec",
-    "log_path": null
+    "log_path": ""
   },
   "artifacts": {
     "expected": [],

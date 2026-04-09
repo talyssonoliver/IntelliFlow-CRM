@@ -1,17 +1,21 @@
 {
-  "$schema": "../../../../schemas/task.schema.json",
-  "id": "IFC-224",
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-224",
   "section": "Calendar Integration",
   "description": "Implement Calendar Webhook Ingestion Routes (Resolves R-008)",
   "owner": "Backend Dev (STOA-Domain)",
-  "dependencies": [
-    "IFC-138"
-  ],
+  "dependencies": {
+    "required": [
+      "IFC-138"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-04-09T20:20:23.997Z"
+  },
   "prerequisites": [
     "FILE:packages/adapters/src/calendar/shared/index.ts"
   ],
   "definition_of_done": "Webhooks endpoints configured to receive external calendar events; verified by: pnpm test",
-  "kpis": "External calendar syncs arrive via webhook",
+  "kpis": {},
   "status": "DONE",
   "target_sprint": 14,
   "artifacts_to_track": [

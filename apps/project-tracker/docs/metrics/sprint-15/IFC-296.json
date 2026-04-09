@@ -5,7 +5,7 @@
   "description": "Queue Scheduler Administration — Implement queuesAdmin tRPC router with live BullMQ stats and scheduler CRUD (list/pause/resume/retry/delete), wire to /agent-approvals/agents page. Replace stub router with live Redis/BullMQ data. Add queue health panel to ActiveAgentsDashboard showing scheduler cron patterns, queue counts, and action buttons.",
   "owner": "Backend Dev + Frontend Dev (STOA-Domain)",
   "sprint": "sprint-15",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "DONE",
   "dependencies": {
@@ -15,7 +15,7 @@
       "PG-151"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.579Z"
+    "verified_at": "2026-04-09T20:20:24.022Z"
   },
   "dependencies_resolved": [
     "IFC-015",

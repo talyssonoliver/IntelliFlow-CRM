@@ -5,13 +5,13 @@
   "description": "Deal Backend Tenant Isolation & Audit Logging. (1) CRITICAL: PrismaOpportunityRepository.findById() (line 82) has NO tenantId WHERE clause — cross-tenant read/write/delete possible via getById/update/delete/moveStage/dealForecast (B-01). Fix: add tenantId to findById() and findByOwnerId() WHERE clauses. (2) CRITICAL: Zero auditLogger.log() calls across all 16 opportunity + pipeline-config procedures (B-02). Add audit logging to create/update/delete/moveStage (especially CLOSED_WON/CLOSED_LOST) and pipeline config changes. (3) Create notification in create procedure uses raw ctx.prisma instead of prismaWithTenant (B-03). Audit: docs/audit/deal-detail-wiring-audit.md sections 5-6.",
   "owner": "Backend Dev (STOA-Domain)",
   "sprint": "sprint-16",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "DONE",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.615Z"
+    "verified_at": "2026-04-09T20:20:24.049Z"
   },
   "dependencies_resolved": [],
   "started_at": "2026-03-19T00:25:53.575Z",

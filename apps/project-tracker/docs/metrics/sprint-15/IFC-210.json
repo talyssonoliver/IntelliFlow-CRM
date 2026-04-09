@@ -5,7 +5,7 @@
   "description": "Fill SEO metadata gaps on public pages - add description OG and Twitter tags to /pricing, complete OG tags on /about and /features, add layout-level metadata for auth-flow pages (content audit findings F-010 F-011 F-012)",
   "owner": "CRM FE (STOA-Foundation)",
   "sprint": "sprint-15",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "DONE",
   "dependencies": {
@@ -13,7 +13,7 @@
       "DOC-009"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.577Z"
+    "verified_at": "2026-04-09T20:20:24.020Z"
   },
   "dependencies_resolved": [
     "DOC-009"

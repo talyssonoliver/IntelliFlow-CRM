@@ -5,13 +5,13 @@
   "description": "Contact Detail NaN Fix + Auth Guard + Status Enum. CRITICAL: (1) NaN% division by zero — emailsOpened/emailsSent at line 1319 renders 'NaN%' when emailsSent=0 (F-01). (2) Create contact page missing useRequireAuth() — unauthenticated access (F-07). (3) Status enum truncated to 3 values in ContactList/ContactCard (ACTIVE/INACTIVE/ARCHIVED) but create form allows 6 values — unknown status crashes detail page statusConfig (F-08). Audit: docs/audit/contact-detail-wiring-audit.md §16.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-16",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "DONE",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.608Z"
+    "verified_at": "2026-04-09T20:20:24.043Z"
   },
   "dependencies_resolved": [],
   "started_at": "2026-03-13T18:57:35.896Z",

@@ -1,17 +1,21 @@
 {
-  "$schema": "../../../../schemas/task.schema.json",
-  "id": "IFC-223",
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-223",
   "section": "Notifications",
   "description": "Wire actual Email Outbound Adapter (Resolves R-018)",
   "owner": "Backend Dev (STOA-Domain)",
-  "dependencies": [
-    "IFC-157"
-  ],
+  "dependencies": {
+    "required": [
+      "IFC-157"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-04-09T20:20:23.996Z"
+  },
   "prerequisites": [
     "FILE:packages/adapters/src/messaging/email/outbound.ts"
   ],
   "definition_of_done": "Email outbound connects to real SMTP/API provider; verified by: pnpm test",
-  "kpis": "Emails dispatch to external provider",
+  "kpis": {},
   "status": "DONE",
   "target_sprint": 14,
   "artifacts_to_track": [

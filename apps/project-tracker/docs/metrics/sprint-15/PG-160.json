@@ -5,13 +5,13 @@
   "description": "View All AI Insights page - /insights route with getAllInsights endpoint pagination and filtering by insight type",
   "owner": "CRM FE+BE (STOA-Foundation)",
   "sprint": "sprint-15",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "dependencies": {
     "required": [
       "PG-129"
     ],
-    "verified_at": "2026-03-19T22:11:37.567Z",
+    "verified_at": "2026-04-09T20:20:24.013Z",
     "all_satisfied": true
   },
   "status": "DONE",

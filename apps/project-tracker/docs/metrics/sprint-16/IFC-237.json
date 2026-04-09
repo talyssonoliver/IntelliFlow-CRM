@@ -5,13 +5,13 @@
   "description": "Lead Router Security - Tenant Isolation & Domain Bypass. Fix 4 CRITICAL/MEDIUM security issues: (1) scoreWithAI fire-and-forget uses raw ctx.prisma instead of prismaWithTenant - cross-tenant data leak risk [S2]. (2) logActivity $transaction uses raw ctx.prisma - may bypass tenant middleware [S3]. (3) bulkUpdateStatus uses direct Prisma updateMany bypassing Lead.changeStatus() domain validation - skips status transition rules and domain events [S4]. (4) getHotLeads/getReadyForQualification pass userId as ownerId without explicit tenantId [S9]. Fix: Replace ctx.prisma with prismaWithTenant in all cases. Route bulkUpdateStatus through domain model. Add explicit tenantId to hot/ready queries.",
   "owner": "Backend Dev (STOA-Domain)",
   "sprint": "sprint-16",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "DONE",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.603Z"
+    "verified_at": "2026-04-09T20:20:24.039Z"
   },
   "dependencies_resolved": [],
   "started_at": "2026-03-12T23:37:25.569Z",

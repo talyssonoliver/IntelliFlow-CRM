@@ -1,17 +1,21 @@
 {
-  "$schema": "../../../../schemas/task.schema.json",
-  "id": "IFC-222",
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-222",
   "section": "Notifications",
   "description": "Implement real Twilio SMS SDK calls (Resolves R-006)",
   "owner": "Backend Dev (STOA-Domain)",
-  "dependencies": [
-    "IFC-170"
-  ],
+  "dependencies": {
+    "required": [
+      "IFC-170"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-04-09T20:20:23.996Z"
+  },
   "prerequisites": [
     "FILE:apps/workers/notifications-worker/src/channels/sms.ts"
   ],
   "definition_of_done": "Real Twilio SDK calls replace mock logic; verified by: pnpm test",
-  "kpis": "SMS delivery uses real Twilio API",
+  "kpis": {},
   "status": "DONE",
   "target_sprint": 14,
   "artifacts_to_track": [

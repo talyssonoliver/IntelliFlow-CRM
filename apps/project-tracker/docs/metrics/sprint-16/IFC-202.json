@@ -10,7 +10,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.594Z",
+    "verified_at": "2026-04-09T20:20:24.032Z",
     "required": [
       "IFC-069"
     ]
@@ -21,19 +21,19 @@
     "retry_count": 0,
     "last_error": null,
     "executor": "claude-code",
-    "log_path": null
+    "log_path": ""
   },
   "artifacts": {
     "expected": [],
     "created": [
       {
         "path": ".specify/sprints/sprint-16/specifications/IFC-202-spec.md",
-        "sha256": "pending",
+        "sha256": "f0767bd1b40bbea3c93609b08fd1d4dcb52afef28ff6788c81dd937512240ffd",
         "created_at": "2026-03-10T12:00:00.000Z"
       },
       {
         "path": ".specify/sprints/sprint-16/specifications/IFC-202-discussion.md",
-        "sha256": "pending",
+        "sha256": "ec2b7dc976066fd04568337c14f1c1309b9c23fac2ff9eeacf253e8a18c358fb",
         "created_at": "2026-03-10T12:00:00.000Z"
       }
     ],

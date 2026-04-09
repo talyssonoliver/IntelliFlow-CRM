@@ -5,13 +5,13 @@
   "description": "Visible Pin to Home buttons on entity list items and detail page headers - not just hidden in 3-dot MoreActionsButton sheet",
   "owner": "CRM FE (STOA-Foundation)",
   "sprint": "sprint-15",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "dependencies": {
     "required": [
       "PG-129"
     ],
-    "verified_at": "2026-03-19T22:11:37.566Z",
+    "verified_at": "2026-04-09T20:20:24.012Z",
     "all_satisfied": true,
     "notes": "PG-129 verified complete — useEntityPin hook, PinnedItemsSheet, AuthenticatedHomePage all exist."
   },

@@ -16,7 +16,7 @@
       "DOC-005"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.526Z"
+    "verified_at": "2026-04-09T20:20:23.992Z"
   },
   "dependencies_resolved": [
     "DOC-002",
@@ -44,7 +44,7 @@
       "command": "pnpm --filter @intelliflow/web typecheck",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-02-24T21:21:00Z",
+      "executed_at": "2026-02-24T21:21:00Z",
       "duration_ms": 8000
     },
     {
@@ -52,7 +52,7 @@
       "command": "npx vitest run src/app/__tests__/",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-02-24T21:21:30Z",
+      "executed_at": "2026-02-24T21:21:30Z",
       "duration_ms": 1790
     },
     {
@@ -60,7 +60,7 @@
       "command": "pnpm --filter @intelliflow/web lint",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-02-24T21:21:45Z",
+      "executed_at": "2026-02-24T21:21:45Z",
       "duration_ms": 5000
     },
     {
@@ -68,7 +68,7 @@
       "command": "pnpm --filter @intelliflow/web build",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-02-24T21:22:00Z",
+      "executed_at": "2026-02-24T21:22:00Z",
       "duration_ms": 30000
     }
   ],
@@ -79,11 +79,11 @@
       "at": "2026-02-23T00:00:00Z"
     },
     {
-      "status": "Specifying",
+      "status": "In Progress",
       "at": "2026-02-24T12:00:00Z"
     },
     {
-      "status": "Spec Complete",
+      "status": "In Progress",
       "at": "2026-02-24T12:30:00Z"
     },
     {

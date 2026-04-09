@@ -5,7 +5,7 @@
   "description": "Fix sitemap.ts defects - replace new Date() lastModified with actual file modification timestamps, add all 6 blog post slugs, add dynamic route entries for /careers/[id] and /lp/[slug] (content audit findings F-007 F-008 F-009)",
   "owner": "CRM FE (STOA-Foundation)",
   "sprint": "sprint-15",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "DONE",
   "dependencies": {
@@ -14,7 +14,7 @@
       "DOC-009"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.576Z"
+    "verified_at": "2026-04-09T20:20:24.019Z"
   },
   "dependencies_resolved": [
     "DOC-002",
@@ -71,11 +71,11 @@
       "at": "2026-02-25T23:00:00Z"
     },
     {
-      "status": "Specifying",
+      "status": "In Progress",
       "at": "2026-03-02T10:00:00Z"
     },
     {
-      "status": "Spec Complete",
+      "status": "In Progress",
       "at": "2026-03-02T10:30:00Z"
     },
     {

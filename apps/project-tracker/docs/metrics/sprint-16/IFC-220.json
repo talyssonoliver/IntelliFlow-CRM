@@ -5,7 +5,7 @@
   "description": "AI Insight Null-State UX (Contact)  -  Add Run AI Analysis button when aiInsight is null on Contact detail page. Lead detail already done 2026-03-04. Pattern: amber dashed-border banner + button wired to scoreWithAI mutation. Invalidate query on success. Follows IFC-095 (Pattern 2  -  scope oversight). Resolves WIRE-IFC-095-001.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-16",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "DONE",
   "dependencies": {
@@ -13,7 +13,7 @@
       "IFC-095"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.598Z"
+    "verified_at": "2026-04-09T20:20:24.035Z"
   },
   "dependencies_resolved": [
     "IFC-095"

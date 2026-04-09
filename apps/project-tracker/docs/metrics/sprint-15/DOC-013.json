@@ -13,7 +13,7 @@
       "DOC-008"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.573Z"
+    "verified_at": "2026-04-09T20:20:24.017Z"
   },
   "dependencies_resolved": [
     "DOC-008"
@@ -59,11 +59,11 @@
       "at": "2026-02-24T01:30:00Z"
     },
     {
-      "status": "Specifying",
+      "status": "In Progress",
       "at": "2026-03-02T22:48:13Z"
     },
     {
-      "status": "Spec Complete",
+      "status": "In Progress",
       "at": "2026-03-02T22:55:00Z"
     },
     {

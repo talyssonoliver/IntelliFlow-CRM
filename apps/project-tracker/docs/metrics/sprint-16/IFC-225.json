@@ -5,13 +5,13 @@
   "description": "Convert Lead UX Fix - Backend requires QUALIFIED status but Convert button always visible. Fix: (1) Disable/hide button for non-QUALIFIED leads with guidance tooltip. (2) Add confirmation dialog before conversion. (3) Add createAccount option to conversion flow. (4) Handle conversion errors gracefully. Page: leads/[id]/page.tsx line 1169.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-16",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "DONE",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.599Z"
+    "verified_at": "2026-04-09T20:20:24.036Z"
   },
   "dependencies_resolved": [],
   "started_at": "2026-03-12T20:50:59.183Z",
