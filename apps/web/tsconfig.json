@@ -23,6 +23,8 @@
       "@/*": ["./src/*"],
       "@intelliflow/api-client": ["../../packages/api-client/src"],
       "@intelliflow/api": ["../../apps/api/src"],
+      "@intelliflow/api/context": ["../../apps/api/src/context.ts"],
+      "@intelliflow/api/router": ["../../apps/api/src/router.ts"],
       "@intelliflow/ui": ["../../packages/ui/src"],
       "@intelliflow/validators": ["../../packages/validators/src"]
     }
