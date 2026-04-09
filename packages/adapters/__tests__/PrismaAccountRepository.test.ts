@@ -35,10 +35,14 @@ vi.mock('@intelliflow/db', async (importOriginal) => {
 import { PrismaAccountRepository } from '../src/repositories/PrismaAccountRepository';
 
 type AccountPrismaDelegateDouble = {
+  create: ReturnType<typeof vi.fn>;
   upsert: ReturnType<typeof vi.fn>;
+  updateMany: ReturnType<typeof vi.fn>;
   findUnique: ReturnType<typeof vi.fn>;
+  findFirst: ReturnType<typeof vi.fn>;
   findMany: ReturnType<typeof vi.fn>;
   delete: ReturnType<typeof vi.fn>;
+  deleteMany: ReturnType<typeof vi.fn>;
   count: ReturnType<typeof vi.fn>;
   groupBy: ReturnType<typeof vi.fn>;
 };
@@ -50,10 +54,14 @@ interface AccountPrismaClientDouble {
 
 const createMockPrismaClient = (): AccountPrismaClientDouble => {
   const account: AccountPrismaDelegateDouble = {
+    create: vi.fn(),
     upsert: vi.fn(),
+    updateMany: vi.fn(),
     findUnique: vi.fn(),
+    findFirst: vi.fn(),
     findMany: vi.fn(),
     delete: vi.fn(),
+    deleteMany: vi.fn(),
     count: vi.fn(),
     groupBy: vi.fn(),
   };
@@ -114,26 +122,35 @@ describe('PrismaAccountRepository', () => {
   });
 
   describe('save()', () => {
-    it('should call prisma.account.upsert with correct data', async () => {
-      const upsertMock = mockPrisma.account.upsert;
-      upsertMock.mockResolvedValue({});
+    it('should update existing record with tenant-scoped WHERE (F2 fix)', async () => {
+      mockPrisma.account.updateMany.mockResolvedValue({ count: 1 });
 
       await repository.save(testAccount);
 
-      expect(upsertMock).toHaveBeenCalledWith({
-        where: { id: testAccount.id.value },
-        create: expect.objectContaining({
+      expect(mockPrisma.account.updateMany).toHaveBeenCalledWith({
+        where: { id: testAccount.id.value, tenantId: 'tenant-123' },
+        data: expect.objectContaining({
           id: testAccount.id.value,
           name: 'Acme Corporation',
-          website: 'https://acme.com',
-          industry: 'Technology',
-          employees: 500,
-          description: 'A leading tech company',
-          ownerId: 'owner-123',
           tenantId: 'tenant-123',
         }),
-        update: expect.objectContaining({
+      });
+      // Should not call create when updateMany found a record
+      expect(mockPrisma.account.create).not.toHaveBeenCalled();
+    });
+
+    it('should create new record when updateMany matches nothing', async () => {
+      mockPrisma.account.updateMany.mockResolvedValue({ count: 0 });
+      mockPrisma.account.create.mockResolvedValue({});
+
+      await repository.save(testAccount);
+
+      expect(mockPrisma.account.updateMany).toHaveBeenCalled();
+      expect(mockPrisma.account.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          id: testAccount.id.value,
           name: 'Acme Corporation',
+          tenantId: 'tenant-123',
         }),
       });
     });
@@ -145,45 +162,41 @@ describe('PrismaAccountRepository', () => {
         tenantId: 'tenant-123',
       });
 
-      const upsertMock = mockPrisma.account.upsert;
-      upsertMock.mockResolvedValue({});
+      mockPrisma.account.updateMany.mockResolvedValue({ count: 0 });
+      mockPrisma.account.create.mockResolvedValue({});
 
       await repository.save(minimalAccountResult.value);
 
-      expect(upsertMock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          create: expect.objectContaining({
-            website: null,
-            industry: null,
-            employees: null,
-            revenue: null,
-            description: null,
-          }),
-        })
-      );
+      expect(mockPrisma.account.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          website: null,
+          industry: null,
+          employees: null,
+          revenue: null,
+          description: null,
+        }),
+      });
     });
 
     it('should convert revenue to Decimal', async () => {
-      const upsertMock = mockPrisma.account.upsert;
-      upsertMock.mockResolvedValue({});
+      mockPrisma.account.updateMany.mockResolvedValue({ count: 1 });
 
       await repository.save(testAccount);
 
-      const callArgs = upsertMock.mock.calls[0][0];
-      expect(callArgs.create.revenue).toBeDefined();
-      expect(callArgs.create.revenue.toString()).toBe('50000000');
+      const callArgs = mockPrisma.account.updateMany.mock.calls[0][0];
+      expect(callArgs.data.revenue).toBeDefined();
+      expect(callArgs.data.revenue.toString()).toBe('50000000');
     });
 
     it('should handle prisma errors', async () => {
-      const upsertMock = mockPrisma.account.upsert;
-      upsertMock.mockRejectedValue(new Error('Database error'));
+      mockPrisma.account.updateMany.mockRejectedValue(new Error('Database error'));
 
       await expect(repository.save(testAccount)).rejects.toThrow('Database error');
     });
   });
 
   describe('findById()', () => {
-    it('should return account when found', async () => {
+    it('should return account when found within tenant', async () => {
       const mockRecord = {
         id: testAccountId.value,
         name: 'Acme Corporation',
@@ -198,13 +211,13 @@ describe('PrismaAccountRepository', () => {
         updatedAt: new Date(),
       };
 
-      const findUniqueMock = mockPrisma.account.findUnique;
-      findUniqueMock.mockResolvedValue(mockRecord);
+      const findFirstMock = mockPrisma.account.findFirst;
+      findFirstMock.mockResolvedValue(mockRecord);
 
-      const result = await repository.findById(testAccountId);
+      const result = await repository.findById(testAccountId, 'tenant-123');
 
-      expect(findUniqueMock).toHaveBeenCalledWith({
-        where: { id: testAccountId.value },
+      expect(findFirstMock).toHaveBeenCalledWith({
+        where: { id: testAccountId.value, tenantId: 'tenant-123' },
       });
 
       expect(result).not.toBeNull();
@@ -215,11 +228,23 @@ describe('PrismaAccountRepository', () => {
     });
 
     it('should return null when not found', async () => {
-      const findUniqueMock = mockPrisma.account.findUnique;
-      findUniqueMock.mockResolvedValue(null);
+      const findFirstMock = mockPrisma.account.findFirst;
+      findFirstMock.mockResolvedValue(null);
 
-      const result = await repository.findById(testAccountId);
+      const result = await repository.findById(testAccountId, 'tenant-123');
 
+      expect(result).toBeNull();
+    });
+
+    it('should return null for cross-tenant access (B-02)', async () => {
+      const findFirstMock = mockPrisma.account.findFirst;
+      findFirstMock.mockResolvedValue(null);
+
+      const result = await repository.findById(testAccountId, 'tenant-OTHER');
+
+      expect(findFirstMock).toHaveBeenCalledWith({
+        where: { id: testAccountId.value, tenantId: 'tenant-OTHER' },
+      });
       expect(result).toBeNull();
     });
 
@@ -238,10 +263,10 @@ describe('PrismaAccountRepository', () => {
         updatedAt: new Date(),
       };
 
-      const findUniqueMock = mockPrisma.account.findUnique;
-      findUniqueMock.mockResolvedValue(mockRecord);
+      const findFirstMock = mockPrisma.account.findFirst;
+      findFirstMock.mockResolvedValue(mockRecord);
 
-      const result = await repository.findById(testAccountId);
+      const result = await repository.findById(testAccountId, 'tenant-123');
 
       expect(result?.website).toBeUndefined();
       expect(result?.industry).toBeUndefined();
@@ -285,10 +310,10 @@ describe('PrismaAccountRepository', () => {
       const findManyMock = mockPrisma.account.findMany;
       findManyMock.mockResolvedValue(mockRecords);
 
-      const results = await repository.findByOwnerId('owner-123');
+      const results = await repository.findByOwnerId('owner-123', 'tenant-123');
 
       expect(findManyMock).toHaveBeenCalledWith({
-        where: { ownerId: 'owner-123' },
+        where: { ownerId: 'owner-123', tenantId: 'tenant-123' },
         orderBy: { name: 'asc' },
       });
 
@@ -301,7 +326,7 @@ describe('PrismaAccountRepository', () => {
       const findManyMock = mockPrisma.account.findMany;
       findManyMock.mockResolvedValue([]);
 
-      const results = await repository.findByOwnerId('owner-999');
+      const results = await repository.findByOwnerId('owner-999', 'tenant-123');
 
       expect(results).toHaveLength(0);
     });
@@ -328,11 +353,12 @@ describe('PrismaAccountRepository', () => {
       const findManyMock = mockPrisma.account.findMany;
       findManyMock.mockResolvedValue(mockRecords);
 
-      const results = await repository.findByName('Acme');
+      const results = await repository.findByName('Acme', 'tenant-123');
 
       expect(findManyMock).toHaveBeenCalledWith({
         where: {
           name: { contains: 'Acme', mode: 'insensitive' },
+          tenantId: 'tenant-123',
         },
         orderBy: { name: 'asc' },
       });
@@ -345,7 +371,7 @@ describe('PrismaAccountRepository', () => {
       const findManyMock = mockPrisma.account.findMany;
       findManyMock.mockResolvedValue([]);
 
-      const results = await repository.findByName('NonExistent');
+      const results = await repository.findByName('NonExistent', 'tenant-123');
 
       expect(results).toHaveLength(0);
     });
@@ -372,10 +398,10 @@ describe('PrismaAccountRepository', () => {
       const findManyMock = mockPrisma.account.findMany;
       findManyMock.mockResolvedValue(mockRecords);
 
-      const results = await repository.findByIndustry('Technology');
+      const results = await repository.findByIndustry('Technology', 'tenant-123');
 
       expect(findManyMock).toHaveBeenCalledWith({
-        where: { industry: 'Technology' },
+        where: { industry: 'Technology', tenantId: 'tenant-123' },
         orderBy: { name: 'asc' },
       });
 
@@ -402,10 +428,10 @@ describe('PrismaAccountRepository', () => {
       const findManyMock = mockPrisma.account.findMany;
       findManyMock.mockResolvedValue(mockRecords);
 
-      const results = await repository.findByIndustry('Technology', 'owner-123');
+      const results = await repository.findByIndustry('Technology', 'tenant-123');
 
       expect(findManyMock).toHaveBeenCalledWith({
-        where: { industry: 'Technology', ownerId: 'owner-123' },
+        where: { industry: 'Technology', tenantId: 'tenant-123' },
         orderBy: { name: 'asc' },
       });
 
@@ -416,29 +442,34 @@ describe('PrismaAccountRepository', () => {
       const findManyMock = mockPrisma.account.findMany;
       findManyMock.mockResolvedValue([]);
 
-      const results = await repository.findByIndustry('NonExistent');
+      const results = await repository.findByIndustry('NonExistent', 'tenant-123');
 
       expect(results).toHaveLength(0);
     });
   });
 
   describe('delete()', () => {
-    it('should call prisma.account.delete with correct ID', async () => {
-      const deleteMock = mockPrisma.account.delete;
-      deleteMock.mockResolvedValue({});
+    it('should call prisma.account.deleteMany with tenant-scoped WHERE (B-02)', async () => {
+      const deleteManyMock = mockPrisma.account.deleteMany;
+      deleteManyMock.mockResolvedValue({ count: 1 });
 
-      await repository.delete(testAccountId);
+      await repository.delete(testAccountId, 'tenant-123');
 
-      expect(deleteMock).toHaveBeenCalledWith({
-        where: { id: testAccountId.value },
+      expect(deleteManyMock).toHaveBeenCalledWith({
+        where: { id: testAccountId.value, tenantId: 'tenant-123' },
       });
     });
 
-    it('should propagate prisma errors', async () => {
-      const deleteMock = mockPrisma.account.delete;
-      deleteMock.mockRejectedValue(new Error('Record not found'));
+    it('should gracefully handle cross-tenant delete (returns 0)', async () => {
+      const deleteManyMock = mockPrisma.account.deleteMany;
+      deleteManyMock.mockResolvedValue({ count: 0 });
 
-      await expect(repository.delete(testAccountId)).rejects.toThrow('Record not found');
+      // Should not throw even though nothing was deleted
+      await repository.delete(testAccountId, 'tenant-OTHER');
+
+      expect(deleteManyMock).toHaveBeenCalledWith({
+        where: { id: testAccountId.value, tenantId: 'tenant-OTHER' },
+      });
     });
   });
 
@@ -447,10 +478,10 @@ describe('PrismaAccountRepository', () => {
       const countMock = mockPrisma.account.count;
       countMock.mockResolvedValue(5);
 
-      const count = await repository.countByOwner('owner-123');
+      const count = await repository.countByOwner('owner-123', 'tenant-123');
 
       expect(countMock).toHaveBeenCalledWith({
-        where: { ownerId: 'owner-123' },
+        where: { ownerId: 'owner-123', tenantId: 'tenant-123' },
       });
 
       expect(count).toBe(5);
@@ -460,9 +491,44 @@ describe('PrismaAccountRepository', () => {
       const countMock = mockPrisma.account.count;
       countMock.mockResolvedValue(0);
 
-      const count = await repository.countByOwner('owner-999');
+      const count = await repository.countByOwner('owner-999', 'tenant-123');
 
       expect(count).toBe(0);
+    });
+  });
+
+  describe('existsByName() (B-03)', () => {
+    it('should check name within tenant scope', async () => {
+      const countMock = mockPrisma.account.count;
+      countMock.mockResolvedValue(1);
+
+      const result = await repository.existsByName('Acme Corp', 'tenant-123');
+
+      expect(countMock).toHaveBeenCalledWith({
+        where: { name: 'Acme Corp', tenantId: 'tenant-123' },
+      });
+      expect(result).toBe(true);
+    });
+
+    it('should return false when name exists only in different tenant', async () => {
+      const countMock = mockPrisma.account.count;
+      countMock.mockResolvedValue(0);
+
+      const result = await repository.existsByName('Acme Corp', 'tenant-OTHER');
+
+      expect(countMock).toHaveBeenCalledWith({
+        where: { name: 'Acme Corp', tenantId: 'tenant-OTHER' },
+      });
+      expect(result).toBe(false);
+    });
+
+    it('should return false when name does not exist at all', async () => {
+      const countMock = mockPrisma.account.count;
+      countMock.mockResolvedValue(0);
+
+      const result = await repository.existsByName('NonExistent', 'tenant-123');
+
+      expect(result).toBe(false);
     });
   });
 
@@ -482,10 +548,10 @@ describe('PrismaAccountRepository', () => {
         updatedAt: new Date(),
       };
 
-      const findUniqueMock = mockPrisma.account.findUnique;
-      findUniqueMock.mockResolvedValue(mockRecord);
+      const findFirstMock = mockPrisma.account.findFirst;
+      findFirstMock.mockResolvedValue(mockRecord);
 
-      await expect(repository.findById(testAccountId)).rejects.toThrow(/Invalid AccountId/);
+      await expect(repository.findById(testAccountId, 'tenant-123')).rejects.toThrow(/Invalid AccountId/);
     });
   });
 
@@ -505,13 +571,12 @@ describe('PrismaAccountRepository', () => {
         updatedAt: testAccount.updatedAt,
       };
 
-      const upsertMock = mockPrisma.account.upsert;
-      const findUniqueMock = mockPrisma.account.findUnique;
-      upsertMock.mockResolvedValue(mockRecord);
-      findUniqueMock.mockResolvedValue(mockRecord);
+      mockPrisma.account.updateMany.mockResolvedValue({ count: 1 });
+      const findFirstMock = mockPrisma.account.findFirst;
+      findFirstMock.mockResolvedValue(mockRecord);
 
       await repository.save(testAccount);
-      const found = await repository.findById(testAccount.id);
+      const found = await repository.findById(testAccount.id, 'tenant-123');
 
       expect(found).not.toBeNull();
       expect(found?.name).toBe(testAccount.name);

@@ -245,18 +245,24 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
     return records.map(reconstituteOpportunity);
   }
 
-  async softDelete(id: OpportunityId): Promise<void> {
-    await this.prisma.opportunity.update({
-      where: { id: id.value },
+  async softDelete(id: OpportunityId, tenantId: string): Promise<void> {
+    const { count } = await this.prisma.opportunity.updateMany({
+      where: { id: id.value, tenantId } as any,
       data: { deletedAt: new Date() } as any,
     });
+    if (count === 0) {
+      throw new Error(`Opportunity not found or tenant mismatch: ${id.value}`);
+    }
   }
 
-  async restore(id: OpportunityId): Promise<void> {
-    await this.prisma.opportunity.update({
-      where: { id: id.value },
+  async restore(id: OpportunityId, tenantId: string): Promise<void> {
+    const { count } = await this.prisma.opportunity.updateMany({
+      where: { id: id.value, tenantId } as any,
       data: { deletedAt: null } as any,
     });
+    if (count === 0) {
+      throw new Error(`Opportunity not found or tenant mismatch: ${id.value}`);
+    }
   }
 
   async findByIdIncludingDeleted(id: OpportunityId): Promise<Opportunity | null> {

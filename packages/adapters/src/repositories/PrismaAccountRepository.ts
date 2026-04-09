@@ -30,6 +30,9 @@ function toWebsiteUrl(url: string | null): WebsiteUrl | undefined {
 /**
  * Prisma Account Repository
  * Implements AccountRepository port using Prisma ORM
+ *
+ * IFC-269: All read/delete methods include tenantId in WHERE clause
+ * for defense-in-depth tenant isolation (ADR-004).
  */
 export class PrismaAccountRepository implements AccountRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -66,16 +69,21 @@ export class PrismaAccountRepository implements AccountRepository {
       updatedAt: account.updatedAt,
     };
 
-    await this.prisma.account.upsert({
-      where: { id: data.id },
-      create: data,
-      update: data,
+    // F2 fix: tenant-guarded write. Use updateMany with tenantId to prevent
+    // cross-tenant record overwrite, then create if nothing was updated.
+    const updated = await this.prisma.account.updateMany({
+      where: { id: data.id, tenantId: data.tenantId },
+      data,
     });
+
+    if (updated.count === 0) {
+      await this.prisma.account.create({ data });
+    }
   }
 
-  async findById(id: AccountId): Promise<Account | null> {
-    const record = await this.prisma.account.findUnique({
-      where: { id: id.value },
+  async findById(id: AccountId, tenantId: string): Promise<Account | null> {
+    const record = await this.prisma.account.findFirst({
+      where: { id: id.value, tenantId },
     });
 
     if (!record) return null;
@@ -83,19 +91,20 @@ export class PrismaAccountRepository implements AccountRepository {
     return this.toDomain(record);
   }
 
-  async findByOwnerId(ownerId: string): Promise<Account[]> {
+  async findByOwnerId(ownerId: string, tenantId: string): Promise<Account[]> {
     const records = await this.prisma.account.findMany({
-      where: { ownerId },
+      where: { ownerId, tenantId },
       orderBy: { name: 'asc' },
     });
 
     return records.map((record) => this.toDomain(record));
   }
 
-  async findByName(name: string): Promise<Account[]> {
+  async findByName(name: string, tenantId: string): Promise<Account[]> {
     const records = await this.prisma.account.findMany({
       where: {
         name: { contains: name, mode: 'insensitive' },
+        tenantId,
       },
       orderBy: { name: 'asc' },
     });
@@ -103,11 +112,11 @@ export class PrismaAccountRepository implements AccountRepository {
     return records.map((record) => this.toDomain(record));
   }
 
-  async findByIndustry(industry: string, ownerId?: string): Promise<Account[]> {
+  async findByIndustry(industry: string, tenantId: string): Promise<Account[]> {
     const records = await this.prisma.account.findMany({
       where: {
         industry,
-        ...(ownerId ? { ownerId } : {}),
+        tenantId,
       },
       orderBy: { name: 'asc' },
     });
@@ -115,29 +124,31 @@ export class PrismaAccountRepository implements AccountRepository {
     return records.map((record) => this.toDomain(record));
   }
 
-  async delete(id: AccountId): Promise<void> {
-    await this.prisma.account.delete({
-      where: { id: id.value },
+  async delete(id: AccountId, tenantId: string): Promise<void> {
+    // Use deleteMany to gracefully handle cross-tenant attempts (returns 0 instead of throwing)
+    await this.prisma.account.deleteMany({
+      where: { id: id.value, tenantId },
     });
   }
 
-  async countByOwner(ownerId: string): Promise<number> {
+  async countByOwner(ownerId: string, tenantId: string): Promise<number> {
     return this.prisma.account.count({
-      where: { ownerId },
+      where: { ownerId, tenantId },
     });
   }
 
-  async existsByName(name: string): Promise<boolean> {
+  async existsByName(name: string, tenantId: string): Promise<boolean> {
     const count = await this.prisma.account.count({
-      where: { name },
+      where: { name, tenantId },
     });
     return count > 0;
   }
 
-  async countByIndustry(): Promise<Record<string, number>> {
+  async countByIndustry(tenantId: string): Promise<Record<string, number>> {
     const results = await this.prisma.account.groupBy({
       by: ['industry'],
       _count: true,
+      where: { tenantId },
     });
 
     return results.reduce(
@@ -163,21 +174,21 @@ export class PrismaAccountRepository implements AccountRepository {
     };
   }
 
-  async findWithChildren(id: AccountId, maxDepth: number): Promise<AccountHierarchyRecord | null> {
+  async findWithChildren(id: AccountId, maxDepth: number, tenantId: string): Promise<AccountHierarchyRecord | null> {
     const include = {
       _count: { select: { contacts: true, opportunities: true } },
       ...this.buildChildrenInclude(maxDepth),
     };
 
-    const record = await this.prisma.account.findUnique({
-      where: { id: id.value },
+    const record = await this.prisma.account.findFirst({
+      where: { id: id.value, tenantId },
       include,
     });
 
     return record as AccountHierarchyRecord | null;
   }
 
-  async findAncestors(id: AccountId): Promise<Account[]> {
+  async findAncestors(id: AccountId, tenantId: string): Promise<Account[]> {
     const ancestors: Account[] = [];
     let currentId: string | null = id.value;
     const visited = new Set<string>();
@@ -186,16 +197,17 @@ export class PrismaAccountRepository implements AccountRepository {
       if (visited.has(currentId)) break;
       visited.add(currentId);
 
-      const record: PrismaAccount | null = await this.prisma.account.findUnique({
-        where: { id: currentId },
+      const record: PrismaAccount | null = await this.prisma.account.findFirst({
+        where: { id: currentId, tenantId },
       });
 
       if (!record?.parentAccountId) break;
 
-      const parentRecord: PrismaAccount | null = await this.prisma.account.findUnique({
-        where: { id: record.parentAccountId },
+      const parentRecord: PrismaAccount | null = await this.prisma.account.findFirst({
+        where: { id: record.parentAccountId, tenantId },
       });
 
+      // Break traversal on cross-tenant boundary (parent not found within tenant)
       if (!parentRecord) break;
 
       ancestors.push(this.toDomain(parentRecord));
@@ -205,8 +217,8 @@ export class PrismaAccountRepository implements AccountRepository {
     return ancestors;
   }
 
-  async getHierarchyDepth(id: AccountId): Promise<number> {
-    const ancestors = await this.findAncestors(id);
+  async getHierarchyDepth(id: AccountId, tenantId: string): Promise<number> {
+    const ancestors = await this.findAncestors(id, tenantId);
     return ancestors.length;
   }
 }

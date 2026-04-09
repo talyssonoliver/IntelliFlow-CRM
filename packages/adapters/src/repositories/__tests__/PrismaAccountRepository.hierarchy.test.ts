@@ -6,15 +6,18 @@ function mockPrisma() {
   return {
     account: {
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
       findMany: vi.fn(),
       upsert: vi.fn(),
       delete: vi.fn(),
+      deleteMany: vi.fn(),
       count: vi.fn(),
       groupBy: vi.fn(),
     },
   } as any;
 }
 
+const TENANT_ID = 'tenant-1';
 const NOW = new Date('2026-01-15T10:00:00Z');
 
 function makePrismaRecord(overrides: Record<string, unknown> = {}) {
@@ -28,7 +31,7 @@ function makePrismaRecord(overrides: Record<string, unknown> = {}) {
     description: null,
     parentAccountId: null,
     ownerId: 'owner-1',
-    tenantId: 'tenant-1',
+    tenantId: TENANT_ID,
     createdAt: NOW,
     updatedAt: NOW,
     ...overrides,
@@ -55,10 +58,10 @@ describe('PrismaAccountRepository hierarchy methods', () => {
 
   describe('findWithChildren', () => {
     it('should return null when account not found', async () => {
-      prisma.account.findUnique.mockResolvedValue(null);
+      prisma.account.findFirst.mockResolvedValue(null);
       const id = AccountId.create(UUID_MISSING).value;
 
-      const result = await repo.findWithChildren(id, 3);
+      const result = await repo.findWithChildren(id, 3, TENANT_ID);
       expect(result).toBeNull();
     });
 
@@ -75,10 +78,10 @@ describe('PrismaAccountRepository hierarchy methods', () => {
         ],
       };
 
-      prisma.account.findUnique.mockResolvedValue(record);
+      prisma.account.findFirst.mockResolvedValue(record);
       const id = AccountId.create(UUID_PARENT).value;
 
-      const result = await repo.findWithChildren(id, 2);
+      const result = await repo.findWithChildren(id, 2, TENANT_ID);
       expect(result).not.toBeNull();
       expect(result!.id).toBe(UUID_PARENT);
       expect(result!.childAccounts).toHaveLength(1);
@@ -86,15 +89,15 @@ describe('PrismaAccountRepository hierarchy methods', () => {
       expect(result!._count).toEqual({ contacts: 2, opportunities: 1 });
     });
 
-    it('should pass include with recursive children to prisma', async () => {
-      prisma.account.findUnique.mockResolvedValue(null);
+    it('should include tenantId in WHERE clause (B-02)', async () => {
+      prisma.account.findFirst.mockResolvedValue(null);
       const id = AccountId.create(UUID_PARENT).value;
 
-      await repo.findWithChildren(id, 1);
+      await repo.findWithChildren(id, 1, TENANT_ID);
 
-      expect(prisma.account.findUnique).toHaveBeenCalledWith(
+      expect(prisma.account.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: UUID_PARENT },
+          where: { id: UUID_PARENT, tenantId: TENANT_ID },
           include: expect.objectContaining({
             _count: { select: { contacts: true, opportunities: true } },
             childAccounts: expect.any(Object),
@@ -106,10 +109,10 @@ describe('PrismaAccountRepository hierarchy methods', () => {
 
   describe('findAncestors', () => {
     it('should return empty array when account has no parent', async () => {
-      prisma.account.findUnique.mockResolvedValue(makePrismaRecord({ parentAccountId: null }));
+      prisma.account.findFirst.mockResolvedValue(makePrismaRecord({ parentAccountId: null }));
       const id = AccountId.create(UUID_ROOT).value;
 
-      const ancestors = await repo.findAncestors(id);
+      const ancestors = await repo.findAncestors(id, TENANT_ID);
       expect(ancestors).toEqual([]);
     });
 
@@ -118,7 +121,7 @@ describe('PrismaAccountRepository hierarchy methods', () => {
       const parent = makePrismaRecord({ id: UUID_PARENT, parentAccountId: UUID_GRANDPARENT });
       const grandparent = makePrismaRecord({ id: UUID_GRANDPARENT, parentAccountId: null });
 
-      prisma.account.findUnique
+      prisma.account.findFirst
         .mockResolvedValueOnce(child) // lookup child
         .mockResolvedValueOnce(parent) // lookup parent
         .mockResolvedValueOnce(parent) // lookup parent for its parentAccountId
@@ -126,7 +129,7 @@ describe('PrismaAccountRepository hierarchy methods', () => {
         .mockResolvedValueOnce(grandparent); // grandparent has no parent
 
       const id = AccountId.create(UUID_CHILD).value;
-      const ancestors = await repo.findAncestors(id);
+      const ancestors = await repo.findAncestors(id, TENANT_ID);
 
       expect(ancestors.length).toBeGreaterThanOrEqual(1);
     });
@@ -135,14 +138,14 @@ describe('PrismaAccountRepository hierarchy methods', () => {
       const a = makePrismaRecord({ id: UUID_A, parentAccountId: UUID_B });
       const b = makePrismaRecord({ id: UUID_B, parentAccountId: UUID_A });
 
-      prisma.account.findUnique
+      prisma.account.findFirst
         .mockResolvedValueOnce(a)
         .mockResolvedValueOnce(b)
         .mockResolvedValueOnce(b)
         .mockResolvedValueOnce(a);
 
       const id = AccountId.create(UUID_A).value;
-      const ancestors = await repo.findAncestors(id);
+      const ancestors = await repo.findAncestors(id, TENANT_ID);
 
       // Should terminate without infinite loop
       expect(ancestors.length).toBeLessThanOrEqual(2);
@@ -151,10 +154,10 @@ describe('PrismaAccountRepository hierarchy methods', () => {
 
   describe('getHierarchyDepth', () => {
     it('should return 0 for root account', async () => {
-      prisma.account.findUnique.mockResolvedValue(makePrismaRecord({ parentAccountId: null }));
+      prisma.account.findFirst.mockResolvedValue(makePrismaRecord({ parentAccountId: null }));
       const id = AccountId.create(UUID_ROOT).value;
 
-      const depth = await repo.getHierarchyDepth(id);
+      const depth = await repo.getHierarchyDepth(id, TENANT_ID);
       expect(depth).toBe(0);
     });
 
@@ -162,13 +165,13 @@ describe('PrismaAccountRepository hierarchy methods', () => {
       const child = makePrismaRecord({ id: UUID_CHILD, parentAccountId: UUID_PARENT });
       const parent = makePrismaRecord({ id: UUID_PARENT, parentAccountId: null });
 
-      prisma.account.findUnique
+      prisma.account.findFirst
         .mockResolvedValueOnce(child)
         .mockResolvedValueOnce(parent)
         .mockResolvedValueOnce(parent);
 
       const id = AccountId.create(UUID_CHILD).value;
-      const depth = await repo.getHierarchyDepth(id);
+      const depth = await repo.getHierarchyDepth(id, TENANT_ID);
       expect(depth).toBe(1);
     });
   });
