@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-03-19T22:11:39.907Z",
+  "generated_at": "2026-04-09T20:51:34.757Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 365,
-    "completed": 357,
-    "partially_done": 2,
-    "spec_only": 2,
+    "total_specs_analyzed": 367,
+    "completed": 361,
+    "partially_done": 1,
+    "spec_only": 1,
     "uncertain": 4
   },
   "status_legend": {
@@ -19,6 +19,12 @@
       "task_id": "IFC-194",
       "severity": "MEDIUM",
       "issue": "Attestation confirms completion but CSV shows only 50% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
+      "task_id": "IFC-269",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
       "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     },
     {
@@ -50,6 +56,12 @@
       "severity": "MEDIUM",
       "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
       "recommendation": "Run /exec PG-166 when ready for implementation."
+    },
+    {
+      "task_id": "PG-175",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 10% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     },
     {
       "task_id": "PG-176",
@@ -3998,6 +4010,20 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-239",
+      "title": "Lead Router Data Integrity Fixes. Fix 5 HIGH issues: (1) update procedure ambiguous status field handling - may silently drop or bypass domain validation [S5]. (2) Score tier thresholds inconsistent - domain LeadScore uses 80/50 but router stats query uses 70/40 [S6]. (3) sortBy accepts arbitrary strings with no enum validation - Prisma orderBy injection risk [S7]. (4) leadListResponseSchema expects 'data' key but router returns 'leads' [W4]. (5) leadResponseSchema missing Lead 360 fields (aiInsight, activities, notes, files, tasks) [D5]. Fix: Explicitly handle status in update, unify thresholds, add sortBy enum, fix schema keys.",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/IFC-239-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
       "task_id": "IFC-252",
       "title": "Contact Router Security — Tenant Isolation Fixes. CRITICAL: (1) search procedure has no createTenantWhereClause — cross-tenant search by name/email (R-02). (2) logActivity transaction uses raw ctx.prisma with no tenantId in WHERE — cross-tenant update (R-03). (3) bulkEmail/bulkExport no tenant filter — email exfiltration via guessed UUIDs (R-04). (4) stats ignores typedCtx tenant — no tenantId boundary (R-05). (5) getById/getByEmail double-fetch through unscoped domain repo (R-06). Cross-ref: R-01 (prismaWithTenant raw) is cross-cutting and shared with IFC-237. Audit: docs/audit/contact-detail-wiring-audit.md §15.",
       "sprint": 16,
@@ -4058,6 +4084,20 @@
       "title": "Account Owner Display & Assignment. (1) Owner card shows literal 'Owner Assigned' and 'Account Manager' text instead of actual owner name/title — ownerId exists but owner relation not included in getById (F-01). (2) No owner assignment UI or mutation (F-02). Fix: include owner relation in getById query; display real owner name and role; add owner assignment combobox or dialog with user search mutation. Audit: docs/audit/account-detail-wiring-audit.md section 2.",
       "sprint": 16,
       "spec_path": ".specify/sprints/sprint-16/specifications/IFC-268-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-269",
+      "title": "Account Backend Tenant Isolation & Security. (1) CRITICAL: filterOptions uses raw ctx.prisma instead of prismaWithTenant for user lookup — tenant data leak (B-01, account.router.ts:445). (2) PrismaAccountRepository has NO tenantId filter on any method — single-layer defense (B-02). (3) existsByName blocks same name across all tenants — should be per-tenant (B-03). (4) sortBy parameter unsanitized — potential Prisma orderBy injection (B-04). (5) TOCTOU window in update/delete without transaction (B-05). (6) Zero audit logging on all account mutations (B-07). Audit: docs/audit/account-detail-wiring-audit.md sections 11-12.",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/IFC-269-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
@@ -5825,13 +5865,13 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "In Progress",
+      "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-135"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-176",
@@ -5921,15 +5961,15 @@
       "spec_path": ".specify/sprints/sprint-16/specifications/PG-193-spec.md",
       "has_spec": true,
       "has_plan": true,
-      "has_attestation": false,
-      "csv_status": "Planning",
+      "has_attestation": true,
+      "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-151",
         "PG-192"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PM-OPS-001",

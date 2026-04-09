@@ -262,7 +262,7 @@ After completing each task, the system will automatically:
 1. Update `Sprint_plan.csv` status to "Done"
 2. Generate evidence in `artifacts/stoa-runs/` or `artifacts/swarm-runs/`
 3. Create attestation in `artifacts/attestations/<TASK_ID>/attestation.json` with:
-   - `$schema`: `https://intelliflow-crm.com/schemas/attestation.schema.json`
+   - `$schema`: `../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json`
    - `schema_version`: `"1.0.0"`
    - `verdict`: `"COMPLETE"` or `"INCOMPLETE"`
    - `context_acknowledgment`: files_read with SHA256 hashes

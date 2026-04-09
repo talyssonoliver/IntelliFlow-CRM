@@ -487,9 +487,9 @@
       }
     ],
     "createdAt": "2025-12-21T09:59:22.382Z",
-    "resolvedAt": null,
-    "resolvedBy": null,
-    "resolution": null
+    "resolvedAt": "2026-04-07T20:27:50.813Z",
+    "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-0/attestations/EXC-INIT-001/EXC-INIT-001-attestation.json",
+    "resolution": "Resolved during blocker reconciliation"
   },
   {
     "id": "RQ-1766311428056-j5480n",
@@ -562,9 +562,9 @@
       }
     ],
     "createdAt": "2025-12-21T10:03:48.056Z",
-    "resolvedAt": null,
-    "resolvedBy": null,
-    "resolution": null
+    "resolvedAt": "2026-04-07T20:27:50.814Z",
+    "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-0/attestations/ENV-001-AI/ENV-001-AI-attestation.json",
+    "resolution": "Resolved during blocker reconciliation"
   },
   {
     "id": "RQ-1766311592317-woao91",
@@ -637,9 +637,9 @@
       }
     ],
     "createdAt": "2025-12-21T10:06:32.317Z",
-    "resolvedAt": null,
-    "resolvedBy": null,
-    "resolution": null
+    "resolvedAt": "2026-04-07T20:27:50.816Z",
+    "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-0/attestations/ENV-002-AI/ENV-002-AI-attestation.json",
+    "resolution": "Resolved during blocker reconciliation"
   },
   {
     "id": "RQ-1766311699607-cmdxpi",
@@ -712,9 +712,9 @@
       }
     ],
     "createdAt": "2025-12-21T10:08:19.607Z",
-    "resolvedAt": null,
-    "resolvedBy": null,
-    "resolution": null
+    "resolvedAt": "2026-04-07T20:27:50.806Z",
+    "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-0/attestations/ENV-003-AI/ENV-003-AI-attestation.json",
+    "resolution": "Resolved during blocker reconciliation"
   },
   {
     "id": "RQ-1766311799927-3gke6l",
@@ -775,9 +775,9 @@
       }
     ],
     "createdAt": "2025-12-21T10:09:59.927Z",
-    "resolvedAt": null,
-    "resolvedBy": null,
-    "resolution": null
+    "resolvedAt": "2026-04-07T20:27:50.808Z",
+    "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-0/attestations/ENV-004-AI/ENV-004-AI-attestation.json",
+    "resolution": "Resolved during blocker reconciliation"
   },
   {
     "id": "RQ-1766311919840-hlev6b",
@@ -868,9 +868,9 @@
       }
     ],
     "createdAt": "2025-12-21T10:11:59.840Z",
-    "resolvedAt": null,
-    "resolvedBy": null,
-    "resolution": null
+    "resolvedAt": "2026-04-07T20:27:50.818Z",
+    "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-0/attestations/ENV-005-AI/ENV-005-AI-attestation.json",
+    "resolution": "Resolved during blocker reconciliation"
   },
   {
     "id": "RQ-1766312036849-vjf66v",
@@ -967,9 +967,9 @@
       }
     ],
     "createdAt": "2025-12-21T10:13:56.849Z",
-    "resolvedAt": null,
-    "resolvedBy": null,
-    "resolution": null
+    "resolvedAt": "2026-04-07T20:27:50.811Z",
+    "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-0/attestations/ENV-006-AI/ENV-006-AI-attestation.json",
+    "resolution": "Resolved during blocker reconciliation"
   },
   {
     "id": "RQ-1766312145611-wiy9sl",
@@ -1855,9 +1855,9 @@
       }
     ],
     "createdAt": "2025-12-22T21:13:40.980Z",
-    "resolvedAt": null,
-    "resolvedBy": null,
-    "resolution": null
+    "resolvedAt": "2026-04-07T20:27:50.820Z",
+    "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-2/attestations/IFC-008/IFC-008-attestation.json",
+    "resolution": "Resolved during blocker reconciliation"
   },
   {
     "id": "RQ-1766438201018-m63qpp",
@@ -1876,9 +1876,9 @@
       }
     ],
     "createdAt": "2025-12-22T21:16:41.018Z",
-    "resolvedAt": null,
-    "resolvedBy": null,
-    "resolution": null
+    "resolvedAt": "2026-04-07T20:27:50.821Z",
+    "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-2/attestations/IFC-101/IFC-101-attestation.json",
+    "resolution": "Resolved during blocker reconciliation"
   },
   {
     "id": "RQ-1766438298827-fw6q8h",
@@ -1897,9 +1897,9 @@
       }
     ],
     "createdAt": "2025-12-22T21:18:18.827Z",
-    "resolvedAt": null,
-    "resolvedBy": null,
-    "resolution": null
+    "resolvedAt": "2026-04-07T20:27:50.823Z",
+    "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-2/attestations/IFC-102/attestation.json",
+    "resolution": "Resolved during blocker reconciliation"
   },
   {
     "id": "RQ-1766438356030-jz1wao",
@@ -1918,9 +1918,9 @@
       }
     ],
     "createdAt": "2025-12-22T21:19:16.030Z",
-    "resolvedAt": null,
-    "resolvedBy": null,
-    "resolution": null
+    "resolvedAt": "2026-04-07T20:27:50.825Z",
+    "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-2/attestations/IFC-103/IFC-103-attestation.json",
+    "resolution": "Resolved during blocker reconciliation"
   },
   {
     "id": "RQ-1766438406903-emnheu",
@@ -1939,8 +1939,8 @@
       }
     ],
     "createdAt": "2025-12-22T21:20:06.903Z",
-    "resolvedAt": null,
-    "resolvedBy": null,
-    "resolution": null
+    "resolvedAt": "2026-04-07T20:27:50.827Z",
+    "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-8/attestations/IFC-118/attestation.json",
+    "resolution": "Resolved during blocker reconciliation"
   }
 ]

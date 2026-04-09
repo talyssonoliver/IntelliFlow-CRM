@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://intelliflow-crm.com/schemas/extracted-text.schema.json",
+  "$id": "extracted-text-schema.json",
   "title": "ExtractedTextArtifact",
   "description": "Schema for OCR-extracted text artifacts stored for search and RAG",
   "type": "object",
