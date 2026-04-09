@@ -350,4 +350,151 @@ describe('opportunityRouter additional coverage', () => {
       ).rejects.toThrow('Opportunity service not available');
     });
   });
+
+  // =========================================================================
+  // PG-175: Trash procedures (listTrashed, restore, permanentDelete)
+  // =========================================================================
+
+  describe('listTrashed', () => {
+    const trashedOpp = {
+      ...{
+        id: OPP_ID,
+        tenantId: TENANT_ID,
+        name: 'Deleted Deal',
+        value: 25000,
+        stage: 'PROPOSAL',
+        probability: 50,
+        expectedCloseDate: new Date('2025-06-30'),
+        closedAt: null,
+        deletedAt: new Date('2026-03-15'),
+        description: 'Was deleted',
+        accountId: null,
+        contactId: null,
+        ownerId: USER_ID,
+        sourceLeadId: null,
+        createdAt: new Date('2025-01-01'),
+        updatedAt: new Date('2025-01-01'),
+      },
+      owner: { id: USER_ID, name: 'Test User', email: 'test@example.com' },
+      account: null,
+      contact: null,
+    };
+
+    it('should return trashed opportunities', async () => {
+      prismaMock.opportunity.findMany.mockResolvedValue([trashedOpp] as any);
+      prismaMock.opportunity.count.mockResolvedValue(1);
+      const caller = opportunityRouter.createCaller(ctx);
+
+      const result = await caller.listTrashed({});
+
+      expect(result.opportunities).toHaveLength(1);
+      expect(result.total).toBe(1);
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(15);
+      expect(result.hasMore).toBe(false);
+    });
+
+    it('should respect search filter on name', async () => {
+      prismaMock.opportunity.findMany.mockResolvedValue([]);
+      prismaMock.opportunity.count.mockResolvedValue(0);
+      const caller = opportunityRouter.createCaller(ctx);
+
+      const result = await caller.listTrashed({ search: 'Nonexistent' });
+
+      expect(result.opportunities).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+
+    it('should paginate correctly', async () => {
+      prismaMock.opportunity.findMany.mockResolvedValue([trashedOpp] as any);
+      prismaMock.opportunity.count.mockResolvedValue(20);
+      const caller = opportunityRouter.createCaller(ctx);
+
+      const result = await caller.listTrashed({ page: 2, limit: 5 });
+
+      expect(result.page).toBe(2);
+      expect(result.limit).toBe(5);
+      expect(result.hasMore).toBe(true); // 5 + 1 < 20
+    });
+  });
+
+  describe('restore', () => {
+    it('should restore a trashed opportunity successfully', async () => {
+      mockServices.opportunity.restoreOpportunity.mockResolvedValue({
+        isFailure: false,
+        value: { id: OPP_ID },
+      });
+      const caller = opportunityRouter.createCaller(ctx);
+
+      const result = await caller.restore({ id: OPP_ID });
+
+      expect(result).toEqual({ success: true, id: OPP_ID });
+      expect(mockServices.opportunity.restoreOpportunity).toHaveBeenCalledWith(OPP_ID, TENANT_ID);
+    });
+
+    it('should throw NOT_FOUND for non-existent id', async () => {
+      mockServices.opportunity.restoreOpportunity.mockResolvedValue({
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: 'Opportunity not found' },
+      });
+      const caller = opportunityRouter.createCaller(ctx);
+
+      await expect(caller.restore({ id: OPP_ID })).rejects.toThrow('Opportunity not found');
+    });
+  });
+
+  describe('permanentDelete', () => {
+    it('should permanently delete a trashed opportunity', async () => {
+      mockServices.opportunity.permanentDeleteOpportunity.mockResolvedValue({
+        isFailure: false,
+        value: { id: OPP_ID },
+      });
+      const caller = opportunityRouter.createCaller(ctx);
+
+      const result = await caller.permanentDelete({ id: OPP_ID });
+
+      expect(result).toEqual({ success: true, id: OPP_ID });
+      expect(mockServices.opportunity.permanentDeleteOpportunity).toHaveBeenCalledWith(OPP_ID, TENANT_ID);
+    });
+
+    it('should reject non-trashed deals with PRECONDITION_FAILED', async () => {
+      mockServices.opportunity.permanentDeleteOpportunity.mockResolvedValue({
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: 'Can only permanently delete deals that are in trash' },
+      });
+      const caller = opportunityRouter.createCaller(ctx);
+
+      try {
+        await caller.permanentDelete({ id: OPP_ID });
+        expect.unreachable('Should have thrown');
+      } catch (error: any) {
+        expect(error.code).toBe('PRECONDITION_FAILED');
+      }
+    });
+
+    it('should throw NOT_FOUND for non-existent id', async () => {
+      mockServices.opportunity.permanentDeleteOpportunity.mockResolvedValue({
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: 'Opportunity not found' },
+      });
+      const caller = opportunityRouter.createCaller(ctx);
+
+      await expect(caller.permanentDelete({ id: OPP_ID })).rejects.toThrow('Opportunity not found');
+    });
+  });
+
+  describe('delete - now performs soft-delete', () => {
+    it('should call deleteOpportunity (which is now soft-delete) successfully', async () => {
+      mockServices.opportunity.deleteOpportunity.mockResolvedValue({
+        isFailure: false,
+        value: { id: OPP_ID },
+      });
+      const caller = opportunityRouter.createCaller(ctx);
+
+      const result = await caller.delete({ id: OPP_ID });
+
+      expect(result).toEqual({ success: true, id: OPP_ID });
+      expect(mockServices.opportunity.deleteOpportunity).toHaveBeenCalled();
+    });
+  });
 });

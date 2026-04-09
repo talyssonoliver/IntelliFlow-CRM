@@ -175,7 +175,7 @@ describe('Opportunity Router', () => {
         contact: { id: TEST_UUIDS.contact1, firstName: 'John', lastName: 'Doe', title: 'CEO', email: 'john@test.com' },
       };
 
-      prismaMock.opportunity.findUnique.mockResolvedValue(enrichedRecord as any);
+      prismaMock.opportunity.findFirst.mockResolvedValue(enrichedRecord as any);
 
       const result = await caller.getById({ id: TEST_UUIDS.opportunity1 });
 
@@ -184,9 +184,9 @@ describe('Opportunity Router', () => {
       expect(result.owner).toEqual({ id: TEST_UUIDS.user1, name: 'Test Owner', email: 'owner@test.com' });
       expect(result.account).toEqual({ id: TEST_UUIDS.account1, name: 'Test Account', website: 'https://test.com' });
       expect(result.contact).toEqual({ id: TEST_UUIDS.contact1, firstName: 'John', lastName: 'Doe', title: 'CEO', email: 'john@test.com' });
-      expect(prismaMock.opportunity.findUnique).toHaveBeenCalledWith(
+      expect(prismaMock.opportunity.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: TEST_UUIDS.opportunity1 },
+          where: expect.objectContaining({ id: TEST_UUIDS.opportunity1 }),
           include: expect.objectContaining({
             owner: expect.any(Object),
             account: expect.any(Object),
@@ -197,7 +197,7 @@ describe('Opportunity Router', () => {
     });
 
     it('should throw NOT_FOUND for non-existent opportunity', async () => {
-      prismaMock.opportunity.findUnique.mockResolvedValue(null);
+      prismaMock.opportunity.findFirst.mockResolvedValue(null);
 
       await expect(caller.getById({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(
         expect.objectContaining({

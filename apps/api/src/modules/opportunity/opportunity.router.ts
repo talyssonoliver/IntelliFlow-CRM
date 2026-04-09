@@ -528,8 +528,8 @@ export const opportunityRouter = createTRPCRouter({
    */
   getById: tenantProcedure.input(z.object({ id: idSchema })).query(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
-    const record = await typedCtx.prismaWithTenant.opportunity.findUnique({
-      where: { id: input.id },
+    const record = await typedCtx.prismaWithTenant.opportunity.findFirst({
+      where: { id: input.id, deletedAt: null } as any,
       include: {
         owner: { select: { id: true, name: true, email: true } },
         account: { select: { id: true, name: true, website: true } },
@@ -537,7 +537,7 @@ export const opportunityRouter = createTRPCRouter({
       },
     });
 
-    if (!record || record.deletedAt !== null) {
+    if (!record) {
       throw new TRPCError({
         code: 'NOT_FOUND',
         message: `Opportunity not found: ${input.id}`,
@@ -688,7 +688,7 @@ export const opportunityRouter = createTRPCRouter({
     .input(
       z.object({
         search: z.string().optional(),
-        sortBy: z.string().optional().default('deletedAt'),
+        sortBy: z.enum(['name', 'value', 'deletedAt', 'stage']).optional().default('deletedAt'),
         sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
         page: z.number().int().positive().optional().default(1),
         limit: z.number().int().positive().max(100).optional().default(15),
