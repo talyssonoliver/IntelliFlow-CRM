@@ -290,12 +290,35 @@ describe('Opportunity Router Contract Tests', () => {
     });
 
     it('should return opportunity via OpportunityService', async () => {
-      const mockDomainOpportunity = createMockDomainOpportunity();
-      ctx.services!.opportunity!.getOpportunityById = vi.fn().mockResolvedValue({
-        isSuccess: true,
-        isFailure: false,
-        value: mockDomainOpportunity,
-      });
+      // getById now queries prismaWithTenant.opportunity.findFirst directly
+      // rather than going through OpportunityService. Mock the prisma call.
+      prismaMock.opportunity.findFirst.mockResolvedValue({
+        id: TEST_UUIDS.opportunity1,
+        name: 'Enterprise Deal',
+        value: 50000,
+        probability: 60,
+        stage: 'PROPOSAL',
+        expectedCloseDate: new Date('2024-12-31'),
+        accountId: TEST_UUIDS.account1,
+        contactId: TEST_UUIDS.contact1,
+        ownerId: TEST_UUIDS.user1,
+        tenantId: TEST_UUIDS.tenant,
+        sourceLeadId: null,
+        description: 'Large enterprise opportunity',
+        closedAt: null,
+        deletedAt: null,
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
+        owner: { id: TEST_UUIDS.user1, name: 'Test', email: 'test@example.com' },
+        account: { id: TEST_UUIDS.account1, name: 'Acme', website: null },
+        contact: {
+          id: TEST_UUIDS.contact1,
+          firstName: 'Jane',
+          lastName: 'Smith',
+          title: 'CTO',
+          email: 'jane@acme.com',
+        },
+      } as any);
 
       const result = await caller.getById({ id: TEST_UUIDS.opportunity1 });
 

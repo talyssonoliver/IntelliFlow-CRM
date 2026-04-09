@@ -414,8 +414,10 @@ describe('Update Agent Tools', () => {
 
       it('should add warning for time outside business hours (early morning)', async () => {
         const context = createMockContext();
+        // Use UTC setters because the router checks getUTCHours() — avoids
+        // failing on machines where local time differs from UTC.
         const earlyDate = new Date();
-        earlyDate.setHours(6, 0, 0, 0);
+        earlyDate.setUTCHours(6, 0, 0, 0);
         const input = { id: 'appt-123', startTime: earlyDate };
 
         const preview = await updateAppointmentTool.generatePreview(input, context);
@@ -427,7 +429,7 @@ describe('Update Agent Tools', () => {
       it('should add warning for time outside business hours (late evening)', async () => {
         const context = createMockContext();
         const lateDate = new Date();
-        lateDate.setHours(20, 0, 0, 0);
+        lateDate.setUTCHours(20, 0, 0, 0);
         const input = { id: 'appt-123', startTime: lateDate };
 
         const preview = await updateAppointmentTool.generatePreview(input, context);
@@ -438,10 +440,10 @@ describe('Update Agent Tools', () => {
 
       it('should add warning for weekend appointment (Saturday)', async () => {
         const context = createMockContext();
-        // Find next Saturday
+        // Find next Saturday (UTC to avoid server-local timezone drift)
         const saturday = new Date();
-        saturday.setDate(saturday.getDate() + (6 - saturday.getDay()));
-        saturday.setHours(10, 0, 0, 0);
+        saturday.setUTCDate(saturday.getUTCDate() + (6 - saturday.getUTCDay()));
+        saturday.setUTCHours(10, 0, 0, 0);
         const input = { id: 'appt-123', startTime: saturday };
 
         const preview = await updateAppointmentTool.generatePreview(input, context);
@@ -452,10 +454,10 @@ describe('Update Agent Tools', () => {
 
       it('should add warning for weekend appointment (Sunday)', async () => {
         const context = createMockContext();
-        // Find next Sunday
+        // Find next Sunday (UTC to avoid server-local timezone drift)
         const sunday = new Date();
-        sunday.setDate(sunday.getDate() + (7 - sunday.getDay()));
-        sunday.setHours(10, 0, 0, 0);
+        sunday.setUTCDate(sunday.getUTCDate() + (7 - sunday.getUTCDay()));
+        sunday.setUTCHours(10, 0, 0, 0);
         const input = { id: 'appt-123', startTime: sunday };
 
         const preview = await updateAppointmentTool.generatePreview(input, context);

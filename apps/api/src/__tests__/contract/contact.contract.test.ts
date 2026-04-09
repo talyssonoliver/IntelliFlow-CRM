@@ -290,7 +290,7 @@ describe('Contact Router Contract Tests', () => {
         value: createMockDomainContact(),
       });
 
-      prismaMock.contact.findUnique.mockResolvedValue(contactWithRelations);
+      prismaMock.contact.findFirst.mockResolvedValue(contactWithRelations);
 
       const result = await caller.getById({ id: TEST_UUIDS.contact1 });
 
@@ -625,13 +625,15 @@ describe('Contact Router Contract Tests', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      ctx.services!.contact!.getContactStatistics = vi.fn().mockResolvedValue({
-        total: 50,
-        withAccount: 35,
-        withoutAccount: 15,
-        convertedFromLeads: 10,
-        byDepartment: { Engineering: 20 },
-      });
+      // The stats procedure queries prismaWithTenant directly with
+      // count + count + groupBy. The service mock is not used here.
+      prismaMock.contact.count
+        .mockResolvedValueOnce(50) // total
+        .mockResolvedValueOnce(35); // withAccounts
+      (prismaMock.contact.groupBy as any).mockResolvedValue([
+        { department: 'Engineering', _count: 20 },
+        { department: 'Sales', _count: 15 },
+      ]);
 
       const result = await caller.stats();
 

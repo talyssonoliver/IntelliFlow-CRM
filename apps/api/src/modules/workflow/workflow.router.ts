@@ -8,6 +8,10 @@
  *  - PG-193:  Workflow Step Progress Panel — adds getExecution,
  *             getExecutionsByEntity and migrates all procedures to
  *             `tenantProcedure` for tenant isolation.
+ *  - PG-193 audit fix: mergeSteps no longer synthesises a "running" status
+ *    from `currentStep`. Step status comes from explicit stepResults entries
+ *    first; unresulted steps fall back to the execution-level status only.
+ *    See `apps/api/src/modules/workflow/__tests__/workflow.router.test.ts`.
  */
 
 import { z } from 'zod';
@@ -75,53 +79,82 @@ export function stepTypeToName(type: string): string {
 // JSON parsers with safe fallback
 // ---------------------------------------------------------------------------
 
+/**
+ * Parse the JSON step definition array stored on WorkflowDefinition.steps.
+ * Valid entries are kept, invalid entries are silently dropped. A single
+ * malformed row must NOT discard the rest of the workflow definition.
+ */
 export function parseStepDefinitions(raw: unknown): WorkflowStepDef[] {
   if (!Array.isArray(raw)) return [];
-  const parsed = z.array(workflowStepDefSchema).safeParse(raw);
-  return parsed.success ? parsed.data : [];
-}
-
-export function parseStepResults(raw: unknown): WorkflowStepResult[] {
-  if (!Array.isArray(raw)) return [];
-  const parsed = z.array(workflowStepResultSchema).safeParse(raw);
-  return parsed.success ? parsed.data : [];
+  return raw.flatMap((item) => {
+    const parsed = workflowStepDefSchema.safeParse(item);
+    return parsed.success ? [parsed.data] : [];
+  });
 }
 
 /**
+ * Parse the JSON step result array stored on WorkflowExecution.stepResults.
+ * Valid entries are kept, invalid entries are silently dropped. A single
+ * malformed row must NOT discard the rest of the execution's progress state.
+ */
+export function parseStepResults(raw: unknown): WorkflowStepResult[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    const parsed = workflowStepResultSchema.safeParse(item);
+    return parsed.success ? [parsed.data] : [];
+  });
+}
+
+export type WorkflowExecutionStatus =
+  | 'RUNNING'
+  | 'PAUSED'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'CANCELLED';
+
+/**
  * Merge workflow step definitions with execution results into a single
- * display-ready array. Handles the 0-based `currentStep` (DB) vs 1-based
- * `stepResults[].step` (seed data) offset.
+ * display-ready array.
+ *
+ * Status resolution (PG-193 audit fix):
+ * 1. If a stepResult entry exists for the step, use its explicit `status`
+ *    field verbatim — the engine is the canonical source of truth.
+ * 2. Otherwise, derive a fallback from the execution-level `status`:
+ *      - COMPLETED → 'completed' (missing result ≈ engine forgot to record;
+ *        the execution as a whole is done, so treat it as done)
+ *      - CANCELLED → 'skipped'
+ *      - RUNNING / PAUSED / FAILED → 'pending'
+ *
+ * Historical note: the first implementation used `currentStep + 1` to
+ * synthesize a "running" status for the next-unresulted step. That logic
+ * disagreed with the seed fixture (`packages/db/prisma/seed.ts:8090-8128`),
+ * which marks step 2 as the active (pending) step while step 3 has no result
+ * — so the synthesiser incorrectly rendered step 3 as running. Until the real
+ * workflow engine (IFC-028 / IFC-296) lands with a documented `currentStep`
+ * contract, we do not fabricate per-step running state at all.
  */
 export function mergeSteps(
   defs: WorkflowStepDef[],
   results: WorkflowStepResult[],
-  currentStep: number,
-  status: 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED',
+  status: WorkflowExecutionStatus,
 ): WorkflowMergedStep[] {
   const resultByStep = new Map<number, WorkflowStepResult>();
   for (const r of results) resultByStep.set(r.step, r);
-
-  // 1-based index of the currently running step (translation from 0-based).
-  const runningIndex = currentStep + 1;
 
   return defs.map<WorkflowMergedStep>((def, idx) => {
     const stepNumber = idx + 1;
     const result = resultByStep.get(def.id) ?? resultByStep.get(stepNumber);
     const explicitStatus = result?.status;
+
     let computedStatus: WorkflowStepStatus;
     if (explicitStatus) {
       computedStatus = explicitStatus;
-    } else if (status === 'CANCELLED') {
-      computedStatus = stepNumber < runningIndex ? 'completed' : 'skipped';
     } else if (status === 'COMPLETED') {
       computedStatus = 'completed';
-    } else if (status === 'FAILED' && stepNumber === runningIndex) {
-      computedStatus = 'failed';
-    } else if (status === 'RUNNING' && stepNumber === runningIndex) {
-      computedStatus = 'running';
-    } else if (stepNumber < runningIndex) {
-      computedStatus = 'completed';
+    } else if (status === 'CANCELLED') {
+      computedStatus = 'skipped';
     } else {
+      // RUNNING / PAUSED / FAILED with no explicit result → pending.
       computedStatus = 'pending';
     }
 
@@ -143,10 +176,15 @@ export function mergeSteps(
 // Shared shape builder
 // ---------------------------------------------------------------------------
 
-interface ExecutionRow {
+/**
+ * Minimal structural shape `toExecutionDetail` consumes. Kept as a local
+ * `type` (NOT an interface) so it acts as a structural constraint the
+ * Prisma-inferred return value satisfies without needing a manual cast.
+ */
+type ExecutionWithWorkflow = {
   id: string;
   workflowId: string;
-  status: 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+  status: WorkflowExecutionStatus;
   currentStep: number;
   stepResults: unknown;
   error: string | null;
@@ -159,12 +197,12 @@ interface ExecutionRow {
     category: string;
     steps: unknown;
   } | null;
-}
+};
 
-function toExecutionDetail(execution: ExecutionRow) {
+function toExecutionDetail(execution: ExecutionWithWorkflow) {
   const defs = parseStepDefinitions(execution.workflow?.steps);
   const results = parseStepResults(execution.stepResults);
-  const steps = mergeSteps(defs, results, execution.currentStep, execution.status);
+  const steps = mergeSteps(defs, results, execution.status);
   const totalSteps = steps.length;
   const completedCount = steps.filter((s) => s.status === 'completed').length;
   const percentage = totalSteps > 0 ? Math.round((completedCount / totalSteps) * 100) : 0;
@@ -240,7 +278,7 @@ export const workflowRouter = createTRPCRouter({
         });
 
         if (!execution) return null;
-        return toExecutionDetail(execution as unknown as ExecutionRow);
+        return toExecutionDetail(execution);
       } catch (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -280,7 +318,7 @@ export const workflowRouter = createTRPCRouter({
         });
 
         if (!execution) return null;
-        return toExecutionDetail(execution as unknown as ExecutionRow);
+        return toExecutionDetail(execution);
       } catch (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',

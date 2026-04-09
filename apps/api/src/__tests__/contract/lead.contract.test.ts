@@ -344,7 +344,7 @@ describe('Lead Router Contract Tests', () => {
       const parseResult = leadListResponseSchema.safeParse(result);
       expect(parseResult.success).toBe(true);
 
-      expect(result).toHaveProperty('leads');
+      expect(result).toHaveProperty('data');
       expect(result).toHaveProperty('total');
       expect(result).toHaveProperty('page');
       expect(result).toHaveProperty('limit');
