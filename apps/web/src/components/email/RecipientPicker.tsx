@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useId, useMemo } from 'react';
+import { useState, useRef, useCallback, useId, useMemo, useEffect } from 'react';
 import { X, User, Briefcase, Mail } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -36,6 +36,12 @@ const SOURCE_CONFIG: Record<SuggestionSource, { icon: typeof User; label: string
     lead: { icon: Briefcase, label: 'Lead', color: 'text-amber-500 bg-amber-500/10' },
     email: { icon: Mail, label: 'Email', color: 'text-emerald-500 bg-emerald-500/10' },
   };
+
+function getTypeScore(source: SuggestionSource): number {
+  if (source === 'contact') return 1.0;
+  if (source === 'lead') return 0.6;
+  return 0.3;
+}
 
 /**
  * Field Autocomplete Algorithm
@@ -74,7 +80,7 @@ function computeScore(
   }
 
   // Contact type (0–1)
-  const typeScore = source === 'contact' ? 1.0 : source === 'lead' ? 0.6 : 0.3;
+  const typeScore = getTypeScore(source);
 
   // Completeness — has real name vs just email (0–1)
   const completeness = name && name !== email ? 1.0 : 0.3;
@@ -96,9 +102,12 @@ export function RecipientPicker({
   const [isOpen, setIsOpen] = useState(false);
   const [highlightIndex, setHighlightIndex] = useState(-1);
   const [error, setError] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const listboxId = useId();
+  const suggestionsId = useId();
+  const suggestionsHintId = useId();
   const inputId = useId();
+  const nativeSuggestionsId = useId();
 
   const debouncedQuery = useDebounce(inputValue, 200);
   const queryEnabled = debouncedQuery.length >= 1;
@@ -138,7 +147,7 @@ export function RecipientPicker({
     }
 
     // Add leads (skip if already seen as contact)
-    for (const l of (leadsQuery.data as { leads?: Array<Record<string, unknown>> })?.leads ?? []) {
+    for (const l of (leadsQuery.data as { data?: Array<Record<string, unknown>> })?.data ?? []) {
       const email = (l.email as string)?.toLowerCase();
       if (!email || seen.has(email)) continue;
       seen.add(email);
@@ -156,6 +165,19 @@ export function RecipientPicker({
   }, [contactsQuery.data, leadsQuery.data, debouncedQuery, value]);
 
   const isLoading = queryEnabled && (contactsQuery.isLoading || leadsQuery.isLoading);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (containerRef.current?.contains(event.target as Node)) return;
+      setIsOpen(false);
+      setHighlightIndex(-1);
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, [isOpen]);
 
   const addRecipient = useCallback(
     (recipient: Recipient) => {
@@ -176,6 +198,13 @@ export function RecipientPicker({
     [value, onChange]
   );
 
+  const addSuggestionRecipient = useCallback(
+    (suggestion: Pick<ScoredSuggestion, 'name' | 'email'>) => {
+      addRecipient({ name: suggestion.name, email: suggestion.email });
+    },
+    [addRecipient]
+  );
+
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
     setIsOpen(e.target.value.length > 0);
@@ -186,17 +215,32 @@ export function RecipientPicker({
   const handleEnterKey = useCallback(() => {
     if (highlightIndex >= 0 && highlightIndex < suggestions.length) {
       const s = suggestions[highlightIndex];
-      addRecipient({ name: s.name, email: s.email });
+      addSuggestionRecipient(s);
       return;
     }
+
     const trimmed = inputValue.trim();
     if (!trimmed) return;
+
+    const exactMatch = suggestions.find((suggestion) => {
+      const normalizedInput = trimmed.toLowerCase();
+      return (
+        suggestion.email.toLowerCase() === normalizedInput ||
+        suggestion.name.toLowerCase() === normalizedInput
+      );
+    });
+
+    if (exactMatch) {
+      addSuggestionRecipient(exactMatch);
+      return;
+    }
+
     if (EMAIL_REGEX.test(trimmed)) {
       addRecipient({ name: trimmed, email: trimmed });
     } else {
       setError('Invalid email address');
     }
-  }, [highlightIndex, suggestions, inputValue, addRecipient]);
+  }, [highlightIndex, suggestions, inputValue, addRecipient, addSuggestionRecipient]);
 
   const openDropdownIfNeeded = useCallback(() => {
     if (!isOpen && inputValue) setIsOpen(true);
@@ -224,19 +268,24 @@ export function RecipientPicker({
     [handleEnterKey, inputValue, value, onChange, openDropdownIfNeeded, suggestions.length]
   );
 
-  const highlightedId = highlightIndex >= 0 ? `${listboxId}-option-${highlightIndex}` : undefined;
+  const highlightedSuggestion = highlightIndex >= 0 ? suggestions[highlightIndex] : undefined;
+  let suggestionsHint = `Type to search ${label.toLowerCase()} suggestions.`;
+  if (isLoading) {
+    suggestionsHint = `Searching ${label.toLowerCase()} suggestions.`;
+  } else if (highlightedSuggestion) {
+    suggestionsHint = `${suggestions.length} suggestions available. ${highlightedSuggestion.name}, ${highlightedSuggestion.email} highlighted. Press Enter to add.`;
+  } else if (suggestions.length > 0) {
+    suggestionsHint = `${suggestions.length} suggestions available. Use arrow keys to choose and Enter to add.`;
+  } else if (inputValue) {
+    suggestionsHint = `No ${label.toLowerCase()} suggestions found.`;
+  }
 
   return (
-    <div className={cn('relative', className)}>
+    <div ref={containerRef} className={cn('relative', className)}>
       <label htmlFor={inputId} className="sr-only">
         {label}
       </label>
       <div
-        role="combobox" // NOSONAR typescript:S6819 — multi-value combobox container with chip tags
-        aria-expanded={isOpen}
-        aria-haspopup="listbox"
-        aria-controls={listboxId}
-        aria-owns={listboxId}
         className={cn(
           'flex flex-wrap items-center gap-1 rounded-md border border-input px-2 py-1.5 text-sm',
           'focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1'
@@ -266,21 +315,39 @@ export function RecipientPicker({
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           onFocus={() => inputValue && setIsOpen(true)}
-          onBlur={() => setTimeout(() => setIsOpen(false), 200)}
           placeholder="Add recipient..."
-          aria-autocomplete="list"
-          aria-controls={listboxId}
-          aria-activedescendant={highlightedId}
+          autoComplete="off"
+          list={nativeSuggestionsId}
+          aria-controls={suggestionsId}
+          aria-describedby={suggestionsHintId}
           className="min-w-[120px] flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
         />
       </div>
 
       {error ? <p className="mt-1 text-xs text-destructive">{error}</p> : null}
+      <p id={suggestionsHintId} aria-live="polite" className="sr-only">
+        {suggestionsHint}
+      </p>
+      {suggestions.length > 0 ? (
+        <datalist id={nativeSuggestionsId}>
+          {suggestions.map((suggestion) => {
+            const config = SOURCE_CONFIG[suggestion.source];
+            const detail = suggestion.detail ? `, ${suggestion.detail}` : '';
+
+            return (
+              <option
+                key={`${suggestion.source}-${suggestion.email}-native`}
+                value={suggestion.email}
+                label={`${suggestion.name} (${config.label}${detail})`}
+              />
+            );
+          })}
+        </datalist>
+      ) : null}
 
       {isOpen && (suggestions.length > 0 || isLoading) ? (
         <ul
-          id={listboxId}
-          role="listbox" // NOSONAR typescript:S6819,S6842 — ARIA listbox for autocomplete suggestions
+          id={suggestionsId}
           aria-label={`${label} suggestions`}
           className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-md border border-border bg-popover p-1 shadow-md"
         >
@@ -292,53 +359,53 @@ export function RecipientPicker({
             const Icon = config.icon;
 
             return (
-              <li
-                key={`${suggestion.source}-${suggestion.email}`}
-                id={`${listboxId}-option-${i}`}
-                role="option" // NOSONAR typescript:S6819,S6842
-                aria-selected={i === highlightIndex}
-                data-highlighted={i === highlightIndex ? 'true' : undefined}
-                className={cn(
-                  'flex cursor-pointer items-center gap-2.5 rounded-sm px-2 py-2 text-sm',
-                  i === highlightIndex && 'bg-accent text-accent-foreground'
-                )}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  addRecipient({ name: suggestion.name, email: suggestion.email });
-                }}
-              >
-                {/* Source-typed avatar */}
-                <div
+              <li key={`${suggestion.source}-${suggestion.email}`}>
+                <button
+                  type="button"
                   className={cn(
-                    'flex h-8 w-8 items-center justify-center rounded-full flex-shrink-0',
-                    config.color
+                    'flex w-full items-center gap-2.5 rounded-sm px-2 py-2 text-left text-sm',
+                    i === highlightIndex && 'bg-accent text-accent-foreground'
                   )}
+                  data-highlighted={i === highlightIndex ? 'true' : undefined}
+                  onFocus={() => setHighlightIndex(i)}
+                  onMouseEnter={() => setHighlightIndex(i)}
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    addSuggestionRecipient(suggestion);
+                  }}
+                  onClick={() => addSuggestionRecipient(suggestion)}
                 >
-                  <Icon className="h-3.5 w-3.5" />
-                </div>
-
-                {/* Name + email + detail */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium truncate">{suggestion.name}</span>
-                    <span
-                      className={cn(
-                        'inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium',
-                        config.color
-                      )}
-                    >
-                      {config.label}
-                    </span>
-                  </div>
-                  <div className="text-xs text-muted-foreground truncate">
-                    {suggestion.email}
-                    {suggestion.detail && (
-                      <span className="ml-1.5 text-muted-foreground/70">
-                        &middot; {suggestion.detail}
-                      </span>
+                  <div
+                    className={cn(
+                      'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full',
+                      config.color
                     )}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
                   </div>
-                </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="truncate font-medium">{suggestion.name}</span>
+                      <span
+                        className={cn(
+                          'inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium',
+                          config.color
+                        )}
+                      >
+                        {config.label}
+                      </span>
+                    </div>
+                    <div className="truncate text-xs text-muted-foreground">
+                      {suggestion.email}
+                      {suggestion.detail && (
+                        <span className="ml-1.5 text-muted-foreground/70">
+                          &middot; {suggestion.detail}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </button>
               </li>
             );
           })}

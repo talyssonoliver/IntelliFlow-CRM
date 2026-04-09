@@ -65,7 +65,9 @@ function formatDate(dateStr: string | null, timezone: string = 'Europe/London'):
   });
 }
 
-function getSortParams(sortOrder: string): { sortBy: string; sortOrder: 'asc' | 'desc' } {
+type TrashedSortBy = 'name' | 'value' | 'deletedAt' | 'stage';
+
+function getSortParams(sortOrder: string): { sortBy: TrashedSortBy; sortOrder: 'asc' | 'desc' } {
   switch (sortOrder) {
     case 'deleted-oldest':
       return { sortBy: 'deletedAt', sortOrder: 'asc' };
@@ -216,6 +218,7 @@ export const TrashList = React.memo(function TrashList() {
   const [showBulkPermanentDeleteDialog, setShowBulkPermanentDeleteDialog] = useState(false);
   const selectedDealsRef = useRef<TrashedDeal[]>([]);
   const singleDealRef = useRef<TrashedDeal | null>(null);
+  const isBulkOperationRef = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const utils = trpc.useUtils();
@@ -245,20 +248,28 @@ export const TrashList = React.memo(function TrashList() {
       utils.opportunity.listTrashed.invalidate();
       utils.opportunity.list.invalidate();
       utils.opportunity.stats.invalidate();
-      toast({ title: 'Deal Restored', description: 'The deal has been restored.' });
+      if (!isBulkOperationRef.current) {
+        toast({ title: 'Deal Restored', description: 'The deal has been restored.' });
+      }
     },
     onError: (err) => {
-      toast({ title: 'Restore Failed', description: err.message, variant: 'destructive' });
+      if (!isBulkOperationRef.current) {
+        toast({ title: 'Restore Failed', description: err.message, variant: 'destructive' });
+      }
     },
   });
 
   const permanentDeleteMutation = trpc.opportunity.permanentDelete.useMutation({
     onSuccess: () => {
       utils.opportunity.listTrashed.invalidate();
-      toast({ title: 'Deal Permanently Deleted', description: 'The deal has been permanently removed.' });
+      if (!isBulkOperationRef.current) {
+        toast({ title: 'Deal Permanently Deleted', description: 'The deal has been permanently removed.' });
+      }
     },
     onError: (err) => {
-      toast({ title: 'Delete Failed', description: err.message, variant: 'destructive' });
+      if (!isBulkOperationRef.current) {
+        toast({ title: 'Delete Failed', description: err.message, variant: 'destructive' });
+      }
     },
   });
 
@@ -286,13 +297,13 @@ export const TrashList = React.memo(function TrashList() {
         (item.owner as Record<string, string>)?.name ??
         (item.owner as Record<string, string>)?.email ??
         'Unknown',
-      createdAt: item.createdAt?.toString() ?? new Date().toISOString(),
-      deletedAt: item.deletedAt?.toString() ?? new Date().toISOString(),
+      createdAt: item.createdAt?.toString() ?? '',
+      deletedAt: item.deletedAt?.toString() ?? '',
     }));
   }, [trashedData]);
 
   const totalItems = trashedData?.total ?? 0;
-  const hasMore = trashedDeals.length === PAGE_SIZE && currentPage * PAGE_SIZE < totalItems;
+  const hasMore = currentPage * PAGE_SIZE < totalItems;
 
   // Handlers
   const handleSearch = useCallback((value: string) => setSearchQuery(value), []);
@@ -349,6 +360,7 @@ export const TrashList = React.memo(function TrashList() {
     const selected = selectedDealsRef.current;
     if (selected.length === 0) return;
     setIsSubmitting(true);
+    isBulkOperationRef.current = true;
     try {
       await Promise.all(selected.map((deal) => restoreMutation.mutateAsync({ id: deal.id })));
       toast({
@@ -362,6 +374,7 @@ export const TrashList = React.memo(function TrashList() {
         variant: 'destructive',
       });
     } finally {
+      isBulkOperationRef.current = false;
       setIsSubmitting(false);
       setShowBulkRestoreDialog(false);
     }
@@ -371,6 +384,7 @@ export const TrashList = React.memo(function TrashList() {
     const selected = selectedDealsRef.current;
     if (selected.length === 0) return;
     setIsSubmitting(true);
+    isBulkOperationRef.current = true;
     try {
       await Promise.all(
         selected.map((deal) => permanentDeleteMutation.mutateAsync({ id: deal.id }))
@@ -386,6 +400,7 @@ export const TrashList = React.memo(function TrashList() {
         variant: 'destructive',
       });
     } finally {
+      isBulkOperationRef.current = false;
       setIsSubmitting(false);
       setShowBulkPermanentDeleteDialog(false);
     }

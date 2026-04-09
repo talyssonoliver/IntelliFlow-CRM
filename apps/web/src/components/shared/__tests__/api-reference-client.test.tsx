@@ -67,13 +67,13 @@ describe('ApiReferenceClient', () => {
     it('has aria-busy="true" during loading', () => {
       (globalThis.fetch as ReturnType<typeof vi.fn>).mockReturnValue(new Promise(() => {}));
       render(<ApiReferenceClient specUrl="/api/openapi" />);
-      expect(screen.getByRole('status')).toHaveAttribute('aria-busy', 'true');
+      expect(document.querySelector('output')).toHaveAttribute('aria-busy', 'true');
     });
 
-    it('has role="status" on loading container', () => {
+    it('renders an output element for the loading container', () => {
       (globalThis.fetch as ReturnType<typeof vi.fn>).mockReturnValue(new Promise(() => {}));
       render(<ApiReferenceClient specUrl="/api/openapi" />);
-      expect(screen.getByRole('status')).toBeInTheDocument();
+      expect(document.querySelector('output')).toBeInTheDocument();
     });
 
     it('shows sr-only loading message "Loading API reference"', () => {
@@ -101,9 +101,12 @@ describe('ApiReferenceClient', () => {
     it('renders Scalar component with spec data', async () => {
       mockFetchSuccess();
       render(<ApiReferenceClient specUrl="/api/openapi" />);
-      await waitFor(() => {
-        expect(screen.getByTestId('scalar-reference')).toBeInTheDocument();
-      });
+      await waitFor(
+        () => {
+          expect(screen.getByTestId('scalar-reference')).toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
     });
 
     it('passes dark mode flag (isDark=true) when theme is "dark"', async () => {

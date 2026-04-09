@@ -104,27 +104,38 @@ vi.mock('@/lib/trpc', () => ({
 const mockToast = vi.fn();
 
 vi.mock('@intelliflow/ui', () => ({
-  DataTable: ({ columns, data }: any) => (
-    <table data-testid="data-table" aria-label="Trashed deals table">
-      <thead>
-        <tr>
-          {columns.map((col: any, i: number) => (
-            <th key={i}>{typeof col.header === 'function' ? col.header() : col.header}</th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {data.map((row: any, i: number) => (
-          <tr key={i} data-testid={`row-${row.id}`}>
-            {columns.map((col: any, j: number) => (
-              <td key={j}>
-                {typeof col.cell === 'function' ? col.cell({ row: { original: row } }) : null}
-              </td>
+  DataTable: ({ columns, data, bulkActions }: any) => (
+    <div>
+      <table data-testid="data-table" aria-label="Trashed deals table">
+        <thead>
+          <tr>
+            {columns.map((col: any, i: number) => (
+              <th key={i}>{typeof col.header === 'function' ? col.header() : col.header}</th>
             ))}
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {data.map((row: any, i: number) => (
+            <tr key={i} data-testid={`row-${row.id}`}>
+              {columns.map((col: any, j: number) => (
+                <td key={j}>
+                  {typeof col.cell === 'function' ? col.cell({ row: { original: row } }) : null}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {bulkActions?.map((action: any, i: number) => (
+        <button
+          key={i}
+          data-testid={`bulk-action-${action.label.replace(/\s+/g, '-').toLowerCase()}`}
+          onClick={() => action.onClick(data)}
+        >
+          {action.label}
+        </button>
+      ))}
+    </div>
   ),
   ConfirmationDialog: ({ open, title, description, onConfirm, onOpenChange }: any) =>
     open ? (
@@ -760,115 +771,186 @@ describe('TrashList', { timeout: 10000 }, () => {
       expect(screen.getByTestId('data-table')).toBeInTheDocument();
     });
 
-    it('bulk restore shows confirmation dialog with plural title', async () => {
-      // Simulate the bulk restore path by directly accessing the DataTable bulkActions
-      // We verify via the dialog state driven through the component
-      let _capturedBulkActions: Array<{ label: string; onClick: (selected: unknown[]) => void }> =
-        [];
+    it('clicking Restore Selected opens bulk restore dialog', async () => {
+      const user = userEvent.setup();
 
-      // Re-mock DataTable to capture bulkActions
-      const { unmount } = render(<div />);
-      unmount();
-
-      vi.doMock('@intelliflow/ui', () => ({
-        DataTable: ({ columns, data, bulkActions }: any) => {
-          _capturedBulkActions = bulkActions ?? [];
-          return (
-            <table data-testid="data-table">
-              <tbody>
-                {data.map((row: any, i: number) => (
-                  <tr key={i} data-testid={`row-${row.id}`}>
-                    {columns.map((col: any, j: number) => (
-                      <td key={j}>
-                        {typeof col.cell === 'function'
-                          ? col.cell({ row: { original: row } })
-                          : null}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          );
-        },
-        ConfirmationDialog: ({ open, title, onConfirm, onOpenChange }: any) =>
-          open ? (
-            <dialog open data-testid="confirmation-dialog">
-              <h2>{title}</h2>
-              <button onClick={onConfirm} data-testid="confirm-button">
-                Confirm
-              </button>
-              <button onClick={() => onOpenChange?.(false)} data-testid="cancel-button">
-                Cancel
-              </button>
-            </dialog>
-          ) : null,
-        TableRowActions: ({ quickActions, dropdownActions }: any) => (
-          <div data-testid="table-row-actions">
-            {quickActions?.map((action: any, i: number) => (
-              <button
-                key={i}
-                onClick={action.onClick}
-                data-testid={`quick-action-${action.icon}`}
-              >
-                {action.label}
-              </button>
-            ))}
-            {dropdownActions
-              ?.filter((a: any) => !a.separator)
-              .map((action: any, i: number) => (
-                <button
-                  key={i}
-                  onClick={action.onClick}
-                  data-testid={`dropdown-action-${action.icon}`}
-                >
-                  {action.label}
-                </button>
-              ))}
-          </div>
-        ),
-        BulkAction: () => null,
-        Skeleton: ({ className }: any) => <div data-testid="skeleton" className={className} />,
-        EmptyState: ({ title, description }: any) => (
-          <div data-testid="empty-state">
-            <h3>{title}</h3>
-            {description && <p>{description}</p>}
-          </div>
-        ),
-        toast: (...args: any[]) => mockToast(...args),
-      }));
-
-      // The component memoizes bulkActions — verify the component passes them
-      // by confirming render succeeds and DataTable is present
       await act(async () => {
         render(<TrashList />);
       });
 
-      // DataTable renders with data → bulk actions are wired
+      const restoreBtn = screen.getByTestId('bulk-action-restore-selected');
+      await user.click(restoreBtn);
+
+      const dialog = screen.getByTestId('confirmation-dialog');
+      expect(dialog).toBeInTheDocument();
+      expect(screen.getByText('Restore Deals')).toBeInTheDocument();
+    });
+
+    it('confirming bulk restore calls restore mutation for each selected deal', async () => {
+      const user = userEvent.setup();
+
+      await act(async () => {
+        render(<TrashList />);
+      });
+
+      await user.click(screen.getByTestId('bulk-action-restore-selected'));
+      await user.click(screen.getByTestId('confirm-button'));
+
+      await waitFor(() => {
+        expect(mockRestoreMutateAsync).toHaveBeenCalledTimes(3);
+      });
+    });
+
+    it('clicking Delete Forever opens bulk permanent delete dialog', async () => {
+      const user = userEvent.setup();
+
+      await act(async () => {
+        render(<TrashList />);
+      });
+
+      const deleteBtn = screen.getByTestId('bulk-action-delete-forever');
+      await user.click(deleteBtn);
+
+      const dialog = screen.getByTestId('confirmation-dialog');
+      expect(dialog).toBeInTheDocument();
+    });
+
+    it('confirming bulk permanent delete calls mutation for each selected deal', async () => {
+      const user = userEvent.setup();
+
+      await act(async () => {
+        render(<TrashList />);
+      });
+
+      await user.click(screen.getByTestId('bulk-action-delete-forever'));
+      await user.click(screen.getByTestId('confirm-button'));
+
+      await waitFor(() => {
+        expect(mockPermDeleteMutateAsync).toHaveBeenCalledTimes(3);
+      });
+    });
+
+    it('bulk restore shows success toast after completion', async () => {
+      const user = userEvent.setup();
+
+      await act(async () => {
+        render(<TrashList />);
+      });
+
+      await user.click(screen.getByTestId('bulk-action-restore-selected'));
+      await user.click(screen.getByTestId('confirm-button'));
+
+      await waitFor(() => {
+        expect(mockToast).toHaveBeenCalledWith(
+          expect.objectContaining({ title: 'Deals Restored' })
+        );
+      });
+    });
+
+    it('bulk restore shows error toast on failure', async () => {
+      mockRestoreMutateAsync.mockRejectedValue(new Error('Network error'));
+      const user = userEvent.setup();
+
+      await act(async () => {
+        render(<TrashList />);
+      });
+
+      await user.click(screen.getByTestId('bulk-action-restore-selected'));
+      await user.click(screen.getByTestId('confirm-button'));
+
+      await waitFor(() => {
+        expect(mockToast).toHaveBeenCalledWith(
+          expect.objectContaining({ title: 'Bulk Restore Failed', variant: 'destructive' })
+        );
+      });
+    });
+
+    it('bulk permanent delete shows error toast on failure', async () => {
+      mockPermDeleteMutateAsync.mockRejectedValue(new Error('Server error'));
+      const user = userEvent.setup();
+
+      await act(async () => {
+        render(<TrashList />);
+      });
+
+      await user.click(screen.getByTestId('bulk-action-delete-forever'));
+      await user.click(screen.getByTestId('confirm-button'));
+
+      await waitFor(() => {
+        expect(mockToast).toHaveBeenCalledWith(
+          expect.objectContaining({ title: 'Bulk Delete Failed', variant: 'destructive' })
+        );
+      });
+    });
+
+    it('bulk restore error with non-Error object shows fallback message', async () => {
+      mockRestoreMutateAsync.mockRejectedValue('string error');
+      const user = userEvent.setup();
+
+      await act(async () => {
+        render(<TrashList />);
+      });
+
+      await user.click(screen.getByTestId('bulk-action-restore-selected'));
+      await user.click(screen.getByTestId('confirm-button'));
+
+      await waitFor(() => {
+        expect(mockToast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'Bulk Restore Failed',
+            description: 'An error occurred',
+          })
+        );
+      });
+    });
+
+    it('bulk permanent delete error with non-Error object shows fallback message', async () => {
+      mockPermDeleteMutateAsync.mockRejectedValue({ code: 500 });
+      const user = userEvent.setup();
+
+      await act(async () => {
+        render(<TrashList />);
+      });
+
+      await user.click(screen.getByTestId('bulk-action-delete-forever'));
+      await user.click(screen.getByTestId('confirm-button'));
+
+      await waitFor(() => {
+        expect(mockToast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'Bulk Delete Failed',
+            description: 'An error occurred',
+          })
+        );
+      });
+    });
+
+    it('renders deals with null owner and account using fallback values', async () => {
+      mockQueryState.data = {
+        opportunities: [
+          {
+            id: 'trash-null-001',
+            name: 'Deal with null owner',
+            value: 10000,
+            stage: 'PROSPECTING',
+            probability: 20,
+            expectedCloseDate: null,
+            account: null,
+            contact: null,
+            ownerId: null,
+            owner: null,
+            createdAt: '2026-01-01T00:00:00Z',
+            deletedAt: '2026-03-10T00:00:00Z',
+          },
+        ],
+        total: 1,
+      };
+
+      await act(async () => {
+        render(<TrashList />);
+      });
+
       expect(screen.getByTestId('data-table')).toBeInTheDocument();
-    });
-
-    it('bulk restore dialog opens with "Restore Deals" title when triggered', async () => {
-      // Use the existing mock and trigger bulk restore via component internal state
-      // We verify the component's 4 ConfirmationDialogs for bulk/single restore/delete
-      // exist by checking they open on the correct triggers.
-      // The TrashList renders 4 ConfirmationDialog instances — only one opens at a time.
-      await act(async () => {
-        render(<TrashList />);
-      });
-
-      // No dialog should be open initially
-      expect(screen.queryByTestId('confirmation-dialog')).not.toBeInTheDocument();
-    });
-
-    it('bulk permanent delete mutation is called for each selected deal', async () => {
-      // Verify permanentDelete mutation is properly set up for bulk use
-      await act(async () => {
-        render(<TrashList />);
-      });
-
-      // The component wires permanentDelete.useMutation — captured config exists
-      expect(mockPermDeleteMutateAsync).not.toHaveBeenCalled();
     });
   });
 
@@ -929,6 +1011,46 @@ describe('TrashList', { timeout: 10000 }, () => {
       await user.selectOptions(sortSelect, 'name-asc');
 
       expect(sortSelect).toHaveValue('name-asc');
+    });
+
+    it('changing sort to name-desc updates sort select', async () => {
+      const user = userEvent.setup();
+      await act(async () => {
+        render(<TrashList />);
+      });
+      const sortSelect = screen.getByTestId('sort-select');
+      await user.selectOptions(sortSelect, 'name-desc');
+      expect(sortSelect).toHaveValue('name-desc');
+    });
+
+    it('changing sort to value-high updates sort select', async () => {
+      const user = userEvent.setup();
+      await act(async () => {
+        render(<TrashList />);
+      });
+      const sortSelect = screen.getByTestId('sort-select');
+      await user.selectOptions(sortSelect, 'value-high');
+      expect(sortSelect).toHaveValue('value-high');
+    });
+
+    it('changing sort to value-low updates sort select', async () => {
+      const user = userEvent.setup();
+      await act(async () => {
+        render(<TrashList />);
+      });
+      const sortSelect = screen.getByTestId('sort-select');
+      await user.selectOptions(sortSelect, 'value-low');
+      expect(sortSelect).toHaveValue('value-low');
+    });
+
+    it('changing sort to deleted-oldest updates sort select', async () => {
+      const user = userEvent.setup();
+      await act(async () => {
+        render(<TrashList />);
+      });
+      const sortSelect = screen.getByTestId('sort-select');
+      await user.selectOptions(sortSelect, 'deleted-oldest');
+      expect(sortSelect).toHaveValue('deleted-oldest');
     });
 
     it('shows DataTable (not EmptyState) when search is active even with empty results', async () => {
@@ -1163,6 +1285,33 @@ describe('TrashList', { timeout: 10000 }, () => {
       await user.click(nextButton);
 
       expect(screen.getByText(/Page 2 of 2/)).toBeInTheDocument();
+    });
+
+    it('clicking Previous decrements the page after navigating forward', async () => {
+      const user = userEvent.setup();
+
+      const manyOpportunities = Array.from({ length: 15 }, (_, i) => ({
+        ...mockTrashedOpportunities[0],
+        id: `trash-prev-${i}`,
+        name: `Deal ${i}`,
+      }));
+
+      mockQueryState.data = {
+        opportunities: manyOpportunities,
+        total: 30,
+      };
+
+      await act(async () => {
+        render(<TrashList />);
+      });
+
+      // Go to page 2
+      await user.click(screen.getByRole('button', { name: 'Next' }));
+      expect(screen.getByText(/Page 2 of 2/)).toBeInTheDocument();
+
+      // Go back to page 1
+      await user.click(screen.getByRole('button', { name: 'Previous' }));
+      expect(screen.getByText(/Page 1 of 2/)).toBeInTheDocument();
     });
   });
 

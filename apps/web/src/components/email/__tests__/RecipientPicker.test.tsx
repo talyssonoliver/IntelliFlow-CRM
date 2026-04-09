@@ -58,15 +58,15 @@ describe('RecipientPicker', () => {
     const user = userEvent.setup();
     render(<RecipientPicker {...defaultProps} />);
     await user.type(screen.getByPlaceholderText(/add recipient/i), 'al');
-    expect(screen.getByRole('listbox')).toBeInTheDocument();
+    expect(screen.getByRole('list', { name: /to suggestions/i })).toBeInTheDocument();
   });
 
   it('adds chip when selecting contact', async () => {
     const user = userEvent.setup();
     render(<RecipientPicker {...defaultProps} />);
     await user.type(screen.getByPlaceholderText(/add recipient/i), 'al');
-    const listbox = screen.getByRole('listbox');
-    const options = within(listbox).getAllByRole('option');
+    const listbox = screen.getByRole('list', { name: /to suggestions/i });
+    const options = within(listbox).getAllByRole('button');
     await user.click(options[0]);
     expect(defaultProps.onChange).toHaveBeenCalledWith(
       expect.arrayContaining([expect.objectContaining({ email: 'alice@test.com' })])
@@ -128,7 +128,9 @@ describe('RecipientPicker', () => {
     render(<RecipientPicker {...defaultProps} />);
     await user.type(screen.getByPlaceholderText(/add recipient/i), 'a');
     await user.keyboard('{ArrowDown}');
-    const options = within(screen.getByRole('listbox')).getAllByRole('option');
+    const options = within(screen.getByRole('list', { name: /to suggestions/i })).getAllByRole(
+      'button'
+    );
     expect(options[0]).toHaveAttribute('data-highlighted', 'true');
   });
 
@@ -144,30 +146,32 @@ describe('RecipientPicker', () => {
     const user = userEvent.setup();
     render(<RecipientPicker {...defaultProps} />);
     await user.type(screen.getByPlaceholderText(/add recipient/i), 'a');
-    expect(screen.getByRole('listbox')).toBeInTheDocument();
+    expect(screen.getByRole('list', { name: /to suggestions/i })).toBeInTheDocument();
     await user.keyboard('{Escape}');
-    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('list', { name: /to suggestions/i })).not.toBeInTheDocument();
   });
 
-  it('has role="combobox" and aria-expanded on container', () => {
+  it('wires the textbox to native suggestions and live instructions', () => {
     render(<RecipientPicker {...defaultProps} />);
-    const combobox = screen.getByRole('combobox');
-    expect(combobox).toHaveAttribute('aria-expanded');
+    const textbox = screen.getByRole('combobox', { name: /to/i });
+    expect(textbox).toHaveAttribute('list');
+    expect(textbox).toHaveAttribute('aria-describedby');
   });
 
-  it('has role="listbox" on suggestion list', async () => {
+  it('renders a semantic list for visible suggestions', async () => {
     const user = userEvent.setup();
     render(<RecipientPicker {...defaultProps} />);
     await user.type(screen.getByPlaceholderText(/add recipient/i), 'a');
-    expect(screen.getByRole('listbox')).toBeInTheDocument();
+    expect(screen.getByRole('list', { name: /to suggestions/i })).toBeInTheDocument();
   });
 
-  it('tracks highlighted option with aria-activedescendant', async () => {
+  it('tracks the highlighted suggestion on the visible option button', async () => {
     const user = userEvent.setup();
     render(<RecipientPicker {...defaultProps} />);
     const input = screen.getByPlaceholderText(/add recipient/i);
     await user.type(input, 'a');
     await user.keyboard('{ArrowDown}');
-    expect(input).toHaveAttribute('aria-activedescendant');
+    expect(within(screen.getByRole('list', { name: /to suggestions/i })).getAllByRole('button')[0])
+      .toHaveAttribute('data-highlighted', 'true');
   });
 });

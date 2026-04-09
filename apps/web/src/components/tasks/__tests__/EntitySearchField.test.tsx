@@ -67,8 +67,10 @@ describe('EntitySearchField', () => {
   it('debounces lead searches before enabling the query', () => {
     render(<EntitySearchField {...defaultProps} />);
 
-    fireEvent.focus(screen.getByRole('combobox'));
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'john' } });
+    fireEvent.focus(screen.getByRole('combobox', { name: /search leads/i }));
+    fireEvent.change(screen.getByRole('combobox', { name: /search leads/i }), {
+      target: { value: 'john' },
+    });
 
     act(() => {
       vi.advanceTimersByTime(350);
@@ -89,8 +91,10 @@ describe('EntitySearchField', () => {
       />
     );
 
-    fireEvent.focus(screen.getByRole('combobox'));
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'alice' } });
+    fireEvent.focus(screen.getByRole('combobox', { name: /search contacts/i }));
+    fireEvent.change(screen.getByRole('combobox', { name: /search contacts/i }), {
+      target: { value: 'alice' },
+    });
 
     act(() => {
       vi.advanceTimersByTime(350);
@@ -118,14 +122,16 @@ describe('EntitySearchField', () => {
     const onChange = vi.fn();
     render(<EntitySearchField {...defaultProps} entityType="account" onChange={onChange} />);
 
-    fireEvent.focus(screen.getByRole('combobox'));
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'acme' } });
+    fireEvent.focus(screen.getByRole('combobox', { name: /search accounts/i }));
+    fireEvent.change(screen.getByRole('combobox', { name: /search accounts/i }), {
+      target: { value: 'acme' },
+    });
 
     act(() => {
       vi.advanceTimersByTime(350);
     });
 
-    fireEvent.click(screen.getByRole('option', { name: 'Acme Corp' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Acme Corp' }));
 
     expect(onChange).toHaveBeenCalledWith('11111111-1111-4111-8111-111111111111', 'Acme Corp');
   });
@@ -150,6 +156,14 @@ describe('EntitySearchField', () => {
   it('disables the input when requested', () => {
     render(<EntitySearchField {...defaultProps} disabled />);
 
-    expect(screen.getByRole('combobox')).toBeDisabled();
+    expect(screen.getByRole('combobox', { name: /search leads/i })).toBeDisabled();
+  });
+
+  it('connects the textbox to native suggestions and the visible list', () => {
+    render(<EntitySearchField {...defaultProps} />);
+
+    const textbox = screen.getByRole('combobox', { name: /search leads/i });
+    expect(textbox).toHaveAttribute('list');
+    expect(textbox).toHaveAttribute('aria-describedby');
   });
 });

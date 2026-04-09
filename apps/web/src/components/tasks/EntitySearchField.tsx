@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useId } from 'react';
 import { api } from '@/lib/api';
 
 export interface EntitySearchFieldProps {
@@ -38,9 +38,12 @@ export function EntitySearchField({
 }: Readonly<EntitySearchFieldProps>) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [highlightIndex, setHighlightIndex] = useState(-1);
   const debouncedSearch = useDebounce(search, 300);
   const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const suggestionsId = useId();
+  const nativeSuggestionsId = useId();
+  const suggestionsHintId = useId();
 
   // Close on outside click
   useEffect(() => {
@@ -76,7 +79,7 @@ export function EntitySearchField({
   const getResults = useCallback((): Array<{ id: string; name: string }> => {
     if (entityType === 'lead' && leadQuery.data) {
       return (
-        leadQuery.data.leads?.map((l) => ({
+        leadQuery.data.data?.map((l) => ({
           id: l.id,
           name: `${l.firstName} ${l.lastName}`,
         })) ?? []
@@ -125,11 +128,70 @@ export function EntitySearchField({
     onChange(id, name);
     setSearch('');
     setOpen(false);
+    setHighlightIndex(-1);
   }
 
   function handleClear() {
     onChange('', '');
     setSearch('');
+  }
+
+  const handleInputChange = useCallback((nextValue: string) => {
+    setSearch(nextValue);
+    setHighlightIndex(-1);
+    if (!open) setOpen(true);
+  }, [open]);
+
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        if (!open) setOpen(true);
+        setHighlightIndex((prev) => (prev < results.length - 1 ? prev + 1 : prev));
+        return;
+      }
+
+      if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        setHighlightIndex((prev) => (prev > 0 ? prev - 1 : 0));
+        return;
+      }
+
+      if (event.key === 'Escape') {
+        setOpen(false);
+        setHighlightIndex(-1);
+        return;
+      }
+
+      if (event.key !== 'Enter') return;
+
+      if (highlightIndex >= 0 && highlightIndex < results.length) {
+        event.preventDefault();
+        const selected = results[highlightIndex];
+        handleSelect(selected.id, selected.name);
+        return;
+      }
+
+      const normalizedSearch = search.trim().toLowerCase();
+      const exactMatch = results.find((item) => item.name.toLowerCase() === normalizedSearch);
+      if (exactMatch) {
+        event.preventDefault();
+        handleSelect(exactMatch.id, exactMatch.name);
+      }
+    },
+    [highlightIndex, open, results, search]
+  );
+
+  const highlightedResult = highlightIndex >= 0 ? results[highlightIndex] : undefined;
+  let suggestionsHint = `Type to search ${ENTITY_LABELS[entityType].toLowerCase()} records.`;
+  if (isLoading) {
+    suggestionsHint = `Searching ${ENTITY_LABELS[entityType].toLowerCase()} suggestions.`;
+  } else if (highlightedResult) {
+    suggestionsHint = `${results.length} suggestions available. ${highlightedResult.name} highlighted. Press Enter to select.`;
+  } else if (results.length > 0) {
+    suggestionsHint = `${results.length} suggestions available. Use arrow keys to choose and Enter to select.`;
+  } else if (debouncedSearch.length > 0) {
+    suggestionsHint = `No ${ENTITY_LABELS[entityType].toLowerCase()} results found.`;
   }
 
   return (
@@ -152,48 +214,62 @@ export function EntitySearchField({
         </div>
       ) : (
         <input
-          ref={inputRef}
           type="text"
           value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            if (!open) setOpen(true);
-          }}
+          onChange={(e) => handleInputChange(e.target.value)}
+          onKeyDown={handleKeyDown}
           onFocus={() => setOpen(true)}
           placeholder={`Search ${ENTITY_LABELS[entityType].toLowerCase()}s...`}
           disabled={disabled}
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground"
           aria-label={`Search ${ENTITY_LABELS[entityType].toLowerCase()}s`}
-          role="combobox"
-          aria-expanded={open}
-          aria-controls="entity-search-listbox"
+          autoComplete="off"
+          list={nativeSuggestionsId}
+          aria-controls={suggestionsId}
+          aria-describedby={suggestionsHintId}
         />
       )}
+      <p id={suggestionsHintId} aria-live="polite" className="sr-only">
+        {suggestionsHint}
+      </p>
+      {results.length > 0 ? (
+        <datalist id={nativeSuggestionsId}>
+          {results.map((item) => (
+            <option key={`${item.id}-native`} value={item.name} />
+          ))}
+        </datalist>
+      ) : null}
 
       {open && !value && debouncedSearch.length > 0 && (
-        <div
-          id="entity-search-listbox"
-          className="absolute z-50 mt-1 w-full rounded-md border border-input bg-background shadow-lg max-h-48 overflow-y-auto"
-          role="listbox" // NOSONAR typescript:S6819 — custom autocomplete dropdown; <select> cannot be positioned absolutely or contain custom layout
+        <ul
+          id={suggestionsId}
+          className="absolute z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-md border border-input bg-background shadow-lg"
+          aria-label={`${ENTITY_LABELS[entityType]} suggestions`}
         >
-          {isLoading && <div className="px-3 py-2 text-sm text-muted-foreground">Searching...</div>}
+          {isLoading && <li className="px-3 py-2 text-sm text-muted-foreground">Searching...</li>}
           {!isLoading && results.length === 0 && (
-            <div className="px-3 py-2 text-sm text-muted-foreground">No results found</div>
+            <li className="px-3 py-2 text-sm text-muted-foreground">No results found</li>
           )}
           {!isLoading &&
-            results.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => handleSelect(item.id, item.name)}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors"
-                role="option" // NOSONAR typescript:S6819 — listbox option button; <option> cannot be styled or contain custom layout
-                aria-selected={false}
-              >
-                {item.name}
-              </button>
+            results.map((item, index) => (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  onClick={() => handleSelect(item.id, item.name)}
+                  onFocus={() => setHighlightIndex(index)}
+                  onMouseEnter={() => setHighlightIndex(index)}
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    handleSelect(item.id, item.name);
+                  }}
+                  data-highlighted={index === highlightIndex ? 'true' : undefined}
+                  className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-accent data-[highlighted=true]:bg-accent"
+                >
+                  {item.name}
+                </button>
+              </li>
             ))}
-        </div>
+        </ul>
       )}
     </div>
   );
