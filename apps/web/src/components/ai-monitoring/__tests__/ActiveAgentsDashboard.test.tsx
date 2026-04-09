@@ -14,6 +14,17 @@ vi.mock('@/lib/active-agents/hooks', () => ({
   useActiveAgentsDashboard: vi.fn(),
 }));
 
+// PG-193: WorkflowProgressPanel embedded in AgentCard — mock the data hook so
+// it returns null and the panel renders nothing in this regression suite.
+vi.mock('@/lib/ai-monitoring/workflow-hooks', () => ({
+  useWorkflowProgress: vi.fn(() => ({
+    data: null,
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
+}));
+
 vi.mock('@/lib/ai-monitoring/queue-scheduler-hooks', () => ({
   useQueueScheduler: vi.fn(() => ({
     data: null,

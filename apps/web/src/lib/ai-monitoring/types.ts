@@ -69,6 +69,10 @@ export interface AgentLog {
   id: string;
   agentId: string;
   agentType: string;
+  /** ConversationRecord.contextType — used to join with WorkflowExecution (PG-193) */
+  contextType?: string | null;
+  /** ConversationRecord.contextId — used to join with WorkflowExecution (PG-193) */
+  contextId?: string | null;
   messages: AgentLogMessage[];
   toolCalls: AgentLogToolCall[];
   createdAt: string; // ISO

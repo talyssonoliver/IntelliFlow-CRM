@@ -15,6 +15,7 @@ import { PageHeader, SearchFilterBar, useMultiFilterState } from '@/components/s
 import { useActiveAgentsDashboard } from '@/lib/active-agents/hooks';
 import { api } from '@/lib/api';
 import { QueueSchedulerPanel } from './QueueSchedulerPanel';
+import { WorkflowProgressPanel } from './WorkflowProgressPanel';
 import { useQueueScheduler, useQueueMutations } from '@/lib/ai-monitoring/queue-scheduler-hooks';
 import {
   getAgentTypeLabel,
@@ -116,14 +117,23 @@ interface AgentCardProps {
   onReset: (agentId: string) => void;
   onDelete: (agentId: string) => void;
   isActing: boolean;
+  isExpanded: boolean;
+  onToggle: () => void;
 }
 
-function AgentCard({ agent, onReset, onDelete, isActing }: Readonly<AgentCardProps>) {
+function AgentCard({
+  agent,
+  onReset,
+  onDelete,
+  isActing,
+  isExpanded,
+  onToggle,
+}: Readonly<AgentCardProps>) {
   const agentId = agent.agentId ?? agent.id;
 
   return (
-    <article data-testid="agent-card" className="rounded-lg border bg-card p-4">
-      <div className="flex items-start justify-between gap-4">
+    <article data-testid="agent-card" className="rounded-lg border bg-card overflow-hidden">
+      <div className="flex items-start justify-between gap-4 p-4">
         <div className="flex items-start gap-3 min-w-0">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <span className="material-symbols-outlined text-lg">
@@ -154,6 +164,21 @@ function AgentCard({ agent, onReset, onDelete, isActing }: Readonly<AgentCardPro
             {formatLastActive(agent.lastActive)}
           </span>
           <div className="flex items-center gap-1.5">
+            {agent.contextType && agent.contextId && (
+              <button
+                type="button"
+                data-testid="expand-agent-workflow"
+                aria-expanded={isExpanded}
+                aria-label={isExpanded ? 'Hide workflow progress' : 'Show workflow progress'}
+                onClick={onToggle}
+                className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs hover:bg-muted transition-colors"
+              >
+                <span className="material-symbols-outlined text-sm">
+                  {isExpanded ? 'expand_less' : 'expand_more'}
+                </span>
+                Workflow
+              </button>
+            )}
             <Link
               href={`/agent-approvals/logs/${agentId}`}
               className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs hover:bg-muted transition-colors"
@@ -187,6 +212,14 @@ function AgentCard({ agent, onReset, onDelete, isActing }: Readonly<AgentCardPro
           </div>
         </div>
       </div>
+      {isExpanded && agent.contextType && agent.contextId && (
+        <div className="border-t px-4 py-3">
+          <WorkflowProgressPanel
+            entityType={agent.contextType}
+            entityId={agent.contextId}
+          />
+        </div>
+      )}
     </article>
   );
 }
@@ -228,6 +261,16 @@ export function ActiveAgentsDashboard() {
 
   const [activeChip, setActiveChip] = useState('all');
   const [actingAgentId, setActingAgentId] = useState<string | null>(null);
+  const [expandedAgentIds, setExpandedAgentIds] = useState<Set<string>>(new Set());
+
+  const toggleAgentExpand = useCallback((id: string) => {
+    setExpandedAgentIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
 
   const resetMutation = api.aiMonitoring.resetAgentStatus.useMutation({
     onSuccess: () => { setActingAgentId(null); refetch(); },
@@ -406,6 +449,8 @@ export function ActiveAgentsDashboard() {
                   onReset={handleReset}
                   onDelete={handleDelete}
                   isActing={actingAgentId === (agent.agentId ?? agent.id)}
+                  isExpanded={expandedAgentIds.has(agent.id)}
+                  onToggle={() => toggleAgentExpand(agent.id)}
                 />
               ))}
             </div>

@@ -15,6 +15,18 @@ vi.mock('@/lib/ai-monitoring/hooks', () => ({
   })),
 }));
 
+// PG-193: WorkflowProgressPanel embedded in LogEntryCard expanded section —
+// mock the data hook so it returns null and the panel renders nothing in
+// this regression suite.
+vi.mock('@/lib/ai-monitoring/workflow-hooks', () => ({
+  useWorkflowProgress: vi.fn(() => ({
+    data: null,
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
+}));
+
 vi.mock('@/lib/auth/AuthContext', () => ({
   useRequireAuth: vi.fn(() => ({
     user: { id: 'user-1', name: 'Test User' },

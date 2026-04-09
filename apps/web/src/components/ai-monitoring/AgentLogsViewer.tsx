@@ -14,6 +14,7 @@ import { PageHeader, SearchFilterBar, useMultiFilterState } from '@/components/s
 import { useAgentLogs, useFailedJobs } from '@/lib/ai-monitoring/hooks';
 import { getAgentTypeIcon, getAgentTypeLabel } from '@/lib/active-agents/agent-utils';
 import type { AgentLog, AgentLogMessage, AgentLogToolCall, FailedJob } from '@/lib/ai-monitoring/types';
+import { WorkflowProgressPanel } from './WorkflowProgressPanel';
 
 
 // ---------------------------------------------------------------------------
@@ -308,6 +309,14 @@ function LogEntryCard({ log, isExpanded, onToggle }: Readonly<LogEntryCardProps>
         <>
           <TranscriptView messages={log.messages} />
           <ToolCallList toolCalls={log.toolCalls} />
+          {log.contextType && log.contextId && (
+            <div className="border-t px-4 py-3">
+              <WorkflowProgressPanel
+                entityType={log.contextType}
+                entityId={log.contextId}
+              />
+            </div>
+          )}
         </>
       )}
     </article>
