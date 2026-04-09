@@ -44,6 +44,23 @@ if git diff --cached --name-only | grep -qE "$CODEBASE_PATTERNS"; then
   echo "✅ Codebase inventory synced and staged"
 fi
 
+# Secret scan (gitleaks) - fail fast locally before CI
+echo "🔐 Scanning for secrets..."
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --redact --config=.gitleaks.toml --no-banner || {
+    echo "❌ Secret scan failed. Remove secrets before committing."
+    echo "   If this is a false positive, add to .gitleaks.toml allowlist."
+    exit 1
+  }
+  echo "✅ No secrets detected in staged files"
+else
+  echo "⚠️  gitleaks not installed locally — skipping pre-commit secret scan."
+  echo "   CI will still scan this commit. Install locally with:"
+  echo "     brew install gitleaks   # macOS"
+  echo "     scoop install gitleaks  # Windows"
+  echo "     See https://github.com/gitleaks/gitleaks#installing"
+fi
+
 # Run linting
 echo "📋 Linting code..."
 pnpm run lint "--filter=!@intelliflow/project-tracker" || {
