@@ -17,6 +17,7 @@ import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { Prisma } from '@intelliflow/db';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import { loadBullMQ } from '../../lib/load-bullmq';
 import {
   churnRiskLevelSchema,
   nbaActionTypeSchema,
@@ -805,8 +806,8 @@ export const intelligenceRouter = createTRPCRouter({
       const correlationId = `prediction-${entityType}-${entityId}-${Date.now()}`;
 
       try {
-        const { Queue } = await import('bullmq');
-        const { QUEUE_NAMES, DEFAULT_QUEUE_CONFIGS } = await import('@intelliflow/platform/queues');
+        const { Queue } = await loadBullMQ();
+        const { QUEUE_NAMES, DEFAULT_QUEUE_CONFIGS } = await import('@intelliflow/platform/queues/types');
         const qConfig = DEFAULT_QUEUE_CONFIGS[QUEUE_NAMES.AI_PREDICTION];
         const queue = new Queue(QUEUE_NAMES.AI_PREDICTION, {
           connection: {

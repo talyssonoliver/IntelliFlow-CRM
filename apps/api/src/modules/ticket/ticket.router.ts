@@ -23,6 +23,7 @@ import {
   statsInputSchema,
 } from '@intelliflow/validators/ticket';
 import { type Context } from '../../context';
+import { loadBullMQ } from '../../lib/load-bullmq';
 import { assertTenantContext } from '../../security/tenant-context';
 import { createNotification } from '../notifications/notifications.router';
 
@@ -80,8 +81,8 @@ function notifyAssignee(
 
   // BullMQ email notification (fire-and-forget)
   (async () => {
-    const { Queue } = await import('bullmq');
-    const { QUEUE_NAMES, DEFAULT_QUEUE_CONFIGS } = await import('@intelliflow/platform/queues');
+    const { Queue } = await loadBullMQ();
+    const { QUEUE_NAMES, DEFAULT_QUEUE_CONFIGS } = await import('@intelliflow/platform/queues/types');
     const qConfig = DEFAULT_QUEUE_CONFIGS[QUEUE_NAMES.EMAIL_NOTIFICATIONS];
     const queue = new Queue(QUEUE_NAMES.EMAIL_NOTIFICATIONS, {
       connection: {

@@ -34,6 +34,7 @@ import {
 } from '@intelliflow/validators';
 import { mapContactToResponse } from '../../shared/mappers';
 import type { Context } from '../../context';
+import { loadBullMQ } from '../../lib/load-bullmq';
 import {
   getTenantContext,
   createTenantWhereClause,
@@ -194,9 +195,10 @@ async function handleAssociateAccount(
   contactService: ReturnType<typeof getContactService>,
   id: string,
   accountId: string,
-  userId: string
+  userId: string,
+  tenantId: string
 ): Promise<void> {
-  const result = await contactService.associateWithAccount(id, accountId, userId);
+  const result = await contactService.associateWithAccount(id, accountId, userId, tenantId);
   if (result.isFailure) {
     const msg = result.error.message;
     throw new TRPCError({
@@ -579,7 +581,7 @@ export const contactRouter = createTRPCRouter({
       if (accountId === null) {
         await handleDisassociateAccount(contactService, id, typedCtx.tenant.userId);
       } else {
-        await handleAssociateAccount(contactService, id, accountId, typedCtx.tenant.userId);
+        await handleAssociateAccount(contactService, id, accountId, typedCtx.tenant.userId, typedCtx.tenant.tenantId);
       }
     }
 
@@ -658,7 +660,8 @@ export const contactRouter = createTRPCRouter({
       const result = await contactService.associateWithAccount(
         input.contactId,
         input.accountId,
-        typedCtx.tenant.userId
+        typedCtx.tenant.userId,
+        typedCtx.tenant.tenantId
       );
 
       if (result.isFailure) {
@@ -1381,8 +1384,8 @@ export const contactRouter = createTRPCRouter({
 
       // Fire-and-forget: enqueue background LLM enrichment (best-effort)
       try {
-        const { Queue } = await import('bullmq');
-        const { QUEUE_NAMES } = await import('@intelliflow/platform/queues');
+        const { Queue } = await loadBullMQ();
+        const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
         const queue = new Queue(QUEUE_NAMES.AI_PREDICTION, {
           connection: { host: process.env.REDIS_HOST ?? 'localhost', port: Number.parseInt(process.env.REDIS_PORT || '6379', 10) },
         });

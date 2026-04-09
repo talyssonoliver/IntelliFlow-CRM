@@ -14,9 +14,9 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { Queue } from 'bullmq';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { type Context } from '../../context';
+import { loadBullMQ } from '../../lib/load-bullmq';
 import {
   pinItemInputSchema,
   unpinItemInputSchema,
@@ -371,7 +371,7 @@ const DEFAULT_AI_INSIGHTS_QUEUE_CONFIG = {
 
 async function getAIInsightsQueueConfig() {
   try {
-    const platformQueues = await import('@intelliflow/platform/queues');
+    const platformQueues = await import('@intelliflow/platform/queues/types');
     return {
       queueName: platformQueues.QUEUE_NAMES.AI_INSIGHTS,
       queueConfig:
@@ -402,6 +402,7 @@ async function enqueueInsightGeneration(
   if (!uuidRegex.test(tenantId)) return;
 
   try {
+    const { Queue } = await loadBullMQ();
     const { queueName, queueConfig } = await getAIInsightsQueueConfig();
     const queue = new Queue(queueName, {
       connection: {

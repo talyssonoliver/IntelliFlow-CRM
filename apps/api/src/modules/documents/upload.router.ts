@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../../trpc';
 import { TRPCError } from '@trpc/server';
 import { IngestionOrchestrator } from '@intelliflow/application';
+import { loadBullMQ } from '../../lib/load-bullmq';
 
 /**
  * File Upload Input Schema
@@ -44,7 +45,7 @@ async function enqueueDocumentProcessing(params: {
   userId: string;
   filename: string;
 }) {
-  const { Queue } = await import('bullmq');
+  const { Queue } = await loadBullMQ();
   const connection = {
     host: process.env.REDIS_HOST || 'localhost',
     port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),

@@ -20,6 +20,7 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import { loadBullMQ } from '../../lib/load-bullmq';
 
 // ============================================================
 // Input Schemas
@@ -180,6 +181,8 @@ export const aiMonitoringRouter = createTRPCRouter({
           agentModel: true,
           status: true,
           contextName: true,
+          contextType: true,
+          contextId: true,
           startedAt: true,
           lastMessageAt: true,
         },
@@ -194,6 +197,8 @@ export const aiMonitoringRouter = createTRPCRouter({
           model: c.agentModel ?? 'unknown',
           status: c.status.toLowerCase() as 'active' | 'idle' | 'error',
           currentTask: c.contextName ?? undefined,
+          contextType: c.contextType ?? null,
+          contextId: c.contextId ?? null,
           lastActive: (c.lastMessageAt ?? c.startedAt).toISOString(),
         })),
         totalActive: conversations.length,
@@ -223,7 +228,13 @@ export const aiMonitoringRouter = createTRPCRouter({
       const [conversations, total] = await Promise.all([
         ctx.prismaWithTenant.conversationRecord.findMany({
           where,
-          include: {
+          select: {
+            id: true,
+            agentId: true,
+            agentName: true,
+            contextType: true,
+            contextId: true,
+            startedAt: true,
             messages: {
               select: {
                 id: true,
@@ -257,6 +268,8 @@ export const aiMonitoringRouter = createTRPCRouter({
           id: c.id,
           agentId: c.agentId ?? '',
           agentType: c.agentName ?? 'unknown',
+          contextType: c.contextType ?? null,
+          contextId: c.contextId ?? null,
           messages: c.messages.map((m) => ({
             role: m.role,
             content: m.content,
@@ -378,7 +391,7 @@ export const aiMonitoringRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       try {
-        const { Queue } = await import('bullmq');
+        const { Queue } = await loadBullMQ();
         const queueNames = input.queue
           ? [input.queue]
           : ['ai-scoring', 'ai-prediction', 'ai-insights'];

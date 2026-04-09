@@ -64,10 +64,26 @@ async function getApplicationModule(): Promise<any> {
 // Lock token secret
 // ============================================================
 
-const LOCK_TOKEN_SECRET = process.env.REVIEW_LOCK_TOKEN_SECRET || 'dev-secret-change-in-production';
+const DEV_LOCK_TOKEN_SECRET = 'dev-secret-change-in-production';
+let hasWarnedAboutMissingLockSecret = false;
 
-if (!process.env.REVIEW_LOCK_TOKEN_SECRET) {
-  console.warn('[AIReview] WARNING: REVIEW_LOCK_TOKEN_SECRET not set, using dev fallback');
+function getLockTokenSecret(): string {
+  const configuredSecret = process.env.REVIEW_LOCK_TOKEN_SECRET?.trim();
+  if (configuredSecret) return configuredSecret;
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'REVIEW_LOCK_TOKEN_SECRET must be configured in production',
+    });
+  }
+
+  if (!hasWarnedAboutMissingLockSecret) {
+    hasWarnedAboutMissingLockSecret = true;
+    console.warn('[AIReview] WARNING: REVIEW_LOCK_TOKEN_SECRET not set, using dev fallback');
+  }
+
+  return DEV_LOCK_TOKEN_SECRET;
 }
 
 // ============================================================
@@ -281,7 +297,7 @@ export const aiReviewRouter = createTRPCRouter({
       const repository = await getRepository(ctx);
 
       const app = await getApplicationModule();
-      const useCase = new app.ClaimReviewUseCase(repository, eventBus, LOCK_TOKEN_SECRET);
+      const useCase = new app.ClaimReviewUseCase(repository, eventBus, getLockTokenSecret());
       const result = await useCase.execute({
         reviewId: input.reviewId,
         tenantId: typedCtx.tenant.tenantId,
@@ -321,7 +337,7 @@ export const aiReviewRouter = createTRPCRouter({
       const repository = await getRepository(ctx);
 
       const app = await getApplicationModule();
-      const useCase = new app.ApproveReviewUseCase(repository, eventBus, LOCK_TOKEN_SECRET);
+      const useCase = new app.ApproveReviewUseCase(repository, eventBus, getLockTokenSecret());
       const result = await useCase.execute({
         reviewId: input.reviewId,
         tenantId: typedCtx.tenant.tenantId,
@@ -359,7 +375,7 @@ export const aiReviewRouter = createTRPCRouter({
       const repository = await getRepository(ctx);
 
       const app = await getApplicationModule();
-      const useCase = new app.RejectReviewUseCase(repository, eventBus, LOCK_TOKEN_SECRET);
+      const useCase = new app.RejectReviewUseCase(repository, eventBus, getLockTokenSecret());
       const result = await useCase.execute({
         reviewId: input.reviewId,
         tenantId: typedCtx.tenant.tenantId,
@@ -399,7 +415,7 @@ export const aiReviewRouter = createTRPCRouter({
       const repository = await getRepository(ctx);
 
       const app = await getApplicationModule();
-      const useCase = new app.EscalateReviewUseCase(repository, eventBus, LOCK_TOKEN_SECRET);
+      const useCase = new app.EscalateReviewUseCase(repository, eventBus, getLockTokenSecret());
       const result = await useCase.execute({
         reviewId: input.reviewId,
         tenantId: typedCtx.tenant.tenantId,
@@ -439,7 +455,7 @@ export const aiReviewRouter = createTRPCRouter({
       const repository = await getRepository(ctx);
 
       const app = await getApplicationModule();
-      const useCase = new app.ReleaseReviewUseCase(repository, eventBus, LOCK_TOKEN_SECRET);
+      const useCase = new app.ReleaseReviewUseCase(repository, eventBus, getLockTokenSecret());
       const result = await useCase.execute({
         reviewId: input.reviewId,
         tenantId: typedCtx.tenant.tenantId,

@@ -73,8 +73,14 @@ const TEST_DRAFT_ID = '00000000-0000-4000-8000-000000000301';
 const TEST_LEAD_ID = '00000000-0000-4000-8000-000000000201';
 
 function createCallerContext() {
+  // Minimal prisma stub with $extends so tenantMiddleware's
+  // createTenantScopedPrisma(ctx.prisma, tenant) call does not throw.
+  const prismaStub: any = {
+    $extends: () => prismaStub,
+    $executeRawUnsafe: vi.fn().mockResolvedValue(undefined),
+  };
   return {
-    prisma: {} as any,
+    prisma: prismaStub,
     user: {
       userId: TEST_USER_ID,
       email: 'test@example.com',
@@ -88,7 +94,7 @@ function createCallerContext() {
       role: 'SALES_REP',
       canAccessAllTenantData: false,
     },
-    prismaWithTenant: {} as any,
+    prismaWithTenant: prismaStub,
   } as any;
 }
 
@@ -682,18 +688,7 @@ describe('autoResponseRouter (caller tests)', () => {
 
   describe('getStatsByStatus', () => {
     it('should return counts for each status', async () => {
-      // The getStatsByStatus uses protectedProcedure (not tenantProcedure)
-      const protectedCtx = {
-        prisma: {} as any,
-        user: {
-          userId: TEST_USER_ID,
-          email: 'test@example.com',
-          role: 'ADMIN',
-          tenantId: TEST_TENANT_ID,
-        },
-      } as any;
-      const adminCaller = autoResponseRouter.createCaller(protectedCtx);
-
+      // getStatsByStatus uses tenantProcedure (IFC-194 migration)
       // countByStatus is called sequentially per status; use mockImplementation by status arg
       mockRepository.countByStatus.mockImplementation((_tenantId: string, status: string) => {
         const counts: Record<string, number> = {
@@ -709,7 +704,7 @@ describe('autoResponseRouter (caller tests)', () => {
         return Promise.resolve(counts[status] ?? 0);
       });
 
-      const result = await adminCaller.getStatsByStatus({
+      const result = await caller.getStatsByStatus({
         tenantId: TEST_TENANT_ID,
       });
 
@@ -724,37 +719,17 @@ describe('autoResponseRouter (caller tests)', () => {
     });
 
     it('should call countByStatus for all 8 statuses', async () => {
-      const protectedCtx = {
-        prisma: {} as any,
-        user: {
-          userId: TEST_USER_ID,
-          email: 'test@example.com',
-          role: 'ADMIN',
-          tenantId: TEST_TENANT_ID,
-        },
-      } as any;
-      const adminCaller = autoResponseRouter.createCaller(protectedCtx);
       mockRepository.countByStatus.mockResolvedValue(0);
 
-      await adminCaller.getStatsByStatus({ tenantId: TEST_TENANT_ID });
+      await caller.getStatsByStatus({ tenantId: TEST_TENANT_ID });
 
       expect(mockRepository.countByStatus).toHaveBeenCalled();
     });
 
     it('should pass tenantId to each countByStatus call', async () => {
-      const protectedCtx = {
-        prisma: {} as any,
-        user: {
-          userId: TEST_USER_ID,
-          email: 'test@example.com',
-          role: 'ADMIN',
-          tenantId: TEST_TENANT_ID,
-        },
-      } as any;
-      const adminCaller = autoResponseRouter.createCaller(protectedCtx);
       mockRepository.countByStatus.mockResolvedValue(0);
 
-      await adminCaller.getStatsByStatus({ tenantId: TEST_TENANT_ID });
+      await caller.getStatsByStatus({ tenantId: TEST_TENANT_ID });
 
       for (const call of mockRepository.countByStatus.mock.calls) {
         expect(call[0]).toBe(TEST_TENANT_ID);

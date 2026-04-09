@@ -12,7 +12,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, tenantProcedure, protectedProcedure } from '../../trpc';
+import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import {
   createAutoResponseDraftSchema,
   submitForApprovalSchema,
@@ -773,13 +773,13 @@ export const autoResponseRouter = createTRPCRouter({
 
   /**
    * Get statistics by status
-   * SECURITY: Uses protectedProcedure for admin/manager analytics
+   * SECURITY: Uses tenantProcedure to enforce tenant isolation
    */
-  getStatsByStatus: protectedProcedure
+  getStatsByStatus: tenantProcedure
     .input(z.object({ tenantId: idSchema }).optional())
     .query(async ({ ctx, input }) => {
       const repository = await getRepository(ctx);
-      const tenantId = input?.tenantId ?? ctx.user?.tenantId;
+      const tenantId = input?.tenantId ?? ctx.tenant.tenantId;
 
       if (!tenantId) {
         throw new TRPCError({

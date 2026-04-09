@@ -16,7 +16,7 @@
  */
 
 import { createTRPCRouter, publicProcedure, adminProcedure } from '../../trpc';
-import { InMemoryFeatureFlagProvider } from '@intelliflow/platform';
+import { InMemoryFeatureFlagProvider } from '@intelliflow/platform/feature-flags';
 import { loadFeatureFlagsConfig, FLAG_KEY_TO_FEATURE } from '../../config/feature-flags.config';
 
 /**

@@ -13,17 +13,22 @@ import { TRPCError } from '@trpc/server';
 import { feedbackSurveyRouter } from '../feedbackSurvey.router';
 import type { UserSession, Context } from '../../../context';
 
-const mockPrisma = {} as Context['prisma'];
+// Minimal prisma stub with $extends so tenantMiddleware's
+// createTenantScopedPrisma(ctx.prisma, tenant) call does not throw.
+const mockPrisma: any = {
+  $extends: () => mockPrisma,
+  $executeRawUnsafe: vi.fn().mockResolvedValue(undefined),
+};
 
 const mockFeedbackSurveyService = {
   getDashboardSummary: vi.fn(),
 };
 
 const mockUser: UserSession = {
-  userId: 'user_123',
+  userId: '00000000-0000-4000-8000-000000000103',
   email: 'test@example.com',
   role: 'USER',
-  tenantId: 'tenant_123',
+  tenantId: '00000000-0000-4000-8000-000000000001',
 };
 
 function createMockContext(overrides?: Partial<Context>) {
@@ -31,9 +36,9 @@ function createMockContext(overrides?: Partial<Context>) {
     prisma: mockPrisma,
     user: mockUser,
     tenant: {
-      tenantId: 'tenant_123',
+      tenantId: '00000000-0000-4000-8000-000000000001',
       tenantType: 'user' as const,
-      userId: 'user_123',
+      userId: '00000000-0000-4000-8000-000000000103',
       role: 'USER',
       canAccessAllTenantData: false,
     },
@@ -69,7 +74,7 @@ describe('feedbackSurveyRouter', () => {
       expect(result.nps?.score).toBe(42);
       expect(result.csat?.score).toBe(80);
       expect(mockFeedbackSurveyService.getDashboardSummary).toHaveBeenCalledWith(
-        'tenant_123',
+        '00000000-0000-4000-8000-000000000001',
         expect.objectContaining({ granularity: 'month' })
       );
     });

@@ -16,6 +16,7 @@ import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { container } from '../../container';
+import { loadBullMQ } from '../../lib/load-bullmq';
 
 // ============================================================================
 // Input Schemas
@@ -115,7 +116,7 @@ export const documentsRouter = createTRPCRouter({
 
     // Fire-and-forget: enqueue text extraction / OCR (best-effort)
     (async () => {
-      const { Queue } = await import('bullmq');
+      const { Queue } = await loadBullMQ();
       const connection = {
         host: process.env.REDIS_HOST || 'localhost',
         port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
