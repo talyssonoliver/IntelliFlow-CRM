@@ -5,13 +5,13 @@
   "description": "Settings Pages Wiring - 4 settings pages with hardcoded data and inert buttons. Team: hardcoded 4-person array, inert Invite/Remove/Role buttons. Integrations: hardcoded provider list, inert Connect/Disconnect buttons. Notifications: hardcoded const, no useState, no onClick on toggles. Account: profile name/email has no save mutation, 3 security buttons (Change Password, Enable 2FA, Download Data) have no onClick. Wire all to real tRPC mutations and queries.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-18",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.649Z"
+    "verified_at": "2026-04-09T20:20:24.077Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

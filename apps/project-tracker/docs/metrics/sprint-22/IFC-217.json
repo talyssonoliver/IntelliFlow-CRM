@@ -5,7 +5,7 @@
   "description": "Entity Detail Email Compose Wiring  -  Wire existing EmailCompose component into Compose buttons on Lead and Contact detail pages. Pre-fill recipient. Open as Sheet overlay. Connect to email send API via EmailServiceAdapter. Follows IFC-144 and PG-141 (Pattern 1 + Pattern 2). Resolves WIRE-IFC-144-001 and WIRE-PG-141-001.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-22",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
@@ -14,7 +14,7 @@
       "PG-141"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.723Z"
+    "verified_at": "2026-04-09T20:20:24.129Z"
   },
   "dependencies_resolved": [
     "IFC-144",

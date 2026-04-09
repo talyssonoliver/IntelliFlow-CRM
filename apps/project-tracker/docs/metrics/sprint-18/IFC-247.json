@@ -5,13 +5,13 @@
   "description": "Lead Detail Page Tests. Lead detail page (2200+ lines) has ZERO component tests [T1]. Also untested: addNote procedure [T4] and logActivity procedure [T5] added 2026-03-04. Write comprehensive tests: (1) Component render tests for all tabs (Overview, Activity, AI Insights, Lead IQ, Notes, Files, Emails, Tasks). (2) Mutation tests for addNote and logActivity. (3) Error state tests (404, 500, retry). (4) AI insight null-state rendering. (5) Activity feed toggle. Must cover 2026-03-04 wiring fixes.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-18",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.652Z"
+    "verified_at": "2026-04-09T20:20:24.080Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

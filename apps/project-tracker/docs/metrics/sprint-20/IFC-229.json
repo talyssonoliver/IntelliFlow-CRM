@@ -5,13 +5,13 @@
   "description": "Lead Detail Map View - Current map section (lines 1453-1465) is a gradient placeholder with non-functional 'View Map' button. Options: (A) Integrate Mapbox/Leaflet with geocoded address, (B) Link to Google Maps in new tab, (C) Remove placeholder entirely if map not in MVP scope. Needs product decision.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-20",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.692Z"
+    "verified_at": "2026-04-09T20:20:24.110Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

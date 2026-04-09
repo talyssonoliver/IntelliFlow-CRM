@@ -5,13 +5,13 @@
   "description": "Account Router Missing Procedures & Update Fix. (1) Update procedure silently drops revenue/employees/industry/parentAccountId fields accepted by schema (B-08). (2) accountListResponseSchema uses 'data' key but router returns 'accounts' — mismatch (B-09). (3) No updateRevenue procedure — domain Account.updateRevenue() unreachable via API (B-10). (4) No updateEmployeeCount procedure (B-11). (5) No categorizeIndustry procedure (B-12). (6) mapAccountToResponse returns raw WebsiteUrl value object instead of string (B-13). Audit: docs/audit/account-detail-wiring-audit.md section 12.",
   "owner": "Backend Dev (STOA-Domain)",
   "sprint": "sprint-18",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.659Z"
+    "verified_at": "2026-04-09T20:20:24.086Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

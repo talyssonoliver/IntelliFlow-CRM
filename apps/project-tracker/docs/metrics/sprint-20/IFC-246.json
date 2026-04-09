@@ -5,13 +5,13 @@
   "description": "Domain Model Lead 360 Alignment. Fix 4 HIGH issues: (1) Lead.toJSON() omits aiInsight, activities, notes, files, tasks relations - domain events carry incomplete snapshots [D1]. (2) qualify() only allows from NEW/CONTACTED but UI doesn't reflect this constraint [D2]. (3) LeadScoringChain throws unhandled error for unknown AI_PROVIDER [D3]. (4) AI scoring prompt only receives basic lead data, ignores activity count, engagement history, note count [D4]. Fix: Extend toJSON, expose allowed transitions, add provider fallback, enrich scoring prompt.",
   "owner": "AI Specialist (STOA-Intelligence)",
   "sprint": "sprint-20",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.698Z"
+    "verified_at": "2026-04-09T20:20:24.116Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

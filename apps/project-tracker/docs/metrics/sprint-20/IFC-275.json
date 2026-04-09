@@ -5,7 +5,7 @@
   "description": "Account Create & Edit Forms. (1) No account create form page — router has create procedure but no frontend consumer (F-16). Create page at accounts/(list)/new/page.tsx with form for all account fields. (2) No account edit form — Edit button navigates but lands on 404 (F-17). Create edit form page or inline edit mode using router update procedure. Both forms should validate with accountSchema. Audit: docs/audit/account-detail-wiring-audit.md section 10.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-20",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
@@ -13,7 +13,7 @@
       "IFC-270:FS"
     ],
     "all_satisfied": false,
-    "verified_at": "2026-03-19T22:11:37.706Z"
+    "verified_at": "2026-04-09T20:20:24.120Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

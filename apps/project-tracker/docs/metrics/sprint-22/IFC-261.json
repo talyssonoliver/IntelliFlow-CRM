@@ -5,13 +5,13 @@
   "description": "Contact Event Pipeline — Worker Handlers + Event Types. (1) Zero contact event handlers in events worker (W-02). (2) Only 2/8 contact event types in DOMAIN_EVENT_TYPES — missing deleted, account_associated, account_disassociated, converted_from_lead, linked_to_lead, interacted (W-04). (3) No webhook routing for contact events (W-05). (4) No notifications for contact events (W-11). Cross-ref: W-01 (InMemoryEventBus) shared with IFC-250. Audit: docs/audit/contact-detail-wiring-audit.md §17.",
   "owner": "Backend Dev (STOA-Domain)",
   "sprint": "sprint-22",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.732Z"
+    "verified_at": "2026-04-09T20:20:24.133Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

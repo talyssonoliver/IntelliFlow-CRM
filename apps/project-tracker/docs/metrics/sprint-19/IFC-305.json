@@ -5,7 +5,7 @@
   "description": "Componentize CRM entity detail pages (Leads, Contacts) — extract shared SOLID-compliant components from 5284 lines of duplicated god-files; wire bypassed shared components (EntityHeader, SearchFilterBar, ActivityFeed); create cross-entity reusable components (EntityProfileCard, ActivityFilterBar, AiInsightMetricsGrid, ai-insight-transforms utility, EntityErrorState, EntityDetailSkeleton, ConfirmationDialog); reduce page files from 2691/2593 to ~200 lines each",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-19",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
@@ -13,7 +13,7 @@
       "IFC-226"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.683Z"
+    "verified_at": "2026-04-09T20:20:24.102Z"
   },
   "dependencies_resolved": [
     "IFC-226"

@@ -5,13 +5,13 @@
   "description": "Lead Event Pipeline - Persistent Outbox + Webhooks. Fix HIGH/LOW issues: (1) InMemoryEventBus loses all events on server restart - no persistent outbox pattern [W3]. (2) No webhook handlers for lead events - external systems cannot subscribe [W9]. Fix: Implement transactional outbox pattern for lead domain events (LeadCreatedEvent, LeadQualifiedEvent, etc.). Add webhook dispatch for lead events. Ensure event ordering and at-least-once delivery.",
   "owner": "Backend Dev (STOA-Domain)",
   "sprint": "sprint-22",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.730Z"
+    "verified_at": "2026-04-09T20:20:24.132Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

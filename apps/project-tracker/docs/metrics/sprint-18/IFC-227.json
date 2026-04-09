@@ -5,13 +5,13 @@
   "description": "Company-to-Account Navigation Link - Lead detail page shows company name as plain <span> in profile card (line 1352) and info panel (line 1656). Replace with Next.js Link component navigating to /accounts/[accountId]. Requires accountId in lead transform/query. Apply same pattern to Contact and Deal detail pages.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-18",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.646Z"
+    "verified_at": "2026-04-09T20:20:24.075Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

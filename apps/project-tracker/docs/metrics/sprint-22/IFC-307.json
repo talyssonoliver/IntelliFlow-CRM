@@ -2,18 +2,24 @@
   "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-307",
   "section": "AI & Intelligence",
-  "description": "Contact Enrichment Pipeline — Automated background job that periodically enriches contact/lead data from external providers (Clearbit, Apollo). Includes: BullMQ queue 'intelliflow-contact-enrichment', enrichment adapter with rate limiting, on-create trigger in contact.router.ts, periodic cron sweep for stale profiles (>30 days), cost tracking via CostTracker, field updates (company, title, social profiles, industry).",
+  "description": "Contact Enrichment Pipeline — Automated background job that periodically enriches contact/lead data from external providers (Clearbit, Apollo). Includes: BullMQ queue intelliflow-contact-enrichment, enrichment adapter with rate limiting, on-create trigger in contact.router.ts, periodic cron sweep for stale profiles (>30 days), cost tracking via CostTracker, field updates (company, title, social profiles, industry)",
   "owner": "Tech Lead (STOA-Domain)",
   "sprint": "sprint-22",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
-    "required": ["IFC-168", "IFC-131"],
+    "required": [
+      "IFC-168",
+      "IFC-131"
+    ],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T23:30:00.000Z"
+    "verified_at": "2026-04-09T20:20:24.137Z"
   },
-  "dependencies_resolved": [],
+  "dependencies_resolved": [
+    "IFC-168",
+    "IFC-131"
+  ],
   "started_at": null,
   "completed_at": null,
   "target_duration_minutes": 480,

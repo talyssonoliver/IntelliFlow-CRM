@@ -5,7 +5,7 @@
   "description": "Deal Detail Action Buttons — Wire 14 No-Ops. (1) EntityHeader 6 no-ops all with onClick: () => {} (F-08): Won → moveStage CLOSED_WON with success dialog; Lost → moveStage CLOSED_LOST with LossReasonModal (reuse from list page); Edit → navigate to edit form or open inline edit; Clone → duplicate mutation; Archive → set archived status; Delete → AlertDialog confirmation + delete mutation. (2) Stakeholder/Product/File 8 no-ops (F-09): Edit stakeholders → open edit dialog; Account icons → navigate to /accounts/[id] and website; Contact icons → mailto: and tel: links; Add Product → product association dialog; File upload → upload mutation; File links → presigned URL download. Depends on IFC-278 (real data needed for mutations). Audit: docs/audit/deal-detail-wiring-audit.md section 2.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-18",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
@@ -13,7 +13,7 @@
       "IFC-278:FS"
     ],
     "all_satisfied": false,
-    "verified_at": "2026-03-19T22:11:37.662Z"
+    "verified_at": "2026-04-09T20:20:24.089Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

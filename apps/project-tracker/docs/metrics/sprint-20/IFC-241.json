@@ -5,13 +5,13 @@
   "description": "Lead Router Dead Code & Missing Events Cleanup. Fix 4 MEDIUM/LOW issues: (1) scoreWithAI notification variables at lines 517-527 set but never referenced - dead code [S10]. (2) LeadRoutedEvent defined in domain but never published by any procedure or service [S11]. (3) Only 3 of ~10 lead event types trigger notifications [W10]. (4) Lead notifications processed synchronously, not queued via BullMQ [W11]. Fix: Remove dead notification code, publish LeadRoutedEvent from routing logic, add notification handlers for remaining event types, enqueue via BullMQ.",
   "owner": "Backend Dev (STOA-Domain)",
   "sprint": "sprint-20",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.694Z"
+    "verified_at": "2026-04-09T20:20:24.113Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

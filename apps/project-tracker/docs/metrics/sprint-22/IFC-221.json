@@ -5,7 +5,7 @@
   "description": "Email Open Tracking Integration  -  Real email open/click tracking. Backend: tracking pixel endpoint recording opens; click-through URL wrapper; EmailTracking model. Frontend: replace activity-derived open rate with real data on Lead and Contact detail. Inject pixel + wrap links on outbound send. Follows IFC-144 and IFC-099 (Pattern 1  -  infra-only). Resolves WIRE-IFC-099-001.",
   "owner": "Backend Dev (STOA-Domain)",
   "sprint": "sprint-22",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
@@ -14,7 +14,7 @@
       "IFC-099"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.725Z"
+    "verified_at": "2026-04-09T20:20:24.129Z"
   },
   "dependencies_resolved": [
     "IFC-144",

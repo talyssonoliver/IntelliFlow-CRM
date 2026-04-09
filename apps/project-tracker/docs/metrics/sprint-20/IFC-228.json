@@ -5,7 +5,7 @@
   "description": "Lead Owner Reassignment UI - Owner card on Lead detail (lines 1468-1487) is read-only. Add reassignment capability for MANAGER/ADMIN roles: user picker dropdown, reassign mutation via lead.update, audit trail entry. Apply RBAC check to show/hide reassign button. Extend to Contact and Account detail pages.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-20",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
@@ -13,7 +13,7 @@
       "IFC-095"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.691Z"
+    "verified_at": "2026-04-09T20:20:24.109Z"
   },
   "dependencies_resolved": [
     "IFC-095"

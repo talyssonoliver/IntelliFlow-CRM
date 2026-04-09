@@ -5,7 +5,7 @@
   "description": "Account Contract Test + Test Gaps. (1) Accounts is the ONLY entity without a contract test file (T-01). (2) No-op buttons untested — 6 CRITICAL no-op buttons have no click behavior tests (T-02). (3) Tenant isolation untested in router tests (T-03). (4) No E2E Playwright tests for account CRUD flow (T-04). (5) Owner display untested — tests don't verify owner name/title rendering (T-05). Audit: docs/audit/account-detail-wiring-audit.md section 19.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-20",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
@@ -13,7 +13,7 @@
       "IFC-267:FS;IFC-268:FS"
     ],
     "all_satisfied": false,
-    "verified_at": "2026-03-19T22:11:37.708Z"
+    "verified_at": "2026-04-09T20:20:24.121Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

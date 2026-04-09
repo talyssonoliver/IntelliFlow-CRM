@@ -5,7 +5,7 @@
   "description": "Activity Feed Interactions (Reactions + Comments)  -  Add ActivityReaction and ActivityComment models to Prisma schema. tRPC mutations: addReaction removeReaction addComment. Wire into Lead and Contact detail activity action buttons. Remove hardcoded [] arrays. Follows IFC-069 (Pattern 2  -  scope oversight). Resolves WIRE-IFC-069-001.",
   "owner": "Backend Dev (STOA-Domain)",
   "sprint": "sprint-20",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
@@ -13,7 +13,7 @@
       "IFC-069"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.690Z"
+    "verified_at": "2026-04-09T20:20:24.108Z"
   },
   "dependencies_resolved": [
     "IFC-069"

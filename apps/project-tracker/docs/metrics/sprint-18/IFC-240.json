@@ -5,13 +5,13 @@
   "description": "Lead Audit Logging. Add audit log entries to all 20 lead router procedures using SecurityAuditService. GDPR-relevant operations (delete, bulkDelete, convert, export) MUST have audit trail. Include: actor (userId), action, entityType (Lead), entityId, tenantId, timestamp, metadata (old/new values for mutations). Integrate with existing audit infrastructure at apps/api/src/security/audit/.",
   "owner": "Backend Dev (STOA-Security)",
   "sprint": "sprint-18",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.650Z"
+    "verified_at": "2026-04-09T20:20:24.078Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

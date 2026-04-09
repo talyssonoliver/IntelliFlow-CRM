@@ -5,7 +5,7 @@
   "description": "Account Event Pipeline — Worker Handlers + Event Types. (1) Zero account event handlers in events worker (W-01). (2) Zero account event types in DOMAIN_EVENT_TYPES map (W-02). (3) Audit handler has 3 account event mappings (Created/Updated/Deleted) but events never reach it because worker has no handlers and dispatcher has no types (W-03). Add event handlers for AccountCreated, AccountUpdated, AccountDeleted (requires IFC-271), AccountRevenueUpdated, AccountHierarchyUpdated, AccountIndustryCategorized to events worker. Register all types in DOMAIN_EVENT_TYPES. Cross-ref: W-01/W-02 pattern shared with Contact (IFC-261). Audit: docs/audit/account-detail-wiring-audit.md section 14.",
   "owner": "Backend Dev (STOA-Domain)",
   "sprint": "sprint-22",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
@@ -13,7 +13,7 @@
       "IFC-271:FS"
     ],
     "all_satisfied": false,
-    "verified_at": "2026-03-19T22:11:37.737Z"
+    "verified_at": "2026-04-09T20:20:24.135Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

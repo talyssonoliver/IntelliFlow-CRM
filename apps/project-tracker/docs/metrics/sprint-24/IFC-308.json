@@ -2,18 +2,24 @@
   "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-308",
   "section": "AI & Intelligence",
-  "description": "Scheduled Report Generation — BullMQ cron job that generates daily/weekly analytics snapshots and emails summary reports to team leads. Includes: report template system (pipeline summary, lead conversion, revenue trends, SLA compliance), PDF/HTML report rendering, email delivery via notifications worker, configurable schedule per tenant, report archive storage.",
+  "description": "Scheduled Report Generation — BullMQ cron job that generates daily/weekly analytics snapshots and emails summary reports to team leads. Includes: report template system (pipeline summary, lead conversion, revenue trends, SLA compliance), PDF/HTML report rendering, email delivery via notifications worker, configurable schedule per tenant, report archive storage",
   "owner": "Tech Lead (STOA-Domain)",
   "sprint": "sprint-24",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
-    "required": ["IFC-168", "IFC-024"],
+    "required": [
+      "IFC-168",
+      "IFC-024"
+    ],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T23:30:00.000Z"
+    "verified_at": "2026-04-09T20:20:24.259Z"
   },
-  "dependencies_resolved": [],
+  "dependencies_resolved": [
+    "IFC-168",
+    "IFC-024"
+  ],
   "started_at": null,
   "completed_at": null,
   "target_duration_minutes": 600,

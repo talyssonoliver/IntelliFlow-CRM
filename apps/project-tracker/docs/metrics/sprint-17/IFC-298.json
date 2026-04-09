@@ -6,14 +6,14 @@
   "owner": "Backend Dev (STOA-Domain)",
   "status": "DONE",
   "sprint": "sprint-17",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "dependencies": {
     "required": [
       "PG-045"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.627Z"
+    "verified_at": "2026-04-09T20:20:24.061Z"
   },
   "started_at": "2026-03-10T20:56:22.672Z",
   "completed_at": "2026-03-10T21:11:22.672Z",

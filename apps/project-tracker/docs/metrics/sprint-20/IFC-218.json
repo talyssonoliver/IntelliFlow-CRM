@@ -5,7 +5,7 @@
   "description": "Similar Entity API (pgvector)  -  Build lead.getSimilar and contact.getSimilar tRPC queries using pgvector embedding similarity. Top 5 matches exclude self tenant-isolated. Wire to Lead detail sidebar (replace empty state) and Contact detail sidebar. Follows IFC-039 (Pattern 1  -  infra-only). Resolves WIRE-IFC-039-001.",
   "owner": "AI Specialist (STOA-Intelligence)",
   "sprint": "sprint-20",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
@@ -13,7 +13,7 @@
       "IFC-039"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.689Z"
+    "verified_at": "2026-04-09T20:20:24.108Z"
   },
   "dependencies_resolved": [
     "IFC-039"

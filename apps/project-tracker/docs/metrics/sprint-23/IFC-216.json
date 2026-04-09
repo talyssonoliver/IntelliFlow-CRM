@@ -5,7 +5,7 @@
   "description": "Entity Detail File Upload/Download Wiring  -  Wire file upload and download handlers on entity detail pages (Lead Contact Deal). Upload: file picker to upload mutation to Supabase Storage. Download: presigned URL to browser download. Follows IFC-094 (Pattern 1  -  infra-only). Resolves WIRE-IFC-094-001.",
   "owner": "Backend Dev (STOA-Domain)",
   "sprint": "sprint-23",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
@@ -13,7 +13,7 @@
       "IFC-094"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.780Z"
+    "verified_at": "2026-04-09T20:20:24.158Z"
   },
   "dependencies_resolved": [
     "IFC-094"

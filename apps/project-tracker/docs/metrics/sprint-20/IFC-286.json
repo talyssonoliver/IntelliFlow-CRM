@@ -5,7 +5,7 @@
   "description": "Deal Detail Page Tests + E2E. (1) Deal detail page (792 lines) has ZERO test coverage (T-01). (2) No E2E Playwright tests for /deals, /deals/[id], or /deals/forecast — only pipeline-settings has E2E (T-02). (3) No cross-tenant access attempt test in router tests (T-03). (4) Contract test missing NEEDS_ANALYSIS stage in test data (T-04). Depends on IFC-278 (real data) and IFC-280 (wired buttons). Audit: docs/audit/deal-detail-wiring-audit.md section 10.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-20",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
@@ -13,7 +13,7 @@
       "IFC-278:FS;IFC-280:FS"
     ],
     "all_satisfied": false,
-    "verified_at": "2026-03-19T22:11:37.710Z"
+    "verified_at": "2026-04-09T20:20:24.122Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

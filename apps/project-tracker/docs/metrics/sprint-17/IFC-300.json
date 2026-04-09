@@ -6,14 +6,14 @@
   "owner": "Backend Dev (STOA-Foundation)",
   "status": "BACKLOG",
   "sprint": "sprint-17",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "dependencies": {
     "required": [
       "IFC-298"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.628Z"
+    "verified_at": "2026-04-09T20:20:24.063Z"
   },
   "started_at": null,
   "completed_at": null,

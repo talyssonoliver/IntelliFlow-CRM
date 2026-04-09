@@ -5,13 +5,13 @@
   "description": "Lead List & Create Page Tests. Two major pages with ZERO tests: (1) Lead list page with filtering, sorting, bulk operations, saved views [T2]. (2) Lead create page (1029 lines) with BANT fields, source handling, validation [T3]. Also test: (3) Role-based filtering (ADMIN sees all, others see own) [T7]. (4) Bulk operations UI (score, convert, archive, delete) [T8]. Write component tests covering happy path, error states, and edge cases.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-18",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.653Z"
+    "verified_at": "2026-04-09T20:20:24.081Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

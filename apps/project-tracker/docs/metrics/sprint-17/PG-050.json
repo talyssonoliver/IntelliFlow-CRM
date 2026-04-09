@@ -10,7 +10,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.623Z",
+    "verified_at": "2026-04-09T20:20:24.057Z",
     "required": [
       "IFC-058"
     ]
@@ -93,7 +93,7 @@
   "blockers": [],
   "status_history": [
     {
-      "status": "Plan Complete",
+      "status": "Planned",
       "at": "2026-03-08T17:17:11Z",
       "note": "Spec and plan phases completed before exec"
     },

@@ -5,13 +5,13 @@
   "description": "Contact Dead UI Fields & Unused Components. (1) location/timezone always empty (F-10). (2) isOnline/isVIP always false — dead badges (F-11). (3) tags always empty array (F-12). (4) ContactDetail.tsx component unused by page — 597 lines with tests but never imported (F-14). (5) ContactCard.tsx unused by list page (F-28). (6) emailsOpened always 0 (F-20). Decision needed: wire to real data, show placeholder states, or remove dead UI. Audit: docs/audit/contact-detail-wiring-audit.md §16.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-20",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.700Z"
+    "verified_at": "2026-04-09T20:20:24.118Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

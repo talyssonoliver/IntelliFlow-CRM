@@ -5,13 +5,13 @@
   "description": "Contact Detail Page Tests. (1) Contact detail page (2242 lines) has ZERO page-level tests (T-01). (2) Tenant isolation NEVER tested in 2878 lines of router tests (T-04). (3) logActivity missing activity type coverage in tests (T-06). (4) getById relations (activities, notes, opportunities, aiInsight) not asserted (T-07). (5) Tab content rendering not verified in component tests (T-08). Audit: docs/audit/contact-detail-wiring-audit.md §19.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-18",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.657Z"
+    "verified_at": "2026-04-09T20:20:24.085Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

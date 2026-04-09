@@ -5,13 +5,13 @@
   "description": "Lead Create Form Fixes - BANT Drop, Revenue Mapping, Validation. Fix 3 HIGH issues: (1) BANT fields (Budget, Authority, Need, Timeline) collected in create form but silently dropped on submit - never sent to API [F3]. (2) annualRevenue mapped to estimatedValue - semantic mismatch between company annual revenue and deal estimated value [F4]. (3) Edit form uses 'as any' cast with no client-side Zod validation - no inline field errors [F9]. Fix: Send BANT to API (add to createLeadSchema if needed), map annualRevenue correctly, add Zod resolver to edit form, remove as any.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-18",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.651Z"
+    "verified_at": "2026-04-09T20:20:24.079Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

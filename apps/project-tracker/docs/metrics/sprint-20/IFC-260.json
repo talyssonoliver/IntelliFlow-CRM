@@ -5,13 +5,13 @@
   "description": "Contact Domain Model Fixes. (1) reconstitute() silently substitutes unknown@unknown.com for invalid emails — should Result.fail or throw (D-01). (2) mergeContacts no cross-tenant check — linkToLead correctly checks but merge doesn't (D-02). (3) No ContactDeletedEvent — deleteContact publishes no events, audit handler has mapping but event never emitted (D-04). (4) No ContactEmailChangedEvent — old email not captured in generic ContactUpdatedEvent (D-05). (5) Tags update always emits event without deep equality check (D-07). Audit: docs/audit/contact-detail-wiring-audit.md §18.",
   "owner": "Backend Dev (STOA-Domain)",
   "sprint": "sprint-20",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.701Z"
+    "verified_at": "2026-04-09T20:20:24.118Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

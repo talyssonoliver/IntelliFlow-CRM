@@ -5,13 +5,13 @@
   "description": "Lead Frontend Consistency - StatusBadge, Toast, window.prompt. Fix 3 MEDIUM issues: (1) window.prompt() used for note input at line 1951 - blocks UI, no multi-line, poor UX [F5]. Replace with Dialog/Sheet component. (2) Two different StatusBadge implementations - inline LeadStatusBadge vs shared component with different color schemes [F6]. Consolidate to shared component. (3) Two Toast patterns - sonner toast.success() vs shadcn useToast() used inconsistently across lead pages [F7]. Standardize to one pattern.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-20",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.695Z"
+    "verified_at": "2026-04-09T20:20:24.113Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

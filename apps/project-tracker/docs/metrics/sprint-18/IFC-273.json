@@ -5,13 +5,13 @@
   "description": "Account List Page Type Safety & Filter Enums. (1) serverStats cast to any loses type safety (L-01, AccountsPageClient.tsx:154). (2) Double unsafe cast for withOpportunities stat (L-02, AccountsPageClient.tsx:206-208). (3) AccountTier type and getAccountTier() duplicated locally in AccountCard.tsx instead of using domain enum (L-04). (4) Contact status filter uses hardcoded inline option values instead of ContactStatus domain enum (F-09, AccountContactsList.tsx:81-83). (5) Opportunity stage filter uses hardcoded inline strings instead of OpportunityStage domain enum (F-12, AccountOpportunitiesList.tsx:109-114). Audit: docs/audit/account-detail-wiring-audit.md sections 4-5, 15.",
   "owner": "Frontend Dev (STOA-Quality)",
   "sprint": "sprint-18",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.661Z"
+    "verified_at": "2026-04-09T20:20:24.088Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

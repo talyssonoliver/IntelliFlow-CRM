@@ -6,14 +6,14 @@
   "owner": "Backend Dev (STOA-Domain)",
   "status": "DONE",
   "sprint": "sprint-17",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "dependencies": {
     "required": [
       "IFC-298"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.628Z"
+    "verified_at": "2026-04-09T20:20:24.062Z"
   },
   "started_at": "2026-03-18T12:00:00Z",
   "completed_at": "2026-03-19T00:22:57.642Z",
@@ -53,12 +53,12 @@
       "note": "Task created — helpArticle tRPC router with full CRUD + publish workflow"
     },
     {
-      "status": "Specifying",
+      "status": "In Progress",
       "at": "2026-03-18T12:00:00Z",
       "note": "Spec session started with 3 agents (Backend-Architect, Test-Engineer, Data-Engineer)"
     },
     {
-      "status": "Spec Complete",
+      "status": "In Progress",
       "at": "2026-03-18T12:30:00Z",
       "note": "Specification complete — 9 procedures, ~50 test cases, 3/3 agents approved"
     }

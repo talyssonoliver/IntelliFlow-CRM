@@ -5,13 +5,13 @@
   "description": "Wire Unused Backend tRPC Endpoints - ~20 built but unused tRPC procedures. Lead: convertToDeal, getHotLeads, getReadyForQualification, bulkScore. Contact: getByEmail, linkToAccount, unlinkFromAccount, search, linkToLead, unlinkFromLead, getTimeline, logActivity. Opportunity: create, getById, getHistory, getProducts, getPipeline, stats. Account: create, update. Task: stats, assign, reschedule. Wire each to appropriate frontend UI or remove if not needed.",
   "owner": "Full Stack Dev (STOA-Domain)",
   "sprint": "sprint-20",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.693Z"
+    "verified_at": "2026-04-09T20:20:24.112Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

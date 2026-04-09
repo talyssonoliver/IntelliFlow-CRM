@@ -5,7 +5,7 @@
   "description": "Lead Detail AI Chat Panel - Add AI chat panel to Lead detail page for entity-scoped conversations. Backend: conversation.router.ts is fully built with 13 endpoints but NOT registered in router.ts - register it. Frontend: build LeadChatPanel component using conversation API with contextType=LEAD, contextId=leadId. Similar to dashboard TeamChatWidget but with real API calls (TeamChatWidget is decorative with hardcoded messages). ConversationRecord/MessageRecord Prisma models exist.",
   "owner": "Full Stack Dev (STOA-Domain)",
   "sprint": "sprint-22",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
@@ -13,7 +13,7 @@
       "IFC-069"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.729Z"
+    "verified_at": "2026-04-09T20:20:24.131Z"
   },
   "dependencies_resolved": [
     "IFC-069"

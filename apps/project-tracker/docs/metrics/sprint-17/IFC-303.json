@@ -6,14 +6,14 @@
   "owner": "Backend Dev (STOA-Domain)",
   "status": "DONE",
   "sprint": "sprint-17",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "dependencies": {
     "required": [
       "IFC-298"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.629Z"
+    "verified_at": "2026-04-09T20:20:24.064Z"
   },
   "started_at": "2026-03-18T00:00:00Z",
   "completed_at": "2026-03-19T00:28:57.314Z",
@@ -36,7 +36,7 @@
       "command": "pnpm --filter @intelliflow/api typecheck",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-03-19T00:26:00Z",
+      "executed_at": "2026-03-19T00:26:00Z",
       "duration_ms": 8000
     },
     {
@@ -44,7 +44,7 @@
       "command": "npx vitest run apps/api/src/modules/help-article/__tests__/help-article.router.test.ts",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-03-19T00:24:00Z",
+      "executed_at": "2026-03-19T00:24:00Z",
       "duration_ms": 884
     },
     {
@@ -52,7 +52,7 @@
       "command": "npx eslint apps/api/src/modules/help-article/help-article.router.ts apps/web/src/components/support/feedback-widget.tsx",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-03-19T00:26:30Z",
+      "executed_at": "2026-03-19T00:26:30Z",
       "duration_ms": 5000
     },
     {
@@ -60,7 +60,7 @@
       "command": "pnpm build",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-03-19T00:27:00Z",
+      "executed_at": "2026-03-19T00:27:00Z",
       "duration_ms": 15000
     }
   ],
@@ -79,22 +79,22 @@
       "note": "Task created — Article feedback persistence + analytics aggregation"
     },
     {
-      "status": "Specifying",
+      "status": "In Progress",
       "at": "2026-03-18T00:00:00Z",
       "note": "Spec session started — 4 agents (Backend-Architect, Data-Engineer, Domain-Expert, Test-Engineer)"
     },
     {
-      "status": "Spec Complete",
+      "status": "In Progress",
       "at": "2026-03-18T00:00:00Z",
       "note": "Spec session complete — 4/4 consensus, spec at .specify/sprints/sprint-17/specifications/IFC-303-spec.md"
     },
     {
-      "status": "Planning",
+      "status": "Planned",
       "at": "2026-03-18T00:00:00Z",
       "note": "Plan session started — TDD decomposition"
     },
     {
-      "status": "Plan Complete",
+      "status": "Planned",
       "at": "2026-03-18T00:00:00Z",
       "note": "Plan session complete — reviewer approved after 3 fixes, plan at .specify/sprints/sprint-17/planning/IFC-303-plan.md"
     },

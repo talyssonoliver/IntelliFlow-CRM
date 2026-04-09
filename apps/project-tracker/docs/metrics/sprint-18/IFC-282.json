@@ -5,13 +5,13 @@
   "description": "Deal Router Correctness Fixes. (1) Name updates silently dropped — service has TODO 'Add updateName method' (B-04, OpportunityService.ts:313). Add updateName to domain and wire in service. (2) data.probability?.value unwrapping may be undefined if percentageSchema returns plain number (B-05, router:460). Verify and fix. (3) opportunityListResponseSchema key 'data' vs router key 'opportunities' mismatch (B-07, validators:88 vs router:437). (4) throwOpportunityCreateError maps VALIDATION_ERROR to NOT_FOUND — wrong HTTP semantic (B-09, router:55). (5) validateStageDeactivation throws plain Error → 500 instead of BAD_REQUEST (B-10, validators:214). (6) mapOpportunityToResponse drops closedAt field (B-11, mappers.ts:88-108). (7) CLOSED_LOST no-reason passes Zod but fails at service (B-12, router:322). Audit: docs/audit/deal-detail-wiring-audit.md section 6.",
   "owner": "Backend Dev (STOA-Domain)",
   "sprint": "sprint-18",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.663Z"
+    "verified_at": "2026-04-09T20:20:24.090Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

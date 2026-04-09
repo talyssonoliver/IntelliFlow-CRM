@@ -5,13 +5,13 @@
   "description": "Account Domain Model Fixes. (1) No AccountDeletedEvent — deletions produce no domain event; audit handler has mapping but event never emitted (D-01). (2) Account.toJSON() omits tenantId (B-15). (3) updateAccountInfo return value (Result) discarded by service — silent validation failures (B-16). (4) user!.userId non-null assertion in router (B-06). Audit: docs/audit/account-detail-wiring-audit.md sections 11-13.",
   "owner": "Backend Dev (STOA-Domain)",
   "sprint": "sprint-18",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:37.660Z"
+    "verified_at": "2026-04-09T20:20:24.087Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

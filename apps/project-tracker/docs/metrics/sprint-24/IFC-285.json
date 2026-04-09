@@ -5,13 +5,13 @@
   "description": "Deal Service Dead Code & Minor Fixes. (1) 11 dead service methods unreachable from router: listOpportunities, advanceStage, updateValue, updateProbability, updateExpectedCloseDate, reopenOpportunity, getPipelineForecast, getOpportunitiesClosingSoon, getHighValueOpportunities, getOpportunitiesByAccount, getOpportunitiesByContact, getWinRateStatistics (B-13). Decide: wire to router or remove. (2) toMoney/toPercentage silent zero fallback on DB corruption (B-14). (3) TOCTOU in stage transitions — no optimistic locking (B-16). (4) Event publish failure swallowed with console.error only (B-17). (5) DealQuickView is a 49-line stub not used anywhere (F-13). (6) RecommendedActions.onActionClick not wired at forecast page level (F-18). (7) Sidebar deals config settingsHref points to /settings/deals instead of /settings/pipeline (W-03). Audit: docs/audit/deal-detail-wiring-audit.md sections 6-7.",
   "owner": "Backend Dev (STOA-Domain)",
   "sprint": "sprint-24",
-  "phase": null,
+  "phase": "",
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-03-19T22:11:38.009Z"
+    "verified_at": "2026-04-09T20:20:24.258Z"
   },
   "dependencies_resolved": [],
   "started_at": null,
