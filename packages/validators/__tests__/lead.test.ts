@@ -22,8 +22,10 @@ import {
   leadQuerySchema,
   leadResponseSchema,
   leadListResponseSchema,
+  leadDetailResponseSchema,
   leadSourceSchema,
   leadStatusSchema,
+  LEAD_SORTABLE_FIELDS,
 } from '../src/lead';
 
 describe('Lead Validators', () => {
@@ -182,7 +184,6 @@ describe('Lead Validators', () => {
         firstName: 'Jane',
         lastName: 'Smith',
         company: 'New Corp',
-        status: 'CONTACTED',
       };
 
       const result = updateLeadSchema.safeParse(validData);
@@ -208,14 +209,18 @@ describe('Lead Validators', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject invalid status', () => {
-      const invalidData = {
+    it('should strip status field (status changes use dedicated endpoints)', () => {
+      const dataWithStatus = {
         id: '123e4567-e89b-12d3-a456-426614174000',
-        status: 'INVALID_STATUS',
+        firstName: 'Jane',
+        status: 'CONTACTED',
       };
 
-      const result = updateLeadSchema.safeParse(invalidData);
-      expect(result.success).toBe(false);
+      const result = updateLeadSchema.safeParse(dataWithStatus);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).not.toHaveProperty('status');
+      }
     });
   });
 
@@ -473,42 +478,41 @@ describe('Lead Validators', () => {
   });
 
   describe('leadResponseSchema', () => {
-    it('should validate valid lead response', () => {
-      const validResponse = {
-        id: '123e4567-e89b-12d3-a456-426614174000',
-        email: 'test@example.com',
-        firstName: 'John',
-        lastName: 'Doe',
-        company: 'Acme Corp',
-        title: 'CTO',
-        phone: '+1-555-0100',
-        source: 'WEBSITE',
-        status: 'QUALIFIED',
-        score: 85,
-        ownerId: '456e4567-e89b-12d3-a456-426614174000',
-        createdAt: '2024-01-01T00:00:00Z',
-        updatedAt: '2024-01-02T00:00:00Z',
-      };
+    const baseResponse = {
+      id: '123e4567-e89b-12d3-a456-426614174000',
+      email: 'test@example.com',
+      firstName: 'John',
+      lastName: 'Doe',
+      company: 'Acme Corp',
+      title: 'CTO',
+      phone: '+1-555-0100',
+      source: 'WEBSITE',
+      status: 'QUALIFIED',
+      score: 85,
+      scoreConfidence: 0.92,
+      scoreTier: 'HOT',
+      ownerId: '456e4567-e89b-12d3-a456-426614174000',
+      tenantId: '789e4567-e89b-12d3-a456-426614174000',
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: '2024-01-02T00:00:00Z',
+    };
 
-      const result = leadResponseSchema.safeParse(validResponse);
+    it('should validate valid lead response', () => {
+      const result = leadResponseSchema.safeParse(baseResponse);
       expect(result.success).toBe(true);
     });
 
-    it('should accept null for optional fields', () => {
+    it('should accept null for nullable fields', () => {
       const responseWithNulls = {
-        id: '123e4567-e89b-12d3-a456-426614174000',
-        email: 'test@example.com',
+        ...baseResponse,
         firstName: null,
         lastName: null,
         company: null,
         title: null,
         phone: null,
-        source: 'WEBSITE',
-        status: 'NEW',
         score: 0,
-        ownerId: '456e4567-e89b-12d3-a456-426614174000',
-        createdAt: '2024-01-01T00:00:00Z',
-        updatedAt: '2024-01-02T00:00:00Z',
+        scoreConfidence: null,
+        scoreTier: null,
       };
 
       const result = leadResponseSchema.safeParse(responseWithNulls);
@@ -516,23 +520,7 @@ describe('Lead Validators', () => {
     });
 
     it('should coerce date strings to Date objects', () => {
-      const response = {
-        id: '123e4567-e89b-12d3-a456-426614174000',
-        email: 'test@example.com',
-        firstName: 'John',
-        lastName: 'Doe',
-        company: null,
-        title: null,
-        phone: null,
-        source: 'WEBSITE',
-        status: 'NEW',
-        score: 0,
-        ownerId: '456e4567-e89b-12d3-a456-426614174000',
-        createdAt: '2024-01-01T00:00:00Z',
-        updatedAt: '2024-01-02T00:00:00Z',
-      };
-
-      const result = leadResponseSchema.safeParse(response);
+      const result = leadResponseSchema.safeParse(baseResponse);
       expect(result.success).toBe(true);
 
       if (result.success) {
@@ -540,28 +528,46 @@ describe('Lead Validators', () => {
         expect(result.data.updatedAt).toBeInstanceOf(Date);
       }
     });
+
+    it('should validate scoreConfidence and scoreTier fields', () => {
+      const result = leadResponseSchema.safeParse(baseResponse);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.scoreConfidence).toBe(0.92);
+        expect(result.data.scoreTier).toBe('HOT');
+        expect(result.data.tenantId).toBe('789e4567-e89b-12d3-a456-426614174000');
+      }
+    });
+
+    it('should reject invalid scoreTier values', () => {
+      const result = leadResponseSchema.safeParse({ ...baseResponse, scoreTier: 'INVALID' });
+      expect(result.success).toBe(false);
+    });
   });
 
   describe('leadListResponseSchema', () => {
+    const sampleLeadItem = {
+      id: '123e4567-e89b-12d3-a456-426614174000',
+      email: 'test1@example.com',
+      firstName: 'John',
+      lastName: 'Doe',
+      company: 'Acme Corp',
+      title: null,
+      phone: null,
+      source: 'WEBSITE',
+      status: 'NEW',
+      score: 50,
+      scoreConfidence: 0.8,
+      scoreTier: 'WARM',
+      ownerId: '456e4567-e89b-12d3-a456-426614174000',
+      tenantId: '789e4567-e89b-12d3-a456-426614174000',
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: '2024-01-02T00:00:00Z',
+    };
+
     it('should validate valid lead list response', () => {
       const validList = {
-        data: [
-          {
-            id: '123e4567-e89b-12d3-a456-426614174000',
-            email: 'test1@example.com',
-            firstName: 'John',
-            lastName: 'Doe',
-            company: 'Acme Corp',
-            title: null,
-            phone: null,
-            source: 'WEBSITE',
-            status: 'NEW',
-            score: 50,
-            ownerId: '456e4567-e89b-12d3-a456-426614174000',
-            createdAt: '2024-01-01T00:00:00Z',
-            updatedAt: '2024-01-02T00:00:00Z',
-          },
-        ],
+        data: [sampleLeadItem],
         total: 100,
         page: 1,
         limit: 20,
@@ -609,6 +615,105 @@ describe('Lead Validators', () => {
 
       const result = leadListResponseSchema.safeParse(invalidList);
       expect(result.success).toBe(false);
+    });
+  });
+
+  describe('LEAD_SORTABLE_FIELDS', () => {
+    it('should contain expected sortable columns', () => {
+      expect(LEAD_SORTABLE_FIELDS).toContain('createdAt');
+      expect(LEAD_SORTABLE_FIELDS).toContain('updatedAt');
+      expect(LEAD_SORTABLE_FIELDS).toContain('firstName');
+      expect(LEAD_SORTABLE_FIELDS).toContain('lastName');
+      expect(LEAD_SORTABLE_FIELDS).toContain('company');
+      expect(LEAD_SORTABLE_FIELDS).toContain('email');
+      expect(LEAD_SORTABLE_FIELDS).toContain('score');
+      expect(LEAD_SORTABLE_FIELDS).toContain('status');
+      expect(LEAD_SORTABLE_FIELDS).toContain('source');
+      expect(LEAD_SORTABLE_FIELDS).toContain('lastContactedAt');
+      expect(LEAD_SORTABLE_FIELDS).toContain('estimatedValue');
+    });
+
+    it('should NOT contain sensitive columns', () => {
+      expect(LEAD_SORTABLE_FIELDS).not.toContain('tenantId');
+      expect(LEAD_SORTABLE_FIELDS).not.toContain('ownerId');
+    });
+  });
+
+  describe('leadQuerySchema sortBy validation', () => {
+    it('should accept valid sortBy values', () => {
+      const validValues = ['createdAt', 'score', 'firstName', 'lastName', 'email'];
+      for (const sortBy of validValues) {
+        const result = leadQuerySchema.safeParse({ sortBy });
+        expect(result.success).toBe(true);
+      }
+    });
+
+    it('should reject invalid sortBy values', () => {
+      const invalidValues = ['tenantId', 'ownerId', '__proto__', 'password', 'nonExistent', ''];
+      for (const sortBy of invalidValues) {
+        const result = leadQuerySchema.safeParse({ sortBy });
+        expect(result.success).toBe(false);
+      }
+    });
+
+    it('should accept undefined sortBy (optional field)', () => {
+      const result = leadQuerySchema.safeParse({});
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.sortBy).toBeUndefined();
+      }
+    });
+  });
+
+  describe('leadDetailResponseSchema', () => {
+    const baseResponse = {
+      id: '123e4567-e89b-12d3-a456-426614174000',
+      email: 'test@example.com',
+      firstName: 'John',
+      lastName: 'Doe',
+      company: 'Acme Corp',
+      title: 'CTO',
+      phone: '+1-555-0100',
+      source: 'WEBSITE',
+      status: 'QUALIFIED',
+      score: 85,
+      scoreConfidence: 0.92,
+      scoreTier: 'HOT',
+      ownerId: '456e4567-e89b-12d3-a456-426614174000',
+      tenantId: '789e4567-e89b-12d3-a456-426614174000',
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: '2024-01-02T00:00:00Z',
+    };
+
+    it('should validate response with Lead 360 relation fields', () => {
+      const detailResponse = {
+        ...baseResponse,
+        owner: { id: '456e4567-e89b-12d3-a456-426614174000', email: 'owner@test.com', name: 'Owner', avatarUrl: null, role: 'ADMIN' },
+        activities: [{ id: '1', type: 'NOTE', timestamp: '2024-01-01T00:00:00Z' }],
+        notes: [{ id: '1', content: 'Test note' }],
+        files: [{ id: '1', name: 'doc.pdf' }],
+        aiInsight: { summary: 'High potential lead', score: 85 },
+        tasks: [{ id: '1', title: 'Follow up', status: 'PENDING' }],
+      };
+
+      const result = leadDetailResponseSchema.safeParse(detailResponse);
+      expect(result.success).toBe(true);
+    });
+
+    it('should validate response without optional relation fields', () => {
+      const result = leadDetailResponseSchema.safeParse(baseResponse);
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept null for owner and aiInsight', () => {
+      const detailResponse = {
+        ...baseResponse,
+        owner: null,
+        aiInsight: null,
+      };
+
+      const result = leadDetailResponseSchema.safeParse(detailResponse);
+      expect(result.success).toBe(true);
     });
   });
 });

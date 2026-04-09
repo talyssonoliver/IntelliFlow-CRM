@@ -41,6 +41,12 @@ export const updateAccountSchema = baseAccountFieldsSchema.partial().extend({
 
 export type UpdateAccountInput = z.infer<typeof updateAccountSchema>;
 
+// IFC-269 B-04: Whitelist of safe sortable Account columns
+export const ACCOUNT_SORT_FIELDS = [
+  'createdAt', 'updatedAt', 'name', 'revenue', 'employees', 'industry',
+] as const;
+export type AccountSortField = (typeof ACCOUNT_SORT_FIELDS)[number];
+
 // Account Query Schema
 export const accountQuerySchema = paginationSchema.extend({
   search: z.string().max(200).optional(),
@@ -50,6 +56,7 @@ export const accountQuerySchema = paginationSchema.extend({
   maxRevenue: z.number().positive().optional(),
   minEmployees: z.number().int().positive().optional(),
   maxEmployees: z.number().int().positive().optional(),
+  sortBy: z.enum(ACCOUNT_SORT_FIELDS).default('createdAt'),
 });
 
 export type AccountQueryInput = z.infer<typeof accountQuerySchema>;

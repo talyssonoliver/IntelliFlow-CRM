@@ -372,6 +372,32 @@ describe('Account Validators', () => {
     });
   });
 
+  describe('sortBy allowlist (B-04)', () => {
+    it('should accept all valid ACCOUNT_SORT_FIELDS', () => {
+      const validFields = ['createdAt', 'updatedAt', 'name', 'revenue', 'employees', 'industry'];
+      for (const field of validFields) {
+        const result = accountQuerySchema.safeParse({ sortBy: field });
+        expect(result.success, `sortBy: "${field}" should be valid`).toBe(true);
+      }
+    });
+
+    it('should reject invalid sortBy values', () => {
+      const invalidFields = ['__proto__', 'password', 'constructor', 'nonexistent', 'tenantId', 'ownerId'];
+      for (const field of invalidFields) {
+        const result = accountQuerySchema.safeParse({ sortBy: field });
+        expect(result.success, `sortBy: "${field}" should be rejected`).toBe(false);
+      }
+    });
+
+    it('should default to createdAt when sortBy omitted', () => {
+      const result = accountQuerySchema.safeParse({});
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.sortBy).toBe('createdAt');
+      }
+    });
+  });
+
   describe('accountResponseSchema', () => {
     it('should validate valid account response', () => {
       const validResponse = {

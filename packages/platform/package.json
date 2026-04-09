@@ -22,15 +22,35 @@
       "import": "./dist/resilience/index.mjs",
       "require": "./dist/resilience/index.js"
     },
+    "./workflow": {
+      "types": "./dist/workflow/index.d.ts",
+      "import": "./dist/workflow/index.mjs",
+      "require": "./dist/workflow/index.js"
+    },
+    "./realtime": {
+      "types": "./dist/realtime/index.d.ts",
+      "import": "./dist/realtime/index.mjs",
+      "require": "./dist/realtime/index.js"
+    },
     "./queues": {
       "types": "./dist/queues/index.d.ts",
       "import": "./dist/queues/index.mjs",
       "require": "./dist/queues/index.js"
+    },
+    "./queues/types": {
+      "types": "./dist/queues/types.d.ts",
+      "import": "./dist/queues/types.mjs",
+      "require": "./dist/queues/types.js"
+    },
+    "./queues/connection": {
+      "types": "./dist/queues/connection.d.ts",
+      "import": "./dist/queues/connection.mjs",
+      "require": "./dist/queues/connection.js"
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts src/feature-flags/index.ts src/resilience/index.ts src/queues/index.ts --format cjs,esm --experimental-dts",
-    "dev": "tsup src/index.ts src/feature-flags/index.ts src/resilience/index.ts src/queues/index.ts --format cjs,esm --experimental-dts --watch",
+    "build": "tsup src/index.ts src/feature-flags/index.ts src/resilience/index.ts src/workflow/index.ts src/realtime/index.ts src/queues/index.ts src/queues/types.ts src/queues/connection.ts --format cjs,esm --experimental-dts",
+    "dev": "tsup src/index.ts src/feature-flags/index.ts src/resilience/index.ts src/workflow/index.ts src/realtime/index.ts src/queues/index.ts src/queues/types.ts src/queues/connection.ts --format cjs,esm --experimental-dts --watch",
     "clean": "rm -rf dist .turbo",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.ts\"",

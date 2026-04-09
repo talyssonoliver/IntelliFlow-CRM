@@ -30,59 +30,60 @@ export interface AccountHierarchyRecord {
 export interface AccountRepository {
   /**
    * Save an account (create or update)
+   * tenantId is embedded in the Account entity — no separate param needed.
    */
   save(account: Account): Promise<void>;
 
   /**
-   * Find an account by ID
+   * Find an account by ID within a tenant (IFC-269 B-02: defense-in-depth)
    */
-  findById(id: AccountId): Promise<Account | null>;
+  findById(id: AccountId, tenantId: string): Promise<Account | null>;
 
   /**
-   * Find accounts by name (partial match)
+   * Find accounts by name within a tenant (partial match)
    */
-  findByName(name: string): Promise<Account[]>;
+  findByName(name: string, tenantId: string): Promise<Account[]>;
 
   /**
-   * Find all accounts for an owner
+   * Find all accounts for an owner within a tenant
    */
-  findByOwnerId(ownerId: string): Promise<Account[]>;
+  findByOwnerId(ownerId: string, tenantId: string): Promise<Account[]>;
 
   /**
-   * Find accounts by industry
+   * Find accounts by industry within a tenant
    */
-  findByIndustry(industry: string): Promise<Account[]>;
+  findByIndustry(industry: string, tenantId: string): Promise<Account[]>;
 
   /**
-   * Delete an account
+   * Delete an account within a tenant (IFC-269 B-02)
    */
-  delete(id: AccountId): Promise<void>;
+  delete(id: AccountId, tenantId: string): Promise<void>;
 
   /**
-   * Check if account name exists
+   * Check if account name exists within a tenant (IFC-269 B-03: per-tenant uniqueness)
    */
-  existsByName(name: string): Promise<boolean>;
+  existsByName(name: string, tenantId: string): Promise<boolean>;
 
   /**
-   * Count accounts by industry
+   * Count accounts by industry within a tenant
    */
-  countByIndustry(): Promise<Record<string, number>>;
+  countByIndustry(tenantId: string): Promise<Record<string, number>>;
 
   /**
-   * Find account with nested children up to maxDepth
-   * Returns raw record with _count and childAccounts includes
+   * Find account with nested children up to maxDepth within a tenant
    */
-  findWithChildren(id: AccountId, maxDepth: number): Promise<AccountHierarchyRecord | null>;
+  findWithChildren(id: AccountId, maxDepth: number, tenantId: string): Promise<AccountHierarchyRecord | null>;
 
   /**
-   * Find ancestor chain from account to root
+   * Find ancestor chain from account to root within a tenant
+   * Breaks traversal on cross-tenant boundary.
    */
-  findAncestors(id: AccountId): Promise<Account[]>;
+  findAncestors(id: AccountId, tenantId: string): Promise<Account[]>;
 
   /**
-   * Get hierarchy depth (number of ancestors)
+   * Get hierarchy depth within a tenant (number of ancestors)
    */
-  getHierarchyDepth(id: AccountId): Promise<number>;
+  getHierarchyDepth(id: AccountId, tenantId: string): Promise<number>;
 }
 
 /**

@@ -51,13 +51,15 @@ export interface OpportunityRepository {
 
   /**
    * Soft-delete an opportunity (sets deletedAt)
+   * tenantId required to prevent cross-tenant soft-deletes
    */
-  softDelete(id: OpportunityId): Promise<void>;
+  softDelete(id: OpportunityId, tenantId: string): Promise<void>;
 
   /**
    * Restore a soft-deleted opportunity (clears deletedAt)
+   * tenantId required to prevent cross-tenant restores
    */
-  restore(id: OpportunityId): Promise<void>;
+  restore(id: OpportunityId, tenantId: string): Promise<void>;
 
   /**
    * Find an opportunity by ID including soft-deleted records
