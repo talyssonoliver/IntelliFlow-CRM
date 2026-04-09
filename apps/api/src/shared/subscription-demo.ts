@@ -35,7 +35,7 @@ import {
   emitTaskAssigned,
   emitSystemEvent,
   emitAIProgress,
-} from '@intelliflow/platform';
+} from '@intelliflow/platform/realtime';
 
 /**
  * Shared EventEmitter from @intelliflow/platform
@@ -208,7 +208,7 @@ export const subscriptionRouter = createTRPCRouter({
 });
 
 /**
- * Re-exported Emit Functions from @intelliflow/platform
+ * Re-exported Emit Functions from @intelliflow/platform/realtime
  *
  * These functions are used by other parts of the API to trigger subscription updates.
  * Call these from mutations to notify subscribers of changes.
@@ -220,7 +220,12 @@ export const subscriptionRouter = createTRPCRouter({
  *
  * @see @intelliflow/platform/realtime for function signatures
  */
-export { emitLeadScored, emitTaskAssigned, emitSystemEvent, emitAIProgress } from '@intelliflow/platform';
+export {
+  emitLeadScored,
+  emitTaskAssigned,
+  emitSystemEvent,
+  emitAIProgress,
+} from '@intelliflow/platform/realtime';
 
 /**
  * CLIENT-SIDE USAGE EXAMPLE
