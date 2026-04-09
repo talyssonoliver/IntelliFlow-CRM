@@ -304,7 +304,7 @@ const LEAD_STATUS_OPTIONS: StatusOption[] = [
 // =============================================================================
 
 // Map sort option to API parameters
-function getSortParams(sortOrder: string): { sortBy: string; sortOrder: 'asc' | 'desc' } {
+function getSortParams(sortOrder: string): { sortBy: 'createdAt' | 'score'; sortOrder: 'asc' | 'desc' } {
   switch (sortOrder) {
     case 'oldest':
       return { sortBy: 'createdAt', sortOrder: 'asc' };
@@ -521,8 +521,8 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
 
   // Extract leads from API response
   const leads = useMemo(() => {
-    if (!data?.leads) return [];
-    return data.leads as Lead[];
+    if (!data?.data) return [];
+    return data.data as Lead[];
   }, [data]);
 
   const totalItems = data?.total ?? 0;

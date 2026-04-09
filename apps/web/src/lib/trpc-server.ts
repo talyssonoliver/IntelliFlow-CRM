@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
-import { appRouter, createContext } from '@intelliflow/api';
+import { createContext } from '@intelliflow/api/context';
+import { appRouter } from '@intelliflow/api/router';
 import { isTokenUsable } from '@/lib/auth/jwt';
 
 /**

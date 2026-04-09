@@ -12,6 +12,10 @@ export interface ActiveAgent {
   model: string;
   status: 'active' | 'idle' | 'error';
   currentTask?: string;
+  /** ConversationRecord.contextType — used to join with WorkflowExecution (PG-193) */
+  contextType?: string | null;
+  /** ConversationRecord.contextId — used to join with WorkflowExecution (PG-193) */
+  contextId?: string | null;
   lastActive: string;
 }
 

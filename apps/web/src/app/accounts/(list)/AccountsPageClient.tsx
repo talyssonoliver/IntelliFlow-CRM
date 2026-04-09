@@ -52,7 +52,7 @@ const SORT_OPTIONS = [
   { value: 'revenue-asc', label: 'Revenue Low-High' },
 ];
 
-function getSortParams(sortOrder: string): { sortBy: string; sortOrder: 'asc' | 'desc' } {
+function getSortParams(sortOrder: string): { sortBy: 'createdAt' | 'updatedAt' | 'name' | 'revenue' | 'employees' | 'industry'; sortOrder: 'asc' | 'desc' } {
   switch (sortOrder) {
     case 'oldest':
       return { sortBy: 'createdAt', sortOrder: 'asc' };

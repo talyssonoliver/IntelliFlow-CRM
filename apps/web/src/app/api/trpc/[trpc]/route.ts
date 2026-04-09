@@ -6,7 +6,8 @@
  */
 
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
-import { appRouter, createContext } from '@intelliflow/api';
+import { createContext } from '@intelliflow/api/context';
+import { appRouter } from '@intelliflow/api/router';
 
 const handler = (req: Request) =>
   fetchRequestHandler({
