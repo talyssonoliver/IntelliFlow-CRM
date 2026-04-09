@@ -126,6 +126,7 @@ intelliflow.com
 ├── CRM CORE: DEALS ──────────────────────── Layout: deals/(list), deals/[id]
 │   │
 │   ├── /deals                            → FLOW-007, FLOW-008 (pipeline)
+│   ├── /deals/trash                      → PG-175 (soft-deleted deals)
 │   ├── /deals/forecast                   → FLOW-025 (sales forecasting)
 │   └── /deals/[id]                       → FLOW-008 (deal detail)
 │       └── /deals/[id]/forecast          → FLOW-024 (AI probability)
@@ -257,7 +258,7 @@ intelliflow.com
 | CRM Core: Leads       | 4       | List, new, detail, edit                        |
 | CRM Core: Contacts    | 4       | List, new, detail, edit                        |
 | CRM Core: Accounts    | 2       | List, detail                                   |
-| CRM Core: Deals       | 4       | List, detail, forecast (2)                     |
+| CRM Core: Deals       | 5       | List, trash, detail, forecast (2)              |
 | CRM Core: Tickets     | 3       | List, new, detail                              |
 | CRM Core: Documents   | 3       | List, new, detail                              |
 | CRM Core: Cases       | 4       | List, new, detail, timeline                    |
@@ -359,7 +360,7 @@ resolve to sidebar/navigation links but have no `page.tsx` yet:
 
 ## Implementation Status
 
-### Implemented Pages (124 total)
+### Implemented Pages (125 total)
 
 | Category      | Route                                                                                                                                                                                                                                                            | Status      | Flow               |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ------------------ |
@@ -369,7 +370,7 @@ resolve to sidebar/navigation links but have no `page.tsx` yet:
 | Leads         | `/leads`, `/leads/new`, `/leads/[id]`, `/leads/[id]/edit`                                                                                                                                                                                                        | Implemented | FLOW-005, FLOW-006 |
 | Contacts      | `/contacts`, `/contacts/new`, `/contacts/[id]`, `/contacts/[id]/edit`                                                                                                                                                                                            | Implemented | FLOW-016           |
 | Accounts      | `/accounts`, `/accounts/[id]`                                                                                                                                                                                                                                    | Implemented | -                  |
-| Deals         | `/deals`, `/deals/[id]`, `/deals/[id]/forecast`                                                                                                                                                                                                                  | Implemented | FLOW-007, FLOW-008 |
+| Deals         | `/deals`, `/deals/trash`, `/deals/[id]`, `/deals/[id]/forecast`                                                                                                                                                                                                   | Implemented | FLOW-007, FLOW-008 |
 | Tickets       | `/tickets`, `/tickets/new`, `/tickets/[id]`                                                                                                                                                                                                                      | Implemented | FLOW-011, FLOW-012 |
 | Documents     | `/documents`, `/documents/new`, `/documents/[id]`                                                                                                                                                                                                                | Implemented | -                  |
 | Cases         | `/cases`, `/cases/new`, `/cases/[id]`, `/cases/timeline`                                                                                                                                                                                                         | Implemented | FLOW-020           |

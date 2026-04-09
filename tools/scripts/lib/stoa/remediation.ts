@@ -40,6 +40,12 @@ export interface BlockerRecord {
   createdAt: string;
   resolvedAt: string | null;
   resolvedBy: string | null;
+  resolutionEvidencePath: string | null;
+}
+
+export interface BlockerLedger {
+  blockers: BlockerRecord[];
+  last_updated: string;
 }
 
 export interface HumanPacket {
@@ -141,30 +147,71 @@ export function appendToReviewQueue(repoRoot: string, item: ReviewQueueItem): vo
 
 const BLOCKERS_PATH = 'artifacts/blockers.json';
 
-export function loadBlockers(repoRoot: string): BlockerRecord[] {
+function normalizeBlockerLedger(data: unknown): BlockerLedger {
+  const timestamp = new Date().toISOString();
+  const normalizeBlockers = (items: unknown[]): BlockerRecord[] =>
+    items.map((item) => {
+      const blocker = item as BlockerRecord & { resolutionEvidencePath?: string | null };
+      return {
+        ...blocker,
+        resolutionEvidencePath:
+          typeof blocker.resolutionEvidencePath === 'string'
+            ? blocker.resolutionEvidencePath
+            : null,
+      };
+    });
+
+  if (Array.isArray(data)) {
+    return {
+      blockers: normalizeBlockers(data),
+      last_updated: timestamp,
+    };
+  }
+
+  if (data && typeof data === 'object') {
+    const ledger = data as Partial<BlockerLedger>;
+    return {
+      blockers: Array.isArray(ledger.blockers) ? normalizeBlockers(ledger.blockers) : [],
+      last_updated: typeof ledger.last_updated === 'string' ? ledger.last_updated : timestamp,
+    };
+  }
+
+  return {
+    blockers: [],
+    last_updated: timestamp,
+  };
+}
+
+export function loadBlockerLedger(repoRoot: string): BlockerLedger {
   const blockersPath = join(repoRoot, BLOCKERS_PATH);
   if (!existsSync(blockersPath)) {
-    return [];
+    return {
+      blockers: [],
+      last_updated: new Date().toISOString(),
+    };
   }
   try {
-    const data = JSON.parse(readFileSync(blockersPath, 'utf-8'));
-    // Handle both array format and { blockers: [] } format
-    if (Array.isArray(data)) {
-      return data;
-    }
-    if (data && Array.isArray(data.blockers)) {
-      return data.blockers;
-    }
-    return [];
+    return normalizeBlockerLedger(JSON.parse(readFileSync(blockersPath, 'utf-8')));
   } catch {
-    return [];
+    return {
+      blockers: [],
+      last_updated: new Date().toISOString(),
+    };
   }
+}
+
+export function loadBlockers(repoRoot: string): BlockerRecord[] {
+  return loadBlockerLedger(repoRoot).blockers;
 }
 
 export function saveBlockers(repoRoot: string, blockers: BlockerRecord[]): void {
   const blockersPath = join(repoRoot, BLOCKERS_PATH);
   mkdirSync(dirname(blockersPath), { recursive: true });
-  writeFileSync(blockersPath, JSON.stringify(blockers, null, 2));
+  const ledger: BlockerLedger = {
+    blockers,
+    last_updated: new Date().toISOString(),
+  };
+  writeFileSync(blockersPath, JSON.stringify(ledger, null, 2));
 }
 
 export function createBlockerRecord(
@@ -185,32 +232,67 @@ export function createBlockerRecord(
     createdAt: new Date().toISOString(),
     resolvedAt: null,
     resolvedBy: null,
+    resolutionEvidencePath: null,
   };
 }
 
 export function addBlocker(repoRoot: string, blocker: BlockerRecord): void {
   const blockers = loadBlockers(repoRoot);
 
-  // Remove existing blocker for same task if any
-  const filtered = blockers.filter((b) => b.taskId !== blocker.taskId);
+  // Keep resolved history, but allow only one open blocker per task.
+  const filtered = blockers.filter((b) => !(b.taskId === blocker.taskId && b.resolvedAt === null));
   filtered.push(blocker);
 
   saveBlockers(repoRoot, filtered);
 }
 
-export function resolveBlocker(repoRoot: string, taskId: string, resolvedBy: string): boolean {
+export function resolveBlocker(
+  repoRoot: string,
+  taskId: string,
+  resolvedBy: string,
+  resolutionEvidencePath: string | null = null
+): boolean {
   const blockers = loadBlockers(repoRoot);
-  const blocker = blockers.find((b) => b.taskId === taskId && !b.resolvedAt);
+  let changed = false;
+  const resolvedAt = new Date().toISOString();
 
-  if (!blocker) {
+  for (const blocker of blockers) {
+    if (blocker.taskId === taskId && !blocker.resolvedAt) {
+      blocker.resolvedAt = resolvedAt;
+      blocker.resolvedBy = resolvedBy;
+      blocker.resolutionEvidencePath = resolutionEvidencePath;
+      changed = true;
+    }
+  }
+
+  if (!changed) {
     return false;
   }
 
-  blocker.resolvedAt = new Date().toISOString();
-  blocker.resolvedBy = resolvedBy;
-
   saveBlockers(repoRoot, blockers);
   return true;
+}
+
+export function backfillBlockerResolutionEvidence(
+  repoRoot: string,
+  taskId: string,
+  resolutionEvidencePath: string
+): boolean {
+  const blockers = loadBlockers(repoRoot);
+  let changed = false;
+
+  for (const blocker of blockers) {
+    if (blocker.taskId === taskId && blocker.resolvedAt && !blocker.resolutionEvidencePath) {
+      blocker.resolutionEvidencePath = resolutionEvidencePath;
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    saveBlockers(repoRoot, blockers);
+  }
+
+  return changed;
 }
 
 // ============================================================================
@@ -372,9 +454,13 @@ export function processVerdictRemediation(
 
   switch (verdict.verdict) {
     case 'PASS':
-      // Close any open review queue items for this task
-      closeReviewQueueItems(repoRoot, verdict.taskId, runId);
-      result.actions.push(`Closed review queue items for ${verdict.taskId}`);
+      // Close any open review queue items and blockers for this task.
+      if (resolveReviewQueueItems(repoRoot, verdict.taskId, `MATOP run ${runId}`)) {
+        result.actions.push(`Closed review queue items for ${verdict.taskId}`);
+      }
+      if (resolveBlocker(repoRoot, verdict.taskId, `MATOP run ${runId}`, evidenceDir)) {
+        result.actions.push(`Resolved blocker for ${verdict.taskId}`);
+      }
       break;
 
     case 'FAIL': {
@@ -431,15 +517,20 @@ export function processVerdictRemediation(
 /**
  * Close resolved review queue items for a task.
  */
-function closeReviewQueueItems(repoRoot: string, taskId: string, resolvedByRunId: string): void {
+export function resolveReviewQueueItems(
+  repoRoot: string,
+  taskId: string,
+  resolvedBy: string,
+  resolution: string = 'Task passed validation'
+): boolean {
   const queue = loadReviewQueue(repoRoot);
   let changed = false;
 
   for (const item of queue) {
     if (item.taskId === taskId && item.resolvedAt === null) {
       item.resolvedAt = new Date().toISOString();
-      item.resolvedBy = `MATOP run ${resolvedByRunId}`;
-      item.resolution = 'Task passed validation';
+      item.resolvedBy = resolvedBy;
+      item.resolution = resolution;
       changed = true;
     }
   }
@@ -447,6 +538,8 @@ function closeReviewQueueItems(repoRoot: string, taskId: string, resolvedByRunId
   if (changed) {
     saveReviewQueue(repoRoot, queue);
   }
+
+  return changed;
 }
 
 // ============================================================================

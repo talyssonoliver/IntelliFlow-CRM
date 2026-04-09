@@ -35,7 +35,7 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 | Category        | Count |
 | --------------- | ----- |
-| Total Pages     | 143   |
+| Total Pages     | 144   |
 | Public Pages    | 29    |
 | Developer Pages | 14    |
 | Protected Pages | 95    |
@@ -164,7 +164,7 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ---
 
-### 7. CRM Core — Deals (6 pages)
+### 7. CRM Core — Deals (7 pages)
 
 | Route                  | Page              | Description                 |
 | ---------------------- | ----------------- | --------------------------- |
@@ -174,6 +174,7 @@ developer sidebar. These pages are accessible through the Settings sidebar
 | `/deals/[id]/forecast` | Deal Forecast     | AI-powered deal probability |
 | `/deals/forecast`      | Forecast Overview | Sales forecasting dashboard |
 | `/deals/all/forecast`  | Legacy Forecast   | Redirects legacy forecast route to `/deals/forecast` |
+| `/deals/trash`         | Deals Trash       | Soft-deleted deals with restore and permanent delete |
 
 ---
 

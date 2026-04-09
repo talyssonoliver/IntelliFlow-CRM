@@ -296,7 +296,7 @@ IFC-267 (Account Detail Action Buttons) — wiring added in PG-134 (AccountDetai
 
 Dependency Chain:
   IFC-104 (Domain) ──┬──► opportunity.ts (Val) ──► IFC-108 (Services) ──► IFC-107 (Adapters) ──► IFC-186 (API) ✅ ──┬──► PG-135 (Pipeline) ✅ ──► IFC-064 (DnD Persist) ✅
-                     │                                                                                              │
+                     │                                                                                              ├──► PG-175 (Trash) ✅
                      └──► IFC-017 (Database) ───────────────────────────────────────────────────────────────────────┴──► PG-131 (Forecast) ✅
 
 Cross-Domain: Lead → Deal Conversion (IFC-062 ✅):
@@ -314,6 +314,12 @@ Deal Detail Page (IFC-278 ✅):
   ProductsCard → api.opportunity.getProducts
   StakeholdersCard → Link to /accounts/[accountId], /contacts/[contactId]
   useRequireAuth() guard, loading skeleton, error state
+
+Deals Trash Page (PG-175 ✅):
+  /deals/trash (page.tsx) → TrashList → trpc.opportunity.listTrashed (query)
+  Restore: trpc.opportunity.restore → OpportunityService.restoreOpportunity()
+  Permanent Delete: trpc.opportunity.permanentDelete → OpportunityService.permanentDeleteOpportunity()
+  Existing delete converted from hard-delete to soft-delete (deletedAt pattern)
 
 Deal Won Closure Workflow (IFC-065 ✅):
   IFC-091 (Deals Pipeline Kanban) ✅ ──┐
@@ -1287,6 +1293,10 @@ Dependency Chain:
                             └──► ai-metrics.ts (Val) ⬜ ────────────────────────────────────────────────┘
 
   IFC-015 (Platform) ✅ ──► IFC-197 (AI Monitoring API) ✅ ──► PG-151 (Dashboard UI) ⏳ ──► IFC-296 (Queue Admin API + UI) ⏳
+                                                                    └──► PG-192 (Agent Logs Fix) ✅ ──┬──► PG-193 (Workflow Progress Panel) ✅
+                                                                                                     │
+  workflow.router.ts ✅ ──► workflow.getExecution/getExecutionsByEntity (tenantProcedure) ✅ ────────┘
+  (PG-193 uses sibling join on ConversationRecord.contextType+contextId → WorkflowExecution.entityType+entityId)
 ```
 
 ---
