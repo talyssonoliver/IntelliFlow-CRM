@@ -137,7 +137,14 @@ artifacts/logs/execution-*.log
 artifacts/logs/swarm/
 
 # Tooling scratch space
-.specify/
+# Ignore .specify/ contents (not the directory itself) so carve-outs below work.
+# Per git rules, negations can't re-include a child if the parent directory is ignored.
+.specify/*
+# Carve out: .specify/memory/** holds durable governance docs (Framework.md, constitution.md)
+# referenced as FILE: prerequisites in Sprint_plan.csv (333 rows) and by
+# tools/scripts/lib/stoa/paths.ts getConstitutionPath(). These MUST be tracked.
+!.specify/memory/
+!.specify/memory/**
 artifacts/misc/.locks/
 apps/tree_intelliflow.txt
 
@@ -153,6 +160,25 @@ apps/project-tracker/docs/metrics/_global/*.tmp
 
 # Sprint plan split files (derived from Sprint_plan.csv - regenerated locally)
 apps/project-tracker/docs/metrics/_global/Sprint_plan_[A-Z].csv
+
+# ============================================
+# Project tracker runtime metric cache - Added 2026-04-10
+# These JSON files contain only timestamp fields (verified_at, calculated_at,
+# last_updated, notes: "Last synced") that are re-stamped on every server
+# start. They are runtime cache, not source of truth.
+# Source of truth: Sprint_plan.csv / Sprint_plan.json (tracked above).
+# Schemas: apps/project-tracker/docs/metrics/schemas/ (tracked, see below).
+# ============================================
+
+# Per-sprint task JSON files and phase summaries (timestamp-only churn)
+apps/project-tracker/docs/metrics/sprint-*/
+
+# Global derived cache files (timestamp-only)
+apps/project-tracker/docs/metrics/_global/task-registry.json
+apps/project-tracker/docs/metrics/_global/dependency-graph.json
+
+# Runtime review queue (generated_at timestamp only)
+apps/project-tracker/docs/metrics/review-queue.json
 
 # ============================================
 # Runtime Artifacts - Sprint 0 Remediation
