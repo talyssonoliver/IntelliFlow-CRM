@@ -246,7 +246,10 @@ Response (Partial Failure):
 
 - `lib/data-sync.ts` - Sync utility functions
 - `lib/data-validator.ts` - Data consistency validation
-- `app/api/sync-metrics/route.ts` - API endpoint
-- `scripts/sync-metrics.ts` - CLI script
+- `app/api/sync-metrics/route.ts` - Metrics sync API endpoint
+- `app/api/context/route.ts` - Session context snapshot API (GET = view, POST =
+  regenerate `docs/SESSION_CONTEXT.md`)
+- `scripts/sync-metrics.ts` - Metrics sync CLI script
+- `scripts/generate-context.ts` - Session context snapshot CLI
 - `app/page.tsx` - Auto-sync integration
 - `components/MetricsView.tsx` - UI sync button

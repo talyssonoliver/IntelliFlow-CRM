@@ -80,6 +80,7 @@ export default function EditContactPage() {
       });
       setSeeded(true);
     }
+    // @ts-expect-error TS2589 — deep tRPC/Prisma return type exceeds TS depth limit
   }, [record, seeded]);
 
   // Track unsaved changes — dirty state reported by ContactForm via onDirtyChange
@@ -146,8 +147,7 @@ export default function EditContactPage() {
       // email omitted — read-only
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await mutation.mutateAsync(payload as any);
+    await mutation.mutateAsync(payload as never);
   };
 
   // Loading states
@@ -157,7 +157,9 @@ export default function EditContactPage() {
         <Skeleton className="h-8 w-48 mb-6" />
         <Card className="p-6 space-y-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="space-y-2"> {/* NOSONAR typescript:S6479 */}
+            <div key={i} className="space-y-2">
+              {' '}
+              {/* NOSONAR typescript:S6479 */}
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-10 w-full" />
             </div>

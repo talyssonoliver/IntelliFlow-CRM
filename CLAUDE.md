@@ -157,10 +157,32 @@ Safe alternatives: `git restore --staged` (unstage only), `git diff -- <file>`
 - Quality is more important than speed
 - Do not skip validation steps
 
+## Session Continuation
+
+`docs/SESSION_CONTEXT.md` is the cross-session handoff file — a compact digest
+of the current working state generated from the metrics tree + git.
+
+**Rules:**
+
+1. **At the start of every new session**, read `docs/SESSION_CONTEXT.md` before
+   doing anything else. It tells you which sprint is active, what's in progress,
+   what blockers exist, and what the next unblocked tasks are.
+2. **After completing a task or before running out of context**, regenerate it
+   so the next session starts from an accurate snapshot:
+   - CLI: `npx tsx apps/project-tracker/scripts/generate-context.ts`
+   - API: `curl -X POST http://localhost:3002/api/context`
+   - Slash command: `/resume`
+3. **Never edit `docs/SESSION_CONTEXT.md` by hand** — it is derived from the
+   metrics files, same discipline as `Sprint_plan.json`.
+
+**Generator source**: `apps/project-tracker/lib/context-snapshot.ts`
+
 ## Resources
 
 - **Sprint Plan**: `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
 - **Metrics Dashboard**: http://localhost:3002/
+- **Context Snapshot API**: http://localhost:3002/api/context (GET = view, POST
+  = regenerate)
 - **ADRs**: `docs/planning/adr/`
 - **Dependency Chains**: `docs/design/diagrams/complete-dependency-chains.md`
 - **Design Mockups**: `docs/design/README.md`
