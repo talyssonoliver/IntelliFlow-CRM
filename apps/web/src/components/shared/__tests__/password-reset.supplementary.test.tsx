@@ -133,7 +133,7 @@ describe('PasswordStrengthIndicator', () => {
   });
 
   it('shows strong for strong passwords', () => {
-      render(<PasswordStrengthIndicator password="StrongP@ss123" />); // pragma: allowlist secret
+    render(<PasswordStrengthIndicator password="StrongP@ss123" />); // pragma: allowlist secret
     expect(screen.getByText('Strong')).toBeInTheDocument();
   });
 
@@ -143,7 +143,7 @@ describe('PasswordStrengthIndicator', () => {
   });
 
   it('hides feedback for strong passwords', () => {
-      render(<PasswordStrengthIndicator password="StrongP@ss123" showRequirements={true} />); // pragma: allowlist secret
+    render(<PasswordStrengthIndicator password="StrongP@ss123" showRequirements={true} />); // pragma: allowlist secret
     expect(screen.queryByText(/add:/i)).not.toBeInTheDocument();
   });
 

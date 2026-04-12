@@ -172,7 +172,9 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: Readonly<JobDetailT
               </h2>
               <ul className="space-y-3">
                 {job.responsibilities.map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-3"> {/* NOSONAR typescript:S6479 */}
+                  <li key={idx} className="flex items-start gap-3">
+                    {' '}
+                    {/* NOSONAR typescript:S6479 */}
                     <span
                       className="material-symbols-outlined text-[#137fec] mt-0.5"
                       aria-hidden="true"
@@ -195,7 +197,9 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: Readonly<JobDetailT
               </h2>
               <ul className="space-y-3">
                 {job.requirements.map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-3"> {/* NOSONAR typescript:S6479 */}
+                  <li key={idx} className="flex items-start gap-3">
+                    {' '}
+                    {/* NOSONAR typescript:S6479 */}
                     <span
                       className="material-symbols-outlined text-slate-400 mt-0.5"
                       aria-hidden="true"
@@ -219,7 +223,9 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: Readonly<JobDetailT
                 </h2>
                 <ul className="space-y-3">
                   {job.niceToHave.map((item, idx) => (
-                    <li key={idx} className="flex items-start gap-3"> {/* NOSONAR typescript:S6479 */}
+                    <li key={idx} className="flex items-start gap-3">
+                      {' '}
+                      {/* NOSONAR typescript:S6479 */}
                       <span
                         className="material-symbols-outlined text-amber-500 mt-0.5"
                         aria-hidden="true"

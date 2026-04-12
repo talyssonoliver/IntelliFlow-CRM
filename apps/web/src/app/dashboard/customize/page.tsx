@@ -209,7 +209,11 @@ export default function CustomizeDashboardPage() {
     const diffMins = Math.floor(diffMs / 60000);
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins} min ago`;
-    return lastSaved.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: timezone });
+    return lastSaved.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZone: timezone,
+    });
   };
 
   const activeWidget = activeId ? widgets.find((w) => w.id === activeId) : null;
@@ -259,8 +263,8 @@ export default function CustomizeDashboardPage() {
                 onClick={handleSave}
                 className="flex items-center justify-center rounded-lg h-9 px-4 bg-ds-primary hover:bg-ds-primary-hover text-white text-sm font-bold shadow-sm shadow-ds-primary/30 transition-all"
               >
-                <span className="material-symbols-outlined text-[18px] mr-2">save</span>{' '}
-                Save Changes
+                <span className="material-symbols-outlined text-[18px] mr-2">save</span> Save
+                Changes
               </button>
             </div>
           </div>

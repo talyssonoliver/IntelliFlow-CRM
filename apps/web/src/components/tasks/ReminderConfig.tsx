@@ -10,7 +10,11 @@ function formatTaskCount(count: number): string {
   return `${count} task${count === 1 ? '' : 's'}`;
 }
 
-export function ReminderConfig({ overdueCount, dueTodayCount, onFilter }: Readonly<ReminderConfigProps>) {
+export function ReminderConfig({
+  overdueCount,
+  dueTodayCount,
+  onFilter,
+}: Readonly<ReminderConfigProps>) {
   if (overdueCount === 0 && dueTodayCount === 0) return null;
 
   const hasOverdue = overdueCount > 0;

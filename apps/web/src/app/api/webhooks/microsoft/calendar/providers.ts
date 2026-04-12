@@ -24,8 +24,8 @@ interface MicrosoftAdapter {
   parseWebhookPayload(headers: Record<string, string>, body: unknown): WebhookParseResult;
 }
 
-let adapterOverride: MicrosoftAdapter | null = null;
-let serviceOverride: CalendarWebhookService | null = null;
+const adapterOverride: MicrosoftAdapter | null = null;
+const serviceOverride: CalendarWebhookService | null = null;
 
 /**
  * Inline Microsoft webhook payload parser.
@@ -34,7 +34,7 @@ let serviceOverride: CalendarWebhookService | null = null;
  */
 function parseMicrosoftWebhookPayload(
   _headers: Record<string, string>,
-  body: unknown,
+  body: unknown
 ): WebhookParseResult {
   const payload = body as {
     value?: Array<{

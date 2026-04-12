@@ -14,6 +14,18 @@ import type {
   AppointmentType,
 } from '@/components/appointments/types';
 
+/**
+ * Default date range for the list view — first day of the current month
+ * through the last day. Gives users a sensible starting dataset instead of
+ * "oldest 20 appointments in the tenant".
+ */
+export function getCurrentMonthRange(): { from: Date; to: Date } {
+  const now = new Date();
+  const from = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+  const to = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+  return { from, to };
+}
+
 export const defaultAppointmentFilters: AppointmentFilters = {
   search: '',
   status: '',
@@ -37,11 +49,18 @@ function loadFromStorage<T>(key: string, fallback: T): T {
 }
 
 export function useAppointmentFilters() {
-  const [filters, setFilters] = useState<AppointmentFilters>(() => ({
-    ...defaultAppointmentFilters,
-    viewMode: loadFromStorage('appointment-viewMode', 'calendar' as const),
-    calendarView: loadFromStorage('appointment-calendarView', 'month' as const),
-  }));
+  const [filters, setFilters] = useState<AppointmentFilters>(() => {
+    // Compute the default month range on mount so it always reflects the
+    // user's "today", not when the module was first imported.
+    const range = getCurrentMonthRange();
+    return {
+      ...defaultAppointmentFilters,
+      startTimeFrom: range.from,
+      startTimeTo: range.to,
+      viewMode: loadFromStorage('appointment-viewMode', 'calendar' as const),
+      calendarView: loadFromStorage('appointment-calendarView', 'month' as const),
+    };
+  });
 
   // Persist view preferences to localStorage
   useEffect(() => {

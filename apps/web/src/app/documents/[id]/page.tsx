@@ -64,7 +64,8 @@ function mapAuditEntry(entry: RawAuditEntry, index: number, total: number): Audi
     sizeBytes?: number;
   } | null;
   const version = metadata?.version;
-  const createdAt = typeof entry.created_at === 'string' ? entry.created_at : String(entry.created_at);
+  const createdAt =
+    typeof entry.created_at === 'string' ? entry.created_at : String(entry.created_at);
   const changesStr = entry.changes == null ? null : JSON.stringify(entry.changes);
   return {
     id: entry.id,
@@ -105,12 +106,32 @@ function formatRelativeTime(dateString: string, timezone: string = 'Europe/Londo
 
 function getStatusConfig(status: DocumentStatus) {
   const configs = {
-    DRAFT: { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-700 dark:text-slate-300', icon: 'edit_note' },
-    UNDER_REVIEW: { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-700 dark:text-amber-400', icon: 'rate_review' },
-    APPROVED: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', icon: 'check_circle' },
+    DRAFT: {
+      bg: 'bg-slate-100 dark:bg-slate-800',
+      text: 'text-slate-700 dark:text-slate-300',
+      icon: 'edit_note',
+    },
+    UNDER_REVIEW: {
+      bg: 'bg-amber-100 dark:bg-amber-900/30',
+      text: 'text-amber-700 dark:text-amber-400',
+      icon: 'rate_review',
+    },
+    APPROVED: {
+      bg: 'bg-green-100 dark:bg-green-900/30',
+      text: 'text-green-700 dark:text-green-400',
+      icon: 'check_circle',
+    },
     SIGNED: { bg: 'bg-[#137fec]/10', text: 'text-[#137fec]', icon: 'verified' },
-    ARCHIVED: { bg: 'bg-gray-100 dark:bg-gray-900/30', text: 'text-gray-600 dark:text-gray-400', icon: 'archive' },
-    SUPERSEDED: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-400', icon: 'history' },
+    ARCHIVED: {
+      bg: 'bg-gray-100 dark:bg-gray-900/30',
+      text: 'text-gray-600 dark:text-gray-400',
+      icon: 'archive',
+    },
+    SUPERSEDED: {
+      bg: 'bg-purple-100 dark:bg-purple-900/30',
+      text: 'text-purple-700 dark:text-purple-400',
+      icon: 'history',
+    },
   };
   return configs[status] || configs.DRAFT;
 }
@@ -119,7 +140,10 @@ function getAccessLevelBadge(level: AccessLevel) {
   const configs = {
     NONE: { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-600 dark:text-slate-400' },
     VIEW: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-400' },
-    COMMENT: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-400' },
+    COMMENT: {
+      bg: 'bg-purple-100 dark:bg-purple-900/30',
+      text: 'text-purple-700 dark:text-purple-400',
+    },
     EDIT: { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-700 dark:text-amber-400' },
     ADMIN: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400' },
   };
@@ -233,25 +257,19 @@ function DocumentOverviewTab({
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-          Description
-        </h3>
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Description</h3>
         <p className="text-slate-600 dark:text-slate-400">{document.description}</p>
       </div>
 
       {/* Document Preview */}
       <div>
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
-          Document Preview
-        </h3>
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Document Preview</h3>
         <div className="aspect-[8.5/11] bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center">
           <div className="text-center">
             <span className="material-symbols-outlined text-[80px] text-slate-400">
               description
             </span>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">
-              PDF Preview
-            </p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">PDF Preview</p>
             {signedUrlData?.url ? (
               <a
                 href={signedUrlData.url}
@@ -275,18 +293,14 @@ function DocumentOverviewTab({
 
       {/* Quick Actions */}
       <div>
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
-          Quick Actions
-        </h3>
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Quick Actions</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <button
             className="flex flex-col items-center gap-2 p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={document.status !== 'APPROVED' || signMutation.isPending}
             onClick={() => signMutation.mutate({ documentId })}
           >
-            <span className="material-symbols-outlined text-[32px] text-[#137fec]">
-              draw
-            </span>
+            <span className="material-symbols-outlined text-[32px] text-[#137fec]">draw</span>
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {signMutation.isPending ? 'Signing...' : 'Sign'}
             </span>
@@ -312,12 +326,8 @@ function DocumentOverviewTab({
             </span>
           </button>
           <button className="flex flex-col items-center gap-2 p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-            <span className="material-symbols-outlined text-[32px] text-[#137fec]">
-              print
-            </span>
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              Print
-            </span>
+            <span className="material-symbols-outlined text-[32px] text-[#137fec]">print</span>
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Print</span>
           </button>
         </div>
       </div>
@@ -329,9 +339,7 @@ function DocumentVersionsTab({ auditTrail }: { auditTrail: AuditEntry[] }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-          Version History
-        </h3>
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Version History</h3>
         <button className="px-4 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors">
           Create New Version
         </button>
@@ -377,9 +385,7 @@ function DocumentVersionsTab({ auditTrail }: { auditTrail: AuditEntry[] }) {
                       {event.metadata?.sizeBytes && (
                         <>
                           <span>•</span>
-                          <span>
-                            {formatFileSize(Number(event.metadata.sizeBytes))}
-                          </span>
+                          <span>{formatFileSize(Number(event.metadata.sizeBytes))}</span>
                         </>
                       )}
                     </div>
@@ -387,20 +393,14 @@ function DocumentVersionsTab({ auditTrail }: { auditTrail: AuditEntry[] }) {
                 </div>
                 <div className="flex gap-2">
                   <button className="p-1.5 text-slate-400 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded transition-colors">
-                    <span className="material-symbols-outlined text-[20px]">
-                      download
-                    </span>
+                    <span className="material-symbols-outlined text-[20px]">download</span>
                   </button>
                   <button className="p-1.5 text-slate-400 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded transition-colors">
-                    <span className="material-symbols-outlined text-[20px]">
-                      visibility
-                    </span>
+                    <span className="material-symbols-outlined text-[20px]">visibility</span>
                   </button>
                   {!isCurrent && (
                     <button className="p-1.5 text-slate-400 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded transition-colors">
-                      <span className="material-symbols-outlined text-[20px]">
-                        restore
-                      </span>
+                      <span className="material-symbols-outlined text-[20px]">restore</span>
                     </button>
                   )}
                 </div>
@@ -410,12 +410,8 @@ function DocumentVersionsTab({ auditTrail }: { auditTrail: AuditEntry[] }) {
         })
       ) : (
         <div className="text-center py-12">
-          <span className="material-symbols-outlined text-[48px] text-slate-400">
-            history
-          </span>
-          <p className="mt-4 text-slate-600 dark:text-slate-400">
-            No version history available
-          </p>
+          <span className="material-symbols-outlined text-[48px] text-slate-400">history</span>
+          <p className="mt-4 text-slate-600 dark:text-slate-400">No version history available</p>
         </div>
       )}
     </div>
@@ -426,9 +422,7 @@ function DocumentAccessControlTab({ accessControlList }: { accessControlList: AC
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-          Access Control List
-        </h3>
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Access Control List</h3>
         <button className="px-4 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors">
           Grant Access
         </button>
@@ -502,9 +496,7 @@ function DocumentAccessControlTab({ accessControlList }: { accessControlList: AC
                     </td>
                     <td className="px-4 py-3">
                       <button className="p-1 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors">
-                        <span className="material-symbols-outlined text-[20px]">
-                          delete
-                        </span>
+                        <span className="material-symbols-outlined text-[20px]">delete</span>
                       </button>
                     </td>
                   </tr>
@@ -513,9 +505,7 @@ function DocumentAccessControlTab({ accessControlList }: { accessControlList: AC
             ) : (
               <tr>
                 <td colSpan={6} className="px-4 py-12 text-center">
-                  <span className="material-symbols-outlined text-[48px] text-slate-400">
-                    lock
-                  </span>
+                  <span className="material-symbols-outlined text-[48px] text-slate-400">lock</span>
                   <p className="mt-4 text-slate-600 dark:text-slate-400">
                     No access control entries
                   </p>
@@ -533,9 +523,7 @@ function DocumentSignaturesTab({ signatures }: { signatures: DocumentPageSignatu
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-          E-Signatures
-        </h3>
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white">E-Signatures</h3>
         <button className="px-4 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors">
           Request Signature
         </button>
@@ -584,15 +572,12 @@ function DocumentSignaturesTab({ signatures }: { signatures: DocumentPageSignatu
                       {formatDateTime(signature.signedAt)}
                     </div>
                     <div>
-                      <span className="font-semibold">IP Address:</span>{' '}
-                      {signature.ipAddress}
+                      <span className="font-semibold">IP Address:</span> {signature.ipAddress}
                     </div>
                   </div>
                 </div>
                 <button className="p-1.5 text-slate-400 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded transition-colors">
-                  <span className="material-symbols-outlined text-[20px]">
-                    more_vert
-                  </span>
+                  <span className="material-symbols-outlined text-[20px]">more_vert</span>
                 </button>
               </div>
             </div>
@@ -632,14 +617,10 @@ function DocumentCommentsTab({
           <div className="flex justify-between items-center mt-2">
             <div className="flex gap-2">
               <button className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-                <span className="material-symbols-outlined text-[20px]">
-                  attach_file
-                </span>
+                <span className="material-symbols-outlined text-[20px]">attach_file</span>
               </button>
               <button className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-                <span className="material-symbols-outlined text-[20px]">
-                  sentiment_satisfied
-                </span>
+                <span className="material-symbols-outlined text-[20px]">sentiment_satisfied</span>
               </button>
             </div>
             <button className="bg-[#137fec] text-white text-sm font-semibold px-4 py-1.5 rounded-lg hover:bg-blue-600 transition-colors">
@@ -670,9 +651,7 @@ function DocumentCommentsTab({
                         {formatRelativeTime(comment.createdAt)}
                       </span>
                     </div>
-                    <p className="text-sm text-slate-700 dark:text-slate-300">
-                      {comment.content}
-                    </p>
+                    <p className="text-sm text-slate-700 dark:text-slate-300">{comment.content}</p>
                   </div>
                   <div className="flex items-center gap-4 mt-2 px-3">
                     <button className="text-xs text-slate-500 hover:text-[#137fec] font-medium">
@@ -680,9 +659,7 @@ function DocumentCommentsTab({
                     </button>
                     {comment.isResolved ? (
                       <span className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[14px]">
-                          check_circle
-                        </span>{' '}
+                        <span className="material-symbols-outlined text-[14px]">check_circle</span>{' '}
                         Resolved
                       </span>
                     ) : (
@@ -705,7 +682,9 @@ function DocumentCommentsTab({
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-function isDocumentAuthError(error: { data?: { code?: string } | null; message?: string } | null): boolean {
+function isDocumentAuthError(
+  error: { data?: { code?: string } | null; message?: string } | null
+): boolean {
   if (!error) return false;
   return (
     error.data?.code === 'UNAUTHORIZED' ||
@@ -726,7 +705,8 @@ function getPrincipalTypeIcon(principalType: string): string {
   return 'business';
 }
 
-export default function DocumentDetailPage() { // NOSONAR typescript:S3776
+export default function DocumentDetailPage() {
+  // NOSONAR typescript:S3776
   const params = useParams();
   const router = useRouter();
   const documentId = params.id as string;
@@ -776,7 +756,9 @@ export default function DocumentDetailPage() { // NOSONAR typescript:S3776
 
   // Map audit trail to UI-friendly format using module-level mapAuditEntry helper
   // tRPC serializes dates as strings; the type mismatch is expected at the wire boundary
-  const auditEntries: RawAuditEntry[] = rawAuditTrail ? (rawAuditTrail as unknown as RawAuditEntry[]) : [];
+  const auditEntries: RawAuditEntry[] = rawAuditTrail
+    ? (rawAuditTrail as unknown as RawAuditEntry[])
+    : [];
   const auditTrail: AuditEntry[] = auditEntries.map((entry, index) =>
     mapAuditEntry(entry, index, auditEntries.length)
   );
@@ -901,16 +883,13 @@ export default function DocumentDetailPage() { // NOSONAR typescript:S3776
         </div>
         <div className="flex gap-3">
           <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-            <span className="material-symbols-outlined text-[18px]">download</span>{' '}
-            Download
+            <span className="material-symbols-outlined text-[18px]">download</span> Download
           </button>
           <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-            <span className="material-symbols-outlined text-[18px]">share</span>{' '}
-            Share
+            <span className="material-symbols-outlined text-[18px]">share</span> Share
           </button>
           <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none">
-            <span className="material-symbols-outlined text-[18px]">edit</span>{' '}
-            Edit
+            <span className="material-symbols-outlined text-[18px]">edit</span> Edit
           </button>
         </div>
       </div>
@@ -937,8 +916,7 @@ export default function DocumentDetailPage() { // NOSONAR typescript:S3776
                   </span>
                   {document.isLegalHold && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                      <span className="material-symbols-outlined text-sm">shield</span>{' '}
-                      Legal Hold
+                      <span className="material-symbols-outlined text-sm">shield</span> Legal Hold
                     </span>
                   )}
                 </div>
@@ -1099,9 +1077,7 @@ export default function DocumentDetailPage() { // NOSONAR typescript:S3776
               )}
 
               {/* Version History Tab */}
-              {activeTab === 'versions' && (
-                <DocumentVersionsTab auditTrail={auditTrail} />
-              )}
+              {activeTab === 'versions' && <DocumentVersionsTab auditTrail={auditTrail} />}
 
               {/* Access Control Tab */}
               {activeTab === 'access-control' && (
@@ -1109,9 +1085,7 @@ export default function DocumentDetailPage() { // NOSONAR typescript:S3776
               )}
 
               {/* Signatures Tab */}
-              {activeTab === 'signatures' && (
-                <DocumentSignaturesTab signatures={signatures} />
-              )}
+              {activeTab === 'signatures' && <DocumentSignaturesTab signatures={signatures} />}
 
               {/* Activity Tab */}
               {activeTab === 'activity' && (

@@ -109,8 +109,22 @@ const lighthouseScoresShape = z.object({
   seo: z.number(),
 });
 
+const lighthouseVitalsShape = z.object({
+  fcp: z.number().nullable().optional(),
+  lcp: z.number().nullable().optional(),
+  tbt: z.number().nullable().optional(),
+  cls: z.number().nullable().optional(),
+  tti: z.number().nullable().optional(),
+  si: z.number().nullable().optional(),
+  serverResponse: z.number().nullable().optional(),
+  jsBytes: z.number().nullable().optional(),
+  totalBytes: z.number().nullable().optional(),
+  url: z.string().nullable().optional(),
+}).optional();
+
 const lighthouseSummaryFormat = z.object({
   scores: lighthouseScoresShape,
+  vitals: lighthouseVitalsShape,
   generatedAt: z.string().optional(),
 });
 
@@ -125,12 +139,13 @@ const lighthouseRawFormat = z.object({
   fetchTime: z.string().optional(),
 });
 
-function parseLighthouseScores(data: unknown): { scores: LighthouseScores; generatedAt: string } {
+function parseLighthouseScores(data: unknown): { scores: LighthouseScores; generatedAt: string; vitals?: Record<string, number | string | null | undefined> } {
   // Try summary format first
   const summaryResult = lighthouseSummaryFormat.safeParse(data);
   if (summaryResult.success) {
     return {
       scores: summaryResult.data.scores,
+      vitals: summaryResult.data.vitals,
       generatedAt: summaryResult.data.generatedAt || new Date().toISOString(),
     };
   }
@@ -153,6 +168,84 @@ function parseLighthouseScores(data: unknown): { scores: LighthouseScores; gener
   throw new Error('Unknown lighthouse report format');
 }
 
+interface LighthouseWebVitals {
+  fcp: number | null;
+  lcp: number | null;
+  tbt: number | null;
+  cls: number | null;
+  tti: number | null;
+  si: number | null;
+  serverResponse: number | null;
+  jsBytes: number | null;
+  totalBytes: number | null;
+  url: string | null;
+}
+
+function findDirectory(relativePath: string): string | null {
+  const cwd = process.cwd();
+  const projectRoot = detectProjectRoot(cwd);
+  const uniqueBases = buildBaseLocations(cwd, projectRoot);
+  for (const base of uniqueBases) {
+    try {
+      const full = path.join(base, relativePath);
+      if (fs.existsSync(full) && fs.statSync(full).isDirectory()) return full;
+    } catch { /* skip */ }
+  }
+  return null;
+}
+
+function loadLighthouseWebVitals(): LighthouseWebVitals {
+  const empty: LighthouseWebVitals = {
+    fcp: null, lcp: null, tbt: null, cls: null, tti: null, si: null,
+    serverResponse: null, jsBytes: null, totalBytes: null, url: null,
+  };
+
+  const lhciDir = findDirectory('.lighthouseci');
+  if (!lhciDir) return empty;
+
+  try {
+    const files = fs.readdirSync(lhciDir)
+      .filter((f) => f.endsWith('.json') && f.startsWith('lhr-'))
+      .sort();
+    if (files.length === 0) return empty;
+
+    interface LhrRun {
+      perf: number;
+      data: LighthouseWebVitals & { perf: number };
+    }
+
+    const runs: LhrRun[] = files.map((f) => {
+      const d = JSON.parse(fs.readFileSync(path.join(lhciDir, f), 'utf8'));
+      const resourceItems = d.audits?.['resource-summary']?.details?.items ?? [];
+      const scriptItem = resourceItems.find((i: { resourceType: string }) => i.resourceType === 'script');
+      const totalItem = resourceItems.find((i: { resourceType: string }) => i.resourceType === 'total');
+      return {
+        perf: d.categories?.performance?.score ?? 0,
+        data: {
+          perf: d.categories?.performance?.score ?? 0,
+          fcp: d.audits?.['first-contentful-paint']?.numericValue ?? null,
+          lcp: d.audits?.['largest-contentful-paint']?.numericValue ?? null,
+          tbt: d.audits?.['total-blocking-time']?.numericValue ?? null,
+          cls: d.audits?.['cumulative-layout-shift']?.numericValue ?? null,
+          tti: d.audits?.interactive?.numericValue ?? null,
+          si: d.audits?.['speed-index']?.numericValue ?? null,
+          serverResponse: d.audits?.['server-response-time']?.numericValue ?? null,
+          jsBytes: scriptItem?.transferSize ?? null,
+          totalBytes: totalItem?.transferSize ?? null,
+          url: d.requestedUrl || d.finalUrl || null,
+        },
+      };
+    });
+
+    // Sort by performance score descending, pick median (skip cold-start outlier)
+    runs.sort((a, b) => b.perf - a.perf);
+    const rep = runs.length >= 3 ? runs[1] : runs[0];
+    return rep.data;
+  } catch {
+    return empty;
+  }
+}
+
 function getLighthouseReport(): QualityReport {
   // Check multiple possible file locations
   const filePath = findFile([
@@ -167,7 +260,7 @@ function getLighthouseReport(): QualityReport {
       // Check if this is explicitly a placeholder report
       const isPlaceholder = data.type === 'unavailable' || data.source === 'placeholder';
 
-      const { scores, generatedAt } = parseLighthouseScores(data);
+      const { scores, generatedAt, vitals: parsedVitals } = parseLighthouseScores(data);
 
       const avgScore = Math.round(
         (scores.performance + scores.accessibility + scores.bestPractices + scores.seo) / 4
@@ -181,6 +274,10 @@ function getLighthouseReport(): QualityReport {
         ? 'unknown'
         : scoreStatus;
 
+      // Prefer vitals embedded in the summary file; fall back to scanning .lighthouseci/
+      const hasEmbeddedVitals = parsedVitals && Object.values(parsedVitals).some((v) => v != null);
+      const vitals = hasEmbeddedVitals ? parsedVitals : loadLighthouseWebVitals();
+
       return {
         id: 'lighthouse',
         name: 'Lighthouse Performance',
@@ -190,7 +287,7 @@ function getLighthouseReport(): QualityReport {
         generatedAt,
         source: isPlaceholder ? 'placeholder' : data.source || 'ci',
         htmlPath: '/api/quality-reports/view?report=lighthouse',
-        details: { ...scores },
+        details: { ...scores, vitals },
         isPlaceholder: isPlaceholder && !hasValidData,
         placeholderReason:
           isPlaceholder && !hasValidData ? data.message || 'Lighthouse not available' : undefined,
@@ -278,9 +375,7 @@ function parseCoverageData(
   throw new Error('Unknown coverage report format');
 }
 
-function resolveCoverageSource(
-  dataSource: unknown
-): StaticReportSource {
+function resolveCoverageSource(dataSource: unknown): StaticReportSource {
   if (dataSource === 'placeholder') return 'placeholder';
   if (dataSource === 'manual') return 'manual';
   return 'ci';
@@ -416,6 +511,40 @@ function parsePerformanceData(data: Record<string, unknown>): ParsedPerformanceD
   throw new Error('Unknown performance report format');
 }
 
+interface EndpointResult {
+  name: string;
+  description: string;
+  p50: number;
+  p95: number;
+  p99: number;
+  avgTime: number;
+  iterations: number;
+  status: string;
+}
+
+function loadEndpointResults(): EndpointResult[] {
+  const baselinePath = findFile(['artifacts/benchmarks/baseline.json']);
+  if (!baselinePath) return [];
+  try {
+    const data = JSON.parse(fs.readFileSync(baselinePath, 'utf8'));
+    const apiResults = (data.results?.api || []) as Array<Record<string, unknown>>;
+    return apiResults
+      .filter((r) => !(r.metadata as Record<string, unknown>)?.aggregate)
+      .map((r) => ({
+        name: (r.name as string).replace('-', '.'),
+        description: r.description as string,
+        p50: Math.round(r.p50 as number),
+        p95: Math.round(r.p95 as number),
+        p99: Math.round(r.p99 as number),
+        avgTime: Math.round(r.avgTime as number),
+        iterations: r.iterations as number,
+        status: r.status as string,
+      }));
+  } catch {
+    return [];
+  }
+}
+
 function getPerformanceReport(): QualityReport {
   // Check multiple possible file locations
   const filePath = findFile([
@@ -440,6 +569,9 @@ function getPerformanceReport(): QualityReport {
         ? 'placeholder'
         : nonPlaceholderSource;
 
+      // Enrich with per-endpoint data from baseline.json
+      const endpoints = loadEndpointResults();
+
       return {
         id: 'performance',
         name: 'Performance Benchmarks',
@@ -449,8 +581,8 @@ function getPerformanceReport(): QualityReport {
         generatedAt,
         source: performanceSource,
         htmlPath: '/api/quality-reports/view?report=performance',
-        details,
-        isPlaceholder: false, // If we have data, it's not a placeholder
+        details: { ...details, endpoints },
+        isPlaceholder: false,
         placeholderReason: undefined,
       };
     }
@@ -470,9 +602,7 @@ function getPerformanceReport(): QualityReport {
   };
 }
 
-function resolveDebtStatus(
-  summary: Record<string, number> | undefined
-): ReportStatus {
+function resolveDebtStatus(summary: Record<string, number> | undefined): ReportStatus {
   if (!summary) return 'unknown';
   if (summary.critical === 0 && summary.overdue === 0) return 'passing';
   if (summary.critical > 0 || summary.overdue > 0) return 'failing';

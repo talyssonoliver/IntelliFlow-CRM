@@ -11,14 +11,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import {
-  Card,
-  CardContent,
-  Button,
-  Progress,
-  Skeleton,
-  cn,
-} from '@intelliflow/ui';
+import { Card, CardContent, Button, Progress, Skeleton, cn } from '@intelliflow/ui';
 import { useWorkflowProgress } from '@/lib/ai-monitoring/workflow-hooks';
 import type {
   WorkflowExecutionStatus,
@@ -57,8 +50,7 @@ const STEP_VISUALS: Record<WorkflowStepStatus, StepVisual> = {
   },
   running: {
     icon: 'progress_activity',
-    iconClass:
-      'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 animate-pulse',
+    iconClass: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 animate-pulse',
     ariaLabel: 'Running step',
     ringClass: 'ring-blue-300 dark:ring-blue-700',
   },
@@ -122,17 +114,13 @@ function renderStepDetail(step: WorkflowMergedStep) {
   const duration = formatDuration(step.startedAt, step.completedAt);
 
   if (step.status === 'pending') {
-    return (
-      <p className="text-xs text-muted-foreground">This step has not yet started.</p>
-    );
+    return <p className="text-xs text-muted-foreground">This step has not yet started.</p>;
   }
 
   return (
     <div className="space-y-2 text-xs text-muted-foreground">
       {duration && <p>Duration: {duration}</p>}
-      {step.error && (
-        <p className="text-red-600 dark:text-red-400 break-words">{step.error}</p>
-      )}
+      {step.error && <p className="text-red-600 dark:text-red-400 break-words">{step.error}</p>}
       {step.result && Object.keys(step.result).length > 0 && (
         <pre className="rounded bg-muted/50 p-2 text-[11px] overflow-auto max-h-40">
           {JSON.stringify(step.result, null, 2)}
@@ -142,13 +130,8 @@ function renderStepDetail(step: WorkflowMergedStep) {
   );
 }
 
-function WorkflowStepItem({
-  step,
-  isLast,
-  isExpanded,
-  onToggle,
-}: Readonly<WorkflowStepItemProps>) {
-  const visual = STEP_VISUALS[step.status];
+function WorkflowStepItem({ step, isLast, isExpanded, onToggle }: Readonly<WorkflowStepItemProps>) {
+  const visual = STEP_VISUALS[step.status] ?? STEP_VISUALS.pending;
 
   return (
     <li
@@ -162,7 +145,7 @@ function WorkflowStepItem({
         className={cn(
           'absolute left-0 top-0 inline-flex h-7 w-7 items-center justify-center rounded-full ring-2',
           visual.iconClass,
-          visual.ringClass,
+          visual.ringClass
         )}
       >
         <span className="material-symbols-outlined text-sm" aria-hidden="true">
@@ -172,10 +155,7 @@ function WorkflowStepItem({
 
       {/* Vertical connector line */}
       {!isLast && (
-        <span
-          aria-hidden="true"
-          className="absolute left-[13px] top-7 bottom-0 w-px bg-border"
-        />
+        <span aria-hidden="true" className="absolute left-[13px] top-7 bottom-0 w-px bg-border" />
       )}
 
       {/* Clickable row */}
@@ -186,16 +166,11 @@ function WorkflowStepItem({
         className="w-full flex items-center justify-between gap-2 text-left rounded px-1 py-0.5 hover:bg-muted/50 transition-colors"
       >
         <span className="text-sm font-medium truncate">{step.name}</span>
-        <span className="text-[11px] uppercase text-muted-foreground shrink-0">
-          {step.status}
-        </span>
+        <span className="text-[11px] uppercase text-muted-foreground shrink-0">{step.status}</span>
       </button>
 
       {isExpanded && (
-        <div
-          data-testid={`step-detail-${step.stepNumber}`}
-          className="mt-2 ml-1 border-l pl-3"
-        >
+        <div data-testid={`step-detail-${step.stepNumber}`} className="mt-2 ml-1 border-l pl-3">
           {renderStepDetail(step)}
         </div>
       )}
@@ -248,18 +223,9 @@ export function WorkflowProgressPanel({
     return (
       <Card className={className} data-testid="error-message">
         <CardContent className="flex flex-col items-center p-4 text-center">
-          <span className="material-symbols-outlined text-2xl text-red-500 mb-1">
-            error
-          </span>
-          <p className="text-sm text-muted-foreground mb-2">
-            Failed to load workflow progress
-          </p>
-          <Button
-            data-testid="retry-button"
-            variant="outline"
-            size="sm"
-            onClick={() => refetch()}
-          >
+          <span className="material-symbols-outlined text-2xl text-red-500 mb-1">error</span>
+          <p className="text-sm text-muted-foreground mb-2">Failed to load workflow progress</p>
+          <Button data-testid="retry-button" variant="outline" size="sm" onClick={() => refetch()}>
             Try again
           </Button>
         </CardContent>
@@ -275,21 +241,14 @@ export function WorkflowProgressPanel({
   const { workflowName, status, completedCount, totalSteps, completedPercent, steps } = data;
 
   return (
-    <Card
-      className={className}
-      data-testid="workflow-progress-panel"
-      data-status={status}
-    >
+    <Card className={className} data-testid="workflow-progress-panel" data-status={status}>
       <CardContent className="p-4">
         {/* Header */}
         <header className="mb-3 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h4 className="text-sm font-semibold truncate">{workflowName}</h4>
             <p
-              className={cn(
-                'text-[11px] font-medium uppercase tracking-wide',
-                STATUS_TONE[status],
-              )}
+              className={cn('text-[11px] font-medium uppercase tracking-wide', STATUS_TONE[status])}
             >
               {status}
             </p>
@@ -300,6 +259,7 @@ export function WorkflowProgressPanel({
         </header>
 
         {/* Progress bar */}
+        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- shadcn Progress renders a div; role="progressbar" is the correct ARIA pattern for this compound component */}
         <Progress
           value={completedPercent}
           className="h-1.5 mb-4"

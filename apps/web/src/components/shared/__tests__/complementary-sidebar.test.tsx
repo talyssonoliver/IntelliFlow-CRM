@@ -48,17 +48,13 @@ describe('ComplementarySidebar', () => {
   });
 
   it('renders title and subtitle', () => {
-    render(
-      <ComplementarySidebar {...defaultProps} isOpen title="Agent A" subtitle="AI Agent" />,
-    );
+    render(<ComplementarySidebar {...defaultProps} isOpen title="Agent A" subtitle="AI Agent" />);
     expect(screen.getByText('Agent A')).toBeInTheDocument();
     expect(screen.getByText('AI Agent')).toBeInTheDocument();
   });
 
   it('omits title element when no title provided', () => {
-    render(
-      <ComplementarySidebar {...defaultProps} isOpen title={undefined} />,
-    );
+    render(<ComplementarySidebar {...defaultProps} isOpen title={undefined} />);
     expect(screen.queryByRole('heading', { level: 3 })).not.toBeInTheDocument();
   });
 
@@ -122,7 +118,7 @@ describe('ComplementarySidebar', () => {
         isOpen
         isLoading
         skeleton={<div data-testid="custom-skeleton">Loading...</div>}
-      />,
+      />
     );
     expect(screen.getByTestId('custom-skeleton')).toBeInTheDocument();
   });
@@ -140,7 +136,7 @@ describe('ComplementarySidebar', () => {
         {...defaultProps}
         isOpen
         headerActions={<button data-testid="edit-btn">Edit</button>}
-      />,
+      />
     );
     expect(screen.getByTestId('edit-btn')).toBeInTheDocument();
   });
@@ -149,7 +145,7 @@ describe('ComplementarySidebar', () => {
 
   it('applies fade-in animation class on content wrapper', () => {
     const { container } = render(
-      <ComplementarySidebar {...defaultProps} isOpen contentKey="key-1" />,
+      <ComplementarySidebar {...defaultProps} isOpen contentKey="key-1" />
     );
     const contentWrapper = container.querySelector('.animate-\\[fade-in_100ms_ease-out\\]');
     expect(contentWrapper).toBeInTheDocument();
@@ -159,7 +155,7 @@ describe('ComplementarySidebar', () => {
     const { rerender, container } = render(
       <ComplementarySidebar {...defaultProps} isOpen contentKey="key-1">
         <span>Content A</span>
-      </ComplementarySidebar>,
+      </ComplementarySidebar>
     );
 
     const firstWrapper = container.querySelector('[class*="animate"]');
@@ -167,7 +163,7 @@ describe('ComplementarySidebar', () => {
     rerender(
       <ComplementarySidebar {...defaultProps} isOpen contentKey="key-2">
         <span>Content B</span>
-      </ComplementarySidebar>,
+      </ComplementarySidebar>
     );
 
     const secondWrapper = container.querySelector('[class*="animate"]');

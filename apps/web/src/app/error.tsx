@@ -59,15 +59,13 @@ export default function ErrorPage({
             onClick={reset}
             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#137fec] text-white font-medium rounded-lg hover:bg-[#0e6ac7] transition-colors focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2"
           >
-            <span className="material-symbols-outlined text-lg">refresh</span>{' '}
-            Try again
+            <span className="material-symbols-outlined text-lg">refresh</span> Try again
           </button>
           <Link
             href="/dashboard"
             className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-border-light dark:border-border-dark text-slate-700 dark:text-slate-300 font-medium rounded-lg hover:bg-slate-100 dark:hover:bg-[#2d3a4a] transition-colors"
           >
-            <span className="material-symbols-outlined text-lg">dashboard</span>{' '}
-            Go to Dashboard
+            <span className="material-symbols-outlined text-lg">dashboard</span> Go to Dashboard
           </Link>
         </div>
 

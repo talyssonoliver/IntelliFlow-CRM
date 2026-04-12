@@ -14,7 +14,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const materialSymbols = localFont({
   src: '../../public/fonts/MaterialSymbolsOutlined.woff2',
   variable: '--font-material-symbols',
-  display: 'block',
+  display: 'swap',
   weight: '100 700',
 });
 

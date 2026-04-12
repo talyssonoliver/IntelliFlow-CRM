@@ -44,9 +44,7 @@ export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
               return (
                 <div key={stage.stageKey}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-foreground">
-                      {stage.displayName}
-                    </span>
+                    <span className="text-sm font-medium text-foreground">{stage.displayName}</span>
                     <span className="text-sm text-muted-foreground">
                       {stageValue.toLocaleString('en-US', {
                         style: 'currency',

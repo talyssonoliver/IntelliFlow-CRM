@@ -1,9 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  buildNotFoundAnalyticsPayload,
-  trackNotFoundPageView,
-} from '../error-analytics';
+import { buildNotFoundAnalyticsPayload, trackNotFoundPageView } from '../error-analytics';
 
 describe('error-analytics', () => {
   beforeEach(() => {

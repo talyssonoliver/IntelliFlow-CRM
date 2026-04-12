@@ -11,9 +11,11 @@ export function RouteAccessGate({ children }: Readonly<{ children: ReactNode }>)
     return <>{children}</>;
   }
 
-  return <Suspense fallback={<AccessGateFallback />}>
-    <ProtectedRouteContent>{children}</ProtectedRouteContent>
-  </Suspense>;
+  return (
+    <Suspense fallback={<AccessGateFallback />}>
+      <ProtectedRouteContent>{children}</ProtectedRouteContent>
+    </Suspense>
+  );
 }
 
 function ProtectedRouteContent({ children }: Readonly<{ children: ReactNode }>) {

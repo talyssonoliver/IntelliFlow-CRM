@@ -55,7 +55,7 @@ export function HomePageContent() {
       <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-[#137fec] border-t-transparent rounded-full animate-spin" />
-          <p className="text-slate-400 text-sm">Loading...</p>
+          <p className="text-slate-600 dark:text-slate-400 text-sm">Loading...</p>
         </div>
       </div>
     );

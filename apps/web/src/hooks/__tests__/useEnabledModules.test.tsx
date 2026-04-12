@@ -14,7 +14,8 @@ vi.mock('@/lib/trpc', () => ({
   trpc: {
     moduleAccess: {
       getEnabledModules: {
-        useQuery: (...args: unknown[]) => (mockGetEnabledModules as (...params: unknown[]) => unknown)(...args),
+        useQuery: (...args: unknown[]) =>
+          (mockGetEnabledModules as (...params: unknown[]) => unknown)(...args),
       },
     },
   },

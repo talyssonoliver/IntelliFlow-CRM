@@ -30,7 +30,11 @@ const TaskCalendarInner = dynamic(
   }
 );
 
-export function TaskCalendar({ tasks, onTaskClick, onCreateWithDate }: Readonly<TaskCalendarProps>) {
+export function TaskCalendar({
+  tasks,
+  onTaskClick,
+  onCreateWithDate,
+}: Readonly<TaskCalendarProps>) {
   const { timezone } = useTimezoneContext();
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const year = currentDate.getFullYear();
@@ -48,7 +52,11 @@ export function TaskCalendar({ tasks, onTaskClick, onCreateWithDate }: Readonly<
     setCurrentDate(new Date());
   }, []);
 
-  const monthLabel = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: timezone });
+  const monthLabel = currentDate.toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric',
+    timeZone: timezone,
+  });
 
   return (
     <div

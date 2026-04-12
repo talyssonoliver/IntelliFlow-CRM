@@ -52,7 +52,7 @@ vi.mock('@/lib/active-agents/agent-utils', () => ({
 }));
 
 const { useAgentLogs, useFailedJobs } = vi.mocked(
-  (await import('@/lib/ai-monitoring/hooks')) as any,
+  (await import('@/lib/ai-monitoring/hooks')) as any
 );
 
 const { useSearchParams } = vi.mocked((await import('next/navigation')) as any);
@@ -572,7 +572,7 @@ const mockFailedJobs = [
 
 describe('Category 6: Queue Failures View', () => {
   function renderAndSwitchToQueueFailures(
-    failedJobsData: Partial<ReturnType<typeof useFailedJobs>> = {},
+    failedJobsData: Partial<ReturnType<typeof useFailedJobs>> = {}
   ) {
     (useFailedJobs as ReturnType<typeof vi.fn>).mockReturnValue({
       jobs: mockFailedJobs,

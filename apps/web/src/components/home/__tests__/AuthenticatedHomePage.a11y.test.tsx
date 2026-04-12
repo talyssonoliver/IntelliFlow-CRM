@@ -71,7 +71,9 @@ vi.mock('@/lib/trpc', () => ({
       reorderPinnedItems: { useMutation: mockReorderMutation },
     },
     notifications: {
-      getUnreadCount: { useQuery: vi.fn(() => ({ data: { total: 0, byPriority: {} }, isLoading: false })) },
+      getUnreadCount: {
+        useQuery: vi.fn(() => ({ data: { total: 0, byPriority: {} }, isLoading: false })),
+      },
       list: { useQuery: vi.fn(() => ({ data: { notifications: [] }, isLoading: false })) },
       markAsRead: { useMutation: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })) },
       markAllAsRead: { useMutation: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })) },
@@ -152,7 +154,9 @@ vi.mock('@/components/notifications', () => ({
 }));
 
 vi.mock('@/components/shared/activity-feed', () => ({
-  ActivityFeed: (_props: any) => <div data-testid="activity-feed-mock" role="feed" aria-busy="false" />,
+  ActivityFeed: (_props: any) => (
+    <div data-testid="activity-feed-mock" role="feed" aria-busy="false" />
+  ),
   ActivityFeedStatsBar: () => <div data-testid="activity-feed-stats-bar" />,
   ActivityFeedTypeFilter: ({
     value,
@@ -303,7 +307,7 @@ describe('AuthenticatedHomePage a11y', () => {
       const h2s = screen.getAllByRole('heading', { level: 2 });
       const h2Texts = h2s.map((h) => h.textContent);
 
-      expect(h2Texts).toContain('AI Daily Insights');
+      expect(h2Texts).toContain('Insights');
       expect(h2Texts).toContain('Quick Actions');
       expect(h2Texts).toContain('Your Feed');
       expect(h2Texts).toContain("Today's Focus");

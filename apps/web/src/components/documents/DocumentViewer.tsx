@@ -45,7 +45,10 @@ export function DocumentViewer({
     const iframe = iframeRef.current;
     if (!iframe) return;
     const onLoad = () => setIsLoading(false);
-    const onError = () => { setIsLoading(false); setHasError(true); };
+    const onError = () => {
+      setIsLoading(false);
+      setHasError(true);
+    };
     iframe.addEventListener('load', onLoad);
     iframe.addEventListener('error', onError);
     return () => {
@@ -58,7 +61,10 @@ export function DocumentViewer({
     const iframe = htmlIframeRef.current;
     if (!iframe) return;
     const onLoad = () => setIsLoading(false);
-    const onError = () => { setIsLoading(false); setHasError(true); };
+    const onError = () => {
+      setIsLoading(false);
+      setHasError(true);
+    };
     iframe.addEventListener('load', onLoad);
     iframe.addEventListener('error', onError);
     return () => {
@@ -71,7 +77,10 @@ export function DocumentViewer({
     const img = imgRef.current;
     if (!img) return;
     const onLoad = () => setIsLoading(false);
-    const onError = () => { setIsLoading(false); setHasError(true); };
+    const onError = () => {
+      setIsLoading(false);
+      setHasError(true);
+    };
     img.addEventListener('load', onLoad);
     img.addEventListener('error', onError);
     return () => {
@@ -125,8 +134,7 @@ export function DocumentViewer({
             download={fileName}
             className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
           >
-            <span className="material-symbols-outlined text-sm">download</span>{' '}
-            Download {fileName}
+            <span className="material-symbols-outlined text-sm">download</span> Download {fileName}
           </a>
         </div>
       );
@@ -220,8 +228,7 @@ export function DocumentViewer({
           className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
           aria-label={`Download ${fileName}`}
         >
-          <span className="material-symbols-outlined text-sm">download</span>{' '}
-          Download
+          <span className="material-symbols-outlined text-sm">download</span> Download
         </a>
       </div>
     );

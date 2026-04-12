@@ -361,10 +361,7 @@ export function DocumentList({
 
   if (isLoading) {
     return (
-      <output
-        className="space-y-4"
-        aria-label="Loading documents"
-      >
+      <output className="space-y-4" aria-label="Loading documents">
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="h-16 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" /> // NOSONAR typescript:S6479
         ))}

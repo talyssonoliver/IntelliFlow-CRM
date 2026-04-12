@@ -28,10 +28,7 @@ function stripSourcePrefix(id: string): string {
  * Returns both the original (prefixed) ID and stripped (raw) ID so timelines
  * using either format can match.
  */
-export function useActivityDeepLink(
-  activeTab: string,
-  setActiveTab: (tab: 'activity') => void
-) {
+export function useActivityDeepLink(activeTab: string, setActiveTab: (tab: 'activity') => void) {
   const searchParams = useSearchParams();
   const rawParam = searchParams.get('activityId') ?? null;
 

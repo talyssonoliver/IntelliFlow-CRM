@@ -123,7 +123,9 @@ vi.mock('@/lib/trpc', () => ({
       },
     },
     notifications: {
-      getUnreadCount: { useQuery: vi.fn(() => ({ data: { total: 0, byPriority: {} }, isLoading: false })) },
+      getUnreadCount: {
+        useQuery: vi.fn(() => ({ data: { total: 0, byPriority: {} }, isLoading: false })),
+      },
       list: { useQuery: vi.fn(() => ({ data: { notifications: [] }, isLoading: false })) },
       markAsRead: { useMutation: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })) },
       markAllAsRead: { useMutation: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })) },
@@ -478,7 +480,9 @@ describe('AuthenticatedHomePage Analytics', () => {
   it('tracks "View All" click in insights section', () => {
     render(<AuthenticatedHomePage />);
     const viewAllLinks = screen.getAllByRole('link', { name: /View All/i });
-    const insightsLink = viewAllLinks.find((l) => l.getAttribute('href') === '/agent-approvals/insights');
+    const insightsLink = viewAllLinks.find(
+      (l) => l.getAttribute('href') === '/agent-approvals/insights'
+    );
     expect(insightsLink).toBeDefined();
     fireEvent.click(insightsLink!);
     expect(mockTrackInsightsViewAllClick).toHaveBeenCalled();

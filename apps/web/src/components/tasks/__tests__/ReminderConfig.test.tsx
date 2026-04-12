@@ -28,7 +28,9 @@ describe('ReminderConfig', () => {
 
     expect(screen.getByText('Tasks Overdue')).toBeInTheDocument();
     expect(screen.getByText('3 overdue')).toBeInTheDocument();
-    expect(screen.getByText('3 tasks past due. Immediate follow-up recommended.')).toBeInTheDocument();
+    expect(
+      screen.getByText('3 tasks past due. Immediate follow-up recommended.')
+    ).toBeInTheDocument();
   });
 
   it('renders due today count when > 0', () => {

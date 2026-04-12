@@ -106,7 +106,13 @@ vi.mock('@/lib/api', () => ({
     task: {
       stats: {
         useQuery: () => ({
-          data: { total: 2, byStatus: { PENDING: 1, IN_PROGRESS: 1 }, byPriority: {}, overdue: 0, dueToday: 0 },
+          data: {
+            total: 2,
+            byStatus: { PENDING: 1, IN_PROGRESS: 1 },
+            byPriority: {},
+            overdue: 0,
+            dueToday: 0,
+          },
           isLoading: false,
         }),
       },
@@ -179,9 +185,7 @@ vi.mock('@/lib/shared/filter-utils', () => ({
 
 // ─── 8. Component mocks ─────────────────────────────────────────
 vi.mock('@/components/shared', () => ({
-  PageHeader: ({ title }: { title: string }) => (
-    <div data-testid="page-header">{title}</div>
-  ),
+  PageHeader: ({ title }: { title: string }) => <div data-testid="page-header">{title}</div>,
   SearchFilterBar: ({
     onSearch,
     placeholder,
@@ -198,13 +202,7 @@ vi.mock('@/components/shared', () => ({
 }));
 
 vi.mock('@/components/tasks/TaskList', () => ({
-  TaskList: ({
-    tasks,
-    isLoading,
-  }: {
-    tasks: typeof mockTasks;
-    isLoading: boolean;
-  }) => (
+  TaskList: ({ tasks, isLoading }: { tasks: typeof mockTasks; isLoading: boolean }) => (
     <div data-testid="task-list">
       {isLoading && <span data-testid="list-loading">Loading...</span>}
       {tasks?.map((t: (typeof mockTasks)[0]) => (

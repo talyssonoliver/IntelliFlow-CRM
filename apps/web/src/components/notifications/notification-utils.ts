@@ -400,9 +400,15 @@ const PRIORITY_CONFIGS: Record<NotificationPriority, PriorityConfig> = {
  */
 export const PROACTIVE_ALERT_CATEGORIES = {
   'Time-Based': ['appointment_reminder', 'task_due_soon'],
-  'Status-Based': ['task_overdue', 'deal_at_risk', 'contact_stale', 'ticket_escalated', 'case_status_changed'],
-  'Threshold': ['lead_scored'],
-  'Compliance': ['document_approval_needed'],
+  'Status-Based': [
+    'task_overdue',
+    'deal_at_risk',
+    'contact_stale',
+    'ticket_escalated',
+    'case_status_changed',
+  ],
+  Threshold: ['lead_scored'],
+  Compliance: ['document_approval_needed'],
 } as const;
 
 /**
@@ -428,7 +434,10 @@ export function getPriorityConfig(priority: string): PriorityConfig | undefined 
 }
 
 /** Format a date string into relative time (e.g., "5 min ago") */
-export function formatRelativeTime(dateInput: string | Date, timezone: string = 'Europe/London'): string {
+export function formatRelativeTime(
+  dateInput: string | Date,
+  timezone: string = 'Europe/London'
+): string {
   const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
   if (Number.isNaN(date.getTime())) return 'Unknown';
 

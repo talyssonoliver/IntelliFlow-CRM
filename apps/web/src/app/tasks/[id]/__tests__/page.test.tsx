@@ -144,9 +144,15 @@ vi.mock('@/components/tasks/TaskDetail', () => ({
         <>
           <span data-testid="task-title">{task.title}</span>
           <span data-testid="task-status">{task.status}</span>
-          <button data-testid="start-btn" onClick={() => onStart(task.id)}>Start</button>
-          <button data-testid="complete-btn" onClick={() => onComplete(task.id)}>Complete</button>
-          <button data-testid="delete-btn" onClick={() => onDelete(task.id)}>Delete</button>
+          <button data-testid="start-btn" onClick={() => onStart(task.id)}>
+            Start
+          </button>
+          <button data-testid="complete-btn" onClick={() => onComplete(task.id)}>
+            Complete
+          </button>
+          <button data-testid="delete-btn" onClick={() => onDelete(task.id)}>
+            Delete
+          </button>
         </>
       )}
     </div>
@@ -154,9 +160,8 @@ vi.mock('@/components/tasks/TaskDetail', () => ({
 }));
 
 vi.mock('@/components/tasks/TaskForm', () => ({
-  TaskForm: ({ open }: { open: boolean }) => (
-    open ? <div data-testid="task-form">Edit Form</div> : null
-  ),
+  TaskForm: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="task-form">Edit Form</div> : null,
 }));
 
 vi.mock('@/components/shared/activity-feed', () => ({

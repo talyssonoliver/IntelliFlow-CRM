@@ -24,7 +24,10 @@ import { trpc } from '@/lib/trpc';
 // Helpers
 // ============================================
 
-type VerifyMutationFn = (args: { token_hash: string; type: 'email' | 'signup' }) => Promise<{ email?: string | null }>;
+type VerifyMutationFn = (args: {
+  token_hash: string;
+  type: 'email' | 'signup';
+}) => Promise<{ email?: string | null }>;
 
 async function runEmailVerification(
   hash: string,
@@ -220,8 +223,8 @@ export function EmailVerification({
             )}
             aria-label="Continue to dashboard"
           >
-            Continue to Dashboard
-            {' '}<span className="material-symbols-outlined text-xl" aria-hidden="true">
+            Continue to Dashboard{' '}
+            <span className="material-symbols-outlined text-xl" aria-hidden="true">
               arrow_forward
             </span>
           </Link>
@@ -239,8 +242,8 @@ export function EmailVerification({
             )}
             aria-label="Go to login page"
           >
-            Sign In
-            {' '}<span className="material-symbols-outlined text-xl" aria-hidden="true">
+            Sign In{' '}
+            <span className="material-symbols-outlined text-xl" aria-hidden="true">
               login
             </span>
           </Link>
@@ -308,8 +311,8 @@ export function EmailVerification({
             )}
             aria-label="Go to sign up page"
           >
-            Sign Up
-            {' '}<span className="material-symbols-outlined text-xl" aria-hidden="true">
+            Sign Up{' '}
+            <span className="material-symbols-outlined text-xl" aria-hidden="true">
               person_add
             </span>
           </Link>
@@ -328,8 +331,8 @@ export function EmailVerification({
               )}
               aria-label="Try signing up again"
             >
-              Try Again
-              {' '}<span className="material-symbols-outlined text-xl" aria-hidden="true">
+              Try Again{' '}
+              <span className="material-symbols-outlined text-xl" aria-hidden="true">
                 refresh
               </span>
             </Link>
@@ -349,14 +352,10 @@ export function EmailVerification({
       </div>
 
       {/* Title */}
-      <h1 className="text-2xl font-bold text-white mb-2">
-        {STATUS_TITLES[status]}
-      </h1>
+      <h1 className="text-2xl font-bold text-white mb-2">{STATUS_TITLES[status]}</h1>
 
       {/* Message */}
-      <output className="text-slate-400 mb-8 max-w-md mx-auto block">
-        {message}
-      </output>
+      <output className="text-slate-400 mb-8 max-w-md mx-auto block">{message}</output>
 
       {/* Verified Email (on success) */}
       {verifiedEmail && status === 'success' && (

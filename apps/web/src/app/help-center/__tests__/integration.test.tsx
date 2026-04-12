@@ -19,10 +19,13 @@ function setSearchParams(params: Record<string, string>) {
 
 /** Get only category card links (not breadcrumb links) */
 function getCategoryLinks() {
-  return screen.getAllByRole('link').filter(
-    (el) => el.getAttribute('href')?.startsWith('/help-center/') &&
-      !el.closest('nav[aria-label="Breadcrumb"]')
-  );
+  return screen
+    .getAllByRole('link')
+    .filter(
+      (el) =>
+        el.getAttribute('href')?.startsWith('/help-center/') &&
+        !el.closest('nav[aria-label="Breadcrumb"]')
+    );
 }
 
 describe('HelpCenter Integration', () => {

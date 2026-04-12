@@ -192,7 +192,7 @@ export const DEFAULT_HELP_ARTICLES: readonly HelpArticle[] = [
             type: 'steps',
             items: [
               'Admin — Full system access: user management, billing, integrations, and all CRM data',
-              'Manager — Team oversight: view team members\' records, run reports, and approve AI actions',
+              "Manager — Team oversight: view team members' records, run reports, and approve AI actions",
               'Agent — Day-to-day CRM: create and edit leads, contacts, deals, and tickets assigned to them',
               'Viewer — Read-only access: view dashboards and reports without modifying data',
             ],
@@ -409,7 +409,7 @@ export const DEFAULT_HELP_ARTICLES: readonly HelpArticle[] = [
           },
           {
             type: 'info',
-            text: 'Every stage change is logged in the deal\'s activity timeline with a timestamp, the user who made the change, and any notes. This creates a complete audit trail.',
+            text: "Every stage change is logged in the deal's activity timeline with a timestamp, the user who made the change, and any notes. This creates a complete audit trail.",
           },
         ],
       },
@@ -434,7 +434,7 @@ export const DEFAULT_HELP_ARTICLES: readonly HelpArticle[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: 'The Forecast dashboard gives you a clear view of projected revenue, weighted by each deal\'s probability of closing. IntelliFlow AI continuously adjusts these probabilities based on historical conversion rates and deal velocity.',
+            text: "The Forecast dashboard gives you a clear view of projected revenue, weighted by each deal's probability of closing. IntelliFlow AI continuously adjusts these probabilities based on historical conversion rates and deal velocity.",
           },
           {
             type: 'info',
@@ -786,7 +786,7 @@ export const DEFAULT_HELP_ARTICLES: readonly HelpArticle[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: 'IntelliFlow AI analyzes each deal\'s stage, contact engagement, and historical patterns to recommend your next best action — whether that\'s sending a follow-up email, scheduling a call, or updating the deal stage.',
+            text: "IntelliFlow AI analyzes each deal's stage, contact engagement, and historical patterns to recommend your next best action — whether that's sending a follow-up email, scheduling a call, or updating the deal stage.",
           },
           {
             type: 'steps',
@@ -799,7 +799,7 @@ export const DEFAULT_HELP_ARTICLES: readonly HelpArticle[] = [
           },
           {
             type: 'info',
-            text: 'Suggestions improve over time as the AI learns from your team\'s actions. The more feedback you provide, the more accurate the recommendations become.',
+            text: "Suggestions improve over time as the AI learns from your team's actions. The more feedback you provide, the more accurate the recommendations become.",
           },
         ],
       },
@@ -817,7 +817,7 @@ export const DEFAULT_HELP_ARTICLES: readonly HelpArticle[] = [
             type: 'steps',
             items: [
               'Navigate to the Agent Approvals dashboard from the sidebar',
-              'Review pending actions: see the AI\'s reasoning and the proposed action',
+              "Review pending actions: see the AI's reasoning and the proposed action",
               'Approve to execute, Edit to modify before sending, or Reject to cancel',
               'Bulk-approve low-risk actions to save time',
             ],

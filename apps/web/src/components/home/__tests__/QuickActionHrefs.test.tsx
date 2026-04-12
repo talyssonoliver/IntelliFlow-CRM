@@ -49,7 +49,9 @@ vi.mock('@/lib/trpc', () => ({
       reorderPinnedItems: { useMutation: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })) },
     },
     notifications: {
-      getUnreadCount: { useQuery: vi.fn(() => ({ data: { total: 0, byPriority: {} }, isLoading: false })) },
+      getUnreadCount: {
+        useQuery: vi.fn(() => ({ data: { total: 0, byPriority: {} }, isLoading: false })),
+      },
       list: { useQuery: vi.fn(() => ({ data: { notifications: [] }, isLoading: false })) },
       markAsRead: { useMutation: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })) },
       markAllAsRead: { useMutation: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })) },

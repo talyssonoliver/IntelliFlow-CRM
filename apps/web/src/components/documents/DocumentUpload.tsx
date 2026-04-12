@@ -162,7 +162,15 @@ export function DocumentUpload({
         // Derive a documentType from the file MIME type for the required API field.
         // The full document type selector UI is tracked in IFC-152.
         const mimeType = selectedFile.type || 'application/octet-stream';
-        let documentType: 'OTHER' | 'CONTRACT' | 'AGREEMENT' | 'EVIDENCE' | 'CORRESPONDENCE' | 'REPORT' | 'COURT_FILING' | 'MEMO';
+        let documentType:
+          | 'OTHER'
+          | 'CONTRACT'
+          | 'AGREEMENT'
+          | 'EVIDENCE'
+          | 'CORRESPONDENCE'
+          | 'REPORT'
+          | 'COURT_FILING'
+          | 'MEMO';
         if (mimeType.startsWith('image/')) {
           documentType = 'EVIDENCE';
         } else if (
@@ -241,6 +249,7 @@ export function DocumentUpload({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Drop Zone */}
+      {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- file drop zone contains nested <Button>; using <button> here would create invalid nested buttons */}
       <div // NOSONAR — file drop zone with nested interactive elements (Remove button); drag events require div wrapper
         role="button"
         tabIndex={0}
@@ -309,10 +318,11 @@ export function DocumentUpload({
       </div>
 
       {/* Upload Progress */}
+      {/* eslint-disable jsx-a11y/prefer-tag-over-role -- custom multi-part progress display; <progress> cannot contain nested elements */}
       {isUploading && (
         <div
           className="space-y-2"
-          role="progressbar" // NOSONAR typescript:S6819 — custom multi-part progress display, <progress> cannot contain nested elements
+          role="progressbar" // NOSONAR typescript:S6819
           aria-valuenow={uploadProgress}
           aria-valuemin={0}
           aria-valuemax={100}
@@ -329,6 +339,7 @@ export function DocumentUpload({
           </div>
         </div>
       )}
+      {/* eslint-enable jsx-a11y/prefer-tag-over-role */}
 
       {/* Metadata Form */}
       <Card className="p-6 space-y-4">
@@ -337,7 +348,7 @@ export function DocumentUpload({
             htmlFor="doc-title"
             className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
           >
-            Title{' '}<span className="text-red-500">*</span>
+            Title <span className="text-red-500">*</span>
           </label>
           <input
             id="doc-title"

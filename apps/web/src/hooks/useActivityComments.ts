@@ -15,13 +15,8 @@ export interface CommentItem {
  * Hook for managing activity comments (replies).
  * Wraps activityFeed.getComments query + activityFeed.addComment mutation.
  */
-export function useActivityComments(
-  activityIds: string[],
-  activitySource: string
-) {
-  const [optimisticComments, setOptimisticComments] = useState<
-    Record<string, CommentItem[]>
-  >({});
+export function useActivityComments(activityIds: string[], activitySource: string) {
+  const [optimisticComments, setOptimisticComments] = useState<Record<string, CommentItem[]>>({});
 
   const utils = api.useUtils();
 

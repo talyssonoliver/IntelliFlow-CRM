@@ -91,7 +91,13 @@ function resolveDataSource(
 }
 
 export function ActivityFeed(props: Readonly<ActivityFeedProps>) {
-  const { height = 400, className = '', emptyMessage = 'No recent activity', timeline = false, selectedId } = props;
+  const {
+    height = 400,
+    className = '',
+    emptyMessage = 'No recent activity',
+    timeline = false,
+    selectedId,
+  } = props;
 
   // Resolve data source: internal hook or external props
   const internal = useActivityFeedConditional(props);
@@ -147,7 +153,9 @@ export function ActivityFeed(props: Readonly<ActivityFeedProps>) {
     return (
       <div className={`divide-y divide-[#e2e8f0] dark:divide-[#334155] ${className}`}>
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="animate-pulse flex gap-3 p-5"> {/* NOSONAR typescript:S6479 */}
+          <div key={i} className="animate-pulse flex gap-3 p-5">
+            {' '}
+            {/* NOSONAR typescript:S6479 */}
             <div className="size-10 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
             <div className="flex-1 space-y-2">
               <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />

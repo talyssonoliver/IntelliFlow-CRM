@@ -24,11 +24,9 @@ export function TasksShell({ children }: Readonly<{ children: React.ReactNode }>
 
   const sidebarConfig = useMemo(() => {
     if (onSettingsPage) {
-      return createTasksSettingsSidebarConfig(
-        ({ isExpanded }: { isExpanded: boolean }) => (
-          <TaskSettingsSidebarNav isExpanded={isExpanded} />
-        ),
-      );
+      return createTasksSettingsSidebarConfig(({ isExpanded }: { isExpanded: boolean }) => (
+        <TaskSettingsSidebarNav isExpanded={isExpanded} />
+      ));
     }
     return createTasksSidebarConfig(() => setSettingsOpen((prev) => !prev));
   }, [onSettingsPage]);
@@ -39,10 +37,7 @@ export function TasksShell({ children }: Readonly<{ children: React.ReactNode }>
         <SidebarWithSuspense config={sidebarConfig} />
 
         {!onSettingsPage && (
-          <TaskSettingsPanel
-            isOpen={settingsOpen}
-            onClose={() => setSettingsOpen(false)}
-          />
+          <TaskSettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
         )}
 
         <SidebarInset>

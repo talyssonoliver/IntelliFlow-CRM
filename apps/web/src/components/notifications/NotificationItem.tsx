@@ -2,7 +2,12 @@ import React, { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@intelliflow/ui';
 
-import { getTypeConfig, getPriorityConfig, formatRelativeTime, getProactiveAlertCategory } from './notification-utils';
+import {
+  getTypeConfig,
+  getPriorityConfig,
+  formatRelativeTime,
+  getProactiveAlertCategory,
+} from './notification-utils';
 
 /** Accept tRPC-inferred notification type (Date fields from superjson) */
 interface NotificationItemProps {
@@ -75,11 +80,17 @@ export const NotificationItem = React.memo(function NotificationItem({
     [activateItem]
   );
 
+  // NOSONAR typescript:S6819,S6842 — notification item is a styled div that conditionally acts as a link or button
+  let divRole: 'link' | 'button' | undefined;
+  if (actionLink) divRole = 'link';
+  else if (isClickable) divRole = 'button';
+
   return (
-    <div // NOSONAR typescript:S6845,S6848 — notification item conditionally acts as a link; <a> cannot contain interactive child elements (action buttons)
+    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role, jsx-a11y/no-static-element-interactions -- notification item conditionally acts as a link or button; <a> cannot contain interactive child action buttons
+    <div // NOSONAR typescript:S6845,S6848
       onClick={handleItemClick}
       onKeyDown={handleKeyDown}
-      role={actionLink ? 'link' : isClickable ? 'button' : undefined} // NOSONAR typescript:S6819,S6842 — notification item is a styled div that conditionally acts as a link or button
+      role={divRole}
       tabIndex={isClickable ? 0 : undefined}
       className={`group relative flex w-full items-start gap-4 rounded-xl p-4 shadow-sm border transition-all hover:shadow-md ${isClickable ? 'cursor-pointer' : ''} ${containerClass}`}
     >
@@ -132,14 +143,15 @@ export const NotificationItem = React.memo(function NotificationItem({
           </span>
           {proactiveCategory && (
             <span className="text-xs px-2 py-0.5 rounded-full bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400 flex items-center gap-1">
-              <span className="material-symbols-outlined text-[11px]" aria-hidden="true">notifications_active</span>
+              <span className="material-symbols-outlined text-[11px]" aria-hidden="true">
+                notifications_active
+              </span>
               {proactiveCategory}
             </span>
           )}
           {actionLink && (
             <span className="text-xs text-primary flex items-center gap-1">
-              View details{' '}
-              <span className="material-symbols-outlined text-sm">arrow_forward</span>
+              View details <span className="material-symbols-outlined text-sm">arrow_forward</span>
             </span>
           )}
         </div>
@@ -154,7 +166,10 @@ export const NotificationItem = React.memo(function NotificationItem({
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  onClick={() => { setOptimisticRead(true); onMarkAsRead(notification.id); }}
+                  onClick={() => {
+                    setOptimisticRead(true);
+                    onMarkAsRead(notification.id);
+                  }}
                   aria-label="Mark as read"
                   className="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-primary"
                 >

@@ -5,6 +5,8 @@ export const metadata: Metadata = {
   title: 'AI Insights',
 };
 
-export default function InsightsLayout({ children }: Readonly<{ readonly children: React.ReactNode }>) {
+export default function InsightsLayout({
+  children,
+}: Readonly<{ readonly children: React.ReactNode }>) {
   return <InsightsLayoutShell>{children}</InsightsLayoutShell>;
 }

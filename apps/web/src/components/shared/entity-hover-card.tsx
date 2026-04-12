@@ -71,7 +71,12 @@ interface RelatedMessagesProps {
   currentFolder: string | null;
 }
 
-function RelatedMessagesList({ isLoading, shouldFetch, messages, currentFolder }: Readonly<RelatedMessagesProps>) {
+function RelatedMessagesList({
+  isLoading,
+  shouldFetch,
+  messages,
+  currentFolder,
+}: Readonly<RelatedMessagesProps>) {
   if (isLoading && shouldFetch) {
     return (
       <div className="space-y-1.5">
@@ -190,193 +195,246 @@ export function EntityHoverCard({
 
   return (
     <>
-      <HoverCard open={isHoverOpen} openDelay={600} closeDelay={250} onOpenChange={handleHoverOpenChange}>
+      <HoverCard
+        open={isHoverOpen}
+        openDelay={600}
+        closeDelay={250}
+        onOpenChange={handleHoverOpenChange}
+      >
         <HoverCardTrigger asChild>{children}</HoverCardTrigger>
         <HoverCardContent
           side={side}
           align={align}
           className={cn(
             'w-72 p-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg rounded-lg',
-            className,
+            className
           )}
         >
-        {/* Defensive wrapper: stop all events from leaking through the portal to underlying elements (e.g. table rows) */}
-        <div
-          role="none"
-          onPointerDown={stopAllPropagation}
-          onPointerUp={stopAllPropagation}
-          onClick={stopAllPropagation}
-          onMouseDown={stopAllPropagation}
-          onMouseUp={stopAllPropagation}
-          onKeyDown={stopAllPropagation}
-        >
-        <TooltipProvider delayDuration={400}>
-          {/* Header — horizontal layout like Gmail/Outlook */}
-          <div className="flex items-center gap-3 px-4 pt-4 pb-3">
-            <AppAvatar
-              name={cardName}
-              src={entity?.avatarUrl}
-              className="h-10 w-10 text-sm shrink-0"
-            />
-            <div className="flex-1 min-w-0">
-              {entityHref ? (
-                <a
-                  href={entityHref}
-                  className="text-sm font-semibold text-slate-900 dark:text-white hover:underline truncate block"
-                >
-                  {cardName}
-                </a>
-              ) : (
-                <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-                  {cardName}
-                </p>
-              )}
-              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{cardEmail}</p>
-            </div>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                {entityHref ? (
-                  <a
-                    href={entityHref}
-                    className="shrink-0 p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"
-                    aria-label="Open profile"
-                  >
-                    <span className="material-symbols-outlined text-[20px]" aria-hidden="true">open_in_new</span>
-                  </a>
-                ) : (
-                  <a
-                    href={addLeadHref}
-                    className="shrink-0 p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"
-                    aria-label="Add as lead"
-                  >
-                    <span className="material-symbols-outlined text-[20px]" aria-hidden="true">person_add</span>
-                  </a>
-                )}
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs">
-                {entityHref ? 'Open profile' : 'Add as lead'}
-              </TooltipContent>
-            </Tooltip>
-          </div>
-
-          {/* Actions — primary CTA + icon buttons */}
-          <div className="flex items-center gap-1.5 px-4 pb-3">
-            <a
-              href={`/email/compose?to=${encodeURIComponent(cardEmail)}`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-xs font-medium rounded hover:bg-[#0e6ac7] transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-            >
-              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">mail</span>{' '}
-              Send Email
-            </a>
-
-            <div className="flex items-center gap-0.5 ml-auto">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <a
-                    href={entityHref ? `${entityHref}?tab=deals&action=new` : `/deals/new?email=${encodeURIComponent(email)}&name=${encodeURIComponent(displayName || '')}`}
-                    className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"
-                    aria-label="New deal"
-                  >
-                    <span className="material-symbols-outlined text-[20px]" aria-hidden="true">handshake</span>
-                  </a>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-xs">New deal</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={handleOpenTaskSheet}
-                    className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"
-                    aria-label="Add task"
-                  >
-                    <span className="material-symbols-outlined text-[20px]" aria-hidden="true">add_task</span>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-xs">Add task</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <a
-                    href={entityHref ? `${entityHref}?tab=activities&action=schedule` : `/calendar/new?email=${encodeURIComponent(email)}&name=${encodeURIComponent(displayName || '')}`}
-                    className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"
-                    aria-label="Schedule meeting"
-                  >
-                    <span className="material-symbols-outlined text-[20px]" aria-hidden="true">calendar_month</span>
-                  </a>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-xs">Schedule meeting</TooltipContent>
-              </Tooltip>
-              <DropdownMenu>
+          {/* Defensive wrapper: stop all events from leaking through the portal to underlying elements (e.g. table rows) */}
+          <div
+            role="none"
+            onPointerDown={stopAllPropagation}
+            onPointerUp={stopAllPropagation}
+            onClick={stopAllPropagation}
+            onMouseDown={stopAllPropagation}
+            onMouseUp={stopAllPropagation}
+            onKeyDown={stopAllPropagation}
+          >
+            <TooltipProvider delayDuration={400}>
+              {/* Header — horizontal layout like Gmail/Outlook */}
+              <div className="flex items-center gap-3 px-4 pt-4 pb-3">
+                <AppAvatar
+                  name={cardName}
+                  src={entity?.avatarUrl}
+                  className="h-10 w-10 text-sm shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  {entityHref ? (
+                    <a
+                      href={entityHref}
+                      className="text-sm font-semibold text-slate-900 dark:text-white hover:underline truncate block"
+                    >
+                      {cardName}
+                    </a>
+                  ) : (
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                      {cardName}
+                    </p>
+                  )}
+                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{cardEmail}</p>
+                </div>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
+                    {entityHref ? (
+                      <a
+                        href={entityHref}
+                        className="shrink-0 p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"
+                        aria-label="Open profile"
+                      >
+                        <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                          open_in_new
+                        </span>
+                      </a>
+                    ) : (
+                      <a
+                        href={addLeadHref}
+                        className="shrink-0 p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"
+                        aria-label="Add as lead"
+                      >
+                        <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                          person_add
+                        </span>
+                      </a>
+                    )}
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">
+                    {entityHref ? 'Open profile' : 'Add as lead'}
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+
+              {/* Actions — primary CTA + icon buttons */}
+              <div className="flex items-center gap-1.5 px-4 pb-3">
+                <a
+                  href={`/email/compose?to=${encodeURIComponent(cardEmail)}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-xs font-medium rounded hover:bg-[#0e6ac7] transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                >
+                  <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                    mail
+                  </span>{' '}
+                  Send Email
+                </a>
+
+                <div className="flex items-center gap-0.5 ml-auto">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <a
+                        href={
+                          entityHref
+                            ? `${entityHref}?tab=deals&action=new`
+                            : `/deals/new?email=${encodeURIComponent(email)}&name=${encodeURIComponent(displayName || '')}`
+                        }
+                        className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"
+                        aria-label="New deal"
+                      >
+                        <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                          handshake
+                        </span>
+                      </a>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-xs">
+                      New deal
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
                       <button
                         type="button"
-                        className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors cursor-pointer"
-                        aria-label="More actions"
+                        onClick={handleOpenTaskSheet}
+                        className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"
+                        aria-label="Add task"
                       >
-                        <span className="material-symbols-outlined text-[20px]" aria-hidden="true">more_horiz</span>
+                        <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                          add_task
+                        </span>
                       </button>
-                    </DropdownMenuTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="text-xs">More actions</TooltipContent>
-                </Tooltip>
-                <DropdownMenuContent align="end" className="w-48">
-                  {entity && (
-                    <DropdownMenuItem onSelect={togglePin}>
-                      <span className="material-symbols-outlined text-[16px] mr-2" aria-hidden="true">
-                        {isPinned ? 'push_pin' : 'push_pin'}
-                      </span>
-                      {isPinned ? 'Unpin from Home' : 'Pin to Home'}
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem asChild>
-                    <a href={`/email/compose?to=${encodeURIComponent(cardEmail)}`}>
-                      <span className="material-symbols-outlined text-[16px] mr-2" aria-hidden="true">forward_to_inbox</span>{' '}
-                      Send Message
-                    </a>
-                  </DropdownMenuItem>
-                  {entity?.phone && (
-                    <DropdownMenuItem asChild>
-                      <a href={`tel:${entity.phone}`}>
-                        <span className="material-symbols-outlined text-[16px] mr-2" aria-hidden="true">call</span>
-                        Call {entity.phone}
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-xs">
+                      Add task
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <a
+                        href={
+                          entityHref
+                            ? `${entityHref}?tab=activities&action=schedule`
+                            : `/calendar/new?email=${encodeURIComponent(email)}&name=${encodeURIComponent(displayName || '')}`
+                        }
+                        className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"
+                        aria-label="Schedule meeting"
+                      >
+                        <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                          calendar_month
+                        </span>
                       </a>
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-xs">
+                      Schedule meeting
+                    </TooltipContent>
+                  </Tooltip>
+                  <DropdownMenu>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors cursor-pointer"
+                            aria-label="More actions"
+                          >
+                            <span
+                              className="material-symbols-outlined text-[20px]"
+                              aria-hidden="true"
+                            >
+                              more_horiz
+                            </span>
+                          </button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="text-xs">
+                        More actions
+                      </TooltipContent>
+                    </Tooltip>
+                    <DropdownMenuContent align="end" className="w-48">
+                      {entity && (
+                        <DropdownMenuItem onSelect={togglePin}>
+                          <span
+                            className="material-symbols-outlined text-[16px] mr-2"
+                            aria-hidden="true"
+                          >
+                            {isPinned ? 'push_pin' : 'push_pin'}
+                          </span>
+                          {isPinned ? 'Unpin from Home' : 'Pin to Home'}
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem asChild>
+                        <a href={`/email/compose?to=${encodeURIComponent(cardEmail)}`}>
+                          <span
+                            className="material-symbols-outlined text-[16px] mr-2"
+                            aria-hidden="true"
+                          >
+                            forward_to_inbox
+                          </span>{' '}
+                          Send Message
+                        </a>
+                      </DropdownMenuItem>
+                      {entity?.phone && (
+                        <DropdownMenuItem asChild>
+                          <a href={`tel:${entity.phone}`}>
+                            <span
+                              className="material-symbols-outlined text-[16px] mr-2"
+                              aria-hidden="true"
+                            >
+                              call
+                            </span>
+                            Call {entity.phone}
+                          </a>
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
 
-          {/* "Open detailed view" link */}
-          {entityHref && (
-            <div className="px-4 pb-3">
-              <a
-                href={entityHref}
-                className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-0.5"
-              >
-                Open detailed view{' '}
-                <span className="material-symbols-outlined text-xs" aria-hidden="true">arrow_outward</span>
-              </a>
-            </div>
-          )}
+              {/* "Open detailed view" link */}
+              {entityHref && (
+                <div className="px-4 pb-3">
+                  <a
+                    href={entityHref}
+                    className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-0.5"
+                  >
+                    Open detailed view{' '}
+                    <span className="material-symbols-outlined text-xs" aria-hidden="true">
+                      arrow_outward
+                    </span>
+                  </a>
+                </div>
+              )}
 
-          {/* Related messages */}
-          <div className="border-t border-slate-200 dark:border-slate-800 px-4 py-2.5">
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wide font-medium mb-1.5">
-              Related Messages
-            </p>
-            <RelatedMessagesList
-              isLoading={messagesQuery.isLoading}
-              shouldFetch={shouldFetch}
-              messages={messages}
-              currentFolder={currentFolder}
-            />
+              {/* Related messages */}
+              <div className="border-t border-slate-200 dark:border-slate-800 px-4 py-2.5">
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wide font-medium mb-1.5">
+                  Related Messages
+                </p>
+                <RelatedMessagesList
+                  isLoading={messagesQuery.isLoading}
+                  shouldFetch={shouldFetch}
+                  messages={messages}
+                  currentFolder={currentFolder}
+                />
+              </div>
+            </TooltipProvider>
           </div>
-        </TooltipProvider>
-        </div>
         </HoverCardContent>
       </HoverCard>
 

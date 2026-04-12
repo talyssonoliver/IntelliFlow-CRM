@@ -88,10 +88,7 @@ export default function HelpCenterArticlePage() {
                           {related.excerpt}
                         </p>
                         <div className="flex items-center gap-1 text-xs text-muted-foreground mt-3">
-                          <span
-                            className="material-symbols-outlined text-xs"
-                            aria-hidden="true"
-                          >
+                          <span className="material-symbols-outlined text-xs" aria-hidden="true">
                             schedule
                           </span>
                           {related.readTimeMinutes} min read

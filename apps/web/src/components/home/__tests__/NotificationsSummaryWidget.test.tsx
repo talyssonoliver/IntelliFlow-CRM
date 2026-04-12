@@ -73,10 +73,7 @@ vi.mock('@/components/notifications', () => ({
       >
         mark read
       </button>
-      <button
-        data-testid={`dismiss-${notification.id}`}
-        onClick={() => onDismiss(notification.id)}
-      >
+      <button data-testid={`dismiss-${notification.id}`} onClick={() => onDismiss(notification.id)}>
         dismiss
       </button>
     </div>
@@ -86,10 +83,7 @@ vi.mock('@/components/notifications', () => ({
 
 // Mock next/link
 vi.mock('next/link', () => ({
-  default: ({
-    children,
-    href,
-  }: Readonly<{ children: React.ReactNode; href: string }>) => (
+  default: ({ children, href }: Readonly<{ children: React.ReactNode; href: string }>) => (
     <a href={href}>{children}</a>
   ),
 }));

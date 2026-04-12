@@ -20,9 +20,9 @@ export function useActivityReactions(
   currentUserId?: string
 ) {
   // Local optimistic state
-  const [optimisticReactions, setOptimisticReactions] = useState<
-    Record<string, ReactionGroup[]>
-  >({});
+  const [optimisticReactions, setOptimisticReactions] = useState<Record<string, ReactionGroup[]>>(
+    {}
+  );
 
   const utils = api.useUtils();
 

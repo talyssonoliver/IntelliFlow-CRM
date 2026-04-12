@@ -84,9 +84,7 @@ describe('help-articles data module', () => {
   describe('getRelatedArticles', () => {
     it('returns max 3 articles, excludes self', () => {
       // Find an article with relatedArticleIds
-      const articleWithRelated = DEFAULT_HELP_ARTICLES.find(
-        (a) => a.relatedArticleIds.length > 0
-      );
+      const articleWithRelated = DEFAULT_HELP_ARTICLES.find((a) => a.relatedArticleIds.length > 0);
       if (!articleWithRelated) {
         // Skip if no articles have related — but the data should include some
         expect(articleWithRelated).toBeDefined();

@@ -16,14 +16,40 @@ vi.mock('@/lib/trpc', () => ({
             globalEnabled: true,
             defaultChannels: ['in_app', 'email'],
             emailDigest: { enabled: false, frequency: 'daily', time: '09:00' },
-            quietHours: { enabled: true, start: '22:00', end: '08:00', timezone: 'UTC', daysOfWeek: [1, 2, 3, 4, 5] },
+            quietHours: {
+              enabled: true,
+              start: '22:00',
+              end: '08:00',
+              timezone: 'UTC',
+              daysOfWeek: [1, 2, 3, 4, 5],
+            },
             preferences: [
-              { type: 'task_assigned', enabled: true, channels: ['in_app', 'email', 'push'], frequency: 'instant' },
+              {
+                type: 'task_assigned',
+                enabled: true,
+                channels: ['in_app', 'email', 'push'],
+                frequency: 'instant',
+              },
               { type: 'task_due_soon', enabled: true, channels: ['in_app'], frequency: 'instant' },
-              { type: 'deal_stage_changed', enabled: true, channels: ['in_app'], frequency: 'instant' },
-              { type: 'lead_assigned', enabled: true, channels: ['in_app', 'email'], frequency: 'instant' },
+              {
+                type: 'deal_stage_changed',
+                enabled: true,
+                channels: ['in_app'],
+                frequency: 'instant',
+              },
+              {
+                type: 'lead_assigned',
+                enabled: true,
+                channels: ['in_app', 'email'],
+                frequency: 'instant',
+              },
               { type: 'ai_insight', enabled: true, channels: ['in_app'], frequency: 'instant' },
-              { type: 'system_alert', enabled: true, channels: ['in_app', 'email', 'push', 'sms'], frequency: 'instant' },
+              {
+                type: 'system_alert',
+                enabled: true,
+                channels: ['in_app', 'email', 'push', 'sms'],
+                frequency: 'instant',
+              },
             ],
           },
           isLoading: false,
@@ -62,11 +88,21 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 }));
 
 vi.mock('@/components/shared', () => ({
-  PageHeader: ({ title, breadcrumbs, description }: { title: string; breadcrumbs?: Array<{ label: string }>; description?: string }) => (
+  PageHeader: ({
+    title,
+    breadcrumbs,
+    description,
+  }: {
+    title: string;
+    breadcrumbs?: Array<{ label: string }>;
+    description?: string;
+  }) => (
     <div data-testid="page-header">
       <h1>{title}</h1>
       {description && <p>{description}</p>}
-      {breadcrumbs?.map((b) => <span key={b.label}>{b.label}</span>)}
+      {breadcrumbs?.map((b) => (
+        <span key={b.label}>{b.label}</span>
+      ))}
     </div>
   ),
 }));
@@ -85,14 +121,35 @@ function setQueryReturn(overrides: Record<string, unknown>) {
       globalEnabled: true,
       defaultChannels: ['in_app', 'email'],
       emailDigest: { enabled: false, frequency: 'daily', time: '09:00' },
-      quietHours: { enabled: true, start: '22:00', end: '08:00', timezone: 'UTC', daysOfWeek: [1, 2, 3, 4, 5] },
+      quietHours: {
+        enabled: true,
+        start: '22:00',
+        end: '08:00',
+        timezone: 'UTC',
+        daysOfWeek: [1, 2, 3, 4, 5],
+      },
       preferences: [
-        { type: 'task_assigned', enabled: true, channels: ['in_app', 'email', 'push'], frequency: 'instant' },
+        {
+          type: 'task_assigned',
+          enabled: true,
+          channels: ['in_app', 'email', 'push'],
+          frequency: 'instant',
+        },
         { type: 'task_due_soon', enabled: true, channels: ['in_app'], frequency: 'instant' },
         { type: 'deal_stage_changed', enabled: true, channels: ['in_app'], frequency: 'instant' },
-        { type: 'lead_assigned', enabled: true, channels: ['in_app', 'email'], frequency: 'instant' },
+        {
+          type: 'lead_assigned',
+          enabled: true,
+          channels: ['in_app', 'email'],
+          frequency: 'instant',
+        },
         { type: 'ai_insight', enabled: true, channels: ['in_app'], frequency: 'instant' },
-        { type: 'system_alert', enabled: true, channels: ['in_app', 'email', 'push', 'sms'], frequency: 'instant' },
+        {
+          type: 'system_alert',
+          enabled: true,
+          channels: ['in_app', 'email', 'push', 'sms'],
+          frequency: 'instant',
+        },
       ],
     },
     isLoading: false,
@@ -189,7 +246,7 @@ describe('NotificationSettingsPage (Hub)', () => {
     const checkbox = screen.getByRole('checkbox', { name: /tasks & deadlines sms/i });
     fireEvent.click(checkbox);
     expect(mockMutate).toHaveBeenCalledWith(
-      expect.objectContaining({ preferences: expect.any(Array) }),
+      expect.objectContaining({ preferences: expect.any(Array) })
     );
   });
 
@@ -199,7 +256,7 @@ describe('NotificationSettingsPage (Hub)', () => {
     const checkbox = screen.getByRole('checkbox', { name: /task assigned sms/i });
     fireEvent.click(checkbox);
     expect(mockMutate).toHaveBeenCalledWith(
-      expect.objectContaining({ preferences: expect.any(Array) }),
+      expect.objectContaining({ preferences: expect.any(Array) })
     );
   });
 
@@ -219,12 +276,12 @@ describe('NotificationSettingsPage (Hub)', () => {
 
   it('save success shows toast', () => {
     let capturedOnSuccess: (() => void) | undefined;
-    (trpc.notifications.updatePreferences.useMutation as ReturnType<typeof vi.fn>).mockImplementation(
-      (opts?: { onSuccess?: () => void }) => {
-        capturedOnSuccess = opts?.onSuccess;
-        return { mutate: mockMutate, isPending: false };
-      }
-    );
+    (
+      trpc.notifications.updatePreferences.useMutation as ReturnType<typeof vi.fn>
+    ).mockImplementation((opts?: { onSuccess?: () => void }) => {
+      capturedOnSuccess = opts?.onSuccess;
+      return { mutate: mockMutate, isPending: false };
+    });
     renderPage();
     if (capturedOnSuccess) capturedOnSuccess();
     expect(toast).toHaveBeenCalled();

@@ -10,10 +10,7 @@ export default function QuietHoursPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        breadcrumbs={[
-          { label: 'Notifications', href: '/notifications' },
-          { label: 'Quiet Hours' },
-        ]}
+        breadcrumbs={[{ label: 'Notifications', href: '/notifications' }, { label: 'Quiet Hours' }]}
         title="Quiet Hours"
       />
       <QuietHoursScheduler />

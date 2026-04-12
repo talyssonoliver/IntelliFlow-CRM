@@ -3,7 +3,14 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { EmptyState, Popover, PopoverContent, PopoverTrigger, ScrollArea, Skeleton } from '@intelliflow/ui';
+import {
+  EmptyState,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  ScrollArea,
+  Skeleton,
+} from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useNotificationSubscription } from './hooks/useNotificationSubscription';
@@ -142,40 +149,41 @@ export function NotificationBell() {
         <ScrollArea className="max-h-80">
           {(() => {
             if (isLoading) return <NotificationBellSkeleton />;
-            if (recentNotifications.length === 0) return <EmptyState entity="notifications" phase="passive" className="py-2" />;
+            if (recentNotifications.length === 0)
+              return <EmptyState entity="notifications" phase="passive" className="py-2" />;
             return (
-            <div className="divide-y divide-slate-100 dark:divide-slate-700">
-              {recentNotifications.map((n) => {
-                const typeConfig = getTypeConfig(n.type);
-                return (
-                  <button
-                    key={n.id}
-                    type="button"
-                    onClick={() => handleNotificationClick(n)}
-                    className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-100 dark:hover:bg-slate-700 ${n.isRead ? '' : 'bg-slate-50/50 dark:bg-slate-800/50'}`}
-                  >
-                    <div
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${typeConfig.bgColor} ${typeConfig.iconColor}`}
+              <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                {recentNotifications.map((n) => {
+                  const typeConfig = getTypeConfig(n.type);
+                  return (
+                    <button
+                      key={n.id}
+                      type="button"
+                      onClick={() => handleNotificationClick(n)}
+                      className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-100 dark:hover:bg-slate-700 ${n.isRead ? '' : 'bg-slate-50/50 dark:bg-slate-800/50'}`}
                     >
-                      <span className="material-symbols-outlined text-sm">{typeConfig.icon}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className={`text-sm ${n.isRead ? 'font-medium' : 'font-semibold'} text-slate-900 dark:text-white truncate`}
+                      <div
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${typeConfig.bgColor} ${typeConfig.iconColor}`}
                       >
-                        {n.title}
-                      </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {formatRelativeTime(n.createdAt)}
-                      </p>
-                    </div>
-                    {!n.isRead && (
-                      <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+                        <span className="material-symbols-outlined text-sm">{typeConfig.icon}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className={`text-sm ${n.isRead ? 'font-medium' : 'font-semibold'} text-slate-900 dark:text-white truncate`}
+                        >
+                          {n.title}
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {formatRelativeTime(n.createdAt)}
+                        </p>
+                      </div>
+                      {!n.isRead && (
+                        <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             );
           })()}
         </ScrollArea>

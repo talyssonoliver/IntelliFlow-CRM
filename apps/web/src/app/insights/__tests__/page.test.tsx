@@ -177,7 +177,9 @@ describe('Insights Page', () => {
     await importAndRender();
 
     const links = screen.getAllByRole('link');
-    const dealLink = links.find((l) => l.getAttribute('href') === '/deals/opp-1?insightId=deal-risk-1');
+    const dealLink = links.find(
+      (l) => l.getAttribute('href') === '/deals/opp-1?insightId=deal-risk-1'
+    );
     expect(dealLink).toBeDefined();
   });
 

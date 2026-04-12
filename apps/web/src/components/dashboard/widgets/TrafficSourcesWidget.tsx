@@ -39,8 +39,7 @@ export function TrafficSourcesWidget(_props: Readonly<WidgetProps>) {
   return (
     <div className="p-5 h-full flex flex-col">
       <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-        <span className="material-symbols-outlined text-slate-400">pie_chart</span>{' '}
-        Traffic Sources
+        <span className="material-symbols-outlined text-slate-400">pie_chart</span> Traffic Sources
       </h3>
 
       {/* Simple donut representation */}

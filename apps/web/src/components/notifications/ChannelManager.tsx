@@ -25,12 +25,34 @@ interface ChannelManagerProps {
   className?: string;
 }
 
-const CHANNEL_META: Record<string, { label: string; icon: string; description: string; badge?: string }> = {
-  in_app: { label: 'In-App', icon: 'notifications', description: 'Notifications shown within the application' },
+const CHANNEL_META: Record<
+  string,
+  { label: string; icon: string; description: string; badge?: string }
+> = {
+  in_app: {
+    label: 'In-App',
+    icon: 'notifications',
+    description: 'Notifications shown within the application',
+  },
   email: { label: 'Email', icon: 'mail', description: 'Email notifications and digest' },
-  sms: { label: 'SMS', icon: 'message', description: 'Text message notifications', badge: 'Requires SMS provider configuration' },
-  push: { label: 'Push', icon: 'smartphone', description: 'Push notifications to devices', badge: 'Requires push notification setup' },
-  webhook: { label: 'Webhook', icon: 'webhook', description: 'Webhook delivery to external systems', badge: 'Configure webhook endpoints in Developer Settings' },
+  sms: {
+    label: 'SMS',
+    icon: 'message',
+    description: 'Text message notifications',
+    badge: 'Requires SMS provider configuration',
+  },
+  push: {
+    label: 'Push',
+    icon: 'smartphone',
+    description: 'Push notifications to devices',
+    badge: 'Requires push notification setup',
+  },
+  webhook: {
+    label: 'Webhook',
+    icon: 'webhook',
+    description: 'Webhook delivery to external systems',
+    badge: 'Configure webhook endpoints in Developer Settings',
+  },
 };
 
 export function ChannelManager({ className }: ChannelManagerProps) {
@@ -40,15 +62,24 @@ export function ChannelManager({ className }: ChannelManagerProps) {
   const mutation = trpc.notifications.updatePreferences.useMutation({
     onSuccess: () => {
       utils.notifications.getPreferences.invalidate();
-      toast({ title: 'Channels updated', description: 'Your notification channel preferences have been saved.' });
+      toast({
+        title: 'Channels updated',
+        description: 'Your notification channel preferences have been saved.',
+      });
     },
     onError: (err: { message: string }) => {
       toast({ title: 'Failed to save', description: err.message, variant: 'destructive' });
     },
   });
 
-  const [defaultChannels, setDefaultChannels] = useState<typeof NOTIFICATION_CHANNELS[number][]>([]);
-  const [emailDigest, setEmailDigest] = useState<{ enabled: boolean; frequency: 'daily' | 'weekly'; time: string }>({ enabled: false, frequency: 'daily', time: '09:00' });
+  const [defaultChannels, setDefaultChannels] = useState<(typeof NOTIFICATION_CHANNELS)[number][]>(
+    []
+  );
+  const [emailDigest, setEmailDigest] = useState<{
+    enabled: boolean;
+    frequency: 'daily' | 'weekly';
+    time: string;
+  }>({ enabled: false, frequency: 'daily', time: '09:00' });
 
   useEffect(() => {
     if (data) {
@@ -82,7 +113,7 @@ export function ChannelManager({ className }: ChannelManagerProps) {
     );
   }
 
-  const toggleChannel = (channel: typeof NOTIFICATION_CHANNELS[number]) => {
+  const toggleChannel = (channel: (typeof NOTIFICATION_CHANNELS)[number]) => {
     if (channel === 'in_app') return; // Cannot disable in-app
     setDefaultChannels((prev) =>
       prev.includes(channel) ? prev.filter((c) => c !== channel) : [...prev, channel]
@@ -97,7 +128,11 @@ export function ChannelManager({ className }: ChannelManagerProps) {
     <div className={className}>
       <div className="space-y-4">
         {NOTIFICATION_CHANNELS.map((channel) => {
-          const meta = CHANNEL_META[channel] || { label: channel, icon: 'settings', description: '' };
+          const meta = CHANNEL_META[channel] || {
+            label: channel,
+            icon: 'settings',
+            description: '',
+          };
           const isEnabled = defaultChannels.includes(channel);
           const isInApp = channel === 'in_app';
 
@@ -105,7 +140,9 @@ export function ChannelManager({ className }: ChannelManagerProps) {
             <Card key={channel}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-muted-foreground">{meta.icon}</span>
+                  <span className="material-symbols-outlined text-muted-foreground">
+                    {meta.icon}
+                  </span>
                   <div>
                     <h3 className="font-semibold">{meta.label}</h3>
                     <p className="text-sm text-muted-foreground">{meta.description}</p>
@@ -131,7 +168,9 @@ export function ChannelManager({ className }: ChannelManagerProps) {
                         <Switch
                           id="digest-enabled"
                           checked={emailDigest.enabled}
-                          onCheckedChange={(checked) => setEmailDigest((prev) => ({ ...prev, enabled: checked }))}
+                          onCheckedChange={(checked) =>
+                            setEmailDigest((prev) => ({ ...prev, enabled: checked }))
+                          }
                           aria-label="Email digest enabled"
                         />
                       </div>
@@ -141,7 +180,12 @@ export function ChannelManager({ className }: ChannelManagerProps) {
                             <Label htmlFor="digest-frequency">Frequency</Label>
                             <Select
                               value={emailDigest.frequency}
-                              onValueChange={(val) => setEmailDigest((prev) => ({ ...prev, frequency: val as 'daily' | 'weekly' }))}
+                              onValueChange={(val) =>
+                                setEmailDigest((prev) => ({
+                                  ...prev,
+                                  frequency: val as 'daily' | 'weekly',
+                                }))
+                              }
                             >
                               <SelectTrigger id="digest-frequency" className="w-32">
                                 <SelectValue />
@@ -158,7 +202,9 @@ export function ChannelManager({ className }: ChannelManagerProps) {
                               id="digest-time"
                               type="time"
                               value={emailDigest.time}
-                              onChange={(e) => setEmailDigest((prev) => ({ ...prev, time: e.target.value }))}
+                              onChange={(e) =>
+                                setEmailDigest((prev) => ({ ...prev, time: e.target.value }))
+                              }
                               className="w-32"
                             />
                           </div>

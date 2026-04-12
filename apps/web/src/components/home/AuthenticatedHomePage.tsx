@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, lazy, Suspense } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
@@ -44,15 +44,23 @@ import {
   trackPinnedNavSettingsOpened,
 } from '@/lib/analytics';
 import {
-  EditQuickActionsSheet,
   ALL_QUICK_ACTIONS,
   loadEnabledActions,
-  EditPinnedNavigationSheet,
   ALL_PINNED_NAV_GROUPS,
   loadPinnedGroups,
 } from './PinnedItemsSheet';
-import { GoalSettingsModal } from './GoalSettingsModal';
 import { InsightCard, type SerializedAIInsight } from '@/components/insights/InsightCard';
+
+// Lazy-load heavy modals/sheets — only needed on user click (PG-166 TTI optimization)
+const EditQuickActionsSheet = lazy(() =>
+  import('./PinnedItemsSheet').then((m) => ({ default: m.EditQuickActionsSheet }))
+);
+const EditPinnedNavigationSheet = lazy(() =>
+  import('./PinnedItemsSheet').then((m) => ({ default: m.EditPinnedNavigationSheet }))
+);
+const GoalSettingsModal = lazy(() =>
+  import('./GoalSettingsModal').then((m) => ({ default: m.GoalSettingsModal }))
+);
 
 // =============================================================================
 // Types (inferred from tRPC to handle date serialization)
@@ -235,9 +243,7 @@ function InsightsSection({ isLoading, insights, onInsightClick }: Readonly<Insig
   }
 
   if (!insights || insights.length === 0) {
-    return (
-      <EmptyState entity="insights" phase="passive" className="py-4" />
-    );
+    return <EmptyState entity="insights" phase="passive" className="py-4" />;
   }
 
   return (
@@ -265,9 +271,11 @@ function GoalSection({ isLoading, goal }: Readonly<GoalSectionProps>) {
   return (
     <>
       <div className="relative w-32 h-32 mx-auto mb-4">
+        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- SVG element; role="img" is the correct ARIA pattern for SVG used as an image */}
         <svg
           className="size-full -rotate-90"
           viewBox="0 0 36 36"
+          role="img"
           aria-labelledby="goal-progress-title"
         >
           <title id="goal-progress-title">{`${progress}% of ${goal?.label || 'goal'} target reached`}</title>
@@ -295,7 +303,7 @@ function GoalSection({ isLoading, goal }: Readonly<GoalSectionProps>) {
         </div>
       </div>
       <p className="text-sm text-center text-slate-600 dark:text-slate-400">
-        You need{' '}<span className="font-bold text-slate-900 dark:text-white">{remaining}</span>{' '}more
+        You need <span className="font-bold text-slate-900 dark:text-white">{remaining}</span> more
         to hit today&apos;s target.
       </p>
     </>
@@ -346,9 +354,7 @@ function PinnedSection({
   }
 
   if (!items || items.length === 0) {
-    return (
-      <EmptyState entity="pinned" phase="passive" className="py-4" />
-    );
+    return <EmptyState entity="pinned" phase="passive" className="py-4" />;
   }
 
   return (
@@ -558,9 +564,7 @@ export function AuthenticatedHomePage() {
                   >
                     auto_awesome
                   </span>
-                  <h2 className="font-bold text-slate-800 dark:text-slate-100">
-                    Insights
-                  </h2>
+                  <h2 className="font-bold text-slate-800 dark:text-slate-100">Insights</h2>
                 </div>
                 <Link
                   href="/agent-approvals/insights"
@@ -571,7 +575,11 @@ export function AuthenticatedHomePage() {
                 </Link>
               </div>
               <div className="p-4 grid gap-4">
-                <InsightsSection isLoading={insightsLoading} insights={insightsData?.insights} onInsightClick={handleInsightClick} />
+                <InsightsSection
+                  isLoading={insightsLoading}
+                  insights={insightsData?.insights}
+                  onInsightClick={handleInsightClick}
+                />
               </div>
             </div>
 
@@ -580,7 +588,10 @@ export function AuthenticatedHomePage() {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="font-bold text-slate-900 dark:text-white">Quick Actions</h2>
                 <button
-                  onClick={() => { trackQuickActionsSettingsOpened(); setIsQuickActionsSheetOpen(true); }}
+                  onClick={() => {
+                    trackQuickActionsSettingsOpened();
+                    setIsQuickActionsSheetOpen(true);
+                  }}
                   className="text-slate-400 hover:text-[#137fec] transition-colors"
                   aria-label="Edit quick actions"
                 >
@@ -651,7 +662,11 @@ export function AuthenticatedHomePage() {
                 <h2 className="font-bold text-slate-900 dark:text-white">Your Feed</h2>
                 <div className="flex items-center gap-2">
                   <ActivityFeedTypeFilter value={feedFilter} onChange={handleFeedFilterChange} />
-                  <Link href="/activity" onClick={() => trackFeedViewAllClick()} className="text-sm text-ds-primary hover:underline">
+                  <Link
+                    href="/activity"
+                    onClick={() => trackFeedViewAllClick()}
+                    className="text-sm text-ds-primary hover:underline"
+                  >
                     View All
                   </Link>
                 </div>
@@ -672,7 +687,10 @@ export function AuthenticatedHomePage() {
                     {goalData?.goal.label || 'Sales'}
                   </span>
                   <button
-                    onClick={() => { trackGoalSettingsOpened(); setIsGoalSettingsOpen(true); }}
+                    onClick={() => {
+                      trackGoalSettingsOpened();
+                      setIsGoalSettingsOpen(true);
+                    }}
                     className="text-slate-400 hover:text-[#137fec] transition-colors"
                     aria-label="Goal settings"
                     data-testid="goal-settings-button"
@@ -691,7 +709,10 @@ export function AuthenticatedHomePage() {
               <div className="flex justify-between items-center mb-3">
                 <h2 className="font-bold text-slate-900 dark:text-white">Pinned</h2>
                 <button
-                  onClick={() => { trackPinnedNavSettingsOpened(); setIsPinnedNavSheetOpen(true); }}
+                  onClick={() => {
+                    trackPinnedNavSettingsOpened();
+                    setIsPinnedNavSheetOpen(true);
+                  }}
                   className="text-slate-400 hover:text-[#137fec] transition-colors"
                   aria-label="Edit pinned navigation"
                 >
@@ -710,33 +731,30 @@ export function AuthenticatedHomePage() {
                 />
               </div>
             </div>
-
           </div>
         </div>
       </main>
 
-      {/* Edit Quick Actions Sheet */}
-      <EditQuickActionsSheet
-        open={isQuickActionsSheetOpen}
-        onOpenChange={setIsQuickActionsSheetOpen}
-        onSave={handleQuickActionsSave}
-      />
-
-      {/* Edit Pinned Navigation Sheet */}
-      <EditPinnedNavigationSheet
-        open={isPinnedNavSheetOpen}
-        onOpenChange={setIsPinnedNavSheetOpen}
-        onSave={handlePinnedNavSave}
-        pinnedItems={pinnedData?.items}
-        onUnpin={handleUnpin}
-      />
-
-      {/* Goal Settings Modal (IFC-195) */}
-      <GoalSettingsModal
-        open={isGoalSettingsOpen}
-        onOpenChange={setIsGoalSettingsOpen}
-        currentGoal={goalData?.goal}
-      />
+      {/* Lazy-loaded modals (PG-166 TTI optimization) */}
+      <Suspense fallback={null}>
+        <EditQuickActionsSheet
+          open={isQuickActionsSheetOpen}
+          onOpenChange={setIsQuickActionsSheetOpen}
+          onSave={handleQuickActionsSave}
+        />
+        <EditPinnedNavigationSheet
+          open={isPinnedNavSheetOpen}
+          onOpenChange={setIsPinnedNavSheetOpen}
+          onSave={handlePinnedNavSave}
+          pinnedItems={pinnedData?.items}
+          onUnpin={handleUnpin}
+        />
+        <GoalSettingsModal
+          open={isGoalSettingsOpen}
+          onOpenChange={setIsGoalSettingsOpen}
+          currentGoal={goalData?.goal}
+        />
+      </Suspense>
     </div>
   );
 }

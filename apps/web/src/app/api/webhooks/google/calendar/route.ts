@@ -37,7 +37,14 @@ export async function POST(request: Request): Promise<Response> {
 
   // Build headers map for adapter
   const headers: Record<string, string> = {};
-  for (const key of ['x-goog-channel-id', 'x-goog-resource-id', 'x-goog-resource-state', 'x-goog-resource-uri', 'x-goog-channel-token', 'x-goog-message-number']) {
+  for (const key of [
+    'x-goog-channel-id',
+    'x-goog-resource-id',
+    'x-goog-resource-state',
+    'x-goog-resource-uri',
+    'x-goog-channel-token',
+    'x-goog-message-number',
+  ]) {
     const val = request.headers.get(key);
     if (val) headers[key] = val;
   }

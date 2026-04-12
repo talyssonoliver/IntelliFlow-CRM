@@ -100,28 +100,31 @@ export function ModuleSettingsNav({
   return (
     <>
       {/* Backdrop layer 1 — sidebar area: 40% dim */}
-      {isOpen && createPortal(
-        <div
-          className={cn(
-            'fixed top-16 bottom-0 left-0 z-[31] backdrop-blur-[2px] transition-opacity duration-150 ease-out',
-            sidebarPinned ? 'w-60' : 'w-14',
-          )}
-          onClick={onClose}
-          onMouseEnter={() => sidebarCtx?.setHovered(false)}
-          aria-hidden="true"
-        />,
-        document.body,
-      )}
+      {isOpen &&
+        createPortal(
+          <div
+            className={cn(
+              'fixed top-16 bottom-0 left-0 z-[31] backdrop-blur-[2px] transition-opacity duration-150 ease-out',
+              sidebarPinned ? 'w-60' : 'w-14'
+            )}
+            onClick={onClose}
+            onMouseEnter={() => sidebarCtx?.setHovered(false)}
+            aria-hidden="true"
+          />,
+          document.body
+        )}
 
       {/* Backdrop layer 2 — page content: 80% dim + blur */}
-      {isOpen && targetEl && createPortal(
-        <div
-          className="absolute inset-0 z-20 backdrop-blur-lg transition-opacity duration-150 ease-out"
-          onClick={onClose}
-          aria-hidden="true"
-        />,
-        targetEl,
-      )}
+      {isOpen &&
+        targetEl &&
+        createPortal(
+          <div
+            className="absolute inset-0 z-20 backdrop-blur-lg transition-opacity duration-150 ease-out"
+            onClick={onClose}
+            aria-hidden="true"
+          />,
+          targetEl
+        )}
 
       {/* Navigation panel — slides in next to sidebar */}
       <aside
@@ -135,7 +138,7 @@ export function ModuleSettingsNav({
           'transition-[left,opacity] duration-200 ease-out',
           isOpen
             ? `${sidebarPinned ? 'left-60' : 'left-14'} opacity-100`
-            : 'left-0 opacity-0 pointer-events-none',
+            : 'left-0 opacity-0 pointer-events-none'
         )}
       >
         {/* Spacer pushes items to bottom */}
@@ -156,7 +159,7 @@ export function ModuleSettingsNav({
                   'transition-colors duration-100 ease-out',
                   isActive
                     ? 'bg-accent text-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                 )}
                 style={{
                   animationDelay: isOpen ? `${index * 30}ms` : undefined,
@@ -165,7 +168,7 @@ export function ModuleSettingsNav({
                 <span
                   className={cn(
                     'material-symbols-outlined text-lg mt-0.5 transition-colors duration-100',
-                    isActive ? 'text-primary' : 'group-hover:text-primary',
+                    isActive ? 'text-primary' : 'group-hover:text-primary'
                   )}
                   aria-hidden="true"
                 >
@@ -174,9 +177,7 @@ export function ModuleSettingsNav({
                 <div className="min-w-0">
                   <div className="font-medium truncate">{item.label}</div>
                   {item.description && (
-                    <div className="text-xs text-muted-foreground truncate">
-                      {item.description}
-                    </div>
+                    <div className="text-xs text-muted-foreground truncate">{item.description}</div>
                   )}
                 </div>
               </Link>

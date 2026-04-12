@@ -12,11 +12,7 @@
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
-import {
-  type ModuleId,
-  getRoutesForModules,
-  type NavRouteConfig,
-} from '@intelliflow/domain';
+import { type ModuleId, getRoutesForModules, type NavRouteConfig } from '@intelliflow/domain';
 
 export interface UseEnabledModulesResult {
   /** List of enabled module IDs in canonical order */

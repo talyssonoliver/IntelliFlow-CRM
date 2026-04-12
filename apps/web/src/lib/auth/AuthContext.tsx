@@ -96,7 +96,7 @@ export interface AuthSession {
 export interface MfaState {
   required: boolean;
   challengeId: string | null;
-  methods: (AuthMfaMethod)[];
+  methods: AuthMfaMethod[];
 }
 
 export interface AuthState {
@@ -157,6 +157,75 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 // ============================================
+// Auth State Helpers
+// ============================================
+
+function syncLocalStorageTokenToCookie(token: string): void {
+  if (isTokenUsable(token)) {
+    import('@/lib/shared/session-cleanup').then(({ syncTokenToCookie }) => {
+      syncTokenToCookie(token);
+    });
+  } else {
+    document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+  }
+}
+
+function debugLogLocalStorageToken(): void {
+  if (typeof globalThis.window === 'undefined') return;
+  const token = localStorage.getItem('accessToken');
+  console.log(
+    '[AuthContext] Token in localStorage:',
+    token ? `${token.substring(0, 20)}...` : 'null'
+  );
+  if (token) {
+    syncLocalStorageTokenToCookie(token);
+  }
+}
+
+type QueryStateResult =
+  | { handled: false }
+  | { handled: true; update: Partial<AuthState> };
+
+function resolveQueryStateUpdate(
+  statusQuery: {
+    isPending: boolean;
+    isFetching: boolean;
+    isSuccess: boolean;
+    isError: boolean;
+    data?: unknown;
+    error?: unknown;
+  }
+): QueryStateResult {
+  if (statusQuery.isPending || statusQuery.isFetching) {
+    return { handled: false };
+  }
+  if (statusQuery.isSuccess && statusQuery.data) {
+    const data = statusQuery.data as Record<string, unknown>;
+    if (data['authenticated'] && 'user' in data && data['user']) {
+      const expiresAt =
+        'expiresAt' in data && data['expiresAt']
+          ? { accessToken: '', expiresAt: new Date(data['expiresAt'] as string) }
+          : null;
+      return {
+        handled: true,
+        update: { user: data['user'] as AuthUser, isAuthenticated: true, isLoading: false, session: expiresAt },
+      };
+    }
+    return {
+      handled: true,
+      update: { user: null, isAuthenticated: false, isLoading: false },
+    };
+  }
+  if (statusQuery.isError) {
+    return {
+      handled: true,
+      update: { user: null, isAuthenticated: false, isLoading: false },
+    };
+  }
+  return { handled: false };
+}
+
+// ============================================
 // Provider
 // ============================================
 
@@ -173,7 +242,8 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
 
   // Check if we just logged out (prevents redirect loop)
   const isLoggedOutPage =
-    typeof globalThis.window !== 'undefined' && globalThis.location.search.includes('logged_out=true');
+    typeof globalThis.window !== 'undefined' &&
+    globalThis.location.search.includes('logged_out=true');
 
   // tRPC queries - skip fetching if we just logged out
   const statusQuery = trpc.auth.getStatus.useQuery(undefined, {
@@ -321,45 +391,17 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   // ==========================================
 
   useEffect(() => {
-    // Debug: Log token status on mount
-    if (typeof globalThis.window !== 'undefined') {
-      const token = localStorage.getItem('accessToken');
-      console.log(
-        '[AuthContext] Token in localStorage:',
-        token ? `${token.substring(0, 20)}...` : 'null'
-      );
-
-      // Sync token from localStorage to cookie for proxy access
-      if (token) {
-        if (isTokenUsable(token)) {
-          import('@/lib/shared/session-cleanup').then(({ syncTokenToCookie }) => {
-            syncTokenToCookie(token);
-          });
-        } else {
-          document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-        }
-      }
-    }
+    // Debug: Log token status on mount and sync to cookie for proxy access
+    debugLogLocalStorageToken();
 
     // If we just logged out, immediately set as not authenticated
     if (isLoggedOutPage) {
       console.log('[AuthContext] Logged out page detected, setting unauthenticated');
-      setState((prev) => ({
-        ...prev,
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-      }));
+      setState((prev) => ({ ...prev, user: null, isAuthenticated: false, isLoading: false }));
       return;
     }
 
     // IFC-007: Handle all query states to prevent stuck loading spinner
-    // Wait for query to finish (not pending/fetching)
-    if (statusQuery.isPending || statusQuery.isFetching) {
-      console.log('[AuthContext] Query still pending/fetching...');
-      return;
-    }
-
     console.log('[AuthContext] Query completed:', {
       isSuccess: statusQuery.isSuccess,
       isError: statusQuery.isError,
@@ -367,43 +409,21 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       error: statusQuery.error,
     });
 
-    if (statusQuery.isSuccess && statusQuery.data) {
-      const data = statusQuery.data;
-      if (data.authenticated && 'user' in data && data.user) {
-        console.log('[AuthContext] User authenticated:', data.user);
-        setState((prev) => ({
-          ...prev,
-          user: data.user as AuthUser,
-          isAuthenticated: true,
-          isLoading: false,
-          session:
-            'expiresAt' in data && data.expiresAt
-              ? {
-                  accessToken: '', // Not exposed in status
-                  expiresAt: new Date(data.expiresAt),
-                }
-              : null,
-        }));
-      } else {
-        // Not authenticated - user logged out or no valid token
-        console.log('[AuthContext] Not authenticated - data:', data);
-        setState((prev) => ({
-          ...prev,
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-        }));
-      }
-    } else if (statusQuery.isError) {
-      // Query failed - treat as not authenticated
-      console.error('[AuthContext] Query error:', statusQuery.error);
-      setState((prev) => ({
-        ...prev,
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-      }));
+    const result = resolveQueryStateUpdate(statusQuery);
+    if (!result.handled) {
+      console.log('[AuthContext] Query still pending/fetching...');
+      return;
     }
+
+    if (result.update.isAuthenticated) {
+      console.log('[AuthContext] User authenticated:', result.update.user);
+    } else if (statusQuery.isError) {
+      console.error('[AuthContext] Query error:', statusQuery.error);
+    } else {
+      console.log('[AuthContext] Not authenticated - data:', statusQuery.data);
+    }
+
+    setState((prev) => ({ ...prev, ...result.update }));
   }, [
     statusQuery.isPending,
     statusQuery.isFetching,
@@ -813,17 +833,30 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   // Context Value
   // ==========================================
 
-  const contextValue: AuthContextType = useMemo(() => ({
-    ...state,
-    login,
-    loginWithOAuth,
-    loginWithSso,
-    verifyMfa,
-    logout,
-    refreshSession,
-    clearError,
-    setMfaRequired,
-  }), [state, login, loginWithOAuth, loginWithSso, verifyMfa, logout, refreshSession, clearError, setMfaRequired]);
+  const contextValue: AuthContextType = useMemo(
+    () => ({
+      ...state,
+      login,
+      loginWithOAuth,
+      loginWithSso,
+      verifyMfa,
+      logout,
+      refreshSession,
+      clearError,
+      setMfaRequired,
+    }),
+    [
+      state,
+      login,
+      loginWithOAuth,
+      loginWithSso,
+      verifyMfa,
+      logout,
+      refreshSession,
+      clearError,
+      setMfaRequired,
+    ]
+  );
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 }
@@ -851,7 +884,8 @@ interface AuthRedirectFlags {
 }
 
 function readAuthRedirectFlags(hasOAuthParam: boolean): AuthRedirectFlags {
-  const hasLocalToken = typeof globalThis.window !== 'undefined' && !!localStorage.getItem('accessToken');
+  const hasLocalToken =
+    typeof globalThis.window !== 'undefined' && !!localStorage.getItem('accessToken');
   const lastRedirectTime =
     typeof globalThis.window === 'undefined' ? null : sessionStorage.getItem('auth_redirect_time');
   const isRecentRedirect = lastRedirectTime
@@ -859,7 +893,9 @@ function readAuthRedirectFlags(hasOAuthParam: boolean): AuthRedirectFlags {
     : null;
   const oauthLoginTime =
     typeof globalThis.window === 'undefined' ? null : sessionStorage.getItem('oauth_login_success');
-  const isRecentOAuthLogin = !!(oauthLoginTime && Date.now() - Number.parseInt(oauthLoginTime, 10) < 10000);
+  const isRecentOAuthLogin = !!(
+    oauthLoginTime && Date.now() - Number.parseInt(oauthLoginTime, 10) < 10000
+  );
   const isOAuthFlow = isRecentOAuthLogin || hasOAuthParam;
   return { hasLocalToken, isRecentRedirect, isRecentOAuthLogin, isOAuthFlow };
 }
@@ -951,12 +987,16 @@ export function useRequireAuth(): AuthContextType {
     }
 
     if (isOAuthFlow && hasLocalToken) {
-      console.log('[useRequireAuth] OAuth flow detected with token, waiting for auth to complete...');
+      console.log(
+        '[useRequireAuth] OAuth flow detected with token, waiting for auth to complete...'
+      );
       return;
     }
 
     if (hasLocalToken && !auth.isAuthenticated && !auth.isLoading) {
-      console.log('[useRequireAuth] Token present but auth failed; clearing token and redirecting to login');
+      console.log(
+        '[useRequireAuth] Token present but auth failed; clearing token and redirecting to login'
+      );
       clearExpiredToken();
       clearAuthSession();
       stampRedirectTime(hasRedirectedRef);
@@ -970,7 +1010,8 @@ export function useRequireAuth(): AuthContextType {
   }, [auth.isLoading, auth.isAuthenticated, auth.user, auth.error, router, hasOAuthParam]);
 
   // Check for recent OAuth login to extend loading state
-  const hasLocalToken = typeof globalThis.window !== 'undefined' && !!localStorage.getItem('accessToken');
+  const hasLocalToken =
+    typeof globalThis.window !== 'undefined' && !!localStorage.getItem('accessToken');
   const oauthLoginTime =
     typeof globalThis.window === 'undefined' ? null : sessionStorage.getItem('oauth_login_success');
   const isRecentOAuthLogin = !!(
@@ -1012,7 +1053,8 @@ export function useRedirectIfAuthenticated(redirectTo: string = '/dashboard'): A
   const hasRedirectedRef = useRef(false);
 
   // Check for token in localStorage
-  const hasLocalToken = typeof globalThis.window !== 'undefined' && !!localStorage.getItem('accessToken');
+  const hasLocalToken =
+    typeof globalThis.window !== 'undefined' && !!localStorage.getItem('accessToken');
 
   // Check for recent OAuth login - if set, we know auth should be valid
   const oauthLoginTime =

@@ -34,8 +34,8 @@ export const DEMO_APPS: DeveloperApp[] = [
       {
         id: 'key-001',
         name: 'Dashboard API Key',
-      key: 'ifc_live_a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2', // pragma: allowlist secret
-      maskedKey: maskApiKey('ifc_live_a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2'), // pragma: allowlist secret
+        key: 'ifc_live_a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2', // pragma: allowlist secret
+        maskedKey: maskApiKey('ifc_live_a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2'), // pragma: allowlist secret
         createdAt: '2026-01-15T10:05:00Z',
         lastUsed: '2026-02-22T14:30:00Z',
         scopes: ['read', 'write'],
@@ -43,8 +43,8 @@ export const DEMO_APPS: DeveloperApp[] = [
       {
         id: 'key-002',
         name: 'Analytics Key',
-      key: 'ifc_live_f6e5d4c3b2a1f6e5d4c3b2a1f6e5d4c3b2a1f6e5', // pragma: allowlist secret
-      maskedKey: maskApiKey('ifc_live_f6e5d4c3b2a1f6e5d4c3b2a1f6e5d4c3b2a1f6e5'), // pragma: allowlist secret
+        key: 'ifc_live_f6e5d4c3b2a1f6e5d4c3b2a1f6e5d4c3b2a1f6e5', // pragma: allowlist secret
+        maskedKey: maskApiKey('ifc_live_f6e5d4c3b2a1f6e5d4c3b2a1f6e5d4c3b2a1f6e5'), // pragma: allowlist secret
         createdAt: '2026-02-01T08:00:00Z',
         lastUsed: '2026-02-23T09:15:00Z',
         scopes: ['read'],
@@ -76,8 +76,8 @@ export const DEMO_APPS: DeveloperApp[] = [
       {
         id: 'key-003',
         name: 'Legacy Bridge Key',
-      key: 'ifc_live_1234567890abcdef1234567890abcdef12345678', // pragma: allowlist secret
-      maskedKey: maskApiKey('ifc_live_1234567890abcdef1234567890abcdef12345678'), // pragma: allowlist secret
+        key: 'ifc_live_1234567890abcdef1234567890abcdef12345678', // pragma: allowlist secret
+        maskedKey: maskApiKey('ifc_live_1234567890abcdef1234567890abcdef12345678'), // pragma: allowlist secret
         createdAt: '2025-11-01T12:05:00Z',
         lastUsed: '2026-01-10T11:00:00Z',
         scopes: ['read'],

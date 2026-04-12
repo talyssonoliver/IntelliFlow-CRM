@@ -26,31 +26,80 @@ import type {
 // ---------------------------------------------------------------------------
 
 vi.mock('@intelliflow/ui', () => ({
-  Card: ({ children, className, ...props }: Readonly<{ children: React.ReactNode; className?: string; [k: string]: unknown }>) => (
-    <div data-testid="card" className={className} {...props}>{children}</div>
+  Card: ({
+    children,
+    className,
+    ...props
+  }: Readonly<{ children: React.ReactNode; className?: string; [k: string]: unknown }>) => (
+    <div data-testid="card" className={className} {...props}>
+      {children}
+    </div>
   ),
-  CardContent: ({ children, className, ...props }: Readonly<{ children: React.ReactNode; className?: string; [k: string]: unknown }>) => (
-    <div className={className} {...props}>{children}</div>
+  CardContent: ({
+    children,
+    className,
+    ...props
+  }: Readonly<{ children: React.ReactNode; className?: string; [k: string]: unknown }>) => (
+    <div className={className} {...props}>
+      {children}
+    </div>
   ),
-  CardHeader: ({ children, className, ...props }: Readonly<{ children: React.ReactNode; className?: string; [k: string]: unknown }>) => (
-    <div className={className} {...props}>{children}</div>
+  CardHeader: ({
+    children,
+    className,
+    ...props
+  }: Readonly<{ children: React.ReactNode; className?: string; [k: string]: unknown }>) => (
+    <div className={className} {...props}>
+      {children}
+    </div>
   ),
-  CardTitle: ({ children, className, ...props }: Readonly<{ children: React.ReactNode; className?: string; [k: string]: unknown }>) => (
-    <h3 className={className} {...props}>{children}</h3>
+  CardTitle: ({
+    children,
+    className,
+    ...props
+  }: Readonly<{ children: React.ReactNode; className?: string; [k: string]: unknown }>) => (
+    <h3 className={className} {...props}>
+      {children}
+    </h3>
   ),
-  Button: ({ children, className, disabled, onClick, ...props }: Readonly<{ children: React.ReactNode; className?: string; disabled?: boolean; onClick?: () => void; [k: string]: unknown }>) => (
-    <button className={className} disabled={disabled} onClick={onClick} {...props}>{children}</button>
+  Button: ({
+    children,
+    className,
+    disabled,
+    onClick,
+    ...props
+  }: Readonly<{
+    children: React.ReactNode;
+    className?: string;
+    disabled?: boolean;
+    onClick?: () => void;
+    [k: string]: unknown;
+  }>) => (
+    <button className={className} disabled={disabled} onClick={onClick} {...props}>
+      {children}
+    </button>
   ),
   Skeleton: ({ className, ...props }: Readonly<{ className?: string; [k: string]: unknown }>) => (
     <div data-testid="skeleton" className={className} {...props} />
   ),
-  Badge: ({ children, className, ...props }: Readonly<{ children: React.ReactNode; className?: string; [k: string]: unknown }>) => (
-    <span data-testid="badge" className={className} {...props}>{children}</span>
+  Badge: ({
+    children,
+    className,
+    ...props
+  }: Readonly<{ children: React.ReactNode; className?: string; [k: string]: unknown }>) => (
+    <span data-testid="badge" className={className} {...props}>
+      {children}
+    </span>
   ),
   Tooltip: ({ children }: Readonly<{ children: React.ReactNode }>) => <>{children}</>,
-  TooltipContent: ({ children }: Readonly<{ children: React.ReactNode }>) => <span>{children}</span>,
+  TooltipContent: ({ children }: Readonly<{ children: React.ReactNode }>) => (
+    <span>{children}</span>
+  ),
   TooltipProvider: ({ children }: Readonly<{ children: React.ReactNode }>) => <>{children}</>,
-  TooltipTrigger: ({ children, asChild: _asChild }: Readonly<{ children: React.ReactNode; asChild?: boolean }>) => <>{children}</>,
+  TooltipTrigger: ({
+    children,
+    asChild: _asChild,
+  }: Readonly<{ children: React.ReactNode; asChild?: boolean }>) => <>{children}</>,
   cn: (...args: unknown[]) => args.filter(Boolean).join(' '),
 }));
 
@@ -68,7 +117,14 @@ function createMockQueueData(overrides?: Partial<QueueSchedulerData>): QueueSche
         name: 'ai-scoring' as SchedulerQueueName,
         isPaused: false,
         counts: { waiting: 5, active: 2, completed: 100, failed: 3, delayed: 1 },
-        schedulers: [{ id: 'sched-1', name: 'scheduled-lead-scoring', pattern: '0 */4 * * *', next: Date.now() + 3600000 }],
+        schedulers: [
+          {
+            id: 'sched-1',
+            name: 'scheduled-lead-scoring',
+            pattern: '0 */4 * * *',
+            next: Date.now() + 3600000,
+          },
+        ],
       },
       {
         name: 'ai-prediction' as SchedulerQueueName,
@@ -80,7 +136,14 @@ function createMockQueueData(overrides?: Partial<QueueSchedulerData>): QueueSche
         name: 'ai-insights' as SchedulerQueueName,
         isPaused: true,
         counts: { waiting: 10, active: 0, completed: 200, failed: 5, delayed: 2 },
-        schedulers: [{ id: 'sched-2', name: 'scheduled-insight-refresh', pattern: '0 */6 * * *', next: Date.now() + 7200000 }],
+        schedulers: [
+          {
+            id: 'sched-2',
+            name: 'scheduled-insight-refresh',
+            pattern: '0 */6 * * *',
+            next: Date.now() + 7200000,
+          },
+        ],
       },
     ],
     ...overrides,

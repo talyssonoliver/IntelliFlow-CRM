@@ -71,8 +71,7 @@ const columns: ColumnDef<DocumentRecord>[] = [
             )}
             {hasLegalHold && (
               <span className="inline-flex items-center gap-1 mt-1 text-xs text-amber-600 dark:text-amber-400">
-                <span className="material-symbols-outlined text-sm">shield</span>{' '}
-                Legal Hold
+                <span className="material-symbols-outlined text-sm">shield</span> Legal Hold
               </span>
             )}
           </div>

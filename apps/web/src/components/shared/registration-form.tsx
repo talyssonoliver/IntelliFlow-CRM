@@ -107,7 +107,10 @@ interface PasswordStrengthIndicatorProps {
   className?: string;
 }
 
-function PasswordStrengthIndicator({ password, className }: Readonly<PasswordStrengthIndicatorProps>) {
+function PasswordStrengthIndicator({
+  password,
+  className,
+}: Readonly<PasswordStrengthIndicatorProps>) {
   if (!password) return null;
 
   const { strength, feedback } = calculatePasswordStrength(password);
@@ -149,13 +152,14 @@ function PasswordStrengthIndicator({ password, className }: Readonly<PasswordStr
         </span>
       </div>
       <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- inner fill bar; <progress> cannot be positioned inside overflow:hidden container */}
         <div
           className={cn(
             'h-full rounded-full transition-all duration-300',
             strengthColors[strength],
             strengthWidths[strength]
           )}
-          role="progressbar" // NOSONAR typescript:S6819 — inner fill bar; <progress> cannot be positioned inside overflow:hidden container
+          role="progressbar" // NOSONAR typescript:S6819
           aria-valuenow={Math.round((calculatePasswordStrength(password).score / 6) * 100)}
           aria-valuemin={0}
           aria-valuemax={100}

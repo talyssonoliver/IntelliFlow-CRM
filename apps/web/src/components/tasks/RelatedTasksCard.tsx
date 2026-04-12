@@ -27,7 +27,10 @@ const PRIORITY_COLORS: Record<string, string> = {
   URGENT: 'text-red-500',
 };
 
-function formatDueDate(date: Date | string | null, timezone: string = 'Europe/London'): string | null {
+function formatDueDate(
+  date: Date | string | null,
+  timezone: string = 'Europe/London'
+): string | null {
   if (!date) return null;
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return null;
@@ -148,11 +151,7 @@ export function RelatedTasksCard({
         {error && <p className="text-sm text-destructive text-center py-2">Failed to load tasks</p>}
 
         {!isLoading && !error && displayTasks.length === 0 && (
-          <EmptyState
-            entity="tasks"
-            phase="passive"
-            className="py-2"
-          />
+          <EmptyState entity="tasks" phase="passive" className="py-2" />
         )}
 
         {!isLoading && !error && displayTasks.length > 0 && (

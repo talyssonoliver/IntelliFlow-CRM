@@ -16,7 +16,13 @@ vi.mock('@/lib/trpc', () => ({
             globalEnabled: true,
             defaultChannels: ['in_app', 'email'],
             emailDigest: { enabled: false, frequency: 'daily', time: '09:00' },
-            quietHours: { enabled: true, start: '22:00', end: '08:00', timezone: 'UTC', daysOfWeek: [1, 2, 3, 4, 5] },
+            quietHours: {
+              enabled: true,
+              start: '22:00',
+              end: '08:00',
+              timezone: 'UTC',
+              daysOfWeek: [1, 2, 3, 4, 5],
+            },
             preferences: [],
           },
           isLoading: false,
@@ -60,7 +66,13 @@ function setQueryReturn(overrides: Record<string, unknown>) {
       globalEnabled: true,
       defaultChannels: ['in_app', 'email'],
       emailDigest: { enabled: false, frequency: 'daily', time: '09:00' },
-      quietHours: { enabled: true, start: '22:00', end: '08:00', timezone: 'UTC', daysOfWeek: [1, 2, 3, 4, 5] },
+      quietHours: {
+        enabled: true,
+        start: '22:00',
+        end: '08:00',
+        timezone: 'UTC',
+        daysOfWeek: [1, 2, 3, 4, 5],
+      },
       preferences: [],
     },
     isLoading: false,
@@ -139,7 +151,13 @@ describe('QuietHoursScheduler', () => {
         globalEnabled: true,
         defaultChannels: ['in_app', 'email'],
         emailDigest: { enabled: false, frequency: 'daily', time: '09:00' },
-        quietHours: { enabled: false, start: '22:00', end: '08:00', timezone: 'UTC', daysOfWeek: [1, 2, 3, 4, 5] },
+        quietHours: {
+          enabled: false,
+          start: '22:00',
+          end: '08:00',
+          timezone: 'UTC',
+          daysOfWeek: [1, 2, 3, 4, 5],
+        },
         preferences: [],
       },
     });
@@ -163,7 +181,7 @@ describe('QuietHoursScheduler', () => {
           timezone: expect.any(String),
           daysOfWeek: expect.any(Array),
         }),
-      }),
+      })
     );
   });
 
@@ -180,18 +198,18 @@ describe('QuietHoursScheduler', () => {
         quietHours: expect.objectContaining({
           daysOfWeek: expect.arrayContaining([0]), // Sunday added
         }),
-      }),
+      })
     );
   });
 
   it('save success shows toast and invalidates query', () => {
     let capturedOnSuccess: (() => void) | undefined;
-    (trpc.notifications.updatePreferences.useMutation as ReturnType<typeof vi.fn>).mockImplementation(
-      (opts?: { onSuccess?: () => void }) => {
-        capturedOnSuccess = opts?.onSuccess;
-        return { mutate: mockMutate, isPending: false };
-      }
-    );
+    (
+      trpc.notifications.updatePreferences.useMutation as ReturnType<typeof vi.fn>
+    ).mockImplementation((opts?: { onSuccess?: () => void }) => {
+      capturedOnSuccess = opts?.onSuccess;
+      return { mutate: mockMutate, isPending: false };
+    });
     renderComponent();
     if (capturedOnSuccess) capturedOnSuccess();
     expect(toast).toHaveBeenCalled();
@@ -199,12 +217,12 @@ describe('QuietHoursScheduler', () => {
 
   it('save error shows error toast', () => {
     let capturedOnError: ((err: Error) => void) | undefined;
-    (trpc.notifications.updatePreferences.useMutation as ReturnType<typeof vi.fn>).mockImplementation(
-      (opts?: { onSuccess?: () => void; onError?: (err: Error) => void }) => {
-        capturedOnError = opts?.onError;
-        return { mutate: mockMutate, isPending: false };
-      }
-    );
+    (
+      trpc.notifications.updatePreferences.useMutation as ReturnType<typeof vi.fn>
+    ).mockImplementation((opts?: { onSuccess?: () => void; onError?: (err: Error) => void }) => {
+      capturedOnError = opts?.onError;
+      return { mutate: mockMutate, isPending: false };
+    });
     renderComponent();
     if (capturedOnError) capturedOnError(new Error('fail'));
     expect(toast).toHaveBeenCalled();

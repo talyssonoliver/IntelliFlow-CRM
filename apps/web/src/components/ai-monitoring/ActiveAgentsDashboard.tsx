@@ -28,7 +28,6 @@ import {
 } from '@/lib/active-agents/agent-utils';
 import type { ActiveAgent, ActiveAgentFilters } from '@/lib/active-agents/types';
 
-
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -84,7 +83,15 @@ interface StatCardProps {
   ariaLabel?: string;
 }
 
-function StatCard({ label, value, icon, colorClass, isLoading, testId, ariaLabel }: Readonly<StatCardProps>) {
+function StatCard({
+  label,
+  value,
+  icon,
+  colorClass,
+  isLoading,
+  testId,
+  ariaLabel,
+}: Readonly<StatCardProps>) {
   return (
     <Card>
       <CardContent className="p-4" data-testid={testId} aria-label={ariaLabel}>
@@ -176,15 +183,14 @@ function AgentCard({
                 <span className="material-symbols-outlined text-sm">
                   {isExpanded ? 'expand_less' : 'expand_more'}
                 </span>
-                Workflow
+                {' '}Workflow
               </button>
             )}
             <Link
               href={`/agent-approvals/logs/${agentId}`}
               className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs hover:bg-muted transition-colors"
             >
-              <span className="material-symbols-outlined text-sm">description</span>{' '}
-              Logs
+              <span className="material-symbols-outlined text-sm">description</span>{' '}Logs
             </Link>
             {agent.status === 'error' && (
               <Button
@@ -195,8 +201,7 @@ function AgentCard({
                 onClick={() => onReset(agentId)}
                 aria-label={`Reset ${getAgentTypeLabel(agent.type)}`}
               >
-                <span className="material-symbols-outlined text-sm mr-1">restart_alt</span>{' '}
-                Reset
+                <span className="material-symbols-outlined text-sm mr-1">restart_alt</span> Reset
               </Button>
             )}
             <Button
@@ -214,10 +219,7 @@ function AgentCard({
       </div>
       {isExpanded && agent.contextType && agent.contextId && (
         <div className="border-t px-4 py-3">
-          <WorkflowProgressPanel
-            entityType={agent.contextType}
-            entityId={agent.contextId}
-          />
+          <WorkflowProgressPanel entityType={agent.contextType} entityId={agent.contextId} />
         </div>
       )}
     </article>
@@ -273,24 +275,40 @@ export function ActiveAgentsDashboard() {
   }, []);
 
   const resetMutation = api.aiMonitoring.resetAgentStatus.useMutation({
-    onSuccess: () => { setActingAgentId(null); refetch(); },
-    onError: () => { setActingAgentId(null); },
+    onSuccess: () => {
+      setActingAgentId(null);
+      refetch();
+    },
+    onError: () => {
+      setActingAgentId(null);
+    },
   });
 
   const deleteMutation = api.aiMonitoring.deleteAgent.useMutation({
-    onSuccess: () => { setActingAgentId(null); refetch(); },
-    onError: () => { setActingAgentId(null); },
+    onSuccess: () => {
+      setActingAgentId(null);
+      refetch();
+    },
+    onError: () => {
+      setActingAgentId(null);
+    },
   });
 
-  const handleReset = useCallback((agentId: string) => {
-    setActingAgentId(agentId);
-    resetMutation.mutate({ agentId });
-  }, [resetMutation]);
+  const handleReset = useCallback(
+    (agentId: string) => {
+      setActingAgentId(agentId);
+      resetMutation.mutate({ agentId });
+    },
+    [resetMutation]
+  );
 
-  const handleDelete = useCallback((agentId: string) => {
-    setActingAgentId(agentId);
-    deleteMutation.mutate({ agentId });
-  }, [deleteMutation]);
+  const handleDelete = useCallback(
+    (agentId: string) => {
+      setActingAgentId(agentId);
+      deleteMutation.mutate({ agentId });
+    },
+    [deleteMutation]
+  );
 
   const filterState = useMultiFilterState({
     status: '',
@@ -360,7 +378,6 @@ export function ActiveAgentsDashboard() {
           },
         ]}
       />
-
 
       {/* Stat Cards */}
       {isLoading ? (

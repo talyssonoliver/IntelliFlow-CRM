@@ -10,10 +10,7 @@ export default function NotificationChannelsPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        breadcrumbs={[
-          { label: 'Notifications', href: '/notifications' },
-          { label: 'Channels' },
-        ]}
+        breadcrumbs={[{ label: 'Notifications', href: '/notifications' }, { label: 'Channels' }]}
         title="Notification Channels"
       />
       <ChannelManager />

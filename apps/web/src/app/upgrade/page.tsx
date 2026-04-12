@@ -66,9 +66,7 @@ function TierCta({ isCurrentPlan, isAdmin, isRequired, meetsRequirement, tierNam
         asChild
         className={cn(
           'w-full',
-          (isRequired || (meetsRequirement && !isCurrentPlan))
-            ? 'bg-primary hover:bg-primary/90'
-            : ''
+          isRequired || (meetsRequirement && !isCurrentPlan) ? 'bg-primary hover:bg-primary/90' : ''
         )}
         variant={isRequired || meetsRequirement ? 'default' : 'outline'}
       >
@@ -85,9 +83,7 @@ function TierCta({ isCurrentPlan, isAdmin, isRequired, meetsRequirement, tierNam
       className="w-full"
       variant={isRequired || meetsRequirement ? 'default' : 'outline'}
     >
-      <Link href="/billing/subscriptions">
-        View Plan
-      </Link>
+      <Link href="/billing/subscriptions">View Plan</Link>
     </Button>
   );
 }
@@ -220,21 +216,17 @@ function UpgradePageContent() {
               onClick={() => setBilling('annual')}
             >
               Annual{' '}
-              <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">
-                Save 17%
-              </span>
+              <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">Save 17%</span>
             </button>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {pricingData.tiers.map((tier) => {
-            const isCurrentPlan =
-              currentPlan?.toLowerCase() === tier.id.toLowerCase();
+            const isCurrentPlan = currentPlan?.toLowerCase() === tier.id.toLowerCase();
             const tierKey = tier.id.toUpperCase();
             const isRequired = requiredPlan === tierKey;
-            const meetsRequirement =
-              requiredPlan && planMeetsOrExceeds(tierKey, requiredPlan);
+            const meetsRequirement = requiredPlan && planMeetsOrExceeds(tierKey, requiredPlan);
 
             // Module inclusion data from real API
             const tierModuleData = planModuleData?.find(
@@ -296,9 +288,7 @@ function UpgradePageContent() {
                       <span className="text-3xl font-bold text-slate-900 dark:text-white">
                         £{billing === 'monthly' ? tier.price.monthly : tier.price.annual}
                       </span>
-                      <span className="text-sm text-slate-500 dark:text-slate-400">
-                        /user/mo
-                      </span>
+                      <span className="text-sm text-slate-500 dark:text-slate-400">/user/mo</span>
                       {billing === 'annual' && (
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                           Billed annually
@@ -419,9 +409,7 @@ function UpgradePageContent() {
                             <span
                               className={cn(
                                 'font-medium',
-                                isTarget
-                                  ? 'text-primary'
-                                  : 'text-slate-700 dark:text-slate-300'
+                                isTarget ? 'text-primary' : 'text-slate-700 dark:text-slate-300'
                               )}
                             >
                               {meta.label}

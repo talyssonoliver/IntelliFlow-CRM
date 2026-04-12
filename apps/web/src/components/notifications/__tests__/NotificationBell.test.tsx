@@ -4,7 +4,14 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 
 // Hoisted mock values — must be before vi.mock
-const { mockUseQuery, mockListUseQuery, mockUseSubscription, mockInvalidate, mockRouterPush, mockMarkAsReadMutate } = vi.hoisted(() => ({
+const {
+  mockUseQuery,
+  mockListUseQuery,
+  mockUseSubscription,
+  mockInvalidate,
+  mockRouterPush,
+  mockMarkAsReadMutate,
+} = vi.hoisted(() => ({
   mockUseQuery: vi.fn(),
   mockListUseQuery: vi.fn(),
   mockUseSubscription: vi.fn(),
@@ -272,7 +279,13 @@ describe('NotificationBell', () => {
     mockListUseQuery.mockReturnValue({
       data: {
         notifications: [
-          { id: 'n2', type: 'task_assigned', title: 'Read Item', isRead: true, createdAt: new Date() },
+          {
+            id: 'n2',
+            type: 'task_assigned',
+            title: 'Read Item',
+            isRead: true,
+            createdAt: new Date(),
+          },
         ],
       },
       isLoading: false,
@@ -288,7 +301,13 @@ describe('NotificationBell', () => {
     mockListUseQuery.mockReturnValue({
       data: {
         notifications: [
-          { id: 'n3', type: 'lead_assigned', title: 'Close Test', isRead: false, createdAt: new Date() },
+          {
+            id: 'n3',
+            type: 'lead_assigned',
+            title: 'Close Test',
+            isRead: false,
+            createdAt: new Date(),
+          },
         ],
       },
       isLoading: false,
@@ -306,7 +325,14 @@ describe('NotificationBell', () => {
     mockListUseQuery.mockReturnValue({
       data: {
         notifications: [
-          { id: 'n4', type: 'lead_assigned', title: 'Navigate', isRead: false, createdAt: new Date(), actionUrl: '/leads/123' },
+          {
+            id: 'n4',
+            type: 'lead_assigned',
+            title: 'Navigate',
+            isRead: false,
+            createdAt: new Date(),
+            actionUrl: '/leads/123',
+          },
         ],
       },
       isLoading: false,
@@ -322,7 +348,14 @@ describe('NotificationBell', () => {
     mockListUseQuery.mockReturnValue({
       data: {
         notifications: [
-          { id: 'n5', type: 'lead_assigned', title: 'No URL', isRead: false, createdAt: new Date(), actionUrl: null },
+          {
+            id: 'n5',
+            type: 'lead_assigned',
+            title: 'No URL',
+            isRead: false,
+            createdAt: new Date(),
+            actionUrl: null,
+          },
         ],
       },
       isLoading: false,

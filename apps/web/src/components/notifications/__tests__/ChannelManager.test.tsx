@@ -16,7 +16,13 @@ vi.mock('@/lib/trpc', () => ({
             globalEnabled: true,
             defaultChannels: ['in_app', 'email'],
             emailDigest: { enabled: false, frequency: 'daily', time: '09:00' },
-            quietHours: { enabled: false, start: '22:00', end: '08:00', timezone: 'UTC', daysOfWeek: [0,1,2,3,4,5,6] },
+            quietHours: {
+              enabled: false,
+              start: '22:00',
+              end: '08:00',
+              timezone: 'UTC',
+              daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
+            },
             preferences: [],
           },
           isLoading: false,
@@ -61,7 +67,13 @@ function setQueryReturn(overrides: Record<string, unknown>) {
       globalEnabled: true,
       defaultChannels: ['in_app', 'email'],
       emailDigest: { enabled: false, frequency: 'daily', time: '09:00' },
-      quietHours: { enabled: false, start: '22:00', end: '08:00', timezone: 'UTC', daysOfWeek: [0,1,2,3,4,5,6] },
+      quietHours: {
+        enabled: false,
+        start: '22:00',
+        end: '08:00',
+        timezone: 'UTC',
+        daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
+      },
       preferences: [],
     },
     isLoading: false,
@@ -101,13 +113,21 @@ describe('ChannelManager', () => {
 
   it('toggling email on adds email to form state', async () => {
     // Start with email NOT in defaultChannels
-    setQueryReturn({ data: {
-      globalEnabled: true,
-      defaultChannels: ['in_app'],
-      emailDigest: { enabled: false, frequency: 'daily', time: '09:00' },
-      quietHours: { enabled: false, start: '22:00', end: '08:00', timezone: 'UTC', daysOfWeek: [0,1,2,3,4,5,6] },
-      preferences: [],
-    }});
+    setQueryReturn({
+      data: {
+        globalEnabled: true,
+        defaultChannels: ['in_app'],
+        emailDigest: { enabled: false, frequency: 'daily', time: '09:00' },
+        quietHours: {
+          enabled: false,
+          start: '22:00',
+          end: '08:00',
+          timezone: 'UTC',
+          daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
+        },
+        preferences: [],
+      },
+    });
     renderComponent();
     const emailSwitch = screen.getByLabelText(/email/i);
     fireEvent.click(emailSwitch);
@@ -117,13 +137,21 @@ describe('ChannelManager', () => {
   });
 
   it('toggling sms off removes sms from form state', async () => {
-    setQueryReturn({ data: {
-      globalEnabled: true,
-      defaultChannels: ['in_app', 'email', 'sms'],
-      emailDigest: { enabled: false, frequency: 'daily', time: '09:00' },
-      quietHours: { enabled: false, start: '22:00', end: '08:00', timezone: 'UTC', daysOfWeek: [0,1,2,3,4,5,6] },
-      preferences: [],
-    }});
+    setQueryReturn({
+      data: {
+        globalEnabled: true,
+        defaultChannels: ['in_app', 'email', 'sms'],
+        emailDigest: { enabled: false, frequency: 'daily', time: '09:00' },
+        quietHours: {
+          enabled: false,
+          start: '22:00',
+          end: '08:00',
+          timezone: 'UTC',
+          daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
+        },
+        preferences: [],
+      },
+    });
     renderComponent();
     const smsSwitch = screen.getByLabelText(/sms/i);
     fireEvent.click(smsSwitch);
@@ -132,13 +160,21 @@ describe('ChannelManager', () => {
   });
 
   it('email card shows digest config (enabled toggle, frequency select, time input)', () => {
-    setQueryReturn({ data: {
-      globalEnabled: true,
-      defaultChannels: ['in_app', 'email'],
-      emailDigest: { enabled: true, frequency: 'daily', time: '09:00' },
-      quietHours: { enabled: false, start: '22:00', end: '08:00', timezone: 'UTC', daysOfWeek: [0,1,2,3,4,5,6] },
-      preferences: [],
-    }});
+    setQueryReturn({
+      data: {
+        globalEnabled: true,
+        defaultChannels: ['in_app', 'email'],
+        emailDigest: { enabled: true, frequency: 'daily', time: '09:00' },
+        quietHours: {
+          enabled: false,
+          start: '22:00',
+          end: '08:00',
+          timezone: 'UTC',
+          daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
+        },
+        preferences: [],
+      },
+    });
     renderComponent();
     expect(screen.getByText(/email digest/i)).toBeInTheDocument();
   });
@@ -156,12 +192,12 @@ describe('ChannelManager', () => {
 
   it('save success shows success toast and invalidates query', async () => {
     let capturedOnSuccess: (() => void) | undefined;
-    (trpc.notifications.updatePreferences.useMutation as ReturnType<typeof vi.fn>).mockImplementation(
-      (opts?: { onSuccess?: () => void; onError?: () => void }) => {
-        capturedOnSuccess = opts?.onSuccess;
-        return { mutate: mockMutate, isPending: false };
-      }
-    );
+    (
+      trpc.notifications.updatePreferences.useMutation as ReturnType<typeof vi.fn>
+    ).mockImplementation((opts?: { onSuccess?: () => void; onError?: () => void }) => {
+      capturedOnSuccess = opts?.onSuccess;
+      return { mutate: mockMutate, isPending: false };
+    });
     renderComponent();
     if (capturedOnSuccess) capturedOnSuccess();
     expect(toast).toHaveBeenCalled();
@@ -169,12 +205,12 @@ describe('ChannelManager', () => {
 
   it('save error shows error toast', async () => {
     let capturedOnError: ((err: Error) => void) | undefined;
-    (trpc.notifications.updatePreferences.useMutation as ReturnType<typeof vi.fn>).mockImplementation(
-      (opts?: { onSuccess?: () => void; onError?: (err: Error) => void }) => {
-        capturedOnError = opts?.onError;
-        return { mutate: mockMutate, isPending: false };
-      }
-    );
+    (
+      trpc.notifications.updatePreferences.useMutation as ReturnType<typeof vi.fn>
+    ).mockImplementation((opts?: { onSuccess?: () => void; onError?: (err: Error) => void }) => {
+      capturedOnError = opts?.onError;
+      return { mutate: mockMutate, isPending: false };
+    });
     renderComponent();
     if (capturedOnError) capturedOnError(new Error('fail'));
     expect(toast).toHaveBeenCalled();
@@ -221,13 +257,21 @@ describe('ChannelManager', () => {
   });
 
   it('email digest enabled shows frequency and time controls', () => {
-    setQueryReturn({ data: {
-      globalEnabled: true,
-      defaultChannels: ['in_app', 'email'],
-      emailDigest: { enabled: true, frequency: 'daily', time: '09:00' },
-      quietHours: { enabled: false, start: '22:00', end: '08:00', timezone: 'UTC', daysOfWeek: [0,1,2,3,4,5,6] },
-      preferences: [],
-    }});
+    setQueryReturn({
+      data: {
+        globalEnabled: true,
+        defaultChannels: ['in_app', 'email'],
+        emailDigest: { enabled: true, frequency: 'daily', time: '09:00' },
+        quietHours: {
+          enabled: false,
+          start: '22:00',
+          end: '08:00',
+          timezone: 'UTC',
+          daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
+        },
+        preferences: [],
+      },
+    });
     renderComponent();
     expect(screen.getByLabelText('Email digest enabled')).toBeInTheDocument();
     expect(screen.getByText('Frequency')).toBeInTheDocument();
@@ -239,13 +283,21 @@ describe('ChannelManager', () => {
   });
 
   it('toggling digest enabled switch changes digest state', () => {
-    setQueryReturn({ data: {
-      globalEnabled: true,
-      defaultChannels: ['in_app', 'email'],
-      emailDigest: { enabled: false, frequency: 'daily', time: '09:00' },
-      quietHours: { enabled: false, start: '22:00', end: '08:00', timezone: 'UTC', daysOfWeek: [0,1,2,3,4,5,6] },
-      preferences: [],
-    }});
+    setQueryReturn({
+      data: {
+        globalEnabled: true,
+        defaultChannels: ['in_app', 'email'],
+        emailDigest: { enabled: false, frequency: 'daily', time: '09:00' },
+        quietHours: {
+          enabled: false,
+          start: '22:00',
+          end: '08:00',
+          timezone: 'UTC',
+          daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
+        },
+        preferences: [],
+      },
+    });
     renderComponent();
     const digestSwitch = screen.getByLabelText('Email digest enabled');
     fireEvent.click(digestSwitch);
@@ -265,7 +317,7 @@ describe('ChannelManager', () => {
           frequency: expect.any(String),
           time: expect.any(String),
         }),
-      }),
+      })
     );
   });
 });

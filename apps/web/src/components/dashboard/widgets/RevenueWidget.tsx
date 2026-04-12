@@ -32,10 +32,7 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
   const deltaPercent = previous > 0 ? (revenueDelta / previous) * 100 : 0;
 
   const points = Array.isArray(timeSeries) ? timeSeries : [];
-  const maxValue = Math.max(
-    ...points.map((p: Record<string, unknown>) => Number(p.value || 0)),
-    1
-  );
+  const maxValue = Math.max(...points.map((p: Record<string, unknown>) => Number(p.value || 0)), 1);
 
   const dayLabels =
     timeRange === 'week'

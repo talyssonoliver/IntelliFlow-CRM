@@ -231,7 +231,9 @@ export function QuickLogComposer({
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-slate-400 hidden sm:inline">Ctrl+Enter to submit</span>
+              <span className="text-[10px] text-slate-400 hidden sm:inline">
+                Ctrl+Enter to submit
+              </span>
               <button
                 type="button"
                 onClick={handleSubmit}

@@ -284,7 +284,7 @@ export function ResetEmailSent({
           </span>
           <div className="text-sm text-slate-300">
             <p>
-              The link will expire in{' '}<span className="text-white font-medium">1 hour</span>.
+              The link will expire in <span className="text-white font-medium">1 hour</span>.
             </p>
             <p className="mt-1">If you don&apos;t see the email, check your spam folder.</p>
           </div>
@@ -306,20 +306,22 @@ export function ResetEmailSent({
           )}
         >
           {(() => {
-            if (isResending) return (
-              <>
-                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />{' '}
-                Resending...
-              </>
-            );
-            if (cooldown > 0) return (
-              <>
-                <span className="material-symbols-outlined text-lg" aria-hidden="true">
-                  schedule
-                </span>{' '}
-                Resend in {cooldown}s
-              </>
-            );
+            if (isResending)
+              return (
+                <>
+                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />{' '}
+                  Resending...
+                </>
+              );
+            if (cooldown > 0)
+              return (
+                <>
+                  <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                    schedule
+                  </span>{' '}
+                  Resend in {cooldown}s
+                </>
+              );
             return (
               <>
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">

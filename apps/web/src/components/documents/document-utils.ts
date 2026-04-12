@@ -140,8 +140,12 @@ export function canUserModifyACL(userAccessLevel: AccessLevel): boolean {
  */
 export function sanitizeFileName(name: string): string {
   return (
-    name.replaceAll('..', '').replaceAll(/[/\\]/g, '').replaceAll('\0', '').replace(/^\.+/, '').trim() ||
-    'unnamed'
+    name
+      .replaceAll('..', '')
+      .replaceAll(/[/\\]/g, '')
+      .replaceAll('\0', '')
+      .replace(/^\.+/, '')
+      .trim() || 'unnamed'
   );
 }
 

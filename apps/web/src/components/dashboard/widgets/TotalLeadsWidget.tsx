@@ -12,7 +12,13 @@ export function TotalLeadsWidget({ initialData }: Readonly<WidgetProps>) {
     error,
   } = trpc.lead.stats.useQuery(undefined, {
     enabled: isAuthenticated && !authLoading,
-    ...(initialData == null ? {} : { initialData: initialData as NonNullable<Parameters<typeof trpc.lead.stats.useQuery>[1]>['initialData'] }),
+    ...(initialData == null
+      ? {}
+      : {
+          initialData: initialData as NonNullable<
+            Parameters<typeof trpc.lead.stats.useQuery>[1]
+          >['initialData'],
+        }),
   });
   const { data: overview } = trpc.analytics.getOverview.useQuery(
     {},

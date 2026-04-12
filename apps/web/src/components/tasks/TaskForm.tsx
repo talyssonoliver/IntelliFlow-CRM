@@ -104,7 +104,7 @@ export function TaskForm({ open, onClose, onSubmit, initialData, mode }: Readonl
           {/* Title */}
           <div>
             <label htmlFor="task-title" className="block text-sm font-medium text-foreground mb-1">
-              Title{' '}<span className="text-destructive">*</span>
+              Title <span className="text-destructive">*</span>
             </label>
             <input
               id="task-title"

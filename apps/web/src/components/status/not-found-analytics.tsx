@@ -10,7 +10,9 @@ export function NotFoundAnalytics({ suggestionCount }: Readonly<{ suggestionCoun
   useEffect(() => {
     const navigationEntry =
       typeof window !== 'undefined'
-        ? window.performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined
+        ? (window.performance.getEntriesByType('navigation')[0] as
+            | PerformanceNavigationTiming
+            | undefined)
         : undefined;
 
     trackNotFoundPageView({

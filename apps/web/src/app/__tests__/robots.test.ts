@@ -7,7 +7,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://test.intelliflow.com');
 
- 
 let robotsResult: any;
 
 beforeEach(async () => {

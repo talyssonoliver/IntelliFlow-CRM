@@ -30,9 +30,11 @@ vi.mock('../hooks/useNotificationFeed', () => ({
 
 // Mock NotificationItem and Skeleton
 vi.mock('../NotificationItem', () => ({
-  NotificationItem: vi.fn(({ notification }: Readonly<{ notification: Record<string, unknown> }>) => (
-    <div data-testid={`notification-${notification.id}`}>{String(notification.title)}</div>
-  )),
+  NotificationItem: vi.fn(
+    ({ notification }: Readonly<{ notification: Record<string, unknown> }>) => (
+      <div data-testid={`notification-${notification.id}`}>{String(notification.title)}</div>
+    )
+  ),
 }));
 
 vi.mock('../NotificationItemSkeleton', () => ({

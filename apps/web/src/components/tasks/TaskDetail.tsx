@@ -18,7 +18,12 @@ export interface TaskDetailData {
   readonly status: TaskStatus;
   readonly ownerId: string;
   readonly owner: { id: string; email: string; name: string | null };
-  readonly lead: { id: string; email?: string; firstName: string | null; lastName: string | null } | null;
+  readonly lead: {
+    id: string;
+    email?: string;
+    firstName: string | null;
+    lastName: string | null;
+  } | null;
   readonly contact: { id: string; email?: string; firstName: string; lastName: string } | null;
   readonly opportunity: { id: string; name: string; stage: string } | null;
   readonly createdAt: Date | string;
@@ -35,7 +40,11 @@ export interface TaskDetailProps {
   readonly onEdit: (task: TaskDetailData) => void;
   readonly onDelete: (id: string) => void;
   readonly onArchive: (id: string) => void;
-  readonly onAssign?: (id: string, entityType: 'lead' | 'contact' | 'opportunity', entityId: string) => void;
+  readonly onAssign?: (
+    id: string,
+    entityType: 'lead' | 'contact' | 'opportunity',
+    entityId: string
+  ) => void;
   readonly onReschedule?: (id: string, newDueDate: Date) => void;
   readonly isCompleting?: boolean;
   readonly isStarting?: boolean;
@@ -64,18 +73,42 @@ function formatDate(date: DateStringNull, timezone: string = 'Europe/London'): s
   if (!date) return '—';
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone });
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: timezone,
+  });
 }
 
 function getDueDateStatus(date: DateStringNull): 'overdue' | 'today' | 'normal' {
   if (!date) return 'normal';
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const dueDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const dueDay = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
   if (dueDay < today) return 'overdue';
   if (dueDay.getTime() === today.getTime()) return 'today';
   return 'normal';
+}
+
+function getDueDateColor(dueStatus: 'overdue' | 'today' | 'normal'): string {
+  if (dueStatus === 'overdue') return 'text-red-600 dark:text-red-400';
+  if (dueStatus === 'today') return 'text-amber-600 dark:text-amber-400';
+  return 'text-foreground';
+}
+
+function getDateInputDefaultValue(dueDate: DateStringNull): string {
+  if (!dueDate) return '';
+  return typeof dueDate === 'string' ? dueDate.split('T')[0] : dueDate.toISOString().split('T')[0];
+}
+
+function isTaskActive(status: string): boolean {
+  return status !== 'COMPLETED' && status !== 'CANCELLED' && status !== 'ARCHIVED';
+}
+
+function isAssignable(status: string): boolean {
+  return status === 'PENDING' || status === 'IN_PROGRESS';
 }
 
 function getEntityInfo(
@@ -127,7 +160,9 @@ export function TaskDetail({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
   const [showAssignPanel, setShowAssignPanel] = useState(false);
-  const [assignEntityType, setAssignEntityType] = useState<'lead' | 'contact' | 'opportunity'>('lead');
+  const [assignEntityType, setAssignEntityType] = useState<'lead' | 'contact' | 'opportunity'>(
+    'lead'
+  );
   const [assignEntityId, setAssignEntityId] = useState('');
   const [assignEntityName, setAssignEntityName] = useState('');
   const [showReschedule, setShowReschedule] = useState(false);
@@ -163,14 +198,7 @@ export function TaskDetail({
   const priority = PRIORITY_STYLES[task.priority] ?? PRIORITY_STYLES.MEDIUM;
   const entity = getEntityInfo(task);
   const dueStatus = getDueDateStatus(task.dueDate);
-  let dueDateColor: string;
-  if (dueStatus === 'overdue') {
-    dueDateColor = 'text-red-600 dark:text-red-400';
-  } else if (dueStatus === 'today') {
-    dueDateColor = 'text-amber-600 dark:text-amber-400';
-  } else {
-    dueDateColor = 'text-foreground';
-  }
+  const dueDateColor = getDueDateColor(dueStatus);
 
   return (
     <div className="space-y-6">
@@ -212,31 +240,29 @@ export function TaskDetail({
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Due Date</p>
             <div className="flex items-center gap-2 mt-0.5">
-              <p
-                className={`text-sm font-medium ${dueDateColor}`}
-                data-testid={`due-${dueStatus}`}
-              >
+              <p className={`text-sm font-medium ${dueDateColor}`} data-testid={`due-${dueStatus}`}>
                 {formatDate(task.dueDate, timezone)}
                 {dueStatus === 'overdue' && <span className="ml-1 text-xs">(overdue)</span>}
               </p>
-              {onReschedule && task.status !== 'COMPLETED' && task.status !== 'CANCELLED' && task.status !== 'ARCHIVED' && (
-                <button
-                  type="button"
-                  onClick={() => setShowReschedule((v) => !v)}
-                  disabled={isRescheduling}
-                  className="text-muted-foreground hover:text-foreground disabled:opacity-50"
-                  aria-label="Reschedule task"
-                >
-                  <span className="material-symbols-outlined text-base" aria-hidden="true">
-                    {isRescheduling ? 'hourglass_empty' : 'calendar_month'}
-                  </span>
-                </button>
-              )}
+              {onReschedule &&
+                isTaskActive(task.status) && (
+                  <button
+                    type="button"
+                    onClick={() => setShowReschedule((v) => !v)}
+                    disabled={isRescheduling}
+                    className="text-muted-foreground hover:text-foreground disabled:opacity-50"
+                    aria-label="Reschedule task"
+                  >
+                    <span className="material-symbols-outlined text-base" aria-hidden="true">
+                      {isRescheduling ? 'hourglass_empty' : 'calendar_month'}
+                    </span>
+                  </button>
+                )}
             </div>
             {showReschedule && onReschedule && (
               <input
                 type="date"
-                defaultValue={task.dueDate ? (typeof task.dueDate === 'string' ? task.dueDate.split('T')[0] : task.dueDate.toISOString().split('T')[0]) : ''}
+                defaultValue={getDateInputDefaultValue(task.dueDate)}
                 onChange={(e) => {
                   if (e.target.value) {
                     onReschedule(task.id, new Date(e.target.value));
@@ -256,11 +282,15 @@ export function TaskDetail({
           </div>
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Created</p>
-            <p className="text-sm text-muted-foreground mt-0.5">{formatDate(task.createdAt, timezone)}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {formatDate(task.createdAt, timezone)}
+            </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Updated</p>
-            <p className="text-sm text-muted-foreground mt-0.5">{formatDate(task.updatedAt, timezone)}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {formatDate(task.updatedAt, timezone)}
+            </p>
           </div>
           {task.completedAt && (
             <div>
@@ -301,7 +331,7 @@ export function TaskDetail({
 
       {/* Actions */}
       <div className="flex items-center gap-3 flex-wrap">
-        {onAssign && (task.status === 'PENDING' || task.status === 'IN_PROGRESS') && (
+        {onAssign && isAssignable(task.status) && (
           <button
             type="button"
             onClick={() => setShowAssignPanel((v) => !v)}
@@ -365,9 +395,7 @@ export function TaskDetail({
             </span>
           </button>
         )}
-        {task.status !== 'COMPLETED' &&
-          task.status !== 'CANCELLED' &&
-          task.status !== 'ARCHIVED' && (
+        {isTaskActive(task.status) && (
             <button
               type="button"
               onClick={() => setShowDeleteConfirm(true)}

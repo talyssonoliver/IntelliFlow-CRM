@@ -54,11 +54,7 @@ function InsightsLoadingState() {
 function InsightsEmptyState({ selectedType }: Readonly<{ selectedType: string | null }>) {
   return (
     <Card className="p-12">
-      <EmptyState
-        entity="insights"
-        variant={selectedType ? 'filtered' : 'empty'}
-        phase="passive"
-      />
+      <EmptyState entity="insights" variant={selectedType ? 'filtered' : 'empty'} phase="passive" />
     </Card>
   );
 }
@@ -142,7 +138,6 @@ export function InsightsListPage() {
         <span>/</span>
         <span className="text-slate-900 dark:text-white font-medium">All Insights</span>
       </nav>
-
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">

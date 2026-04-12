@@ -51,9 +51,7 @@ export function ModulePaywall({ moduleId, className, accessError }: Readonly<Mod
   const requiredPlanLabel = minPlan ? (PLAN_LABELS[minPlan] ?? minPlan) : null;
 
   // Find which plans include this module
-  const plansWithModule = plans?.filter((p) =>
-    p.modules.includes(moduleId)
-  ) ?? [];
+  const plansWithModule = plans?.filter((p) => p.modules.includes(moduleId)) ?? [];
 
   return (
     <div
@@ -63,7 +61,10 @@ export function ModulePaywall({ moduleId, className, accessError }: Readonly<Mod
         {/* Lock header */}
         <div className="text-center space-y-4">
           <div className="mx-auto w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-            <span className="material-symbols-outlined text-3xl text-slate-400 dark:text-slate-500" aria-hidden="true">
+            <span
+              className="material-symbols-outlined text-3xl text-slate-400 dark:text-slate-500"
+              aria-hidden="true"
+            >
               lock
             </span>
           </div>
@@ -81,7 +82,10 @@ export function ModulePaywall({ moduleId, className, accessError }: Readonly<Mod
         {/* Access error banner */}
         {accessError && (
           <div className="flex items-start gap-3 p-4 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30">
-            <span className="material-symbols-outlined text-lg text-amber-600 dark:text-amber-400 mt-0.5" aria-hidden="true">
+            <span
+              className="material-symbols-outlined text-lg text-amber-600 dark:text-amber-400 mt-0.5"
+              aria-hidden="true"
+            >
               warning
             </span>
             <div>
@@ -147,7 +151,10 @@ export function ModulePaywall({ moduleId, className, accessError }: Readonly<Mod
                     {isCurrent ? (
                       <span className="text-xs text-muted-foreground">Current plan</span>
                     ) : (
-                      <span className="material-symbols-outlined text-base text-green-600" aria-hidden="true">
+                      <span
+                        className="material-symbols-outlined text-base text-green-600"
+                        aria-hidden="true"
+                      >
                         check_circle
                       </span>
                     )}
@@ -169,7 +176,7 @@ export function ModulePaywall({ moduleId, className, accessError }: Readonly<Mod
               <span className="material-symbols-outlined text-lg" aria-hidden="true">
                 upgrade
               </span>
-              Upgrade Plan
+              {' '}Upgrade Plan
             </Link>
 
             {/* Admin shortcut: direct to subscription management */}
@@ -181,7 +188,7 @@ export function ModulePaywall({ moduleId, className, accessError }: Readonly<Mod
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   credit_card
                 </span>
-                Manage Subscription
+                {' '}Manage Subscription
               </Link>
             ) : (
               <Link

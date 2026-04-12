@@ -202,8 +202,12 @@ export default function TaskDetailPage() {
       if (!editingTask) return;
       const entityIds = {
         leadId: formData.entityType === 'lead' && formData.entityId ? formData.entityId : undefined,
-        contactId: formData.entityType === 'contact' && formData.entityId ? formData.entityId : undefined,
-        opportunityId: formData.entityType === 'opportunity' && formData.entityId ? formData.entityId : undefined,
+        contactId:
+          formData.entityType === 'contact' && formData.entityId ? formData.entityId : undefined,
+        opportunityId:
+          formData.entityType === 'opportunity' && formData.entityId
+            ? formData.entityId
+            : undefined,
       };
       updateMutation.mutate({
         id: editingTask.id,

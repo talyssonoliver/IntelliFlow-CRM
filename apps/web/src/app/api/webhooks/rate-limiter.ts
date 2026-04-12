@@ -37,7 +37,7 @@ function extractClientIp(request: Request): string {
   const forwarded = request.headers.get('x-forwarded-for');
   if (forwarded) {
     // Use rightmost IP (most trusted in reverse proxy chains)
-    const ips = forwarded.split(',').map(s => s.trim());
+    const ips = forwarded.split(',').map((s) => s.trim());
     return ips.at(-1) || 'unknown';
   }
   return request.headers.get('x-real-ip') || 'unknown';
@@ -48,7 +48,7 @@ export function checkIpAllowlist(request: Request): void {
   if (!allowedIps) return;
 
   const ip = extractClientIp(request);
-  const allowed = allowedIps.split(',').map(s => s.trim());
+  const allowed = allowedIps.split(',').map((s) => s.trim());
   if (!allowed.includes(ip)) {
     console.warn('[WebhookRateLimiter] security_event_ip_not_allowlisted', {
       ip,

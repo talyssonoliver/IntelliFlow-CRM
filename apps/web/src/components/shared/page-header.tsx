@@ -83,7 +83,10 @@ export function Breadcrumbs({ items, className }: Readonly<BreadcrumbsProps>) {
                 {item.label}
               </span>
             ) : (
-              <Link href={item.href} className="hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+              <Link
+                href={item.href}
+                className="hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
                 {item.label}
               </Link>
             )}
@@ -130,16 +133,18 @@ function ActionButton({ action }: Readonly<ActionButtonProps>) {
   const content = (
     <>
       {(() => {
-        if (loading) return (
-          <span className="material-symbols-outlined text-[20px] animate-spin">
-            progress_activity
-          </span>
-        );
-        if (icon) return (
-          <span className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform">
-            {icon}
-          </span>
-        );
+        if (loading)
+          return (
+            <span className="material-symbols-outlined text-[20px] animate-spin">
+              progress_activity
+            </span>
+          );
+        if (icon)
+          return (
+            <span className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform">
+              {icon}
+            </span>
+          );
         return null;
       })()}
       <span className={cn(hideOnMobile && 'hidden sm:inline')}>{label}</span>

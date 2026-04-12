@@ -91,10 +91,18 @@ export function getTaskStatusConfig(status: string): { label: string; color: str
 
 type DeadlineValue = Date | string | null;
 
-export function formatDeadline(deadline: DeadlineValue, timezone: string = 'Europe/London'): string {
+export function formatDeadline(
+  deadline: DeadlineValue,
+  timezone: string = 'Europe/London'
+): string {
   if (!deadline) return 'No deadline';
   const d = new Date(deadline);
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone });
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: timezone,
+  });
 }
 
 export function formatDeadlineShort(
@@ -105,7 +113,7 @@ export function formatDeadlineShort(
   const d = new Date(deadline);
   return {
     month: d.toLocaleDateString('en-US', { month: 'short', timeZone: timezone }).toUpperCase(),
-    day: String(d.getDate()),
+    day: d.toLocaleDateString('en-US', { day: 'numeric', timeZone: timezone }),
   };
 }
 
@@ -136,5 +144,10 @@ export function timeAgo(date: Date | string, timezone: string = 'Europe/London')
   const days = Math.floor(hours / 24);
   if (days === 1) return 'Yesterday';
   if (days < 7) return `${days} days ago`;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone });
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: timezone,
+  });
 }

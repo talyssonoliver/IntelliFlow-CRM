@@ -4,10 +4,7 @@ import { Suspense, useMemo, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { PageHeader, SearchFilterBar } from '@/components/shared';
 import { HelpCategories } from '@/components/support';
-import {
-  searchHelpContent,
-  DEFAULT_SEARCH_FILTERS,
-} from '@/components/support/search-algorithm';
+import { searchHelpContent, DEFAULT_SEARCH_FILTERS } from '@/components/support/search-algorithm';
 import type { SortMode } from '@/components/support/search-algorithm';
 import { DEFAULT_HELP_CATEGORIES } from '@/lib/support/help-categories';
 
@@ -79,9 +76,12 @@ function HelpCenterContent() {
     (updates: Record<string, string>) => {
       const params = new URLSearchParams(searchParams.toString());
       Object.entries(updates).forEach(([key, value]) => {
-        if (value === '' || value === DEFAULT_SEARCH_FILTERS.categoryId && key === 'category' ||
-            value === DEFAULT_SEARCH_FILTERS.sortMode && key === 'sort' ||
-            value === 'false' && key === 'popular') {
+        if (
+          value === '' ||
+          (value === DEFAULT_SEARCH_FILTERS.categoryId && key === 'category') ||
+          (value === DEFAULT_SEARCH_FILTERS.sortMode && key === 'sort') ||
+          (value === 'false' && key === 'popular')
+        ) {
           params.delete(key);
         } else {
           params.set(key, value);

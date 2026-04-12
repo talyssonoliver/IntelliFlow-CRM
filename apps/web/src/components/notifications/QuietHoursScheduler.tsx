@@ -28,7 +28,10 @@ export function QuietHoursScheduler({ className }: QuietHoursSchedulerProps) {
   const mutation = trpc.notifications.updatePreferences.useMutation({
     onSuccess: () => {
       utils.notifications.getPreferences.invalidate();
-      toast({ title: 'Quiet hours updated', description: 'Your quiet hours schedule has been saved.' });
+      toast({
+        title: 'Quiet hours updated',
+        description: 'Your quiet hours schedule has been saved.',
+      });
     },
     onError: (err: { message: string }) => {
       toast({ title: 'Failed to save', description: err.message, variant: 'destructive' });

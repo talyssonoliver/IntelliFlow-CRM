@@ -38,9 +38,7 @@ vi.mock('@/components/shared/page-header', () => ({
       {breadcrumbs && (
         <nav aria-label="Breadcrumb">
           {breadcrumbs.map((b, i) => (
-            <span key={i}>
-              {b.href ? <a href={b.href}>{b.label}</a> : <span>{b.label}</span>}
-            </span>
+            <span key={i}>{b.href ? <a href={b.href}>{b.label}</a> : <span>{b.label}</span>}</span>
           ))}
         </nav>
       )}

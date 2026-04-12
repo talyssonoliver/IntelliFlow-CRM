@@ -6,7 +6,16 @@
  */
 
 import { useState, Suspense, lazy } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, Button, EmptyState, Skeleton, cn } from '@intelliflow/ui';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Button,
+  EmptyState,
+  Skeleton,
+  cn,
+} from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared';
 import { useDriftDashboard, useFailedJobs } from '@/lib/ai-monitoring/hooks';
 import type { DriftFilters } from '@/lib/ai-monitoring/types';
@@ -128,7 +137,6 @@ export function DriftDashboard() {
     <div>
       <PageHeader title="Drift Detection" breadcrumbs={BREADCRUMBS} />
 
-
       {/* Process isolation banner */}
       {!isLoading && !available && (
         <div
@@ -139,8 +147,8 @@ export function DriftDashboard() {
             <span className="material-symbols-outlined text-base" aria-hidden="true">
               info
             </span>{' '}
-            Monitoring data unavailable — AI worker runs in a separate process. Data will appear when
-            both services are colocated or Redis-backed persistence is enabled.
+            Monitoring data unavailable — AI worker runs in a separate process. Data will appear
+            when both services are colocated or Redis-backed persistence is enabled.
           </p>
         </div>
       )}
@@ -274,82 +282,84 @@ export function DriftDashboard() {
           </CardHeader>
           <CardContent className="pb-4">
             {(() => {
-              if (!isLoading && history.length === 0) return (
-              <div data-testid="empty-state">
-                <EmptyState entity="insights" phase="passive" />
-              </div>
-              );
-              if (isLoading) return (
-              <div className="space-y-3">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={i} className="h-20 w-full rounded-lg" /> // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
-                ))}
-              </div>
-              );
+              if (!isLoading && history.length === 0)
+                return (
+                  <div data-testid="empty-state">
+                    <EmptyState entity="insights" phase="passive" />
+                  </div>
+                );
+              if (isLoading)
+                return (
+                  <div className="space-y-3">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-20 w-full rounded-lg" /> // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
+                    ))}
+                  </div>
+                );
               return (
-              <div className="space-y-2">
-                {history.map((item, idx) => {
-                  const key = `${item.metric}-${idx}`;
-                  const isExpanded = expandedCards.has(key);
-                  return (
-                    <div
-                      key={key}
-                      className="p-3 rounded-lg border hover:bg-muted/50 transition-colors"
-                      data-testid="drift-history-card"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium">{item.metric}</span>
-                          <span
-                            className={cn(
-                              'inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium',
-                              getSeverityBadgeClass(item.severity)
-                            )}
-                            aria-label={`Severity: ${item.severity}`}
-                          >
-                            {item.severity.toUpperCase()}
-                          </span>
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                          {formatRelativeTime(item.timestamp)}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-4 mt-1">
-                        <span className="text-xs text-muted-foreground">
-                          Score:{' '}
-                          <span className="font-mono" data-testid="drift-score">
-                            {formatDriftScore(item.driftScore)}
-                          </span>
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          p-value: <span className="font-mono">{formatPValue(item.pValue)}</span>
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => toggleExpand(key)}
-                        className="text-xs text-primary hover:underline mt-1"
-                        data-testid="expand-button"
+                <div className="space-y-2">
+                  {history.map((item, idx) => {
+                    const key = `${item.metric}-${idx}`;
+                    const isExpanded = expandedCards.has(key);
+                    return (
+                      <div
+                        key={key}
+                        className="p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                        data-testid="drift-history-card"
                       >
-                        {isExpanded ? 'Hide Details' : 'View Details'}
-                      </button>
-                      {isExpanded && (
-                        <div className="mt-2 pt-2 border-t" data-testid="expanded-details">
-                          {item.recommendations.length > 0 && (
-                            <div className="mb-2">
-                              <p className="text-xs font-medium mb-1">Recommendations:</p>
-                              <ul className="text-xs space-y-0.5 text-muted-foreground">
-                                {item.recommendations.map((rec) => (
-                                  <li key={rec}>• {rec}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">{item.metric}</span>
+                            <span
+                              className={cn(
+                                'inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium',
+                                getSeverityBadgeClass(item.severity)
+                              )}
+                              aria-label={`Severity: ${item.severity}`}
+                            >
+                              {item.severity.toUpperCase()}
+                            </span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {formatRelativeTime(item.timestamp)}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+                        <div className="flex items-center gap-4 mt-1">
+                          <span className="text-xs text-muted-foreground">
+                            Score:{' '}
+                            <span className="font-mono" data-testid="drift-score">
+                              {formatDriftScore(item.driftScore)}
+                            </span>
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            p-value: <span className="font-mono">{formatPValue(item.pValue)}</span>
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => toggleExpand(key)}
+                          className="text-xs text-primary hover:underline mt-1"
+                          data-testid="expand-button"
+                        >
+                          {isExpanded ? 'Hide Details' : 'View Details'}
+                        </button>
+                        {isExpanded && (
+                          <div className="mt-2 pt-2 border-t" data-testid="expanded-details">
+                            {item.recommendations.length > 0 && (
+                              <div className="mb-2">
+                                <p className="text-xs font-medium mb-1">Recommendations:</p>
+                                <ul className="text-xs space-y-0.5 text-muted-foreground">
+                                  {item.recommendations.map((rec) => (
+                                    <li key={rec}>• {rec}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               );
             })()}
           </CardContent>

@@ -34,7 +34,10 @@ interface NotificationSettingsPanelProps {
   onClose: () => void;
 }
 
-export function NotificationSettingsPanel({ isOpen, onClose }: Readonly<NotificationSettingsPanelProps>) {
+export function NotificationSettingsPanel({
+  isOpen,
+  onClose,
+}: Readonly<NotificationSettingsPanelProps>) {
   return (
     <ModuleSettingsNav
       isOpen={isOpen}

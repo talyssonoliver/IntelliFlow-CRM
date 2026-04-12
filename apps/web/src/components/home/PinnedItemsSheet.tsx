@@ -2,10 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@intelliflow/ui';
-import {
-  trackQuickActionsSettingsSaved,
-  trackPinnedNavSettingsSaved,
-} from '@/lib/analytics';
+import { trackQuickActionsSettingsSaved, trackPinnedNavSettingsSaved } from '@/lib/analytics';
 
 // =============================================================================
 // All available quick actions (superset of what can appear on home)
@@ -142,7 +139,10 @@ export type { QuickActionDef };
 // Toggle Switch component (matches mockup exactly)
 // =============================================================================
 
-function Toggle({ checked, onChange }: Readonly<{ checked: boolean; onChange: (v: boolean) => void }>) {
+function Toggle({
+  checked,
+  onChange,
+}: Readonly<{ checked: boolean; onChange: (v: boolean) => void }>) {
   return (
     <label
       aria-label={`Toggle ${checked ? 'off' : 'on'}`}
@@ -169,7 +169,11 @@ interface EditQuickActionsSheetProps {
   onSave: (enabledIds: Set<string>) => void;
 }
 
-export function EditQuickActionsSheet({ open, onOpenChange, onSave }: Readonly<EditQuickActionsSheetProps>) {
+export function EditQuickActionsSheet({
+  open,
+  onOpenChange,
+  onSave,
+}: Readonly<EditQuickActionsSheetProps>) {
   const [draft, setDraft] = useState<Set<string>>(() => loadEnabledActions());
   const draftRef = useRef(draft);
   draftRef.current = draft;

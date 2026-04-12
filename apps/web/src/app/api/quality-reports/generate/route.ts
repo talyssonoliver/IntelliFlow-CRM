@@ -45,10 +45,7 @@ async function runCoverageTests(
   coverageDir: string,
   fs: typeof import('node:fs')
 ): Promise<{ testOutput: string; testSucceeded: boolean; coverageGenerated: boolean }> {
-  let testOutput = '';
-  let testSucceeded = false;
   const coverageSummaryPath = path.join(coverageDir, 'coverage-summary.json');
-  let coverageGenerated = false;
 
   try {
     const { stdout } = await execAsync(testCommand, {
@@ -56,14 +53,12 @@ async function runCoverageTests(
       timeout: 300000,
       env: { ...process.env, CI: 'true', FORCE_COLOR: '0' },
     });
-    testOutput = stdout;
-    testSucceeded = true;
+    return { testOutput: stdout, testSucceeded: true, coverageGenerated: false };
   } catch (testError) {
-    testOutput = testError instanceof Error ? testError.message : String(testError);
-    coverageGenerated = fs.existsSync(coverageSummaryPath);
+    const testOutput = testError instanceof Error ? testError.message : String(testError);
+    const coverageGenerated = fs.existsSync(coverageSummaryPath);
+    return { testOutput, testSucceeded: false, coverageGenerated };
   }
-
-  return { testOutput, testSucceeded, coverageGenerated };
 }
 
 function tryCopyToMiscDir(
@@ -79,7 +74,10 @@ function tryCopyToMiscDir(
   }
 }
 
-async function tryGenerateHtmlReport(projectRoot: string, fs: typeof import('node:fs')): Promise<void> {
+async function tryGenerateHtmlReport(
+  projectRoot: string,
+  fs: typeof import('node:fs')
+): Promise<void> {
   const reportScriptPath = path.join(projectRoot, 'scripts', 'ci', 'generate-coverage-report.js');
   if (!fs.existsSync(reportScriptPath)) return;
   try {
@@ -115,8 +113,11 @@ async function generateCoverageReport(
     if (!fs.existsSync(coverageDir)) fs.mkdirSync(coverageDir, { recursive: true });
     if (!fs.existsSync(miscCoverageDir)) fs.mkdirSync(miscCoverageDir, { recursive: true });
 
-    const { testOutput, testSucceeded, coverageGenerated: initialCoverageGenerated } =
-      await runCoverageTests(testCommand, projectRoot, coverageDir, fs);
+    const {
+      testOutput,
+      testSucceeded,
+      coverageGenerated: initialCoverageGenerated,
+    } = await runCoverageTests(testCommand, projectRoot, coverageDir, fs);
 
     const coverageSummaryPath = path.join(coverageDir, 'coverage-summary.json');
     let coverageGenerated = initialCoverageGenerated;
@@ -126,9 +127,8 @@ async function generateCoverageReport(
       tryCopyToMiscDir(coverageSummaryPath, miscCoverageDir, fs);
     }
 
-    const coverageMatch = /All files\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)/.exec(
-      testOutput
-    );
+    const coverageMatch =
+      /All files\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)/.exec(testOutput);
 
     await tryGenerateHtmlReport(projectRoot, fs);
 

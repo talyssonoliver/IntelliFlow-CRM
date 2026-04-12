@@ -26,8 +26,8 @@ export function DriftAlerts({ alerts }: Readonly<DriftAlertsProps>) {
         <CardTitle className="text-base flex items-center gap-2">
           <span className="material-symbols-outlined text-lg text-amber-500" aria-hidden="true">
             notifications_active
-          </span>
-          {' '}Drift Alerts
+          </span>{' '}
+          Drift Alerts
           {urgentAlerts.length > 0 && (
             <Badge variant="destructive" className="ml-1">
               {urgentAlerts.length}
@@ -80,7 +80,9 @@ export function DriftAlerts({ alerts }: Readonly<DriftAlertsProps>) {
                 {alert.recommendations.length > 0 && (
                   <ul className="text-xs space-y-1" data-testid="alert-recommendations">
                     {alert.recommendations.map((rec, ridx) => (
-                      <li key={ridx} className="flex items-start gap-1.5"> {/* NOSONAR typescript:S6479 */}
+                      <li key={ridx} className="flex items-start gap-1.5">
+                        {' '}
+                        {/* NOSONAR typescript:S6479 */}
                         <span
                           className="material-symbols-outlined text-xs mt-0.5"
                           aria-hidden="true"

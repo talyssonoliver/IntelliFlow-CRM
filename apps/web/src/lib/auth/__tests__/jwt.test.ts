@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  decodeJwtPayload,
-  getTokenExpiryMs,
-  getTokenMaxAgeSeconds,
-  isTokenUsable,
-} from '../jwt';
+import { decodeJwtPayload, getTokenExpiryMs, getTokenMaxAgeSeconds, isTokenUsable } from '../jwt';
 
 function createTestJwt(exp: number, extra: Record<string, unknown> = {}): string {
   const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));

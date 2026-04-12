@@ -41,7 +41,8 @@ export function isValidWebhookUrl(
   }
 
   const lower = url.toLowerCase();
-  if (lower.startsWith('javascript:') || lower.startsWith('data:') || lower.startsWith('file:')) { // NOSONAR — security guard rejecting dangerous protocols, not using them
+  if (lower.startsWith('javascript:') || lower.startsWith('data:') || lower.startsWith('file:')) {
+    // NOSONAR — security guard rejecting dangerous protocols, not using them
     return 'Invalid URL protocol';
   }
 

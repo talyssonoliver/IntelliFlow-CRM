@@ -21,7 +21,7 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 }));
 
 const { useWorkflowProgress } = vi.mocked(
-  (await import('@/lib/ai-monitoring/workflow-hooks')) as any,
+  (await import('@/lib/ai-monitoring/workflow-hooks')) as any
 );
 
 import { WorkflowProgressPanel } from '../WorkflowProgressPanel';
@@ -53,7 +53,8 @@ function buildSteps(): WorkflowMergedStep[] {
 function buildData(overrides: Partial<WorkflowProgressData> = {}): WorkflowProgressData {
   const steps = overrides.steps ?? buildSteps();
   const totalSteps = overrides.totalSteps ?? steps.length;
-  const completedCount = overrides.completedCount ?? steps.filter((s) => s.status === 'completed').length;
+  const completedCount =
+    overrides.completedCount ?? steps.filter((s) => s.status === 'completed').length;
   return {
     executionId: 'exec-1',
     workflowName: 'Lead Qualification',
@@ -201,7 +202,13 @@ describe('WorkflowProgressPanel — Category 2: Data Display', () => {
   it('COMPLETED execution shows 100% progress', () => {
     const steps = buildSteps().map<WorkflowMergedStep>((s) => ({ ...s, status: 'completed' }));
     setupMock({
-      data: buildData({ steps, status: 'COMPLETED', completedCount: 8, completedPercent: 100, completedAt: '2026-02-17T11:00:00Z' }),
+      data: buildData({
+        steps,
+        status: 'COMPLETED',
+        completedCount: 8,
+        completedPercent: 100,
+        completedAt: '2026-02-17T11:00:00Z',
+      }),
     });
     render(<WorkflowProgressPanel executionId="exec-1" />);
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100');
@@ -343,7 +350,9 @@ describe('WorkflowProgressPanel — Category 3: Interactions', () => {
 
 describe('WorkflowProgressPanel — Category 4: Edge Cases', () => {
   it('0 steps shows empty state', () => {
-    setupMock({ data: buildData({ steps: [], totalSteps: 0, completedCount: 0, completedPercent: 0 }) });
+    setupMock({
+      data: buildData({ steps: [], totalSteps: 0, completedCount: 0, completedPercent: 0 }),
+    });
     render(<WorkflowProgressPanel executionId="exec-1" />);
     expect(screen.queryAllByTestId('workflow-step')).toHaveLength(0);
     expect(screen.getByTestId('no-steps-empty')).toBeInTheDocument();
@@ -351,14 +360,18 @@ describe('WorkflowProgressPanel — Category 4: Edge Cases', () => {
 
   it('all steps completed renders 100% progress', () => {
     const steps = buildSteps().map<WorkflowMergedStep>((s) => ({ ...s, status: 'completed' }));
-    setupMock({ data: buildData({ steps, status: 'COMPLETED', completedCount: 8, completedPercent: 100 }) });
+    setupMock({
+      data: buildData({ steps, status: 'COMPLETED', completedCount: 8, completedPercent: 100 }),
+    });
     render(<WorkflowProgressPanel executionId="exec-1" />);
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100');
   });
 
   it('all steps failed renders 0% completed', () => {
     const steps = buildSteps().map<WorkflowMergedStep>((s) => ({ ...s, status: 'failed' }));
-    setupMock({ data: buildData({ steps, status: 'FAILED', completedCount: 0, completedPercent: 0 }) });
+    setupMock({
+      data: buildData({ steps, status: 'FAILED', completedCount: 0, completedPercent: 0 }),
+    });
     render(<WorkflowProgressPanel executionId="exec-1" />);
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '0');
     expect(screen.getByTestId('step-counter').textContent).toContain('0 / 8');
@@ -378,7 +391,9 @@ describe('WorkflowProgressPanel — Category 4: Edge Cases', () => {
 
   it('null/empty stepResults renders all pending', () => {
     const steps = buildSteps().map<WorkflowMergedStep>((s) => ({ ...s, status: 'pending' }));
-    setupMock({ data: buildData({ steps, currentStep: 0, completedCount: 0, completedPercent: 0 }) });
+    setupMock({
+      data: buildData({ steps, currentStep: 0, completedCount: 0, completedPercent: 0 }),
+    });
     render(<WorkflowProgressPanel executionId="exec-1" />);
     const rows = screen.getAllByTestId('workflow-step');
     for (const row of rows) {
@@ -390,7 +405,9 @@ describe('WorkflowProgressPanel — Category 4: Edge Cases', () => {
     const steps: WorkflowMergedStep[] = [
       { stepNumber: 1, stepId: 1, name: 'Lead Scoring', type: 'score', status: 'completed' },
     ];
-    setupMock({ data: buildData({ steps, totalSteps: 1, completedCount: 1, completedPercent: 100 }) });
+    setupMock({
+      data: buildData({ steps, totalSteps: 1, completedCount: 1, completedPercent: 100 }),
+    });
     render(<WorkflowProgressPanel executionId="exec-1" />);
     expect(screen.getAllByTestId('workflow-step')).toHaveLength(1);
     expect(screen.getByTestId('step-counter').textContent).toContain('1 / 1');
@@ -412,9 +429,11 @@ describe('WorkflowProgressPanel — Category 4: Edge Cases', () => {
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '38');
 
     const steps = buildSteps().map<WorkflowMergedStep>((s, i) =>
-      i < 5 ? { ...s, status: 'completed' } : s,
+      i < 5 ? { ...s, status: 'completed' } : s
     );
-    setupMock({ data: buildData({ steps, currentStep: 5, completedCount: 5, completedPercent: 63 }) });
+    setupMock({
+      data: buildData({ steps, currentStep: 5, completedCount: 5, completedPercent: 63 }),
+    });
     rerender(<WorkflowProgressPanel executionId="exec-1" />);
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '63');
   });

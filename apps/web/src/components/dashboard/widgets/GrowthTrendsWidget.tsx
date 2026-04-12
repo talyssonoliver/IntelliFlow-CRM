@@ -18,7 +18,7 @@ export function GrowthTrendsWidget(_props: Readonly<WidgetProps>) {
   );
 
   if (isLoading || authLoading) {
-  return (
+    return (
       <div className="p-5 h-full flex flex-col animate-pulse">
         <div className="flex items-center justify-between mb-4">
           <div className="h-6 w-40 rounded bg-muted" />
@@ -41,14 +41,16 @@ export function GrowthTrendsWidget(_props: Readonly<WidgetProps>) {
   const dataPoints = trendData.map((d: GrowthTrendData) => d.value);
   const months = trendData.map((d: GrowthTrendData) => d.month);
   const yoyChange = trendData[trendData.length - 1]?.yoyChange || 0;
-  const lineSegments = dataPoints.map((p: number, i: number) => `L${(i / (dataPoints.length - 1)) * 300},${100 - p}`).join(" "); // NOSONAR typescript:S4624 — arithmetic expressions inside template literal, not nested template
+  const lineSegments = dataPoints
+    .map((p: number, i: number) => `L${(i / (dataPoints.length - 1)) * 300},${100 - p}`)
+    .join(' '); // NOSONAR typescript:S4624 — arithmetic expressions inside template literal, not nested template
 
   return (
     <div className="p-5 h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-bold text-foreground flex items-center gap-2">
-          <span className="material-symbols-outlined text-muted-foreground">show_chart</span>{' '}
-          Growth Trends
+          <span className="material-symbols-outlined text-muted-foreground">show_chart</span> Growth
+          Trends
         </h3>
         {yoyChange !== 0 && (
           <span

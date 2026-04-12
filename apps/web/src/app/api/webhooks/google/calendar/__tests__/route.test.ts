@@ -30,10 +30,7 @@ vi.mock('../providers', () => ({
 import { POST } from '../route';
 import { resetRateLimiter } from '../../../rate-limiter';
 
-function createGoogleRequest(
-  headers: Record<string, string> = {},
-  body: string = '',
-): Request {
+function createGoogleRequest(headers: Record<string, string> = {}, body: string = ''): Request {
   const defaultHeaders: Record<string, string> = {
     'x-goog-channel-id': 'channel-123',
     'x-goog-resource-id': 'resource-456',
@@ -66,7 +63,7 @@ describe('Google Calendar Webhook Route Handler', () => {
         changeType: 'updated',
         channelId: 'channel-123',
         timestamp: new Date(),
-      }),
+      })
     );
     mockProcessNotification.mockResolvedValue({ processed: true });
 
@@ -77,9 +74,7 @@ describe('Google Calendar Webhook Route Handler', () => {
   });
 
   it('sync state returns 200 without calling processNotification', async () => {
-    const response = await POST(
-      createGoogleRequest({ 'x-goog-resource-state': 'sync' }),
-    );
+    const response = await POST(createGoogleRequest({ 'x-goog-resource-state': 'sync' }));
 
     expect(response.status).toBe(200);
     const body = await response.json();
@@ -95,13 +90,11 @@ describe('Google Calendar Webhook Route Handler', () => {
         changeType: 'deleted',
         channelId: 'channel-123',
         timestamp: new Date(),
-      }),
+      })
     );
     mockProcessNotification.mockResolvedValue({ processed: true });
 
-    const response = await POST(
-      createGoogleRequest({ 'x-goog-resource-state': 'not_exists' }),
-    );
+    const response = await POST(createGoogleRequest({ 'x-goog-resource-state': 'not_exists' }));
 
     expect(response.status).toBe(200);
     expect(mockProcessNotification).toHaveBeenCalled();
@@ -157,7 +150,7 @@ describe('Google Calendar Webhook Route Handler', () => {
 
   it('parseWebhookPayload returns failure → 200 OK (logged, not processed)', async () => {
     mockParseWebhookPayload.mockReturnValue(
-      Result.fail(new TestDomainError('Parse failed', 'PARSE_ERROR')),
+      Result.fail(new TestDomainError('Parse failed', 'PARSE_ERROR'))
     );
 
     const response = await POST(createGoogleRequest());
@@ -175,7 +168,7 @@ describe('Google Calendar Webhook Route Handler', () => {
         changeType: 'updated',
         channelId: 'channel-123',
         timestamp: new Date(),
-      }),
+      })
     );
     mockProcessNotification.mockRejectedValue(new Error('Unexpected error'));
 
@@ -192,7 +185,7 @@ describe('Google Calendar Webhook Route Handler', () => {
         changeType: 'updated',
         channelId: 'channel-123',
         timestamp: new Date(),
-      }),
+      })
     );
     mockProcessNotification.mockResolvedValue({ processed: true });
 
@@ -203,9 +196,7 @@ describe('Google Calendar Webhook Route Handler', () => {
   });
 
   it('response body includes verification flag for sync state', async () => {
-    const response = await POST(
-      createGoogleRequest({ 'x-goog-resource-state': 'sync' }),
-    );
+    const response = await POST(createGoogleRequest({ 'x-goog-resource-state': 'sync' }));
     const body = await response.json();
 
     expect(body.received).toBe(true);
@@ -218,9 +209,7 @@ describe('Google Calendar Webhook Route Handler', () => {
       const req = createGoogleRequest({ 'x-goog-resource-state': 'sync' });
       await POST(req);
     }
-    const response = await POST(
-      createGoogleRequest({ 'x-goog-resource-state': 'sync' }),
-    );
+    const response = await POST(createGoogleRequest({ 'x-goog-resource-state': 'sync' }));
     const body = await response.json();
     expect(body.error).toBe('rate_limited');
   });
@@ -265,7 +254,7 @@ describe('Google Calendar Webhook Route Handler', () => {
 
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining('ip_not_allowlisted'),
-      expect.any(Object),
+      expect.any(Object)
     );
     vi.unstubAllEnvs();
   });
@@ -278,7 +267,7 @@ describe('Google Calendar Webhook Route Handler', () => {
         changeType: 'updated',
         channelId: 'channel-123',
         timestamp: new Date(),
-      }),
+      })
     );
     mockProcessNotification.mockResolvedValue({ processed: true });
 

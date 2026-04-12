@@ -7,8 +7,6 @@ interface ApiReferenceRendererProps {
   configuration: Record<string, unknown>;
 }
 
-export function ApiReferenceRenderer({
-  configuration,
-}: Readonly<ApiReferenceRendererProps>) {
+export function ApiReferenceRenderer({ configuration }: Readonly<ApiReferenceRendererProps>) {
   return <ApiReferenceReact configuration={configuration} />;
 }

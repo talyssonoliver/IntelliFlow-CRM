@@ -99,16 +99,16 @@ function getSuggestedRoutes(pathname: string, maxItems: number): SuggestedRoute[
     route,
     score: scoreRoute(route, tokens),
   })).sort((left, right) => {
-      if (right.score !== left.score) {
-        return right.score - left.score;
-      }
+    if (right.score !== left.score) {
+      return right.score - left.score;
+    }
 
-      if (left.route.source !== right.route.source) {
-        return left.route.source === 'module-route' ? -1 : 1;
-      }
+    if (left.route.source !== right.route.source) {
+      return left.route.source === 'module-route' ? -1 : 1;
+    }
 
-      return left.route.label.localeCompare(right.route.label);
-    });
+    return left.route.label.localeCompare(right.route.label);
+  });
 
   const ranked = rankedEntries.map((entry) => entry.route);
 
@@ -121,7 +121,8 @@ function getSuggestedRoutes(pathname: string, maxItems: number): SuggestedRoute[
   }
 
   const merged = [...ranked, ...fallback].filter(
-    (route, index, routes) => routes.findIndex((candidate) => candidate.href === route.href) === index
+    (route, index, routes) =>
+      routes.findIndex((candidate) => candidate.href === route.href) === index
   );
 
   return merged.slice(0, maxItems);

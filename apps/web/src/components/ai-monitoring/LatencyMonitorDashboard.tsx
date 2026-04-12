@@ -14,7 +14,16 @@
  */
 
 import { useState, Suspense, lazy } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, Button, EmptyState, Skeleton, cn } from '@intelliflow/ui';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Button,
+  EmptyState,
+  Skeleton,
+  cn,
+} from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared';
 import { useLatencyDashboard } from '@/lib/ai-monitoring/hooks';
 import type { LatencyFilters, LatencyPhase, LatencyPercentiles } from '@/lib/ai-monitoring/types';
@@ -27,7 +36,6 @@ import {
   isStaleLatencyData,
 } from '@/lib/ai-monitoring/latency-utils';
 import { LatencyAlerts } from './LatencyAlerts';
-
 
 const LatencyTrendChart = lazy(() => import('./LatencyTrendChart'));
 
@@ -143,7 +151,7 @@ export function LatencyMonitorDashboard() {
     return (
       <div>
         <PageHeader title="Latency Monitor" breadcrumbs={BREADCRUMBS} />
-  
+
         {!available ? (
           <div
             className="mt-4 p-3 rounded-lg bg-blue-50 border border-blue-200 dark:bg-blue-900/20 dark:border-blue-800"
@@ -171,7 +179,6 @@ export function LatencyMonitorDashboard() {
   return (
     <div>
       <PageHeader title="Latency Monitor" breadcrumbs={BREADCRUMBS} />
-
 
       {/* Stale data warning */}
       {isStaleLatencyData(latestTimestamp) && (
@@ -229,22 +236,22 @@ export function LatencyMonitorDashboard() {
         <fieldset className="contents">
           <legend className="sr-only">Filter by time range</legend>
           <div className="flex flex-wrap gap-1.5">
-          {TIME_RANGES.map((range) => (
-            <button
-              key={range}
-              onClick={() => setTimeRange(range)}
-              className={cn(
-                'px-3 py-1 rounded-full text-xs font-medium transition-colors',
-                timeRange === range
-                  ? 'bg-primary text-primary-foreground ring-2 ring-offset-1 ring-primary/40'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
-              )}
-              aria-pressed={timeRange === range}
-              data-testid={`filter-${range}`}
-            >
-              {range.toUpperCase()}
-            </button>
-          ))}
+            {TIME_RANGES.map((range) => (
+              <button
+                key={range}
+                onClick={() => setTimeRange(range)}
+                className={cn(
+                  'px-3 py-1 rounded-full text-xs font-medium transition-colors',
+                  timeRange === range
+                    ? 'bg-primary text-primary-foreground ring-2 ring-offset-1 ring-primary/40'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                )}
+                aria-pressed={timeRange === range}
+                data-testid={`filter-${range}`}
+              >
+                {range.toUpperCase()}
+              </button>
+            ))}
           </div>
         </fieldset>
         {modelNames.length > 0 && (

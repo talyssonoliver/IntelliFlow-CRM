@@ -95,16 +95,18 @@ function ActionButton({ action }: Readonly<ActionButtonProps>) {
   const content = (
     <>
       {(() => {
-        if (loading) return (
-          <span className="material-symbols-outlined text-[20px] animate-spin">
-            progress_activity
-          </span>
-        );
-        if (icon) return (
-          <span className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform">
-            {icon}
-          </span>
-        );
+        if (loading)
+          return (
+            <span className="material-symbols-outlined text-[20px] animate-spin">
+              progress_activity
+            </span>
+          );
+        if (icon)
+          return (
+            <span className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform">
+              {icon}
+            </span>
+          );
         return null;
       })()}
       <span className={cn(hideOnMobile && 'hidden sm:inline')}>{label}</span>

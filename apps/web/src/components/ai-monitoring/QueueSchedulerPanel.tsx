@@ -102,7 +102,9 @@ function QueueRow({
               data-testid={`action-resume-${queue.name}`}
               aria-label={`Resume ${queue.name} queue`}
             >
-              <span className="material-symbols-outlined text-sm" aria-hidden="true">play_arrow</span>
+              <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                play_arrow
+              </span>
             </Button>
           ) : (
             <Button
@@ -113,7 +115,9 @@ function QueueRow({
               data-testid={`action-pause-${queue.name}`}
               aria-label={`Pause ${queue.name} queue`}
             >
-              <span className="material-symbols-outlined text-sm" aria-hidden="true">pause</span>
+              <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                pause
+              </span>
             </Button>
           )}
 
@@ -124,18 +128,30 @@ function QueueRow({
             onClick={() => onRetryFailed(queue.name)}
             aria-label={`Retry failed jobs in ${queue.name}`}
           >
-            <span className="material-symbols-outlined text-sm" aria-hidden="true">replay</span>
+            <span className="material-symbols-outlined text-sm" aria-hidden="true">
+              replay
+            </span>
           </Button>
         </div>
       </div>
 
       {/* Counts */}
       <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-        <span>Waiting: <strong className="text-foreground">{queue.counts.waiting}</strong></span>
-        <span>Active: <strong className="text-foreground">{queue.counts.active}</strong></span>
-        <span>Completed: <strong className="text-foreground">{queue.counts.completed}</strong></span>
-        <span>Failed: <strong className="text-foreground">{queue.counts.failed}</strong></span>
-        <span>Delayed: <strong className="text-foreground">{queue.counts.delayed}</strong></span>
+        <span>
+          Waiting: <strong className="text-foreground">{queue.counts.waiting}</strong>
+        </span>
+        <span>
+          Active: <strong className="text-foreground">{queue.counts.active}</strong>
+        </span>
+        <span>
+          Completed: <strong className="text-foreground">{queue.counts.completed}</strong>
+        </span>
+        <span>
+          Failed: <strong className="text-foreground">{queue.counts.failed}</strong>
+        </span>
+        <span>
+          Delayed: <strong className="text-foreground">{queue.counts.delayed}</strong>
+        </span>
       </div>
 
       {/* Schedulers */}
@@ -144,7 +160,9 @@ function QueueRow({
           {queue.schedulers.map((sched) => (
             <div key={sched.id} className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2 text-muted-foreground">
-                <span className="material-symbols-outlined text-sm" aria-hidden="true">schedule</span>
+                <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                  schedule
+                </span>
                 <span className="font-mono">{sched.pattern ?? 'interval'}</span>
                 <span>{sched.name}</span>
               </div>
@@ -158,7 +176,12 @@ function QueueRow({
                       onClick={() => onDeleteScheduler(queue.name, sched.id)}
                       aria-label={`Delete scheduler ${sched.id}`}
                     >
-                      <span className="material-symbols-outlined text-sm text-destructive" aria-hidden="true">delete</span>
+                      <span
+                        className="material-symbols-outlined text-sm text-destructive"
+                        aria-hidden="true"
+                      >
+                        delete
+                      </span>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -194,16 +217,15 @@ export function QueueSchedulerPanel({
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
-            <span className="material-symbols-outlined text-lg" aria-hidden="true">queue</span>{' '}
+            <span className="material-symbols-outlined text-lg" aria-hidden="true">
+              queue
+            </span>{' '}
             Queue Scheduler
           </CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onRefresh}
-            aria-label="Refresh queue data"
-          >
-            <span className="material-symbols-outlined text-sm" aria-hidden="true">refresh</span>
+          <Button variant="ghost" size="sm" onClick={onRefresh} aria-label="Refresh queue data">
+            <span className="material-symbols-outlined text-sm" aria-hidden="true">
+              refresh
+            </span>
           </Button>
         </div>
       </CardHeader>

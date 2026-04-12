@@ -30,10 +30,7 @@ vi.mock('../providers', () => ({
 import { POST } from '../route';
 import { resetRateLimiter } from '../../../rate-limiter';
 
-function createMicrosoftRequest(
-  body: object | null = null,
-  queryParams: string = '',
-): Request {
+function createMicrosoftRequest(body: object | null = null, queryParams: string = ''): Request {
   const url = `http://localhost:3000/api/webhooks/microsoft/calendar${queryParams}`;
   const init: RequestInit = {
     method: 'POST',
@@ -76,9 +73,7 @@ describe('Microsoft Calendar Webhook Route Handler', () => {
   });
 
   it('validationToken query param → 200 OK, text/plain, echoes token', async () => {
-    const response = await POST(
-      createMicrosoftRequest(null, '?validationToken=abc123-def'),
-    );
+    const response = await POST(createMicrosoftRequest(null, '?validationToken=abc123-def'));
 
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toContain('text/plain');
@@ -88,7 +83,7 @@ describe('Microsoft Calendar Webhook Route Handler', () => {
 
   it('validationToken with special characters → sanitized/validated', async () => {
     const response = await POST(
-      createMicrosoftRequest(null, '?validationToken=<script>alert(1)</script>'),
+      createMicrosoftRequest(null, '?validationToken=<script>alert(1)</script>')
     );
 
     // Should reject invalid token format
@@ -106,7 +101,7 @@ describe('Microsoft Calendar Webhook Route Handler', () => {
         changeType: 'updated',
         channelId: 'sub-123',
         timestamp: new Date(),
-      }),
+      })
     );
     mockProcessNotification.mockResolvedValue({ processed: true });
 
@@ -124,12 +119,12 @@ describe('Microsoft Calendar Webhook Route Handler', () => {
         changeType: 'updated',
         channelId: 'sub-123',
         timestamp: new Date(),
-      }),
+      })
     );
     mockProcessNotification.mockResolvedValue({ processed: true });
 
     const response = await POST(
-      createMicrosoftRequest(createNotificationBody({ clientState: 'test-secret' })),
+      createMicrosoftRequest(createNotificationBody({ clientState: 'test-secret' }))
     );
 
     expect([200, 202]).toContain(response.status);
@@ -140,14 +135,14 @@ describe('Microsoft Calendar Webhook Route Handler', () => {
     const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const response = await POST(
-      createMicrosoftRequest(createNotificationBody({ clientState: 'wrong-secret' })),
+      createMicrosoftRequest(createNotificationBody({ clientState: 'wrong-secret' }))
     );
 
     expect([200, 202]).toContain(response.status);
     expect(mockProcessNotification).not.toHaveBeenCalled();
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining('security'),
-      expect.any(Object),
+      expect.any(Object)
     );
   });
 
@@ -155,7 +150,7 @@ describe('Microsoft Calendar Webhook Route Handler', () => {
     const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const response = await POST(
-      createMicrosoftRequest(createNotificationBody({ clientState: undefined })),
+      createMicrosoftRequest(createNotificationBody({ clientState: undefined }))
     );
 
     expect([200, 202]).toContain(response.status);
@@ -196,7 +191,7 @@ describe('Microsoft Calendar Webhook Route Handler', () => {
         changeType: 'updated',
         channelId: 'sub-1',
         timestamp: new Date(),
-      }),
+      })
     );
     mockProcessNotification.mockResolvedValue({ processed: true });
 
@@ -209,12 +204,10 @@ describe('Microsoft Calendar Webhook Route Handler', () => {
 
   it('parseWebhookPayload returns failure → 202 (logged, notification skipped)', async () => {
     mockParseWebhookPayload.mockReturnValue(
-      Result.fail(new TestDomainError('Parse failed', 'PARSE_ERROR')),
+      Result.fail(new TestDomainError('Parse failed', 'PARSE_ERROR'))
     );
 
-    const response = await POST(
-      createMicrosoftRequest(createNotificationBody()),
-    );
+    const response = await POST(createMicrosoftRequest(createNotificationBody()));
 
     expect([200, 202]).toContain(response.status);
     expect(mockProcessNotification).not.toHaveBeenCalled();
@@ -228,13 +221,11 @@ describe('Microsoft Calendar Webhook Route Handler', () => {
         changeType: 'updated',
         channelId: 'sub-123',
         timestamp: new Date(),
-      }),
+      })
     );
     mockProcessNotification.mockRejectedValue(new Error('Unexpected'));
 
-    const response = await POST(
-      createMicrosoftRequest(createNotificationBody()),
-    );
+    const response = await POST(createMicrosoftRequest(createNotificationBody()));
 
     expect([200, 202]).toContain(response.status);
   });
@@ -248,7 +239,7 @@ describe('Microsoft Calendar Webhook Route Handler', () => {
         changeType: 'created',
         channelId: 'sub-123',
         timestamp: new Date(),
-      }),
+      })
     );
     mockProcessNotification.mockResolvedValue({ processed: true });
 
@@ -266,13 +257,11 @@ describe('Microsoft Calendar Webhook Route Handler', () => {
         changeType: 'updated',
         channelId: 'sub-123',
         timestamp: new Date(),
-      }),
+      })
     );
     mockProcessNotification.mockResolvedValue({ processed: true });
 
-    const response = await POST(
-      createMicrosoftRequest(createNotificationBody()),
-    );
+    const response = await POST(createMicrosoftRequest(createNotificationBody()));
     const responseBody = await response.json();
 
     expect(responseBody.received).toBe(true);

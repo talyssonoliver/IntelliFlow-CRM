@@ -28,7 +28,11 @@ interface LatencyTrendChartProps {
   p99Target: number;
 }
 
-export default function LatencyTrendChart({ trend, p95Target, p99Target }: Readonly<LatencyTrendChartProps>) {
+export default function LatencyTrendChart({
+  trend,
+  p95Target,
+  p99Target,
+}: Readonly<LatencyTrendChartProps>) {
   const { timezone } = useTimezoneContext();
   if (trend.length === 0) {
     return (
@@ -61,7 +65,15 @@ export default function LatencyTrendChart({ trend, p95Target, p99Target }: Reado
             <LineChart data={trend}>
               <XAxis dataKey="timestamp" tickFormatter={formatTime} fontSize={11} />
               <YAxis fontSize={11} />
-              <Tooltip labelFormatter={(ts) => new Date(ts as string).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: timezone })} />
+              <Tooltip
+                labelFormatter={(ts) =>
+                  new Date(ts as string).toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    timeZone: timezone,
+                  })
+                }
+              />
               <Line
                 type="monotone"
                 dataKey="p50"

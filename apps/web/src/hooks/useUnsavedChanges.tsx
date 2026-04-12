@@ -149,7 +149,10 @@ interface UseFormUnsavedChangesOptions {
  * });
  * ```
  */
-export function useFormUnsavedChanges({ formName, isDirty }: Readonly<UseFormUnsavedChangesOptions>): void {
+export function useFormUnsavedChanges({
+  formName,
+  isDirty,
+}: Readonly<UseFormUnsavedChangesOptions>): void {
   const { register, unregister } = useUnsavedChanges();
 
   // Register/unregister based on dirty state

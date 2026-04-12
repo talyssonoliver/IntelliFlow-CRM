@@ -14,9 +14,7 @@ export function TeamChatWidget(_props: Readonly<WidgetProps>) {
           <span className="material-symbols-outlined text-2xl text-muted-foreground">forum</span>
         </div>
         <p className="text-sm font-medium text-muted-foreground">Coming Soon</p>
-        <p className="text-xs text-muted-foreground mt-1">
-          Team messaging is under development
-        </p>
+        <p className="text-xs text-muted-foreground mt-1">Team messaging is under development</p>
       </div>
     </div>
   );

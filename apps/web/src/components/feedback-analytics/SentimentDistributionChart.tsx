@@ -16,7 +16,9 @@ const COLORS = {
   Negative: '#dc2626',
 };
 
-export default function SentimentDistributionChart({ sentiment }: Readonly<SentimentDistributionChartProps>) {
+export default function SentimentDistributionChart({
+  sentiment,
+}: Readonly<SentimentDistributionChartProps>) {
   if (sentiment.total === 0) {
     return <EmptyState entity="insights" phase="passive" className="py-4" />;
   }

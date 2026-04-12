@@ -19,7 +19,9 @@ vi.mock('@intelliflow/ui', async () => {
       children: React.ReactNode;
       asChild?: boolean;
     }>) => <>{children}</>,
-    TooltipContent: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
+    TooltipContent: ({ children }: Readonly<{ children: React.ReactNode }>) => (
+      <div>{children}</div>
+    ),
     TooltipProvider: ({ children }: Readonly<{ children: React.ReactNode }>) => <>{children}</>,
   };
 });

@@ -14,7 +14,9 @@ import {
 import { DocumentSettingsPanel } from '@/components/documents/DocumentSettingsPanel';
 import { DocumentSettingsSidebarNav } from '@/components/documents/DocumentSettingsSidebarNav';
 
-export default function DocumentsListLayout({ children }: Readonly<{ readonly children: React.ReactNode }>) {
+export default function DocumentsListLayout({
+  children,
+}: Readonly<{ readonly children: React.ReactNode }>) {
   const pathname = usePathname();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -22,11 +24,9 @@ export default function DocumentsListLayout({ children }: Readonly<{ readonly ch
 
   const sidebarConfig = useMemo(() => {
     if (onSettingsPage) {
-      return createDocumentsSettingsSidebarConfig(
-        ({ isExpanded }) => (
-          <DocumentSettingsSidebarNav isExpanded={isExpanded} />
-        ),
-      );
+      return createDocumentsSettingsSidebarConfig(({ isExpanded }) => (
+        <DocumentSettingsSidebarNav isExpanded={isExpanded} />
+      ));
     }
     return createDocumentsSidebarConfig(() => setSettingsOpen((prev) => !prev));
   }, [onSettingsPage]);
@@ -38,10 +38,7 @@ export default function DocumentsListLayout({ children }: Readonly<{ readonly ch
 
         {/* Panel only needed in list mode */}
         {!onSettingsPage && (
-          <DocumentSettingsPanel
-            isOpen={settingsOpen}
-            onClose={() => setSettingsOpen(false)}
-          />
+          <DocumentSettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
         )}
 
         <SidebarInset>

@@ -242,9 +242,7 @@ export default function TasksPage() {
 
   const handleBulkComplete = useCallback(
     (ids: string[]) => {
-      Promise.allSettled(
-        ids.map((id) => completeMutation.mutateAsync({ taskId: id }))
-      ).then(() => {
+      Promise.allSettled(ids.map((id) => completeMutation.mutateAsync({ taskId: id }))).then(() => {
         utils.task.list.invalidate();
         utils.task.stats.invalidate();
       });
@@ -254,9 +252,7 @@ export default function TasksPage() {
 
   const handleBulkDelete = useCallback(
     (ids: string[]) => {
-      Promise.allSettled(
-        ids.map((id) => deleteMutation.mutateAsync({ id }))
-      ).then(() => {
+      Promise.allSettled(ids.map((id) => deleteMutation.mutateAsync({ id }))).then(() => {
         utils.task.list.invalidate();
         utils.task.stats.invalidate();
       });
@@ -266,9 +262,7 @@ export default function TasksPage() {
 
   const handleBulkArchive = useCallback(
     (ids: string[]) => {
-      Promise.allSettled(
-        ids.map((id) => archiveMutation.mutateAsync({ id }))
-      ).then(() => {
+      Promise.allSettled(ids.map((id) => archiveMutation.mutateAsync({ id }))).then(() => {
         utils.task.list.invalidate();
         utils.task.stats.invalidate();
       });
@@ -306,19 +300,22 @@ export default function TasksPage() {
     [editingTask, updateMutation]
   );
 
-  const handleReminderFilter = useCallback((filter: 'overdue' | 'today') => {
-    setPriorityFilter('');
-    setSearchQuery('');
-    setSortOrder('dueDate-asc');
-    if (filter === 'overdue') {
-      setStatusFilter('');
-      // Navigate with overdue param so the query picks up the `overdue: true` flag
-      router.push('/tasks?status=OVERDUE');
-    } else {
-      setStatusFilter('');
-      router.push('/tasks');
-    }
-  }, [router]);
+  const handleReminderFilter = useCallback(
+    (filter: 'overdue' | 'today') => {
+      setPriorityFilter('');
+      setSearchQuery('');
+      setSortOrder('dueDate-asc');
+      if (filter === 'overdue') {
+        setStatusFilter('');
+        // Navigate with overdue param so the query picks up the `overdue: true` flag
+        router.push('/tasks?status=OVERDUE');
+      } else {
+        setStatusFilter('');
+        router.push('/tasks');
+      }
+    },
+    [router]
+  );
 
   const totalItems = data?.total ?? tasks.length;
   const taskCountSuffix = totalItems > 0 ? ` (${totalItems} total)` : '';
@@ -332,7 +329,6 @@ export default function TasksPage() {
         breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Tasks' }]}
         title="Task Management"
         description={`Track and manage your tasks.${taskCountSuffix}`}
-
         actions={[
           {
             label: 'New Task',
@@ -428,7 +424,8 @@ export default function TasksPage() {
       {!error && data && data.total > data.limit && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {(page - 1) * data.limit + 1}–{Math.min(page * data.limit, data.total)} of {data.total}
+            Showing {(page - 1) * data.limit + 1}–{Math.min(page * data.limit, data.total)} of{' '}
+            {data.total}
           </p>
           <div className="flex items-center gap-2">
             <button

@@ -329,44 +329,46 @@ export function ReviewQueue() {
 
       {/* Review cards or empty/loading state */}
       {(() => {
-        if (isLoading) return (
-        <div className="space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-36 w-full rounded-lg" /> // NOSONAR typescript:S6479
-          ))}
-        </div>
-        );
-        if (reviews.length === 0) return (
-        <EmptyState
-          icon="inbox"
-          title="No pending reviews"
-          description="All AI outputs have been reviewed or there are no items matching your filters."
-          action={{
-            label: 'Clear Filters',
-            onClick: () => {
-              filterState.reset();
-              setFilters({ page: 1, limit: 20, sortBy: 'createdAt', sortOrder: 'desc' });
-            },
-            icon: 'filter_list_off',
-          }}
-        />
-        );
-        return (
-        <div className="space-y-3">
-          {reviews.map((review: ReviewResponse) => (
-            <ReviewCard
-              key={review.id}
-              review={review}
-              lockToken={getLockToken(review.id)}
-              currentUserId={currentUserId}
-              onClaim={handleClaim}
-              onApprove={handleApprove}
-              onReject={handleReject}
-              onEscalate={handleEscalate}
-              isMutating={isMutating}
+        if (isLoading)
+          return (
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-36 w-full rounded-lg" /> // NOSONAR typescript:S6479
+              ))}
+            </div>
+          );
+        if (reviews.length === 0)
+          return (
+            <EmptyState
+              icon="inbox"
+              title="No pending reviews"
+              description="All AI outputs have been reviewed or there are no items matching your filters."
+              action={{
+                label: 'Clear Filters',
+                onClick: () => {
+                  filterState.reset();
+                  setFilters({ page: 1, limit: 20, sortBy: 'createdAt', sortOrder: 'desc' });
+                },
+                icon: 'filter_list_off',
+              }}
             />
-          ))}
-        </div>
+          );
+        return (
+          <div className="space-y-3">
+            {reviews.map((review: ReviewResponse) => (
+              <ReviewCard
+                key={review.id}
+                review={review}
+                lockToken={getLockToken(review.id)}
+                currentUserId={currentUserId}
+                onClaim={handleClaim}
+                onApprove={handleApprove}
+                onReject={handleReject}
+                onEscalate={handleEscalate}
+                isMutating={isMutating}
+              />
+            ))}
+          </div>
         );
       })()}
 

@@ -8,6 +8,12 @@ export default [
     plugins: {
       react: reactPlugin,
     },
+    linterOptions: {
+      // Type-aware rules (e.g. @typescript-eslint/no-explicit-any) can't fire
+      // because projectService is disabled below. Their eslint-disable
+      // directives would be flagged as "unused" — suppress that noise.
+      reportUnusedDisableDirectives: 'off',
+    },
     languageOptions: {
       parserOptions: {
         // Disable type-aware linting for the sonar guard — these a11y and
@@ -17,6 +23,9 @@ export default [
       },
     },
     rules: {
+      // no-explicit-any is covered by the main lint; disable here so warnings
+      // from `as any` casts don't trip --max-warnings=0 in this a11y guard.
+      '@typescript-eslint/no-explicit-any': 'off',
       // Sonar accessibility parity for new code in web UI.
       'jsx-a11y/prefer-tag-over-role': 'error',
       'jsx-a11y/no-static-element-interactions': 'error',

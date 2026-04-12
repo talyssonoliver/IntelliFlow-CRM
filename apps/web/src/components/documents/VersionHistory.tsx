@@ -99,20 +99,20 @@ export function VersionHistory({
                 if (e.key === 'Escape') cancelRestore();
               }}
             >
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-              Restore version?
-            </h3>
-            <p className="mt-2 text-sm text-slate-500">
-              This will restore version{' '}
-              {sortedVersions.find((v) => v.id === restoreTarget)?.versionNumber ?? restoreTarget}{' '}
-              as the current version. This action can be undone.
-            </p>
-            <div className="flex justify-end gap-3 mt-6">
-              <Button variant="outline" onClick={cancelRestore}>
-                Cancel
-              </Button>
-              <Button onClick={confirmRestore}>Restore</Button>
-            </div>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                Restore version?
+              </h3>
+              <p className="mt-2 text-sm text-slate-500">
+                This will restore version{' '}
+                {sortedVersions.find((v) => v.id === restoreTarget)?.versionNumber ?? restoreTarget}{' '}
+                as the current version. This action can be undone.
+              </p>
+              <div className="flex justify-end gap-3 mt-6">
+                <Button variant="outline" onClick={cancelRestore}>
+                  Cancel
+                </Button>
+                <Button onClick={confirmRestore}>Restore</Button>
+              </div>
             </div>
           </dialog>
         </div>

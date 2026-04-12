@@ -30,14 +30,7 @@ export interface UseActivityFeedSearchOptions {
 const MIN_SEARCH_LENGTH = 2;
 
 export function useActivityFeedSearch(options: UseActivityFeedSearchOptions) {
-  const {
-    query,
-    limit = 20,
-    types,
-    sources,
-    entityType,
-    enabled = true,
-  } = options;
+  const { query, limit = 20, types, sources, entityType, enabled = true } = options;
 
   const trimmedQuery = query.trim();
   const isSearchActive = trimmedQuery.length >= MIN_SEARCH_LENGTH && enabled;

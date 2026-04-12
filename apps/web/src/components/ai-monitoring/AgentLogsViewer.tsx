@@ -13,9 +13,13 @@ import { Card, CardContent, Button, EmptyState, Skeleton, cn } from '@intelliflo
 import { PageHeader, SearchFilterBar, useMultiFilterState } from '@/components/shared';
 import { useAgentLogs, useFailedJobs } from '@/lib/ai-monitoring/hooks';
 import { getAgentTypeIcon, getAgentTypeLabel } from '@/lib/active-agents/agent-utils';
-import type { AgentLog, AgentLogMessage, AgentLogToolCall, FailedJob } from '@/lib/ai-monitoring/types';
+import type {
+  AgentLog,
+  AgentLogMessage,
+  AgentLogToolCall,
+  FailedJob,
+} from '@/lib/ai-monitoring/types';
 import { WorkflowProgressPanel } from './WorkflowProgressPanel';
-
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -169,11 +173,7 @@ function TranscriptView({ messages }: Readonly<TranscriptViewProps>) {
             {bubbleContent}
           </button>
         ) : (
-          <div
-            key={`${msg.role}-${idx}`}
-            data-testid="message-bubble"
-            className={bubbleClass}
-          >
+          <div key={`${msg.role}-${idx}`} data-testid="message-bubble" className={bubbleClass}>
             {bubbleContent}
           </div>
         );
@@ -311,10 +311,7 @@ function LogEntryCard({ log, isExpanded, onToggle }: Readonly<LogEntryCardProps>
           <ToolCallList toolCalls={log.toolCalls} />
           {log.contextType && log.contextId && (
             <div className="border-t px-4 py-3">
-              <WorkflowProgressPanel
-                entityType={log.contextType}
-                entityId={log.contextId}
-              />
+              <WorkflowProgressPanel entityType={log.contextType} entityId={log.contextId} />
             </div>
           )}
         </>
@@ -336,7 +333,6 @@ function LogsSkeleton() {
     </div>
   );
 }
-
 
 // ---------------------------------------------------------------------------
 // Failed Job Card (BullMQ DLQ visibility)
@@ -527,8 +523,8 @@ export function AgentLogsViewer({ agentId }: Readonly<AgentLogsViewerProps>) {
   // Agent logs query — skip when viewing queue failures
   const { logs, total, hasMore, isLoading, error, refetch } = useAgentLogs({
     agentId: agentId ?? undefined,
-    search: isQueueFailuresView ? undefined : (filterState.values.search || undefined),
-    toolStatus: isQueueFailuresView ? undefined : (filterState.values.toolStatus || undefined),
+    search: isQueueFailuresView ? undefined : filterState.values.search || undefined,
+    toolStatus: isQueueFailuresView ? undefined : filterState.values.toolStatus || undefined,
     sort: (filterState.values.sort as 'newest' | 'oldest') || 'newest',
     limit: DEFAULT_LIMIT,
     offset: isQueueFailuresView ? 0 : offset,
@@ -570,7 +566,9 @@ export function AgentLogsViewer({ agentId }: Readonly<AgentLogsViewerProps>) {
       breadcrumbs={BREADCRUMBS}
       title="Agent Logs"
       description="View AI agent conversation transcripts and tool call records"
-      actions={[{ label: 'Refresh', icon: 'refresh', variant: 'secondary', onClick: activeRefetch }]}
+      actions={[
+        { label: 'Refresh', icon: 'refresh', variant: 'secondary', onClick: activeRefetch },
+      ]}
     />
   );
 
@@ -605,7 +603,9 @@ export function AgentLogsViewer({ agentId }: Readonly<AgentLogsViewerProps>) {
       <SearchFilterBar
         searchValue={filterState.values.search}
         onSearchChange={(v) => filterState.set('search', v)}
-        searchPlaceholder={isQueueFailuresView ? 'Search disabled for queue view' : 'Search logs...'}
+        searchPlaceholder={
+          isQueueFailuresView ? 'Search disabled for queue view' : 'Search logs...'
+        }
         filters={[
           {
             id: 'toolStatus',

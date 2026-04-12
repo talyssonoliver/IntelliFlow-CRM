@@ -98,7 +98,16 @@ export function StatusMonitor({ services, refreshInterval = 30000 }: Readonly<St
                 refresh
               </span>
             )}
-            <span>Updated {lastUpdated ? lastUpdated.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: timezone }) : 'Loading...'}</span>
+            <span>
+              Updated{' '}
+              {lastUpdated
+                ? lastUpdated.toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    timeZone: timezone,
+                  })
+                : 'Loading...'}
+            </span>
           </div>
         </div>
 
@@ -116,6 +125,7 @@ export function StatusMonitor({ services, refreshInterval = 30000 }: Readonly<St
                     {service.uptime}%
                   </span>
                 </div>
+                {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- SVG/canvas wrapper: uptime chart built from bar divs; <img> cannot contain dynamic bar elements */}
                 <div
                   className="flex gap-0.5"
                   role="img" // NOSONAR typescript:S6819 — uptime chart built from bar divs; <img> cannot contain dynamic bar elements

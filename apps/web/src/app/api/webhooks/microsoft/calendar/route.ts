@@ -14,7 +14,11 @@ import { isRateLimited, checkIpAllowlist } from '../../rate-limiter';
 const MAX_BODY_SIZE = 1024 * 1024; // 1 MB
 const VALIDATION_TOKEN_REGEX = /^[\w\-.~+/]+=*$/;
 
-function validateClientState(notifClientState: string | undefined, clientStateSecret: string | undefined, subscriptionId: string): boolean {
+function validateClientState(
+  notifClientState: string | undefined,
+  clientStateSecret: string | undefined,
+  subscriptionId: string
+): boolean {
   if (!notifClientState || !clientStateSecret) {
     console.warn('[MicrosoftWebhook] security_event_missing_client_state', {
       subscriptionId,
@@ -32,7 +36,9 @@ function validateClientState(notifClientState: string | undefined, clientStateSe
     }
     return true;
   } catch {
-    console.warn('[MicrosoftWebhook] security_event_client_state_validation_error', { subscriptionId });
+    console.warn('[MicrosoftWebhook] security_event_client_state_validation_error', {
+      subscriptionId,
+    });
     return false;
   }
 }
@@ -48,7 +54,13 @@ async function processNotifications(
   for (const notification of notifications) {
     const notif = notification as Record<string, unknown>;
     const subscriptionId = notif.subscriptionId as string;
-    if (!validateClientState(notif.clientState as string | undefined, clientStateSecret, subscriptionId)) {
+    if (
+      !validateClientState(
+        notif.clientState as string | undefined,
+        clientStateSecret,
+        subscriptionId
+      )
+    ) {
       continue;
     }
     const parseResult = adapter.parseWebhookPayload(headers, { value: [notif] });
@@ -57,7 +69,9 @@ async function processNotifications(
       continue;
     }
     try {
-      await webhookService.processNotification(parseResult.value as Parameters<typeof webhookService.processNotification>[0]);
+      await webhookService.processNotification(
+        parseResult.value as Parameters<typeof webhookService.processNotification>[0]
+      );
     } catch (err) {
       console.error('[MicrosoftWebhook] process_error', {
         subscriptionId,
@@ -81,7 +95,7 @@ export async function POST(request: Request): Promise<Response> {
     if (!VALIDATION_TOKEN_REGEX.test(validationToken)) {
       return Response.json(
         { received: true, processed: false, error: 'invalid_validation_token' },
-        { status: 200 },
+        { status: 200 }
       );
     }
     return new Response(validationToken, {
@@ -95,7 +109,7 @@ export async function POST(request: Request): Promise<Response> {
   if (contentLength && Number.parseInt(contentLength, 10) > MAX_BODY_SIZE) {
     return Response.json(
       { received: true, processed: false, error: 'payload_too_large' },
-      { status: 200 },
+      { status: 200 }
     );
   }
 
@@ -104,14 +118,17 @@ export async function POST(request: Request): Promise<Response> {
     if (rawBody.length > MAX_BODY_SIZE) {
       return Response.json(
         { received: true, processed: false, error: 'payload_too_large' },
-        { status: 200 },
+        { status: 200 }
       );
     }
     const body = JSON.parse(rawBody);
     const notifications = body?.value;
 
     if (!Array.isArray(notifications) || notifications.length === 0) {
-      return Response.json({ received: true, processed: false, error: 'empty_value' }, { status: 200 });
+      return Response.json(
+        { received: true, processed: false, error: 'empty_value' },
+        { status: 200 }
+      );
     }
 
     const clientStateSecret = process.env.MSGRAPH_CLIENT_STATE_SECRET;
@@ -122,6 +139,9 @@ export async function POST(request: Request): Promise<Response> {
     console.error('[MicrosoftWebhook] unexpected_error', {
       error: err instanceof Error ? err.message : 'unknown',
     });
-    return Response.json({ received: true, processed: false, error: 'internal_error' }, { status: 200 });
+    return Response.json(
+      { received: true, processed: false, error: 'internal_error' },
+      { status: 200 }
+    );
   }
 }

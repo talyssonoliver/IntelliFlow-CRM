@@ -1,6 +1,14 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
 import type { ReactNode } from 'react';
 import * as React from 'react';
 import { api } from '@/lib/api';
@@ -103,7 +111,6 @@ interface CalendarApiEscape {
   };
 }
 
- 
 const calendarApi = api as CalendarApiEscape;
 
 const CalendarVisibilityContext = createContext<CalendarVisibilityContextValue | null>(null);
@@ -181,35 +188,39 @@ export function CalendarVisibilityProvider({ children }: { children: ReactNode }
 
   const addCalendar = useCallback(
     (label: string, color: string): Promise<void> => {
-      return createMutation
-        ?.mutateAsync({ name: label, color })
-        .then((result) => {
-          if (result) {
-            const created = result as DbCalendar;
-            setVisibility((prev) => ({ ...prev, [created.id]: true }));
-          }
-        })
-        .catch(() => {
-          // Silently fail — the UI can retry
-        }) ?? Promise.resolve();
+      return (
+        createMutation
+          ?.mutateAsync({ name: label, color })
+          .then((result) => {
+            if (result) {
+              const created = result as DbCalendar;
+              setVisibility((prev) => ({ ...prev, [created.id]: true }));
+            }
+          })
+          .catch(() => {
+            // Silently fail — the UI can retry
+          }) ?? Promise.resolve()
+      );
     },
     [createMutation]
   );
 
   const removeCalendar = useCallback(
     (id: string): Promise<void> => {
-      return deleteMutation
-        ?.mutateAsync({ id })
-        .then(() => {
-          setVisibility((prev) => {
-            const next = { ...prev };
-            delete next[id];
-            return next;
-          });
-        })
-        .catch(() => {
-          // Silently fail
-        }) ?? Promise.resolve();
+      return (
+        deleteMutation
+          ?.mutateAsync({ id })
+          .then(() => {
+            setVisibility((prev) => {
+              const next = { ...prev };
+              delete next[id];
+              return next;
+            });
+          })
+          .catch(() => {
+            // Silently fail
+          }) ?? Promise.resolve()
+      );
     },
     [deleteMutation]
   );
@@ -233,7 +244,15 @@ export function CalendarVisibilityProvider({ children }: { children: ReactNode }
   }, [visibility, dbCalendars]);
 
   const value = useMemo<CalendarVisibilityContextValue>(
-    () => ({ calendars, dbCalendars, toggle, isVisible, setOnlyVisible, addCalendar, removeCalendar }),
+    () => ({
+      calendars,
+      dbCalendars,
+      toggle,
+      isVisible,
+      setOnlyVisible,
+      addCalendar,
+      removeCalendar,
+    }),
     [calendars, dbCalendars, toggle, isVisible, setOnlyVisible, addCalendar, removeCalendar]
   );
 

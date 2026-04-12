@@ -74,7 +74,9 @@ function formatDueDate(date: DateStringNull, timezone: string = 'Europe/London')
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: timezone });
 }
 
-function getEntityInfo(task: Readonly<TaskListItem>): { type: string; name: string; href: string } | null {
+function getEntityInfo(
+  task: Readonly<TaskListItem>
+): { type: string; name: string; href: string } | null {
   if (task.lead)
     return {
       type: 'lead',
@@ -92,12 +94,15 @@ function getEntityInfo(task: Readonly<TaskListItem>): { type: string; name: stri
   return null;
 }
 
-function createColumns(handlers: {
-  onComplete: (id: string) => void;
-  onEdit: (task: TaskListItem) => void;
-  onDelete: (id: string) => void;
-  onArchive: (id: string) => void;
-}, timezone: string = 'Europe/London'): ColumnDef<TaskListItem>[] {
+function createColumns(
+  handlers: {
+    onComplete: (id: string) => void;
+    onEdit: (task: TaskListItem) => void;
+    onDelete: (id: string) => void;
+    onArchive: (id: string) => void;
+  },
+  timezone: string = 'Europe/London'
+): ColumnDef<TaskListItem>[] {
   return [
     {
       accessorKey: 'title',
@@ -218,7 +223,7 @@ function createColumns(handlers: {
             }
             dropdownActions={[
               { icon: 'edit', label: 'Edit', onClick: () => handlers.onEdit(task) },
-              ...((() => {
+              ...(() => {
                 if (task.status === 'COMPLETED' || task.status === 'CANCELLED') {
                   return [
                     {
@@ -239,7 +244,7 @@ function createColumns(handlers: {
                   ];
                 }
                 return [];
-              })()),
+              })(),
             ]}
           />
         );
@@ -314,11 +319,7 @@ export function TaskList({
   if (tasks.length === 0) {
     return (
       <div data-testid="task-list-empty">
-        <EmptyState
-          entity="tasks"
-          variant="filtered"
-          phase="passive"
-        />
+        <EmptyState entity="tasks" variant="filtered" phase="passive" />
       </div>
     );
   }

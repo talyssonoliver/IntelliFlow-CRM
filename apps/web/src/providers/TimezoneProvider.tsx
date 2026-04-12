@@ -41,8 +41,14 @@ export interface TimezoneContextValue {
   timezoneLabel: string;
 
   // Pre-bound formatting functions (use user's timezone automatically)
-  formatDate: (input: DateInput, options?: Partial<Pick<Intl.DateTimeFormatOptions, 'weekday' | 'year' | 'month' | 'day'>>) => string;
-  formatTime: (input: DateInput, options?: Partial<Pick<Intl.DateTimeFormatOptions, 'hour12' | 'second'>>) => string;
+  formatDate: (
+    input: DateInput,
+    options?: Partial<Pick<Intl.DateTimeFormatOptions, 'weekday' | 'year' | 'month' | 'day'>>
+  ) => string;
+  formatTime: (
+    input: DateInput,
+    options?: Partial<Pick<Intl.DateTimeFormatOptions, 'hour12' | 'second'>>
+  ) => string;
   formatDateTime: (input: DateInput, options?: Partial<Intl.DateTimeFormatOptions>) => string;
   formatDateShort: (input: DateInput) => string;
   formatISODate: (input: DateInput) => string;
@@ -68,26 +74,25 @@ const TimezoneContext = createContext<TimezoneContextValue>(UTC_FALLBACK);
 export function TimezoneProvider({ children }: Readonly<{ children: ReactNode }>) {
   const { timezone, isLoading, browserTimezone } = useTimezone();
 
-  const value = useMemo<TimezoneContextValue>(() => ({
-    timezone,
-    isLoading,
-    browserTimezone,
-    timezoneAbbr: getTimezoneAbbreviation(timezone),
-    timezoneLabel: getTimezoneLabel(timezone),
+  const value = useMemo<TimezoneContextValue>(
+    () => ({
+      timezone,
+      isLoading,
+      browserTimezone,
+      timezoneAbbr: getTimezoneAbbreviation(timezone),
+      timezoneLabel: getTimezoneLabel(timezone),
 
-    formatDate: (input, options) => rawFormatDate(input, timezone, options),
-    formatTime: (input, options) => rawFormatTime(input, timezone, options),
-    formatDateTime: (input, options) => rawFormatDateTime(input, timezone, options),
-    formatDateShort: (input) => rawFormatDateShort(input, timezone),
-    formatISODate: (input) => rawFormatISODate(input, timezone),
-    formatTimeRange: (start, end) => rawFormatTimeRange(start, end, timezone),
-  }), [timezone, isLoading, browserTimezone]);
-
-  return (
-    <TimezoneContext.Provider value={value}>
-      {children}
-    </TimezoneContext.Provider>
+      formatDate: (input, options) => rawFormatDate(input, timezone, options),
+      formatTime: (input, options) => rawFormatTime(input, timezone, options),
+      formatDateTime: (input, options) => rawFormatDateTime(input, timezone, options),
+      formatDateShort: (input) => rawFormatDateShort(input, timezone),
+      formatISODate: (input) => rawFormatISODate(input, timezone),
+      formatTimeRange: (start, end) => rawFormatTimeRange(start, end, timezone),
+    }),
+    [timezone, isLoading, browserTimezone]
   );
+
+  return <TimezoneContext.Provider value={value}>{children}</TimezoneContext.Provider>;
 }
 
 /**

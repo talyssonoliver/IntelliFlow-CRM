@@ -7,5 +7,10 @@ export {
   type ActivityFeedTypeFilterValue,
 } from './ActivityFeedTypeFilter';
 export type { ActivityFeedFilterValues } from './ActivityFeedFilters';
-export { ActivityFeedItemActions, type ActivityFeedItemActionsProps, type ReactionGroup, type ActivityComment } from './ActivityFeedItemActions';
+export {
+  ActivityFeedItemActions,
+  type ActivityFeedItemActionsProps,
+  type ReactionGroup,
+  type ActivityComment,
+} from './ActivityFeedItemActions';
 export { ActivityFeedStatsBar } from './ActivityFeedStatsBar';

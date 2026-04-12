@@ -151,7 +151,10 @@ export interface LandingPageConfig {
 // Section Components
 // ============================================================================
 
-export function LandingHero({ section, pageSlug }: Readonly<{ section: HeroSection; pageSlug: string }>) {
+export function LandingHero({
+  section,
+  pageSlug,
+}: Readonly<{ section: HeroSection; pageSlug: string }>) {
   const variant = section.experiment ? getVariant(section.experiment) : null;
   const ctaText = variant?.name || section.primaryCta.text;
 
@@ -448,7 +451,10 @@ export function LandingFaq({ section }: Readonly<{ section: FaqSection }>) {
   );
 }
 
-export function LandingCta({ section, pageSlug }: Readonly<{ section: CtaSection; pageSlug: string }>) {
+export function LandingCta({
+  section,
+  pageSlug,
+}: Readonly<{ section: CtaSection; pageSlug: string }>) {
   const handleCtaClick = () => {
     trackConversion(`lp_${pageSlug}`, 'footer_cta_click');
   };
@@ -532,13 +538,7 @@ export function LandingBuilder({ config }: Readonly<{ config: LandingPageConfig 
         const sectionKey = `${section.type}-${sectionLabel}`;
         switch (section.type) {
           case 'hero':
-            return (
-              <LandingHero
-                key={sectionKey}
-                section={section}
-                pageSlug={config.slug}
-              />
-            );
+            return <LandingHero key={sectionKey} section={section} pageSlug={config.slug} />;
           case 'features':
             return <LandingFeatures key={sectionKey} section={section} />;
           case 'testimonials':
@@ -550,13 +550,7 @@ export function LandingBuilder({ config }: Readonly<{ config: LandingPageConfig 
           case 'faq':
             return <LandingFaq key={sectionKey} section={section} />;
           case 'cta':
-            return (
-              <LandingCta
-                key={sectionKey}
-                section={section}
-                pageSlug={config.slug}
-              />
-            );
+            return <LandingCta key={sectionKey} section={section} pageSlug={config.slug} />;
           case 'logo-cloud':
             return <LandingLogoCloud key={sectionKey} section={section} />;
           default:

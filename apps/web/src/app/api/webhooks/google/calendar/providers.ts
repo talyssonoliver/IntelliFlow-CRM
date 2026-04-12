@@ -25,17 +25,15 @@ interface GoogleAdapter {
   parseWebhookPayload(headers: Record<string, string>, body: unknown): WebhookParseResult;
 }
 
-let adapterOverride: GoogleAdapter | null = null;
-let serviceOverride: CalendarWebhookService | null = null;
+const adapterOverride: GoogleAdapter | null = null;
+const serviceOverride: CalendarWebhookService | null = null;
 
 /**
  * Inline Google webhook payload parser.
  * Mirrors GoogleCalendarAdapter.parseWebhookPayload logic (packages/adapters)
  * to avoid importing @intelliflow/adapters from the Next.js web app.
  */
-function parseGoogleWebhookPayload(
-  headers: Record<string, string>,
-): WebhookParseResult {
+function parseGoogleWebhookPayload(headers: Record<string, string>): WebhookParseResult {
   const resourceState = headers['x-goog-resource-state'];
   const resourceId = headers['x-goog-resource-id'];
   const channelId = headers['x-goog-channel-id'];
@@ -79,8 +77,7 @@ function parseGoogleWebhookPayload(
 }
 
 const inlineAdapter: GoogleAdapter = {
-  parseWebhookPayload: (headers: Record<string, string>) =>
-    parseGoogleWebhookPayload(headers),
+  parseWebhookPayload: (headers: Record<string, string>) => parseGoogleWebhookPayload(headers),
 };
 
 export function getGoogleAdapter(): GoogleAdapter {

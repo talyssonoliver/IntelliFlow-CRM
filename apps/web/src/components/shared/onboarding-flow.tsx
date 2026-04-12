@@ -360,8 +360,8 @@ export function OnboardingFlow({
             href="/dashboard"
             className="text-sm text-slate-300 hover:text-white transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900 rounded"
           >
-            Skip for now and go to dashboard
-            {' '}<span className="material-symbols-outlined text-lg" aria-hidden="true">
+            Skip for now and go to dashboard{' '}
+            <span className="material-symbols-outlined text-lg" aria-hidden="true">
               arrow_forward
             </span>
           </Link>

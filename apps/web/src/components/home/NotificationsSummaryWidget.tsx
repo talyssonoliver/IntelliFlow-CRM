@@ -8,22 +8,21 @@ interface NotificationsSummaryWidgetProps {
   enabled: boolean;
 }
 
-export function NotificationsSummaryWidget({
-  enabled,
-}: Readonly<NotificationsSummaryWidgetProps>) {
+export function NotificationsSummaryWidget({ enabled }: Readonly<NotificationsSummaryWidgetProps>) {
   const utils = trpc.useUtils();
 
-  const { data: unreadData, isLoading: countLoading } =
-    trpc.notifications.getUnreadCount.useQuery(undefined, {
+  const { data: unreadData, isLoading: countLoading } = trpc.notifications.getUnreadCount.useQuery(
+    undefined,
+    {
       enabled,
       refetchInterval: 60_000,
-    });
+    }
+  );
 
-  const { data: listData, isLoading: listLoading } =
-    trpc.notifications.list.useQuery(
-      { limit: 3, isRead: false },
-      { enabled }
-    );
+  const { data: listData, isLoading: listLoading } = trpc.notifications.list.useQuery(
+    { limit: 3, isRead: false },
+    { enabled }
+  );
 
   const invalidateAll = () => {
     utils.notifications.getUnreadCount.invalidate();
@@ -79,26 +78,32 @@ export function NotificationsSummaryWidget({
 
       {/* Body */}
       <div className="p-3 space-y-2">
-        {isLoading ? (
-          <>
-            <NotificationItemSkeleton />
-            <NotificationItemSkeleton />
-            <NotificationItemSkeleton />
-          </>
-        ) : notifications.length === 0 ? (
-          <div className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-            You&apos;re all caught up!
-          </div>
-        ) : (
-          notifications.map((n) => (
+        {(() => {
+          if (isLoading) {
+            return (
+              <>
+                <NotificationItemSkeleton />
+                <NotificationItemSkeleton />
+                <NotificationItemSkeleton />
+              </>
+            );
+          }
+          if (notifications.length === 0) {
+            return (
+              <div className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                You&apos;re all caught up!
+              </div>
+            );
+          }
+          return notifications.map((n) => (
             <NotificationItem
               key={n.id}
               notification={n}
               onMarkAsRead={handleMarkAsRead}
               onDismiss={handleDismiss}
             />
-          ))
-        )}
+          ));
+        })()}
       </div>
 
       {/* Footer */}

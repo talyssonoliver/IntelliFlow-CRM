@@ -289,7 +289,11 @@ function emailStatusVariant(status: string): TagVariant {
   return 'slate';
 }
 
-function buildSourceTags(source: string, type: string, metadata: Record<string, unknown>): AutoTag[] {
+function buildSourceTags(
+  source: string,
+  type: string,
+  metadata: Record<string, unknown>
+): AutoTag[] {
   if (source === 'CALL') {
     const tags: AutoTag[] = [];
     const sentiment = metadata.sentiment as string | undefined;
@@ -322,9 +326,7 @@ function buildAutoTags(
 
   const tags: AutoTag[] = buildSourceTags(source, type, metadata);
 
-  const manualTags = metadata.tags as
-    | Array<{ label: string; variant?: TagVariant }>
-    | undefined;
+  const manualTags = metadata.tags as Array<{ label: string; variant?: TagVariant }> | undefined;
   if (manualTags) {
     for (const t of manualTags) {
       tags.push({ label: t.label, variant: t.variant || 'slate' });
@@ -377,7 +379,11 @@ interface EntityDescriptionProps {
   entityUrl: string | null;
 }
 
-function EntityDescription({ richDescription, entity, entityUrl }: Readonly<EntityDescriptionProps>) {
+function EntityDescription({
+  richDescription,
+  entity,
+  entityUrl,
+}: Readonly<EntityDescriptionProps>) {
   if (!richDescription && !entity) return null;
 
   return (

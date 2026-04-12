@@ -109,8 +109,8 @@ export function ACLManager({
             aria-label="Grant access"
             data-testid="grant-access-button"
           >
-            <span className="material-symbols-outlined text-[18px] mr-1">person_add</span>{' '}
-            Grant Access
+            <span className="material-symbols-outlined text-[18px] mr-1">person_add</span> Grant
+            Access
           </Button>
         </div>
       )}

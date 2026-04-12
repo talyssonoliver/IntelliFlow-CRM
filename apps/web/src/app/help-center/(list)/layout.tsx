@@ -11,7 +11,9 @@ import {
 } from '@/components/sidebar';
 import { ModuleGate } from '@/components/ModuleGate';
 
-export default function HelpCenterListLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function HelpCenterListLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <ModuleGate moduleId="SUPPORT">
       <SidebarPortalProvider>

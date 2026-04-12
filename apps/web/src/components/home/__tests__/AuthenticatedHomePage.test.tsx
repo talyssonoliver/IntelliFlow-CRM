@@ -76,7 +76,9 @@ vi.mock('@/lib/trpc', () => ({
       reorderPinnedItems: { useMutation: mockReorderMutation },
     },
     notifications: {
-      getUnreadCount: { useQuery: vi.fn(() => ({ data: { total: 0, byPriority: {} }, isLoading: false })) },
+      getUnreadCount: {
+        useQuery: vi.fn(() => ({ data: { total: 0, byPriority: {} }, isLoading: false })),
+      },
       list: { useQuery: vi.fn(() => ({ data: { notifications: [] }, isLoading: false })) },
       markAsRead: { useMutation: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })) },
       markAllAsRead: { useMutation: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })) },
@@ -126,7 +128,10 @@ vi.mock('@dnd-kit/core', () => ({
 }));
 
 vi.mock('@dnd-kit/sortable', () => ({
-  SortableContext: ({ children, items }: Readonly<{ children: React.ReactNode; items: string[] }>) => {
+  SortableContext: ({
+    children,
+    items,
+  }: Readonly<{ children: React.ReactNode; items: string[] }>) => {
     capturedSortableItems = items;
     return <div data-testid="sortable-context">{children}</div>;
   },
@@ -560,7 +565,9 @@ describe('AuthenticatedHomePage', () => {
     it('renders View All link', () => {
       render(<AuthenticatedHomePage />);
       const viewAllLinks = screen.getAllByRole('link', { name: /View All/i });
-      const insightsLink = viewAllLinks.find((l) => l.getAttribute('href') === '/agent-approvals/insights');
+      const insightsLink = viewAllLinks.find(
+        (l) => l.getAttribute('href') === '/agent-approvals/insights'
+      );
       expect(insightsLink).toBeDefined();
     });
 
@@ -597,7 +604,7 @@ describe('AuthenticatedHomePage', () => {
       });
 
       render(<AuthenticatedHomePage />);
-      expect(screen.getByText('No insights at this time.')).toBeInTheDocument();
+      expect(screen.getByText('No insights yet')).toBeInTheDocument();
     });
 
     it('shows skeleton loader when loading', () => {
@@ -1013,7 +1020,7 @@ describe('AuthenticatedHomePage', () => {
     it('configures reorderMutation with onSuccess that refetches', () => {
       render(<AuthenticatedHomePage />);
       // The mockReorderMutation was called with a config object that has onSuccess/onError
-       
+
       const calls = mockReorderMutation.mock.calls as any[][];
       const mutationConfig = calls[0]?.[0] as
         | { onSuccess?: unknown; onError?: unknown }
@@ -1026,7 +1033,7 @@ describe('AuthenticatedHomePage', () => {
     // T-008: onError calls refetchPinned (rollback)
     it('invokes onSuccess and onError callbacks without throwing', () => {
       render(<AuthenticatedHomePage />);
-       
+
       const calls = mockReorderMutation.mock.calls as any[][];
       const mutationConfig = calls[0]?.[0] as {
         onSuccess?: () => void;
@@ -1237,12 +1244,12 @@ describe('AuthenticatedHomePage', () => {
       expect(gearButton).toBeInTheDocument();
     });
 
-    it('clicking gear icon opens GoalSettingsModal', () => {
+    it('clicking gear icon opens GoalSettingsModal', async () => {
       render(<AuthenticatedHomePage />);
       const gearButton = screen.getByLabelText('Goal settings');
       fireEvent.click(gearButton);
-      // After clicking, the GoalSettingsModal should appear
-      expect(screen.getByText(/goal settings/i)).toBeInTheDocument();
+      // GoalSettingsModal is lazy-loaded — wait for it to appear
+      expect(await screen.findByText(/goal settings/i)).toBeInTheDocument();
     });
 
     it('GoalSection displays dynamic label from goalData', () => {

@@ -423,9 +423,7 @@ export default function UploadDocumentPage() {
                   accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.png,.jpg,.jpeg"
                   aria-label="Choose file to upload"
                 />
-                <span
-                  className="inline-block px-6 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors pointer-events-none"
-                >
+                <span className="inline-block px-6 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors pointer-events-none">
                   Select File
                 </span>
               </button>
@@ -451,7 +449,7 @@ export default function UploadDocumentPage() {
                   htmlFor="doc-title"
                   className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"
                 >
-                  Title{' '}<span className="text-red-500">*</span>
+                  Title <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="doc-title"
@@ -494,7 +492,7 @@ export default function UploadDocumentPage() {
                     htmlFor="doc-document-type"
                     className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"
                   >
-                    Document Type{' '}<span className="text-red-500">*</span>
+                    Document Type <span className="text-red-500">*</span>
                   </label>
                   <select
                     id="doc-document-type"
@@ -693,8 +691,8 @@ export default function UploadDocumentPage() {
               </>
             ) : (
               <>
-                <span className="material-symbols-outlined text-[18px]">upload</span>{' '}
-                Upload Document
+                <span className="material-symbols-outlined text-[18px]">upload</span> Upload
+                Document
               </>
             )}
           </button>

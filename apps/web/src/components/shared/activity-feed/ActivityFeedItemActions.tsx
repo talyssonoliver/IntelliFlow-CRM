@@ -131,6 +131,8 @@ export function ActivityFeedItemActions({
     }
   };
 
+  const submitLabel = inputMode === 'reply' ? 'Reply' : 'Save Note';
+
   return (
     <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
       {/* Reaction badges */}
@@ -158,10 +160,7 @@ export function ActivityFeedItemActions({
       {comments.length > 0 && (
         <div className="mb-2 space-y-2">
           {comments.map((c) => (
-            <div
-              key={c.id}
-              className="pl-3 border-l-2 border-slate-200 dark:border-slate-700"
-            >
+            <div key={c.id} className="pl-3 border-l-2 border-slate-200 dark:border-slate-700">
               <p className="text-sm text-slate-600 dark:text-slate-400">{c.text}</p>
               <p className="text-xs text-slate-500 mt-0.5">
                 {c.user} &middot; {formatTime(c.timestamp)}
@@ -251,7 +250,7 @@ export function ActivityFeedItemActions({
               disabled={!inputContent.trim() || isSubmitting}
               className="px-3 py-1.5 text-xs font-medium text-white bg-[#137fec] hover:bg-[#0f6dd0] rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Saving...' : inputMode === 'reply' ? 'Reply' : 'Save Note'}
+              {isSubmitting ? 'Saving...' : submitLabel}
             </button>
           </div>
         </div>

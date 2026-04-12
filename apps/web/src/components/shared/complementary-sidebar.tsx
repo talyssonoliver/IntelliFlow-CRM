@@ -98,22 +98,14 @@ export function ComplementarySidebar({
         // Slide animation — 200ms ease-out
         'transition-transform duration-200 ease-out',
         isOpen ? 'translate-x-0' : 'translate-x-full',
-        className,
+        className
       )}
     >
       {/* Header */}
       <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border shrink-0">
         <div className="min-w-0 flex-1">
-          {title && (
-            <h3 className="text-sm font-semibold text-foreground truncate">
-              {title}
-            </h3>
-          )}
-          {subtitle && (
-            <p className="text-xs text-muted-foreground truncate mt-0.5">
-              {subtitle}
-            </p>
-          )}
+          {title && <h3 className="text-sm font-semibold text-foreground truncate">{title}</h3>}
+          {subtitle && <p className="text-xs text-muted-foreground truncate mt-0.5">{subtitle}</p>}
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {headerActions}
@@ -124,7 +116,7 @@ export function ComplementarySidebar({
               'p-1.5 rounded-md',
               'text-muted-foreground hover:text-foreground',
               'hover:bg-slate-100 dark:hover:bg-slate-800',
-              'transition-colors',
+              'transition-colors'
             )}
             aria-label="Close panel"
           >
@@ -137,11 +129,8 @@ export function ComplementarySidebar({
 
       {/* Scrollable content with crossfade on key change */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
-        <div
-          key={`${contentKey}-${isLoading}`}
-          className="animate-[fade-in_100ms_ease-out]"
-        >
-          {isLoading ? (skeleton || <DefaultSkeleton />) : children}
+        <div key={`${contentKey}-${isLoading}`} className="animate-[fade-in_100ms_ease-out]">
+          {isLoading ? skeleton || <DefaultSkeleton /> : children}
         </div>
       </div>
     </aside>

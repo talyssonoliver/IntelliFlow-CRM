@@ -250,11 +250,14 @@ function toggleCategoryChannel(
   const allHave = items.every((p) => p.channels.includes(channel));
   return preferences.map((pref) => {
     if (!typeSet.has(pref.type)) return pref;
-    const channels = allHave
-      ? pref.channels.filter((c) => c !== channel)
-      : pref.channels.includes(channel)
-        ? pref.channels
-        : [...pref.channels, channel];
+    let channels: string[];
+    if (allHave) {
+      channels = pref.channels.filter((c) => c !== channel);
+    } else if (pref.channels.includes(channel)) {
+      channels = pref.channels;
+    } else {
+      channels = [...pref.channels, channel];
+    }
     return { ...pref, channels };
   });
 }
@@ -272,7 +275,10 @@ export default function NotificationSettingsPage() {
   const mutation = trpc.notifications.updatePreferences.useMutation({
     onSuccess: () => {
       utils.notifications.getPreferences.invalidate();
-      toast({ title: 'Preferences updated', description: 'Your notification preferences have been saved.' });
+      toast({
+        title: 'Preferences updated',
+        description: 'Your notification preferences have been saved.',
+      });
     },
     onError: (err: { message: string }) => {
       toast({ title: 'Failed to save', description: err.message, variant: 'destructive' });
@@ -282,9 +288,7 @@ export default function NotificationSettingsPage() {
   const [preferences, setPreferences] = useState<PrefItem[]>([]);
   const [prefsInitialized, setPrefsInitialized] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
-  const [priorityFilter, setPriorityFilter] = useState(
-    (data as any)?.priorityFilter || 'normal'
-  );
+  const [priorityFilter, setPriorityFilter] = useState((data as any)?.priorityFilter || 'normal');
 
   if (data && !prefsInitialized) {
     setPreferences(toPrefItems((data.preferences as Array<Record<string, unknown>>) || []));
@@ -316,7 +320,9 @@ export default function NotificationSettingsPage() {
   const savePrefs = useCallback(
     (updated: PrefItem[]) => {
       setPreferences(updated);
-      mutation.mutate({ preferences: updated as Parameters<typeof mutation.mutate>[0]['preferences'] });
+      mutation.mutate({
+        preferences: updated as Parameters<typeof mutation.mutate>[0]['preferences'],
+      });
     },
     [mutation]
   );
@@ -431,7 +437,10 @@ export default function NotificationSettingsPage() {
           <div className="grid grid-cols-[1fr_repeat(4,56px)] items-center gap-1 border-b bg-muted/50 px-5 py-3">
             <span className="text-sm font-semibold">Notification Types</span>
             {CHANNELS.map((ch) => (
-              <span key={ch} className="text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <span
+                key={ch}
+                className="text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+              >
                 {CHANNEL_LABELS[ch]}
               </span>
             ))}
@@ -460,12 +469,19 @@ export default function NotificationSettingsPage() {
                         expanded && 'rotate-180'
                       )}
                     />
-                    <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', category.iconBg)}>
+                    <div
+                      className={cn(
+                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
+                        category.iconBg
+                      )}
+                    >
                       <Icon className="h-[18px] w-[18px]" />
                     </div>
                     <div className="min-w-0">
                       <div className="text-sm font-semibold truncate">{category.label}</div>
-                      <div className="text-[11px] text-muted-foreground truncate">{category.description}</div>
+                      <div className="text-[11px] text-muted-foreground truncate">
+                        {category.description}
+                      </div>
                     </div>
                   </button>
 
@@ -491,7 +507,9 @@ export default function NotificationSettingsPage() {
                         key={pref.type}
                         className="grid grid-cols-[1fr_repeat(4,56px)] items-center gap-1 border-t border-border/40 px-5 py-2.5 hover:bg-muted/40 transition-colors"
                       >
-                        <span className="pl-16 text-sm text-foreground/80">{formatTypeName(pref.type)}</span>
+                        <span className="pl-16 text-sm text-foreground/80">
+                          {formatTypeName(pref.type)}
+                        </span>
                         {CHANNELS.map((ch) => (
                           <div key={ch} className="flex justify-center">
                             <input

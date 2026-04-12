@@ -30,9 +30,9 @@ export default function NotificationsLayoutShell({
 
   const sidebarConfig = useMemo(() => {
     if (onSettingsPage) {
-      return createNotificationsSettingsSidebarConfig(
-        ({ isExpanded }) => <NotificationSettingsSidebarNav isExpanded={isExpanded} />,
-      );
+      return createNotificationsSettingsSidebarConfig(({ isExpanded }) => (
+        <NotificationSettingsSidebarNav isExpanded={isExpanded} />
+      ));
     }
     return createNotificationsSidebarConfig(handleSettingsClick);
   }, [onSettingsPage, handleSettingsClick]);

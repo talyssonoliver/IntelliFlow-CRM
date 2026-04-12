@@ -136,11 +136,14 @@ export function EntitySearchField({
     setSearch('');
   }
 
-  const handleInputChange = useCallback((nextValue: string) => {
-    setSearch(nextValue);
-    setHighlightIndex(-1);
-    if (!open) setOpen(true);
-  }, [open]);
+  const handleInputChange = useCallback(
+    (nextValue: string) => {
+      setSearch(nextValue);
+      setHighlightIndex(-1);
+      if (!open) setOpen(true);
+    },
+    [open]
+  );
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {

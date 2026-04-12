@@ -24,8 +24,8 @@ export function LatencyAlerts({ alerts }: Readonly<LatencyAlertsProps>) {
         <CardTitle className="text-base flex items-center gap-2">
           <span className="material-symbols-outlined text-lg text-amber-500" aria-hidden="true">
             notifications_active
-          </span>
-          {' '}Latency Alerts
+          </span>{' '}
+          Latency Alerts
           {alerts.length > 0 && (
             <Badge variant="destructive" className="ml-1" data-testid="alert-count">
               {alerts.length}
