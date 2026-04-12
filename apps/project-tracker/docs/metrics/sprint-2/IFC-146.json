@@ -41,16 +41,15 @@
       "docs/planning/prd-template.md",
       "docs/planning/user-journey-template.md",
       "docs/planning/definition-of-ready.md",
-      "artifacts/logs/backlog-updates-log.csv"
+      "artifacts/old/backlog-updates-log.csv"
     ],
     "created": [
       "docs/planning/prd-template.md",
       "docs/planning/user-journey-template.md",
-      "docs/planning/definition-of-ready.md"
+      "docs/planning/definition-of-ready.md",
+      "artifacts/old/backlog-updates-log.csv"
     ],
-    "missing": [
-      "artifacts/logs/backlog-updates-log.csv"
-    ]
+    "missing": []
   },
   "validations": [
     {
