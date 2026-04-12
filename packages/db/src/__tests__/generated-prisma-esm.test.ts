@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const generatedPrismaPath = (...parts: string[]) => resolve(__dirname, '..', '..', 'generated', 'prisma', ...parts);
+const generatedPrismaPath = (...parts: string[]) =>
+  resolve(__dirname, '..', '..', 'generated', 'prisma', ...parts);
 
 describe('generated Prisma ESM shims', () => {
   it('marks generated/prisma as an ESM package for tsx consumers', () => {

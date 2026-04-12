@@ -93,205 +93,75 @@ const LEGACY_PATTERNS = {
   users: 'seed-user-',
 };
 
+async function deleteSeedRecords(
+  delegate: { deleteMany: (args: { where: unknown }) => Promise<{ count: number }> },
+  label: string,
+  where: unknown
+): Promise<number> {
+  try {
+    const result = await delegate.deleteMany({ where });
+    if (result.count > 0) {
+      console.log(`  ✓ Deleted ${result.count} ${label}`);
+    }
+    return result.count;
+  } catch {
+    /* table may not exist */
+    return 0;
+  }
+}
+
+async function cleanupApiAndWebhooks(): Promise<number> {
+  let total = 0;
+  total += await deleteSeedRecords(prisma.aPIUsageRecord, 'API usage records', { id: { startsWith: 'seed-' } });
+  total += await deleteSeedRecords(prisma.aPIKey, 'API keys', { id: { startsWith: 'seed-' } });
+  total += await deleteSeedRecords(prisma.webhookEndpoint, 'webhook endpoints', { id: { startsWith: 'seed-' } });
+  return total;
+}
+
+async function cleanupAgentAndContactActivities(): Promise<number> {
+  let total = 0;
+  total += await deleteSeedRecords(prisma.agentAction, 'agent actions', { id: { startsWith: 'seed-' } });
+  total += await deleteSeedRecords(prisma.contactActivity, 'contact activities', { id: { startsWith: 'seed-' } });
+  return total;
+}
+
+async function cleanupTicketRelated(): Promise<number> {
+  let total = 0;
+  total += await deleteSeedRecords(prisma.ticketActivity, 'ticket activities', { id: { startsWith: 'seed-' } });
+  total += await deleteSeedRecords(prisma.ticketAttachment, 'ticket attachments', { id: { startsWith: 'seed-' } });
+  total += await deleteSeedRecords(prisma.ticket, 'tickets', { id: { startsWith: 'seed-' } });
+  return total;
+}
+
+async function cleanupTasksAndDeals(): Promise<number> {
+  let total = 0;
+  total += await deleteSeedRecords(prisma.task, 'tasks', {
+    OR: [{ id: { startsWith: 'seed-' } }, { id: { in: [...LEGACY_HOME_PAGE_TASK_IDS] } }],
+  });
+  total += await deleteSeedRecords(prisma.activity, 'deal activities', { id: { startsWith: 'seed-' } });
+  total += await deleteSeedRecords(prisma.file, 'deal files', { id: { startsWith: 'seed-' } });
+  total += await deleteSeedRecords(prisma.opportunity, 'opportunities', { id: { startsWith: 'seed-' } });
+  return total;
+}
+
+async function cleanupCoreEntities(): Promise<number> {
+  let total = 0;
+  total += await deleteSeedRecords(prisma.lead, 'leads', { id: { startsWith: 'seed-' } });
+  total += await deleteSeedRecords(prisma.contact, 'contacts', { id: { startsWith: 'seed-' } });
+  total += await deleteSeedRecords(prisma.account, 'accounts', { id: { startsWith: 'seed-' } });
+  return total;
+}
+
 async function cleanupLegacySeedData() {
   console.log('🧹 Starting cleanup of legacy string-ID seed data...\n');
 
-  let totalDeleted = 0;
-
   // Delete in order to respect foreign key constraints (children first)
-
-  // 1. API & Webhooks
-  try {
-    const apiUsageDeleted = await prisma.aPIUsageRecord.deleteMany({
-      where: { id: { startsWith: 'seed-' } },
-    });
-    if (apiUsageDeleted.count > 0) {
-      console.log(`  ✓ Deleted ${apiUsageDeleted.count} API usage records`);
-      totalDeleted += apiUsageDeleted.count;
-    }
-  } catch {
-    /* table may not exist */
-  }
-
-  try {
-    const apiKeysDeleted = await prisma.aPIKey.deleteMany({
-      where: { id: { startsWith: 'seed-' } },
-    });
-    if (apiKeysDeleted.count > 0) {
-      console.log(`  ✓ Deleted ${apiKeysDeleted.count} API keys`);
-      totalDeleted += apiKeysDeleted.count;
-    }
-  } catch {
-    /* table may not exist */
-  }
-
-  try {
-    const webhooksDeleted = await prisma.webhookEndpoint.deleteMany({
-      where: { id: { startsWith: 'seed-' } },
-    });
-    if (webhooksDeleted.count > 0) {
-      console.log(`  ✓ Deleted ${webhooksDeleted.count} webhook endpoints`);
-      totalDeleted += webhooksDeleted.count;
-    }
-  } catch {
-    /* table may not exist */
-  }
-
-  // 2. Agent actions and activities
-  try {
-    const agentActionsDeleted = await prisma.agentAction.deleteMany({
-      where: { id: { startsWith: 'seed-' } },
-    });
-    if (agentActionsDeleted.count > 0) {
-      console.log(`  ✓ Deleted ${agentActionsDeleted.count} agent actions`);
-      totalDeleted += agentActionsDeleted.count;
-    }
-  } catch {
-    /* table may not exist */
-  }
-
-  try {
-    const contactActivitiesDeleted = await prisma.contactActivity.deleteMany({
-      where: { id: { startsWith: 'seed-' } },
-    });
-    if (contactActivitiesDeleted.count > 0) {
-      console.log(`  ✓ Deleted ${contactActivitiesDeleted.count} contact activities`);
-      totalDeleted += contactActivitiesDeleted.count;
-    }
-  } catch {
-    /* table may not exist */
-  }
-
-  // 3. Ticket-related
-  try {
-    const ticketActivitiesDeleted = await prisma.ticketActivity.deleteMany({
-      where: { id: { startsWith: 'seed-' } },
-    });
-    if (ticketActivitiesDeleted.count > 0) {
-      console.log(`  ✓ Deleted ${ticketActivitiesDeleted.count} ticket activities`);
-      totalDeleted += ticketActivitiesDeleted.count;
-    }
-  } catch {
-    /* table may not exist */
-  }
-
-  try {
-    const ticketAttachmentsDeleted = await prisma.ticketAttachment.deleteMany({
-      where: { id: { startsWith: 'seed-' } },
-    });
-    if (ticketAttachmentsDeleted.count > 0) {
-      console.log(`  ✓ Deleted ${ticketAttachmentsDeleted.count} ticket attachments`);
-      totalDeleted += ticketAttachmentsDeleted.count;
-    }
-  } catch {
-    /* table may not exist */
-  }
-
-  try {
-    const ticketsDeleted = await prisma.ticket.deleteMany({
-      where: { id: { startsWith: 'seed-' } },
-    });
-    if (ticketsDeleted.count > 0) {
-      console.log(`  ✓ Deleted ${ticketsDeleted.count} tickets`);
-      totalDeleted += ticketsDeleted.count;
-    }
-  } catch {
-    /* table may not exist */
-  }
-
-  // 4. Tasks
-  try {
-    const tasksDeleted = await prisma.task.deleteMany({
-      where: {
-        OR: [
-          { id: { startsWith: 'seed-' } },
-          { id: { in: [...LEGACY_HOME_PAGE_TASK_IDS] } },
-        ],
-      },
-    });
-    if (tasksDeleted.count > 0) {
-      console.log(`  ✓ Deleted ${tasksDeleted.count} tasks`);
-      totalDeleted += tasksDeleted.count;
-    }
-  } catch {
-    /* table may not exist */
-  }
-
-  // 5. Deal-related
-  try {
-    const dealActivitiesDeleted = await prisma.activity.deleteMany({
-      where: { id: { startsWith: 'seed-' } },
-    });
-    if (dealActivitiesDeleted.count > 0) {
-      console.log(`  ✓ Deleted ${dealActivitiesDeleted.count} deal activities`);
-      totalDeleted += dealActivitiesDeleted.count;
-    }
-  } catch {
-    /* table may not exist */
-  }
-
-  try {
-    const dealFilesDeleted = await prisma.file.deleteMany({
-      where: { id: { startsWith: 'seed-' } },
-    });
-    if (dealFilesDeleted.count > 0) {
-      console.log(`  ✓ Deleted ${dealFilesDeleted.count} deal files`);
-      totalDeleted += dealFilesDeleted.count;
-    }
-  } catch {
-    /* table may not exist */
-  }
-
-  try {
-    const opportunitiesDeleted = await prisma.opportunity.deleteMany({
-      where: { id: { startsWith: 'seed-' } },
-    });
-    if (opportunitiesDeleted.count > 0) {
-      console.log(`  ✓ Deleted ${opportunitiesDeleted.count} opportunities`);
-      totalDeleted += opportunitiesDeleted.count;
-    }
-  } catch {
-    /* table may not exist */
-  }
-
-  // 6. Leads
-  try {
-    const leadsDeleted = await prisma.lead.deleteMany({
-      where: { id: { startsWith: 'seed-' } },
-    });
-    if (leadsDeleted.count > 0) {
-      console.log(`  ✓ Deleted ${leadsDeleted.count} leads`);
-      totalDeleted += leadsDeleted.count;
-    }
-  } catch {
-    /* table may not exist */
-  }
-
-  // 7. Contacts
-  try {
-    const contactsDeleted = await prisma.contact.deleteMany({
-      where: { id: { startsWith: 'seed-' } },
-    });
-    if (contactsDeleted.count > 0) {
-      console.log(`  ✓ Deleted ${contactsDeleted.count} contacts`);
-      totalDeleted += contactsDeleted.count;
-    }
-  } catch {
-    /* table may not exist */
-  }
-
-  // 8. Accounts
-  try {
-    const accountsDeleted = await prisma.account.deleteMany({
-      where: { id: { startsWith: 'seed-' } },
-    });
-    if (accountsDeleted.count > 0) {
-      console.log(`  ✓ Deleted ${accountsDeleted.count} accounts`);
-      totalDeleted += accountsDeleted.count;
-    }
-  } catch {
-    /* table may not exist */
-  }
+  let totalDeleted = 0;
+  totalDeleted += await cleanupApiAndWebhooks();             // 1. API & Webhooks
+  totalDeleted += await cleanupAgentAndContactActivities();  // 2. Agent actions and activities
+  totalDeleted += await cleanupTicketRelated();              // 3. Ticket-related
+  totalDeleted += await cleanupTasksAndDeals();              // 4. Tasks and deal-related
+  totalDeleted += await cleanupCoreEntities();               // 5-8. Leads, Contacts, Accounts
 
   console.log(
     `\n✅ Cleanup complete! Deleted ${totalDeleted} total records with legacy string IDs.`
@@ -362,10 +232,7 @@ async function showLegacyCounts() {
   try {
     const taskCount = await prisma.task.count({
       where: {
-        OR: [
-          { id: { startsWith: 'seed-' } },
-          { id: { in: [...LEGACY_HOME_PAGE_TASK_IDS] } },
-        ],
+        OR: [{ id: { startsWith: 'seed-' } }, { id: { in: [...LEGACY_HOME_PAGE_TASK_IDS] } }],
       },
     });
     if (taskCount > 0) {

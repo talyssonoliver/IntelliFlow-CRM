@@ -77,8 +77,8 @@ export const SEED_IDS = {
     ryanMurphy: seedUUID('02', 13),
     dianaHall: seedUUID('02', 14),
     // Home page seed leads (previously used non-UUID 'home-lead-*' IDs)
-    jamesCarter: seedUUID('02', 15),   // 00000000-0000-4000-8000-00000000020f
-    priyaSharma: seedUUID('02', 16),   // 00000000-0000-4000-8000-000000000210
+    jamesCarter: seedUUID('02', 15), // 00000000-0000-4000-8000-00000000020f
+    priyaSharma: seedUUID('02', 16), // 00000000-0000-4000-8000-000000000210
     // Home page fallback leads (previously used non-UUID 'home-seed-lead-*' IDs)
     homeSeedLead1: seedUUID('02', 17),
     homeSeedLead2: seedUUID('02', 18),
@@ -138,9 +138,9 @@ export const SEED_IDS = {
     proposalDeal2: seedUUID('05', 23),
     proposalDeal3: seedUUID('05', 24),
     // Home page seed deals (previously used non-UUID 'home-deal-*' IDs)
-    homeDeal1: seedUUID('05', 25),   // 00000000-0000-4000-8000-000000000519
-    homeDeal2: seedUUID('05', 26),   // 00000000-0000-4000-8000-00000000051a
-    homeDeal3: seedUUID('05', 27),   // 00000000-0000-4000-8000-00000000051b
+    homeDeal1: seedUUID('05', 25), // 00000000-0000-4000-8000-000000000519
+    homeDeal2: seedUUID('05', 26), // 00000000-0000-4000-8000-00000000051a
+    homeDeal3: seedUUID('05', 27), // 00000000-0000-4000-8000-00000000051b
   },
   tickets: {
     systemOutage: seedUUID('06', 1), // 00000000-0000-4000-8000-000000000601
@@ -751,12 +751,12 @@ export const SEED_IDS = {
   },
   // AI Output Reviews for IFC-179 (AI Review Queue)
   aiOutputReviews: {
-    pendingScoring: seedUUID('61', 1),     // PENDING - lead scoring
-    pendingSentiment: seedUUID('61', 2),    // PENDING - sentiment analysis
-    inReviewResponse: seedUUID('61', 3),    // IN_REVIEW - auto response
-    approvedChurn: seedUUID('61', 4),       // APPROVED - churn prediction
-    rejectedEmail: seedUUID('61', 5),       // REJECTED - email generation
-    escalatedNba: seedUUID('61', 6),        // ESCALATED - next best action
+    pendingScoring: seedUUID('61', 1), // PENDING - lead scoring
+    pendingSentiment: seedUUID('61', 2), // PENDING - sentiment analysis
+    inReviewResponse: seedUUID('61', 3), // IN_REVIEW - auto response
+    approvedChurn: seedUUID('61', 4), // APPROVED - churn prediction
+    rejectedEmail: seedUUID('61', 5), // REJECTED - email generation
+    escalatedNba: seedUUID('61', 6), // ESCALATED - next best action
   },
   // Auto-Response Drafts for IFC-029 (Agent Approvals page)
   autoResponseDrafts: {

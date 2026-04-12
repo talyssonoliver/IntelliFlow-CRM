@@ -789,7 +789,9 @@ async function seedUserRoleAssignments(tenantId: string) {
     });
 
     if (!role) {
-      console.warn(`⚠️  RBAC role ${mapping.roleName} not found, skipping assignment for user ${mapping.userId}`);
+      console.warn(
+        `⚠️  RBAC role ${mapping.roleName} not found, skipping assignment for user ${mapping.userId}`
+      );
       continue;
     }
 
@@ -2614,7 +2616,11 @@ async function seedAIOutputReviews(tenantId: string) {
       id: SEED_IDS.aiOutputReviews.pendingScoring,
       tenantId,
       outputType: 'LEAD_SCORING' as const,
-      outputPayload: { leadId: SEED_IDS.leads.sarahMiller, score: 87, factors: ['website_visit', 'email_open', 'form_submit'] },
+      outputPayload: {
+        leadId: SEED_IDS.leads.sarahMiller,
+        score: 87,
+        factors: ['website_visit', 'email_open', 'form_submit'],
+      },
       confidence: 0.87,
       status: 'PENDING' as const,
       slaDeadline: oneDayFromNow,
@@ -2627,7 +2633,11 @@ async function seedAIOutputReviews(tenantId: string) {
       id: SEED_IDS.aiOutputReviews.pendingSentiment,
       tenantId,
       outputType: 'SENTIMENT_ANALYSIS' as const,
-      outputPayload: { ticketId: SEED_IDS.tickets.systemOutage, sentiment: 'NEGATIVE', confidence: 0.62 },
+      outputPayload: {
+        ticketId: SEED_IDS.tickets.systemOutage,
+        sentiment: 'NEGATIVE',
+        confidence: 0.62,
+      },
       confidence: 0.62,
       status: 'PENDING' as const,
       slaDeadline: oneDayFromNow,
@@ -2640,7 +2650,11 @@ async function seedAIOutputReviews(tenantId: string) {
       id: SEED_IDS.aiOutputReviews.inReviewResponse,
       tenantId,
       outputType: 'AUTO_RESPONSE' as const,
-      outputPayload: { leadId: SEED_IDS.leads.davidChen, subject: 'Follow-up on your inquiry', body: 'Thank you for reaching out...' },
+      outputPayload: {
+        leadId: SEED_IDS.leads.davidChen,
+        subject: 'Follow-up on your inquiry',
+        body: 'Thank you for reaching out...',
+      },
       confidence: 0.78,
       status: 'IN_REVIEW' as const,
       slaDeadline: oneDayFromNow,
@@ -2672,7 +2686,11 @@ async function seedAIOutputReviews(tenantId: string) {
       id: SEED_IDS.aiOutputReviews.rejectedEmail,
       tenantId,
       outputType: 'EMAIL_GENERATION' as const,
-      outputPayload: { leadId: SEED_IDS.leads.amandaSmith, subject: 'Special offer', body: 'Dear customer...' },
+      outputPayload: {
+        leadId: SEED_IDS.leads.amandaSmith,
+        subject: 'Special offer',
+        body: 'Dear customer...',
+      },
       confidence: 0.45,
       status: 'REJECTED' as const,
       slaDeadline: oneDayFromNow,
@@ -2688,7 +2706,11 @@ async function seedAIOutputReviews(tenantId: string) {
       id: SEED_IDS.aiOutputReviews.escalatedNba,
       tenantId,
       outputType: 'NEXT_BEST_ACTION' as const,
-      outputPayload: { leadId: SEED_IDS.leads.jamesWilson, action: 'SCHEDULE_DEMO', reason: 'High engagement score' },
+      outputPayload: {
+        leadId: SEED_IDS.leads.jamesWilson,
+        action: 'SCHEDULE_DEMO',
+        reason: 'High engagement score',
+      },
       confidence: 0.55,
       status: 'ESCALATED' as const,
       // SLA breached — deadline in the past (for SLA alert testing)
@@ -6933,7 +6955,7 @@ async function seedCaseDocuments(tenantId: string) {
       sizeBytes: BigInt(245000),
       signedBy: userId,
       signedAt: new Date('2024-12-29T14:00:00'),
-      signatureHash: 'signature-' + 'b'.repeat(56),
+      signatureHash: 'b'.repeat(64),
       signatureIpAddress: '192.168.1.100',
       signatureUserAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
       createdBy: userId,
@@ -6965,7 +6987,7 @@ async function seedCaseDocuments(tenantId: string) {
       sizeBytes: BigInt(95000),
       signedBy: userId,
       signedAt: new Date('2024-12-27T16:00:00'),
-      signatureHash: 'signature-' + 'd'.repeat(56),
+      signatureHash: 'd'.repeat(64),
       signatureIpAddress: '192.168.1.50',
       signatureUserAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
       createdBy: userId,
@@ -7042,7 +7064,7 @@ async function seedCaseDocuments(tenantId: string) {
     {
       id: SEED_IDS.caseDocuments.serviceAgreement,
       tenantId,
-      versionMajor: 0,
+      versionMajor: 1,
       versionMinor: 2,
       versionPatch: 0,
       parentVersionId: null,
@@ -7056,7 +7078,7 @@ async function seedCaseDocuments(tenantId: string) {
       relatedCaseId: null,
       relatedContactId: null,
       storageKey: 'documents/service-agreement-cloud.pdf',
-      contentHash: 'g'.repeat(64),
+      contentHash: 'b'.repeat(64),
       mimeType: 'application/pdf',
       sizeBytes: BigInt(310000),
       signedBy: null,
@@ -9607,6 +9629,213 @@ async function seedNotifications(tenantId: string) {
 // Main Function
 // =============================================================================
 
+async function trySeed(label: string, fn: () => Promise<void>): Promise<void> {
+  try {
+    await fn();
+  } catch (e) {
+    console.warn(`⚠️  ${label} failed:`, (e as Error).message?.slice(0, 100));
+  }
+}
+
+async function seedCoreEntities(tenantId: string): Promise<void> {
+  await seedUsers(tenantId);
+  await seedUserRoleAssignments(tenantId);
+  await seedAccounts(tenantId);
+  await seedLeads(tenantId);
+  await seedLeadActivities(tenantId);
+  await seedLeadNotes(tenantId);
+  await seedLeadFiles(tenantId);
+  await seedLeadAIInsights(tenantId);
+  await seedAutoResponseDrafts(tenantId);
+  await trySeed('seedAIOutputReviews', () => seedAIOutputReviews(tenantId));
+  await seedConversationRecords(tenantId);
+  await seedContacts(tenantId);
+  await seedOpportunities(tenantId);
+  await seedSLAPolicies(tenantId);
+  await seedTickets(tenantId);
+  await seedTasks(tenantId);
+  await seedAIScores(tenantId);
+  await seedAuditLogs(tenantId);
+  await seedDomainEvents(tenantId);
+}
+
+async function seedSupplementaryData(tenantId: string): Promise<void> {
+  console.log('\n📦 Seeding supplementary data (optional)...');
+  await trySeed('seedDealProducts', () => seedDealProducts(tenantId));
+  await trySeed('seedDealFiles', () => seedDealFiles(tenantId));
+  await trySeed('seedDealActivities', () => seedDealActivities(tenantId));
+  await trySeed('seedTicketActivities', () => seedTicketActivities(tenantId));
+  await trySeed('seedTicketAttachments', () => seedTicketAttachments(tenantId));
+}
+
+async function seedAdditionalUiData(tenantId: string): Promise<void> {
+  await trySeed('seedAdditionalUsersAndAccounts', () => seedAdditionalUsersAndAccounts(tenantId));
+  await trySeed('seedAgentActions', () => seedAgentActions(tenantId));
+  await trySeed('seedContactActivities', () => seedContactActivities(tenantId));
+  await trySeed('seedDashboardActivities', () => seedDashboardActivities(tenantId));
+}
+
+async function seedComprehensiveUiData(tenantId: string): Promise<void> {
+  await trySeed('seedContactNotes', () => seedContactNotes(tenantId));
+  await trySeed('seedContactAIInsights', () => seedContactAIInsights(tenantId));
+  await trySeed('seedCalendarEvents', () => seedCalendarEvents(tenantId));
+  await trySeed('seedTeamMessages', () => seedTeamMessages(tenantId));
+  await trySeed('seedPipelineSnapshots', () => seedPipelineSnapshots(tenantId));
+  await trySeed('seedTrafficSources', () => seedTrafficSources(tenantId));
+  await trySeed('seedGrowthMetrics', () => seedGrowthMetrics(tenantId));
+  await trySeed('seedDealsWonMetrics', () => seedDealsWonMetrics(tenantId));
+  await trySeed('seedTicketNextSteps', () => seedTicketNextSteps(tenantId));
+  await trySeed('seedRelatedTickets', () => seedRelatedTickets(tenantId));
+  await trySeed('seedTicketAIInsights', () => seedTicketAIInsights(tenantId));
+  await trySeed('seedSalesPerformance', () => seedSalesPerformance(tenantId));
+  await trySeed('seedDashboardTasks', () => seedDashboardTasks(tenantId));
+  await trySeed('seedContactDeals', () => seedContactDeals(tenantId));
+  await trySeed('seedContactTasks', () => seedContactTasks(tenantId));
+}
+
+async function seedFlowCoverageData(tenantId: string): Promise<void> {
+  console.log('\n🔄 Seeding flow coverage data (optional)...');
+
+  // FLOW-002, FLOW-004: Teams & Workspaces
+  await trySeed('seedWorkspaces', () => seedWorkspaces());
+  await trySeed('seedTeams', () => seedTeams(tenantId));
+  await trySeed('seedTeamMembers', () => seedTeamMembers(tenantId));
+
+  // FLOW-016: Email Communication
+  await trySeed('seedEmailTemplates', () => seedEmailTemplates(tenantId));
+  await trySeed('seedEmailRecords', () => seedEmailRecords(tenantId));
+
+  // FLOW-017: Chat Integration
+  await trySeed('seedChatConversations', () => seedChatConversations(tenantId));
+  await trySeed('seedChatMessages', () => seedChatMessages(tenantId));
+
+  // FLOW-018: Call Recording
+  await trySeed('seedCallRecords', () => seedCallRecords(tenantId));
+
+  // FLOW-021: Document Management
+  await trySeed('seedDocuments', () => seedDocuments(tenantId));
+
+  // PG-138: Case Management
+  await trySeed('seedCases', () => seedCases());
+  await trySeed('seedCaseTasks', () => seedCaseTasks(tenantId));
+
+  // IFC-152: Case Document Management
+  await trySeed('seedCaseDocuments', () => seedCaseDocuments(tenantId));
+
+  // FLOW-015: Customer Feedback (NPS/CSAT)
+  await trySeed('seedFeedbackSurveys', () => seedFeedbackSurveys(tenantId));
+
+  // FLOW-010: Deal Renewals & Account Health
+  await trySeed('seedDealRenewals', () => seedDealRenewals(tenantId));
+  await trySeed('seedAccountHealthScores', () => seedAccountHealthScores(tenantId));
+
+  // FLOW-012: Agent Skills & Routing
+  await trySeed('seedAgentSkills', () => seedAgentSkills(tenantId));
+  await trySeed('seedAgentAvailability', () => seedAgentAvailability(tenantId));
+  await trySeed('seedRoutingRules', () => seedRoutingRules(tenantId));
+  await trySeed('seedRoutingAudits', () => seedRoutingAudits(tenantId));
+
+  // FLOW-011, FLOW-013: Ticket Categories & SLA
+  await trySeed('seedTicketCategories', () => seedTicketCategories(tenantId));
+  await trySeed('seedSLABreaches', () => seedSLABreaches(tenantId));
+  await trySeed('seedEscalationHistory', () => seedEscalationHistory(tenantId));
+
+  // FLOW-025, FLOW-026: Workflow Engine
+  await trySeed('seedWorkflowDefinitions', () => seedWorkflowDefinitions(tenantId));
+  await trySeed('seedWorkflowExecutions', () => seedWorkflowExecutions(tenantId));
+
+  // FLOW-027: Business Rules
+  await trySeed('seedBusinessRules', () => seedBusinessRules(tenantId));
+
+  // FLOW-022, FLOW-023: Dashboards & Reports
+  await trySeed('seedDashboardConfigs', () => seedDashboardConfigs(tenantId));
+  await trySeed('seedKPIDefinitions', () => seedKPIDefinitions());
+  await trySeed('seedReportDefinitions', () => seedReportDefinitions(tenantId));
+
+  // FLOW-024: AI Insights
+  await trySeed('seedAIInsights', () => seedAIInsights(tenantId));
+
+  // FLOW-031, FLOW-032, FLOW-033: Monitoring & Observability
+  await trySeed('seedHealthChecks', () => seedHealthChecks());
+  await trySeed('seedAlertIncidents', () => seedAlertIncidents());
+  await trySeed('seedPerformanceMetrics', () => seedPerformanceMetrics(tenantId));
+
+  // FLOW-034: Webhooks
+  await trySeed('seedWebhookEndpoints', () => seedWebhookEndpoints(tenantId));
+
+  // FLOW-035, FLOW-036: API Management
+  await trySeed('seedAPIKeys', () => seedAPIKeys(tenantId));
+  await trySeed('seedAPIVersions', () => seedAPIVersions());
+
+  // Notifications seed data (for notification inbox)
+  await trySeed('seedNotifications', () => seedNotifications(tenantId));
+
+  // IFC-182: Home Page Data (uses relative dates for recent activity)
+  await trySeed('seedHomePageData', () => seedHomePageData(tenantId));
+}
+
+function printSeedSummary(): void {
+  console.log('\n✨ Database seeding completed successfully!\n');
+  console.log('📊 Summary (matching UI mockups + ALL 38 FLOWS):');
+  console.log('');
+  console.log('  CORE ENTITIES:');
+  console.log('  - 13 users (admin, manager, sales reps, support team, Alice Smith, Bob Jones)');
+  console.log('  - 14 accounts (TechCorp, Acme Corp, MegaCorp, TechFlow Inc., etc.)');
+  console.log('  - 5 leads (Sarah Miller, David Chen, etc.)');
+  console.log('  - 11 contacts (with account relationships, includes Sarah Jenkins)');
+  console.log('  - 12 opportunities/deals (across all pipeline stages + contact deals)');
+  console.log('  - 2 SLA policies (Standard & Premium)');
+  console.log('  - 6 tickets (with SLA statuses: Breached, At Risk, On Track)');
+  console.log('  - 13 tasks (Dashboard widgets, Deal detail, Contact tasks)');
+  console.log('  - 5 AI scores (for lead scoring)');
+  console.log('  - 3 audit logs');
+  console.log('  - 3 domain events');
+  console.log('');
+  console.log('  SUPPLEMENTARY DATA:');
+  console.log('  - 2 deal products (Enterprise License, Implementation)');
+  console.log('  - 2 deal files (Acme_MSA_v3.pdf, Requirements_Doc.docx)');
+  console.log('  - 5 deal activities (AI agent actions, emails, calls, stage changes)');
+  console.log('  - 6 ticket activities (customer messages, agent replies, system events)');
+  console.log('  - 3 ticket attachments (error logs, screenshot, DevOps analysis)');
+  console.log('');
+  console.log('  ADDITIONAL UI DATA:');
+  console.log('  - 4 agent actions (AI approval queue from agent-approvals)');
+  console.log('  - 10 contact activities (from contacts/[id] detail page)');
+  console.log('  - 2 dashboard activities (from RecentActivityWidget)');
+  console.log('');
+  console.log('  COMPREHENSIVE UI DATA:');
+  console.log('  - 2 contact notes, 1 contact AI insight, 4 calendar events');
+  console.log('  - 3 team messages, 4 pipeline snapshots, 4 traffic sources');
+  console.log('  - 12 growth metrics, 6 deals won metrics, 4 sales performance records');
+  console.log('  - 3 ticket next steps, 3 related tickets, 1 ticket AI insight');
+  console.log('');
+  console.log('  🆕 FLOW COVERAGE DATA (38 FLOWS):');
+  console.log('  FLOW-002/004: 2 workspaces, 3 teams, 3 team members');
+  console.log('  FLOW-016: 3 email templates, 3 email records');
+  console.log('  FLOW-017: 3 chat conversations, 3 chat messages');
+  console.log('  FLOW-018: 3 call records with transcription & sentiment');
+  console.log('  FLOW-021: 3 documents with categories');
+  console.log('  IFC-152: 5 case documents with ACL, versions, signatures');
+  console.log('  FLOW-015: 3 feedback surveys (NPS, CSAT, CES)');
+  console.log('  FLOW-010: 2 deal renewals, 3 account health scores');
+  console.log('  FLOW-012: 3 agent skills, 3 agent availability, 3 routing rules');
+  console.log('  FLOW-011/013: 4 ticket categories, 2 SLA breaches, 2 escalations');
+  console.log('  FLOW-025/026: 3 workflow definitions, 2 workflow executions');
+  console.log('  FLOW-027: 3 business rules');
+  console.log('  FLOW-022/023: 3 dashboard configs, 3 KPIs, 3 report definitions');
+  console.log('  FLOW-024: 3 AI insights (deal risk, churn risk, upsell)');
+  console.log('  FLOW-031/032/033: 3 health checks, 2 alert incidents, 3 performance metrics');
+  console.log('  FLOW-034: 3 webhook endpoints');
+  console.log(
+    '  PG-151: 14 AI conversation records (9 active, 3 idle, 2 error), 6 messages, 3 tool calls'
+  );
+  console.log('  FLOW-035/036: 3 API keys, 2 API versions');
+  console.log('');
+  console.log(
+    '\n🎉 Ready for development! Data matches ALL 104 frontend mockup files + ALL 38 FLOWS!\n'
+  );
+}
+
 async function main() {
   console.log('🌱 Starting database seeding...\n');
   console.log('📊 Seeding data from frontend UI mockups:\n');
@@ -9628,454 +9857,21 @@ async function main() {
     await seedRBACRolePermissions();
 
     // Seed data in correct order (respecting foreign key constraints)
-    await seedUsers(tenantId);
-    await seedUserRoleAssignments(tenantId);
-    await seedAccounts(tenantId);
-    await seedLeads(tenantId);
-    // Lead 360 data (requires leads)
-    await seedLeadActivities(tenantId);
-    await seedLeadNotes(tenantId);
-    await seedLeadFiles(tenantId);
-    await seedLeadAIInsights(tenantId);
-    // Auto-Response Drafts for IFC-029 (Agent Approvals page)
-    await seedAutoResponseDrafts(tenantId);
-    // AI Output Reviews for IFC-179 (AI Review Queue)
-    try {
-      await seedAIOutputReviews(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedAIOutputReviews failed:', (e as Error).message?.slice(0, 100));
-    }
-    // AI Conversation Records for PG-151 (Active Agents Dashboard)
-    await seedConversationRecords(tenantId);
-    await seedContacts(tenantId);
-    await seedOpportunities(tenantId);
-    await seedSLAPolicies(tenantId);
-    await seedTickets(tenantId);
-    await seedTasks(tenantId);
-    await seedAIScores(tenantId);
-    await seedAuditLogs(tenantId);
-    await seedDomainEvents(tenantId);
+    await seedCoreEntities(tenantId);
 
     // Seed supplementary data (requires parent records)
-    // NOTE: These are wrapped in try-catch as some may need tenantId updates
-    console.log('\n📦 Seeding supplementary data (optional)...');
-    try {
-      await seedDealProducts(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedDealProducts failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedDealFiles(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedDealFiles failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedDealActivities(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedDealActivities failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedTicketActivities(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedTicketActivities failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedTicketAttachments(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedTicketAttachments failed:', (e as Error).message?.slice(0, 100));
-    }
+    await seedSupplementaryData(tenantId);
 
     // Seed additional UI mockup data (Agent Actions, Contact Activities, Dashboard Activities)
-    try {
-      await seedAdditionalUsersAndAccounts(tenantId);
-    } catch (e) {
-      console.warn(
-        '⚠️  seedAdditionalUsersAndAccounts failed:',
-        (e as Error).message?.slice(0, 100)
-      );
-    }
-    try {
-      await seedAgentActions(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedAgentActions failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedContactActivities(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedContactActivities failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedDashboardActivities(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedDashboardActivities failed:', (e as Error).message?.slice(0, 100));
-    }
+    await seedAdditionalUiData(tenantId);
 
     // Seed comprehensive UI data (contacts 360, dashboard widgets, analytics)
-    try {
-      await seedContactNotes(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedContactNotes failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedContactAIInsights(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedContactAIInsights failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedCalendarEvents(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedCalendarEvents failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedTeamMessages(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedTeamMessages failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedPipelineSnapshots(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedPipelineSnapshots failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedTrafficSources(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedTrafficSources failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedGrowthMetrics(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedGrowthMetrics failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedDealsWonMetrics(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedDealsWonMetrics failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedTicketNextSteps(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedTicketNextSteps failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedRelatedTickets(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedRelatedTickets failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedTicketAIInsights(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedTicketAIInsights failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedSalesPerformance(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedSalesPerformance failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedDashboardTasks(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedDashboardTasks failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedContactDeals(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedContactDeals failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedContactTasks(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedContactTasks failed:', (e as Error).message?.slice(0, 100));
-    }
+    await seedComprehensiveUiData(tenantId);
 
-    // =========================================================================
-    // NEW FLOW COVERAGE DATA (FLOW-001 to FLOW-038)
-    // =========================================================================
-    console.log('\n🔄 Seeding flow coverage data (optional)...');
+    // Seed flow coverage data (FLOW-001 to FLOW-038)
+    await seedFlowCoverageData(tenantId);
 
-    // FLOW-002, FLOW-004: Teams & Workspaces
-    try {
-      await seedWorkspaces();
-    } catch (e) {
-      console.warn('⚠️  seedWorkspaces failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedTeams(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedTeams failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedTeamMembers(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedTeamMembers failed:', (e as Error).message?.slice(0, 100));
-    }
-
-    // FLOW-016: Email Communication
-    try {
-      await seedEmailTemplates(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedEmailTemplates failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedEmailRecords(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedEmailRecords failed:', (e as Error).message?.slice(0, 100));
-    }
-
-    // FLOW-017: Chat Integration
-    try {
-      await seedChatConversations(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedChatConversations failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedChatMessages(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedChatMessages failed:', (e as Error).message?.slice(0, 100));
-    }
-
-    // FLOW-018: Call Recording
-    try {
-      await seedCallRecords(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedCallRecords failed:', (e as Error).message?.slice(0, 100));
-    }
-
-    // FLOW-021: Document Management
-    try {
-      await seedDocuments(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedDocuments failed:', (e as Error).message?.slice(0, 100));
-    }
-
-    // PG-138: Case Management
-    try {
-      await seedCases();
-    } catch (e) {
-      console.warn('⚠️  seedCases failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedCaseTasks(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedCaseTasks failed:', (e as Error).message?.slice(0, 100));
-    }
-
-    // IFC-152: Case Document Management
-    try {
-      await seedCaseDocuments(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedCaseDocuments failed:', (e as Error).message?.slice(0, 100));
-    }
-
-    // FLOW-015: Customer Feedback (NPS/CSAT)
-    try {
-      await seedFeedbackSurveys(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedFeedbackSurveys failed:', (e as Error).message?.slice(0, 100));
-    }
-
-    // FLOW-010: Deal Renewals & Account Health
-    try {
-      await seedDealRenewals(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedDealRenewals failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedAccountHealthScores(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedAccountHealthScores failed:', (e as Error).message?.slice(0, 100));
-    }
-
-    // FLOW-012: Agent Skills & Routing
-    try {
-      await seedAgentSkills(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedAgentSkills failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedAgentAvailability(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedAgentAvailability failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedRoutingRules(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedRoutingRules failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedRoutingAudits(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedRoutingAudits failed:', (e as Error).message?.slice(0, 100));
-    }
-
-    // FLOW-011, FLOW-013: Ticket Categories & SLA
-    try {
-      await seedTicketCategories(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedTicketCategories failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedSLABreaches(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedSLABreaches failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedEscalationHistory(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedEscalationHistory failed:', (e as Error).message?.slice(0, 100));
-    }
-
-    // FLOW-025, FLOW-026: Workflow Engine
-    try {
-      await seedWorkflowDefinitions(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedWorkflowDefinitions failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedWorkflowExecutions(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedWorkflowExecutions failed:', (e as Error).message?.slice(0, 100));
-    }
-
-    // FLOW-027: Business Rules
-    try {
-      await seedBusinessRules(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedBusinessRules failed:', (e as Error).message?.slice(0, 100));
-    }
-
-    // FLOW-022, FLOW-023: Dashboards & Reports
-    try {
-      await seedDashboardConfigs(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedDashboardConfigs failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedKPIDefinitions();
-    } catch (e) {
-      console.warn('⚠️  seedKPIDefinitions failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedReportDefinitions(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedReportDefinitions failed:', (e as Error).message?.slice(0, 100));
-    }
-
-    // FLOW-024: AI Insights
-    try {
-      await seedAIInsights(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedAIInsights failed:', (e as Error).message?.slice(0, 100));
-    }
-
-    // FLOW-031, FLOW-032, FLOW-033: Monitoring & Observability
-    try {
-      await seedHealthChecks();
-    } catch (e) {
-      console.warn('⚠️  seedHealthChecks failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedAlertIncidents();
-    } catch (e) {
-      console.warn('⚠️  seedAlertIncidents failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedPerformanceMetrics(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedPerformanceMetrics failed:', (e as Error).message?.slice(0, 100));
-    }
-
-    // FLOW-034: Webhooks
-    try {
-      await seedWebhookEndpoints(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedWebhookEndpoints failed:', (e as Error).message?.slice(0, 100));
-    }
-
-    // FLOW-035, FLOW-036: API Management
-    try {
-      await seedAPIKeys(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedAPIKeys failed:', (e as Error).message?.slice(0, 100));
-    }
-    try {
-      await seedAPIVersions();
-    } catch (e) {
-      console.warn('⚠️  seedAPIVersions failed:', (e as Error).message?.slice(0, 100));
-    }
-
-    // Notifications seed data (for notification inbox)
-    try {
-      await seedNotifications(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedNotifications failed:', (e as Error).message?.slice(0, 100));
-    }
-
-    // IFC-182: Home Page Data (uses relative dates for recent activity)
-    try {
-      await seedHomePageData(tenantId);
-    } catch (e) {
-      console.warn('⚠️  seedHomePageData failed:', (e as Error).message?.slice(0, 100));
-    }
-
-    console.log('\n✨ Database seeding completed successfully!\n');
-    console.log('📊 Summary (matching UI mockups + ALL 38 FLOWS):');
-    console.log('');
-    console.log('  CORE ENTITIES:');
-    console.log('  - 13 users (admin, manager, sales reps, support team, Alice Smith, Bob Jones)');
-    console.log('  - 14 accounts (TechCorp, Acme Corp, MegaCorp, TechFlow Inc., etc.)');
-    console.log('  - 5 leads (Sarah Miller, David Chen, etc.)');
-    console.log('  - 11 contacts (with account relationships, includes Sarah Jenkins)');
-    console.log('  - 12 opportunities/deals (across all pipeline stages + contact deals)');
-    console.log('  - 2 SLA policies (Standard & Premium)');
-    console.log('  - 6 tickets (with SLA statuses: Breached, At Risk, On Track)');
-    console.log('  - 13 tasks (Dashboard widgets, Deal detail, Contact tasks)');
-    console.log('  - 5 AI scores (for lead scoring)');
-    console.log('  - 3 audit logs');
-    console.log('  - 3 domain events');
-    console.log('');
-    console.log('  SUPPLEMENTARY DATA:');
-    console.log('  - 2 deal products (Enterprise License, Implementation)');
-    console.log('  - 2 deal files (Acme_MSA_v3.pdf, Requirements_Doc.docx)');
-    console.log('  - 5 deal activities (AI agent actions, emails, calls, stage changes)');
-    console.log('  - 6 ticket activities (customer messages, agent replies, system events)');
-    console.log('  - 3 ticket attachments (error logs, screenshot, DevOps analysis)');
-    console.log('');
-    console.log('  ADDITIONAL UI DATA:');
-    console.log('  - 4 agent actions (AI approval queue from agent-approvals)');
-    console.log('  - 10 contact activities (from contacts/[id] detail page)');
-    console.log('  - 2 dashboard activities (from RecentActivityWidget)');
-    console.log('');
-    console.log('  COMPREHENSIVE UI DATA:');
-    console.log('  - 2 contact notes, 1 contact AI insight, 4 calendar events');
-    console.log('  - 3 team messages, 4 pipeline snapshots, 4 traffic sources');
-    console.log('  - 12 growth metrics, 6 deals won metrics, 4 sales performance records');
-    console.log('  - 3 ticket next steps, 3 related tickets, 1 ticket AI insight');
-    console.log('');
-    console.log('  🆕 FLOW COVERAGE DATA (38 FLOWS):');
-    console.log('  FLOW-002/004: 2 workspaces, 3 teams, 3 team members');
-    console.log('  FLOW-016: 3 email templates, 3 email records');
-    console.log('  FLOW-017: 3 chat conversations, 3 chat messages');
-    console.log('  FLOW-018: 3 call records with transcription & sentiment');
-    console.log('  FLOW-021: 3 documents with categories');
-    console.log('  IFC-152: 5 case documents with ACL, versions, signatures');
-    console.log('  FLOW-015: 3 feedback surveys (NPS, CSAT, CES)');
-    console.log('  FLOW-010: 2 deal renewals, 3 account health scores');
-    console.log('  FLOW-012: 3 agent skills, 3 agent availability, 3 routing rules');
-    console.log('  FLOW-011/013: 4 ticket categories, 2 SLA breaches, 2 escalations');
-    console.log('  FLOW-025/026: 3 workflow definitions, 2 workflow executions');
-    console.log('  FLOW-027: 3 business rules');
-    console.log('  FLOW-022/023: 3 dashboard configs, 3 KPIs, 3 report definitions');
-    console.log('  FLOW-024: 3 AI insights (deal risk, churn risk, upsell)');
-    console.log('  FLOW-031/032/033: 3 health checks, 2 alert incidents, 3 performance metrics');
-    console.log('  FLOW-034: 3 webhook endpoints');
-    console.log(
-      '  PG-151: 14 AI conversation records (9 active, 3 idle, 2 error), 6 messages, 3 tool calls'
-    );
-    console.log('  FLOW-035/036: 3 API keys, 2 API versions');
-    console.log('');
-    console.log(
-      '\n🎉 Ready for development! Data matches ALL 104 frontend mockup files + ALL 38 FLOWS!\n'
-    );
+    printSeedSummary();
   } catch (error) {
     console.error('❌ Error seeding database:', error);
     throw error;

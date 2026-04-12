@@ -185,7 +185,11 @@ describe('seed-home-page - supplementary', () => {
       expect(lead).toBeNull();
 
       // Upsert 3 leads
-      const seedLeadIds = [SEED_IDS.leads.homeSeedLead1, SEED_IDS.leads.homeSeedLead2, SEED_IDS.leads.homeSeedLead3];
+      const seedLeadIds = [
+        SEED_IDS.leads.homeSeedLead1,
+        SEED_IDS.leads.homeSeedLead2,
+        SEED_IDS.leads.homeSeedLead3,
+      ];
       for (let i = 0; i < 3; i++) {
         await mockUpsert({
           where: { id: seedLeadIds[i] },

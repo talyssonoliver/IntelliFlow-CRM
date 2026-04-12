@@ -26,7 +26,7 @@ export default defineConfig({
       const content = readFileSync(filePath, 'utf8');
       const fixed = content.replaceAll(
         /from "(\.\.\/generated\/prisma\/[^"]+?)(?<!\.js)"/g,
-        'from "$1.js"',
+        'from "$1.js"'
       );
       if (fixed !== content) {
         writeFileSync(filePath, fixed);
@@ -36,6 +36,5 @@ export default defineConfig({
     if (patched > 0) {
       console.log(`[prisma-esm] Patched ${patched} .mjs files with .js extensions`);
     }
-
   },
 });
