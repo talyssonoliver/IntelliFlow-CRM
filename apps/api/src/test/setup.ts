@@ -485,8 +485,22 @@ export const mockUser = {
   id: TEST_UUIDS.user1,
   email: 'test@example.com',
   name: 'Test User',
+  givenName: null,
+  familyName: null,
   avatarUrl: 'https://example.com/avatar.jpg',
   timezone: 'UTC',
+  locale: 'en-US',
+  phone: null,
+  company: null,
+  department: null,
+  location: null,
+  website: null,
+  bio: null,
+  provider: null,
+  emailVerified: false,
+  lastSignInAt: null,
+  signInCount: 0,
+  createdAt: new Date('2025-01-15T00:00:00.000Z'),
 };
 
 export const mockAIScore = {

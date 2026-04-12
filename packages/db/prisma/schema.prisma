@@ -189,11 +189,29 @@ model User {
   id               String    @id @default(cuid())
   email            String    @unique
   name             String?
+  givenName        String?   // First name (from OAuth given_name)
+  familyName       String?   // Last name (from OAuth family_name)
   avatarUrl        String?
   role             UserRole  @default(USER)
   stripeCustomerId String?   @unique // Stripe customer ID for billing
   preferences      Json?     // User preferences (pinned items, dashboard settings)
   timezone         String?   @default("Europe/London") // IANA timezone identifier (e.g. "America/New_York")
+  locale           String?   @default("en-US") // BCP 47 locale (e.g. "en-US", "pt-BR")
+
+  // Profile contact info
+  phone            String?
+  company          String?
+  department       String?
+  location         String?
+  website          String?
+  bio              String?
+
+  // OAuth / sign-in metadata
+  provider         String?   // e.g. "google", "github", "email"
+  emailVerified    Boolean   @default(false)
+  lastSignInAt     DateTime?
+  signInCount      Int       @default(0)
+
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 

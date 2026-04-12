@@ -13,8 +13,7 @@ import { AccountSettingsLoading } from './AccountSettingsLoading';
 import { ProfilePhotoDialog } from './ProfilePhotoDialog';
 
 export default function AccountSettingsContent() {
-  const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
-  const avatarSrc = user?.avatar ?? null;
+  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
 
   // ─── Queries ────────────────────────────────────────────────────────────
   const profileQuery = trpc.user.getProfile.useQuery(undefined, {
@@ -25,9 +24,10 @@ export default function AccountSettingsContent() {
   // ─── Mutations ──────────────────────────────────────────────────────────
   const utils = trpc.useUtils();
   const updateTimezoneMutation = trpc.user.updateTimezone.useMutation({
-    onSuccess: () => {
-      utils.user.getProfile.invalidate();
-    },
+    onSuccess: () => utils.user.getProfile.invalidate(),
+  });
+  const updateProfileMutation = trpc.user.updateProfile.useMutation({
+    onSuccess: () => utils.user.getProfile.invalidate(),
   });
 
   // ─── Local State ────────────────────────────────────────────────────────
@@ -35,12 +35,17 @@ export default function AccountSettingsContent() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
+  const [phone, setPhone] = useState('');
+  const [company, setCompany] = useState('');
+  const [department, setDepartment] = useState('');
+  const [location, setLocation] = useState('');
+  const [website, setWebsite] = useState('');
   const [timezone, setTimezone] = useState('Europe/London');
-  const [isDirty, setIsDirty] = useState(false);
-  const [dateFormat, setDateFormat] = useState('MM/DD/YYYY');
   const [language, setLanguage] = useState('en-US');
+  const [dateFormat, setDateFormat] = useState('MM/DD/YYYY');
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [desktopNotifications, setDesktopNotifications] = useState(true);
+  const [isDirty, setIsDirty] = useState(false);
   const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
 
   const { theme, setTheme } = useTheme();
@@ -48,20 +53,36 @@ export default function AccountSettingsContent() {
   // Sync server data to local state
   useEffect(() => {
     if (profileQuery.data) {
-      const fullName = String(profileQuery.data.name ?? '');
-      const parts = fullName.split(' ');
-      setFirstName(parts[0] ?? '');
-      setLastName(parts.slice(1).join(' '));
-      setEmail(String(profileQuery.data.email ?? ''));
-      setRole(String(profileQuery.data.role ?? ''));
-      setTimezone(String(profileQuery.data.timezone ?? 'Europe/London'));
+      const data = profileQuery.data;
+      // Prefer server-provided given/family; fall back to splitting `name`
+      if (data.givenName || data.familyName) {
+        setFirstName(data.givenName ?? '');
+        setLastName(data.familyName ?? '');
+      } else {
+        const parts = String(data.name ?? '').split(' ');
+        setFirstName(parts[0] ?? '');
+        setLastName(parts.slice(1).join(' '));
+      }
+      setEmail(data.email);
+      setRole(String(data.role ?? ''));
+      setPhone(data.phone ?? '');
+      setCompany(data.company ?? '');
+      setDepartment(data.department ?? '');
+      setLocation(data.location ?? '');
+      setWebsite(data.website ?? '');
+      setTimezone(data.timezone ?? 'Europe/London');
+      setLanguage(data.locale ?? 'en-US');
     }
   }, [profileQuery.data]);
 
   // ─── Derived values ─────────────────────────────────────────────────────
   const fullName = [firstName, lastName].filter(Boolean).join(' ') || 'User';
+  const avatarSrc = profileQuery.data?.avatarUrl ?? null;
+  const provider = profileQuery.data?.provider ?? null;
+  const emailVerified = profileQuery.data?.emailVerified ?? false;
+  const memberSince = profileQuery.data?.createdAt ?? null;
   const isLoading = authLoading || profileQuery.isLoading;
-  const isSaving = updateTimezoneMutation.isPending;
+  const isSaving = updateTimezoneMutation.isPending || updateProfileMutation.isPending;
   const error = profileQuery.error;
   const username = email.split('@')[0] ?? '';
 
@@ -70,7 +91,19 @@ export default function AccountSettingsContent() {
 
   const handleSave = useCallback(async () => {
     try {
-      await updateTimezoneMutation.mutateAsync({ timezone });
+      await Promise.all([
+        updateProfileMutation.mutateAsync({
+          givenName: firstName || null,
+          familyName: lastName || null,
+          phone: phone || null,
+          company: company || null,
+          department: department || null,
+          location: location || null,
+          website: website || null,
+          locale: language || null,
+        }),
+        updateTimezoneMutation.mutateAsync({ timezone }),
+      ]);
       setIsDirty(false);
       toast({
         title: 'Settings saved',
@@ -83,16 +116,30 @@ export default function AccountSettingsContent() {
         variant: 'destructive',
       });
     }
-  }, [timezone, updateTimezoneMutation]);
+  }, [
+    firstName, lastName, phone, company, department, location, website,
+    language, timezone, updateProfileMutation, updateTimezoneMutation,
+  ]);
 
   const handleCancel = useCallback(() => {
     if (profileQuery.data) {
-      const fullNameVal = String(profileQuery.data.name ?? '');
-      const parts = fullNameVal.split(' ');
-      setFirstName(parts[0] ?? '');
-      setLastName(parts.slice(1).join(' '));
-      setEmail(String(profileQuery.data.email ?? ''));
-      setTimezone(String(profileQuery.data.timezone ?? 'Europe/London'));
+      const data = profileQuery.data;
+      if (data.givenName || data.familyName) {
+        setFirstName(data.givenName ?? '');
+        setLastName(data.familyName ?? '');
+      } else {
+        const parts = String(data.name ?? '').split(' ');
+        setFirstName(parts[0] ?? '');
+        setLastName(parts.slice(1).join(' '));
+      }
+      setEmail(data.email);
+      setPhone(data.phone ?? '');
+      setCompany(data.company ?? '');
+      setDepartment(data.department ?? '');
+      setLocation(data.location ?? '');
+      setWebsite(data.website ?? '');
+      setTimezone(data.timezone ?? 'Europe/London');
+      setLanguage(data.locale ?? 'en-US');
       setIsDirty(false);
     }
   }, [profileQuery.data]);
@@ -176,11 +223,11 @@ export default function AccountSettingsContent() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
               {([
                 { icon: 'mail', label: 'Email', value: email },
-                { icon: 'call', label: 'Phone', value: null },
-                { icon: 'apartment', label: 'Company', value: null },
-                { icon: 'work', label: 'Department', value: null },
-                { icon: 'location_on', label: 'Location', value: null },
-                { icon: 'language', label: 'Website', value: null },
+                { icon: 'call', label: 'Phone', value: phone || null },
+                { icon: 'apartment', label: 'Company', value: company || null },
+                { icon: 'work', label: 'Department', value: department || null },
+                { icon: 'location_on', label: 'Location', value: location || null },
+                { icon: 'language', label: 'Website', value: website || null },
               ] as const).map((field) => (
                 <div key={field.label} className="flex items-start gap-3">
                   <span className="material-symbols-outlined text-slate-400 dark:text-slate-500 text-[20px] mt-0.5">{field.icon}</span>
@@ -241,6 +288,25 @@ export default function AccountSettingsContent() {
                   </Badge>
                 </Link>
               </div>
+              {provider && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Signed in with</span>
+                  <Badge variant="secondary" className="capitalize">
+                    <span className="material-symbols-outlined text-[12px] mr-1" aria-hidden="true">
+                      {provider === 'google' ? 'g_translate' : provider === 'github' ? 'code' : 'login'}
+                    </span>
+                    {provider}
+                  </Badge>
+                </div>
+              )}
+              {memberSince && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Member since</span>
+                  <span className="text-sm font-medium text-foreground">
+                    {new Date(memberSince).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -305,7 +371,20 @@ export default function AccountSettingsContent() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="account-email" className="text-slate-700 dark:text-slate-300">Email Address</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="account-email" className="text-slate-700 dark:text-slate-300">Email Address</Label>
+                <div className="flex items-center gap-1.5">
+                  {emailVerified && (
+                    <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800 text-[10px] h-5">
+                      <span className="material-symbols-outlined text-[12px] mr-0.5" aria-hidden="true">verified</span>
+                      Verified
+                    </Badge>
+                  )}
+                  <span className="text-xs font-medium text-slate-400 bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded">
+                    Read-only
+                  </span>
+                </div>
+              </div>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                   <span className="material-symbols-outlined text-slate-400 text-[18px]">mail</span>
@@ -314,10 +393,13 @@ export default function AccountSettingsContent() {
                   id="account-email"
                   type="email"
                   value={email}
-                  onChange={(e) => { setEmail(e.target.value); markDirty(); }}
-                  disabled={isSaving}
-                  className="h-11 pl-10"
+                  disabled
+                  readOnly
+                  className="h-11 pl-10 pr-10 bg-slate-100 dark:bg-slate-800/50 text-slate-500 cursor-not-allowed"
                 />
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                  <span className="material-symbols-outlined text-slate-400 text-[18px]">lock</span>
+                </div>
               </div>
             </div>
             <div className="space-y-2">
@@ -330,6 +412,8 @@ export default function AccountSettingsContent() {
                   id="account-phone"
                   type="tel"
                   placeholder="Add your phone number"
+                  value={phone}
+                  onChange={(e) => { setPhone(e.target.value); markDirty(); }}
                   disabled={isSaving}
                   className="h-11 pl-10"
                 />
@@ -345,6 +429,8 @@ export default function AccountSettingsContent() {
                   id="account-company"
                   type="text"
                   placeholder="Add your company"
+                  value={company}
+                  onChange={(e) => { setCompany(e.target.value); markDirty(); }}
                   disabled={isSaving}
                   className="h-11 pl-10"
                 />
@@ -360,6 +446,8 @@ export default function AccountSettingsContent() {
                   id="account-department"
                   type="text"
                   placeholder="Add your department"
+                  value={department}
+                  onChange={(e) => { setDepartment(e.target.value); markDirty(); }}
                   disabled={isSaving}
                   className="h-11 pl-10"
                 />
@@ -375,6 +463,8 @@ export default function AccountSettingsContent() {
                   id="account-location"
                   type="text"
                   placeholder="Add your location"
+                  value={location}
+                  onChange={(e) => { setLocation(e.target.value); markDirty(); }}
                   disabled={isSaving}
                   className="h-11 pl-10"
                 />
@@ -390,6 +480,8 @@ export default function AccountSettingsContent() {
                   id="account-website"
                   type="url"
                   placeholder="Add your website"
+                  value={website}
+                  onChange={(e) => { setWebsite(e.target.value); markDirty(); }}
                   disabled={isSaving}
                   className="h-11 pl-10"
                 />

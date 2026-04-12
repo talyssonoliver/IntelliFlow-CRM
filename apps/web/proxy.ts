@@ -117,6 +117,17 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  // Authenticated user on the public marketing home page (`/`) -> redirect to dashboard
+  // This eliminates the spinner-flash that occurs when HomePageContent waits for the
+  // client-side `auth.getStatus` query to resolve before deciding which view to render.
+  // Server-side cookie check + redirect happens before the page HTML is generated, so
+  // authed users go straight to /dashboard with zero loading state.
+  // Unauthenticated visitors fall through and see PublicHomePage SSR'd immediately.
+  if (path === '/' && hasUsableAccessToken && !request.nextUrl.searchParams.has('logged_out')) {
+    console.log(`[Proxy] Authenticated user on home page, redirecting to dashboard`);
+    return clearStaleAuthArtifacts(NextResponse.redirect(new URL('/dashboard', request.url)));
+  }
+
   // Add user info to headers for server components (if session available)
   const response = clearStaleAuthArtifacts(NextResponse.next());
 

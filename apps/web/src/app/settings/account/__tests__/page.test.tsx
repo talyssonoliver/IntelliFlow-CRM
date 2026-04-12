@@ -40,6 +40,13 @@ vi.mock('@/lib/trpc', () => ({
           isPending: false,
         }),
       },
+      updateProfile: {
+        useMutation: () => ({
+          mutate: vi.fn(),
+          mutateAsync: mockMutateAsync,
+          isPending: false,
+        }),
+      },
     },
     useUtils: () => ({
       user: {
@@ -138,9 +145,24 @@ describe('AccountSettingsContent', () => {
     vi.clearAllMocks();
     mockProfileData = {
       name: 'Test User',
+      givenName: null,
+      familyName: null,
       email: 'test@example.com',
+      avatarUrl: null,
       role: 'ADMIN',
       timezone: 'America/New_York',
+      locale: 'en-US',
+      phone: null,
+      company: null,
+      department: null,
+      location: null,
+      website: null,
+      bio: null,
+      provider: null,
+      emailVerified: false,
+      lastSignInAt: null,
+      signInCount: 1,
+      createdAt: '2025-01-15T00:00:00.000Z',
     };
     mockIsLoading = false;
   });

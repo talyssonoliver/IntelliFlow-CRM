@@ -51,3 +51,22 @@ export const userProfileSchema = z.object({
 });
 
 export type UserProfile = z.infer<typeof userProfileSchema>;
+
+/**
+ * Input schema for updating user profile.
+ * All fields are optional — only provided fields are updated.
+ */
+export const updateProfileInputSchema = z.object({
+  name: z.string().min(1).max(120).optional(),
+  givenName: z.string().max(80).nullable().optional(),
+  familyName: z.string().max(80).nullable().optional(),
+  phone: z.string().max(40).nullable().optional(),
+  company: z.string().max(120).nullable().optional(),
+  department: z.string().max(120).nullable().optional(),
+  location: z.string().max(120).nullable().optional(),
+  website: z.string().max(255).nullable().optional(),
+  bio: z.string().max(500).nullable().optional(),
+  locale: z.string().max(20).nullable().optional(),
+});
+
+export type UpdateProfileInput = z.infer<typeof updateProfileInputSchema>;

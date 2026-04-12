@@ -32,7 +32,8 @@ describe('User Router', () => {
 
       const result = await caller.getProfile();
 
-      expect(result).toEqual({
+      // Verify core fields (Phase 1 expansion adds avatarUrl, createdAt, etc.)
+      expect(result).toMatchObject({
         name: 'Test User',
         email: 'test@example.com',
         role: 'USER',

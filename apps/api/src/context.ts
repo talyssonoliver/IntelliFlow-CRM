@@ -318,12 +318,44 @@ function extractAvatarUrl(meta: Record<string, unknown>): string | null {
   return (meta.avatar_url as string | undefined) || (meta.picture as string | undefined) || null;
 }
 
+function extractGivenName(meta: Record<string, unknown>): string | null {
+  return (meta.given_name as string | undefined) || (meta.first_name as string | undefined) || null;
+}
+
+function extractFamilyName(meta: Record<string, unknown>): string | null {
+  return (meta.family_name as string | undefined) || (meta.last_name as string | undefined) || null;
+}
+
+function extractLocale(meta: Record<string, unknown>): string | null {
+  const locale = (meta.locale as string | undefined) || (meta.language as string | undefined);
+  return locale || null;
+}
+
+function extractProvider(supabaseUser: { app_metadata?: Record<string, unknown>; user_metadata?: Record<string, unknown> }): string | null {
+  const appMeta = supabaseUser.app_metadata ?? {};
+  const userMeta = supabaseUser.user_metadata ?? {};
+  return (
+    (appMeta.provider as string | undefined) ||
+    (userMeta.provider as string | undefined) ||
+    (userMeta.iss as string | undefined) ||
+    null
+  );
+}
+
+function extractEmailVerified(supabaseUser: { email_confirmed_at?: string | null; user_metadata?: Record<string, unknown> }): boolean {
+  if (supabaseUser.email_confirmed_at) return true;
+  const meta = supabaseUser.user_metadata ?? {};
+  return Boolean(meta.email_verified);
+}
+
 async function provisionNewUserWith(
   prisma: UserProvisioningPrisma,
   supabaseUser: {
     id: string;
     email?: string;
     user_metadata?: Record<string, unknown>;
+    app_metadata?: Record<string, unknown>;
+    email_confirmed_at?: string | null;
   }
 ): Promise<UserSession> {
   try {
@@ -339,6 +371,11 @@ async function provisionNewUserWith(
     const meta = supabaseUser.user_metadata ?? {};
     const userName = extractUserName(meta, supabaseUser.email);
     const avatarUrl = extractAvatarUrl(meta);
+    const givenName = extractGivenName(meta);
+    const familyName = extractFamilyName(meta);
+    const locale = extractLocale(meta);
+    const provider = extractProvider(supabaseUser);
+    const emailVerified = extractEmailVerified(supabaseUser);
     const role = resolveProvisionedRole(supabaseUser.email);
 
     const newUser = await prisma.user.create({
@@ -346,7 +383,14 @@ async function provisionNewUserWith(
         id: supabaseUser.id,
         email: supabaseUser.email || '',
         name: userName,
+        givenName,
+        familyName,
         avatarUrl,
+        locale,
+        provider,
+        emailVerified,
+        lastSignInAt: new Date(),
+        signInCount: 1,
         role,
         tenantId: defaultTenant.id,
       },
@@ -386,10 +430,24 @@ export async function ensureAppUserSession(
     id: string;
     email?: string;
     user_metadata?: Record<string, unknown>;
+    app_metadata?: Record<string, unknown>;
+    email_confirmed_at?: string | null;
   }
 ): Promise<UserSession> {
   const existing = await resolveDbUserWith(prisma, supabaseUser.id);
   if (existing) {
+    // Track sign-in for existing user (fire-and-forget — no need to await)
+    void prisma.user
+      .update({
+        where: { id: existing.userId },
+        data: {
+          lastSignInAt: new Date(),
+          signInCount: { increment: 1 },
+          emailVerified: extractEmailVerified(supabaseUser),
+        },
+      })
+      .catch((err) => console.warn('[Auth] Failed to update sign-in metadata:', err));
+
     return maybePromoteBootstrapAdmin(prisma, existing, supabaseUser);
   }
 
