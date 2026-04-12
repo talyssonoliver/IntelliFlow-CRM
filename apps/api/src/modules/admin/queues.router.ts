@@ -44,7 +44,7 @@ function formatQueueStats(
   name: string,
   counts: Record<string, number>,
   paused: boolean,
-  schedulers: unknown[],
+  schedulers: unknown[]
 ) {
   return {
     name,
@@ -178,9 +178,7 @@ export const queuesAdminRouter = createTRPCRouter({
     )
     .mutation(async ({ input }) => {
       try {
-        await withQueue(input.name, (q) =>
-          q.retryJobs({ state: 'failed', count: input.count })
-        );
+        await withQueue(input.name, (q) => q.retryJobs({ state: 'failed', count: input.count }));
         return { retriedCount: input.count };
       } catch (error) {
         throw new TRPCError({
@@ -201,9 +199,7 @@ export const queuesAdminRouter = createTRPCRouter({
     )
     .mutation(async ({ input }) => {
       try {
-        const removed = await withQueue(input.name, (q) =>
-          q.removeJobScheduler(input.schedulerId)
-        );
+        const removed = await withQueue(input.name, (q) => q.removeJobScheduler(input.schedulerId));
         if (!removed) {
           throw new TRPCError({
             code: 'NOT_FOUND',

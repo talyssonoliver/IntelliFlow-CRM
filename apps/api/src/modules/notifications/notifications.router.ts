@@ -227,10 +227,7 @@ function buildPreferenceUpsertData(
  * Extracts the sequential filter-building logic to reduce cognitive complexity.
  */
 /** Append a type-filter clause using JSON path equals (single) or AND+OR (multiple). */
-function applyTypeFilter(
-  types: string[],
-  where: Record<string, unknown>
-): void {
+function applyTypeFilter(types: string[], where: Record<string, unknown>): void {
   if (types.length === 1) {
     where.metadata = { path: ['notificationType'], equals: types[0] };
   } else {
@@ -292,7 +289,8 @@ function buildNotificationListWhere(
   const where: Record<string, unknown> = { tenantId, recipientId: userId };
 
   if (types && types.length > 0) applyTypeFilter(types, where);
-  if (priorities && priorities.length > 0) where.priority = { in: priorities.map((p: string) => p.toUpperCase()) };
+  if (priorities && priorities.length > 0)
+    where.priority = { in: priorities.map((p: string) => p.toUpperCase()) };
   if (status) where.status = status.toUpperCase();
 
   applyDateRangeFilter(where, fromDate, toDate);
@@ -609,8 +607,7 @@ export const notificationsRouter = createTRPCRouter({
       });
 
       const currentChannelPrefs = (existing?.channelPreferences as Record<string, unknown>) || {};
-      const currentCategoryPrefs =
-        (existing?.categoryPreferences as Record<string, unknown>) || {};
+      const currentCategoryPrefs = (existing?.categoryPreferences as Record<string, unknown>) || {};
 
       const updatedChannelPrefs = buildUpdatedChannelPrefs(currentChannelPrefs, input);
       const updatedCategoryPrefs = buildUpdatedCategoryPrefs(
@@ -640,10 +637,11 @@ export const notificationsRouter = createTRPCRouter({
         try {
           const auditLogger = (orchestrator as any).auditLogger;
           if (auditLogger) {
-            await auditLogger.logPreferenceUpdated(
-              { userId, tenantId } as any,
-              { channelPrefs: updatedChannelPrefs, categoryPrefs: updatedCategoryPrefs, ...input }
-            );
+            await auditLogger.logPreferenceUpdated({ userId, tenantId } as any, {
+              channelPrefs: updatedChannelPrefs,
+              categoryPrefs: updatedCategoryPrefs,
+              ...input,
+            });
           }
         } catch {
           // Audit logging is best-effort — don't fail the mutation
@@ -764,9 +762,8 @@ export type CreateNotificationParams = {
 export async function createNotification(
   prisma: Context['prisma'],
   params: CreateNotificationParams,
-  orchestrator?: any,
+  orchestrator?: any
 ): Promise<Notification> {
-
   // When orchestrator is available, use the full delivery pipeline
   if (orchestrator && typeof orchestrator.send === 'function') {
     try {
@@ -795,7 +792,7 @@ export async function createNotification(
         title: params.title,
         body: params.body,
         priority: params.priority || 'normal',
-        status: result.status === 'filtered' ? 'filtered' as any : 'pending',
+        status: result.status === 'filtered' ? ('filtered' as any) : 'pending',
         isRead: false,
         readAt: null,
         createdAt: new Date(),

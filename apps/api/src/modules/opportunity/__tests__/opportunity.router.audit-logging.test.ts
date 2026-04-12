@@ -87,7 +87,9 @@ describe('Opportunity Router — Audit Logging (IFC-281 AC-006/AC-007/AC-008)', 
       const caller = opportunityRouter.createCaller(ctx);
       const mockOpp = createMockDomainOpportunity({ name: 'New Deal' });
 
-      ctx.services!.opportunity!.createOpportunity = vi.fn().mockResolvedValue(makeSuccess(mockOpp));
+      ctx.services!.opportunity!.createOpportunity = vi
+        .fn()
+        .mockResolvedValue(makeSuccess(mockOpp));
       prismaMock.notification.create.mockResolvedValue({} as any);
 
       await caller.create({
@@ -119,7 +121,9 @@ describe('Opportunity Router — Audit Logging (IFC-281 AC-006/AC-007/AC-008)', 
       const caller = opportunityRouter.createCaller(ctx);
       const mockOpp = createMockDomainOpportunity({ stage: 'NEGOTIATION' });
 
-      ctx.services!.opportunity!.updateOpportunity = vi.fn().mockResolvedValue(makeSuccess(mockOpp));
+      ctx.services!.opportunity!.updateOpportunity = vi
+        .fn()
+        .mockResolvedValue(makeSuccess(mockOpp));
 
       await caller.update({ id: TEST_UUIDS.opportunity1, stage: 'NEGOTIATION' });
 
@@ -245,8 +249,22 @@ describe('Opportunity Router — Audit Logging (IFC-281 AC-006/AC-007/AC-008)', 
 
       // updateAll uses prismaWithTenant.$transaction
       (prismaMock.$transaction as any) = vi.fn().mockResolvedValue([
-        { stageKey: 'PROPOSAL', displayName: 'Proposal', color: '#fb923c', order: 3, probability: 70, isActive: true },
-        { stageKey: 'NEGOTIATION', displayName: 'Negotiation', color: '#facc15', order: 4, probability: 80, isActive: true },
+        {
+          stageKey: 'PROPOSAL',
+          displayName: 'Proposal',
+          color: '#fb923c',
+          order: 3,
+          probability: 70,
+          isActive: true,
+        },
+        {
+          stageKey: 'NEGOTIATION',
+          displayName: 'Negotiation',
+          color: '#facc15',
+          order: 4,
+          probability: 80,
+          isActive: true,
+        },
       ]);
 
       await caller.updateAll({

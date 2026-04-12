@@ -40,7 +40,14 @@ import {
 import { detectScoreBias, type LeadScoringBiasCheck } from '@intelliflow/adapters';
 import { createNotification } from '../notifications/notifications.router';
 import { deriveLeadInsights } from '../../shared/lead-insight-deriver';
-import { Lead, LeadId, Email, PhoneNumber, type LeadStatus, type LeadSource } from '@intelliflow/domain';
+import {
+  Lead,
+  LeadId,
+  Email,
+  PhoneNumber,
+  type LeadStatus,
+  type LeadSource,
+} from '@intelliflow/domain';
 import { LEAD_SCORE_THRESHOLDS } from '@intelliflow/application';
 
 function buildNumberRange(
@@ -308,7 +315,7 @@ function mapPrismaLeadToResponse(lead: {
     source: lead.source,
     status: lead.status,
     score: lead.score,
-    scoreConfidence: (lead as Record<string, unknown>).scoreConfidence as number ?? null,
+    scoreConfidence: ((lead as Record<string, unknown>).scoreConfidence as number) ?? null,
     scoreTier: (() => {
       if (lead.score >= LEAD_SCORE_THRESHOLDS.HOT) return 'HOT';
       if (lead.score >= LEAD_SCORE_THRESHOLDS.WARM) return 'WARM';
@@ -464,7 +471,10 @@ export const leadRouter = createTRPCRouter({
       const { Queue } = await loadBullMQ();
       const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
       const queue = new Queue(QUEUE_NAMES.AI_SCORING, {
-        connection: { host: process.env.REDIS_HOST || 'localhost', port: Number.parseInt(process.env.REDIS_PORT || '6379', 10) },
+        connection: {
+          host: process.env.REDIS_HOST || 'localhost',
+          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+        },
       });
       await queue.add('score-lead', {
         leadId: result.value.id.value,
@@ -604,7 +614,10 @@ export const leadRouter = createTRPCRouter({
     const skip = (page - 1) * limit;
 
     // Apply tenant filtering
-    const where = createTenantWhereClause(typedCtx.tenant, buildLeadListWhere({ status, source, minScore, maxScore, search, ownerId, dateFrom, dateTo }));
+    const where = createTenantWhereClause(
+      typedCtx.tenant,
+      buildLeadListWhere({ status, source, minScore, maxScore, search, ownerId, dateFrom, dateTo })
+    );
 
     // Execute queries in parallel using tenant-scoped Prisma
     const [leads, total] = await Promise.all([
@@ -675,7 +688,10 @@ export const leadRouter = createTRPCRouter({
       const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
       const lead = result.value;
       const queue = new Queue(QUEUE_NAMES.AI_SCORING, {
-        connection: { host: process.env.REDIS_HOST || 'localhost', port: Number.parseInt(process.env.REDIS_PORT || '6379', 10) },
+        connection: {
+          host: process.env.REDIS_HOST || 'localhost',
+          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+        },
       });
       await queue.add('score-lead', {
         leadId: id,
@@ -769,17 +785,21 @@ export const leadRouter = createTRPCRouter({
     }
 
     // Fire-and-forget: notification failure must not block the lead qualification response
-    createNotification(typedCtx.prismaWithTenant, {
-      userId: typedCtx.tenant.userId,
-      tenantId: typedCtx.tenant.tenantId,
-      type: 'lead_converted',
-      title: 'Lead qualified',
-      body: `Lead has been qualified`,
-      priority: 'normal',
-      entityType: 'lead',
-      entityId: input.leadId,
-      actionUrl: `/leads/${input.leadId}`,
-    }, typedCtx.services?.notificationOrchestrator).catch(() => {}); // Swallow notification errors — non-critical side-effect
+    createNotification(
+      typedCtx.prismaWithTenant,
+      {
+        userId: typedCtx.tenant.userId,
+        tenantId: typedCtx.tenant.tenantId,
+        type: 'lead_converted',
+        title: 'Lead qualified',
+        body: `Lead has been qualified`,
+        priority: 'normal',
+        entityType: 'lead',
+        entityId: input.leadId,
+        actionUrl: `/leads/${input.leadId}`,
+      },
+      typedCtx.services?.notificationOrchestrator
+    ).catch(() => {}); // Swallow notification errors — non-critical side-effect
 
     await writeLeadActivityLog(typedCtx, {
       leadId: input.leadId,
@@ -883,17 +903,21 @@ export const leadRouter = createTRPCRouter({
     }
 
     // Fire-and-forget: notification failure must not block the lead-to-deal conversion response
-    createNotification(typedCtx.prismaWithTenant, {
-      userId: typedCtx.tenant.userId,
-      tenantId: typedCtx.tenant.tenantId,
-      type: 'lead_converted',
-      title: 'Lead converted to deal',
-      body: `Lead converted to deal "${input.dealName}"`,
-      priority: 'high',
-      entityType: 'lead',
-      entityId: input.leadId,
-      actionUrl: `/leads/${input.leadId}`,
-    }, typedCtx.services?.notificationOrchestrator).catch(() => {}); // Swallow notification errors — non-critical side-effect
+    createNotification(
+      typedCtx.prismaWithTenant,
+      {
+        userId: typedCtx.tenant.userId,
+        tenantId: typedCtx.tenant.tenantId,
+        type: 'lead_converted',
+        title: 'Lead converted to deal',
+        body: `Lead converted to deal "${input.dealName}"`,
+        priority: 'high',
+        entityType: 'lead',
+        entityId: input.leadId,
+        actionUrl: `/leads/${input.leadId}`,
+      },
+      typedCtx.services?.notificationOrchestrator
+    ).catch(() => {}); // Swallow notification errors — non-critical side-effect
 
     await writeLeadActivityLog(typedCtx, {
       leadId: input.leadId,
@@ -939,17 +963,21 @@ export const leadRouter = createTRPCRouter({
       }
 
       // Fire-and-forget: notification failure must not block the AI scoring response
-      createNotification(typedCtx.prismaWithTenant, {
-        userId: typedCtx.tenant.userId,
-        tenantId: typedCtx.tenant.tenantId,
-        type: 'lead_scored',
-        title: 'Lead scored by AI',
-        body: `Lead scored ${result.value.newScore} (${result.value.tier})`,
-        priority: 'normal',
-        entityType: 'lead',
-        entityId: result.value.leadId,
-        actionUrl: `/leads/${result.value.leadId}`,
-      }, typedCtx.services?.notificationOrchestrator).catch(() => {}); // Swallow notification errors — non-critical side-effect
+      createNotification(
+        typedCtx.prismaWithTenant,
+        {
+          userId: typedCtx.tenant.userId,
+          tenantId: typedCtx.tenant.tenantId,
+          type: 'lead_scored',
+          title: 'Lead scored by AI',
+          body: `Lead scored ${result.value.newScore} (${result.value.tier})`,
+          priority: 'normal',
+          entityType: 'lead',
+          entityId: result.value.leadId,
+          actionUrl: `/leads/${result.value.leadId}`,
+        },
+        typedCtx.services?.notificationOrchestrator
+      ).catch(() => {}); // Swallow notification errors — non-critical side-effect
 
       await writeLeadActivityLog(typedCtx, {
         leadId: result.value.leadId,
@@ -1058,7 +1086,9 @@ export const leadRouter = createTRPCRouter({
 
     // Calculate score-based metrics using unified thresholds (single source of truth)
     const hotLeads = leads.filter((l) => l.score >= LEAD_SCORE_THRESHOLDS.HOT).length;
-    const warmLeads = leads.filter((l) => l.score >= LEAD_SCORE_THRESHOLDS.WARM && l.score < LEAD_SCORE_THRESHOLDS.HOT).length;
+    const warmLeads = leads.filter(
+      (l) => l.score >= LEAD_SCORE_THRESHOLDS.WARM && l.score < LEAD_SCORE_THRESHOLDS.HOT
+    ).length;
     const coldLeads = leads.filter((l) => l.score < LEAD_SCORE_THRESHOLDS.WARM).length;
 
     const totalScore = leads.reduce((sum, l) => sum + l.score, 0);
@@ -1338,7 +1368,9 @@ export const leadRouter = createTRPCRouter({
           const phone = record.phone ? PhoneNumber.create(record.phone) : undefined;
 
           const lead = Lead.reconstitute(leadIdResult.value, {
-            email: emailResult.isSuccess ? emailResult.value : Email.create('unknown@placeholder.invalid').value,
+            email: emailResult.isSuccess
+              ? emailResult.value
+              : Email.create('unknown@placeholder.invalid').value,
             firstName: record.firstName ?? undefined,
             lastName: record.lastName ?? undefined,
             company: record.company ?? undefined,
@@ -1380,7 +1412,11 @@ export const leadRouter = createTRPCRouter({
             'Lead Status Changed'
           );
 
-          await persistBulkStatusActivityRows(typedCtx.prismaWithTenant, activityRows, 'bulkUpdateStatus');
+          await persistBulkStatusActivityRows(
+            typedCtx.prismaWithTenant,
+            activityRows,
+            'bulkUpdateStatus'
+          );
         }
       } catch (error) {
         collectBulkFailures(ids, failed, successful, error);

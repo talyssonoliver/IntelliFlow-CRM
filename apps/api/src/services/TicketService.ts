@@ -413,12 +413,13 @@ export class TicketService {
     }
   ) {
     // Fetch previous state for activity logging
-    const previousTicket = (data.assigneeId || data.priority)
-      ? await this.prisma.ticket.findUnique({
-          where: { id },
-          select: { assigneeId: true, priority: true },
-        })
-      : null;
+    const previousTicket =
+      data.assigneeId || data.priority
+        ? await this.prisma.ticket.findUnique({
+            where: { id },
+            select: { assigneeId: true, priority: true },
+          })
+        : null;
 
     const ticket = await this.prisma.ticket.update({
       where: { id },

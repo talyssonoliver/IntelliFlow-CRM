@@ -25,20 +25,26 @@ import { PrismaAnalyticsRepository } from '@intelliflow/adapters';
  * Set to false if Prisma client cannot be loaded
  */
 let _isInfrastructureAvailable = false;
-export function isInfrastructureAvailable(): boolean { return _isInfrastructureAvailable; }
+export function isInfrastructureAvailable(): boolean {
+  return _isInfrastructureAvailable;
+}
 
 /**
  * Reason for infrastructure unavailability (for alerts)
  */
 let _infrastructureUnavailableReason = '';
-export function getInfrastructureUnavailableReason(): string { return _infrastructureUnavailableReason; }
+export function getInfrastructureUnavailableReason(): string {
+  return _infrastructureUnavailableReason;
+}
 
 /**
  * Real Prisma client for integration tests (may be null if unavailable)
  * Connected to test database
  */
 let _testPrisma: any = null;
-export function getTestPrisma(): any { return _testPrisma; }
+export function getTestPrisma(): any {
+  return _testPrisma;
+}
 
 // Lazy-loaded services and adapters
 let _testServices: any = null;

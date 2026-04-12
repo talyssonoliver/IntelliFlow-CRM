@@ -159,8 +159,18 @@ function buildTaskListWhere(filters: {
   overdue?: boolean;
 }): Record<string, unknown> {
   const where: Record<string, unknown> = {};
-  const { search, status, priority, ownerId, leadId, contactId, opportunityId,
-    dueDateFrom, dueDateTo, overdue } = filters;
+  const {
+    search,
+    status,
+    priority,
+    ownerId,
+    leadId,
+    contactId,
+    opportunityId,
+    dueDateFrom,
+    dueDateTo,
+    overdue,
+  } = filters;
 
   if (search) {
     where.OR = [
@@ -207,7 +217,10 @@ export const taskRouter = createTRPCRouter({
       await auditLogger.logPermissionDenied('task', '', 'task:write', typedCtx.tenant.tenantId, {
         actorId: typedCtx.tenant.userId,
       });
-      throw new TRPCError({ code: 'FORBIDDEN', message: canWrite.reason ?? 'Insufficient permissions' });
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: canWrite.reason ?? 'Insufficient permissions',
+      });
     }
 
     const { calendarId, ...taskInput } = input;
@@ -231,24 +244,30 @@ export const taskRouter = createTRPCRouter({
     }
 
     // Audit log
-    auditLogger.logAction('CREATE', 'task', result.value.id.toString(), typedCtx.tenant.tenantId, {
-      actorId: typedCtx.tenant.userId,
-      resourceName: result.value.title,
-    }).catch(() => {}); // Non-blocking
+    auditLogger
+      .logAction('CREATE', 'task', result.value.id.toString(), typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        resourceName: result.value.title,
+      })
+      .catch(() => {}); // Non-blocking
 
     // Fire-and-forget: notification failure must not block the task creation response
-    createNotification(ctx.prismaWithTenant, {
-      userId: typedCtx.tenant.userId,
-      tenantId: typedCtx.tenant.tenantId,
-      type: 'task_assigned',
-      title: 'New task created',
-      body: `Task "${result.value.title}" has been created`,
-      priority: 'normal',
-      entityType: 'task',
-      entityId: result.value.id.toString(),
-      entityName: result.value.title,
-      actionUrl: `/tasks/${result.value.id.toString()}`,
-    }, ctx.services?.notificationOrchestrator).catch(() => {}); // Swallow notification errors — non-critical side-effect
+    createNotification(
+      ctx.prismaWithTenant,
+      {
+        userId: typedCtx.tenant.userId,
+        tenantId: typedCtx.tenant.tenantId,
+        type: 'task_assigned',
+        title: 'New task created',
+        body: `Task "${result.value.title}" has been created`,
+        priority: 'normal',
+        entityType: 'task',
+        entityId: result.value.id.toString(),
+        entityName: result.value.title,
+        actionUrl: `/tasks/${result.value.id.toString()}`,
+      },
+      ctx.services?.notificationOrchestrator
+    ).catch(() => {}); // Swallow notification errors — non-critical side-effect
 
     return mapTaskToResponse(result.value);
   }),
@@ -396,7 +415,10 @@ export const taskRouter = createTRPCRouter({
       await auditLogger.logPermissionDenied('task', id, 'task:write', typedCtx.tenant.tenantId, {
         actorId: typedCtx.tenant.userId,
       });
-      throw new TRPCError({ code: 'FORBIDDEN', message: canWrite.reason ?? 'Insufficient permissions' });
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: canWrite.reason ?? 'Insufficient permissions',
+      });
     }
 
     // First check if task exists via service
@@ -427,10 +449,12 @@ export const taskRouter = createTRPCRouter({
         throwTaskUpdateInfoError(result.error.code, result.error.message);
       }
 
-      auditLogger.logAction('UPDATE', 'task', id, typedCtx.tenant.tenantId, {
-        actorId: typedCtx.tenant.userId,
-        resourceName: result.value.title,
-      }).catch(() => {});
+      auditLogger
+        .logAction('UPDATE', 'task', id, typedCtx.tenant.tenantId, {
+          actorId: typedCtx.tenant.userId,
+          resourceName: result.value.title,
+        })
+        .catch(() => {});
 
       return mapTaskToResponse(result.value);
     }
@@ -451,10 +475,12 @@ export const taskRouter = createTRPCRouter({
       },
     });
 
-    auditLogger.logAction('UPDATE', 'task', id, typedCtx.tenant.tenantId, {
-      actorId: typedCtx.tenant.userId,
-      resourceName: task.title,
-    }).catch(() => {});
+    auditLogger
+      .logAction('UPDATE', 'task', id, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        resourceName: task.title,
+      })
+      .catch(() => {});
 
     return task;
   }),
@@ -476,10 +502,19 @@ export const taskRouter = createTRPCRouter({
       action: 'delete',
     });
     if (!canDelete.granted) {
-      await auditLogger.logPermissionDenied('task', input.id, 'task:delete', typedCtx.tenant.tenantId, {
-        actorId: typedCtx.tenant.userId,
+      await auditLogger.logPermissionDenied(
+        'task',
+        input.id,
+        'task:delete',
+        typedCtx.tenant.tenantId,
+        {
+          actorId: typedCtx.tenant.userId,
+        }
+      );
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: canDelete.reason ?? 'Insufficient permissions',
       });
-      throw new TRPCError({ code: 'FORBIDDEN', message: canDelete.reason ?? 'Insufficient permissions' });
     }
 
     const result = await taskService.deleteTask(input.id);
@@ -505,9 +540,11 @@ export const taskRouter = createTRPCRouter({
       });
     }
 
-    auditLogger.logAction('DELETE', 'task', input.id, typedCtx.tenant.tenantId, {
-      actorId: typedCtx.tenant.userId,
-    }).catch(() => {});
+    auditLogger
+      .logAction('DELETE', 'task', input.id, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+      })
+      .catch(() => {});
 
     return { success: true, id: input.id };
   }),
@@ -515,46 +552,50 @@ export const taskRouter = createTRPCRouter({
   /**
    * Archive a completed or cancelled task
    */
-  archive: tenantProcedure.input(z.object({ id: taskIdSchema })).mutation(async ({ ctx, input }) => {
-    const typedCtx = getTenantContext(ctx);
-    const taskService = getTaskService(ctx);
-    const auditLogger = getAuditLogger(ctx.prisma);
+  archive: tenantProcedure
+    .input(z.object({ id: taskIdSchema }))
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const taskService = getTaskService(ctx);
+      const auditLogger = getAuditLogger(ctx.prisma);
 
-    const result = await taskService.archiveTask(input.id);
+      const result = await taskService.archiveTask(input.id);
 
-    if (result.isFailure) {
-      const errorCode = result.error.code;
-      const message = result.error.message;
-      if (errorCode === 'NOT_FOUND_ERROR' || message.includes('not found')) {
+      if (result.isFailure) {
+        const errorCode = result.error.code;
+        const message = result.error.message;
+        if (errorCode === 'NOT_FOUND_ERROR' || message.includes('not found')) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message,
+          });
+        }
+        // TaskCannotBeArchivedError or VALIDATION_ERROR → PRECONDITION_FAILED
+        if (
+          result.error instanceof TaskCannotBeArchivedError ||
+          errorCode === 'TASK_CANNOT_BE_ARCHIVED' ||
+          errorCode === 'VALIDATION_ERROR'
+        ) {
+          throw new TRPCError({
+            code: 'PRECONDITION_FAILED',
+            message,
+          });
+        }
         throw new TRPCError({
-          code: 'NOT_FOUND',
+          code: 'INTERNAL_SERVER_ERROR',
           message,
         });
       }
-      // TaskCannotBeArchivedError or VALIDATION_ERROR → PRECONDITION_FAILED
-      if (
-        result.error instanceof TaskCannotBeArchivedError ||
-        errorCode === 'TASK_CANNOT_BE_ARCHIVED' ||
-        errorCode === 'VALIDATION_ERROR'
-      ) {
-        throw new TRPCError({
-          code: 'PRECONDITION_FAILED',
-          message,
-        });
-      }
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message,
-      });
-    }
 
-    auditLogger.logAction('UPDATE', 'task', input.id, typedCtx.tenant.tenantId, {
-      actorId: typedCtx.tenant.userId,
-      resourceName: 'task archived',
-    }).catch(() => {});
+      auditLogger
+        .logAction('UPDATE', 'task', input.id, typedCtx.tenant.tenantId, {
+          actorId: typedCtx.tenant.userId,
+          resourceName: 'task archived',
+        })
+        .catch(() => {});
 
-    return { success: true, id: input.id };
-  }),
+      return { success: true, id: input.id };
+    }),
 
   /**
    * Complete a task
@@ -600,24 +641,30 @@ export const taskRouter = createTRPCRouter({
       });
     }
 
-    auditLogger.logAction('UPDATE', 'task', input.taskId, typedCtx.tenant.tenantId, {
-      actorId: typedCtx.tenant.userId,
-      resourceName: result.value.title,
-    }).catch(() => {});
+    auditLogger
+      .logAction('UPDATE', 'task', input.taskId, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        resourceName: result.value.title,
+      })
+      .catch(() => {});
 
     // Fire-and-forget: notification failure must not block the task completion response
-    createNotification(ctx.prismaWithTenant, {
-      userId: typedCtx.tenant.userId,
-      tenantId: typedCtx.tenant.tenantId,
-      type: 'task_completed',
-      title: 'Task completed',
-      body: `Task "${result.value.title}" has been completed`,
-      priority: 'normal',
-      entityType: 'task',
-      entityId: result.value.id.toString(),
-      entityName: result.value.title,
-      actionUrl: `/tasks/${result.value.id.toString()}`,
-    }, ctx.services?.notificationOrchestrator).catch(() => {}); // Swallow notification errors — non-critical side-effect
+    createNotification(
+      ctx.prismaWithTenant,
+      {
+        userId: typedCtx.tenant.userId,
+        tenantId: typedCtx.tenant.tenantId,
+        type: 'task_completed',
+        title: 'Task completed',
+        body: `Task "${result.value.title}" has been completed`,
+        priority: 'normal',
+        entityType: 'task',
+        entityId: result.value.id.toString(),
+        entityName: result.value.title,
+        actionUrl: `/tasks/${result.value.id.toString()}`,
+      },
+      ctx.services?.notificationOrchestrator
+    ).catch(() => {}); // Swallow notification errors — non-critical side-effect
 
     return mapTaskToResponse(result.value);
   }),
@@ -645,10 +692,12 @@ export const taskRouter = createTRPCRouter({
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message });
     }
 
-    auditLogger.logAction('UPDATE', 'task', input.taskId, typedCtx.tenant.tenantId, {
-      actorId: typedCtx.tenant.userId,
-      resourceName: result.value.title,
-    }).catch(() => {});
+    auditLogger
+      .logAction('UPDATE', 'task', input.taskId, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        resourceName: result.value.title,
+      })
+      .catch(() => {});
 
     return mapTaskToResponse(result.value);
   }),
@@ -682,10 +731,12 @@ export const taskRouter = createTRPCRouter({
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message });
     }
 
-    auditLogger.logAction('UPDATE', 'task', input.taskId, typedCtx.tenant.tenantId, {
-      actorId: typedCtx.tenant.userId,
-      resourceName: result.value.title,
-    }).catch(() => {});
+    auditLogger
+      .logAction('UPDATE', 'task', input.taskId, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        resourceName: result.value.title,
+      })
+      .catch(() => {});
 
     return mapTaskToResponse(result.value);
   }),
@@ -789,24 +840,30 @@ export const taskRouter = createTRPCRouter({
       throw new TRPCError({ code: 'BAD_REQUEST', message });
     }
 
-    auditLogger.logAction('UPDATE', 'task', result.value.id.toString(), typedCtx.tenant.tenantId, {
-      actorId: typedCtx.tenant.userId,
-      resourceName: result.value.title,
-    }).catch(() => {});
+    auditLogger
+      .logAction('UPDATE', 'task', result.value.id.toString(), typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        resourceName: result.value.title,
+      })
+      .catch(() => {});
 
     // Fire-and-forget: notification failure must not block the task assignment response
-    createNotification(ctx.prismaWithTenant, {
-      userId: typedCtx.tenant.userId,
-      tenantId: typedCtx.tenant.tenantId,
-      type: 'task_assigned',
-      title: 'Task assigned to entity',
-      body: `Task "${result.value.title}" assigned to ${input.entityType}`,
-      priority: 'normal',
-      entityType: 'task',
-      entityId: result.value.id.toString(),
-      entityName: result.value.title,
-      actionUrl: `/tasks/${result.value.id.toString()}`,
-    }, ctx.services?.notificationOrchestrator).catch(() => {}); // Swallow notification errors — non-critical side-effect
+    createNotification(
+      ctx.prismaWithTenant,
+      {
+        userId: typedCtx.tenant.userId,
+        tenantId: typedCtx.tenant.tenantId,
+        type: 'task_assigned',
+        title: 'Task assigned to entity',
+        body: `Task "${result.value.title}" assigned to ${input.entityType}`,
+        priority: 'normal',
+        entityType: 'task',
+        entityId: result.value.id.toString(),
+        entityName: result.value.title,
+        actionUrl: `/tasks/${result.value.id.toString()}`,
+      },
+      ctx.services?.notificationOrchestrator
+    ).catch(() => {}); // Swallow notification errors — non-critical side-effect
 
     return mapTaskToResponse(result.value);
   }),
@@ -833,10 +890,12 @@ export const taskRouter = createTRPCRouter({
       throw new TRPCError({ code: 'BAD_REQUEST', message });
     }
 
-    auditLogger.logAction('UPDATE', 'task', input.taskId, typedCtx.tenant.tenantId, {
-      actorId: typedCtx.tenant.userId,
-      resourceName: result.value.title,
-    }).catch(() => {});
+    auditLogger
+      .logAction('UPDATE', 'task', input.taskId, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        resourceName: result.value.title,
+      })
+      .catch(() => {});
 
     return mapTaskToResponse(result.value);
   }),

@@ -16,19 +16,21 @@ const FIXED_NOW = new Date('2024-09-01T08:00:00Z');
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const FOUR_HOURS_MS = 4 * 60 * 60 * 1000;
 
-function makeDbRecord(overrides: Partial<{
-  id: string;
-  userId: string;
-  tenantId: string;
-  deviceInfo: object;
-  ipAddress: string | null;
-  userAgent: string | null;
-  refreshToken: string | null;
-  rememberMe: boolean;
-  lastActiveAt: Date;
-  expiresAt: Date;
-  createdAt: Date;
-}> = {}) {
+function makeDbRecord(
+  overrides: Partial<{
+    id: string;
+    userId: string;
+    tenantId: string;
+    deviceInfo: object;
+    ipAddress: string | null;
+    userAgent: string | null;
+    refreshToken: string | null;
+    rememberMe: boolean;
+    lastActiveAt: Date;
+    expiresAt: Date;
+    createdAt: Date;
+  }> = {}
+) {
   return {
     id: overrides.id ?? 'db-session-id-001',
     userId: overrides.userId ?? 'user-db-001',

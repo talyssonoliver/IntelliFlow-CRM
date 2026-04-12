@@ -627,9 +627,9 @@ export class MfaService {
   /**
    * Get available MFA methods for user
    */
-  async getAvailableMfaMethods(userId: string): Promise<(MfaMethod)[]> {
+  async getAvailableMfaMethods(userId: string): Promise<MfaMethod[]> {
     const settings = await this.getUserMfaSettings(userId);
-    const methods: (MfaMethod)[] = [];
+    const methods: MfaMethod[] = [];
 
     if (settings?.totpEnabled) methods.push('totp');
     if (settings?.smsEnabled) methods.push('sms');
@@ -697,7 +697,10 @@ export class MfaService {
             smsPhone: settings.smsPhone ?? null,
             emailEnabled: settings.emailEnabled,
             backupCodes: settings.backupCodes ?? [],
-            enabledAt: settings.totpEnabled || settings.smsEnabled || settings.emailEnabled ? new Date() : null,
+            enabledAt:
+              settings.totpEnabled || settings.smsEnabled || settings.emailEnabled
+                ? new Date()
+                : null,
             lastVerifiedAt: settings.lastUsedAt ?? null,
           },
           update: {
@@ -707,7 +710,10 @@ export class MfaService {
             smsPhone: settings.smsPhone ?? null,
             emailEnabled: settings.emailEnabled,
             backupCodes: settings.backupCodes ?? [],
-            enabledAt: settings.totpEnabled || settings.smsEnabled || settings.emailEnabled ? new Date() : null,
+            enabledAt:
+              settings.totpEnabled || settings.smsEnabled || settings.emailEnabled
+                ? new Date()
+                : null,
             lastVerifiedAt: settings.lastUsedAt ?? null,
           },
         });

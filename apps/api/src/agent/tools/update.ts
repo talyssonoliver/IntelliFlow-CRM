@@ -47,7 +47,11 @@ function makeChange(field: string, newValue: string): ChangeEntry {
 /**
  * Build case change list and warnings from UpdateCaseInput fields.
  */
-function applyCasePriorityChange(priority: string, changes: ChangeEntry[], warnings: string[]): void {
+function applyCasePriorityChange(
+  priority: string,
+  changes: ChangeEntry[],
+  warnings: string[]
+): void {
   changes.push(makeChange('priority', priority));
   if (priority === 'URGENT') {
     warnings.push('Changing priority to URGENT will trigger immediate attention notifications');

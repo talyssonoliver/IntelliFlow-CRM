@@ -62,9 +62,7 @@ describe('CalendarWebhookService', () => {
       operation: 'update',
       idempotencyKey: 'google:channel-456:resource-123:updated',
     };
-    vi.mocked(mockSyncService.handleWebhookNotification).mockResolvedValue(
-      Result.ok(syncResult),
-    );
+    vi.mocked(mockSyncService.handleWebhookNotification).mockResolvedValue(Result.ok(syncResult));
 
     const result = await service.processNotification(payload);
 
@@ -79,7 +77,7 @@ describe('CalendarWebhookService', () => {
         success: true,
         operation: 'update' as const,
         idempotencyKey: 'key-1',
-      }),
+      })
     );
 
     const result = await service.processNotification(payload);
@@ -91,7 +89,7 @@ describe('CalendarWebhookService', () => {
   it('processNotification returns failure result when sync fails (no throw)', async () => {
     const payload = createPayload();
     vi.mocked(mockSyncService.handleWebhookNotification).mockResolvedValue(
-      Result.fail(new TestDomainError('Sync failed', 'SYNC_ERROR')),
+      Result.fail(new TestDomainError('Sync failed', 'SYNC_ERROR'))
     );
 
     const result = await service.processNotification(payload);
@@ -107,7 +105,7 @@ describe('CalendarWebhookService', () => {
         success: true,
         operation: 'update' as const,
         idempotencyKey: 'key-1',
-      }),
+      })
     );
 
     await service.processNotification(payload);
@@ -125,7 +123,7 @@ describe('CalendarWebhookService', () => {
         success: true,
         operation: 'update' as const,
         idempotencyKey: 'key-1',
-      }),
+      })
     );
 
     await service.processNotification(payload);
@@ -148,14 +146,14 @@ describe('CalendarWebhookService', () => {
         success: true,
         operation: 'update' as const,
         idempotencyKey: 'key-1',
-      }),
+      })
     );
 
     await service.processNotification(payload);
 
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining('webhook_notification_processed'),
-      expect.any(Object),
+      expect.any(Object)
     );
   });
 
@@ -163,14 +161,14 @@ describe('CalendarWebhookService', () => {
     const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const payload = createPayload();
     vi.mocked(mockSyncService.handleWebhookNotification).mockResolvedValue(
-      Result.fail(new TestDomainError('Sync failed', 'SYNC_ERROR')),
+      Result.fail(new TestDomainError('Sync failed', 'SYNC_ERROR'))
     );
 
     await service.processNotification(payload);
 
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining('webhook_notification_failed'),
-      expect.any(Object),
+      expect.any(Object)
     );
   });
 
@@ -180,13 +178,13 @@ describe('CalendarWebhookService', () => {
         success: true,
         operation: 'update' as const,
         idempotencyKey: 'key',
-      }),
+      })
     );
 
     // Generate >1000 unique entries to trigger cleanup
     for (let i = 0; i < 1002; i++) {
       await service.processNotification(
-        createPayload({ resourceId: `resource-${i}`, channelId: `channel-${i}` }),
+        createPayload({ resourceId: `resource-${i}`, channelId: `channel-${i}` })
       );
     }
 

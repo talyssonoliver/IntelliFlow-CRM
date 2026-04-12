@@ -643,10 +643,7 @@ async function searchEntityIfAllowed<T>(
  * Searches across multiple entity types with a single query.
  * Useful for AI agents that need to find relevant information across the CRM.
  */
-export const combinedSearchTool: AgentToolDefinition<
-  CombinedSearchInput,
-  CombinedSearchResults
-> = {
+export const combinedSearchTool: AgentToolDefinition<CombinedSearchInput, CombinedSearchResults> = {
   name: 'search_crm',
   description:
     'Search across multiple CRM entities (leads, contacts, opportunities) with a single query',
@@ -664,17 +661,14 @@ export const combinedSearchTool: AgentToolDefinition<
 
     try {
       const [leads, contacts, opportunities] = await Promise.all([
-        searchEntityIfAllowed(
-          input.entityTypes, context.allowedEntityTypes, 'LEAD',
-          () => searchLeadsTool.execute(searchArgs, context)
+        searchEntityIfAllowed(input.entityTypes, context.allowedEntityTypes, 'LEAD', () =>
+          searchLeadsTool.execute(searchArgs, context)
         ),
-        searchEntityIfAllowed(
-          input.entityTypes, context.allowedEntityTypes, 'CONTACT',
-          () => searchContactsTool.execute(searchArgs, context)
+        searchEntityIfAllowed(input.entityTypes, context.allowedEntityTypes, 'CONTACT', () =>
+          searchContactsTool.execute(searchArgs, context)
         ),
-        searchEntityIfAllowed(
-          input.entityTypes, context.allowedEntityTypes, 'OPPORTUNITY',
-          () => searchOpportunitiesTool.execute(searchArgs, context)
+        searchEntityIfAllowed(input.entityTypes, context.allowedEntityTypes, 'OPPORTUNITY', () =>
+          searchOpportunitiesTool.execute(searchArgs, context)
         ),
       ]);
 

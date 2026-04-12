@@ -1118,9 +1118,7 @@ describe('Contact Router - Additional Coverage', () => {
 
       // Should be rejected by Zod enum validation, not pass through
       const result = caller.list({ sortBy: 'password' } as any);
-      await expect(result).rejects.toThrow(
-        expect.objectContaining({ code: 'BAD_REQUEST' })
-      );
+      await expect(result).rejects.toThrow(expect.objectContaining({ code: 'BAD_REQUEST' }));
     });
 
     it('should reject SQL-injection-like sortBy with BAD_REQUEST', async () => {
@@ -1131,9 +1129,7 @@ describe('Contact Router - Additional Coverage', () => {
       prismaMock.contact.count.mockResolvedValue(0);
 
       const result = caller.list({ sortBy: '1;DROP TABLE contacts' } as any);
-      await expect(result).rejects.toThrow(
-        expect.objectContaining({ code: 'BAD_REQUEST' })
-      );
+      await expect(result).rejects.toThrow(expect.objectContaining({ code: 'BAD_REQUEST' }));
     });
 
     it('should reject empty string sortBy with BAD_REQUEST', async () => {
@@ -1144,15 +1140,20 @@ describe('Contact Router - Additional Coverage', () => {
       prismaMock.contact.count.mockResolvedValue(0);
 
       const result = caller.list({ sortBy: '' } as any);
-      await expect(result).rejects.toThrow(
-        expect.objectContaining({ code: 'BAD_REQUEST' })
-      );
+      await expect(result).rejects.toThrow(expect.objectContaining({ code: 'BAD_REQUEST' }));
     });
 
     it('should accept all valid sortBy enum values', async () => {
       const validSortFields = [
-        'createdAt', 'updatedAt', 'firstName', 'lastName', 'email',
-        'status', 'company', 'department', 'lastContactedAt',
+        'createdAt',
+        'updatedAt',
+        'firstName',
+        'lastName',
+        'email',
+        'status',
+        'company',
+        'department',
+        'lastContactedAt',
       ];
 
       for (const sortBy of validSortFields) {
@@ -1174,15 +1175,16 @@ describe('Contact Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      (prismaMock.contact.groupBy as any).mockImplementation((args: { by: string[]; where?: Record<string, unknown> }) => {
-        if (args.by?.includes('department'))
-          return Promise.resolve([{ department: 'Engineering', _count: 3 }]);
-        if (args.by?.includes('accountId'))
+      (prismaMock.contact.groupBy as any).mockImplementation(
+        (args: { by: string[]; where?: Record<string, unknown> }) => {
+          if (args.by?.includes('department'))
+            return Promise.resolve([{ department: 'Engineering', _count: 3 }]);
+          if (args.by?.includes('accountId')) return Promise.resolve([]);
+          if (args.by?.includes('status'))
+            return Promise.resolve([{ status: 'ACTIVE', _count: 5 }]);
           return Promise.resolve([]);
-        if (args.by?.includes('status'))
-          return Promise.resolve([{ status: 'ACTIVE', _count: 5 }]);
-        return Promise.resolve([]);
-      });
+        }
+      );
 
       const result = await caller.filterOptions({ status: ['ACTIVE'] });
 
@@ -1222,8 +1224,7 @@ describe('Contact Router - Additional Coverage', () => {
         if (args.by?.includes('department'))
           return Promise.resolve([{ department: 'Engineering', _count: 2 }]);
         if (args.by?.includes('accountId')) return Promise.resolve([]);
-        if (args.by?.includes('status'))
-          return Promise.resolve([{ status: 'ACTIVE', _count: 2 }]);
+        if (args.by?.includes('status')) return Promise.resolve([{ status: 'ACTIVE', _count: 2 }]);
         return Promise.resolve([]);
       });
 

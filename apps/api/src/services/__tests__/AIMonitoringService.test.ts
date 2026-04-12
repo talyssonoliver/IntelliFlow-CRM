@@ -45,7 +45,7 @@ describe('AIMonitoringService', () => {
         .mockResolvedValueOnce(50) // latency
         .mockResolvedValueOnce(20) // hallucination
         .mockResolvedValueOnce(30) // roi_cost
-        .mockResolvedValueOnce(0)  // hallucination flagged
+        .mockResolvedValueOnce(0) // hallucination flagged
         .mockResolvedValueOnce(2); // drift flagged
 
       const result = await service.getStatus();
@@ -58,10 +58,10 @@ describe('AIMonitoringService', () => {
 
     it('reports issues when hallucination rate exceeds 5%', async () => {
       mockPrisma.aIMonitoringEvent.count
-        .mockResolvedValueOnce(0)  // drift
-        .mockResolvedValueOnce(0)  // latency
+        .mockResolvedValueOnce(0) // drift
+        .mockResolvedValueOnce(0) // latency
         .mockResolvedValueOnce(100) // hallucination total
-        .mockResolvedValueOnce(0)  // roi_cost
+        .mockResolvedValueOnce(0) // roi_cost
         .mockResolvedValueOnce(10) // hallucination flagged (10%)
         .mockResolvedValueOnce(0); // drift flagged
 
@@ -207,7 +207,12 @@ describe('AIMonitoringService', () => {
           model: 'gpt-4o',
           value: 0.1,
           flagged: false,
-          payload: { confidence: 0.1, hallucinationTypes: [], evidence: [], groundTruthSources: [] },
+          payload: {
+            confidence: 0.1,
+            hallucinationTypes: [],
+            evidence: [],
+            groundTruthSources: [],
+          },
           recordedAt: new Date('2026-03-15T23:00:00Z'),
         },
       ];
@@ -267,9 +272,7 @@ describe('AIMonitoringService', () => {
     });
 
     it('returns zero ROI when no events exist', async () => {
-      mockPrisma.aIMonitoringEvent.findMany
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce([]);
+      mockPrisma.aIMonitoringEvent.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
 
       const result = await service.getROIMetrics();
 
@@ -289,7 +292,7 @@ describe('AIMonitoringService', () => {
       expect(mockPrisma.aIMonitoringEvent.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ tenantId: 'tenant-1' }),
-        }),
+        })
       );
     });
   });

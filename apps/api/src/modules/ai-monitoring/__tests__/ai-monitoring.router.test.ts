@@ -12,7 +12,13 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createTestContext, createPublicContext, prismaMock, mockServices, TEST_UUIDS } from '../../../test/setup';
+import {
+  createTestContext,
+  createPublicContext,
+  prismaMock,
+  mockServices,
+  TEST_UUIDS,
+} from '../../../test/setup';
 
 // Import router after mocks are set up
 import { aiMonitoringRouter } from '../ai-monitoring.router';
@@ -67,11 +73,30 @@ function createMockLatencyResponse() {
       periodEnd: new Date('2026-02-10T00:00:00Z'),
       sampleCount: 500,
       successRate: 0.99,
-      percentiles: { p50: 150, p75: 250, p90: 400, p95: 500, p99: 800, max: 1200, min: 50, mean: 200, stdDev: 100 },
+      percentiles: {
+        p50: 150,
+        p75: 250,
+        p90: 400,
+        p95: 500,
+        p99: 800,
+        max: 1200,
+        min: 50,
+        mean: 200,
+        stdDev: 100,
+      },
       byModel: {},
       byOperation: {},
       byPhase: {},
-      sloCompliance: { p95Target: 2000, p99Target: 5000, p95Actual: 500, p99Actual: 800, p95Compliant: true, p99Compliant: true, overallCompliant: true, complianceRate: 1 },
+      sloCompliance: {
+        p95Target: 2000,
+        p99Target: 5000,
+        p95Actual: 500,
+        p99Actual: 800,
+        p95Compliant: true,
+        p99Compliant: true,
+        overallCompliant: true,
+        complianceRate: 1,
+      },
     },
     alerts: [],
   };
@@ -92,7 +117,17 @@ function createMockHallucinationResponse() {
       kpiCompliant: true,
     },
     recentResults: [
-      { id: 'check-1', timestamp: new Date(), model: 'gpt-4', hallucinated: false, confidence: 0.1, hallucinationTypes: [], evidence: [], groundTruthSources: [], score: 0.1 },
+      {
+        id: 'check-1',
+        timestamp: new Date(),
+        model: 'gpt-4',
+        hallucinated: false,
+        confidence: 0.1,
+        hallucinationTypes: [],
+        evidence: [],
+        groundTruthSources: [],
+        score: 0.1,
+      },
     ],
   };
 }
@@ -140,11 +175,28 @@ function createMockConversation(overrides: Record<string, unknown> = {}) {
     tenantId: TEST_UUIDS.tenant,
     userId: 'user-1',
     messages: [
-      { id: 'msg-1', role: 'user', content: 'Score this lead', createdAt: new Date('2026-02-10T08:00:00Z') },
-      { id: 'msg-2', role: 'assistant', content: 'Score: 85/100', createdAt: new Date('2026-02-10T08:01:00Z') },
+      {
+        id: 'msg-1',
+        role: 'user',
+        content: 'Score this lead',
+        createdAt: new Date('2026-02-10T08:00:00Z'),
+      },
+      {
+        id: 'msg-2',
+        role: 'assistant',
+        content: 'Score: 85/100',
+        createdAt: new Date('2026-02-10T08:01:00Z'),
+      },
     ],
     toolCalls: [
-      { id: 'tc-1', toolName: 'scoreLead', toolInput: { leadId: 'l1' }, toolOutput: { score: 85 }, status: 'SUCCESS', createdAt: new Date('2026-02-10T08:00:30Z') },
+      {
+        id: 'tc-1',
+        toolName: 'scoreLead',
+        toolInput: { leadId: 'l1' },
+        toolOutput: { score: 85 },
+        status: 'SUCCESS',
+        createdAt: new Date('2026-02-10T08:00:30Z'),
+      },
     ],
     ...overrides,
   };
@@ -212,7 +264,10 @@ describe('AI Monitoring Router (IFC-197, IFC-297)', () => {
     });
 
     it('getLatencyTrend — returns bucketed trend data', async () => {
-      const mockResponse = { available: true, trend: [{ timestamp: new Date(), p50: 100, p95: 200, p99: 400, count: 10 }] };
+      const mockResponse = {
+        available: true,
+        trend: [{ timestamp: new Date(), p50: 100, p95: 200, p99: 400, count: 10 }],
+      };
       mockServices.aiMonitoringService.getLatencyTrend.mockResolvedValue(mockResponse);
 
       const caller = createCaller();
@@ -267,9 +322,16 @@ describe('AI Monitoring Router (IFC-197, IFC-297)', () => {
     it('all 6 monitoring endpoints return available: true (AC-009)', async () => {
       mockServices.aiMonitoringService.getStatus.mockResolvedValue(createMockStatusResponse());
       mockServices.aiMonitoringService.getDriftMetrics.mockResolvedValue(createMockDriftResponse());
-      mockServices.aiMonitoringService.getLatencyMetrics.mockResolvedValue(createMockLatencyResponse());
-      mockServices.aiMonitoringService.getLatencyTrend.mockResolvedValue({ available: true, trend: [] });
-      mockServices.aiMonitoringService.getHallucinationReport.mockResolvedValue(createMockHallucinationResponse());
+      mockServices.aiMonitoringService.getLatencyMetrics.mockResolvedValue(
+        createMockLatencyResponse()
+      );
+      mockServices.aiMonitoringService.getLatencyTrend.mockResolvedValue({
+        available: true,
+        trend: [],
+      });
+      mockServices.aiMonitoringService.getHallucinationReport.mockResolvedValue(
+        createMockHallucinationResponse()
+      );
       mockServices.aiMonitoringService.getROIMetrics.mockResolvedValue(createMockROIResponse());
 
       const caller = createCaller();
@@ -339,7 +401,9 @@ describe('AI Monitoring Router (IFC-197, IFC-297)', () => {
     });
 
     it('getLatencyMetrics defaults applied when no input', async () => {
-      mockServices.aiMonitoringService.getLatencyMetrics.mockResolvedValue(createMockLatencyResponse());
+      mockServices.aiMonitoringService.getLatencyMetrics.mockResolvedValue(
+        createMockLatencyResponse()
+      );
 
       const caller = createCaller();
       const result = await caller.getLatencyMetrics({});
@@ -397,12 +461,24 @@ describe('AI Monitoring Router (IFC-197, IFC-297)', () => {
 
       const caller1 = createCaller(
         createTestContext({
-          tenant: { tenantId: 'tenant-A', tenantType: 'user' as const, userId: 'u1', role: 'USER', canAccessAllTenantData: false },
+          tenant: {
+            tenantId: 'tenant-A',
+            tenantType: 'user' as const,
+            userId: 'u1',
+            role: 'USER',
+            canAccessAllTenantData: false,
+          },
         })
       );
       const caller2 = createCaller(
         createTestContext({
-          tenant: { tenantId: 'tenant-B', tenantType: 'user' as const, userId: 'u2', role: 'USER', canAccessAllTenantData: false },
+          tenant: {
+            tenantId: 'tenant-B',
+            tenantType: 'user' as const,
+            userId: 'u2',
+            role: 'USER',
+            canAccessAllTenantData: false,
+          },
         })
       );
 
@@ -424,7 +500,12 @@ describe('AI Monitoring Router (IFC-197, IFC-297)', () => {
         issues: [],
         drift: { trackedMetrics: 0, driftDetected: false, highSeverityCount: 0 },
         latency: { totalMeasurements: 0, sloCompliance: { overallCompliant: true } },
-        hallucination: { totalChecks: 0, hallucinationsDetected: 0, hallucinationRate: 0, kpiCompliant: true },
+        hallucination: {
+          totalChecks: 0,
+          hallucinationsDetected: 0,
+          hallucinationRate: 0,
+          kpiCompliant: true,
+        },
         roi: { totalCosts: 0, currentROI: 0, roiTrend: 'stable' },
       });
 
@@ -442,7 +523,12 @@ describe('AI Monitoring Router (IFC-197, IFC-297)', () => {
         issues: ['2 drift detections', 'Hallucination rate 8.5%', 'Negative ROI', 'SLO violation'],
         drift: { trackedMetrics: 3, driftDetected: true, highSeverityCount: 2 },
         latency: { totalMeasurements: 500, sloCompliance: { overallCompliant: false } },
-        hallucination: { totalChecks: 100, hallucinationsDetected: 9, hallucinationRate: 0.085, kpiCompliant: false },
+        hallucination: {
+          totalChecks: 100,
+          hallucinationsDetected: 9,
+          hallucinationRate: 0.085,
+          kpiCompliant: false,
+        },
         roi: { totalCosts: 50, currentROI: -15, roiTrend: 'declining' },
       });
 

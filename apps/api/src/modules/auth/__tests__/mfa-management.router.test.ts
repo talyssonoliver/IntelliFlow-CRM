@@ -202,7 +202,9 @@ describe('MFA Management Router (PG-125)', () => {
       });
 
       const caller = createProtectedCaller();
-      await expect(caller.disableMfa({ totpCode: '123456' })).rejects.toThrow('not currently enabled');
+      await expect(caller.disableMfa({ totpCode: '123456' })).rejects.toThrow(
+        'not currently enabled'
+      );
     });
   });
 
@@ -220,7 +222,16 @@ describe('MFA Management Router (PG-125)', () => {
         codes: ['CODE1', 'CODE2', 'CODE3', 'CODE4', 'CODE5', 'CODE6', 'CODE7', 'CODE8'],
         generatedAt: new Date(),
       });
-      mockMfaService.hashBackupCodes.mockReturnValue(['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h7', 'h8']);
+      mockMfaService.hashBackupCodes.mockReturnValue([
+        'h1',
+        'h2',
+        'h3',
+        'h4',
+        'h5',
+        'h6',
+        'h7',
+        'h8',
+      ]);
       mockMfaService.saveUserMfaSettings.mockResolvedValue(undefined);
       mockAuditLogger.log.mockResolvedValue(undefined);
 
@@ -241,14 +252,18 @@ describe('MFA Management Router (PG-125)', () => {
       mockMfaService.verifyTotpTimingSafe.mockReturnValue(false);
 
       const caller = createProtectedCaller();
-      await expect(caller.regenerateBackupCodes({ totpCode: '000000' })).rejects.toThrow('Invalid TOTP');
+      await expect(caller.regenerateBackupCodes({ totpCode: '000000' })).rejects.toThrow(
+        'Invalid TOTP'
+      );
     });
 
     it('should reject when MFA not enabled', async () => {
       mockMfaService.getUserMfaSettings.mockResolvedValue(null);
 
       const caller = createProtectedCaller();
-      await expect(caller.regenerateBackupCodes({ totpCode: '123456' })).rejects.toThrow('must be enabled');
+      await expect(caller.regenerateBackupCodes({ totpCode: '123456' })).rejects.toThrow(
+        'must be enabled'
+      );
     });
   });
 });

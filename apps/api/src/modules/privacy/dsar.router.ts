@@ -23,13 +23,7 @@ import { createDSARWorkflow } from '../../workflow/dsar-workflow';
  * DSAR request types as defined in GDPR Articles 15-22.
  * Keep aligned with dsarRequestSchema in dsar-workflow.ts.
  */
-const dsarTypeSchema = z.enum([
-  'ACCESS',
-  'ERASURE',
-  'PORTABILITY',
-  'RESTRICTION',
-  'OBJECTION',
-]);
+const dsarTypeSchema = z.enum(['ACCESS', 'ERASURE', 'PORTABILITY', 'RESTRICTION', 'OBJECTION']);
 
 const submitDSARInput = z.object({
   type: dsarTypeSchema,
@@ -112,8 +106,7 @@ export const dsarRouter = createTRPCRouter({
         success: true,
         requestId: state.requestId,
         slaDeadline: state.slaDeadline,
-        message:
-          'Your request has been received. Please check your email to verify your identity.',
+        message: 'Your request has been received. Please check your email to verify your identity.',
       };
     } catch (error) {
       throw new TRPCError({

@@ -38,7 +38,8 @@ function normalizePathname(pathname: string): string {
 }
 
 function getOrigin(req: IncomingMessage): string {
-  return `http://${req.headers.host ?? `localhost:${API_PORT}`}`;
+  const host = req.headers.host ?? `localhost:${API_PORT}`;
+  return `http://${host}`;
 }
 
 function createHeaders(req: IncomingMessage): Headers {
@@ -76,11 +77,7 @@ async function readRequestBody(req: IncomingMessage): Promise<Buffer | undefined
   return chunks.length > 0 ? Buffer.concat(chunks) : undefined;
 }
 
-function createWebRequest(
-  req: IncomingMessage,
-  origin: string,
-  body?: Buffer
-): Request {
+function createWebRequest(req: IncomingMessage, origin: string, body?: Buffer): Request {
   const url = new URL(req.url ?? '/', origin);
   const method = req.method?.toUpperCase() ?? 'GET';
   const init: RequestInit & { duplex?: 'half' } = {
@@ -330,11 +327,7 @@ export function createApiServer(options: ApiServerOptions = {}): http.Server {
         await handleRequest(req, res, router, createContextFn);
       } catch (error) {
         console.error('[API] HTTP request failed:', error);
-        sendInternalError(
-          res,
-          error,
-          (req.method?.toUpperCase() ?? 'GET') === 'HEAD'
-        );
+        sendInternalError(res, error, (req.method?.toUpperCase() ?? 'GET') === 'HEAD');
       }
     });
   });

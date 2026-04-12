@@ -166,46 +166,44 @@ export const helpArticleRouter = createTRPCRouter({
   /**
    * Get articles by category. Defaults to PUBLISHED only.
    */
-  getByCategory: tenantProcedure
-    .input(helpArticleCategorySchema)
-    .query(async ({ ctx, input }) => {
-      const tenantId = ctx.tenant.tenantId;
+  getByCategory: tenantProcedure.input(helpArticleCategorySchema).query(async ({ ctx, input }) => {
+    const tenantId = ctx.tenant.tenantId;
 
-      const isPrivileged = ctx.tenant.role === 'ADMIN' || ctx.tenant.role === 'MANAGER';
-      const where: Record<string, unknown> = {
-        tenantId,
-        categoryId: input.categoryId,
-      };
-      // Only privileged users can see unpublished articles
-      if (!input.includeUnpublished || !isPrivileged) {
-        where.status = 'PUBLISHED';
-      }
+    const isPrivileged = ctx.tenant.role === 'ADMIN' || ctx.tenant.role === 'MANAGER';
+    const where: Record<string, unknown> = {
+      tenantId,
+      categoryId: input.categoryId,
+    };
+    // Only privileged users can see unpublished articles
+    if (!input.includeUnpublished || !isPrivileged) {
+      where.status = 'PUBLISHED';
+    }
 
-      const articles = await ctx.prismaWithTenant.helpArticle.findMany({
-        where,
-        select: {
-          id: true,
-          slug: true,
-          title: true,
-          excerpt: true,
-          readTimeMinutes: true,
-          order: true,
-          status: true,
-          publishedAt: true,
-          keywords: true,
-          relatedArticleIds: true,
-          _count: { select: { feedback: true } },
-        },
-        orderBy: { order: 'asc' },
-      });
+    const articles = await ctx.prismaWithTenant.helpArticle.findMany({
+      where,
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        excerpt: true,
+        readTimeMinutes: true,
+        order: true,
+        status: true,
+        publishedAt: true,
+        keywords: true,
+        relatedArticleIds: true,
+        _count: { select: { feedback: true } },
+      },
+      orderBy: { order: 'asc' },
+    });
 
-      return articles.map((a) => ({
-        ...a,
-        keywords: a.keywords as string[],
-        relatedArticleIds: a.relatedArticleIds as string[],
-        feedbackCount: a._count.feedback,
-      }));
-    }),
+    return articles.map((a) => ({
+      ...a,
+      keywords: a.keywords as string[],
+      relatedArticleIds: a.relatedArticleIds as string[],
+      feedbackCount: a._count.feedback,
+    }));
+  }),
 
   /**
    * Get related articles by resolving relatedArticleIds JSON array.
@@ -245,232 +243,222 @@ export const helpArticleRouter = createTRPCRouter({
    * Create a new help article with sections.
    * Requires ADMIN or MANAGER role.
    */
-  create: tenantProcedure
-    .input(createHelpArticleSchema)
-    .mutation(async ({ ctx, input }) => {
-      assertAdminOrManager(ctx.tenant.role);
-      const tenantId = ctx.tenant.tenantId;
+  create: tenantProcedure.input(createHelpArticleSchema).mutation(async ({ ctx, input }) => {
+    assertAdminOrManager(ctx.tenant.role);
+    const tenantId = ctx.tenant.tenantId;
 
-      // Pre-check slug uniqueness for a clean error message
-      const existing = await ctx.prismaWithTenant.helpArticle.findUnique({
-        where: { tenantId_slug: { tenantId, slug: input.slug } },
-        select: { id: true },
+    // Pre-check slug uniqueness for a clean error message
+    const existing = await ctx.prismaWithTenant.helpArticle.findUnique({
+      where: { tenantId_slug: { tenantId, slug: input.slug } },
+      select: { id: true },
+    });
+    if (existing) {
+      throw new TRPCError({
+        code: 'CONFLICT',
+        message: `Slug "${input.slug}" is already in use`,
       });
-      if (existing) {
+    }
+
+    try {
+      return await ctx.prismaWithTenant.helpArticle.create({
+        data: {
+          slug: input.slug,
+          title: input.title,
+          categoryId: input.categoryId,
+          excerpt: input.excerpt,
+          readTimeMinutes: input.readTimeMinutes,
+          keywords: input.keywords,
+          relatedArticleIds: input.relatedArticleIds,
+          order: input.order,
+          status: 'DRAFT',
+          tenantId,
+          sections: {
+            createMany: {
+              data: input.sections.map((s, i) => ({
+                heading: s.heading,
+                content: s.content,
+                blocks: s.blocks ?? undefined,
+                order: s.order ?? i,
+                tenantId,
+              })),
+            },
+          },
+        },
+        include: { sections: { orderBy: { order: 'asc' } } },
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
         throw new TRPCError({
           code: 'CONFLICT',
           message: `Slug "${input.slug}" is already in use`,
         });
       }
-
-      try {
-        return await ctx.prismaWithTenant.helpArticle.create({
-          data: {
-            slug: input.slug,
-            title: input.title,
-            categoryId: input.categoryId,
-            excerpt: input.excerpt,
-            readTimeMinutes: input.readTimeMinutes,
-            keywords: input.keywords,
-            relatedArticleIds: input.relatedArticleIds,
-            order: input.order,
-            status: 'DRAFT',
-            tenantId,
-            sections: {
-              createMany: {
-                data: input.sections.map((s, i) => ({
-                  heading: s.heading,
-                  content: s.content,
-                  blocks: s.blocks ?? undefined,
-                  order: s.order ?? i,
-                  tenantId,
-                })),
-              },
-            },
-          },
-          include: { sections: { orderBy: { order: 'asc' } } },
-        });
-      } catch (e) {
-        if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-          throw new TRPCError({
-            code: 'CONFLICT',
-            message: `Slug "${input.slug}" is already in use`,
-          });
-        }
-        throw e;
-      }
-    }),
+      throw e;
+    }
+  }),
 
   /**
    * Update a help article. If sections are provided, replaces all sections.
    * Requires ADMIN or MANAGER role.
    */
-  update: tenantProcedure
-    .input(updateHelpArticleSchema)
-    .mutation(async ({ ctx, input }) => {
-      assertAdminOrManager(ctx.tenant.role);
-      const tenantId = ctx.tenant.tenantId;
-      const { id, sections, ...articleFields } = input;
+  update: tenantProcedure.input(updateHelpArticleSchema).mutation(async ({ ctx, input }) => {
+    assertAdminOrManager(ctx.tenant.role);
+    const tenantId = ctx.tenant.tenantId;
+    const { id, sections, ...articleFields } = input;
 
-      const existing = await ctx.prismaWithTenant.helpArticle.findFirst({
-        where: { id, tenantId },
-        select: { id: true, slug: true },
+    const existing = await ctx.prismaWithTenant.helpArticle.findFirst({
+      where: { id, tenantId },
+      select: { id: true, slug: true },
+    });
+    if (!existing) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Article not found' });
+    }
+
+    // Slug conflict check (only if slug is changing)
+    if (articleFields.slug && articleFields.slug !== existing.slug) {
+      const slugConflict = await ctx.prismaWithTenant.helpArticle.findUnique({
+        where: { tenantId_slug: { tenantId, slug: articleFields.slug } },
+        select: { id: true },
       });
-      if (!existing) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Article not found' });
-      }
-
-      // Slug conflict check (only if slug is changing)
-      if (articleFields.slug && articleFields.slug !== existing.slug) {
-        const slugConflict = await ctx.prismaWithTenant.helpArticle.findUnique({
-          where: { tenantId_slug: { tenantId, slug: articleFields.slug } },
-          select: { id: true },
+      if (slugConflict) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: `Slug "${articleFields.slug}" is already in use`,
         });
-        if (slugConflict) {
-          throw new TRPCError({
-            code: 'CONFLICT',
-            message: `Slug "${articleFields.slug}" is already in use`,
-          });
-        }
       }
+    }
 
-      try {
-        return await ctx.prismaWithTenant.$transaction(async (tx) => {
-          // Replace sections if provided
-          if (sections !== undefined) {
-            await tx.articleSection.deleteMany({
-              where: { articleId: id, tenantId },
+    try {
+      return await ctx.prismaWithTenant.$transaction(async (tx) => {
+        // Replace sections if provided
+        if (sections !== undefined) {
+          await tx.articleSection.deleteMany({
+            where: { articleId: id, tenantId },
+          });
+          if (sections.length > 0) {
+            await tx.articleSection.createMany({
+              data: sections.map((s, i) => ({
+                heading: s.heading,
+                content: s.content,
+                blocks: s.blocks ?? undefined,
+                order: s.order ?? i,
+                articleId: id,
+                tenantId,
+              })),
             });
-            if (sections.length > 0) {
-              await tx.articleSection.createMany({
-                data: sections.map((s, i) => ({
-                  heading: s.heading,
-                  content: s.content,
-                  blocks: s.blocks ?? undefined,
-                  order: s.order ?? i,
-                  articleId: id,
-                  tenantId,
-                })),
-              });
-            }
           }
-
-          // Build update data — only include provided fields
-          const data: Record<string, unknown> = {};
-          if (articleFields.slug !== undefined) data.slug = articleFields.slug;
-          if (articleFields.title !== undefined) data.title = articleFields.title;
-          if (articleFields.categoryId !== undefined) data.categoryId = articleFields.categoryId;
-          if (articleFields.excerpt !== undefined) data.excerpt = articleFields.excerpt;
-          if (articleFields.readTimeMinutes !== undefined)
-            data.readTimeMinutes = articleFields.readTimeMinutes;
-          if (articleFields.keywords !== undefined) data.keywords = articleFields.keywords;
-          if (articleFields.relatedArticleIds !== undefined)
-            data.relatedArticleIds = articleFields.relatedArticleIds;
-          if (articleFields.order !== undefined) data.order = articleFields.order;
-
-          return tx.helpArticle.update({
-            where: { id },
-            data,
-            include: { sections: { orderBy: { order: 'asc' } } },
-          });
-        });
-      } catch (e) {
-        if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-          throw new TRPCError({
-            code: 'CONFLICT',
-            message: `Slug "${articleFields.slug}" is already in use`,
-          });
         }
-        throw e;
+
+        // Build update data — only include provided fields
+        const data: Record<string, unknown> = {};
+        if (articleFields.slug !== undefined) data.slug = articleFields.slug;
+        if (articleFields.title !== undefined) data.title = articleFields.title;
+        if (articleFields.categoryId !== undefined) data.categoryId = articleFields.categoryId;
+        if (articleFields.excerpt !== undefined) data.excerpt = articleFields.excerpt;
+        if (articleFields.readTimeMinutes !== undefined)
+          data.readTimeMinutes = articleFields.readTimeMinutes;
+        if (articleFields.keywords !== undefined) data.keywords = articleFields.keywords;
+        if (articleFields.relatedArticleIds !== undefined)
+          data.relatedArticleIds = articleFields.relatedArticleIds;
+        if (articleFields.order !== undefined) data.order = articleFields.order;
+
+        return tx.helpArticle.update({
+          where: { id },
+          data,
+          include: { sections: { orderBy: { order: 'asc' } } },
+        });
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: `Slug "${articleFields.slug}" is already in use`,
+        });
       }
-    }),
+      throw e;
+    }
+  }),
 
   /**
    * Delete a help article. Sections and feedback cascade-delete.
    * Requires ADMIN role.
    */
-  delete: tenantProcedure
-    .input(helpArticleIdSchema)
-    .mutation(async ({ ctx, input }) => {
-      assertAdmin(ctx.tenant.role);
-      const tenantId = ctx.tenant.tenantId;
+  delete: tenantProcedure.input(helpArticleIdSchema).mutation(async ({ ctx, input }) => {
+    assertAdmin(ctx.tenant.role);
+    const tenantId = ctx.tenant.tenantId;
 
-      const existing = await ctx.prismaWithTenant.helpArticle.findFirst({
-        where: { id: input.id, tenantId },
-        select: { id: true },
-      });
-      if (!existing) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Article not found' });
-      }
+    const existing = await ctx.prismaWithTenant.helpArticle.findFirst({
+      where: { id: input.id, tenantId },
+      select: { id: true },
+    });
+    if (!existing) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Article not found' });
+    }
 
-      await ctx.prismaWithTenant.helpArticle.delete({
-        where: { id: input.id },
-      });
+    await ctx.prismaWithTenant.helpArticle.delete({
+      where: { id: input.id },
+    });
 
-      return { success: true };
-    }),
+    return { success: true };
+  }),
 
   /**
    * Publish a DRAFT article. Sets status to PUBLISHED and publishedAt.
    * Requires ADMIN or MANAGER role.
    */
-  publish: tenantProcedure
-    .input(helpArticleIdSchema)
-    .mutation(async ({ ctx, input }) => {
-      assertAdminOrManager(ctx.tenant.role);
-      const tenantId = ctx.tenant.tenantId;
+  publish: tenantProcedure.input(helpArticleIdSchema).mutation(async ({ ctx, input }) => {
+    assertAdminOrManager(ctx.tenant.role);
+    const tenantId = ctx.tenant.tenantId;
 
-      const existing = await ctx.prismaWithTenant.helpArticle.findFirst({
-        where: { id: input.id, tenantId },
-        select: { id: true, status: true },
+    const existing = await ctx.prismaWithTenant.helpArticle.findFirst({
+      where: { id: input.id, tenantId },
+      select: { id: true, status: true },
+    });
+    if (!existing) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Article not found' });
+    }
+    if (existing.status === 'PUBLISHED') {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Article is already published',
       });
-      if (!existing) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Article not found' });
-      }
-      if (existing.status === 'PUBLISHED') {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Article is already published',
-        });
-      }
+    }
 
-      return ctx.prismaWithTenant.helpArticle.update({
-        where: { id: input.id },
-        data: { status: 'PUBLISHED', publishedAt: new Date() },
-        select: { id: true, status: true, publishedAt: true },
-      });
-    }),
+    return ctx.prismaWithTenant.helpArticle.update({
+      where: { id: input.id },
+      data: { status: 'PUBLISHED', publishedAt: new Date() },
+      select: { id: true, status: true, publishedAt: true },
+    });
+  }),
 
   /**
    * Unpublish a PUBLISHED article. Sets status to DRAFT and clears publishedAt.
    * Requires ADMIN or MANAGER role.
    */
-  unpublish: tenantProcedure
-    .input(helpArticleIdSchema)
-    .mutation(async ({ ctx, input }) => {
-      assertAdminOrManager(ctx.tenant.role);
-      const tenantId = ctx.tenant.tenantId;
+  unpublish: tenantProcedure.input(helpArticleIdSchema).mutation(async ({ ctx, input }) => {
+    assertAdminOrManager(ctx.tenant.role);
+    const tenantId = ctx.tenant.tenantId;
 
-      const existing = await ctx.prismaWithTenant.helpArticle.findFirst({
-        where: { id: input.id, tenantId },
-        select: { id: true, status: true },
+    const existing = await ctx.prismaWithTenant.helpArticle.findFirst({
+      where: { id: input.id, tenantId },
+      select: { id: true, status: true },
+    });
+    if (!existing) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Article not found' });
+    }
+    if (existing.status === 'DRAFT') {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Article is already unpublished',
       });
-      if (!existing) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Article not found' });
-      }
-      if (existing.status === 'DRAFT') {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Article is already unpublished',
-        });
-      }
+    }
 
-      return ctx.prismaWithTenant.helpArticle.update({
-        where: { id: input.id },
-        data: { status: 'DRAFT', publishedAt: null },
-        select: { id: true, status: true, publishedAt: true },
-      });
-    }),
+    return ctx.prismaWithTenant.helpArticle.update({
+      where: { id: input.id },
+      data: { status: 'DRAFT', publishedAt: null },
+      select: { id: true, status: true, publishedAt: true },
+    });
+  }),
 
   // ─── Feedback (IFC-303) ─────────────────────────────────────────────────
 
@@ -478,38 +466,34 @@ export const helpArticleRouter = createTRPCRouter({
    * Submit feedback for a help article.
    * Maps FeedbackValue ('helpful' | 'not_helpful') to boolean.
    */
-  submitFeedback: tenantProcedure
-    .input(submitFeedbackSchema)
-    .mutation(async ({ ctx, input }) => {
-      const feedback = await ctx.prismaWithTenant.articleFeedback.create({
-        data: {
-          articleId: input.articleId,
-          helpful: input.value === 'helpful',
-          comment: input.comment,
-          userId: ctx.tenant.userId,
-          tenantId: ctx.tenant.tenantId,
-        },
-      });
+  submitFeedback: tenantProcedure.input(submitFeedbackSchema).mutation(async ({ ctx, input }) => {
+    const feedback = await ctx.prismaWithTenant.articleFeedback.create({
+      data: {
+        articleId: input.articleId,
+        helpful: input.value === 'helpful',
+        comment: input.comment,
+        userId: ctx.tenant.userId,
+        tenantId: ctx.tenant.tenantId,
+      },
+    });
 
-      return { id: feedback.id, helpful: feedback.helpful, createdAt: feedback.createdAt };
-    }),
+    return { id: feedback.id, helpful: feedback.helpful, createdAt: feedback.createdAt };
+  }),
 
   /**
    * Get aggregated feedback stats for a help article.
    * Returns helpful count, not-helpful count, and total.
    */
-  getFeedbackStats: tenantProcedure
-    .input(getFeedbackStatsSchema)
-    .query(async ({ ctx, input }) => {
-      const [helpful, total] = await Promise.all([
-        ctx.prismaWithTenant.articleFeedback.count({
-          where: { articleId: input.articleId, helpful: true },
-        }),
-        ctx.prismaWithTenant.articleFeedback.count({
-          where: { articleId: input.articleId },
-        }),
-      ]);
+  getFeedbackStats: tenantProcedure.input(getFeedbackStatsSchema).query(async ({ ctx, input }) => {
+    const [helpful, total] = await Promise.all([
+      ctx.prismaWithTenant.articleFeedback.count({
+        where: { articleId: input.articleId, helpful: true },
+      }),
+      ctx.prismaWithTenant.articleFeedback.count({
+        where: { articleId: input.articleId },
+      }),
+    ]);
 
-      return { helpful, notHelpful: total - helpful, total };
-    }),
+    return { helpful, notHelpful: total - helpful, total };
+  }),
 });

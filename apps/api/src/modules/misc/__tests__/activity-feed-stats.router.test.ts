@@ -93,11 +93,10 @@ describe('activityFeedRouter.getStats', () => {
 
     await caller.getStats({ sources: ['LEAD_ACTIVITY', 'EMAIL'] });
 
-    expect(mockActivityFeedService.getStats).toHaveBeenCalledWith(
-      TEST_UUIDS.tenant,
-      '7d',
-      { sources: ['LEAD_ACTIVITY', 'EMAIL'], entityType: undefined }
-    );
+    expect(mockActivityFeedService.getStats).toHaveBeenCalledWith(TEST_UUIDS.tenant, '7d', {
+      sources: ['LEAD_ACTIVITY', 'EMAIL'],
+      entityType: undefined,
+    });
   });
 
   it('applies entityType filter correctly (passes to service)', async () => {
@@ -106,11 +105,10 @@ describe('activityFeedRouter.getStats', () => {
 
     await caller.getStats({ entityType: 'LEAD' });
 
-    expect(mockActivityFeedService.getStats).toHaveBeenCalledWith(
-      TEST_UUIDS.tenant,
-      '7d',
-      { sources: undefined, entityType: 'LEAD' }
-    );
+    expect(mockActivityFeedService.getStats).toHaveBeenCalledWith(TEST_UUIDS.tenant, '7d', {
+      sources: undefined,
+      entityType: 'LEAD',
+    });
   });
 
   it('returns empty stats for tenant with no data', async () => {
@@ -134,7 +132,9 @@ describe('activityFeedRouter.getStats', () => {
   });
 
   it('throws FORBIDDEN when no tenantId in context', async () => {
-    const ctx = createCtxWithService({ user: { userId: 'u1', email: 'test@test.com', role: 'USER' } });
+    const ctx = createCtxWithService({
+      user: { userId: 'u1', email: 'test@test.com', role: 'USER' },
+    });
     const caller = activityFeedRouter.createCaller(ctx);
 
     await expect(caller.getStats({})).rejects.toThrow(/tenant/i);

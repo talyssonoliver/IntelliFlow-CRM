@@ -92,45 +92,43 @@ const stagesRouter = createTRPCRouter({
     });
   }),
 
-  updateAll: tenantProcedure
-    .input(updateLeadStagesSchema)
-    .mutation(async ({ ctx, input }) => {
-      const tenantId = ctx.tenant.tenantId;
-      const { stages } = input;
+  updateAll: tenantProcedure.input(updateLeadStagesSchema).mutation(async ({ ctx, input }) => {
+    const tenantId = ctx.tenant.tenantId;
+    const { stages } = input;
 
-      // Ensure exactly one default
-      const defaultCount = stages.filter((s) => s.isDefault).length;
-      if (defaultCount !== 1) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Exactly one stage must be marked as default',
+    // Ensure exactly one default
+    const defaultCount = stages.filter((s) => s.isDefault).length;
+    if (defaultCount !== 1) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Exactly one stage must be marked as default',
+      });
+    }
+
+    return ctx.prismaWithTenant.$transaction(async (tx) => {
+      // Deactivate all existing stages
+      await tx.leadStageConfig.updateMany({
+        where: { tenantId },
+        data: { isActive: false },
+      });
+
+      // Upsert each stage
+      for (const stage of stages) {
+        await tx.leadStageConfig.upsert({
+          where: {
+            tenantId_stageKey: { tenantId, stageKey: stage.stageKey },
+          },
+          create: { ...stage, tenantId, isActive: true },
+          update: { ...stage, isActive: true },
         });
       }
 
-      return ctx.prismaWithTenant.$transaction(async (tx) => {
-        // Deactivate all existing stages
-        await tx.leadStageConfig.updateMany({
-          where: { tenantId },
-          data: { isActive: false },
-        });
-
-        // Upsert each stage
-        for (const stage of stages) {
-          await tx.leadStageConfig.upsert({
-            where: {
-              tenantId_stageKey: { tenantId, stageKey: stage.stageKey },
-            },
-            create: { ...stage, tenantId, isActive: true },
-            update: { ...stage, isActive: true },
-          });
-        }
-
-        return tx.leadStageConfig.findMany({
-          where: { tenantId, isActive: true },
-          orderBy: { sortOrder: 'asc' },
-        });
+      return tx.leadStageConfig.findMany({
+        where: { tenantId, isActive: true },
+        orderBy: { sortOrder: 'asc' },
       });
-    }),
+    });
+  }),
 
   resetToDefaults: tenantProcedure.mutation(async ({ ctx }) => {
     const tenantId = ctx.tenant.tenantId;
@@ -244,79 +242,73 @@ const customFieldsRouter = createTRPCRouter({
     });
   }),
 
-  create: tenantProcedure
-    .input(createLeadCustomFieldSchema)
-    .mutation(async ({ ctx, input }) => {
-      const tenantId = ctx.tenant.tenantId;
-      const fieldKey = generateFieldKey(input.fieldName);
+  create: tenantProcedure.input(createLeadCustomFieldSchema).mutation(async ({ ctx, input }) => {
+    const tenantId = ctx.tenant.tenantId;
+    const fieldKey = generateFieldKey(input.fieldName);
 
-      // Check for duplicate
-      const existing = await ctx.prismaWithTenant.leadCustomField.findUnique({
-        where: { tenantId_fieldKey: { tenantId, fieldKey } },
+    // Check for duplicate
+    const existing = await ctx.prismaWithTenant.leadCustomField.findUnique({
+      where: { tenantId_fieldKey: { tenantId, fieldKey } },
+    });
+    if (existing) {
+      throw new TRPCError({
+        code: 'CONFLICT',
+        message: `A field with key "${fieldKey}" already exists`,
       });
-      if (existing) {
-        throw new TRPCError({
-          code: 'CONFLICT',
-          message: `A field with key "${fieldKey}" already exists`,
-        });
-      }
+    }
 
-      // Get next sort order
-      const maxSort = await ctx.prismaWithTenant.leadCustomField.aggregate({
-        where: { tenantId },
-        _max: { sortOrder: true },
-      });
+    // Get next sort order
+    const maxSort = await ctx.prismaWithTenant.leadCustomField.aggregate({
+      where: { tenantId },
+      _max: { sortOrder: true },
+    });
 
-      return ctx.prismaWithTenant.leadCustomField.create({
-        data: {
-          fieldName: input.fieldName,
-          fieldKey,
-          dataType: input.dataType,
-          options: input.options ?? undefined,
-          isRequired: input.isRequired ?? false,
-          sortOrder: (maxSort._max.sortOrder ?? -1) + 1,
-          tenantId,
-        },
-      });
-    }),
+    return ctx.prismaWithTenant.leadCustomField.create({
+      data: {
+        fieldName: input.fieldName,
+        fieldKey,
+        dataType: input.dataType,
+        options: input.options ?? undefined,
+        isRequired: input.isRequired ?? false,
+        sortOrder: (maxSort._max.sortOrder ?? -1) + 1,
+        tenantId,
+      },
+    });
+  }),
 
-  update: tenantProcedure
-    .input(updateLeadCustomFieldSchema)
-    .mutation(async ({ ctx, input }) => {
-      const { id, ...data } = input;
-      const existing = await ctx.prismaWithTenant.leadCustomField.findFirst({
-        where: { id, tenantId: ctx.tenant.tenantId },
-      });
-      if (!existing) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Custom field not found' });
-      }
+  update: tenantProcedure.input(updateLeadCustomFieldSchema).mutation(async ({ ctx, input }) => {
+    const { id, ...data } = input;
+    const existing = await ctx.prismaWithTenant.leadCustomField.findFirst({
+      where: { id, tenantId: ctx.tenant.tenantId },
+    });
+    if (!existing) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Custom field not found' });
+    }
 
-      return ctx.prismaWithTenant.leadCustomField.update({
-        where: { id },
-        data: {
-          fieldName: data.fieldName,
-          dataType: data.dataType,
-          options: data.options ?? undefined,
-          isRequired: data.isRequired ?? existing.isRequired,
-        },
-      });
-    }),
+    return ctx.prismaWithTenant.leadCustomField.update({
+      where: { id },
+      data: {
+        fieldName: data.fieldName,
+        dataType: data.dataType,
+        options: data.options ?? undefined,
+        isRequired: data.isRequired ?? existing.isRequired,
+      },
+    });
+  }),
 
-  delete: tenantProcedure
-    .input(deleteLeadCustomFieldSchema)
-    .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.prismaWithTenant.leadCustomField.findFirst({
-        where: { id: input.id, tenantId: ctx.tenant.tenantId },
-      });
-      if (!existing) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Custom field not found' });
-      }
+  delete: tenantProcedure.input(deleteLeadCustomFieldSchema).mutation(async ({ ctx, input }) => {
+    const existing = await ctx.prismaWithTenant.leadCustomField.findFirst({
+      where: { id: input.id, tenantId: ctx.tenant.tenantId },
+    });
+    if (!existing) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Custom field not found' });
+    }
 
-      return ctx.prismaWithTenant.leadCustomField.update({
-        where: { id: input.id },
-        data: { isActive: false },
-      });
-    }),
+    return ctx.prismaWithTenant.leadCustomField.update({
+      where: { id: input.id },
+      data: { isActive: false },
+    });
+  }),
 });
 
 // ─── Automation Sub-Router ──────────────────────────────────────────────────
@@ -341,16 +333,14 @@ const automationRouter = createTRPCRouter({
     });
   }),
 
-  update: tenantProcedure
-    .input(leadAutomationSettingsSchema)
-    .mutation(async ({ ctx, input }) => {
-      const tenantId = ctx.tenant.tenantId;
-      return ctx.prismaWithTenant.leadAutomationSetting.upsert({
-        where: { tenantId },
-        create: { ...input, tenantId },
-        update: input,
-      });
-    }),
+  update: tenantProcedure.input(leadAutomationSettingsSchema).mutation(async ({ ctx, input }) => {
+    const tenantId = ctx.tenant.tenantId;
+    return ctx.prismaWithTenant.leadAutomationSetting.upsert({
+      where: { tenantId },
+      create: { ...input, tenantId },
+      update: input,
+    });
+  }),
 });
 
 // ─── Export Combined Router ─────────────────────────────────────────────────

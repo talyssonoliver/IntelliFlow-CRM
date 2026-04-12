@@ -150,7 +150,9 @@ describe('add()', () => {
   it('A2: maps MEDIUM estimatedImpact to confidenceScore 60', async () => {
     (prismaMock.agentAction.create as any).mockResolvedValue({});
 
-    const action = makePendingAction({ preview: { ...makePendingAction().preview, estimatedImpact: 'MEDIUM' } });
+    const action = makePendingAction({
+      preview: { ...makePendingAction().preview, estimatedImpact: 'MEDIUM' },
+    });
     await store.add(action);
 
     const data = (prismaMock.agentAction.create as any).mock.calls[0][0].data;
@@ -160,7 +162,9 @@ describe('add()', () => {
   it('A3: maps LOW estimatedImpact to confidenceScore 30', async () => {
     (prismaMock.agentAction.create as any).mockResolvedValue({});
 
-    const action = makePendingAction({ preview: { ...makePendingAction().preview, estimatedImpact: 'LOW' } });
+    const action = makePendingAction({
+      preview: { ...makePendingAction().preview, estimatedImpact: 'LOW' },
+    });
     await store.add(action);
 
     const data = (prismaMock.agentAction.create as any).mock.calls[0][0].data;
@@ -170,7 +174,9 @@ describe('add()', () => {
   it('A4: maps HIGH estimatedImpact to confidenceScore 90', async () => {
     (prismaMock.agentAction.create as any).mockResolvedValue({});
 
-    const action = makePendingAction({ preview: { ...makePendingAction().preview, estimatedImpact: 'HIGH' } });
+    const action = makePendingAction({
+      preview: { ...makePendingAction().preview, estimatedImpact: 'HIGH' },
+    });
     await store.add(action);
 
     const data = (prismaMock.agentAction.create as any).mock.calls[0][0].data;
@@ -1019,10 +1025,16 @@ describe('impact/confidence roundtrip', () => {
   it('M1: LOW impact → confidence 30 → back to LOW', async () => {
     (prismaMock.agentAction.create as any).mockResolvedValue({});
     (prismaMock.agentAction.findUnique as any).mockResolvedValue(
-      makeAgentActionRow({ confidenceScore: 30, status: 'PENDING_APPROVAL', expiresAt: new Date(Date.now() + 60_000) })
+      makeAgentActionRow({
+        confidenceScore: 30,
+        status: 'PENDING_APPROVAL',
+        expiresAt: new Date(Date.now() + 60_000),
+      })
     );
 
-    await store.add(makePendingAction({ preview: { ...makePendingAction().preview, estimatedImpact: 'LOW' } }));
+    await store.add(
+      makePendingAction({ preview: { ...makePendingAction().preview, estimatedImpact: 'LOW' } })
+    );
 
     const addData = (prismaMock.agentAction.create as any).mock.calls[0][0].data;
     expect(addData.confidenceScore).toBe(30);
@@ -1034,10 +1046,16 @@ describe('impact/confidence roundtrip', () => {
   it('M2: MEDIUM impact → confidence 60 → back to MEDIUM', async () => {
     (prismaMock.agentAction.create as any).mockResolvedValue({});
     (prismaMock.agentAction.findUnique as any).mockResolvedValue(
-      makeAgentActionRow({ confidenceScore: 60, status: 'PENDING_APPROVAL', expiresAt: new Date(Date.now() + 60_000) })
+      makeAgentActionRow({
+        confidenceScore: 60,
+        status: 'PENDING_APPROVAL',
+        expiresAt: new Date(Date.now() + 60_000),
+      })
     );
 
-    await store.add(makePendingAction({ preview: { ...makePendingAction().preview, estimatedImpact: 'MEDIUM' } }));
+    await store.add(
+      makePendingAction({ preview: { ...makePendingAction().preview, estimatedImpact: 'MEDIUM' } })
+    );
 
     const addData = (prismaMock.agentAction.create as any).mock.calls[0][0].data;
     expect(addData.confidenceScore).toBe(60);
@@ -1049,10 +1067,16 @@ describe('impact/confidence roundtrip', () => {
   it('M3: HIGH impact → confidence 90 → back to HIGH', async () => {
     (prismaMock.agentAction.create as any).mockResolvedValue({});
     (prismaMock.agentAction.findUnique as any).mockResolvedValue(
-      makeAgentActionRow({ confidenceScore: 90, status: 'PENDING_APPROVAL', expiresAt: new Date(Date.now() + 60_000) })
+      makeAgentActionRow({
+        confidenceScore: 90,
+        status: 'PENDING_APPROVAL',
+        expiresAt: new Date(Date.now() + 60_000),
+      })
     );
 
-    await store.add(makePendingAction({ preview: { ...makePendingAction().preview, estimatedImpact: 'HIGH' } }));
+    await store.add(
+      makePendingAction({ preview: { ...makePendingAction().preview, estimatedImpact: 'HIGH' } })
+    );
 
     const addData = (prismaMock.agentAction.create as any).mock.calls[0][0].data;
     expect(addData.confidenceScore).toBe(90);
@@ -1062,7 +1086,11 @@ describe('impact/confidence roundtrip', () => {
   });
 
   it('M4: confidenceScore 0 maps to LOW impact', async () => {
-    const row = makeAgentActionRow({ confidenceScore: 0, status: 'PENDING_APPROVAL', expiresAt: new Date(Date.now() + 60_000) });
+    const row = makeAgentActionRow({
+      confidenceScore: 0,
+      status: 'PENDING_APPROVAL',
+      expiresAt: new Date(Date.now() + 60_000),
+    });
     (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
 
     const result = await store.get(ACTION_ID);
@@ -1070,7 +1098,11 @@ describe('impact/confidence roundtrip', () => {
   });
 
   it('M5: confidenceScore 39 maps to LOW impact (boundary)', async () => {
-    const row = makeAgentActionRow({ confidenceScore: 39, status: 'PENDING_APPROVAL', expiresAt: new Date(Date.now() + 60_000) });
+    const row = makeAgentActionRow({
+      confidenceScore: 39,
+      status: 'PENDING_APPROVAL',
+      expiresAt: new Date(Date.now() + 60_000),
+    });
     (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
 
     const result = await store.get(ACTION_ID);
@@ -1078,7 +1110,11 @@ describe('impact/confidence roundtrip', () => {
   });
 
   it('M6: confidenceScore 40 maps to MEDIUM impact (boundary)', async () => {
-    const row = makeAgentActionRow({ confidenceScore: 40, status: 'PENDING_APPROVAL', expiresAt: new Date(Date.now() + 60_000) });
+    const row = makeAgentActionRow({
+      confidenceScore: 40,
+      status: 'PENDING_APPROVAL',
+      expiresAt: new Date(Date.now() + 60_000),
+    });
     (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
 
     const result = await store.get(ACTION_ID);
@@ -1086,7 +1122,11 @@ describe('impact/confidence roundtrip', () => {
   });
 
   it('M7: confidenceScore 69 maps to MEDIUM impact (boundary)', async () => {
-    const row = makeAgentActionRow({ confidenceScore: 69, status: 'PENDING_APPROVAL', expiresAt: new Date(Date.now() + 60_000) });
+    const row = makeAgentActionRow({
+      confidenceScore: 69,
+      status: 'PENDING_APPROVAL',
+      expiresAt: new Date(Date.now() + 60_000),
+    });
     (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
 
     const result = await store.get(ACTION_ID);
@@ -1094,7 +1134,11 @@ describe('impact/confidence roundtrip', () => {
   });
 
   it('M8: confidenceScore 70 maps to HIGH impact (boundary)', async () => {
-    const row = makeAgentActionRow({ confidenceScore: 70, status: 'PENDING_APPROVAL', expiresAt: new Date(Date.now() + 60_000) });
+    const row = makeAgentActionRow({
+      confidenceScore: 70,
+      status: 'PENDING_APPROVAL',
+      expiresAt: new Date(Date.now() + 60_000),
+    });
     (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
 
     const result = await store.get(ACTION_ID);
@@ -1102,7 +1146,11 @@ describe('impact/confidence roundtrip', () => {
   });
 
   it('M9: confidenceScore 100 maps to HIGH impact', async () => {
-    const row = makeAgentActionRow({ confidenceScore: 100, status: 'PENDING_APPROVAL', expiresAt: new Date(Date.now() + 60_000) });
+    const row = makeAgentActionRow({
+      confidenceScore: 100,
+      status: 'PENDING_APPROVAL',
+      expiresAt: new Date(Date.now() + 60_000),
+    });
     (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
 
     const result = await store.get(ACTION_ID);
@@ -1116,7 +1164,11 @@ describe('impact/confidence roundtrip', () => {
 
 describe('inferActionType from toolName', () => {
   async function getActionTypeFor(toolName: string): Promise<string> {
-    const row = makeAgentActionRow({ actionType: toolName, status: 'PENDING_APPROVAL', expiresAt: new Date(Date.now() + 60_000) });
+    const row = makeAgentActionRow({
+      actionType: toolName,
+      status: 'PENDING_APPROVAL',
+      expiresAt: new Date(Date.now() + 60_000),
+    });
     (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
     const result = await store.get(ACTION_ID);
     return result!.actionType;

@@ -339,9 +339,7 @@ export const analyticsRouter = createTRPCRouter({
       take: 5,
     });
 
-    const userIds = closedWonByOwner
-      .map((o) => o.ownerId)
-      .filter((id): id is string => id != null);
+    const userIds = closedWonByOwner.map((o) => o.ownerId).filter((id): id is string => id != null);
 
     const users =
       userIds.length > 0

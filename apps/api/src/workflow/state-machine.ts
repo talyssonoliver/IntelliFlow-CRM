@@ -27,7 +27,8 @@ import type {
  */
 export class WorkflowStateMachine implements IWorkflowEngine {
   /** Registered workflow definitions */
-  private readonly definitions: Map<string, WorkflowDefinition<Record<string, unknown>>> = new Map();
+  private readonly definitions: Map<string, WorkflowDefinition<Record<string, unknown>>> =
+    new Map();
 
   /** In-memory state storage (replace with PostgreSQL in production) */
   private readonly states: Map<string, WorkflowState<Record<string, unknown>>> = new Map();

@@ -66,23 +66,28 @@ function notifyAssignee(
   params: { assigneeId: string; tenantId: string; ticketId: string; subject: string }
 ) {
   // In-app notification
-  createNotification(ctx.prismaWithTenant, {
-    userId: params.assigneeId,
-    tenantId: params.tenantId,
-    type: 'ticket_assigned',
-    title: 'Ticket assigned to you',
-    body: `Ticket "${params.subject}" has been assigned to you`,
-    priority: 'normal',
-    entityType: 'ticket',
-    entityId: params.ticketId,
-    entityName: params.subject,
-    actionUrl: `/tickets/${params.ticketId}`,
-  }, ctx.services?.notificationOrchestrator).catch(() => {});
+  createNotification(
+    ctx.prismaWithTenant,
+    {
+      userId: params.assigneeId,
+      tenantId: params.tenantId,
+      type: 'ticket_assigned',
+      title: 'Ticket assigned to you',
+      body: `Ticket "${params.subject}" has been assigned to you`,
+      priority: 'normal',
+      entityType: 'ticket',
+      entityId: params.ticketId,
+      entityName: params.subject,
+      actionUrl: `/tickets/${params.ticketId}`,
+    },
+    ctx.services?.notificationOrchestrator
+  ).catch(() => {});
 
   // BullMQ email notification (fire-and-forget)
   (async () => {
     const { Queue } = await loadBullMQ();
-    const { QUEUE_NAMES, DEFAULT_QUEUE_CONFIGS } = await import('@intelliflow/platform/queues/types');
+    const { QUEUE_NAMES, DEFAULT_QUEUE_CONFIGS } =
+      await import('@intelliflow/platform/queues/types');
     const qConfig = DEFAULT_QUEUE_CONFIGS[QUEUE_NAMES.EMAIL_NOTIFICATIONS];
     const queue = new Queue(QUEUE_NAMES.EMAIL_NOTIFICATIONS, {
       connection: {
@@ -210,22 +215,27 @@ function notifyTeamUnassigned(
       select: { id: true },
     });
 
-    const priorityLabel: 'high' | 'normal' = params.priority === 'CRITICAL' || params.priority === 'HIGH' ? 'high' : 'normal';
+    const priorityLabel: 'high' | 'normal' =
+      params.priority === 'CRITICAL' || params.priority === 'HIGH' ? 'high' : 'normal';
 
     for (const member of teamMembers) {
-      createNotification(ctx.prismaWithTenant, {
-        userId: member.id,
-        tenantId: params.tenantId,
-        type: 'ticket_created',
-        title: 'New unassigned ticket',
-        body: `[${params.priority}] "${params.subject}" needs assignment`,
-        priority: priorityLabel,
-        entityType: 'ticket',
-        entityId: params.ticketId,
-        entityName: params.subject,
-        actionUrl: `/tickets/${params.ticketId}`,
-        actionLabel: 'View & Assign',
-      }, ctx.services?.notificationOrchestrator).catch(() => {});
+      createNotification(
+        ctx.prismaWithTenant,
+        {
+          userId: member.id,
+          tenantId: params.tenantId,
+          type: 'ticket_created',
+          title: 'New unassigned ticket',
+          body: `[${params.priority}] "${params.subject}" needs assignment`,
+          priority: priorityLabel,
+          entityType: 'ticket',
+          entityId: params.ticketId,
+          entityName: params.subject,
+          actionUrl: `/tickets/${params.ticketId}`,
+          actionLabel: 'View & Assign',
+        },
+        ctx.services?.notificationOrchestrator
+      ).catch(() => {});
     }
   })().catch(() => {});
 }
@@ -421,18 +431,22 @@ export const ticketRouter = createTRPCRouter({
       // Fire-and-forget: notification failure must not block the ticket update response
       if (updateData.priority && ['URGENT', 'CRITICAL'].includes(updateData.priority)) {
         const tenantId = ctx.tenant.tenantId;
-        createNotification(ctx.prismaWithTenant, {
-          userId: ticket.assigneeId || 'system',
-          tenantId,
-          type: 'ticket_escalated',
-          title: 'Ticket escalated',
-          body: `Ticket "${ticket.subject}" escalated to ${updateData.priority}`,
-          priority: 'high',
-          entityType: 'ticket',
-          entityId: ticket.id,
-          entityName: ticket.subject,
-          actionUrl: `/tickets/${ticket.id}`,
-        }, ctx.services?.notificationOrchestrator).catch(() => {}); // Swallow notification errors — non-critical side-effect
+        createNotification(
+          ctx.prismaWithTenant,
+          {
+            userId: ticket.assigneeId || 'system',
+            tenantId,
+            type: 'ticket_escalated',
+            title: 'Ticket escalated',
+            body: `Ticket "${ticket.subject}" escalated to ${updateData.priority}`,
+            priority: 'high',
+            entityType: 'ticket',
+            entityId: ticket.id,
+            entityName: ticket.subject,
+            actionUrl: `/tickets/${ticket.id}`,
+          },
+          ctx.services?.notificationOrchestrator
+        ).catch(() => {}); // Swallow notification errors — non-critical side-effect
       }
 
       return ticket;
@@ -767,52 +781,50 @@ export const ticketRouter = createTRPCRouter({
   /**
    * Add attachment to a ticket (PG-047)
    */
-  addAttachment: tenantProcedure
-    .input(addAttachmentSchema)
-    .mutation(async ({ ctx, input }) => {
-      const tenantId = ctx.tenant.tenantId;
+  addAttachment: tenantProcedure.input(addAttachmentSchema).mutation(async ({ ctx, input }) => {
+    const tenantId = ctx.tenant.tenantId;
 
-      // Verify ticket exists and belongs to tenant
-      const ticket = await ctx.prismaWithTenant.ticket.findFirst({
-        where: { id: input.ticketId, tenantId },
-        select: { id: true },
+    // Verify ticket exists and belongs to tenant
+    const ticket = await ctx.prismaWithTenant.ticket.findFirst({
+      where: { id: input.ticketId, tenantId },
+      select: { id: true },
+    });
+
+    if (!ticket) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Ticket not found',
       });
+    }
 
-      if (!ticket) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Ticket not found',
-        });
-      }
+    // Determine file type enum from MIME type
+    const fileTypeMap: Record<string, string> = {
+      'image/jpeg': 'IMAGE',
+      'image/png': 'IMAGE',
+      'image/gif': 'IMAGE',
+      'image/webp': 'IMAGE',
+      'application/pdf': 'PDF',
+      'application/msword': 'DOCUMENT',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCUMENT',
+      'text/plain': 'DOCUMENT',
+      'text/csv': 'SPREADSHEET',
+      'application/zip': 'ARCHIVE',
+    };
+    const dbFileType = fileTypeMap[input.fileType] ?? 'OTHER';
 
-      // Determine file type enum from MIME type
-      const fileTypeMap: Record<string, string> = {
-        'image/jpeg': 'IMAGE',
-        'image/png': 'IMAGE',
-        'image/gif': 'IMAGE',
-        'image/webp': 'IMAGE',
-        'application/pdf': 'PDF',
-        'application/msword': 'DOCUMENT',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCUMENT',
-        'text/plain': 'DOCUMENT',
-        'text/csv': 'SPREADSHEET',
-        'application/zip': 'ARCHIVE',
-      };
-      const dbFileType = fileTypeMap[input.fileType] ?? 'OTHER';
+    const attachment = await ctx.prismaWithTenant.ticketAttachment.create({
+      data: {
+        name: input.name,
+        size: input.size,
+        sizeBytes: input.sizeBytes,
+        fileType: dbFileType as never,
+        url: `data:${input.fileType};base64,${input.content.slice(0, 100)}...`,
+        ticketId: input.ticketId,
+        uploadedById: ctx.user?.userId ?? null,
+        tenantId,
+      },
+    });
 
-      const attachment = await ctx.prismaWithTenant.ticketAttachment.create({
-        data: {
-          name: input.name,
-          size: input.size,
-          sizeBytes: input.sizeBytes,
-          fileType: dbFileType as never,
-          url: `data:${input.fileType};base64,${input.content.slice(0, 100)}...`,
-          ticketId: input.ticketId,
-          uploadedById: ctx.user?.userId ?? null,
-          tenantId,
-        },
-      });
-
-      return { id: attachment.id, name: attachment.name, size: attachment.size };
-    }),
+    return { id: attachment.id, name: attachment.name, size: attachment.size };
+  }),
 });

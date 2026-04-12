@@ -261,7 +261,8 @@ function buildTaskTimelineWhere(opts: {
   includeCompleted: boolean;
   priorities: string[] | undefined;
 }): Record<string, unknown> {
-  const { effectiveOpportunityId, contactId, dateFilter, search, includeCompleted, priorities } = opts;
+  const { effectiveOpportunityId, contactId, dateFilter, search, includeCompleted, priorities } =
+    opts;
   const taskWhere: Record<string, unknown> = {};
 
   if (effectiveOpportunityId) taskWhere.opportunityId = effectiveOpportunityId;
@@ -283,7 +284,8 @@ function buildTaskTimelineWhere(opts: {
   }
 
   if (!includeCompleted) taskWhere.status = { notIn: ['COMPLETED', 'CANCELLED'] };
-  if (priorities && priorities.length > 0) taskWhere.priority = { in: priorities.map((p) => p.toUpperCase()) };
+  if (priorities && priorities.length > 0)
+    taskWhere.priority = { in: priorities.map((p) => p.toUpperCase()) };
 
   return taskWhere;
 }

@@ -134,7 +134,10 @@ describe('Tenant Context', () => {
           canAccessAllTenantData: true,
         };
 
-        const scopedPrisma = createTenantScopedPrisma(mockPrisma as any /* test-only mock */, tenant);
+        const scopedPrisma = createTenantScopedPrisma(
+          mockPrisma as any /* test-only mock */,
+          tenant
+        );
 
         expect(mockPrisma.$extends).toHaveBeenCalled();
         expect(scopedPrisma).toBeDefined();

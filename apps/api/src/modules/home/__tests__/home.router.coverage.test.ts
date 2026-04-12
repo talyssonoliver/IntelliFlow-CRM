@@ -51,7 +51,9 @@ describe('Home Router Coverage Tests (PG-163)', () => {
     prismaMock.notification.create.mockResolvedValue({} as any);
 
     // Transaction mock: pass prismaMock as tx so inner tx.notification.* hits existing mocks
-    (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: any) => fn(prismaMock));
+    (prismaMock as any).$transaction = vi
+      .fn()
+      .mockImplementation(async (fn: any) => fn(prismaMock));
 
     // Default mocks for buildSmartSummaries Prisma calls.
     // All return "no data" so the achievement fallback triggers unless overridden.
@@ -454,8 +456,20 @@ describe('Home Router Coverage Tests (PG-163)', () => {
     it('BullMQ enqueue is called on cache miss', async () => {
       // enqueueInsightGeneration requires a valid UUID tenantId
       const uuidCtx = createTestContext({
-        user: { userId: TEST_UUIDS.user1, email: 'test@example.com', role: 'USER', tenantId: TEST_UUIDS.tenant, timezone: 'UTC' },
-        tenant: { tenantId: TEST_UUIDS.tenant, tenantType: 'user' as const, userId: TEST_UUIDS.user1, role: 'USER', canAccessAllTenantData: false },
+        user: {
+          userId: TEST_UUIDS.user1,
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: TEST_UUIDS.tenant,
+          timezone: 'UTC',
+        },
+        tenant: {
+          tenantId: TEST_UUIDS.tenant,
+          tenantType: 'user' as const,
+          userId: TEST_UUIDS.user1,
+          role: 'USER',
+          canAccessAllTenantData: false,
+        },
       });
       const uuidCaller = homeRouter.createCaller(uuidCtx);
 
@@ -479,8 +493,20 @@ describe('Home Router Coverage Tests (PG-163)', () => {
 
       // enqueueInsightGeneration requires a valid UUID tenantId
       const uuidCtx = createTestContext({
-        user: { userId: TEST_UUIDS.user1, email: 'test@example.com', role: 'USER', tenantId: TEST_UUIDS.tenant, timezone: 'UTC' },
-        tenant: { tenantId: TEST_UUIDS.tenant, tenantType: 'user' as const, userId: TEST_UUIDS.user1, role: 'USER', canAccessAllTenantData: false },
+        user: {
+          userId: TEST_UUIDS.user1,
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: TEST_UUIDS.tenant,
+          timezone: 'UTC',
+        },
+        tenant: {
+          tenantId: TEST_UUIDS.tenant,
+          tenantType: 'user' as const,
+          userId: TEST_UUIDS.user1,
+          role: 'USER',
+          canAccessAllTenantData: false,
+        },
       });
       const uuidCaller = homeRouter.createCaller(uuidCtx);
 

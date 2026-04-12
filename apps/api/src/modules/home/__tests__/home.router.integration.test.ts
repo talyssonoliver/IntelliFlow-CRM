@@ -22,7 +22,9 @@ const describeIntegration = isInfrastructureAvailable() ? describe : describe.sk
 
 // Log skip reason if not available
 if (!isInfrastructureAvailable() && getInfrastructureUnavailableReason()) {
-  console.log(`⏭️  Skipping Home Router Integration Tests: ${getInfrastructureUnavailableReason()}`);
+  console.log(
+    `⏭️  Skipping Home Router Integration Tests: ${getInfrastructureUnavailableReason()}`
+  );
 }
 
 describeIntegration('Home Router - Integration Tests', () => {

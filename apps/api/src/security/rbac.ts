@@ -141,10 +141,7 @@ function isOwnershipViolation(
  * Evaluate a single ABAC condition against a context value.
  * Returns true when the condition is satisfied.
  */
-function evaluateSingleCondition(
-  condition: AttributeCondition,
-  value: unknown
-): boolean {
+function evaluateSingleCondition(condition: AttributeCondition, value: unknown): boolean {
   switch (condition.operator) {
     case 'eq':
       return value === condition.value;
@@ -164,10 +161,7 @@ function evaluateSingleCondition(
 /**
  * Populate a permissions set with the default permissions for a given role.
  */
-function addDefaultRolePermissions(
-  permissions: Set<string>,
-  userRole: RoleName
-): void {
+function addDefaultRolePermissions(permissions: Set<string>, userRole: RoleName): void {
   const defaultPerms = DEFAULT_PERMISSIONS[userRole];
   if (!defaultPerms) return;
   for (const [resource, actions] of Object.entries(defaultPerms)) {
@@ -526,7 +520,6 @@ export class RBACService {
     await this.applyUserPermissionOverrides(permissions, userId);
 
     const result = Array.from(permissions);
-
 
     // Cache the result
     this.permissionCache.set(cacheKey, {

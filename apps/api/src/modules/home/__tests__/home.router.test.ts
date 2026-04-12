@@ -44,7 +44,9 @@ describe('Home Router', () => {
     (prismaMock.notification as any).create.mockResolvedValue({ id: 'notif-mock' });
 
     // Transaction mock: pass prismaMock as tx so inner tx.notification.* hits existing mocks
-    (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: any) => fn(prismaMock));
+    (prismaMock as any).$transaction = vi
+      .fn()
+      .mockImplementation(async (fn: any) => fn(prismaMock));
   });
 
   // =============================================================================
@@ -1745,7 +1747,12 @@ describe('Home Router', () => {
       prismaMock.lead.findMany.mockResolvedValue([]);
       prismaMock.task.count.mockResolvedValue(0);
       prismaMock.contact.findMany.mockResolvedValue([
-        { id: 'c-1', firstName: 'Stale', lastName: 'Contact', lastContactedAt: new Date('2024-01-01') },
+        {
+          id: 'c-1',
+          firstName: 'Stale',
+          lastName: 'Contact',
+          lastContactedAt: new Date('2024-01-01'),
+        },
       ] as any);
 
       const result = await caller.getAIInsights();

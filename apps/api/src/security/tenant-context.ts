@@ -128,9 +128,7 @@ export function createTenantScopedPrisma(
         async $allOperations({ args, query }) {
           // Set the session variable that RLS policies read.
           // Session-scoped SET persists for the connection lifetime.
-          await prisma.$executeRawUnsafe(
-            `SET app.current_tenant_id = '${tenantContext.tenantId}'`
-          );
+          await prisma.$executeRawUnsafe(`SET app.current_tenant_id = '${tenantContext.tenantId}'`);
           return query(args);
         },
       },

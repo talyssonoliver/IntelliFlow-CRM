@@ -431,19 +431,23 @@ export const autoResponseRouter = createTRPCRouter({
 
       // Send notification to the escalation target
       try {
-        await createNotification(ctx.prismaWithTenant, {
-          userId: input.escalatedTo,
-          tenantId: typedCtx.tenant.tenantId,
-          type: 'ai_action_pending',
-          title: 'AI Draft Escalated for Your Review',
-          body: `An AI auto-response draft "${draft.content.subject}" has been escalated to you for review. Reason: ${input.reason}`,
-          priority: 'high',
-          entityType: 'auto_response_draft',
-          entityId: draft.id.toString(),
-          entityName: draft.content.subject,
-          actionUrl: '/agent-approvals?status=escalated',
-          actionLabel: 'Review Draft',
-        }, ctx.services?.notificationOrchestrator);
+        await createNotification(
+          ctx.prismaWithTenant,
+          {
+            userId: input.escalatedTo,
+            tenantId: typedCtx.tenant.tenantId,
+            type: 'ai_action_pending',
+            title: 'AI Draft Escalated for Your Review',
+            body: `An AI auto-response draft "${draft.content.subject}" has been escalated to you for review. Reason: ${input.reason}`,
+            priority: 'high',
+            entityType: 'auto_response_draft',
+            entityId: draft.id.toString(),
+            entityName: draft.content.subject,
+            actionUrl: '/agent-approvals?status=escalated',
+            actionLabel: 'Review Draft',
+          },
+          ctx.services?.notificationOrchestrator
+        );
       } catch (notifError) {
         // Non-blocking — escalation still succeeds even if notification fails
         console.error('[AutoResponse] Failed to send escalation notification:', notifError);

@@ -305,10 +305,7 @@ async function maybePromoteBootstrapAdmin(
  * Auto-provision a new user (JIT — Just In Time user creation for OAuth).
  * Returns a minimal UserSession on failure.
  */
-function extractUserName(
-  meta: Record<string, unknown>,
-  email: string | undefined
-): string {
+function extractUserName(meta: Record<string, unknown>, email: string | undefined): string {
   return (
     (meta.name as string | undefined) ||
     (meta.full_name as string | undefined) ||
@@ -324,10 +321,11 @@ function extractAvatarUrl(meta: Record<string, unknown>): string | null {
 async function provisionNewUserWith(
   prisma: UserProvisioningPrisma,
   supabaseUser: {
-  id: string;
-  email?: string;
-  user_metadata?: Record<string, unknown>;
-}): Promise<UserSession> {
+    id: string;
+    email?: string;
+    user_metadata?: Record<string, unknown>;
+  }
+): Promise<UserSession> {
   try {
     let defaultTenant = await prisma.tenant.findUnique({ where: { slug: 'default' } });
 
@@ -398,8 +396,39 @@ export async function ensureAppUserSession(
   return provisionNewUserWith(prisma, supabaseUser);
 }
 
+// ============================================
+// USER SESSION CACHE (performance fix)
+// ============================================
+// Cache resolved UserSession objects in-process to avoid a DB round-trip
+// (prisma.user.findUnique) on every request from the same user.
+// TTL: 60 seconds. Eviction: on size limit (1000 entries).
+
+const USER_SESSION_CACHE = new Map<string, { session: UserSession; expiresAt: number }>();
+const USER_CACHE_TTL_MS = 60_000; // 60 seconds
+const USER_CACHE_MAX_SIZE = 1_000;
+
+function getCachedSession(userId: string): UserSession | null {
+  const entry = USER_SESSION_CACHE.get(userId);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    USER_SESSION_CACHE.delete(userId);
+    return null;
+  }
+  return entry.session;
+}
+
+function cacheSession(userId: string, session: UserSession): void {
+  // Simple size eviction: clear oldest entries when at limit
+  if (USER_SESSION_CACHE.size >= USER_CACHE_MAX_SIZE) {
+    const firstKey = USER_SESSION_CACHE.keys().next().value;
+    if (firstKey) USER_SESSION_CACHE.delete(firstKey);
+  }
+  USER_SESSION_CACHE.set(userId, { session, expiresAt: Date.now() + USER_CACHE_TTL_MS });
+}
+
 /**
  * Resolve a UserSession from a raw JWT token.
+ * Uses local JWT verification + in-process session cache to minimize latency.
  * Returns null when the token is invalid or the Supabase user cannot be verified.
  */
 async function resolveUserFromToken(token: string): Promise<UserSession | null> {
@@ -412,7 +441,18 @@ async function resolveUserFromToken(token: string): Promise<UserSession | null> 
 
   if (!supabaseUser) return null;
 
-  return ensureAppUserSession(apiPrisma, supabaseUser);
+  // Check session cache before hitting the database
+  const cached = getCachedSession(supabaseUser.id);
+  if (cached) return cached;
+
+  const session = await ensureAppUserSession(apiPrisma, supabaseUser);
+
+  // Cache the resolved session
+  if (session) {
+    cacheSession(supabaseUser.id, session);
+  }
+
+  return session;
 }
 
 /**

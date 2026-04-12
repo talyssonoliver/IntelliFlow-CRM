@@ -273,7 +273,11 @@ async function filterStaleInsights<
   if (aggregateTaskInsights.length > 0) {
     const overdueCutoff = startOfDayInTimezone(timezone, new Date());
     const currentOverdue = await prisma.task.count({
-      where: { tenantId, dueDate: { lt: overdueCutoff }, status: { notIn: ['COMPLETED', 'CANCELLED'] } },
+      where: {
+        tenantId,
+        dueDate: { lt: overdueCutoff },
+        status: { notIn: ['COMPLETED', 'CANCELLED'] },
+      },
     });
     if (currentOverdue === 0) {
       const staleAggregateIds = aggregateTaskInsights.map((i) => i.id);
@@ -596,7 +600,11 @@ function buildHeuristicInsights(
       ? `${deal.name} has had no activity for ${daysSinceUpdate} days. This deal is at serious risk of going cold.`
       : `${deal.name} hasn't been updated in ${daysSinceUpdate} days. A timely touchpoint can keep momentum going.`;
     const actions = isCritical
-      ? ['Call the decision-maker directly', 'Send a value-recap email', 'Escalate internally for support']
+      ? [
+          'Call the decision-maker directly',
+          'Send a value-recap email',
+          'Escalate internally for support',
+        ]
       : ['Schedule a check-in call', 'Send a progress update', 'Review the deal timeline'];
     insights.push({
       id: `deal-risk-${deal.id}`,
@@ -621,14 +629,26 @@ function buildHeuristicInsights(
     const isTopTier = score >= 90;
     const title = isTopTier ? `High-Priority Lead: ${name}` : `Hot Lead: ${name}`;
     const actions = isTopTier
-      ? ['Schedule a discovery call', 'Prepare a tailored proposal', 'Send a personalized intro email']
-      : ['Send personalized follow-up', 'Schedule an introductory call', 'Research their company needs'];
+      ? [
+          'Schedule a discovery call',
+          'Prepare a tailored proposal',
+          'Send a personalized intro email',
+        ]
+      : [
+          'Send personalized follow-up',
+          'Schedule an introductory call',
+          'Research their company needs',
+        ];
     const action = actions[idx % actions.length];
     const descriptions = isTopTier
-      ? [`${name} scored ${score} — one of your strongest prospects. Prioritize direct outreach.`,
-         `${name} shows exceptional buying signals (score: ${score}). A discovery call could accelerate conversion.`]
-      : [`${name} has a score of ${score}, indicating genuine interest. Engage before momentum fades.`,
-         `${name} scored ${score} and may be evaluating options. Timely follow-up can make the difference.`];
+      ? [
+          `${name} scored ${score} — one of your strongest prospects. Prioritize direct outreach.`,
+          `${name} shows exceptional buying signals (score: ${score}). A discovery call could accelerate conversion.`,
+        ]
+      : [
+          `${name} has a score of ${score}, indicating genuine interest. Engage before momentum fades.`,
+          `${name} scored ${score} and may be evaluating options. Timely follow-up can make the difference.`,
+        ];
     insights.push({
       id: `hot-lead-${lead.id}`,
       type: 'opportunity',
@@ -674,15 +694,27 @@ function buildHeuristicInsights(
     if (days === null) {
       title = `New Contact Needs Outreach: ${name}`;
       description = `${name} has never been contacted but has open opportunities. Initial outreach could unlock pipeline value.`;
-      actions = ['Send an introductory email', 'Schedule a first meeting', 'Add to outreach sequence'];
+      actions = [
+        'Send an introductory email',
+        'Schedule a first meeting',
+        'Add to outreach sequence',
+      ];
     } else if (isVeryStale) {
       title = `Re-engage ${name} — ${days} Days Silent`;
       description = `${name} has gone ${days} days without interaction and has active opportunities at stake. Re-engagement is overdue.`;
-      actions = ['Send a re-engagement email', 'Call to re-establish contact', 'Review their opportunity status'];
+      actions = [
+        'Send a re-engagement email',
+        'Call to re-establish contact',
+        'Review their opportunity status',
+      ];
     } else {
       title = `Follow Up with ${name}`;
       description = `It's been ${days} days since your last interaction with ${name}. Their open opportunities need attention.`;
-      actions = ['Schedule a check-in call', 'Send a quick update email', 'Review their open opportunities'];
+      actions = [
+        'Schedule a check-in call',
+        'Send a quick update email',
+        'Review their open opportunities',
+      ];
     }
     insights.push({
       id: `stale-contact-${contact.id}`,
@@ -924,7 +956,12 @@ async function buildDealTrendInsight(
       where: { tenantId, ownerId: userId, stage: 'CLOSED_WON', closedAt: { gte: weekAgo } },
     }),
     prisma.opportunity.count({
-      where: { tenantId, ownerId: userId, stage: 'CLOSED_WON', closedAt: { gte: twoWeeksAgo, lt: weekAgo } },
+      where: {
+        tenantId,
+        ownerId: userId,
+        stage: 'CLOSED_WON',
+        closedAt: { gte: twoWeeksAgo, lt: weekAgo },
+      },
     }),
   ]);
 
@@ -971,7 +1008,14 @@ async function buildSmartSummaries(
   if (pipelineInsight) summaries.push(pipelineInsight);
 
   // 2. Weekly deal trend — forward-looking: "momentum indicator"
-  const trendInsight = await buildDealTrendInsight(prisma, tenantId, userId, weekAgo, twoWeeksAgo, now);
+  const trendInsight = await buildDealTrendInsight(
+    prisma,
+    tenantId,
+    userId,
+    weekAgo,
+    twoWeeksAgo,
+    now
+  );
   if (trendInsight) summaries.push(trendInsight);
 
   // 3. Lead qualification queue — forward-looking: "what to work on next"
@@ -1153,7 +1197,11 @@ async function resolveInsightById(
     };
   }
 
-  const staleContactHeuristic = await resolveStaleContactHeuristicInsight(prisma, tenantId, insightId);
+  const staleContactHeuristic = await resolveStaleContactHeuristicInsight(
+    prisma,
+    tenantId,
+    insightId
+  );
   if (staleContactHeuristic) {
     return {
       insight: staleContactHeuristic,
@@ -1401,7 +1449,12 @@ export const homeRouter = createTRPCRouter({
       // Validate that referenced entities still exist — prevents dead links
       // when a lead/contact/deal has been deleted or converted since the insight was cached
       const userTz = safeTimezone(ctx.user?.timezone);
-      const validInsights = await filterStaleInsights(ctx.prismaWithTenant, tenantId, cachedInsights, userTz);
+      const validInsights = await filterStaleInsights(
+        ctx.prismaWithTenant,
+        tenantId,
+        cachedInsights,
+        userTz
+      );
 
       if (validInsights.length > 0) {
         const duration = performance.now() - startTime;
@@ -1419,24 +1472,38 @@ export const homeRouter = createTRPCRouter({
 
     // Step 2: Cache miss — run heuristic queries with user→tenant fallback
     const userTz = safeTimezone(ctx.user?.timezone);
-    const heuristic = await runHeuristicQueries(ctx.prismaWithTenant, tenantId, userId, {
-      dealTake: 3,
-      leadTake: 2,
-      contactTake: 2,
-    }, ctx.tenant.canAccessAllTenantData, userTz);
+    const heuristic = await runHeuristicQueries(
+      ctx.prismaWithTenant,
+      tenantId,
+      userId,
+      {
+        dealTake: 3,
+        leadTake: 2,
+        contactTake: 2,
+      },
+      ctx.tenant.canAccessAllTenantData,
+      userTz
+    );
     const { dealsAtRisk, hotLeads, overdueTasksCount, staleContacts } = heuristic;
 
     // Step 2a: Route threshold alerts to notifications (fire-and-forget)
     createProactiveNotifications(
-      ctx.prismaWithTenant, tenantId, userId,
-      dealsAtRisk, hotLeads, overdueTasksCount, staleContacts,
+      ctx.prismaWithTenant,
+      tenantId,
+      userId,
+      dealsAtRisk,
+      hotLeads,
+      overdueTasksCount,
+      staleContacts,
       heuristic.now,
       safeTimezone(ctx.user?.timezone)
     ).catch(() => {});
 
     // Step 2b: Build forward-looking smart summaries as insights
     const insights = await buildSmartSummaries(
-      ctx.prismaWithTenant, tenantId, userId,
+      ctx.prismaWithTenant,
+      tenantId,
+      userId,
       { dealsAtRisk, hotLeads, overdueTasksCount, staleContacts },
       heuristic.now
     );
@@ -1865,10 +1932,17 @@ export const homeRouter = createTRPCRouter({
 
       if (cachedInsights.length > 0) {
         // Validate entity existence — filter out insights referencing deleted entities
-        const validCached = await filterStaleInsights(ctx.prismaWithTenant, tenantId, cachedInsights, userTz);
+        const validCached = await filterStaleInsights(
+          ctx.prismaWithTenant,
+          tenantId,
+          cachedInsights,
+          userTz
+        );
         const dedupedCached = deduplicateInsights(validCached);
         const total = dedupedCached.length;
-        const offset = cursor ? (Number.parseInt(Buffer.from(cursor, 'base64').toString('utf-8'), 10) || 0) : 0;
+        const offset = cursor
+          ? Number.parseInt(Buffer.from(cursor, 'base64').toString('utf-8'), 10) || 0
+          : 0;
 
         const page = dedupedCached.slice(offset, offset + limit).map(mapAIInsightToResponse);
         const hasMore = offset + limit < total;
@@ -1892,24 +1966,38 @@ export const homeRouter = createTRPCRouter({
       }
 
       // Step 2: Cache miss — run heuristic queries with user→tenant fallback
-      const heuristic = await runHeuristicQueries(ctx.prismaWithTenant, tenantId, userId, {
-        dealTake: 50,
-        leadTake: 50,
-        contactTake: 50,
-      }, ctx.tenant.canAccessAllTenantData, userTz);
+      const heuristic = await runHeuristicQueries(
+        ctx.prismaWithTenant,
+        tenantId,
+        userId,
+        {
+          dealTake: 50,
+          leadTake: 50,
+          contactTake: 50,
+        },
+        ctx.tenant.canAccessAllTenantData,
+        userTz
+      );
       const { dealsAtRisk, hotLeads, overdueTasksCount, staleContacts } = heuristic;
 
       // Route threshold alerts to notifications (fire-and-forget)
       createProactiveNotifications(
-        ctx.prismaWithTenant, tenantId, userId,
-        dealsAtRisk, hotLeads, overdueTasksCount, staleContacts,
+        ctx.prismaWithTenant,
+        tenantId,
+        userId,
+        dealsAtRisk,
+        hotLeads,
+        overdueTasksCount,
+        staleContacts,
         heuristic.now,
         safeTimezone(ctx.user?.timezone)
       ).catch(() => {});
 
       // Build forward-looking smart summaries
       const allInsights = await buildSmartSummaries(
-        ctx.prismaWithTenant, tenantId, userId,
+        ctx.prismaWithTenant,
+        tenantId,
+        userId,
         { dealsAtRisk, hotLeads, overdueTasksCount, staleContacts },
         heuristic.now
       );
@@ -1919,7 +2007,9 @@ export const homeRouter = createTRPCRouter({
 
       const total = filtered.length;
 
-      const offset = cursor ? (Number.parseInt(Buffer.from(cursor, 'base64').toString('utf-8'), 10) || 0) : 0;
+      const offset = cursor
+        ? Number.parseInt(Buffer.from(cursor, 'base64').toString('utf-8'), 10) || 0
+        : 0;
 
       const page = filtered.slice(offset, offset + limit);
       const hasMore = offset + limit < total;
@@ -1976,7 +2066,12 @@ export const homeRouter = createTRPCRouter({
       const tenantId = ctx.tenant.tenantId;
       const userId = ctx.tenant.userId;
 
-      const resolved = await resolveInsightById(ctx.prismaWithTenant, tenantId, userId, input.insightId);
+      const resolved = await resolveInsightById(
+        ctx.prismaWithTenant,
+        tenantId,
+        userId,
+        input.insightId
+      );
       if (!resolved) {
         throw new TRPCError({
           code: 'NOT_FOUND',
@@ -1999,7 +2094,12 @@ export const homeRouter = createTRPCRouter({
       const tenantId = ctx.tenant.tenantId;
       const userId = ctx.tenant.userId;
 
-      const resolved = await resolveInsightById(ctx.prismaWithTenant, tenantId, userId, input.insightId);
+      const resolved = await resolveInsightById(
+        ctx.prismaWithTenant,
+        tenantId,
+        userId,
+        input.insightId
+      );
       if (!resolved) {
         throw new TRPCError({
           code: 'NOT_FOUND',
@@ -2069,10 +2169,12 @@ export const homeRouter = createTRPCRouter({
    * Also handles explicit user dismissals.
    */
   dismissInsight: tenantProcedure
-    .input(z.object({
-      insightId: z.string().min(1),
-      reason: z.string().max(500).optional(),
-    }))
+    .input(
+      z.object({
+        insightId: z.string().min(1),
+        reason: z.string().max(500).optional(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const tenantId = ctx.tenant.tenantId;
       const now = new Date();

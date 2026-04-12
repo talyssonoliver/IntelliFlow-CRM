@@ -345,9 +345,9 @@ describe('opportunityRouter additional coverage', () => {
       const caller = opportunityRouter.createCaller(ctxNoService);
 
       // getById now uses Prisma directly, so test service-dependent procedure (delete) instead
-      await expect(
-        caller.delete({ id: OPP_ID })
-      ).rejects.toThrow('Opportunity service not available');
+      await expect(caller.delete({ id: OPP_ID })).rejects.toThrow(
+        'Opportunity service not available'
+      );
     });
   });
 
@@ -454,13 +454,19 @@ describe('opportunityRouter additional coverage', () => {
       const result = await caller.permanentDelete({ id: OPP_ID });
 
       expect(result).toEqual({ success: true, id: OPP_ID });
-      expect(mockServices.opportunity.permanentDeleteOpportunity).toHaveBeenCalledWith(OPP_ID, TENANT_ID);
+      expect(mockServices.opportunity.permanentDeleteOpportunity).toHaveBeenCalledWith(
+        OPP_ID,
+        TENANT_ID
+      );
     });
 
     it('should reject non-trashed deals with PRECONDITION_FAILED', async () => {
       mockServices.opportunity.permanentDeleteOpportunity.mockResolvedValue({
         isFailure: true,
-        error: { code: 'VALIDATION_ERROR', message: 'Can only permanently delete deals that are in trash' },
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Can only permanently delete deals that are in trash',
+        },
       });
       const caller = opportunityRouter.createCaller(ctx);
 

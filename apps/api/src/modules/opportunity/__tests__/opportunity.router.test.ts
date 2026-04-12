@@ -172,7 +172,13 @@ describe('Opportunity Router', () => {
         isLost: false,
         owner: { id: TEST_UUIDS.user1, name: 'Test Owner', email: 'owner@test.com' },
         account: { id: TEST_UUIDS.account1, name: 'Test Account', website: 'https://test.com' },
-        contact: { id: TEST_UUIDS.contact1, firstName: 'John', lastName: 'Doe', title: 'CEO', email: 'john@test.com' },
+        contact: {
+          id: TEST_UUIDS.contact1,
+          firstName: 'John',
+          lastName: 'Doe',
+          title: 'CEO',
+          email: 'john@test.com',
+        },
       };
 
       prismaMock.opportunity.findFirst.mockResolvedValue(enrichedRecord as any);
@@ -181,9 +187,23 @@ describe('Opportunity Router', () => {
 
       expect(result.id).toBe(TEST_UUIDS.opportunity1);
       expect(result.name).toBe('Big Deal');
-      expect(result.owner).toEqual({ id: TEST_UUIDS.user1, name: 'Test Owner', email: 'owner@test.com' });
-      expect(result.account).toEqual({ id: TEST_UUIDS.account1, name: 'Test Account', website: 'https://test.com' });
-      expect(result.contact).toEqual({ id: TEST_UUIDS.contact1, firstName: 'John', lastName: 'Doe', title: 'CEO', email: 'john@test.com' });
+      expect(result.owner).toEqual({
+        id: TEST_UUIDS.user1,
+        name: 'Test Owner',
+        email: 'owner@test.com',
+      });
+      expect(result.account).toEqual({
+        id: TEST_UUIDS.account1,
+        name: 'Test Account',
+        website: 'https://test.com',
+      });
+      expect(result.contact).toEqual({
+        id: TEST_UUIDS.contact1,
+        firstName: 'John',
+        lastName: 'Doe',
+        title: 'CEO',
+        email: 'john@test.com',
+      });
       expect(prismaMock.opportunity.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ id: TEST_UUIDS.opportunity1 }),

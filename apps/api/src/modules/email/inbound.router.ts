@@ -124,7 +124,8 @@ export interface ParsedEmailResponse {
 
 function mapEmailRecord(record: any): ParsedEmailResponse {
   const metadata = (record.metadata as Record<string, any>) ?? {};
-  const isHtml = metadata.isHtml ?? (typeof record.body === 'string' && /<[a-z][\s\S]*>/i.test(record.body));
+  const isHtml =
+    metadata.isHtml ?? (typeof record.body === 'string' && /<[a-z][\s\S]*>/i.test(record.body));
   return {
     id: record.id,
     from: { address: record.fromEmail, name: metadata.fromName },
@@ -158,6 +159,42 @@ function parseRecipients(str: string): Array<{ address: string; name?: string }>
     .map((s) => s.trim())
     .filter(Boolean)
     .map((address) => ({ address }));
+}
+
+// ============================================================================
+// Helpers: Build listEmails where-clause filters
+// ============================================================================
+
+function applyFolderFilter(where: any, folder: string, userId: string): void {
+  const folderLower = folder.toLowerCase();
+  if (folderLower === 'sent') {
+    where.userId = userId;
+    where.status = { in: ['SENT', 'DELIVERED', 'OPENED', 'CLICKED'] };
+  } else if (folderLower === 'drafts') {
+    where.metadata = { path: ['isDraft'], equals: true };
+  } else if (folderLower === 'spam') {
+    where.metadata = { path: ['isSpam'], equals: true };
+  } else if (folderLower === 'trash') {
+    where.metadata = { path: ['isTrashed'], equals: true };
+  } else if (folderLower === 'archive') {
+    where.metadata = { path: ['isArchived'], equals: true };
+  }
+  // 'inbox' needs no DB-level filter; app-layer filtering below
+  // excludes archived, trashed, spam, and draft emails
+}
+
+function applyLabelFilter(where: any, label: string): void {
+  const labelCondition = {
+    metadata: { path: ['labels'], array_contains: [label] },
+  };
+  // Combine with existing metadata filter (from folder) via AND
+  if (where.metadata) {
+    const folderCondition = { metadata: where.metadata };
+    delete where.metadata;
+    where.AND = [...(where.AND ?? []), folderCondition, labelCondition];
+  } else {
+    where.AND = [...(where.AND ?? []), labelCondition];
+  }
 }
 
 // ============================================================================
@@ -262,36 +299,12 @@ export const inboundEmailRouter = createTRPCRouter({
 
       // Filter by folder via metadata
       if (input.folder) {
-        const folderLower = input.folder.toLowerCase();
-        if (folderLower === 'sent') {
-          where.userId = (ctx as any).user.userId;
-          where.status = { in: ['SENT', 'DELIVERED', 'OPENED', 'CLICKED'] };
-        } else if (folderLower === 'drafts') {
-          where.metadata = { path: ['isDraft'], equals: true };
-        } else if (folderLower === 'spam') {
-          where.metadata = { path: ['isSpam'], equals: true };
-        } else if (folderLower === 'trash') {
-          where.metadata = { path: ['isTrashed'], equals: true };
-        } else if (folderLower === 'archive') {
-          where.metadata = { path: ['isArchived'], equals: true };
-        }
-        // 'inbox' needs no DB-level filter; app-layer filtering below
-        // excludes archived, trashed, spam, and draft emails
+        applyFolderFilter(where, input.folder, (ctx as any).user.userId);
       }
 
       // Filter by label in metadata.labels array
       if (input.label) {
-        const labelCondition = {
-          metadata: { path: ['labels'], array_contains: [input.label] },
-        };
-        // Combine with existing metadata filter (from folder) via AND
-        if (where.metadata) {
-          const folderCondition = { metadata: where.metadata };
-          delete where.metadata;
-          where.AND = [...(where.AND ?? []), folderCondition, labelCondition];
-        } else {
-          where.AND = [...(where.AND ?? []), labelCondition];
-        }
+        applyLabelFilter(where, input.label);
       }
 
       // Search by subject or body
@@ -360,19 +373,43 @@ export const inboundEmailRouter = createTRPCRouter({
         case 'archive':
           await (ctx as any).prisma.emailRecord.update({
             where: { id: emailId },
-            data: { metadata: { ...currentMeta, isArchived: true, isTrashed: false, isSpam: false, isDraft: false } },
+            data: {
+              metadata: {
+                ...currentMeta,
+                isArchived: true,
+                isTrashed: false,
+                isSpam: false,
+                isDraft: false,
+              },
+            },
           });
           break;
         case 'spam':
           await (ctx as any).prisma.emailRecord.update({
             where: { id: emailId },
-            data: { metadata: { ...currentMeta, isSpam: true, isArchived: false, isTrashed: false, isDraft: false } },
+            data: {
+              metadata: {
+                ...currentMeta,
+                isSpam: true,
+                isArchived: false,
+                isTrashed: false,
+                isDraft: false,
+              },
+            },
           });
           break;
         case 'delete':
           await (ctx as any).prisma.emailRecord.update({
             where: { id: emailId },
-            data: { metadata: { ...currentMeta, isTrashed: true, isArchived: false, isSpam: false, isDraft: false } },
+            data: {
+              metadata: {
+                ...currentMeta,
+                isTrashed: true,
+                isArchived: false,
+                isSpam: false,
+                isDraft: false,
+              },
+            },
           });
           break;
         case 'permanentDelete':
@@ -921,88 +958,86 @@ export const inboundEmailRouter = createTRPCRouter({
    * Used by the email hover card to show sender/recipient profile previews.
    * Returns the first match found in order: contact → lead → null.
    */
-  lookupByEmail: tenantProcedure
-    .input(z.object({ email: z.string().email() }))
-    .query(
-      async ({
-        input,
-        ctx,
-      }): Promise<{
-        type: 'contact' | 'lead';
-        id: string;
-        name: string;
-        email: string;
-        title?: string | null;
-        phone?: string | null;
-        status: string;
-        company?: string | null;
-        avatarUrl?: string | null;
-      } | null> => {
-        const tenantId = (ctx as any).tenant.tenantId;
-        const prisma = (ctx as any).prisma;
+  lookupByEmail: tenantProcedure.input(z.object({ email: z.string().email() })).query(
+    async ({
+      input,
+      ctx,
+    }): Promise<{
+      type: 'contact' | 'lead';
+      id: string;
+      name: string;
+      email: string;
+      title?: string | null;
+      phone?: string | null;
+      status: string;
+      company?: string | null;
+      avatarUrl?: string | null;
+    } | null> => {
+      const tenantId = (ctx as any).tenant.tenantId;
+      const prisma = (ctx as any).prisma;
 
-        // 1. Check contacts first
-        const contact = await prisma.contact.findFirst({
-          where: { tenantId, email: input.email },
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            title: true,
-            phone: true,
-            status: true,
-            avatarUrl: true,
-            account: { select: { name: true } },
-          },
-        });
+      // 1. Check contacts first
+      const contact = await prisma.contact.findFirst({
+        where: { tenantId, email: input.email },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          title: true,
+          phone: true,
+          status: true,
+          avatarUrl: true,
+          account: { select: { name: true } },
+        },
+      });
 
-        if (contact) {
-          return {
-            type: 'contact',
-            id: contact.id,
-            name: `${contact.firstName} ${contact.lastName}`.trim(),
-            email: contact.email,
-            title: contact.title,
-            phone: contact.phone,
-            status: contact.status,
-            company: contact.account?.name ?? null,
-            avatarUrl: contact.avatarUrl ?? null,
-          };
-        }
-
-        // 2. Check leads
-        const lead = await prisma.lead.findFirst({
-          where: { tenantId, email: input.email },
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            title: true,
-            phone: true,
-            status: true,
-            company: true,
-          },
-        });
-
-        if (lead) {
-          return {
-            type: 'lead',
-            id: lead.id,
-            name: `${lead.firstName} ${lead.lastName}`.trim(),
-            email: lead.email,
-            title: lead.title,
-            phone: lead.phone,
-            status: lead.status,
-            company: lead.company,
-            avatarUrl: null,
-          };
-        }
-
-        return null;
+      if (contact) {
+        return {
+          type: 'contact',
+          id: contact.id,
+          name: `${contact.firstName} ${contact.lastName}`.trim(),
+          email: contact.email,
+          title: contact.title,
+          phone: contact.phone,
+          status: contact.status,
+          company: contact.account?.name ?? null,
+          avatarUrl: contact.avatarUrl ?? null,
+        };
       }
-    ),
+
+      // 2. Check leads
+      const lead = await prisma.lead.findFirst({
+        where: { tenantId, email: input.email },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          title: true,
+          phone: true,
+          status: true,
+          company: true,
+        },
+      });
+
+      if (lead) {
+        return {
+          type: 'lead',
+          id: lead.id,
+          name: `${lead.firstName} ${lead.lastName}`.trim(),
+          email: lead.email,
+          title: lead.title,
+          phone: lead.phone,
+          status: lead.status,
+          company: lead.company,
+          avatarUrl: null,
+        };
+      }
+
+      return null;
+    }
+  ),
 
   /**
    * Get email storage usage for the current tenant
@@ -1106,9 +1141,8 @@ export const inboundEmailRouter = createTRPCRouter({
         });
 
         return emails.map((e: any) => {
-          const bodyText = typeof e.body === 'string'
-            ? e.body.replace(/<[^>]*>/g, '').slice(0, 60)
-            : '';
+          const bodyText =
+            typeof e.body === 'string' ? e.body.replace(/<[^>]*>/g, '').slice(0, 60) : '';
           return {
             id: e.id,
             subject: e.subject ?? '(No subject)',

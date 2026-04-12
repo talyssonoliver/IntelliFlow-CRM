@@ -361,7 +361,10 @@ function buildMonthlyRevenue(
 ): Record<string, { actual: number; deals: number }> {
   const monthlyRevenue: Record<string, { actual: number; deals: number }> = {};
   for (const deal of wonDeals) {
-    const month = new Date(deal.closedAt!).toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
+    const month = new Date(deal.closedAt!).toLocaleString('en-US', {
+      month: 'short',
+      timeZone: 'UTC',
+    });
     if (!monthlyRevenue[month]) {
       monthlyRevenue[month] = { actual: 0, deals: 0 };
     }
@@ -414,11 +417,13 @@ function computeAvgSalesCycle(wonDeals: WonDeal[]): number {
 
 function buildOwnerAvatar(name: string | null | undefined): string {
   if (!name) return 'NA';
-  return name
-    .split(' ')
-    .map((n: string) => n[0])
-    .join('')
-    .toUpperCase() || 'NA';
+  return (
+    name
+      .split(' ')
+      .map((n: string) => n[0])
+      .join('')
+      .toUpperCase() || 'NA'
+  );
 }
 
 function buildWinRateTrend(
@@ -428,7 +433,8 @@ function buildWinRateTrend(
   const months = ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
   return months.map((month) => {
     const monthDeals = closedDeals.filter(
-      (d) => new Date(d.closedAt!).toLocaleString('en-US', { month: 'short', timeZone: 'UTC' }) === month
+      (d) =>
+        new Date(d.closedAt!).toLocaleString('en-US', { month: 'short', timeZone: 'UTC' }) === month
     );
     const monthWon = monthDeals.filter((d) => d.stage === 'CLOSED_WON').length;
     const rate = monthDeals.length > 0 ? Math.round((monthWon / monthDeals.length) * 100) : 0;
@@ -500,25 +506,35 @@ export const opportunityRouter = createTRPCRouter({
     }
 
     // Fire-and-forget notification
-    createNotification(ctx.prismaWithTenant, {
-      userId: typedCtx.tenant.userId,
-      tenantId: typedCtx.tenant.tenantId,
-      type: 'deal_assigned',
-      title: 'New deal created',
-      body: `Deal "${result.value.name}" has been created`,
-      priority: 'normal',
-      entityType: 'opportunity',
-      entityId: result.value.id.value,
-      entityName: result.value.name,
-      actionUrl: `/deals/${result.value.id.value}`,
-    }, ctx.services?.notificationOrchestrator).catch((err) => console.error('[opportunity.router] Notification failed:', err));
+    createNotification(
+      ctx.prismaWithTenant,
+      {
+        userId: typedCtx.tenant.userId,
+        tenantId: typedCtx.tenant.tenantId,
+        type: 'deal_assigned',
+        title: 'New deal created',
+        body: `Deal "${result.value.name}" has been created`,
+        priority: 'normal',
+        entityType: 'opportunity',
+        entityId: result.value.id.value,
+        entityName: result.value.name,
+        actionUrl: `/deals/${result.value.id.value}`,
+      },
+      ctx.services?.notificationOrchestrator
+    ).catch((err) => console.error('[opportunity.router] Notification failed:', err));
 
     // IFC-281: Fire-and-forget audit logging
     const auditLogger = getAuditLogger(ctx.prisma);
-    auditLogger.logAction('CREATE', 'opportunity', result.value.id.value, typedCtx.tenant.tenantId, {
-      actorId: typedCtx.tenant.userId,
-      afterState: { name: result.value.name, stage: result.value.stage, value: result.value.value.amount },
-    }).catch((err) => console.error('[opportunity.router] Audit log failed:', err));
+    auditLogger
+      .logAction('CREATE', 'opportunity', result.value.id.value, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        afterState: {
+          name: result.value.name,
+          stage: result.value.stage,
+          value: result.value.value.amount,
+        },
+      })
+      .catch((err) => console.error('[opportunity.router] Audit log failed:', err));
 
     return mapOpportunityToResponse(result.value);
   }),
@@ -533,7 +549,9 @@ export const opportunityRouter = createTRPCRouter({
       include: {
         owner: { select: { id: true, name: true, email: true } },
         account: { select: { id: true, name: true, website: true } },
-        contact: { select: { id: true, firstName: true, lastName: true, title: true, email: true } },
+        contact: {
+          select: { id: true, firstName: true, lastName: true, title: true, email: true },
+        },
       },
     });
 
@@ -651,10 +669,12 @@ export const opportunityRouter = createTRPCRouter({
 
     // IFC-281: Fire-and-forget audit logging
     const auditLogger = getAuditLogger(ctx.prisma);
-    auditLogger.logAction('UPDATE', 'opportunity', id, typedCtx.tenant.tenantId, {
-      actorId: typedCtx.tenant.userId,
-      afterState: { name: result.value.name, stage: result.value.stage },
-    }).catch((err) => console.error('[opportunity.router] Audit log failed:', err));
+    auditLogger
+      .logAction('UPDATE', 'opportunity', id, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        afterState: { name: result.value.name, stage: result.value.stage },
+      })
+      .catch((err) => console.error('[opportunity.router] Audit log failed:', err));
 
     return mapOpportunityToResponse(result.value);
   }),
@@ -674,9 +694,11 @@ export const opportunityRouter = createTRPCRouter({
 
     // IFC-281: Fire-and-forget audit logging
     const auditLogger = getAuditLogger(ctx.prisma);
-    auditLogger.logAction('DELETE', 'opportunity', input.id, typedCtx.tenant.tenantId, {
-      actorId: typedCtx.tenant.userId,
-    }).catch((err) => console.error('[opportunity.router] Audit log failed:', err));
+    auditLogger
+      .logAction('DELETE', 'opportunity', input.id, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+      })
+      .catch((err) => console.error('[opportunity.router] Audit log failed:', err));
 
     return { success: true, id: input.id };
   }),
@@ -699,9 +721,12 @@ export const opportunityRouter = createTRPCRouter({
       const { page, limit, sortBy, sortOrder, search } = input;
       const skip = (page - 1) * limit;
 
-      const baseWhere: any = { deletedAt: { not: null } };
+      const baseWhere: Record<string, unknown> = { deletedAt: { not: null } };
       if (search) {
-        baseWhere.name = { contains: search, mode: 'insensitive' };
+        baseWhere.OR = [
+          { name: { contains: search, mode: 'insensitive' } },
+          { account: { name: { contains: search, mode: 'insensitive' } } },
+        ];
       }
       const where = createTenantWhereClause(typedCtx.tenant, baseWhere);
 
@@ -738,7 +763,10 @@ export const opportunityRouter = createTRPCRouter({
       const typedCtx = getTenantContext(ctx);
       const opportunityService = getOpportunityService(ctx);
 
-      const result = await opportunityService.restoreOpportunity(input.id, typedCtx.tenant.tenantId);
+      const result = await opportunityService.restoreOpportunity(
+        input.id,
+        typedCtx.tenant.tenantId
+      );
 
       if (result.isFailure) {
         throwOpportunityDeleteError(result.error);
@@ -806,26 +834,32 @@ export const opportunityRouter = createTRPCRouter({
     }
 
     const notif = resolveStageNotification(input.targetStage);
-    createNotification(ctx.prismaWithTenant, {
-      userId: typedCtx.tenant.userId,
-      tenantId: typedCtx.tenant.tenantId,
-      type: notif.type,
-      title: notif.title,
-      body: `"${result.value.name}" moved to ${input.targetStage}`,
-      priority: notif.priority,
-      entityType: 'opportunity',
-      entityId: result.value.id.value,
-      entityName: result.value.name,
-      actionUrl: `/deals/${result.value.id.value}`,
-    }, ctx.services?.notificationOrchestrator).catch((err) => console.error('[opportunity.router] Notification failed:', err));
+    createNotification(
+      ctx.prismaWithTenant,
+      {
+        userId: typedCtx.tenant.userId,
+        tenantId: typedCtx.tenant.tenantId,
+        type: notif.type,
+        title: notif.title,
+        body: `"${result.value.name}" moved to ${input.targetStage}`,
+        priority: notif.priority,
+        entityType: 'opportunity',
+        entityId: result.value.id.value,
+        entityName: result.value.name,
+        actionUrl: `/deals/${result.value.id.value}`,
+      },
+      ctx.services?.notificationOrchestrator
+    ).catch((err) => console.error('[opportunity.router] Notification failed:', err));
 
     // IFC-281: Fire-and-forget audit logging with stage transition metadata
     const auditLogger = getAuditLogger(ctx.prisma);
-    auditLogger.logAction('UPDATE', 'opportunity', result.value.id.value, typedCtx.tenant.tenantId, {
-      actorId: typedCtx.tenant.userId,
-      metadata: { targetStage: input.targetStage, previousStage },
-      afterState: { name: result.value.name, stage: result.value.stage },
-    }).catch((err) => console.error('[opportunity.router] Audit log failed:', err));
+    auditLogger
+      .logAction('UPDATE', 'opportunity', result.value.id.value, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        metadata: { targetStage: input.targetStage, previousStage },
+        afterState: { name: result.value.name, stage: result.value.stage },
+      })
+      .catch((err) => console.error('[opportunity.router] Audit log failed:', err));
 
     return mapOpportunityToResponse(result.value);
   }),
@@ -1110,101 +1144,95 @@ export const opportunityRouter = createTRPCRouter({
    * Get deal-specific forecast with risk factors, recommendations, history
    * PG-131: Deterministic risk scoring — no AI chain dependency
    */
-  dealForecast: tenantProcedure
-    .input(z.object({ id: z.uuid() }))
-    .query(async ({ ctx, input }) => {
-      const typedCtx = getTenantContext(ctx);
+  dealForecast: tenantProcedure.input(z.object({ id: z.uuid() })).query(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
 
-      // Fetch opportunity with relations
-      const opportunity = await typedCtx.prismaWithTenant.opportunity.findUnique({
-        where: { id: input.id },
-        include: {
-          owner: { select: { id: true, name: true, email: true } },
-          account: { select: { id: true, name: true } },
-          contact: { select: { id: true, firstName: true, lastName: true, title: true } },
-        },
-      });
+    // Fetch opportunity with relations
+    const opportunity = await typedCtx.prismaWithTenant.opportunity.findUnique({
+      where: { id: input.id },
+      include: {
+        owner: { select: { id: true, name: true, email: true } },
+        account: { select: { id: true, name: true } },
+        contact: { select: { id: true, firstName: true, lastName: true, title: true } },
+      },
+    });
 
-      if (!opportunity) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Opportunity not found' });
-      }
+    if (!opportunity) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Opportunity not found' });
+    }
 
-      // Fetch activity events for last 30 days
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setUTCDate(thirtyDaysAgo.getUTCDate() - 30);
+    // Fetch activity events for last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setUTCDate(thirtyDaysAgo.getUTCDate() - 30);
 
-      const activities = await typedCtx.prismaWithTenant.activityEvent.findMany({
-        where: {
-          opportunityId: input.id,
-          timestamp: { gte: thirtyDaysAgo },
-        },
-        orderBy: { timestamp: 'asc' },
-      });
+    const activities = await typedCtx.prismaWithTenant.activityEvent.findMany({
+      where: {
+        opportunityId: input.id,
+        timestamp: { gte: thirtyDaysAgo },
+      },
+      orderBy: { timestamp: 'asc' },
+    });
 
-      // Stage probability defaults (mirrors frontend STAGE_PROBABILITIES)
-      const STAGE_DEFAULTS: Record<string, number> = {
-        PROSPECTING: 10,
-        QUALIFICATION: 20,
-        NEEDS_ANALYSIS: 40,
-        PROPOSAL: 60,
-        NEGOTIATION: 80,
-        CLOSED_WON: 100,
-        CLOSED_LOST: 0,
-      };
+    // Stage probability defaults (mirrors frontend STAGE_PROBABILITIES)
+    const STAGE_DEFAULTS: Record<string, number> = {
+      PROSPECTING: 10,
+      QUALIFICATION: 20,
+      NEEDS_ANALYSIS: 40,
+      PROPOSAL: 60,
+      NEGOTIATION: 80,
+      CLOSED_WON: 100,
+      CLOSED_LOST: 0,
+    };
 
-      const stageDefault = STAGE_DEFAULTS[opportunity.stage] ?? 50;
+    const stageDefault = STAGE_DEFAULTS[opportunity.stage] ?? 50;
 
-      const lastActivity = activities.length > 0 ? (activities.at(-1) ?? null) : null;
-      const daysSinceActivity = lastActivity
-        ? Math.floor(
-            (Date.now() - new Date(lastActivity.timestamp).getTime()) / (1000 * 60 * 60 * 24)
-          )
-        : 999;
+    const lastActivity = activities.length > 0 ? (activities.at(-1) ?? null) : null;
+    const daysSinceActivity = lastActivity
+      ? Math.floor(
+          (Date.now() - new Date(lastActivity.timestamp).getTime()) / (1000 * 60 * 60 * 24)
+        )
+      : 999;
 
-      const riskFactors = deriveDealRiskFactors(
-        opportunity,
-        stageDefault,
-        daysSinceActivity,
-        lastActivity
-      );
-      const recommendations = deriveDealRecommendations(
-        opportunity,
-        stageDefault,
-        daysSinceActivity
-      );
-      const history = deriveProbabilityHistory(activities, STAGE_DEFAULTS);
-      const confidenceScore = computeConfidenceScore(activities.length, opportunity, stageDefault);
+    const riskFactors = deriveDealRiskFactors(
+      opportunity,
+      stageDefault,
+      daysSinceActivity,
+      lastActivity
+    );
+    const recommendations = deriveDealRecommendations(opportunity, stageDefault, daysSinceActivity);
+    const history = deriveProbabilityHistory(activities, STAGE_DEFAULTS);
+    const confidenceScore = computeConfidenceScore(activities.length, opportunity, stageDefault);
 
-      const ownerName = opportunity.owner?.name || 'Unassigned';
-      const ownerAvatar = ownerName
-        .split(' ')
-        .map((n: string) => n[0])
-        .join('')
-        .toUpperCase();
+    const ownerName = opportunity.owner?.name || 'Unassigned';
+    const ownerAvatar = ownerName
+      .split(' ')
+      .map((n: string) => n[0])
+      .join('')
+      .toUpperCase();
 
-      return {
-        deal: {
-          id: opportunity.id,
-          name: opportunity.name,
-          stage: opportunity.stage,
-          probability: opportunity.probability,
-          value: Number(opportunity.value),
-          expectedCloseDate: opportunity.expectedCloseDate?.toISOString().split('T')[0] ?? null,
-          owner: { name: ownerName, avatar: ownerAvatar },
-          account: opportunity.account ? { name: opportunity.account.name } : null,
-          contact: opportunity.contact
-            ? {
-                name: `${opportunity.contact.firstName} ${opportunity.contact.lastName}`.trim(),
-                title: opportunity.contact.title ?? '',
-              }
-            : null,
-        },
-        riskFactors,
-        recommendations,
-        history,
-        confidence: Math.min(1, confidenceScore),
-        lastActivityAt: lastActivity ? lastActivity.timestamp.toISOString() : null,
-        stageDefault,
-      };
-    }),
+    return {
+      deal: {
+        id: opportunity.id,
+        name: opportunity.name,
+        stage: opportunity.stage,
+        probability: opportunity.probability,
+        value: Number(opportunity.value),
+        expectedCloseDate: opportunity.expectedCloseDate?.toISOString().split('T')[0] ?? null,
+        owner: { name: ownerName, avatar: ownerAvatar },
+        account: opportunity.account ? { name: opportunity.account.name } : null,
+        contact: opportunity.contact
+          ? {
+              name: `${opportunity.contact.firstName} ${opportunity.contact.lastName}`.trim(),
+              title: opportunity.contact.title ?? '',
+            }
+          : null,
+      },
+      riskFactors,
+      recommendations,
+      history,
+      confidence: Math.min(1, confidenceScore),
+      lastActivityAt: lastActivity ? lastActivity.timestamp.toISOString() : null,
+      stageDefault,
+    };
+  }),
 });

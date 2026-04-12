@@ -85,7 +85,10 @@ describe('Contact Router Security — Tenant Isolation (IFC-252)', () => {
       expect(result.contacts).toHaveLength(0);
       expect(result.count).toBe(0);
       // Verify the WHERE had ownerId constraint
-      const where = (prismaMock.contact.findMany.mock.calls[0][0]?.where ?? {}) as Record<string, unknown>;
+      const where = (prismaMock.contact.findMany.mock.calls[0][0]?.where ?? {}) as Record<
+        string,
+        unknown
+      >;
       expect(where.ownerId).toBe(TENANT_A_USER_ID);
     });
 
@@ -97,7 +100,10 @@ describe('Contact Router Security — Tenant Isolation (IFC-252)', () => {
 
       await caller.search({ query: 'test', limit: 10 });
 
-      const where = (prismaMock.contact.findMany.mock.calls[0][0]?.where ?? {}) as Record<string, unknown>;
+      const where = (prismaMock.contact.findMany.mock.calls[0][0]?.where ?? {}) as Record<
+        string,
+        unknown
+      >;
       // ADMIN: createTenantWhereClause does NOT add ownerId
       expect(where).not.toHaveProperty('ownerId');
       expect(where).toHaveProperty('OR');
@@ -178,9 +184,7 @@ describe('Contact Router Security — Tenant Isolation (IFC-252)', () => {
 
       await expect(
         caller.logActivity({ ...logActivityInput, contactId: CROSS_TENANT_CONTACT_ID })
-      ).rejects.toThrow(
-        expect.objectContaining({ code: 'NOT_FOUND' })
-      );
+      ).rejects.toThrow(expect.objectContaining({ code: 'NOT_FOUND' }));
     });
 
     it('R03-E1: uses getTenantContext for type-safe tenant extraction', async () => {
@@ -256,9 +260,7 @@ describe('Contact Router Security — Tenant Isolation (IFC-252)', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      prismaMock.contact.findMany.mockResolvedValue([
-        { ...mockContact, account: null } as any,
-      ]);
+      prismaMock.contact.findMany.mockResolvedValue([{ ...mockContact, account: null } as any]);
 
       await caller.bulkExport({ ids: [TEST_UUIDS.contact1], format: 'json' });
 
@@ -346,7 +348,10 @@ describe('Contact Router Security — Tenant Isolation (IFC-252)', () => {
 
       await caller.stats();
 
-      const where = (prismaMock.contact.count.mock.calls[0][0]?.where ?? {}) as Record<string, unknown>;
+      const where = (prismaMock.contact.count.mock.calls[0][0]?.where ?? {}) as Record<
+        string,
+        unknown
+      >;
       // ADMIN: no ownerId filter, but still has tenantId
       expect(where).not.toHaveProperty('ownerId');
       expect(where).toHaveProperty('tenantId', TENANT_A_TENANT_ID);
@@ -379,7 +384,10 @@ describe('Contact Router Security — Tenant Isolation (IFC-252)', () => {
 
       await caller.stats();
 
-      const where = (prismaMock.contact.count.mock.calls[0][0]?.where ?? {}) as Record<string, unknown>;
+      const where = (prismaMock.contact.count.mock.calls[0][0]?.where ?? {}) as Record<
+        string,
+        unknown
+      >;
       // MANAGER without enrichment: ownerId scoping to own userId
       expect(where).toHaveProperty('ownerId');
       expect(where).toHaveProperty('tenantId', TENANT_A_TENANT_ID);
@@ -434,7 +442,11 @@ describe('Contact Router Security — Tenant Isolation (IFC-252)', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      prismaMock.contact.findFirst.mockResolvedValue({ ...mockContact, owner: mockUser, account: null } as any);
+      prismaMock.contact.findFirst.mockResolvedValue({
+        ...mockContact,
+        owner: mockUser,
+        account: null,
+      } as any);
 
       const result = await caller.getByEmail({ email: 'contact@example.com' });
 
@@ -460,7 +472,12 @@ describe('Contact Router Security — Tenant Isolation (IFC-252)', () => {
       const caller = contactRouter.createCaller(ctx);
 
       // findFirst returns tenant A's contact because of ownerId filter
-      const tenantAContact = { ...mockContact, ownerId: TENANT_A_USER_ID, owner: mockUser, account: null };
+      const tenantAContact = {
+        ...mockContact,
+        ownerId: TENANT_A_USER_ID,
+        owner: mockUser,
+        account: null,
+      };
       prismaMock.contact.findFirst.mockResolvedValue(tenantAContact as any);
 
       const result = await caller.getByEmail({ email: 'shared@example.com' });

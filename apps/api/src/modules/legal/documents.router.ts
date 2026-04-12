@@ -135,7 +135,7 @@ export const documentsRouter = createTRPCRouter({
       await queue.add(isImage ? 'ocr-process' : 'extract-text', {
         documentId: document.id,
         sourceUrl: `storage://${storageKey}`,
-        format: isImage ? input.mimeType.split('/')[1] : (formatMap[input.mimeType] || 'txt'),
+        format: isImage ? input.mimeType.split('/')[1] : formatMap[input.mimeType] || 'txt',
         tenantId,
         userId,
         language: 'en',
@@ -197,33 +197,31 @@ export const documentsRouter = createTRPCRouter({
   /**
    * Get document by ID
    */
-  getById: tenantProcedure
-    .input(z.object({ id: z.uuid() }))
-    .query(async ({ ctx, input }) => {
-      const userId = ctx.user?.userId;
-      if (!userId) {
-        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-      }
+  getById: tenantProcedure.input(z.object({ id: z.uuid() })).query(async ({ ctx, input }) => {
+    const userId = ctx.user?.userId;
+    if (!userId) {
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
+    }
 
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
+    const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
-      const document = await documentRepo.findById(input.id);
-      if (!document) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-      }
+    const document = await documentRepo.findById(input.id);
+    if (!document) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
+    }
 
-      // Check if deleted
-      if (document.isDeleted) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-      }
+    // Check if deleted
+    if (document.isDeleted) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
+    }
 
-      // Check access
-      if (!document.hasAccess(userId, AccessLevel.VIEW) && document.toJSON().createdBy !== userId) {
-        throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' });
-      }
+    // Check access
+    if (!document.hasAccess(userId, AccessLevel.VIEW) && document.toJSON().createdBy !== userId) {
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' });
+    }
 
-      return document.toJSON();
-    }),
+    return document.toJSON();
+  }),
 
   /**
    * List documents accessible by current user
@@ -756,39 +754,37 @@ export const documentsRouter = createTRPCRouter({
   /**
    * Bulk delete documents (soft delete)
    */
-  bulkDelete: tenantProcedure
-    .input(bulkDeleteDocumentsSchema)
-    .mutation(async ({ ctx, input }) => {
-      const userId = ctx.user?.userId;
-      if (!userId) {
-        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-      }
+  bulkDelete: tenantProcedure.input(bulkDeleteDocumentsSchema).mutation(async ({ ctx, input }) => {
+    const userId = ctx.user?.userId;
+    if (!userId) {
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
+    }
 
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
-      const { ids } = input;
+    const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
+    const { ids } = input;
 
-      const successful: string[] = [];
-      const failed: Array<{ id: string; error: string }> = [];
+    const successful: string[] = [];
+    const failed: Array<{ id: string; error: string }> = [];
 
-      for (const docId of ids) {
-        try {
-          const document = await documentRepo.findById(docId);
-          if (!document) {
-            failed.push({ id: docId, error: 'Document not found' });
-            continue;
-          }
-
-          document.delete(userId);
-          await documentRepo.save(document);
-          successful.push(docId);
-        } catch (error) {
-          failed.push({
-            id: docId,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          });
+    for (const docId of ids) {
+      try {
+        const document = await documentRepo.findById(docId);
+        if (!document) {
+          failed.push({ id: docId, error: 'Document not found' });
+          continue;
         }
-      }
 
-      return { successful, failed, totalProcessed: ids.length };
-    }),
+        document.delete(userId);
+        await documentRepo.save(document);
+        successful.push(docId);
+      } catch (error) {
+        failed.push({
+          id: docId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
+
+    return { successful, failed, totalProcessed: ids.length };
+  }),
 });

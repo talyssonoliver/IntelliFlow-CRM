@@ -353,130 +353,124 @@ export const conversationRouter = createTRPCRouter({
   /**
    * Record a tool call
    */
-  recordToolCall: tenantProcedure
-    .input(RecordToolCallSchema)
-    .mutation(async ({ ctx, input }) => {
-      // Verify conversation exists
-      const conversation = await ctx.prismaWithTenant.conversationRecord.findFirst({
-        where: {
-          id: input.conversationId,
-          tenantId: ctx.user.tenantId,
-        },
+  recordToolCall: tenantProcedure.input(RecordToolCallSchema).mutation(async ({ ctx, input }) => {
+    // Verify conversation exists
+    const conversation = await ctx.prismaWithTenant.conversationRecord.findFirst({
+      where: {
+        id: input.conversationId,
+        tenantId: ctx.user.tenantId,
+      },
+    });
+
+    if (!conversation) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Conversation not found',
       });
+    }
 
-      if (!conversation) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Conversation not found',
-        });
-      }
+    const [toolCall] = await ctx.prismaWithTenant.$transaction([
+      ctx.prismaWithTenant.toolCallRecord.create({
+        data: {
+          tenantId: ctx.user.tenantId,
+          conversationId: input.conversationId,
+          messageId: input.messageId,
+          toolName: input.toolName,
+          toolType: input.toolType,
+          toolVersion: input.toolVersion,
+          inputParameters: input.inputParameters as object,
+          status: input.requiresApproval ? 'PENDING' : 'RUNNING',
+          requiresApproval: input.requiresApproval,
+          approvalStatus: input.requiresApproval ? 'PENDING' : null,
+          affectedEntityType: input.affectedEntityType,
+          affectedEntityId: input.affectedEntityId,
+          affectedEntity:
+            input.affectedEntityType && input.affectedEntityId
+              ? `${input.affectedEntityType}:${input.affectedEntityId}`
+              : null,
+          changeDescription: input.changeDescription,
+          isReversible: input.isReversible,
+          rollbackData: input.rollbackData as object | undefined,
+        },
+      }),
+      ctx.prismaWithTenant.conversationRecord.update({
+        where: { id: input.conversationId },
+        data: {
+          toolCallCount: { increment: 1 },
+        },
+      }),
+    ]);
 
-      const [toolCall] = await ctx.prismaWithTenant.$transaction([
-        ctx.prismaWithTenant.toolCallRecord.create({
-          data: {
-            tenantId: ctx.user.tenantId,
-            conversationId: input.conversationId,
-            messageId: input.messageId,
-            toolName: input.toolName,
-            toolType: input.toolType,
-            toolVersion: input.toolVersion,
-            inputParameters: input.inputParameters as object,
-            status: input.requiresApproval ? 'PENDING' : 'RUNNING',
-            requiresApproval: input.requiresApproval,
-            approvalStatus: input.requiresApproval ? 'PENDING' : null,
-            affectedEntityType: input.affectedEntityType,
-            affectedEntityId: input.affectedEntityId,
-            affectedEntity:
-              input.affectedEntityType && input.affectedEntityId
-                ? `${input.affectedEntityType}:${input.affectedEntityId}`
-                : null,
-            changeDescription: input.changeDescription,
-            isReversible: input.isReversible,
-            rollbackData: input.rollbackData as object | undefined,
-          },
-        }),
-        ctx.prismaWithTenant.conversationRecord.update({
-          where: { id: input.conversationId },
-          data: {
-            toolCallCount: { increment: 1 },
-          },
-        }),
-      ]);
-
-      return toolCall;
-    }),
+    return toolCall;
+  }),
 
   /**
    * Update tool call status and result
    */
-  updateToolCall: tenantProcedure
-    .input(UpdateToolCallSchema)
-    .mutation(async ({ ctx, input }) => {
-      const existingCall = await ctx.prismaWithTenant.toolCallRecord.findFirst({
-        where: { id: input.id },
-        include: { conversation: true },
+  updateToolCall: tenantProcedure.input(UpdateToolCallSchema).mutation(async ({ ctx, input }) => {
+    const existingCall = await ctx.prismaWithTenant.toolCallRecord.findFirst({
+      where: { id: input.id },
+      include: { conversation: true },
+    });
+
+    if (!existingCall || existingCall.conversation.tenantId !== ctx.user.tenantId) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Tool call not found',
       });
+    }
 
-      if (!existingCall || existingCall.conversation.tenantId !== ctx.user.tenantId) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Tool call not found',
-        });
-      }
+    const toolCall = await ctx.prismaWithTenant.toolCallRecord.update({
+      where: { id: input.id },
+      data: {
+        status: input.status,
+        outputResult: input.outputResult as object | undefined,
+        errorMessage: input.errorMessage,
+        errorCode: input.errorCode,
+        durationMs: input.durationMs,
+        completedAt:
+          input.status && ['SUCCESS', 'FAILED', 'CANCELLED', 'TIMEOUT'].includes(input.status)
+            ? new Date()
+            : undefined,
+      },
+    });
 
-      const toolCall = await ctx.prismaWithTenant.toolCallRecord.update({
-        where: { id: input.id },
-        data: {
-          status: input.status,
-          outputResult: input.outputResult as object | undefined,
-          errorMessage: input.errorMessage,
-          errorCode: input.errorCode,
-          durationMs: input.durationMs,
-          completedAt:
-            input.status && ['SUCCESS', 'FAILED', 'CANCELLED', 'TIMEOUT'].includes(input.status)
-              ? new Date()
-              : undefined,
-        },
-      });
-
-      return toolCall;
-    }),
+    return toolCall;
+  }),
 
   /**
    * Approve or reject a tool call (human-in-the-loop)
    */
-  approveToolCall: tenantProcedure
-    .input(ApproveToolCallSchema)
-    .mutation(async ({ ctx, input }) => {
-      const existingCall = await ctx.prismaWithTenant.toolCallRecord.findFirst({
-        where: {
-          id: input.id,
-          requiresApproval: true,
-          approvalStatus: 'PENDING',
-        },
-        include: { conversation: true },
+  approveToolCall: tenantProcedure.input(ApproveToolCallSchema).mutation(async ({ ctx, input }) => {
+    const existingCall = await ctx.prismaWithTenant.toolCallRecord.findFirst({
+      where: {
+        id: input.id,
+        requiresApproval: true,
+        approvalStatus: 'PENDING',
+      },
+      include: { conversation: true },
+    });
+
+    if (!existingCall || existingCall.conversation.tenantId !== ctx.user.tenantId) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Pending tool call not found',
       });
+    }
 
-      if (!existingCall || existingCall.conversation.tenantId !== ctx.user.tenantId) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Pending tool call not found',
-        });
-      }
+    const toolCall = await ctx.prismaWithTenant.toolCallRecord.update({
+      where: { id: input.id },
+      data: {
+        approvalStatus: input.approved ? 'APPROVED' : 'REJECTED',
+        approvedBy: ctx.user.userId,
+        approvedAt: new Date(),
+        rejectionReason: input.approved ? null : input.reason,
+        status: input.approved ? 'RUNNING' : 'CANCELLED',
+      },
+    });
 
-      const toolCall = await ctx.prismaWithTenant.toolCallRecord.update({
-        where: { id: input.id },
-        data: {
-          approvalStatus: input.approved ? 'APPROVED' : 'REJECTED',
-          approvedBy: ctx.user.userId,
-          approvedAt: new Date(),
-          rejectionReason: input.approved ? null : input.reason,
-          status: input.approved ? 'RUNNING' : 'CANCELLED',
-        },
-      });
-
-      return toolCall;
-    }),
+    return toolCall;
+  }),
 
   /**
    * End a conversation

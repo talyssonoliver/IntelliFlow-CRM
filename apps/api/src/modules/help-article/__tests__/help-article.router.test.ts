@@ -103,7 +103,17 @@ describe('helpArticleRouter', () => {
       { name: 'getBySlug', input: { slug: 'test' } },
       { name: 'getByCategory', input: { categoryId: 'cat-1' } },
       { name: 'getRelated', input: { id: ARTICLE_ID_1 } },
-      { name: 'create', input: { slug: 'test', title: 'Test', categoryId: 'cat-1', excerpt: 'Test', readTimeMinutes: 5, sections: [{ heading: 'H', content: 'C' }] } },
+      {
+        name: 'create',
+        input: {
+          slug: 'test',
+          title: 'Test',
+          categoryId: 'cat-1',
+          excerpt: 'Test',
+          readTimeMinutes: 5,
+          sections: [{ heading: 'H', content: 'C' }],
+        },
+      },
       { name: 'update', input: { id: ARTICLE_ID_1, title: 'Updated' } },
       { name: 'delete', input: { id: ARTICLE_ID_1 } },
       { name: 'publish', input: { id: ARTICLE_ID_1 } },
@@ -156,7 +166,7 @@ describe('helpArticleRouter', () => {
       expect((prismaMock.helpArticle as any).findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ status: 'PUBLISHED' }),
-        }),
+        })
       );
     });
 
@@ -169,7 +179,7 @@ describe('helpArticleRouter', () => {
       expect((prismaMock.helpArticle as any).findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ categoryId: 'cat-onboarding' }),
-        }),
+        })
       );
     });
 
@@ -186,7 +196,7 @@ describe('helpArticleRouter', () => {
               expect.objectContaining({ title: expect.objectContaining({ contains: 'started' }) }),
             ]),
           }),
-        }),
+        })
       );
     });
 
@@ -199,7 +209,7 @@ describe('helpArticleRouter', () => {
       expect((prismaMock.helpArticle as any).findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ status: 'PUBLISHED' }),
-        }),
+        })
       );
     });
 
@@ -213,7 +223,7 @@ describe('helpArticleRouter', () => {
       expect((prismaMock.helpArticle as any).findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ status: 'PUBLISHED' }),
-        }),
+        })
       );
     });
   });
@@ -277,7 +287,7 @@ describe('helpArticleRouter', () => {
       expect((prismaMock.helpArticle as any).findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ status: 'PUBLISHED' }),
-        }),
+        })
       );
     });
 
@@ -290,7 +300,7 @@ describe('helpArticleRouter', () => {
       expect((prismaMock.helpArticle as any).findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ status: 'PUBLISHED' }),
-        }),
+        })
       );
     });
   });
@@ -304,7 +314,14 @@ describe('helpArticleRouter', () => {
         relatedArticleIds: [ARTICLE_ID_2],
       });
       (prismaMock.helpArticle as any).findMany.mockResolvedValue([
-        { id: ARTICLE_ID_2, slug: 'advanced-features', title: 'Advanced Features', excerpt: 'Learn advanced features', readTimeMinutes: 10, categoryId: 'cat-advanced' },
+        {
+          id: ARTICLE_ID_2,
+          slug: 'advanced-features',
+          title: 'Advanced Features',
+          excerpt: 'Learn advanced features',
+          readTimeMinutes: 10,
+          categoryId: 'cat-advanced',
+        },
       ]);
 
       const result = await caller.getRelated({ id: ARTICLE_ID_1 });
@@ -340,7 +357,7 @@ describe('helpArticleRouter', () => {
       expect((prismaMock.helpArticle as any).findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ tenantId: TEST_UUIDS.tenant }),
-        }),
+        })
       );
     });
   });
@@ -383,7 +400,7 @@ describe('helpArticleRouter', () => {
       expect((prismaMock.helpArticle as any).create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ tenantId: TEST_UUIDS.tenant }),
-        }),
+        })
       );
     });
 
@@ -399,17 +416,13 @@ describe('helpArticleRouter', () => {
     it('rejects missing title via Zod validation', async () => {
       const caller = helpArticleRouter.createCaller(createAdminContext());
 
-      await expect(
-        caller.create({ ...validInput, title: '' } as any),
-      ).rejects.toThrow();
+      await expect(caller.create({ ...validInput, title: '' } as any)).rejects.toThrow();
     });
 
     it('rejects empty slug via Zod validation', async () => {
       const caller = helpArticleRouter.createCaller(createAdminContext());
 
-      await expect(
-        caller.create({ ...validInput, slug: '' } as any),
-      ).rejects.toThrow();
+      await expect(caller.create({ ...validInput, slug: '' } as any)).rejects.toThrow();
     });
   });
 
@@ -465,9 +478,9 @@ describe('helpArticleRouter', () => {
       const caller = helpArticleRouter.createCaller(createAdminContext());
       (prismaMock.helpArticle as any).findFirst.mockResolvedValue(null);
 
-      await expect(
-        caller.update({ id: TEST_UUIDS.nonExistent, title: 'X' }),
-      ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+      await expect(caller.update({ id: TEST_UUIDS.nonExistent, title: 'X' })).rejects.toMatchObject(
+        { code: 'NOT_FOUND' }
+      );
     });
 
     it('throws CONFLICT on slug collision during update', async () => {
@@ -475,17 +488,17 @@ describe('helpArticleRouter', () => {
       (prismaMock.helpArticle as any).findFirst.mockResolvedValue(mockArticle);
       (prismaMock.helpArticle as any).findUnique.mockResolvedValue({ id: ARTICLE_ID_2 });
 
-      await expect(
-        caller.update({ id: ARTICLE_ID_1, slug: 'taken-slug' }),
-      ).rejects.toMatchObject({ code: 'CONFLICT' });
+      await expect(caller.update({ id: ARTICLE_ID_1, slug: 'taken-slug' })).rejects.toMatchObject({
+        code: 'CONFLICT',
+      });
     });
 
     it('rejects USER role with FORBIDDEN', async () => {
       const caller = helpArticleRouter.createCaller(createTestContext());
 
-      await expect(
-        caller.update({ id: ARTICLE_ID_1, title: 'X' }),
-      ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+      await expect(caller.update({ id: ARTICLE_ID_1, title: 'X' })).rejects.toMatchObject({
+        code: 'FORBIDDEN',
+      });
     });
   });
 
@@ -505,22 +518,33 @@ describe('helpArticleRouter', () => {
       const caller = helpArticleRouter.createCaller(createAdminContext());
       (prismaMock.helpArticle as any).findFirst.mockResolvedValue(null);
 
-      await expect(
-        caller.delete({ id: TEST_UUIDS.nonExistent }),
-      ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+      await expect(caller.delete({ id: TEST_UUIDS.nonExistent })).rejects.toMatchObject({
+        code: 'NOT_FOUND',
+      });
     });
 
     it('rejects non-ADMIN role with FORBIDDEN', async () => {
       const caller = helpArticleRouter.createCaller(
         createTestContext({
-          user: { userId: TEST_UUIDS.user1, email: 'mgr@test.com', role: 'MANAGER', tenantId: TEST_UUIDS.tenant },
-          tenant: { tenantId: TEST_UUIDS.tenant, tenantType: 'user' as const, userId: TEST_UUIDS.user1, role: 'MANAGER', canAccessAllTenantData: true },
-        }),
+          user: {
+            userId: TEST_UUIDS.user1,
+            email: 'mgr@test.com',
+            role: 'MANAGER',
+            tenantId: TEST_UUIDS.tenant,
+          },
+          tenant: {
+            tenantId: TEST_UUIDS.tenant,
+            tenantType: 'user' as const,
+            userId: TEST_UUIDS.user1,
+            role: 'MANAGER',
+            canAccessAllTenantData: true,
+          },
+        })
       );
 
-      await expect(
-        caller.delete({ id: ARTICLE_ID_1 }),
-      ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+      await expect(caller.delete({ id: ARTICLE_ID_1 })).rejects.toMatchObject({
+        code: 'FORBIDDEN',
+      });
     });
   });
 
@@ -560,9 +584,9 @@ describe('helpArticleRouter', () => {
       const caller = helpArticleRouter.createCaller(createAdminContext());
       (prismaMock.helpArticle as any).findFirst.mockResolvedValue(null);
 
-      await expect(
-        caller.publish({ id: TEST_UUIDS.nonExistent }),
-      ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+      await expect(caller.publish({ id: TEST_UUIDS.nonExistent })).rejects.toMatchObject({
+        code: 'NOT_FOUND',
+      });
     });
   });
 
@@ -602,9 +626,9 @@ describe('helpArticleRouter', () => {
       const caller = helpArticleRouter.createCaller(createAdminContext());
       (prismaMock.helpArticle as any).findFirst.mockResolvedValue(null);
 
-      await expect(
-        caller.unpublish({ id: TEST_UUIDS.nonExistent }),
-      ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+      await expect(caller.unpublish({ id: TEST_UUIDS.nonExistent })).rejects.toMatchObject({
+        code: 'NOT_FOUND',
+      });
     });
   });
 
@@ -694,16 +718,14 @@ describe('helpArticleRouter', () => {
     it('rejects empty articleId', async () => {
       const caller = helpArticleRouter.createCaller(createTestContext());
 
-      await expect(
-        caller.submitFeedback({ articleId: '', value: 'helpful' }),
-      ).rejects.toThrow();
+      await expect(caller.submitFeedback({ articleId: '', value: 'helpful' })).rejects.toThrow();
     });
 
     it('rejects invalid value enum', async () => {
       const caller = helpArticleRouter.createCaller(createTestContext());
 
       await expect(
-        caller.submitFeedback({ articleId: ARTICLE_ID_1, value: 'invalid' as any }),
+        caller.submitFeedback({ articleId: ARTICLE_ID_1, value: 'invalid' as any })
       ).rejects.toThrow();
     });
 
@@ -744,7 +766,7 @@ describe('helpArticleRouter', () => {
     it('returns correct helpful/notHelpful/total for mixed feedback', async () => {
       const caller = helpArticleRouter.createCaller(createTestContext());
       (prismaMock.articleFeedback as any).count
-        .mockResolvedValueOnce(3)  // helpful=true count
+        .mockResolvedValueOnce(3) // helpful=true count
         .mockResolvedValueOnce(5); // total count
 
       const result = await caller.getFeedbackStats({ articleId: ARTICLE_ID_1 });
@@ -755,7 +777,7 @@ describe('helpArticleRouter', () => {
     it('returns zeros for article with no feedback', async () => {
       const caller = helpArticleRouter.createCaller(createTestContext());
       (prismaMock.articleFeedback as any).count
-        .mockResolvedValueOnce(0)  // helpful=true count
+        .mockResolvedValueOnce(0) // helpful=true count
         .mockResolvedValueOnce(0); // total count
 
       const result = await caller.getFeedbackStats({ articleId: ARTICLE_ID_1 });
@@ -765,9 +787,7 @@ describe('helpArticleRouter', () => {
 
     it('scopes count queries to the given articleId', async () => {
       const caller = helpArticleRouter.createCaller(createTestContext());
-      (prismaMock.articleFeedback as any).count
-        .mockResolvedValueOnce(1)
-        .mockResolvedValueOnce(1);
+      (prismaMock.articleFeedback as any).count.mockResolvedValueOnce(1).mockResolvedValueOnce(1);
 
       await caller.getFeedbackStats({ articleId: ARTICLE_ID_1 });
 
@@ -793,36 +813,36 @@ describe('helpArticleRouter', () => {
           excerpt: 'Test',
           readTimeMinutes: 5,
           sections: [{ heading: 'H', content: 'C' }],
-        }),
+        })
       ).rejects.toMatchObject({ code: 'FORBIDDEN' });
     });
 
     it('update rejects USER role', async () => {
       const caller = helpArticleRouter.createCaller(createTestContext());
-      await expect(
-        caller.update({ id: ARTICLE_ID_1, title: 'Updated' }),
-      ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+      await expect(caller.update({ id: ARTICLE_ID_1, title: 'Updated' })).rejects.toMatchObject({
+        code: 'FORBIDDEN',
+      });
     });
 
     it('delete rejects USER role', async () => {
       const caller = helpArticleRouter.createCaller(createTestContext());
-      await expect(
-        caller.delete({ id: ARTICLE_ID_1 }),
-      ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+      await expect(caller.delete({ id: ARTICLE_ID_1 })).rejects.toMatchObject({
+        code: 'FORBIDDEN',
+      });
     });
 
     it('publish rejects USER role', async () => {
       const caller = helpArticleRouter.createCaller(createTestContext());
-      await expect(
-        caller.publish({ id: ARTICLE_ID_1 }),
-      ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+      await expect(caller.publish({ id: ARTICLE_ID_1 })).rejects.toMatchObject({
+        code: 'FORBIDDEN',
+      });
     });
 
     it('unpublish rejects USER role', async () => {
       const caller = helpArticleRouter.createCaller(createTestContext());
-      await expect(
-        caller.unpublish({ id: ARTICLE_ID_1 }),
-      ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+      await expect(caller.unpublish({ id: ARTICLE_ID_1 })).rejects.toMatchObject({
+        code: 'FORBIDDEN',
+      });
     });
   });
 });

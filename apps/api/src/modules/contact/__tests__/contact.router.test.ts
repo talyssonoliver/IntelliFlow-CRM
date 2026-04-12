@@ -1122,13 +1122,11 @@ describe('Contact Router', () => {
 
       prismaMock.contact.findUnique.mockResolvedValue(null);
 
-      await expect(
-        caller.scoreWithAI({ contactId: TEST_UUIDS.contact1 })
-      ).rejects.toThrow(TRPCError);
+      await expect(caller.scoreWithAI({ contactId: TEST_UUIDS.contact1 })).rejects.toThrow(
+        TRPCError
+      );
 
-      await expect(
-        caller.scoreWithAI({ contactId: TEST_UUIDS.contact1 })
-      ).rejects.toMatchObject({
+      await expect(caller.scoreWithAI({ contactId: TEST_UUIDS.contact1 })).rejects.toMatchObject({
         code: 'NOT_FOUND',
       });
     });

@@ -391,10 +391,20 @@ export class WebhookHandler {
   private validateSourceConfig(source: string): WebhookHandlerResult | null {
     const config = this.configs.get(source);
     if (!config) {
-      return { success: false, message: `Unknown webhook source: ${source}`, statusCode: 404, retryable: false };
+      return {
+        success: false,
+        message: `Unknown webhook source: ${source}`,
+        statusCode: 404,
+        retryable: false,
+      };
     }
     if (!config.enabled) {
-      return { success: false, message: `Webhook source disabled: ${source}`, statusCode: 503, retryable: true };
+      return {
+        success: false,
+        message: `Webhook source disabled: ${source}`,
+        statusCode: 503,
+        retryable: true,
+      };
     }
     return null;
   }

@@ -20,11 +20,7 @@
  */
 
 import type { PrismaClient } from '@intelliflow/db';
-import type {
-  PendingAction,
-  ExecutedAction,
-  ApprovalStatus,
-} from './types';
+import type { PendingAction, ExecutedAction, ApprovalStatus } from './types';
 
 // Infer the AgentAction row type from Prisma's findUnique return
 type AgentAction = NonNullable<Awaited<ReturnType<PrismaClient['agentAction']['findUnique']>>>;
@@ -64,7 +60,7 @@ export class PrismaAgentActionStore {
         aiReasoning: JSON.stringify(action.metadata ?? {}),
         confidenceScore: this.impactToConfidence(action.preview.estimatedImpact),
         status: STATUS_TO_DB[action.status] as any,
-        entityId: action.input.entityId as string ?? action.id,
+        entityId: (action.input.entityId as string) ?? action.id,
         entityType: action.entityType.toLowerCase(),
         entityName: action.preview.affectedEntities?.[0]?.name ?? action.entityType,
         previousState: action.input as any,
@@ -99,9 +95,8 @@ export class PrismaAgentActionStore {
         status: STATUS_TO_DB[action.status] as any,
         previousState: action.input as any,
         proposedState: action.preview as any,
-        reviewedAt: action.status === 'APPROVED' || action.status === 'REJECTED'
-          ? new Date()
-          : undefined,
+        reviewedAt:
+          action.status === 'APPROVED' || action.status === 'REJECTED' ? new Date() : undefined,
       },
     });
   }
@@ -307,9 +302,7 @@ export class PrismaAgentActionStore {
     return 'LOW';
   }
 
-  private inferActionType(
-    actionType: string
-  ): 'SEARCH' | 'CREATE' | 'UPDATE' | 'DELETE' | 'DRAFT' {
+  private inferActionType(actionType: string): 'SEARCH' | 'CREATE' | 'UPDATE' | 'DELETE' | 'DRAFT' {
     const lower = actionType.toLowerCase();
     if (lower.includes('create') || lower.includes('add')) return 'CREATE';
     if (lower.includes('delete') || lower.includes('remove')) return 'DELETE';

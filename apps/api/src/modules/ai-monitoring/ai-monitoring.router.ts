@@ -434,9 +434,7 @@ export const aiMonitoringRouter = createTRPCRouter({
         }
 
         // Sort by most recent first
-        allFailed.sort(
-          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-        );
+        allFailed.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
         const paged = allFailed.slice(input.offset, input.offset + input.limit);
 

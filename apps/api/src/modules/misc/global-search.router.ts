@@ -31,10 +31,7 @@ const globalSearchInputSchema = z.object({
   /** Max results per entity type. */
   limit: z.number().int().min(1).max(10).default(5),
   /** Restrict search to specific entity types (default: all). */
-  entityTypes: z
-    .array(z.enum(GLOBAL_SEARCH_ENTITY_TYPES))
-    .min(1)
-    .optional(),
+  entityTypes: z.array(z.enum(GLOBAL_SEARCH_ENTITY_TYPES)).min(1).optional(),
 });
 
 // ── Result types ────────────────────────────────────────────────────────
@@ -142,11 +139,7 @@ async function searchAccounts(
   const rows = await prisma.account.findMany({
     where: {
       tenantId,
-      OR: [
-        { name: ilike(query) },
-        { website: ilike(query) },
-        { industry: ilike(query) },
-      ],
+      OR: [{ name: ilike(query) }, { website: ilike(query) }, { industry: ilike(query) }],
     },
     take: limit,
     orderBy: { createdAt: 'desc' },
@@ -171,10 +164,7 @@ async function searchDeals(
   const rows = await prisma.opportunity.findMany({
     where: {
       tenantId,
-      OR: [
-        { name: ilike(query) },
-        { description: ilike(query) },
-      ],
+      OR: [{ name: ilike(query) }, { description: ilike(query) }],
     },
     take: limit,
     orderBy: { createdAt: 'desc' },
@@ -238,10 +228,7 @@ async function searchTasks(
   const rows = await prisma.task.findMany({
     where: {
       tenantId,
-      OR: [
-        { title: ilike(query) },
-        { description: ilike(query) },
-      ],
+      OR: [{ title: ilike(query) }, { description: ilike(query) }],
     },
     take: limit,
     orderBy: { createdAt: 'desc' },

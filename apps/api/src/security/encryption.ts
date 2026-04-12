@@ -19,7 +19,13 @@
  * ```
  */
 
-import { randomBytes, createCipheriv, createDecipheriv, pbkdf2Sync, timingSafeEqual } from 'node:crypto';
+import {
+  randomBytes,
+  createCipheriv,
+  createDecipheriv,
+  pbkdf2Sync,
+  timingSafeEqual,
+} from 'node:crypto';
 
 /**
  * Encryption algorithm configuration

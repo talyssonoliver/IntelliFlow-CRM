@@ -14,11 +14,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const agentActionRows = vi.hoisted(() => [] as any[]);
-const rollbackSpy = vi.hoisted(() => vi.fn().mockResolvedValue({
-  success: true,
-  actionId: 'rollback-action',
-  rolledBackAt: new Date(),
-}));
+const rollbackSpy = vi.hoisted(() =>
+  vi.fn().mockResolvedValue({
+    success: true,
+    actionId: 'rollback-action',
+    rolledBackAt: new Date(),
+  })
+);
 
 function sortRows(rows: any[], orderBy?: Record<string, 'asc' | 'desc'>) {
   if (!orderBy) return rows;
@@ -26,7 +28,10 @@ function sortRows(rows: any[], orderBy?: Record<string, 'asc' | 'desc'>) {
   return [...rows].sort((a, b) => {
     const av = a[field];
     const bv = b[field];
-    const cmp = av > bv ? 1 : av < bv ? -1 : 0;
+    let cmp: number;
+    if (av > bv) cmp = 1;
+    else if (av < bv) cmp = -1;
+    else cmp = 0;
     return direction === 'desc' ? -cmp : cmp;
   });
 }
@@ -83,10 +88,18 @@ vi.mock('@intelliflow/db', () => ({
         const [deleted] = agentActionRows.splice(index, 1);
         return deleted;
       }),
-      findMany: vi.fn(async ({ where, orderBy }: { where?: Record<string, any>; orderBy?: Record<string, 'asc' | 'desc'> }) => {
-        const filtered = agentActionRows.filter((row) => matchesWhere(row, where));
-        return sortRows(filtered, orderBy);
-      }),
+      findMany: vi.fn(
+        async ({
+          where,
+          orderBy,
+        }: {
+          where?: Record<string, any>;
+          orderBy?: Record<string, 'asc' | 'desc'>;
+        }) => {
+          const filtered = agentActionRows.filter((row) => matchesWhere(row, where));
+          return sortRows(filtered, orderBy);
+        }
+      ),
       updateMany: vi.fn(async ({ where, data }: { where?: Record<string, any>; data: any }) => {
         let count = 0;
 

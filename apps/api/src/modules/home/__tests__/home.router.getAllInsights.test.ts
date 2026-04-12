@@ -9,7 +9,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { homeRouter } from '../home.router';
-import { prismaMock, createTestContext, createPublicContext, TEST_UUIDS } from '../../../test/setup';
+import {
+  prismaMock,
+  createTestContext,
+  createPublicContext,
+  TEST_UUIDS,
+} from '../../../test/setup';
 
 describe('home.getAllInsights', () => {
   const ctx = createTestContext();
@@ -74,7 +79,9 @@ describe('home.getAllInsights', () => {
     (prismaMock.notification as any).findFirst.mockResolvedValue(null);
     (prismaMock.notification as any).create.mockResolvedValue({} as any);
     // Transaction mock: pass prismaMock as tx so inner tx.notification.* hits existing mocks
-    (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: any) => fn(prismaMock));
+    (prismaMock as any).$transaction = vi
+      .fn()
+      .mockImplementation(async (fn: any) => fn(prismaMock));
   });
 
   // =========================================================================
@@ -104,9 +111,9 @@ describe('home.getAllInsights', () => {
     // Use mockResolvedValueOnce to control each successive opportunity.count call:
     //   1st call → activeDealCount (pipeline-summary), 2nd → closedThisWeek, 3rd → closedLastWeek
     prismaMock.opportunity.count
-      .mockResolvedValueOnce(5)   // activeDealCount → pipeline-summary
-      .mockResolvedValueOnce(3)   // closedThisWeek → deal-trend
-      .mockResolvedValueOnce(2);  // closedLastWeek
+      .mockResolvedValueOnce(5) // activeDealCount → pipeline-summary
+      .mockResolvedValueOnce(3) // closedThisWeek → deal-trend
+      .mockResolvedValueOnce(2); // closedLastWeek
     prismaMock.opportunity.aggregate.mockResolvedValue({ _sum: { value: 100000 } } as any);
     prismaMock.lead.count.mockResolvedValue(4); // qualifiableLeads → lead-queue
     // 3 summaries total: pipeline-summary + deal-trend + lead-queue; limit: 2 → hasMore: true
@@ -133,9 +140,9 @@ describe('home.getAllInsights', () => {
     setupMockQueries({ dealsAtRisk: 5, hotLeads: 5, overdueTasks: 3, staleContacts: 5 });
     // Produce 3 smart summaries: pipeline-summary, deal-trend, lead-queue
     prismaMock.opportunity.count
-      .mockResolvedValueOnce(5)   // activeDealCount → pipeline-summary
-      .mockResolvedValueOnce(3)   // closedThisWeek → deal-trend
-      .mockResolvedValueOnce(1);  // closedLastWeek
+      .mockResolvedValueOnce(5) // activeDealCount → pipeline-summary
+      .mockResolvedValueOnce(3) // closedThisWeek → deal-trend
+      .mockResolvedValueOnce(1); // closedLastWeek
     prismaMock.opportunity.aggregate.mockResolvedValue({ _sum: { value: 50000 } } as any);
     prismaMock.lead.count.mockResolvedValue(3); // qualifiableLeads → lead-queue
 
@@ -195,9 +202,9 @@ describe('home.getAllInsights', () => {
     // Produce summaries of different types:
     //   pipeline-summary (opportunity) + deal-trend with declining trend (warning)
     prismaMock.opportunity.count
-      .mockResolvedValueOnce(3)   // activeDealCount → pipeline-summary (type: opportunity)
-      .mockResolvedValueOnce(1)   // closedThisWeek
-      .mockResolvedValueOnce(4);  // closedLastWeek > closedThisWeek → declining → deal-trend (type: warning)
+      .mockResolvedValueOnce(3) // activeDealCount → pipeline-summary (type: opportunity)
+      .mockResolvedValueOnce(1) // closedThisWeek
+      .mockResolvedValueOnce(4); // closedLastWeek > closedThisWeek → declining → deal-trend (type: warning)
     prismaMock.opportunity.aggregate.mockResolvedValue({ _sum: { value: 30000 } } as any);
     prismaMock.lead.count.mockResolvedValue(0); // no lead-queue
     const result = await caller.getAllInsights({});
@@ -220,9 +227,9 @@ describe('home.getAllInsights', () => {
     setupMockQueries({ dealsAtRisk: 0, hotLeads: 0, overdueTasks: 0, staleContacts: 0 });
     // Produce 2 opportunity-type summaries: pipeline-summary + lead-queue
     prismaMock.opportunity.count
-      .mockResolvedValueOnce(3)   // activeDealCount → pipeline-summary (opportunity)
-      .mockResolvedValueOnce(0)   // closedThisWeek → no deal-trend
-      .mockResolvedValueOnce(0);  // closedLastWeek
+      .mockResolvedValueOnce(3) // activeDealCount → pipeline-summary (opportunity)
+      .mockResolvedValueOnce(0) // closedThisWeek → no deal-trend
+      .mockResolvedValueOnce(0); // closedLastWeek
     prismaMock.opportunity.aggregate.mockResolvedValue({ _sum: { value: 30000 } } as any);
     prismaMock.lead.count.mockResolvedValue(4); // qualifiableLeads → lead-queue (opportunity)
     const result = await caller.getAllInsights({ types: ['opportunity'], limit: 1 });

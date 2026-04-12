@@ -30,7 +30,12 @@ import {
 } from '@intelliflow/validators';
 import { callStripeAPI } from '../../shared/external-service-wrapper';
 import { mapErrorToTRPCError } from '../../shared/error-mapper';
-import { PLAN_TIERS, type PlanTier, SubscriptionCanceledEvent, SubscriptionPausedEvent } from '@intelliflow/domain';
+import {
+  PLAN_TIERS,
+  type PlanTier,
+  SubscriptionCanceledEvent,
+  SubscriptionPausedEvent,
+} from '@intelliflow/domain';
 import { formatDateTimeInTimezone } from '../../lib/timezone-utils';
 
 // ============================================
@@ -950,12 +955,15 @@ export const billingRouter = createTRPCRouter({
 
     // Plan tier limits — aligned with pricing-data.json comparisonFeatures
     // "Unlimited" is represented as -1 (frontend renders as "Unlimited")
-    const PLAN_LIMITS: Record<string, {
-      maxUsers: number;
-      contacts: number;
-      aiPredictions: number;
-      storageGB: number;
-    }> = {
+    const PLAN_LIMITS: Record<
+      string,
+      {
+        maxUsers: number;
+        contacts: number;
+        aiPredictions: number;
+        storageGB: number;
+      }
+    > = {
       free: { maxUsers: 5, contacts: 500, aiPredictions: 500, storageGB: 0.5 },
       starter: { maxUsers: 5, contacts: 1000, aiPredictions: 1000, storageGB: 1 },
       professional: { maxUsers: 25, contacts: 10000, aiPredictions: 10000, storageGB: 5 },
@@ -968,12 +976,14 @@ export const billingRouter = createTRPCRouter({
     if (user?.stripeCustomerId) {
       try {
         const stripe = await getStripeAdapter();
-        const subsResult = await callStripeAPI(() => stripe.listSubscriptions(user.stripeCustomerId!));
+        const subsResult = await callStripeAPI(() =>
+          stripe.listSubscriptions(user.stripeCustomerId!)
+        );
 
         if (subsResult.isSuccess && subsResult.value.length > 0) {
-          const activeSub = subsResult.value.find(
-            (s) => s.status === 'active' || s.status === 'trialing'
-          ) ?? subsResult.value[0];
+          const activeSub =
+            subsResult.value.find((s) => s.status === 'active' || s.status === 'trialing') ??
+            subsResult.value[0];
           const parts = activeSub.priceId.split('_');
           if (parts.length >= 2 && parts[1] in PLAN_LIMITS) {
             planKey = parts[1];
@@ -1001,17 +1011,33 @@ export const billingRouter = createTRPCRouter({
     const db = ctx.prisma;
     const [
       // CRM entities
-      userCount, contactCount, leadCount, accountCount,
-      dealCount, taskCount, ticketCount, caseCount,
-      documentCount, calendarEventCount,
+      userCount,
+      contactCount,
+      leadCount,
+      accountCount,
+      dealCount,
+      taskCount,
+      ticketCount,
+      caseCount,
+      documentCount,
+      calendarEventCount,
       // AI entities
-      aiScoreCount, aiScoreThisPeriod,
-      conversationCount, messageCount, toolCallCount,
-      aiInsightCount, leadAIInsightCount, contactAIInsightCount,
-      aiOutputReviewCount, aiMonitoringEventCount,
-      agentActionCount, chainVersionCount, experimentCount,
+      aiScoreCount,
+      aiScoreThisPeriod,
+      conversationCount,
+      messageCount,
+      toolCallCount,
+      aiInsightCount,
+      leadAIInsightCount,
+      contactAIInsightCount,
+      aiOutputReviewCount,
+      aiMonitoringEventCount,
+      agentActionCount,
+      chainVersionCount,
+      experimentCount,
       // Activity
-      auditLogCount, notificationCount,
+      auditLogCount,
+      notificationCount,
     ] = await Promise.all([
       // CRM
       db.user.count({ where: { tenantId } }),
@@ -1044,7 +1070,7 @@ export const billingRouter = createTRPCRouter({
     ]);
 
     // Estimate storage: ~50KB per document average
-    const estimatedStorageGB = Math.round((documentCount * 50) / (1024 * 1024) * 100) / 100;
+    const estimatedStorageGB = Math.round(((documentCount * 50) / (1024 * 1024)) * 100) / 100;
 
     return {
       // Plan-limited metrics (with progress bars)
@@ -1384,7 +1410,9 @@ export const billingRouter = createTRPCRouter({
         `Receipt: ${receiptNumber}`,
         `Amount: ${amountFormatted}`,
         `Status: ${invoice.status}`,
-        invoice.paidAt ? `Paid: ${invoice.paidAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}` : '',
+        invoice.paidAt
+          ? `Paid: ${invoice.paidAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}`
+          : '',
         invoice.hostedInvoiceUrl ? `\nView receipt: ${invoice.hostedInvoiceUrl}` : '',
       ]
         .filter(Boolean)

@@ -188,7 +188,7 @@ function getTimezoneOffsetMinutes(date: Date, timezone: string): number {
   const tzH = getPartValue(tzParts, 'hour');
   const tzM = getPartValue(tzParts, 'minute');
 
-  let offsetMinutes = (tzH * 60 + tzM) - (utcH * 60 + utcM);
+  let offsetMinutes = tzH * 60 + tzM - (utcH * 60 + utcM);
 
   // Handle day-crossing
   if (offsetMinutes > 720) offsetMinutes -= 1440;

@@ -357,18 +357,13 @@ describe('Lead Router Security — Tenant Isolation (IFC-237)', () => {
 
   describe('T-011: Static analysis — no ctx.prisma in lead.router.ts except user lookup', () => {
     it('should have zero ctx.prisma usages apart from the allowed user lookup', () => {
-      const routerSource = readFileSync(
-        resolve(__dirname, '../lead.router.ts'),
-        'utf-8'
-      );
+      const routerSource = readFileSync(resolve(__dirname, '../lead.router.ts'), 'utf-8');
 
       // Find all ctx.prisma occurrences. The router has since been refactored
       // to use prismaWithTenant everywhere, including the cross-tenant user
       // lookup, so the allowed count is now 0.
       const matches = routerSource.match(/ctx\.prisma\b/g) ?? [];
-      const allowedPatternCount = (
-        routerSource.match(/ctx\.prisma\.user\.findMany/g) ?? []
-      ).length;
+      const allowedPatternCount = (routerSource.match(/ctx\.prisma\.user\.findMany/g) ?? []).length;
 
       expect(matches.length).toBe(allowedPatternCount);
       expect(allowedPatternCount).toBeLessThanOrEqual(1);

@@ -717,7 +717,9 @@ export const authRouter = createTRPCRouter({
         const result = await mfaService.sendSmsOtp(input.phone, userId);
         return {
           success: result.success,
-          message: result.success ? 'SMS code sent successfully' : result.error || 'Failed to send SMS',
+          message: result.success
+            ? 'SMS code sent successfully'
+            : result.error || 'Failed to send SMS',
         };
       }
 
@@ -725,7 +727,9 @@ export const authRouter = createTRPCRouter({
         const result = await mfaService.sendEmailOtp(input.email, userId);
         return {
           success: result.success,
-          message: result.success ? 'Email code sent successfully' : result.error || 'Failed to send email',
+          message: result.success
+            ? 'Email code sent successfully'
+            : result.error || 'Failed to send email',
         };
       }
 
@@ -925,57 +929,56 @@ export const authRouter = createTRPCRouter({
    * Requires re-authentication via TOTP code or password
    * PG-125: AC-002, AC-003, AC-009
    */
-  disableMfa: protectedProcedure
-    .input(disableMfaSchema)
-    .mutation(async ({ ctx, input }) => {
-      const mfaService = getMfaService(ctx.prisma);
-      const auditLogger = getAuditLogger(ctx.prisma);
+  disableMfa: protectedProcedure.input(disableMfaSchema).mutation(async ({ ctx, input }) => {
+    const mfaService = getMfaService(ctx.prisma);
+    const auditLogger = getAuditLogger(ctx.prisma);
 
-      // Rate limit check (AC-009)
-      const rateCheck = mfaDisableLimiter.check(ctx.user.userId);
-      if (!rateCheck.allowed) {
+    // Rate limit check (AC-009)
+    const rateCheck = mfaDisableLimiter.check(ctx.user.userId);
+    if (!rateCheck.allowed) {
+      throw new TRPCError({
+        code: 'TOO_MANY_REQUESTS',
+        message: `Too many attempts. Please try again in ${Math.ceil(rateCheck.retryAfterSeconds / 60)} minutes.`,
+      });
+    }
+
+    // Get current MFA settings
+    const settings = await mfaService.getUserMfaSettings(ctx.user.userId);
+    if (!settings || !(settings.totpEnabled || settings.smsEnabled || settings.emailEnabled)) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'MFA is not currently enabled',
+      });
+    }
+
+    // Re-authenticate (AC-002)
+    if (input.totpCode && settings.totpSecret) {
+      const isValid = mfaService.verifyTotpTimingSafe(settings.totpSecret, input.totpCode);
+      if (!isValid) {
         throw new TRPCError({
-          code: 'TOO_MANY_REQUESTS',
-          message: `Too many attempts. Please try again in ${Math.ceil(rateCheck.retryAfterSeconds / 60)} minutes.`,
+          code: 'UNAUTHORIZED',
+          message: 'Invalid TOTP code',
         });
       }
-
-      // Get current MFA settings
-      const settings = await mfaService.getUserMfaSettings(ctx.user.userId);
-      if (!settings || !(settings.totpEnabled || settings.smsEnabled || settings.emailEnabled)) {
+    } else if (input.password) {
+      // Verify password via Supabase (NF-003: doesn't create new session)
+      const { error } = await signIn(ctx.user.email, input.password);
+      if (error) {
         throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'MFA is not currently enabled',
+          code: 'UNAUTHORIZED',
+          message: 'Invalid password',
         });
       }
+    } else {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Either TOTP code or password required',
+      });
+    }
 
-      // Re-authenticate (AC-002)
-      if (input.totpCode && settings.totpSecret) {
-        const isValid = mfaService.verifyTotpTimingSafe(settings.totpSecret, input.totpCode);
-        if (!isValid) {
-          throw new TRPCError({
-            code: 'UNAUTHORIZED',
-            message: 'Invalid TOTP code',
-          });
-        }
-      } else if (input.password) {
-        // Verify password via Supabase (NF-003: doesn't create new session)
-        const { error } = await signIn(ctx.user.email, input.password);
-        if (error) {
-          throw new TRPCError({
-            code: 'UNAUTHORIZED',
-            message: 'Invalid password',
-          });
-        }
-      } else {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Either TOTP code or password required',
-        });
-      }
-
-      // Disable all MFA methods (AC-003)
-      await mfaService.saveUserMfaSettings({
+    // Disable all MFA methods (AC-003)
+    await mfaService.saveUserMfaSettings(
+      {
         userId: ctx.user.userId,
         totpEnabled: false,
         totpSecret: undefined,
@@ -983,22 +986,24 @@ export const authRouter = createTRPCRouter({
         smsPhone: undefined,
         emailEnabled: false,
         backupCodes: [],
-      }, ctx.user.tenantId);
+      },
+      ctx.user.tenantId
+    );
 
-      // Audit log (AC-003)
-      await auditLogger.log({
-        tenantId: ctx.user.tenantId,
-        eventType: 'MfaDisabled',
-        action: 'UPDATE',
-        actionResult: 'SUCCESS',
-        resourceType: 'user',
-        resourceId: ctx.user.userId,
-        actorId: ctx.user.userId,
-        actorEmail: ctx.user.email,
-      });
+    // Audit log (AC-003)
+    await auditLogger.log({
+      tenantId: ctx.user.tenantId,
+      eventType: 'MfaDisabled',
+      action: 'UPDATE',
+      actionResult: 'SUCCESS',
+      resourceType: 'user',
+      resourceId: ctx.user.userId,
+      actorId: ctx.user.userId,
+      actorEmail: ctx.user.email,
+    });
 
-      return { success: true };
-    }),
+    return { success: true };
+  }),
 
   /**
    * Regenerate backup codes
@@ -1034,10 +1039,13 @@ export const authRouter = createTRPCRouter({
       const hashedCodes = mfaService.hashBackupCodes(codes);
 
       // Save with new codes (invalidates old ones)
-      await mfaService.saveUserMfaSettings({
-        ...settings,
-        backupCodes: hashedCodes,
-      }, ctx.user.tenantId);
+      await mfaService.saveUserMfaSettings(
+        {
+          ...settings,
+          backupCodes: hashedCodes,
+        },
+        ctx.user.tenantId
+      );
 
       // Audit log
       await auditLogger.log({

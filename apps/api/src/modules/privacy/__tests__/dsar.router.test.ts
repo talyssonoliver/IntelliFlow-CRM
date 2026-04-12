@@ -134,9 +134,7 @@ describe('DSAR Router (Fix #17)', () => {
 
     it('rejects invalid email with BAD_REQUEST (Zod validation)', async () => {
       const caller = makeCaller();
-      await expect(
-        caller.submitDSAR({ type: 'ACCESS', email: 'not-an-email' })
-      ).rejects.toThrow();
+      await expect(caller.submitDSAR({ type: 'ACCESS', email: 'not-an-email' })).rejects.toThrow();
     });
 
     it('rejects unknown DSAR type with validation error', async () => {
@@ -152,9 +150,9 @@ describe('DSAR Router (Fix #17)', () => {
 
       const types = ['ACCESS', 'ERASURE', 'PORTABILITY', 'RESTRICTION', 'OBJECTION'] as const;
       for (const type of types) {
-        await expect(
-          caller.submitDSAR({ type, email: 'test@example.com' })
-        ).resolves.toMatchObject({ success: true });
+        await expect(caller.submitDSAR({ type, email: 'test@example.com' })).resolves.toMatchObject(
+          { success: true }
+        );
       }
     });
   });
@@ -169,7 +167,10 @@ describe('DSAR Router (Fix #17)', () => {
       mockGetStatus.mockResolvedValue({ ...DEFAULT_STATE });
 
       const caller = makeCaller();
-      const result = await caller.getDSARStatus({ requestId: REQUEST_ID, verificationToken: TOKEN });
+      const result = await caller.getDSARStatus({
+        requestId: REQUEST_ID,
+        verificationToken: TOKEN,
+      });
 
       expect(result.requestId).toBe(REQUEST_ID);
       expect(result.status).toBe('pending');
@@ -203,7 +204,10 @@ describe('DSAR Router (Fix #17)', () => {
       });
 
       const caller = makeCaller();
-      const result = await caller.getDSARStatus({ requestId: REQUEST_ID, verificationToken: TOKEN });
+      const result = await caller.getDSARStatus({
+        requestId: REQUEST_ID,
+        verificationToken: TOKEN,
+      });
 
       expect(result.status).toBe('completed');
       expect(result.dataExportUrl).toBe('https://storage.example.com/export.json');

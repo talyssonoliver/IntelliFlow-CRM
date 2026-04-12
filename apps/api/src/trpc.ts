@@ -125,7 +125,8 @@ const csrfMiddleware = t.middleware(({ ctx, type, next }) => {
 
     // 2. Custom header fallback (for non-browser clients or when Origin is stripped)
     // A cross-origin request cannot easily set custom headers without CORS preflight
-    const hasCustomHeader = ctx.req.headers.has('x-csrf-token') || ctx.req.headers.has('authorization');
+    const hasCustomHeader =
+      ctx.req.headers.has('x-csrf-token') || ctx.req.headers.has('authorization');
     if (!origin && !hasCustomHeader) {
       throw new TRPCError({
         code: 'FORBIDDEN',

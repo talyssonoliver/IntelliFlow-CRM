@@ -78,7 +78,7 @@ function buildMessageChanges(input: DraftMessageInput): Array<{
       previousValue: null,
       newValue: `${input.recipientType}: ${input.recipientId}`,
       changeType: 'ADD',
-    },
+    }
   );
   if (input.subject) {
     changes.push({

@@ -10,7 +10,10 @@ async function readJson<T>(response: Response): Promise<T> {
 }
 
 async function startTestServer(overrides?: {
-  createContext?: (opts?: { req?: Request; res?: Response }) => ReturnType<typeof createPublicContext>;
+  createContext?: (opts?: {
+    req?: Request;
+    res?: Response;
+  }) => ReturnType<typeof createPublicContext>;
 }): Promise<{ server: Server; baseUrl: string }> {
   const router = createTRPCRouter({
     hello: publicProcedure.query(() => 'world'),

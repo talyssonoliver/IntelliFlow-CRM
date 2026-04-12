@@ -52,7 +52,9 @@ describe('Account Router', () => {
     (prismaMock as any).$extends = vi.fn().mockReturnValue(prismaMock);
     (prismaMock as any).$executeRawUnsafe = vi.fn().mockResolvedValue(undefined);
     // Support $transaction for B-05 TOCTOU wrapping — pass prismaMock as tx client
-    (prismaMock as any).$transaction = vi.fn().mockImplementation(async (cb: (tx: any) => Promise<any>) => cb(prismaMock));
+    (prismaMock as any).$transaction = vi
+      .fn()
+      .mockImplementation(async (cb: (tx: any) => Promise<any>) => cb(prismaMock));
   });
 
   describe('create', () => {
@@ -150,9 +152,16 @@ describe('Account Router', () => {
 
       expect(result.id).toBe(TEST_UUIDS.account1);
       expect(result.name).toBe('TechCorp Inc');
-      expect(result.owner).toEqual({ id: TEST_UUIDS.user1, name: 'Jane Smith', email: 'jane@co.com' });
+      expect(result.owner).toEqual({
+        id: TEST_UUIDS.user1,
+        name: 'Jane Smith',
+        email: 'jane@co.com',
+      });
       expect(result._count).toEqual({ contacts: 3, opportunities: 2 });
-      expect(ctx.services!.account!.getAccountById).toHaveBeenCalledWith(TEST_UUIDS.account1, expect.any(String));
+      expect(ctx.services!.account!.getAccountById).toHaveBeenCalledWith(
+        TEST_UUIDS.account1,
+        expect.any(String)
+      );
     });
 
     it('should return owner with null name gracefully', async () => {
@@ -367,7 +376,10 @@ describe('Account Router', () => {
 
       expect(result.success).toBe(true);
       expect(result.id).toBe(TEST_UUIDS.account1);
-      expect(ctx.services!.account!.deleteAccount).toHaveBeenCalledWith(TEST_UUIDS.account1, expect.any(String));
+      expect(ctx.services!.account!.deleteAccount).toHaveBeenCalledWith(
+        TEST_UUIDS.account1,
+        expect.any(String)
+      );
     });
 
     it('should throw PRECONDITION_FAILED if account has contacts', async () => {
@@ -1588,14 +1600,25 @@ describe('Account Router', () => {
     it('should return tenant-scoped user list', async () => {
       prismaMock.user.findMany.mockResolvedValue([
         { id: 'u1', name: 'Alice', email: 'alice@co.com', role: 'ADMIN', avatarUrl: null } as any,
-        { id: 'u2', name: null, email: 'bob@co.com', role: 'SALES_REP', avatarUrl: 'https://avatar.com/bob.jpg' } as any,
+        {
+          id: 'u2',
+          name: null,
+          email: 'bob@co.com',
+          role: 'SALES_REP',
+          avatarUrl: 'https://avatar.com/bob.jpg',
+        } as any,
       ]);
 
       const result = await caller.assignees();
 
       expect(result).toHaveLength(2);
       expect(result[0]).toEqual({ id: 'u1', name: 'Alice', title: 'Administrator', avatar: null });
-      expect(result[1]).toEqual({ id: 'u2', name: 'bob@co.com', title: 'Sales Representative', avatar: 'https://avatar.com/bob.jpg' });
+      expect(result[1]).toEqual({
+        id: 'u2',
+        name: 'bob@co.com',
+        title: 'Sales Representative',
+        avatar: 'https://avatar.com/bob.jpg',
+      });
     });
   });
 
@@ -1604,11 +1627,18 @@ describe('Account Router', () => {
 
     it('should update ownerId and return success with owner', async () => {
       prismaMock.account.findFirst.mockResolvedValue(mockAccount as any);
-      prismaMock.user.findFirst.mockResolvedValue({ id: newOwnerUuid, name: 'New Owner', email: 'new@co.com', tenantId: TEST_UUIDS.tenant } as any);
+      prismaMock.user.findFirst.mockResolvedValue({
+        id: newOwnerUuid,
+        name: 'New Owner',
+        email: 'new@co.com',
+        tenantId: TEST_UUIDS.tenant,
+      } as any);
       prismaMock.account.updateMany.mockResolvedValue({ count: 1 } as any);
 
       const mockDomainAccount = createMockDomainAccount();
-      mockDomainAccount.assignOwner = vi.fn().mockReturnValue({ isSuccess: true, isFailure: false });
+      mockDomainAccount.assignOwner = vi
+        .fn()
+        .mockReturnValue({ isSuccess: true, isFailure: false });
       ctx.services!.account!.getAccountById = vi.fn().mockResolvedValue({
         isSuccess: true,
         isFailure: false,
@@ -1626,9 +1656,7 @@ describe('Account Router', () => {
 
       await expect(
         caller.assignOwner({ id: TEST_UUIDS.nonExistent, ownerId: newOwnerUuid })
-      ).rejects.toThrow(
-        expect.objectContaining({ code: 'NOT_FOUND' })
-      );
+      ).rejects.toThrow(expect.objectContaining({ code: 'NOT_FOUND' }));
     });
 
     it('should throw NOT_FOUND when target user does not exist', async () => {
@@ -1637,9 +1665,7 @@ describe('Account Router', () => {
 
       await expect(
         caller.assignOwner({ id: TEST_UUIDS.account1, ownerId: newOwnerUuid })
-      ).rejects.toThrow(
-        expect.objectContaining({ code: 'NOT_FOUND' })
-      );
+      ).rejects.toThrow(expect.objectContaining({ code: 'NOT_FOUND' }));
     });
 
     it('should reject cross-tenant user assignment (masked as NOT_FOUND)', async () => {
@@ -1648,9 +1674,7 @@ describe('Account Router', () => {
 
       await expect(
         caller.assignOwner({ id: TEST_UUIDS.account1, ownerId: TEST_UUIDS.nonExistent })
-      ).rejects.toThrow(
-        expect.objectContaining({ code: 'NOT_FOUND' })
-      );
+      ).rejects.toThrow(expect.objectContaining({ code: 'NOT_FOUND' }));
     });
   });
 });

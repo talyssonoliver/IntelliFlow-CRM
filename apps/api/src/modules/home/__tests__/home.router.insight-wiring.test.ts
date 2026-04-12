@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { homeRouter } from '../home.router';
-import { prismaMock, createTestContext, createPublicContext, TEST_UUIDS } from '../../../test/setup';
+import {
+  prismaMock,
+  createTestContext,
+  createPublicContext,
+  TEST_UUIDS,
+} from '../../../test/setup';
 
 describe('home insight wiring', () => {
   const caller = homeRouter.createCaller(createTestContext());
@@ -145,9 +150,11 @@ describe('home insight wiring', () => {
   });
 
   it('requires authentication for getInsightById and ensureInsightReview', async () => {
-    await expect(publicCaller.getInsightById({ insightId: 'insight-1' })).rejects.toThrow(TRPCError);
-    await expect(
-      publicCaller.ensureInsightReview({ insightId: 'insight-1' })
-    ).rejects.toThrow(TRPCError);
+    await expect(publicCaller.getInsightById({ insightId: 'insight-1' })).rejects.toThrow(
+      TRPCError
+    );
+    await expect(publicCaller.ensureInsightReview({ insightId: 'insight-1' })).rejects.toThrow(
+      TRPCError
+    );
   });
 });

@@ -80,16 +80,16 @@ describe('Opportunity Router — Tenant Isolation (IFC-281 AC-003/AC-004/AC-005)
 
       await expect(
         caller.update({ id: TEST_UUIDS.opportunity1, name: 'Tampered Name' })
-      ).rejects.toThrow(
-        expect.objectContaining({ code: 'NOT_FOUND' })
-      );
+      ).rejects.toThrow(expect.objectContaining({ code: 'NOT_FOUND' }));
 
       expect(ctx.services!.opportunity!.updateOpportunity).toHaveBeenCalled();
     });
 
     it('should succeed when service receives correct tenantId', async () => {
       const mockDomainOpp = createMockDomainOpportunity({ name: 'Updated Name' });
-      ctx.services!.opportunity!.updateOpportunity = vi.fn().mockResolvedValue(successResult(mockDomainOpp));
+      ctx.services!.opportunity!.updateOpportunity = vi
+        .fn()
+        .mockResolvedValue(successResult(mockDomainOpp));
 
       const result = await caller.update({ id: TEST_UUIDS.opportunity1, name: 'Updated Name' });
 
@@ -105,9 +105,7 @@ describe('Opportunity Router — Tenant Isolation (IFC-281 AC-003/AC-004/AC-005)
       // Service returns NOT_FOUND because the opportunity was not found in the requesting tenant
       ctx.services!.opportunity!.deleteOpportunity = vi.fn().mockResolvedValue(NOT_FOUND_FAILURE);
 
-      await expect(
-        caller.delete({ id: TEST_UUIDS.opportunity1 })
-      ).rejects.toThrow(
+      await expect(caller.delete({ id: TEST_UUIDS.opportunity1 })).rejects.toThrow(
         expect.objectContaining({ code: 'NOT_FOUND' })
       );
 
@@ -142,20 +140,26 @@ describe('Opportunity Router — Tenant Isolation (IFC-281 AC-003/AC-004/AC-005)
 
       await expect(
         caller.moveStage({ id: TEST_UUIDS.opportunity1, targetStage: 'NEGOTIATION' })
-      ).rejects.toThrow(
-        expect.objectContaining({ code: 'NOT_FOUND' })
-      );
+      ).rejects.toThrow(expect.objectContaining({ code: 'NOT_FOUND' }));
 
       expect(ctx.services!.opportunity!.changeStage).toHaveBeenCalled();
     });
 
     it('should succeed when service receives correct tenantId', async () => {
-      const mockDomainOpp = createMockDomainOpportunity({ stage: 'NEGOTIATION', probability: { value: 80 } });
+      const mockDomainOpp = createMockDomainOpportunity({
+        stage: 'NEGOTIATION',
+        probability: { value: 80 },
+      });
       // Pre-mutation stage lookup
       prismaMock.opportunity.findUnique.mockResolvedValue({ stage: 'PROPOSAL' } as any);
-      ctx.services!.opportunity!.changeStage = vi.fn().mockResolvedValue(successResult(mockDomainOpp));
+      ctx.services!.opportunity!.changeStage = vi
+        .fn()
+        .mockResolvedValue(successResult(mockDomainOpp));
 
-      const result = await caller.moveStage({ id: TEST_UUIDS.opportunity1, targetStage: 'NEGOTIATION' });
+      const result = await caller.moveStage({
+        id: TEST_UUIDS.opportunity1,
+        targetStage: 'NEGOTIATION',
+      });
 
       expect(result.stage).toBe('NEGOTIATION');
       expect(ctx.services!.opportunity!.changeStage).toHaveBeenCalledWith(

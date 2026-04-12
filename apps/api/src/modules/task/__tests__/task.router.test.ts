@@ -21,7 +21,9 @@ import { TRPCError } from '@trpc/server';
 vi.mock('../../../security/rbac', () => ({
   RBACService: class {
     constructor(_prisma: any) {}
-    async can() { return { granted: true }; }
+    async can() {
+      return { granted: true };
+    }
   },
 }));
 

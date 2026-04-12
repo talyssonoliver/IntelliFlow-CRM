@@ -24,7 +24,9 @@ const describeIntegration = isInfrastructureAvailable() ? describe : describe.sk
 
 // Log skip reason if not available
 if (!isInfrastructureAvailable() && getInfrastructureUnavailableReason()) {
-  console.log(`⏭️  Skipping Lead Contract Integration Tests: ${getInfrastructureUnavailableReason()}`);
+  console.log(
+    `⏭️  Skipping Lead Contract Integration Tests: ${getInfrastructureUnavailableReason()}`
+  );
 }
 
 describeIntegration('Lead Contract - Integration Tests', () => {

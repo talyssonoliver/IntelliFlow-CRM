@@ -119,11 +119,13 @@ const createAdapters = (prismaClient: PrismaClient) => {
     process.env.SUPABASE_URL || 'http://localhost:54321',
     process.env.SUPABASE_SERVICE_ROLE_KEY || 'dev-service-key'
   );
-  
+
   // AV Scanner (addressing audit finding)
   const clamAvHost = process.env.CLAMAV_HOST;
   const clamAvPort = process.env.CLAMAV_PORT ? parseInt(process.env.CLAMAV_PORT, 10) : 3310;
-  const avScanner = clamAvHost ? new ClamAVScanner({ host: clamAvHost, port: clamAvPort }) : new NoOpAVScanner();
+  const avScanner = clamAvHost
+    ? new ClamAVScanner({ host: clamAvHost, port: clamAvPort })
+    : new NoOpAVScanner();
 
   // Feature flags
   const featureFlagsConfig = loadFeatureFlagsConfig();
@@ -140,7 +142,9 @@ const createAdapters = (prismaClient: PrismaClient) => {
           temperature: process.env.OLLAMA_TEMPERATURE
             ? Number.parseFloat(process.env.OLLAMA_TEMPERATURE)
             : 0.1,
-          timeout: process.env.OLLAMA_TIMEOUT ? Number.parseInt(process.env.OLLAMA_TIMEOUT, 10) : 60_000,
+          timeout: process.env.OLLAMA_TIMEOUT
+            ? Number.parseInt(process.env.OLLAMA_TIMEOUT, 10)
+            : 60_000,
         })
       : new MockAIService();
   const cache = new InMemoryCache();

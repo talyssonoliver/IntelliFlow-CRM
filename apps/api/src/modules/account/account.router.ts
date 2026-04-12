@@ -26,10 +26,7 @@ import {
 } from '@intelliflow/validators/account';
 import { mapAccountToResponse } from '../../shared/mappers';
 import { type Context } from '../../context';
-import {
-  getTenantContext,
-  createTenantWhereClause,
-} from '../../security/tenant-context';
+import { getTenantContext, createTenantWhereClause } from '../../security/tenant-context';
 import { getAuditLogger } from '../../security/audit-logger';
 
 /**
@@ -74,10 +71,12 @@ export const accountRouter = createTRPCRouter({
     }
 
     // IFC-269 B-07: Audit logging
-    getAuditLogger(ctx.prisma).logAction('CREATE', 'account', result.value.id.value, typedCtx.tenant.tenantId, {
-      actorId: typedCtx.tenant.userId,
-      resourceName: result.value.name,
-    }).catch((err) => console.error('[account.router] Audit log failed:', err));
+    getAuditLogger(ctx.prisma)
+      .logAction('CREATE', 'account', result.value.id.value, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        resourceName: result.value.name,
+      })
+      .catch((err) => console.error('[account.router] Audit log failed:', err));
 
     return mapAccountToResponse(result.value);
   }),
@@ -95,9 +94,11 @@ export const accountRouter = createTRPCRouter({
 
     if (result.isFailure) {
       // F5: Log potential cross-tenant access attempt
-      getAuditLogger(ctx.prisma).logPermissionDenied('account', input.id, 'account:read', typedCtx.tenant.tenantId, {
-        actorId: typedCtx.tenant.userId,
-      }).catch((err) => console.error('[account.router] Audit log failed:', err));
+      getAuditLogger(ctx.prisma)
+        .logPermissionDenied('account', input.id, 'account:read', typedCtx.tenant.tenantId, {
+          actorId: typedCtx.tenant.userId,
+        })
+        .catch((err) => console.error('[account.router] Audit log failed:', err));
 
       throw new TRPCError({
         code: 'NOT_FOUND',
@@ -248,16 +249,21 @@ export const accountRouter = createTRPCRouter({
 
     // IFC-269 B-05: Wrap in transaction to prevent TOCTOU
     const result = await accountService.updateAccountInfo(
-      id, updateData, typedCtx.tenant.userId, typedCtx.tenant.tenantId
+      id,
+      updateData,
+      typedCtx.tenant.userId,
+      typedCtx.tenant.tenantId
     );
 
     if (result.isFailure) {
       const errorCode = result.error.code;
       if (errorCode === 'NOT_FOUND_ERROR') {
         // F5: Log potential cross-tenant access attempt
-        getAuditLogger(ctx.prisma).logPermissionDenied('account', id, 'account:update', typedCtx.tenant.tenantId, {
-          actorId: typedCtx.tenant.userId,
-        }).catch((err) => console.error('[account.router] Audit log failed:', err));
+        getAuditLogger(ctx.prisma)
+          .logPermissionDenied('account', id, 'account:update', typedCtx.tenant.tenantId, {
+            actorId: typedCtx.tenant.userId,
+          })
+          .catch((err) => console.error('[account.router] Audit log failed:', err));
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: result.error.message,
@@ -282,9 +288,11 @@ export const accountRouter = createTRPCRouter({
     }
 
     // IFC-269 B-07: Audit logging
-    getAuditLogger(ctx.prisma).logAction('UPDATE', 'account', id, typedCtx.tenant.tenantId, {
-      actorId: typedCtx.tenant.userId,
-    }).catch((err) => console.error('[account.router] Audit log failed:', err));
+    getAuditLogger(ctx.prisma)
+      .logAction('UPDATE', 'account', id, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+      })
+      .catch((err) => console.error('[account.router] Audit log failed:', err));
 
     return mapAccountToResponse(result.value);
   }),
@@ -306,9 +314,11 @@ export const accountRouter = createTRPCRouter({
         const isNotFound = result.error.message.includes('not found');
         if (isNotFound) {
           // F5: Log potential cross-tenant access attempt
-          getAuditLogger(ctx.prisma).logPermissionDenied('account', input.id, 'account:delete', typedCtx.tenant.tenantId, {
-            actorId: typedCtx.tenant.userId,
-          }).catch((err) => console.error('[account.router] Audit log failed:', err));
+          getAuditLogger(ctx.prisma)
+            .logPermissionDenied('account', input.id, 'account:delete', typedCtx.tenant.tenantId, {
+              actorId: typedCtx.tenant.userId,
+            })
+            .catch((err) => console.error('[account.router] Audit log failed:', err));
         }
         throw new TRPCError({
           code: isNotFound ? 'NOT_FOUND' : 'PRECONDITION_FAILED',
@@ -328,9 +338,11 @@ export const accountRouter = createTRPCRouter({
     }
 
     // IFC-269 B-07: Audit logging
-    getAuditLogger(ctx.prisma).logAction('DELETE', 'account', input.id, typedCtx.tenant.tenantId, {
-      actorId: typedCtx.tenant.userId,
-    }).catch((err) => console.error('[account.router] Audit log failed:', err));
+    getAuditLogger(ctx.prisma)
+      .logAction('DELETE', 'account', input.id, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+      })
+      .catch((err) => console.error('[account.router] Audit log failed:', err));
 
     return { success: true, id: input.id };
   }),
@@ -612,10 +624,12 @@ export const accountRouter = createTRPCRouter({
     }
 
     // IFC-269 B-07: Audit logging
-    getAuditLogger(ctx.prisma).logAction('UPDATE', 'account', input.accountId, typedCtx.tenant.tenantId, {
-      actorId: typedCtx.tenant.userId,
-      afterState: { parentAccountId: input.parentAccountId },
-    }).catch((err) => console.error('[account.router] Audit log failed:', err));
+    getAuditLogger(ctx.prisma)
+      .logAction('UPDATE', 'account', input.accountId, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        afterState: { parentAccountId: input.parentAccountId },
+      })
+      .catch((err) => console.error('[account.router] Audit log failed:', err));
 
     return mapAccountToResponse(result.value);
   }),
@@ -690,22 +704,32 @@ export const accountRouter = createTRPCRouter({
 
       if (count === 0) {
         // Account was deleted between the read above and this write (TOCTOU).
-        return { error: 'ACCOUNT_NOT_FOUND' as const, message: 'Account not found or was concurrently deleted' };
+        return {
+          error: 'ACCOUNT_NOT_FOUND' as const,
+          message: 'Account not found or was concurrently deleted',
+        };
       }
 
       return { success: true as const, targetUser };
     });
 
     if ('error' in txResult) {
-      if (txResult.error === 'ACCOUNT_NOT_FOUND' || txResult.error === 'USER_NOT_FOUND' || txResult.error === 'ACCOUNT_LOAD_FAILED') {
+      if (
+        txResult.error === 'ACCOUNT_NOT_FOUND' ||
+        txResult.error === 'USER_NOT_FOUND' ||
+        txResult.error === 'ACCOUNT_LOAD_FAILED'
+      ) {
         // F5: Log permission denied for cross-tenant attempts
-        getAuditLogger(ctx.prisma).logPermissionDenied('account', input.id, 'account:assignOwner', tenantId, {
-          actorId: typedCtx.tenant.userId,
-        }).catch((err) => console.error('[account.router] Audit log failed:', err));
+        getAuditLogger(ctx.prisma)
+          .logPermissionDenied('account', input.id, 'account:assignOwner', tenantId, {
+            actorId: typedCtx.tenant.userId,
+          })
+          .catch((err) => console.error('[account.router] Audit log failed:', err));
 
         throw new TRPCError({
           code: 'NOT_FOUND',
-          message: txResult.error === 'USER_NOT_FOUND' ? 'Target user not found' : 'Account not found',
+          message:
+            txResult.error === 'USER_NOT_FOUND' ? 'Target user not found' : 'Account not found',
         });
       }
       throw new TRPCError({
@@ -715,10 +739,12 @@ export const accountRouter = createTRPCRouter({
     }
 
     // IFC-269 B-07: Audit logging
-    getAuditLogger(ctx.prisma).logAction('UPDATE', 'account', input.id, tenantId, {
-      actorId: typedCtx.tenant.userId,
-      afterState: { ownerId: input.ownerId },
-    }).catch((err) => console.error('[account.router] Audit log failed:', err));
+    getAuditLogger(ctx.prisma)
+      .logAction('UPDATE', 'account', input.id, tenantId, {
+        actorId: typedCtx.tenant.userId,
+        afterState: { ownerId: input.ownerId },
+      })
+      .catch((err) => console.error('[account.router] Audit log failed:', err));
 
     return {
       success: true as const,

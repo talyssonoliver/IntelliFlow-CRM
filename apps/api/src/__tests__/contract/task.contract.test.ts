@@ -19,7 +19,9 @@ import { z } from 'zod';
 vi.mock('../../security/rbac', () => ({
   RBACService: class {
     constructor(_prisma: any) {}
-    async can() { return { granted: true }; }
+    async can() {
+      return { granted: true };
+    }
   },
 }));
 
@@ -490,10 +492,10 @@ describe('Task Router Contract Tests', () => {
       // Each target status needs a valid "from" status per domain state machine:
       // PENDING→IN_PROGRESS, PENDING→CANCELLED, IN_PROGRESS→COMPLETED, same→same (no-op)
       const transitions = [
-        { from: 'PENDING', to: 'PENDING' },           // same status — skips transition check
-        { from: 'PENDING', to: 'IN_PROGRESS' },       // valid transition
-        { from: 'IN_PROGRESS', to: 'COMPLETED' },     // valid transition
-        { from: 'PENDING', to: 'CANCELLED' },         // valid transition
+        { from: 'PENDING', to: 'PENDING' }, // same status — skips transition check
+        { from: 'PENDING', to: 'IN_PROGRESS' }, // valid transition
+        { from: 'IN_PROGRESS', to: 'COMPLETED' }, // valid transition
+        { from: 'PENDING', to: 'CANCELLED' }, // valid transition
       ] as const;
       for (const { from, to } of transitions) {
         // Complex updates (status, priority, etc.) go through Prisma with service validation

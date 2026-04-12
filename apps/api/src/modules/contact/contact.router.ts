@@ -70,9 +70,19 @@ type UpdateContactData = Record<string, unknown> & {
 };
 
 const CONTACT_INFO_FIELDS = [
-  'firstName', 'lastName', 'title', 'department', 'status',
-  'streetAddress', 'city', 'zipCode', 'company', 'linkedInUrl',
-  'contactType', 'tags', 'contactNotes',
+  'firstName',
+  'lastName',
+  'title',
+  'department',
+  'status',
+  'streetAddress',
+  'city',
+  'zipCode',
+  'company',
+  'linkedInUrl',
+  'contactType',
+  'tags',
+  'contactNotes',
 ] as const;
 
 /**
@@ -506,7 +516,10 @@ export const contactRouter = createTRPCRouter({
     const skip = (page - 1) * limit;
 
     // Apply tenant filtering
-    const where = createTenantWhereClause(typedCtx.tenant, buildContactListWhere({ search, accountId, ownerId, department, status }));
+    const where = createTenantWhereClause(
+      typedCtx.tenant,
+      buildContactListWhere({ search, accountId, ownerId, department, status })
+    );
 
     // Execute queries in parallel using tenant-scoped Prisma
     const [contacts, total] = await Promise.all([
@@ -581,7 +594,13 @@ export const contactRouter = createTRPCRouter({
       if (accountId === null) {
         await handleDisassociateAccount(contactService, id, typedCtx.tenant.userId);
       } else {
-        await handleAssociateAccount(contactService, id, accountId, typedCtx.tenant.userId, typedCtx.tenant.tenantId);
+        await handleAssociateAccount(
+          contactService,
+          id,
+          accountId,
+          typedCtx.tenant.userId,
+          typedCtx.tenant.tenantId
+        );
       }
     }
 
@@ -708,7 +727,10 @@ export const contactRouter = createTRPCRouter({
   // IFC-252: bypasses ContactService for tenant-scoped DB-level aggregation
   stats: tenantProcedure.query(async ({ ctx }) => {
     const typedCtx = getTenantContext(ctx);
-    const where = { ...createTenantWhereClause(typedCtx.tenant, {}), tenantId: typedCtx.tenant.tenantId };
+    const where = {
+      ...createTenantWhereClause(typedCtx.tenant, {}),
+      tenantId: typedCtx.tenant.tenantId,
+    };
 
     const [total, withAccounts, byDepartmentRaw] = await Promise.all([
       typedCtx.prismaWithTenant.contact.count({ where }),
@@ -719,7 +741,7 @@ export const contactRouter = createTRPCRouter({
     return {
       total,
       byDepartment: Object.fromEntries(
-        byDepartmentRaw.filter(g => g.department).map(g => [g.department!, g._count])
+        byDepartmentRaw.filter((g) => g.department).map((g) => [g.department!, g._count])
       ),
       withAccounts,
       withoutAccounts: total - withAccounts,
@@ -905,7 +927,10 @@ export const contactRouter = createTRPCRouter({
     const { ids } = input;
 
     const contacts = await typedCtx.prismaWithTenant.contact.findMany({
-      where: { ...createTenantWhereClause(typedCtx.tenant, { id: { in: ids } }), tenantId: typedCtx.tenant.tenantId },
+      where: {
+        ...createTenantWhereClause(typedCtx.tenant, { id: { in: ids } }),
+        tenantId: typedCtx.tenant.tenantId,
+      },
       select: { id: true, email: true },
     });
 
@@ -935,7 +960,10 @@ export const contactRouter = createTRPCRouter({
     const { ids, format } = input;
 
     const contacts = await typedCtx.prismaWithTenant.contact.findMany({
-      where: { ...createTenantWhereClause(typedCtx.tenant, { id: { in: ids } }), tenantId: typedCtx.tenant.tenantId },
+      where: {
+        ...createTenantWhereClause(typedCtx.tenant, { id: { in: ids } }),
+        tenantId: typedCtx.tenant.tenantId,
+      },
       include: {
         account: { select: { name: true } },
       },
@@ -1110,7 +1138,8 @@ export const contactRouter = createTRPCRouter({
           where: {
             contactId: input.contactId,
             ...(Object.keys(dateFilter).length > 0 && { createdAt: dateFilter }),
-            ...(cursorTimestamp && buildTaskCursorFilter(cursorTimestamp, cursorId, input.sortOrder)),
+            ...(cursorTimestamp &&
+              buildTaskCursorFilter(cursorTimestamp, cursorId, input.sortOrder)),
           },
           orderBy: { createdAt: input.sortOrder },
           take: fetchLimit,
@@ -1126,7 +1155,13 @@ export const contactRouter = createTRPCRouter({
           },
         }),
         // Notes (using ContactNote model via raw query with tenant isolation)
-        fetchContactNotes(typedCtx.prismaWithTenant, input.contactId, typedCtx.tenant.tenantId, dateFilter, fetchLimit),
+        fetchContactNotes(
+          typedCtx.prismaWithTenant,
+          input.contactId,
+          typedCtx.tenant.tenantId,
+          dateFilter,
+          fetchLimit
+        ),
       ]);
 
       // 5. Map to timeline events
@@ -1387,7 +1422,10 @@ export const contactRouter = createTRPCRouter({
         const { Queue } = await loadBullMQ();
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
         const queue = new Queue(QUEUE_NAMES.AI_PREDICTION, {
-          connection: { host: process.env.REDIS_HOST ?? 'localhost', port: Number.parseInt(process.env.REDIS_PORT || '6379', 10) },
+          connection: {
+            host: process.env.REDIS_HOST ?? 'localhost',
+            port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+          },
         });
         await queue.add('predict', {
           entityType: 'contact',

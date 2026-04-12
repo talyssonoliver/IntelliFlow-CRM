@@ -149,10 +149,16 @@ export const pipelineConfigRouter = createTRPCRouter({
 
       // IFC-281: Fire-and-forget audit logging
       const auditLogger = getAuditLogger(ctx.prisma);
-      auditLogger.logAction('UPDATE', 'pipeline_config', stageKey, tenantId, {
-        actorId: typedCtx.tenant.userId,
-        afterState: { displayName: configResult.displayName, color: configResult.color, probability: configResult.probability },
-      }).catch((err) => console.error('[pipeline-config.router] Audit log failed:', err));
+      auditLogger
+        .logAction('UPDATE', 'pipeline_config', stageKey, tenantId, {
+          actorId: typedCtx.tenant.userId,
+          afterState: {
+            displayName: configResult.displayName,
+            color: configResult.color,
+            probability: configResult.probability,
+          },
+        })
+        .catch((err) => console.error('[pipeline-config.router] Audit log failed:', err));
 
       return configResult;
     }),
@@ -206,9 +212,11 @@ export const pipelineConfigRouter = createTRPCRouter({
     // IFC-281: Fire-and-forget audit logging for bulk update
     const auditLogger = getAuditLogger(ctx.prisma);
     const stageKeys = input.stages.map((s) => s.stage);
-    auditLogger.logBulkOperation('BULK_UPDATE', 'pipeline_config', stageKeys, tenantId, {
-      actorId: typedCtx.tenant.userId,
-    }).catch((err) => console.error('[pipeline-config.router] Audit log failed:', err));
+    auditLogger
+      .logBulkOperation('BULK_UPDATE', 'pipeline_config', stageKeys, tenantId, {
+        actorId: typedCtx.tenant.userId,
+      })
+      .catch((err) => console.error('[pipeline-config.router] Audit log failed:', err));
 
     return { success: true, updatedCount: results.length };
   }),
@@ -228,10 +236,12 @@ export const pipelineConfigRouter = createTRPCRouter({
 
     // IFC-281: Fire-and-forget audit logging
     const auditLogger = getAuditLogger(ctx.prisma);
-    auditLogger.logAction('DELETE', 'pipeline_config', 'all', tenantId, {
-      actorId: typedCtx.tenant.userId,
-      metadata: { deletedCount: count },
-    }).catch((err) => console.error('[pipeline-config.router] Audit log failed:', err));
+    auditLogger
+      .logAction('DELETE', 'pipeline_config', 'all', tenantId, {
+        actorId: typedCtx.tenant.userId,
+        metadata: { deletedCount: count },
+      })
+      .catch((err) => console.error('[pipeline-config.router] Audit log failed:', err));
 
     return { success: true, deletedCount: count };
   }),

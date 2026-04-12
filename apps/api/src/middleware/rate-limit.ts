@@ -32,7 +32,7 @@ interface WindowState {
 
 interface MiddlewareOpts {
   ctx: Context;
-   
+
   next: (opts?: { ctx: unknown }) => Promise<any>;
 }
 

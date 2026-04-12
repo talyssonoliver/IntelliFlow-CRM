@@ -18,11 +18,20 @@ import { createTestContext, createPublicContext } from '../../../test/setup';
 // BullMQ Mock — class-based (matching intelligence.router.test.ts pattern)
 // ---------------------------------------------------------------------------
 
-const mockGetJobCounts = vi.fn().mockResolvedValue({ waiting: 5, active: 2, completed: 100, failed: 3, delayed: 1 });
+const mockGetJobCounts = vi
+  .fn()
+  .mockResolvedValue({ waiting: 5, active: 2, completed: 100, failed: 3, delayed: 1 });
 const mockIsPaused = vi.fn().mockResolvedValue(false);
 const mockPause = vi.fn().mockResolvedValue(undefined);
 const mockResume = vi.fn().mockResolvedValue(undefined);
-const mockGetJobSchedulers = vi.fn().mockResolvedValue([{ id: 'scheduler-1', name: 'scheduled-insight-refresh', pattern: '0 */6 * * *', next: Date.now() + 3600000 }]);
+const mockGetJobSchedulers = vi.fn().mockResolvedValue([
+  {
+    id: 'scheduler-1',
+    name: 'scheduled-insight-refresh',
+    pattern: '0 */6 * * *',
+    next: Date.now() + 3600000,
+  },
+]);
 const mockRetryJobs = vi.fn().mockResolvedValue(undefined);
 const mockRemoveJobScheduler = vi.fn().mockResolvedValue(true);
 const mockClose = vi.fn().mockResolvedValue(undefined);
@@ -58,7 +67,9 @@ import { queuesAdminRouter } from '../queues.router';
 // Helpers
 // ---------------------------------------------------------------------------
 
-function createMockScheduler(overrides?: Partial<{ id: string; name: string; pattern: string; next: number }>) {
+function createMockScheduler(
+  overrides?: Partial<{ id: string; name: string; pattern: string; next: number }>
+) {
   return {
     id: 'scheduler-1',
     name: 'scheduled-insight-refresh',
@@ -69,7 +80,13 @@ function createMockScheduler(overrides?: Partial<{ id: string; name: string; pat
 }
 
 function setupDefaultMocks() {
-  mockGetJobCounts.mockImplementation(async () => ({ waiting: 5, active: 2, completed: 100, failed: 3, delayed: 1 }));
+  mockGetJobCounts.mockImplementation(async () => ({
+    waiting: 5,
+    active: 2,
+    completed: 100,
+    failed: 3,
+    delayed: 1,
+  }));
   mockIsPaused.mockImplementation(async () => false);
   mockGetJobSchedulers.mockImplementation(async () => [createMockScheduler()]);
   mockPause.mockImplementation(async () => undefined);
@@ -211,9 +228,7 @@ describe('queuesAdminRouter', () => {
     it('retryFailed when queue.retryJobs() throws returns INTERNAL_SERVER_ERROR', async () => {
       mockRetryJobs.mockRejectedValue(new Error('Redis OOM'));
 
-      await expect(
-        caller.retryFailed({ name: 'ai-scoring', count: 10 })
-      ).rejects.toMatchObject({
+      await expect(caller.retryFailed({ name: 'ai-scoring', count: 10 })).rejects.toMatchObject({
         code: 'INTERNAL_SERVER_ERROR',
       });
       expect(mockClose).toHaveBeenCalledTimes(1);
@@ -265,33 +280,25 @@ describe('queuesAdminRouter', () => {
   // =========================================================================
   describe('Category C: Input Validation', () => {
     it('getByName with invalid queue name is rejected by Zod', async () => {
-      await expect(
-        caller.getByName({ name: 'invalid-queue' as any })
-      ).rejects.toMatchObject({
+      await expect(caller.getByName({ name: 'invalid-queue' as any })).rejects.toMatchObject({
         code: 'BAD_REQUEST',
       });
     });
 
     it('deleteScheduler with missing schedulerId is rejected by Zod', async () => {
-      await expect(
-        caller.deleteScheduler({ name: 'ai-scoring' } as any)
-      ).rejects.toMatchObject({
+      await expect(caller.deleteScheduler({ name: 'ai-scoring' } as any)).rejects.toMatchObject({
         code: 'BAD_REQUEST',
       });
     });
 
     it('retryFailed with count > 100 is rejected by Zod', async () => {
-      await expect(
-        caller.retryFailed({ name: 'ai-scoring', count: 101 })
-      ).rejects.toMatchObject({
+      await expect(caller.retryFailed({ name: 'ai-scoring', count: 101 })).rejects.toMatchObject({
         code: 'BAD_REQUEST',
       });
     });
 
     it('retryFailed with count < 1 is rejected by Zod', async () => {
-      await expect(
-        caller.retryFailed({ name: 'ai-scoring', count: 0 })
-      ).rejects.toMatchObject({
+      await expect(caller.retryFailed({ name: 'ai-scoring', count: 0 })).rejects.toMatchObject({
         code: 'BAD_REQUEST',
       });
     });
@@ -312,9 +319,7 @@ describe('queuesAdminRouter', () => {
     it('unauthenticated caller on pause throws UNAUTHORIZED', async () => {
       const publicCaller = queuesAdminRouter.createCaller(createPublicContext());
 
-      await expect(
-        publicCaller.pause({ name: 'ai-scoring' })
-      ).rejects.toMatchObject({
+      await expect(publicCaller.pause({ name: 'ai-scoring' })).rejects.toMatchObject({
         code: 'UNAUTHORIZED',
       });
     });
@@ -326,7 +331,11 @@ describe('queuesAdminRouter', () => {
   describe('Category E: Edge Cases', () => {
     it('list when all queues have 0 jobs returns all 3 with zero counts', async () => {
       mockGetJobCounts.mockResolvedValue({
-        waiting: 0, active: 0, completed: 0, failed: 0, delayed: 0,
+        waiting: 0,
+        active: 0,
+        completed: 0,
+        failed: 0,
+        delayed: 0,
       });
       mockGetJobSchedulers.mockResolvedValue([]);
 
@@ -388,9 +397,7 @@ describe('queuesAdminRouter', () => {
 
     it('formatQueueStats handles scheduler with key instead of id', async () => {
       // Scheduler entry with `key` instead of `id`, and missing optional fields
-      mockGetJobSchedulers.mockResolvedValue([
-        { key: 'key-1', name: 'test-scheduler' },
-      ]);
+      mockGetJobSchedulers.mockResolvedValue([{ key: 'key-1', name: 'test-scheduler' }]);
 
       const result = await caller.getByName({ name: 'ai-scoring' });
 
@@ -404,9 +411,7 @@ describe('queuesAdminRouter', () => {
 
     it('formatQueueStats handles scheduler with no id or key', async () => {
       // Scheduler with no id/key — forces empty string fallback
-      mockGetJobSchedulers.mockResolvedValue([
-        { name: 'orphan-scheduler' },
-      ]);
+      mockGetJobSchedulers.mockResolvedValue([{ name: 'orphan-scheduler' }]);
 
       const result = await caller.getByName({ name: 'ai-scoring' });
 

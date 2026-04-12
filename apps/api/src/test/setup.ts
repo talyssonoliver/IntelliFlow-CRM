@@ -222,7 +222,9 @@ function normalizeHeaders(headers?: HeaderLike): Headers | undefined {
 
   return {
     get(name: string): string | null {
-      const key = Object.keys(headerSource).find((candidate) => candidate.toLowerCase() === name.toLowerCase());
+      const key = Object.keys(headerSource).find(
+        (candidate) => candidate.toLowerCase() === name.toLowerCase()
+      );
 
       let value: unknown;
       if (typeof headerSource.get === 'function') {

@@ -138,9 +138,7 @@ describe('Ticket Config Router', () => {
 
     it('throws NOT_FOUND for non-existent policy', async () => {
       (prismaMock.sLAPolicy.findFirst as any).mockResolvedValue(null);
-      await expect(
-        caller.slaPolicy.update({ id: 'non-existent', name: 'Test' })
-      ).rejects.toThrow();
+      await expect(caller.slaPolicy.update({ id: 'non-existent', name: 'Test' })).rejects.toThrow();
     });
   });
 
@@ -233,9 +231,7 @@ describe('Ticket Config Router', () => {
 
     it('throws NOT_FOUND for non-existent category', async () => {
       (prismaMock.ticketCategory.findFirst as any).mockResolvedValue(null);
-      await expect(
-        caller.category.update({ id: 'non-existent', name: 'Test' })
-      ).rejects.toThrow();
+      await expect(caller.category.update({ id: 'non-existent', name: 'Test' })).rejects.toThrow();
     });
   });
 
@@ -256,9 +252,7 @@ describe('Ticket Config Router', () => {
       (prismaMock.ticketCategory.findFirst as any).mockResolvedValue(mockCategory);
       (prismaMock.ticketCategory.count as any).mockResolvedValue(2);
 
-      await expect(caller.category.delete({ id: 'cat-1' })).rejects.toThrow(
-        /active child/i
-      );
+      await expect(caller.category.delete({ id: 'cat-1' })).rejects.toThrow(/active child/i);
     });
   });
 

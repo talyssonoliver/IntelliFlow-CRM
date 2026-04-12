@@ -113,10 +113,7 @@ describe('Lead Settings Router', () => {
     });
 
     it('returns existing stages ordered by sortOrder without seeding', async () => {
-      (prismaMock.leadStageConfig.findMany as any).mockResolvedValueOnce([
-        mockStage,
-        mockStage2,
-      ]);
+      (prismaMock.leadStageConfig.findMany as any).mockResolvedValueOnce([mockStage, mockStage2]);
 
       const result = await caller.stages.getAll();
 
@@ -178,7 +175,13 @@ describe('Lead Settings Router', () => {
       await expect(
         caller.stages.updateAll({
           stages: [
-            { stageKey: 'NEW', displayName: 'New', color: '#3B82F6', sortOrder: 0, isDefault: false },
+            {
+              stageKey: 'NEW',
+              displayName: 'New',
+              color: '#3B82F6',
+              sortOrder: 0,
+              isDefault: false,
+            },
           ],
         })
       ).rejects.toThrow(/exactly one stage must be marked as default/i);
@@ -188,8 +191,20 @@ describe('Lead Settings Router', () => {
       await expect(
         caller.stages.updateAll({
           stages: [
-            { stageKey: 'NEW', displayName: 'New', color: '#3B82F6', sortOrder: 0, isDefault: true },
-            { stageKey: 'CONTACTED', displayName: 'Contacted', color: '#F59E0B', sortOrder: 1, isDefault: true },
+            {
+              stageKey: 'NEW',
+              displayName: 'New',
+              color: '#3B82F6',
+              sortOrder: 0,
+              isDefault: true,
+            },
+            {
+              stageKey: 'CONTACTED',
+              displayName: 'Contacted',
+              color: '#F59E0B',
+              sortOrder: 1,
+              isDefault: true,
+            },
           ],
         })
       ).rejects.toThrow(/exactly one stage must be marked as default/i);
@@ -298,7 +313,12 @@ describe('Lead Settings Router', () => {
       expect(tx.leadScoringRule.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { tenantId_activityType: { tenantId, activityType: 'EMAIL_OPEN' } },
-          create: expect.objectContaining({ tenantId, activityType: 'EMAIL_OPEN', points: 10, isActive: true }),
+          create: expect.objectContaining({
+            tenantId,
+            activityType: 'EMAIL_OPEN',
+            points: 10,
+            isActive: true,
+          }),
           update: expect.objectContaining({ isActive: true }),
         })
       );
@@ -365,7 +385,9 @@ describe('Lead Settings Router', () => {
   describe('customFields.create', () => {
     it('generates fieldKey from fieldName and creates field', async () => {
       (prismaMock.leadCustomField.findUnique as any).mockResolvedValue(null); // no duplicate
-      (prismaMock.leadCustomField.aggregate as any).mockResolvedValue({ _max: { sortOrder: null } });
+      (prismaMock.leadCustomField.aggregate as any).mockResolvedValue({
+        _max: { sortOrder: null },
+      });
       (prismaMock.leadCustomField.create as any).mockResolvedValue(mockCustomField);
 
       const result = await caller.customFields.create({
@@ -412,7 +434,9 @@ describe('Lead Settings Router', () => {
 
     it('checks for duplicate using tenantId-scoped unique key', async () => {
       (prismaMock.leadCustomField.findUnique as any).mockResolvedValue(null);
-      (prismaMock.leadCustomField.aggregate as any).mockResolvedValue({ _max: { sortOrder: null } });
+      (prismaMock.leadCustomField.aggregate as any).mockResolvedValue({
+        _max: { sortOrder: null },
+      });
       (prismaMock.leadCustomField.create as any).mockResolvedValue(mockCustomField);
 
       await caller.customFields.create({ fieldName: 'My Field', dataType: 'text' });
@@ -499,9 +523,7 @@ describe('Lead Settings Router', () => {
     it('throws NOT_FOUND when field does not exist for tenant', async () => {
       (prismaMock.leadCustomField.findFirst as any).mockResolvedValue(null);
 
-      await expect(
-        caller.customFields.delete({ id: 'ghost-field' })
-      ).rejects.toThrow(/not found/i);
+      await expect(caller.customFields.delete({ id: 'ghost-field' })).rejects.toThrow(/not found/i);
     });
   });
 

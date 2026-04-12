@@ -46,10 +46,16 @@ function makeCtx(overrides?: {
       userId: '00000000-0000-4000-8000-000000000103',
       email: 'test@example.com',
       role: 'USER',
-      tenantId: overrides && 'tenantId' in overrides ? overrides.tenantId : '00000000-0000-4000-8000-000000000001',
+      tenantId:
+        overrides && 'tenantId' in overrides
+          ? overrides.tenantId
+          : '00000000-0000-4000-8000-000000000001',
     } as any, // test-only mock
     tenant: {
-      tenantId: overrides && 'tenantId' in overrides ? overrides.tenantId : '00000000-0000-4000-8000-000000000001',
+      tenantId:
+        overrides && 'tenantId' in overrides
+          ? overrides.tenantId
+          : '00000000-0000-4000-8000-000000000001',
       tenantType: 'user' as const,
       userId: '00000000-0000-4000-8000-000000000103',
       role: 'USER',
@@ -195,7 +201,10 @@ describe('analyticsRouter', () => {
       const result = await caller.dealsWonTrend({ months: 6 });
 
       expect(result).toEqual(mockTrend);
-      expect(mockAnalyticsService.getDealsWonTrend).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000001', 6);
+      expect(mockAnalyticsService.getDealsWonTrend).toHaveBeenCalledWith(
+        '00000000-0000-4000-8000-000000000001',
+        6
+      );
     });
 
     it('should use default months value of 6', async () => {
@@ -220,7 +229,10 @@ describe('analyticsRouter', () => {
 
       await caller.dealsWonTrend({});
 
-      expect(mockAnalyticsService.getDealsWonTrend).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000001', 6);
+      expect(mockAnalyticsService.getDealsWonTrend).toHaveBeenCalledWith(
+        '00000000-0000-4000-8000-000000000001',
+        6
+      );
     });
 
     it('should accept months between 1 and 12', async () => {
@@ -245,11 +257,17 @@ describe('analyticsRouter', () => {
 
       // Test minimum value
       await caller.dealsWonTrend({ months: 1 });
-      expect(mockAnalyticsService.getDealsWonTrend).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000001', 1);
+      expect(mockAnalyticsService.getDealsWonTrend).toHaveBeenCalledWith(
+        '00000000-0000-4000-8000-000000000001',
+        1
+      );
 
       // Test maximum value
       await caller.dealsWonTrend({ months: 12 });
-      expect(mockAnalyticsService.getDealsWonTrend).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000001', 12);
+      expect(mockAnalyticsService.getDealsWonTrend).toHaveBeenCalledWith(
+        '00000000-0000-4000-8000-000000000001',
+        12
+      );
     });
   });
 
@@ -290,7 +308,11 @@ describe('analyticsRouter', () => {
       const result = await caller.growthTrends({ metric: 'revenue', months: 12 });
 
       expect(result).toEqual(mockTrends);
-      expect(mockAnalyticsService.getGrowthTrend).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000001', 'revenue', 12);
+      expect(mockAnalyticsService.getGrowthTrend).toHaveBeenCalledWith(
+        '00000000-0000-4000-8000-000000000001',
+        'revenue',
+        12
+      );
     });
 
     it('should return leads growth trends', async () => {
@@ -315,7 +337,11 @@ describe('analyticsRouter', () => {
 
       await caller.growthTrends({ metric: 'leads', months: 6 });
 
-      expect(mockAnalyticsService.getGrowthTrend).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000001', 'leads', 6);
+      expect(mockAnalyticsService.getGrowthTrend).toHaveBeenCalledWith(
+        '00000000-0000-4000-8000-000000000001',
+        'leads',
+        6
+      );
     });
 
     it('should return deals growth trends', async () => {
@@ -340,7 +366,11 @@ describe('analyticsRouter', () => {
 
       await caller.growthTrends({ metric: 'deals', months: 3 });
 
-      expect(mockAnalyticsService.getGrowthTrend).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000001', 'deals', 3);
+      expect(mockAnalyticsService.getGrowthTrend).toHaveBeenCalledWith(
+        '00000000-0000-4000-8000-000000000001',
+        'deals',
+        3
+      );
     });
 
     it('should return contacts growth trends', async () => {
@@ -365,7 +395,11 @@ describe('analyticsRouter', () => {
 
       await caller.growthTrends({ metric: 'contacts', months: 9 });
 
-      expect(mockAnalyticsService.getGrowthTrend).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000001', 'contacts', 9);
+      expect(mockAnalyticsService.getGrowthTrend).toHaveBeenCalledWith(
+        '00000000-0000-4000-8000-000000000001',
+        'contacts',
+        9
+      );
     });
 
     it('should use default months value of 12', async () => {
@@ -390,7 +424,11 @@ describe('analyticsRouter', () => {
 
       await caller.growthTrends({ metric: 'revenue' });
 
-      expect(mockAnalyticsService.getGrowthTrend).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000001', 'revenue', 12);
+      expect(mockAnalyticsService.getGrowthTrend).toHaveBeenCalledWith(
+        '00000000-0000-4000-8000-000000000001',
+        'revenue',
+        12
+      );
     });
   });
 
@@ -429,7 +467,9 @@ describe('analyticsRouter', () => {
       const result = await caller.trafficSources();
 
       expect(result).toEqual(mockSources);
-      expect(mockAnalyticsService.getTrafficSources).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000001');
+      expect(mockAnalyticsService.getTrafficSources).toHaveBeenCalledWith(
+        '00000000-0000-4000-8000-000000000001'
+      );
     });
 
     it('should return empty array when no traffic sources', async () => {
@@ -497,7 +537,10 @@ describe('analyticsRouter', () => {
       const result = await caller.recentActivity({ limit: 10 });
 
       expect(result).toEqual(mockActivities);
-      expect(mockAnalyticsService.getRecentActivity).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000001', 10);
+      expect(mockAnalyticsService.getRecentActivity).toHaveBeenCalledWith(
+        '00000000-0000-4000-8000-000000000001',
+        10
+      );
     });
 
     it('should use default limit of 10', async () => {
@@ -522,7 +565,10 @@ describe('analyticsRouter', () => {
 
       await caller.recentActivity({});
 
-      expect(mockAnalyticsService.getRecentActivity).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000001', 10);
+      expect(mockAnalyticsService.getRecentActivity).toHaveBeenCalledWith(
+        '00000000-0000-4000-8000-000000000001',
+        10
+      );
     });
 
     it('should accept limit between 1 and 50', async () => {
@@ -547,11 +593,17 @@ describe('analyticsRouter', () => {
 
       // Test minimum value
       await caller.recentActivity({ limit: 1 });
-      expect(mockAnalyticsService.getRecentActivity).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000001', 1);
+      expect(mockAnalyticsService.getRecentActivity).toHaveBeenCalledWith(
+        '00000000-0000-4000-8000-000000000001',
+        1
+      );
 
       // Test maximum value
       await caller.recentActivity({ limit: 50 });
-      expect(mockAnalyticsService.getRecentActivity).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000001', 50);
+      expect(mockAnalyticsService.getRecentActivity).toHaveBeenCalledWith(
+        '00000000-0000-4000-8000-000000000001',
+        50
+      );
     });
 
     it('should return empty array when no activities', async () => {
@@ -615,7 +667,9 @@ describe('analyticsRouter', () => {
       const result = await caller.leadStats();
 
       expect(result).toEqual(mockStats);
-      expect(mockAnalyticsService.getLeadStats).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000001');
+      expect(mockAnalyticsService.getLeadStats).toHaveBeenCalledWith(
+        '00000000-0000-4000-8000-000000000001'
+      );
     });
 
     it('should return zeros when no leads exist', async () => {
@@ -965,7 +1019,10 @@ describe('analyticsRouter', () => {
       expect(result.totalRevenue).toBe(500000);
       expect(result.winRate).toBe(65);
       expect(result.recentActivity).toHaveLength(1);
-      expect(mockAnalyticsService.getOverview).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000001', undefined);
+      expect(mockAnalyticsService.getOverview).toHaveBeenCalledWith(
+        '00000000-0000-4000-8000-000000000001',
+        undefined
+      );
     });
 
     it('should return zeros and empty arrays when no data', async () => {

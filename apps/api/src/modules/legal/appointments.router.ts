@@ -79,7 +79,12 @@ const recurrenceSchema = z
 const ianaTimezoneSchema = z.string().refine(
   (tz) => {
     if (tz === 'UTC' || tz.includes('/')) {
-      try { Intl.DateTimeFormat(undefined, { timeZone: tz }); return true; } catch { return false; }
+      try {
+        Intl.DateTimeFormat(undefined, { timeZone: tz });
+        return true;
+      } catch {
+        return false;
+      }
     }
     return false;
   },
@@ -171,6 +176,62 @@ function userScopeFilter(user: { userId: string; role: string }) {
   return {
     OR: [{ organizerId: user.userId }, { attendees: { some: { userId: user.userId } } }],
   };
+}
+
+/**
+ * Business-hours window (inclusive start, exclusive end) in 24-hour clock,
+ * matching the calendar's day boundaries: 07:00 – 19:00.
+ * Update both sides in sync if the range changes.
+ */
+const BUSINESS_HOURS_START = 7;
+const BUSINESS_HOURS_END = 19;
+
+function getLocalHour(date: Date, timezone?: string): number {
+  const tz = timezone ?? 'UTC';
+  // Use en-GB to get 24-hour format reliably
+  const hourStr = new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    hour12: false,
+    timeZone: tz,
+  }).format(date);
+  // en-GB can return "24" for midnight in some engines — normalise
+  const hour = parseInt(hourStr, 10);
+  return hour === 24 ? 0 : hour;
+}
+
+/**
+ * Validates that the appointment's start and end fall within business hours
+ * (07:00 – 19:00) in the provided timezone. Throws a BAD_REQUEST if outside.
+ */
+function assertWithinBusinessHours(
+  startTime: Date,
+  endTime: Date,
+  timezone?: string
+): void {
+  const startHour = getLocalHour(startTime, timezone);
+  const endHour = getLocalHour(endTime, timezone);
+  const startWithinDay = startHour >= BUSINESS_HOURS_START && startHour < BUSINESS_HOURS_END;
+  // End boundary: end hour == 19 is OK when minutes are 00 (meeting ends at 19:00 sharp)
+  const endMinutes = parseInt(
+    new Intl.DateTimeFormat('en-GB', {
+      minute: '2-digit',
+      timeZone: timezone ?? 'UTC',
+    }).format(endTime),
+    10
+  );
+  const endWithinDay =
+    (endHour >= BUSINESS_HOURS_START && endHour < BUSINESS_HOURS_END) ||
+    (endHour === BUSINESS_HOURS_END && endMinutes === 0);
+
+  if (!startWithinDay || !endWithinDay) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: `Appointments must start and end between ${String(BUSINESS_HOURS_START).padStart(
+        2,
+        '0'
+      )}:00 and ${String(BUSINESS_HOURS_END).padStart(2, '0')}:00.`,
+    });
+  }
 }
 
 /**
@@ -300,6 +361,9 @@ export const appointmentsRouter = createTRPCRouter({
     const startTime = performance.now();
 
     try {
+      // Reject appointments outside business hours (07:00 – 19:00).
+      assertWithinBusinessHours(input.startTime, input.endTime, input.timezone);
+
       // Use domain service for input validation
       const validation = AppointmentDomainService.validateInput({
         title: input.title,
@@ -460,18 +524,22 @@ export const appointmentsRouter = createTRPCRouter({
     );
 
     // Notify organizer of scheduled appointment
-    createNotification(ctx.prismaWithTenant, {
-      userId: ctx.user.userId,
-      tenantId,
-      type: 'appointment_scheduled',
-      title: 'Appointment scheduled',
-      body: `Appointment "${input.title}" scheduled for ${input.startTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: safeTimezone(ctx.user?.timezone) })}`,
-      priority: 'normal',
-      entityType: 'appointment',
-      entityId: appointment.id,
-      entityName: input.title,
-      actionUrl: `/calendar/${appointment.id}`,
-    }, ctx.services?.notificationOrchestrator).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
+    createNotification(
+      ctx.prismaWithTenant,
+      {
+        userId: ctx.user.userId,
+        tenantId,
+        type: 'appointment_scheduled',
+        title: 'Appointment scheduled',
+        body: `Appointment "${input.title}" scheduled for ${input.startTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: safeTimezone(ctx.user?.timezone) })}`,
+        priority: 'normal',
+        entityType: 'appointment',
+        entityId: appointment.id,
+        entityName: input.title,
+        actionUrl: `/calendar/${appointment.id}`,
+      },
+      ctx.services?.notificationOrchestrator
+    ).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
 
     return appointment;
   }),
@@ -630,6 +698,9 @@ export const appointmentsRouter = createTRPCRouter({
   reschedule: tenantProcedure.input(rescheduleSchema).mutation(async ({ ctx, input }) => {
     const startTime = performance.now();
 
+    // Reject rescheduling outside business hours (07:00 – 19:00).
+    assertWithinBusinessHours(input.newStartTime, input.newEndTime);
+
     const existing = await ctx.prismaWithTenant.appointment.findUnique({
       where: { id: input.id },
       include: {
@@ -758,18 +829,22 @@ export const appointmentsRouter = createTRPCRouter({
     ).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
 
     // Notify organizer of rescheduled appointment
-    createNotification(ctx.prismaWithTenant, {
-      userId: existing.organizerId,
-      tenantId: ctx.user.tenantId,
-      type: 'appointment_rescheduled',
-      title: 'Appointment rescheduled',
-      body: `Appointment "${existing.title}" has been rescheduled`,
-      priority: 'normal',
-      entityType: 'appointment',
-      entityId: appointment.id,
-      entityName: existing.title,
-      actionUrl: `/calendar/${appointment.id}`,
-    }, ctx.services?.notificationOrchestrator).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
+    createNotification(
+      ctx.prismaWithTenant,
+      {
+        userId: existing.organizerId,
+        tenantId: ctx.user.tenantId,
+        type: 'appointment_rescheduled',
+        title: 'Appointment rescheduled',
+        body: `Appointment "${existing.title}" has been rescheduled`,
+        priority: 'normal',
+        entityType: 'appointment',
+        entityId: appointment.id,
+        entityName: existing.title,
+        actionUrl: `/calendar/${appointment.id}`,
+      },
+      ctx.services?.notificationOrchestrator
+    ).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
 
     return {
       appointment,
@@ -783,38 +858,36 @@ export const appointmentsRouter = createTRPCRouter({
   /**
    * Confirm an appointment
    */
-  confirm: tenantProcedure
-    .input(z.object({ id: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.prismaWithTenant.appointment.findUnique({
-        where: { id: input.id },
+  confirm: tenantProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
+    const existing = await ctx.prismaWithTenant.appointment.findUnique({
+      where: { id: input.id },
+    });
+
+    if (!existing) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Appointment with ID ${input.id} not found`,
       });
+    }
 
-      if (!existing) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: `Appointment with ID ${input.id} not found`,
-        });
-      }
-
-      if (existing.status !== 'SCHEDULED') {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: `Cannot confirm appointment with status ${existing.status}`,
-        });
-      }
-
-      const appointment = await ctx.prismaWithTenant.appointment.update({
-        where: { id: input.id },
-        data: { status: 'CONFIRMED' },
-        include: {
-          attendees: true,
-          linkedCases: true,
-        },
+    if (existing.status !== 'SCHEDULED') {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: `Cannot confirm appointment with status ${existing.status}`,
       });
+    }
 
-      return appointment;
-    }),
+    const appointment = await ctx.prismaWithTenant.appointment.update({
+      where: { id: input.id },
+      data: { status: 'CONFIRMED' },
+      include: {
+        attendees: true,
+        linkedCases: true,
+      },
+    });
+
+    return appointment;
+  }),
 
   /**
    * Complete an appointment
@@ -954,26 +1027,24 @@ export const appointmentsRouter = createTRPCRouter({
   /**
    * Delete an appointment
    */
-  delete: tenantProcedure
-    .input(z.object({ id: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.prismaWithTenant.appointment.findUnique({
-        where: { id: input.id },
+  delete: tenantProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
+    const existing = await ctx.prismaWithTenant.appointment.findUnique({
+      where: { id: input.id },
+    });
+
+    if (!existing) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Appointment with ID ${input.id} not found`,
       });
+    }
 
-      if (!existing) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: `Appointment with ID ${input.id} not found`,
-        });
-      }
+    await ctx.prismaWithTenant.appointment.delete({
+      where: { id: input.id },
+    });
 
-      await ctx.prismaWithTenant.appointment.delete({
-        where: { id: input.id },
-      });
-
-      return { success: true, id: input.id };
-    }),
+    return { success: true, id: input.id };
+  }),
 
   /**
    * Check for scheduling conflicts

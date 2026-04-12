@@ -366,18 +366,22 @@ export const casesRouter = createTRPCRouter({
 
     // Notify assignee
     if (assignedTo) {
-      createNotification(ctx.prismaWithTenant, {
-        userId: assignedTo,
-        tenantId,
-        type: 'case_assigned',
-        title: 'Case assigned to you',
-        body: `Case "${input.title}" has been assigned to you`,
-        priority: 'normal',
-        entityType: 'case',
-        entityId: caseData.id,
-        entityName: input.title,
-        actionUrl: `/cases/${caseData.id}`,
-      }, ctx.services?.notificationOrchestrator).catch((err) => console.error('[cases.router] Notification failed:', err));
+      createNotification(
+        ctx.prismaWithTenant,
+        {
+          userId: assignedTo,
+          tenantId,
+          type: 'case_assigned',
+          title: 'Case assigned to you',
+          body: `Case "${input.title}" has been assigned to you`,
+          priority: 'normal',
+          entityType: 'case',
+          entityId: caseData.id,
+          entityName: input.title,
+          actionUrl: `/cases/${caseData.id}`,
+        },
+        ctx.services?.notificationOrchestrator
+      ).catch((err) => console.error('[cases.router] Notification failed:', err));
     }
 
     return caseData;
@@ -455,18 +459,22 @@ export const casesRouter = createTRPCRouter({
 
     // Notify on status change
     const statusChangeUserId = existing.assignedTo || (ctx.user as { id?: string })?.id || 'system';
-    createNotification(ctx.prismaWithTenant, {
-      userId: statusChangeUserId,
-      tenantId,
-      type: 'case_status_changed',
-      title: 'Case status changed',
-      body: `Case "${existing.title}" status changed to ${input.status}`,
-      priority: 'normal',
-      entityType: 'case',
-      entityId: caseData.id,
-      entityName: existing.title,
-      actionUrl: `/cases/${caseData.id}`,
-    }, ctx.services?.notificationOrchestrator).catch((err) => console.error('[cases.router] Notification failed:', err));
+    createNotification(
+      ctx.prismaWithTenant,
+      {
+        userId: statusChangeUserId,
+        tenantId,
+        type: 'case_status_changed',
+        title: 'Case status changed',
+        body: `Case "${existing.title}" status changed to ${input.status}`,
+        priority: 'normal',
+        entityType: 'case',
+        entityId: caseData.id,
+        entityName: existing.title,
+        actionUrl: `/cases/${caseData.id}`,
+      },
+      ctx.services?.notificationOrchestrator
+    ).catch((err) => console.error('[cases.router] Notification failed:', err));
 
     return caseData;
   }),
@@ -501,18 +509,22 @@ export const casesRouter = createTRPCRouter({
 
     // Notify on case closure
     const closeUserId = existing.assignedTo || (ctx.user as { id?: string })?.id || 'system';
-    createNotification(ctx.prismaWithTenant, {
-      userId: closeUserId,
-      tenantId,
-      type: 'case_closed',
-      title: 'Case closed',
-      body: `Case "${existing.title}" has been closed`,
-      priority: 'normal',
-      entityType: 'case',
-      entityId: caseData.id,
-      entityName: existing.title,
-      actionUrl: `/cases/${caseData.id}`,
-    }, ctx.services?.notificationOrchestrator).catch((err) => console.error('[cases.router] Notification failed:', err));
+    createNotification(
+      ctx.prismaWithTenant,
+      {
+        userId: closeUserId,
+        tenantId,
+        type: 'case_closed',
+        title: 'Case closed',
+        body: `Case "${existing.title}" has been closed`,
+        priority: 'normal',
+        entityType: 'case',
+        entityId: caseData.id,
+        entityName: existing.title,
+        actionUrl: `/cases/${caseData.id}`,
+      },
+      ctx.services?.notificationOrchestrator
+    ).catch((err) => console.error('[cases.router] Notification failed:', err));
 
     return caseData;
   }),

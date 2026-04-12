@@ -99,9 +99,7 @@ describe('purgeExpiredRecords', () => {
 
     await purgeExpiredRecords(prisma, logger);
 
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('SecurityEvent')
-    );
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('SecurityEvent'));
   });
 
   it('logs info at start and end of purge', async () => {
@@ -114,8 +112,12 @@ describe('purgeExpiredRecords', () => {
     const allMessages = (logger.info as ReturnType<typeof vi.fn>).mock.calls.map(
       (c: unknown[]) => c[0]
     );
-    expect(allMessages.some((m: unknown) => typeof m === 'string' && m.includes('Starting'))).toBe(true);
-    expect(allMessages.some((m: unknown) => typeof m === 'string' && m.includes('complete'))).toBe(true);
+    expect(allMessages.some((m: unknown) => typeof m === 'string' && m.includes('Starting'))).toBe(
+      true
+    );
+    expect(allMessages.some((m: unknown) => typeof m === 'string' && m.includes('complete'))).toBe(
+      true
+    );
   });
 
   it('uses default batchSize of 100 when not specified', async () => {
@@ -125,8 +127,6 @@ describe('purgeExpiredRecords', () => {
     await purgeExpiredRecords(prisma, logger);
 
     // First call should use take: 100
-    expect(findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ take: 100 })
-    );
+    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 100 }));
   });
 });

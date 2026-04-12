@@ -261,7 +261,8 @@ export type { BenchmarkResult };
  * Run if executed directly
  */
 if (require.main === module) {
-  (async () => { // NOSONAR typescript:S7785 — top-level await unavailable in CJS modules
+  (async () => {
+    // NOSONAR typescript:S7785 — top-level await unavailable in CJS modules
     try {
       await runBenchmarks();
     } catch (error) {

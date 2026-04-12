@@ -11,7 +11,12 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createPublicContext, createTestContext, prismaMock, TEST_UUIDS } from '../../../test/setup';
+import {
+  createPublicContext,
+  createTestContext,
+  prismaMock,
+  TEST_UUIDS,
+} from '../../../test/setup';
 
 // Mock the InboundEmailParser from adapters - preserve other exports via importOriginal
 vi.mock('@intelliflow/adapters', async (importOriginal) => {

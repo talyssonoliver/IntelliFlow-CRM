@@ -63,7 +63,7 @@ describe('calendarWebhooks router', () => {
 
   it('invalid provider input → Zod validation error', async () => {
     await expect(
-      caller.calendarWebhooks.getSyncStatus({ provider: 'invalid' as any }),
+      caller.calendarWebhooks.getSyncStatus({ provider: 'invalid' as any })
     ).rejects.toThrow();
   });
 });

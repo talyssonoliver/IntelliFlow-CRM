@@ -51,7 +51,9 @@ export class AIMonitoringService {
     const [driftCount, latencyCount, hallucinationCount, roiCostCount] = await Promise.all([
       db.aIMonitoringEvent.count({ where: { eventType: 'drift', recordedAt: { gte: since } } }),
       db.aIMonitoringEvent.count({ where: { eventType: 'latency', recordedAt: { gte: since } } }),
-      db.aIMonitoringEvent.count({ where: { eventType: 'hallucination', recordedAt: { gte: since } } }),
+      db.aIMonitoringEvent.count({
+        where: { eventType: 'hallucination', recordedAt: { gte: since } },
+      }),
       db.aIMonitoringEvent.count({ where: { eventType: 'roi_cost', recordedAt: { gte: since } } }),
     ]);
 
@@ -63,10 +65,14 @@ export class AIMonitoringService {
       where: { eventType: 'drift', flagged: true, recordedAt: { gte: since } },
     });
 
-    const hallucinationRate = hallucinationCount > 0 ? hallucinationFlagged / hallucinationCount : 0;
+    const hallucinationRate =
+      hallucinationCount > 0 ? hallucinationFlagged / hallucinationCount : 0;
     const issues: string[] = [];
     if (driftFlagged > 0) issues.push(`${driftFlagged} drift detection(s) in last 24h`);
-    if (hallucinationRate > 0.05) issues.push(`Hallucination rate ${(hallucinationRate * 100).toFixed(1)}% exceeds 5% threshold`);
+    if (hallucinationRate > 0.05)
+      issues.push(
+        `Hallucination rate ${(hallucinationRate * 100).toFixed(1)}% exceeds 5% threshold`
+      );
 
     // Compute latency p95/p99 from recent events
     const latencyEvents = await db.aIMonitoringEvent.findMany({
@@ -74,8 +80,11 @@ export class AIMonitoringService {
       select: { value: true },
       orderBy: { value: 'asc' },
     });
-    const latencyValues = latencyEvents.map((e: any) => e.value ?? 0).sort((a: number, b: number) => a - b);
-    const pct = (arr: number[], p: number) => arr.length > 0 ? arr[Math.ceil(arr.length * p / 100) - 1] ?? 0 : 0;
+    const latencyValues = latencyEvents
+      .map((e: any) => e.value ?? 0)
+      .sort((a: number, b: number) => a - b);
+    const pct = (arr: number[], p: number) =>
+      arr.length > 0 ? (arr[Math.ceil((arr.length * p) / 100) - 1] ?? 0) : 0;
     const p95 = pct(latencyValues, 95);
     const p99 = pct(latencyValues, 99);
 
@@ -96,7 +105,11 @@ export class AIMonitoringService {
       available: true,
       healthy: issues.length === 0,
       issues,
-      drift: { trackedMetrics: driftCount, driftDetected: driftFlagged > 0, highSeverityCount: driftFlagged },
+      drift: {
+        trackedMetrics: driftCount,
+        driftDetected: driftFlagged > 0,
+        highSeverityCount: driftFlagged,
+      },
       latency: {
         sloCompliant: p95 <= 2000,
         p95,
@@ -121,7 +134,9 @@ export class AIMonitoringService {
     });
 
     const driftFlagged = events.filter((e: any) => e.flagged);
-    const highSeverity = events.filter((e: any) => e.severity === 'high' || e.severity === 'critical');
+    const highSeverity = events.filter(
+      (e: any) => e.severity === 'high' || e.severity === 'critical'
+    );
 
     return {
       available: true,
@@ -163,11 +178,30 @@ export class AIMonitoringService {
           periodEnd: opts.endTime ?? new Date(),
           sampleCount: 0,
           successRate: 1,
-          percentiles: { p50: 0, p75: 0, p90: 0, p95: 0, p99: 0, max: 0, min: 0, mean: 0, stdDev: 0 },
+          percentiles: {
+            p50: 0,
+            p75: 0,
+            p90: 0,
+            p95: 0,
+            p99: 0,
+            max: 0,
+            min: 0,
+            mean: 0,
+            stdDev: 0,
+          },
           byModel: {},
           byOperation: {},
           byPhase: {},
-          sloCompliance: { p95Target: 2000, p99Target: 5000, p95Actual: 0, p99Actual: 0, p95Compliant: true, p99Compliant: true, overallCompliant: true, complianceRate: 1 },
+          sloCompliance: {
+            p95Target: 2000,
+            p99Target: 5000,
+            p95Actual: 0,
+            p99Actual: 0,
+            p95Compliant: true,
+            p99Compliant: true,
+            overallCompliant: true,
+            complianceRate: 1,
+          },
         },
         alerts: [],
       };
@@ -175,7 +209,8 @@ export class AIMonitoringService {
 
     const durations = events.map((e: any) => e.value ?? 0).sort((a: number, b: number) => a - b);
     const successCount = events.filter((e: any) => !e.flagged).length;
-    const percentile = (arr: number[], p: number) => arr[Math.ceil(arr.length * p / 100) - 1] ?? 0;
+    const percentile = (arr: number[], p: number) =>
+      arr[Math.ceil((arr.length * p) / 100) - 1] ?? 0;
 
     return {
       available: true,
@@ -238,7 +273,7 @@ export class AIMonitoringService {
 
     const percentile = (arr: number[], p: number) => {
       const sorted = [...arr].sort((a, b) => a - b);
-      return sorted[Math.ceil(sorted.length * p / 100) - 1] ?? 0;
+      return sorted[Math.ceil((sorted.length * p) / 100) - 1] ?? 0;
     };
 
     const trend = Array.from(buckets.entries())
