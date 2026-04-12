@@ -50,7 +50,7 @@ import {
 // Configuration
 // ============================================================================
 
-const ALLOWED_STATUSES = ['Done', 'Completed', 'In Progress', 'Blocked', 'Planned', 'Backlog'];
+const ALLOWED_STATUSES = new Set(['Done', 'Completed', 'In Progress', 'Blocked', 'Planned', 'Backlog']);
 
 const repoRoot = findRepoRoot();
 
@@ -177,7 +177,7 @@ function indexTaskJsonFiles(taskJsonFiles: string[]): {
   const duplicateTaskIds: string[] = [];
 
   for (const jsonFile of taskJsonFiles) {
-    const repoRelativePath = jsonFile.replaceAll(repoRoot, '').replaceAll(/\\/g, '/');
+    const repoRelativePath = jsonFile.replaceAll(repoRoot, '').replaceAll('\\', '/');
     try {
       const raw = readFileSync(jsonFile, 'utf-8');
       const data = JSON.parse(raw);
@@ -249,7 +249,7 @@ function validateCsvStructure(tasks: SprintTask[]): GateResult[] {
   const invalidStatuses: { taskId: string; status: string }[] = [];
   for (const task of tasks) {
     const status = task.Status;
-    if (status && !ALLOWED_STATUSES.includes(status)) {
+    if (status && !ALLOWED_STATUSES.has(status)) {
       invalidStatuses.push({ taskId: task['Task ID'], status });
     }
   }
@@ -348,10 +348,11 @@ function validateSprintCounts(
         logGate(result);
       }
     } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
       const result: GateResult = {
         name: 'Summary: Count Consistency',
         severity: 'WARN',
-        message: `Could not parse _summary.json`,
+        message: `Could not parse _summary.json: ${msg}`,
       };
       results.push(result);
       logGate(result);
@@ -373,6 +374,144 @@ function validateSprintCounts(
 // Gate: JSON File Consistency
 // ============================================================================
 
+// ============================================================================
+// Gate: JSON File Consistency — helper sub-checks
+// ============================================================================
+
+function checkJsonParseErrors(index: ReturnType<typeof indexTaskJsonFiles>): GateResult {
+  if (index.parseErrors.length > 0) {
+    return {
+      name: 'JSON: Parse Errors',
+      severity: 'FAIL',
+      message: `Failed to parse ${index.parseErrors.length} task JSON file(s)`,
+      details: index.parseErrors.slice(0, 5),
+    };
+  }
+  return { name: 'JSON: Parse Errors', severity: 'PASS', message: `All task JSON files are valid JSON` };
+}
+
+function checkJsonTaskIdPresence(index: ReturnType<typeof indexTaskJsonFiles>): GateResult {
+  if (index.missingTaskIdFiles.length > 0) {
+    return {
+      name: 'JSON: task_id Presence',
+      severity: 'FAIL',
+      message: `Missing task_id/taskId in ${index.missingTaskIdFiles.length} task JSON file(s)`,
+      details: index.missingTaskIdFiles.slice(0, 5),
+    };
+  }
+  return { name: 'JSON: task_id Presence', severity: 'PASS', message: `All task JSON files contain task_id` };
+}
+
+function checkJsonTaskIdUniqueness(index: ReturnType<typeof indexTaskJsonFiles>): GateResult {
+  if (index.duplicateTaskIds.length > 0) {
+    return {
+      name: 'JSON: Task ID Uniqueness',
+      severity: 'FAIL',
+      message: `Found ${index.duplicateTaskIds.length} duplicate task_id value(s)`,
+      details: index.duplicateTaskIds.slice(0, 5),
+    };
+  }
+  return { name: 'JSON: Task ID Uniqueness', severity: 'PASS', message: `All task_id values are unique` };
+}
+
+function checkJsonOrphanedFiles(
+  index: ReturnType<typeof indexTaskJsonFiles>,
+  csvTaskIds: Set<string>
+): GateResult {
+  const orphanedFiles = [...index.byId.values()]
+    .filter((entry) => !csvTaskIds.has(entry.taskId))
+    .map((entry) => `${entry.taskId} (${entry.repoRelativePath})`);
+  if (orphanedFiles.length > 0) {
+    return {
+      name: 'JSON: Orphaned Files',
+      severity: 'WARN',
+      message: `Found ${orphanedFiles.length} orphaned JSON file(s)`,
+      details: orphanedFiles.slice(0, 5),
+    };
+  }
+  return { name: 'JSON: Orphaned Files', severity: 'PASS', message: `No orphaned JSON files` };
+}
+
+function checkJsonMissingFiles(
+  sprintTasks: SprintTask[],
+  index: ReturnType<typeof indexTaskJsonFiles>,
+  targetSprint: string
+): GateResult {
+  const missingFiles = sprintTasks
+    .map((t) => t['Task ID'])
+    .filter((taskId) => !index.byId.has(taskId));
+  if (missingFiles.length > 0) {
+    return {
+      name: 'JSON: Missing Files',
+      severity: 'WARN',
+      message: `Missing JSON for ${missingFiles.length} Sprint ${targetSprint} task(s)`,
+      details: missingFiles.slice(0, 5),
+    };
+  }
+  return {
+    name: 'JSON: Missing Files',
+    severity: 'PASS',
+    message: `All Sprint ${targetSprint} tasks have JSON files`,
+  };
+}
+
+function checkJsonStatusConsistency(
+  sprintTasks: SprintTask[],
+  index: ReturnType<typeof indexTaskJsonFiles>
+): GateResult {
+  const statusMismatches: string[] = [];
+  for (const task of sprintTasks) {
+    const entry = index.byId.get(task['Task ID']);
+    if (!entry) continue;
+    const expectedStatus = mapCsvToJsonStatus(task.Status);
+    if (entry.status !== expectedStatus) {
+      statusMismatches.push(
+        `${task['Task ID']}: CSV="${task.Status}" -> expected "${expectedStatus}", got "${entry.status}"`
+      );
+    }
+  }
+  if (statusMismatches.length > 0) {
+    return {
+      name: 'JSON: Status Consistency',
+      severity: 'WARN',
+      message: `Found ${statusMismatches.length} status mismatch(es)`,
+      details: statusMismatches.slice(0, 5),
+    };
+  }
+  return { name: 'JSON: Status Consistency', severity: 'PASS', message: `All JSON statuses match CSV` };
+}
+
+function checkJsonDescriptionConsistency(
+  sprintTasks: SprintTask[],
+  index: ReturnType<typeof indexTaskJsonFiles>
+): GateResult {
+  const descriptionMismatches: string[] = [];
+  for (const task of sprintTasks) {
+    const entry = index.byId.get(task['Task ID']);
+    if (!entry) continue;
+    const csvDescription = normalizeText(task.Description);
+    const jsonDescription = normalizeText(entry.description);
+    if (csvDescription && jsonDescription && csvDescription !== jsonDescription) {
+      descriptionMismatches.push(
+        `${task['Task ID']}: CSV and JSON descriptions differ (${entry.repoRelativePath})`
+      );
+    }
+  }
+  if (descriptionMismatches.length > 0) {
+    return {
+      name: 'JSON: Description Consistency',
+      severity: 'WARN',
+      message: `Found ${descriptionMismatches.length} description mismatch(es)`,
+      details: descriptionMismatches.slice(0, 5),
+    };
+  }
+  return {
+    name: 'JSON: Description Consistency',
+    severity: 'PASS',
+    message: `All JSON descriptions match CSV (normalized)`,
+  };
+}
+
 function validateJsonFiles(
   tasks: SprintTask[],
   metricsDir: string,
@@ -383,12 +522,9 @@ function validateJsonFiles(
 
   const sprintDir = join(metricsDir, `sprint-${targetSprint}`);
   const specifyRoot = join(repoRoot, '.specify');
-  // Metrics JSONs take precedence; attestation JSONs fill the gap for tasks
-  // that have evidence in .specify but no file in the metrics tree.
   const metricsJsonFiles = findAllTaskJsons(sprintDir);
   const attestationJsonFiles = findAttestationJsons(specifyRoot, targetSprint);
 
-  // Build set of task IDs already covered by metrics files (fast pre-scan)
   const metricsTaskIds = new Set<string>();
   for (const f of metricsJsonFiles) {
     try {
@@ -401,7 +537,6 @@ function validateJsonFiles(
   const sprintTasks = tasks.filter((t) => String(t['Target Sprint']) === targetSprint);
   const csvTaskIds = new Set(sprintTasks.map((t) => t['Task ID']));
 
-  // Only include attestation files for tasks NOT already in metrics AND in the CSV
   const filteredAttestations = attestationJsonFiles.filter((f) => {
     try {
       const data = JSON.parse(readFileSync(f, 'utf-8'));
@@ -411,182 +546,21 @@ function validateJsonFiles(
   });
 
   const taskJsonFiles = [...metricsJsonFiles, ...filteredAttestations];
-
   log(`   Found ${taskJsonFiles.length} task JSON files`, 'gray');
 
   const index = indexTaskJsonFiles(taskJsonFiles);
 
-  if (index.parseErrors.length > 0) {
-    const result: GateResult = {
-      name: 'JSON: Parse Errors',
-      severity: 'FAIL',
-      message: `Failed to parse ${index.parseErrors.length} task JSON file(s)`,
-      details: index.parseErrors.slice(0, 5),
-    };
-    results.push(result);
-    logGate(result);
-  } else {
-    const result: GateResult = {
-      name: 'JSON: Parse Errors',
-      severity: 'PASS',
-      message: `All task JSON files are valid JSON`,
-    };
-    results.push(result);
-    logGate(result);
-  }
+  const checks = [
+    checkJsonParseErrors(index),
+    checkJsonTaskIdPresence(index),
+    checkJsonTaskIdUniqueness(index),
+    checkJsonOrphanedFiles(index, csvTaskIds),
+    checkJsonMissingFiles(sprintTasks, index, targetSprint),
+    checkJsonStatusConsistency(sprintTasks, index),
+    checkJsonDescriptionConsistency(sprintTasks, index),
+  ];
 
-  if (index.missingTaskIdFiles.length > 0) {
-    const result: GateResult = {
-      name: 'JSON: task_id Presence',
-      severity: 'FAIL',
-      message: `Missing task_id/taskId in ${index.missingTaskIdFiles.length} task JSON file(s)`,
-      details: index.missingTaskIdFiles.slice(0, 5),
-    };
-    results.push(result);
-    logGate(result);
-  } else {
-    const result: GateResult = {
-      name: 'JSON: task_id Presence',
-      severity: 'PASS',
-      message: `All task JSON files contain task_id`,
-    };
-    results.push(result);
-    logGate(result);
-  }
-
-  if (index.duplicateTaskIds.length > 0) {
-    const result: GateResult = {
-      name: 'JSON: Task ID Uniqueness',
-      severity: 'FAIL',
-      message: `Found ${index.duplicateTaskIds.length} duplicate task_id value(s)`,
-      details: index.duplicateTaskIds.slice(0, 5),
-    };
-    results.push(result);
-    logGate(result);
-  } else {
-    const result: GateResult = {
-      name: 'JSON: Task ID Uniqueness',
-      severity: 'PASS',
-      message: `All task_id values are unique`,
-    };
-    results.push(result);
-    logGate(result);
-  }
-
-  // Check for orphaned JSON files
-  const orphanedFiles = [...index.byId.values()]
-    .filter((entry) => !csvTaskIds.has(entry.taskId))
-    .map((entry) => `${entry.taskId} (${entry.repoRelativePath})`);
-
-  if (orphanedFiles.length > 0) {
-    const result: GateResult = {
-      name: 'JSON: Orphaned Files',
-      severity: 'WARN',
-      message: `Found ${orphanedFiles.length} orphaned JSON file(s)`,
-      details: orphanedFiles.slice(0, 5),
-    };
-    results.push(result);
-    logGate(result);
-  } else {
-    const result: GateResult = {
-      name: 'JSON: Orphaned Files',
-      severity: 'PASS',
-      message: `No orphaned JSON files`,
-    };
-    results.push(result);
-    logGate(result);
-  }
-
-  // Check for missing JSON files
-  const missingFiles = sprintTasks
-    .map((t) => t['Task ID'])
-    .filter((taskId) => !index.byId.has(taskId));
-
-  if (missingFiles.length > 0) {
-    const result: GateResult = {
-      name: 'JSON: Missing Files',
-      severity: 'WARN',
-      message: `Missing JSON for ${missingFiles.length} Sprint ${targetSprint} task(s)`,
-      details: missingFiles.slice(0, 5),
-    };
-    results.push(result);
-    logGate(result);
-  } else {
-    const result: GateResult = {
-      name: 'JSON: Missing Files',
-      severity: 'PASS',
-      message: `All Sprint ${targetSprint} tasks have JSON files`,
-    };
-    results.push(result);
-    logGate(result);
-  }
-
-  // Check status mismatches
-  const statusMismatches: string[] = [];
-  for (const task of sprintTasks) {
-    const taskId = task['Task ID'];
-    const entry = index.byId.get(taskId);
-    if (!entry) continue;
-
-    const expectedStatus = mapCsvToJsonStatus(task.Status);
-    if (entry.status !== expectedStatus) {
-      statusMismatches.push(
-        `${taskId}: CSV="${task.Status}" -> expected "${expectedStatus}", got "${entry.status}"`
-      );
-    }
-  }
-
-  if (statusMismatches.length > 0) {
-    const result: GateResult = {
-      name: 'JSON: Status Consistency',
-      severity: 'WARN',
-      message: `Found ${statusMismatches.length} status mismatch(es)`,
-      details: statusMismatches.slice(0, 5),
-    };
-    results.push(result);
-    logGate(result);
-  } else {
-    const result: GateResult = {
-      name: 'JSON: Status Consistency',
-      severity: 'PASS',
-      message: `All JSON statuses match CSV`,
-    };
-    results.push(result);
-    logGate(result);
-  }
-
-  // Check description mismatches (normalized whitespace)
-  const descriptionMismatches: string[] = [];
-  for (const task of sprintTasks) {
-    const taskId = task['Task ID'];
-    const entry = index.byId.get(taskId);
-    if (!entry) continue;
-
-    const csvDescription = normalizeText(task.Description);
-    const jsonDescription = normalizeText(entry.description);
-
-    if (csvDescription && jsonDescription && csvDescription !== jsonDescription) {
-      descriptionMismatches.push(
-        `${taskId}: CSV and JSON descriptions differ (${entry.repoRelativePath})`
-      );
-    }
-  }
-
-  if (descriptionMismatches.length > 0) {
-    const result: GateResult = {
-      name: 'JSON: Description Consistency',
-      severity: 'WARN',
-      message: `Found ${descriptionMismatches.length} description mismatch(es)`,
-      details: descriptionMismatches.slice(0, 5),
-    };
-    results.push(result);
-    logGate(result);
-  } else {
-    const result: GateResult = {
-      name: 'JSON: Description Consistency',
-      severity: 'PASS',
-      message: `All JSON descriptions match CSV (normalized)`,
-    };
+  for (const result of checks) {
     results.push(result);
     logGate(result);
   }
@@ -646,9 +620,11 @@ function main(): void {
   // Run all gates
   const allResults: GateResult[] = [];
 
-  allResults.push(...validateCsvStructure(tasks));
-  allResults.push(...validateSprintCounts(tasks, metricsDir, sprintArg.sprint));
-  allResults.push(...validateJsonFiles(tasks, metricsDir, sprintArg.sprint));
+  allResults.push(
+    ...validateCsvStructure(tasks),
+    ...validateSprintCounts(tasks, metricsDir, sprintArg.sprint),
+    ...validateJsonFiles(tasks, metricsDir, sprintArg.sprint),
+  );
 
   // Summary
   const summary = createSummary(allResults);

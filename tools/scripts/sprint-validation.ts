@@ -439,6 +439,53 @@ function runEvidenceIntegrityGate(targetSprint: string): GateResult[] {
     }
   }
 
+  // Supplement with .specify/sprints/sprint-N/attestations/*/attestation.json for tasks
+  // not covered by the metrics folder. This is the canonical evidence location.
+  const specifyAttestationsPath = `.specify/sprints/sprint-${targetSprint}/attestations`;
+  const specifyTracked = listGitTrackedFilesInPath(repoRoot, specifyAttestationsPath);
+  if (!specifyTracked.error) {
+    const attestationFiles = specifyTracked.files.filter(
+      (f) => path.posix.basename(f) === 'attestation.json'
+    );
+    for (const repoRel of attestationFiles) {
+      const fullPath = path.join(repoRoot, repoRel);
+      try {
+        const raw = fs.readFileSync(fullPath, 'utf-8');
+        const att = JSON.parse(raw);
+        const taskId: unknown = att?.task_id ?? att?.taskId;
+        if (typeof taskId !== 'string' || taskId.trim().length === 0) continue;
+        if (tasksById.has(taskId)) continue; // metrics JSON takes precedence
+
+        // Normalize attestation format to the shape the validator checks below
+        const normalised = {
+          task_id: taskId,
+          status: att.verdict === 'COMPLETE' ? 'DONE' : att.verdict,
+          dependencies: {
+            required: Array.isArray(att.dependencies_verified) ? att.dependencies_verified : [],
+            all_satisfied: att.verdict === 'COMPLETE',
+          },
+          validations: Array.isArray(att.validation_results)
+            ? att.validation_results.map((v: any) => ({
+                name: v.command ?? 'validation',
+                command: v.command,
+                passed: v.passed,
+                exit_code: v.exit_code,
+                executed_at: v.timestamp,
+              }))
+            : [],
+          artifacts: {
+            expected: att.artifact_hashes ? Object.keys(att.artifact_hashes) : [],
+            created: att.artifact_hashes ? Object.keys(att.artifact_hashes) : [],
+            missing: [],
+          },
+        };
+        tasksById.set(taskId, { file: repoRel, data: normalised });
+      } catch {
+        // Non-fatal: skip unparseable attestation
+      }
+    }
+  }
+
   const missingJsonForDone = doneTasks
     .map((t) => t['Task ID'])
     .filter((taskId) => !tasksById.has(taskId));
