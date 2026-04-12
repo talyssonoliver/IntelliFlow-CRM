@@ -1,56 +1,37 @@
-'use client';
-
 import * as React from 'react';
-import { usePathname } from 'next/navigation';
-import { PublicHeader } from '@/components/public/PublicHeader';
 import { PublicFooter } from '@/components/public/PublicFooter';
-import { useAuth } from '@/lib/auth/AuthContext';
+import { PublicLayoutShell } from './_components/PublicLayoutShell';
+import { getAccessToken } from '@/lib/trpc-server';
 
-// Auth pages that should NOT show footer (they have their own full-screen layout)
-const AUTH_PAGES_NO_FOOTER = [
-  '/login',
-  '/signup',
-  '/forgot-password',
-  '/reset-password',
-  '/logout',
-  '/verify-email',
-  '/mfa',
-  '/auth/callback',
-  '/sso',
-];
-
-export default function PublicLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const pathname = usePathname();
-  const { isAuthenticated, isLoading } = useAuth();
-
-  // IFC-007: Don't show footer on auth pages (they use AuthBackground full-screen layout)
-  const isAuthPage = AUTH_PAGES_NO_FOOTER.some((page) => pathname?.startsWith(page));
-
-  // Show PublicHeader if:
-  // 1. On auth pages (login, signup, etc.) - ALWAYS show header, redirect will handle auth users
-  // 2. On non-auth pages when user is NOT authenticated
-  // This prevents header flash on auth pages when auth state changes
-  const showPublicHeader = isAuthPage || !isAuthenticated;
-
-  // Debug: Log auth state for public layout
-  console.log('[PublicLayout]', {
-    pathname,
-    isAuthenticated,
-    isLoading,
-    showPublicHeader,
-    isAuthPage,
-  });
+/**
+ * Public route-group layout — Server Component
+ *
+ * Reads the auth cookie server-side to decide what shell to wrap around the
+ * public-group children. This is what avoids the PublicHeader flash on refresh
+ * for authenticated users: the decision is made at SSR time, before any HTML
+ * is sent to the browser.
+ *
+ * Strategy:
+ * - Auth pages (`/login`, `/signup`, etc.) always render with no public chrome —
+ *   they have their own full-screen backgrounds. The `PublicLayoutShell` client
+ *   component detects the path via `usePathname()` and handles this.
+ * - For other public routes, the server decides based on the token cookie
+ *   whether to show `PublicHeader` + `PublicFooter`. Authenticated users on `/`
+ *   skip the public chrome entirely so only the authenticated shell renders.
+ * - The root `app/layout.tsx` already renders the authenticated `<Navigation />`
+ *   globally, so authed users get their normal app chrome wrapping whatever the
+ *   server-rendered content is.
+ */
+export default async function PublicLayout({ children }: { children: React.ReactNode }) {
+  const token = await getAccessToken();
+  const isAuthenticated = token !== null;
 
   return (
-    <>
-      {showPublicHeader && <PublicHeader />}
-      {/* IFC-007: Auth pages use their own full-height background, no min-h-screen needed */}
-      {isAuthPage ? (
-        children
-      ) : (
-        <main className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">{children}</main>
-      )}
-      {!isAuthPage && <PublicFooter />}
-    </>
+    <PublicLayoutShell isAuthenticated={isAuthenticated}>
+      {children}
+      {/* Footer rendered here (not inside the client shell) so it inherits the
+          server decision and never flashes in/out on client hydration. */}
+      {!isAuthenticated && <PublicFooter />}
+    </PublicLayoutShell>
   );
 }

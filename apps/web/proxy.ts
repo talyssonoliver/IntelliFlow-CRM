@@ -35,6 +35,33 @@ import { PROTECTED_ROUTE_PREFIXES, matchesRoutePrefix } from './src/lib/auth/rou
  * The client-side auth (useRequireAuth hook) handles the actual validation.
  * This proxy provides a lightweight server-side redirect hint only.
  */
+async function handleAuthPageRoute(
+  hasValidSession: boolean,
+  hasStaleAccessToken: boolean,
+  hasStaleSession: boolean,
+  request: NextRequest
+): Promise<NextResponse | null> {
+  if (hasValidSession && !request.nextUrl.searchParams.has('logged_out')) {
+    console.log('[Proxy] Authenticated user on auth page, redirecting to home');
+    return clearStaleAuthCookies(NextResponse.redirect(new URL('/', request.url)), hasStaleAccessToken, hasStaleSession);
+  }
+  if (hasStaleAccessToken || hasStaleSession) {
+    console.log('[Proxy] Stale access token without session on auth page, clearing cookies');
+    return clearStaleAuthCookies(NextResponse.next(), hasStaleAccessToken, hasStaleSession);
+  }
+  return null;
+}
+
+function clearStaleAuthCookies(
+  response: NextResponse,
+  hasStaleAccessToken: boolean,
+  hasStaleSession: boolean
+): NextResponse {
+  if (hasStaleAccessToken) response.cookies.delete('accessToken');
+  if (hasStaleSession) response.cookies.delete('session');
+  return response;
+}
+
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
@@ -68,18 +95,6 @@ export async function proxy(request: NextRequest) {
   const hasStaleSession = Boolean(sessionCookie && !hasValidSession);
   const hasAnyAuthArtifact = hasUsableAccessToken || hasValidSession;
 
-  const clearStaleAuthArtifacts = (response: NextResponse) => {
-    if (hasStaleAccessToken) {
-      response.cookies.delete('accessToken');
-    }
-
-    if (hasStaleSession) {
-      response.cookies.delete('session');
-    }
-
-    return response;
-  };
-
   console.log(
     `[Proxy] Path: ${path}, hasAccessToken: ${hasUsableAccessToken}, hasSession: ${!!session}, hasValidSession: ${hasValidSession}`
   );
@@ -90,46 +105,28 @@ export async function proxy(request: NextRequest) {
     console.log(`[Proxy] Protected route without auth, redirecting to login: ${path}`);
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', path);
-    return clearStaleAuthArtifacts(NextResponse.redirect(loginUrl));
+    return clearStaleAuthCookies(NextResponse.redirect(loginUrl), hasStaleAccessToken, hasStaleSession);
   }
 
   // Check role-based access (only if we have a full session)
   if (isProtectedRoute && session) {
     const requiredRoles = PROTECTED_ROUTES[path];
     if (requiredRoles && !hasRole(session, requiredRoles)) {
-      // User doesn't have required role -> redirect to dashboard
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      // User doesn't have required role -> redirect to home
+      return NextResponse.redirect(new URL('/', request.url));
     }
   }
 
-  // Authenticated user on auth pages (login/signup) -> redirect to dashboard
+  // Authenticated user on auth pages (login/signup) -> redirect to home
   // Only if we have a valid session; stale tokens should not redirect
   // If token exists but session is missing/invalid, clear cookies to break loops
   if (path === '/login' || path === '/signup') {
-    if (hasValidSession && !request.nextUrl.searchParams.has('logged_out')) {
-      console.log(`[Proxy] Authenticated user on auth page, redirecting to dashboard`);
-      return clearStaleAuthArtifacts(NextResponse.redirect(new URL('/dashboard', request.url)));
-    }
-
-    if (hasStaleAccessToken || hasStaleSession) {
-      console.log(`[Proxy] Stale access token without session on auth page, clearing cookies`);
-      return clearStaleAuthArtifacts(NextResponse.next());
-    }
-  }
-
-  // Authenticated user on the public marketing home page (`/`) -> redirect to dashboard
-  // This eliminates the spinner-flash that occurs when HomePageContent waits for the
-  // client-side `auth.getStatus` query to resolve before deciding which view to render.
-  // Server-side cookie check + redirect happens before the page HTML is generated, so
-  // authed users go straight to /dashboard with zero loading state.
-  // Unauthenticated visitors fall through and see PublicHomePage SSR'd immediately.
-  if (path === '/' && hasUsableAccessToken && !request.nextUrl.searchParams.has('logged_out')) {
-    console.log(`[Proxy] Authenticated user on home page, redirecting to dashboard`);
-    return clearStaleAuthArtifacts(NextResponse.redirect(new URL('/dashboard', request.url)));
+    const authPageResult = await handleAuthPageRoute(hasValidSession, hasStaleAccessToken, hasStaleSession, request);
+    if (authPageResult) return authPageResult;
   }
 
   // Add user info to headers for server components (if session available)
-  const response = clearStaleAuthArtifacts(NextResponse.next());
+  const response = clearStaleAuthCookies(NextResponse.next(), hasStaleAccessToken, hasStaleSession);
 
   if (session) {
     response.headers.set('x-user-id', session.userId);

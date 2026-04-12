@@ -27,7 +27,7 @@ import { MfaVerifyLoading } from './mfa-verify-loading';
 // Constants
 // ============================================
 
-const DEFAULT_REDIRECT = '/dashboard';
+const DEFAULT_REDIRECT = '/';
 const DEFAULT_METHOD = 'totp';
 
 // ============================================
@@ -39,7 +39,7 @@ function MfaVerifyContent() {
   const searchParams = useSearchParams();
 
   // Auth guard — redirect authenticated users
-  useRedirectIfAuthenticated('/dashboard');
+  useRedirectIfAuthenticated('/');
 
   // Extract URL params
   const challengeId = searchParams.get('challenge') || undefined;

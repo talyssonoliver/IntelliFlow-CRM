@@ -58,15 +58,15 @@ function SSOCallbackFallback() {
 // ============================================
 
 function SSOCallbackContent() {
-  // Bounce already-authenticated users to dashboard
-  useRedirectIfAuthenticated('/dashboard');
+  // Bounce already-authenticated users to home
+  useRedirectIfAuthenticated('/');
 
   // Hard navigation on success — prevents Back button replaying callback with used PKCE code
   const handleSuccess = () => {
-    globalThis.location.href = '/dashboard';
+    globalThis.location.href = '/';
   };
 
-  return <OAuthCallback onSuccess={handleSuccess} redirectUrl="/dashboard" />;
+  return <OAuthCallback onSuccess={handleSuccess} redirectUrl="/" />;
 }
 
 // ============================================

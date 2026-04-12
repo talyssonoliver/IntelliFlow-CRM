@@ -244,7 +244,7 @@ function LogoutContent() {
 
                 {/* Redirect Notice */}
                 <div className="text-center text-sm text-slate-400">
-                  Redirecting to login in <Countdown seconds={5} onComplete={handleRedirect} />
+                  Redirecting to home in <Countdown seconds={5} onComplete={handleRedirect} />
                 </div>
 
                 {/* Manual Redirect Button */}

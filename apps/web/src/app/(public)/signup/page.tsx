@@ -138,7 +138,7 @@ function SignUpPageContent() {
   const getUTMData = useUTMCapture();
 
   // Redirect if already authenticated
-  useRedirectIfAuthenticated('/dashboard');
+  useRedirectIfAuthenticated('/');
 
   // Form state
   const [isSubmitting, setIsSubmitting] = useState(false);

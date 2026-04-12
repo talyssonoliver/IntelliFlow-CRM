@@ -466,7 +466,29 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
         }
 
         if (result.success && result.user && result.session) {
-          // Login successful
+          // Login successful.
+          //
+          // CRITICAL ORDER (fixes public-page-flash after sign-in):
+          // 1. Store localStorage tokens AND sync the accessToken cookie FIRST.
+          // 2. THEN call setState so React's re-render happens AFTER the cookie
+          //    is in place. `useRedirectIfAuthenticated` fires on that render and
+          //    triggers `globalThis.location.href = '/'` — by that moment the
+          //    browser cookie jar already holds the accessToken, so the server
+          //    renders the authenticated home variant directly. If we flipped
+          //    this order, setState would re-render (and the hook would navigate)
+          //    before the cookie sync completed, leading to a public SSR payload
+          //    layered under the client-hydrated authed nav.
+          //
+          // SECURITY NOTE: localStorage is vulnerable to XSS attacks.
+          // For enhanced security, consider HttpOnly cookies via Supabase Auth.
+          // Trade-off: localStorage enables SPA auth without server-side sessions.
+          if (typeof globalThis.window !== 'undefined') {
+            storeSessionTokens(result.session.accessToken, result.session.refreshToken);
+            // Sync to cookie for middleware/proxy and server components
+            const { syncTokenToCookie } = await import('@/lib/shared/session-cleanup');
+            syncTokenToCookie(result.session.accessToken);
+          }
+
           setState((prev) => ({
             ...prev,
             user: result.user as AuthUser,
@@ -479,17 +501,6 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
             isLoading: false,
             mfa: initialMfaState,
           }));
-
-          // Store token in localStorage for persistence
-          // SECURITY NOTE: localStorage is vulnerable to XSS attacks.
-          // For enhanced security, consider HttpOnly cookies via Supabase Auth.
-          // Trade-off: localStorage enables SPA auth without server-side sessions.
-          if (typeof globalThis.window !== 'undefined') {
-            storeSessionTokens(result.session.accessToken, result.session.refreshToken);
-            // Sync to cookie for middleware access
-            const { syncTokenToCookie } = await import('@/lib/shared/session-cleanup');
-            syncTokenToCookie(result.session.accessToken);
-          }
 
           return true;
         }
@@ -656,6 +667,16 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
         });
 
         if (result.success && result.user && result.session) {
+          // CRITICAL: sync cookie BEFORE setState (same race condition as login()).
+          // If setState fires first, React re-renders with isAuthenticated=true and
+          // useRedirectIfAuthenticated navigates before the cookie lands in the
+          // browser jar — producing a public-page flash on the post-redirect load.
+          if (typeof globalThis.window !== 'undefined') {
+            storeSessionTokens(result.session.accessToken, result.session.refreshToken);
+            const { syncTokenToCookie } = await import('@/lib/shared/session-cleanup');
+            syncTokenToCookie(result.session.accessToken);
+          }
+
           setState((prev) => ({
             ...prev,
             user: result.user as AuthUser,
@@ -668,13 +689,6 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
             isLoading: false,
             mfa: initialMfaState,
           }));
-
-          if (typeof globalThis.window !== 'undefined') {
-            storeSessionTokens(result.session.accessToken, result.session.refreshToken);
-            // Sync to cookie for middleware access
-            const { syncTokenToCookie } = await import('@/lib/shared/session-cleanup');
-            syncTokenToCookie(result.session.accessToken);
-          }
 
           return true;
         }
@@ -701,7 +715,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
    * 2. Invalidate React Query cache
    * 3. Broadcast logout to other tabs
    * 4. Clear React state
-   * 5. Redirect to login
+   * 5. Redirect to public home
    */
   const logout = useCallback(async (): Promise<void> => {
     setState((prev) => ({ ...prev, isLoading: true }));
@@ -752,8 +766,9 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
         isLoading: false,
       });
 
-      // Redirect to login with flag to prevent redirect loop
-      router.push('/login?logged_out=true');
+      // Redirect to public home with flag to prevent redirect loops on
+      // `/login` / `/signup` if the user subsequently navigates there.
+      router.push('/?logged_out=true');
     }
   }, [logoutMutation, router, queryClient]);
 
@@ -1037,7 +1052,7 @@ export function useRequireAuth(): AuthContextType {
  *
  * Won't redirect if the user just logged out (has logged_out=true query param)
  */
-export function useRedirectIfAuthenticated(redirectTo: string = '/dashboard'): AuthContextType {
+export function useRedirectIfAuthenticated(redirectTo: string = '/'): AuthContextType {
   const auth = useAuth();
   const _router = useRouter();
   const searchParams = useSearchParams();
@@ -1110,9 +1125,22 @@ export function useRedirectIfAuthenticated(redirectTo: string = '/dashboard'): A
 
     // Only redirect if actually authenticated (token validated by query)
     if (auth.isAuthenticated) {
+      // DEBUG: capture the cookie state at the exact moment of redirect
+      // TODO: remove once post-login flash is diagnosed
+      const cookieAtRedirect =
+        typeof document !== 'undefined'
+          ? document.cookie
+              .split('; ')
+              .find((c) => c.startsWith('accessToken='))
+              ?.substring(0, 40) + '...'
+          : 'no document';
       console.log(
-        '[useRedirectIfAuthenticated] Auth confirmed, using window.location to navigate to:',
-        finalRedirectTo
+        '[useRedirectIfAuthenticated] Auth confirmed, navigating to:',
+        finalRedirectTo,
+        '| cookie at redirect:',
+        cookieAtRedirect,
+        '| ts:',
+        new Date().toISOString()
       );
       hasRedirectedRef.current = true;
       // Use window.location.href because router.replace doesn't seem to work reliably

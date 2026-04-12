@@ -75,11 +75,11 @@ type LoginStep = 'credentials' | 'mfa';
 // ============================================
 
 export default function LoginPage() {
-  const router = useRouter();
+  const _router = useRouter();
   const auth = useAuth();
 
   // Redirect if already authenticated
-  useRedirectIfAuthenticated('/dashboard');
+  useRedirectIfAuthenticated('/');
 
   // Form state
   const [step, setStep] = useState<LoginStep>('credentials');
@@ -236,9 +236,12 @@ export default function LoginPage() {
           description: 'Signing you in...',
         });
 
-        // Redirect to dashboard
+        // Hard navigation (not router.push) so the server re-runs the
+        // (public)/layout.tsx cookie check and renders the authenticated
+        // home variant. router.push serves the cached RSC payload from
+        // before login, producing a public-header/authed-nav mix.
         setTimeout(() => {
-          router.push('/dashboard');
+          globalThis.location.href = '/';
         }, 1000);
       } else if (!auth.mfa.required) {
         // Login failed (and not MFA challenge)
@@ -347,8 +350,9 @@ export default function LoginPage() {
         description: 'Signing you in...',
       });
 
+      // Hard navigation so the server re-renders with the freshly-set auth cookie.
       setTimeout(() => {
-        router.push('/dashboard');
+        globalThis.location.href = '/';
       }, 1000);
     }
 
