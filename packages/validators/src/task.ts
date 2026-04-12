@@ -5,9 +5,7 @@ import { TASK_STATUSES, TASK_PRIORITIES } from '@intelliflow/domain';
 // Re-export common schemas used by API routers
 export { idSchema } from './common';
 
-const seededTaskIdSchema = z
-  .string()
-  .check(z.regex(/^home-task-\d+$/, 'Invalid seeded task ID'));
+const seededTaskIdSchema = z.string().check(z.regex(/^home-task-\d+$/, 'Invalid seeded task ID'));
 
 export const taskIdSchema = z.union([idSchema, seededTaskIdSchema]);
 

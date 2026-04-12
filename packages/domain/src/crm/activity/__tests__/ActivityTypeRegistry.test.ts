@@ -16,125 +16,341 @@ import {
 import { ACTIVITY_FEED_TYPES } from '../../../activity-feed/ActivityFeedConstants';
 
 // Import all domain event classes to verify completeness
-import { LeadCreatedEvent, LeadScoredEvent, LeadStatusChangedEvent, LeadQualifiedEvent, LeadConvertedEvent, LeadRoutedEvent } from '../../lead/LeadEvents';
-import { ContactCreatedEvent, ContactUpdatedEvent, ContactAccountAssociatedEvent, ContactAccountDisassociatedEvent, ContactConvertedFromLeadEvent, ContactLinkedToLeadEvent, ContactUnlinkedFromLeadEvent, ContactInteractedEvent } from '../../contact/ContactEvents';
-import { AccountCreatedEvent, AccountUpdatedEvent, AccountRevenueUpdatedEvent, AccountHierarchyUpdatedEvent, AccountIndustryCategorizedEvent } from '../../account/AccountEvents';
-import { OpportunityCreatedEvent, OpportunityStageChangedEvent, OpportunityValueUpdatedEvent, OpportunityWonEvent, OpportunityLostEvent, OpportunityProbabilityUpdatedEvent, OpportunityCloseDateChangedEvent, OpportunityReopenedEvent, DealWonEnrichedEvent, DealLostEnrichedEvent } from '../../opportunity/OpportunityEvents';
-import { TaskCreatedEvent, TaskStatusChangedEvent, TaskCompletedEvent, TaskCancelledEvent, TaskPriorityChangedEvent, TaskDueDateChangedEvent, TaskUpdatedEvent, TaskDeletedEvent, TaskAssignedEvent } from '../../task/TaskEvents';
-import { TicketCreatedEvent, TicketStatusChangedEvent, TicketPriorityChangedEvent, TicketAssignedEvent, TicketUnassignedEvent, TicketResolvedEvent, TicketClosedEvent, TicketReopenedEvent, TicketResponseSlaBreachedEvent, TicketResolutionSlaBreachedEvent, TicketSlaPausedEvent, TicketSlaResumedEvent, TicketRoutedEvent, TicketRoutingFailedEvent } from '../../ticket/TicketEvents';
-import { CaseCreatedEvent, CaseStatusChangedEvent, CaseDeadlineUpdatedEvent, CaseTaskAddedEvent, CaseTaskRemovedEvent, CaseTaskCompletedEvent, CasePriorityChangedEvent, CaseClosedEvent } from '../../../legal/cases/CaseEvents';
-import { CaseWorkflowStartedEvent, CaseWorkflowCompletedEvent, CaseWorkflowFailedEvent, CaseApprovalRequiredEvent, CaseApprovalReceivedEvent, CaseEscalatedEvent, CaseSLABreachedEvent, CaseAssignedEvent, CaseNoteAddedEvent, CaseDocumentAttachedEvent, CaseReopenedEvent, CaseTimerStartedEvent, CaseTimerPausedEvent } from '../../../events/case-events';
-import { AppointmentCreatedEvent, AppointmentRescheduledEvent, AppointmentConfirmedEvent, AppointmentCancelledEvent, AppointmentCompletedEvent, AppointmentNoShowEvent, AppointmentLinkedToCaseEvent, AppointmentUnlinkedFromCaseEvent, AppointmentAttendeeAddedEvent, AppointmentAttendeeRemovedEvent, AppointmentConflictDetectedEvent } from '../../../legal/appointments/AppointmentEvents';
-import { DeadlineCreatedEvent, DeadlineStatusChangedEvent, DeadlineApproachingEvent, DeadlineDueTodayEvent, DeadlineOverdueEvent, DeadlineCompletedEvent, DeadlineWaivedEvent, DeadlineExtendedEvent, DeadlineReminderSentEvent } from '../../../legal/deadlines/DeadlineEvents';
-import { InvoiceCreatedEvent, InvoiceIssuedEvent, InvoicePaymentRecordedEvent, InvoicePaidEvent, InvoiceVoidedEvent, InvoiceRefundedEvent, InvoiceUncollectibleEvent, ReceiptIssuedEvent } from '../../billing/billing-events';
-import { DocumentIngestionCreatedEvent, DocumentIngestionFailedEvent } from '../../../legal/cases/DocumentIngestionEvents';
-import { ScoreFeedbackSubmittedEvent, RetrainingRecommendedEvent, TrainingDataExportedEvent, FeedbackAnalyticsGeneratedEvent } from '../../../ai/FeedbackEvents';
-import { ChainVersionCreatedEvent, ChainVersionActivatedEvent, ChainVersionDeprecatedEvent, ChainVersionRolledBackEvent } from '../../../ai/ChainVersionEvents';
+import {
+  LeadCreatedEvent,
+  LeadScoredEvent,
+  LeadStatusChangedEvent,
+  LeadQualifiedEvent,
+  LeadConvertedEvent,
+  LeadRoutedEvent,
+} from '../../lead/LeadEvents';
+import {
+  ContactCreatedEvent,
+  ContactUpdatedEvent,
+  ContactAccountAssociatedEvent,
+  ContactAccountDisassociatedEvent,
+  ContactConvertedFromLeadEvent,
+  ContactLinkedToLeadEvent,
+  ContactUnlinkedFromLeadEvent,
+  ContactInteractedEvent,
+} from '../../contact/ContactEvents';
+import {
+  AccountCreatedEvent,
+  AccountUpdatedEvent,
+  AccountRevenueUpdatedEvent,
+  AccountHierarchyUpdatedEvent,
+  AccountIndustryCategorizedEvent,
+} from '../../account/AccountEvents';
+import {
+  OpportunityCreatedEvent,
+  OpportunityStageChangedEvent,
+  OpportunityValueUpdatedEvent,
+  OpportunityWonEvent,
+  OpportunityLostEvent,
+  OpportunityProbabilityUpdatedEvent,
+  OpportunityCloseDateChangedEvent,
+  OpportunityReopenedEvent,
+  DealWonEnrichedEvent,
+  DealLostEnrichedEvent,
+} from '../../opportunity/OpportunityEvents';
+import {
+  TaskCreatedEvent,
+  TaskStatusChangedEvent,
+  TaskCompletedEvent,
+  TaskCancelledEvent,
+  TaskPriorityChangedEvent,
+  TaskDueDateChangedEvent,
+  TaskUpdatedEvent,
+  TaskDeletedEvent,
+  TaskAssignedEvent,
+} from '../../task/TaskEvents';
+import {
+  TicketCreatedEvent,
+  TicketStatusChangedEvent,
+  TicketPriorityChangedEvent,
+  TicketAssignedEvent,
+  TicketUnassignedEvent,
+  TicketResolvedEvent,
+  TicketClosedEvent,
+  TicketReopenedEvent,
+  TicketResponseSlaBreachedEvent,
+  TicketResolutionSlaBreachedEvent,
+  TicketSlaPausedEvent,
+  TicketSlaResumedEvent,
+  TicketRoutedEvent,
+  TicketRoutingFailedEvent,
+} from '../../ticket/TicketEvents';
+import {
+  CaseCreatedEvent,
+  CaseStatusChangedEvent,
+  CaseDeadlineUpdatedEvent,
+  CaseTaskAddedEvent,
+  CaseTaskRemovedEvent,
+  CaseTaskCompletedEvent,
+  CasePriorityChangedEvent,
+  CaseClosedEvent,
+} from '../../../legal/cases/CaseEvents';
+import {
+  CaseWorkflowStartedEvent,
+  CaseWorkflowCompletedEvent,
+  CaseWorkflowFailedEvent,
+  CaseApprovalRequiredEvent,
+  CaseApprovalReceivedEvent,
+  CaseEscalatedEvent,
+  CaseSLABreachedEvent,
+  CaseAssignedEvent,
+  CaseNoteAddedEvent,
+  CaseDocumentAttachedEvent,
+  CaseReopenedEvent,
+  CaseTimerStartedEvent,
+  CaseTimerPausedEvent,
+} from '../../../events/case-events';
+import {
+  AppointmentCreatedEvent,
+  AppointmentRescheduledEvent,
+  AppointmentConfirmedEvent,
+  AppointmentCancelledEvent,
+  AppointmentCompletedEvent,
+  AppointmentNoShowEvent,
+  AppointmentLinkedToCaseEvent,
+  AppointmentUnlinkedFromCaseEvent,
+  AppointmentAttendeeAddedEvent,
+  AppointmentAttendeeRemovedEvent,
+  AppointmentConflictDetectedEvent,
+} from '../../../legal/appointments/AppointmentEvents';
+import {
+  DeadlineCreatedEvent,
+  DeadlineStatusChangedEvent,
+  DeadlineApproachingEvent,
+  DeadlineDueTodayEvent,
+  DeadlineOverdueEvent,
+  DeadlineCompletedEvent,
+  DeadlineWaivedEvent,
+  DeadlineExtendedEvent,
+  DeadlineReminderSentEvent,
+} from '../../../legal/deadlines/DeadlineEvents';
+import {
+  InvoiceCreatedEvent,
+  InvoiceIssuedEvent,
+  InvoicePaymentRecordedEvent,
+  InvoicePaidEvent,
+  InvoiceVoidedEvent,
+  InvoiceRefundedEvent,
+  InvoiceUncollectibleEvent,
+  ReceiptIssuedEvent,
+} from '../../billing/billing-events';
+import {
+  DocumentIngestionCreatedEvent,
+  DocumentIngestionFailedEvent,
+} from '../../../legal/cases/DocumentIngestionEvents';
+import {
+  ScoreFeedbackSubmittedEvent,
+  RetrainingRecommendedEvent,
+  TrainingDataExportedEvent,
+  FeedbackAnalyticsGeneratedEvent,
+} from '../../../ai/FeedbackEvents';
+import {
+  ChainVersionCreatedEvent,
+  ChainVersionActivatedEvent,
+  ChainVersionDeprecatedEvent,
+  ChainVersionRolledBackEvent,
+} from '../../../ai/ChainVersionEvents';
 import { ReviewRequestedEvent } from '../../../ai/review/events/ReviewRequestedEvent';
 import { ReviewApprovedEvent } from '../../../ai/review/events/ReviewApprovedEvent';
 import { ReviewRejectedEvent } from '../../../ai/review/events/ReviewRejectedEvent';
 import { ReviewEscalatedEvent } from '../../../ai/review/events/ReviewEscalatedEvent';
-import { AutoResponseGeneratedEvent, AutoResponseSubmittedForApprovalEvent, AutoResponseApprovedEvent, AutoResponseRejectedEvent, AutoResponseSentEvent, AutoResponseExpiredEvent, AutoResponseEscalatedEvent, AutoResponseInvalidatedEvent, AutoResponseSendFailedEvent, AutoResponseEscalationResolvedEvent } from '../../../autoresponse/AutoResponseEvents';
-import { NotificationCreatedEvent, NotificationSentEvent, NotificationDeliveredEvent, NotificationFailedEvent, NotificationReadEvent, NotificationPreferenceUpdatedEvent, NotificationScheduledEvent, NotificationMovedToDLQEvent } from '../../../notifications/NotificationEvents';
+import {
+  AutoResponseGeneratedEvent,
+  AutoResponseSubmittedForApprovalEvent,
+  AutoResponseApprovedEvent,
+  AutoResponseRejectedEvent,
+  AutoResponseSentEvent,
+  AutoResponseExpiredEvent,
+  AutoResponseEscalatedEvent,
+  AutoResponseInvalidatedEvent,
+  AutoResponseSendFailedEvent,
+  AutoResponseEscalationResolvedEvent,
+} from '../../../autoresponse/AutoResponseEvents';
+import {
+  NotificationCreatedEvent,
+  NotificationSentEvent,
+  NotificationDeliveredEvent,
+  NotificationFailedEvent,
+  NotificationReadEvent,
+  NotificationPreferenceUpdatedEvent,
+  NotificationScheduledEvent,
+  NotificationMovedToDLQEvent,
+} from '../../../notifications/NotificationEvents';
 import { ChurnRiskAssessedEvent } from '../../../intelligence/events/ChurnRiskAssessedEvent';
-import { SurveySentEvent, SurveyRespondedEvent, SurveyFollowedUpEvent, SurveyClosedEvent } from '../../feedback/SurveyEvents';
+import {
+  SurveySentEvent,
+  SurveyRespondedEvent,
+  SurveyFollowedUpEvent,
+  SurveyClosedEvent,
+} from '../../feedback/SurveyEvents';
 
 // Collect all domain event instances to extract their eventType values
 function getAllDomainEventTypes(): string[] {
   const events = [
     // Lead (6)
-    new LeadCreatedEvent({} as any), new LeadScoredEvent({} as any),
-    new LeadStatusChangedEvent({} as any), new LeadQualifiedEvent({} as any),
-    new LeadConvertedEvent({} as any), new LeadRoutedEvent({} as any),
+    new LeadCreatedEvent({} as any),
+    new LeadScoredEvent({} as any),
+    new LeadStatusChangedEvent({} as any),
+    new LeadQualifiedEvent({} as any),
+    new LeadConvertedEvent({} as any),
+    new LeadRoutedEvent({} as any),
     // Contact (8)
-    new ContactCreatedEvent({} as any), new ContactUpdatedEvent({} as any),
-    new ContactAccountAssociatedEvent({} as any), new ContactAccountDisassociatedEvent({} as any),
-    new ContactConvertedFromLeadEvent({} as any), new ContactLinkedToLeadEvent({} as any),
-    new ContactUnlinkedFromLeadEvent({} as any), new ContactInteractedEvent({} as any),
+    new ContactCreatedEvent({} as any),
+    new ContactUpdatedEvent({} as any),
+    new ContactAccountAssociatedEvent({} as any),
+    new ContactAccountDisassociatedEvent({} as any),
+    new ContactConvertedFromLeadEvent({} as any),
+    new ContactLinkedToLeadEvent({} as any),
+    new ContactUnlinkedFromLeadEvent({} as any),
+    new ContactInteractedEvent({} as any),
     // Account (5)
-    new AccountCreatedEvent({} as any), new AccountUpdatedEvent({} as any),
-    new AccountRevenueUpdatedEvent({} as any), new AccountHierarchyUpdatedEvent({} as any),
+    new AccountCreatedEvent({} as any),
+    new AccountUpdatedEvent({} as any),
+    new AccountRevenueUpdatedEvent({} as any),
+    new AccountHierarchyUpdatedEvent({} as any),
     new AccountIndustryCategorizedEvent({} as any),
     // Opportunity (10)
-    new OpportunityCreatedEvent({} as any), new OpportunityStageChangedEvent({} as any),
-    new OpportunityValueUpdatedEvent({} as any), new OpportunityWonEvent({} as any),
-    new OpportunityLostEvent({} as any), new OpportunityProbabilityUpdatedEvent({} as any),
-    new OpportunityCloseDateChangedEvent({} as any), new OpportunityReopenedEvent({} as any),
-    new DealWonEnrichedEvent({} as any), new DealLostEnrichedEvent({} as any),
+    new OpportunityCreatedEvent({} as any),
+    new OpportunityStageChangedEvent({} as any),
+    new OpportunityValueUpdatedEvent({} as any),
+    new OpportunityWonEvent({} as any),
+    new OpportunityLostEvent({} as any),
+    new OpportunityProbabilityUpdatedEvent({} as any),
+    new OpportunityCloseDateChangedEvent({} as any),
+    new OpportunityReopenedEvent({} as any),
+    new DealWonEnrichedEvent({} as any),
+    new DealLostEnrichedEvent({} as any),
     // Task (9)
-    new TaskCreatedEvent({} as any), new TaskStatusChangedEvent({} as any),
-    new TaskCompletedEvent({} as any), new TaskCancelledEvent({} as any),
-    new TaskPriorityChangedEvent({} as any), new TaskDueDateChangedEvent({} as any),
-    new TaskUpdatedEvent({} as any), new TaskDeletedEvent({} as any),
+    new TaskCreatedEvent({} as any),
+    new TaskStatusChangedEvent({} as any),
+    new TaskCompletedEvent({} as any),
+    new TaskCancelledEvent({} as any),
+    new TaskPriorityChangedEvent({} as any),
+    new TaskDueDateChangedEvent({} as any),
+    new TaskUpdatedEvent({} as any),
+    new TaskDeletedEvent({} as any),
     new TaskAssignedEvent({} as any),
     // Ticket (14)
-    new TicketCreatedEvent({} as any), new TicketStatusChangedEvent({} as any),
-    new TicketPriorityChangedEvent({} as any), new TicketAssignedEvent({} as any),
-    new TicketUnassignedEvent({} as any), new TicketResolvedEvent({} as any),
-    new TicketClosedEvent({} as any), new TicketReopenedEvent({} as any),
-    new TicketResponseSlaBreachedEvent({} as any), new TicketResolutionSlaBreachedEvent({} as any),
-    new TicketSlaPausedEvent({} as any), new TicketSlaResumedEvent({} as any),
-    new TicketRoutedEvent({} as any), new TicketRoutingFailedEvent({} as any),
+    new TicketCreatedEvent({} as any),
+    new TicketStatusChangedEvent({} as any),
+    new TicketPriorityChangedEvent({} as any),
+    new TicketAssignedEvent({} as any),
+    new TicketUnassignedEvent({} as any),
+    new TicketResolvedEvent({} as any),
+    new TicketClosedEvent({} as any),
+    new TicketReopenedEvent({} as any),
+    new TicketResponseSlaBreachedEvent({} as any),
+    new TicketResolutionSlaBreachedEvent({} as any),
+    new TicketSlaPausedEvent({} as any),
+    new TicketSlaResumedEvent({} as any),
+    new TicketRoutedEvent({} as any),
+    new TicketRoutingFailedEvent({} as any),
     // Case from CaseEvents (8)
-    new CaseCreatedEvent({} as any), new CaseStatusChangedEvent({} as any),
-    new CaseDeadlineUpdatedEvent({} as any), new CaseTaskAddedEvent({} as any),
-    new CaseTaskRemovedEvent({} as any), new CaseTaskCompletedEvent({} as any),
-    new CasePriorityChangedEvent({} as any), new CaseClosedEvent({} as any),
+    new CaseCreatedEvent({} as any),
+    new CaseStatusChangedEvent({} as any),
+    new CaseDeadlineUpdatedEvent({} as any),
+    new CaseTaskAddedEvent({} as any),
+    new CaseTaskRemovedEvent({} as any),
+    new CaseTaskCompletedEvent({} as any),
+    new CasePriorityChangedEvent({} as any),
+    new CaseClosedEvent({} as any),
     // Case from case-events (13)
-    new CaseWorkflowStartedEvent({} as any), new CaseWorkflowCompletedEvent({} as any),
-    new CaseWorkflowFailedEvent({} as any), new CaseApprovalRequiredEvent({} as any),
-    new CaseApprovalReceivedEvent({} as any), new CaseEscalatedEvent({} as any),
-    new CaseSLABreachedEvent({} as any), new CaseAssignedEvent({} as any),
-    new CaseNoteAddedEvent({} as any), new CaseDocumentAttachedEvent({} as any),
-    new CaseReopenedEvent({} as any), new CaseTimerStartedEvent({} as any),
+    new CaseWorkflowStartedEvent({} as any),
+    new CaseWorkflowCompletedEvent({} as any),
+    new CaseWorkflowFailedEvent({} as any),
+    new CaseApprovalRequiredEvent({} as any),
+    new CaseApprovalReceivedEvent({} as any),
+    new CaseEscalatedEvent({} as any),
+    new CaseSLABreachedEvent({} as any),
+    new CaseAssignedEvent({} as any),
+    new CaseNoteAddedEvent({} as any),
+    new CaseDocumentAttachedEvent({} as any),
+    new CaseReopenedEvent({} as any),
+    new CaseTimerStartedEvent({} as any),
     new CaseTimerPausedEvent({} as any),
     // Appointment (11)
-    new AppointmentCreatedEvent({} as any), new AppointmentRescheduledEvent({} as any),
-    new AppointmentConfirmedEvent({} as any), new AppointmentCancelledEvent({} as any),
-    new AppointmentCompletedEvent({} as any), new AppointmentNoShowEvent({} as any),
-    new AppointmentLinkedToCaseEvent({} as any), new AppointmentUnlinkedFromCaseEvent({} as any),
-    new AppointmentAttendeeAddedEvent({} as any), new AppointmentAttendeeRemovedEvent({} as any),
+    new AppointmentCreatedEvent({} as any),
+    new AppointmentRescheduledEvent({} as any),
+    new AppointmentConfirmedEvent({} as any),
+    new AppointmentCancelledEvent({} as any),
+    new AppointmentCompletedEvent({} as any),
+    new AppointmentNoShowEvent({} as any),
+    new AppointmentLinkedToCaseEvent({} as any),
+    new AppointmentUnlinkedFromCaseEvent({} as any),
+    new AppointmentAttendeeAddedEvent({} as any),
+    new AppointmentAttendeeRemovedEvent({} as any),
     new AppointmentConflictDetectedEvent({} as any),
     // Deadline (9)
-    new DeadlineCreatedEvent({} as any), new DeadlineStatusChangedEvent({} as any),
-    new DeadlineApproachingEvent({} as any), new DeadlineDueTodayEvent({} as any),
-    new DeadlineOverdueEvent({} as any), new DeadlineCompletedEvent({} as any),
-    new DeadlineWaivedEvent({} as any), new DeadlineExtendedEvent({} as any),
+    new DeadlineCreatedEvent({} as any),
+    new DeadlineStatusChangedEvent({} as any),
+    new DeadlineApproachingEvent({} as any),
+    new DeadlineDueTodayEvent({} as any),
+    new DeadlineOverdueEvent({} as any),
+    new DeadlineCompletedEvent({} as any),
+    new DeadlineWaivedEvent({} as any),
+    new DeadlineExtendedEvent({} as any),
     new DeadlineReminderSentEvent({} as any),
     // Billing (8)
-    new InvoiceCreatedEvent({} as any), new InvoiceIssuedEvent({} as any),
-    new InvoicePaymentRecordedEvent({} as any), new InvoicePaidEvent({} as any),
-    new InvoiceVoidedEvent({} as any), new InvoiceRefundedEvent({} as any),
-    new InvoiceUncollectibleEvent({} as any), new ReceiptIssuedEvent({} as any),
+    new InvoiceCreatedEvent({} as any),
+    new InvoiceIssuedEvent({} as any),
+    new InvoicePaymentRecordedEvent({} as any),
+    new InvoicePaidEvent({} as any),
+    new InvoiceVoidedEvent({} as any),
+    new InvoiceRefundedEvent({} as any),
+    new InvoiceUncollectibleEvent({} as any),
+    new ReceiptIssuedEvent({} as any),
     // Document (2)
-    new DocumentIngestionCreatedEvent({} as any), new DocumentIngestionFailedEvent({} as any),
+    new DocumentIngestionCreatedEvent({} as any),
+    new DocumentIngestionFailedEvent({} as any),
     // AI Feedback (4)
-    new ScoreFeedbackSubmittedEvent({} as any), new RetrainingRecommendedEvent({} as any),
-    new TrainingDataExportedEvent({} as any), new FeedbackAnalyticsGeneratedEvent({} as any),
+    new ScoreFeedbackSubmittedEvent({} as any),
+    new RetrainingRecommendedEvent({} as any),
+    new TrainingDataExportedEvent({} as any),
+    new FeedbackAnalyticsGeneratedEvent({} as any),
     // Chain Version (4)
-    new ChainVersionCreatedEvent({} as any), new ChainVersionActivatedEvent({} as any),
-    new ChainVersionDeprecatedEvent({} as any), new ChainVersionRolledBackEvent({} as any),
+    new ChainVersionCreatedEvent({} as any),
+    new ChainVersionActivatedEvent({} as any),
+    new ChainVersionDeprecatedEvent({} as any),
+    new ChainVersionRolledBackEvent({} as any),
     // AI Review (4)
-    new ReviewRequestedEvent({} as any), new ReviewApprovedEvent({} as any),
-    new ReviewRejectedEvent({} as any), new ReviewEscalatedEvent({} as any),
+    new ReviewRequestedEvent({} as any),
+    new ReviewApprovedEvent({} as any),
+    new ReviewRejectedEvent({} as any),
+    new ReviewEscalatedEvent({} as any),
     // Auto-response (10)
-    new AutoResponseGeneratedEvent({} as any), new AutoResponseSubmittedForApprovalEvent({} as any),
-    new AutoResponseApprovedEvent({} as any), new AutoResponseRejectedEvent({} as any),
-    new AutoResponseSentEvent({} as any), new AutoResponseExpiredEvent({} as any),
-    new AutoResponseEscalatedEvent({} as any), new AutoResponseInvalidatedEvent({} as any),
-    new AutoResponseSendFailedEvent({} as any), new AutoResponseEscalationResolvedEvent({} as any),
+    new AutoResponseGeneratedEvent({} as any),
+    new AutoResponseSubmittedForApprovalEvent({} as any),
+    new AutoResponseApprovedEvent({} as any),
+    new AutoResponseRejectedEvent({} as any),
+    new AutoResponseSentEvent({} as any),
+    new AutoResponseExpiredEvent({} as any),
+    new AutoResponseEscalatedEvent({} as any),
+    new AutoResponseInvalidatedEvent({} as any),
+    new AutoResponseSendFailedEvent({} as any),
+    new AutoResponseEscalationResolvedEvent({} as any),
     // Notification (8)
-    new NotificationCreatedEvent({} as any), new NotificationSentEvent({} as any),
-    new NotificationDeliveredEvent({} as any), new NotificationFailedEvent({} as any),
-    new NotificationReadEvent({} as any), new NotificationPreferenceUpdatedEvent({} as any),
-    new NotificationScheduledEvent({} as any), new NotificationMovedToDLQEvent({} as any),
+    new NotificationCreatedEvent({} as any),
+    new NotificationSentEvent({} as any),
+    new NotificationDeliveredEvent({} as any),
+    new NotificationFailedEvent({} as any),
+    new NotificationReadEvent({} as any),
+    new NotificationPreferenceUpdatedEvent({} as any),
+    new NotificationScheduledEvent({} as any),
+    new NotificationMovedToDLQEvent({} as any),
     // Intelligence (1)
     new ChurnRiskAssessedEvent({} as any),
     // Survey (4)
-    new SurveySentEvent({} as any), new SurveyRespondedEvent({} as any),
-    new SurveyFollowedUpEvent({} as any), new SurveyClosedEvent({} as any),
+    new SurveySentEvent({} as any),
+    new SurveyRespondedEvent({} as any),
+    new SurveyFollowedUpEvent({} as any),
+    new SurveyClosedEvent({} as any),
   ];
-  return events.map(e => e.eventType);
+  return events.map((e) => e.eventType);
 }
 
 describe('ActivityTypeRegistry', () => {
@@ -178,7 +394,8 @@ describe('ActivityTypeRegistry', () => {
       if (!meta.icon || typeof meta.icon !== 'string') invalid.push(`${key}: invalid icon`);
       if (!meta.label || typeof meta.label !== 'string') invalid.push(`${key}: invalid label`);
       if (!meta.color || typeof meta.color !== 'string') invalid.push(`${key}: invalid color`);
-      if (meta.color && !colorPattern.test(meta.color)) invalid.push(`${key}: color '${meta.color}' doesn't match pattern`);
+      if (meta.color && !colorPattern.test(meta.color))
+        invalid.push(`${key}: color '${meta.color}' doesn't match pattern`);
     }
     expect(invalid).toEqual([]);
   });

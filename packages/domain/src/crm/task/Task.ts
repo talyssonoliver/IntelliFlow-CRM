@@ -326,7 +326,10 @@ export class Task extends AggregateRoot<TaskId> {
     this.addDomainEvent(new TaskAssignedEvent(this.id, 'opportunity', opportunityId, assignedBy));
   }
 
-  updateTaskInfo(updates: Partial<Pick<TaskProps, 'title' | 'description'>>, updatedBy?: string): void {
+  updateTaskInfo(
+    updates: Partial<Pick<TaskProps, 'title' | 'description'>>,
+    updatedBy?: string
+  ): void {
     const changedFields: string[] = [];
     if (updates.title !== undefined) {
       this.props.title = updates.title;

@@ -688,7 +688,13 @@ describe('Lead Validators', () => {
     it('should validate response with Lead 360 relation fields', () => {
       const detailResponse = {
         ...baseResponse,
-        owner: { id: '456e4567-e89b-12d3-a456-426614174000', email: 'owner@test.com', name: 'Owner', avatarUrl: null, role: 'ADMIN' },
+        owner: {
+          id: '456e4567-e89b-12d3-a456-426614174000',
+          email: 'owner@test.com',
+          name: 'Owner',
+          avatarUrl: null,
+          role: 'ADMIN',
+        },
         activities: [{ id: '1', type: 'NOTE', timestamp: '2024-01-01T00:00:00Z' }],
         notes: [{ id: '1', content: 'Test note' }],
         files: [{ id: '1', name: 'doc.pdf' }],

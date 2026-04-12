@@ -114,9 +114,17 @@ export type ConvertLeadToDealInput = z.infer<typeof convertLeadToDealSchema>;
 
 // Sortable fields allowlist — only safe, indexed, user-meaningful columns
 export const LEAD_SORTABLE_FIELDS = [
-  'createdAt', 'updatedAt', 'firstName', 'lastName',
-  'company', 'email', 'score', 'status', 'source',
-  'lastContactedAt', 'estimatedValue',
+  'createdAt',
+  'updatedAt',
+  'firstName',
+  'lastName',
+  'company',
+  'email',
+  'score',
+  'status',
+  'source',
+  'lastContactedAt',
+  'estimatedValue',
 ] as const;
 
 // Lead Query Schema
@@ -160,13 +168,16 @@ export type LeadResponse = z.infer<typeof leadResponseSchema>;
 // Lead Detail Response Schema — extends base with Lead 360 relation fields
 // Used by getById which includes full relation data
 export const leadDetailResponseSchema = leadResponseSchema.extend({
-  owner: z.object({
-    id: idSchema,
-    email: z.string(),
-    name: z.string().nullable(),
-    avatarUrl: z.string().nullable(),
-    role: z.string(),
-  }).nullable().optional(),
+  owner: z
+    .object({
+      id: idSchema,
+      email: z.string(),
+      name: z.string().nullable(),
+      avatarUrl: z.string().nullable(),
+      role: z.string(),
+    })
+    .nullable()
+    .optional(),
   activities: z.array(z.any()).optional(),
   notes: z.array(z.any()).optional(),
   files: z.array(z.any()).optional(),

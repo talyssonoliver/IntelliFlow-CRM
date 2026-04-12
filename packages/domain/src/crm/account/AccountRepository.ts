@@ -72,7 +72,11 @@ export interface AccountRepository {
   /**
    * Find account with nested children up to maxDepth within a tenant
    */
-  findWithChildren(id: AccountId, maxDepth: number, tenantId: string): Promise<AccountHierarchyRecord | null>;
+  findWithChildren(
+    id: AccountId,
+    maxDepth: number,
+    tenantId: string
+  ): Promise<AccountHierarchyRecord | null>;
 
   /**
    * Find ancestor chain from account to root within a tenant

@@ -62,8 +62,15 @@ export type UpdateContactInput = z.infer<typeof updateContactSchema>;
 
 // IFC-254 R-10: Whitelist of safe sortable Contact columns
 export const CONTACT_SORT_FIELDS = [
-  'createdAt', 'updatedAt', 'firstName', 'lastName', 'email',
-  'status', 'company', 'department', 'lastContactedAt',
+  'createdAt',
+  'updatedAt',
+  'firstName',
+  'lastName',
+  'email',
+  'status',
+  'company',
+  'department',
+  'lastContactedAt',
 ] as const;
 
 // Contact Query Schema

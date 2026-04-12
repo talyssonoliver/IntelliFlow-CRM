@@ -12,10 +12,7 @@ export const createTicketCategorySchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
   description: z.string().max(500).optional(),
   parentId: z.string().optional(),
-  color: z
-    .string()
-    .regex(hexColorRegex, 'Must be a valid hex color (e.g. #FF0000)')
-    .optional(),
+  color: z.string().regex(hexColorRegex, 'Must be a valid hex color (e.g. #FF0000)').optional(),
   icon: z.string().max(50).optional(),
   slaPolicyId: z.string().optional(),
 });

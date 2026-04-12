@@ -43,7 +43,12 @@ export type UpdateAccountInput = z.infer<typeof updateAccountSchema>;
 
 // IFC-269 B-04: Whitelist of safe sortable Account columns
 export const ACCOUNT_SORT_FIELDS = [
-  'createdAt', 'updatedAt', 'name', 'revenue', 'employees', 'industry',
+  'createdAt',
+  'updatedAt',
+  'name',
+  'revenue',
+  'employees',
+  'industry',
 ] as const;
 export type AccountSortField = (typeof ACCOUNT_SORT_FIELDS)[number];
 

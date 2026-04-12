@@ -115,7 +115,13 @@ describe('updateLeadStagesSchema', () => {
     const result = updateLeadStagesSchema.safeParse({
       stages: [
         validStage,
-        { stageKey: 'CONTACTED', displayName: 'Contacted', color: '#F59E0B', sortOrder: 1, isDefault: false },
+        {
+          stageKey: 'CONTACTED',
+          displayName: 'Contacted',
+          color: '#F59E0B',
+          sortOrder: 1,
+          isDefault: false,
+        },
       ],
     });
     expect(result.success).toBe(true);

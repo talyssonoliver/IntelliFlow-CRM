@@ -8,7 +8,12 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { Account, InvalidRevenueError, InvalidEmployeeCountError, SameOwnerError } from '../Account';
+import {
+  Account,
+  InvalidRevenueError,
+  InvalidEmployeeCountError,
+  SameOwnerError,
+} from '../Account';
 import { AccountId } from '../AccountId';
 import { WebsiteUrl } from '../../../shared/WebsiteUrl';
 import {

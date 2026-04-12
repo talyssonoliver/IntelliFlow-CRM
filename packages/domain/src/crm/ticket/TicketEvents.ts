@@ -231,7 +231,13 @@ export class TicketResponseSlaBreachedEvent extends DomainEvent {
   }
 
   toPayload(): Record<string, unknown> {
-    return slaBreachPayload(this.ticketId, 'response', this.dueAt, this.breachedAt, this.slaPolicyId);
+    return slaBreachPayload(
+      this.ticketId,
+      'response',
+      this.dueAt,
+      this.breachedAt,
+      this.slaPolicyId
+    );
   }
 }
 
@@ -251,7 +257,13 @@ export class TicketResolutionSlaBreachedEvent extends DomainEvent {
   }
 
   toPayload(): Record<string, unknown> {
-    return slaBreachPayload(this.ticketId, 'resolution', this.dueAt, this.breachedAt, this.slaPolicyId);
+    return slaBreachPayload(
+      this.ticketId,
+      'resolution',
+      this.dueAt,
+      this.breachedAt,
+      this.slaPolicyId
+    );
   }
 }
 

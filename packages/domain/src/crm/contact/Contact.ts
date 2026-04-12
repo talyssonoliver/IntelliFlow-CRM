@@ -357,7 +357,10 @@ export class Contact extends AggregateRoot<ContactId> {
     return Result.ok(undefined);
   }
 
-  private applyPhoneUpdate(phone: string | PhoneNumber, updatedFields: string[]): DomainError | null {
+  private applyPhoneUpdate(
+    phone: string | PhoneNumber,
+    updatedFields: string[]
+  ): DomainError | null {
     const resolvedPhone = this.resolvePhone(phone);
     if (resolvedPhone.isFailure) return resolvedPhone.error;
     const newPhone = resolvedPhone.value;
@@ -370,17 +373,35 @@ export class Contact extends AggregateRoot<ContactId> {
 
   private applyScalarUpdates(
     updates: Partial<{
-      firstName: string; lastName: string; title: string; department: string;
-      status: ContactStatus; streetAddress: string; city: string; zipCode: string;
-      company: string; linkedInUrl: string; contactType: ContactType;
-      tags: string[]; contactNotes: string;
+      firstName: string;
+      lastName: string;
+      title: string;
+      department: string;
+      status: ContactStatus;
+      streetAddress: string;
+      city: string;
+      zipCode: string;
+      company: string;
+      linkedInUrl: string;
+      contactType: ContactType;
+      tags: string[];
+      contactNotes: string;
     }>,
     updatedFields: string[]
   ): void {
     const simpleFields = [
-      'firstName', 'lastName', 'title', 'department', 'status',
-      'streetAddress', 'city', 'zipCode', 'company', 'linkedInUrl',
-      'contactType', 'contactNotes',
+      'firstName',
+      'lastName',
+      'title',
+      'department',
+      'status',
+      'streetAddress',
+      'city',
+      'zipCode',
+      'company',
+      'linkedInUrl',
+      'contactType',
+      'contactNotes',
     ] as const;
 
     const mutableProps = this.props as { -readonly [K in keyof ContactProps]: ContactProps[K] };

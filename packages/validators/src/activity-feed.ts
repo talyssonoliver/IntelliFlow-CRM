@@ -153,18 +153,24 @@ export const activityFeedStatsResponseSchema = z.object({
   windowStart: z.date().nullable(),
   windowEnd: z.date(),
   total: z.number().int().min(0),
-  byType: z.array(z.object({
-    type: unifiedFeedTypeSchema,
-    count: z.number().int().min(0),
-  })),
-  bySource: z.array(z.object({
-    source: unifiedFeedSourceSchema,
-    count: z.number().int().min(0),
-  })),
-  byEntityType: z.array(z.object({
-    entityType: unifiedFeedEntityTypeSchema,
-    count: z.number().int().min(0),
-  })),
+  byType: z.array(
+    z.object({
+      type: unifiedFeedTypeSchema,
+      count: z.number().int().min(0),
+    })
+  ),
+  bySource: z.array(
+    z.object({
+      source: unifiedFeedSourceSchema,
+      count: z.number().int().min(0),
+    })
+  ),
+  byEntityType: z.array(
+    z.object({
+      entityType: unifiedFeedEntityTypeSchema,
+      count: z.number().int().min(0),
+    })
+  ),
 });
 
 export type ActivityFeedStatsResponseOutput = z.infer<typeof activityFeedStatsResponseSchema>;

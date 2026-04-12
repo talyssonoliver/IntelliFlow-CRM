@@ -48,9 +48,11 @@ export const baseDomainEventSchema = z.object({
   eventType: z
     .string()
     .min(1)
-    .check(z.regex(/^[a-z]+\.[a-z_]+$/, {
-      message: 'Event type must follow pattern: aggregate.action (e.g., lead.created)',
-    })),
+    .check(
+      z.regex(/^[a-z]+\.[a-z_]+$/, {
+        message: 'Event type must follow pattern: aggregate.action (e.g., lead.created)',
+      })
+    ),
   aggregateType: z.string().min(1),
   aggregateId: z.string().min(1),
   payload: z.record(z.string(), z.unknown()),

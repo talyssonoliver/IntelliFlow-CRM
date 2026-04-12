@@ -5,10 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  createSlaPolicySchema,
-  updateSlaPolicySchema,
-} from '../sla-policy';
+import { createSlaPolicySchema, updateSlaPolicySchema } from '../sla-policy';
 import {
   createTicketCategorySchema,
   updateTicketCategorySchema,

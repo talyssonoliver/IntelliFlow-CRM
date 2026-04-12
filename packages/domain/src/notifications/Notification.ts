@@ -305,7 +305,11 @@ export class Notification extends AggregateRoot<NotificationId> {
    * Mark notification as read (in-app notifications)
    */
   markAsRead(): void {
-    if (this.props.status !== 'delivered' && this.props.status !== 'sent' && this.props.status !== 'pending') {
+    if (
+      this.props.status !== 'delivered' &&
+      this.props.status !== 'sent' &&
+      this.props.status !== 'pending'
+    ) {
       throw new Error('Cannot mark as read a notification that was not delivered or pending');
     }
 

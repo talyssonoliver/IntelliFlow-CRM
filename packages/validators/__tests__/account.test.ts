@@ -382,7 +382,14 @@ describe('Account Validators', () => {
     });
 
     it('should reject invalid sortBy values', () => {
-      const invalidFields = ['__proto__', 'password', 'constructor', 'nonexistent', 'tenantId', 'ownerId'];
+      const invalidFields = [
+        '__proto__',
+        'password',
+        'constructor',
+        'nonexistent',
+        'tenantId',
+        'ownerId',
+      ];
       for (const field of invalidFields) {
         const result = accountQuerySchema.safeParse({ sortBy: field });
         expect(result.success, `sortBy: "${field}" should be rejected`).toBe(false);
