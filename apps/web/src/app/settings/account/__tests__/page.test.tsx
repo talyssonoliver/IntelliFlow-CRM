@@ -75,7 +75,7 @@ vi.mock('@intelliflow/ui', () => ({
   Badge: ({ children, className }: { children: React.ReactNode; className?: string }) => (
     <span className={className}>{children}</span>
   ),
-  Button: ({ children, onClick, disabled, variant, className, asChild }: {
+  Button: ({ children, onClick, disabled, variant, className, asChild: _asChild }: {
     children: React.ReactNode; onClick?: () => void; disabled?: boolean; variant?: string; className?: string; asChild?: boolean;
   }) => (
     <button onClick={onClick} disabled={disabled} data-variant={variant} className={className}>{children}</button>
@@ -86,7 +86,7 @@ vi.mock('@intelliflow/ui', () => ({
     <button data-testid="switch" role="switch" aria-checked={checked ?? defaultChecked ?? false}
       onClick={() => onCheckedChange?.(!checked)} />
   ),
-  Select: ({ children, value, onValueChange }: { children: React.ReactNode; value?: string; onValueChange?: (v: string) => void }) => (
+  Select: ({ children, value, onValueChange: _onValueChange }: { children: React.ReactNode; value?: string; onValueChange?: (v: string) => void }) => (
     <div data-testid="select" data-value={value}>{children}</div>
   ),
   SelectTrigger: ({ children, className }: { children: React.ReactNode; className?: string }) => (

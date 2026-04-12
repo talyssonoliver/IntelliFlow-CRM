@@ -81,7 +81,6 @@ export const userRouter = createTRPCRouter({
 
   /**
    * Update the authenticated user's timezone.
-   * Validates the timezone is a valid IANA identifier.
    */
   updateTimezone: tenantProcedure
     .input(updateTimezoneInputSchema)
@@ -116,13 +115,12 @@ export const userRouter = createTRPCRouter({
         });
       }
 
-      // Build update data from defined keys (omit undefined to avoid clobbering)
       const data: Record<string, unknown> = {};
       for (const key of Object.keys(input) as Array<keyof typeof input>) {
         if (input[key] !== undefined) data[key] = input[key];
       }
 
-      // Keep `name` synced with given/family if both provided
+      // Keep `name` synced with given/family if either is provided
       if (input.givenName !== undefined || input.familyName !== undefined) {
         const current = await ctx.prismaWithTenant.user.findUnique({
           where: { id: ctx.user.userId },

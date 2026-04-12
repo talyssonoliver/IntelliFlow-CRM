@@ -12,6 +12,18 @@ import { PageHeader } from '@/components/shared/page-header';
 import { AccountSettingsLoading } from './AccountSettingsLoading';
 import { ProfilePhotoDialog } from './ProfilePhotoDialog';
 
+function getRoleMessage(role: string): string {
+  if (role === 'ADMIN') return 'You can manage team roles and permissions in Team Settings.';
+  if (role === 'MANAGER') return 'To change roles or permissions, contact your Admin.';
+  return 'To change your username or role, contact the System Administrator.';
+}
+
+function getThemeIcon(t: string): string {
+  if (t === 'light') return 'light_mode';
+  if (t === 'dark') return 'dark_mode';
+  return 'contrast';
+}
+
 export default function AccountSettingsContent() {
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
 
@@ -54,7 +66,6 @@ export default function AccountSettingsContent() {
   useEffect(() => {
     if (profileQuery.data) {
       const data = profileQuery.data;
-      // Prefer server-provided given/family; fall back to splitting `name`
       if (data.givenName || data.familyName) {
         setFirstName(data.givenName ?? '');
         setLastName(data.familyName ?? '');
@@ -214,8 +225,7 @@ export default function AccountSettingsContent() {
                 </div>
               </div>
               <Button variant="outline" size="sm" className="self-start sm:self-end shrink-0" onClick={() => setPhotoDialogOpen(true)}>
-                <span className="material-symbols-outlined text-[16px] mr-1.5" aria-hidden="true">upload</span>
-                Upload New Photo
+                <span className="material-symbols-outlined text-[16px] mr-1.5" aria-hidden="true">upload</span>Upload New Photo
               </Button>
             </div>
 
@@ -283,8 +293,7 @@ export default function AccountSettingsContent() {
                 <span className="text-sm text-muted-foreground">Plan</span>
                 <Link href="/billing">
                   <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 dark:bg-primary/20 hover:bg-primary/20 dark:hover:bg-primary/30 cursor-pointer transition-colors">
-                    <span className="material-symbols-outlined text-[12px] mr-1" aria-hidden="true">workspace_premium</span>
-                    Professional
+                    <span className="material-symbols-outlined text-[12px] mr-1" aria-hidden="true">workspace_premium</span>Professional
                   </Badge>
                 </Link>
               </div>
@@ -312,11 +321,7 @@ export default function AccountSettingsContent() {
 
           <div className="mt-5 pt-4 border-t border-slate-200 dark:border-slate-700 px-6 pb-6">
             <p className="text-xs text-muted-foreground mb-3">
-              {role === 'ADMIN'
-                ? 'You can manage team roles and permissions in Team Settings.'
-                : role === 'MANAGER'
-                  ? 'To change roles or permissions, contact your Admin.'
-                  : 'To change your username or role, contact the System Administrator.'}
+              {getRoleMessage(role)}
             </p>
             <div className="flex items-center justify-between gap-4">
               {role === 'ADMIN' ? (
@@ -516,7 +521,7 @@ export default function AccountSettingsContent() {
                     }`}
                   >
                     <span className="material-symbols-outlined text-[20px]">
-                      {t === 'light' ? 'light_mode' : t === 'dark' ? 'dark_mode' : 'contrast'}
+                      {getThemeIcon(t)}
                     </span>
                     {t.charAt(0).toUpperCase() + t.slice(1)}
                   </button>
@@ -762,8 +767,7 @@ export default function AccountSettingsContent() {
             >
               {isSaving ? (
                 <span className="flex items-center gap-2">
-                  <span className="material-symbols-outlined animate-spin text-sm" aria-hidden="true">progress_activity</span>
-                  Saving...
+                  <span className="material-symbols-outlined animate-spin text-sm" aria-hidden="true">progress_activity</span>Saving...
                 </span>
               ) : (
                 'Save Changes'
