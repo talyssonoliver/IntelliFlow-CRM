@@ -33,7 +33,8 @@ function getRoot(): string {
 // All git invocations in this module use static arguments — no user-controlled data.
 function safeExec(args: string[], root: string): string {
   try {
-    return execFileSync('git', args, { // NOSONAR — PATH inherited from dev environment, internal tooling only
+    return execFileSync('git', args, {
+      // NOSONAR — PATH inherited from dev environment, internal tooling only
       cwd: root,
       encoding: 'utf-8',
       timeout: 15000,
@@ -75,7 +76,10 @@ function safeReadJson(filePath: string): any {
   }
 }
 
-function collectTurbo(root: string, existing: any): { turboTaskCount: number; turboRemoteCache: boolean } {
+function collectTurbo(
+  root: string,
+  existing: any
+): { turboTaskCount: number; turboRemoteCache: boolean } {
   const turboJson = safeReadJson(resolve(root, 'turbo.json'));
   return {
     turboTaskCount: turboJson?.tasks
@@ -89,7 +93,10 @@ function collectWorkflows(root: string): { workflowCount: number; workflowNames:
   const workflowDir = resolve(root, '.github/workflows');
   if (!existsSync(workflowDir)) return { workflowCount: 0, workflowNames: [] };
   const files = readdirSync(workflowDir).filter((f) => f.endsWith('.yml') || f.endsWith('.yaml'));
-  return { workflowCount: files.length, workflowNames: files.map((f) => f.replace(/\.(yml|yaml)$/, '')) };
+  return {
+    workflowCount: files.length,
+    workflowNames: files.map((f) => f.replace(/\.(yml|yaml)$/, '')),
+  };
 }
 
 function collectPackageCount(root: string): number {
@@ -98,8 +105,14 @@ function collectPackageCount(root: string): number {
   let count = 0;
   const appsDir = resolve(root, 'apps');
   const pkgsDir = resolve(root, 'packages');
-  if (existsSync(appsDir)) count += readdirSync(appsDir).filter((d) => existsSync(join(appsDir, d, 'package.json'))).length;
-  if (existsSync(pkgsDir)) count += readdirSync(pkgsDir).filter((d) => existsSync(join(pkgsDir, d, 'package.json'))).length;
+  if (existsSync(appsDir))
+    count += readdirSync(appsDir).filter((d) =>
+      existsSync(join(appsDir, d, 'package.json'))
+    ).length;
+  if (existsSync(pkgsDir))
+    count += readdirSync(pkgsDir).filter((d) =>
+      existsSync(join(pkgsDir, d, 'package.json'))
+    ).length;
   return count;
 }
 
@@ -113,10 +126,30 @@ function collectGitVelocity(root: string): { commitCount30d: number; branchCount
 }
 
 const DEFAULT_GOLDEN_PATHS = [
-  { name: 'web-app-development', description: 'Standard path for Next.js web applications', entry_point: 'pnpm --filter web dev', documentation: 'docs/operations/engineering-playbook.md' },
-  { name: 'api-development', description: 'Standard path for tRPC API development', entry_point: 'pnpm --filter api dev', documentation: 'docs/operations/engineering-playbook.md' },
-  { name: 'ai-worker-development', description: 'Standard path for AI worker/agent development', entry_point: 'pnpm --filter ai-worker dev', documentation: 'docs/operations/engineering-playbook.md' },
-  { name: 'database-migrations', description: 'Standard path for Prisma migrations', entry_point: 'pnpm run db:migrate:create', documentation: 'docs/operations/engineering-playbook.md' },
+  {
+    name: 'web-app-development',
+    description: 'Standard path for Next.js web applications',
+    entry_point: 'pnpm --filter web dev',
+    documentation: 'docs/operations/engineering-playbook.md',
+  },
+  {
+    name: 'api-development',
+    description: 'Standard path for tRPC API development',
+    entry_point: 'pnpm --filter api dev',
+    documentation: 'docs/operations/engineering-playbook.md',
+  },
+  {
+    name: 'ai-worker-development',
+    description: 'Standard path for AI worker/agent development',
+    entry_point: 'pnpm --filter ai-worker dev',
+    documentation: 'docs/operations/engineering-playbook.md',
+  },
+  {
+    name: 'database-migrations',
+    description: 'Standard path for Prisma migrations',
+    entry_point: 'pnpm run db:migrate:create',
+    documentation: 'docs/operations/engineering-playbook.md',
+  },
 ];
 
 function countVerifiedGoldenPaths(goldenPaths: any[], root: string): number {
@@ -166,7 +199,8 @@ export async function POST() {
     // =============================================
     // AUTO-COLLECT: Golden paths verification
     // =============================================
-    const goldenPaths = existing.platform_engineering_foundation?.golden_paths?.paths || DEFAULT_GOLDEN_PATHS;
+    const goldenPaths =
+      existing.platform_engineering_foundation?.golden_paths?.paths || DEFAULT_GOLDEN_PATHS;
     const goldenPathsVerified = countVerifiedGoldenPaths(goldenPaths, root);
 
     // =============================================

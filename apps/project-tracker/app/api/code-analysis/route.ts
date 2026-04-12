@@ -83,7 +83,9 @@ function collectUniqueNames(items: any[] | undefined, bag: string[]): void {
   }
 }
 
-function parseKnipIssues(issues: any[]): Pick<KnipResult, 'dependencies' | 'devDependencies' | 'unlisted' | 'exports' | 'types'> {
+function parseKnipIssues(
+  issues: any[]
+): Pick<KnipResult, 'dependencies' | 'devDependencies' | 'unlisted' | 'exports' | 'types'> {
   const dependencies: string[] = [];
   const devDependencies: string[] = [];
   const unlisted: string[] = [];
@@ -108,7 +110,13 @@ function parseKnipIssues(issues: any[]): Pick<KnipResult, 'dependencies' | 'devD
 
 function parseKnipOutput(output: string): KnipResult {
   const empty: KnipResult = {
-    files: [], dependencies: [], devDependencies: [], unlisted: [], exports: [], types: [], duplicates: [],
+    files: [],
+    dependencies: [],
+    devDependencies: [],
+    unlisted: [],
+    exports: [],
+    types: [],
+    duplicates: [],
   };
 
   try {
@@ -117,7 +125,11 @@ function parseKnipOutput(output: string): KnipResult {
     return {
       files: parsed.files || [],
       duplicates: parsed.duplicates || [],
-      dependencies: [], devDependencies: [], unlisted: [], exports: [], types: [],
+      dependencies: [],
+      devDependencies: [],
+      unlisted: [],
+      exports: [],
+      types: [],
       ...issues,
     };
   } catch (err) {
@@ -151,7 +163,8 @@ function runKnip(): AnalysisResult['knip'] {
     // Knip exits with non-zero when issues are found, so we need to handle that
     let output = '';
     try {
-      output = execSync('npx knip --reporter json --exclude unlisted,unresolved --no-gitignore', { // NOSONAR — PATH inherited from dev environment, internal tooling only
+      output = execSync('npx knip --reporter json --exclude unlisted,unresolved --no-gitignore', {
+        // NOSONAR — PATH inherited from dev environment, internal tooling only
         cwd: PROJECT_ROOT,
         encoding: 'utf-8',
         timeout: 120000, // 2 minutes

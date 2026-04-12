@@ -149,7 +149,9 @@ function buildOwnerVelocities(allTasks: AnyTask[], ownerFilter: string | null): 
     })
     .sort((a, b) => b.completed - a.completed);
   if (ownerFilter) {
-    velocities = velocities.filter((o) => o.owner.toLowerCase().includes(ownerFilter.toLowerCase()));
+    velocities = velocities.filter((o) =>
+      o.owner.toLowerCase().includes(ownerFilter.toLowerCase())
+    );
   }
   return velocities;
 }
@@ -177,7 +179,8 @@ function calculateVelocityTrend(sprintVelocities: SprintVelocity[]): string {
   if (recentSprints.length < 2) return 'stable';
   const avgRecent = recentSprints.reduce((sum, s) => sum + s.velocity, 0) / recentSprints.length;
   const previousSlice = sprintVelocities.slice(-6, -3);
-  const avgPrevious = previousSlice.reduce((sum, s) => sum + s.velocity, 0) / Math.max(1, previousSlice.length);
+  const avgPrevious =
+    previousSlice.reduce((sum, s) => sum + s.velocity, 0) / Math.max(1, previousSlice.length);
   if (avgRecent > avgPrevious * 1.1) return 'improving';
   if (avgRecent < avgPrevious * 0.9) return 'declining';
   return 'stable';

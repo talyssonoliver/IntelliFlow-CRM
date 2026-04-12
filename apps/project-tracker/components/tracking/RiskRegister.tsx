@@ -417,8 +417,16 @@ type RiskFormData = {
 
 function buildChangedFields(formData: RiskFormData, orig: Risk): Partial<Risk> {
   const FIELD_KEYS = [
-    'category', 'description', 'impact', 'likelihood',
-    'status', 'owner', 'mitigation', 'escalationPath', 'evidence', 'notes',
+    'category',
+    'description',
+    'impact',
+    'likelihood',
+    'status',
+    'owner',
+    'mitigation',
+    'escalationPath',
+    'evidence',
+    'notes',
   ] as const;
   const updates: Partial<Risk> = {};
   for (const key of FIELD_KEYS) {
@@ -461,8 +469,7 @@ function RiskModal({
   const computedScore = formData.impact * formData.likelihood;
   const validTransitions = isEdit ? (VALID_RISK_TRANSITIONS[editRisk?.status ?? 'Open'] ?? []) : [];
 
-  const buildEditUpdates = (): Partial<Risk> =>
-    buildChangedFields(formData, editRisk!);
+  const buildEditUpdates = (): Partial<Risk> => buildChangedFields(formData, editRisk!);
 
   const handleSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault();
@@ -502,7 +509,9 @@ function RiskModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="risk-category" className="block text-sm text-gray-600 mb-1">Category</label>
+            <label htmlFor="risk-category" className="block text-sm text-gray-600 mb-1">
+              Category
+            </label>
             <select
               id="risk-category"
               value={formData.category}
@@ -518,7 +527,9 @@ function RiskModal({
           </div>
 
           <div>
-            <label htmlFor="risk-description" className="block text-sm text-gray-600 mb-1">Description</label>
+            <label htmlFor="risk-description" className="block text-sm text-gray-600 mb-1">
+              Description
+            </label>
             <textarea
               id="risk-description"
               value={formData.description}
@@ -532,11 +543,15 @@ function RiskModal({
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label htmlFor="risk-impact" className="block text-sm text-gray-600 mb-1">Impact (1-5)</label>
+              <label htmlFor="risk-impact" className="block text-sm text-gray-600 mb-1">
+                Impact (1-5)
+              </label>
               <select
                 id="risk-impact"
                 value={formData.impact}
-                onChange={(e) => setFormData({ ...formData, impact: Number.parseInt(e.target.value) })}
+                onChange={(e) =>
+                  setFormData({ ...formData, impact: Number.parseInt(e.target.value) })
+                }
                 className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
               >
                 {[1, 2, 3, 4, 5].map((v) => (
@@ -547,11 +562,15 @@ function RiskModal({
               </select>
             </div>
             <div>
-              <label htmlFor="risk-likelihood" className="block text-sm text-gray-600 mb-1">Likelihood (1-5)</label>
+              <label htmlFor="risk-likelihood" className="block text-sm text-gray-600 mb-1">
+                Likelihood (1-5)
+              </label>
               <select
                 id="risk-likelihood"
                 value={formData.likelihood}
-                onChange={(e) => setFormData({ ...formData, likelihood: Number.parseInt(e.target.value) })}
+                onChange={(e) =>
+                  setFormData({ ...formData, likelihood: Number.parseInt(e.target.value) })
+                }
                 className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
               >
                 {[1, 2, 3, 4, 5].map((v) => (
@@ -574,7 +593,9 @@ function RiskModal({
 
           {isEdit && (
             <div>
-              <label htmlFor="risk-status" className="block text-sm text-gray-600 mb-1">Status</label>
+              <label htmlFor="risk-status" className="block text-sm text-gray-600 mb-1">
+                Status
+              </label>
               <select
                 id="risk-status"
                 value={formData.status}
@@ -592,7 +613,9 @@ function RiskModal({
           )}
 
           <div>
-            <label htmlFor="risk-owner" className="block text-sm text-gray-600 mb-1">Owner</label>
+            <label htmlFor="risk-owner" className="block text-sm text-gray-600 mb-1">
+              Owner
+            </label>
             <input
               id="risk-owner"
               type="text"
@@ -604,7 +627,9 @@ function RiskModal({
           </div>
 
           <div>
-            <label htmlFor="risk-mitigation" className="block text-sm text-gray-600 mb-1">Mitigation</label>
+            <label htmlFor="risk-mitigation" className="block text-sm text-gray-600 mb-1">
+              Mitigation
+            </label>
             <textarea
               id="risk-mitigation"
               value={formData.mitigation}
@@ -618,7 +643,9 @@ function RiskModal({
           {isEdit && (
             <>
               <div>
-                <label htmlFor="risk-escalation" className="block text-sm text-gray-600 mb-1">Escalation Path</label>
+                <label htmlFor="risk-escalation" className="block text-sm text-gray-600 mb-1">
+                  Escalation Path
+                </label>
                 <input
                   id="risk-escalation"
                   type="text"
@@ -629,7 +656,9 @@ function RiskModal({
                 />
               </div>
               <div>
-                <label htmlFor="risk-evidence" className="block text-sm text-gray-600 mb-1">Evidence</label>
+                <label htmlFor="risk-evidence" className="block text-sm text-gray-600 mb-1">
+                  Evidence
+                </label>
                 <input
                   id="risk-evidence"
                   type="text"
@@ -640,7 +669,9 @@ function RiskModal({
                 />
               </div>
               <div>
-                <label htmlFor="risk-notes" className="block text-sm text-gray-600 mb-1">Notes</label>
+                <label htmlFor="risk-notes" className="block text-sm text-gray-600 mb-1">
+                  Notes
+                </label>
                 <textarea
                   id="risk-notes"
                   value={formData.notes}

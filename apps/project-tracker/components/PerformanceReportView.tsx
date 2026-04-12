@@ -180,12 +180,17 @@ function getValidatorComplexityClass(complexity: string): string {
   return 'bg-green-100 text-green-700';
 }
 
-function getEndpointTestStatusBadge(isK6Tested: boolean, hasBenchmark: unknown): React.ReactElement {
+function getEndpointTestStatusBadge(
+  isK6Tested: boolean,
+  hasBenchmark: unknown
+): React.ReactElement {
   if (isK6Tested) {
     return <span className="px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">TESTED</span>;
   }
   if (hasBenchmark) {
-    return <span className="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700">BENCHMARKED</span>;
+    return (
+      <span className="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700">BENCHMARKED</span>
+    );
   }
   return <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600">PENDING</span>;
 }
@@ -198,10 +203,27 @@ function getRecommendationPriorityClass(priority: string): string {
   return 'bg-blue-500';
 }
 
+function isEndpointK6Tested(
+  testedNames: string[],
+  routerName: string,
+  endpointName: string,
+  index: number
+): boolean {
+  const fullName = `${routerName}.${endpointName}`.toLowerCase();
+  return testedNames.some(
+    (name) =>
+      name === fullName ||
+      (routerName.toLowerCase() === 'health' && index === 0 && name.includes('health')) ||
+      (routerName.toLowerCase() === 'lead' && endpointName === 'list' && name.includes('lead.list')) ||
+      (routerName.toLowerCase() === 'contact' && endpointName === 'list' && name.includes('contact.list'))
+  );
+}
+
 function buildEndpointSectionData(
   endpointMetrics: EndpointMetric[]
 ): { name: string; p50: number; p95: number; p99: number; count: number }[] {
-  const sections: Record<string, { p50: number[]; p95: number[]; p99: number[]; count: number }> = {};
+  const sections: Record<string, { p50: number[]; p95: number[]; p99: number[]; count: number }> =
+    {};
   for (const endpoint of endpointMetrics) {
     const section = endpoint.name.split('-')[0];
     if (!sections[section]) {
@@ -297,13 +319,242 @@ function buildK6Recommendations(
   return recommendations;
 }
 
-function getK6ButtonClass(testType: 'quick' | 'comprehensive', isRunningTest: 'quick' | 'comprehensive' | null, baseColor: string, runningColor: string): string {
+function getK6ButtonClass(
+  testType: 'quick' | 'comprehensive',
+  isRunningTest: 'quick' | 'comprehensive' | null,
+  baseColor: string,
+  runningColor: string
+): string {
   if (isRunningTest === testType) return `${runningColor} text-white cursor-wait`;
   if (isRunningTest !== null) return 'bg-gray-300 text-gray-500 cursor-not-allowed';
   return `${baseColor} text-white`;
 }
 
-export default function PerformanceReportView() { // NOSONAR typescript:S3776
+interface K6TestButtonProps {
+  testType: 'quick' | 'comprehensive';
+  isRunningTest: 'quick' | 'comprehensive' | null;
+  onRun: (t: 'quick' | 'comprehensive') => void;
+}
+
+function K6TestButton({ testType, isRunningTest, onRun }: Readonly<K6TestButtonProps>) {
+  const isQuick = testType === 'quick';
+  const label = isQuick ? 'Quick Test (8 endpoints)' : 'Comprehensive Test (47 endpoints)';
+  const runningLabel = isQuick ? 'Running Quick...' : 'Running Comprehensive...';
+  const baseColor = isQuick ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700';
+  const runningColor = isQuick ? 'bg-blue-400' : 'bg-green-400';
+  const iconName = isQuick ? 'bolt' : 'science';
+  const isThisRunning = isRunningTest === testType;
+
+  return (
+    <button
+      onClick={() => onRun(testType)}
+      disabled={isRunningTest !== null}
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${getK6ButtonClass(testType, isRunningTest, baseColor, runningColor)}`}
+    >
+      {isThisRunning ? (
+        <>
+          <span className="animate-spin">⏳</span> {runningLabel}
+        </>
+      ) : (
+        <>
+          <Icon name={iconName} size="sm" /> {label}
+        </>
+      )}
+    </button>
+  );
+}
+
+function K6TestOutputPanel({
+  isRunningTest,
+  testOutput,
+}: Readonly<{ isRunningTest: 'quick' | 'comprehensive' | null; testOutput: string | null }>) {
+  if (!isRunningTest && !testOutput) return null;
+  return (
+    <div className="p-4 bg-gray-900 text-green-400 font-mono text-xs max-h-64 overflow-y-auto">
+      {isRunningTest && !testOutput && (
+        <div className="flex items-center gap-2">
+          <span className="animate-pulse">▶</span> Running {isRunningTest} test... This may take 30-60 seconds.
+        </div>
+      )}
+      {testOutput && <pre className="whitespace-pre-wrap">{testOutput}</pre>}
+    </div>
+  );
+}
+
+interface ResponseTimeMetricsSectionProps {
+  performanceStatus: string;
+  endpointMetrics: EndpointMetric[] | undefined;
+}
+
+function ResponseTimeMetricsSection({ performanceStatus, endpointMetrics }: Readonly<ResponseTimeMetricsSectionProps>) {
+  const hasData = performanceStatus === 'completed' && endpointMetrics && endpointMetrics.length > 0;
+  return (
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-gray-100 px-6 py-4 border-b">
+        <h2 className="text-lg font-semibold text-gray-700">Response Time Metrics by Section</h2>
+      </div>
+      <div className="p-6">
+        {performanceStatus === 'pending' && (
+          <p className="text-gray-600 italic mb-4">Run benchmarks to see actual response time data</p>
+        )}
+        {hasData ? (
+          <>
+            <div className="flex items-end justify-around gap-2 h-64 pb-8 overflow-x-auto">
+              {buildEndpointSectionData(endpointMetrics!).map((section) => {
+                const maxTime = 120;
+                const p50Height = Math.min((section.p50 / maxTime) * 160, 160);
+                const p95Height = Math.min((section.p95 / maxTime) * 160, 160);
+                const p99Height = Math.min((section.p99 / maxTime) * 160, 160);
+                return (
+                  <div key={section.name} className="flex flex-col items-center gap-2 min-w-[70px]">
+                    <div className="flex items-end gap-1 h-40">
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs text-gray-500 mb-1">{section.p50.toFixed(0)}</span>
+                        <div className="w-5 bg-green-500 rounded-t" style={{ height: `${p50Height}px` }} />
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs text-gray-500 mb-1">{section.p95.toFixed(0)}</span>
+                        <div className="w-5 bg-yellow-500 rounded-t" style={{ height: `${p95Height}px` }} />
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs text-gray-500 mb-1">{section.p99.toFixed(0)}</span>
+                        <div className="w-5 bg-orange-500 rounded-t" style={{ height: `${p99Height}px` }} />
+                      </div>
+                    </div>
+                    <span className="text-xs text-gray-700 font-medium text-center capitalize">{section.name}</span>
+                    <span className="text-xs text-gray-400">({section.count})</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex justify-center gap-6 mt-4 pt-4 border-t">
+              <div className="flex items-center gap-2"><div className="w-4 h-4 bg-green-500 rounded" /><span className="text-sm text-gray-600">p50 (Median)</span></div>
+              <div className="flex items-center gap-2"><div className="w-4 h-4 bg-yellow-500 rounded" /><span className="text-sm text-gray-600">p95</span></div>
+              <div className="flex items-center gap-2"><div className="w-4 h-4 bg-orange-500 rounded" /><span className="text-sm text-gray-600">p99</span></div>
+              <div className="flex items-center gap-2 ml-4 pl-4 border-l"><span className="text-sm text-gray-500">(n) = endpoints tested</span></div>
+            </div>
+          </>
+        ) : (
+          <div className="flex items-end justify-around gap-4 h-64 pb-8">
+            {['Health', 'Auth', 'CRM', 'AI', 'Billing'].map((section) => (
+              <div key={section} className="flex flex-col items-center gap-2 flex-1">
+                <div className="flex items-end gap-1 h-40">
+                  <div className="flex flex-col items-center"><span className="text-xs text-gray-500 mb-1">--</span><div className="w-5 bg-gray-200 rounded-t" style={{ height: '32px' }} /></div>
+                  <div className="flex flex-col items-center"><span className="text-xs text-gray-500 mb-1">--</span><div className="w-5 bg-gray-300 rounded-t" style={{ height: '64px' }} /></div>
+                  <div className="flex flex-col items-center"><span className="text-xs text-gray-500 mb-1">--</span><div className="w-5 bg-gray-400 rounded-t" style={{ height: '96px' }} /></div>
+                </div>
+                <span className="text-xs text-gray-700 font-medium text-center">{section}</span>
+                <span className="text-xs text-gray-400">(0)</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface ErrorRateAnalysisSectionProps {
+  k6ErrorAnalysis: K6ErrorAnalysis | null | undefined;
+  k6TestedEndpoints: K6TestedEndpoint[] | undefined;
+}
+
+function ErrorRateAnalysisSection({ k6ErrorAnalysis, k6TestedEndpoints }: Readonly<ErrorRateAnalysisSectionProps>) {
+  return (
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-gray-100 px-6 py-4 border-b">
+        <h2 className="text-lg font-semibold text-gray-700">Error Rate Analysis</h2>
+      </div>
+      <div className="p-6">
+        {k6ErrorAnalysis ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-gray-50 p-4 rounded-lg text-center">
+                <div className={`text-3xl font-bold ${k6ErrorAnalysis.error_rate_percent === 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {k6ErrorAnalysis.error_rate_percent.toFixed(2)}%
+                </div>
+                <div className="text-sm text-gray-600 mt-1">Total Error Rate</div>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg text-center">
+                <div className="text-3xl font-bold text-green-600">{k6ErrorAnalysis.total_checks_passed.toLocaleString()}</div>
+                <div className="text-sm text-gray-600 mt-1">Checks Passed</div>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg text-center">
+                <div className={`text-3xl font-bold ${k6ErrorAnalysis.total_checks_failed === 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {k6ErrorAnalysis.total_checks_failed.toLocaleString()}
+                </div>
+                <div className="text-sm text-gray-600 mt-1">Checks Failed</div>
+              </div>
+            </div>
+            {k6TestedEndpoints && k6TestedEndpoints.length > 0 && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="px-4 py-3 text-left font-semibold text-gray-600">Endpoint Check</th>
+                      <th className="px-4 py-3 text-center font-semibold text-gray-600">Passes</th>
+                      <th className="px-4 py-3 text-center font-semibold text-gray-600">Fails</th>
+                      <th className="px-4 py-3 text-center font-semibold text-gray-600">Success Rate</th>
+                      <th className="px-4 py-3 text-center font-semibold text-gray-600">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {k6TestedEndpoints.map((endpoint) => (
+                      <tr key={endpoint.name} className="border-t hover:bg-gray-50">
+                        <td className="px-4 py-3 font-medium">{endpoint.name}</td>
+                        <td className="px-4 py-3 text-center text-green-600">{endpoint.passes.toLocaleString()}</td>
+                        <td className="px-4 py-3 text-center text-red-600">{endpoint.fails}</td>
+                        <td className="px-4 py-3 text-center">{endpoint.success_rate.toFixed(1)}%</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className={`px-2 py-0.5 rounded text-xs ${endpoint.fails === 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                            {endpoint.fails === 0 ? 'PASS' : 'FAIL'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <p className="mt-4 text-sm text-gray-700">
+              <strong>Check Success Rate: {(k6ErrorAnalysis.check_success_rate * 100).toFixed(1)}%</strong>{' '}
+              | HTTP Failed Requests: {k6ErrorAnalysis.http_failed_count}
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-gray-600 italic mb-4">No load test data available - run k6 benchmark to see actual error analysis</p>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <p className="text-sm text-amber-800">
+                <strong>To run load tests:</strong> Execute{' '}
+                <code className="bg-amber-100 px-1 rounded">.\artifacts\misc\k6\run-quick-test.ps1</code>{' '}
+                from project root
+              </p>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+async function fetchPerformanceReport(): Promise<PerformanceReportData> {
+  const response = await fetch('/api/performance-report', { cache: 'no-store' });
+  if (!response.ok) throw new Error('Failed to fetch performance report');
+  return response.json() as Promise<PerformanceReportData>;
+}
+
+async function runK6TestRequest(testType: 'quick' | 'comprehensive'): Promise<string> {
+  const response = await fetch('/api/run-k6-test', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ testType }),
+  });
+  const result = (await response.json()) as { output?: string; error?: string };
+  return result.output ?? result.error ?? 'Test completed';
+}
+
+export default function PerformanceReportView() {
   const [data, setData] = useState<PerformanceReportData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -311,44 +562,23 @@ export default function PerformanceReportView() { // NOSONAR typescript:S3776
   const [isRunningTest, setIsRunningTest] = useState<'quick' | 'comprehensive' | null>(null);
   const [testOutput, setTestOutput] = useState<string | null>(null);
 
-  const runK6Test = async (testType: 'quick' | 'comprehensive') => {
-    setIsRunningTest(testType);
-    setTestOutput(null);
-    try {
-      const response = await fetch('/api/run-k6-test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ testType }),
-      });
-      const result = await response.json();
-      setTestOutput(result.output || result.error || 'Test completed');
-      // Reload data after test completes
-      await loadData();
-    } catch (err) {
-      setTestOutput(err instanceof Error ? err.message : 'Test failed');
-    } finally {
-      setIsRunningTest(null);
-    }
-  };
-
   const loadData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    try {
-      const response = await fetch('/api/performance-report', {
-        cache: 'no-store',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch performance report');
-      }
-      const result = await response.json();
-      setData(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setIsLoading(false);
-    }
+    fetchPerformanceReport()
+      .then((result) => setData(result))
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Unknown error'))
+      .finally(() => setIsLoading(false));
   }, []);
+
+  const runK6Test = (testType: 'quick' | 'comprehensive') => {
+    setIsRunningTest(testType);
+    setTestOutput(null);
+    runK6TestRequest(testType)
+      .then((output) => { setTestOutput(output); return loadData(); })
+      .catch((err: unknown) => setTestOutput(err instanceof Error ? err.message : 'Test failed'))
+      .finally(() => setIsRunningTest(null));
+  };
 
   useEffect(() => {
     loadData();
@@ -424,8 +654,7 @@ export default function PerformanceReportView() { // NOSONAR typescript:S3776
             onClick={loadData}
             className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors"
           >
-            <Icon name="refresh" size="sm" />{' '}
-            Refresh
+            <Icon name="refresh" size="sm" /> Refresh
           </button>
         </div>
       </div>
@@ -438,47 +667,17 @@ export default function PerformanceReportView() { // NOSONAR typescript:S3776
             <p className="text-sm text-gray-500">Run k6 load tests against the API</p>
           </div>
           <div className="flex gap-3">
-            <button
-              onClick={() => runK6Test('quick')}
-              disabled={isRunningTest !== null}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${getK6ButtonClass('quick', isRunningTest, 'bg-blue-600 hover:bg-blue-700', 'bg-blue-400')}`}
-            >
-              {isRunningTest === 'quick' ? (
-                <><span className="animate-spin">⏳</span>{' '}Running Quick...</>
-              ) : (
-                <><Icon name="bolt" size="sm" />{' '}Quick Test (8 endpoints)</>
-              )}
-            </button>
-            <button
-              onClick={() => runK6Test('comprehensive')}
-              disabled={isRunningTest !== null}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${getK6ButtonClass('comprehensive', isRunningTest, 'bg-green-600 hover:bg-green-700', 'bg-green-400')}`}
-            >
-              {isRunningTest === 'comprehensive' ? (
-                <><span className="animate-spin">⏳</span>{' '}Running Comprehensive...</>
-              ) : (
-                <><Icon name="science" size="sm" />{' '}Comprehensive Test (47 endpoints)</>
-              )}
-            </button>
+            <K6TestButton testType="quick" isRunningTest={isRunningTest} onRun={runK6Test} />
+            <K6TestButton testType="comprehensive" isRunningTest={isRunningTest} onRun={runK6Test} />
           </div>
         </div>
         {/* Test output log */}
-        {(isRunningTest || testOutput) && (
-          <div className="p-4 bg-gray-900 text-green-400 font-mono text-xs max-h-64 overflow-y-auto">
-            {isRunningTest && !testOutput && (
-              <div className="flex items-center gap-2">
-                <span className="animate-pulse">▶</span>{' '}
-                Running {isRunningTest} test... This may take 30-60 seconds.
-              </div>
-            )}
-            {testOutput && <pre className="whitespace-pre-wrap">{testOutput}</pre>}
-          </div>
-        )}
+        <K6TestOutputPanel isRunningTest={isRunningTest} testOutput={testOutput} />
         {/* Last test info */}
         {data?.k6_test_config && (
           <div className="px-6 py-3 bg-gray-50 border-t text-sm text-gray-600 flex items-center justify-between">
             <span>
-              Last test:{' '}<strong>{data.k6_test_config.test_type}</strong>{' '}at{' '}
+              Last test: <strong>{data.k6_test_config.test_type}</strong> at{' '}
               {new Date(data.k6_test_config.timestamp).toLocaleString()}
             </span>
             <span>
@@ -837,7 +1036,9 @@ export default function PerformanceReportView() { // NOSONAR typescript:S3776
                     <span className="text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">
                       {validator.schemas} schemas
                     </span>
-                    <span className={`text-xs px-1.5 py-0.5 rounded ${getValidatorComplexityClass(validator.complexity)}`}>
+                    <span
+                      className={`text-xs px-1.5 py-0.5 rounded ${getValidatorComplexityClass(validator.complexity)}`}
+                    >
                       {validator.complexity}
                     </span>
                   </div>
@@ -892,113 +1093,10 @@ export default function PerformanceReportView() { // NOSONAR typescript:S3776
       </div>
 
       {/* Response Time Metrics by Section */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="bg-gray-100 px-6 py-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-700">Response Time Metrics by Section</h2>
-        </div>
-        <div className="p-6">
-          {performanceStatus === 'pending' && (
-            <p className="text-gray-600 italic mb-4">
-              Run benchmarks to see actual response time data
-            </p>
-          )}
-          {performanceStatus === 'completed' &&
-          data.endpoint_metrics &&
-          data.endpoint_metrics.length > 0 ? (
-            <>
-              <div className="flex items-end justify-around gap-2 h-64 pb-8 overflow-x-auto">
-                {buildEndpointSectionData(data.endpoint_metrics).map((section) => {
-                  const maxTime = 120;
-                  const p50Height = Math.min((section.p50 / maxTime) * 160, 160);
-                  const p95Height = Math.min((section.p95 / maxTime) * 160, 160);
-                  const p99Height = Math.min((section.p99 / maxTime) * 160, 160);
-                  return (
-                    <div
-                      key={section.name}
-                      className="flex flex-col items-center gap-2 min-w-[70px]"
-                    >
-                      <div className="flex items-end gap-1 h-40">
-                        <div className="flex flex-col items-center">
-                          <span className="text-xs text-gray-500 mb-1">
-                            {section.p50.toFixed(0)}
-                          </span>
-                          <div
-                            className="w-5 bg-green-500 rounded-t"
-                            style={{ height: `${p50Height}px` }}
-                          />
-                        </div>
-                        <div className="flex flex-col items-center">
-                          <span className="text-xs text-gray-500 mb-1">
-                            {section.p95.toFixed(0)}
-                          </span>
-                          <div
-                            className="w-5 bg-yellow-500 rounded-t"
-                            style={{ height: `${p95Height}px` }}
-                          />
-                        </div>
-                        <div className="flex flex-col items-center">
-                          <span className="text-xs text-gray-500 mb-1">
-                            {section.p99.toFixed(0)}
-                          </span>
-                          <div
-                            className="w-5 bg-orange-500 rounded-t"
-                            style={{ height: `${p99Height}px` }}
-                          />
-                        </div>
-                      </div>
-                      <span className="text-xs text-gray-700 font-medium text-center capitalize">
-                        {section.name}
-                      </span>
-                      <span className="text-xs text-gray-400">({section.count})</span>
-                    </div>
-                  );
-                })}
-              </div>
-              {/* Legend */}
-              <div className="flex justify-center gap-6 mt-4 pt-4 border-t">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-green-500 rounded" />
-                  <span className="text-sm text-gray-600">p50 (Median)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-yellow-500 rounded" />
-                  <span className="text-sm text-gray-600">p95</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-orange-500 rounded" />
-                  <span className="text-sm text-gray-600">p99</span>
-                </div>
-                <div className="flex items-center gap-2 ml-4 pl-4 border-l">
-                  <span className="text-sm text-gray-500">(n) = endpoints tested</span>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="flex items-end justify-around gap-4 h-64 pb-8">
-              {['Health', 'Auth', 'CRM', 'AI', 'Billing'].map((section) => (
-                <div key={section} className="flex flex-col items-center gap-2 flex-1">
-                  <div className="flex items-end gap-1 h-40">
-                    <div className="flex flex-col items-center">
-                      <span className="text-xs text-gray-500 mb-1">--</span>
-                      <div className="w-5 bg-gray-200 rounded-t" style={{ height: '32px' }} />
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <span className="text-xs text-gray-500 mb-1">--</span>
-                      <div className="w-5 bg-gray-300 rounded-t" style={{ height: '64px' }} />
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <span className="text-xs text-gray-500 mb-1">--</span>
-                      <div className="w-5 bg-gray-400 rounded-t" style={{ height: '96px' }} />
-                    </div>
-                  </div>
-                  <span className="text-xs text-gray-700 font-medium text-center">{section}</span>
-                  <span className="text-xs text-gray-400">(0)</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      <ResponseTimeMetricsSection
+        performanceStatus={performanceStatus}
+        endpointMetrics={data.endpoint_metrics}
+      />
 
       {/* Endpoint Performance Catalog */}
       {data.api_inventory && (
@@ -1103,20 +1201,7 @@ export default function PerformanceReportView() { // NOSONAR typescript:S3776
                           const fullEndpointName = `${router.name}.${endpointName}`;
 
                           // Check if this endpoint was tested by k6
-                          const isK6Tested = testedEndpointNames.some(
-                            (name) =>
-                              name === fullEndpointName.toLowerCase() ||
-                              name === `${router.name}.${endpointName}`.toLowerCase() ||
-                              (router.name.toLowerCase() === 'health' &&
-                                i === 0 &&
-                                name.includes('health')) ||
-                              (router.name.toLowerCase() === 'lead' &&
-                                endpointName === 'list' &&
-                                name.includes('lead.list')) ||
-                              (router.name.toLowerCase() === 'contact' &&
-                                endpointName === 'list' &&
-                                name.includes('contact.list'))
-                          );
+                          const isK6Tested = isEndpointK6Tested(testedEndpointNames, router.name, endpointName, i);
 
                           // Get benchmark data if available
                           const benchmarkData = data.endpoint_metrics?.find(
@@ -1187,114 +1272,12 @@ export default function PerformanceReportView() { // NOSONAR typescript:S3776
       )}
 
       {/* Error Rate Analysis */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="bg-gray-100 px-6 py-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-700">Error Rate Analysis</h2>
-        </div>
-        <div className="p-6">
-          {data.k6_error_analysis ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-gray-50 p-4 rounded-lg text-center">
-                  <div
-                    className={`text-3xl font-bold ${data.k6_error_analysis.error_rate_percent === 0 ? 'text-green-600' : 'text-red-600'}`}
-                  >
-                    {data.k6_error_analysis.error_rate_percent.toFixed(2)}%
-                  </div>
-                  <div className="text-sm text-gray-600 mt-1">Total Error Rate</div>
-                </div>
-                <div className="bg-gray-50 p-4 rounded-lg text-center">
-                  <div className="text-3xl font-bold text-green-600">
-                    {data.k6_error_analysis.total_checks_passed.toLocaleString()}
-                  </div>
-                  <div className="text-sm text-gray-600 mt-1">Checks Passed</div>
-                </div>
-                <div className="bg-gray-50 p-4 rounded-lg text-center">
-                  <div
-                    className={`text-3xl font-bold ${data.k6_error_analysis.total_checks_failed === 0 ? 'text-green-600' : 'text-red-600'}`}
-                  >
-                    {data.k6_error_analysis.total_checks_failed.toLocaleString()}
-                  </div>
-                  <div className="text-sm text-gray-600 mt-1">Checks Failed</div>
-                </div>
-              </div>
+      <ErrorRateAnalysisSection
+        k6ErrorAnalysis={data.k6_error_analysis}
+        k6TestedEndpoints={data.k6_tested_endpoints}
+      />
 
-              {/* Tested Endpoints Results */}
-              {data.k6_tested_endpoints && data.k6_tested_endpoints.length > 0 && (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-gray-50">
-                        <th className="px-4 py-3 text-left font-semibold text-gray-600">
-                          Endpoint Check
-                        </th>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-600">
-                          Passes
-                        </th>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-600">Fails</th>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-600">
-                          Success Rate
-                        </th>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-600">
-                          Status
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.k6_tested_endpoints.map((endpoint) => (
-                        <tr key={endpoint.name} className="border-t hover:bg-gray-50">
-                          <td className="px-4 py-3 font-medium">{endpoint.name}</td>
-                          <td className="px-4 py-3 text-center text-green-600">
-                            {endpoint.passes.toLocaleString()}
-                          </td>
-                          <td className="px-4 py-3 text-center text-red-600">{endpoint.fails}</td>
-                          <td className="px-4 py-3 text-center">
-                            {endpoint.success_rate.toFixed(1)}%
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <span
-                              className={`px-2 py-0.5 rounded text-xs ${
-                                endpoint.fails === 0
-                                  ? 'bg-green-100 text-green-700'
-                                  : 'bg-red-100 text-red-700'
-                              }`}
-                            >
-                              {endpoint.fails === 0 ? 'PASS' : 'FAIL'}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
 
-              <p className="mt-4 text-sm text-gray-700">
-                <strong>
-                  Check Success Rate: {(data.k6_error_analysis.check_success_rate * 100).toFixed(1)}
-                  %
-                </strong>{' '}
-                | HTTP Failed Requests: {data.k6_error_analysis.http_failed_count}
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="text-gray-600 italic mb-4">
-                No load test data available - run k6 benchmark to see actual error analysis
-              </p>
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <p className="text-sm text-amber-800">
-                  <strong>To run load tests:</strong>{' '}Execute{' '}
-                  <code className="bg-amber-100 px-1 rounded">
-                    .\artifacts\misc\k6\run-quick-test.ps1
-                  </code>{' '}
-                  from project root
-                </p>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
 
       {/* Resource Utilization Targets */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -1437,7 +1420,7 @@ export default function PerformanceReportView() { // NOSONAR typescript:S3776
               </p>
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                 <p className="text-sm text-amber-800">
-                  <strong>To run load tests:</strong>{' '}Execute{' '}
+                  <strong>To run load tests:</strong> Execute{' '}
                   <code className="bg-amber-100 px-1 rounded">
                     .\artifacts\misc\k6\run-quick-test.ps1
                   </code>{' '}
@@ -1466,10 +1449,7 @@ export default function PerformanceReportView() { // NOSONAR typescript:S3776
                 data.k6_tested_endpoints?.length ?? 0,
                 data.api_inventory?.total_endpoints ?? 0
               ).map((rec) => (
-                <div
-                  key={rec.title}
-                  className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg"
-                >
+                <div key={rec.title} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${getRecommendationPriorityClass(rec.priority)}`}
                   >
@@ -1489,7 +1469,7 @@ export default function PerformanceReportView() { // NOSONAR typescript:S3776
               </p>
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                 <p className="text-sm text-amber-800">
-                  <strong>To get recommendations:</strong>{' '}Execute{' '}
+                  <strong>To get recommendations:</strong> Execute{' '}
                   <code className="bg-amber-100 px-1 rounded">
                     .\artifacts\misc\k6\run-quick-test.ps1
                   </code>{' '}

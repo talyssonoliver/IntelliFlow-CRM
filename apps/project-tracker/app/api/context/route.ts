@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
+import { generateCurrentStateReport } from '@/lib/current-state-report';
 import { generateContextSnapshot } from '@/lib/context-snapshot';
 
 /**
@@ -24,8 +25,11 @@ function resolveSnapshotPaths() {
   const projectTrackerRoot = process.cwd();
   const monorepoRoot = join(projectTrackerRoot, '..', '..');
   const metricsDir = join(projectTrackerRoot, 'docs', 'metrics');
+  const specifySprintsDir = join(monorepoRoot, '.specify', 'sprints');
   const outputPath = join(monorepoRoot, 'docs', 'SESSION_CONTEXT.md');
-  return { monorepoRoot, metricsDir, outputPath };
+  const stateReportMdPath = join(monorepoRoot, 'docs', 'CURRENT_STATE_REPORT.md');
+  const stateReportJsonPath = join(monorepoRoot, 'artifacts', 'reports', 'current-state-report.json');
+  return { monorepoRoot, metricsDir, specifySprintsDir, outputPath, stateReportMdPath, stateReportJsonPath };
 }
 
 export async function GET() {
@@ -55,7 +59,20 @@ export async function GET() {
 
 export async function POST() {
   try {
-    const { monorepoRoot, metricsDir, outputPath } = resolveSnapshotPaths();
+    const { monorepoRoot, metricsDir, specifySprintsDir, outputPath, stateReportMdPath, stateReportJsonPath } = resolveSnapshotPaths();
+
+    // Step 1: Regenerate current-state-report so PROJECT_HEALTH section is fresh
+    if (existsSync(specifySprintsDir)) {
+      for (const p of [stateReportMdPath, stateReportJsonPath]) {
+        const d = dirname(p);
+        if (!existsSync(d)) mkdirSync(d, { recursive: true });
+      }
+      const stateReport = generateCurrentStateReport(metricsDir, specifySprintsDir, monorepoRoot);
+      writeFileSync(stateReportMdPath, stateReport.markdown, 'utf-8');
+      writeFileSync(stateReportJsonPath, `${JSON.stringify(stateReport.data, null, 2)}\n`, 'utf-8');
+    }
+
+    // Step 2: Generate SESSION_CONTEXT (reads fresh state-report JSON)
     const result = generateContextSnapshot(metricsDir, monorepoRoot);
 
     const outputDir = dirname(outputPath);
@@ -65,7 +82,7 @@ export async function POST() {
     writeFileSync(outputPath, result.markdown, 'utf-8');
 
     console.log(
-      `✅ Wrote session context snapshot: ${outputPath} (${result.markdown.length} bytes)`
+      `Wrote session context snapshot: ${outputPath} (${result.markdown.length} bytes)`
     );
 
     return NextResponse.json({

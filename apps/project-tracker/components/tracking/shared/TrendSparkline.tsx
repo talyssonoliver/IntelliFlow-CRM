@@ -75,9 +75,10 @@ export default function TrendSparkline({
         strokeLinecap="round"
       />
       {/* Dots along the sparkline — key is positional (stable render order) */}
-      {showDots && points.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r={2} fill={color} /> // NOSONAR typescript:S6479
-      ))}
+      {showDots &&
+        points.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r={2} fill={color} /> // NOSONAR typescript:S6479
+        ))}
     </svg>
   );
 }

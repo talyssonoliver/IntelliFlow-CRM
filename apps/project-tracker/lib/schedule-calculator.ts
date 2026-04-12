@@ -329,9 +329,7 @@ function computeSuccLateBound(
   return succScheduled.lateStart;
 }
 
-function buildSprintPositionMaps(
-  sortedTasks: TaskScheduleInput[]
-): {
+function buildSprintPositionMaps(sortedTasks: TaskScheduleInput[]): {
   tasksBySpint: Map<number, TaskScheduleInput[]>;
   taskPositionInSprint: Map<string, number>;
 } {
@@ -431,9 +429,7 @@ function computeFloat(
       const minSuccessorES = Math.min(
         ...successors.map((s) => scheduledTasks.get(s.taskId)!.earlyStart.getTime())
       );
-      scheduled.freeFloat = Math.round(
-        (minSuccessorES - scheduled.earlyFinish.getTime()) / 60000
-      );
+      scheduled.freeFloat = Math.round((minSuccessorES - scheduled.earlyFinish.getTime()) / 60000);
     } else {
       scheduled.freeFloat = scheduled.totalFloat;
     }
@@ -501,7 +497,8 @@ function buildCriticalPathSet(
   let minFloat = Infinity;
   for (const task of sortedTasks) {
     const scheduled = scheduledTasks.get(task.taskId)!;
-    if (scheduled.totalFloat < minFloat && scheduled.totalFloat >= 0) minFloat = scheduled.totalFloat;
+    if (scheduled.totalFloat < minFloat && scheduled.totalFloat >= 0)
+      minFloat = scheduled.totalFloat;
   }
   const floatThreshold = minFloat + 60;
   for (const task of sortedTasks) {
@@ -517,7 +514,12 @@ function identifyCriticalPath(
 ): { criticalPathTasks: string[]; totalCriticalDuration: number; totalCriticalComplete: number } {
   const { longestPathTo, pathPredecessor } = buildLongestPaths(sortedTasks, scheduledTasks);
   const criticalEndTask = findCriticalEndTask(sortedTasks, scheduledTasks, longestPathTo);
-  const criticalPathSet = buildCriticalPathSet(sortedTasks, scheduledTasks, criticalEndTask, pathPredecessor);
+  const criticalPathSet = buildCriticalPathSet(
+    sortedTasks,
+    scheduledTasks,
+    criticalEndTask,
+    pathPredecessor
+  );
 
   const criticalPathTasks: string[] = [];
   let totalCriticalDuration = 0;
@@ -563,12 +565,19 @@ export function calculateSchedule(
   const sortedTasks = topologicalSort(tasks);
   const { tasksBySpint, taskPositionInSprint } = buildSprintPositionMaps(sortedTasks);
   const scheduledTasks = runForwardPass(
-    sortedTasks, sprintStart, sprintEnd, tasksBySpint, taskPositionInSprint, config
+    sortedTasks,
+    sprintStart,
+    sprintEnd,
+    tasksBySpint,
+    taskPositionInSprint,
+    config
   );
   runBackwardPass(sortedTasks, scheduledTasks, config);
   computeFloat(sortedTasks, scheduledTasks);
-  const { criticalPathTasks, totalCriticalDuration, totalCriticalComplete } =
-    identifyCriticalPath(sortedTasks, scheduledTasks);
+  const { criticalPathTasks, totalCriticalDuration, totalCriticalComplete } = identifyCriticalPath(
+    sortedTasks,
+    scheduledTasks
+  );
   const { svMinutes, spi, status } = computeEvm(sortedTasks, scheduledTasks);
 
   const completionPercentage =

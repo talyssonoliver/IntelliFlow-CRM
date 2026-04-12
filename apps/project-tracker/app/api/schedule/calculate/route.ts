@@ -224,7 +224,9 @@ function findMetricsDir(): string {
 
 function computeSprintEndFromMax(tasks: TaskRecord[], sprintStart: Date): Date {
   const maxSprint = Math.max(
-    ...tasks.map((t) => Number.parseInt(t['Target Sprint'] || '0', 10)).filter((n) => !Number.isNaN(n)),
+    ...tasks
+      .map((t) => Number.parseInt(t['Target Sprint'] || '0', 10))
+      .filter((n) => !Number.isNaN(n)),
     0
   );
   const end = new Date(sprintStart);
@@ -232,9 +234,7 @@ function computeSprintEndFromMax(tasks: TaskRecord[], sprintStart: Date): Date {
   return end;
 }
 
-function loadDatesFromSummary(
-  summaryPath: string
-): { start: Date | null; end: Date | null } {
+function loadDatesFromSummary(summaryPath: string): { start: Date | null; end: Date | null } {
   try {
     const summary = JSON.parse(readFileSync(summaryPath, 'utf-8'));
     const start = summary.started_at ? new Date(summary.started_at) : null;
@@ -289,7 +289,11 @@ function resolveSprintDatesFromSummaries(
 ): { start: Date | null; end: Date | null } {
   if (isAllSprints) {
     const sprintNumbers = [
-      ...new Set(tasks.map((t) => Number.parseInt(t['Target Sprint'] || '0', 10)).filter((n) => !Number.isNaN(n))),
+      ...new Set(
+        tasks
+          .map((t) => Number.parseInt(t['Target Sprint'] || '0', 10))
+          .filter((n) => !Number.isNaN(n))
+      ),
     ].sort((a, b) => a - b);
 
     let start: Date | null = null;
@@ -319,7 +323,12 @@ function resolveSprintDates(
   let sprintEnd: Date | null = csvDates.end;
 
   if (!sprintStart || !sprintEnd) {
-    const { start, end } = resolveSprintDatesFromSummaries(tasks, metricsDir, isAllSprints, sprintNum);
+    const { start, end } = resolveSprintDatesFromSummaries(
+      tasks,
+      metricsDir,
+      isAllSprints,
+      sprintNum
+    );
     if (!sprintStart && start) sprintStart = start;
     if (!sprintEnd && end) sprintEnd = end;
     if (!sprintEnd && sprintStart && isAllSprints) {
@@ -372,7 +381,11 @@ export async function GET(request: NextRequest) {
     // Get project/sprint dates
     const now = new Date();
     const { sprintStart, sprintEnd, isOverdue } = resolveSprintDates(
-      tasks, metricsDir, isAllSprints, sprintNum, now
+      tasks,
+      metricsDir,
+      isAllSprints,
+      sprintNum,
+      now
     );
 
     // Convert to schedule inputs - load actual data from task JSON files

@@ -444,7 +444,10 @@ async function generateStatusFromCSV(): Promise<NextResponse> {
     });
   } catch (error) {
     return NextResponse.json(
-      { status: 'error', message: `Failed to generate from CSV: ${error instanceof Error ? error.message : String(error)}` },
+      {
+        status: 'error',
+        message: `Failed to generate from CSV: ${error instanceof Error ? error.message : String(error)}`,
+      },
       { status: 500 }
     );
   }

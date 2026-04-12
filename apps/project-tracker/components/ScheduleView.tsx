@@ -322,7 +322,9 @@ export default function ScheduleView() {
         <div className="flex items-center gap-4">
           {/* Sprint selector - synced with main navigation */}
           <div className="flex items-center gap-2">
-            <label htmlFor="schedule-sprint-select" className="text-sm font-medium text-gray-700">Sprint</label>
+            <label htmlFor="schedule-sprint-select" className="text-sm font-medium text-gray-700">
+              Sprint
+            </label>
             <select
               id="schedule-sprint-select"
               value={currentSprint}

@@ -73,13 +73,20 @@ function parseRawLighthouseFormat(content: any): WebVitalsReport | null {
     url: content.finalUrl || content.requestedUrl || 'http://localhost:3000',
     timestamp: content.fetchTime || new Date().toISOString(),
     metrics,
-    overallScore: averageScores(metrics.performance, metrics.accessibility, metrics.bestPractices, metrics.seo),
+    overallScore: averageScores(
+      metrics.performance,
+      metrics.accessibility,
+      metrics.bestPractices,
+      metrics.seo
+    ),
     status: scoreToStatus(metrics.performance),
-    coreWebVitals: content.audits ? {
-      lcp: content.audits['largest-contentful-paint']?.numericValue || 0,
-      fid: content.audits['max-potential-fid']?.numericValue || 0,
-      cls: content.audits['cumulative-layout-shift']?.numericValue || 0,
-    } : undefined,
+    coreWebVitals: content.audits
+      ? {
+          lcp: content.audits['largest-contentful-paint']?.numericValue || 0,
+          fid: content.audits['max-potential-fid']?.numericValue || 0,
+          cls: content.audits['cumulative-layout-shift']?.numericValue || 0,
+        }
+      : undefined,
   };
 }
 

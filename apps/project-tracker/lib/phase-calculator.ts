@@ -210,7 +210,8 @@ function identifyParallelStreams(
   const signatureGroups = new Map<string, string[]>();
 
   for (const task of tasks) {
-    const signature = [...task.dependencies].sort((a, b) => a.localeCompare(b)).join(',') || 'no-deps';
+    const signature =
+      [...task.dependencies].sort((a, b) => a.localeCompare(b)).join(',') || 'no-deps';
     if (!signatureGroups.has(signature)) {
       signatureGroups.set(signature, []);
     }
@@ -457,7 +458,11 @@ function getStreamLetterLocal(index: number): string {
   return String.fromCodePoint(65 + index);
 }
 
-function isInTargetSprint(sprint: string, sprintNumber: number | 'all', includeAll: boolean): boolean {
+function isInTargetSprint(
+  sprint: string,
+  sprintNumber: number | 'all',
+  includeAll: boolean
+): boolean {
   if (includeAll) return true;
   if (sprint === String(sprintNumber)) return true;
   if (sprintNumber === -1 && sprint === 'Continuous') return true;

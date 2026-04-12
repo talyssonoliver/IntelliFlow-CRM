@@ -152,7 +152,8 @@ function buildTaskIssues(taskResults: any[]): Record<string, TaskIssue> {
 function getXlsxColumns(xlsx: string): string {
   if (xlsx.includes('training-completion')) return 'employee_id,name,course,completion_date,score';
   if (xlsx.includes('alternatives')) return 'vendor,service,alternative,migration_effort,notes';
-  if (xlsx.includes('mapping')) return 'source_table,source_field,target_table,target_field,transformation';
+  if (xlsx.includes('mapping'))
+    return 'source_table,source_field,target_table,target_field,transformation';
   return 'appropriate columns for the task';
 }
 
@@ -201,9 +202,10 @@ function buildDetailedFixSection(taskIssues: Record<string, TaskIssue>, timestam
     }
     const ackNum = xlsxFiles.length > 0 ? '2' : '1';
     const moreArtifactsSuffix = info.foundArtifacts.length > 3 ? ',\n    "..."' : '';
-    const filesReadJson = info.foundArtifacts.length > 0
-      ? `\n    "${info.foundArtifacts.slice(0, 3).join('",\n    "')}"${moreArtifactsSuffix}`
-      : '';
+    const filesReadJson =
+      info.foundArtifacts.length > 0
+        ? `\n    "${info.foundArtifacts.slice(0, 3).join('",\n    "')}"${moreArtifactsSuffix}`
+        : '';
     out += `${ackNum}. Create \`${attestationDir}/context_ack.json\`:\n\`\`\`json\n{\n  "task_id": "${taskId}",\n  "acknowledged_at": "${timestamp}",\n  "files_read": [${filesReadJson}\n  ],\n  "invariants_acknowledged": [\n    "All required artifacts have been created",\n    "Implementation matches task requirements",\n    "DoD criteria verified through artifact inspection"\n  ]\n}\n\`\`\`\n\n`;
   }
   return out;
@@ -577,8 +579,7 @@ export default function AuditView() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Icon name="terminal" size="xl" className="text-blue-600" />{' '}
-            Audit
+            <Icon name="terminal" size="xl" className="text-blue-600" /> Audit
           </h2>
           <p className="text-sm text-gray-600 mt-1">
             Run system audits from the UI and stream results live. Bundles are written under{' '}
@@ -592,8 +593,7 @@ export default function AuditView() {
           disabled={isLoading || isRunning}
           className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
         >
-          <Icon name="refresh" size="sm" className={isLoading ? 'animate-spin' : ''} />{' '}
-          Refresh
+          <Icon name="refresh" size="sm" className={isLoading ? 'animate-spin' : ''} /> Refresh
         </button>
       </div>
 
@@ -602,8 +602,7 @@ export default function AuditView() {
         <div className="bg-white rounded-lg shadow p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <Icon name="play_arrow" size="lg" className="text-green-600" />{' '}
-              Run System Audit
+              <Icon name="play_arrow" size="lg" className="text-green-600" /> Run System Audit
             </h3>
             {isRunning && (
               <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
@@ -686,8 +685,7 @@ export default function AuditView() {
               disabled={isRunning}
               className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
             >
-              <Icon name="play_arrow" size="sm" />{' '}
-              Run
+              <Icon name="play_arrow" size="sm" /> Run
             </button>
             <button
               type="button"
@@ -695,16 +693,14 @@ export default function AuditView() {
               disabled={!isRunning}
               className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 disabled:opacity-50"
             >
-              <Icon name="cancel" size="sm" />{' '}
-              Stop
+              <Icon name="cancel" size="sm" /> Stop
             </button>
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6 space-y-4">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Icon name="description" size="lg" className="text-purple-600" />{' '}
-            Reports & Utilities
+            <Icon name="description" size="lg" className="text-purple-600" /> Reports & Utilities
           </h3>
 
           <div className="flex flex-wrap gap-2">
@@ -738,39 +734,41 @@ export default function AuditView() {
 
           <div className="border-t pt-4 space-y-3">
             <div className="text-sm font-medium text-gray-700 flex items-center gap-2">
-              <Icon name="assignment_turned_in" size="sm" className="text-teal-600" />{' '}
-              Sprint Completion Audit
+              <Icon name="assignment_turned_in" size="sm" className="text-teal-600" /> Sprint
+              Completion Audit
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label className="text-sm">
                 <span className="block text-gray-600 mb-1">Sprint # (with completed tasks)</span>
                 {(() => {
-                  if (isLoadingSprints) return (
-                    <div className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-400">
-                      Loading...
-                    </div>
-                  );
-                  if (availableSprints.length === 0) return (
-                    <div className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-500 text-sm">
-                      No sprints with completed tasks
-                    </div>
-                  );
+                  if (isLoadingSprints)
+                    return (
+                      <div className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-400">
+                        Loading...
+                      </div>
+                    );
+                  if (availableSprints.length === 0)
+                    return (
+                      <div className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-500 text-sm">
+                        No sprints with completed tasks
+                      </div>
+                    );
                   return (
-                  <select
-                    value={sprintToAudit ?? ''}
-                    onChange={(e) => {
-                      const sprint = Number.parseInt(e.target.value, 10);
-                      setSprintToAudit(sprint);
-                      loadSprintAuditReport(sprint);
-                    }}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  >
-                    {availableSprints.map((s) => (
-                      <option key={s.sprint} value={s.sprint}>
-                        Sprint {s.sprint} ({s.completedCount} completed)
-                      </option>
-                    ))}
-                  </select>
+                    <select
+                      value={sprintToAudit ?? ''}
+                      onChange={(e) => {
+                        const sprint = Number.parseInt(e.target.value, 10);
+                        setSprintToAudit(sprint);
+                        loadSprintAuditReport(sprint);
+                      }}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    >
+                      {availableSprints.map((s) => (
+                        <option key={s.sprint} value={s.sprint}>
+                          Sprint {s.sprint} ({s.completedCount} completed)
+                        </option>
+                      ))}
+                    </select>
                   );
                 })()}
               </label>
@@ -803,13 +801,11 @@ export default function AuditView() {
             >
               {isRunning ? (
                 <>
-                  <Icon name="refresh" size="sm" className="animate-spin" />{' '}
-                  Auditing...
+                  <Icon name="refresh" size="sm" className="animate-spin" /> Auditing...
                 </>
               ) : (
                 <>
-                  <Icon name="play_arrow" size="sm" />{' '}
-                  Run Completion Audit
+                  <Icon name="play_arrow" size="sm" /> Run Completion Audit
                 </>
               )}
             </button>
@@ -834,8 +830,7 @@ export default function AuditView() {
 
                 {sprintAuditResult.error && (
                   <div className="flex items-center gap-2 text-sm text-red-600">
-                    <Icon name="warning" size="sm" />{' '}
-                    {sprintAuditResult.error}
+                    <Icon name="warning" size="sm" /> {sprintAuditResult.error}
                   </div>
                 )}
 
@@ -930,8 +925,7 @@ export default function AuditView() {
 
         {serverError && (
           <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
-            <Icon name="warning" size="sm" />{' '}
-            {serverError}
+            <Icon name="warning" size="sm" /> {serverError}
           </div>
         )}
 
@@ -1057,8 +1051,7 @@ export default function AuditView() {
                         onClick={handleGenerateFixPrompt}
                         className="flex items-center gap-1 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-xs font-medium"
                       >
-                        <Icon name="auto_fix_high" size="sm" />{' '}
-                        Generate Fix Prompt
+                        <Icon name="auto_fix_high" size="sm" /> Generate Fix Prompt
                       </button>
                     )}
                   </div>
@@ -1076,7 +1069,7 @@ export default function AuditView() {
 
         {!isLoading && bundles.length === 0 && (
           <div className="text-sm text-gray-500">
-            No audit bundles found yet. Run an audit to generate{' '}<code>{bundlesDir}</code>.
+            No audit bundles found yet. Run an audit to generate <code>{bundlesDir}</code>.
           </div>
         )}
 
@@ -1159,13 +1152,11 @@ export default function AuditView() {
                 >
                   {promptCopied ? (
                     <>
-                      <Icon name="check_circle" size="sm" />{' '}
-                      Copied!
+                      <Icon name="check_circle" size="sm" /> Copied!
                     </>
                   ) : (
                     <>
-                      <Icon name="content_copy" size="sm" />{' '}
-                      Copy to Clipboard
+                      <Icon name="content_copy" size="sm" /> Copy to Clipboard
                     </>
                   )}
                 </button>

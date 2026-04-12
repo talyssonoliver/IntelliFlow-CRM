@@ -211,23 +211,40 @@ export function TaskDataProvider({ children }: Readonly<TaskDataProviderProps>) 
     };
   }, [refreshData]);
 
-  const value: TaskDataContextType = useMemo(() => ({
-    allTasks,
-    filteredTasks,
-    sections,
-    sprints,
-    currentSprint,
-    statusCounts,
-    sectionData,
-    lastUpdated,
-    isLoading,
-    error,
-    setCurrentSprint,
-    refreshData,
-    selectTask,
-    selectedTask,
-  }), [allTasks, filteredTasks, sections, sprints, currentSprint, statusCounts, sectionData, lastUpdated, isLoading, error, setCurrentSprint, refreshData, selectTask, selectedTask]);
+  const value: TaskDataContextType = useMemo(
+    () => ({
+      allTasks,
+      filteredTasks,
+      sections,
+      sprints,
+      currentSprint,
+      statusCounts,
+      sectionData,
+      lastUpdated,
+      isLoading,
+      error,
+      setCurrentSprint,
+      refreshData,
+      selectTask,
+      selectedTask,
+    }),
+    [
+      allTasks,
+      filteredTasks,
+      sections,
+      sprints,
+      currentSprint,
+      statusCounts,
+      sectionData,
+      lastUpdated,
+      isLoading,
+      error,
+      setCurrentSprint,
+      refreshData,
+      selectTask,
+      selectedTask,
+    ]
+  );
 
   return <TaskDataContext.Provider value={value}>{children}</TaskDataContext.Provider>;
 }
-

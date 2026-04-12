@@ -101,7 +101,7 @@
       "Status": "Completed",
       "KPIs": "Zero prompt injection incidents; bias score below threshold",
       "Target Sprint": "6",
-      "Artifacts To Track": "SPEC:.specify/sprints/sprint-11/specifications/IFC-125-spec.md;PLAN:.specify/sprints/sprint-11/planning/IFC-125-plan.md;EVIDENCE:.specify/sprints/sprint-11/attestations/IFC-125/context_pack.md;EVIDENCE:.specify/sprints/sprint-11/attestations/IFC-125/context_ack.json;ARTIFACT:apps/api/src/shared/prompt-sanitizer.ts;ARTIFACT:artifacts/metrics/bias-metrics.csv;ARTIFACT:docs/shared/ai-guardrails-report.md",
+      "Artifacts To Track": "SPEC:.specify/sprints/sprint-6/specifications/IFC-125-spec.md;PLAN:.specify/sprints/sprint-6/planning/IFC-125-plan.md;EVIDENCE:.specify/sprints/sprint-6/attestations/IFC-125/context_pack.md;EVIDENCE:.specify/sprints/sprint-6/attestations/IFC-125/context_ack.json;ARTIFACT:apps/api/src/shared/prompt-sanitizer.ts;ARTIFACT:artifacts/metrics/bias-metrics.csv;ARTIFACT:docs/shared/ai-guardrails-report.md",
       "Validation Method": "VALIDATE:pnpm test;GATE:no-deferred-audit-logging",
       "Cadence": ""
     },
@@ -1167,7 +1167,7 @@
       "Status": "Completed",
       "KPIs": "Agents cooperating, tasks orchestrated",
       "Target Sprint": "6",
-      "Artifacts To Track": "ARTIFACT:artifacts/misc/crew-config.yaml;ARTIFACT:artifacts/logs/agent-interaction-logs.json;ARTIFACT:apps/api/src/agent/orchestration.test.ts;EVIDENCE:.specify/sprints/sprint-13/attestations/IFC-021/context_ack.json",
+      "Artifacts To Track": "ARTIFACT:artifacts/misc/crew-config.yaml;ARTIFACT:artifacts/logs/agent-interaction-logs.json;ARTIFACT:apps/api/src/agent/orchestration.test.ts;EVIDENCE:.specify/sprints/sprint-6/attestations/IFC-021/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test",
       "Cadence": ""
     },
@@ -3657,7 +3657,7 @@
       "Dependencies": "PG-129",
       "Pre-requisites": "FILE:apps/web/src/components/home/AuthenticatedHomePage.tsx",
       "Definition of Done": "Lighthouse CI audit on / route; Performance >=90, Accessibility >=90, TTI <1s; results saved to artifacts; ADR-027 verification confirmed",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "Lighthouse Performance >=90, Accessibility >=90, TTI <1s",
       "Target Sprint": "19",
       "Artifacts To Track": "ARTIFACT:artifacts/benchmarks/home-page-lighthouse.json",
@@ -3897,10 +3897,10 @@
       "Dependencies": "",
       "Pre-requisites": "FILE:apps/web/src/components/sidebar/configs/deals.ts;FILE:apps/web/src/app/deals/(list)/page.tsx",
       "Definition of Done": "/deals/trash route resolves to a valid page (placeholder or functional); zero 404 errors from sidebar navigation; tests >=90%",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "Zero 404 errors from deals sidebar navigation; /deals/trash accessible",
       "Target Sprint": "16",
-      "Artifacts To Track": "ARTIFACT:apps/web/src/app/deals/trash/page.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/IFC-232/context_ack.json",
+      "Artifacts To Track": "ARTIFACT:apps/web/src/app/deals/(list)/trash/page.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/IFC-232/context_ack.json;SPEC:.specify/sprints/sprint-16/specifications/IFC-232-spec.md;PLAN:.specify/sprints/sprint-16/planning/IFC-232-plan.md",
       "Validation Method": "VALIDATE:pnpm --filter web typecheck;VALIDATE:pnpm --filter web test --run;GATE:coverage-gte-90",
       "Cadence": ""
     },
@@ -5215,7 +5215,7 @@
       "Status": "Completed",
       "KPIs": "No cross‑tenant data access; isolation tests pass",
       "Target Sprint": "5",
-      "Artifacts To Track": "SPEC:.specify/sprints/sprint-10/specifications/IFC-127-spec.md;PLAN:.specify/sprints/sprint-10/planning/IFC-127-plan.md;EVIDENCE:.specify/sprints/sprint-10/attestations/IFC-127/context_pack.md;EVIDENCE:.specify/sprints/sprint-10/attestations/IFC-127/context_ack.json;ARTIFACT:infra/supabase/migrations/20250124000000_rls_policies.sql;ARTIFACT:infra/supabase/migrations/20260103000000_add_tenant_isolation.sql;ARTIFACT:apps/api/src/security/tenant-context.ts;ARTIFACT:packages/db/prisma/migrations/add-multi-tenancy-diff.sql;ARTIFACT:packages/db/prisma/migrations/add_multi_tenancy_manual.sql;ARTIFACT:packages/db/prisma/migrations/tenant-rls.sql",
+      "Artifacts To Track": "SPEC:.specify/sprints/sprint-5/specifications/IFC-127-spec.md;PLAN:.specify/sprints/sprint-5/planning/IFC-127-plan.md;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-127/context_pack.md;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-127/context_ack.json;ARTIFACT:infra/supabase/migrations/20250124000000_rls_policies.sql;ARTIFACT:infra/supabase/migrations/20260103000000_add_tenant_isolation.sql;ARTIFACT:apps/api/src/security/tenant-context.ts;ARTIFACT:packages/db/prisma/migrations/add-multi-tenancy-diff.sql;ARTIFACT:packages/db/prisma/migrations/add_multi_tenancy_manual.sql;ARTIFACT:packages/db/prisma/migrations/tenant-rls.sql",
       "Validation Method": "VALIDATE:pnpm test;AUDIT:security-review",
       "Cadence": ""
     },
@@ -7846,7 +7846,7 @@
       "Status": "Completed",
       "KPIs": "Outbound deliverability >=95%; inbound parse accuracy >=99%; API spec coverage 100%; zero duplicate webhook processing",
       "Target Sprint": "6",
-      "Artifacts To Track": "ARTIFACT:packages/adapters/src/messaging/email/outbound.ts;ARTIFACT:packages/adapters/src/messaging/email/inbound.ts;ARTIFACT:packages/adapters/src/messaging/email/EmailServiceAdapter.ts;ARTIFACT:packages/adapters/src/messaging/email/attachments.ts;ARTIFACT:packages/adapters/src/messaging/email/dkim-signer.ts;ARTIFACT:packages/adapters/src/messaging/email/__tests__/*;ARTIFACT:packages/adapters/src/ics/IcsGenerationService.ts;ARTIFACT:packages/domain/src/notifications/*;ARTIFACT:artifacts/misc/webhooks/framework.ts;ARTIFACT:artifacts/misc/api-spec/openapi-v1.yaml;EVIDENCE:.specify/sprints/sprint-10/attestations/IFC-144/attestation.json;ARTIFACT:docs/planning/adr/ADR-023-communications-inbox.md;ARTIFACT:docs/planning/prd-communications-inbox.md",
+      "Artifacts To Track": "ARTIFACT:packages/adapters/src/messaging/email/outbound.ts;ARTIFACT:packages/adapters/src/messaging/email/inbound.ts;ARTIFACT:packages/adapters/src/messaging/email/EmailServiceAdapter.ts;ARTIFACT:packages/adapters/src/messaging/email/attachments.ts;ARTIFACT:packages/adapters/src/messaging/email/dkim-signer.ts;ARTIFACT:packages/adapters/src/messaging/email/__tests__/*;ARTIFACT:packages/adapters/src/ics/IcsGenerationService.ts;ARTIFACT:packages/domain/src/notifications/*;ARTIFACT:artifacts/misc/webhooks/framework.ts;ARTIFACT:artifacts/misc/api-spec/openapi-v1.yaml;EVIDENCE:.specify/sprints/sprint-6/attestations/IFC-144/attestation.json;ARTIFACT:docs/planning/adr/ADR-023-communications-inbox.md;ARTIFACT:docs/planning/prd-communications-inbox.md",
       "Validation Method": "VALIDATE:pnpm test;GATE:integration-wired",
       "Cadence": ""
     },
@@ -7938,7 +7938,7 @@
       "Status": "Completed",
       "KPIs": "0 unauthorized retrievals; response time p95 <2s; hallucination rate reduced via eval suite",
       "Target Sprint": "6",
-      "Artifacts To Track": "ARTIFACT:packages/ai/tools/retrieve-case-context.ts;ARTIFACT:docs/agent/case-rag.md;EVIDENCE:.specify/sprints/sprint-13/attestations/IFC-156/context_ack.json",
+      "Artifacts To Track": "ARTIFACT:packages/ai/tools/retrieve-case-context.ts;ARTIFACT:docs/agent/case-rag.md;EVIDENCE:.specify/sprints/sprint-6/attestations/IFC-156/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test",
       "Cadence": ""
     }
@@ -8051,7 +8051,7 @@
       "Status": "Completed",
       "KPIs": "Ingestion success >=99%; AV scan blocks 100% known samples; duplicate ingestion rate <1%",
       "Target Sprint": "6",
-      "Artifacts To Track": "ARTIFACT:docs/operations/runbooks/ingestion.md;EVIDENCE:.specify/sprints/sprint-12/attestations/IFC-153/context_ack.json;EVIDENCE:.specify/sprints/sprint-12/attestations/IFC-153/attestation.json",
+      "Artifacts To Track": "ARTIFACT:docs/operations/runbooks/ingestion.md;EVIDENCE:.specify/sprints/sprint-6/attestations/IFC-153/context_ack.json;EVIDENCE:.specify/sprints/sprint-6/attestations/IFC-153/attestation.json",
       "Validation Method": "VALIDATE:pnpm test:integration",
       "Cadence": ""
     },
@@ -8556,7 +8556,7 @@
       "Owner": "Frontend Dev (STOA-Intelligence)",
       "Dependencies": "PG-151,PG-192",
       "Pre-requisites": "DESIGN:docs/design/mockups/workflow-progress-panel.png;FILE:apps/web/src/components/ai-monitoring/ActiveAgentsDashboard.tsx;FILE:apps/web/src/components/ai-monitoring/AgentLogsViewer.tsx;FILE:packages/db/generated/prisma/models/WorkflowExecution.ts",
-      "Definition of Done": "WorkflowProgressPanel component created; integrated into ActiveAgentsDashboard agent detail expand and AgentLogsViewer log detail view; reads currentStep and stepResults from WorkflowExecution via tRPC; renders progress bar + per-step status with checkmarks; WCAG AA accessible; Lighthouse >=90; verified by: pnpm test",
+      "Definition of Done": "WorkflowProgressPanel component created; integrated into ActiveAgentsDashboard agent detail expand and AgentLogsViewer log detail view; reads currentStep and stepResults from WorkflowExecution via tRPC; renders progress bar + per-step status with checkmarks; WCAG AA accessible; Lighthouse >=90; verified by: pnpm test. NOTE: 3 follow-ups for whoever touches workflow next — (1) workflow.getExecution procedure has no production caller yet (wire a deep-link page or remove); (2) KNOWN_ENTITY_TYPES in workflow.router.ts is hardcoded (update when adding new entity kinds or derive from @intelliflow/domain); (3) entityId-only fallback returns most-recent workflow per entity which is ambiguous for multi-workflow entities (long-term: add workflowExecutionId FK on ConversationRecord). See memory/project_pg193_follow_ups.md",
       "Status": "Completed",
       "KPIs": "Progress panel renders <200ms; step states accurate; accessible (WCAG AA); Lighthouse >=90; test coverage >=90%",
       "Target Sprint": "16",

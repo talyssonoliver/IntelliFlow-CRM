@@ -289,9 +289,334 @@ function buildInitialScanState(scanId: string): Partial<ScanState> {
   };
 }
 
+async function fetchSecurityMetrics(): Promise<{
+  metrics: SecurityMetrics;
+  scanState: ScanState | null;
+}> {
+  const response = await fetch('/api/tracking/security');
+  if (!response.ok) throw new Error('Failed to fetch security metrics');
+  return response.json();
+}
+
+async function startSecurityScan(): Promise<{ scanId?: string }> {
+  const response = await fetch('/api/tracking/security', { method: 'POST' });
+  if (!response.ok) throw new Error('Scan failed');
+  return response.json();
+}
+
+async function pollScanStatus(): Promise<{ scan: ScanState } | null> {
+  const response = await fetch('/api/tracking/security?status=true');
+  if (!response.ok) return null;
+  return response.json();
+}
+
+async function pollAndUpdateScanState(
+  setScanState: React.Dispatch<React.SetStateAction<ScanState | null>>,
+  onComplete: () => void,
+  interval: NodeJS.Timeout
+): Promise<void> {
+  try {
+    const result = await pollScanStatus();
+    if (!result) return;
+    const newState = result.scan;
+    setScanState(newState);
+    if (newState.status === 'completed' || newState.status === 'failed') {
+      clearInterval(interval);
+      onComplete();
+    }
+  } catch {
+    // Silently handle polling errors
+  }
+}
+
+// --- Sub-components for complex render sections ---
+
+interface OutdatedDepsSectionProps {
+  outdatedDeps: SecurityMetrics['outdatedDeps'] | undefined;
+}
+
+function OutdatedDepsSection({ outdatedDeps }: Readonly<OutdatedDepsSectionProps>) {
+  const hasData = outdatedDeps && (outdatedDeps.total > 0 || outdatedDeps.lastScan);
+  return (
+    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+      <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+        <Icon name="history" size="base" />
+        Outdated Dependencies
+      </h4>
+      {hasData ? (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+            <MetricCard
+              title="Major"
+              value={outdatedDeps.major}
+              icon="error"
+              variant={outdatedDeps.major > 0 ? 'error' : 'default'}
+            />
+            <MetricCard
+              title="Minor"
+              value={outdatedDeps.minor}
+              icon="warning"
+              variant={outdatedDeps.minor > 0 ? 'warning' : 'default'}
+            />
+            <MetricCard title="Patch" value={outdatedDeps.patch} icon="info" variant="info" />
+            <MetricCard title="Total" value={outdatedDeps.total} icon="list" variant="default" />
+          </div>
+          {outdatedDeps.packages.length > 0 && (
+            <details className="text-sm">
+              <summary className="cursor-pointer text-blue-600 hover:text-blue-800">
+                View {outdatedDeps.packages.length} outdated packages
+              </summary>
+              <div className="mt-2 overflow-x-auto">
+                <table className="min-w-full text-xs">
+                  <thead>
+                    <tr className="text-gray-500 border-b">
+                      <th className="text-left py-1 pr-4">Package</th>
+                      <th className="text-left py-1 pr-4">Current</th>
+                      <th className="text-left py-1 pr-4">Latest</th>
+                      <th className="text-left py-1">Type</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {outdatedDeps.packages.map((pkg) => (
+                      <tr key={pkg.name} className="border-b border-gray-100">
+                        <td className="py-1 pr-4 font-mono">{pkg.name}</td>
+                        <td className="py-1 pr-4 text-gray-500">{pkg.current}</td>
+                        <td className="py-1 pr-4">{pkg.latest}</td>
+                        <td className="py-1">
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-xs ${getPackageTypeBadgeClass(pkg.type)}`}
+                          >
+                            {pkg.type}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </details>
+          )}
+        </>
+      ) : (
+        <div className="text-sm text-gray-400 italic">No dependency data available</div>
+      )}
+    </div>
+  );
+}
+
+interface RemediationSectionProps {
+  remediationDisplay: ReturnType<typeof getRemediationSummary> | {
+    isEmpty: true;
+    emptyMessage: string;
+    fixedCount: 0;
+    openCount: 0;
+    waiverCount: 0;
+    mttrDisplay: string;
+  };
+  items: RemediationItem[] | undefined;
+}
+
+function RemediationSection({ remediationDisplay, items }: Readonly<RemediationSectionProps>) {
+  return (
+    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+      <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+        <Icon name="healing" size="base" />
+        Remediation Tracking
+      </h4>
+      {remediationDisplay.isEmpty ? (
+        <div className="text-sm text-gray-400 italic">{remediationDisplay.emptyMessage}</div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <MetricCard
+              title="Fixed"
+              value={remediationDisplay.fixedCount}
+              icon="check_circle"
+              variant="success"
+            />
+            <MetricCard
+              title="Open"
+              value={remediationDisplay.openCount}
+              icon="error"
+              variant={remediationDisplay.openCount > 0 ? 'error' : 'default'}
+            />
+            <MetricCard
+              title="Waived"
+              value={remediationDisplay.waiverCount}
+              icon="do_not_disturb"
+              variant="default"
+            />
+            <MetricCard
+              title="MTTR"
+              value={remediationDisplay.mttrDisplay}
+              icon="schedule"
+              variant="default"
+            />
+          </div>
+          {items && items.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-xs">
+                <thead>
+                  <tr className="text-gray-500 border-b">
+                    <th className="text-left py-1 pr-3">ID</th>
+                    <th className="text-left py-1 pr-3">Module</th>
+                    <th className="text-left py-1 pr-3">Severity</th>
+                    <th className="text-left py-1 pr-3">Status</th>
+                    <th className="text-left py-1">Fix Applied</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item, idx) => (
+                    <tr
+                      key={`${item.id}-${item.module}-${idx}`}
+                      className="border-b border-gray-100"
+                    >
+                      <td className="py-1 pr-3 font-mono">{item.id}</td>
+                      <td className="py-1 pr-3">{item.module}</td>
+                      <td className="py-1 pr-3">
+                        <span
+                          className={`px-1.5 py-0.5 rounded text-xs ${getSeverityBadgeClass(item.severity)}`}
+                        >
+                          {item.severity}
+                        </span>
+                      </td>
+                      <td className="py-1 pr-3">
+                        <span
+                          className={`px-1.5 py-0.5 rounded text-xs ${getStatusBadgeClass(item.status)}`}
+                        >
+                          {item.status}
+                        </span>
+                      </td>
+                      <td className="py-1 text-gray-500">{item.fixApplied || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+interface BaselineAndHistorySectionProps {
+  data: SecurityMetrics | null;
+  vulns: VulnerabilityCounts;
+}
+
+function BaselineAndHistorySection({ data, vulns }: Readonly<BaselineAndHistorySectionProps>) {
+  return (
+    <>
+      {/* TrendSparkline (AC-002) */}
+      {data?.scanHistory && data.scanHistory.length >= 2 && (
+        <div className="flex items-center gap-3 px-1">
+          <span className="text-xs text-gray-500">Vulnerability trend:</span>
+          <TrendSparkline
+            data={data.scanHistory.map((s) => ({ date: s.date, value: s.total }))}
+            label="Vulnerability trend over time"
+          />
+        </div>
+      )}
+
+      {/* Baseline Comparison */}
+      {data?.baseline && (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+            <Icon name="difference" size="base" />
+            Baseline Comparison (from {formatBaselineDate(data.baseline.date)})
+          </h4>
+          <div className="grid grid-cols-2 gap-4">
+            {(['critical', 'high'] as const).map((severity) => {
+              const delta = getBaselineDelta(vulns[severity], data.baseline![severity]);
+              return (
+                <div key={severity} className="flex items-center gap-3">
+                  <span className="text-gray-500 capitalize">{severity}:</span>
+                  <span className="font-mono text-gray-900">{data.baseline![severity]}</span>
+                  {delta.show && (
+                    <span className={`text-sm ${delta.colorClass}`}>{delta.value}</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Scan History */}
+      {data?.scanHistory && data.scanHistory.length > 0 && (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+            <Icon name="history" size="base" />
+            Scan History
+          </h4>
+          <div className="space-y-2">
+            {getScanHistorySlice(data.scanHistory, 5).map((scan, idx) => (
+              <div key={scan.date || idx} className="flex items-center justify-between text-sm">
+                <span className="text-gray-500">{new Date(scan.date).toLocaleString()}</span>
+                <div className="flex items-center gap-4">
+                  <span className={getHistoryItemColor(scan.critical)}>
+                    {scan.critical} critical
+                  </span>
+                  <span className="text-gray-700">{scan.total} total</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+interface SecretScanSectionProps {
+  secretScan: SecurityMetrics['secretScan'] | undefined;
+}
+
+function SecretScanSection({ secretScan }: Readonly<SecretScanSectionProps>) {
+  const hasData =
+    secretScan &&
+    (secretScan.lastScan || secretScan.leaksFound > 0 || secretScan.filesScanned > 0);
+  return (
+    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+      <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+        <Icon name="shield" size="base" />
+        Secret Scan
+      </h4>
+      {hasData ? (
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-4">
+            <MetricCard
+              title="Leaks Found"
+              value={secretScan.leaksFound}
+              icon="lock_open"
+              variant={secretScan.leaksFound > 0 ? 'error' : 'success'}
+            />
+            <MetricCard
+              title="Files Scanned"
+              value={secretScan.filesScanned}
+              icon="description"
+              variant="default"
+            />
+          </div>
+          {secretScan.lastScan && (
+            <StaleIndicator
+              lastUpdated={secretScan.lastScan}
+              thresholdMinutes={STALE_THRESHOLD_MINUTES}
+              showTime
+            />
+          )}
+        </div>
+      ) : (
+        <div className="text-sm text-gray-400 italic">No gitleaks data — scan not run</div>
+      )}
+    </div>
+  );
+}
+
 // --- Component ---
 
-export default function SecurityDashboard() { // NOSONAR typescript:S3776
+export default function SecurityDashboard() {
   const [data, setData] = useState<SecurityMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
@@ -300,9 +625,7 @@ export default function SecurityDashboard() { // NOSONAR typescript:S3776
 
   const fetchData = useCallback(async () => {
     try {
-      const response = await fetch('/api/tracking/security');
-      if (!response.ok) throw new Error('Failed to fetch security metrics');
-      const result = await response.json();
+      const result = await fetchSecurityMetrics();
       setData(result.metrics);
       setScanState(result.scanState);
       setErrors({});
@@ -316,19 +639,22 @@ export default function SecurityDashboard() { // NOSONAR typescript:S3776
   const handleScan = async () => {
     setScanning(true);
     try {
-      const response = await fetch('/api/tracking/security', { method: 'POST' });
-      if (!response.ok) throw new Error('Scan failed');
-      const result = await response.json();
+      const result = await startSecurityScan();
       if (result.scanId) {
         setScanState(() => ({
           status: 'idle' as const,
           startedAt: null,
           completedAt: null,
           currentStep: null,
-          progress: { dependency_check: 'pending', outdated_check: 'pending', secret_scan: 'pending', sast_scan: 'pending' },
+          progress: {
+            dependency_check: 'pending',
+            outdated_check: 'pending',
+            secret_scan: 'pending',
+            sast_scan: 'pending',
+          },
           errors: [],
           scanId: null,
-          ...buildInitialScanState(result.scanId),
+          ...buildInitialScanState(result.scanId!),
         }));
       }
     } catch (err) {
@@ -349,20 +675,8 @@ export default function SecurityDashboard() { // NOSONAR typescript:S3776
   useEffect(() => {
     if (scanState?.status !== 'running') return;
 
-    const interval = setInterval(async () => {
-      try {
-        const response = await fetch('/api/tracking/security?status=true');
-        if (!response.ok) return;
-        const result = await response.json();
-        const newState = result.scan as ScanState;
-        setScanState(newState);
-        if (newState.status === 'completed' || newState.status === 'failed') {
-          clearInterval(interval);
-          fetchData();
-        }
-      } catch {
-        // Silently handle polling errors
-      }
+    const interval = setInterval(() => {
+      pollAndUpdateScanState(setScanState, fetchData, interval);
     }, 3000);
 
     return () => clearInterval(interval);
@@ -498,174 +812,14 @@ export default function SecurityDashboard() { // NOSONAR typescript:S3776
         <MetricCard title="Low" value={vulns.low} icon="remove_circle" variant="default" />
       </div>
 
-      {/* TrendSparkline (AC-002) */}
-      {data?.scanHistory && data.scanHistory.length >= 2 && (
-        <div className="flex items-center gap-3 px-1">
-          <span className="text-xs text-gray-500">Vulnerability trend:</span>
-          <TrendSparkline
-            data={data.scanHistory.map((s) => ({ date: s.date, value: s.total }))}
-            label="Vulnerability trend over time"
-          />
-        </div>
-      )}
-
-      {/* Baseline Comparison */}
-      {data?.baseline && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-            <Icon name="difference" size="base" />
-            Baseline Comparison (from {formatBaselineDate(data.baseline.date)})
-          </h4>
-          <div className="grid grid-cols-2 gap-4">
-            {(['critical', 'high'] as const).map((severity) => {
-              const delta = getBaselineDelta(vulns[severity], data.baseline![severity]);
-              return (
-                <div key={severity} className="flex items-center gap-3">
-                  <span className="text-gray-500 capitalize">{severity}:</span>
-                  <span className="font-mono text-gray-900">{data.baseline![severity]}</span>
-                  {delta.show && (
-                    <span className={`text-sm ${delta.colorClass}`}>{delta.value}</span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Scan History */}
-      {data?.scanHistory && data.scanHistory.length > 0 && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-            <Icon name="history" size="base" />
-            Scan History
-          </h4>
-          <div className="space-y-2">
-            {getScanHistorySlice(data.scanHistory, 5).map((scan, idx) => (
-              <div key={scan.date || idx} className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">{new Date(scan.date).toLocaleString()}</span>
-                <div className="flex items-center gap-4">
-                  <span className={getHistoryItemColor(scan.critical)}>
-                    {scan.critical} critical
-                  </span>
-                  <span className="text-gray-700">{scan.total} total</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* TrendSparkline, Baseline Comparison, Scan History (AC-002) */}
+      <BaselineAndHistorySection data={data} vulns={vulns} />
 
       {/* Outdated Dependencies (AC-005) */}
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-        <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-          <Icon name="history" size="base" />
-          Outdated Dependencies
-        </h4>
-        {data?.outdatedDeps && (data.outdatedDeps.total > 0 || data.outdatedDeps.lastScan) ? (
-          <>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
-              <MetricCard
-                title="Major"
-                value={data.outdatedDeps.major}
-                icon="error"
-                variant={data.outdatedDeps.major > 0 ? 'error' : 'default'}
-              />
-              <MetricCard
-                title="Minor"
-                value={data.outdatedDeps.minor}
-                icon="warning"
-                variant={data.outdatedDeps.minor > 0 ? 'warning' : 'default'}
-              />
-              <MetricCard
-                title="Patch"
-                value={data.outdatedDeps.patch}
-                icon="info"
-                variant="info"
-              />
-              <MetricCard
-                title="Total"
-                value={data.outdatedDeps.total}
-                icon="list"
-                variant="default"
-              />
-            </div>
-            {data.outdatedDeps.packages.length > 0 && (
-              <details className="text-sm">
-                <summary className="cursor-pointer text-blue-600 hover:text-blue-800">
-                  View {data.outdatedDeps.packages.length} outdated packages
-                </summary>
-                <div className="mt-2 overflow-x-auto">
-                  <table className="min-w-full text-xs">
-                    <thead>
-                      <tr className="text-gray-500 border-b">
-                        <th className="text-left py-1 pr-4">Package</th>
-                        <th className="text-left py-1 pr-4">Current</th>
-                        <th className="text-left py-1 pr-4">Latest</th>
-                        <th className="text-left py-1">Type</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.outdatedDeps.packages.map((pkg) => (
-                        <tr key={pkg.name} className="border-b border-gray-100">
-                          <td className="py-1 pr-4 font-mono">{pkg.name}</td>
-                          <td className="py-1 pr-4 text-gray-500">{pkg.current}</td>
-                          <td className="py-1 pr-4">{pkg.latest}</td>
-                          <td className="py-1">
-                            <span className={`px-1.5 py-0.5 rounded text-xs ${getPackageTypeBadgeClass(pkg.type)}`}>
-                              {pkg.type}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </details>
-            )}
-          </>
-        ) : (
-          <div className="text-sm text-gray-400 italic">No dependency data available</div>
-        )}
-      </div>
+      <OutdatedDepsSection outdatedDeps={data?.outdatedDeps} />
 
       {/* Secret Scan (AC-006) */}
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-        <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-          <Icon name="shield" size="base" />
-          Secret Scan
-        </h4>
-        {data?.secretScan &&
-        (data.secretScan.lastScan ||
-          data.secretScan.leaksFound > 0 ||
-          data.secretScan.filesScanned > 0) ? (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-4">
-              <MetricCard
-                title="Leaks Found"
-                value={data.secretScan.leaksFound}
-                icon="lock_open"
-                variant={data.secretScan.leaksFound > 0 ? 'error' : 'success'}
-              />
-              <MetricCard
-                title="Files Scanned"
-                value={data.secretScan.filesScanned}
-                icon="description"
-                variant="default"
-              />
-            </div>
-            {data.secretScan.lastScan && (
-              <StaleIndicator
-                lastUpdated={data.secretScan.lastScan}
-                thresholdMinutes={STALE_THRESHOLD_MINUTES}
-                showTime
-              />
-            )}
-          </div>
-        ) : (
-          <div className="text-sm text-gray-400 italic">No gitleaks data — scan not run</div>
-        )}
-      </div>
+      <SecretScanSection secretScan={data?.secretScan} />
 
       {/* SAST Summary (AC-007) */}
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
@@ -700,85 +854,10 @@ export default function SecurityDashboard() { // NOSONAR typescript:S3776
       </div>
 
       {/* Remediation Tracking (AC-004) */}
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-        <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-          <Icon name="healing" size="base" />
-          Remediation Tracking
-        </h4>
-        {remediationDisplay.isEmpty ? (
-          <div className="text-sm text-gray-400 italic">{remediationDisplay.emptyMessage}</div>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              <MetricCard
-                title="Fixed"
-                value={remediationDisplay.fixedCount}
-                icon="check_circle"
-                variant="success"
-              />
-              <MetricCard
-                title="Open"
-                value={remediationDisplay.openCount}
-                icon="error"
-                variant={remediationDisplay.openCount > 0 ? 'error' : 'default'}
-              />
-              <MetricCard
-                title="Waived"
-                value={remediationDisplay.waiverCount}
-                icon="do_not_disturb"
-                variant="default"
-              />
-              <MetricCard
-                title="MTTR"
-                value={remediationDisplay.mttrDisplay}
-                icon="schedule"
-                variant="default"
-              />
-            </div>
-            {data?.remediation?.items && data.remediation.items.length > 0 && (
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-xs">
-                  <thead>
-                    <tr className="text-gray-500 border-b">
-                      <th className="text-left py-1 pr-3">ID</th>
-                      <th className="text-left py-1 pr-3">Module</th>
-                      <th className="text-left py-1 pr-3">Severity</th>
-                      <th className="text-left py-1 pr-3">Status</th>
-                      <th className="text-left py-1">Fix Applied</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.remediation.items.map((item, idx) => (
-                      <tr
-                        key={`${item.id}-${item.module}-${idx}`}
-                        className="border-b border-gray-100"
-                      >
-                        <td className="py-1 pr-3 font-mono">{item.id}</td>
-                        <td className="py-1 pr-3">{item.module}</td>
-                        <td className="py-1 pr-3">
-                          <span
-                            className={`px-1.5 py-0.5 rounded text-xs ${getSeverityBadgeClass(item.severity)}`}
-                          >
-                            {item.severity}
-                          </span>
-                        </td>
-                        <td className="py-1 pr-3">
-                          <span
-                            className={`px-1.5 py-0.5 rounded text-xs ${getStatusBadgeClass(item.status)}`}
-                          >
-                            {item.status}
-                          </span>
-                        </td>
-                        <td className="py-1 text-gray-500">{item.fixApplied || '—'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+      <RemediationSection
+        remediationDisplay={remediationDisplay}
+        items={data?.remediation?.items}
+      />
 
       {/* Compliance Checks (AC-008 — 4 cards) */}
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">

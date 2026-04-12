@@ -93,9 +93,19 @@ function computeStaleness(
 /**
  * Parse a git log line in format: hash|date|author|subject
  */
-function parseGitLogLine(line: string): { hash: string; date: string; author: string; message: string } {
+function parseGitLogLine(line: string): {
+  hash: string;
+  date: string;
+  author: string;
+  message: string;
+} {
   const [hash, date, author, ...messageParts] = line.split('|');
-  return { hash: hash || '', date: date || '', author: author || '', message: messageParts.join('|') };
+  return {
+    hash: hash || '',
+    date: date || '',
+    author: author || '',
+    message: messageParts.join('|'),
+  };
 }
 
 /**
@@ -197,7 +207,8 @@ function getFileHistory(relativePath: string, staleDays: number): FileHistoryEnt
  */
 function getAllTrackedFiles(): string[] {
   try {
-    const output = execFileSync('git', ['ls-files'], { // NOSONAR — PATH inherited from dev environment, internal tooling only
+    const output = execFileSync('git', ['ls-files'], {
+      // NOSONAR — PATH inherited from dev environment, internal tooling only
       cwd: PROJECT_ROOT,
       encoding: 'utf-8',
       timeout: 30000,
@@ -218,7 +229,8 @@ function getAllTrackedFiles(): string[] {
  */
 function getUntrackedFiles(): string[] {
   try {
-    const output = execFileSync('git', ['ls-files', '--others', '--exclude-standard'], { // NOSONAR — PATH inherited from dev environment, internal tooling only
+    const output = execFileSync('git', ['ls-files', '--others', '--exclude-standard'], {
+      // NOSONAR — PATH inherited from dev environment, internal tooling only
       cwd: PROJECT_ROOT,
       encoding: 'utf-8',
       timeout: 30000,

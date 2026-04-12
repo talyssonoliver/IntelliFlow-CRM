@@ -36,7 +36,15 @@ interface PhaseResult {
  * Prerequisites: Spec must exist (SESSION 1 must be complete)
  * Updates Sprint_plan.csv status: Planning -> Plan Complete
  */
-export async function POST(request: Request) { // NOSONAR typescript:S3776
+async function rollbackToPlanningStatus(taskId: string): Promise<void> {
+  try {
+    await updateTaskStatus(taskId, 'Spec Complete');
+  } catch {
+    // Ignore rollback errors
+  }
+}
+
+export async function POST(request: Request) {
   let taskId: string | undefined;
 
   try {
@@ -162,11 +170,7 @@ export async function POST(request: Request) { // NOSONAR typescript:S3776
 
     // Rollback status on failure
     if (taskId) {
-      try {
-        await updateTaskStatus(taskId, 'Spec Complete');
-      } catch {
-        // Ignore rollback errors
-      }
+      await rollbackToPlanningStatus(taskId);
     }
 
     return NextResponse.json(

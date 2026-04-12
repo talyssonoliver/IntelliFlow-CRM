@@ -78,7 +78,129 @@ function groupCheckboxesByPhase(items: PlanCheckboxItem[]): Record<string, PlanC
   );
 }
 
-export default function PlanDeliverablesStatus({ // NOSONAR typescript:S3776
+interface DeliverablesSectionProps {
+  data: PlanDeliverablesVerification;
+  expanded: boolean;
+  onToggle: () => void;
+}
+
+function DeliverablesSection({ data, expanded, onToggle }: Readonly<DeliverablesSectionProps>) {
+  if (data.deliverables.total === 0) return null;
+  return (
+    <div className="border-t border-gray-200">
+      <button
+        type="button"
+        className="w-full px-4 py-2 flex items-center justify-between cursor-pointer hover:bg-gray-50 text-left"
+        onClick={onToggle}
+        aria-expanded={expanded}
+      >
+        <h4 className="text-sm font-medium text-gray-700">
+          Plan Deliverables ({data.deliverables.total})
+        </h4>
+        {expanded ? (
+          <Icon name="expand_less" size="sm" className="text-gray-400" />
+        ) : (
+          <Icon name="expand_more" size="sm" className="text-gray-400" />
+        )}
+      </button>
+      {expanded ? (
+        <div className="px-4 pb-3">
+          <div className="bg-gray-50 rounded-lg p-2 font-mono text-xs space-y-1 max-h-48 overflow-y-auto">
+            {data.deliverables.items.map((file, idx) => {
+              const present = isFilePresent(file.status);
+              return (
+                <div
+                  key={idx} // NOSONAR typescript:S6479
+                  className={`flex items-center justify-between py-1 px-2 rounded ${present ? 'bg-green-50' : 'bg-red-50'}`}
+                >
+                  <span
+                    className={`truncate flex-1 ${present ? 'text-gray-700' : 'text-red-700'}`}
+                    title={file.path}
+                  >
+                    {file.path}
+                    {file.status === 'deleted' ? ' (deleted)' : ''}
+                  </span>
+                  <div className="flex items-center gap-2 ml-2">
+                    {file.size ? (
+                      <span className="text-gray-500 text-[10px]">{formatBytes(file.size)}</span>
+                    ) : null}
+                    <span
+                      className={`w-4 h-4 flex items-center justify-center ${present ? 'text-green-600' : 'text-red-600'}`}
+                    >
+                      {present ? '✓' : '✗'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+interface CheckboxesSectionProps {
+  data: PlanDeliverablesVerification;
+  expanded: boolean;
+  onToggle: () => void;
+}
+
+function CheckboxesSection({ data, expanded, onToggle }: Readonly<CheckboxesSectionProps>) {
+  if (data.checkboxes.total === 0) return null;
+  return (
+    <div className="border-t border-gray-200">
+      <button
+        type="button"
+        className="w-full px-4 py-2 flex items-center justify-between cursor-pointer hover:bg-gray-50 text-left"
+        onClick={onToggle}
+        aria-expanded={expanded}
+      >
+        <h4 className="text-sm font-medium text-gray-700">
+          Implementation Steps ({data.checkboxes.total})
+        </h4>
+        {expanded ? (
+          <Icon name="expand_less" size="sm" className="text-gray-400" />
+        ) : (
+          <Icon name="expand_more" size="sm" className="text-gray-400" />
+        )}
+      </button>
+      {expanded ? (
+        <div className="px-4 pb-3">
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {Object.entries(groupCheckboxesByPhase(data.checkboxes.items)).map(
+              ([phase, items]) => (
+                <div key={phase} className="bg-gray-50 rounded-lg p-2">
+                  <h5 className="text-xs font-medium text-gray-600 mb-1">{phase}</h5>
+                  <div className="space-y-1">
+                    {items.map((item, idx) => (
+                      <div key={idx} className="flex items-start gap-2 text-xs">
+                        {' '}
+                        {/* NOSONAR typescript:S6479 */}
+                        <span
+                          className={`mt-0.5 ${item.checked ? 'text-green-600' : 'text-gray-400'}`}
+                        >
+                          {item.checked ? '☑' : '☐'}
+                        </span>
+                        <span
+                          className={`${item.checked ? 'text-gray-700 line-through' : 'text-gray-900'}`}
+                        >
+                          {item.text}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export default function PlanDeliverablesStatus({
   data,
   compact = false,
 }: Readonly<PlanDeliverablesStatusProps>) {
@@ -164,109 +286,18 @@ export default function PlanDeliverablesStatus({ // NOSONAR typescript:S3776
       </div>
 
       {/* Deliverables Section */}
-      {data.deliverables.total > 0 ? (
-        <div className="border-t border-gray-200">
-          <button
-            type="button"
-            className="w-full px-4 py-2 flex items-center justify-between cursor-pointer hover:bg-gray-50 text-left"
-            onClick={() => setExpandedFiles(!expandedFiles)}
-            aria-expanded={expandedFiles}
-          >
-            <h4 className="text-sm font-medium text-gray-700">
-              Plan Deliverables ({data.deliverables.total})
-            </h4>
-            {expandedFiles ? (
-              <Icon name="expand_less" size="sm" className="text-gray-400" />
-            ) : (
-              <Icon name="expand_more" size="sm" className="text-gray-400" />
-            )}
-          </button>
-
-          {expandedFiles ? (
-            <div className="px-4 pb-3">
-              <div className="bg-gray-50 rounded-lg p-2 font-mono text-xs space-y-1 max-h-48 overflow-y-auto">
-                {data.deliverables.items.map((file, idx) => {
-                  const present = isFilePresent(file.status);
-                  return (
-                    <div
-                      key={idx} // NOSONAR typescript:S6479
-                      className={`flex items-center justify-between py-1 px-2 rounded ${present ? 'bg-green-50' : 'bg-red-50'}`}
-                    >
-                      <span
-                        className={`truncate flex-1 ${present ? 'text-gray-700' : 'text-red-700'}`}
-                        title={file.path}
-                      >
-                        {file.path}
-                        {file.status === 'deleted' ? ' (deleted)' : ''}
-                      </span>
-                      <div className="flex items-center gap-2 ml-2">
-                        {file.size ? (
-                          <span className="text-gray-500 text-[10px]">{formatBytes(file.size)}</span>
-                        ) : null}
-                        <span className={`w-4 h-4 flex items-center justify-center ${present ? 'text-green-600' : 'text-red-600'}`}>
-                          {present ? '✓' : '✗'}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
+      <DeliverablesSection
+        data={data}
+        expanded={expandedFiles}
+        onToggle={() => setExpandedFiles(!expandedFiles)}
+      />
 
       {/* Checkboxes Section */}
-      {data.checkboxes.total > 0 ? (
-        <div className="border-t border-gray-200">
-          <button
-            type="button"
-            className="w-full px-4 py-2 flex items-center justify-between cursor-pointer hover:bg-gray-50 text-left"
-            onClick={() => setExpandedCheckboxes(!expandedCheckboxes)}
-            aria-expanded={expandedCheckboxes}
-          >
-            <h4 className="text-sm font-medium text-gray-700">
-              Implementation Steps ({data.checkboxes.total})
-            </h4>
-            {expandedCheckboxes ? (
-              <Icon name="expand_less" size="sm" className="text-gray-400" />
-            ) : (
-              <Icon name="expand_more" size="sm" className="text-gray-400" />
-            )}
-          </button>
-
-          {expandedCheckboxes ? (
-            <div className="px-4 pb-3">
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {/* Group by phase */}
-                {Object.entries(groupCheckboxesByPhase(data.checkboxes.items)).map(([phase, items]) => (
-                  <div key={phase} className="bg-gray-50 rounded-lg p-2">
-                    <h5 className="text-xs font-medium text-gray-600 mb-1">{phase}</h5>
-                    <div className="space-y-1">
-                      {items.map((item, idx) => (
-                        <div key={idx} className="flex items-start gap-2 text-xs"> {/* NOSONAR typescript:S6479 */}
-                          <span
-                            className={`mt-0.5 ${item.checked ? 'text-green-600' : 'text-gray-400'}`}
-                          >
-                            {item.checked ? '☑' : '☐'}
-                          </span>
-                          <span
-                            className={`${
-                              item.checked ? 'text-gray-700 line-through' : 'text-gray-900'
-                            }`}
-                          >
-                            {item.text}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
+      <CheckboxesSection
+        data={data}
+        expanded={expandedCheckboxes}
+        onToggle={() => setExpandedCheckboxes(!expandedCheckboxes)}
+      />
 
       {/* Plan Path */}
       {data.planPath ? (

@@ -156,7 +156,11 @@ function getBaseUrl(request: Request): string {
   return `${url.protocol}//${url.host}`;
 }
 
-function buildStatusErrorMessage(skipPlanCheck: boolean, currentStatus: string, validStartStatuses: string[]): string {
+function buildStatusErrorMessage(
+  skipPlanCheck: boolean,
+  currentStatus: string,
+  validStartStatuses: string[]
+): string {
   if (skipPlanCheck) {
     return `Cannot start task with status '${currentStatus}'. Must be: ${validStartStatuses.join(', ')}`;
   }

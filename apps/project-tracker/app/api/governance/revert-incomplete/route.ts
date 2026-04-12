@@ -95,22 +95,33 @@ async function checkPathExists(artifactPath: string): Promise<boolean> {
   }
 }
 
-async function findTasksToRevert(tasks: CsvTask[]): Promise<Array<{ taskId: string; missingArtifacts: string[]; missingEvidence: string[] }>> {
-  const results: Array<{ taskId: string; missingArtifacts: string[]; missingEvidence: string[] }> = [];
+async function findTasksToRevert(
+  tasks: CsvTask[]
+): Promise<Array<{ taskId: string; missingArtifacts: string[]; missingEvidence: string[] }>> {
+  const results: Array<{ taskId: string; missingArtifacts: string[]; missingEvidence: string[] }> =
+    [];
 
   for (const task of tasks) {
     const status = (task.Status || '').toLowerCase().trim();
     if (status !== 'completed' && status !== 'done') continue;
 
     const parsed = parseArtifactsWithPrefixes(task['Artifacts To Track']);
-    const missingArtifacts = await Promise.all(parsed.artifacts.map(async (a) => (await checkPathExists(a) ? null : a)));
-    const missingEvidence = await Promise.all(parsed.evidence.map(async (e) => (await checkPathExists(e) ? null : e)));
+    const missingArtifacts = await Promise.all(
+      parsed.artifacts.map(async (a) => ((await checkPathExists(a)) ? null : a))
+    );
+    const missingEvidence = await Promise.all(
+      parsed.evidence.map(async (e) => ((await checkPathExists(e)) ? null : e))
+    );
 
     const filteredArtifacts = missingArtifacts.filter((a): a is string => a !== null);
     const filteredEvidence = missingEvidence.filter((e): e is string => e !== null);
 
     if (filteredArtifacts.length > 0 || filteredEvidence.length > 0) {
-      results.push({ taskId: task['Task ID'], missingArtifacts: filteredArtifacts, missingEvidence: filteredEvidence });
+      results.push({
+        taskId: task['Task ID'],
+        missingArtifacts: filteredArtifacts,
+        missingEvidence: filteredEvidence,
+      });
     }
   }
 
@@ -126,7 +137,11 @@ export async function POST(request: Request) {
     const csvContent = await readFile(csvPath, 'utf-8');
 
     const tasks = parse(csvContent, {
-      columns: true, skip_empty_lines: true, relax_quotes: true, relax_column_count: true, bom: true,
+      columns: true,
+      skip_empty_lines: true,
+      relax_quotes: true,
+      relax_column_count: true,
+      bom: true,
     }) as CsvTask[];
 
     const tasksToRevert = await findTasksToRevert(tasks);
@@ -153,11 +168,17 @@ export async function POST(request: Request) {
       timestamp: new Date().toISOString(),
     };
 
-    return NextResponse.json(result, { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } });
+    return NextResponse.json(result, {
+      headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' },
+    });
   } catch (error) {
     console.error('Error in revert-incomplete:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to process revert request', details: error instanceof Error ? error.message : String(error) },
+      {
+        success: false,
+        error: 'Failed to process revert request',
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }

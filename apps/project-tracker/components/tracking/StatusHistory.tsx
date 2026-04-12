@@ -194,9 +194,7 @@ export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) 
       </div>
 
       {/* Trend Summary */}
-      {trend && (
-        <TrendSummary trend={trend} />
-      )}
+      {trend && <TrendSummary trend={trend} />}
 
       {/* History Timeline */}
       {entries.length === 0 ? (

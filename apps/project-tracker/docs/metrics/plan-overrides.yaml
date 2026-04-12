@@ -2443,7 +2443,6 @@ DOC-009:
     - artifacts/reports/content-audit-results.json
   notes: 'Content audit framework. 103 routes inventoried, SEO + stale content detection.'
 
-
 # =============================================================================
 # TIER A ROOT TASK OVERRIDES
 # Auto-generated: Tasks with no dependencies default to Tier A and require
@@ -3341,7 +3340,6 @@ PG-180:
     - apps/web/src/app/help-center/*
     - apps/api/src/modules/help/*
   notes: 'Help Article Admin List Page'
-
 
 PG-178:
   tier: A

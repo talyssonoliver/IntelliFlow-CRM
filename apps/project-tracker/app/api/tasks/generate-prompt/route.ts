@@ -140,7 +140,7 @@ function buildTaskPrompt(tasks: CsvTask[], dependencyGraph: any): string {
     '- Aviability: Ensure high availability and reliability',
     '- Maintainability: Write clean, maintainable code',
     '- Documentation: Provide clear documentation and specs',
-    '',
+    ''
   );
   tasks.forEach((task) => {
     const depsRaw = task.CleanDependencies || task.Dependencies || '';
@@ -178,13 +178,13 @@ function buildTaskPrompt(tasks: CsvTask[], dependencyGraph: any): string {
       `**Section:** ${task.Section}`,
       `**Owner:** ${task.Owner}`,
       `**Status:** ${task.Status}`,
-      '',
+      ''
     );
     lines.push(
       'You must adhere to the following guidelines while implementing this task: .specify/memory/constitution.md',
       '',
       '### Dependencies',
-      deps.length ? deps.map((d) => `- ${d}`).join('\n') : '- None',
+      deps.length ? deps.map((d) => `- ${d}`).join('\n') : '- None'
     );
     if (depStatus.length) {
       lines.push('', 'Dependency Status:', depStatus.map((d) => `- ${d}`).join('\n'));
@@ -195,7 +195,7 @@ function buildTaskPrompt(tasks: CsvTask[], dependencyGraph: any): string {
       task['Pre-requisites'] || 'None specified',
       '',
       '### Definition of Done',
-      dodItems.length ? dodItems.map((d, i) => `${i + 1}. ${d}`).join('\n') : '- None specified',
+      dodItems.length ? dodItems.map((d, i) => `${i + 1}. ${d}`).join('\n') : '- None specified'
     );
     lines.push(
       '',
@@ -217,7 +217,7 @@ function buildTaskPrompt(tasks: CsvTask[], dependencyGraph: any): string {
       '- Use spec/plan from .specify/sprints/sprint-{N}/specifications/ and planning/',
       '',
       '---',
-      '',
+      ''
     );
   });
 
@@ -226,7 +226,7 @@ function buildTaskPrompt(tasks: CsvTask[], dependencyGraph: any): string {
     '- Follow TDD: write/extend tests before implementation.',
     '- Respect Definition of Done and produce required artifacts.',
     '- Run lint/typecheck/test/build/security scans.',
-    '- Attach evidence (context_pack, context_ack, summaries).',
+    '- Attach evidence (context_pack, context_ack, summaries).'
   );
 
   return lines.join('\n');

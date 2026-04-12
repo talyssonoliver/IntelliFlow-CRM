@@ -202,8 +202,10 @@ function resolveInactiveStatus(
   csvStatus: string,
   currentPhase: string | null
 ): SwarmTaskStatus['status'] {
-  if (csvStatus === 'completed' || csvStatus === 'done' || currentPhase === 'COMPLETED') return 'completed';
-  if (csvStatus === 'failed' || csvStatus === 'blocked' || currentPhase === 'CRASHED') return 'failed';
+  if (csvStatus === 'completed' || csvStatus === 'done' || currentPhase === 'COMPLETED')
+    return 'completed';
+  if (csvStatus === 'failed' || csvStatus === 'blocked' || currentPhase === 'CRASHED')
+    return 'failed';
   return 'not_started';
 }
 
@@ -214,8 +216,9 @@ function resolveTaskStatus(
   logInfo: { recentActivity: string[] },
   csvTask: { Status?: string }
 ): SwarmTaskStatus['status'] {
-  if (isActive) return resolveActiveStatus(heartbeatAge, taskPhaseInfo.currentPhase, logInfo.recentActivity);
-  return resolveInactiveStatus((csvTask.Status?.toLowerCase() || ''), taskPhaseInfo.currentPhase);
+  if (isActive)
+    return resolveActiveStatus(heartbeatAge, taskPhaseInfo.currentPhase, logInfo.recentActivity);
+  return resolveInactiveStatus(csvTask.Status?.toLowerCase() || '', taskPhaseInfo.currentPhase);
 }
 
 export async function GET(request: Request) {

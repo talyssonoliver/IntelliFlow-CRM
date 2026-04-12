@@ -187,22 +187,19 @@ export default function QualityDashboard() {
             title="Branches"
             value={`${data?.coverage.branches.toFixed(1) ?? 0}%`}
             icon="fork_right"
-            variant={
-              getCoverageColor(data?.coverage.branches ?? 0)             }
+            variant={getCoverageColor(data?.coverage.branches ?? 0)}
           />
           <MetricCard
             title="Functions"
             value={`${data?.coverage.functions.toFixed(1) ?? 0}%`}
             icon="package_2"
-            variant={
-              getCoverageColor(data?.coverage.functions ?? 0)             }
+            variant={getCoverageColor(data?.coverage.functions ?? 0)}
           />
           <MetricCard
             title="Statements"
             value={`${data?.coverage.statements.toFixed(1) ?? 0}%`}
             icon="description"
-            variant={
-              getCoverageColor(data?.coverage.statements ?? 0)             }
+            variant={getCoverageColor(data?.coverage.statements ?? 0)}
           />
         </div>
       </div>

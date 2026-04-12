@@ -130,7 +130,15 @@ function parseDependencies(deps: string): string[] {
 }
 
 // Prefixes that represent file paths to validate
-const PATH_PREFIXES = ['ARTIFACT:', 'EVIDENCE:', 'SPEC:', 'PLAN:', 'CONTEXT:', 'PRD:', 'ATTESTATION:'] as const;
+const PATH_PREFIXES = [
+  'ARTIFACT:',
+  'EVIDENCE:',
+  'SPEC:',
+  'PLAN:',
+  'CONTEXT:',
+  'PRD:',
+  'ATTESTATION:',
+] as const;
 // Prefixes that are metadata/commands, not file paths
 const METADATA_PREFIXES = ['VALIDATE:', 'GATE:', 'AUDIT:', 'FILE:', 'ENV:', 'POLICY:'] as const;
 
@@ -234,7 +242,11 @@ async function checkArtifactExists(artifactPath: string): Promise<boolean> {
   }
 }
 
-function isPackageTracked(packagePath: string, srcPath: string, trackedArtifacts: Set<string>): boolean {
+function isPackageTracked(
+  packagePath: string,
+  srcPath: string,
+  trackedArtifacts: Set<string>
+): boolean {
   for (const tracked of trackedArtifacts) {
     if (tracked.startsWith(packagePath) || tracked.startsWith(srcPath)) return true;
   }
@@ -337,8 +349,7 @@ function dirHasAckInAttestation(dir: string, taskId: string): boolean {
 function dirHasAck(dir: string, taskId: string): boolean {
   if (dirHasAckInAttestation(dir, taskId)) return true;
   return (
-    existsSync(join(dir, 'context_ack.json')) ||
-    existsSync(join(dir, `${taskId}-context_ack.json`))
+    existsSync(join(dir, 'context_ack.json')) || existsSync(join(dir, `${taskId}-context_ack.json`))
   );
 }
 
@@ -368,7 +379,11 @@ function getExtensionVariant(fp: string): string | null {
   return null;
 }
 
-function buildPlanCandidates(taskId: string, sprintNumber: number | null, allSprintDirs: string[]): string[] {
+function buildPlanCandidates(
+  taskId: string,
+  sprintNumber: number | null,
+  allSprintDirs: string[]
+): string[] {
   const root = join(MONOREPO_ROOT, '.specify', 'sprints');
   const candidates: string[] = [];
   if (sprintNumber !== null) {
@@ -387,7 +402,9 @@ function readPlanContent(candidates: string[]): { content: string; path: string 
     if (!existsSync(candidate)) continue;
     try {
       const content = readFileSync(candidate, 'utf-8');
-      const path = candidate.replaceAll(MONOREPO_ROOT + '/', '').replaceAll(MONOREPO_ROOT + '\\', '');
+      const path = candidate
+        .replaceAll(MONOREPO_ROOT + '/', '')
+        .replaceAll(MONOREPO_ROOT + '\\', '');
       return { content, path };
     } catch {
       /* can't read */
@@ -396,7 +413,11 @@ function readPlanContent(candidates: string[]): { content: string; path: string 
   return null;
 }
 
-function countPlanCheckboxes(planContent: string): { total: number; checked: number; pct: number | null } {
+function countPlanCheckboxes(planContent: string): {
+  total: number;
+  checked: number;
+  pct: number | null;
+} {
   const checkboxRegex = /^(\s*)-\s*\[([ xX])\]\s*([^\n]{1,500})$/;
   let total = 0;
   let checked = 0;
@@ -459,8 +480,14 @@ function checkPlanDeliverables(
   checkboxPct: number | null;
 } {
   const empty = {
-    planExists: false, planPath: '', total: 0, verified: 0,
-    missingFiles: [] as string[], checkboxTotal: 0, checkboxChecked: 0, checkboxPct: null as number | null,
+    planExists: false,
+    planPath: '',
+    total: 0,
+    verified: 0,
+    missingFiles: [] as string[],
+    checkboxTotal: 0,
+    checkboxChecked: 0,
+    checkboxPct: null as number | null,
   };
 
   const candidates = buildPlanCandidates(taskId, sprintNumber, allSprintDirs);
@@ -468,14 +495,23 @@ function checkPlanDeliverables(
   if (!found) return empty;
 
   const { content: planContent, path: planPath } = found;
-  const { total: checkboxTotal, checked: checkboxChecked, pct: checkboxPct } = countPlanCheckboxes(planContent);
+  const {
+    total: checkboxTotal,
+    checked: checkboxChecked,
+    pct: checkboxPct,
+  } = countPlanCheckboxes(planContent);
   const filePaths = extractPlanFilePaths(planContent);
   const { verified, missingFiles } = verifyPlanFilePaths(filePaths);
 
   return {
-    planExists: true, planPath,
-    total: filePaths.length, verified, missingFiles,
-    checkboxTotal, checkboxChecked, checkboxPct,
+    planExists: true,
+    planPath,
+    total: filePaths.length,
+    verified,
+    missingFiles,
+    checkboxTotal,
+    checkboxChecked,
+    checkboxPct,
   };
 }
 
@@ -514,10 +550,7 @@ function normalizeHashEntry(f: { path: string; sha256?: string; hash?: string })
   return { path: f.path, sha256: f.sha256 || f.hash || '' };
 }
 
-function loadManifestFromDir(
-  dir: string,
-  taskId: string
-): HashEntry[] | null {
+function loadManifestFromDir(dir: string, taskId: string): HashEntry[] | null {
   const names = ['context_pack.manifest.json', `${taskId}-context_pack.manifest.json`];
   for (const name of names) {
     const p = join(dir, name);
@@ -624,10 +657,14 @@ function checkContextHashes(
 const PACK_REQUIRED_FROM_SPRINT = 5;
 
 function checkContextGap(
-  taskId: string, sprintNum: number | null, desc: string, allSprintDirs: string[]
+  taskId: string,
+  sprintNum: number | null,
+  desc: string,
+  allSprintDirs: string[]
 ): ContextGapDetail | null {
   const ctx = checkContextExists(taskId, sprintNum, allSprintDirs);
-  if (!ctx.hasAck) return { task_id: taskId, description: desc, missing_pack: !ctx.hasPack, missing_ack: true };
+  if (!ctx.hasAck)
+    return { task_id: taskId, description: desc, missing_pack: !ctx.hasPack, missing_ack: true };
   if (!ctx.hasPack && sprintNum !== null && sprintNum >= PACK_REQUIRED_FROM_SPRINT) {
     return { task_id: taskId, description: desc, missing_pack: true, missing_ack: false };
   }
@@ -635,7 +672,10 @@ function checkContextGap(
 }
 
 function checkPlanGap(
-  taskId: string, sprintNum: number | null, desc: string, allSprintDirs: string[]
+  taskId: string,
+  sprintNum: number | null,
+  desc: string,
+  allSprintDirs: string[]
 ): PlanGapDetail | null {
   const plan = checkPlanDeliverables(taskId, sprintNum, allSprintDirs);
   if (!plan.planExists) return null;
@@ -643,20 +683,31 @@ function checkPlanGap(
   const hasUncheckedSteps = plan.checkboxTotal > 0 && plan.checkboxChecked < plan.checkboxTotal;
   if (!hasMissingFiles && !hasUncheckedSteps) return null;
   return {
-    task_id: taskId, description: desc, plan_path: plan.planPath,
-    total_files: plan.total, verified_files: plan.verified, missing_files: plan.missingFiles.slice(0, 5),
-    checkbox_total: plan.checkboxTotal, checkbox_checked: plan.checkboxChecked,
+    task_id: taskId,
+    description: desc,
+    plan_path: plan.planPath,
+    total_files: plan.total,
+    verified_files: plan.verified,
+    missing_files: plan.missingFiles.slice(0, 5),
+    checkbox_total: plan.checkboxTotal,
+    checkbox_checked: plan.checkboxChecked,
   };
 }
 
 function checkHashMismatch(
-  taskId: string, sprintNum: number | null, desc: string, allSprintDirs: string[]
+  taskId: string,
+  sprintNum: number | null,
+  desc: string,
+  allSprintDirs: string[]
 ): HashMismatchDetail | null {
   const hashes = checkContextHashes(taskId, sprintNum, allSprintDirs);
   if (!hashes.hasBoth || hashes.mismatched.length === 0) return null;
   return {
-    task_id: taskId, description: desc, mismatched_files: hashes.mismatched.slice(0, 5),
-    total_files: hashes.total, matched_count: hashes.matched,
+    task_id: taskId,
+    description: desc,
+    mismatched_files: hashes.mismatched.slice(0, 5),
+    total_files: hashes.total,
+    matched_count: hashes.matched,
   };
 }
 
@@ -704,7 +755,14 @@ function collectCompletedTaskChecks(
   for (const task of tasks) {
     const status = (task.Status || '').toLowerCase().trim();
     if (status !== 'completed' && status !== 'done') continue;
-    processCompletedTaskChecks(task, taskSprintMap, allSprintDirs, contextGapDetails, planGapDetails, hashMismatchDetails);
+    processCompletedTaskChecks(
+      task,
+      taskSprintMap,
+      allSprintDirs,
+      contextGapDetails,
+      planGapDetails,
+      hashMismatchDetails
+    );
   }
 
   return { contextGapDetails, planGapDetails, hashMismatchDetails };
@@ -715,10 +773,16 @@ function collectAttestationIssues(
   sprintNum: number | null,
   targetSprint: string,
   allSprintDirs: string[]
-): { issues: string[]; attestExists: boolean | null; attestVerdict: string | null; attestValidationCount: number | null } {
+): {
+  issues: string[];
+  attestExists: boolean | null;
+  attestVerdict: string | null;
+  attestValidationCount: number | null;
+} {
   const ATTESTATION_REQUIRED_FROM_SPRINT = 16;
   const isContinuousTask = (targetSprint || '').toLowerCase() === 'continuous';
-  const skipAttestationCheck = isContinuousTask || (sprintNum !== null && sprintNum < ATTESTATION_REQUIRED_FROM_SPRINT);
+  const skipAttestationCheck =
+    isContinuousTask || (sprintNum !== null && sprintNum < ATTESTATION_REQUIRED_FROM_SPRINT);
 
   if (skipAttestationCheck) {
     return { issues: [], attestExists: null, attestVerdict: null, attestValidationCount: null };
@@ -728,10 +792,15 @@ function collectAttestationIssues(
   const issues: string[] = [];
 
   if (attestResult.exists) {
-    const badVerdict = attestResult.verdict && attestResult.verdict !== 'COMPLETE' && attestResult.verdict !== 'PASS';
+    const badVerdict =
+      attestResult.verdict &&
+      attestResult.verdict !== 'COMPLETE' &&
+      attestResult.verdict !== 'PASS';
     if (badVerdict) issues.push(`Attestation verdict: ${attestResult.verdict} (expected COMPLETE)`);
     if (attestResult.validationCount < 4) {
-      issues.push(`Only ${attestResult.validationCount}/4 validations recorded (need TypeScript, Tests, Lint, Build)`);
+      issues.push(
+        `Only ${attestResult.validationCount}/4 validations recorded (need TypeScript, Tests, Lint, Build)`
+      );
     }
   } else {
     issues.push('Missing attestation.json');
@@ -750,22 +819,42 @@ function buildTaskIntegrityIssues(
   task: CsvTask,
   sprintNum: number | null,
   allSprintDirs: string[]
-): { issues: string[]; planResult: ReturnType<typeof checkPlanDeliverables>; attestInfo: ReturnType<typeof collectAttestationIssues> } {
+): {
+  issues: string[];
+  planResult: ReturnType<typeof checkPlanDeliverables>;
+  attestInfo: ReturnType<typeof collectAttestationIssues>;
+} {
   const planResult = checkPlanDeliverables(taskId, sprintNum, allSprintDirs);
   const issues: string[] = [];
 
-  if (planResult.planExists && planResult.checkboxTotal > 0 && planResult.checkboxChecked < planResult.checkboxTotal) {
-    issues.push(`Plan steps: ${planResult.checkboxChecked}/${planResult.checkboxTotal} checked (${planResult.checkboxPct}%) — must be 100% for completed tasks`);
+  if (
+    planResult.planExists &&
+    planResult.checkboxTotal > 0 &&
+    planResult.checkboxChecked < planResult.checkboxTotal
+  ) {
+    issues.push(
+      `Plan steps: ${planResult.checkboxChecked}/${planResult.checkboxTotal} checked (${planResult.checkboxPct}%) — must be 100% for completed tasks`
+    );
   }
 
   if (planResult.planExists && planResult.total > 0 && planResult.verified < planResult.total) {
     const missingCount = planResult.total - planResult.verified;
-    const sample = planResult.missingFiles.slice(0, 3).map((f) => f.split('/').pop()).join(', ');
+    const sample = planResult.missingFiles
+      .slice(0, 3)
+      .map((f) => f.split('/').pop())
+      .join(', ');
     const missingNote = missingCount > 3 ? ` +${missingCount - 3} more` : '';
-    issues.push(`Plan deliverables: ${planResult.verified}/${planResult.total} files exist on disk (missing: ${sample}${missingNote})`);
+    issues.push(
+      `Plan deliverables: ${planResult.verified}/${planResult.total} files exist on disk (missing: ${sample}${missingNote})`
+    );
   }
 
-  const attestInfo = collectAttestationIssues(taskId, sprintNum, task['Target Sprint'], allSprintDirs);
+  const attestInfo = collectAttestationIssues(
+    taskId,
+    sprintNum,
+    task['Target Sprint'],
+    allSprintDirs
+  );
   issues.push(...attestInfo.issues);
 
   return { issues, planResult, attestInfo };
@@ -786,7 +875,12 @@ function collectIntegrityFailures(
     if (!taskId) continue;
 
     const sprintNum = taskSprintMap.get(taskId) ?? null;
-    const { issues, planResult, attestInfo } = buildTaskIntegrityIssues(taskId, task, sprintNum, allSprintDirs);
+    const { issues, planResult, attestInfo } = buildTaskIntegrityIssues(
+      taskId,
+      task,
+      sprintNum,
+      allSprintDirs
+    );
 
     if (issues.length > 0) {
       integrityFailures.push({
@@ -828,7 +922,14 @@ async function collectMissingPaths(
     ]);
 
   return {
-    missingArtifacts: [...missingArt, ...missingSpec, ...missingPlan, ...missingCtx, ...missingPrd, ...missingAttest],
+    missingArtifacts: [
+      ...missingArt,
+      ...missingSpec,
+      ...missingPlan,
+      ...missingCtx,
+      ...missingPrd,
+      ...missingAttest,
+    ],
     missingEvidence: missingEv,
   };
 }
@@ -845,7 +946,11 @@ function filterTasksBySprint(tasks: CsvTask[], sprintParam: string | null): CsvT
   return tasks;
 }
 
-function countTaskStatuses(tasks: CsvTask[]): { completed: number; inProgress: number; backlog: number } {
+function countTaskStatuses(tasks: CsvTask[]): {
+  completed: number;
+  inProgress: number;
+  backlog: number;
+} {
   let completed = 0;
   let inProgress = 0;
   let backlog = 0;
@@ -920,15 +1025,12 @@ function collectBottleneckDetails(
     dependency_count: data.count,
     blocked_tasks: data.tasks.slice(0, 10),
   }));
-  const str = sortedBottlenecks.length > 0
-    ? sortedBottlenecks.map(([sprint]) => sprint).join(', ')
-    : 'None';
+  const str =
+    sortedBottlenecks.length > 0 ? sortedBottlenecks.map(([sprint]) => sprint).join(', ') : 'None';
   return { details, str };
 }
 
-async function collectMismatchAndRevertDetails(
-  tasks: CsvTask[]
-): Promise<{
+async function collectMismatchAndRevertDetails(tasks: CsvTask[]): Promise<{
   mismatchDetails: MismatchDetail[];
   tasksRequiringRevertDetails: TaskRequiringRevert[];
   trackedArtifacts: Set<string>;
@@ -1015,11 +1117,17 @@ export async function GET(request: Request) {
       await collectMismatchAndRevertDetails(tasks);
 
     const allSprintDirs = loadAllSprintDirs();
-    const { contextGapDetails, planGapDetails, hashMismatchDetails } =
-      collectCompletedTaskChecks(tasks, taskSprintMap, allSprintDirs);
+    const { contextGapDetails, planGapDetails, hashMismatchDetails } = collectCompletedTaskChecks(
+      tasks,
+      taskSprintMap,
+      allSprintDirs
+    );
     const integrityFailures = collectIntegrityFailures(tasks, taskSprintMap, allSprintDirs);
     const untrackedResult = await getUntrackedArtifactsWithDetails(trackedArtifacts);
-    const { details: bottleneckDetails, str: bottleneckStr } = collectBottleneckDetails(tasks, taskSprintMap);
+    const { details: bottleneckDetails, str: bottleneckStr } = collectBottleneckDetails(
+      tasks,
+      taskSprintMap
+    );
 
     const metrics: ExecutiveMetrics = {
       total_tasks: total,

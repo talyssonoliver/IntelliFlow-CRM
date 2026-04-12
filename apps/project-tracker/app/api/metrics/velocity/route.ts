@@ -117,8 +117,15 @@ function buildSprintBars(sprintTasks: AnyTask[]): SprintBar[] {
   }
   return Array.from(sprintMap.entries())
     .map(([sprint, counts]) => {
-      const velocity = counts.planned > 0 ? Math.round((counts.completed / counts.planned) * 100) : 0;
-      return { sprint, velocity, percentage: velocity, planned: counts.planned, completed: counts.completed };
+      const velocity =
+        counts.planned > 0 ? Math.round((counts.completed / counts.planned) * 100) : 0;
+      return {
+        sprint,
+        velocity,
+        percentage: velocity,
+        planned: counts.planned,
+        completed: counts.completed,
+      };
     })
     .sort((a, b) => a.sprint - b.sprint);
 }

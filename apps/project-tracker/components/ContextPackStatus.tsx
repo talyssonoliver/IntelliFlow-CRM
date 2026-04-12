@@ -75,7 +75,10 @@ function shortenHash(hash: string): string {
   return `${hash.slice(0, 8)}...`;
 }
 
-export default function ContextPackStatus({ data, compact = false }: Readonly<ContextPackStatusProps>) {
+export default function ContextPackStatus({
+  data,
+  compact = false,
+}: Readonly<ContextPackStatusProps>) {
   const [expanded, setExpanded] = useState(false);
 
   const allValid =
@@ -96,13 +99,11 @@ export default function ContextPackStatus({ data, compact = false }: Readonly<Co
     return (
       <div className="flex items-center gap-2">
         <div
-          className={`w-2.5 h-2.5 rounded-full ${
-            (() => {
-              if (overallStatus === 'valid') return 'bg-green-500';
-              if (overallStatus === 'missing') return 'bg-red-500';
-              return 'bg-yellow-500';
-            })()
-          }`}
+          className={`w-2.5 h-2.5 rounded-full ${(() => {
+            if (overallStatus === 'valid') return 'bg-green-500';
+            if (overallStatus === 'missing') return 'bg-red-500';
+            return 'bg-yellow-500';
+          })()}`}
           title={`Context verification: ${overallStatus}`}
         />
         <span className="text-xs text-gray-500">{data.filesRead.length} files</span>
@@ -187,13 +188,12 @@ export default function ContextPackStatus({ data, compact = false }: Readonly<Co
                         {shortenHash(file.hash)}
                       </span>
                       <span
-                        className={`w-4 h-4 flex items-center justify-center ${
-                          (() => {
-                            if (file.status === 'matched') return 'text-green-600';
-                            if (file.status === 'mismatched' || file.status === 'missing') return 'text-red-600';
-                            return 'text-gray-400';
-                          })()
-                        }`}
+                        className={`w-4 h-4 flex items-center justify-center ${(() => {
+                          if (file.status === 'matched') return 'text-green-600';
+                          if (file.status === 'mismatched' || file.status === 'missing')
+                            return 'text-red-600';
+                          return 'text-gray-400';
+                        })()}`}
                       >
                         {(() => {
                           if (file.status === 'matched') return '✓';
@@ -222,7 +222,11 @@ export default function ContextPackStatus({ data, compact = false }: Readonly<Co
               </h4>
               <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
                 {data.invariantsAcknowledged.map((inv, idx) => (
-                  <li key={idx}> {/* NOSONAR typescript:S6479 */}{inv}</li>
+                  <li key={idx}>
+                    {' '}
+                    {/* NOSONAR typescript:S6479 */}
+                    {inv}
+                  </li>
                 ))}
               </ul>
             </div>

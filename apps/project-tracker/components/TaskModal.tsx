@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Task, TaskValidationSummary, CoverageMetrics } from '@/lib/types';
+import { Task, TaskValidationSummary } from '@/lib/types';
 import { Icon } from '@/lib/icons';
 import ContractTagList, { parseContractTags, hasContractTags } from './ContractTagList';
 import ContextPackStatus, { ContextPackData } from './ContextPackStatus';
@@ -178,7 +178,8 @@ function AttestationSummary({
   const verdict = attestation.verdict ?? '';
   const incompleteVerdictClass =
     verdict === 'INCOMPLETE' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700';
-  const verdictClass = verdict === 'COMPLETE' ? 'bg-green-100 text-green-700' : incompleteVerdictClass;
+  const verdictClass =
+    verdict === 'COMPLETE' ? 'bg-green-100 text-green-700' : incompleteVerdictClass;
   return (
     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
       <div className="flex items-center gap-2">
@@ -210,7 +211,13 @@ interface DetailsTabProps {
   onNavigateToTask?: (taskId: string) => void;
 }
 
-function DetailsTab({ loadingTask, displayTask, planStatus, actionMessage, onNavigateToTask }: Readonly<DetailsTabProps>) {
+function DetailsTab({
+  loadingTask,
+  displayTask,
+  planStatus,
+  actionMessage,
+  onNavigateToTask,
+}: Readonly<DetailsTabProps>) {
   const handleDependencyClick = (depId: string) => {
     if (onNavigateToTask) onNavigateToTask(depId);
   };
@@ -224,150 +231,147 @@ function DetailsTab({ loadingTask, displayTask, planStatus, actionMessage, onNav
     );
   }
   if (!displayTask) {
-    return <div className="space-y-6"><div className="text-center py-8 text-gray-500">Unable to load task details</div></div>;
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-8 text-gray-500">Unable to load task details</div>
+      </div>
+    );
   }
   return (
     <div className="space-y-6">
-        {/* Description */}
-          <div>
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Description</h3>
-            <p className="text-gray-900">{displayTask.description}</p>
-          </div>
+      {/* Description */}
+      <div>
+        <h3 className="text-sm font-medium text-gray-500 mb-2">Description</h3>
+        <p className="text-gray-900">{displayTask.description}</p>
+      </div>
 
-          {/* Info Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-1">Owner</h3>
-              <p className="text-gray-900">{displayTask.owner}</p>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-1">Sprint</h3>
-              <p className="text-gray-900">{displayTask.sprint}</p>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-1">Status</h3>
-              <span
+      {/* Info Grid */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <h3 className="text-sm font-medium text-gray-500 mb-1">Owner</h3>
+          <p className="text-gray-900">{displayTask.owner}</p>
+        </div>
+        <div>
+          <h3 className="text-sm font-medium text-gray-500 mb-1">Sprint</h3>
+          <p className="text-gray-900">{displayTask.sprint}</p>
+        </div>
+        <div>
+          <h3 className="text-sm font-medium text-gray-500 mb-1">Status</h3>
+          <span
+            className={clsx(
+              'px-3 py-1 inline-flex text-sm font-semibold rounded-full',
+              getStatusClass(displayTask.status)
+            )}
+          >
+            {displayTask.status}
+          </span>
+        </div>
+        <div>
+          <h3 className="text-sm font-medium text-gray-500 mb-1">Section</h3>
+          <p className="text-gray-900">{displayTask.section}</p>
+        </div>
+      </div>
+
+      {/* Definition of Done */}
+      {displayTask.dod && (
+        <div>
+          <h3 className="text-sm font-medium text-gray-500 mb-2">Definition of Done</h3>
+          <p className="text-gray-900 whitespace-pre-wrap">{displayTask.dod}</p>
+        </div>
+      )}
+
+      {/* KPIs */}
+      {displayTask.kpis && (
+        <div>
+          <h3 className="text-sm font-medium text-gray-500 mb-2">KPIs</h3>
+          <p className="text-gray-900">{displayTask.kpis}</p>
+        </div>
+      )}
+
+      {/* Dependencies */}
+      {displayTask.dependencies && displayTask.dependencies.length > 0 && (
+        <div>
+          <h3 className="text-sm font-medium text-gray-500 mb-2">
+            Dependencies ({displayTask.dependencies.length})
+          </h3>
+          <div className="space-y-1">
+            {displayTask.dependencies.map((dep) => (
+              <button
+                key={dep}
+                onClick={() => handleDependencyClick(dep)}
+                disabled={!onNavigateToTask}
                 className={clsx(
-                  'px-3 py-1 inline-flex text-sm font-semibold rounded-full',
-                  getStatusClass(displayTask.status)
+                  'flex items-center gap-2 px-3 py-2 rounded-lg text-left w-full transition-colors',
+                  onNavigateToTask
+                    ? 'bg-gray-50 hover:bg-blue-50 cursor-pointer group'
+                    : 'bg-gray-50 cursor-default'
                 )}
               >
-                {displayTask.status}
+                <Icon
+                  name="chevron_right"
+                  size="sm"
+                  className={clsx('text-gray-400', onNavigateToTask && 'group-hover:text-blue-500')}
+                />
+                <span className="font-mono text-sm text-blue-700">{dep}</span>
+                {onNavigateToTask && (
+                  <>
+                    <span className="text-xs text-gray-400 ml-auto">Click to view</span>
+                    <Icon
+                      name="open_in_new"
+                      size="xs"
+                      className="text-gray-400 group-hover:text-blue-500"
+                    />
+                  </>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Plan Status */}
+      {planStatus && (
+        <div className="bg-gray-50 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Spec & Plan Status</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center gap-2">
+              {planStatus.hasSpec ? (
+                <Icon name="check_circle" size="lg" className="text-green-500" />
+              ) : (
+                <Icon name="cancel" size="lg" className="text-gray-400" />
+              )}
+              <span className="text-sm">
+                Specification: {planStatus.hasSpec ? 'Exists' : 'Missing'}
               </span>
             </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-1">Section</h3>
-              <p className="text-gray-900">{displayTask.section}</p>
+            <div className="flex items-center gap-2">
+              {planStatus.hasPlan ? (
+                <Icon name="check_circle" size="lg" className="text-green-500" />
+              ) : (
+                <Icon name="cancel" size="lg" className="text-gray-400" />
+              )}
+              <span className="text-sm">Plan: {planStatus.hasPlan ? 'Exists' : 'Missing'}</span>
             </div>
           </div>
-
-          {/* Definition of Done */}
-          {displayTask.dod && (
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Definition of Done</h3>
-              <p className="text-gray-900 whitespace-pre-wrap">{displayTask.dod}</p>
-            </div>
+          {planStatus.specPath && (
+            <p className="text-xs text-gray-500 mt-2 font-mono truncate">{planStatus.specPath}</p>
           )}
+        </div>
+      )}
 
-          {/* KPIs */}
-          {displayTask.kpis && (
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-2">KPIs</h3>
-              <p className="text-gray-900">{displayTask.kpis}</p>
-            </div>
+      {/* Action Message */}
+      {actionMessage && (
+        <div
+          className={clsx(
+            'p-3 rounded-lg text-sm',
+            actionMessage.startsWith('Error')
+              ? 'bg-red-50 text-red-700'
+              : 'bg-green-50 text-green-700'
           )}
-
-          {/* Dependencies */}
-          {displayTask.dependencies && displayTask.dependencies.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-2">
-                Dependencies ({displayTask.dependencies.length})
-              </h3>
-              <div className="space-y-1">
-                {displayTask.dependencies.map((dep) => (
-                  <button
-                    key={dep}
-                    onClick={() => handleDependencyClick(dep)}
-                    disabled={!onNavigateToTask}
-                    className={clsx(
-                      'flex items-center gap-2 px-3 py-2 rounded-lg text-left w-full transition-colors',
-                      onNavigateToTask
-                        ? 'bg-gray-50 hover:bg-blue-50 cursor-pointer group'
-                        : 'bg-gray-50 cursor-default'
-                    )}
-                  >
-                    <Icon
-                      name="chevron_right"
-                      size="sm"
-                      className={clsx(
-                        'text-gray-400',
-                        onNavigateToTask && 'group-hover:text-blue-500'
-                      )}
-                    />
-                    <span className="font-mono text-sm text-blue-700">{dep}</span>
-                    {onNavigateToTask && (
-                      <>
-                        <span className="text-xs text-gray-400 ml-auto">Click to view</span>
-                        <Icon
-                          name="open_in_new"
-                          size="xs"
-                          className="text-gray-400 group-hover:text-blue-500"
-                        />
-                      </>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Plan Status */}
-          {planStatus && (
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Spec & Plan Status</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-2">
-                  {planStatus.hasSpec ? (
-                    <Icon name="check_circle" size="lg" className="text-green-500" />
-                  ) : (
-                    <Icon name="cancel" size="lg" className="text-gray-400" />
-                  )}
-                  <span className="text-sm">
-                    Specification: {planStatus.hasSpec ? 'Exists' : 'Missing'}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {planStatus.hasPlan ? (
-                    <Icon name="check_circle" size="lg" className="text-green-500" />
-                  ) : (
-                    <Icon name="cancel" size="lg" className="text-gray-400" />
-                  )}
-                  <span className="text-sm">
-                    Plan: {planStatus.hasPlan ? 'Exists' : 'Missing'}
-                  </span>
-                </div>
-              </div>
-              {planStatus.specPath && (
-                <p className="text-xs text-gray-500 mt-2 font-mono truncate">
-                  {planStatus.specPath}
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Action Message */}
-          {actionMessage && (
-            <div
-              className={clsx(
-                'p-3 rounded-lg text-sm',
-                actionMessage.startsWith('Error')
-                  ? 'bg-red-50 text-red-700'
-                  : 'bg-green-50 text-green-700'
-              )}
-            >
-              {actionMessage}
-            </div>
-          )}
+        >
+          {actionMessage}
+        </div>
+      )}
     </div>
   );
 }
@@ -410,7 +414,11 @@ function ContractTab({
     );
   }
   if (!displayTask) {
-    return <div className="space-y-6"><div className="text-center py-8 text-gray-500">Unable to load task details</div></div>;
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-8 text-gray-500">Unable to load task details</div>
+      </div>
+    );
   }
   return (
     <div className="space-y-6">
@@ -418,7 +426,11 @@ function ContractTab({
       <div>
         <h3 className="text-sm font-medium text-gray-500 mb-3 flex items-center gap-2">
           Pre-requisites
-          {hasPrereqTags && <span className="text-xs text-green-600">({parseContractTags(displayTask.prerequisites).length} tags)</span>}
+          {hasPrereqTags && (
+            <span className="text-xs text-green-600">
+              ({parseContractTags(displayTask.prerequisites).length} tags)
+            </span>
+          )}
         </h3>
         {hasPrereqTags ? (
           <ContractTagList rawString={displayTask.prerequisites} mode="full" />
@@ -434,7 +446,11 @@ function ContractTab({
       <div>
         <h3 className="text-sm font-medium text-gray-500 mb-3 flex items-center gap-2">
           Artifacts To Track (Evidence)
-          {hasArtifactTags && <span className="text-xs text-green-600">({parseContractTags(artifactsString).length} tags)</span>}
+          {hasArtifactTags && (
+            <span className="text-xs text-green-600">
+              ({parseContractTags(artifactsString).length} tags)
+            </span>
+          )}
         </h3>
         {hasArtifactTags ? (
           <ContractTagList rawString={artifactsString} mode="full" />
@@ -442,7 +458,9 @@ function ContractTab({
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-700">
             No EVIDENCE tags found. Raw artifacts:
             <ul className="mt-2 font-mono text-xs space-y-1">
-              {displayTask.artifacts?.map((a) => <li key={a}>{a}</li>)}
+              {displayTask.artifacts?.map((a) => (
+                <li key={a}>{a}</li>
+              ))}
             </ul>
           </div>
         )}
@@ -452,7 +470,11 @@ function ContractTab({
       <div>
         <h3 className="text-sm font-medium text-gray-500 mb-3 flex items-center gap-2">
           Validation Method
-          {hasValidationTags && <span className="text-xs text-green-600">({parseContractTags(displayTask.validation).length} tags)</span>}
+          {hasValidationTags && (
+            <span className="text-xs text-green-600">
+              ({parseContractTags(displayTask.validation).length} tags)
+            </span>
+          )}
         </h3>
         {hasValidationTags ? (
           <ContractTagList rawString={displayTask.validation} mode="full" />
@@ -495,9 +517,7 @@ function ContextTab({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-700">
-          Context Pack & Acknowledgment Status
-        </h3>
+        <h3 className="text-sm font-medium text-gray-700">Context Pack & Acknowledgment Status</h3>
         <button
           onClick={onRefresh}
           disabled={loadingContext}
@@ -542,9 +562,8 @@ function ContextTab({
             Context Acknowledgment Required
           </h4>
           <p className="text-sm text-blue-700">
-            This task has{' '}
-            <code className="bg-blue-100 px-1 rounded">EVIDENCE:context_ack</code>{' '}in its
-            artifacts. The agent must produce a valid context_ack.json with SHA256 hashes
+            This task has <code className="bg-blue-100 px-1 rounded">EVIDENCE:context_ack</code> in
+            its artifacts. The agent must produce a valid context_ack.json with SHA256 hashes
             matching all FILE: prerequisites before code changes are accepted.
           </p>
         </div>
@@ -562,194 +581,193 @@ function ScheduleTab({ loadingSchedule, scheduleData }: Readonly<ScheduleTabProp
   return (
     <div className="space-y-6">
       {(() => {
-        if (loadingSchedule) return (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-        </div>
-        );
-        if (scheduleData) return (
-        <>
-          {/* Critical Path Indicator */}
-          {scheduleData.isCritical && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <div className="flex items-center gap-2">
-                <Icon name="warning" size="lg" className="text-red-500" />
-                <div>
-                  <h4 className="text-sm font-semibold text-red-800">Critical Path Task</h4>
-                  <p className="text-sm text-red-600">
-                    This task is on the critical path. Any delay will impact the sprint
-                    completion date.
-                  </p>
-                </div>
-              </div>
+        if (loadingSchedule)
+          return (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
             </div>
-          )}
-
-          {/* Progress */}
-          <div>
-            <h3 className="text-sm font-medium text-gray-500 mb-3">Progress</h3>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-700">Percent Complete</span>
-                <span className="text-lg font-bold text-gray-900">
-                  {scheduleData.percentComplete}%
-                </span>
-              </div>
-              <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className={clsx(
-                    'h-full rounded-full transition-all',
-                    getProgressBarColor(scheduleData.percentComplete, scheduleData.isCritical)
-                  )}
-                  style={{ width: `${Math.min(100, scheduleData.percentComplete)}%` }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Duration & Estimate */}
-          <div>
-            <h3 className="text-sm font-medium text-gray-500 mb-3">
-              Duration Estimate (PERT)
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {scheduleData.estimate ? (
-                <>
-                  <div className="bg-green-50 rounded-lg p-3 text-center border border-green-200">
-                    <div className="text-xs text-green-600 mb-1">Optimistic</div>
-                    <div className="text-lg font-bold text-green-700">
-                      {Math.round(scheduleData.estimate.optimistic / 60)}h
+          );
+        if (scheduleData)
+          return (
+            <>
+              {/* Critical Path Indicator */}
+              {scheduleData.isCritical && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <Icon name="warning" size="lg" className="text-red-500" />
+                    <div>
+                      <h4 className="text-sm font-semibold text-red-800">Critical Path Task</h4>
+                      <p className="text-sm text-red-600">
+                        This task is on the critical path. Any delay will impact the sprint
+                        completion date.
+                      </p>
                     </div>
-                  </div>
-                  <div className="bg-blue-50 rounded-lg p-3 text-center border border-blue-200">
-                    <div className="text-xs text-blue-600 mb-1">Most Likely</div>
-                    <div className="text-lg font-bold text-blue-700">
-                      {Math.round(scheduleData.estimate.mostLikely / 60)}h
-                    </div>
-                  </div>
-                  <div className="bg-amber-50 rounded-lg p-3 text-center border border-amber-200">
-                    <div className="text-xs text-amber-600 mb-1">Pessimistic</div>
-                    <div className="text-lg font-bold text-amber-700">
-                      {Math.round(scheduleData.estimate.pessimistic / 60)}h
-                    </div>
-                  </div>
-                  <div className="bg-purple-50 rounded-lg p-3 text-center border border-purple-200">
-                    <div className="text-xs text-purple-600 mb-1">Expected</div>
-                    <div className="text-lg font-bold text-purple-700">
-                      {Math.round((scheduleData.expectedDuration / 60) * 10) / 10}h
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="col-span-4 bg-gray-50 rounded-lg p-3 text-center border border-gray-200">
-                  <div className="text-xs text-gray-600 mb-1">Expected Duration</div>
-                  <div className="text-lg font-bold text-gray-700">
-                    {Math.round((scheduleData.expectedDuration / 60) * 10) / 10}h
-                  </div>
-                  <div className="text-xs text-gray-400 mt-1">
-                    No three-point estimate provided
                   </div>
                 </div>
               )}
-            </div>
-          </div>
 
-          {/* Schedule Dates */}
-          <div>
-            <h3 className="text-sm font-medium text-gray-500 mb-3">Calculated Schedule</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="text-xs font-medium text-gray-500 mb-3 uppercase">
-                  Early Dates (Forward Pass)
-                </h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Early Start</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {new Date(scheduleData.earlyStart).toLocaleDateString()}
+              {/* Progress */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 mb-3">Progress</h3>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-700">Percent Complete</span>
+                    <span className="text-lg font-bold text-gray-900">
+                      {scheduleData.percentComplete}%
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Early Finish</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {new Date(scheduleData.earlyFinish).toLocaleDateString()}
-                    </span>
+                  <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={clsx(
+                        'h-full rounded-full transition-all',
+                        getProgressBarColor(scheduleData.percentComplete, scheduleData.isCritical)
+                      )}
+                      style={{ width: `${Math.min(100, scheduleData.percentComplete)}%` }}
+                    />
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="text-xs font-medium text-gray-500 mb-3 uppercase">
-                  Late Dates (Backward Pass)
-                </h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Late Start</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {new Date(scheduleData.lateStart).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Late Finish</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {new Date(scheduleData.lateFinish).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          {/* Float (Slack) */}
-          <div>
-            <h3 className="text-sm font-medium text-gray-500 mb-3">Float / Slack</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <FloatCard totalFloat={scheduleData.totalFloat} />
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <div className="text-xs text-gray-500 mb-1">Free Float</div>
-                <div className="text-2xl font-bold text-gray-700">
-                  {scheduleData.freeFloat} min
-                </div>
-                <div className="text-xs text-gray-400">
-                  {Math.round((scheduleData.freeFloat / 60) * 10) / 10} hours
+              {/* Duration & Estimate */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 mb-3">Duration Estimate (PERT)</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {scheduleData.estimate ? (
+                    <>
+                      <div className="bg-green-50 rounded-lg p-3 text-center border border-green-200">
+                        <div className="text-xs text-green-600 mb-1">Optimistic</div>
+                        <div className="text-lg font-bold text-green-700">
+                          {Math.round(scheduleData.estimate.optimistic / 60)}h
+                        </div>
+                      </div>
+                      <div className="bg-blue-50 rounded-lg p-3 text-center border border-blue-200">
+                        <div className="text-xs text-blue-600 mb-1">Most Likely</div>
+                        <div className="text-lg font-bold text-blue-700">
+                          {Math.round(scheduleData.estimate.mostLikely / 60)}h
+                        </div>
+                      </div>
+                      <div className="bg-amber-50 rounded-lg p-3 text-center border border-amber-200">
+                        <div className="text-xs text-amber-600 mb-1">Pessimistic</div>
+                        <div className="text-lg font-bold text-amber-700">
+                          {Math.round(scheduleData.estimate.pessimistic / 60)}h
+                        </div>
+                      </div>
+                      <div className="bg-purple-50 rounded-lg p-3 text-center border border-purple-200">
+                        <div className="text-xs text-purple-600 mb-1">Expected</div>
+                        <div className="text-lg font-bold text-purple-700">
+                          {Math.round((scheduleData.expectedDuration / 60) * 10) / 10}h
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="col-span-4 bg-gray-50 rounded-lg p-3 text-center border border-gray-200">
+                      <div className="text-xs text-gray-600 mb-1">Expected Duration</div>
+                      <div className="text-lg font-bold text-gray-700">
+                        {Math.round((scheduleData.expectedDuration / 60) * 10) / 10}h
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        No three-point estimate provided
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-            <p className="text-xs text-gray-400 mt-2">
-              Total Float = Late Start - Early Start. Tasks with zero float are on the
-              critical path.
+
+              {/* Schedule Dates */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 mb-3">Calculated Schedule</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-xs font-medium text-gray-500 mb-3 uppercase">
+                      Early Dates (Forward Pass)
+                    </h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Early Start</span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {new Date(scheduleData.earlyStart).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Early Finish</span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {new Date(scheduleData.earlyFinish).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-xs font-medium text-gray-500 mb-3 uppercase">
+                      Late Dates (Backward Pass)
+                    </h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Late Start</span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {new Date(scheduleData.lateStart).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Late Finish</span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {new Date(scheduleData.lateFinish).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Float (Slack) */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 mb-3">Float / Slack</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <FloatCard totalFloat={scheduleData.totalFloat} />
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="text-xs text-gray-500 mb-1">Free Float</div>
+                    <div className="text-2xl font-bold text-gray-700">
+                      {scheduleData.freeFloat} min
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {Math.round((scheduleData.freeFloat / 60) * 10) / 10} hours
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400 mt-2">
+                  Total Float = Late Start - Early Start. Tasks with zero float are on the critical
+                  path.
+                </p>
+              </div>
+
+              {/* Status */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Icon name="info" size="sm" className="text-gray-400" />
+                    <span className="text-sm text-gray-600">Task Status</span>
+                  </div>
+                  <span
+                    className={clsx(
+                      'px-3 py-1 text-sm font-medium rounded-full',
+                      getStatusClass(scheduleData.status)
+                    )}
+                  >
+                    {scheduleData.status}
+                  </span>
+                </div>
+              </div>
+            </>
+          );
+        return (
+          <div className="bg-gray-50 rounded-lg p-8 text-center">
+            <Icon name="calendar_today" size="xl" className="text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500">No schedule data available for this task.</p>
+            <p className="text-sm text-gray-400 mt-2">
+              Schedule data is calculated from Sprint_plan.csv columns:
+              <br />
+              Estimate (O/M/P), Planned Start, Planned Finish, Percent Complete, Dependency Types
             </p>
           </div>
-
-          {/* Status */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Icon name="info" size="sm" className="text-gray-400" />
-                <span className="text-sm text-gray-600">Task Status</span>
-              </div>
-              <span
-                className={clsx(
-                  'px-3 py-1 text-sm font-medium rounded-full',
-                  getStatusClass(scheduleData.status)
-                )}
-              >
-                {scheduleData.status}
-              </span>
-            </div>
-          </div>
-        </>
-        );
-        return (
-        <div className="bg-gray-50 rounded-lg p-8 text-center">
-          <Icon name="calendar_today" size="xl" className="text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">No schedule data available for this task.</p>
-          <p className="text-sm text-gray-400 mt-2">
-            Schedule data is calculated from Sprint_plan.csv columns:
-            <br />
-            Estimate (O/M/P), Planned Start, Planned Finish, Percent Complete, Dependency
-            Types
-          </p>
-        </div>
         );
       })()}
     </div>
@@ -783,402 +801,326 @@ function ValidationTab({
       <div className="space-y-6">
         <div className="bg-gray-50 rounded-lg p-8 text-center">
           <p className="text-gray-500">No validation data available for this task.</p>
-          <p className="text-sm text-gray-400 mt-2">Validation data is generated when a task has an attestation file.</p>
+          <p className="text-sm text-gray-400 mt-2">
+            Validation data is generated when a task has an attestation file.
+          </p>
         </div>
       </div>
     );
   }
   return (
     <div className="space-y-6">
-          {/* Build Validation Grid */}
-          <div>
-            <h3 className="text-sm font-medium text-gray-500 mb-3">Build Validation</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {validationSummary.buildValidation.items.map((item) => (
-                <ValidationItemCard key={item.name} item={item} />
+      {/* Build Validation Grid */}
+      <div>
+        <h3 className="text-sm font-medium text-gray-500 mb-3">Build Validation</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {validationSummary.buildValidation.items.map((item) => (
+            <ValidationItemCard key={item.name} item={item} />
+          ))}
+        </div>
+      </div>
+
+      {/* Coverage Metrics */}
+      {validationSummary.coverage && (
+        <div>
+          <h3 className="text-sm font-medium text-gray-500 mb-1">Task-Scoped Coverage</h3>
+          <p className="text-xs text-gray-400 mb-3">
+            {validationSummary.coverage.scope?.source === 'task-files'
+              ? `Using current coverage data for ${validationSummary.coverage.scope.matchedFiles ?? 0} matched task file(s).`
+              : 'Using the task attestation snapshot because the current coverage report has no matching task files.'}
+          </p>
+          <div className="space-y-2">
+            {(
+              [
+                'lines',
+                'branches',
+                'functions',
+                ...(validationSummary.coverage.statements ? (['statements'] as const) : []),
+              ] as const
+            ).map((metric) => {
+              const data = validationSummary.coverage?.[metric];
+              if (!data || typeof data !== 'object' || !('pct' in data)) return null;
+              const coverageData = {
+                pct: Number(data.pct) || 0,
+                met: Boolean((data as Record<string, unknown>).met),
+              };
+              return (
+                <div key={metric} className="flex items-center gap-3">
+                  <span className="text-xs text-gray-500 w-20 capitalize">{metric}</span>
+                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={clsx(
+                        'h-full rounded-full transition-all',
+                        coverageData.met ? 'bg-green-500' : 'bg-amber-500'
+                      )}
+                      style={{ width: `${Math.min(100, coverageData.pct)}%` }}
+                    />
+                  </div>
+                  <span
+                    className={clsx(
+                      'text-xs font-medium w-12 text-right',
+                      coverageData.met ? 'text-green-600' : 'text-amber-600'
+                    )}
+                  >
+                    {coverageData.pct.toFixed(1)}%
+                  </span>
+                  {coverageData.met ? (
+                    <Icon name="check" size="xs" className="text-green-500" />
+                  ) : (
+                    <Icon name="close" size="xs" className="text-amber-500" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* MATOP Execution Panel */}
+      {validationSummary.matop && (
+        <div className="border rounded-lg overflow-hidden">
+          <button
+            onClick={() => onTogglePanel('matop')}
+            className="w-full px-4 py-3 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Icon name="smart_toy" size="sm" className="text-purple-500" />
+              <span className="text-sm font-medium">MATOP Execution</span>
+              <span
+                className={clsx(
+                  'px-2 py-0.5 text-xs font-medium rounded',
+                  validationSummary.matop.consensusVerdict === 'PASS' &&
+                    'bg-green-100 text-green-700',
+                  validationSummary.matop.consensusVerdict === 'WARN' &&
+                    'bg-yellow-100 text-yellow-700',
+                  validationSummary.matop.consensusVerdict === 'FAIL' && 'bg-red-100 text-red-700'
+                )}
+              >
+                {validationSummary.matop.consensusVerdict}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              {validationSummary.matop.gatesExecuted.passed}/
+              {validationSummary.matop.gatesExecuted.total} gates
+              <Icon name={expandedPanels.matop ? 'expand_less' : 'expand_more'} size="sm" />
+            </div>
+          </button>
+          {expandedPanels.matop && (
+            <div className="p-4 space-y-3">
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="bg-green-50 rounded-lg p-2">
+                  <div className="text-lg font-bold text-green-700">
+                    {validationSummary.matop.gatesExecuted.passed}
+                  </div>
+                  <div className="text-xs text-green-600">Passed</div>
+                </div>
+                <div className="bg-yellow-50 rounded-lg p-2">
+                  <div className="text-lg font-bold text-yellow-700">
+                    {validationSummary.matop.gatesExecuted.warned}
+                  </div>
+                  <div className="text-xs text-yellow-600">Warned</div>
+                </div>
+                <div className="bg-red-50 rounded-lg p-2">
+                  <div className="text-lg font-bold text-red-700">
+                    {validationSummary.matop.gatesExecuted.failed}
+                  </div>
+                  <div className="text-xs text-red-600">Failed</div>
+                </div>
+              </div>
+              {Object.keys(validationSummary.matop.stoaResults).length > 0 && (
+                <div>
+                  <div className="text-xs font-medium text-gray-500 mb-2">STOA Verdicts</div>
+                  <div className="space-y-1">
+                    {Object.entries(validationSummary.matop.stoaResults).map(([stoa, result]) => (
+                      <div key={stoa} className="flex items-center justify-between text-sm">
+                        <span className="text-gray-700">{stoa}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-400">{result.role}</span>
+                          <span
+                            className={clsx(
+                              'px-2 py-0.5 text-xs rounded',
+                              result.verdict === 'PASS' && 'bg-green-100 text-green-700',
+                              result.verdict === 'WARN' && 'bg-yellow-100 text-yellow-700',
+                              result.verdict === 'FAIL' && 'bg-red-100 text-red-700'
+                            )}
+                          >
+                            {result.verdict}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="text-xs text-gray-400">Run ID: {validationSummary.matop.runId}</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* KPI Results Panel */}
+      {validationSummary.kpis.total > 0 && (
+        <div className="border rounded-lg overflow-hidden">
+          <button
+            onClick={() => onTogglePanel('kpis')}
+            className="w-full px-4 py-3 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Icon name="my_location" size="sm" className="text-blue-500" />
+              <span className="text-sm font-medium">KPI Results</span>
+              <span
+                className={clsx(
+                  'px-2 py-0.5 text-xs font-medium rounded',
+                  validationSummary.kpis.met === validationSummary.kpis.total
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-amber-100 text-amber-700'
+                )}
+              >
+                {validationSummary.kpis.met}/{validationSummary.kpis.total}
+              </span>
+            </div>
+            <Icon
+              name={expandedPanels.kpis ? 'expand_less' : 'expand_more'}
+              size="sm"
+              className="text-gray-400"
+            />
+          </button>
+          {expandedPanels.kpis && (
+            <div className="p-4">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-gray-500">
+                    <th className="pb-2">KPI</th>
+                    <th className="pb-2">Target</th>
+                    <th className="pb-2">Actual</th>
+                    <th className="pb-2 text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {validationSummary.kpis.results.map((kpi, idx) => (
+                    <tr key={idx} className="border-t">
+                      {/* NOSONAR typescript:S6479 */}
+                      <td className="py-2 text-gray-700">{kpi.kpi}</td>
+                      <td className="py-2 text-gray-500 font-mono text-xs">{kpi.target}</td>
+                      <td className="py-2 text-gray-700 font-mono text-xs">{kpi.actual}</td>
+                      <td className="py-2 text-center">
+                        {kpi.met ? (
+                          <Icon name="check_circle" size="sm" className="text-green-500" />
+                        ) : (
+                          <Icon name="cancel" size="sm" className="text-red-500" />
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* DoD Results Panel */}
+      {validationSummary.dod.total > 0 && (
+        <div className="border rounded-lg overflow-hidden">
+          <button
+            onClick={() => onTogglePanel('dod')}
+            className="w-full px-4 py-3 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Icon name="checklist" size="sm" className="text-green-500" />
+              <span className="text-sm font-medium">Definition of Done</span>
+              <span
+                className={clsx(
+                  'px-2 py-0.5 text-xs font-medium rounded',
+                  validationSummary.dod.met === validationSummary.dod.total
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-amber-100 text-amber-700'
+                )}
+              >
+                {validationSummary.dod.met}/{validationSummary.dod.total}
+              </span>
+            </div>
+            <Icon
+              name={expandedPanels.dod ? 'expand_less' : 'expand_more'}
+              size="sm"
+              className="text-gray-400"
+            />
+          </button>
+          {expandedPanels.dod && (
+            <div className="p-4 space-y-2">
+              {validationSummary.dod.items.map((item, idx) => (
+                <div
+                  key={idx} // NOSONAR typescript:S6479
+                  className={clsx(
+                    'flex items-start gap-3 p-2 rounded',
+                    item.met ? 'bg-green-50' : 'bg-red-50'
+                  )}
+                >
+                  {item.met ? (
+                    <Icon name="check_circle" size="sm" className="text-green-500 mt-0.5" />
+                  ) : (
+                    <Icon name="cancel" size="sm" className="text-red-500 mt-0.5" />
+                  )}
+                  <div>
+                    <div className="text-sm text-gray-700">{item.criterion}</div>
+                    {item.evidence && (
+                      <div className="text-xs text-gray-500 mt-1">{item.evidence}</div>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
-          </div>
-
-          {/* Coverage Metrics */}
-          {validationSummary.coverage && (
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-3">Coverage Metrics</h3>
-              <div className="space-y-2">
-                {(['lines', 'branches', 'functions'] as const).map((metric) => {
-                  const data =
-                    validationSummary.coverage?.[metric as keyof CoverageMetrics];
-                  if (!data || typeof data !== 'object' || !('pct' in data)) return null;
-                  const coverageData = {
-                    pct: Number(data.pct) || 0,
-                    met: Boolean((data as Record<string, unknown>).met),
-                  };
-                  return (
-                    <div key={metric} className="flex items-center gap-3">
-                      <span className="text-xs text-gray-500 w-20 capitalize">
-                        {metric}
-                      </span>
-                      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div
-                          className={clsx(
-                            'h-full rounded-full transition-all',
-                            coverageData.met ? 'bg-green-500' : 'bg-amber-500'
-                          )}
-                          style={{ width: `${Math.min(100, coverageData.pct)}%` }}
-                        />
-                      </div>
-                      <span
-                        className={clsx(
-                          'text-xs font-medium w-12 text-right',
-                          coverageData.met ? 'text-green-600' : 'text-amber-600'
-                        )}
-                      >
-                        {coverageData.pct.toFixed(1)}%
-                      </span>
-                      {coverageData.met ? (
-                        <Icon name="check" size="xs" className="text-green-500" />
-                      ) : (
-                        <Icon name="close" size="xs" className="text-amber-500" />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
           )}
+        </div>
+      )}
 
-          {/* MATOP Execution Panel */}
-          {validationSummary.matop && (
+      {/* Document Previews */}
+      {(validationSummary.spec.exists || validationSummary.plan.exists) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* Spec Preview */}
+          {validationSummary.spec.exists && (
             <div className="border rounded-lg overflow-hidden">
               <button
-                onClick={() => onTogglePanel('matop')}
+                onClick={() => onTogglePanel('spec')}
                 className="w-full px-4 py-3 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <Icon name="smart_toy" size="sm" className="text-purple-500" />
-                  <span className="text-sm font-medium">MATOP Execution</span>
-                  <span
-                    className={clsx(
-                      'px-2 py-0.5 text-xs font-medium rounded',
-                      validationSummary.matop.consensusVerdict === 'PASS' &&
-                        'bg-green-100 text-green-700',
-                      validationSummary.matop.consensusVerdict === 'WARN' &&
-                        'bg-yellow-100 text-yellow-700',
-                      validationSummary.matop.consensusVerdict === 'FAIL' &&
-                        'bg-red-100 text-red-700'
-                    )}
-                  >
-                    {validationSummary.matop.consensusVerdict}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  {validationSummary.matop.gatesExecuted.passed}/
-                  {validationSummary.matop.gatesExecuted.total} gates
-                  <Icon
-                    name={expandedPanels.matop ? 'expand_less' : 'expand_more'}
-                    size="sm"
-                  />
-                </div>
-              </button>
-              {expandedPanels.matop && (
-                <div className="p-4 space-y-3">
-                  <div className="grid grid-cols-3 gap-3 text-center">
-                    <div className="bg-green-50 rounded-lg p-2">
-                      <div className="text-lg font-bold text-green-700">
-                        {validationSummary.matop.gatesExecuted.passed}
-                      </div>
-                      <div className="text-xs text-green-600">Passed</div>
-                    </div>
-                    <div className="bg-yellow-50 rounded-lg p-2">
-                      <div className="text-lg font-bold text-yellow-700">
-                        {validationSummary.matop.gatesExecuted.warned}
-                      </div>
-                      <div className="text-xs text-yellow-600">Warned</div>
-                    </div>
-                    <div className="bg-red-50 rounded-lg p-2">
-                      <div className="text-lg font-bold text-red-700">
-                        {validationSummary.matop.gatesExecuted.failed}
-                      </div>
-                      <div className="text-xs text-red-600">Failed</div>
-                    </div>
-                  </div>
-                  {Object.keys(validationSummary.matop.stoaResults).length > 0 && (
-                    <div>
-                      <div className="text-xs font-medium text-gray-500 mb-2">
-                        STOA Verdicts
-                      </div>
-                      <div className="space-y-1">
-                        {Object.entries(validationSummary.matop.stoaResults).map(
-                          ([stoa, result]) => (
-                            <div
-                              key={stoa}
-                              className="flex items-center justify-between text-sm"
-                            >
-                              <span className="text-gray-700">{stoa}</span>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-400">{result.role}</span>
-                                <span
-                                  className={clsx(
-                                    'px-2 py-0.5 text-xs rounded',
-                                    result.verdict === 'PASS' &&
-                                      'bg-green-100 text-green-700',
-                                    result.verdict === 'WARN' &&
-                                      'bg-yellow-100 text-yellow-700',
-                                    result.verdict === 'FAIL' && 'bg-red-100 text-red-700'
-                                  )}
-                                >
-                                  {result.verdict}
-                                </span>
-                              </div>
-                            </div>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  <div className="text-xs text-gray-400">
-                    Run ID: {validationSummary.matop.runId}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* KPI Results Panel */}
-          {validationSummary.kpis.total > 0 && (
-            <div className="border rounded-lg overflow-hidden">
-              <button
-                onClick={() => onTogglePanel('kpis')}
-                className="w-full px-4 py-3 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <Icon name="my_location" size="sm" className="text-blue-500" />
-                  <span className="text-sm font-medium">KPI Results</span>
-                  <span
-                    className={clsx(
-                      'px-2 py-0.5 text-xs font-medium rounded',
-                      validationSummary.kpis.met === validationSummary.kpis.total
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-amber-100 text-amber-700'
-                    )}
-                  >
-                    {validationSummary.kpis.met}/{validationSummary.kpis.total}
-                  </span>
+                  <Icon name="description" size="sm" className="text-purple-500" />
+                  <span className="text-sm font-medium">Specification</span>
+                  <Icon name="check_circle" size="xs" className="text-green-500" />
                 </div>
                 <Icon
-                  name={expandedPanels.kpis ? 'expand_less' : 'expand_more'}
+                  name={expandedPanels.spec ? 'expand_less' : 'expand_more'}
                   size="sm"
                   className="text-gray-400"
                 />
               </button>
-              {expandedPanels.kpis && (
-                <div className="p-4">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="text-left text-xs text-gray-500">
-                        <th className="pb-2">KPI</th>
-                        <th className="pb-2">Target</th>
-                        <th className="pb-2">Actual</th>
-                        <th className="pb-2 text-center">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {validationSummary.kpis.results.map((kpi, idx) => (
-                        <tr key={idx} className="border-t"> {/* NOSONAR typescript:S6479 */}
-                          <td className="py-2 text-gray-700">{kpi.kpi}</td>
-                          <td className="py-2 text-gray-500 font-mono text-xs">
-                            {kpi.target}
-                          </td>
-                          <td className="py-2 text-gray-700 font-mono text-xs">
-                            {kpi.actual}
-                          </td>
-                          <td className="py-2 text-center">
-                            {kpi.met ? (
-                              <Icon
-                                name="check_circle"
-                                size="sm"
-                                className="text-green-500"
-                              />
-                            ) : (
-                              <Icon name="cancel" size="sm" className="text-red-500" />
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* DoD Results Panel */}
-          {validationSummary.dod.total > 0 && (
-            <div className="border rounded-lg overflow-hidden">
-              <button
-                onClick={() => onTogglePanel('dod')}
-                className="w-full px-4 py-3 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <Icon name="checklist" size="sm" className="text-green-500" />
-                  <span className="text-sm font-medium">Definition of Done</span>
-                  <span
-                    className={clsx(
-                      'px-2 py-0.5 text-xs font-medium rounded',
-                      validationSummary.dod.met === validationSummary.dod.total
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-amber-100 text-amber-700'
-                    )}
-                  >
-                    {validationSummary.dod.met}/{validationSummary.dod.total}
-                  </span>
-                </div>
-                <Icon
-                  name={expandedPanels.dod ? 'expand_less' : 'expand_more'}
-                  size="sm"
-                  className="text-gray-400"
-                />
-              </button>
-              {expandedPanels.dod && (
+              {expandedPanels.spec && (
                 <div className="p-4 space-y-2">
-                  {validationSummary.dod.items.map((item, idx) => (
-                    <div
-                      key={idx} // NOSONAR typescript:S6479
-                      className={clsx(
-                        'flex items-start gap-3 p-2 rounded',
-                        item.met ? 'bg-green-50' : 'bg-red-50'
-                      )}
-                    >
-                      {item.met ? (
-                        <Icon
-                          name="check_circle"
-                          size="sm"
-                          className="text-green-500 mt-0.5"
-                        />
-                      ) : (
-                        <Icon name="cancel" size="sm" className="text-red-500 mt-0.5" />
-                      )}
-                      <div>
-                        <div className="text-sm text-gray-700">{item.criterion}</div>
-                        {item.evidence && (
-                          <div className="text-xs text-gray-500 mt-1">{item.evidence}</div>
+                  {validationSummary.spec.title && (
+                    <div className="font-medium text-sm">{validationSummary.spec.title}</div>
+                  )}
+                  {validationSummary.spec.sections &&
+                    validationSummary.spec.sections.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {validationSummary.spec.sections.slice(0, 5).map((section, idx) => (
+                          <span
+                            key={idx} // NOSONAR typescript:S6479
+                            className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs"
+                          >
+                            {section}
+                          </span>
+                        ))}
+                        {validationSummary.spec.sections.length > 5 && (
+                          <span className="text-xs text-gray-400">
+                            +{validationSummary.spec.sections.length - 5} more
+                          </span>
                         )}
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Document Previews */}
-          {(validationSummary.spec.exists || validationSummary.plan.exists) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {/* Spec Preview */}
-              {validationSummary.spec.exists && (
-                <div className="border rounded-lg overflow-hidden">
-                  <button
-                    onClick={() => onTogglePanel('spec')}
-                    className="w-full px-4 py-3 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Icon name="description" size="sm" className="text-purple-500" />
-                      <span className="text-sm font-medium">Specification</span>
-                      <Icon name="check_circle" size="xs" className="text-green-500" />
-                    </div>
-                    <Icon
-                      name={expandedPanels.spec ? 'expand_less' : 'expand_more'}
-                      size="sm"
-                      className="text-gray-400"
-                    />
-                  </button>
-                  {expandedPanels.spec && (
-                    <div className="p-4 space-y-2">
-                      {validationSummary.spec.title && (
-                        <div className="font-medium text-sm">
-                          {validationSummary.spec.title}
-                        </div>
-                      )}
-                      {validationSummary.spec.sections &&
-                        validationSummary.spec.sections.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {validationSummary.spec.sections
-                              .slice(0, 5)
-                              .map((section, idx) => (
-                                <span
-                                  key={idx} // NOSONAR typescript:S6479
-                                  className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs"
-                                >
-                                  {section}
-                                </span>
-                              ))}
-                            {validationSummary.spec.sections.length > 5 && (
-                              <span className="text-xs text-gray-400">
-                                +{validationSummary.spec.sections.length - 5} more
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      {validationSummary.spec.path && (
-                        <div className="text-xs text-gray-400 font-mono truncate">
-                          {validationSummary.spec.path}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Plan Preview */}
-              {validationSummary.plan.exists && (
-                <div className="border rounded-lg overflow-hidden">
-                  <button
-                    onClick={() => onTogglePanel('plan')}
-                    className="w-full px-4 py-3 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Icon name="task_alt" size="sm" className="text-blue-500" />
-                      <span className="text-sm font-medium">Implementation Plan</span>
-                      <Icon name="check_circle" size="xs" className="text-green-500" />
-                    </div>
-                    <Icon
-                      name={expandedPanels.plan ? 'expand_less' : 'expand_more'}
-                      size="sm"
-                      className="text-gray-400"
-                    />
-                  </button>
-                  {expandedPanels.plan && (
-                    <div className="p-4 space-y-2">
-                      {validationSummary.plan.title && (
-                        <div className="font-medium text-sm">
-                          {validationSummary.plan.title}
-                        </div>
-                      )}
-                      {validationSummary.plan.sections &&
-                        validationSummary.plan.sections.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {validationSummary.plan.sections
-                              .slice(0, 5)
-                              .map((section, idx) => (
-                                <span
-                                  key={idx} // NOSONAR typescript:S6479
-                                  className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs"
-                                >
-                                  {section}
-                                </span>
-                              ))}
-                            {validationSummary.plan.sections.length > 5 && (
-                              <span className="text-xs text-gray-400">
-                                +{validationSummary.plan.sections.length - 5} more
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      {validationSummary.plan.path && (
-                        <div className="text-xs text-gray-400 font-mono truncate">
-                          {validationSummary.plan.path}
-                        </div>
-                      )}
+                    )}
+                  {validationSummary.spec.path && (
+                    <div className="text-xs text-gray-400 font-mono truncate">
+                      {validationSummary.spec.path}
                     </div>
                   )}
                 </div>
@@ -1186,10 +1128,63 @@ function ValidationTab({
             </div>
           )}
 
-          {/* Attestation Summary */}
-          {validationSummary.attestation.exists && (
-            <AttestationSummary attestation={validationSummary.attestation} />
+          {/* Plan Preview */}
+          {validationSummary.plan.exists && (
+            <div className="border rounded-lg overflow-hidden">
+              <button
+                onClick={() => onTogglePanel('plan')}
+                className="w-full px-4 py-3 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Icon name="task_alt" size="sm" className="text-blue-500" />
+                  <span className="text-sm font-medium">Implementation Plan</span>
+                  <Icon name="check_circle" size="xs" className="text-green-500" />
+                </div>
+                <Icon
+                  name={expandedPanels.plan ? 'expand_less' : 'expand_more'}
+                  size="sm"
+                  className="text-gray-400"
+                />
+              </button>
+              {expandedPanels.plan && (
+                <div className="p-4 space-y-2">
+                  {validationSummary.plan.title && (
+                    <div className="font-medium text-sm">{validationSummary.plan.title}</div>
+                  )}
+                  {validationSummary.plan.sections &&
+                    validationSummary.plan.sections.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {validationSummary.plan.sections.slice(0, 5).map((section, idx) => (
+                          <span
+                            key={idx} // NOSONAR typescript:S6479
+                            className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs"
+                          >
+                            {section}
+                          </span>
+                        ))}
+                        {validationSummary.plan.sections.length > 5 && (
+                          <span className="text-xs text-gray-400">
+                            +{validationSummary.plan.sections.length - 5} more
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  {validationSummary.plan.path && (
+                    <div className="text-xs text-gray-400 font-mono truncate">
+                      {validationSummary.plan.path}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           )}
+        </div>
+      )}
+
+      {/* Attestation Summary */}
+      {validationSummary.attestation.exists && (
+        <AttestationSummary attestation={validationSummary.attestation} />
+      )}
     </div>
   );
 }
@@ -1575,7 +1570,6 @@ export default function TaskModal({
             />
           )}
 
-
           {/* Context Tab */}
           {activeTab === 'context' && (
             <ContextTab
@@ -1592,7 +1586,6 @@ export default function TaskModal({
             <ScheduleTab loadingSchedule={loadingSchedule} scheduleData={scheduleData} />
           )}
 
-
           {/* Validation Tab */}
           {activeTab === 'validation' && (
             <ValidationTab
@@ -1602,7 +1595,6 @@ export default function TaskModal({
               onTogglePanel={togglePanel}
             />
           )}
-
         </div>
 
         {/* Footer */}

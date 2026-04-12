@@ -81,7 +81,9 @@ function getAllChecks(group: {
   if (group.groups) {
     for (const subGroup of group.groups) {
       checks.push(
-        ...getAllChecks(subGroup as { checks?: K6Check[]; groups?: { checks?: K6Check[]; groups?: unknown[] }[] })
+        ...getAllChecks(
+          subGroup as { checks?: K6Check[]; groups?: { checks?: K6Check[]; groups?: unknown[] }[] }
+        )
       );
     }
   }
@@ -218,10 +220,7 @@ export async function GET() {
         passes: check.passes,
         fails: check.fails,
         total: check.passes + check.fails,
-        success_rate:
-          check.passes > 0
-            ? (check.passes / (check.passes + check.fails)) * 100
-            : 0,
+        success_rate: check.passes > 0 ? (check.passes / (check.passes + check.fails)) * 100 : 0,
       }));
 
     // Extract k6 test configuration

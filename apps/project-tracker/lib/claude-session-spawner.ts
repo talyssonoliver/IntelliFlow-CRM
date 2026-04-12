@@ -142,7 +142,8 @@ export async function spawnClaudeSession(
 
   // Spawn Claude Code CLI
   // Use --print to run non-interactively
-  const child = spawn('claude', ['--print', prompt], { // NOSONAR — PATH inherited from dev environment, internal tooling only
+  const child = spawn('claude', ['--print', prompt], {
+    // NOSONAR — PATH inherited from dev environment, internal tooling only
     cwd: getProjectRoot(),
     stdio: ['pipe', 'pipe', 'pipe'],
     shell: true,

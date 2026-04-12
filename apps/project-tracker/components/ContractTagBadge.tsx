@@ -128,7 +128,9 @@ export default function ContractTagBadge({
 }
 
 // Summary badge for compact display (shows count per type)
-export function ContractTagSummary({ tags }: Readonly<{ tags: { type: ContractTagType; count: number }[] }>) {
+export function ContractTagSummary({
+  tags,
+}: Readonly<{ tags: { type: ContractTagType; count: number }[] }>) {
   return (
     <div className="flex flex-wrap gap-1">
       {tags.map(({ type, count }) => {

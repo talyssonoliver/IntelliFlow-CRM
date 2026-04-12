@@ -212,6 +212,87 @@ function loadInProgressTasks(
 }
 
 // ============================================================================
+// Project Health (from current-state-report.json)
+// ============================================================================
+
+interface ReportOverview {
+  totalTasks: number;
+  completedTasks: number;
+  backlogTasks: number;
+  blockedTasks: number;
+  inProgressTasks: number;
+  completionPercentage: number;
+}
+
+interface ReportHealth {
+  overview: ReportOverview;
+  activeFocusSprints: number[];
+  attestedButNotCompleted: number;
+  sprintMismatches: number;
+  completedWithoutAttestation: number;
+  generatedAt: string;
+}
+
+function loadReportHealth(repoDir: string): ReportHealth | null {
+  const reportPath = join(repoDir, 'artifacts', 'reports', 'current-state-report.json');
+  if (!existsSync(reportPath)) return null;
+  try {
+    const raw = JSON.parse(readFileSync(reportPath, 'utf-8'));
+    return {
+      overview: raw.overview,
+      activeFocusSprints: raw.currentState?.activeFocusSprints ?? [],
+      attestedButNotCompleted: raw.inconsistencies?.attestedButNotCompletedInCsv?.length ?? 0,
+      sprintMismatches: raw.inconsistencies?.sprintMismatches?.length ?? 0,
+      completedWithoutAttestation: raw.inconsistencies?.completedWithoutCanonicalAttestation?.length ?? 0,
+      generatedAt: raw.generatedAt ?? '',
+    };
+  } catch {
+    return null;
+  }
+}
+
+function buildProjectHealth(health: ReportHealth | null): string {
+  if (!health) return '';
+
+  const { overview: o } = health;
+  const lines: string[] = ['## Project Health', ''];
+
+  lines.push(
+    `- **Progress:** ${o.completedTasks}/${o.totalTasks} tasks completed (${o.completionPercentage}%) — ${o.backlogTasks} backlog, ${o.blockedTasks} blocked, ${o.inProgressTasks} in progress.`
+  );
+
+  if (health.activeFocusSprints.length > 0) {
+    lines.push(
+      `- **Focus band:** Sprints ${health.activeFocusSprints.join(', ')} carry the earliest remaining backlog.`
+    );
+  }
+
+  const issues: string[] = [];
+  if (health.completedWithoutAttestation > 0) {
+    issues.push(`${health.completedWithoutAttestation} completed without attestation`);
+  }
+  if (health.attestedButNotCompleted > 0) {
+    issues.push(`${health.attestedButNotCompleted} attested but CSV not updated`);
+  }
+  if (health.sprintMismatches > 0) {
+    issues.push(`${health.sprintMismatches} sprint path mismatches`);
+  }
+
+  if (issues.length > 0) {
+    lines.push(`- **Evidence issues:** ${issues.join('; ')}.`);
+  } else {
+    lines.push('- **Evidence health:** Clean — no attestation gaps or mismatches.');
+  }
+
+  lines.push(
+    `- _Source: \`docs/CURRENT_STATE_REPORT.md\` (${relativeTimeFromIso(health.generatedAt)}) — full sprint-by-sprint breakdown._`
+  );
+
+  lines.push('');
+  return lines.join('\n');
+}
+
+// ============================================================================
 // Section builders
 // ============================================================================
 
@@ -394,6 +475,7 @@ function buildKeyFiles(): string {
     '- Task registry: `apps/project-tracker/docs/metrics/_global/task-registry.json`',
     '- Active sprint metrics: `apps/project-tracker/docs/metrics/{active_sprint}/`',
     '- This snapshot: `docs/SESSION_CONTEXT.md`',
+    '- Full state report: `docs/CURRENT_STATE_REPORT.md` (deep sprint-by-sprint reference)',
     '- Refresh: `npx tsx apps/project-tracker/scripts/generate-context.ts` or POST `/api/context`',
     '',
   ].join('\n');
@@ -425,10 +507,12 @@ export function generateContextSnapshot(metricsDir: string, repoDir: string): Sn
   const openBlockerCount = (summary?.blockers ?? []).filter((b) => b.resolved_at === null).length;
 
   const git = collectGitInfo(repoDir);
+  const reportHealth = loadReportHealth(repoDir);
 
   const sections: string[] = [
     buildHeader(git.branch, generatedAt),
     buildWhereWeLeftOff(registry, summary, inProgressIds.length, openBlockerCount),
+    buildProjectHealth(reportHealth),
     buildActiveTasks(inProgressTasks),
     buildOpenBlockers(summary), // returns '' if no blockers
     buildRecentlyCompleted(summary), // returns '' if no completed tasks

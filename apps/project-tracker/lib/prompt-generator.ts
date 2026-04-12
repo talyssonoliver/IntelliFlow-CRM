@@ -169,7 +169,9 @@ function renderParallelPhase(phase: ExecutionPhase, lines: string[]): void {
 
 function renderSequentialPhase(phase: ExecutionPhase, lines: string[]): void {
   for (const task of phase.tasks) {
-    lines.push(`  ${task.status === 'completed' ? '✓' : '○'} ${task.taskId} → ${task.description.slice(0, 40)}...`);
+    lines.push(
+      `  ${task.status === 'completed' ? '✓' : '○'} ${task.taskId} → ${task.description.slice(0, 40)}...`
+    );
   }
   lines.push('  ↓');
 }
@@ -201,9 +203,16 @@ function generateDependencyGraphSection(
   lines.push('='.repeat(60), '```');
 
   if (parallelStreams.length > 0) {
-    lines.push('', '### Parallel Streams', '', '| Stream | Tasks | Dependencies |', '|--------|-------|--------------|');
+    lines.push(
+      '',
+      '### Parallel Streams',
+      '',
+      '| Stream | Tasks | Dependencies |',
+      '|--------|-------|--------------|'
+    );
     for (const stream of parallelStreams) {
-      const deps = stream.sharedDependencies.length > 0 ? stream.sharedDependencies.join(', ') : 'None';
+      const deps =
+        stream.sharedDependencies.length > 0 ? stream.sharedDependencies.join(', ') : 'None';
       lines.push(`| ${stream.streamId} | ${stream.tasks.join(', ')} | ${deps} |`);
     }
   }
@@ -219,7 +228,13 @@ function generateTaskListSection(completed: CSVTask[], pending: CSVTask[]): stri
 
   // Completed tasks
   if (completed.length > 0) {
-    lines.push('', `### Completed Tasks (${completed.length})`, '', '| Task ID | Section | Description | Status |', '|---------|---------|-------------|--------|');
+    lines.push(
+      '',
+      `### Completed Tasks (${completed.length})`,
+      '',
+      '| Task ID | Section | Description | Status |',
+      '|---------|---------|-------------|--------|'
+    );
     for (const task of completed) {
       lines.push(
         `| **${task['Task ID']}** | ${task.Section} | ${task.Description} | ✅ Completed |`
@@ -229,7 +244,13 @@ function generateTaskListSection(completed: CSVTask[], pending: CSVTask[]): stri
 
   // Pending tasks
   if (pending.length > 0) {
-    lines.push('', `### Pending Tasks (${pending.length})`, '', '| Task ID | Section | Description | Owner | Dependencies | KPIs |', '|---------|---------|-------------|-------|--------------|------|');
+    lines.push(
+      '',
+      `### Pending Tasks (${pending.length})`,
+      '',
+      '| Task ID | Section | Description | Owner | Dependencies | KPIs |',
+      '|---------|---------|-------------|-------|--------------|------|'
+    );
     for (const task of pending) {
       const deps = task.Dependencies || 'None';
       const kpis = task.KPIs || '-';
@@ -246,7 +267,12 @@ function generateTaskListSection(completed: CSVTask[], pending: CSVTask[]): stri
  * Generate execution strategy section
  */
 function renderParallelStreamBlock(phase: ExecutionPhase, lines: string[]): void {
-  lines.push('Execute these streams **simultaneously** using the `Task` tool:', '', '```bash', '# Spawn parallel sub-agents');
+  lines.push(
+    'Execute these streams **simultaneously** using the `Task` tool:',
+    '',
+    '```bash',
+    '# Spawn parallel sub-agents'
+  );
   const phaseStreams = new Set(phase.tasks.map((t) => t.parallelStreamId).filter(Boolean));
   for (const streamId of phaseStreams) {
     const streamTasks = phase.tasks.filter((t) => t.parallelStreamId === streamId);
@@ -373,7 +399,7 @@ function generateTaskSpecification(csvTask: CSVTask, phaseEntry: TaskPhaseEntry)
     `Dependency: ${csvTask.Dependencies || 'None'}`,
     `Owner: ${csvTask.Owner}`,
     `Execution Mode: ${phaseEntry.executionMode.toUpperCase()}`,
-    '',
+    ''
   );
 
   appendPrerequisitesSection(lines, csvTask);
@@ -415,7 +441,9 @@ function buildKpiCategoryMap(tasks: CSVTask[]): Record<string, string[]> {
     if (!task.KPIs) continue;
     const category = task.Section || 'General';
     if (!kpiCategories[category]) kpiCategories[category] = [];
-    const kpis = task.KPIs.split(';').map((k) => k.trim()).filter(Boolean);
+    const kpis = task.KPIs.split(';')
+      .map((k) => k.trim())
+      .filter(Boolean);
     kpiCategories[category].push(...kpis);
   }
   return kpiCategories;

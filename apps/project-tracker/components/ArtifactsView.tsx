@@ -267,20 +267,31 @@ function getPriorityColor(priority: 'high' | 'medium' | 'low'): string {
 function buildOrphanTable(orphanFiles: FileEntry[]): string {
   const rows = orphanFiles
     .slice(0, 50)
-    .map((f) => `| \`${f.path}\` | ${formatBytes(f.size)} | ${formatDate(f.lastModified)} | _Review needed_ |`)
+    .map(
+      (f) =>
+        `| \`${f.path}\` | ${formatBytes(f.size)} | ${formatDate(f.lastModified)} | _Review needed_ |`
+    )
     .join('\n');
-  const overflow = orphanFiles.length > 50 ? `\n*...and ${orphanFiles.length - 50} more orphan files*\n` : '';
+  const overflow =
+    orphanFiles.length > 50 ? `\n*...and ${orphanFiles.length - 50} more orphan files*\n` : '';
   return rows + overflow;
 }
 
 function buildLinkedFilesList(linkedFiles: FileEntry[]): string {
-  const rows = linkedFiles.slice(0, 20).map((f) => `- \`${f.path}\` → ${f.linkedTasks.join(', ')}`).join('\n');
-  const overflow = linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked files*` : '';
+  const rows = linkedFiles
+    .slice(0, 20)
+    .map((f) => `- \`${f.path}\` → ${f.linkedTasks.join(', ')}`)
+    .join('\n');
+  const overflow =
+    linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked files*` : '';
   return rows + overflow;
 }
 
 function buildExpTaskId(folderPath: string): string {
-  return `EXP-${folderPath.toUpperCase().replaceAll(/[^A-Z0-9]/g, '-').slice(0, 20)}-001`;
+  return `EXP-${folderPath
+    .toUpperCase()
+    .replaceAll(/[^A-Z0-9]/g, '-')
+    .slice(0, 20)}-001`;
 }
 
 function buildFileAuditPrompt(
@@ -491,9 +502,7 @@ function FileListItem({
             </span>
           )}
           {file.isTestFile && (
-            <span className="px-2 py-0.5 text-xs bg-pink-100 text-pink-700 rounded">
-              Test
-            </span>
+            <span className="px-2 py-0.5 text-xs bg-pink-100 text-pink-700 rounded">Test</span>
           )}
         </div>
         <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
@@ -632,9 +641,7 @@ function FilesTabContent({
             <button
               onClick={() => setCurrentPath('')}
               className={`flex items-center gap-1 px-2 py-1 rounded text-sm font-medium transition-colors ${
-                currentPath === ''
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'text-gray-600 hover:bg-gray-100'
+                currentPath === '' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
               <Icon name="folder_open" size="sm" />
@@ -758,7 +765,10 @@ function FilesTabContent({
           <Icon name="folder_open" size="2xl" className="text-gray-400 mx-auto mb-4 text-5xl" />
           <p className="text-gray-600">No files found at this path</p>
           {currentPath && (
-            <button onClick={() => setCurrentPath('')} className="mt-4 text-blue-600 hover:underline">
+            <button
+              onClick={() => setCurrentPath('')}
+              className="mt-4 text-blue-600 hover:underline"
+            >
               Go back to root
             </button>
           )}
@@ -774,7 +784,285 @@ interface ArtifactsViewProps {
 
 type ViewTab = 'overview' | 'files' | 'cleanup' | 'missing' | 'history' | 'code-health';
 
-export default function ArtifactsView({ onTaskClick }: Readonly<ArtifactsViewProps>) { // NOSONAR typescript:S3776
+function buildArtifactsFetchParams(
+  refresh: boolean,
+  directoryFilter: DirectoryType | 'all',
+  orphanFilter: 'all' | 'orphans' | 'linked'
+): URLSearchParams {
+  const params = new URLSearchParams({ page: '1', pageSize: '10000', scope: 'all' });
+  if (refresh) params.set('refresh', 'true');
+  if (directoryFilter !== 'all') params.set('directory', directoryFilter);
+  if (orphanFilter === 'orphans') params.set('orphans', 'true');
+  else if (orphanFilter === 'linked') params.set('linked', 'true');
+  return params;
+}
+
+function getFileHistoryStatusBadge(file: { isStale: boolean; createdAt: string | null }): React.ReactElement {
+  if (file.isStale)
+    return (
+      <span className="px-2 py-0.5 text-xs bg-orange-100 text-orange-700 rounded border border-orange-200">
+        Stale
+      </span>
+    );
+  if (file.createdAt)
+    return (
+      <span className="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded">Active</span>
+    );
+  return (
+    <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">Untracked</span>
+  );
+}
+
+function applyHistoryFilter(
+  files: FileHistoryEntry[],
+  historyFilter: 'all' | 'stale' | 'with-task'
+): FileHistoryEntry[] {
+  if (historyFilter === 'stale') return files.filter((f) => f.isStale);
+  if (historyFilter === 'with-task') return files.filter((f) => f.createdTaskId !== null);
+  return files;
+}
+
+async function executeArtifactAction(
+  action: 'delete' | 'archive' | 'ignore',
+  paths: string[]
+): Promise<ActionResponse> {
+  const response = await fetch('/api/artifacts/actions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, paths }),
+  });
+  const result: ActionResponse = await response.json();
+  if (!response.ok) throw new Error(result.action || 'Action failed');
+  return result;
+}
+
+async function fetchCodeAnalysisRequest(runFresh: boolean): Promise<CodeAnalysisResult> {
+  const response = await fetch('/api/code-analysis', {
+    method: runFresh ? 'POST' : 'GET',
+  });
+  return response.json();
+}
+
+async function fetchHistoryRequest(staleDays: number, staleOnly: boolean): Promise<HistoryResponse> {
+  const params = new URLSearchParams({ staleDays: staleDays.toString() });
+  if (staleOnly) params.set('stale', 'true');
+  const response = await fetch(`/api/artifacts/history?${params}`);
+  return response.json();
+}
+
+function toggleSetItem(prev: Set<string>, item: string): Set<string> {
+  const next = new Set(prev);
+  if (next.has(item)) {
+    next.delete(item);
+  } else {
+    next.add(item);
+  }
+  return next;
+}
+
+function formatActionMessage(action: string, result: ActionResponse): { type: 'success' | 'error'; text: string } {
+  return {
+    type: result.failed > 0 ? 'error' : 'success',
+    text:
+      `${action}: ${result.success}/${result.total} successful` +
+      (result.failed > 0 ? `, ${result.failed} failed` : ''),
+  };
+}
+
+interface CleanupTabContentProps {
+  cleanup: RegistryResponse['cleanup'];
+  selectedPaths: Set<string>;
+  actionLoading: string | null;
+  actionMessage: { type: 'success' | 'error'; text: string } | null;
+  onToggleSelectAll: () => void;
+  onToggleSelection: (path: string) => void;
+  onExecuteAction: (action: 'delete' | 'archive' | 'ignore') => void;
+}
+
+function CleanupTabContent({
+  cleanup,
+  selectedPaths,
+  actionLoading,
+  actionMessage,
+  onToggleSelectAll,
+  onToggleSelection,
+  onExecuteAction,
+}: Readonly<CleanupTabContentProps>) {
+  if (cleanup.length === 0) {
+    return (
+      <div className="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
+        <Icon name="check_circle" size="2xl" className="text-green-500 mx-auto mb-4 text-5xl" />
+        <h3 className="text-lg font-semibold text-green-800">All Clear!</h3>
+        <p className="text-green-600 mt-2">No cleanup suggestions at this time.</p>
+      </div>
+    );
+  }
+  const allSelected = selectedPaths.size === cleanup.length;
+  return (
+    <div className="space-y-4">
+      {actionMessage && (
+        <div
+          className={`p-4 rounded-lg border ${
+            actionMessage.type === 'success'
+              ? 'bg-green-50 border-green-200 text-green-800'
+              : 'bg-red-50 border-red-200 text-red-800'
+          }`}
+        >
+          {actionMessage.text}
+        </div>
+      )}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Icon name="warning" size="lg" className="text-yellow-600" />
+            <span className="font-medium text-yellow-800">
+              {cleanup.length} cleanup suggestions found
+            </span>
+          </div>
+          <span className="text-sm text-yellow-700">
+            {selectedPaths.size > 0 && `${selectedPaths.size} selected`}
+          </span>
+        </div>
+        <p className="text-yellow-700 text-sm mt-1">
+          Select files and use the actions below to clean up your codebase.
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-3 bg-white rounded-lg shadow p-4">
+        <button
+          onClick={onToggleSelectAll}
+          className="flex items-center gap-2 px-3 py-2 rounded border border-gray-300 hover:bg-gray-50 text-sm"
+        >
+          {allSelected ? (
+            <Icon name="check_box" size="sm" className="text-blue-600" />
+          ) : (
+            <Icon name="check_box_outline_blank" size="sm" className="text-gray-400" />
+          )}
+          {allSelected ? 'Deselect All' : 'Select All'}
+        </button>
+        <div className="h-6 w-px bg-gray-300" />
+        {(['archive', 'ignore', 'delete'] as const).map((action) => {
+          const actionBgClass = { archive: 'bg-blue-600', ignore: 'bg-gray-600', delete: 'bg-red-600' }[action];
+          const actionIcon = { archive: 'archive', ignore: 'visibility_off', delete: 'delete' }[action];
+          return (
+          <button
+            key={action}
+            onClick={() => onExecuteAction(action)}
+            disabled={selectedPaths.size === 0 || actionLoading !== null}
+            className={`flex items-center gap-2 px-4 py-2 rounded text-white hover:opacity-90 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium ${actionBgClass}`}
+          >
+            {actionLoading === action ? (
+              <Icon name="progress_activity" size="sm" className="animate-spin" />
+            ) : (
+              <Icon name={actionIcon} size="sm" />
+            )}
+            {action.charAt(0).toUpperCase() + action.slice(1)}
+          </button>
+        ); })}
+        <div className="flex-1" />
+        <span className="text-sm text-gray-500">
+          Archive moves to artifacts/archive/, Ignore adds to .artifactignore
+        </span>
+      </div>
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-12">
+                <button onClick={onToggleSelectAll} className="hover:text-gray-700">
+                  {allSelected ? (
+                    <Icon name="check_box" size="sm" className="text-blue-600" />
+                  ) : (
+                    <Icon name="check_box_outline_blank" size="sm" />
+                  )}
+                </button>
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">File Path</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Size</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {cleanup.map((item, index) => (
+              <tr
+                key={`${item.path}-${item.category}-${index}`}
+                className={`hover:bg-gray-50 cursor-pointer ${selectedPaths.has(item.path) ? 'bg-blue-50' : ''}`}
+                onClick={() => onToggleSelection(item.path)}
+              >
+                <td className="px-4 py-4">
+                  {selectedPaths.has(item.path) ? (
+                    <Icon name="check_box" size="sm" className="text-blue-600" />
+                  ) : (
+                    <Icon name="check_box_outline_blank" size="sm" className="text-gray-400" />
+                  )}
+                </td>
+                <td className="px-4 py-4">
+                  <span className={`px-2 py-1 text-xs rounded border ${getPriorityColor(item.priority)}`}>
+                    {item.priority}
+                  </span>
+                </td>
+                <td className="px-4 py-4 font-mono text-sm text-gray-900 max-w-md truncate">{item.path}</td>
+                <td className="px-4 py-4 text-sm text-gray-600 max-w-sm">{item.reason}</td>
+                <td className="px-4 py-4 text-sm text-gray-500">{formatBytes(item.size)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function useFileHistory(staleDays: number, activeTab: ViewTab) {
+  const [historyData, setHistoryData] = useState<HistoryResponse | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyFilter, setHistoryFilter] = useState<'all' | 'stale' | 'with-task'>('all');
+
+  const fetchHistory = useCallback(async (staleOnly = false) => {
+    setHistoryLoading(true);
+    try {
+      const result = await fetchHistoryRequest(staleDays, staleOnly);
+      setHistoryData(result);
+    } catch (err) {
+      console.error('Failed to fetch history:', err);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [staleDays]);
+
+  useEffect(() => {
+    if (activeTab === 'history' && !historyData && !historyLoading) {
+      fetchHistory();
+    }
+  }, [activeTab, historyData, historyLoading, fetchHistory]);
+
+  return { historyData, historyLoading, historyFilter, setHistoryFilter, fetchHistory };
+}
+
+function useCodeAnalysis() {
+  const [codeAnalysis, setCodeAnalysis] = useState<CodeAnalysisResult | null>(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+
+  const fetchCodeAnalysis = useCallback(async (runFresh = false) => {
+    setAnalysisLoading(true);
+    try {
+      const result = await fetchCodeAnalysisRequest(runFresh);
+      setCodeAnalysis(result);
+    } catch (err) {
+      console.error('Failed to fetch code analysis:', err);
+    } finally {
+      setAnalysisLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCodeAnalysis(false);
+  }, [fetchCodeAnalysis]);
+
+  return { codeAnalysis, analysisLoading, fetchCodeAnalysis };
+}
+
+export default function ArtifactsView({ onTaskClick }: Readonly<ArtifactsViewProps>) {
   const [data, setData] = useState<RegistryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -792,15 +1080,10 @@ export default function ArtifactsView({ onTaskClick }: Readonly<ArtifactsViewPro
     text: string;
   } | null>(null);
 
-  // Code analysis states
-  const [codeAnalysis, setCodeAnalysis] = useState<CodeAnalysisResult | null>(null);
-  const [analysisLoading, setAnalysisLoading] = useState(false);
-
-  // History states
-  const [historyData, setHistoryData] = useState<HistoryResponse | null>(null);
-  const [historyLoading, setHistoryLoading] = useState(false);
-  const [historyFilter, setHistoryFilter] = useState<'all' | 'stale' | 'with-task'>('all');
   const [staleDays, setStaleDays] = useState(30);
+  const { historyData, historyLoading, historyFilter, setHistoryFilter, fetchHistory } =
+    useFileHistory(staleDays, activeTab);
+  const { codeAnalysis, analysisLoading, fetchCodeAnalysis } = useCodeAnalysis();
 
   // Prompt generation states
   const [generatingPrompt, setGeneratingPrompt] = useState<string | null>(null);
@@ -817,27 +1100,7 @@ export default function ArtifactsView({ onTaskClick }: Readonly<ArtifactsViewPro
       setError(null);
 
       try {
-        // Fetch ALL files (large pageSize to get everything)
-        const params = new URLSearchParams({
-          page: '1',
-          pageSize: '10000',
-          scope: 'all',
-        });
-
-        if (refresh) {
-          params.set('refresh', 'true');
-        }
-
-        if (directoryFilter !== 'all') {
-          params.set('directory', directoryFilter);
-        }
-
-        if (orphanFilter === 'orphans') {
-          params.set('orphans', 'true');
-        } else if (orphanFilter === 'linked') {
-          params.set('linked', 'true');
-        }
-
+        const params = buildArtifactsFetchParams(refresh, directoryFilter, orphanFilter);
         const response = await fetch(`/api/artifacts?${params}`);
 
         if (!response.ok) {
@@ -860,28 +1123,12 @@ export default function ArtifactsView({ onTaskClick }: Readonly<ArtifactsViewPro
   }, [fetchData]);
 
   const _toggleDir = (dir: string) => {
-    _setExpandedDirs((prev) => {
-      const next = new Set(prev);
-      if (next.has(dir)) {
-        next.delete(dir);
-      } else {
-        next.add(dir);
-      }
-      return next;
-    });
+    _setExpandedDirs((prev) => toggleSetItem(prev, dir));
   };
 
   // Toggle selection for cleanup item
   const toggleSelection = (path: string) => {
-    setSelectedPaths((prev) => {
-      const next = new Set(prev);
-      if (next.has(path)) {
-        next.delete(path);
-      } else {
-        next.add(path);
-      }
-      return next;
-    });
+    setSelectedPaths((prev) => toggleSetItem(prev, path));
   };
 
   // Select/deselect all cleanup items
@@ -896,96 +1143,19 @@ export default function ArtifactsView({ onTaskClick }: Readonly<ArtifactsViewPro
   // Execute cleanup action
   const executeAction = async (action: 'delete' | 'archive' | 'ignore') => {
     if (selectedPaths.size === 0) return;
-
     setActionLoading(action);
     setActionMessage(null);
-
     try {
-      const response = await fetch('/api/artifacts/actions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action,
-          paths: Array.from(selectedPaths),
-        }),
-      });
-
-      const result: ActionResponse = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.action || 'Action failed');
-      }
-
-      setActionMessage({
-        type: result.failed > 0 ? 'error' : 'success',
-        text: `${action}: ${result.success}/${result.total} successful` + (result.failed > 0 ? `, ${result.failed} failed` : ''),
-      });
-
-      // Clear selection and refresh
+      const result = await executeArtifactAction(action, Array.from(selectedPaths));
+      setActionMessage(formatActionMessage(action, result));
       setSelectedPaths(new Set());
       fetchData(true);
     } catch (err) {
-      setActionMessage({
-        type: 'error',
-        text: err instanceof Error ? err.message : 'Action failed',
-      });
+      setActionMessage({ type: 'error', text: err instanceof Error ? err.message : 'Action failed' });
     } finally {
       setActionLoading(null);
     }
   };
-
-  // Fetch code analysis
-  const fetchCodeAnalysis = async (runFresh = false) => {
-    setAnalysisLoading(true);
-
-    try {
-      const response = await fetch('/api/code-analysis', {
-        method: runFresh ? 'POST' : 'GET',
-      });
-
-      const result = await response.json();
-      setCodeAnalysis(result);
-    } catch (err) {
-      console.error('Failed to fetch code analysis:', err);
-    } finally {
-      setAnalysisLoading(false);
-    }
-  };
-
-  // Load cached analysis on mount
-  useEffect(() => {
-    fetchCodeAnalysis(false); // NOSONAR
-  }, []);
-
-  // Fetch file history
-  const fetchHistory = async (staleOnly = false) => {
-    setHistoryLoading(true);
-
-    try {
-      const params = new URLSearchParams({
-        staleDays: staleDays.toString(),
-      });
-
-      if (staleOnly) {
-        params.set('stale', 'true');
-      }
-
-      const response = await fetch(`/api/artifacts/history?${params}`);
-      const result = await response.json();
-      setHistoryData(result);
-    } catch (err) {
-      console.error('Failed to fetch history:', err);
-    } finally {
-      setHistoryLoading(false);
-    }
-  };
-
-  // Load history when tab is activated
-  useEffect(() => {
-    if (activeTab === 'history' && !historyData && !historyLoading) {
-      fetchHistory(); // NOSONAR
-    }
-  }, [activeTab, historyData, historyLoading]);
 
   // Generate file audit prompt for a folder path
   const generateFileAuditPrompt = async (folderPath: string) => {
@@ -1204,16 +1374,16 @@ export default function ArtifactsView({ onTaskClick }: Readonly<ArtifactsViewPro
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
-                      <span className="opacity-75">Files:</span>{' '}{dir.fileCount}
+                      <span className="opacity-75">Files:</span> {dir.fileCount}
                     </div>
                     <div>
-                      <span className="opacity-75">Size:</span>{' '}{formatBytes(dir.totalSize)}
+                      <span className="opacity-75">Size:</span> {formatBytes(dir.totalSize)}
                     </div>
                     <div>
-                      <span className="opacity-75">Linked:</span>{' '}{dir.linkedCount}
+                      <span className="opacity-75">Linked:</span> {dir.linkedCount}
                     </div>
                     <div>
-                      <span className="opacity-75">Orphans:</span>{' '}{dir.orphanCount}
+                      <span className="opacity-75">Orphans:</span> {dir.orphanCount}
                     </div>
                   </div>
                 </div>
@@ -1302,181 +1472,15 @@ export default function ArtifactsView({ onTaskClick }: Readonly<ArtifactsViewPro
 
       {/* Cleanup Tab */}
       {activeTab === 'cleanup' && (
-        <div className="space-y-4">
-          {cleanup.length === 0 ? (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
-              <Icon
-                name="check_circle"
-                size="2xl"
-                className="text-green-500 mx-auto mb-4 text-5xl"
-              />
-              <h3 className="text-lg font-semibold text-green-800">All Clear!</h3>
-              <p className="text-green-600 mt-2">No cleanup suggestions at this time.</p>
-            </div>
-          ) : (
-            <>
-              {/* Action Message */}
-              {actionMessage && (
-                <div
-                  className={`p-4 rounded-lg border ${
-                    actionMessage.type === 'success'
-                      ? 'bg-green-50 border-green-200 text-green-800'
-                      : 'bg-red-50 border-red-200 text-red-800'
-                  }`}
-                >
-                  {actionMessage.text}
-                </div>
-              )}
-
-              {/* Warning Banner */}
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Icon name="warning" size="lg" className="text-yellow-600" />
-                    <span className="font-medium text-yellow-800">
-                      {cleanup.length} cleanup suggestions found
-                    </span>
-                  </div>
-                  <span className="text-sm text-yellow-700">
-                    {selectedPaths.size > 0 && `${selectedPaths.size} selected`}
-                  </span>
-                </div>
-                <p className="text-yellow-700 text-sm mt-1">
-                  Select files and use the actions below to clean up your codebase.
-                </p>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-3 bg-white rounded-lg shadow p-4">
-                <button
-                  onClick={toggleSelectAll}
-                  className="flex items-center gap-2 px-3 py-2 rounded border border-gray-300 hover:bg-gray-50 text-sm"
-                >
-                  {selectedPaths.size === cleanup.length ? (
-                    <Icon name="check_box" size="sm" className="text-blue-600" />
-                  ) : (
-                    <Icon name="check_box_outline_blank" size="sm" className="text-gray-400" />
-                  )}
-                  {selectedPaths.size === cleanup.length ? 'Deselect All' : 'Select All'}
-                </button>
-
-                <div className="h-6 w-px bg-gray-300" />
-
-                <button
-                  onClick={() => executeAction('archive')}
-                  disabled={selectedPaths.size === 0 || actionLoading !== null}
-                  className="flex items-center gap-2 px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium"
-                >
-                  {actionLoading === 'archive' ? (
-                    <Icon name="progress_activity" size="sm" className="animate-spin" />
-                  ) : (
-                    <Icon name="archive" size="sm" />
-                  )}
-                  Archive
-                </button>
-
-                <button
-                  onClick={() => executeAction('ignore')}
-                  disabled={selectedPaths.size === 0 || actionLoading !== null}
-                  className="flex items-center gap-2 px-4 py-2 rounded bg-gray-600 text-white hover:bg-gray-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium"
-                >
-                  {actionLoading === 'ignore' ? (
-                    <Icon name="progress_activity" size="sm" className="animate-spin" />
-                  ) : (
-                    <Icon name="visibility_off" size="sm" />
-                  )}
-                  Ignore
-                </button>
-
-                <button
-                  onClick={() => executeAction('delete')}
-                  disabled={selectedPaths.size === 0 || actionLoading !== null}
-                  className="flex items-center gap-2 px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium"
-                >
-                  {actionLoading === 'delete' ? (
-                    <Icon name="progress_activity" size="sm" className="animate-spin" />
-                  ) : (
-                    <Icon name="delete" size="sm" />
-                  )}
-                  Delete
-                </button>
-
-                <div className="flex-1" />
-
-                <span className="text-sm text-gray-500">
-                  Archive moves to artifacts/archive/, Ignore adds to .artifactignore
-                </span>
-              </div>
-
-              <div className="bg-white rounded-lg shadow overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-12">
-                        <button onClick={toggleSelectAll} className="hover:text-gray-700">
-                          {selectedPaths.size === cleanup.length ? (
-                            <Icon name="check_box" size="sm" className="text-blue-600" />
-                          ) : (
-                            <Icon name="check_box_outline_blank" size="sm" />
-                          )}
-                        </button>
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Priority
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        File Path
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Reason
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Size
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {cleanup.map((item, index) => (
-                      <tr
-                        key={`${item.path}-${item.category}-${index}`}
-                        className={`hover:bg-gray-50 cursor-pointer ${
-                          selectedPaths.has(item.path) ? 'bg-blue-50' : ''
-                        }`}
-                        onClick={() => toggleSelection(item.path)}
-                      >
-                        <td className="px-4 py-4">
-                          {selectedPaths.has(item.path) ? (
-                            <Icon name="check_box" size="sm" className="text-blue-600" />
-                          ) : (
-                            <Icon
-                              name="check_box_outline_blank"
-                              size="sm"
-                              className="text-gray-400"
-                            />
-                          )}
-                        </td>
-                        <td className="px-4 py-4">
-                          <span
-                            className={`px-2 py-1 text-xs rounded border ${getPriorityColor(item.priority)}`}
-                          >
-                            {item.priority}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 font-mono text-sm text-gray-900 max-w-md truncate">
-                          {item.path}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-600 max-w-sm">{item.reason}</td>
-                        <td className="px-4 py-4 text-sm text-gray-500">
-                          {formatBytes(item.size)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-        </div>
+        <CleanupTabContent
+          cleanup={cleanup}
+          selectedPaths={selectedPaths}
+          actionLoading={actionLoading}
+          actionMessage={actionMessage}
+          onToggleSelectAll={toggleSelectAll}
+          onToggleSelection={toggleSelection}
+          onExecuteAction={executeAction}
+        />
       )}
 
       {/* Missing Tab */}
@@ -1526,9 +1530,7 @@ export default function ArtifactsView({ onTaskClick }: Readonly<ArtifactsViewPro
                       <tr key={`${item.path}-${item.prefix}-${index}`} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
                           <span
-                            className={`px-2 py-1 text-xs rounded ${
-                              getPrefixColor(item.prefix)
-                            }`}
+                            className={`px-2 py-1 text-xs rounded ${getPrefixColor(item.prefix)}`}
                           >
                             {item.prefix}
                           </span>
@@ -1568,7 +1570,9 @@ export default function ArtifactsView({ onTaskClick }: Readonly<ArtifactsViewPro
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <label htmlFor="stale-days" className="text-sm text-gray-600">Stale after:</label>
+                <label htmlFor="stale-days" className="text-sm text-gray-600">
+                  Stale after:
+                </label>
                 <select
                   id="stale-days"
                   value={staleDays}
@@ -1708,12 +1712,7 @@ export default function ArtifactsView({ onTaskClick }: Readonly<ArtifactsViewPro
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {historyData.files
-                      .filter((file) => {
-                        if (historyFilter === 'stale') return file.isStale;
-                        if (historyFilter === 'with-task') return file.createdTaskId !== null;
-                        return true;
-                      })
+                    {applyHistoryFilter(historyData.files, historyFilter)
                       .slice(0, 100)
                       .map((file, index) => (
                         <tr
@@ -1783,34 +1782,14 @@ export default function ArtifactsView({ onTaskClick }: Readonly<ArtifactsViewPro
                             )}
                           </td>
                           <td className="px-4 py-3">
-                            {(() => {
-                              if (file.isStale) return (
-                                <span className="px-2 py-0.5 text-xs bg-orange-100 text-orange-700 rounded border border-orange-200">
-                                  Stale
-                                </span>
-                              );
-                              if (file.createdAt) return (
-                                <span className="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded">
-                                  Active
-                                </span>
-                              );
-                              return (
-                                <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
-                                  Untracked
-                                </span>
-                              );
-                            })()}
+                            {getFileHistoryStatusBadge(file)}
                           </td>
                         </tr>
                       ))}
                   </tbody>
                 </table>
               </div>
-              {historyData.files.filter((f) => {
-                if (historyFilter === 'stale') return f.isStale;
-                if (historyFilter === 'with-task') return f.createdTaskId !== null;
-                return true;
-              }).length > 100 && (
+              {applyHistoryFilter(historyData.files, historyFilter).length > 100 && (
                 <div className="px-4 py-3 bg-gray-50 text-center text-sm text-gray-500">
                   Showing first 100 files. Use filters to narrow results.
                 </div>
@@ -1823,20 +1802,24 @@ export default function ArtifactsView({ onTaskClick }: Readonly<ArtifactsViewPro
             <h4 className="font-medium text-blue-800 mb-2">How This Works</h4>
             <ul className="text-sm text-blue-700 space-y-1">
               <li>
-                {'• '}<strong>Created:</strong>{' '}When the file was first added to git
+                {'• '}
+                <strong>Created:</strong> When the file was first added to git
               </li>
               <li>
-                {'• '}<strong>Purpose:</strong>{' '}The commit message explaining why it was created
+                {'• '}
+                <strong>Purpose:</strong> The commit message explaining why it was created
               </li>
               <li>
-                {'• '}<strong>Task ID:</strong>{' '}Extracted from commit message (e.g., IFC-001,
-                ENV-001-AI)
+                {'• '}
+                <strong>Task ID:</strong> Extracted from commit message (e.g., IFC-001, ENV-001-AI)
               </li>
               <li>
-                {'• '}<strong>Age:</strong>{' '}Days since last modification
+                {'• '}
+                <strong>Age:</strong> Days since last modification
               </li>
               <li>
-                {'• '}<strong>Stale:</strong>{' '}Files not modified in more than {staleDays} days
+                {'• '}
+                <strong>Stale:</strong> Files not modified in more than {staleDays} days
               </li>
             </ul>
           </div>
@@ -2045,7 +2028,10 @@ export default function ArtifactsView({ onTaskClick }: Readonly<ArtifactsViewPro
                     </h5>
                     <div className="flex flex-wrap gap-2">
                       {codeAnalysis.depcheck.data.dependencies.map((dep) => (
-                        <span key={dep} className="px-2 py-1 bg-red-100 text-red-700 rounded text-sm">
+                        <span
+                          key={dep}
+                          className="px-2 py-1 bg-red-100 text-red-700 rounded text-sm"
+                        >
                           {dep}
                         </span>
                       ))}

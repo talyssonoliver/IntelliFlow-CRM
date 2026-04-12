@@ -121,7 +121,6 @@ export default function ContractTagList({
 
   // Compact mode - inline badges
   if (mode === 'compact') {
-
     return (
       <div className="flex flex-wrap gap-1">
         {visibleTags.map((tag, idx) => (

@@ -155,7 +155,8 @@ export function updateSprintSummaryGeneric(
         try {
           const taskData = readJsonTolerant(fullPath);
           if (taskData.status === 'DONE' && taskData.completed_at) {
-            const taskId = taskData.task_id || taskData.taskId || entry.name.replaceAll('.json', '');
+            const taskId =
+              taskData.task_id || taskData.taskId || entry.name.replaceAll('.json', '');
             completedTasksMap.set(taskId, {
               task_id: taskId,
               completed_at: taskData.completed_at,

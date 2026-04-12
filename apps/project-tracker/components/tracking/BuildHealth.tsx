@@ -84,7 +84,17 @@ interface CheckPanelProps {
   disabled: boolean;
 }
 
-function CheckPanel({ iconName, title, success, errors, warnings, lastRun, onRefresh, refreshLabel, disabled }: CheckPanelProps) {
+function CheckPanel({
+  iconName,
+  title,
+  success,
+  errors,
+  warnings,
+  lastRun,
+  onRefresh,
+  refreshLabel,
+  disabled,
+}: CheckPanelProps) {
   const isOk = success ?? true;
   return (
     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
@@ -95,7 +105,13 @@ function CheckPanel({ iconName, title, success, errors, warnings, lastRun, onRef
         </h4>
         <div className="flex items-center gap-2">
           {lastRun && <StaleIndicator lastUpdated={lastRun} thresholdMinutes={60} />}
-          <RefreshButton onRefresh={onRefresh} label={refreshLabel} size="sm" variant="ghost" disabled={disabled} />
+          <RefreshButton
+            onRefresh={onRefresh}
+            label={refreshLabel}
+            size="sm"
+            variant="ghost"
+            disabled={disabled}
+          />
         </div>
       </div>
       <div className="flex items-center gap-6">
@@ -104,8 +120,12 @@ function CheckPanel({ iconName, title, success, errors, warnings, lastRun, onRef
           <span className="font-medium">{isOk ? 'Passing' : 'Failing'}</span>
         </div>
         <div className="flex items-center gap-4 text-sm">
-          <span className={`${(errors ?? 0) > 0 ? 'text-red-600' : 'text-gray-500'}`}>{errors ?? 0} errors</span>
-          <span className={`${(warnings ?? 0) > 0 ? 'text-yellow-600' : 'text-gray-500'}`}>{warnings ?? 0} warnings</span>
+          <span className={`${(errors ?? 0) > 0 ? 'text-red-600' : 'text-gray-500'}`}>
+            {errors ?? 0} errors
+          </span>
+          <span className={`${(warnings ?? 0) > 0 ? 'text-yellow-600' : 'text-gray-500'}`}>
+            {warnings ?? 0} warnings
+          </span>
         </div>
       </div>
     </div>
@@ -114,15 +134,25 @@ function CheckPanel({ iconName, title, success, errors, warnings, lastRun, onRef
 
 function HealthStatusBanner({ allPassing }: Readonly<{ allPassing: boolean }>) {
   return (
-    <div className={`rounded-lg p-4 border ${allPassing ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+    <div
+      className={`rounded-lg p-4 border ${allPassing ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}
+    >
       <div className="flex items-center gap-3">
-        <Icon name={allPassing ? 'check_circle' : 'cancel'} className={allPassing ? 'text-green-600' : 'text-red-600'} size="2xl" />
+        <Icon
+          name={allPassing ? 'check_circle' : 'cancel'}
+          className={allPassing ? 'text-green-600' : 'text-red-600'}
+          size="2xl"
+        />
         <div>
-          <div className={`text-lg font-semibold ${allPassing ? 'text-green-600' : 'text-red-600'}`}>
+          <div
+            className={`text-lg font-semibold ${allPassing ? 'text-green-600' : 'text-red-600'}`}
+          >
             {allPassing ? 'All Checks Passing' : 'Build Issues Detected'}
           </div>
           <div className="text-sm text-gray-500">
-            {allPassing ? 'Typecheck, lint, and tests are all passing' : 'One or more checks have failed - review below'}
+            {allPassing
+              ? 'Typecheck, lint, and tests are all passing'
+              : 'One or more checks have failed - review below'}
           </div>
         </div>
       </div>
@@ -270,7 +300,9 @@ export default function BuildHealth() {
             <div className="text-sm text-red-600 font-medium mb-2">Build Errors:</div>
             <ul className="text-sm text-gray-700 space-y-1">
               {data.turbo.errors.slice(0, 5).map((err, idx) => (
-                <li key={idx} className="font-mono text-xs"> {/* NOSONAR typescript:S6479 */}
+                <li key={idx} className="font-mono text-xs">
+                  {' '}
+                  {/* NOSONAR typescript:S6479 */}
                   {err}
                 </li>
               ))}

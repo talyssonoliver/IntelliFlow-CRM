@@ -89,7 +89,10 @@ function parseRiskMatrix(): { risks: Risk[]; summary: RiskSummary } {
       // Parse risk rows — guard: must be in table, header parsed, and starts with |
       if (!inRiskTable || !headerParsed || !trimmed.startsWith('|')) continue;
 
-      const cells = trimmed.split('|').map((c) => c.trim()).filter((c) => c !== '');
+      const cells = trimmed
+        .split('|')
+        .map((c) => c.trim())
+        .filter((c) => c !== '');
       if (cells.length >= 8 && /^R\d+$/.exec(cells[0])) {
         risks.push({
           id: cells[0],

@@ -90,7 +90,7 @@ function estimateUsage(): UsageMetric[] {
       limit: freeTierLimits.authUsers.limit,
       unit: freeTierLimits.authUsers.unit,
       percentage: Math.round((5 / freeTierLimits.authUsers.limit) * 100),
-    },
+    }
   );
 
   return metrics;

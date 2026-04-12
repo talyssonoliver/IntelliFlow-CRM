@@ -75,13 +75,26 @@ interface BlockedTaskDetail {
   }>;
 }
 
-async function loadTaskDescriptions(csvPath: string): Promise<Record<string, { description: string; section: string; owner: string }>> {
+async function loadTaskDescriptions(
+  csvPath: string
+): Promise<Record<string, { description: string; section: string; owner: string }>> {
   const result: Record<string, { description: string; section: string; owner: string }> = {};
   try {
     const csvContent = await readFile(csvPath, 'utf-8');
-    const tasks = parse(csvContent, { columns: true, skip_empty_lines: true, relax_quotes: true, relax_column_count: true, bom: true }) as CsvTask[];
+    const tasks = parse(csvContent, {
+      columns: true,
+      skip_empty_lines: true,
+      relax_quotes: true,
+      relax_column_count: true,
+      bom: true,
+    }) as CsvTask[];
     for (const task of tasks) {
-      if (task['Task ID']) result[task['Task ID']] = { description: task.Description || '', section: task.Section || '', owner: task.Owner || '' };
+      if (task['Task ID'])
+        result[task['Task ID']] = {
+          description: task.Description || '',
+          section: task.Section || '',
+          owner: task.Owner || '',
+        };
     }
   } catch (error_) {
     console.warn('Could not load task descriptions from CSV:', error_);

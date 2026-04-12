@@ -177,7 +177,15 @@ function groupBySection(tasks: UnifiedTask[]): Map<string, SectionData> {
   for (const task of tasks) {
     const section = task.section || 'Other';
     if (!sectionMap.has(section)) {
-      sectionMap.set(section, { name: section, total: 0, done: 0, in_progress: 0, blocked: 0, not_started: 0, progress: 0 });
+      sectionMap.set(section, {
+        name: section,
+        total: 0,
+        done: 0,
+        in_progress: 0,
+        blocked: 0,
+        not_started: 0,
+        progress: 0,
+      });
     }
     accumulateGroupData(task.status, sectionMap.get(section)!);
   }
@@ -192,7 +200,15 @@ function groupBySprint(tasks: UnifiedTask[]): Map<number | 'Continuous', SprintD
   for (const task of tasks) {
     const sprint = task.sprint;
     if (!sprintMap.has(sprint)) {
-      sprintMap.set(sprint, { sprint, total: 0, done: 0, in_progress: 0, blocked: 0, not_started: 0, progress: 0 });
+      sprintMap.set(sprint, {
+        sprint,
+        total: 0,
+        done: 0,
+        in_progress: 0,
+        blocked: 0,
+        not_started: 0,
+        progress: 0,
+      });
     }
     accumulateGroupData(task.status, sprintMap.get(sprint)!);
   }

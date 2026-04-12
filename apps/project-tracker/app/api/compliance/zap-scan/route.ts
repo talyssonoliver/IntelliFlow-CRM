@@ -60,10 +60,14 @@ function loadZapReport(): { alerts: ZapAlert[]; timestamp: string; site: string 
   try {
     const content = JSON.parse(readFileSync(zapPath, 'utf8'));
     const stats = statSync(zapPath);
-    const alerts: ZapAlert[] = (content.site || []).flatMap(
-      (site: any) => (site.alerts || []).map(parseZapAlert)
+    const alerts: ZapAlert[] = (content.site || []).flatMap((site: any) =>
+      (site.alerts || []).map(parseZapAlert)
     );
-    return { alerts, timestamp: stats.mtime.toISOString(), site: content.site?.[0]?.['@name'] || 'unknown' };
+    return {
+      alerts,
+      timestamp: stats.mtime.toISOString(),
+      site: content.site?.[0]?.['@name'] || 'unknown',
+    };
   } catch {
     return null;
   }

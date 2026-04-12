@@ -17,6 +17,15 @@ import type {
   PlanDeliverablesVerification,
   PlanCheckboxItem,
 } from '../../../../../lib/types';
+import {
+  type RawCoverageSummary,
+  type CoverageKpiSnapshot,
+  type CoverageThresholds,
+  extractArtifactTagPaths,
+  extractCoverageThresholdsFromKpis,
+  selectTaskScopedCoverage,
+  buildCoverageMetricsFromAttestedKpis,
+} from '../../../../../lib/task-coverage';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +35,10 @@ function getRepoRoot(): string {
 }
 
 // Get sprint number for a task from CSV
-async function getTaskSprintNumber(taskId: string): Promise<number> {
+async function loadTaskRecord(taskId: string): Promise<{
+  sprintNumber: number;
+  artifactPaths: string[];
+} | null> {
   const repoRoot = getRepoRoot();
   const csvPath = join(
     repoRoot,
@@ -46,9 +58,14 @@ async function getTaskSprintNumber(taskId: string): Promise<number> {
       bom: true,
     }) as Array<Record<string, string>>;
     const task = records.find((r) => r['Task ID'] === taskId);
-    return Number.parseInt(task?.['Target Sprint'] || '0', 10);
+    if (!task) return null;
+
+    return {
+      sprintNumber: Number.parseInt(task['Target Sprint'] || '0', 10),
+      artifactPaths: extractArtifactTagPaths(task['Artifacts To Track']),
+    };
   } catch {
-    return 0;
+    return null;
   }
 }
 
@@ -122,65 +139,8 @@ interface RawAttestation {
     invariants_acknowledged?: string[];
     acknowledged_at?: string;
   };
+  artifact_hashes?: Record<string, string>;
   notes?: string;
-}
-
-// Coverage summary structure - includes per-file coverage
-interface CoverageMetric {
-  total: number;
-  covered: number;
-  skipped?: number;
-  pct: number;
-}
-
-interface FileCoverage {
-  lines: CoverageMetric;
-  branches: CoverageMetric;
-  functions: CoverageMetric;
-  statements: CoverageMetric;
-}
-
-interface RawCoverageSummary {
-  total?: FileCoverage;
-  [filePath: string]: FileCoverage | undefined;
-}
-
-// Task to package mapping based on task ID patterns and known associations
-const TASK_PACKAGE_MAP: Record<string, string[]> = {
-  // AI-related tasks map to ai-worker
-  'IFC-085': ['apps/ai-worker'],
-  'IFC-005': ['apps/ai-worker'],
-  'IFC-155': ['apps/ai-worker'],
-  'AI-SETUP': ['apps/ai-worker'],
-
-  // API tasks
-  'IFC-003': ['apps/api'],
-  'IFC-004': ['apps/api'],
-
-  // Web/UI tasks
-  'PG-': ['apps/web'],
-  'IFC-090': ['apps/web'],
-  'IFC-091': ['apps/web'],
-};
-
-/**
- * Determine which package(s) a task belongs to based on task ID
- */
-function getTaskPackages(taskId: string): string[] {
-  // Check exact match first
-  if (TASK_PACKAGE_MAP[taskId]) {
-    return TASK_PACKAGE_MAP[taskId];
-  }
-
-  // Check prefix matches
-  for (const [prefix, packages] of Object.entries(TASK_PACKAGE_MAP)) {
-    if (taskId.startsWith(prefix)) {
-      return packages;
-    }
-  }
-
-  // Default: return all packages (global coverage)
-  return [];
 }
 
 /**
@@ -275,9 +235,12 @@ async function loadContextAck(taskId: string, sprintNumber: number): Promise<Con
 }
 
 /**
- * Load coverage summary from artifacts, optionally filtered by task's package
+ * Load task-scoped coverage summary from artifacts
  */
-async function loadCoverageSummary(taskId: string): Promise<CoverageMetrics | null> {
+async function loadCoverageSummary(
+  taskArtifacts: string[],
+  attestation: RawAttestation | null
+): Promise<CoverageMetrics | null> {
   const repoRoot = getRepoRoot();
   const coveragePath = join(repoRoot, 'artifacts', 'coverage', 'coverage-summary.json');
 
@@ -288,134 +251,30 @@ async function loadCoverageSummary(taskId: string): Promise<CoverageMetrics | nu
   try {
     const content = await readFile(coveragePath, 'utf-8');
     const data = JSON.parse(content) as RawCoverageSummary;
-
     if (!data.total) return null;
 
-    const threshold = 80; // Coverage threshold
-    const taskPackages = getTaskPackages(taskId);
+    const thresholds: CoverageThresholds = extractCoverageThresholdsFromKpis(
+      attestation?.kpi_results as CoverageKpiSnapshot[] | undefined
+    );
 
-    // If no specific packages, return global coverage
-    if (taskPackages.length === 0) {
-      return buildCoverageMetrics(data.total, threshold);
+    const scopedCoverage = selectTaskScopedCoverage(data, {
+      repoRoot,
+      declaredArtifacts: taskArtifacts,
+      attestedArtifacts: Object.keys(attestation?.artifact_hashes ?? {}),
+      thresholds,
+    });
+
+    if (scopedCoverage) {
+      return scopedCoverage;
     }
 
-    // Filter coverage by package paths and aggregate
-    const aggregated = {
-      lines: { total: 0, covered: 0 },
-      branches: { total: 0, covered: 0 },
-      functions: { total: 0, covered: 0 },
-      statements: { total: 0, covered: 0 },
-    };
-
-    let fileCount = 0;
-
-    for (const [filePath, fileCoverage] of Object.entries(data)) {
-      if (filePath === 'total' || !fileCoverage) continue;
-
-      // Normalize path separators for cross-platform compatibility
-      const normalizedPath = filePath.replaceAll('\\', '/');
-
-      // Check if file belongs to any of the task's packages
-      const belongsToPackage = taskPackages.some((pkg) =>
-        normalizedPath.includes(pkg.replaceAll('\\', '/'))
-      );
-
-      if (belongsToPackage) {
-        fileCount++;
-        aggregated.lines.total += fileCoverage.lines?.total ?? 0;
-        aggregated.lines.covered += fileCoverage.lines?.covered ?? 0;
-        aggregated.branches.total += fileCoverage.branches?.total ?? 0;
-        aggregated.branches.covered += fileCoverage.branches?.covered ?? 0;
-        aggregated.functions.total += fileCoverage.functions?.total ?? 0;
-        aggregated.functions.covered += fileCoverage.functions?.covered ?? 0;
-        aggregated.statements.total += fileCoverage.statements?.total ?? 0;
-        aggregated.statements.covered += fileCoverage.statements?.covered ?? 0;
-      }
-    }
-
-    // If no files found for the package, return null
-    if (fileCount === 0) {
-      return null;
-    }
-
-    // Calculate percentages
-    const calcPct = (covered: number, total: number) =>
-      total > 0 ? Math.round((covered / total) * 10000) / 100 : 0;
-
-    const packageCoverage: FileCoverage = {
-      lines: {
-        total: aggregated.lines.total,
-        covered: aggregated.lines.covered,
-        pct: calcPct(aggregated.lines.covered, aggregated.lines.total),
-      },
-      branches: {
-        total: aggregated.branches.total,
-        covered: aggregated.branches.covered,
-        pct: calcPct(aggregated.branches.covered, aggregated.branches.total),
-      },
-      functions: {
-        total: aggregated.functions.total,
-        covered: aggregated.functions.covered,
-        pct: calcPct(aggregated.functions.covered, aggregated.functions.total),
-      },
-      statements: {
-        total: aggregated.statements.total,
-        covered: aggregated.statements.covered,
-        pct: calcPct(aggregated.statements.covered, aggregated.statements.total),
-      },
-    };
-
-    const metrics = buildCoverageMetrics(packageCoverage, threshold);
-
-    // Add package info to the response
-    if (metrics) {
-      (metrics as CoverageMetrics & { package?: string; fileCount?: number }).package =
-        taskPackages.join(', ');
-      (metrics as CoverageMetrics & { package?: string; fileCount?: number }).fileCount = fileCount;
-    }
-
-    return metrics;
+    return buildCoverageMetricsFromAttestedKpis(
+      attestation?.kpi_results as CoverageKpiSnapshot[] | undefined,
+      thresholds
+    );
   } catch {
     return null;
   }
-}
-
-/**
- * Build CoverageMetrics from raw coverage data
- */
-function buildCoverageMetrics(coverage: FileCoverage, threshold: number): CoverageMetrics {
-  return {
-    lines: {
-      pct: coverage.lines?.pct ?? 0,
-      covered: coverage.lines?.covered ?? 0,
-      total: coverage.lines?.total ?? 0,
-      met: (coverage.lines?.pct ?? 0) >= threshold,
-    },
-    branches: {
-      pct: coverage.branches?.pct ?? 0,
-      covered: coverage.branches?.covered ?? 0,
-      total: coverage.branches?.total ?? 0,
-      met: (coverage.branches?.pct ?? 0) >= threshold,
-    },
-    functions: {
-      pct: coverage.functions?.pct ?? 0,
-      covered: coverage.functions?.covered ?? 0,
-      total: coverage.functions?.total ?? 0,
-      met: (coverage.functions?.pct ?? 0) >= threshold,
-    },
-    statements: coverage.statements
-      ? {
-          pct: coverage.statements.pct ?? 0,
-          covered: coverage.statements.covered ?? 0,
-          total: coverage.statements.total ?? 0,
-          met: (coverage.statements.pct ?? 0) >= threshold,
-        }
-      : undefined,
-    overall: {
-      pct: coverage.lines?.pct ?? 0,
-      met: (coverage.lines?.pct ?? 0) >= threshold,
-    },
-  };
 }
 
 /**
@@ -495,22 +354,154 @@ function extractFilePathsFromBlock(block: string): string[] {
  * Parse plan markdown to extract deliverables and checkboxes
  * Uses the structure from /plan-session skill
  */
-async function parsePlanDeliverables( // NOSONAR typescript:S3776
+async function makeDeliverable(
+  repoRoot: string,
+  filePath: string,
+  fromSection: PlanDeliverable['fromSection'],
+  invertStatus: boolean
+): Promise<PlanDeliverable> {
+  const fullPath = join(repoRoot, filePath);
+  const fileExists = existsSync(fullPath);
+  let size: number | undefined;
+  let lastModified: string | undefined;
+  if (fileExists && !invertStatus) {
+    try {
+      const stats = (await import('node:fs')).statSync(fullPath);
+      size = stats.size;
+      lastModified = stats.mtime.toISOString();
+    } catch {
+      // Ignore stat errors
+    }
+  }
+  let status: 'missing' | 'exists' | 'deleted';
+  if (invertStatus) {
+    status = fileExists ? 'missing' : 'deleted';
+  } else {
+    status = fileExists ? 'exists' : 'missing';
+  }
+  return { path: filePath, type: 'file', status, size, lastModified, fromSection };
+}
+
+const INLINE_FILE_KNOWN_PREFIXES = ['apps/', 'packages/', 'infra/', 'docs/', 'tests/', 'scripts/', 'artifacts/', '.specify/', '.claude/', '.github/'];
+const INLINE_FILE_PATTERN = /`((?:[\w@.-]+\/)+[\w.-]+\.(?:ts|tsx|json|md|js|jsx|css|yaml|yml))`/g;
+
+async function addInlineFileReferences(
+  planContent: string,
+  addIfNew: (filePath: string, fromSection: PlanDeliverable['fromSection']) => Promise<void>
+): Promise<void> {
+  const pattern = new RegExp(INLINE_FILE_PATTERN.source, 'g');
+  let match;
+  while ((match = pattern.exec(planContent)) !== null) {
+    const filePath = match[1];
+    if (filePath.startsWith('node_modules/') || filePath.startsWith('http')) continue;
+    if (!INLINE_FILE_KNOWN_PREFIXES.some((p) => filePath.startsWith(p))) continue;
+    await addIfNew(filePath, 'Implementation Steps');
+  }
+}
+
+async function extractDeliverablesFromPlan(
+  planContent: string,
+  repoRoot: string
+): Promise<PlanDeliverable[]> {
+  const deliverables: PlanDeliverable[] = [];
+
+  async function addIfNew(filePath: string, fromSection: PlanDeliverable['fromSection'], invertStatus = false): Promise<void> {
+    if (deliverables.some((d) => d.path === filePath)) return;
+    deliverables.push(await makeDeliverable(repoRoot, filePath, fromSection, invertStatus));
+  }
+
+  // Files to Create/Modify
+  for (const pattern of [
+    /\*\*Files to Create:\*\*\s*\n((?:- `[^`]+`\n?)+)/g,
+    /\*\*Files to Modify:\*\*\s*\n((?:- `[^`]+`\n?)+)/g,
+  ]) {
+    let match;
+    while ((match = pattern.exec(planContent)) !== null) {
+      for (const fp of extractFilePathsFromBlock(match[1])) await addIfNew(fp, 'Files to Create/Modify');
+    }
+  }
+
+  // Files to Delete
+  const deletePattern = /\*\*Files to Delete[^:]*:\*\*\s*\n((?:- `[^`]+`\n?)+)/g;
+  let deleteMatch;
+  while ((deleteMatch = deletePattern.exec(planContent)) !== null) {
+    for (const fp of extractFilePathsFromBlock(deleteMatch[1])) await addIfNew(fp, 'Files to Delete', true);
+  }
+
+  // Artifact paths
+  const artifactPattern = /`(artifacts\/[^`]+)`/g;
+  let artifactMatch;
+  while ((artifactMatch = artifactPattern.exec(planContent)) !== null) {
+    await addIfNew(artifactMatch[1], 'Artifacts');
+  }
+
+  // Test Files sections
+  const testFilesPattern = /\*\*Test Files:\*\*\s*\n((?:- `[^`]+`\n?)+)/g;
+  let testMatch;
+  while ((testMatch = testFilesPattern.exec(planContent)) !== null) {
+    for (const fp of extractFilePathsFromBlock(testMatch[1])) await addIfNew(fp, 'Implementation Steps');
+  }
+
+  // Inline backtick file references
+  await addInlineFileReferences(planContent, addIfNew);
+
+  return deliverables;
+}
+
+function extractCheckboxesFromPlan(planContent: string): PlanCheckboxItem[] {
+  const checkboxItems: PlanCheckboxItem[] = [];
+  const lines = planContent.split('\n');
+  let currentPhase = 'Unknown';
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].replace(/\r$/, '');
+    const phaseMatch = /^#{2,3}\s+(?:Phase \d+[:\s]*)?([^\n]{1,500})$/.exec(line);
+    if (phaseMatch) currentPhase = phaseMatch[1].trim();
+
+    const checkboxMatch = /^(\s*)-\s*\[([ xX])\]\s*([^\n]{1,500})$/.exec(line);
+    if (checkboxMatch) {
+      checkboxItems.push({
+        text: checkboxMatch[3].trim(),
+        checked: checkboxMatch[2].toLowerCase() === 'x',
+        phase: currentPhase,
+        lineNumber: i + 1,
+      });
+    }
+  }
+
+  return checkboxItems;
+}
+
+function calculateOverallStatus(
+  deliverables: PlanDeliverable[],
+  checkboxItems: PlanCheckboxItem[],
+  verifiedCount: number,
+  checkedCount: number
+): { overallStatus: 'complete' | 'partial' | 'incomplete' | 'no-plan'; completionPercentage: number } {
+  if (deliverables.length === 0 && checkboxItems.length === 0) {
+    return { overallStatus: 'incomplete', completionPercentage: 0 };
+  }
+  const totalItems = deliverables.length + checkboxItems.length;
+  const completionPercentage = Math.round(((verifiedCount + checkedCount) / totalItems) * 100);
+  let overallStatus: 'complete' | 'partial' | 'incomplete';
+  if (completionPercentage === 100) {
+    overallStatus = 'complete';
+  } else if (completionPercentage > 0) {
+    overallStatus = 'partial';
+  } else {
+    overallStatus = 'incomplete';
+  }
+  return { overallStatus, completionPercentage };
+}
+
+async function parsePlanDeliverables(
   taskId: string,
   sprintNumber: number
 ): Promise<PlanDeliverablesVerification | null> {
   const repoRoot = getRepoRoot();
 
-  // Find plan file
   const possiblePaths = [
-    join(
-      repoRoot,
-      '.specify',
-      'sprints',
-      `sprint-${sprintNumber}`,
-      'planning',
-      `${taskId}-plan.md`
-    ),
+    join(repoRoot, '.specify', 'sprints', `sprint-${sprintNumber}`, 'planning', `${taskId}-plan.md`),
     join(repoRoot, '.specify', 'sprints', `sprint-${sprintNumber}`, 'planning', `${taskId}.md`),
   ];
 
@@ -531,167 +522,28 @@ async function parsePlanDeliverables( // NOSONAR typescript:S3776
 
   if (!planContent || !planPath) {
     return {
-      taskId,
-      planExists: false,
-      planPath: null,
+      taskId, planExists: false, planPath: null,
       deliverables: { total: 0, verified: 0, missing: 0, items: [] },
       checkboxes: { total: 0, checked: 0, unchecked: 0, items: [] },
-      overallStatus: 'no-plan',
-      completionPercentage: 0,
+      overallStatus: 'no-plan', completionPercentage: 0,
       verifiedAt: new Date().toISOString(),
     };
   }
 
-  // Extract files from "Files to Create:" and "Files to Modify:" sections
-  const deliverables: PlanDeliverable[] = [];
+  const deliverables = await extractDeliverablesFromPlan(planContent, repoRoot);
+  const checkboxItems = extractCheckboxesFromPlan(planContent);
 
-  async function addDeliverableIfNew(
-    filePath: string,
-    fromSection: PlanDeliverable['fromSection'],
-    invertStatus = false
-  ): Promise<void> {
-    if (deliverables.some((d) => d.path === filePath)) return;
-    const fullPath = join(repoRoot, filePath);
-    const fileExists = existsSync(fullPath);
-    let size: number | undefined;
-    let lastModified: string | undefined;
-    if (fileExists && !invertStatus) {
-      try {
-        const stats = (await import('node:fs')).statSync(fullPath);
-        size = stats.size;
-        lastModified = stats.mtime.toISOString();
-      } catch {
-        // Ignore stat errors
-      }
-    }
-    const statusWhenInverted = fileExists ? 'missing' : 'deleted';
-    const statusWhenNormal = fileExists ? 'exists' : 'missing';
-    const status = invertStatus ? statusWhenInverted : statusWhenNormal;
-    deliverables.push({ path: filePath, type: 'file', status, size, lastModified, fromSection });
-  }
-
-  const filePatterns = [
-    /\*\*Files to Create:\*\*\s*\n((?:- `[^`]+`\n?)+)/g,
-    /\*\*Files to Modify:\*\*\s*\n((?:- `[^`]+`\n?)+)/g,
-  ];
-  for (const pattern of filePatterns) {
-    let match;
-    while ((match = pattern.exec(planContent)) !== null) {
-      for (const fp of extractFilePathsFromBlock(match[1])) {
-        await addDeliverableIfNew(fp, 'Files to Create/Modify');
-      }
-    }
-  }
-
-  // Extract files from "Files to Delete:" sections
-  const deletePattern = /\*\*Files to Delete[^:]*:\*\*\s*\n((?:- `[^`]+`\n?)+)/g;
-  let deleteMatch;
-  while ((deleteMatch = deletePattern.exec(planContent)) !== null) {
-    for (const fp of extractFilePathsFromBlock(deleteMatch[1])) {
-      await addDeliverableIfNew(fp, 'Files to Delete', true);
-    }
-  }
-
-  // Also extract artifact paths mentioned in the plan
-  const artifactPattern = /`(artifacts\/[^`]+)`/g;
-  let artifactMatch;
-  while ((artifactMatch = artifactPattern.exec(planContent)) !== null) {
-    await addDeliverableIfNew(artifactMatch[1], 'Artifacts');
-  }
-
-  // Extract files from "Test Files:" sections
-  const testFilesPattern = /\*\*Test Files:\*\*\s*\n((?:- `[^`]+`\n?)+)/g;
-  let testMatch;
-  while ((testMatch = testFilesPattern.exec(planContent)) !== null) {
-    for (const fp of extractFilePathsFromBlock(testMatch[1])) {
-      await addDeliverableIfNew(fp, 'Implementation Steps');
-    }
-  }
-
-  // Extract inline file paths from backtick-wrapped references
-  const KNOWN_PREFIXES = [
-    'apps/', 'packages/', 'infra/', 'docs/', 'tests/', 'scripts/',
-    'artifacts/', '.specify/', '.claude/', '.github/',
-  ];
-  const inlineFilePattern = /`((?:[\w@.-]+\/)+[\w.-]+\.(?:ts|tsx|json|md|js|jsx|css|yaml|yml))`/g;
-  let inlineMatch;
-  while ((inlineMatch = inlineFilePattern.exec(planContent)) !== null) {
-    const filePath = inlineMatch[1];
-    if (filePath.startsWith('node_modules/') || filePath.startsWith('http')) continue;
-    if (!KNOWN_PREFIXES.some((p) => filePath.startsWith(p))) continue;
-    await addDeliverableIfNew(filePath, 'Implementation Steps');
-  }
-
-  // Extract checkboxes from the plan
-  const checkboxItems: PlanCheckboxItem[] = [];
-  const lines = planContent.split('\n');
-  let currentPhase = 'Unknown';
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].replace(/\r$/, ''); // Strip trailing CR for CRLF files
-
-    // Track current phase (e.g., "### Phase 1: RED", "## Final Validation")
-    const phaseMatch = /^#{2,3}\s+(?:Phase \d+[:\s]*)?([^\n]{1,500})$/.exec(line);
-    if (phaseMatch) {
-      currentPhase = phaseMatch[1].trim();
-    }
-
-    // Match checkboxes: - [ ] or - [x]
-    const checkboxMatch = /^(\s*)-\s*\[([ xX])\]\s*([^\n]{1,500})$/.exec(line);
-    if (checkboxMatch) {
-      const isChecked = checkboxMatch[2].toLowerCase() === 'x';
-      const text = checkboxMatch[3].trim();
-
-      checkboxItems.push({
-        text,
-        checked: isChecked,
-        phase: currentPhase,
-        lineNumber: i + 1,
-      });
-    }
-  }
-
-  // Calculate verification summary
-  const verifiedCount = deliverables.filter(
-    (d) => d.status === 'exists' || d.status === 'deleted'
-  ).length;
+  const verifiedCount = deliverables.filter((d) => d.status === 'exists' || d.status === 'deleted').length;
   const missingCount = deliverables.filter((d) => d.status === 'missing').length;
   const checkedCount = checkboxItems.filter((c) => c.checked).length;
 
-  // Overall status calculation
-  let overallStatus: 'complete' | 'partial' | 'incomplete' | 'no-plan' = 'incomplete';
-  let completionPercentage = 0;
-
-  if (deliverables.length > 0 || checkboxItems.length > 0) {
-    const totalItems = deliverables.length + checkboxItems.length;
-    const completedItems = verifiedCount + checkedCount;
-    completionPercentage = Math.round((completedItems / totalItems) * 100);
-
-    if (completionPercentage === 100) {
-      overallStatus = 'complete';
-    } else if (completionPercentage > 0) {
-      overallStatus = 'partial';
-    }
-  }
+  const { overallStatus, completionPercentage } = calculateOverallStatus(deliverables, checkboxItems, verifiedCount, checkedCount);
 
   return {
-    taskId,
-    planExists: true,
-    planPath,
-    deliverables: {
-      total: deliverables.length,
-      verified: verifiedCount,
-      missing: missingCount,
-      items: deliverables,
-    },
-    checkboxes: {
-      total: checkboxItems.length,
-      checked: checkedCount,
-      unchecked: checkboxItems.length - checkedCount,
-      items: checkboxItems,
-    },
-    overallStatus,
-    completionPercentage,
+    taskId, planExists: true, planPath,
+    deliverables: { total: deliverables.length, verified: verifiedCount, missing: missingCount, items: deliverables },
+    checkboxes: { total: checkboxItems.length, checked: checkedCount, unchecked: checkboxItems.length - checkedCount, items: checkboxItems },
+    overallStatus, completionPercentage,
     verifiedAt: new Date().toISOString(),
   };
 }
@@ -814,7 +666,9 @@ function buildValidationItems(attestation: RawAttestation | null): BuildValidati
   const lint = matchValidation('lint', 'eslint');
   const build = matchValidation('build', 'build');
 
-  const resolveStatus = (v: { passed?: boolean } | null | undefined): 'pass' | 'fail' | 'pending' => {
+  const resolveStatus = (
+    v: { passed?: boolean } | null | undefined
+  ): 'pass' | 'fail' | 'pending' => {
     if (v?.passed === undefined) return 'pending';
     return v.passed ? 'pass' : 'fail';
   };
@@ -851,7 +705,7 @@ function buildValidationItems(attestation: RawAttestation | null): BuildValidati
       command: build?.command,
       timestamp: build?.timestamp,
       duration: build?.duration_ms,
-    },
+    }
   );
 
   return items;
@@ -873,7 +727,10 @@ function buildLifecycleGate(
   return {
     name: 'Lifecycle Flow',
     status: missing.length === 0 ? 'pass' : 'blocked',
-    details: missing.length === 0 ? 'spec, plan, context_ack, attestation all present' : `Missing: ${missing.join(', ')}`,
+    details:
+      missing.length === 0
+        ? 'spec, plan, context_ack, attestation all present'
+        : `Missing: ${missing.join(', ')}`,
     required: true,
   };
 }
@@ -896,7 +753,12 @@ function buildCheckboxGate(
     status = 'blocked';
     blockingReasons.push(`Plan checkboxes incomplete: ${checked}/${total} (${pct}%)`);
   }
-  return { name: 'Plan Checkboxes', status, details: `${checked}/${total} (${pct}%)`, required: true };
+  return {
+    name: 'Plan Checkboxes',
+    status,
+    details: `${checked}/${total} (${pct}%)`,
+    required: true,
+  };
 }
 
 function buildArtifactGate(
@@ -915,7 +777,12 @@ function buildArtifactGate(
     status = 'blocked';
     blockingReasons.push(`Missing artifacts: ${artMissing} files`);
   }
-  return { name: 'Artifact Verification', status, details: `${verified}/${total} verified`, required: true };
+  return {
+    name: 'Artifact Verification',
+    status,
+    details: `${verified}/${total} verified`,
+    required: true,
+  };
 }
 
 function buildBuildValidationGate(
@@ -985,10 +852,19 @@ function buildCompletionGates(
 ): CompletionGatesStatus {
   const blockingReasons: string[] = [];
 
-  const lifecycleGate = buildLifecycleGate(spec, plan, contextAckExists, attestation, blockingReasons);
+  const lifecycleGate = buildLifecycleGate(
+    spec,
+    plan,
+    contextAckExists,
+    attestation,
+    blockingReasons
+  );
   const checkboxGate = buildCheckboxGate(planDeliverables, blockingReasons);
   const artifactGate = buildArtifactGate(planDeliverables, blockingReasons);
-  const { gate: buildGate, allPending: allBuildPending } = buildBuildValidationGate(validationItems, blockingReasons);
+  const { gate: buildGate, allPending: allBuildPending } = buildBuildValidationGate(
+    validationItems,
+    blockingReasons
+  );
   const stoaGate = buildStoaGate(matop, allBuildPending, blockingReasons);
 
   const gates = [lifecycleGate, checkboxGate, artifactGate, buildGate, stoaGate];
@@ -1040,20 +916,20 @@ export async function GET(request: Request, { params }: Params) {
   const { taskId } = resolvedParams;
 
   try {
-    // Get sprint number from CSV
-    const sprintNumber = await getTaskSprintNumber(taskId);
+    const taskRecord = await loadTaskRecord(taskId);
+    const sprintNumber = taskRecord?.sprintNumber ?? 0;
 
     // Load all data in parallel
-    const [attestation, coverage, spec, plan, matop, planDeliverables, contextAck] =
-      await Promise.all([
-        loadAttestation(taskId, sprintNumber),
-        loadCoverageSummary(taskId),
-        loadDocumentPreview(taskId, sprintNumber, 'spec'),
-        loadDocumentPreview(taskId, sprintNumber, 'plan'),
-        loadMATOPSummary(taskId, sprintNumber),
-        parsePlanDeliverables(taskId, sprintNumber),
-        loadContextAck(taskId, sprintNumber),
-      ]);
+    const [attestation, spec, plan, matop, planDeliverables, contextAck] = await Promise.all([
+      loadAttestation(taskId, sprintNumber),
+      loadDocumentPreview(taskId, sprintNumber, 'spec'),
+      loadDocumentPreview(taskId, sprintNumber, 'plan'),
+      loadMATOPSummary(taskId, sprintNumber),
+      parsePlanDeliverables(taskId, sprintNumber),
+      loadContextAck(taskId, sprintNumber),
+    ]);
+
+    const coverage = await loadCoverageSummary(taskRecord?.artifactPaths ?? [], attestation);
 
     // Build validation items from attestation
     const validationItems = buildValidationItems(attestation);

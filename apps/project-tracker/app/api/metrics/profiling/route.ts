@@ -48,7 +48,11 @@ function buildSummary(benchmarks: BenchmarkResult[]): ProfilingReport['summary']
   };
 }
 
-function parsePerformanceSummaryFormat(content: any, fileStat: Stats, benchPath: string): ProfilingReport | null {
+function parsePerformanceSummaryFormat(
+  content: any,
+  fileStat: Stats,
+  benchPath: string
+): ProfilingReport | null {
   if (!content.benchmarks || !Array.isArray(content.benchmarks)) return null;
   const benchmarks: BenchmarkResult[] = content.benchmarks.map((b: any) => ({
     operation: b.operation || b.name || 'Unknown',
@@ -101,8 +105,9 @@ function loadBenchmarkResults(): ProfilingReport | null {
       if (!existsSync(benchPath)) continue;
       const content = JSON.parse(readFileSync(benchPath, 'utf8'));
       const fileStat = statSync(benchPath);
-      const report = parsePerformanceSummaryFormat(content, fileStat, benchPath)
-        ?? parseProfilingResultsFormat(content, fileStat);
+      const report =
+        parsePerformanceSummaryFormat(content, fileStat, benchPath) ??
+        parseProfilingResultsFormat(content, fileStat);
       if (report) return report;
     } catch (error) {
       console.error(`Error loading ${benchPath}:`, error);

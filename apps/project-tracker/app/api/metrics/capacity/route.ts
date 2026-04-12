@@ -113,8 +113,15 @@ function buildRoleMap(roles: CapacityRole[]): Map<string, CapacityRole> {
   }
   if (roleMap.size === 0) {
     roleMap.set('Engineering', {
-      role: 'Engineering', fte: 1, availableDays: 10, focusFactor: 0.7,
-      notes: 'Default', actualTasks: 0, completedTasks: 0, inProgressTasks: 0, utilization: 0,
+      role: 'Engineering',
+      fte: 1,
+      availableDays: 10,
+      focusFactor: 0.7,
+      notes: 'Default',
+      actualTasks: 0,
+      completedTasks: 0,
+      inProgressTasks: 0,
+      utilization: 0,
     });
   }
   return roleMap;
@@ -136,20 +143,35 @@ function accumulateTaskCounts(allTasks: ReturnType<typeof loadCSVTasks>): Map<st
   return roleTaskCounts;
 }
 
-function mergeRoles(roleMap: Map<string, CapacityRole>, roleTaskCounts: Map<string, TaskCounts>): CapacityRole[] {
+function mergeRoles(
+  roleMap: Map<string, CapacityRole>,
+  roleTaskCounts: Map<string, TaskCounts>
+): CapacityRole[] {
   const resultRoles: CapacityRole[] = [];
   for (const [roleName, roleConfig] of roleMap) {
     const taskCounts = roleTaskCounts.get(roleName) || { total: 0, completed: 0, inProgress: 0 };
     const capacity = roleConfig.fte * roleConfig.availableDays * roleConfig.focusFactor;
-    const utilization = capacity > 0 ? Math.min(100, Math.round(((taskCounts.total * 0.5) / capacity) * 100)) : 0;
-    resultRoles.push({ ...roleConfig, actualTasks: taskCounts.total, completedTasks: taskCounts.completed, inProgressTasks: taskCounts.inProgress, utilization });
+    const utilization =
+      capacity > 0 ? Math.min(100, Math.round(((taskCounts.total * 0.5) / capacity) * 100)) : 0;
+    resultRoles.push({
+      ...roleConfig,
+      actualTasks: taskCounts.total,
+      completedTasks: taskCounts.completed,
+      inProgressTasks: taskCounts.inProgress,
+      utilization,
+    });
   }
   for (const [roleName, taskCounts] of roleTaskCounts) {
     if (!roleMap.has(roleName)) {
       resultRoles.push({
-        role: roleName, fte: 1, availableDays: 10, focusFactor: 0.7,
+        role: roleName,
+        fte: 1,
+        availableDays: 10,
+        focusFactor: 0.7,
         notes: 'Auto-detected from tasks',
-        actualTasks: taskCounts.total, completedTasks: taskCounts.completed, inProgressTasks: taskCounts.inProgress,
+        actualTasks: taskCounts.total,
+        completedTasks: taskCounts.completed,
+        inProgressTasks: taskCounts.inProgress,
         utilization: Math.min(100, Math.round(((taskCounts.total * 0.5) / 7) * 100)),
       });
     }

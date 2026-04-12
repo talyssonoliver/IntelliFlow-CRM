@@ -35,7 +35,7 @@ export default function FeatureMatrixPanel() {
       </div>
 
       <p className="text-xs text-gray-500">
-        Generated from{' '}<code>apps/project-tracker/docs/metrics/_global/Sprint_plan.csv</code>{' '}via{' '}
+        Generated from <code>apps/project-tracker/docs/metrics/_global/Sprint_plan.csv</code> via{' '}
         <code>tools/scripts/generate-feature-matrix.ps1</code>.
       </p>
     </div>

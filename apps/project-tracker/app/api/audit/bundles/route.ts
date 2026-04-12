@@ -114,10 +114,17 @@ async function loadMatopRunsForTask(
       const summaryPath = path.join(matopDir, 'summary.json');
       const summaryMdPath = path.join(matopDir, 'summary.md');
       try {
-        const [summaryRaw, summaryStat] = await Promise.all([readFile(summaryPath, 'utf-8'), stat(summaryPath)]);
+        const [summaryRaw, summaryStat] = await Promise.all([
+          readFile(summaryPath, 'utf-8'),
+          stat(summaryPath),
+        ]);
         const summary = JSON.parse(summaryRaw) as AuditBundleSummary;
         items.push({
-          runId, type: 'matop', taskId, sprintNumber, summary,
+          runId,
+          type: 'matop',
+          taskId,
+          sprintNumber,
+          summary,
           updatedAt: summaryStat.mtime.toISOString(),
           paths: {
             summaryJson: path.relative(repoRoot, summaryPath).replaceAll('\\', '/'),
@@ -143,22 +150,28 @@ async function loadMatopBundles(repoRoot: string): Promise<BundleItem[]> {
 
   try {
     const sprintEntries = await readdir(sprintsDir, { withFileTypes: true });
-    const sprintDirs = sprintEntries.filter((e) => e.isDirectory() && e.name.startsWith('sprint-')).map((e) => e.name);
+    const sprintDirs = sprintEntries
+      .filter((e) => e.isDirectory() && e.name.startsWith('sprint-'))
+      .map((e) => e.name);
 
-    const perSprintResults = await Promise.all(sprintDirs.map(async (sprintDir) => {
-      const sprintNumber = Number.parseInt(sprintDir.replaceAll('sprint-', ''), 10);
-      const executionDir = path.join(sprintsDir, sprintDir, 'execution');
-      try {
-        const taskEntries = await readdir(executionDir, { withFileTypes: true });
-        const taskIds = taskEntries.filter((e) => e.isDirectory()).map((e) => e.name);
-        const taskResults = await Promise.all(
-          taskIds.map((taskId) => loadMatopRunsForTask(repoRoot, taskId, path.join(executionDir, taskId), sprintNumber))
-        );
-        return taskResults.flat();
-      } catch {
-        return [];
-      }
-    }));
+    const perSprintResults = await Promise.all(
+      sprintDirs.map(async (sprintDir) => {
+        const sprintNumber = Number.parseInt(sprintDir.replaceAll('sprint-', ''), 10);
+        const executionDir = path.join(sprintsDir, sprintDir, 'execution');
+        try {
+          const taskEntries = await readdir(executionDir, { withFileTypes: true });
+          const taskIds = taskEntries.filter((e) => e.isDirectory()).map((e) => e.name);
+          const taskResults = await Promise.all(
+            taskIds.map((taskId) =>
+              loadMatopRunsForTask(repoRoot, taskId, path.join(executionDir, taskId), sprintNumber)
+            )
+          );
+          return taskResults.flat();
+        } catch {
+          return [];
+        }
+      })
+    );
 
     return perSprintResults.flat();
   } catch {

@@ -42,7 +42,9 @@ function getBashPath(): string {
       String.raw`C:\Program Files (x86)\Git\usr\bin\bash.exe`,
       process.env.PROGRAMFILES ? String.raw`${process.env.PROGRAMFILES}\Git\bin\bash.exe` : '',
       process.env.PROGRAMFILES ? String.raw`${process.env.PROGRAMFILES}\Git\usr\bin\bash.exe` : '',
-      process.env.LOCALAPPDATA ? String.raw`${process.env.LOCALAPPDATA}\Programs\Git\bin\bash.exe` : '',
+      process.env.LOCALAPPDATA
+        ? String.raw`${process.env.LOCALAPPDATA}\Programs\Git\bin\bash.exe`
+        : '',
     ].filter(Boolean);
 
     for (const p of gitBashPaths) {

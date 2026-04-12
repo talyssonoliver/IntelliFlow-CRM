@@ -73,7 +73,10 @@ export function getSloVariant(compliant: boolean | null): 'success' | 'error' | 
   return 'default';
 }
 
-export function getSloBadge(sloStatus: 'compliant' | 'violation' | 'pending'): { cls: string; text: string } {
+export function getSloBadge(sloStatus: 'compliant' | 'violation' | 'pending'): {
+  cls: string;
+  text: string;
+} {
   if (sloStatus === 'compliant') return { cls: 'bg-green-100 text-green-700', text: 'Compliant' };
   if (sloStatus === 'violation') return { cls: 'bg-red-100 text-red-700', text: 'Violation' };
   return { cls: 'bg-gray-100 text-gray-500', text: 'Pending' };
@@ -166,9 +169,171 @@ interface AIMetricsData {
   };
 }
 
+// --- Module-level async helpers (keep try/catch outside component) ---
+
+async function loadAIMetrics(): Promise<{ metrics: AIMetricsData; lastUpdated: string }> {
+  const response = await fetch('/api/tracking/ai');
+  if (!response.ok) throw new Error('Failed to fetch AI metrics');
+  return response.json() as Promise<{ metrics: AIMetricsData; lastUpdated: string }>;
+}
+
+async function triggerAIRefresh(): Promise<void> {
+  const response = await fetch('/api/tracking/ai', { method: 'POST' });
+  if (!response.ok) throw new Error('Failed to refresh');
+}
+
+// --- Helper components/functions to reduce cognitive complexity ---
+
+function getCostBarColor(utilization: number): string {
+  if (utilization > 90) return 'bg-red-500';
+  if (utilization > 70) return 'bg-yellow-500';
+  return 'bg-green-500';
+}
+
+interface DriftCardProps {
+  data: AIMetricsData | null;
+}
+
+function DriftCard({ data }: Readonly<DriftCardProps>) {
+  const detected = data?.drift.detected ?? false;
+  const colorClass = detected ? 'text-red-600' : 'text-green-600';
+  const driftBarWidth =
+    data && data.drift.score !== null
+      ? getDriftBarWidth(data.drift.score, data.drift.threshold)
+      : 0;
+
+  return (
+    <div className={`rounded-lg p-4 border ${detected ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <Icon
+            name={detected ? 'warning' : 'check_circle'}
+            className={colorClass}
+            size="lg"
+          />
+          <span className="font-medium text-gray-900">Model Drift</span>
+        </div>
+        <span className={`text-sm ${colorClass}`}>
+          {getDriftStatusText(data?.drift.score ?? null, detected)}
+        </span>
+      </div>
+      <div className="flex items-center gap-4 text-sm">
+        <div>
+          <span className="text-gray-500">Score: </span>
+          <span className="text-gray-900 font-mono">
+            {data && data.drift.score !== null ? `${(data.drift.score * 100).toFixed(1)}%` : '—'}
+          </span>
+        </div>
+        <div>
+          <span className="text-gray-500">Threshold: </span>
+          <span className="text-gray-900 font-mono">
+            {((data?.drift.threshold ?? 0.05) * 100).toFixed(0)}%
+          </span>
+        </div>
+      </div>
+      <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div
+          className={`h-full ${detected ? 'bg-red-500' : 'bg-green-500'}`}
+          role="progressbar" // NOSONAR typescript:S6819 — inner fill bar inside container; <progress> cannot be positioned inside a parent container this way
+          aria-valuenow={driftBarWidth}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          style={{ width: `${driftBarWidth}%` }}
+        />
+      </div>
+      {data?.drift.history && data.drift.history.length >= 2 && (
+        <div className="mt-3">
+          <TrendSparkline
+            data={data.drift.history.map((h) => ({ date: h.date, value: h.score }))}
+            label="Drift score trend"
+            color="#ef4444"
+          />
+        </div>
+      )}
+      {data?.drift.alerts && data.drift.alerts.length > 0 && (
+        <div className="mt-3 space-y-1">
+          {data.drift.alerts.map((alert, i) => (
+            <div key={i} className="text-xs flex items-center gap-2"> {/* NOSONAR typescript:S6479 */}
+              <span className={`font-medium ${alert.severity === 'critical' ? 'text-red-600' : 'text-yellow-600'}`}>
+                [{alert.severity}]
+              </span>
+              <span className="text-gray-600">{alert.message}</span>
+              <span className="text-gray-400">{alert.timestamp}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface HallucinationCardProps {
+  data: AIMetricsData | null;
+}
+
+function HallucinationCard({ data }: Readonly<HallucinationCardProps>) {
+  const isExceeded =
+    data !== null &&
+    data.hallucination.rate !== null &&
+    data.hallucination.rate > data.hallucination.threshold;
+
+  return (
+    <div className={`rounded-lg p-4 border ${isExceeded ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <Icon
+            name="psychology"
+            className={isExceeded ? 'text-red-600' : 'text-green-600'}
+            size="lg"
+          />
+          <span className="font-medium text-gray-900">Hallucination Rate</span>
+        </div>
+        <span className={`text-sm ${isExceeded ? 'text-red-600' : 'text-green-600'}`}>
+          {data && data.hallucination.rate !== null
+            ? `${(data.hallucination.rate * 100).toFixed(1)}%`
+            : 'Pending'}
+        </span>
+      </div>
+      <div className="flex items-center gap-4 text-sm">
+        <div>
+          <span className="text-gray-500">Samples: </span>
+          <span className="text-gray-900 font-mono">{data?.hallucination.samples_checked ?? 0}</span>
+        </div>
+        <div>
+          <span className="text-gray-500">Threshold: </span>
+          <span className="text-gray-900 font-mono">
+            {((data?.hallucination.threshold ?? 0.05) * 100).toFixed(0)}%
+          </span>
+        </div>
+      </div>
+      {data?.hallucination.history && data.hallucination.history.length >= 2 && (
+        <div className="mt-3">
+          <TrendSparkline
+            data={data.hallucination.history.map((h) => ({ date: h.date, value: h.rate }))}
+            label="Hallucination rate trend"
+            color="#f59e0b"
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function getSuccessRateVariant(
+  data: AIMetricsData | null
+): 'success' | 'warning' | 'error' | 'default' {
+  if (data && data.slo.success_rate !== null && data.slo.success_rate >= 0.99) return 'success';
+  return 'default';
+}
+
+function getSloLatencyValue(ms: number | null, data: AIMetricsData | null): string {
+  if (data && ms !== null) return `${ms}ms`;
+  return 'Pending';
+}
+
 // --- Component ---
 
-export default function AIMetrics() { // NOSONAR typescript:S3776
+export default function AIMetrics() {
   const [data, setData] = useState<AIMetricsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -176,9 +341,7 @@ export default function AIMetrics() { // NOSONAR typescript:S3776
 
   const fetchData = useCallback(async () => {
     try {
-      const response = await fetch('/api/tracking/ai');
-      if (!response.ok) throw new Error('Failed to fetch AI metrics');
-      const result = await response.json();
+      const result = await loadAIMetrics();
       setData(result.metrics);
       setLastUpdated(result.lastUpdated);
       setError(null);
@@ -192,8 +355,7 @@ export default function AIMetrics() { // NOSONAR typescript:S3776
   const handleRefresh = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/tracking/ai', { method: 'POST' });
-      if (!response.ok) throw new Error('Failed to refresh');
+      await triggerAIRefresh();
       await fetchData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Refresh failed');
@@ -287,149 +449,8 @@ export default function AIMetrics() { // NOSONAR typescript:S3776
 
       {/* Drift & Hallucination Alerts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Drift Detection */}
-        <div
-          className={`rounded-lg p-4 border ${
-            data?.drift.detected ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
-          }`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <Icon
-                name={data?.drift.detected ? 'warning' : 'check_circle'}
-                className={data?.drift.detected ? 'text-red-600' : 'text-green-600'}
-                size="lg"
-              />
-              <span className="font-medium text-gray-900">Model Drift</span>
-            </div>
-            <span className={`text-sm ${data?.drift.detected ? 'text-red-600' : 'text-green-600'}`}>
-              {getDriftStatusText(data?.drift.score ?? null, data?.drift.detected ?? false)}
-            </span>
-          </div>
-          <div className="flex items-center gap-4 text-sm">
-            <div>
-              <span className="text-gray-500">Score: </span>
-              <span className="text-gray-900 font-mono">
-                {data && data.drift.score !== null
-                  ? `${(data.drift.score * 100).toFixed(1)}%`
-                  : '—'}
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-500">Threshold: </span>
-              <span className="text-gray-900 font-mono">
-                {((data?.drift.threshold ?? 0.05) * 100).toFixed(0)}%
-              </span>
-            </div>
-          </div>
-          <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div
-              className={`h-full ${data?.drift.detected ? 'bg-red-500' : 'bg-green-500'}`}
-              role="progressbar" // NOSONAR typescript:S6819 — inner fill bar inside container; <progress> cannot be positioned inside a parent container this way
-              aria-valuenow={
-                data && data.drift.score !== null
-                  ? getDriftBarWidth(data.drift.score, data.drift.threshold)
-                  : 0
-              }
-              aria-valuemin={0}
-              aria-valuemax={100}
-              style={{
-                width: `${data && data.drift.score !== null ? getDriftBarWidth(data.drift.score, data.drift.threshold) : 0}%`,
-              }}
-            />
-          </div>
-          {/* Drift History Sparkline */}
-          {data?.drift.history && data.drift.history.length >= 2 && (
-            <div className="mt-3">
-              <TrendSparkline
-                data={data.drift.history.map((h) => ({ date: h.date, value: h.score }))}
-                label="Drift score trend"
-                color="#ef4444"
-              />
-            </div>
-          )}
-          {/* Drift Alerts */}
-          {data?.drift.alerts && data.drift.alerts.length > 0 && (
-            <div className="mt-3 space-y-1">
-              {data.drift.alerts.map((alert, i) => (
-                <div key={i} className="text-xs flex items-center gap-2"> {/* NOSONAR typescript:S6479 */}
-                  <span
-                    className={`font-medium ${alert.severity === 'critical' ? 'text-red-600' : 'text-yellow-600'}`}
-                  >
-                    [{alert.severity}]
-                  </span>
-                  <span className="text-gray-600">{alert.message}</span>
-                  <span className="text-gray-400">{alert.timestamp}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Hallucination Rate */}
-        <div
-          className={`rounded-lg p-4 border ${
-            data &&
-            data.hallucination.rate !== null &&
-            data.hallucination.rate > data.hallucination.threshold
-              ? 'bg-red-50 border-red-200'
-              : 'bg-green-50 border-green-200'
-          }`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <Icon
-                name="psychology"
-                className={
-                  data &&
-                  data.hallucination.rate !== null &&
-                  data.hallucination.rate > data.hallucination.threshold
-                    ? 'text-red-600'
-                    : 'text-green-600'
-                }
-                size="lg"
-              />
-              <span className="font-medium text-gray-900">Hallucination Rate</span>
-            </div>
-            <span
-              className={`text-sm ${
-                data &&
-                data.hallucination.rate !== null &&
-                data.hallucination.rate > data.hallucination.threshold
-                  ? 'text-red-600'
-                  : 'text-green-600'
-              }`}
-            >
-              {data && data.hallucination.rate !== null
-                ? `${(data.hallucination.rate * 100).toFixed(1)}%`
-                : 'Pending'}
-            </span>
-          </div>
-          <div className="flex items-center gap-4 text-sm">
-            <div>
-              <span className="text-gray-500">Samples: </span>
-              <span className="text-gray-900 font-mono">
-                {data?.hallucination.samples_checked ?? 0}
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-500">Threshold: </span>
-              <span className="text-gray-900 font-mono">
-                {((data?.hallucination.threshold ?? 0.05) * 100).toFixed(0)}%
-              </span>
-            </div>
-          </div>
-          {/* Hallucination History Sparkline */}
-          {data?.hallucination.history && data.hallucination.history.length >= 2 && (
-            <div className="mt-3">
-              <TrendSparkline
-                data={data.hallucination.history.map((h) => ({ date: h.date, value: h.rate }))}
-                label="Hallucination rate trend"
-                color="#f59e0b"
-              />
-            </div>
-          )}
-        </div>
+        <DriftCard data={data} />
+        <HallucinationCard data={data} />
       </div>
 
       {/* SLO Compliance */}
@@ -444,18 +465,14 @@ export default function AIMetrics() { // NOSONAR typescript:S3776
         <div className="grid grid-cols-3 gap-4">
           <MetricCard
             title="P95 Latency"
-            value={
-              data && data.slo.p95_actual_ms !== null ? `${data.slo.p95_actual_ms}ms` : 'Pending'
-            }
+            value={getSloLatencyValue(data?.slo.p95_actual_ms ?? null, data)}
             subtitle={`Target: ${data?.slo.p95_target_ms ?? 2000}ms`}
             icon="timer"
             variant={p95Variant}
           />
           <MetricCard
             title="P99 Latency"
-            value={
-              data && data.slo.p99_actual_ms !== null ? `${data.slo.p99_actual_ms}ms` : 'Pending'
-            }
+            value={getSloLatencyValue(data?.slo.p99_actual_ms ?? null, data)}
             subtitle={`Target: ${data?.slo.p99_target_ms ?? 5000}ms`}
             icon="timer"
             variant={p99Variant}
@@ -468,11 +485,7 @@ export default function AIMetrics() { // NOSONAR typescript:S3776
                 : 'Pending'
             }
             icon="check_circle"
-            variant={
-              data && data.slo.success_rate !== null && data.slo.success_rate >= 0.99
-                ? 'success'
-                : 'default'
-            }
+            variant={getSuccessRateVariant(data)}
           />
         </div>
       </div>
@@ -551,20 +564,14 @@ export default function AIMetrics() { // NOSONAR typescript:S3776
           />
         </div>
         <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-          {(() => {
-            const midCostBarColor = costUtilization > 70 ? 'bg-yellow-500' : 'bg-green-500';
-            const costBarColor = costUtilization > 90 ? 'bg-red-500' : midCostBarColor;
-            return (
-              <div
-                className={`h-full transition-all ${costBarColor}`}
-                role="progressbar" // NOSONAR typescript:S6819 — inner fill bar inside container; <progress> cannot be positioned inside a parent container this way
-                aria-valuenow={Math.min(costUtilization, 100)}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                style={{ width: `${Math.min(costUtilization, 100)}%` }}
-              />
-            );
-          })()}
+          <div
+            className={`h-full transition-all ${getCostBarColor(costUtilization)}`}
+            role="progressbar" // NOSONAR typescript:S6819 — inner fill bar inside container; <progress> cannot be positioned inside a parent container this way
+            aria-valuenow={Math.min(costUtilization, 100)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            style={{ width: `${Math.min(costUtilization, 100)}%` }}
+          />
         </div>
         {/* Per-model cost breakdown */}
         {data?.costs.by_model && Object.keys(data.costs.by_model).length > 0 && (

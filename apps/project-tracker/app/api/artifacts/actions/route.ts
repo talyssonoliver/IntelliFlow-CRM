@@ -10,7 +10,14 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { existsSync, mkdirSync, renameSync, unlinkSync, appendFileSync, readFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  renameSync,
+  unlinkSync,
+  appendFileSync,
+  readFileSync,
+} from 'node:fs';
 import { join, dirname, basename } from 'node:path';
 
 const PROJECT_ROOT = process.cwd().replace(/[\\/]apps[\\/]project-tracker$/, '');

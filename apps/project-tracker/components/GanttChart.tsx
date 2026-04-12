@@ -492,7 +492,9 @@ export default function GanttChart({
                 key={index} // NOSONAR typescript:S6479
                 className="cursor-pointer"
                 onClick={() => handleHeaderClick(header.x, header)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleHeaderClick(header.x, header); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') handleHeaderClick(header.x, header);
+                }}
                 role="button"
                 tabIndex={0}
                 aria-label={`Navigate to ${header.label}`}
@@ -639,7 +641,9 @@ export default function GanttChart({
                     onMouseEnter={() => setHoveredTask(task.taskId)}
                     onMouseLeave={() => setHoveredTask(null)}
                     onClick={() => onTaskClick?.(task.taskId)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onTaskClick?.(task.taskId); }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') onTaskClick?.(task.taskId);
+                    }}
                     role="button"
                     tabIndex={0}
                     aria-label={`Task ${task.taskId}`}
@@ -727,13 +731,13 @@ export default function GanttChart({
       <div className="flex items-center justify-between px-4 py-2 border-t border-gray-200 bg-gray-50 text-sm">
         <div className="flex items-center gap-4 text-gray-600">
           <span>
-            <strong>{tasks.length}</strong>{' '}tasks
+            <strong>{tasks.length}</strong> tasks
           </span>
           <span>
-            <strong>{tasks.filter((t) => t.isCritical).length}</strong>{' '}critical
+            <strong>{tasks.filter((t) => t.isCritical).length}</strong> critical
           </span>
           <span>
-            <strong>{tasks.filter((t) => t.percentComplete >= 100).length}</strong>{' '}complete
+            <strong>{tasks.filter((t) => t.percentComplete >= 100).length}</strong> complete
           </span>
         </div>
         <div className="text-gray-500">
@@ -880,11 +884,17 @@ export default function GanttChart({
                         <div className="w-20">
                           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                             {(() => {
-                              const incompleteBarColor = task.isCritical ? 'bg-red-500' : 'bg-blue-500';
-                              const barColorClass = task.percentComplete >= 100 ? 'bg-green-500' : incompleteBarColor;
+                              const incompleteBarColor = task.isCritical
+                                ? 'bg-red-500'
+                                : 'bg-blue-500';
+                              const barColorClass =
+                                task.percentComplete >= 100 ? 'bg-green-500' : incompleteBarColor;
                               return (
                                 <div
-                                  className={clsx('h-full rounded-full transition-all', barColorClass)}
+                                  className={clsx(
+                                    'h-full rounded-full transition-all',
+                                    barColorClass
+                                  )}
                                   style={{ width: `${task.percentComplete}%` }}
                                 />
                               );
@@ -892,11 +902,17 @@ export default function GanttChart({
                           </div>
                         </div>
                         {(() => {
-                          const incompleteLabelColor = task.isCritical ? 'text-red-600' : 'text-gray-600';
-                          const labelColorClass = task.percentComplete >= 100 ? 'text-green-600' : incompleteLabelColor;
+                          const incompleteLabelColor = task.isCritical
+                            ? 'text-red-600'
+                            : 'text-gray-600';
+                          const labelColorClass =
+                            task.percentComplete >= 100 ? 'text-green-600' : incompleteLabelColor;
                           return (
                             <span
-                              className={clsx('text-sm font-medium w-12 text-right', labelColorClass)}
+                              className={clsx(
+                                'text-sm font-medium w-12 text-right',
+                                labelColorClass
+                              )}
                             >
                               {task.percentComplete}%
                             </span>

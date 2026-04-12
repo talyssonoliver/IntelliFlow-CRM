@@ -81,7 +81,8 @@ function getSprintTaskIds(csvPath: string, sprintNumber: number): string[] {
   const taskIds: string[] = [];
   for (const row of results.data as RawCSVRow[]) {
     const targetSprint = row['Target Sprint'];
-    const sprintNum = targetSprint === 'Continuous' ? -1 : Number.parseInt(String(targetSprint ?? ''));
+    const sprintNum =
+      targetSprint === 'Continuous' ? -1 : Number.parseInt(String(targetSprint ?? ''));
     if (sprintNum === sprintNumber && row['Task ID']) {
       taskIds.push(row['Task ID']);
     }
@@ -267,7 +268,11 @@ export async function GET(request: NextRequest) {
     const kpiScore = totalKpis > 0 ? Math.round((passedKpis / totalKpis) * 100) : 0;
 
     // Determine overall status
-    const overallStatus = resolveValidationStatus(totalValidations, passedValidations, failedValidations);
+    const overallStatus = resolveValidationStatus(
+      totalValidations,
+      passedValidations,
+      failedValidations
+    );
 
     // Group validations by type
     const byType = validations.reduce(

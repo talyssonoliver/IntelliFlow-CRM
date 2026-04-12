@@ -63,7 +63,9 @@ interface NextStepsViewProps {
 }
 
 function buildDepGraphNodesFromResult(
-  nodes: Record<string, { task_id: string; dependencies: string[]; dependents: string[] }> | undefined
+  nodes:
+    | Record<string, { task_id: string; dependencies: string[]; dependents: string[] }>
+    | undefined
 ): Map<string, DepGraphNode> {
   const map = new Map<string, DepGraphNode>();
   if (!nodes) return map;
@@ -121,9 +123,7 @@ async function fetchPlanStatusForTask(taskId: string): Promise<PlanStatusEntry> 
   return { hasSpec: false, hasPlan: false, specPath: null, planPath: null };
 }
 
-async function buildPlanStatusMap(
-  taskIds: string[]
-): Promise<Record<string, PlanStatusEntry>> {
+async function buildPlanStatusMap(taskIds: string[]): Promise<Record<string, PlanStatusEntry>> {
   const entries = await Promise.all(
     taskIds.map(async (taskId) => [taskId, await fetchPlanStatusForTask(taskId)] as const)
   );
@@ -151,7 +151,10 @@ async function computeScoredTaskMap(
   const phaseProgress: PhaseProgress[] = progressData?.phases || [];
 
   const sessionStatuses = new Map<string, SessionStatus>(
-    Object.entries(planStatusMap).map(([id, ps]) => [id, { hasSpec: ps.hasSpec, hasPlan: ps.hasPlan }])
+    Object.entries(planStatusMap).map(([id, ps]) => [
+      id,
+      { hasSpec: ps.hasSpec, hasPlan: ps.hasPlan },
+    ])
   );
 
   const readyTasks = result.ready_to_start_details.map((rd: ReadyTaskDetail) => ({
@@ -190,7 +193,10 @@ async function computeScoredTaskMap(
   return map;
 }
 
-export default function NextStepsView({ onTaskClick, sprint = 'all' }: Readonly<NextStepsViewProps>) {
+export default function NextStepsView({
+  onTaskClick,
+  sprint = 'all',
+}: Readonly<NextStepsViewProps>) {
   const [data, setData] = useState<DependencyGraphResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

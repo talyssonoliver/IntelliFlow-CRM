@@ -88,11 +88,36 @@ function checkTaskPrerequisite(
   }
 }
 
+function applyTaskFilter(phases: ExecutionPhase[], taskFilter: string[]): ExecutionPhase[] {
+  const filterSet = new Set(taskFilter);
+  return phases
+    .map((phase) => ({
+      ...phase,
+      tasks: phase.tasks.filter((t) => filterSet.has(t.taskId)),
+    }))
+    .filter((phase) => phase.tasks.length > 0);
+}
+
+async function collectPrerequisites(
+  phases: ExecutionPhase[],
+  csvTasks: TaskRecord[],
+  specifyDir: string
+): Promise<{ prerequisiteErrors: { taskId: string; error: string }[]; tasksToExecute: string[] }> {
+  const prerequisiteErrors: { taskId: string; error: string }[] = [];
+  const tasksToExecute: string[] = [];
+  for (const phase of phases) {
+    for (const task of phase.tasks) {
+      checkTaskPrerequisite(task.taskId, csvTasks, specifyDir, prerequisiteErrors, tasksToExecute);
+    }
+  }
+  return { prerequisiteErrors, tasksToExecute };
+}
+
 /**
  * POST /api/sprint/execute
  * Execute a sprint with computed phases
  */
-export async function POST(request: Request) { // NOSONAR typescript:S3776
+export async function POST(request: Request) {
   try {
     const body: ExecuteRequest = await request.json();
     const {
@@ -148,13 +173,7 @@ export async function POST(request: Request) { // NOSONAR typescript:S3776
 
     // Apply task filter if provided
     if (taskFilter && taskFilter.length > 0) {
-      const filterSet = new Set(taskFilter);
-      phases = phases
-        .map((phase) => ({
-          ...phase,
-          tasks: phase.tasks.filter((t) => filterSet.has(t.taskId)),
-        }))
-        .filter((phase) => phase.tasks.length > 0);
+      phases = applyTaskFilter(phases, taskFilter);
     }
 
     // SESSION 3: Exec - Validate prerequisites for each task
@@ -162,14 +181,11 @@ export async function POST(request: Request) { // NOSONAR typescript:S3776
     const specifyDir = join(projectRoot, '.specify');
     const csvTasks = await loadTasks();
 
-    const prerequisiteErrors: { taskId: string; error: string }[] = [];
-    const tasksToExecute: string[] = [];
-
-    for (const phase of phases) {
-      for (const task of phase.tasks) {
-        checkTaskPrerequisite(task.taskId, csvTasks, specifyDir, prerequisiteErrors, tasksToExecute);
-      }
-    }
+    const { prerequisiteErrors, tasksToExecute } = await collectPrerequisites(
+      phases,
+      csvTasks,
+      specifyDir
+    );
 
     // If there are prerequisite errors, return them (unless it's a dry run)
     if (prerequisiteErrors.length > 0 && !dryRun) {
@@ -398,7 +414,14 @@ export async function GET() {
 function generateExecutionInstructions(phases: ExecutionPhase[], runId: string): string {
   const lines: string[] = [];
 
-  lines.push('## Execution Instructions', '', `Run ID: ${runId}`, '', 'Execute phases in order:', '');
+  lines.push(
+    '## Execution Instructions',
+    '',
+    `Run ID: ${runId}`,
+    '',
+    'Execute phases in order:',
+    ''
+  );
 
   for (const phase of phases) {
     lines.push(`### Phase ${phase.phaseNumber}: ${phase.name}`);
@@ -430,7 +453,7 @@ function generateExecutionInstructions(phases: ExecutionPhase[], runId: string):
     'After each task, update status:',
     '```bash',
     `curl -X POST /api/sprint/status -d '{"runId": "${runId}", "update": {"type": "task_complete", "taskId": "TASK_ID", "phaseNumber": N}}'`,
-    '```',
+    '```'
   );
 
   return lines.join('\n');

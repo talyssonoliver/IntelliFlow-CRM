@@ -241,7 +241,6 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
     };
   }, [selectedSprint]);
 
-
   if (isLoading && !sprintSummary) {
     return (
       <div className="flex items-center justify-center h-64">

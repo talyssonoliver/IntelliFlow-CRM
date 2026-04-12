@@ -376,7 +376,7 @@ export default function SpecTrackerPanel() {
 
       {/* Source info */}
       <p className="text-xs text-gray-500">
-        Generated from{' '}<code>artifacts/reports/spec-tracker.json</code>. Last generated:{' '}
+        Generated from <code>artifacts/reports/spec-tracker.json</code>. Last generated:{' '}
         {new Date(data.generated_at).toLocaleString()}.
       </p>
     </div>

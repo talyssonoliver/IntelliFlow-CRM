@@ -429,14 +429,26 @@ function _isLikelyFabricated(content: string): boolean {
 // =============================================================================
 
 const SKIP_DIRS = new Set([
-  'node_modules', '.next', '.turbo', '.git', '.pnpm', 'dist', '.cache',
+  'node_modules',
+  '.next',
+  '.turbo',
+  '.git',
+  '.pnpm',
+  'dist',
+  '.cache',
   // Gitignored generated coverage data — not source code
-  'coverage-vitest', 'coverage-parts',
+  'coverage-vitest',
+  'coverage-parts',
   // Build output caches — not source code, flagged by Knip/Depcheck
-  '.tsup', 'generated',
+  '.tsup',
+  'generated',
   // Temp/generated/IDE data — not source code
-  '.pytest_cache', '.scannerwork', '.sonarlint', '.vscode',
-  'sonar-reports', '.lighthouseci',
+  '.pytest_cache',
+  '.scannerwork',
+  '.sonarlint',
+  '.vscode',
+  'sonar-reports',
+  '.lighthouseci',
   // Python caches
   '__pycache__',
 ]);
@@ -451,9 +463,15 @@ const SKIP_DIRS_ROOT_ONLY = new Set(['logs', 'tmp', 'playwright-report', 'sonar-
 const SKIP_PATH_PREFIXES = ['supabase/.temp/', 'artifacts/old/'];
 
 const SKIP_FILES = new Set([
-  '.DS_Store', 'Thumbs.db', '.gitkeep', 'desktop.ini',
+  '.DS_Store',
+  'Thumbs.db',
+  '.gitkeep',
+  'desktop.ini',
   // Sensitive env files — never track
-  '.env', '.env.local', '.env.development', '.env.test',
+  '.env',
+  '.env.local',
+  '.env.development',
+  '.env.test',
   '.env.local.example',
   // Temp build artifacts
   'build_output.log',
@@ -552,7 +570,10 @@ function scanItem(
       if (SKIP_DIRS_ROOT_ONLY.has(item.name) && depth <= 1) return;
       // Skip specific path prefixes (e.g., supabase/.temp/)
       const normalizedDir = relativePath.replaceAll('\\', '/') + '/';
-      if (SKIP_PATH_PREFIXES.some((p) => normalizedDir.endsWith(p) || normalizedDir.includes('/' + p))) return;
+      if (
+        SKIP_PATH_PREFIXES.some((p) => normalizedDir.endsWith(p) || normalizedDir.includes('/' + p))
+      )
+        return;
       entries.push(...scanDirectoryRecursive(fullPath, relativePath));
     } else if (item.isFile()) {
       const ext = extname(item.name).toLowerCase() || 'none';
@@ -780,11 +801,7 @@ function enrichFromAttestationFile(
 /**
  * Extract file paths from context_ack.json files_read
  */
-function enrichFromContextAck(
-  taskMap: TaskFileMap,
-  taskId: string,
-  contextAckPath: string
-): void {
+function enrichFromContextAck(taskMap: TaskFileMap, taskId: string, contextAckPath: string): void {
   const data = readJsonSafe(contextAckPath);
   if (!data) return;
 
@@ -843,11 +860,7 @@ function enrichFromAttestations(taskMap: TaskFileMap): void {
 /**
  * Extract file paths from a single task metric JSON
  */
-function enrichFromMetricJson(
-  taskMap: TaskFileMap,
-  taskId: string,
-  jsonPath: string
-): void {
+function enrichFromMetricJson(taskMap: TaskFileMap, taskId: string, jsonPath: string): void {
   const data = readJsonSafe(jsonPath);
   if (!data?.artifacts) return;
 
@@ -881,11 +894,7 @@ function walkMetricDir(dir: string, taskMap: TaskFileMap): void {
     const fullPath = join(dir, entry.name);
     if (entry.isDirectory()) {
       walkMetricDir(fullPath, taskMap);
-    } else if (
-      entry.isFile() &&
-      entry.name.endsWith('.json') &&
-      !entry.name.startsWith('_')
-    ) {
+    } else if (entry.isFile() && entry.name.endsWith('.json') && !entry.name.startsWith('_')) {
       const taskId = entry.name.replace('.json', '');
       enrichFromMetricJson(taskMap, taskId, fullPath);
     }
@@ -896,13 +905,7 @@ function walkMetricDir(dir: string, taskMap: TaskFileMap): void {
  * Scan metric JSON files for artifact references
  */
 function enrichFromMetricJsons(taskMap: TaskFileMap): void {
-  const metricsBaseDir = join(
-    MONOREPO_ROOT,
-    'apps',
-    'project-tracker',
-    'docs',
-    'metrics'
-  );
+  const metricsBaseDir = join(MONOREPO_ROOT, 'apps', 'project-tracker', 'docs', 'metrics');
   if (!existsSync(metricsBaseDir)) return;
 
   let dirs: Dirent<string>[];
@@ -1377,10 +1380,7 @@ function linkGitHubFile(file: FileEntry): FileEntry {
 }
 
 /** Convention-enforcement hooks created by IFC-160 (Artifact Path Conventions + CI Lint) */
-const IFC160_HOOKS = new Set([
-  'git-destructive-guard.mjs',
-  'csv-status-guard.mjs',
-]);
+const IFC160_HOOKS = new Set(['git-destructive-guard.mjs', 'csv-status-guard.mjs']);
 
 /**
  * Link a .claude/ file to the correct task:
@@ -1523,23 +1523,45 @@ function linkSpecifyInfraFile(file: FileEntry): FileEntry {
 
 /** Next.js App Router convention files that inherit their directory's task links */
 const FRAMEWORK_FILES = new Set([
-  'layout.tsx', 'layout.ts', 'layout.js',
-  'loading.tsx', 'error.tsx', 'not-found.tsx',
-  'template.tsx', 'default.tsx', 'global-error.tsx',
-  'opengraph-image.tsx', 'icon.tsx',
-  'manifest.ts', 'robots.ts', 'sitemap.ts',
+  'layout.tsx',
+  'layout.ts',
+  'layout.js',
+  'loading.tsx',
+  'error.tsx',
+  'not-found.tsx',
+  'template.tsx',
+  'default.tsx',
+  'global-error.tsx',
+  'opengraph-image.tsx',
+  'icon.tsx',
+  'manifest.ts',
+  'robots.ts',
+  'sitemap.ts',
 ]);
 
 /** Package/directory infrastructure files */
 const DIR_INFRA_FILES = new Set([
-  'package.json', 'tsconfig.json', 'tsconfig.build.json',
-  'vitest.config.ts', 'vitest.config.mts',
-  'index.ts', 'index.tsx', 'index.js',
-  'CLAUDE.md', 'README.md',
-  '.eslintrc.js', '.eslintrc.cjs', 'eslint.config.js', 'eslint.config.mjs',
-  'tailwind.config.ts', 'tailwind.config.js',
-  'postcss.config.js', 'postcss.config.mjs',
-  'next.config.ts', 'next.config.js', 'next.config.mjs',
+  'package.json',
+  'tsconfig.json',
+  'tsconfig.build.json',
+  'vitest.config.ts',
+  'vitest.config.mts',
+  'index.ts',
+  'index.tsx',
+  'index.js',
+  'CLAUDE.md',
+  'README.md',
+  '.eslintrc.js',
+  '.eslintrc.cjs',
+  'eslint.config.js',
+  'eslint.config.mjs',
+  'tailwind.config.ts',
+  'tailwind.config.js',
+  'postcss.config.js',
+  'postcss.config.mjs',
+  'next.config.ts',
+  'next.config.js',
+  'next.config.mjs',
 ]);
 
 /**
@@ -1712,14 +1734,19 @@ function _buildImportedBasenames(files: FileEntry[]): Set<string> {
       const importPath = match[1];
       // Extract the last segment (basename) of the import path
       const segments = importPath.split('/');
-      const basename = segments[segments.length - 1]
-        .replace(/\.[jt]sx?$/, ''); // strip extension if present
+      const basename = segments[segments.length - 1].replace(/\.[jt]sx?$/, ''); // strip extension if present
       if (basename && !basename.startsWith('.')) {
         imported.add(basename.toLowerCase());
       }
       // Also add full last two segments for scoped imports like @intelliflow/domain
       if (segments.length >= 2) {
-        imported.add(segments.slice(-2).join('/').replace(/\.[jt]sx?$/, '').toLowerCase());
+        imported.add(
+          segments
+            .slice(-2)
+            .join('/')
+            .replace(/\.[jt]sx?$/, '')
+            .toLowerCase()
+        );
       }
     }
   }
@@ -1733,9 +1760,18 @@ function buildDuplicateMap(files: FileEntry[]): Map<string, string[]> {
   const byName = new Map<string, string[]>();
   for (const file of files) {
     const name = file.path.split('/').pop() || '';
-    if (!name || name === 'index.ts' || name === 'index.tsx' || name === 'page.tsx' ||
-        name === 'layout.tsx' || name === 'route.ts' || name === 'README.md' ||
-        name === 'package.json' || name === 'tsconfig.json' || name === 'CLAUDE.md') {
+    if (
+      !name ||
+      name === 'index.ts' ||
+      name === 'index.tsx' ||
+      name === 'page.tsx' ||
+      name === 'layout.tsx' ||
+      name === 'route.ts' ||
+      name === 'README.md' ||
+      name === 'package.json' ||
+      name === 'tsconfig.json' ||
+      name === 'CLAUDE.md'
+    ) {
       continue; // Skip ubiquitous filenames
     }
     let list = byName.get(name);
@@ -1963,7 +1999,9 @@ function runGitLog(args: string[]): string {
   }
 }
 
-function parseGitLogLine(line: string): { hash: string; date: string; author: string; subject: string } | null {
+function parseGitLogLine(
+  line: string
+): { hash: string; date: string; author: string; subject: string } | null {
   const parts = line.split('|');
   if (parts.length < 4) return null;
   return {
@@ -1974,9 +2012,17 @@ function parseGitLogLine(line: string): { hash: string; date: string; author: st
   };
 }
 
-function applyCreationInfo(history: NonNullable<FileEntry['gitHistory']>, relativePath: string): void {
+function applyCreationInfo(
+  history: NonNullable<FileEntry['gitHistory']>,
+  relativePath: string
+): void {
   const output = runGitLog([
-    'log', '--follow', '--diff-filter=A', '--format=%H|%aI|%an|%s', '--', relativePath,
+    'log',
+    '--follow',
+    '--diff-filter=A',
+    '--format=%H|%aI|%an|%s',
+    '--',
+    relativePath,
   ]);
   if (!output) return;
   const lines = output.split('\n');

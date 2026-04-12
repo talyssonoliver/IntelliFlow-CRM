@@ -67,7 +67,10 @@ function loadAttestationEntry(
   const ackPath = join(attestationsDir, taskDir.name, 'context_ack.json');
   if (!existsSync(ackPath)) return null;
   const ack = JSON.parse(readFileSync(ackPath, 'utf8'));
-  return [taskDir.name, { timestamp: ack.attestation_timestamp || '', verdict: ack.verdict || 'PENDING' }];
+  return [
+    taskDir.name,
+    { timestamp: ack.attestation_timestamp || '', verdict: ack.verdict || 'PENDING' },
+  ];
 }
 
 function accumulateSectionCounts(
@@ -302,7 +305,10 @@ export async function GET(request: NextRequest) {
         percentage: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
       },
       phases,
-      bySection: tasks.reduce((acc, t) => accumulateSectionCounts(acc, t), {} as Record<string, { total: number; completed: number }>),
+      bySection: tasks.reduce(
+        (acc, t) => accumulateSectionCounts(acc, t),
+        {} as Record<string, { total: number; completed: number }>
+      ),
       recentCompletions: tasks
         .filter((t) => t.completedAt)
         .sort((a, b) => (b.completedAt || '').localeCompare(a.completedAt || ''))

@@ -104,9 +104,7 @@ function checkServices(): ServiceHealth[] {
       name: 'Supabase Auth',
       status: process.env.SUPABASE_ANON_KEY ? 'healthy' : 'unknown',
       lastCheck: new Date().toISOString(),
-      details: process.env.SUPABASE_ANON_KEY
-        ? 'Auth keys configured'
-        : 'SUPABASE_ANON_KEY not set',
+      details: process.env.SUPABASE_ANON_KEY ? 'Auth keys configured' : 'SUPABASE_ANON_KEY not set',
     },
     {
       name: 'OpenAI API',
@@ -119,7 +117,7 @@ function checkServices(): ServiceHealth[] {
       status: process.env.REDIS_URL ? 'healthy' : 'unknown',
       lastCheck: new Date().toISOString(),
       details: process.env.REDIS_URL ? 'Redis URL configured' : 'REDIS_URL not set',
-    },
+    }
   );
 
   return services;

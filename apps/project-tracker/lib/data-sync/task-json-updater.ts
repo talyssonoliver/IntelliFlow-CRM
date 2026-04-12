@@ -35,11 +35,7 @@ function applyCompletionTimestamps(taskData: any): void {
   taskData.actual_duration_minutes = taskData.target_duration_minutes || 15;
 }
 
-function applyDependencySatisfied(
-  taskData: any,
-  task: TaskRecord,
-  allTasks: TaskRecord[]
-): void {
+function applyDependencySatisfied(taskData: any, task: TaskRecord, allTasks: TaskRecord[]): void {
   if (!taskData.dependencies) return;
   const requiredDeps = parseDependencies(task.CleanDependencies || task.Dependencies || '');
   const allSatisfied = requiredDeps.every((depId: string) => {

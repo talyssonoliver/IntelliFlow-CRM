@@ -24,7 +24,14 @@ function countTaskStatus(tasks: CsvTask[]): {
   not_started: number;
   failed: number;
 } {
-  const counts = { total: tasks.length, done: 0, in_progress: 0, blocked: 0, not_started: 0, failed: 0 };
+  const counts = {
+    total: tasks.length,
+    done: 0,
+    in_progress: 0,
+    blocked: 0,
+    not_started: 0,
+    failed: 0,
+  };
   for (const task of tasks) {
     const status = normalizeStatus(task.Status || '');
     if (STATUS_GROUPS.completed.includes(status)) {
@@ -125,9 +132,19 @@ function getSprintDataFromCsv(tasks: CsvTask[], sprintNumber: string) {
   };
 }
 
-const CSV_HEADERS = { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0', Pragma: 'no-cache', Expires: '0' };
+const CSV_HEADERS = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+  Pragma: 'no-cache',
+  Expires: '0',
+};
 
-const CSV_PARSE_OPTIONS = { columns: true as const, skip_empty_lines: true, relax_quotes: true, relax_column_count: true, bom: true };
+const CSV_PARSE_OPTIONS = {
+  columns: true as const,
+  skip_empty_lines: true,
+  relax_quotes: true,
+  relax_column_count: true,
+  bom: true,
+};
 
 async function tryLoadJsonMetadata(metricsPath: string): Promise<Record<string, unknown> | null> {
   try {
@@ -163,23 +180,29 @@ async function handleSprintNumber(sprintNumber: string): Promise<NextResponse> {
     };
 
     if (csvData.task_summary.total === 0) {
-      return NextResponse.json({ ...mergedData, message: `No tasks found for Sprint ${sprintNumber}.` }, { headers: CSV_HEADERS });
+      return NextResponse.json(
+        { ...mergedData, message: `No tasks found for Sprint ${sprintNumber}.` },
+        { headers: CSV_HEADERS }
+      );
     }
     return NextResponse.json(mergedData, { headers: CSV_HEADERS });
   } catch (csvError) {
     console.error('Error reading CSV:', csvError);
-    return NextResponse.json({
-      sprint: `sprint-${sprintNumber}`,
-      name: `Sprint ${sprintNumber}`,
-      target_date: new Date().toISOString(),
-      started_at: null,
-      completed_at: null,
-      task_summary: { total: 0, done: 0, in_progress: 0, blocked: 0, not_started: 0, failed: 0 },
-      kpi_summary: {},
-      blockers: [],
-      completed_tasks: [],
-      message: `No metrics data available for Sprint ${sprintNumber}.`,
-    }, { headers: CSV_HEADERS });
+    return NextResponse.json(
+      {
+        sprint: `sprint-${sprintNumber}`,
+        name: `Sprint ${sprintNumber}`,
+        target_date: new Date().toISOString(),
+        started_at: null,
+        completed_at: null,
+        task_summary: { total: 0, done: 0, in_progress: 0, blocked: 0, not_started: 0, failed: 0 },
+        kpi_summary: {},
+        blockers: [],
+        completed_tasks: [],
+        message: `No metrics data available for Sprint ${sprintNumber}.`,
+      },
+      { headers: CSV_HEADERS }
+    );
   }
 }
 

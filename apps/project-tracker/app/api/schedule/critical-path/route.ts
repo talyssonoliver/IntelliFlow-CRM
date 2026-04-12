@@ -113,8 +113,9 @@ function derivePercentComplete(status: string, jsonStatus?: string): number {
 }
 
 function createTaskInput(row: TaskRecord, jsonData: TaskJsonData | null): TaskScheduleInput {
-  const durationMinutes = jsonData?.target_duration_minutes
-    ?? estimateDuration(row['Task ID'] || '', row['Section'] || '');
+  const durationMinutes =
+    jsonData?.target_duration_minutes ??
+    estimateDuration(row['Task ID'] || '', row['Section'] || '');
 
   const status = row['Status'] || 'Planned';
   const percentComplete = derivePercentComplete(status, jsonData?.status);
@@ -162,7 +163,11 @@ function resolveAllSprintDates(
   now: Date
 ): { sprintStart: Date; sprintEnd: Date } {
   const sprintNumbers = [
-    ...new Set(tasks.map((t) => Number.parseInt(t['Target Sprint'] || '0', 10)).filter((n) => !Number.isNaN(n))),
+    ...new Set(
+      tasks
+        .map((t) => Number.parseInt(t['Target Sprint'] || '0', 10))
+        .filter((n) => !Number.isNaN(n))
+    ),
   ].sort((a, b) => a - b);
 
   let earliestStart: Date | null = null;
@@ -177,8 +182,17 @@ function resolveAllSprintDates(
   }
 
   const sprintStart = earliestStart ?? new Date();
-  let sprintEnd = latestEnd ?? (() => { const d = new Date(); d.setDate(d.getDate() + 14); return d; })();
-  if (sprintEnd < now) { sprintEnd = new Date(now); sprintEnd.setDate(sprintEnd.getDate() + 30); }
+  let sprintEnd =
+    latestEnd ??
+    (() => {
+      const d = new Date();
+      d.setDate(d.getDate() + 14);
+      return d;
+    })();
+  if (sprintEnd < now) {
+    sprintEnd = new Date(now);
+    sprintEnd.setDate(sprintEnd.getDate() + 30);
+  }
   return { sprintStart, sprintEnd };
 }
 
@@ -201,13 +215,17 @@ function resolveSprintDates(
   try {
     const summary = JSON.parse(readFileSync(summaryPath, 'utf-8'));
     if (summary.started_at) sprintStart = new Date(summary.started_at);
-    if (summary.schedule?.sprint_start_date) sprintStart = new Date(summary.schedule.sprint_start_date);
+    if (summary.schedule?.sprint_start_date)
+      sprintStart = new Date(summary.schedule.sprint_start_date);
     if (summary.schedule?.sprint_end_date) {
       sprintEnd = new Date(summary.schedule.sprint_end_date);
     } else if (summary.target_date) {
       sprintEnd = new Date(summary.target_date);
     }
-    if (sprintEnd < now) { sprintEnd = new Date(now); sprintEnd.setDate(sprintEnd.getDate() + 7); }
+    if (sprintEnd < now) {
+      sprintEnd = new Date(now);
+      sprintEnd.setDate(sprintEnd.getDate() + 7);
+    }
   } catch {
     // Use defaults
   }
@@ -252,7 +270,13 @@ export async function GET(request: NextRequest) {
 
     // Get sprint dates
     const now = new Date();
-    const { sprintStart, sprintEnd } = resolveSprintDates(tasks, metricsDir, isAllSprints, sprintNum, now);
+    const { sprintStart, sprintEnd } = resolveSprintDates(
+      tasks,
+      metricsDir,
+      isAllSprints,
+      sprintNum,
+      now
+    );
 
     // Calculate schedule - load actual data from task JSON files
     const taskInputs: TaskScheduleInput[] = tasks.map((row) => {

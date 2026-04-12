@@ -829,136 +829,142 @@ export default function SprintExecutionView({ sprintNumber }: Readonly<SprintExe
         {historyExpanded && (
           <div className="border-t bg-white p-4">
             {(() => {
-              if (historyLoading) return (
-              <div className="flex items-center justify-center py-8">
-                <Icon name="refresh" size="xl" className="animate-spin text-blue-500" />
-                <span className="ml-2 text-gray-500">Loading history...</span>
-              </div>
-              );
-              if (historyRuns.length === 0) return (
-              <div className="text-center py-8 text-gray-500">
-                <Icon name="history" size="2xl" className="mx-auto mb-2 opacity-50" />
-                <p>
-                  No execution history found for{' '}
-                  {targetSprint === 'all' ? 'All Sprints' : `Sprint ${targetSprint}`}
-                </p>
-                <p className="text-sm">Execute the sprint to start tracking history.</p>
-              </div>
-              );
-              return (
-              <div className="space-y-3">
-                {/* Stats Summary */}
-                {historyStats && (
-                  <div className="grid grid-cols-4 gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
-                    <div className="text-center">
-                      <div className="text-2xl font-semibold">{historyStats.totalRuns}</div>
-                      <div className="text-xs text-gray-500">Total Runs</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-semibold">
-                        {Math.round(historyStats.successRate * 100)}%
-                      </div>
-                      <div className="text-xs text-gray-500">Success Rate</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-semibold">
-                        {Math.round(historyStats.averagePassRate * 100)}%
-                      </div>
-                      <div className="text-xs text-gray-500">Avg Pass Rate</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        {getTrendIcon(historyStats.trend)}
-                        <span className="text-lg font-medium capitalize">{historyStats.trend}</span>
-                      </div>
-                      <div className="text-xs text-gray-500">Trend</div>
-                    </div>
+              if (historyLoading)
+                return (
+                  <div className="flex items-center justify-center py-8">
+                    <Icon name="refresh" size="xl" className="animate-spin text-blue-500" />
+                    <span className="ml-2 text-gray-500">Loading history...</span>
                   </div>
-                )}
-
-                {/* Run List */}
-                <div className="space-y-2">
-                  {historyRuns.map((run) => (
-                    <div
-                      key={run.runId}
-                      className={clsx('p-3 rounded-lg border flex items-center justify-between', {
-                        'bg-green-50 border-green-200':
-                          run.status === 'completed' && run.passRatePercent >= 80,
-                        'bg-yellow-50 border-yellow-200':
-                          run.status === 'completed' &&
-                          run.passRatePercent >= 50 &&
-                          run.passRatePercent < 80,
-                        'bg-red-50 border-red-200':
-                          run.status === 'failed' || run.passRatePercent < 50,
-                        'bg-blue-50 border-blue-200': run.status === 'running',
-                        'bg-gray-50 border-gray-200': run.status === 'paused',
-                      })}
-                    >
-                      <div>
-                        <div className="font-mono text-sm">{run.runId}</div>
-                        <div className="text-xs text-gray-500">
-                          {formatTimestamp(run.timestamp)} • {run.formattedDuration}
-                        </div>
+                );
+              if (historyRuns.length === 0)
+                return (
+                  <div className="text-center py-8 text-gray-500">
+                    <Icon name="history" size="2xl" className="mx-auto mb-2 opacity-50" />
+                    <p>
+                      No execution history found for{' '}
+                      {targetSprint === 'all' ? 'All Sprints' : `Sprint ${targetSprint}`}
+                    </p>
+                    <p className="text-sm">Execute the sprint to start tracking history.</p>
+                  </div>
+                );
+              return (
+                <div className="space-y-3">
+                  {/* Stats Summary */}
+                  {historyStats && (
+                    <div className="grid grid-cols-4 gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
+                      <div className="text-center">
+                        <div className="text-2xl font-semibold">{historyStats.totalRuns}</div>
+                        <div className="text-xs text-gray-500">Total Runs</div>
                       </div>
-
-                      <div className="flex items-center gap-4">
-                        <div className="text-sm">
-                          <span className="text-green-600">{run.results.pass} pass</span>
-                          {run.results.fail > 0 && (
-                            <span className="text-red-600 ml-2">{run.results.fail} fail</span>
-                          )}
-                          {run.results.error > 0 && (
-                            <span className="text-orange-600 ml-2">{run.results.error} error</span>
-                          )}
-                          {run.results.skipped > 0 && (
-                            <span className="text-gray-500 ml-2">{run.results.skipped} skip</span>
-                          )}
+                      <div className="text-center">
+                        <div className="text-2xl font-semibold">
+                          {Math.round(historyStats.successRate * 100)}%
                         </div>
-
-                        <div className="flex items-center gap-2">
-                          <div className="w-20 bg-gray-200 rounded-full h-2">
-                            <div
-                              className={clsx('h-2 rounded-full', {
-                                'bg-green-500': run.passRatePercent >= 80,
-                                'bg-yellow-500':
-                                  run.passRatePercent >= 50 && run.passRatePercent < 80,
-                                'bg-red-500': run.passRatePercent < 50,
-                              })}
-                              style={{ width: `${run.passRatePercent}%` }}
-                            />
-                          </div>
-                          <span className="text-xs font-medium w-10">{run.passRatePercent}%</span>
+                        <div className="text-xs text-gray-500">Success Rate</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-semibold">
+                          {Math.round(historyStats.averagePassRate * 100)}%
                         </div>
-
-                        <span
-                          className={clsx('text-xs px-2 py-1 rounded', {
-                            'bg-green-200 text-green-800': run.status === 'completed',
-                            'bg-red-200 text-red-800': run.status === 'failed',
-                            'bg-blue-200 text-blue-800': run.status === 'running',
-                            'bg-yellow-200 text-yellow-800': run.status === 'paused',
-                          })}
-                        >
-                          {run.status}
-                        </span>
+                        <div className="text-xs text-gray-500">Avg Pass Rate</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          {getTrendIcon(historyStats.trend)}
+                          <span className="text-lg font-medium capitalize">
+                            {historyStats.trend}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500">Trend</div>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  )}
 
-                {/* Refresh button */}
-                <button
-                  onClick={fetchHistory}
-                  disabled={historyLoading}
-                  className="w-full mt-2 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center gap-1 disabled:opacity-50"
-                >
-                  <Icon
-                    name="refresh"
-                    size="sm"
-                    className={clsx({ 'animate-spin': historyLoading })}
-                  />
-                  Refresh History
-                </button>
-              </div>
+                  {/* Run List */}
+                  <div className="space-y-2">
+                    {historyRuns.map((run) => (
+                      <div
+                        key={run.runId}
+                        className={clsx('p-3 rounded-lg border flex items-center justify-between', {
+                          'bg-green-50 border-green-200':
+                            run.status === 'completed' && run.passRatePercent >= 80,
+                          'bg-yellow-50 border-yellow-200':
+                            run.status === 'completed' &&
+                            run.passRatePercent >= 50 &&
+                            run.passRatePercent < 80,
+                          'bg-red-50 border-red-200':
+                            run.status === 'failed' || run.passRatePercent < 50,
+                          'bg-blue-50 border-blue-200': run.status === 'running',
+                          'bg-gray-50 border-gray-200': run.status === 'paused',
+                        })}
+                      >
+                        <div>
+                          <div className="font-mono text-sm">{run.runId}</div>
+                          <div className="text-xs text-gray-500">
+                            {formatTimestamp(run.timestamp)} • {run.formattedDuration}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                          <div className="text-sm">
+                            <span className="text-green-600">{run.results.pass} pass</span>
+                            {run.results.fail > 0 && (
+                              <span className="text-red-600 ml-2">{run.results.fail} fail</span>
+                            )}
+                            {run.results.error > 0 && (
+                              <span className="text-orange-600 ml-2">
+                                {run.results.error} error
+                              </span>
+                            )}
+                            {run.results.skipped > 0 && (
+                              <span className="text-gray-500 ml-2">{run.results.skipped} skip</span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <div className="w-20 bg-gray-200 rounded-full h-2">
+                              <div
+                                className={clsx('h-2 rounded-full', {
+                                  'bg-green-500': run.passRatePercent >= 80,
+                                  'bg-yellow-500':
+                                    run.passRatePercent >= 50 && run.passRatePercent < 80,
+                                  'bg-red-500': run.passRatePercent < 50,
+                                })}
+                                style={{ width: `${run.passRatePercent}%` }}
+                              />
+                            </div>
+                            <span className="text-xs font-medium w-10">{run.passRatePercent}%</span>
+                          </div>
+
+                          <span
+                            className={clsx('text-xs px-2 py-1 rounded', {
+                              'bg-green-200 text-green-800': run.status === 'completed',
+                              'bg-red-200 text-red-800': run.status === 'failed',
+                              'bg-blue-200 text-blue-800': run.status === 'running',
+                              'bg-yellow-200 text-yellow-800': run.status === 'paused',
+                            })}
+                          >
+                            {run.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Refresh button */}
+                  <button
+                    onClick={fetchHistory}
+                    disabled={historyLoading}
+                    className="w-full mt-2 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center gap-1 disabled:opacity-50"
+                  >
+                    <Icon
+                      name="refresh"
+                      size="sm"
+                      className={clsx({ 'animate-spin': historyLoading })}
+                    />
+                    Refresh History
+                  </button>
+                </div>
               );
             })()}
           </div>

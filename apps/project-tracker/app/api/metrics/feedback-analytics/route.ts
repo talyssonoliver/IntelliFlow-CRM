@@ -64,7 +64,13 @@ function extractAckFeedback(taskId: string, content: any, timestamp: string): Fe
   }
 
   if (content.approach?.pattern === 'RSI') {
-    records.push({ taskId, type: 'positive', category: 'architecture', timestamp, details: 'RSI pattern implemented' });
+    records.push({
+      taskId,
+      type: 'positive',
+      category: 'architecture',
+      timestamp,
+      details: 'RSI pattern implemented',
+    });
   }
 
   return records;

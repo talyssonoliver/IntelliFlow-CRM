@@ -410,12 +410,15 @@ function computeProvenanceChecks(metrics: Record<string, any>): {
   let provenanceFresh = true;
   let nextDue = '';
 
-  if (!metrics.provenance) return { provenanceChecks, daysSinceCollection, provenanceFresh, nextDue };
+  if (!metrics.provenance)
+    return { provenanceChecks, daysSinceCollection, provenanceFresh, nextDue };
 
   const prov = metrics.provenance;
   const now = new Date();
   const lastCollected = new Date(prov.last_collected_at);
-  daysSinceCollection = Math.floor((now.getTime() - lastCollected.getTime()) / (1000 * 60 * 60 * 24));
+  daysSinceCollection = Math.floor(
+    (now.getTime() - lastCollected.getTime()) / (1000 * 60 * 60 * 24)
+  );
   const isStale = daysSinceCollection > prov.staleness_threshold_days;
   provenanceFresh = !isStale;
   nextDue = prov.next_collection_due;

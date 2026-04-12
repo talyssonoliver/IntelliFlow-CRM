@@ -40,9 +40,7 @@ interface TaskWorkflowStatus {
   dependencies: string[];
 }
 
-function buildDepGraphNodes(
-  nodesData: Record<string, any> | undefined
-): Map<string, DepGraphNode> {
+function buildDepGraphNodes(nodesData: Record<string, any> | undefined): Map<string, DepGraphNode> {
   const map = new Map<string, DepGraphNode>();
   if (!nodesData) return map;
   for (const [id, node] of Object.entries(nodesData)) {
@@ -144,8 +142,7 @@ function buildSingleWorkflowTask(
     hasPlan: planStatus.hasPlan || false,
   });
 
-  const dependenciesMet =
-    readyToStartDetails?.some((r) => r.taskId === task.id) || false;
+  const dependenciesMet = readyToStartDetails?.some((r) => r.taskId === task.id) || false;
   const hasContext = planStatus.hasContext || false;
   const hasSpec = planStatus.hasSpec || false;
   const hasPlan = planStatus.hasPlan || false;
@@ -220,7 +217,11 @@ function categorizeWorkflowTasks(
  * - Re-calculate ready tasks
  * - Generate daily summary
  */
-export function DailyWorkflowSummary({ tasks, sprint, onTaskClick }: Readonly<DailyWorkflowSummaryProps>) {
+export function DailyWorkflowSummary({
+  tasks,
+  sprint,
+  onTaskClick,
+}: Readonly<DailyWorkflowSummaryProps>) {
   const router = useRouter();
   const [workflowData, setWorkflowData] = useState<WorkflowData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -282,7 +283,11 @@ export function DailyWorkflowSummary({ tasks, sprint, onTaskClick }: Readonly<Da
       // Build dep graph node map and critical path set for priority scoring
       const depGraphNodes = buildDepGraphNodes(graphData.nodes);
       const criticalPathIds = new Set<string>(criticalPathData?.criticalPath?.taskIds || []);
-      const scheduleTaskMap = buildScheduleTaskMap(criticalPathData, scheduleCalcData, criticalPathIds);
+      const scheduleTaskMap = buildScheduleTaskMap(
+        criticalPathData,
+        scheduleCalcData,
+        criticalPathIds
+      );
 
       const phaseProgress: PhaseProgress[] = sprintProgressData?.phases || [];
 
@@ -306,8 +311,7 @@ export function DailyWorkflowSummary({ tasks, sprint, onTaskClick }: Readonly<Da
         }
       > = batchData.tasks || {};
 
-      const readyToStartDetails: Array<{ taskId: string }> =
-        graphData.ready_to_start_details || [];
+      const readyToStartDetails: Array<{ taskId: string }> = graphData.ready_to_start_details || [];
       const workflowTasks: TaskWorkflowStatus[] = tasks.map((task) =>
         buildSingleWorkflowTask(
           task,
@@ -322,8 +326,15 @@ export function DailyWorkflowSummary({ tasks, sprint, onTaskClick }: Readonly<Da
         sprint === 'all' ? workflowTasks : workflowTasks.filter((t) => t.sprint === sprint);
 
       const categories = categorizeWorkflowTasks(filteredTasks);
-      const { readyTasks, inProgressTasks, awaitingSpec, awaitingPlan, awaitingExec,
-              completedToday, blockedTasks } = categories;
+      const {
+        readyTasks,
+        inProgressTasks,
+        awaitingSpec,
+        awaitingPlan,
+        awaitingExec,
+        completedToday,
+        blockedTasks,
+      } = categories;
 
       // Compute priority scores for ready tasks
       const readyFullTasks = readyTasks
@@ -911,7 +922,7 @@ export function DailyWorkflowSummary({ tasks, sprint, onTaskClick }: Readonly<Da
         <div className="mt-6 pt-4 border-t border-gray-200">
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-500">
-              Run{' '}<code className="bg-gray-100 px-1 py-0.5 rounded">/matop-execute TASK_ID</code>{' '}
+              Run <code className="bg-gray-100 px-1 py-0.5 rounded">/matop-execute TASK_ID</code>{' '}
               for full orchestration
             </p>
             <a
@@ -1140,7 +1151,9 @@ function PriorityBucket({
               {bucket === 'now' ? 'No urgent tasks' : 'No tasks in this bucket'}
             </div>
           )}
-          {scoredTasks.length > 0 && bucket === 'now' && sprintGroups && (
+          {scoredTasks.length > 0 &&
+            bucket === 'now' &&
+            sprintGroups &&
             /* NOW bucket: grouped by sprint with sub-headers */
             Array.from(sprintGroups.entries()).map(([sprintNum, sprintTasks]) => (
               <div key={sprintNum}>
@@ -1152,8 +1165,7 @@ function PriorityBucket({
                 </div>
                 <div className="divide-y divide-gray-100">{sprintTasks.map(renderTaskRow)}</div>
               </div>
-            ))
-          )}
+            ))}
           {scoredTasks.length > 0 && !(bucket === 'now' && sprintGroups) && (
             /* NEXT/WAIT: flat list with WSJF ordering */
             <div className="divide-y divide-gray-100">

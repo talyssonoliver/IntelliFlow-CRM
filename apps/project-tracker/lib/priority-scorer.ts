@@ -131,7 +131,8 @@ function toFibonacci(normalized: number): number {
  */
 function isTierAId(taskId: string, lcSection: string, dependentCount: number): boolean {
   if (taskId.includes('SEC') || lcSection.includes('security')) return true;
-  if (taskId.startsWith('IFC-0') && Number.parseInt(taskId.replaceAll('IFC-', ''), 10) <= 10) return true;
+  if (taskId.startsWith('IFC-0') && Number.parseInt(taskId.replaceAll('IFC-', ''), 10) <= 10)
+    return true;
   if (dependentCount >= 5) return true;
   if (taskId.startsWith('EXC-')) return true;
   if (lcSection.includes('planning') || lcSection.includes('strategy')) return true;
@@ -422,11 +423,21 @@ function scoreTask(
   const scheduleInfo = ctx.scheduleTaskMap.get(task.id);
 
   const businessValue = scoreBusinessValue(task.id, task.section, dependentCount, isCriticalPath);
-  const timeCriticality = scoreTimeCriticality(task.id, ctx.scheduleTaskMap, task.sprint, ctx.effectiveSprint);
+  const timeCriticality = scoreTimeCriticality(
+    task.id,
+    ctx.scheduleTaskMap,
+    task.sprint,
+    ctx.effectiveSprint
+  );
   const riskReductionOpportunity = scoreRiskReduction(dependentCount, ctx.phaseProgress);
   const jobSizeProxy = computeJobSizeProxy(session);
 
-  const factors: PriorityFactors = { businessValue, timeCriticality, riskReductionOpportunity, jobSizeProxy };
+  const factors: PriorityFactors = {
+    businessValue,
+    timeCriticality,
+    riskReductionOpportunity,
+    jobSizeProxy,
+  };
   const costOfDelay = businessValue + timeCriticality + riskReductionOpportunity;
   const score = Math.round((costOfDelay / jobSizeProxy) * 100) / 100;
 
@@ -463,7 +474,15 @@ export function computePriorityScores(
     );
 
   const taskToGroupMap = buildTaskGroupMap(parallelGroups);
-  const ctx = { depGraphNodes, criticalPathIds, sessionStatuses, scheduleTaskMap, phaseProgress, effectiveSprint, taskToGroupMap };
+  const ctx = {
+    depGraphNodes,
+    criticalPathIds,
+    sessionStatuses,
+    scheduleTaskMap,
+    phaseProgress,
+    effectiveSprint,
+    taskToGroupMap,
+  };
 
   const scored: ScoredTaskInternal[] = readyTasks.map((task) => scoreTask(task, ctx));
 

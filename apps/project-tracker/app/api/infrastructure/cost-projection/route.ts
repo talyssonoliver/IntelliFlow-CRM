@@ -135,7 +135,7 @@ function calculateCosts(): CostItem[] {
       monthlyCost: 0, // Free tier
       annualCost: 0,
       trend: 'stable',
-    },
+    }
   );
 
   return costs;

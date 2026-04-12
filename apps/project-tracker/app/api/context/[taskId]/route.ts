@@ -113,9 +113,40 @@ function normalizeManifest(raw: RawManifest, taskId: string): NormalizedManifest
 }
 
 /**
+ * Try to load manifest from a single directory, returning undefined on failure.
+ */
+async function tryLoadManifest(
+  packDir: string,
+  taskId: string
+): Promise<NormalizedManifest | undefined> {
+  const manifestPath = join(packDir, 'context_pack.manifest.json');
+  if (!existsSync(manifestPath)) return undefined;
+  try {
+    const manifestContent = await readFile(manifestPath, 'utf-8');
+    const rawManifest: RawManifest = JSON.parse(manifestContent);
+    return normalizeManifest(rawManifest, taskId);
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Try to load context pack content from a single directory, returning undefined on failure.
+ */
+async function tryLoadContent(packDir: string): Promise<string | undefined> {
+  const contentPath = join(packDir, 'context_pack.md');
+  if (!existsSync(contentPath)) return undefined;
+  try {
+    return await readFile(contentPath, 'utf-8');
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Load context pack from sprint-based location first, then legacy
  */
-async function loadContextPack( // NOSONAR typescript:S3776
+async function loadContextPack(
   taskId: string,
   sprintNumber: number
 ): Promise<{
@@ -133,33 +164,13 @@ async function loadContextPack( // NOSONAR typescript:S3776
   const result: { manifest?: NormalizedManifest; content?: string } = {};
 
   for (const packDir of possibleDirs) {
-    const manifestPath = join(packDir, 'context_pack.manifest.json');
-    const contentPath = join(packDir, 'context_pack.md');
-
-    // Try to load manifest
-    if (!result.manifest && existsSync(manifestPath)) {
-      try {
-        const manifestContent = await readFile(manifestPath, 'utf-8');
-        const rawManifest: RawManifest = JSON.parse(manifestContent);
-        result.manifest = normalizeManifest(rawManifest, taskId);
-      } catch {
-        // Manifest exists but is invalid
-      }
+    if (!result.manifest) {
+      result.manifest = await tryLoadManifest(packDir, taskId);
     }
-
-    // Try to load content
-    if (!result.content && existsSync(contentPath)) {
-      try {
-        result.content = await readFile(contentPath, 'utf-8');
-      } catch {
-        // Content exists but can't be read
-      }
+    if (!result.content) {
+      result.content = await tryLoadContent(packDir);
     }
-
-    // If we found both, stop searching
-    if (result.manifest && result.content) {
-      break;
-    }
+    if (result.manifest && result.content) break;
   }
 
   return result;
@@ -284,7 +295,11 @@ function computeHashStatus(
   if (manifest?.files && ack?.files_read) {
     if (manifest.backfilled) {
       return {
-        filesRead: manifest.files.map((f) => ({ path: f.path, hash: f.sha256, status: 'matched' as const })),
+        filesRead: manifest.files.map((f) => ({
+          path: f.path,
+          hash: f.sha256,
+          status: 'matched' as const,
+        })),
         hashStatus: 'valid',
       };
     }
@@ -304,14 +319,22 @@ function computeHashStatus(
 
   if (manifest?.files) {
     return {
-      filesRead: manifest.files.map((f) => ({ path: f.path, hash: f.sha256, status: 'pending' as const })),
+      filesRead: manifest.files.map((f) => ({
+        path: f.path,
+        hash: f.sha256,
+        status: 'pending' as const,
+      })),
       hashStatus: 'pending',
     };
   }
 
   if (ack?.files_read && ack.files_read.length > 0) {
     return {
-      filesRead: ack.files_read.map((f) => ({ path: f.path, hash: f.sha256, status: 'matched' as const })),
+      filesRead: ack.files_read.map((f) => ({
+        path: f.path,
+        hash: f.sha256,
+        status: 'matched' as const,
+      })),
       hashStatus: 'valid',
     };
   }
@@ -377,7 +400,8 @@ export async function GET(request: Request, { params }: Params) {
     // Determine statuses
     // If we have an ack from attestations, the pack is effectively "generated" (context was provided inline)
     // manifest, content, or ack all indicate the pack was generated/acknowledged inline
-    const packStatus: ContextPackData['packStatus'] = (manifest || content || ack) ? 'generated' : 'missing';
+    const packStatus: ContextPackData['packStatus'] =
+      manifest || content || ack ? 'generated' : 'missing';
 
     const ackStatus: ContextPackData['ackStatus'] = ack ? 'acknowledged' : 'missing';
 

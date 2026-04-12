@@ -7,9 +7,7 @@ import type { DependencyNode, CrossSprintDep, CriticalPath, TaskRecord } from '.
 import { mapCsvStatusToGraph, parseDependencies } from './csv-mapping';
 import { writeJsonFile } from './file-io';
 
-function buildGraphNodes(
-  tasks: TaskRecord[]
-): {
+function buildGraphNodes(tasks: TaskRecord[]): {
   nodes: Record<string, DependencyNode>;
   taskStatusMap: Map<string, string>;
   taskSprintMap: Map<string, number>;
@@ -185,10 +183,7 @@ export function computeParallelGroups(
   return groups;
 }
 
-function tracePathFromNode(
-  startId: string,
-  nodes: Record<string, DependencyNode>
-): string[] {
+function tracePathFromNode(startId: string, nodes: Record<string, DependencyNode>): string[] {
   const path: string[] = [];
   const visited = new Set<string>();
 

@@ -233,7 +233,11 @@ async function handleAddRisk(body: any): Promise<NextResponse> {
   await fs.writeFile(RISK_REGISTER_PATH, newContent);
 
   await appendAuditEntry({
-    riskId: newId, action: 'add', newStatus: 'Open', newScore: score, changedAt: new Date().toISOString(),
+    riskId: newId,
+    action: 'add',
+    newStatus: 'Open',
+    newScore: score,
+    changedAt: new Date().toISOString(),
   });
 
   return NextResponse.json({ status: 'ok', message: 'Risk added', riskId: newId });
@@ -272,19 +276,33 @@ async function handleEditRisk(body: any): Promise<NextResponse> {
   const { risks } = await parseRiskRegister();
   const riskIndex = risks.findIndex((r) => r.id === riskId);
   if (riskIndex === -1) {
-    return NextResponse.json({ status: 'error', message: `Risk ${riskId} not found` }, { status: 404 });
+    return NextResponse.json(
+      { status: 'error', message: `Risk ${riskId} not found` },
+      { status: 404 }
+    );
   }
 
   const currentRisk = risks[riskIndex];
 
-  if (updates.status && updates.status !== currentRisk.status && !isValidTransition(currentRisk.status, updates.status as RiskStatus)) {
+  if (
+    updates.status &&
+    updates.status !== currentRisk.status &&
+    !isValidTransition(currentRisk.status, updates.status as RiskStatus)
+  ) {
     return NextResponse.json(
-      { status: 'error', message: `Invalid status transition: ${currentRisk.status} → ${updates.status}` },
+      {
+        status: 'error',
+        message: `Invalid status transition: ${currentRisk.status} → ${updates.status}`,
+      },
       { status: 400 }
     );
   }
 
-  const auditEntry: RiskAuditEntry = { riskId, action: 'edit', changedAt: new Date().toISOString() };
+  const auditEntry: RiskAuditEntry = {
+    riskId,
+    action: 'edit',
+    changedAt: new Date().toISOString(),
+  };
   if (updates.status) {
     auditEntry.previousStatus = currentRisk.status;
     auditEntry.newStatus = updates.status as RiskStatus;
@@ -317,6 +335,9 @@ export async function POST(request: NextRequest) {
     return await handler(body);
   } catch (error) {
     console.error('Error updating risk register:', error);
-    return NextResponse.json({ status: 'error', message: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { status: 'error', message: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

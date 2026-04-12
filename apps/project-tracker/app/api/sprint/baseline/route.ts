@@ -71,7 +71,10 @@ function saveFallback(sprintNumber: number, data: any): void {
 const INTERNAL_DEP_PREFIXES = ['IFC-', 'ENV-', 'AI-'];
 
 function splitField(value: string): string[] {
-  return value.split(',').map((s) => s.trim()).filter(Boolean);
+  return value
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 function buildRiskFactors(
@@ -97,7 +100,8 @@ function buildBaselineTask(row: RawCSVRow, sprintNum: number): BaselineTask {
     dependencies: splitField(row['Dependencies'] || ''),
     prerequisites: splitField(row['Pre-requisites'] || ''),
     targetSprint: sprintNum,
-    estimatedEffort: (r['Effort'] as string | undefined) ?? (r['Story Points'] as string | undefined) ?? '',
+    estimatedEffort:
+      (r['Effort'] as string | undefined) ?? (r['Story Points'] as string | undefined) ?? '',
     priority: (r['Priority'] as string | undefined) ?? '',
   };
 }
@@ -117,7 +121,15 @@ function loadSprintBaseline(sprintNumber: number): {
   tasks: BaselineTask[];
   baseline: SprintBaseline;
 } {
-  const csvPath = join(getProjectRoot(), 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+  const csvPath = join(
+    getProjectRoot(),
+    'apps',
+    'project-tracker',
+    'docs',
+    'metrics',
+    '_global',
+    'Sprint_plan.csv'
+  );
   const tasks: BaselineTask[] = [];
   const sections = new Set<string>();
   let internalDeps = 0;
@@ -126,11 +138,15 @@ function loadSprintBaseline(sprintNumber: number): {
 
   try {
     if (existsSync(csvPath)) {
-      const results = Papa.parse(readFileSync(csvPath, 'utf8'), { header: true, skipEmptyLines: true });
+      const results = Papa.parse(readFileSync(csvPath, 'utf8'), {
+        header: true,
+        skipEmptyLines: true,
+      });
 
       for (const row of results.data as RawCSVRow[]) {
         const targetSprint = row['Target Sprint'];
-        const sprintNum = targetSprint === 'Continuous' ? -1 : Number.parseInt(String(targetSprint ?? ''));
+        const sprintNum =
+          targetSprint === 'Continuous' ? -1 : Number.parseInt(String(targetSprint ?? ''));
         if (sprintNum !== sprintNumber) continue;
 
         const task = buildBaselineTask(row, sprintNum);
@@ -148,7 +164,12 @@ function loadSprintBaseline(sprintNumber: number): {
     console.error('Error loading sprint baseline:', error);
   }
 
-  const riskFactors = buildRiskFactors(tasks.length, internalDeps, criticalPath.length, sections.size);
+  const riskFactors = buildRiskFactors(
+    tasks.length,
+    internalDeps,
+    criticalPath.length,
+    sections.size
+  );
 
   return {
     tasks,

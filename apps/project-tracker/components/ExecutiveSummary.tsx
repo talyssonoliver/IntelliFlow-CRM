@@ -7,7 +7,11 @@ import { Icon } from '@/lib/icons';
 
 function toggleSetItem<T>(set: Set<T>, item: T): Set<T> {
   const next = new Set(set);
-  if (next.has(item)) { next.delete(item); } else { next.add(item); }
+  if (next.has(item)) {
+    next.delete(item);
+  } else {
+    next.add(item);
+  }
   return next;
 }
 
@@ -40,9 +44,18 @@ interface ExpandableMetricRowProps {
 }
 
 function ExpandableMetricRow({
-  isAlert, alertColor, iconName, label, hasDetails, isExpanded, onToggle, value, children,
+  isAlert,
+  alertColor,
+  iconName,
+  label,
+  hasDetails,
+  isExpanded,
+  onToggle,
+  value,
+  children,
 }: ExpandableMetricRowProps) {
-  const colorOn = alertColor === 'red' ? 'text-red-400 bg-red-500/10' : 'text-orange-400 bg-orange-500/10';
+  const colorOn =
+    alertColor === 'red' ? 'text-red-400 bg-red-500/10' : 'text-orange-400 bg-orange-500/10';
   const colorOff = 'text-green-400 bg-green-500/10';
   const [iconColor, bgColor] = isAlert ? colorOn.split(' ') : colorOff.split(' ');
   return (
@@ -50,20 +63,21 @@ function ExpandableMetricRow({
       <tr className="hover:bg-slate-800/30 transition-colors cursor-pointer" onClick={onToggle}>
         <td className="py-3 px-3">
           <div className="flex items-center gap-3">
-            <div className={`w-8 h-8 rounded-lg ${bgColor} flex items-center justify-center ${iconColor}`}>
+            <div
+              className={`w-8 h-8 rounded-lg ${bgColor} flex items-center justify-center ${iconColor}`}
+            >
               <Icon name={iconName} size="sm" />
             </div>
             <span className="text-sm font-medium text-slate-200">{label}</span>
-            {hasDetails && (
-              isExpanded
-                ? <Icon name="expand_more" size="sm" className="text-slate-400" />
-                : <Icon name="chevron_right" size="sm" className="text-slate-400" />
-            )}
+            {hasDetails &&
+              (isExpanded ? (
+                <Icon name="expand_more" size="sm" className="text-slate-400" />
+              ) : (
+                <Icon name="chevron_right" size="sm" className="text-slate-400" />
+              ))}
           </div>
         </td>
-        <td className="py-3 px-3 text-right">
-          {value}
-        </td>
+        <td className="py-3 px-3 text-right">{value}</td>
       </tr>
       {isExpanded && hasDetails && children}
     </React.Fragment>
@@ -277,7 +291,9 @@ function ContextArtifactRow({ details, expanded, onToggle }: ContextArtifactRowP
                     </div>
                   ))}
                   {packOnlyMissing.length > 10 && (
-                    <div className="text-xs text-slate-600">+{packOnlyMissing.length - 10} more</div>
+                    <div className="text-xs text-slate-600">
+                      +{packOnlyMissing.length - 10} more
+                    </div>
                   )}
                 </>
               )}
@@ -460,7 +476,13 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
               hasDetails={metrics.plan_vs_code_mismatches_details.length > 0}
               isExpanded={expanded.has('mismatches')}
               onToggle={() => toggleExpanded('mismatches')}
-              value={<span className={`text-sm font-semibold ${metrics.plan_vs_code_mismatches > 0 ? 'text-orange-400' : 'text-green-400'}`}>{metrics.plan_vs_code_mismatches}</span>}
+              value={
+                <span
+                  className={`text-sm font-semibold ${metrics.plan_vs_code_mismatches > 0 ? 'text-orange-400' : 'text-green-400'}`}
+                >
+                  {metrics.plan_vs_code_mismatches}
+                </span>
+              }
             >
               <tr>
                 <td colSpan={2} className="px-3 pb-3">
@@ -503,7 +525,13 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
               hasDetails={metrics.incomplete_plan_deliverables_details.length > 0}
               isExpanded={expanded.has('plandeliverables')}
               onToggle={() => toggleExpanded('plandeliverables')}
-              value={<span className={`text-sm font-semibold ${metrics.incomplete_plan_deliverables > 0 ? 'text-orange-400' : 'text-green-400'}`}>{metrics.incomplete_plan_deliverables}</span>}
+              value={
+                <span
+                  className={`text-sm font-semibold ${metrics.incomplete_plan_deliverables > 0 ? 'text-orange-400' : 'text-green-400'}`}
+                >
+                  {metrics.incomplete_plan_deliverables}
+                </span>
+              }
             >
               <tr>
                 <td colSpan={2} className="px-3 pb-3">
@@ -516,12 +544,16 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
                           <span className="truncate">{detail.description}</span>
                           <div className="flex gap-2 ml-auto shrink-0">
                             {detail.total_files > 0 && (
-                              <span className={`${detail.verified_files < detail.total_files ? 'text-orange-400' : 'text-green-400'}`}>
+                              <span
+                                className={`${detail.verified_files < detail.total_files ? 'text-orange-400' : 'text-green-400'}`}
+                              >
                                 Files {detail.verified_files}/{detail.total_files}
                               </span>
                             )}
                             {detail.checkbox_total > 0 && (
-                              <span className={`${detail.checkbox_checked < detail.checkbox_total ? 'text-orange-400' : 'text-green-400'}`}>
+                              <span
+                                className={`${detail.checkbox_checked < detail.checkbox_total ? 'text-orange-400' : 'text-green-400'}`}
+                              >
                                 Steps {detail.checkbox_checked}/{detail.checkbox_total}
                               </span>
                             )}
@@ -552,7 +584,13 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
               hasDetails={metrics.completion_integrity_details.length > 0}
               isExpanded={expanded.has('integrity')}
               onToggle={() => toggleExpanded('integrity')}
-              value={<span className={`text-sm font-semibold ${metrics.completion_integrity_failures > 0 ? 'text-red-400' : 'text-green-400'}`}>{metrics.completion_integrity_failures}</span>}
+              value={
+                <span
+                  className={`text-sm font-semibold ${metrics.completion_integrity_failures > 0 ? 'text-red-400' : 'text-green-400'}`}
+                >
+                  {metrics.completion_integrity_failures}
+                </span>
+              }
             >
               <tr>
                 <td colSpan={2} className="px-3 pb-3">
@@ -565,21 +603,31 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
                           <span className="truncate">{detail.description}</span>
                           <div className="flex gap-1 ml-auto shrink-0">
                             {detail.has_attestation === false && (
-                              <span className="px-1.5 py-0.5 bg-red-500/10 text-red-400 rounded text-[10px]">no attestation</span>
+                              <span className="px-1.5 py-0.5 bg-red-500/10 text-red-400 rounded text-[10px]">
+                                no attestation
+                              </span>
                             )}
                             {detail.checkbox_pct !== null && detail.checkbox_pct < 100 && (
-                              <span className="px-1.5 py-0.5 bg-orange-500/10 text-orange-400 rounded text-[10px]">{detail.checkbox_pct}% checked</span>
+                              <span className="px-1.5 py-0.5 bg-orange-500/10 text-orange-400 rounded text-[10px]">
+                                {detail.checkbox_pct}% checked
+                              </span>
                             )}
                             {detail.has_attestation && detail.validation_count < 4 && (
-                              <span className="px-1.5 py-0.5 bg-orange-500/10 text-orange-400 rounded text-[10px]">{detail.validation_count}/4 validations</span>
+                              <span className="px-1.5 py-0.5 bg-orange-500/10 text-orange-400 rounded text-[10px]">
+                                {detail.validation_count}/4 validations
+                              </span>
                             )}
                             {detail.issues.some((i) => i.startsWith('Plan deliverables:')) && (
-                              <span className="px-1.5 py-0.5 bg-orange-500/10 text-orange-400 rounded text-[10px]">missing files</span>
+                              <span className="px-1.5 py-0.5 bg-orange-500/10 text-orange-400 rounded text-[10px]">
+                                missing files
+                              </span>
                             )}
                           </div>
                         </div>
                         {detail.issues.length > 0 && (
-                          <div className="ml-4 mt-1 text-slate-500">{detail.issues.join(' · ')}</div>
+                          <div className="ml-4 mt-1 text-slate-500">
+                            {detail.issues.join(' · ')}
+                          </div>
                         )}
                       </div>
                     ))}
@@ -603,7 +651,13 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
               hasDetails={metrics.context_hash_mismatches_details.length > 0}
               isExpanded={expanded.has('hashmismatch')}
               onToggle={() => toggleExpanded('hashmismatch')}
-              value={<span className={`text-sm font-semibold ${metrics.context_hash_mismatches > 0 ? 'text-red-400' : 'text-green-400'}`}>{metrics.context_hash_mismatches}</span>}
+              value={
+                <span
+                  className={`text-sm font-semibold ${metrics.context_hash_mismatches > 0 ? 'text-red-400' : 'text-green-400'}`}
+                >
+                  {metrics.context_hash_mismatches}
+                </span>
+              }
             >
               <tr>
                 <td colSpan={2} className="px-3 pb-3">
@@ -614,12 +668,15 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
                           <span className="font-mono text-red-400">{detail.task_id}</span>
                           <span className="text-slate-500">-</span>
                           <span className="truncate">{detail.description}</span>
-                          <span className="text-slate-500 ml-auto">{detail.matched_count}/{detail.total_files} matched</span>
+                          <span className="text-slate-500 ml-auto">
+                            {detail.matched_count}/{detail.total_files} matched
+                          </span>
                         </div>
                         <div className="ml-4 mt-1 text-slate-500">
                           Mismatched:{' '}
                           {detail.mismatched_files.map((f) => f.split('/').pop()).join(', ')}
-                          {detail.mismatched_files.length < detail.total_files - detail.matched_count &&
+                          {detail.mismatched_files.length <
+                            detail.total_files - detail.matched_count &&
                             ` +${detail.total_files - detail.matched_count - detail.mismatched_files.length} more`}
                         </div>
                       </div>
@@ -639,7 +696,13 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
               hasDetails={metrics.untracked_code_artifacts_details.length > 0}
               isExpanded={expanded.has('untracked')}
               onToggle={() => toggleExpanded('untracked')}
-              value={<span className={`text-sm font-semibold ${metrics.untracked_code_artifacts > 0 ? 'text-orange-400' : 'text-green-400'}`}>{metrics.untracked_code_artifacts}</span>}
+              value={
+                <span
+                  className={`text-sm font-semibold ${metrics.untracked_code_artifacts > 0 ? 'text-orange-400' : 'text-green-400'}`}
+                >
+                  {metrics.untracked_code_artifacts}
+                </span>
+              }
             >
               <tr>
                 <td colSpan={2} className="px-3 pb-3">
@@ -670,7 +733,13 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
               hasDetails={metrics.forward_dependencies_details.length > 0}
               isExpanded={expanded.has('forward')}
               onToggle={() => toggleExpanded('forward')}
-              value={<span className={`text-sm font-semibold ${metrics.forward_dependencies > 0 ? 'text-red-400' : 'text-green-400'}`}>{metrics.forward_dependencies}</span>}
+              value={
+                <span
+                  className={`text-sm font-semibold ${metrics.forward_dependencies > 0 ? 'text-red-400' : 'text-green-400'}`}
+                >
+                  {metrics.forward_dependencies}
+                </span>
+              }
             >
               <tr>
                 <td colSpan={2} className="px-3 pb-3">
@@ -692,7 +761,8 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
                     ))}
                     {metrics.forward_dependencies_details.length > 10 && (
                       <div className="text-xs text-slate-500 pt-1">
-                        +{metrics.forward_dependencies_details.length - 10} more forward dependencies
+                        +{metrics.forward_dependencies_details.length - 10} more forward
+                        dependencies
                       </div>
                     )}
                   </div>
@@ -703,43 +773,60 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
             {/* Sprint Bottleneck - Expandable */}
             {/* Sprint Bottleneck - Expandable */}
             <React.Fragment key="bottleneck-section">
-              <tr className="hover:bg-slate-800/30 transition-colors cursor-pointer" onClick={() => toggleExpanded('bottleneck')}>
+              <tr
+                className="hover:bg-slate-800/30 transition-colors cursor-pointer"
+                onClick={() => toggleExpanded('bottleneck')}
+              >
                 <td className="py-3 px-3">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400">
                       <Icon name="my_location" size="sm" />
                     </div>
                     <span className="text-sm font-medium text-slate-200">Sprint Bottleneck</span>
-                    {metrics.sprint_bottlenecks_details.length > 0 && (
-                      expanded.has('bottleneck')
-                        ? <Icon name="expand_more" size="sm" className="text-slate-400" />
-                        : <Icon name="chevron_right" size="sm" className="text-slate-400" />
-                    )}
+                    {metrics.sprint_bottlenecks_details.length > 0 &&
+                      (expanded.has('bottleneck') ? (
+                        <Icon name="expand_more" size="sm" className="text-slate-400" />
+                      ) : (
+                        <Icon name="chevron_right" size="sm" className="text-slate-400" />
+                      ))}
                   </div>
                 </td>
                 <td className="py-3 px-3 text-right">
-                  <span className="text-sm font-semibold text-purple-400">{metrics.sprint_bottlenecks}</span>
+                  <span className="text-sm font-semibold text-purple-400">
+                    {metrics.sprint_bottlenecks}
+                  </span>
                 </td>
               </tr>
               {expanded.has('bottleneck') && metrics.sprint_bottlenecks_details.length > 0 && (
                 <tr>
                   <td colSpan={2} className="px-3 pb-3">
                     <div className="ml-11 bg-slate-800/50 rounded-lg p-3 space-y-3">
-                      <div className="text-xs text-slate-400 mb-2">Sprints with highest dependency concentration:</div>
+                      <div className="text-xs text-slate-400 mb-2">
+                        Sprints with highest dependency concentration:
+                      </div>
                       {metrics.sprint_bottlenecks_details.map((detail) => (
                         <div key={`bottleneck-sprint-${detail.sprint}`} className="text-xs">
                           <div className="flex items-center gap-3 mb-1">
-                            <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded font-semibold">Sprint {detail.sprint}</span>
-                            <span className="text-slate-400">{detail.dependency_count} dependencies</span>
+                            <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded font-semibold">
+                              Sprint {detail.sprint}
+                            </span>
+                            <span className="text-slate-400">
+                              {detail.dependency_count} dependencies
+                            </span>
                           </div>
                           <div className="ml-2 flex flex-wrap gap-1">
                             {detail.blocked_tasks.slice(0, 8).map((taskId, taskIdx) => (
-                              <span key={`bottleneck-${detail.sprint}-task-${taskId}-${taskIdx}`} className="px-1.5 py-0.5 bg-slate-700/50 text-slate-400 rounded font-mono text-[10px]">
+                              <span
+                                key={`bottleneck-${detail.sprint}-task-${taskId}-${taskIdx}`}
+                                className="px-1.5 py-0.5 bg-slate-700/50 text-slate-400 rounded font-mono text-[10px]"
+                              >
                                 {taskId}
                               </span>
                             ))}
                             {detail.blocked_tasks.length > 8 && (
-                              <span className="px-1.5 py-0.5 text-slate-500 text-[10px]">+{detail.blocked_tasks.length - 8} more</span>
+                              <span className="px-1.5 py-0.5 text-slate-500 text-[10px]">
+                                +{detail.blocked_tasks.length - 8} more
+                              </span>
                             )}
                           </div>
                         </div>

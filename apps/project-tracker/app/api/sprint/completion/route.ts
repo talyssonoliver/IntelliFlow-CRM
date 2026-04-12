@@ -122,8 +122,23 @@ function deriveSprintStatus(percentage: number): SprintCompletion['status'] {
   return 'in-progress';
 }
 
+// Accumulate a single CSV row into the sprint accumulator
+function accumulateSprintRow(row: RawCSVRow, sprintNumber: number, acc: RowAccumulator): void {
+  const targetSprint = row['Target Sprint'];
+  const sprintNum =
+    targetSprint === 'Continuous' ? -1 : Number.parseInt(String(targetSprint ?? ''));
+  if (sprintNum !== sprintNumber) return;
+
+  acc.totalTasks++;
+  const status = (row['Status'] || '').toLowerCase();
+  if (status !== 'completed' && status !== 'done') return;
+
+  acc.completedCount++;
+  processCompletedRow(row, acc);
+}
+
 // Load sprint completion data
-function loadSprintCompletion(sprintNumber: number): { // NOSONAR typescript:S3776
+function loadSprintCompletion(sprintNumber: number): {
   tasks: CompletedTask[];
   completion: SprintCompletion;
 } {
@@ -137,7 +152,13 @@ function loadSprintCompletion(sprintNumber: number): { // NOSONAR typescript:S37
     '_global',
     'Sprint_plan.csv'
   );
-  const acc: RowAccumulator = { tasks: [], totalTasks: 0, completedCount: 0, totalKpis: 0, metKpis: 0 };
+  const acc: RowAccumulator = {
+    tasks: [],
+    totalTasks: 0,
+    completedCount: 0,
+    totalKpis: 0,
+    metKpis: 0,
+  };
 
   try {
     if (existsSync(csvPath)) {
@@ -145,23 +166,15 @@ function loadSprintCompletion(sprintNumber: number): { // NOSONAR typescript:S37
       const results = Papa.parse(content, { header: true, skipEmptyLines: true });
 
       for (const row of results.data as RawCSVRow[]) {
-        const targetSprint = row['Target Sprint'];
-        const sprintNum = targetSprint === 'Continuous' ? -1 : Number.parseInt(String(targetSprint ?? ''));
-        if (sprintNum !== sprintNumber) continue;
-
-        acc.totalTasks++;
-        const status = (row['Status'] || '').toLowerCase();
-        if (status !== 'completed' && status !== 'done') continue;
-
-        acc.completedCount++;
-        processCompletedRow(row, acc);
+        accumulateSprintRow(row, sprintNumber, acc);
       }
     }
   } catch (error) {
     console.error('Error loading sprint completion:', error);
   }
 
-  const percentage = acc.totalTasks > 0 ? Math.round((acc.completedCount / acc.totalTasks) * 100) : 0;
+  const percentage =
+    acc.totalTasks > 0 ? Math.round((acc.completedCount / acc.totalTasks) * 100) : 0;
 
   return {
     tasks: [...acc.tasks].toSorted((a, b) => b.completedAt.localeCompare(a.completedAt)),
@@ -195,7 +208,10 @@ function loadPhaseEntry(sprintDir: string, entryName: string): any | null {
     name: summary.phase_name || entryName,
     total: summary.total_tasks || 0,
     completed: summary.completed_tasks || 0,
-    percentage: summary.total_tasks > 0 ? Math.round((summary.completed_tasks / summary.total_tasks) * 100) : 0,
+    percentage:
+      summary.total_tasks > 0
+        ? Math.round((summary.completed_tasks / summary.total_tasks) * 100)
+        : 0,
     status: getPhaseStatus(summary),
   };
 }
@@ -203,7 +219,14 @@ function loadPhaseEntry(sprintDir: string, entryName: string): any | null {
 // Load phase completion from phase summaries
 function loadPhaseCompletion(sprintNumber: number): any[] {
   const projectRoot = getProjectRoot();
-  const sprintDir = join(projectRoot, 'apps', 'project-tracker', 'docs', 'metrics', `sprint-${sprintNumber}`);
+  const sprintDir = join(
+    projectRoot,
+    'apps',
+    'project-tracker',
+    'docs',
+    'metrics',
+    `sprint-${sprintNumber}`
+  );
   const phases: any[] = [];
 
   try {

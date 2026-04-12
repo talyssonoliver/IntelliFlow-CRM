@@ -295,7 +295,13 @@ function buildTaskTraceability(task: AnyTask): TaskTraceability {
   for (const artifact of task.artifacts) {
     if (!artifact?.trim()) continue;
     const info = getFileInfo(artifact);
-    links.push({ type: 'artifact', path: artifact, exists: info.exists, size: info.size, modifiedAt: info.modifiedAt });
+    links.push({
+      type: 'artifact',
+      path: artifact,
+      exists: info.exists,
+      size: info.size,
+      modifiedAt: info.modifiedAt,
+    });
   }
 
   // Add attestation, tests, documentation
@@ -310,7 +316,10 @@ function buildTaskTraceability(task: AnyTask): TaskTraceability {
   const docLinks = byType('documentation');
 
   const coverage = {
-    artifacts: { total: task.artifacts.filter((a) => a?.trim()).length || 1, found: artifactLinks.filter((l) => l.exists).length },
+    artifacts: {
+      total: task.artifacts.filter((a) => a?.trim()).length || 1,
+      found: artifactLinks.filter((l) => l.exists).length,
+    },
     attestations: { total: 1, found: attestationLinks.filter((l) => l.exists).length },
     tests: { total: 1, found: testLinks.some((l) => l.exists) ? 1 : 0 },
     documentation: { total: 1, found: docLinks.some((l) => l.exists) ? 1 : 0 },
@@ -318,12 +327,25 @@ function buildTaskTraceability(task: AnyTask): TaskTraceability {
 
   const overallCoverage = Math.round(
     (coverage.artifacts.found / coverage.artifacts.total) * COVERAGE_WEIGHTS.artifacts * 100 +
-    (coverage.attestations.found / coverage.attestations.total) * COVERAGE_WEIGHTS.attestations * 100 +
-    (coverage.tests.found / coverage.tests.total) * COVERAGE_WEIGHTS.tests * 100 +
-    (coverage.documentation.found / coverage.documentation.total) * COVERAGE_WEIGHTS.documentation * 100
+      (coverage.attestations.found / coverage.attestations.total) *
+        COVERAGE_WEIGHTS.attestations *
+        100 +
+      (coverage.tests.found / coverage.tests.total) * COVERAGE_WEIGHTS.tests * 100 +
+      (coverage.documentation.found / coverage.documentation.total) *
+        COVERAGE_WEIGHTS.documentation *
+        100
   );
 
-  return { task_id: task.taskId, description: task.description, section: task.section, status: task.status, sprint: task.sprint, links, coverage, overallCoverage };
+  return {
+    task_id: task.taskId,
+    description: task.description,
+    section: task.section,
+    status: task.status,
+    sprint: task.sprint,
+    links,
+    coverage,
+    overallCoverage,
+  };
 }
 
 export async function GET(request: NextRequest) {

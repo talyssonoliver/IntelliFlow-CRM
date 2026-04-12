@@ -50,7 +50,7 @@ export function parseDependencies(depsString: string): string[] {
   return depsString
     .split(',')
     .map((d: string) => d.trim())
-    .filter((d: string) => d.length > 0 && d !== 'None' && d !== '-');
+    .filter((d: string) => d.length > 0 && !/^(?:none|n\/a|-)$/i.test(d));
 }
 
 /**

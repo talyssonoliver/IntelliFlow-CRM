@@ -114,18 +114,43 @@ function getHeartbeatStatus(heartbeatAge?: number): {
   isAlive: boolean;
 } {
   if (heartbeatAge === undefined || heartbeatAge < 0) {
-    return { color: 'text-gray-400', bgColor: 'bg-gray-400', label: 'No heartbeat', isAlive: false };
+    return {
+      color: 'text-gray-400',
+      bgColor: 'bg-gray-400',
+      label: 'No heartbeat',
+      isAlive: false,
+    };
   }
   if (heartbeatAge < 30) {
-    return { color: 'text-green-500', bgColor: 'bg-green-500', label: `${heartbeatAge}s`, isAlive: true };
+    return {
+      color: 'text-green-500',
+      bgColor: 'bg-green-500',
+      label: `${heartbeatAge}s`,
+      isAlive: true,
+    };
   }
   if (heartbeatAge < 60) {
-    return { color: 'text-yellow-500', bgColor: 'bg-yellow-500', label: `${heartbeatAge}s`, isAlive: true };
+    return {
+      color: 'text-yellow-500',
+      bgColor: 'bg-yellow-500',
+      label: `${heartbeatAge}s`,
+      isAlive: true,
+    };
   }
   if (heartbeatAge < 300) {
-    return { color: 'text-orange-500', bgColor: 'bg-orange-500', label: `${Math.floor(heartbeatAge / 60)}m`, isAlive: true };
+    return {
+      color: 'text-orange-500',
+      bgColor: 'bg-orange-500',
+      label: `${Math.floor(heartbeatAge / 60)}m`,
+      isAlive: true,
+    };
   }
-  return { color: 'text-red-500', bgColor: 'bg-red-500', label: `${Math.floor(heartbeatAge / 60)}m`, isAlive: false };
+  return {
+    color: 'text-red-500',
+    bgColor: 'bg-red-500',
+    label: `${Math.floor(heartbeatAge / 60)}m`,
+    isAlive: false,
+  };
 }
 
 // Helper to get log level color class
@@ -176,7 +201,425 @@ function buildLogEntries(tasks: TaskLog[]): LogEntry[] {
   return entries;
 }
 
-function SwarmPageContent() { // NOSONAR typescript:S3776
+// --- Extracted helpers (outside component to reduce cognitive complexity) ---
+
+function toggleSetMembership<T>(set: Set<T>, item: T): Set<T> {
+  const next = new Set(set);
+  if (next.has(item)) {
+    next.delete(item);
+  } else {
+    next.add(item);
+  }
+  return next;
+}
+
+async function killTaskRequest(taskId: string): Promise<void> {
+  await fetch(`/api/swarm/kill-task/${taskId}`, { method: 'POST' });
+}
+
+async function restartTaskRequest(taskId: string): Promise<void> {
+  await fetch(`/api/swarm/restart-task/${taskId}`, { method: 'POST' });
+}
+
+function applyStartSwarmResult(result: { ok: boolean; pid?: number; error?: string }, onRefresh: () => void): void {
+  if (result.ok) { alert(`Swarm started! PID: ${result.pid}`); onRefresh(); }
+  else { alert(`Failed to start swarm: ${result.error}`); }
+}
+
+function applyStopSwarmResult(result: { ok: boolean; error?: string }, onRefresh: () => void): void {
+  if (result.ok) { alert('Swarm stop signal sent'); onRefresh(); }
+  else { alert(`Failed to stop swarm: ${result.error}`); }
+}
+
+function applySubmitAnswersResult(
+  result: { ok: boolean; message?: string; error?: string },
+  taskId: string,
+  onClearAnswers: (taskId: string) => void,
+  onRefreshQuestions: () => void
+): void {
+  if (result.error === 'no_answers') { alert('Please provide at least one answer'); return; }
+  if (result.ok) {
+    alert(result.message);
+    onClearAnswers(taskId);
+    onRefreshQuestions();
+  } else { alert(`Error: ${result.error}`); }
+}
+
+interface SwarmStatusResult {
+  health: SwarmHealth | null;
+  tasks: TaskLog[] | null;
+  connected: boolean;
+}
+
+async function fetchSwarmStatus(): Promise<SwarmStatusResult> {
+  const [healthRes, tasksRes] = await Promise.all([
+    fetch('/api/swarm/health'),
+    fetch('/api/swarm/active-tasks'),
+  ]);
+  const health = healthRes.ok ? ((await healthRes.json()) as SwarmHealth) : null;
+  const tasks = tasksRes.ok ? ((await tasksRes.json()) as TaskLog[]) : null;
+  return { health, tasks, connected: healthRes.ok };
+}
+
+async function fetchPendingQuestions(): Promise<TaskQuestions[]> {
+  const response = await fetch('/api/swarm/questions');
+  if (!response.ok) return [];
+  const data = (await response.json()) as { tasks?: TaskQuestions[] };
+  return data.tasks ?? [];
+}
+
+// --- Extracted async helpers (outside component to reduce cognitive complexity) ---
+
+async function submitAnswersRequest(
+  taskId: string,
+  answers: Record<number, string>
+): Promise<{ ok: boolean; message?: string; error?: string }> {
+  const answersList = Object.entries(answers).map(([qId, answer]) => ({
+    questionId: Number.parseInt(qId, 10),
+    answer,
+  }));
+  if (answersList.length === 0) return { ok: false, error: 'no_answers' };
+  const response = await fetch(`/api/swarm/questions/${taskId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ answers: answersList }),
+  });
+  const result = await response.json();
+  return response.ok ? { ok: true, message: result.message } : { ok: false, error: result.error };
+}
+
+async function startSwarmRequest(
+  maxConcurrent: number,
+  watchdogThreshold: number
+): Promise<{ ok: boolean; pid?: number; error?: string }> {
+  const response = await fetch('/api/swarm/start', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ maxConcurrent, watchdogThreshold }),
+  });
+  const result = await response.json();
+  return response.ok ? { ok: true, pid: result.pid } : { ok: false, error: result.error };
+}
+
+async function stopSwarmRequest(): Promise<{ ok: boolean; error?: string }> {
+  const response = await fetch('/api/swarm/stop', { method: 'POST' });
+  const result = await response.json();
+  return response.ok ? { ok: true } : { ok: false, error: result.error };
+}
+
+async function runCliRequest(commandWithArgs: string): Promise<string> {
+  const parts = commandWithArgs.trim().split(/\s+/);
+  const command = parts[0];
+  const args = parts.slice(1);
+  const response = await fetch('/api/swarm/cli', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ command, args }),
+  });
+  const result = await response.json();
+  return buildCliOutputText(result);
+}
+
+async function explainTaskRequest(taskId: string): Promise<string> {
+  const response = await fetch(`/api/swarm/explain/${taskId}`);
+  const result = await response.json();
+  return result.success
+    ? (result.explanation || '(no explanation available)')
+    : `❌ Error: ${result.error || 'Failed to get explanation'}`;
+}
+
+interface ActiveTaskCardProps {
+  task: TaskLog;
+  isSelected: boolean;
+  isExpanded: boolean;
+  onSelect: (id: string) => void;
+  onToggleExpand: (id: string) => void;
+  onKill: (id: string) => void;
+  onRestart: (id: string) => void;
+  onViewLog: (id: string) => void;
+  onOpenTerminal: (id: string) => void;
+}
+
+function ActiveTaskCard({
+  task,
+  isSelected,
+  isExpanded,
+  onSelect,
+  onToggleExpand,
+  onKill,
+  onRestart,
+  onViewLog,
+  onOpenTerminal,
+}: Readonly<ActiveTaskCardProps>) {
+  const heartbeat = getHeartbeatStatus(task.heartbeatAge);
+  return (
+    <div className={`rounded-lg border transition-all ${getTaskCardStyle(task, isSelected)}`}>
+      <div className="p-3">
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            className="flex items-center gap-2 text-left flex-1"
+            onClick={() => onSelect(task.taskId)}
+          >
+            <div
+              className={`w-2 h-2 rounded-full ${heartbeat.bgColor} ${heartbeat.isAlive ? 'animate-pulse' : ''}`}
+            />
+            <span className="font-medium">{task.taskId}</span>
+            {task.status === 'stuck' && (
+              <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded">STUCK</span>
+            )}
+            {task.status === 'needs_human' && (
+              <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded">NEEDS REVIEW</span>
+            )}
+          </button>
+          <button type="button" className="p-1 hover:bg-gray-700 rounded" onClick={() => onToggleExpand(task.taskId)}>
+            {isExpanded ? <Icon name="expand_less" size="sm" /> : <Icon name="expand_more" size="sm" />}
+          </button>
+        </div>
+        <div className="mt-2 text-sm text-gray-400">{task.phase}</div>
+        <div className="mt-2 flex items-center gap-4 text-xs">
+          <div className={`flex items-center gap-1 ${heartbeat.color}`}>
+            <Icon name="favorite" size="xs" />
+            <span>{heartbeat.label}</span>
+          </div>
+          {task.attempt > 1 && <span className="text-orange-400">Attempt {task.attempt}</span>}
+        </div>
+      </div>
+      {isExpanded && (
+        <div className="border-t border-gray-700 p-3">
+          <div className="flex flex-wrap gap-2 mb-3">
+            <button type="button" onClick={() => onOpenTerminal(task.taskId)} className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-green-600 hover:bg-green-700 rounded transition-colors">
+              <Icon name="terminal" size="xs" /> Terminal
+            </button>
+            <button type="button" onClick={() => onViewLog(task.taskId)} className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 rounded transition-colors">
+              <Icon name="visibility" size="xs" /> Full Log
+            </button>
+            <button type="button" onClick={() => onRestart(task.taskId)} className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-yellow-600 hover:bg-yellow-700 rounded transition-colors">
+              <Icon name="refresh" size="xs" /> Restart
+            </button>
+            <button type="button" onClick={() => onKill(task.taskId)} className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-red-600 hover:bg-red-700 rounded transition-colors">
+              <Icon name="close" size="xs" /> Kill
+            </button>
+          </div>
+          {task.recentActivity && task.recentActivity.length > 0 && (
+            <div>
+              <div className="text-xs text-gray-500 mb-2">Recent Activity</div>
+              <div className="space-y-1 max-h-32 overflow-y-auto text-xs font-mono bg-gray-900 rounded p-2">
+                {task.recentActivity.slice(-5).map((activity, idx) => (
+                  <div key={`${task.taskId}-activity-${idx}`} className="text-gray-400">{activity}</div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface SwarmHeaderProps {
+  isConnected: boolean;
+  isLoading: boolean;
+  health: SwarmHealth | null;
+  activeCount: number;
+  maxAgents: number;
+  isStarting: boolean;
+  isStopping: boolean;
+  showSettings: boolean;
+  maxConcurrent: number;
+  pollInterval: number;
+  onRefresh: () => void;
+  onToggleSettings: () => void;
+  onStartSwarm: () => void;
+  onStopSwarm: () => void;
+  onSetMaxConcurrent: (v: number) => void;
+  onSetPollInterval: (v: number) => void;
+}
+
+function SwarmHeader({
+  isConnected, isLoading, health, activeCount, maxAgents,
+  isStarting, isStopping, showSettings, maxConcurrent, pollInterval,
+  onRefresh, onToggleSettings, onStartSwarm, onStopSwarm,
+  onSetMaxConcurrent, onSetPollInterval,
+}: Readonly<SwarmHeaderProps>) {
+  return (
+    <header className="bg-gray-800 border-b border-gray-700 sticky top-0 z-50">
+      <div className="max-w-full mx-auto px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+              <Icon name="home" size="lg" />
+            </Link>
+            <div className="flex items-center gap-2">
+              <Icon name="dns" size="xl" className="text-blue-500" />
+              <h1 className="text-xl font-bold">Swarm Control Center</h1>
+            </div>
+            <div className="flex items-center gap-2 ml-4">
+              {isConnected ? (
+                <div className="flex items-center gap-1 text-green-400"><Icon name="wifi" size="sm" /><span className="text-sm">Connected</span></div>
+              ) : (
+                <div className="flex items-center gap-1 text-red-400"><Icon name="wifi_off" size="sm" /><span className="text-sm">Disconnected</span></div>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 bg-gray-700 px-3 py-1.5 rounded-lg">
+              <Icon name="memory" size="sm" className="text-blue-400" />
+              <span className="text-sm font-medium">{activeCount} / {maxAgents} Agents</span>
+              <div className="w-20 h-2 bg-gray-600 rounded-full overflow-hidden">
+                <div className={`h-full transition-all ${getCapacityBarColor(activeCount, maxAgents)}`} style={{ width: `${(activeCount / maxAgents) * 100}%` }} />
+              </div>
+            </div>
+            {health?.recent_claude_errors !== undefined && health.recent_claude_errors > 0 && (
+              <div className="flex items-center gap-1 bg-red-900/50 text-red-400 px-3 py-1.5 rounded-lg">
+                <Icon name="warning" size="sm" />
+                <span className="text-sm">{health.recent_claude_errors} Claude errors</span>
+              </div>
+            )}
+            <button onClick={onRefresh} disabled={isLoading} className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors" title="Refresh">
+              <Icon name="refresh" size="sm" className={isLoading ? 'animate-spin' : ''} />
+            </button>
+            <button onClick={onToggleSettings} className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors" title="Settings">
+              <Icon name="settings" size="sm" />
+            </button>
+          </div>
+        </div>
+        <div className="mt-3 flex items-center justify-between">
+          <div className="flex items-center gap-6 text-sm">
+            <div className="flex items-center gap-2">
+              <label htmlFor="poll-interval" className="text-gray-400">Poll Interval:</label>
+              <select id="poll-interval" value={pollInterval} onChange={(e) => onSetPollInterval(Number(e.target.value))} className="bg-gray-700 text-white px-2 py-1 rounded text-sm border border-gray-600">
+                <option value={1000}>1s</option><option value={3000}>3s</option><option value={5000}>5s</option><option value={10000}>10s</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400">Watchdog Threshold:</span>
+              <span className="text-white font-medium">{health?.watchdog_threshold ? `${Math.floor(health.watchdog_threshold / 60)}m` : '15m'}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {activeCount === 0 ? (
+              <button onClick={onStartSwarm} disabled={isStarting} className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-medium rounded-lg transition-colors">
+                <Icon name="play_arrow" size="sm" className={isStarting ? 'animate-pulse' : ''} />
+                {isStarting ? 'Starting...' : 'Start Swarm'}
+              </button>
+            ) : (
+              <button onClick={onStopSwarm} disabled={isStopping} className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white font-medium rounded-lg transition-colors">
+                <Icon name="stop" size="sm" className={isStopping ? 'animate-pulse' : ''} />
+                {isStopping ? 'Stopping...' : 'Stop Swarm'}
+              </button>
+            )}
+          </div>
+        </div>
+        {showSettings && (
+          <div className="mt-3 p-4 bg-gray-700 rounded-lg">
+            <div className="flex items-center gap-6 text-sm">
+              <div className="flex items-center gap-2">
+                <label htmlFor="max-concurrent" className="text-gray-400">Max Concurrent Agents:</label>
+                <select id="max-concurrent" value={maxConcurrent} onChange={(e) => onSetMaxConcurrent(Number(e.target.value))} className="bg-gray-600 text-white px-2 py-1 rounded text-sm border border-gray-500">
+                  <option value={1}>1</option><option value={2}>2</option><option value={3}>3</option>
+                  <option value={4}>4</option><option value={6}>6</option><option value={8}>8</option>
+                </select>
+              </div>
+              <span className="text-xs text-gray-500">(Applied on next Start)</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+}
+
+interface PendingQuestionsSectionProps {
+  pendingQuestions: TaskQuestions[];
+  showQuestionsPanel: boolean;
+  questionAnswers: Record<string, Record<number, string>>;
+  isSubmittingAnswers: string | null;
+  onTogglePanel: () => void;
+  onUpdateAnswer: (taskId: string, questionId: number, answer: string) => void;
+  onSubmitAnswers: (taskId: string) => void;
+}
+
+function PendingQuestionsSection({
+  pendingQuestions,
+  showQuestionsPanel,
+  questionAnswers,
+  isSubmittingAnswers,
+  onTogglePanel,
+  onUpdateAnswer,
+  onSubmitAnswers,
+}: Readonly<PendingQuestionsSectionProps>) {
+  if (pendingQuestions.length === 0) return null;
+  return (
+    <div className="border-b border-gray-700 p-4">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-semibold flex items-center gap-2">
+          <Icon name="contact_support" size="lg" className="text-purple-400" />
+          Agent Questions ({pendingQuestions.reduce((acc, t) => acc + t.questions.length, 0)})
+        </h2>
+        <button type="button" onClick={onTogglePanel} className="text-xs text-gray-400 hover:text-white">
+          {showQuestionsPanel ? 'Hide' : 'Show'}
+        </button>
+      </div>
+      {showQuestionsPanel && (
+        <div className="space-y-4 max-h-[400px] overflow-y-auto">
+          {pendingQuestions.map((task) => (
+            <div key={task.taskId} className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-medium text-purple-300">{task.taskId}</span>
+                <span className="text-xs text-gray-400">{task.source === 'spec' ? 'Specification' : 'Planning'} phase</span>
+              </div>
+              <div className="space-y-3">
+                {task.questions.map((q) => (
+                  <div key={q.id} className="bg-gray-800/50 rounded p-2">
+                    <div className="flex items-start gap-2 mb-2">
+                      <span className={`text-xs px-2 py-0.5 rounded ${getQuestionTypeBadgeClass(q.type)}`}>{q.type}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded ${getQuestionPriorityBadgeClass(q.priority)}`}>{q.priority}</span>
+                    </div>
+                    <p className="text-sm text-gray-200 mb-2">{q.question}</p>
+                    {q.context && (
+                      <p className="text-xs text-gray-500 mb-2"><span className="text-gray-400">Context:</span> {q.context}</p>
+                    )}
+                    {q.answer ? (
+                      <div className="flex items-center gap-2 text-xs text-green-400">
+                        <Icon name="check_circle" size="xs" /><span>Answered</span>
+                      </div>
+                    ) : (
+                      <textarea
+                        placeholder="Type your answer..."
+                        value={questionAnswers[task.taskId]?.[q.id] || ''}
+                        onChange={(e) => onUpdateAnswer(task.taskId, q.id, e.target.value)}
+                        className="w-full px-2 py-1.5 text-sm bg-gray-900 border border-gray-600 rounded focus:border-purple-500 focus:outline-none resize-none"
+                        rows={2}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => onSubmitAnswers(task.taskId)}
+                  disabled={
+                    isSubmittingAnswers === task.taskId ||
+                    !questionAnswers[task.taskId] ||
+                    Object.keys(questionAnswers[task.taskId] || {}).length === 0
+                  }
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded transition-colors"
+                >
+                  <Icon name="send" size="sm" />
+                  {isSubmittingAnswers === task.taskId ? 'Submitting...' : 'Submit Answers'}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SwarmPageContent() {
   const searchParams = useSearchParams();
   const taskFromUrl = searchParams.get('task');
   const [health, setHealth] = useState<SwarmHealth | null>(null);
@@ -208,90 +651,41 @@ function SwarmPageContent() { // NOSONAR typescript:S3776
 
   // Fetch swarm status
   const fetchStatus = useCallback(async () => {
-    try {
-      const [healthRes, tasksRes] = await Promise.all([
-        fetch('/api/swarm/health'),
-        fetch('/api/swarm/active-tasks'),
-      ]);
-
-      if (healthRes.ok) {
-        const data = await healthRes.json();
-        setHealth(data);
-        setIsConnected(true);
-      }
-
-      if (tasksRes.ok) {
-        const data = await tasksRes.json();
-        setActiveTasks(data);
-
-        // Parse recent activity into log entries and keep last 500
-        const newEntries = buildLogEntries(data);
+    fetchSwarmStatus()
+      .then(({ health, tasks, connected }) => {
+        setIsConnected(connected);
+        setHealth(health);
+        setActiveTasks(tasks ?? []);
+        const newEntries = buildLogEntries(tasks ?? []);
         setLogEntries((prev) => [...prev, ...newEntries].slice(-500));
-      }
-    } catch (error) {
-      console.error('Failed to fetch swarm status:', error);
-      setIsConnected(false);
-    } finally {
-      setIsLoading(false);
-    }
+      })
+      .catch((error) => {
+        console.error('Failed to fetch swarm status:', error);
+        setIsConnected(false);
+      })
+      .finally(() => setIsLoading(false));
   }, []);
 
   // Fetch pending questions
   const fetchQuestions = useCallback(async () => {
-    try {
-      const response = await fetch('/api/swarm/questions');
-      if (response.ok) {
-        const data = await response.json();
-        setPendingQuestions(data.tasks || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch questions:', error);
-    }
+    fetchPendingQuestions()
+      .then((tasks) => setPendingQuestions(tasks))
+      .catch((error) => console.error('Failed to fetch questions:', error));
   }, []);
 
+  const clearTaskAnswers = (taskId: string) => {
+    setQuestionAnswers((prev) => { const next = { ...prev }; delete next[taskId]; return next; });
+  };
+
   // Submit answers to questions
-  const submitAnswers = async (taskId: string) => {
+  const submitAnswers = (taskId: string) => {
     const answers = questionAnswers[taskId];
     if (!answers) return;
-
-    const answersList = Object.entries(answers).map(([qId, answer]) => ({
-      questionId: Number.parseInt(qId, 10),
-      answer,
-    }));
-
-    if (answersList.length === 0) {
-      alert('Please provide at least one answer');
-      return;
-    }
-
     setIsSubmittingAnswers(taskId);
-    try {
-      const response = await fetch(`/api/swarm/questions/${taskId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers: answersList }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        alert(result.message);
-        // Clear answers for this task
-        setQuestionAnswers((prev) => {
-          const next = { ...prev };
-          delete next[taskId];
-          return next;
-        });
-        // Refresh questions
-        fetchQuestions();
-      } else {
-        alert(`Error: ${result.error}`);
-      }
-    } catch (error) {
-      alert(`Failed to submit answers: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setIsSubmittingAnswers(null);
-    }
+    submitAnswersRequest(taskId, answers)
+      .then((result) => applySubmitAnswersResult(result, taskId, clearTaskAnswers, fetchQuestions))
+      .catch((error: unknown) => alert(`Failed to submit answers: ${error instanceof Error ? error.message : String(error)}`))
+      .finally(() => setIsSubmittingAnswers(null));
   };
 
   // Update answer for a question
@@ -331,24 +725,18 @@ function SwarmPageContent() { // NOSONAR typescript:S3776
   }, [logEntries, autoScroll]);
 
   // Task actions
-  const handleKillTask = async (taskId: string) => {
+  const handleKillTask = (taskId: string) => {
     if (!confirm(`Kill agent working on ${taskId}?`)) return;
-    try {
-      await fetch(`/api/swarm/kill-task/${taskId}`, { method: 'POST' });
-      fetchStatus();
-    } catch (error) {
-      console.error('Failed to kill task:', error);
-    }
+    killTaskRequest(taskId)
+      .then(() => fetchStatus())
+      .catch((error) => console.error('Failed to kill task:', error));
   };
 
-  const handleRestartTask = async (taskId: string) => {
+  const handleRestartTask = (taskId: string) => {
     if (!confirm(`Restart ${taskId}?`)) return;
-    try {
-      await fetch(`/api/swarm/restart-task/${taskId}`, { method: 'POST' });
-      fetchStatus();
-    } catch (error) {
-      console.error('Failed to restart task:', error);
-    }
+    restartTaskRequest(taskId)
+      .then(() => fetchStatus())
+      .catch((error) => console.error('Failed to restart task:', error));
   };
 
   const handleViewLog = (taskId: string) => {
@@ -360,125 +748,73 @@ function SwarmPageContent() { // NOSONAR typescript:S3776
   };
 
   // Start swarm manager
-  const handleStartSwarm = async () => {
+  const handleStartSwarm = () => {
     if (!confirm('Start the Swarm Manager? This will begin processing pending tasks.')) return;
     setIsStarting(true);
-    try {
-      const response = await fetch('/api/swarm/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          maxConcurrent,
-          watchdogThreshold: health?.watchdog_threshold || 900,
-        }),
-      });
-      const result = await response.json();
-      if (response.ok) {
-        alert(`Swarm started! PID: ${result.pid}`);
-        fetchStatus();
-      } else {
-        alert(`Failed to start swarm: ${result.error}`);
-      }
-    } catch (error) {
-      console.error('Failed to start swarm:', error);
-      alert('Error starting swarm');
-    } finally {
-      setIsStarting(false);
-    }
+    startSwarmRequest(maxConcurrent, health?.watchdog_threshold || 900)
+      .then((result) => applyStartSwarmResult(result, fetchStatus))
+      .catch((error) => { console.error('Failed to start swarm:', error); alert('Error starting swarm'); })
+      .finally(() => setIsStarting(false));
   };
 
   // Stop swarm manager
-  const handleStopSwarm = async () => {
+  const handleStopSwarm = () => {
     if (!confirm('Stop the Swarm Manager? Running tasks will be allowed to complete.')) return;
     setIsStopping(true);
-    try {
-      const response = await fetch('/api/swarm/stop', { method: 'POST' });
-      const result = await response.json();
-      if (response.ok) {
-        alert('Swarm stop signal sent');
-        fetchStatus();
-      } else {
-        alert(`Failed to stop swarm: ${result.error}`);
-      }
-    } catch (error) {
-      console.error('Failed to stop swarm:', error);
-      alert('Error stopping swarm');
-    } finally {
-      setIsStopping(false);
+    stopSwarmRequest()
+      .then((result) => applyStopSwarmResult(result, fetchStatus))
+      .catch((error) => { console.error('Failed to stop swarm:', error); alert('Error stopping swarm'); })
+      .finally(() => setIsStopping(false));
+  };
+
+  const scrollCliToBottom = () => {
+    if (cliOutputRef.current) {
+      cliOutputRef.current.scrollTop = cliOutputRef.current.scrollHeight;
     }
   };
 
   // Execute CLI command (supports "command arg1 arg2" format)
-  const runCliCommand = async (commandWithArgs: string) => {
+  const runCliCommand = (commandWithArgs: string) => {
     setIsRunningCli(true);
     setCliCommand(commandWithArgs);
     setCliOutput(`Running "${commandWithArgs}"... (may take up to 90s for slow commands)`);
-
-    // Parse command and arguments
-    const parts = commandWithArgs.trim().split(/\s+/);
-    const command = parts[0];
-    const args = parts.slice(1);
-
-    try {
-      const response = await fetch('/api/swarm/cli', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ command, args }),
+    runCliRequest(commandWithArgs)
+      .then((output) => setCliOutput(output))
+      .catch((error: unknown) =>
+        setCliOutput(
+          `❌ Failed to run command: ${error instanceof Error ? error.message : String(error)}`
+        )
+      )
+      .finally(() => {
+        setIsRunningCli(false);
+        scrollCliToBottom();
       });
-      const result = await response.json();
-
-      setCliOutput(buildCliOutputText(result));
-    } catch (error) {
-      setCliOutput(`❌ Failed to run command: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setIsRunningCli(false);
-      // Scroll to bottom of CLI output
-      if (cliOutputRef.current) {
-        cliOutputRef.current.scrollTop = cliOutputRef.current.scrollHeight;
-      }
-    }
   };
 
   // Explain a specific task
-  const explainTask = async (taskId: string) => {
+  const explainTask = (taskId: string) => {
     if (!taskId.trim()) {
       setCliOutput('❌ Please enter a task ID');
       return;
     }
-
     setIsRunningCli(true);
     setCliCommand(`explain ${taskId}`);
     setCliOutput(`Fetching explanation for ${taskId}...`);
-
-    try {
-      const response = await fetch(`/api/swarm/explain/${taskId}`);
-      const result = await response.json();
-
-      if (result.success) {
-        setCliOutput(result.explanation || '(no explanation available)');
-      } else {
-        setCliOutput(`❌ Error: ${result.error || 'Failed to get explanation'}`);
-      }
-    } catch (error) {
-      setCliOutput(`❌ Failed to explain task: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setIsRunningCli(false);
-      if (cliOutputRef.current) {
-        cliOutputRef.current.scrollTop = cliOutputRef.current.scrollHeight;
-      }
-    }
+    explainTaskRequest(taskId)
+      .then((output) => setCliOutput(output))
+      .catch((error: unknown) =>
+        setCliOutput(
+          `❌ Failed to explain task: ${error instanceof Error ? error.message : String(error)}`
+        )
+      )
+      .finally(() => {
+        setIsRunningCli(false);
+        scrollCliToBottom();
+      });
   };
 
   const toggleTaskExpanded = (taskId: string) => {
-    setExpandedTasks((prev) => {
-      const next = new Set(prev);
-      if (next.has(taskId)) {
-        next.delete(taskId);
-      } else {
-        next.add(taskId);
-      }
-      return next;
-    });
+    setExpandedTasks((prev) => toggleSetMembership(prev, taskId));
   };
 
   const maxAgents = health?.max || 4;
@@ -487,160 +823,24 @@ function SwarmPageContent() { // NOSONAR typescript:S3776
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700 sticky top-0 z-50">
-        <div className="max-w-full mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link
-                href="/"
-                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
-              >
-                <Icon name="home" size="lg" />
-              </Link>
-              <div className="flex items-center gap-2">
-                <Icon name="dns" size="xl" className="text-blue-500" />
-                <h1 className="text-xl font-bold">Swarm Control Center</h1>
-              </div>
-              <div className="flex items-center gap-2 ml-4">
-                {isConnected ? (
-                  <div className="flex items-center gap-1 text-green-400">
-                    <Icon name="wifi" size="sm" />
-                    <span className="text-sm">Connected</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1 text-red-400">
-                    <Icon name="wifi_off" size="sm" />
-                    <span className="text-sm">Disconnected</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              {/* Agent Capacity Mini */}
-              <div className="flex items-center gap-2 bg-gray-700 px-3 py-1.5 rounded-lg">
-                <Icon name="memory" size="sm" className="text-blue-400" />
-                <span className="text-sm font-medium">
-                  {activeCount} / {maxAgents} Agents
-                </span>
-                <div className="w-20 h-2 bg-gray-600 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full transition-all ${getCapacityBarColor(activeCount, maxAgents)}`}
-                    style={{ width: `${(activeCount / maxAgents) * 100}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Claude Errors */}
-              {health?.recent_claude_errors !== undefined && health.recent_claude_errors > 0 && (
-                <div className="flex items-center gap-1 bg-red-900/50 text-red-400 px-3 py-1.5 rounded-lg">
-                  <Icon name="warning" size="sm" />
-                  <span className="text-sm">{health.recent_claude_errors} Claude errors</span>
-                </div>
-              )}
-
-              {/* Refresh */}
-              <button
-                onClick={fetchStatus}
-                disabled={isLoading}
-                className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-                title="Refresh"
-              >
-                <Icon name="refresh" size="sm" className={isLoading ? 'animate-spin' : ''} />
-              </button>
-
-              {/* Settings */}
-              <button
-                onClick={() => setShowSettings(!showSettings)}
-                className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-                title="Settings"
-              >
-                <Icon name="settings" size="sm" />
-              </button>
-            </div>
-          </div>
-
-          {/* Config Bar - Always visible */}
-          <div className="mt-3 flex items-center justify-between">
-            <div className="flex items-center gap-6 text-sm">
-              <div className="flex items-center gap-2">
-                <label htmlFor="poll-interval" className="text-gray-400">
-                  Poll Interval:
-                </label>
-                <select
-                  id="poll-interval"
-                  value={pollInterval}
-                  onChange={(e) => setPollInterval(Number(e.target.value))}
-                  className="bg-gray-700 text-white px-2 py-1 rounded text-sm border border-gray-600"
-                >
-                  <option value={1000}>1s</option>
-                  <option value={3000}>3s</option>
-                  <option value={5000}>5s</option>
-                  <option value={10000}>10s</option>
-                </select>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400">Watchdog Threshold:</span>
-                <span className="text-white font-medium">
-                  {health?.watchdog_threshold
-                    ? `${Math.floor(health.watchdog_threshold / 60)}m`
-                    : '15m'}
-                </span>
-              </div>
-            </div>
-
-            {/* Start/Stop Buttons */}
-            <div className="flex items-center gap-2">
-              {activeCount === 0 ? (
-                <button
-                  onClick={handleStartSwarm}
-                  disabled={isStarting}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-medium rounded-lg transition-colors"
-                >
-                  <Icon name="play_arrow" size="sm" className={isStarting ? 'animate-pulse' : ''} />
-                  {isStarting ? 'Starting...' : 'Start Swarm'}
-                </button>
-              ) : (
-                <button
-                  onClick={handleStopSwarm}
-                  disabled={isStopping}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white font-medium rounded-lg transition-colors"
-                >
-                  <Icon name="stop" size="sm" className={isStopping ? 'animate-pulse' : ''} />
-                  {isStopping ? 'Stopping...' : 'Stop Swarm'}
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Settings Panel - Max concurrent config */}
-          {showSettings && (
-            <div className="mt-3 p-4 bg-gray-700 rounded-lg">
-              <div className="flex items-center gap-6 text-sm">
-                <div className="flex items-center gap-2">
-                  <label htmlFor="max-concurrent" className="text-gray-400">
-                    Max Concurrent Agents:
-                  </label>
-                  <select
-                    id="max-concurrent"
-                    value={maxConcurrent}
-                    onChange={(e) => setMaxConcurrent(Number(e.target.value))}
-                    className="bg-gray-600 text-white px-2 py-1 rounded text-sm border border-gray-500"
-                  >
-                    <option value={1}>1</option>
-                    <option value={2}>2</option>
-                    <option value={3}>3</option>
-                    <option value={4}>4</option>
-                    <option value={6}>6</option>
-                    <option value={8}>8</option>
-                  </select>
-                </div>
-                <span className="text-xs text-gray-500">(Applied on next Start)</span>
-              </div>
-            </div>
-          )}
-        </div>
-      </header>
+      <SwarmHeader
+        isConnected={isConnected}
+        isLoading={isLoading}
+        health={health}
+        activeCount={activeCount}
+        maxAgents={maxAgents}
+        isStarting={isStarting}
+        isStopping={isStopping}
+        showSettings={showSettings}
+        maxConcurrent={maxConcurrent}
+        pollInterval={pollInterval}
+        onRefresh={fetchStatus}
+        onToggleSettings={() => setShowSettings(!showSettings)}
+        onStartSwarm={handleStartSwarm}
+        onStopSwarm={handleStopSwarm}
+        onSetMaxConcurrent={setMaxConcurrent}
+        onSetPollInterval={setPollInterval}
+      />
 
       {/* Main Content */}
       <div className="flex h-[calc(100vh-64px)]">
@@ -762,100 +962,15 @@ function SwarmPageContent() { // NOSONAR typescript:S3776
           </div>
 
           {/* Pending Questions Section */}
-          {pendingQuestions.length > 0 && (
-            <div className="border-b border-gray-700 p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <Icon name="contact_support" size="lg" className="text-purple-400" />
-                  Agent Questions (
-                  {pendingQuestions.reduce((acc, t) => acc + t.questions.length, 0)})
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setShowQuestionsPanel(!showQuestionsPanel)}
-                  className="text-xs text-gray-400 hover:text-white"
-                >
-                  {showQuestionsPanel ? 'Hide' : 'Show'}
-                </button>
-              </div>
-
-              {showQuestionsPanel && (
-                <div className="space-y-4 max-h-[400px] overflow-y-auto">
-                  {pendingQuestions.map((task) => (
-                    <div
-                      key={task.taskId}
-                      className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-3"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-purple-300">{task.taskId}</span>
-                        <span className="text-xs text-gray-400">
-                          {task.source === 'spec' ? 'Specification' : 'Planning'} phase
-                        </span>
-                      </div>
-
-                      <div className="space-y-3">
-                        {task.questions.map((q) => (
-                          <div key={q.id} className="bg-gray-800/50 rounded p-2">
-                            <div className="flex items-start gap-2 mb-2">
-                              <span
-                                className={`text-xs px-2 py-0.5 rounded ${getQuestionTypeBadgeClass(q.type)}`}
-                              >
-                                {q.type}
-                              </span>
-                              <span
-                                className={`text-xs px-2 py-0.5 rounded ${getQuestionPriorityBadgeClass(q.priority)}`}
-                              >
-                                {q.priority}
-                              </span>
-                            </div>
-
-                            <p className="text-sm text-gray-200 mb-2">{q.question}</p>
-
-                            {q.context && (
-                              <p className="text-xs text-gray-500 mb-2">
-                                <span className="text-gray-400">Context:</span>{' '}{q.context}
-                              </p>
-                            )}
-
-                            {q.answer ? (
-                              <div className="flex items-center gap-2 text-xs text-green-400">
-                                <Icon name="check_circle" size="xs" />
-                                <span>Answered</span>
-                              </div>
-                            ) : (
-                              <textarea
-                                placeholder="Type your answer..."
-                                value={questionAnswers[task.taskId]?.[q.id] || ''}
-                                onChange={(e) => updateAnswer(task.taskId, q.id, e.target.value)}
-                                className="w-full px-2 py-1.5 text-sm bg-gray-900 border border-gray-600 rounded focus:border-purple-500 focus:outline-none resize-none"
-                                rows={2}
-                              />
-                            )}
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="mt-3 flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => submitAnswers(task.taskId)}
-                          disabled={
-                            isSubmittingAnswers === task.taskId ||
-                            !questionAnswers[task.taskId] ||
-                            Object.keys(questionAnswers[task.taskId] || {}).length === 0
-                          }
-                          className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded transition-colors"
-                        >
-                          <Icon name="send" size="sm" />
-                          {isSubmittingAnswers === task.taskId ? 'Submitting...' : 'Submit Answers'}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          <PendingQuestionsSection
+            pendingQuestions={pendingQuestions}
+            showQuestionsPanel={showQuestionsPanel}
+            questionAnswers={questionAnswers}
+            isSubmittingAnswers={isSubmittingAnswers}
+            onTogglePanel={() => setShowQuestionsPanel(!showQuestionsPanel)}
+            onUpdateAnswer={updateAnswer}
+            onSubmitAnswers={submitAnswers}
+          />
 
           {/* Active Tasks Section */}
           <div className="flex-1 overflow-y-auto p-4">
@@ -874,129 +989,20 @@ function SwarmPageContent() { // NOSONAR typescript:S3776
               </div>
             ) : (
               <div className="space-y-3">
-                {activeTasks.map((task) => {
-                  const heartbeat = getHeartbeatStatus(task.heartbeatAge);
-                  const isExpanded = expandedTasks.has(task.taskId);
-                  const isSelected = selectedTask === task.taskId;
-
-                  return (
-                    <div
-                      key={task.taskId}
-                      className={`rounded-lg border transition-all ${getTaskCardStyle(task, isSelected)}`}
-                    >
-                      {/* Task Header */}
-                      <div className="p-3">
-                        <div className="flex items-center justify-between">
-                          <button
-                            type="button"
-                            className="flex items-center gap-2 text-left flex-1"
-                            onClick={() => setSelectedTask(task.taskId)}
-                          >
-                            <div
-                              className={`w-2 h-2 rounded-full ${heartbeat.bgColor} ${
-                                heartbeat.isAlive ? 'animate-pulse' : ''
-                              }`}
-                            />
-                            <span className="font-medium">{task.taskId}</span>
-                            {task.status === 'stuck' && (
-                              <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded">
-                                STUCK
-                              </span>
-                            )}
-                            {task.status === 'needs_human' && (
-                              <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded">
-                                NEEDS REVIEW
-                              </span>
-                            )}
-                          </button>
-                          <button
-                            type="button"
-                            className="p-1 hover:bg-gray-700 rounded"
-                            onClick={() => toggleTaskExpanded(task.taskId)}
-                          >
-                            {isExpanded ? (
-                              <Icon name="expand_less" size="sm" />
-                            ) : (
-                              <Icon name="expand_more" size="sm" />
-                            )}
-                          </button>
-                        </div>
-
-                        {/* Phase */}
-                        <div className="mt-2 text-sm text-gray-400">{task.phase}</div>
-
-                        {/* Heartbeat and Attempt */}
-                        <div className="mt-2 flex items-center gap-4 text-xs">
-                          <div className={`flex items-center gap-1 ${heartbeat.color}`}>
-                            <Icon name="favorite" size="xs" />
-                            <span>{heartbeat.label}</span>
-                          </div>
-                          {task.attempt > 1 && (
-                            <span className="text-orange-400">Attempt {task.attempt}</span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Expanded Content - Outside the button */}
-                      {isExpanded && (
-                        <div className="border-t border-gray-700 p-3">
-                          {/* Actions */}
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            <button
-                              type="button"
-                              onClick={() => handleOpenTerminal(task.taskId)}
-                              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-green-600 hover:bg-green-700 rounded transition-colors"
-                            >
-                              <Icon name="terminal" size="xs" />
-                              Terminal
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleViewLog(task.taskId)}
-                              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 rounded transition-colors"
-                            >
-                              <Icon name="visibility" size="xs" />
-                              Full Log
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleRestartTask(task.taskId)}
-                              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-yellow-600 hover:bg-yellow-700 rounded transition-colors"
-                            >
-                              <Icon name="refresh" size="xs" />
-                              Restart
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleKillTask(task.taskId)}
-                              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-red-600 hover:bg-red-700 rounded transition-colors"
-                            >
-                              <Icon name="close" size="xs" />
-                              Kill
-                            </button>
-                          </div>
-
-                          {/* Recent Activity */}
-                          {task.recentActivity && task.recentActivity.length > 0 && (
-                            <div>
-                              <div className="text-xs text-gray-500 mb-2">Recent Activity</div>
-                              <div className="space-y-1 max-h-32 overflow-y-auto text-xs font-mono bg-gray-900 rounded p-2">
-                                {task.recentActivity.slice(-5).map((activity, idx) => (
-                                  <div
-                                    key={`${task.taskId}-activity-${idx}`}
-                                    className="text-gray-400"
-                                  >
-                                    {activity}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                {activeTasks.map((task) => (
+                  <ActiveTaskCard
+                    key={task.taskId}
+                    task={task}
+                    isSelected={selectedTask === task.taskId}
+                    isExpanded={expandedTasks.has(task.taskId)}
+                    onSelect={setSelectedTask}
+                    onToggleExpand={toggleTaskExpanded}
+                    onKill={handleKillTask}
+                    onRestart={handleRestartTask}
+                    onViewLog={handleViewLog}
+                    onOpenTerminal={handleOpenTerminal}
+                  />
+                ))}
               </div>
             )}
           </div>

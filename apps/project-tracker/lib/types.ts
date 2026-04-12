@@ -583,6 +583,11 @@ export interface CoverageMetrics {
   functions: { pct: number; covered: number; total: number; met: boolean };
   statements?: { pct: number; covered: number; total: number; met: boolean };
   overall: { pct: number; met: boolean };
+  scope?: {
+    source: 'task-files' | 'attestation-kpis';
+    matchedFiles?: number;
+    requestedFiles?: number;
+  };
 }
 
 /**
