@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-04-11T21:44:08.116Z",
+  "timestamp": "2026-04-12T23:48:46.796Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,11 +1015,23 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 25,
-    "total_endpoints": 232,
-    "total_queries": 110,
-    "total_mutations": 122,
+    "total_routers": 49,
+    "total_endpoints": 468,
+    "total_queries": 227,
+    "total_mutations": 241,
     "routers": [
+      {
+        "name": "contact",
+        "endpoints": 20,
+        "queries": 7,
+        "mutations": 13
+      },
+      {
+        "name": "lead",
+        "endpoints": 20,
+        "queries": 6,
+        "mutations": 14
+      },
       {
         "name": "appointments",
         "endpoints": 19,
@@ -1027,22 +1039,40 @@
         "mutations": 12
       },
       {
-        "name": "lead",
-        "endpoints": 17,
-        "queries": 6,
+        "name": "auth",
+        "endpoints": 18,
+        "queries": 3,
+        "mutations": 15
+      },
+      {
+        "name": "billing",
+        "endpoints": 18,
+        "queries": 7,
         "mutations": 11
       },
       {
         "name": "documents",
-        "endpoints": 17,
-        "queries": 3,
+        "endpoints": 18,
+        "queries": 4,
         "mutations": 14
       },
       {
-        "name": "auth",
+        "name": "inbound",
+        "endpoints": 17,
+        "queries": 10,
+        "mutations": 7
+      },
+      {
+        "name": "ticket",
+        "endpoints": 16,
+        "queries": 5,
+        "mutations": 11
+      },
+      {
+        "name": "chainVersion",
         "endpoints": 15,
-        "queries": 2,
-        "mutations": 13
+        "queries": 9,
+        "mutations": 6
       },
       {
         "name": "experiment",
@@ -1051,16 +1081,34 @@
         "mutations": 10
       },
       {
-        "name": "chainVersion",
-        "endpoints": 14,
-        "queries": 8,
+        "name": "opportunity",
+        "endpoints": 15,
+        "queries": 9,
         "mutations": 6
       },
       {
-        "name": "contact",
+        "name": "account",
         "endpoints": 14,
-        "queries": 6,
-        "mutations": 8
+        "queries": 9,
+        "mutations": 5
+      },
+      {
+        "name": "analytics",
+        "endpoints": 14,
+        "queries": 14,
+        "mutations": 0
+      },
+      {
+        "name": "autoresponse",
+        "endpoints": 14,
+        "queries": 4,
+        "mutations": 10
+      },
+      {
+        "name": "task",
+        "endpoints": 14,
+        "queries": 5,
+        "mutations": 9
       },
       {
         "name": "conversation",
@@ -1069,15 +1117,45 @@
         "mutations": 8
       },
       {
-        "name": "ticket",
+        "name": "routing",
         "endpoints": 13,
-        "queries": 4,
-        "mutations": 9
+        "queries": 6,
+        "mutations": 7
       },
       {
-        "name": "billing",
+        "name": "home",
+        "endpoints": 12,
+        "queries": 6,
+        "mutations": 6
+      },
+      {
+        "name": "cases",
+        "endpoints": 12,
+        "queries": 5,
+        "mutations": 7
+      },
+      {
+        "name": "aiMonitoring",
+        "endpoints": 11,
+        "queries": 9,
+        "mutations": 2
+      },
+      {
+        "name": "helpArticle",
         "endpoints": 11,
         "queries": 5,
+        "mutations": 6
+      },
+      {
+        "name": "intelligence",
+        "endpoints": 10,
+        "queries": 7,
+        "mutations": 3
+      },
+      {
+        "name": "webhooks",
+        "endpoints": 9,
+        "queries": 3,
         "mutations": 6
       },
       {
@@ -1087,34 +1165,52 @@
         "mutations": 3
       },
       {
+        "name": "aiReview",
+        "endpoints": 8,
+        "queries": 3,
+        "mutations": 5
+      },
+      {
+        "name": "leadSettings",
+        "endpoints": 8,
+        "queries": 3,
+        "mutations": 5
+      },
+      {
+        "name": "activityFeed",
+        "endpoints": 8,
+        "queries": 6,
+        "mutations": 2
+      },
+      {
         "name": "timeline",
         "endpoints": 8,
         "queries": 8,
         "mutations": 0
       },
       {
-        "name": "account",
-        "endpoints": 7,
-        "queries": 4,
-        "mutations": 3
-      },
-      {
-        "name": "opportunity",
-        "endpoints": 7,
-        "queries": 4,
-        "mutations": 3
-      },
-      {
-        "name": "task",
-        "endpoints": 7,
+        "name": "notifications",
+        "endpoints": 8,
         "queries": 3,
+        "mutations": 5
+      },
+      {
+        "name": "workflow",
+        "endpoints": 8,
+        "queries": 4,
         "mutations": 4
       },
       {
-        "name": "inbound",
+        "name": "ticketConfig",
+        "endpoints": 7,
+        "queries": 2,
+        "mutations": 5
+      },
+      {
+        "name": "queues",
         "endpoints": 6,
-        "queries": 4,
-        "mutations": 2
+        "queries": 2,
+        "mutations": 4
       },
       {
         "name": "feedback",
@@ -1132,12 +1228,6 @@
         "name": "system",
         "endpoints": 6,
         "queries": 6,
-        "mutations": 0
-      },
-      {
-        "name": "analytics",
-        "endpoints": 5,
-        "queries": 5,
         "mutations": 0
       },
       {
@@ -1159,7 +1249,55 @@
         "mutations": 0
       },
       {
+        "name": "calendar",
+        "endpoints": 4,
+        "queries": 1,
+        "mutations": 3
+      },
+      {
+        "name": "feedbackSurvey",
+        "endpoints": 4,
+        "queries": 4,
+        "mutations": 0
+      },
+      {
+        "name": "calendarWebhook",
+        "endpoints": 3,
+        "queries": 2,
+        "mutations": 1
+      },
+      {
+        "name": "subscription",
+        "endpoints": 3,
+        "queries": 2,
+        "mutations": 1
+      },
+      {
+        "name": "user",
+        "endpoints": 3,
+        "queries": 1,
+        "mutations": 2
+      },
+      {
+        "name": "zepBudget",
+        "endpoints": 3,
+        "queries": 2,
+        "mutations": 1
+      },
+      {
         "name": "upload",
+        "endpoints": 2,
+        "queries": 1,
+        "mutations": 1
+      },
+      {
+        "name": "dsar",
+        "endpoints": 2,
+        "queries": 1,
+        "mutations": 1
+      },
+      {
+        "name": "ticketRouting",
         "endpoints": 2,
         "queries": 1,
         "mutations": 1
@@ -1169,6 +1307,12 @@
         "endpoints": 1,
         "queries": 0,
         "mutations": 1
+      },
+      {
+        "name": "globalSearch",
+        "endpoints": 1,
+        "queries": 1,
+        "mutations": 0
       }
     ]
   },
@@ -2357,5 +2501,2506 @@
     "p99_response_time": null,
     "duration_seconds": 30,
     "thresholds_passed": true
+  },
+  "endpoint_catalog": {
+    "account": [
+      {
+        "name": "account.create",
+        "method": "POST",
+        "description": "Create new account",
+        "critical": true
+      },
+      {
+        "name": "account.getById",
+        "method": "GET",
+        "description": "Get account by ID",
+        "critical": true
+      },
+      {
+        "name": "account.list",
+        "method": "GET",
+        "description": "List accounts with pagination",
+        "critical": true
+      },
+      {
+        "name": "account.update",
+        "method": "POST",
+        "description": "Update account",
+        "critical": true
+      },
+      {
+        "name": "account.delete",
+        "method": "POST",
+        "description": "Delete account"
+      },
+      {
+        "name": "account.stats",
+        "method": "GET",
+        "description": "Account statistics"
+      },
+      {
+        "name": "account.filterOptions",
+        "method": "GET",
+        "description": "Get filter options"
+      },
+      {
+        "name": "account.getContacts",
+        "method": "GET",
+        "description": "Get contacts"
+      },
+      {
+        "name": "account.getOpportunities",
+        "method": "GET",
+        "description": "Get opportunities"
+      },
+      {
+        "name": "account.getActivity",
+        "method": "GET",
+        "description": "Get activity"
+      },
+      {
+        "name": "account.getHierarchy",
+        "method": "GET",
+        "description": "Get hierarchy"
+      },
+      {
+        "name": "account.setParent",
+        "method": "POST",
+        "description": "Set parent"
+      },
+      {
+        "name": "account.assignees",
+        "method": "GET",
+        "description": "Assignees"
+      },
+      {
+        "name": "account.assignOwner",
+        "method": "POST",
+        "description": "Assign owner"
+      }
+    ],
+    "queues": [
+      {
+        "name": "queues.list",
+        "method": "GET",
+        "description": "List queuess with pagination"
+      },
+      {
+        "name": "queues.getByName",
+        "method": "GET",
+        "description": "Get by name"
+      },
+      {
+        "name": "queues.pause",
+        "method": "POST",
+        "description": "Pause"
+      },
+      {
+        "name": "queues.resume",
+        "method": "POST",
+        "description": "Resume"
+      },
+      {
+        "name": "queues.retryFailed",
+        "method": "POST",
+        "description": "Retry failed"
+      },
+      {
+        "name": "queues.deleteScheduler",
+        "method": "POST",
+        "description": "Delete scheduler"
+      }
+    ],
+    "agent": [
+      {
+        "name": "agent.listTools",
+        "method": "GET",
+        "description": "List tools",
+        "critical": true
+      },
+      {
+        "name": "agent.getTool",
+        "method": "GET",
+        "description": "Get tool"
+      },
+      {
+        "name": "agent.executeTool",
+        "method": "POST",
+        "description": "Execute tool",
+        "critical": true
+      },
+      {
+        "name": "agent.getPendingApprovals",
+        "method": "GET",
+        "description": "Get pending approvals",
+        "critical": true
+      },
+      {
+        "name": "agent.getPendingAction",
+        "method": "GET",
+        "description": "Get pending action"
+      },
+      {
+        "name": "agent.approveAction",
+        "method": "POST",
+        "description": "Approve action",
+        "critical": true
+      },
+      {
+        "name": "agent.rejectAction",
+        "method": "POST",
+        "description": "Reject action"
+      },
+      {
+        "name": "agent.getPendingCount",
+        "method": "GET",
+        "description": "Get pending count"
+      }
+    ],
+    "conversation": [
+      {
+        "name": "conversation.create",
+        "method": "POST",
+        "description": "Create new conversation",
+        "critical": true
+      },
+      {
+        "name": "conversation.getById",
+        "method": "GET",
+        "description": "Get conversation by ID",
+        "critical": true
+      },
+      {
+        "name": "conversation.getBySessionId",
+        "method": "GET",
+        "description": "Get by session id"
+      },
+      {
+        "name": "conversation.search",
+        "method": "GET",
+        "description": "Search conversations"
+      },
+      {
+        "name": "conversation.addMessage",
+        "method": "POST",
+        "description": "Add message",
+        "critical": true
+      },
+      {
+        "name": "conversation.recordToolCall",
+        "method": "POST",
+        "description": "Record tool call"
+      },
+      {
+        "name": "conversation.updateToolCall",
+        "method": "POST",
+        "description": "Update tool call"
+      },
+      {
+        "name": "conversation.approveToolCall",
+        "method": "POST",
+        "description": "Approve tool call"
+      },
+      {
+        "name": "conversation.endConversation",
+        "method": "POST",
+        "description": "End conversation"
+      },
+      {
+        "name": "conversation.escalate",
+        "method": "POST",
+        "description": "Escalate"
+      },
+      {
+        "name": "conversation.getPendingApprovals",
+        "method": "GET",
+        "description": "Get pending approvals"
+      },
+      {
+        "name": "conversation.getAnalytics",
+        "method": "GET",
+        "description": "Get analytics"
+      },
+      {
+        "name": "conversation.archiveOld",
+        "method": "POST",
+        "description": "Archive old"
+      }
+    ],
+    "aiMonitoring": [
+      {
+        "name": "aiMonitoring.getStatus",
+        "method": "GET",
+        "description": "Get status"
+      },
+      {
+        "name": "aiMonitoring.getDriftMetrics",
+        "method": "GET",
+        "description": "Get drift metrics"
+      },
+      {
+        "name": "aiMonitoring.getLatencyMetrics",
+        "method": "GET",
+        "description": "Get latency metrics"
+      },
+      {
+        "name": "aiMonitoring.getLatencyTrend",
+        "method": "GET",
+        "description": "Get latency trend"
+      },
+      {
+        "name": "aiMonitoring.getHallucinationReport",
+        "method": "GET",
+        "description": "Get hallucination report"
+      },
+      {
+        "name": "aiMonitoring.getROIMetrics",
+        "method": "GET",
+        "description": "Get r o i metrics"
+      },
+      {
+        "name": "aiMonitoring.getActiveAgents",
+        "method": "GET",
+        "description": "Get active agents"
+      },
+      {
+        "name": "aiMonitoring.getAgentLogs",
+        "method": "GET",
+        "description": "Get agent logs"
+      },
+      {
+        "name": "aiMonitoring.resetAgentStatus",
+        "method": "POST",
+        "description": "Reset agent status"
+      },
+      {
+        "name": "aiMonitoring.deleteAgent",
+        "method": "POST",
+        "description": "Delete agent"
+      },
+      {
+        "name": "aiMonitoring.getFailedJobs",
+        "method": "GET",
+        "description": "Get failed jobs"
+      }
+    ],
+    "aiReview": [
+      {
+        "name": "aiReview.list",
+        "method": "GET",
+        "description": "List aiReviews with pagination"
+      },
+      {
+        "name": "aiReview.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "aiReview.claim",
+        "method": "POST",
+        "description": "Claim"
+      },
+      {
+        "name": "aiReview.approve",
+        "method": "POST",
+        "description": "Approve"
+      },
+      {
+        "name": "aiReview.reject",
+        "method": "POST",
+        "description": "Reject"
+      },
+      {
+        "name": "aiReview.escalate",
+        "method": "POST",
+        "description": "Escalate"
+      },
+      {
+        "name": "aiReview.release",
+        "method": "POST",
+        "description": "Release"
+      },
+      {
+        "name": "aiReview.stats",
+        "method": "GET",
+        "description": "AiReview statistics"
+      }
+    ],
+    "analytics": [
+      {
+        "name": "analytics.dealsWonTrend",
+        "method": "GET",
+        "description": "Deals won trend",
+        "critical": true
+      },
+      {
+        "name": "analytics.growthTrends",
+        "method": "GET",
+        "description": "Growth trends",
+        "critical": true
+      },
+      {
+        "name": "analytics.trafficSources",
+        "method": "GET",
+        "description": "Traffic sources"
+      },
+      {
+        "name": "analytics.recentActivity",
+        "method": "GET",
+        "description": "Recent activity",
+        "critical": true
+      },
+      {
+        "name": "analytics.leadStats",
+        "method": "GET",
+        "description": "Lead stats"
+      },
+      {
+        "name": "analytics.exportMetrics",
+        "method": "GET",
+        "description": "Export metrics"
+      },
+      {
+        "name": "analytics.exportConversionFunnel",
+        "method": "GET",
+        "description": "Export conversion funnel"
+      },
+      {
+        "name": "analytics.getOverview",
+        "method": "GET",
+        "description": "Get overview"
+      },
+      {
+        "name": "analytics.getSalesMetrics",
+        "method": "GET",
+        "description": "Get sales metrics"
+      },
+      {
+        "name": "analytics.getLeadMetrics",
+        "method": "GET",
+        "description": "Get lead metrics"
+      },
+      {
+        "name": "analytics.getConversionFunnel",
+        "method": "GET",
+        "description": "Get conversion funnel"
+      },
+      {
+        "name": "analytics.getTimeSeriesData",
+        "method": "GET",
+        "description": "Get time series data"
+      },
+      {
+        "name": "analytics.exportReport",
+        "method": "GET",
+        "description": "Export report"
+      },
+      {
+        "name": "analytics.topPerformers",
+        "method": "GET",
+        "description": "Top performers"
+      }
+    ],
+    "auth": [
+      {
+        "name": "auth.loginWithOAuth",
+        "method": "POST",
+        "description": "Login with o auth"
+      },
+      {
+        "name": "auth.resolveSso",
+        "method": "GET",
+        "description": "Resolve sso"
+      },
+      {
+        "name": "auth.oauthCallback",
+        "method": "POST",
+        "description": "Oauth callback"
+      },
+      {
+        "name": "auth.verifyMfa",
+        "method": "POST",
+        "description": "Verify mfa"
+      },
+      {
+        "name": "auth.resendMfaCode",
+        "method": "POST",
+        "description": "Resend mfa code"
+      },
+      {
+        "name": "auth.logout",
+        "method": "POST",
+        "description": "Logout",
+        "critical": true
+      },
+      {
+        "name": "auth.refreshSession",
+        "method": "POST",
+        "description": "Refresh session",
+        "critical": true
+      },
+      {
+        "name": "auth.setupMfa",
+        "method": "POST",
+        "description": "Setup mfa"
+      },
+      {
+        "name": "auth.confirmMfa",
+        "method": "POST",
+        "description": "Confirm mfa"
+      },
+      {
+        "name": "auth.getBackupCodes",
+        "method": "POST",
+        "description": "Get backup codes"
+      },
+      {
+        "name": "auth.getMfaStatus",
+        "method": "GET",
+        "description": "Get mfa status"
+      },
+      {
+        "name": "auth.disableMfa",
+        "method": "POST",
+        "description": "Disable mfa"
+      },
+      {
+        "name": "auth.regenerateBackupCodes",
+        "method": "POST",
+        "description": "Regenerate backup codes"
+      },
+      {
+        "name": "auth.getSessions",
+        "method": "GET",
+        "description": "Get sessions"
+      },
+      {
+        "name": "auth.revokeSession",
+        "method": "POST",
+        "description": "Revoke session"
+      },
+      {
+        "name": "auth.getStatus",
+        "method": "POST",
+        "description": "Get status",
+        "critical": true
+      },
+      {
+        "name": "auth.verifyEmail",
+        "method": "POST",
+        "description": "Verify email"
+      },
+      {
+        "name": "auth.resendVerification",
+        "method": "POST",
+        "description": "Resend verification"
+      }
+    ],
+    "autoresponse": [
+      {
+        "name": "autoresponse.create",
+        "method": "POST",
+        "description": "Create new autoresponse"
+      },
+      {
+        "name": "autoresponse.getById",
+        "method": "GET",
+        "description": "Get autoresponse by ID"
+      },
+      {
+        "name": "autoresponse.list",
+        "method": "GET",
+        "description": "List autoresponses with pagination"
+      },
+      {
+        "name": "autoresponse.submitForApproval",
+        "method": "POST",
+        "description": "Submit for approval"
+      },
+      {
+        "name": "autoresponse.approve",
+        "method": "POST",
+        "description": "Approve"
+      },
+      {
+        "name": "autoresponse.reject",
+        "method": "POST",
+        "description": "Reject"
+      },
+      {
+        "name": "autoresponse.escalate",
+        "method": "POST",
+        "description": "Escalate"
+      },
+      {
+        "name": "autoresponse.resolveEscalation",
+        "method": "POST",
+        "description": "Resolve escalation"
+      },
+      {
+        "name": "autoresponse.markSent",
+        "method": "POST",
+        "description": "Mark sent"
+      },
+      {
+        "name": "autoresponse.markFailed",
+        "method": "POST",
+        "description": "Mark failed"
+      },
+      {
+        "name": "autoresponse.getPendingForApprover",
+        "method": "GET",
+        "description": "Get pending for approver"
+      },
+      {
+        "name": "autoresponse.rollback",
+        "method": "POST",
+        "description": "Rollback"
+      },
+      {
+        "name": "autoresponse.regenerate",
+        "method": "POST",
+        "description": "Regenerate"
+      },
+      {
+        "name": "autoresponse.getStatsByStatus",
+        "method": "GET",
+        "description": "Get stats by status"
+      }
+    ],
+    "billing": [
+      {
+        "name": "billing.getSubscription",
+        "method": "GET",
+        "description": "Get subscription",
+        "critical": true
+      },
+      {
+        "name": "billing.listInvoices",
+        "method": "GET",
+        "description": "List invoices"
+      },
+      {
+        "name": "billing.getInvoice",
+        "method": "GET",
+        "description": "Get invoice"
+      },
+      {
+        "name": "billing.payInvoice",
+        "method": "POST",
+        "description": "Pay invoice"
+      },
+      {
+        "name": "billing.getPaymentMethods",
+        "method": "GET",
+        "description": "Get payment methods"
+      },
+      {
+        "name": "billing.updatePaymentMethod",
+        "method": "POST",
+        "description": "Update payment method"
+      },
+      {
+        "name": "billing.removePaymentMethod",
+        "method": "POST",
+        "description": "Remove payment method"
+      },
+      {
+        "name": "billing.updateSubscription",
+        "method": "POST",
+        "description": "Update subscription"
+      },
+      {
+        "name": "billing.cancelSubscription",
+        "method": "POST",
+        "description": "Cancel subscription"
+      },
+      {
+        "name": "billing.pauseSubscription",
+        "method": "POST",
+        "description": "Pause subscription"
+      },
+      {
+        "name": "billing.getUpcomingInvoice",
+        "method": "GET",
+        "description": "Get upcoming invoice"
+      },
+      {
+        "name": "billing.ensureCustomer",
+        "method": "POST",
+        "description": "Ensure customer"
+      },
+      {
+        "name": "billing.getUsageMetrics",
+        "method": "GET",
+        "description": "Get usage metrics"
+      },
+      {
+        "name": "billing.getBillingInformation",
+        "method": "GET",
+        "description": "Get billing information"
+      },
+      {
+        "name": "billing.updateBillingInformation",
+        "method": "POST",
+        "description": "Update billing information"
+      },
+      {
+        "name": "billing.createCheckoutSubscription",
+        "method": "POST",
+        "description": "Create checkout subscription"
+      },
+      {
+        "name": "billing.sendReceiptEmail",
+        "method": "POST",
+        "description": "Send receipt email"
+      },
+      {
+        "name": "billing.handleSubscriptionWebhook",
+        "method": "POST",
+        "description": "Handle subscription webhook"
+      }
+    ],
+    "calendarWebhook": [
+      {
+        "name": "calendarWebhook.getSyncStatus",
+        "method": "GET",
+        "description": "Get sync status"
+      },
+      {
+        "name": "calendarWebhook.triggerSync",
+        "method": "POST",
+        "description": "Trigger sync"
+      },
+      {
+        "name": "calendarWebhook.listRegistrations",
+        "method": "GET",
+        "description": "List registrations"
+      }
+    ],
+    "calendar": [
+      {
+        "name": "calendar.list",
+        "method": "GET",
+        "description": "List calendars with pagination"
+      },
+      {
+        "name": "calendar.create",
+        "method": "POST",
+        "description": "Create new calendar"
+      },
+      {
+        "name": "calendar.update",
+        "method": "POST",
+        "description": "Update calendar"
+      },
+      {
+        "name": "calendar.delete",
+        "method": "POST",
+        "description": "Delete calendar"
+      }
+    ],
+    "chainVersion": [
+      {
+        "name": "chainVersion.create",
+        "method": "POST",
+        "description": "Create new chainVersion"
+      },
+      {
+        "name": "chainVersion.update",
+        "method": "POST",
+        "description": "Update chainVersion"
+      },
+      {
+        "name": "chainVersion.activate",
+        "method": "POST",
+        "description": "Activate"
+      },
+      {
+        "name": "chainVersion.deprecate",
+        "method": "POST",
+        "description": "Deprecate"
+      },
+      {
+        "name": "chainVersion.archive",
+        "method": "POST",
+        "description": "Archive"
+      },
+      {
+        "name": "chainVersion.rollback",
+        "method": "POST",
+        "description": "Rollback"
+      },
+      {
+        "name": "chainVersion.getById",
+        "method": "GET",
+        "description": "Get chainVersion by ID"
+      },
+      {
+        "name": "chainVersion.getActive",
+        "method": "GET",
+        "description": "Get active"
+      },
+      {
+        "name": "chainVersion.getConfig",
+        "method": "GET",
+        "description": "Get config"
+      },
+      {
+        "name": "chainVersion.list",
+        "method": "GET",
+        "description": "List chainVersions with pagination"
+      },
+      {
+        "name": "chainVersion.getHistory",
+        "method": "GET",
+        "description": "Get history"
+      },
+      {
+        "name": "chainVersion.getAuditLog",
+        "method": "GET",
+        "description": "Get audit log"
+      },
+      {
+        "name": "chainVersion.getStats",
+        "method": "GET",
+        "description": "Get stats"
+      },
+      {
+        "name": "chainVersion.compare",
+        "method": "GET",
+        "description": "Compare"
+      },
+      {
+        "name": "chainVersion.getZepBudget",
+        "method": "GET",
+        "description": "Get zep budget"
+      }
+    ],
+    "contact": [
+      {
+        "name": "contact.create",
+        "method": "POST",
+        "description": "Create new contact",
+        "critical": true
+      },
+      {
+        "name": "contact.getById",
+        "method": "GET",
+        "description": "Get contact by ID",
+        "critical": true
+      },
+      {
+        "name": "contact.getByEmail",
+        "method": "GET",
+        "description": "Get by email"
+      },
+      {
+        "name": "contact.list",
+        "method": "GET",
+        "description": "List contacts with pagination",
+        "critical": true
+      },
+      {
+        "name": "contact.update",
+        "method": "POST",
+        "description": "Update contact",
+        "critical": true
+      },
+      {
+        "name": "contact.delete",
+        "method": "POST",
+        "description": "Delete contact"
+      },
+      {
+        "name": "contact.linkToAccount",
+        "method": "POST",
+        "description": "Link to account"
+      },
+      {
+        "name": "contact.unlinkFromAccount",
+        "method": "POST",
+        "description": "Unlink from account"
+      },
+      {
+        "name": "contact.stats",
+        "method": "GET",
+        "description": "Contact statistics"
+      },
+      {
+        "name": "contact.search",
+        "method": "GET",
+        "description": "Search contacts"
+      },
+      {
+        "name": "contact.filterOptions",
+        "method": "GET",
+        "description": "Get filter options"
+      },
+      {
+        "name": "contact.bulkEmail",
+        "method": "POST",
+        "description": "Bulk email"
+      },
+      {
+        "name": "contact.bulkExport",
+        "method": "POST",
+        "description": "Bulk export"
+      },
+      {
+        "name": "contact.bulkDelete",
+        "method": "POST",
+        "description": "Bulk delete"
+      },
+      {
+        "name": "contact.linkToLead",
+        "method": "POST",
+        "description": "Link to lead"
+      },
+      {
+        "name": "contact.unlinkFromLead",
+        "method": "POST",
+        "description": "Unlink from lead"
+      },
+      {
+        "name": "contact.getTimeline",
+        "method": "GET",
+        "description": "Get timeline"
+      },
+      {
+        "name": "contact.logActivity",
+        "method": "POST",
+        "description": "Log activity"
+      },
+      {
+        "name": "contact.addNote",
+        "method": "POST",
+        "description": "Add note"
+      },
+      {
+        "name": "contact.scoreWithAI",
+        "method": "POST",
+        "description": "Score with a i"
+      }
+    ],
+    "emailInbound": [
+      {
+        "name": "emailInbound.processInbound",
+        "method": "POST",
+        "description": "Process inbound"
+      }
+    ],
+    "upload": [
+      {
+        "name": "upload.upload",
+        "method": "POST",
+        "description": "Upload"
+      },
+      {
+        "name": "upload.getUploadStatus",
+        "method": "GET",
+        "description": "Get upload status"
+      }
+    ],
+    "inbound": [
+      {
+        "name": "inbound.webhook",
+        "method": "POST",
+        "description": "Webhook"
+      },
+      {
+        "name": "inbound.getEmail",
+        "method": "GET",
+        "description": "Get email"
+      },
+      {
+        "name": "inbound.listEmails",
+        "method": "GET",
+        "description": "List emails"
+      },
+      {
+        "name": "inbound.processEmail",
+        "method": "POST",
+        "description": "Process email"
+      },
+      {
+        "name": "inbound.getThread",
+        "method": "GET",
+        "description": "Get thread"
+      },
+      {
+        "name": "inbound.getAttachment",
+        "method": "GET",
+        "description": "Get attachment"
+      },
+      {
+        "name": "inbound.sendEmail",
+        "method": "POST",
+        "description": "Send email"
+      },
+      {
+        "name": "inbound.saveDraft",
+        "method": "POST",
+        "description": "Save draft"
+      },
+      {
+        "name": "inbound.listTemplates",
+        "method": "GET",
+        "description": "List templates"
+      },
+      {
+        "name": "inbound.markAsRead",
+        "method": "POST",
+        "description": "Mark as read"
+      },
+      {
+        "name": "inbound.markAsUnread",
+        "method": "POST",
+        "description": "Mark as unread"
+      },
+      {
+        "name": "inbound.setLabels",
+        "method": "POST",
+        "description": "Set labels"
+      },
+      {
+        "name": "inbound.getUnreadCounts",
+        "method": "GET",
+        "description": "Get unread counts"
+      },
+      {
+        "name": "inbound.lookupByEmail",
+        "method": "GET",
+        "description": "Lookup by email"
+      },
+      {
+        "name": "inbound.getStorageUsage",
+        "method": "GET",
+        "description": "Get storage usage"
+      },
+      {
+        "name": "inbound.getRelatedMessages",
+        "method": "GET",
+        "description": "Get related messages"
+      },
+      {
+        "name": "inbound.searchContacts",
+        "method": "GET",
+        "description": "Search contacts"
+      }
+    ],
+    "experiment": [
+      {
+        "name": "experiment.create",
+        "method": "POST",
+        "description": "Create new experiment"
+      },
+      {
+        "name": "experiment.update",
+        "method": "POST",
+        "description": "Update experiment"
+      },
+      {
+        "name": "experiment.start",
+        "method": "POST",
+        "description": "Start"
+      },
+      {
+        "name": "experiment.pause",
+        "method": "POST",
+        "description": "Pause"
+      },
+      {
+        "name": "experiment.complete",
+        "method": "POST",
+        "description": "Complete"
+      },
+      {
+        "name": "experiment.archive",
+        "method": "POST",
+        "description": "Archive"
+      },
+      {
+        "name": "experiment.assignVariant",
+        "method": "POST",
+        "description": "Assign variant"
+      },
+      {
+        "name": "experiment.getVariant",
+        "method": "GET",
+        "description": "Get variant"
+      },
+      {
+        "name": "experiment.recordScore",
+        "method": "POST",
+        "description": "Record score"
+      },
+      {
+        "name": "experiment.recordConversion",
+        "method": "POST",
+        "description": "Record conversion"
+      },
+      {
+        "name": "experiment.analyze",
+        "method": "POST",
+        "description": "Analyze"
+      },
+      {
+        "name": "experiment.getById",
+        "method": "GET",
+        "description": "Get experiment by ID"
+      },
+      {
+        "name": "experiment.list",
+        "method": "GET",
+        "description": "List experiments with pagination"
+      },
+      {
+        "name": "experiment.getStatus",
+        "method": "GET",
+        "description": "Get status"
+      },
+      {
+        "name": "experiment.getResults",
+        "method": "GET",
+        "description": "Get results"
+      }
+    ],
+    "feedback": [
+      {
+        "name": "feedback.submitSimple",
+        "method": "POST",
+        "description": "Submit simple",
+        "critical": true
+      },
+      {
+        "name": "feedback.submitCorrection",
+        "method": "POST",
+        "description": "Submit correction",
+        "critical": true
+      },
+      {
+        "name": "feedback.getForLead",
+        "method": "GET",
+        "description": "Get for lead"
+      },
+      {
+        "name": "feedback.getAnalytics",
+        "method": "GET",
+        "description": "Get analytics"
+      },
+      {
+        "name": "feedback.checkRetraining",
+        "method": "GET",
+        "description": "Check retraining"
+      },
+      {
+        "name": "feedback.exportTrainingData",
+        "method": "POST",
+        "description": "Export training data"
+      }
+    ],
+    "feedbackSurvey": [
+      {
+        "name": "feedbackSurvey.getDashboardStats",
+        "method": "GET",
+        "description": "Get dashboard stats"
+      },
+      {
+        "name": "feedbackSurvey.getNPSTrend",
+        "method": "GET",
+        "description": "Get n p s trend"
+      },
+      {
+        "name": "feedbackSurvey.getSentimentBreakdown",
+        "method": "GET",
+        "description": "Get sentiment breakdown"
+      },
+      {
+        "name": "feedbackSurvey.exportData",
+        "method": "GET",
+        "description": "Export data"
+      }
+    ],
+    "helpArticle": [
+      {
+        "name": "helpArticle.list",
+        "method": "GET",
+        "description": "List helpArticles with pagination"
+      },
+      {
+        "name": "helpArticle.getBySlug",
+        "method": "GET",
+        "description": "Get by slug"
+      },
+      {
+        "name": "helpArticle.getByCategory",
+        "method": "GET",
+        "description": "Get by category"
+      },
+      {
+        "name": "helpArticle.getRelated",
+        "method": "GET",
+        "description": "Get related"
+      },
+      {
+        "name": "helpArticle.create",
+        "method": "POST",
+        "description": "Create new helpArticle"
+      },
+      {
+        "name": "helpArticle.update",
+        "method": "POST",
+        "description": "Update helpArticle"
+      },
+      {
+        "name": "helpArticle.delete",
+        "method": "POST",
+        "description": "Delete helpArticle"
+      },
+      {
+        "name": "helpArticle.publish",
+        "method": "POST",
+        "description": "Publish"
+      },
+      {
+        "name": "helpArticle.unpublish",
+        "method": "POST",
+        "description": "Unpublish"
+      },
+      {
+        "name": "helpArticle.submitFeedback",
+        "method": "POST",
+        "description": "Submit feedback"
+      },
+      {
+        "name": "helpArticle.getFeedbackStats",
+        "method": "GET",
+        "description": "Get feedback stats"
+      }
+    ],
+    "home": [
+      {
+        "name": "home.getWelcomeSummary",
+        "method": "GET",
+        "description": "Get welcome summary"
+      },
+      {
+        "name": "home.getAIInsights",
+        "method": "GET",
+        "description": "Get a i insights"
+      },
+      {
+        "name": "home.getDailyGoal",
+        "method": "GET",
+        "description": "Get daily goal"
+      },
+      {
+        "name": "home.updateDailyGoal",
+        "method": "POST",
+        "description": "Update daily goal"
+      },
+      {
+        "name": "home.getPinnedItems",
+        "method": "GET",
+        "description": "Get pinned items"
+      },
+      {
+        "name": "home.pinItem",
+        "method": "POST",
+        "description": "Pin item"
+      },
+      {
+        "name": "home.unpinItem",
+        "method": "POST",
+        "description": "Unpin item"
+      },
+      {
+        "name": "home.reorderPinnedItems",
+        "method": "POST",
+        "description": "Reorder pinned items"
+      },
+      {
+        "name": "home.getAllInsights",
+        "method": "GET",
+        "description": "Get all insights"
+      },
+      {
+        "name": "home.getInsightById",
+        "method": "GET",
+        "description": "Get insight by id"
+      },
+      {
+        "name": "home.ensureInsightReview",
+        "method": "POST",
+        "description": "Ensure insight review"
+      },
+      {
+        "name": "home.dismissInsight",
+        "method": "POST",
+        "description": "Dismiss insight"
+      }
+    ],
+    "integrations": [
+      {
+        "name": "integrations.getConnectorHealth",
+        "method": "GET",
+        "description": "Get connector health"
+      },
+      {
+        "name": "integrations.getAllConnectorsHealth",
+        "method": "GET",
+        "description": "Get all connectors health"
+      },
+      {
+        "name": "integrations.getConnectorsByType",
+        "method": "GET",
+        "description": "Get connectors by type"
+      },
+      {
+        "name": "integrations.triggerSync",
+        "method": "POST",
+        "description": "Trigger sync"
+      },
+      {
+        "name": "integrations.getDashboardConfig",
+        "method": "GET",
+        "description": "Get dashboard config"
+      },
+      {
+        "name": "integrations.testConnection",
+        "method": "POST",
+        "description": "Test connection"
+      }
+    ],
+    "intelligence": [
+      {
+        "name": "intelligence.getSentimentDashboard",
+        "method": "GET",
+        "description": "Get sentiment dashboard"
+      },
+      {
+        "name": "intelligence.getLeadInsights",
+        "method": "GET",
+        "description": "Get lead insights"
+      },
+      {
+        "name": "intelligence.getContactInsights",
+        "method": "GET",
+        "description": "Get contact insights"
+      },
+      {
+        "name": "intelligence.getInsightsSummary",
+        "method": "GET",
+        "description": "Get insights summary"
+      },
+      {
+        "name": "intelligence.triggerPrediction",
+        "method": "POST",
+        "description": "Trigger prediction"
+      },
+      {
+        "name": "intelligence.updateLeadInsights",
+        "method": "POST",
+        "description": "Update lead insights"
+      },
+      {
+        "name": "intelligence.updateContactInsights",
+        "method": "POST",
+        "description": "Update contact insights"
+      },
+      {
+        "name": "intelligence.getChurnDashboard",
+        "method": "GET",
+        "description": "Get churn dashboard"
+      },
+      {
+        "name": "intelligence.getLeadScoringDashboard",
+        "method": "GET",
+        "description": "Get lead scoring dashboard"
+      },
+      {
+        "name": "intelligence.ragSearch",
+        "method": "GET",
+        "description": "Rag search"
+      }
+    ],
+    "leadSettings": [
+      {
+        "name": "leadSettings.getAll",
+        "method": "GET",
+        "description": "Get all"
+      },
+      {
+        "name": "leadSettings.updateAll",
+        "method": "POST",
+        "description": "Update all"
+      },
+      {
+        "name": "leadSettings.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
+      },
+      {
+        "name": "leadSettings.list",
+        "method": "GET",
+        "description": "List leadSettingss with pagination"
+      },
+      {
+        "name": "leadSettings.create",
+        "method": "POST",
+        "description": "Create new leadSettings"
+      },
+      {
+        "name": "leadSettings.update",
+        "method": "POST",
+        "description": "Update leadSettings"
+      },
+      {
+        "name": "leadSettings.delete",
+        "method": "POST",
+        "description": "Delete leadSettings"
+      },
+      {
+        "name": "leadSettings.get",
+        "method": "GET",
+        "description": "Get"
+      }
+    ],
+    "lead": [
+      {
+        "name": "lead.create",
+        "method": "POST",
+        "description": "Create new lead",
+        "critical": true
+      },
+      {
+        "name": "lead.getById",
+        "method": "GET",
+        "description": "Get lead by ID",
+        "critical": true
+      },
+      {
+        "name": "lead.list",
+        "method": "GET",
+        "description": "List leads with pagination",
+        "critical": true
+      },
+      {
+        "name": "lead.update",
+        "method": "POST",
+        "description": "Update lead",
+        "critical": true
+      },
+      {
+        "name": "lead.delete",
+        "method": "POST",
+        "description": "Delete lead"
+      },
+      {
+        "name": "lead.qualify",
+        "method": "POST",
+        "description": "Qualify"
+      },
+      {
+        "name": "lead.convert",
+        "method": "POST",
+        "description": "Convert"
+      },
+      {
+        "name": "lead.convertToDeal",
+        "method": "POST",
+        "description": "Convert to deal"
+      },
+      {
+        "name": "lead.scoreWithAI",
+        "method": "POST",
+        "description": "Score with a i",
+        "critical": true
+      },
+      {
+        "name": "lead.stats",
+        "method": "GET",
+        "description": "Lead statistics"
+      },
+      {
+        "name": "lead.getHotLeads",
+        "method": "GET",
+        "description": "Get hot leads"
+      },
+      {
+        "name": "lead.getReadyForQualification",
+        "method": "GET",
+        "description": "Get ready for qualification"
+      },
+      {
+        "name": "lead.bulkScore",
+        "method": "POST",
+        "description": "Bulk score"
+      },
+      {
+        "name": "lead.filterOptions",
+        "method": "GET",
+        "description": "Get filter options"
+      },
+      {
+        "name": "lead.bulkConvert",
+        "method": "POST",
+        "description": "Bulk convert"
+      },
+      {
+        "name": "lead.bulkUpdateStatus",
+        "method": "POST",
+        "description": "Bulk update status"
+      },
+      {
+        "name": "lead.bulkArchive",
+        "method": "POST",
+        "description": "Bulk archive"
+      },
+      {
+        "name": "lead.addNote",
+        "method": "POST",
+        "description": "Add note"
+      },
+      {
+        "name": "lead.logActivity",
+        "method": "POST",
+        "description": "Log activity"
+      },
+      {
+        "name": "lead.bulkDelete",
+        "method": "POST",
+        "description": "Bulk delete"
+      }
+    ],
+    "appointments": [
+      {
+        "name": "appointments.create",
+        "method": "POST",
+        "description": "Create new appointments",
+        "critical": true
+      },
+      {
+        "name": "appointments.getById",
+        "method": "GET",
+        "description": "Get appointments by ID",
+        "critical": true
+      },
+      {
+        "name": "appointments.list",
+        "method": "GET",
+        "description": "List appointmentss with pagination",
+        "critical": true
+      },
+      {
+        "name": "appointments.update",
+        "method": "POST",
+        "description": "Update appointments",
+        "critical": true
+      },
+      {
+        "name": "appointments.reschedule",
+        "method": "POST",
+        "description": "Reschedule"
+      },
+      {
+        "name": "appointments.confirm",
+        "method": "POST",
+        "description": "Confirm"
+      },
+      {
+        "name": "appointments.complete",
+        "method": "POST",
+        "description": "Complete"
+      },
+      {
+        "name": "appointments.cancel",
+        "method": "POST",
+        "description": "Cancel"
+      },
+      {
+        "name": "appointments.markNoShow",
+        "method": "POST",
+        "description": "Mark no show"
+      },
+      {
+        "name": "appointments.delete",
+        "method": "POST",
+        "description": "Delete appointments"
+      },
+      {
+        "name": "appointments.checkConflicts",
+        "method": "GET",
+        "description": "Check conflicts"
+      },
+      {
+        "name": "appointments.checkAvailability",
+        "method": "GET",
+        "description": "Check availability",
+        "critical": true
+      },
+      {
+        "name": "appointments.findNextSlot",
+        "method": "GET",
+        "description": "Find next slot"
+      },
+      {
+        "name": "appointments.linkToCase",
+        "method": "POST",
+        "description": "Link to case"
+      },
+      {
+        "name": "appointments.unlinkFromCase",
+        "method": "POST",
+        "description": "Unlink from case"
+      },
+      {
+        "name": "appointments.addAttendee",
+        "method": "POST",
+        "description": "Add attendee"
+      },
+      {
+        "name": "appointments.removeAttendee",
+        "method": "POST",
+        "description": "Remove attendee"
+      },
+      {
+        "name": "appointments.upcoming",
+        "method": "GET",
+        "description": "Upcoming"
+      },
+      {
+        "name": "appointments.stats",
+        "method": "GET",
+        "description": "Appointments statistics"
+      }
+    ],
+    "cases": [
+      {
+        "name": "cases.list",
+        "method": "GET",
+        "description": "List casess with pagination"
+      },
+      {
+        "name": "cases.getById",
+        "method": "GET",
+        "description": "Get cases by ID"
+      },
+      {
+        "name": "cases.stats",
+        "method": "GET",
+        "description": "Cases statistics"
+      },
+      {
+        "name": "cases.create",
+        "method": "POST",
+        "description": "Create new cases"
+      },
+      {
+        "name": "cases.update",
+        "method": "POST",
+        "description": "Update cases"
+      },
+      {
+        "name": "cases.changeStatus",
+        "method": "POST",
+        "description": "Change status"
+      },
+      {
+        "name": "cases.close",
+        "method": "POST",
+        "description": "Close"
+      },
+      {
+        "name": "cases.addTask",
+        "method": "POST",
+        "description": "Add task"
+      },
+      {
+        "name": "cases.completeTask",
+        "method": "POST",
+        "description": "Complete task"
+      },
+      {
+        "name": "cases.removeTask",
+        "method": "POST",
+        "description": "Remove task"
+      },
+      {
+        "name": "cases.filterOptions",
+        "method": "GET",
+        "description": "Get filter options"
+      },
+      {
+        "name": "cases.assignees",
+        "method": "GET",
+        "description": "Assignees"
+      }
+    ],
+    "documents": [
+      {
+        "name": "documents.create",
+        "method": "POST",
+        "description": "Create new documents",
+        "critical": true
+      },
+      {
+        "name": "documents.createVersion",
+        "method": "POST",
+        "description": "Create version"
+      },
+      {
+        "name": "documents.getById",
+        "method": "GET",
+        "description": "Get documents by ID",
+        "critical": true
+      },
+      {
+        "name": "documents.list",
+        "method": "GET",
+        "description": "List documentss with pagination",
+        "critical": true
+      },
+      {
+        "name": "documents.grantAccess",
+        "method": "POST",
+        "description": "Grant access"
+      },
+      {
+        "name": "documents.revokeAccess",
+        "method": "POST",
+        "description": "Revoke access"
+      },
+      {
+        "name": "documents.submitForReview",
+        "method": "POST",
+        "description": "Submit for review"
+      },
+      {
+        "name": "documents.approve",
+        "method": "POST",
+        "description": "Approve"
+      },
+      {
+        "name": "documents.sign",
+        "method": "POST",
+        "description": "Sign"
+      },
+      {
+        "name": "documents.archive",
+        "method": "POST",
+        "description": "Archive"
+      },
+      {
+        "name": "documents.placeLegalHold",
+        "method": "POST",
+        "description": "Place legal hold"
+      },
+      {
+        "name": "documents.releaseLegalHold",
+        "method": "POST",
+        "description": "Release legal hold"
+      },
+      {
+        "name": "documents.delete",
+        "method": "POST",
+        "description": "Delete documents"
+      },
+      {
+        "name": "documents.getSignedUrl",
+        "method": "GET",
+        "description": "Get signed url"
+      },
+      {
+        "name": "documents.getAuditTrail",
+        "method": "GET",
+        "description": "Get audit trail"
+      },
+      {
+        "name": "documents.bulkDownload",
+        "method": "POST",
+        "description": "Bulk download"
+      },
+      {
+        "name": "documents.bulkArchive",
+        "method": "POST",
+        "description": "Bulk archive"
+      },
+      {
+        "name": "documents.bulkDelete",
+        "method": "POST",
+        "description": "Bulk delete"
+      }
+    ],
+    "activityFeed": [
+      {
+        "name": "activityFeed.getUnifiedFeed",
+        "method": "GET",
+        "description": "Get unified feed"
+      },
+      {
+        "name": "activityFeed.getEntityFeed",
+        "method": "GET",
+        "description": "Get entity feed"
+      },
+      {
+        "name": "activityFeed.getStats",
+        "method": "GET",
+        "description": "Get stats"
+      },
+      {
+        "name": "activityFeed.search",
+        "method": "GET",
+        "description": "Search activityFeeds"
+      },
+      {
+        "name": "activityFeed.toggleReaction",
+        "method": "POST",
+        "description": "Toggle reaction"
+      },
+      {
+        "name": "activityFeed.getReactions",
+        "method": "GET",
+        "description": "Get reactions"
+      },
+      {
+        "name": "activityFeed.addComment",
+        "method": "POST",
+        "description": "Add comment"
+      },
+      {
+        "name": "activityFeed.getComments",
+        "method": "GET",
+        "description": "Get comments"
+      }
+    ],
+    "globalSearch": [
+      {
+        "name": "globalSearch.query",
+        "method": "GET",
+        "description": "Query"
+      }
+    ],
+    "health": [
+      {
+        "name": "health.ping",
+        "method": "GET",
+        "description": "Ping",
+        "critical": true
+      },
+      {
+        "name": "health.check",
+        "method": "GET",
+        "description": "Check",
+        "critical": true
+      },
+      {
+        "name": "health.ready",
+        "method": "GET",
+        "description": "Ready",
+        "critical": true
+      },
+      {
+        "name": "health.alive",
+        "method": "GET",
+        "description": "Alive",
+        "critical": true
+      },
+      {
+        "name": "health.dbStats",
+        "method": "GET",
+        "description": "Db stats"
+      }
+    ],
+    "system": [
+      {
+        "name": "system.version",
+        "method": "GET",
+        "description": "Version",
+        "critical": true
+      },
+      {
+        "name": "system.info",
+        "method": "GET",
+        "description": "Info"
+      },
+      {
+        "name": "system.features",
+        "method": "GET",
+        "description": "Features"
+      },
+      {
+        "name": "system.config",
+        "method": "GET",
+        "description": "Config"
+      },
+      {
+        "name": "system.metrics",
+        "method": "GET",
+        "description": "Metrics",
+        "critical": true
+      },
+      {
+        "name": "system.capabilities",
+        "method": "GET",
+        "description": "Capabilities"
+      }
+    ],
+    "timeline": [
+      {
+        "name": "timeline.getEvents",
+        "method": "GET",
+        "description": "Get events",
+        "critical": true
+      },
+      {
+        "name": "timeline.getStats",
+        "method": "GET",
+        "description": "Get stats"
+      },
+      {
+        "name": "timeline.getUpcomingDeadlines",
+        "method": "GET",
+        "description": "Get upcoming deadlines",
+        "critical": true
+      },
+      {
+        "name": "timeline.computeDeadline",
+        "method": "GET",
+        "description": "Compute deadline"
+      },
+      {
+        "name": "timeline.isBusinessDay",
+        "method": "GET",
+        "description": "Is business day"
+      },
+      {
+        "name": "timeline.getNextBusinessDay",
+        "method": "GET",
+        "description": "Get next business day"
+      },
+      {
+        "name": "timeline.validateDeadlineRule",
+        "method": "GET",
+        "description": "Validate deadline rule"
+      },
+      {
+        "name": "timeline.getPendingAgentActions",
+        "method": "GET",
+        "description": "Get pending agent actions"
+      }
+    ],
+    "notifications": [
+      {
+        "name": "notifications.list",
+        "method": "GET",
+        "description": "List notificationss with pagination"
+      },
+      {
+        "name": "notifications.getUnreadCount",
+        "method": "GET",
+        "description": "Get unread count"
+      },
+      {
+        "name": "notifications.markAsRead",
+        "method": "POST",
+        "description": "Mark as read"
+      },
+      {
+        "name": "notifications.markAllAsRead",
+        "method": "POST",
+        "description": "Mark all as read"
+      },
+      {
+        "name": "notifications.delete",
+        "method": "POST",
+        "description": "Delete notifications"
+      },
+      {
+        "name": "notifications.getPreferences",
+        "method": "GET",
+        "description": "Get preferences"
+      },
+      {
+        "name": "notifications.updatePreferences",
+        "method": "POST",
+        "description": "Update preferences"
+      },
+      {
+        "name": "notifications.batchAction",
+        "method": "POST",
+        "description": "Batch action"
+      }
+    ],
+    "opportunity": [
+      {
+        "name": "opportunity.create",
+        "method": "POST",
+        "description": "Create new opportunity",
+        "critical": true
+      },
+      {
+        "name": "opportunity.getById",
+        "method": "GET",
+        "description": "Get opportunity by ID",
+        "critical": true
+      },
+      {
+        "name": "opportunity.list",
+        "method": "GET",
+        "description": "List opportunitys with pagination",
+        "critical": true
+      },
+      {
+        "name": "opportunity.update",
+        "method": "POST",
+        "description": "Update opportunity",
+        "critical": true
+      },
+      {
+        "name": "opportunity.delete",
+        "method": "POST",
+        "description": "Delete opportunity"
+      },
+      {
+        "name": "opportunity.listTrashed",
+        "method": "GET",
+        "description": "List trashed"
+      },
+      {
+        "name": "opportunity.restore",
+        "method": "POST",
+        "description": "Restore"
+      },
+      {
+        "name": "opportunity.permanentDelete",
+        "method": "POST",
+        "description": "Permanent delete"
+      },
+      {
+        "name": "opportunity.moveStage",
+        "method": "POST",
+        "description": "Move stage"
+      },
+      {
+        "name": "opportunity.getHistory",
+        "method": "GET",
+        "description": "Get history"
+      },
+      {
+        "name": "opportunity.getProducts",
+        "method": "GET",
+        "description": "Get products"
+      },
+      {
+        "name": "opportunity.getPipeline",
+        "method": "GET",
+        "description": "Get pipeline"
+      },
+      {
+        "name": "opportunity.stats",
+        "method": "GET",
+        "description": "Opportunity statistics"
+      },
+      {
+        "name": "opportunity.forecast",
+        "method": "GET",
+        "description": "Forecast",
+        "critical": true
+      },
+      {
+        "name": "opportunity.dealForecast",
+        "method": "GET",
+        "description": "Deal forecast"
+      }
+    ],
+    "pipelineConfig": [
+      {
+        "name": "pipelineConfig.getAll",
+        "method": "GET",
+        "description": "Get all",
+        "critical": true
+      },
+      {
+        "name": "pipelineConfig.updateStage",
+        "method": "POST",
+        "description": "Update stage"
+      },
+      {
+        "name": "pipelineConfig.updateAll",
+        "method": "POST",
+        "description": "Update all"
+      },
+      {
+        "name": "pipelineConfig.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
+      },
+      {
+        "name": "pipelineConfig.getStats",
+        "method": "GET",
+        "description": "Get stats"
+      }
+    ],
+    "dsar": [
+      {
+        "name": "dsar.submitDSAR",
+        "method": "POST",
+        "description": "Submit d s a r"
+      },
+      {
+        "name": "dsar.getDSARStatus",
+        "method": "GET",
+        "description": "Get d s a r status"
+      }
+    ],
+    "routing": [
+      {
+        "name": "routing.list",
+        "method": "GET",
+        "description": "List routings with pagination"
+      },
+      {
+        "name": "routing.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "routing.create",
+        "method": "POST",
+        "description": "Create new routing"
+      },
+      {
+        "name": "routing.update",
+        "method": "POST",
+        "description": "Update routing"
+      },
+      {
+        "name": "routing.delete",
+        "method": "POST",
+        "description": "Delete routing"
+      },
+      {
+        "name": "routing.reorder",
+        "method": "POST",
+        "description": "Reorder"
+      },
+      {
+        "name": "routing.toggle",
+        "method": "POST",
+        "description": "Toggle"
+      },
+      {
+        "name": "routing.getAssignments",
+        "method": "GET",
+        "description": "Get assignments"
+      },
+      {
+        "name": "routing.getAgentWorkload",
+        "method": "GET",
+        "description": "Get agent workload"
+      },
+      {
+        "name": "routing.getLeadQueue",
+        "method": "GET",
+        "description": "Get lead queue"
+      },
+      {
+        "name": "routing.assignLead",
+        "method": "POST",
+        "description": "Assign lead"
+      },
+      {
+        "name": "routing.autoRouteLead",
+        "method": "POST",
+        "description": "Auto route lead"
+      },
+      {
+        "name": "routing.suggestLeadAssignee",
+        "method": "GET",
+        "description": "Suggest lead assignee"
+      }
+    ],
+    "audit": [
+      {
+        "name": "audit.search",
+        "method": "GET",
+        "description": "Search audits",
+        "critical": true
+      },
+      {
+        "name": "audit.getByResource",
+        "method": "GET",
+        "description": "Get by resource"
+      },
+      {
+        "name": "audit.getMyActivity",
+        "method": "GET",
+        "description": "Get my activity"
+      },
+      {
+        "name": "audit.getSecurityEvents",
+        "method": "GET",
+        "description": "Get security events",
+        "critical": true
+      },
+      {
+        "name": "audit.getStats",
+        "method": "GET",
+        "description": "Get stats"
+      }
+    ],
+    "subscription": [
+      {
+        "name": "subscription.getEnabledModules",
+        "method": "GET",
+        "description": "Get enabled modules"
+      },
+      {
+        "name": "subscription.getPlans",
+        "method": "GET",
+        "description": "Get plans"
+      },
+      {
+        "name": "subscription.toggleModule",
+        "method": "POST",
+        "description": "Toggle module"
+      }
+    ],
+    "task": [
+      {
+        "name": "task.create",
+        "method": "POST",
+        "description": "Create new task",
+        "critical": true
+      },
+      {
+        "name": "task.getById",
+        "method": "GET",
+        "description": "Get task by ID",
+        "critical": true
+      },
+      {
+        "name": "task.list",
+        "method": "GET",
+        "description": "List tasks with pagination",
+        "critical": true
+      },
+      {
+        "name": "task.update",
+        "method": "POST",
+        "description": "Update task",
+        "critical": true
+      },
+      {
+        "name": "task.delete",
+        "method": "POST",
+        "description": "Delete task"
+      },
+      {
+        "name": "task.archive",
+        "method": "POST",
+        "description": "Archive"
+      },
+      {
+        "name": "task.complete",
+        "method": "POST",
+        "description": "Complete"
+      },
+      {
+        "name": "task.start",
+        "method": "POST",
+        "description": "Start"
+      },
+      {
+        "name": "task.cancel",
+        "method": "POST",
+        "description": "Cancel"
+      },
+      {
+        "name": "task.stats",
+        "method": "GET",
+        "description": "Task statistics"
+      },
+      {
+        "name": "task.assign",
+        "method": "POST",
+        "description": "Assign"
+      },
+      {
+        "name": "task.reschedule",
+        "method": "POST",
+        "description": "Reschedule"
+      },
+      {
+        "name": "task.getReminders",
+        "method": "GET",
+        "description": "Get reminders"
+      },
+      {
+        "name": "task.getByEntity",
+        "method": "GET",
+        "description": "Get by entity"
+      }
+    ],
+    "ticketConfig": [
+      {
+        "name": "ticketConfig.list",
+        "method": "GET",
+        "description": "List ticketConfigs with pagination"
+      },
+      {
+        "name": "ticketConfig.getById",
+        "method": "GET",
+        "description": "Get ticketConfig by ID"
+      },
+      {
+        "name": "ticketConfig.create",
+        "method": "POST",
+        "description": "Create new ticketConfig"
+      },
+      {
+        "name": "ticketConfig.update",
+        "method": "POST",
+        "description": "Update ticketConfig"
+      },
+      {
+        "name": "ticketConfig.delete",
+        "method": "POST",
+        "description": "Delete ticketConfig"
+      },
+      {
+        "name": "ticketConfig.setDefault",
+        "method": "POST",
+        "description": "Set default"
+      },
+      {
+        "name": "ticketConfig.reorder",
+        "method": "POST",
+        "description": "Reorder"
+      }
+    ],
+    "ticketRouting": [
+      {
+        "name": "ticketRouting.autoRoute",
+        "method": "POST",
+        "description": "Auto route"
+      },
+      {
+        "name": "ticketRouting.suggestAssignee",
+        "method": "GET",
+        "description": "Suggest assignee"
+      }
+    ],
+    "ticket": [
+      {
+        "name": "ticket.create",
+        "method": "POST",
+        "description": "Create new ticket",
+        "critical": true
+      },
+      {
+        "name": "ticket.getById",
+        "method": "GET",
+        "description": "Get ticket by ID",
+        "critical": true
+      },
+      {
+        "name": "ticket.list",
+        "method": "GET",
+        "description": "List tickets with pagination",
+        "critical": true
+      },
+      {
+        "name": "ticket.update",
+        "method": "POST",
+        "description": "Update ticket",
+        "critical": true
+      },
+      {
+        "name": "ticket.delete",
+        "method": "POST",
+        "description": "Delete ticket"
+      },
+      {
+        "name": "ticket.archive",
+        "method": "POST",
+        "description": "Archive"
+      },
+      {
+        "name": "ticket.stats",
+        "method": "GET",
+        "description": "Ticket statistics"
+      },
+      {
+        "name": "ticket.addResponse",
+        "method": "POST",
+        "description": "Add response"
+      },
+      {
+        "name": "ticket.bulkAssign",
+        "method": "POST",
+        "description": "Bulk assign"
+      },
+      {
+        "name": "ticket.bulkUpdateStatus",
+        "method": "POST",
+        "description": "Bulk update status"
+      },
+      {
+        "name": "ticket.bulkResolve",
+        "method": "POST",
+        "description": "Bulk resolve"
+      },
+      {
+        "name": "ticket.bulkEscalate",
+        "method": "POST",
+        "description": "Bulk escalate"
+      },
+      {
+        "name": "ticket.bulkClose",
+        "method": "POST",
+        "description": "Bulk close"
+      },
+      {
+        "name": "ticket.assignees",
+        "method": "GET",
+        "description": "Assignees"
+      },
+      {
+        "name": "ticket.filterOptions",
+        "method": "GET",
+        "description": "Get filter options"
+      },
+      {
+        "name": "ticket.addAttachment",
+        "method": "POST",
+        "description": "Add attachment"
+      }
+    ],
+    "user": [
+      {
+        "name": "user.getProfile",
+        "method": "GET",
+        "description": "Get profile"
+      },
+      {
+        "name": "user.updateTimezone",
+        "method": "POST",
+        "description": "Update timezone"
+      },
+      {
+        "name": "user.updateProfile",
+        "method": "POST",
+        "description": "Update profile"
+      }
+    ],
+    "webhooks": [
+      {
+        "name": "webhooks.handleWebhook",
+        "method": "POST",
+        "description": "Handle webhook"
+      },
+      {
+        "name": "webhooks.registerSource",
+        "method": "POST",
+        "description": "Register source"
+      },
+      {
+        "name": "webhooks.unregisterSource",
+        "method": "POST",
+        "description": "Unregister source"
+      },
+      {
+        "name": "webhooks.getSources",
+        "method": "GET",
+        "description": "Get sources"
+      },
+      {
+        "name": "webhooks.getMetrics",
+        "method": "GET",
+        "description": "Get metrics"
+      },
+      {
+        "name": "webhooks.processRetries",
+        "method": "POST",
+        "description": "Process retries"
+      },
+      {
+        "name": "webhooks.getDeadLetterEntries",
+        "method": "GET",
+        "description": "Get dead letter entries"
+      },
+      {
+        "name": "webhooks.reprocessDeadLetter",
+        "method": "POST",
+        "description": "Reprocess dead letter"
+      },
+      {
+        "name": "webhooks.cleanup",
+        "method": "POST",
+        "description": "Cleanup"
+      }
+    ],
+    "workflow": [
+      {
+        "name": "workflow.create",
+        "method": "POST",
+        "description": "Create new workflow"
+      },
+      {
+        "name": "workflow.update",
+        "method": "POST",
+        "description": "Update workflow"
+      },
+      {
+        "name": "workflow.delete",
+        "method": "POST",
+        "description": "Delete workflow"
+      },
+      {
+        "name": "workflow.setActive",
+        "method": "POST",
+        "description": "Set active"
+      },
+      {
+        "name": "workflow.list",
+        "method": "GET",
+        "description": "List workflows with pagination"
+      },
+      {
+        "name": "workflow.getById",
+        "method": "GET",
+        "description": "Get workflow by ID"
+      },
+      {
+        "name": "workflow.getExecution",
+        "method": "GET",
+        "description": "Get execution"
+      },
+      {
+        "name": "workflow.getExecutionsByEntity",
+        "method": "GET",
+        "description": "Get executions by entity"
+      }
+    ],
+    "zepBudget": [
+      {
+        "name": "zepBudget.getStatus",
+        "method": "GET",
+        "description": "Get status"
+      },
+      {
+        "name": "zepBudget.getAuditHistory",
+        "method": "GET",
+        "description": "Get audit history"
+      },
+      {
+        "name": "zepBudget.reset",
+        "method": "POST",
+        "description": "Reset"
+      }
+    ]
   }
 }
