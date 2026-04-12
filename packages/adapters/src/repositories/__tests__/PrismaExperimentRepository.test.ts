@@ -117,9 +117,7 @@ describe('PrismaExperimentRepository', () => {
   // ==========================================================================
   describe('create', () => {
     it('should create an experiment and return a mapped record', async () => {
-      vi.mocked(mockPrisma.experiment.create).mockResolvedValue(
-        createMockExperimentRow() as any
-      );
+      vi.mocked(mockPrisma.experiment.create).mockResolvedValue(createMockExperimentRow() as any);
 
       const result = await repo.create({
         name: 'AI vs Manual Scoring',
@@ -331,7 +329,11 @@ describe('PrismaExperimentRepository', () => {
 
     it('should update trafficPercent, minSampleSize, and significanceLevel', async () => {
       vi.mocked(mockPrisma.experiment.update).mockResolvedValue(
-        createMockExperimentRow({ trafficPercent: 75, minSampleSize: 200, significanceLevel: 0.01 }) as any
+        createMockExperimentRow({
+          trafficPercent: 75,
+          minSampleSize: 200,
+          significanceLevel: 0.01,
+        }) as any
       );
 
       await repo.update(EXPERIMENT_ID, {
@@ -357,8 +359,10 @@ describe('PrismaExperimentRepository', () => {
 
       await repo.update(EXPERIMENT_ID, { description: 'New description' });
 
-      const callData = vi.mocked(mockPrisma.experiment.update).mock.calls[0][0]
-        .data as Record<string, unknown>;
+      const callData = vi.mocked(mockPrisma.experiment.update).mock.calls[0][0].data as Record<
+        string,
+        unknown
+      >;
       expect(callData).toHaveProperty('description', 'New description');
       expect(callData).not.toHaveProperty('name');
       expect(callData).not.toHaveProperty('status');
@@ -396,9 +400,7 @@ describe('PrismaExperimentRepository', () => {
   // ==========================================================================
   describe('delete', () => {
     it('should call Prisma delete with the correct id', async () => {
-      vi.mocked(mockPrisma.experiment.delete).mockResolvedValue(
-        createMockExperimentRow() as any
-      );
+      vi.mocked(mockPrisma.experiment.delete).mockResolvedValue(createMockExperimentRow() as any);
 
       await repo.delete(EXPERIMENT_ID);
 
@@ -408,9 +410,7 @@ describe('PrismaExperimentRepository', () => {
     });
 
     it('should resolve without returning a value', async () => {
-      vi.mocked(mockPrisma.experiment.delete).mockResolvedValue(
-        createMockExperimentRow() as any
-      );
+      vi.mocked(mockPrisma.experiment.delete).mockResolvedValue(createMockExperimentRow() as any);
 
       const result = await repo.delete(EXPERIMENT_ID);
 
@@ -527,10 +527,7 @@ describe('PrismaExperimentRepository', () => {
           createMockAssignmentRow() as any
         );
 
-        const result = await repo.assignments.findByExperimentAndLead(
-          EXPERIMENT_ID,
-          LEAD_ID
-        );
+        const result = await repo.assignments.findByExperimentAndLead(EXPERIMENT_ID, LEAD_ID);
 
         expect(result).not.toBeNull();
         expect(result!.experimentId).toBe(EXPERIMENT_ID);
@@ -543,10 +540,7 @@ describe('PrismaExperimentRepository', () => {
       it('should return null when not found', async () => {
         vi.mocked(mockPrisma.experimentAssignment.findUnique).mockResolvedValue(null);
 
-        const result = await repo.assignments.findByExperimentAndLead(
-          EXPERIMENT_ID,
-          LEAD_ID
-        );
+        const result = await repo.assignments.findByExperimentAndLead(EXPERIMENT_ID, LEAD_ID);
 
         expect(result).toBeNull();
       });
@@ -561,12 +555,7 @@ describe('PrismaExperimentRepository', () => {
           createMockAssignmentRow({ score: 0.87, confidence: 0.95 }) as any
         );
 
-        const result = await repo.assignments.updateScore(
-          EXPERIMENT_ID,
-          LEAD_ID,
-          0.87,
-          0.95
-        );
+        const result = await repo.assignments.updateScore(EXPERIMENT_ID, LEAD_ID, 0.87, 0.95);
 
         expect(result.score).toBe(0.87);
         expect(result.confidence).toBe(0.95);
@@ -602,11 +591,7 @@ describe('PrismaExperimentRepository', () => {
           }) as any
         );
 
-        const result = await repo.assignments.updateConversion(
-          EXPERIMENT_ID,
-          LEAD_ID,
-          1500
-        );
+        const result = await repo.assignments.updateConversion(EXPERIMENT_ID, LEAD_ID, 1500);
 
         expect(result.convertedAt).not.toBeNull();
         expect(result.conversionValue).toBe(1500);
@@ -692,13 +677,10 @@ describe('PrismaExperimentRepository', () => {
     describe('getConversionsByVariant', () => {
       it('should return count (converted) and total for the variant', async () => {
         vi.mocked(mockPrisma.experimentAssignment.count)
-          .mockResolvedValueOnce(100)  // total
-          .mockResolvedValueOnce(35);  // converted
+          .mockResolvedValueOnce(100) // total
+          .mockResolvedValueOnce(35); // converted
 
-        const result = await repo.assignments.getConversionsByVariant(
-          EXPERIMENT_ID,
-          'treatment'
-        );
+        const result = await repo.assignments.getConversionsByVariant(EXPERIMENT_ID, 'treatment');
 
         expect(result.total).toBe(100);
         expect(result.count).toBe(35);
@@ -722,10 +704,7 @@ describe('PrismaExperimentRepository', () => {
           .mockResolvedValueOnce(0)
           .mockResolvedValueOnce(0);
 
-        const result = await repo.assignments.getConversionsByVariant(
-          EXPERIMENT_ID,
-          'control'
-        );
+        const result = await repo.assignments.getConversionsByVariant(EXPERIMENT_ID, 'control');
 
         expect(result.count).toBe(0);
         expect(result.total).toBe(0);
@@ -1056,10 +1035,7 @@ describe('PrismaExperimentRepository', () => {
         }) as any
       );
 
-      const result = await repo.assignments.findByExperimentAndLead(
-        EXPERIMENT_ID,
-        LEAD_ID
-      );
+      const result = await repo.assignments.findByExperimentAndLead(EXPERIMENT_ID, LEAD_ID);
 
       expect(result!.score).toBe(0.9);
       expect(result!.confidence).toBe(0.99);
@@ -1077,10 +1053,7 @@ describe('PrismaExperimentRepository', () => {
         }) as any
       );
 
-      const result = await repo.assignments.findByExperimentAndLead(
-        EXPERIMENT_ID,
-        LEAD_ID
-      );
+      const result = await repo.assignments.findByExperimentAndLead(EXPERIMENT_ID, LEAD_ID);
 
       expect(result!.score).toBeNull();
       expect(result!.confidence).toBeNull();

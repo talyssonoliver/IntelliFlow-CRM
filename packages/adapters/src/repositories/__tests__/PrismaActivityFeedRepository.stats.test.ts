@@ -171,9 +171,7 @@ describe('PrismaActivityFeedRepository.getStats', () => {
 
   it('derives byEntityType from bySource using entitySourceMap', async () => {
     // CONTACT entity type has sources: CONTACT_ACTIVITY, EMAIL, CALL, CHAT
-    mockPrisma.contactActivity.groupBy.mockResolvedValue([
-      { type: 'EMAIL', _count: { _all: 4 } },
-    ]);
+    mockPrisma.contactActivity.groupBy.mockResolvedValue([{ type: 'EMAIL', _count: { _all: 4 } }]);
     mockPrisma.emailRecord.count.mockResolvedValue(3);
     mockPrisma.callRecord.count.mockResolvedValue(2);
     mockPrisma.chatMessage.count.mockResolvedValue(1);

@@ -224,7 +224,9 @@ export class SAPAdapter implements ERPServicePort {
         {
           method: 'GET',
           headers: {
-            Authorization: 'Basic ' + Buffer.from(`${this.config.username}:${this.config.password}`).toString('base64'),
+            Authorization:
+              'Basic ' +
+              Buffer.from(`${this.config.username}:${this.config.password}`).toString('base64'),
             'x-csrf-token': 'Fetch',
             Accept: 'application/json',
           },
@@ -621,9 +623,7 @@ export class SAPAdapter implements ERPServicePort {
       const data = (await response.json()) as {
         d?: { results?: Record<string, unknown>[]; __next?: string };
       };
-      const invoices = (data.d?.results ?? []).map((i) =>
-        this.mapToInvoice(i)
-      );
+      const invoices = (data.d?.results ?? []).map((i) => this.mapToInvoice(i));
       const nextLink = data.d?.__next;
 
       return Result.ok({
@@ -704,9 +704,7 @@ export class SAPAdapter implements ERPServicePort {
       const data = (await response.json()) as {
         d?: { results?: Record<string, unknown>[]; __next?: string };
       };
-      const materials = (data.d?.results ?? []).map((m) =>
-        this.mapToMaterial(m)
-      );
+      const materials = (data.d?.results ?? []).map((m) => this.mapToMaterial(m));
       const nextLink = data.d?.__next;
 
       return Result.ok({
@@ -776,7 +774,9 @@ export class SAPAdapter implements ERPServicePort {
 
   private getHeaders(): Record<string, string> {
     return {
-      Authorization: 'Basic ' + Buffer.from(`${this.config.username}:${this.config.password}`).toString('base64'),
+      Authorization:
+        'Basic ' +
+        Buffer.from(`${this.config.username}:${this.config.password}`).toString('base64'),
       'x-csrf-token': this.tokens?.accessToken ?? '',
       Cookie: this.tokens?.sessionId ?? '',
       Accept: 'application/json',
@@ -803,8 +803,14 @@ export class SAPAdapter implements ERPServicePort {
 
   private mapToCustomer(data: Record<string, unknown>): SAPCustomer {
     return {
-      customerNumber: (data.Customer as string | null | undefined) ?? (data.CustomerID as string | null | undefined) ?? '',
-      name: (data.CustomerName as string | null | undefined) ?? (data.CustomerFullName as string | null | undefined) ?? '',
+      customerNumber:
+        (data.Customer as string | null | undefined) ??
+        (data.CustomerID as string | null | undefined) ??
+        '',
+      name:
+        (data.CustomerName as string | null | undefined) ??
+        (data.CustomerFullName as string | null | undefined) ??
+        '',
       name2: data.CustomerName2 ? (data.CustomerName2 as string) : undefined,
       street: data.StreetName ? (data.StreetName as string) : undefined,
       city: data.CityName ? (data.CityName as string) : undefined,
@@ -845,11 +851,15 @@ export class SAPAdapter implements ERPServicePort {
     return {
       orderNumber: (data.SalesOrder as string | null | undefined) ?? '',
       customerNumber: (data.SoldToParty as string | null | undefined) ?? '',
-      orderDate: new Date((data.SalesOrderDate as string | null | undefined) ?? new Date().toISOString()),
+      orderDate: new Date(
+        (data.SalesOrderDate as string | null | undefined) ?? new Date().toISOString()
+      ),
       deliveryDate: data.RequestedDeliveryDate
         ? new Date(data.RequestedDeliveryDate as string)
         : undefined,
-      status: this.mapStatusFromSAP((data.OverallSDProcessStatus as string | null | undefined) ?? ''),
+      status: this.mapStatusFromSAP(
+        (data.OverallSDProcessStatus as string | null | undefined) ?? ''
+      ),
       currency: (data.TransactionCurrency as string | null | undefined) ?? 'USD',
       netAmount: Number(data.TotalNetAmount ?? 0),
       taxAmount: Number(data.TotalTaxAmount ?? 0),
@@ -892,8 +902,12 @@ export class SAPAdapter implements ERPServicePort {
       invoiceNumber: (data.BillingDocument as string | null | undefined) ?? '',
       orderNumber: (data.SalesDocument as string | null | undefined) ?? '',
       customerNumber: (data.SoldToParty as string | null | undefined) ?? '',
-      invoiceDate: new Date((data.BillingDocumentDate as string | null | undefined) ?? new Date().toISOString()),
-      dueDate: new Date((data.PaymentDueDate as string | null | undefined) ?? new Date().toISOString()),
+      invoiceDate: new Date(
+        (data.BillingDocumentDate as string | null | undefined) ?? new Date().toISOString()
+      ),
+      dueDate: new Date(
+        (data.PaymentDueDate as string | null | undefined) ?? new Date().toISOString()
+      ),
       status: this.mapInvoiceStatus((data.PaymentStatus as string | null | undefined) ?? ''),
       currency: (data.TransactionCurrency as string | null | undefined) ?? 'USD',
       netAmount: Number(data.NetAmount ?? 0),
@@ -905,7 +919,10 @@ export class SAPAdapter implements ERPServicePort {
 
   private mapToMaterial(data: Record<string, unknown>): SAPMaterial {
     return {
-      materialNumber: (data.Product as string | null | undefined) ?? (data.Material as string | null | undefined) ?? '',
+      materialNumber:
+        (data.Product as string | null | undefined) ??
+        (data.Material as string | null | undefined) ??
+        '',
       description: (data.ProductDescription as string | null | undefined) ?? '',
       materialGroup: (data.ProductGroup as string | null | undefined) ?? '',
       baseUnit: (data.BaseUnit as string | null | undefined) ?? 'EA',

@@ -21,7 +21,10 @@ export function mapToCustomer(data: Record<string, unknown>): StripeCustomer {
     description: data.description ? (data.description as string) : undefined,
     metadata: data.metadata as Record<string, string> | undefined,
     defaultPaymentMethodId: data.invoice_settings
-      ? ((data.invoice_settings as Record<string, unknown>).default_payment_method as string | null | undefined) ?? ''
+      ? (((data.invoice_settings as Record<string, unknown>).default_payment_method as
+          | string
+          | null
+          | undefined) ?? '')
       : undefined,
     balance: Number(data.balance ?? 0),
     currency: (data.currency as string | null | undefined) ?? 'usd',
@@ -55,9 +58,8 @@ export function mapToPaymentMethod(data: Record<string, unknown>): StripePayment
           routingNumber: bankAccount.routing_number
             ? (bankAccount.routing_number as string)
             : undefined,
-          accountHolderType: ((bankAccount.account_holder_type as string | null | undefined) ?? 'individual') as
-            | 'individual'
-            | 'company',
+          accountHolderType: ((bankAccount.account_holder_type as string | null | undefined) ??
+            'individual') as 'individual' | 'company',
         }
       : undefined,
     billingDetails: {
@@ -82,7 +84,8 @@ export function mapToPaymentIntent(data: Record<string, unknown>): StripePayment
     id: (data.id as string | null | undefined) ?? '',
     amount: Number(data.amount ?? 0),
     currency: (data.currency as string | null | undefined) ?? 'usd',
-    status: ((data.status as string | null | undefined) ?? 'requires_payment_method') as StripePaymentIntent['status'],
+    status: ((data.status as string | null | undefined) ??
+      'requires_payment_method') as StripePaymentIntent['status'],
     customerId: data.customer ? (data.customer as string) : undefined,
     paymentMethodId: data.payment_method ? (data.payment_method as string) : undefined,
     clientSecret: (data.client_secret as string | null | undefined) ?? '',
@@ -101,7 +104,7 @@ export function mapToRefund(data: Record<string, unknown>): StripeRefund {
     amount: Number(data.amount ?? 0),
     currency: (data.currency as string | null | undefined) ?? 'usd',
     status: ((data.status as string | null | undefined) ?? 'pending') as StripeRefund['status'],
-    reason: data.reason ? ((data.reason as string) as StripeRefund['reason']) : undefined,
+    reason: data.reason ? (data.reason as string as StripeRefund['reason']) : undefined,
     receiptNumber: data.receipt_number ? (data.receipt_number as string) : undefined,
     created: new Date(Number(data.created ?? 0) * 1000),
   };
@@ -116,7 +119,8 @@ export function mapToSubscription(data: Record<string, unknown>): StripeSubscrip
   return {
     id: (data.id as string | null | undefined) ?? '',
     customerId: (data.customer as string | null | undefined) ?? '',
-    status: ((data.status as string | null | undefined) ?? 'incomplete') as StripeSubscription['status'],
+    status: ((data.status as string | null | undefined) ??
+      'incomplete') as StripeSubscription['status'],
     priceId: price ? ((price.id as string | null | undefined) ?? '') : '',
     quantity: Number(firstItem.quantity ?? 1),
     currency: (data.currency as string | null | undefined) ?? 'usd',
@@ -150,9 +154,7 @@ function extractCardDetails(charge: unknown): {
   };
 }
 
-function mapInvoiceLineItems(
-  data: Record<string, unknown>
-): StripeInvoiceLineItem[] {
+function mapInvoiceLineItems(data: Record<string, unknown>): StripeInvoiceLineItem[] {
   const linesObj = data.lines as Record<string, unknown> | undefined;
   const linesData = (linesObj?.data as Array<Record<string, unknown>>) ?? [];
   return linesData.map((item) => ({
@@ -161,13 +163,14 @@ function mapInvoiceLineItems(
     quantity: Number(item.quantity ?? 1),
     unitAmount: Number(item.unit_amount ?? 0),
     amount: Number(item.amount ?? 0),
-    currency: (item.currency as string | null | undefined) ?? (data.currency as string | null | undefined) ?? 'usd',
+    currency:
+      (item.currency as string | null | undefined) ??
+      (data.currency as string | null | undefined) ??
+      'usd',
   }));
 }
 
-function mapInvoiceBillingAddress(
-  data: Record<string, unknown>
-):
+function mapInvoiceBillingAddress(data: Record<string, unknown>):
   | {
       line1?: string;
       line2?: string;

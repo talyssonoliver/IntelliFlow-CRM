@@ -49,8 +49,10 @@ export class PrismaExperimentRepository implements ExperimentRepositoryPort {
         this.updateAssignmentScore(experimentId, leadId, score, confidence),
       updateConversion: (experimentId, leadId, conversionValue) =>
         this.updateAssignmentConversion(experimentId, leadId, conversionValue),
-      countByVariant: (experimentId, variant) => this.countAssignmentsByVariant(experimentId, variant),
-      getScoresByVariant: (experimentId, variant) => this.getAssignmentScoresByVariant(experimentId, variant),
+      countByVariant: (experimentId, variant) =>
+        this.countAssignmentsByVariant(experimentId, variant),
+      getScoresByVariant: (experimentId, variant) =>
+        this.getAssignmentScoresByVariant(experimentId, variant),
       getConversionsByVariant: (experimentId, variant) =>
         this.getAssignmentConversionsByVariant(experimentId, variant),
     };
@@ -229,7 +231,10 @@ export class PrismaExperimentRepository implements ExperimentRepositoryPort {
     });
   }
 
-  private async getAssignmentScoresByVariant(experimentId: string, variant: string): Promise<number[]> {
+  private async getAssignmentScoresByVariant(
+    experimentId: string,
+    variant: string
+  ): Promise<number[]> {
     const rows = await this.prisma.experimentAssignment.findMany({
       where: { experimentId, variant, score: { not: null } },
       select: { score: true },
@@ -282,41 +287,39 @@ export class PrismaExperimentRepository implements ExperimentRepositoryPort {
     return this.toResultRecord(row);
   }
 
-  private async findResultByExperimentId(experimentId: string): Promise<ExperimentResultRecord | null> {
+  private async findResultByExperimentId(
+    experimentId: string
+  ): Promise<ExperimentResultRecord | null> {
     const row = await this.prisma.experimentResult.findUnique({
       where: { experimentId },
     });
     return row ? this.toResultRecord(row) : null;
   }
 
+  private buildResultUpdateData(
+    data: Partial<ExperimentResultRecord>
+  ): Record<string, unknown> {
+    const updateData: Record<string, unknown> = {};
+    const scalarFields = [
+      'controlSampleSize', 'treatmentSampleSize', 'controlMean', 'treatmentMean',
+      'controlStdDev', 'treatmentStdDev', 'tStatistic', 'pValue', 'effectSize',
+      'controlConversionRate', 'treatmentConversionRate', 'chiSquareStatistic',
+      'chiSquarePValue', 'isSignificant', 'winner', 'recommendation',
+    ] as const;
+    for (const field of scalarFields) {
+      if (data[field] !== undefined) updateData[field] = data[field];
+    }
+    if (data.confidenceInterval !== undefined) {
+      updateData.confidenceInterval = data.confidenceInterval as Prisma.InputJsonValue;
+    }
+    return updateData;
+  }
+
   private async updateResult(
     experimentId: string,
     data: Partial<ExperimentResultRecord>
   ): Promise<ExperimentResultRecord> {
-    const updateData: Record<string, unknown> = {};
-    if (data.controlSampleSize !== undefined) updateData.controlSampleSize = data.controlSampleSize;
-    if (data.treatmentSampleSize !== undefined)
-      updateData.treatmentSampleSize = data.treatmentSampleSize;
-    if (data.controlMean !== undefined) updateData.controlMean = data.controlMean;
-    if (data.treatmentMean !== undefined) updateData.treatmentMean = data.treatmentMean;
-    if (data.controlStdDev !== undefined) updateData.controlStdDev = data.controlStdDev;
-    if (data.treatmentStdDev !== undefined) updateData.treatmentStdDev = data.treatmentStdDev;
-    if (data.tStatistic !== undefined) updateData.tStatistic = data.tStatistic;
-    if (data.pValue !== undefined) updateData.pValue = data.pValue;
-    if (data.confidenceInterval !== undefined)
-      updateData.confidenceInterval = data.confidenceInterval as Prisma.InputJsonValue;
-    if (data.effectSize !== undefined) updateData.effectSize = data.effectSize;
-    if (data.controlConversionRate !== undefined)
-      updateData.controlConversionRate = data.controlConversionRate;
-    if (data.treatmentConversionRate !== undefined)
-      updateData.treatmentConversionRate = data.treatmentConversionRate;
-    if (data.chiSquareStatistic !== undefined)
-      updateData.chiSquareStatistic = data.chiSquareStatistic;
-    if (data.chiSquarePValue !== undefined) updateData.chiSquarePValue = data.chiSquarePValue;
-    if (data.isSignificant !== undefined) updateData.isSignificant = data.isSignificant;
-    if (data.winner !== undefined) updateData.winner = data.winner;
-    if (data.recommendation !== undefined) updateData.recommendation = data.recommendation;
-
+    const updateData = this.buildResultUpdateData(data);
     const row = await this.prisma.experimentResult.update({
       where: { experimentId },
       data: updateData as any,

@@ -174,4 +174,8 @@ export function createWebhookServiceAdapter(
 }
 
 // Re-export domain errors for convenience
-export { WebhookVerificationError, WebhookProcessingError, WebhookSourceNotFoundError } from '@intelliflow/application';
+export {
+  WebhookVerificationError,
+  WebhookProcessingError,
+  WebhookSourceNotFoundError,
+} from '@intelliflow/application';

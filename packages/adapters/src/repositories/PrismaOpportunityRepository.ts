@@ -148,7 +148,11 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
     return records.map(reconstituteOpportunity);
   }
 
-  async findByStage(stage: OpportunityStage, tenantId?: string, ownerId?: string): Promise<Opportunity[]> {
+  async findByStage(
+    stage: OpportunityStage,
+    tenantId?: string,
+    ownerId?: string
+  ): Promise<Opportunity[]> {
     const records = await this.prisma.opportunity.findMany({
       where: {
         stage,
@@ -193,7 +197,11 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
   async sumValueByStage(tenantId?: string, ownerId?: string): Promise<Record<string, number>> {
     const results = await this.prisma.opportunity.groupBy({
       by: ['stage'],
-      where: { deletedAt: null, ...(tenantId ? { tenantId } : {}), ...(ownerId ? { ownerId } : {}) } as any,
+      where: {
+        deletedAt: null,
+        ...(tenantId ? { tenantId } : {}),
+        ...(ownerId ? { ownerId } : {}),
+      } as any,
       _sum: { value: true },
     });
 
@@ -209,7 +217,11 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
   async countByStage(tenantId?: string, ownerId?: string): Promise<Record<string, number>> {
     const results = await this.prisma.opportunity.groupBy({
       by: ['stage'],
-      where: { deletedAt: null, ...(tenantId ? { tenantId } : {}), ...(ownerId ? { ownerId } : {}) } as any,
+      where: {
+        deletedAt: null,
+        ...(tenantId ? { tenantId } : {}),
+        ...(ownerId ? { ownerId } : {}),
+      } as any,
       _count: true,
     });
 
@@ -231,7 +243,11 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
     return records.map(reconstituteOpportunity);
   }
 
-  async findHighValue(minValue: number, tenantId?: string, ownerId?: string): Promise<Opportunity[]> {
+  async findHighValue(
+    minValue: number,
+    tenantId?: string,
+    ownerId?: string
+  ): Promise<Opportunity[]> {
     const records = await this.prisma.opportunity.findMany({
       where: {
         value: { gte: new Decimal(minValue) },

@@ -16,10 +16,7 @@ import {
   CalendarConflictError,
 } from '@intelliflow/application';
 import { RetryHandler, RateLimiter } from '../shared/RetryHandler';
-import {
-  IdempotencyManager,
-  InMemoryIdempotencyStore,
-} from '../shared/IdempotencyManager';
+import { IdempotencyManager, InMemoryIdempotencyStore } from '../shared/IdempotencyManager';
 
 /**
  * Google Calendar Adapter
@@ -1016,7 +1013,9 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
           new CalendarEventNotFoundError('google', error.error?.message ?? 'Event not found')
         );
       case 429: {
-        const retryAfter = Number.parseInt(error.error?.details?.[0]?.metadata?.retryAfterSeconds ?? '60');
+        const retryAfter = Number.parseInt(
+          error.error?.details?.[0]?.metadata?.retryAfterSeconds ?? '60'
+        );
         return Result.fail(new CalendarRateLimitError('google', retryAfter));
       }
       default:

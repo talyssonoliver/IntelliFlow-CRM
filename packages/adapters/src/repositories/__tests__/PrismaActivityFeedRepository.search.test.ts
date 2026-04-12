@@ -136,7 +136,12 @@ function makePrismaChatMessage(overrides: Record<string, unknown> = {}) {
     senderName: 'Customer',
     metadata: null,
     tenantId: 'tenant-1',
-    conversation: { id: 'conv-1', contactName: 'Bob Wilson', contactId: 'contact-1', subject: 'Integration help' },
+    conversation: {
+      id: 'conv-1',
+      contactName: 'Bob Wilson',
+      contactId: 'contact-1',
+      subject: 'Integration help',
+    },
     ...overrides,
   };
 }

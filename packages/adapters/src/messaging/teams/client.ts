@@ -1340,7 +1340,9 @@ export class TeamsAdapter implements TeamsMessagingPort {
       description: data.description ? (data.description as string) : undefined,
       visibility: (data.visibility ?? 'private') as 'private' | 'public',
       isArchived: Boolean(data.isArchived),
-      createdDateTime: new Date((data.createdDateTime as string | null | undefined) ?? new Date().toISOString()),
+      createdDateTime: new Date(
+        (data.createdDateTime as string | null | undefined) ?? new Date().toISOString()
+      ),
       webUrl: data.webUrl ? (data.webUrl as string) : undefined,
     };
   }
@@ -1351,7 +1353,9 @@ export class TeamsAdapter implements TeamsMessagingPort {
       displayName: (data.displayName as string | null | undefined) ?? '',
       description: data.description ? (data.description as string) : undefined,
       membershipType: (data.membershipType ?? 'standard') as 'standard' | 'private' | 'shared',
-      createdDateTime: new Date((data.createdDateTime as string | null | undefined) ?? new Date().toISOString()),
+      createdDateTime: new Date(
+        (data.createdDateTime as string | null | undefined) ?? new Date().toISOString()
+      ),
       webUrl: data.webUrl ? (data.webUrl as string) : undefined,
       email: data.email ? (data.email as string) : undefined,
     };
@@ -1363,7 +1367,9 @@ export class TeamsAdapter implements TeamsMessagingPort {
 
     return {
       id: (data.id as string | null | undefined) ?? '',
-      createdDateTime: new Date((data.createdDateTime as string | null | undefined) ?? new Date().toISOString()),
+      createdDateTime: new Date(
+        (data.createdDateTime as string | null | undefined) ?? new Date().toISOString()
+      ),
       lastModifiedDateTime: data.lastModifiedDateTime
         ? new Date(data.lastModifiedDateTime as string)
         : undefined,
@@ -1399,7 +1405,8 @@ export class TeamsAdapter implements TeamsMessagingPort {
         ? {
             id: (application.id as string | null | undefined) ?? '',
             displayName: (application.displayName as string | null | undefined) ?? '',
-            applicationIdentityType: (application.applicationIdentityType as string | null | undefined) ?? '',
+            applicationIdentityType:
+              (application.applicationIdentityType as string | null | undefined) ?? '',
           }
         : undefined,
     };
@@ -1410,7 +1417,9 @@ export class TeamsAdapter implements TeamsMessagingPort {
       id: (data.id as string | null | undefined) ?? '',
       topic: data.topic ? (data.topic as string) : undefined,
       chatType: (data.chatType ?? 'oneOnOne') as 'oneOnOne' | 'group' | 'meeting',
-      createdDateTime: new Date((data.createdDateTime as string | null | undefined) ?? new Date().toISOString()),
+      createdDateTime: new Date(
+        (data.createdDateTime as string | null | undefined) ?? new Date().toISOString()
+      ),
       lastUpdatedDateTime: data.lastUpdatedDateTime
         ? new Date(data.lastUpdatedDateTime as string)
         : undefined,

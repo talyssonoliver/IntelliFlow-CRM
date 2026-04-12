@@ -411,7 +411,9 @@ function parseMimeSection(section: string, endMarkerSuffix: string): MimePart | 
   const filenameMatch = /filename=["']?([^"';\s]+)["']?/i.exec(contentDisposition);
   const filename = filenameMatch ? filenameMatch[1] : undefined;
 
-  const contentIdMatch = headers['content-id'] ? /<([^>]{1,500})>/.exec(headers['content-id']) : undefined;
+  const contentIdMatch = headers['content-id']
+    ? /<([^>]{1,500})>/.exec(headers['content-id'])
+    : undefined;
   const contentId = contentIdMatch ? contentIdMatch[1] : undefined;
 
   return {

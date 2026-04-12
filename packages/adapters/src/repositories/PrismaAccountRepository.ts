@@ -174,7 +174,11 @@ export class PrismaAccountRepository implements AccountRepository {
     };
   }
 
-  async findWithChildren(id: AccountId, maxDepth: number, tenantId: string): Promise<AccountHierarchyRecord | null> {
+  async findWithChildren(
+    id: AccountId,
+    maxDepth: number,
+    tenantId: string
+  ): Promise<AccountHierarchyRecord | null> {
     const include = {
       _count: { select: { contacts: true, opportunities: true } },
       ...this.buildChildrenInclude(maxDepth),

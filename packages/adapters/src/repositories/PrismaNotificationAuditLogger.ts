@@ -7,7 +7,11 @@
  */
 import { PrismaClient } from '@intelliflow/db';
 import type { NotificationAuditLogger } from '@intelliflow/application';
-import type { Notification, NotificationChannel, NotificationPreference } from '@intelliflow/domain';
+import type {
+  Notification,
+  NotificationChannel,
+  NotificationPreference,
+} from '@intelliflow/domain';
 
 // Prisma DB enum types (uppercase) — matches the Prisma-generated enum
 type DbNotificationChannel = 'IN_APP' | 'EMAIL' | 'SMS' | 'PUSH' | 'WEBHOOK';

@@ -317,7 +317,7 @@ export class DkimSigner {
     dkimParts.push(
       `h=${signedHeaderNames.join(':')}`,
       `bh=${bodyHash}`,
-      `b=`, // Empty signature tag — RFC 6376 §3.5 two-pass: this header (with b= empty) is
+      `b=` // Empty signature tag — RFC 6376 §3.5 two-pass: this header (with b= empty) is
       // included in the signing input, then the computed signature replaces it below.
     );
 

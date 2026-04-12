@@ -16,10 +16,7 @@ import {
   CalendarConflictError,
 } from '@intelliflow/application';
 import { RetryHandler, RateLimiter } from '../shared/RetryHandler';
-import {
-  IdempotencyManager,
-  InMemoryIdempotencyStore,
-} from '../shared/IdempotencyManager';
+import { IdempotencyManager, InMemoryIdempotencyStore } from '../shared/IdempotencyManager';
 
 /**
  * Microsoft Graph Calendar Adapter

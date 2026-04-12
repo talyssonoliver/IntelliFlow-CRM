@@ -551,7 +551,9 @@ describe('PrismaAccountRepository', () => {
       const findFirstMock = mockPrisma.account.findFirst;
       findFirstMock.mockResolvedValue(mockRecord);
 
-      await expect(repository.findById(testAccountId, 'tenant-123')).rejects.toThrow(/Invalid AccountId/);
+      await expect(repository.findById(testAccountId, 'tenant-123')).rejects.toThrow(
+        /Invalid AccountId/
+      );
     });
   });
 

@@ -38,9 +38,7 @@ export class RealNotificationServiceAdapter implements NotificationServicePort {
     options: EmailNotificationOptions
   ): Promise<Result<NotificationResult, DomainError>> {
     if (!options.to || options.to.length === 0) {
-      return Result.fail(
-        new NotificationDeliveryError('email', 'Recipients list is empty')
-      );
+      return Result.fail(new NotificationDeliveryError('email', 'Recipients list is empty'));
     }
 
     const recipients = [
@@ -72,7 +70,10 @@ export class RealNotificationServiceAdapter implements NotificationServicePort {
     if (result.isFailure) {
       const err = result.error;
       return Result.fail(
-        new NotificationDeliveryError('email', err instanceof Error ? err.message : 'Email send failed')
+        new NotificationDeliveryError(
+          'email',
+          err instanceof Error ? err.message : 'Email send failed'
+        )
       );
     }
 

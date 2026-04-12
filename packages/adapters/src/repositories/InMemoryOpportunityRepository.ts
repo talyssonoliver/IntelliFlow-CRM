@@ -62,7 +62,8 @@ export class InMemoryOpportunityRepository implements OpportunityRepository {
 
   async softDelete(id: OpportunityId, tenantId: string): Promise<void> {
     const opp = this.opportunities.get(id.value);
-    if (!opp || opp.tenantId !== tenantId) throw new Error(`Opportunity not found or tenant mismatch: ${id.value}`);
+    if (!opp || opp.tenantId !== tenantId)
+      throw new Error(`Opportunity not found or tenant mismatch: ${id.value}`);
     // In-memory: reconstitute with deletedAt set — used for testing only
     const updated = Opportunity.reconstitute(id, {
       name: opp.name,
@@ -85,7 +86,8 @@ export class InMemoryOpportunityRepository implements OpportunityRepository {
 
   async restore(id: OpportunityId, tenantId: string): Promise<void> {
     const opp = this.opportunities.get(id.value);
-    if (!opp || opp.tenantId !== tenantId) throw new Error(`Opportunity not found or tenant mismatch: ${id.value}`);
+    if (!opp || opp.tenantId !== tenantId)
+      throw new Error(`Opportunity not found or tenant mismatch: ${id.value}`);
     const updated = Opportunity.reconstitute(id, {
       name: opp.name,
       value: opp.value,

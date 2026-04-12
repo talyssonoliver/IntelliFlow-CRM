@@ -341,4 +341,9 @@ export function createEmailServiceAdapter(
 }
 
 // Re-export domain errors for convenience
-export { EmailSendError, EmailParseError, RateLimitExceededError, DeliverabilityError } from '@intelliflow/application';
+export {
+  EmailSendError,
+  EmailParseError,
+  RateLimitExceededError,
+  DeliverabilityError,
+} from '@intelliflow/application';

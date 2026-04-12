@@ -28,7 +28,9 @@ export class InMemoryAccountRepository implements AccountRepository {
   async findByName(name: string, tenantId: string): Promise<Account[]> {
     const lowerName = name.toLowerCase();
     return Array.from(this.accounts.values())
-      .filter((account) => account.tenantId === tenantId && account.name.toLowerCase().includes(lowerName))
+      .filter(
+        (account) => account.tenantId === tenantId && account.name.toLowerCase().includes(lowerName)
+      )
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 

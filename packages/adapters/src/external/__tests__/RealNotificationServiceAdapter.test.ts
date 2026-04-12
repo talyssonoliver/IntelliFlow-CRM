@@ -146,9 +146,7 @@ describe('RealNotificationServiceAdapter', () => {
     it('propagates Result.fail from underlying EmailServiceAdapter', async () => {
       const { EmailSendError } = await import('@intelliflow/application');
       mockEmailAdapter = createMockEmailAdapter({
-        sendEmail: vi.fn().mockResolvedValue(
-          Result.fail(new EmailSendError('Provider rejected'))
-        ),
+        sendEmail: vi.fn().mockResolvedValue(Result.fail(new EmailSendError('Provider rejected'))),
       });
       adapter = new RealNotificationServiceAdapter(mockEmailAdapter, {
         fromAddress: 'noreply@intelliflow.com',
@@ -192,11 +190,11 @@ describe('RealNotificationServiceAdapter', () => {
 
   describe('schedule()', () => {
     it('calls sendEmail() immediately for email channel', async () => {
-      const result = await adapter.schedule(
-        'email',
-        new Date('2026-04-01T00:00:00Z'),
-        { to: ['user@example.com'], subject: 'Scheduled', textBody: 'Hello' }
-      );
+      const result = await adapter.schedule('email', new Date('2026-04-01T00:00:00Z'), {
+        to: ['user@example.com'],
+        subject: 'Scheduled',
+        textBody: 'Hello',
+      });
 
       expect(result.isSuccess).toBe(true);
       expect(mockEmailAdapter.sendEmail).toHaveBeenCalled();
@@ -206,11 +204,10 @@ describe('RealNotificationServiceAdapter', () => {
     });
 
     it('returns fail for non-email channel', async () => {
-      const result = await adapter.schedule(
-        'sms',
-        new Date('2026-04-01T00:00:00Z'),
-        { to: '+1234567890', message: 'Hello' }
-      );
+      const result = await adapter.schedule('sms', new Date('2026-04-01T00:00:00Z'), {
+        to: '+1234567890',
+        message: 'Hello',
+      });
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('sms scheduling not configured');
@@ -219,19 +216,17 @@ describe('RealNotificationServiceAdapter', () => {
     it('propagates email send failure', async () => {
       const { EmailSendError } = await import('@intelliflow/application');
       mockEmailAdapter = createMockEmailAdapter({
-        sendEmail: vi.fn().mockResolvedValue(
-          Result.fail(new EmailSendError('Network error'))
-        ),
+        sendEmail: vi.fn().mockResolvedValue(Result.fail(new EmailSendError('Network error'))),
       });
       adapter = new RealNotificationServiceAdapter(mockEmailAdapter, {
         fromAddress: 'noreply@intelliflow.com',
       });
 
-      const result = await adapter.schedule(
-        'email',
-        new Date('2026-04-01T00:00:00Z'),
-        { to: ['user@example.com'], subject: 'Fail', textBody: 'Hello' }
-      );
+      const result = await adapter.schedule('email', new Date('2026-04-01T00:00:00Z'), {
+        to: ['user@example.com'],
+        subject: 'Fail',
+        textBody: 'Hello',
+      });
 
       expect(result.isFailure).toBe(true);
     });

@@ -1072,7 +1072,9 @@ export class OutlookAdapter implements OutlookEmailServicePort {
             this.mapToEmailAddress(r)
           )
         : undefined,
-      receivedDateTime: new Date((data.receivedDateTime as string | null | undefined) ?? new Date().toISOString()),
+      receivedDateTime: new Date(
+        (data.receivedDateTime as string | null | undefined) ?? new Date().toISOString()
+      ),
       sentDateTime: data.sentDateTime ? new Date(data.sentDateTime as string) : undefined,
       hasAttachments: Boolean(data.hasAttachments),
       importance: (data.importance ?? 'normal') as 'low' | 'normal' | 'high',

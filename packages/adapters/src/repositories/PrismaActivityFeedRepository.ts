@@ -234,8 +234,11 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
   }
 
   private async searchLeadActivities(
-    tenantId: string, query: string, limit: number,
-    cursor: { timestamp: Date; id: string } | null, filters: ActivityFeedFilters
+    tenantId: string,
+    query: string,
+    limit: number,
+    cursor: { timestamp: Date; id: string } | null,
+    filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
     const where: any = {
       tenantId,
@@ -281,8 +284,11 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
   }
 
   private async searchContactActivities(
-    tenantId: string, query: string, limit: number,
-    cursor: { timestamp: Date; id: string } | null, filters: ActivityFeedFilters
+    tenantId: string,
+    query: string,
+    limit: number,
+    cursor: { timestamp: Date; id: string } | null,
+    filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
     const where: any = {
       tenantId,
@@ -325,8 +331,11 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
   }
 
   private async searchOpportunityEvents(
-    tenantId: string, query: string, limit: number,
-    cursor: { timestamp: Date; id: string } | null, filters: ActivityFeedFilters
+    tenantId: string,
+    query: string,
+    limit: number,
+    cursor: { timestamp: Date; id: string } | null,
+    filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
     const where: any = {
       tenantId,
@@ -368,8 +377,11 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
   }
 
   private async searchTicketActivities(
-    tenantId: string, query: string, limit: number,
-    cursor: { timestamp: Date; id: string } | null, filters: ActivityFeedFilters
+    tenantId: string,
+    query: string,
+    limit: number,
+    cursor: { timestamp: Date; id: string } | null,
+    filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
     const where: any = {
       tenantId,
@@ -412,8 +424,11 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
   }
 
   private async searchEmailRecords(
-    tenantId: string, query: string, limit: number,
-    cursor: { timestamp: Date; id: string } | null, filters: ActivityFeedFilters
+    tenantId: string,
+    query: string,
+    limit: number,
+    cursor: { timestamp: Date; id: string } | null,
+    filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
     const where: any = {
       tenantId,
@@ -454,8 +469,11 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
   }
 
   private async searchCallRecords(
-    tenantId: string, query: string, limit: number,
-    cursor: { timestamp: Date; id: string } | null, filters: ActivityFeedFilters
+    tenantId: string,
+    query: string,
+    limit: number,
+    cursor: { timestamp: Date; id: string } | null,
+    filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
     const where: any = {
       tenantId,
@@ -481,7 +499,9 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       id: `call_${r.id}`,
       source: 'CALL' as const,
       type: 'CALL' as const,
-      title: `${r.direction === 'inbound' ? 'Incoming' : 'Outgoing'} call` + (r.contactName ? ` with ${r.contactName}` : ''),
+      title:
+        `${r.direction === 'inbound' ? 'Incoming' : 'Outgoing'} call` +
+        (r.contactName ? ` with ${r.contactName}` : ''),
       description: r.summary || r.outcome || null,
       timestamp: r.startedAt,
       actor: r.userName ? { id: r.userId, name: r.userName } : null,
@@ -498,8 +518,11 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
   }
 
   private async searchChatMessages(
-    tenantId: string, query: string, limit: number,
-    cursor: { timestamp: Date; id: string } | null, filters: ActivityFeedFilters
+    tenantId: string,
+    query: string,
+    limit: number,
+    cursor: { timestamp: Date; id: string } | null,
+    filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
     const where: any = {
       tenantId,
@@ -827,7 +850,9 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       id: `call_${r.id}`,
       source: 'CALL' as const,
       type: 'CALL' as const,
-      title: `${r.direction === 'inbound' ? 'Incoming' : 'Outgoing'} call` + (r.contactName ? ` with ${r.contactName}` : ''),
+      title:
+        `${r.direction === 'inbound' ? 'Incoming' : 'Outgoing'} call` +
+        (r.contactName ? ` with ${r.contactName}` : ''),
       description: r.summary || r.outcome || null,
       timestamp: r.startedAt,
       actor: r.userName ? { id: r.userId, name: r.userName } : null,
@@ -913,8 +938,13 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
   ): Promise<ActivityFeedStats> {
     // Determine which sources to query
     let sourcesToQuery: ActivityFeedSource[] = [
-      'LEAD_ACTIVITY', 'CONTACT_ACTIVITY', 'OPPORTUNITY_EVENT',
-      'TICKET_ACTIVITY', 'EMAIL', 'CALL', 'CHAT',
+      'LEAD_ACTIVITY',
+      'CONTACT_ACTIVITY',
+      'OPPORTUNITY_EVENT',
+      'TICKET_ACTIVITY',
+      'EMAIL',
+      'CALL',
+      'CHAT',
     ];
 
     if (filters.sources?.length) {
@@ -942,57 +972,33 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     const queries: Promise<void>[] = [];
 
     for (const source of sourcesToQuery) {
-      if (source === 'LEAD_ACTIVITY' || source === 'CONTACT_ACTIVITY' ||
-          source === 'OPPORTUNITY_EVENT' || source === 'TICKET_ACTIVITY') {
-        const modelName = this.getModelForSource(source);
-        const timestampField = 'timestamp';
-        const where: Record<string, unknown> = { tenantId };
-        const tsWhere: Record<string, unknown> = {};
-        if (windowStart) tsWhere.gte = windowStart;
-        tsWhere.lte = windowEnd;
-        where[timestampField] = tsWhere;
-
+      if (
+        source === 'LEAD_ACTIVITY' ||
+        source === 'CONTACT_ACTIVITY' ||
+        source === 'OPPORTUNITY_EVENT' ||
+        source === 'TICKET_ACTIVITY'
+      ) {
         queries.push(
-          (this.prisma as any)[modelName].groupBy({
-            by: ['type'],
-            where,
-            _count: { _all: true },
-          }).then((rows: Array<{ type: string; _count: { _all: number } }>) => {
-            let sourceTotal = 0;
-            const typeMap = typeMaps[source]!;
-            for (const row of rows) {
-              const normalizedType = typeMap[row.type] || 'SYSTEM';
-              const count = row._count._all;
-              sourceTotal += count;
-              typeCountMap[normalizedType] = (typeCountMap[normalizedType] || 0) + count;
-            }
-            sourceCountMap[source] = sourceTotal;
-          })
+          this.buildGroupByStatsQuery(
+            source,
+            tenantId,
+            windowStart,
+            windowEnd,
+            typeMaps,
+            sourceCountMap,
+            typeCountMap
+          )
         );
       } else {
-        // EMAIL, CALL, CHAT — single-type sources, use count()
-        const modelName = this.getModelForSource(source);
-        const timestampField = source === 'EMAIL' ? 'createdAt'
-          : source === 'CALL' ? 'startedAt'
-          : 'createdAt'; // CHAT
-
-        const feedType: ActivityFeedType = source === 'EMAIL' ? 'EMAIL'
-          : source === 'CALL' ? 'CALL'
-          : 'CHAT';
-
-        const where: Record<string, unknown> = { tenantId };
-        const tsWhere: Record<string, unknown> = {};
-        if (windowStart) tsWhere.gte = windowStart;
-        tsWhere.lte = windowEnd;
-        where[timestampField] = tsWhere;
-
         queries.push(
-          (this.prisma as any)[modelName].count({ where }).then((count: number) => {
-            sourceCountMap[source] = count;
-            if (count > 0) {
-              typeCountMap[feedType] = (typeCountMap[feedType] || 0) + count;
-            }
-          })
+          this.buildSingleTypeStatsQuery(
+            source,
+            tenantId,
+            windowStart,
+            windowEnd,
+            sourceCountMap,
+            typeCountMap
+          )
         );
       }
     }
@@ -1021,12 +1027,75 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
         entityCountMap[entityType] = entityTotal;
       }
     }
-    const byEntityType = Object.entries(entityCountMap)
-      .map(([entityType, count]) => ({ entityType: entityType as ActivityFeedEntityType, count }));
+    const byEntityType = Object.entries(entityCountMap).map(([entityType, count]) => ({
+      entityType: entityType as ActivityFeedEntityType,
+      count,
+    }));
 
     const total = Object.values(sourceCountMap).reduce((sum, c) => sum + c, 0);
 
     return { total, byType, bySource, byEntityType };
+  }
+
+  private buildTimeRangeWhere(
+    tenantId: string,
+    timestampField: string,
+    windowStart: Date | null,
+    windowEnd: Date
+  ): Record<string, unknown> {
+    const tsWhere: Record<string, unknown> = {};
+    if (windowStart) tsWhere.gte = windowStart;
+    tsWhere.lte = windowEnd;
+    return { tenantId, [timestampField]: tsWhere };
+  }
+
+  private buildGroupByStatsQuery(
+    source: ActivityFeedSource,
+    tenantId: string,
+    windowStart: Date | null,
+    windowEnd: Date,
+    typeMaps: Partial<Record<ActivityFeedSource, Record<string, ActivityFeedType>>>,
+    sourceCountMap: Record<string, number>,
+    typeCountMap: Record<string, number>
+  ): Promise<void> {
+    const modelName = this.getModelForSource(source);
+    const where = this.buildTimeRangeWhere(tenantId, 'timestamp', windowStart, windowEnd);
+    return (this.prisma as any)[modelName]
+      .groupBy({ by: ['type'], where, _count: { _all: true } })
+      .then((rows: Array<{ type: string; _count: { _all: number } }>) => {
+        let sourceTotal = 0;
+        const typeMap = typeMaps[source]!;
+        for (const row of rows) {
+          const normalizedType = typeMap[row.type] || 'SYSTEM';
+          const count = row._count._all;
+          sourceTotal += count;
+          typeCountMap[normalizedType] = (typeCountMap[normalizedType] || 0) + count;
+        }
+        sourceCountMap[source] = sourceTotal;
+      });
+  }
+
+  private buildSingleTypeStatsQuery(
+    source: ActivityFeedSource,
+    tenantId: string,
+    windowStart: Date | null,
+    windowEnd: Date,
+    sourceCountMap: Record<string, number>,
+    typeCountMap: Record<string, number>
+  ): Promise<void> {
+    const modelName = this.getModelForSource(source);
+    const timestampField = source === 'CALL' ? 'startedAt' : 'createdAt'; // EMAIL and CHAT both use createdAt
+    let feedType: ActivityFeedType;
+    if (source === 'EMAIL') feedType = 'EMAIL';
+    else if (source === 'CALL') feedType = 'CALL';
+    else feedType = 'CHAT';
+    const where = this.buildTimeRangeWhere(tenantId, timestampField, windowStart, windowEnd);
+    return (this.prisma as any)[modelName].count({ where }).then((count: number) => {
+      sourceCountMap[source] = count;
+      if (count > 0) {
+        typeCountMap[feedType] = (typeCountMap[feedType] || 0) + count;
+      }
+    });
   }
 
   private getModelForSource(source: ActivityFeedSource): string {

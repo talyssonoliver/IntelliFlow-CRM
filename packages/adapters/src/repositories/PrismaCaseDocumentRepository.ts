@@ -285,7 +285,7 @@ export class PrismaCaseDocumentRepository implements CaseDocumentRepository {
       id: record.id,
       tenantId: record.tenantId,
       version: {
-        major: record.versionMajor,
+        major: record.versionMajor || 1,
         minor: record.versionMinor,
         patch: record.versionPatch,
       },
@@ -302,7 +302,7 @@ export class PrismaCaseDocumentRepository implements CaseDocumentRepository {
       storageKey: record.storageKey,
       contentHash: record.contentHash,
       mimeType: record.mimeType,
-      sizeBytes: record.sizeBytes,
+      sizeBytes: Number(record.sizeBytes),
       acl,
       createdBy: record.createdBy,
       createdAt: record.createdAt,
@@ -312,7 +312,7 @@ export class PrismaCaseDocumentRepository implements CaseDocumentRepository {
       isLatestVersion: record.isLatestVersion,
       retentionUntil: record.retentionUntil || undefined,
       deletedAt: record.deletedAt || undefined,
-      eSignature: record.signedBy
+      eSignature: record.signedBy && record.signatureHash && /^[a-f0-9]{64}$/.test(record.signatureHash)
         ? {
             signedBy: record.signedBy,
             signedAt: record.signedAt,

@@ -178,7 +178,8 @@ export class EmailRateLimiter {
  * Email template renderer
  */
 export class EmailTemplateRenderer {
-  private readonly templates: Map<string, { subject: string; html: string; text?: string }> = new Map();
+  private readonly templates: Map<string, { subject: string; html: string; text?: string }> =
+    new Map();
 
   registerTemplate(name: string, template: { subject: string; html: string; text?: string }): void {
     this.templates.set(name, template);

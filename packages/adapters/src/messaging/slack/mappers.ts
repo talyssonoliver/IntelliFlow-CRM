@@ -105,7 +105,9 @@ export function mapToFile(data: Record<string, unknown>): SlackFile {
     mimetype: (data.mimetype as string | null | undefined) ?? 'application/octet-stream',
     size: Number(data.size ?? 0),
     urlPrivate: data.url_private ? (data.url_private as string) : undefined,
-    urlPrivateDownload: data.url_private_download ? (data.url_private_download as string) : undefined,
+    urlPrivateDownload: data.url_private_download
+      ? (data.url_private_download as string)
+      : undefined,
     permalink: data.permalink ? (data.permalink as string) : undefined,
     permalinkPublic: data.permalink_public ? (data.permalink_public as string) : undefined,
   };

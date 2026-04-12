@@ -93,11 +93,7 @@ export class IdempotencyManager {
   /**
    * Generate a deterministic idempotency key
    */
-  generateKey(
-    appointmentId: string,
-    operation: IdempotencyOperation,
-    provider: string
-  ): string {
+  generateKey(appointmentId: string, operation: IdempotencyOperation, provider: string): string {
     const data = `${appointmentId}:${operation}:${provider}`;
     const hash = createHash('sha256').update(data).digest('hex').substring(0, 16);
     return `idem_${hash}`;

@@ -1029,7 +1029,11 @@ ${original.body.text ?? original.body.html ?? ''}
     }
 
     // Body
-    lines.push(`Content-Type: ${params.isHtml ? 'text/html' : 'text/plain'}; charset="UTF-8"`, '', params.body);
+    lines.push(
+      `Content-Type: ${params.isHtml ? 'text/html' : 'text/plain'}; charset="UTF-8"`,
+      '',
+      params.body
+    );
 
     // Attachments
     if (params.attachments?.length) {
@@ -1041,7 +1045,7 @@ ${original.body.text ?? original.body.html ?? ''}
           'Content-Transfer-Encoding: base64',
           `Content-Disposition: attachment; filename="${attachment.filename}"`,
           '',
-          attachment.content,
+          attachment.content
         );
       }
       lines.push('', `--${boundary}--`);

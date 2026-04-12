@@ -240,7 +240,11 @@ export class OutboundWebhookClient {
     payload: string,
     attempts: number,
     startTime: number
-  ): Promise<{ response: WebhookResponse | null; lastError: Error | null; lastStatusCode: number | undefined }> {
+  ): Promise<{
+    response: WebhookResponse | null;
+    lastError: Error | null;
+    lastStatusCode: number | undefined;
+  }> {
     try {
       const headers = this.buildRequestHeaders(request, requestId, payload);
       const res = await this.fetchWithTimeout(request.url, method, headers, payload);
@@ -248,20 +252,49 @@ export class OutboundWebhookClient {
       const durationMs = Date.now() - startTime;
 
       if (!res.ok) {
-        const errorResponse = this.handleErrorResponse(res, responseBody, requestId, request.url, method, payload, attempts, durationMs);
-        if (errorResponse) return { response: errorResponse, lastError: null, lastStatusCode: res.status };
+        const errorResponse = this.handleErrorResponse(
+          res,
+          responseBody,
+          requestId,
+          request.url,
+          method,
+          payload,
+          attempts,
+          durationMs
+        );
+        if (errorResponse)
+          return { response: errorResponse, lastError: null, lastStatusCode: res.status };
         await this.sleep(this.getBackoffMs(attempts));
         return { response: null, lastError: null, lastStatusCode: res.status };
       }
 
       this.logDelivery({
-        requestId, url: request.url, method, statusCode: res.status, success: true,
-        attempts, durationMs, timestamp: new Date().toISOString(), payloadSize: payload.length, responseSize: responseBody.length,
+        requestId,
+        url: request.url,
+        method,
+        statusCode: res.status,
+        success: true,
+        attempts,
+        durationMs,
+        timestamp: new Date().toISOString(),
+        payloadSize: payload.length,
+        responseSize: responseBody.length,
       });
-      return { response: this.buildSuccessResponse(requestId, res.status, responseBody, attempts, durationMs), lastError: null, lastStatusCode: undefined };
+      return {
+        response: this.buildSuccessResponse(
+          requestId,
+          res.status,
+          responseBody,
+          attempts,
+          durationMs
+        ),
+        lastError: null,
+        lastStatusCode: undefined,
+      };
     } catch (error) {
       const lastError = error instanceof Error ? error : new Error(String(error));
-      const lastStatusCode = (error instanceof Error && error.name === 'AbortError') ? 408 : undefined;
+      const lastStatusCode =
+        error instanceof Error && error.name === 'AbortError' ? 408 : undefined;
       if (attempts <= this.config.maxRetries) {
         await this.sleep(this.getBackoffMs(attempts));
       }
@@ -284,7 +317,14 @@ export class OutboundWebhookClient {
 
     while (attempts <= this.config.maxRetries) {
       attempts++;
-      const result = await this.trySendAttempt(request, requestId, method, payload, attempts, startTime);
+      const result = await this.trySendAttempt(
+        request,
+        requestId,
+        method,
+        payload,
+        attempts,
+        startTime
+      );
       if (result.response) return result.response;
       if (result.lastError) lastError = result.lastError;
       if (result.lastStatusCode !== undefined) lastStatusCode = result.lastStatusCode;
@@ -292,15 +332,26 @@ export class OutboundWebhookClient {
 
     const durationMs = Date.now() - startTime;
     this.logDelivery({
-      requestId, url: request.url, method, statusCode: lastStatusCode, success: false,
-      error: lastError?.message || 'Unknown error', attempts, durationMs,
-      timestamp: new Date().toISOString(), payloadSize: payload.length,
+      requestId,
+      url: request.url,
+      method,
+      statusCode: lastStatusCode,
+      success: false,
+      error: lastError?.message || 'Unknown error',
+      attempts,
+      durationMs,
+      timestamp: new Date().toISOString(),
+      payloadSize: payload.length,
     });
 
     return {
-      success: false, requestId, statusCode: lastStatusCode,
+      success: false,
+      requestId,
+      statusCode: lastStatusCode,
       error: lastError?.message || 'Unknown error after all retries',
-      attempts, durationMs, timestamp: new Date().toISOString(),
+      attempts,
+      durationMs,
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -346,10 +397,7 @@ export class OutboundWebhookClient {
   }
 
   private getBackoffMs(attempts: number): number {
-    return (
-      this.config.retryBackoffMs[attempts - 1] ||
-      this.config.retryBackoffMs.at(-1)!
-    );
+    return this.config.retryBackoffMs[attempts - 1] || this.config.retryBackoffMs.at(-1)!;
   }
 
   private generateRequestId(): string {

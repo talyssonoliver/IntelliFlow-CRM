@@ -21,7 +21,7 @@ import type { Appointment, AppointmentId } from '@intelliflow/domain';
 
 export class CalendarSyncServiceAdapter implements CalendarSyncServicePort {
   async handleWebhookNotification(
-    payload: WebhookPayload,
+    payload: WebhookPayload
   ): Promise<Result<SyncResult, DomainError>> {
     console.info('[CalendarSyncServiceAdapter] webhook_notification_received (stub)', {
       provider: payload.provider,
@@ -38,7 +38,7 @@ export class CalendarSyncServiceAdapter implements CalendarSyncServicePort {
 
   async executeFullSync(
     userId: string,
-    provider: CalendarProvider,
+    provider: CalendarProvider
   ): Promise<Result<SyncBatchResult, DomainError>> {
     console.info('[CalendarSyncServiceAdapter] executeFullSync (stub)', { userId, provider });
     return Result.ok({
@@ -54,9 +54,12 @@ export class CalendarSyncServiceAdapter implements CalendarSyncServicePort {
 
   async executeIncrementalSync(
     userId: string,
-    provider: CalendarProvider,
+    provider: CalendarProvider
   ): Promise<Result<SyncBatchResult, DomainError>> {
-    console.info('[CalendarSyncServiceAdapter] executeIncrementalSync (stub)', { userId, provider });
+    console.info('[CalendarSyncServiceAdapter] executeIncrementalSync (stub)', {
+      userId,
+      provider,
+    });
     return Result.ok({
       processed: 0,
       created: 0,
@@ -71,7 +74,7 @@ export class CalendarSyncServiceAdapter implements CalendarSyncServicePort {
   async resolveConflict(
     localAppointment: Appointment,
     remoteEvent: ExternalCalendarEvent,
-    strategy: ConflictResolution['strategy'],
+    strategy: ConflictResolution['strategy']
   ): Promise<Result<ConflictResolution, DomainError>> {
     console.info('[CalendarSyncServiceAdapter] resolveConflict (stub)', { strategy });
     return Result.ok({
@@ -84,7 +87,7 @@ export class CalendarSyncServiceAdapter implements CalendarSyncServicePort {
   async queueForSync(
     appointmentId: AppointmentId,
     operation: 'create' | 'update' | 'delete',
-    provider: CalendarProvider,
+    provider: CalendarProvider
   ): Promise<void> {
     console.info('[CalendarSyncServiceAdapter] queueForSync (stub)', {
       appointmentId: appointmentId.toString(),
@@ -95,8 +98,13 @@ export class CalendarSyncServiceAdapter implements CalendarSyncServicePort {
 
   async getSyncStatus(
     userId: string,
-    provider: CalendarProvider,
-  ): Promise<{ lastSyncAt?: Date; syncToken?: string; pendingOperations: number; errors: SyncError[] }> {
+    provider: CalendarProvider
+  ): Promise<{
+    lastSyncAt?: Date;
+    syncToken?: string;
+    pendingOperations: number;
+    errors: SyncError[];
+  }> {
     console.info('[CalendarSyncServiceAdapter] getSyncStatus (stub)', { userId, provider });
     return {
       pendingOperations: 0,
