@@ -309,6 +309,35 @@ Orchestration Flow:
 
 ---
 
+## 6. Workflow Builder UI (Visual Canvas)
+
+### Overview
+
+| Layer      | Task ID | Status | Description                     |
+| ---------- | ------- | ------ | ------------------------------- |
+| Database   | IFC-028 | ✅     | WorkflowDefinition Prisma model |
+| API        | IFC-031 | ✅     | workflow.router CRUD procedures |
+| UI         | IFC-031 | ✅     | Workflow Builder React Flow UI  |
+
+### Dependency Chain
+
+```
+IFC-028 (Workflow Engine) ✅ ──► workflow.router (CRUD) ✅ ──► IFC-031 (Workflow Builder UI) ✅
+                                                                   ├──► WorkflowList (CRUD table)
+                                                                   ├──► WorkflowCanvas (React Flow)
+                                                                   ├──► NodeConfigPanel (Sheet)
+                                                                   └──► NodePalette (@dnd-kit)
+```
+
+### Key Design Decisions
+
+- **SSR Safety (NF-007)**: `@xyflow/react` loaded via `next/dynamic({ ssr: false })` in `WorkflowCanvas.tsx`
+- **Soft Delete**: `WorkflowDefinition.deletedAt DateTime?` with partial unique index on `(tenantId, name)` WHERE `deletedAt IS NULL`
+- **Topology Validation**: Client-side `validateWorkflow()` in `validation.ts` + server-side guard in `workflow.create/update`
+- **Drag & Drop**: `@dnd-kit/core` for palette items; React Flow's built-in handles for edge connections
+
+---
+
 ## Summary
 
 | Chain                | Status        | Blocking Issues                      |
@@ -318,6 +347,7 @@ Orchestration Flow:
 | DSAR Workflow        | ⬜ Mostly New | IFC-058, dsar.router needed          |
 | Legal Case Workflows | ⬜ Partial    | IFC-141, PG-138 needed               |
 | Deal Won Closure     | ✅ Complete   | IFC-065 fully implemented            |
+| Workflow Builder UI  | ✅ Complete   | IFC-031 fully implemented            |
 
 ### Prerequisites for Implementation
 
