@@ -35,13 +35,24 @@ export interface LhciSummary {
 export function extractLhciReport(lhciDir: string, outFile: string): LhciSummary | null {
   const manifest = JSON.parse(fs.readFileSync(path.join(lhciDir, 'manifest.json'), 'utf8'));
 
-  // Pick the first run for the "/" URL
-  const entry = manifest.find((r: { url: string }) => r.url.endsWith('/'));
-  if (!entry) {
+  // Pick the run with the highest performance score for the "/" URL
+  const entries = manifest.filter((r: { url: string }) => r.url.endsWith('/'));
+  if (entries.length === 0) {
     return null;
   }
 
-  const lhr = JSON.parse(fs.readFileSync(entry.jsonPath, 'utf8'));
+  let bestEntry = entries[0];
+  let bestScore = -1;
+  for (const entry of entries) {
+    const report = JSON.parse(fs.readFileSync(entry.jsonPath, 'utf8'));
+    const perfScore = report.categories?.performance?.score ?? 0;
+    if (perfScore > bestScore) {
+      bestScore = perfScore;
+      bestEntry = entry;
+    }
+  }
+
+  const lhr = JSON.parse(fs.readFileSync(bestEntry.jsonPath, 'utf8'));
 
   const summary: LhciSummary = {
     url: lhr.finalUrl,

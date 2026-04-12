@@ -298,7 +298,6 @@ function generateCoverageAnalysis(metrics) {
   section += `\n`;
 
   if (istanbulStats?.lines != null && istanbulStats.lines > sonarCoverage) {
-     
     const gap = (istanbulStats.lines - sonarCoverage).toFixed(1);
     section += `> **⚠️ Coverage Gap: ${gap} percentage points**\n`;
     section += `> SonarQube counts **all** ${linesToCover.toLocaleString()} coverable lines (including source files with no tests → 0%), `;

@@ -2,7 +2,6 @@ import { execSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-
 const TRACKED_EXTENSIONS = /\.(ts|tsx)$/i;
 const EXCLUDED_PATH_SEGMENTS = [
   '/node_modules/',
@@ -12,6 +11,7 @@ const EXCLUDED_PATH_SEGMENTS = [
   '/coverage/',
   '/artifacts/',
   '/.turbo/',
+  '/benchmarks/',
 ];
 
 function runGit(command: string): string | null {
@@ -128,7 +128,10 @@ function main() {
 
   console.log(`sonar-guard: checking ${files.length} changed TS/TSX files.`);
 
-  let allPassed = runEslintBatched('pnpm exec eslint --config tools/eslint/sonar-guard.config.mjs --max-warnings=0', files);
+  let allPassed = runEslintBatched(
+    'pnpm exec eslint --config tools/eslint/sonar-guard.config.mjs --max-warnings=0',
+    files
+  );
 
   const webTsxFiles = files
     .filter((file) => file.startsWith('apps/web/src/'))
@@ -137,7 +140,11 @@ function main() {
 
   if (webTsxFiles.length > 0) {
     console.log(`sonar-guard: running web accessibility guard on ${webTsxFiles.length} file(s).`);
-    const webPassed = runEslintBatched('pnpm --filter web exec eslint --config eslint.sonar-guard.config.mjs --max-warnings=0', webTsxFiles, 30);
+    const webPassed = runEslintBatched(
+      'pnpm --filter web exec eslint --config eslint.sonar-guard.config.mjs --max-warnings=0',
+      webTsxFiles,
+      30
+    );
     if (!webPassed) allPassed = false;
   }
 

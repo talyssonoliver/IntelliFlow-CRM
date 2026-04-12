@@ -246,10 +246,7 @@ function checkOwnerApproval(task: TaskRecord, context: TaskContext): Attestation
   }
 
   // If we have MATOP evidence, that serves as automated approval
-  if (
-    context.matopEvidence &&
-    (context.matopEvidence.verdict === 'PASS')
-  ) {
+  if (context.matopEvidence && context.matopEvidence.verdict === 'PASS') {
     return {
       name: 'Owner Approval',
       description: 'Task has an assigned owner who approved completion',
@@ -335,10 +332,7 @@ function checkPrerequisitesMet(task: TaskRecord, context: TaskContext): Attestat
   // KEY INSIGHT: If MATOP already validated this task with PASS,
   // the prerequisites WERE satisfied at validation time.
   // We trust the evidence - no need for manual re-verification.
-  if (
-    context.matopEvidence &&
-    (context.matopEvidence.verdict === 'PASS')
-  ) {
+  if (context.matopEvidence && context.matopEvidence.verdict === 'PASS') {
     return {
       name: 'Prerequisites Met',
       description: 'All pre-requisites are satisfied',
@@ -375,10 +369,7 @@ function checkDefinitionOfDoneMet(task: TaskRecord, context: TaskContext): Attes
   const evidence: string[] = [];
 
   // If we have MATOP evidence with PASS, DoD is considered met
-  if (
-    context.matopEvidence &&
-    (context.matopEvidence.verdict === 'PASS')
-  ) {
+  if (context.matopEvidence && context.matopEvidence.verdict === 'PASS') {
     evidence.push(`MATOP verdict: ${context.matopEvidence.verdict}`);
     evidence.push(`Evidence: ${context.matopEvidence.evidenceDir}`);
 
@@ -430,10 +421,7 @@ function checkKpisPassing(task: TaskRecord, context: TaskContext): AttestationCr
   }
 
   // If we have MATOP PASS, assume KPIs are met
-  if (
-    context.matopEvidence &&
-    (context.matopEvidence.verdict === 'PASS')
-  ) {
+  if (context.matopEvidence && context.matopEvidence.verdict === 'PASS') {
     return {
       name: 'KPIs Passing',
       description: 'All KPI targets are met',
@@ -451,7 +439,12 @@ function checkKpisPassing(task: TaskRecord, context: TaskContext): AttestationCr
   };
 }
 
-function checkGlobArtifact(trimmedArtifact: string, repoRoot: string, found: string[], missing: string[]): void {
+function checkGlobArtifact(
+  trimmedArtifact: string,
+  repoRoot: string,
+  found: string[],
+  missing: string[]
+): void {
   const parentDir = trimmedArtifact.replace(/\/?\*.*$/, '');
   const fullParentPath = join(repoRoot, parentDir);
 
@@ -471,7 +464,12 @@ function checkGlobArtifact(trimmedArtifact: string, repoRoot: string, found: str
   }
 }
 
-function checkFileArtifact(trimmedArtifact: string, repoRoot: string, found: string[], missing: string[]): void {
+function checkFileArtifact(
+  trimmedArtifact: string,
+  repoRoot: string,
+  found: string[],
+  missing: string[]
+): void {
   const fullPath = join(repoRoot, trimmedArtifact);
 
   if (!existsSync(fullPath)) {
@@ -670,12 +668,18 @@ export function attestSprint(sprint: string, repoRoot: string): SprintAttestatio
 
 function criterionIcon(status: string): string {
   switch (status) {
-    case 'pass': return '✅';
-    case 'warn': return '⚠️';
-    case 'fail': return '❌';
-    case 'skip': return '⏭️';
-    case 'pending': return '🕐';
-    default: return '❓';
+    case 'pass':
+      return '✅';
+    case 'warn':
+      return '⚠️';
+    case 'fail':
+      return '❌';
+    case 'skip':
+      return '⏭️';
+    case 'pending':
+      return '🕐';
+    default:
+      return '❓';
   }
 }
 

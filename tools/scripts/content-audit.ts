@@ -135,8 +135,7 @@ export interface ParsedMetadata {
 
 const TOOL_VERSION = '1.0.0';
 
-const ROOT_TITLE_DEFAULT =
-  'IntelliFlow CRM - AI-Powered Customer Relationship Management';
+const ROOT_TITLE_DEFAULT = 'IntelliFlow CRM - AI-Powered Customer Relationship Management';
 
 const ROOT_LAYOUT_DEFAULTS: ParsedMetadata = {
   title: ROOT_TITLE_DEFAULT,
@@ -156,46 +155,205 @@ const ROOT_LAYOUT_DEFAULTS: ParsedMetadata = {
 };
 
 const GHOST_LINK_REGISTRY: Omit<GhostLinkFinding, 'route'>[] = [
-  { ghost_link_id: 'G-01', severity: 'high', planned_task: 'PG-172', description: 'Sidebar link to /billing/usage, no page exists' },
-  { ghost_link_id: 'G-02', severity: 'high', planned_task: 'PG-172', description: 'Sidebar + in-page links to /billing/plans, no page exists' },
-  { ghost_link_id: 'G-03', severity: 'high', planned_task: 'PG-172', description: 'Sidebar link to /billing/upgrade, no page exists' },
-  { ghost_link_id: 'G-04', severity: 'medium', planned_task: 'PG-172', description: 'In-page link to /billing/cancel, no page exists' },
-  { ghost_link_id: 'G-05', severity: 'medium', planned_task: 'PG-172', description: 'In-page link to /billing/settings, no page exists' },
-  { ghost_link_id: 'G-06', severity: 'medium', planned_task: 'PG-173', description: 'Sidebar link to /tickets/sla-policies, no page exists' },
-  { ghost_link_id: 'G-07', severity: 'medium', planned_task: 'PG-173', description: 'Sidebar link to /tickets/types, no page exists' },
-  { ghost_link_id: 'G-08', severity: 'medium', planned_task: 'PG-173', description: 'Sidebar link to /tickets/automations, no page exists' },
-  { ghost_link_id: 'G-09', severity: 'medium', planned_task: 'PG-174', description: 'Sidebar link to /notifications/channels, no page exists' },
-  { ghost_link_id: 'G-10', severity: 'medium', planned_task: 'PG-174', description: 'Sidebar link to /notifications/quiet-hours, no page exists' },
-  { ghost_link_id: 'G-11', severity: 'low', planned_task: 'PG-175', description: 'Sidebar link to /deals/trash, no page exists' },
-  { ghost_link_id: 'G-12', severity: 'low', planned_task: 'PG-176', description: 'Sidebar link to /governance/quality-reports/lighthouse, no page exists' },
-  { ghost_link_id: 'G-13', severity: 'low', planned_task: 'PG-176', description: 'Sidebar link to /governance/quality-reports/coverage, no page exists' },
-  { ghost_link_id: 'G-14', severity: 'low', planned_task: 'PG-176', description: 'Sidebar link to /governance/quality-reports/performance, no page exists' },
-  { ghost_link_id: 'G-15', severity: 'low', planned_task: 'PG-177', description: 'Sidebar link to /analytics/saved/weekly, no page exists' },
-  { ghost_link_id: 'G-16', severity: 'low', planned_task: 'PG-177', description: 'Sidebar link to /analytics/saved/monthly, no page exists' },
-  { ghost_link_id: 'G-17', severity: 'low', planned_task: 'PG-177', description: 'Sidebar link to /analytics/saved/quarterly, no page exists' },
-  { ghost_link_id: 'G-18', severity: 'low', planned_task: 'PG-178', description: 'settingsHref link, showSettings: false — never rendered' },
-  { ghost_link_id: 'G-19', severity: 'low', planned_task: 'PG-178', description: 'settingsHref link, showSettings: false — never rendered' },
-  { ghost_link_id: 'G-20', severity: 'low', planned_task: 'PG-178', description: 'settingsHref link, showSettings: false — never rendered' },
-  { ghost_link_id: 'G-21', severity: 'low', planned_task: 'PG-178', description: 'Settings footer link to /settings/leads, no page exists' },
-  { ghost_link_id: 'G-22', severity: 'low', planned_task: 'PG-178', description: 'Settings footer link to /settings/contacts, no page exists' },
-  { ghost_link_id: 'G-23', severity: 'low', planned_task: 'PG-178', description: 'Settings footer link to /settings/accounts, no page exists' },
-  { ghost_link_id: 'G-24', severity: 'low', planned_task: 'PG-178', description: 'Settings footer link to /settings/deals, no page exists' },
-  { ghost_link_id: 'G-25', severity: 'low', planned_task: 'PG-178', description: 'Settings footer link to /settings/tickets, no page exists' },
-  { ghost_link_id: 'G-26', severity: 'low', planned_task: 'PG-178', description: 'Settings footer link to /settings/documents, no page exists' },
-  { ghost_link_id: 'G-27', severity: 'low', planned_task: 'PG-178', description: 'Settings footer link to /settings/reports, no page exists' },
-  { ghost_link_id: 'G-28', severity: 'low', planned_task: 'PG-178', description: 'In-page Upgrade Plan CTA link to /settings/billing, no page exists' },
+  {
+    ghost_link_id: 'G-01',
+    severity: 'high',
+    planned_task: 'PG-172',
+    description: 'Sidebar link to /billing/usage, no page exists',
+  },
+  {
+    ghost_link_id: 'G-02',
+    severity: 'high',
+    planned_task: 'PG-172',
+    description: 'Sidebar + in-page links to /billing/plans, no page exists',
+  },
+  {
+    ghost_link_id: 'G-03',
+    severity: 'high',
+    planned_task: 'PG-172',
+    description: 'Sidebar link to /billing/upgrade, no page exists',
+  },
+  {
+    ghost_link_id: 'G-04',
+    severity: 'medium',
+    planned_task: 'PG-172',
+    description: 'In-page link to /billing/cancel, no page exists',
+  },
+  {
+    ghost_link_id: 'G-05',
+    severity: 'medium',
+    planned_task: 'PG-172',
+    description: 'In-page link to /billing/settings, no page exists',
+  },
+  {
+    ghost_link_id: 'G-06',
+    severity: 'medium',
+    planned_task: 'PG-173',
+    description: 'Sidebar link to /tickets/sla-policies, no page exists',
+  },
+  {
+    ghost_link_id: 'G-07',
+    severity: 'medium',
+    planned_task: 'PG-173',
+    description: 'Sidebar link to /tickets/types, no page exists',
+  },
+  {
+    ghost_link_id: 'G-08',
+    severity: 'medium',
+    planned_task: 'PG-173',
+    description: 'Sidebar link to /tickets/automations, no page exists',
+  },
+  {
+    ghost_link_id: 'G-09',
+    severity: 'medium',
+    planned_task: 'PG-174',
+    description: 'Sidebar link to /notifications/channels, no page exists',
+  },
+  {
+    ghost_link_id: 'G-10',
+    severity: 'medium',
+    planned_task: 'PG-174',
+    description: 'Sidebar link to /notifications/quiet-hours, no page exists',
+  },
+  {
+    ghost_link_id: 'G-11',
+    severity: 'low',
+    planned_task: 'PG-175',
+    description: 'Sidebar link to /deals/trash, no page exists',
+  },
+  {
+    ghost_link_id: 'G-12',
+    severity: 'low',
+    planned_task: 'PG-176',
+    description: 'Sidebar link to /governance/quality-reports/lighthouse, no page exists',
+  },
+  {
+    ghost_link_id: 'G-13',
+    severity: 'low',
+    planned_task: 'PG-176',
+    description: 'Sidebar link to /governance/quality-reports/coverage, no page exists',
+  },
+  {
+    ghost_link_id: 'G-14',
+    severity: 'low',
+    planned_task: 'PG-176',
+    description: 'Sidebar link to /governance/quality-reports/performance, no page exists',
+  },
+  {
+    ghost_link_id: 'G-15',
+    severity: 'low',
+    planned_task: 'PG-177',
+    description: 'Sidebar link to /analytics/saved/weekly, no page exists',
+  },
+  {
+    ghost_link_id: 'G-16',
+    severity: 'low',
+    planned_task: 'PG-177',
+    description: 'Sidebar link to /analytics/saved/monthly, no page exists',
+  },
+  {
+    ghost_link_id: 'G-17',
+    severity: 'low',
+    planned_task: 'PG-177',
+    description: 'Sidebar link to /analytics/saved/quarterly, no page exists',
+  },
+  {
+    ghost_link_id: 'G-18',
+    severity: 'low',
+    planned_task: 'PG-178',
+    description: 'settingsHref link, showSettings: false — never rendered',
+  },
+  {
+    ghost_link_id: 'G-19',
+    severity: 'low',
+    planned_task: 'PG-178',
+    description: 'settingsHref link, showSettings: false — never rendered',
+  },
+  {
+    ghost_link_id: 'G-20',
+    severity: 'low',
+    planned_task: 'PG-178',
+    description: 'settingsHref link, showSettings: false — never rendered',
+  },
+  {
+    ghost_link_id: 'G-21',
+    severity: 'low',
+    planned_task: 'PG-178',
+    description: 'Settings footer link to /settings/leads, no page exists',
+  },
+  {
+    ghost_link_id: 'G-22',
+    severity: 'low',
+    planned_task: 'PG-178',
+    description: 'Settings footer link to /settings/contacts, no page exists',
+  },
+  {
+    ghost_link_id: 'G-23',
+    severity: 'low',
+    planned_task: 'PG-178',
+    description: 'Settings footer link to /settings/accounts, no page exists',
+  },
+  {
+    ghost_link_id: 'G-24',
+    severity: 'low',
+    planned_task: 'PG-178',
+    description: 'Settings footer link to /settings/deals, no page exists',
+  },
+  {
+    ghost_link_id: 'G-25',
+    severity: 'low',
+    planned_task: 'PG-178',
+    description: 'Settings footer link to /settings/tickets, no page exists',
+  },
+  {
+    ghost_link_id: 'G-26',
+    severity: 'low',
+    planned_task: 'PG-178',
+    description: 'Settings footer link to /settings/documents, no page exists',
+  },
+  {
+    ghost_link_id: 'G-27',
+    severity: 'low',
+    planned_task: 'PG-178',
+    description: 'Settings footer link to /settings/reports, no page exists',
+  },
+  {
+    ghost_link_id: 'G-28',
+    severity: 'low',
+    planned_task: 'PG-178',
+    description: 'In-page Upgrade Plan CTA link to /settings/billing, no page exists',
+  },
 ];
 
 const GHOST_LINK_ROUTES: string[] = [
-  '/billing/usage', '/billing/plans', '/billing/upgrade', '/billing/cancel', '/billing/settings',
-  '/tickets/sla-policies', '/tickets/types', '/tickets/automations',
-  '/notifications/channels', '/notifications/quiet-hours',
+  '/billing/usage',
+  '/billing/plans',
+  '/billing/upgrade',
+  '/billing/cancel',
+  '/billing/settings',
+  '/tickets/sla-policies',
+  '/tickets/types',
+  '/tickets/automations',
+  '/notifications/channels',
+  '/notifications/quiet-hours',
   '/deals/trash',
-  '/governance/quality-reports/lighthouse', '/governance/quality-reports/coverage', '/governance/quality-reports/performance',
-  '/analytics/saved/weekly', '/analytics/saved/monthly', '/analytics/saved/quarterly',
-  '/settings/appointments', '/settings/cases', '/settings/tasks', '/settings/leads',
-  '/settings/contacts', '/settings/accounts', '/settings/deals', '/settings/tickets',
-  '/settings/documents', '/settings/reports', '/settings/billing',
+  '/governance/quality-reports/lighthouse',
+  '/governance/quality-reports/coverage',
+  '/governance/quality-reports/performance',
+  '/analytics/saved/weekly',
+  '/analytics/saved/monthly',
+  '/analytics/saved/quarterly',
+  '/settings/appointments',
+  '/settings/cases',
+  '/settings/tasks',
+  '/settings/leads',
+  '/settings/contacts',
+  '/settings/accounts',
+  '/settings/deals',
+  '/settings/tickets',
+  '/settings/documents',
+  '/settings/reports',
+  '/settings/billing',
 ];
 
 // ============================================================================
@@ -250,9 +408,16 @@ function extractTitleValue(source: string): string | null {
 }
 
 const NULL_METADATA: ParsedMetadata = {
-  title: null, description: null,
-  ogTitle: null, ogDescription: null, ogUrl: null, ogSiteName: null, ogImage: null,
-  twitterCard: null, twitterTitle: null, twitterDescription: null,
+  title: null,
+  description: null,
+  ogTitle: null,
+  ogDescription: null,
+  ogUrl: null,
+  ogSiteName: null,
+  ogImage: null,
+  twitterCard: null,
+  twitterTitle: null,
+  twitterDescription: null,
   isDynamic: false,
 };
 
@@ -282,12 +447,21 @@ export function parseMetadataFromSource(source: string): ParsedMetadata | null {
   // Twitter fields from twitter section
   const twitterCard = twitterSection ? extractStringValue(twitterSection, 'card') : null;
   const twitterTitle = twitterSection ? extractStringValue(twitterSection, 'title') : null;
-  const twitterDescription = twitterSection ? extractStringValue(twitterSection, 'description') : null;
+  const twitterDescription = twitterSection
+    ? extractStringValue(twitterSection, 'description')
+    : null;
 
   return {
-    title, description,
-    ogTitle, ogDescription, ogUrl, ogSiteName, ogImage,
-    twitterCard, twitterTitle, twitterDescription,
+    title,
+    description,
+    ogTitle,
+    ogDescription,
+    ogUrl,
+    ogSiteName,
+    ogImage,
+    twitterCard,
+    twitterTitle,
+    twitterDescription,
     isDynamic: false,
   };
 }
@@ -335,8 +509,8 @@ export function pathToRoute(relPath: string): string {
   const route = relPath
     .replaceAll(/\\/g, '/')
     .replace(/\/?page\.tsx$/, '')
-    .replaceAll(/\/\([^)]+\)/g, '')     // Strip /(groupName)
-    .replace(/^\([^)]+\)\/?/, '')    // Strip leading (groupName)/
+    .replaceAll(/\/\([^)]+\)/g, '') // Strip /(groupName)
+    .replace(/^\([^)]+\)\/?/, '') // Strip leading (groupName)/
     .replaceAll(/\/+/g, '/')
     .replace(/\/$/, '');
 
@@ -351,13 +525,37 @@ export function pathToRoute(relPath: string): string {
 export function classifyAccessTier(relPath: string): AccessTier {
   const normalized = relPath.replaceAll(/\\/g, '/');
   if (normalized.startsWith('(public)/') || normalized.startsWith('(public)\\')) return 'public';
-  if (normalized.startsWith('(developer)/') || normalized.startsWith('(developer)\\')) return 'developer';
+  if (normalized.startsWith('(developer)/') || normalized.startsWith('(developer)\\'))
+    return 'developer';
   return 'auth-gated';
 }
 
 // ============================================================================
 // Layout Map
 // ============================================================================
+
+function processLayoutEntry(
+  dir: string,
+  entry: { name: string; isDirectory(): boolean },
+  appDir: string,
+  map: Map<string, ParsedMetadata>,
+  walkFn: (d: string) => void
+): void {
+  const fullPath = join(dir, entry.name);
+  if (entry.isDirectory()) {
+    if (entry.name === '__tests__') return;
+    if (entry.name === 'api' && dir === appDir) return;
+    walkFn(fullPath);
+  } else if (entry.name === 'layout.tsx') {
+    try {
+      const source = readFileSync(fullPath, 'utf-8');
+      const meta = parseMetadataFromSource(source);
+      if (meta) map.set(dir.replaceAll(/\\/g, '/'), meta);
+    } catch {
+      /* skip unreadable layouts */
+    }
+  }
+}
 
 export function buildLayoutMap(appDir: string): Map<string, ParsedMetadata> {
   const map = new Map<string, ParsedMetadata>();
@@ -369,22 +567,8 @@ export function buildLayoutMap(appDir: string): Map<string, ParsedMetadata> {
     } catch {
       return;
     }
-
     for (const entry of entries) {
-      const fullPath = join(dir, entry.name);
-      if (entry.isDirectory()) {
-        if (entry.name === '__tests__') continue;
-        if (entry.name === 'api' && dir === appDir) continue;
-        walk(fullPath);
-      } else if (entry.name === 'layout.tsx') {
-        try {
-          const source = readFileSync(fullPath, 'utf-8');
-          const meta = parseMetadataFromSource(source);
-          if (meta) {
-            map.set(dir.replaceAll(/\\/g, '/'), meta);
-          }
-        } catch { /* skip unreadable layouts */ }
-      }
+      processLayoutEntry(dir, entry, appDir, map, walk);
     }
   }
 
@@ -399,12 +583,14 @@ export function buildLayoutMap(appDir: string): Map<string, ParsedMetadata> {
 export function resolveMetadataChain(
   pagePath: string,
   appDir: string,
-  layoutMap: Map<string, ParsedMetadata>,
+  layoutMap: Map<string, ParsedMetadata>
 ): RouteMetadata {
   let pageSource = '';
   try {
     pageSource = readFileSync(pagePath, 'utf-8');
-  } catch { /* empty source fallback */ }
+  } catch {
+    /* empty source fallback */
+  }
 
   const pageMeta = parseMetadataFromSource(pageSource);
   const isDynamic = pageMeta?.isDynamic ?? false;
@@ -432,7 +618,7 @@ export function resolveMetadataChain(
   function resolveField(
     pageVal: string | null | undefined,
     layoutVal: string | null | undefined,
-    rootVal: string | null,
+    rootVal: string | null
   ): MetadataField {
     if (!isDynamic && pageVal != null) return { value: pageVal, source: 'page' };
     if (layoutVal != null) return { value: layoutVal, source: 'layout' };
@@ -441,20 +627,44 @@ export function resolveMetadataChain(
   }
 
   const title = resolveField(pageMeta?.title, nearestLayout?.title, rootLayout.title);
-  const desc = resolveField(pageMeta?.description, nearestLayout?.description, rootLayout.description);
+  const desc = resolveField(
+    pageMeta?.description,
+    nearestLayout?.description,
+    rootLayout.description
+  );
   if (desc.value) desc.length = desc.value.length;
 
   return {
     title,
     description: desc,
     og_title: resolveField(pageMeta?.ogTitle, nearestLayout?.ogTitle, rootLayout.ogTitle),
-    og_description: resolveField(pageMeta?.ogDescription, nearestLayout?.ogDescription, rootLayout.ogDescription),
+    og_description: resolveField(
+      pageMeta?.ogDescription,
+      nearestLayout?.ogDescription,
+      rootLayout.ogDescription
+    ),
     og_url: resolveField(pageMeta?.ogUrl, nearestLayout?.ogUrl, rootLayout.ogUrl),
-    og_site_name: resolveField(pageMeta?.ogSiteName, nearestLayout?.ogSiteName, rootLayout.ogSiteName),
+    og_site_name: resolveField(
+      pageMeta?.ogSiteName,
+      nearestLayout?.ogSiteName,
+      rootLayout.ogSiteName
+    ),
     og_image: resolveField(pageMeta?.ogImage, nearestLayout?.ogImage, rootLayout.ogImage),
-    twitter_card: resolveField(pageMeta?.twitterCard, nearestLayout?.twitterCard, rootLayout.twitterCard),
-    twitter_title: resolveField(pageMeta?.twitterTitle, nearestLayout?.twitterTitle, rootLayout.twitterTitle),
-    twitter_description: resolveField(pageMeta?.twitterDescription, nearestLayout?.twitterDescription, rootLayout.twitterDescription),
+    twitter_card: resolveField(
+      pageMeta?.twitterCard,
+      nearestLayout?.twitterCard,
+      rootLayout.twitterCard
+    ),
+    twitter_title: resolveField(
+      pageMeta?.twitterTitle,
+      nearestLayout?.twitterTitle,
+      rootLayout.twitterTitle
+    ),
+    twitter_description: resolveField(
+      pageMeta?.twitterDescription,
+      nearestLayout?.twitterDescription,
+      rootLayout.twitterDescription
+    ),
     robots_noindex: /robots\s*:\s*\{[^}]*index\s*:\s*false/s.test(pageSource),
   };
 }
@@ -466,7 +676,7 @@ export function resolveMetadataChain(
 export function calculateSeoScore(
   metadata: RouteMetadata,
   inSitemap: boolean,
-  accessTier: AccessTier = 'public',
+  accessTier: AccessTier = 'public'
 ): number | null {
   if (accessTier !== 'public') return null;
 
@@ -494,7 +704,11 @@ export function calculateSeoScore(
   }
 
   // +15: Twitter card + title + description all present
-  if (metadata.twitter_card.value && metadata.twitter_title.value && metadata.twitter_description.value) {
+  if (
+    metadata.twitter_card.value &&
+    metadata.twitter_title.value &&
+    metadata.twitter_description.value
+  ) {
     score += 15;
   }
 
@@ -541,7 +755,9 @@ export function buildSitemapSet(sitemapPath: string, dataDir: string): Map<strin
     while ((match = slugRegex.exec(blogSource)) !== null) {
       result.set(`/blog/${match[1]}`, 'data-field');
     }
-  } catch { /* skip if file missing */ }
+  } catch {
+    /* skip if file missing */
+  }
 
   // Dynamic career routes from job-listings.ts
   try {
@@ -550,7 +766,9 @@ export function buildSitemapSet(sitemapPath: string, dataDir: string): Map<strin
     while ((match = idRegex.exec(jobSource)) !== null) {
       result.set(`/careers/${match[1]}`, 'data-field');
     }
-  } catch { /* skip if file missing */ }
+  } catch {
+    /* skip if file missing */
+  }
 
   // Dynamic LP routes from landing-pages.json
   try {
@@ -560,7 +778,9 @@ export function buildSitemapSet(sitemapPath: string, dataDir: string): Map<strin
         result.set(`/lp/${slug}`, 'data-field');
       }
     }
-  } catch { /* skip if file missing */ }
+  } catch {
+    /* skip if file missing */
+  }
 
   return result;
 }
@@ -643,7 +863,7 @@ export function detectStaleContent(source: string): StaleContentResult {
 export function checkLegalPages(routes: string[]): string[] {
   const required = ['privacy', 'terms', 'cookies'];
   const routeSet = new Set(routes);
-  return required.filter(page => !routeSet.has(`/${page}`));
+  return required.filter((page) => !routeSet.has(`/${page}`));
 }
 
 // ============================================================================
@@ -653,7 +873,7 @@ export function checkLegalPages(routes: string[]): string[] {
 export function buildFindings(
   routes: RouteEntry[],
   ghostLinks: GhostLinkFinding[],
-  repoRoot: string,
+  repoRoot: string
 ): Findings {
   const critical: Finding[] = [];
   const high: Finding[] = [];
@@ -661,7 +881,7 @@ export function buildFindings(
   const low: Finding[] = [];
 
   // Legal pages
-  const routePaths = routes.map(r => r.route);
+  const routePaths = routes.map((r) => r.route);
   const missingLegal = checkLegalPages(routePaths);
   for (const page of missingLegal) {
     critical.push({
@@ -675,7 +895,7 @@ export function buildFindings(
   }
 
   // Press/[id] broken link risk
-  const pressRoute = routes.find(r => r.route === '/press/[id]');
+  const pressRoute = routes.find((r) => r.route === '/press/[id]');
   if (pressRoute) {
     try {
       const pressSource = readFileSync(resolve(repoRoot, pressRoute.file_path), 'utf-8');
@@ -684,13 +904,16 @@ export function buildFindings(
           id: 'CONTENT-PRESS-404',
           type: 'data-dependent-404',
           severity: 'high',
-          description: '/press/[id] uses notFound() — data-dependent 404 risk with no individual sitemap entries',
+          description:
+            '/press/[id] uses notFound() — data-dependent 404 risk with no individual sitemap entries',
           route: '/press/[id]',
           file: pressRoute.file_path,
           remediation: 'Add dynamic press release routes to sitemap.ts or implement ISR fallback',
         });
       }
-    } catch { /* skip on read error */ }
+    } catch {
+      /* skip on read error */
+    }
   }
 
   // Lighthouserc.js SEO warn check
@@ -706,24 +929,27 @@ export function buildFindings(
         remediation: 'Promote categories:seo from warn to error in lighthouserc.js',
       });
     }
-  } catch { /* skip on read error */ }
+  } catch {
+    /* skip on read error */
+  }
 
   // Sitemap.ts STATIC_LAST_MODIFIED check
   try {
-    const sitemapSource = readFileSync(
-      resolve(repoRoot, 'apps/web/src/app/sitemap.ts'), 'utf-8',
-    );
+    const sitemapSource = readFileSync(resolve(repoRoot, 'apps/web/src/app/sitemap.ts'), 'utf-8');
     if (sitemapSource.includes('STATIC_LAST_MODIFIED')) {
       medium.push({
         id: 'SITEMAP-STATIC-DATE',
         type: 'sitemap-defect',
         severity: 'medium',
-        description: 'sitemap.ts uses hardcoded STATIC_LAST_MODIFIED date instead of actual content modification dates',
+        description:
+          'sitemap.ts uses hardcoded STATIC_LAST_MODIFIED date instead of actual content modification dates',
         file: 'apps/web/src/app/sitemap.ts',
         remediation: 'Replace STATIC_LAST_MODIFIED with git commit dates or build-time timestamps',
       });
     }
-  } catch { /* skip on read error */ }
+  } catch {
+    /* skip on read error */
+  }
 
   return { critical, high, medium, low, ghost_links: ghostLinks };
 }
@@ -764,7 +990,7 @@ export function runAudit(repoRoot: string): AuditData {
   const ghostLinks = crossReferenceGhostLinks(appDir);
 
   // 5. Build route entries
-  const routes: RouteEntry[] = rawRoutes.map(raw => {
+  const routes: RouteEntry[] = rawRoutes.map((raw) => {
     const route = pathToRoute(raw.relPath);
     const accessTier = classifyAccessTier(raw.relPath);
 
@@ -775,7 +1001,9 @@ export function runAudit(repoRoot: string): AuditData {
     let pageSource = '';
     try {
       pageSource = readFileSync(raw.filePath, 'utf-8');
-    } catch { /* empty source */ }
+    } catch {
+      /* empty source */
+    }
     const staleContent = detectStaleContent(pageSource);
 
     return {
@@ -800,22 +1028,19 @@ export function runAudit(repoRoot: string): AuditData {
   routes.sort((a, b) => a.route.localeCompare(b.route));
 
   // 7. Build summary
-  const publicRoutes = routes.filter(r => r.access_tier === 'public');
-  const seoScores = publicRoutes
-    .filter(r => r.seo_score !== null)
-    .map(r => r.seo_score!);
-  const avgSeo = seoScores.length > 0
-    ? Math.round(seoScores.reduce((a, b) => a + b, 0) / seoScores.length)
-    : 0;
+  const publicRoutes = routes.filter((r) => r.access_tier === 'public');
+  const seoScores = publicRoutes.filter((r) => r.seo_score !== null).map((r) => r.seo_score!);
+  const avgSeo =
+    seoScores.length > 0 ? Math.round(seoScores.reduce((a, b) => a + b, 0) / seoScores.length) : 0;
 
-  const routePaths = routes.map(r => r.route);
+  const routePaths = routes.map((r) => r.route);
   const missingLegal = checkLegalPages(routePaths);
 
   const summary: AuditSummary = {
     total_routes: routes.length,
     public_routes: publicRoutes.length,
-    auth_gated_routes: routes.filter(r => r.access_tier === 'auth-gated').length,
-    developer_routes: routes.filter(r => r.access_tier === 'developer').length,
+    auth_gated_routes: routes.filter((r) => r.access_tier === 'auth-gated').length,
+    developer_routes: routes.filter((r) => r.access_tier === 'developer').length,
     routes_with_seo_score: seoScores.length,
     routes_pending_runtime_measurement: routes.length,
     average_seo_score_public: avgSeo,
@@ -858,7 +1083,9 @@ export function main(): void {
   writeFileSync(outputPath, JSON.stringify(result, null, 2) + '\n');
 
   console.log(`Routes found: ${result.summary.total_routes}`);
-  console.log(`Public: ${result.summary.public_routes}, Auth-gated: ${result.summary.auth_gated_routes}, Developer: ${result.summary.developer_routes}`);
+  console.log(
+    `Public: ${result.summary.public_routes}, Auth-gated: ${result.summary.auth_gated_routes}, Developer: ${result.summary.developer_routes}`
+  );
   console.log(`Ghost links: ${result.summary.ghost_link_count}`);
   console.log(`Average SEO score (public): ${result.summary.average_seo_score_public}`);
   console.log(`Output: ${outputPath}`);

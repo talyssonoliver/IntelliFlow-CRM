@@ -450,7 +450,9 @@ function checkSoftRules(tasks, overrides, validationRules, config, sprint) {
 
   // Filter by sprint if specified
   const sprintTasks =
-    sprint !== undefined ? tasks.filter((t) => Number.parseInt(t['Target Sprint'], 10) === sprint) : tasks;
+    sprint !== undefined
+      ? tasks.filter((t) => Number.parseInt(t['Target Sprint'], 10) === sprint)
+      : tasks;
 
   // Check validation coverage
   const missingValidation = checkValidationCoverage(sprintTasks, validationRules, sprint);
@@ -592,7 +594,9 @@ function generateReviewQueue(tasks, overrides, validationRules, config, errors, 
 
   // Filter by sprint if specified
   const sprintTasks =
-    sprint !== undefined ? tasks.filter((t) => Number.parseInt(t['Target Sprint'], 10) === sprint) : tasks;
+    sprint !== undefined
+      ? tasks.filter((t) => Number.parseInt(t['Target Sprint'], 10) === sprint)
+      : tasks;
 
   sprintTasks.forEach((task) => {
     const id = task['Task ID'];
@@ -691,7 +695,9 @@ function generateReport(
   const tiers = computeTiers(tasks, overrides, fanout, config);
 
   const sprintTasks =
-    sprint !== undefined ? tasks.filter((t) => Number.parseInt(t['Target Sprint'], 10) === sprint) : tasks;
+    sprint !== undefined
+      ? tasks.filter((t) => Number.parseInt(t['Target Sprint'], 10) === sprint)
+      : tasks;
 
   const tierCounts = { A: 0, B: 0, C: 0 };
   sprintTasks.forEach((task) => {

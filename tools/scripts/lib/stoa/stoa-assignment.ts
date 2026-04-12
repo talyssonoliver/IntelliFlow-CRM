@@ -17,17 +17,39 @@ import type { StoaRole, StoaAssignment, Task } from './types.js';
 
 /**
  * Prefix patterns for Primary STOA assignment.
- * Order matters - first match wins.
+ * Order matters - first match wins. More specific patterns must come first.
+ *
+ * See Framework.md §3.2 for the canonical mapping.
  */
 const PRIMARY_STOA_PREFIX_PATTERNS: Array<{ pattern: RegExp; stoa: StoaRole }> = [
+  // Foundation — infra, tooling, CI, environments
   { pattern: /^ENV-/i, stoa: 'Foundation' },
   { pattern: /^EP-/i, stoa: 'Foundation' },
+
+  // Security — explicit security epics/exceptions
   { pattern: /^EXC-SEC-/i, stoa: 'Security' },
   { pattern: /^SEC-/i, stoa: 'Security' },
+
+  // Intelligence — AI/ML, analytics
   { pattern: /^AI-SETUP-/i, stoa: 'Intelligence' },
   { pattern: /^AI-/i, stoa: 'Intelligence' },
+  { pattern: /^ANALYTICS-/i, stoa: 'Intelligence' },
+
+  // Automation — factory mechanics, orchestration, ops, governance
+  { pattern: /^EXC-INIT-/i, stoa: 'Automation' },
   { pattern: /^AUTOMATION-/i, stoa: 'Automation' },
+  { pattern: /^DOC-/i, stoa: 'Automation' },
+  { pattern: /^PM-OPS-/i, stoa: 'Automation' },
+  { pattern: /^ENG-OPS-/i, stoa: 'Automation' },
+  { pattern: /^GOV-/i, stoa: 'Automation' },
+
+  // Quality — UI pages (a11y / perf / test coverage focus)
   { pattern: /^PG-/i, stoa: 'Quality' },
+
+  // Domain — product/domain features, brand, go-to-market, sales
+  { pattern: /^BRAND-/i, stoa: 'Domain' },
+  { pattern: /^GTM-/i, stoa: 'Domain' },
+  { pattern: /^SALES-/i, stoa: 'Domain' },
   { pattern: /^IFC-/i, stoa: 'Domain' },
 ];
 

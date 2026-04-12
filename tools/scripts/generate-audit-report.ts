@@ -155,7 +155,7 @@ function toCsv(findings: Finding[]): string {
       f.dep_paths,
     ]
       .map(csvEscape)
-      .join(','),
+      .join(',')
   );
   return [header.join(','), ...rows].join('\n') + '\n';
 }

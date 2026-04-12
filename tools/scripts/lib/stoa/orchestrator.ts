@@ -374,7 +374,9 @@ export async function runStoaOrchestration(
 
   stoaVerdicts.push(primaryVerdict);
   writeStoaVerdict(evidenceDir, primaryVerdict);
-  log(`${stoaAssignment.primaryStoa} STOA: ${primaryVerdict.verdict} - ${primaryVerdict.rationale}`);
+  log(
+    `${stoaAssignment.primaryStoa} STOA: ${primaryVerdict.verdict} - ${primaryVerdict.rationale}`
+  );
 
   // Supporting STOA verdicts (for now, they inherit the lead verdict)
   for (const supportingStoa of stoaAssignment.supportingStoas) {
@@ -402,7 +404,13 @@ export async function runStoaOrchestration(
 
   // Create CSV patch proposal if status should change
   const csvPatchProposal = buildCsvPatchProposal(
-    task, finalVerdict, runId, taskId, stoaAssignment.primaryStoa, evidenceDir, repoRoot
+    task,
+    finalVerdict,
+    runId,
+    taskId,
+    stoaAssignment.primaryStoa,
+    evidenceDir,
+    repoRoot
   );
 
   const evidenceBundle = await createEvidenceBundle(

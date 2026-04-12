@@ -209,7 +209,14 @@ function prepareGateTask(
   const { toolId, tool, context, gatesDir, repoRoot, dryRun } = opts;
 
   if (!tool || !tool.command) {
-    results.push({ toolId, exitCode: -1, logPath: '', passed: false, duration: 0, stderr: 'No command defined' });
+    results.push({
+      toolId,
+      exitCode: -1,
+      logPath: '',
+      passed: false,
+      duration: 0,
+      stderr: 'No command defined',
+    });
     return null;
   }
 
@@ -218,7 +225,13 @@ function prepareGateTask(
 
   if (dryRun) {
     console.log(`[DRY RUN] Would execute: ${command}`);
-    results.push({ toolId, exitCode: 0, logPath: normalizeRepoPath(logPath), passed: true, duration: 0 });
+    results.push({
+      toolId,
+      exitCode: 0,
+      logPath: normalizeRepoPath(logPath),
+      passed: true,
+      duration: 0,
+    });
     return null;
   }
 

@@ -61,6 +61,27 @@ const MIN_INVARIANTS_COUNT = 5;
 // Validation Functions
 // ============================================================================
 
+function validateFilesRead(filesRead: unknown[], errors: string[]): void {
+  for (let i = 0; i < filesRead.length; i++) {
+    const entry = filesRead[i] as Record<string, unknown>;
+    if (!entry || typeof entry !== 'object') {
+      errors.push(`files_read[${i}]: Invalid entry (must be object)`);
+      continue;
+    }
+    if (typeof entry.path !== 'string') errors.push(`files_read[${i}]: Missing path (required: string)`);
+    if (typeof entry.sha256 !== 'string') errors.push(`files_read[${i}]: Missing sha256 (required: string)`);
+  }
+}
+
+function validateInvariantsAcknowledged(invariants: unknown[], errors: string[]): void {
+  const validCount = invariants.filter(
+    (item) => typeof item === 'string' && (item as string).trim().length > 0
+  ).length;
+  if (validCount < MIN_INVARIANTS_COUNT) {
+    errors.push(`invariants_acknowledged has ${validCount} items (required: at least ${MIN_INVARIANTS_COUNT})`);
+  }
+}
+
 /**
  * Validate context_ack.json structure.
  */
@@ -74,47 +95,23 @@ export function validateContextAckStructure(ack: unknown): string[] {
 
   const obj = ack as Record<string, unknown>;
 
-  // Required fields
   if (typeof obj.task_id !== 'string' || obj.task_id.trim().length === 0) {
     errors.push('Missing or invalid task_id (required: non-empty string)');
   }
-
   if (typeof obj.run_id !== 'string' || obj.run_id.trim().length === 0) {
     errors.push('Missing or invalid run_id (required: non-empty string)');
   }
 
-  // files_read validation
   if (!Array.isArray(obj.files_read)) {
     errors.push('Missing or invalid files_read (required: array)');
   } else {
-    for (let i = 0; i < obj.files_read.length; i++) {
-      const entry = obj.files_read[i] as Record<string, unknown>;
-      if (!entry || typeof entry !== 'object') {
-        errors.push(`files_read[${i}]: Invalid entry (must be object)`);
-        continue;
-      }
-      if (typeof entry.path !== 'string') {
-        errors.push(`files_read[${i}]: Missing path (required: string)`);
-      }
-      if (typeof entry.sha256 !== 'string') {
-        errors.push(`files_read[${i}]: Missing sha256 (required: string)`);
-      }
-    }
+    validateFilesRead(obj.files_read as unknown[], errors);
   }
 
-  // invariants_acknowledged validation
   if (!Array.isArray(obj.invariants_acknowledged)) {
     errors.push('Missing or invalid invariants_acknowledged (required: array)');
   } else {
-    const invariants = obj.invariants_acknowledged as unknown[];
-    const validInvariants = invariants.filter(
-      (item) => typeof item === 'string' && item.trim().length > 0
-    );
-    if (validInvariants.length < MIN_INVARIANTS_COUNT) {
-      errors.push(
-        `invariants_acknowledged has ${validInvariants.length} items (required: at least ${MIN_INVARIANTS_COUNT})`
-      );
-    }
+    validateInvariantsAcknowledged(obj.invariants_acknowledged as unknown[], errors);
   }
 
   return errors;
@@ -176,6 +173,89 @@ export function validateFilePrerequisites(
 /**
  * Load and validate context_ack.json for a task run.
  */
+function checkAckFileMissing(
+  ackPath: string,
+  contextDir: string,
+  taskId: string,
+  sprintNumber: number,
+  repoRoot: string
+): ContextAckValidationResult | null {
+  if (existsSync(ackPath)) return null;
+
+  // Check for common misname: TASK-ID-context_ack.json (prefixed convention)
+  const prefixedPath = join(contextDir, `${taskId}-context_ack.json`);
+  if (existsSync(prefixedPath)) {
+    return {
+      valid: false, severity: 'FAIL',
+      errors: [
+        `context_ack.json not found at expected path: ${ackPath}`,
+        `Found wrong filename: ${taskId}-context_ack.json — rename to plain context_ack.json (no task ID prefix)`,
+      ],
+      warnings: [],
+    };
+  }
+
+  // Sprint path fallback: scan other sprint dirs
+  const sprintsDir = join(repoRoot, '.specify', 'sprints');
+  if (existsSync(sprintsDir)) {
+    const sprintDirs = readdirSync(sprintsDir)
+      .filter((d) => /^sprint-\d+$/.test(d))
+      .sort((a, b) => Number.parseInt(b.replaceAll('sprint-', ''), 10) - Number.parseInt(a.replaceAll('sprint-', ''), 10));
+    for (const dir of sprintDirs) {
+      const altAck = join(sprintsDir, dir, 'attestations', taskId, 'context_ack.json');
+      if (existsSync(altAck)) {
+        return {
+          valid: false, severity: 'FAIL',
+          errors: [`Sprint path mismatch: expected sprint-${sprintNumber}, found context_ack.json at ${dir}. Move attestation to correct sprint or update CSV Target Sprint.`],
+          warnings: [],
+        };
+      }
+    }
+  }
+
+  return { valid: false, severity: isStrictMode() ? 'FAIL' : 'WARN', errors: [`context_ack.json not found at: ${ackPath}`], warnings: [] };
+}
+
+function parseAndValidateAckFile(ackPath: string): { ack: ContextAck } | ContextAckValidationResult {
+  try {
+    const parsed = JSON.parse(readFileSync(ackPath, 'utf-8'));
+    const structureErrors = validateContextAckStructure(parsed);
+    if (structureErrors.length > 0) {
+      return { valid: false, severity: 'FAIL', errors: structureErrors, warnings: [] };
+    }
+    return { ack: parsed as ContextAck };
+  } catch (error) {
+    return { valid: false, severity: 'FAIL', errors: [`Failed to parse context_ack.json: ${error instanceof Error ? error.message : String(error)}`], warnings: [] };
+  }
+}
+
+function loadAndValidateManifest(
+  manifestPath: string,
+  ack: ContextAck,
+  filePrerequisites: string[],
+  errors: string[],
+  warnings: string[]
+): ContextPackManifest | undefined {
+  if (!existsSync(manifestPath)) {
+    warnings.push('context_pack.manifest.json not found; cannot verify file hashes');
+    return undefined;
+  }
+  try {
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8')) as ContextPackManifest;
+    if (manifest.backfilled) {
+      warnings.push('Manifest was backfilled; hash cross-verification skipped (expected divergence)');
+    } else {
+      const fileValidation = validateFilePrerequisites(ack, manifest, filePrerequisites);
+      errors.push(...fileValidation.errors);
+      warnings.push(...fileValidation.warnings);
+    }
+    return manifest;
+  } catch (error) {
+    warnings.push(`Failed to parse manifest: ${error instanceof Error ? error.message : String(error)}`);
+    return undefined;
+  }
+}
+
 export function validateContextAck(
   taskId: string,
   runId: string,
@@ -186,149 +266,37 @@ export function validateContextAck(
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  // Paths - sprint-based structure: .specify/sprints/sprint-{N}/attestations/{taskId}/
-  const contextDir = join(
-    repoRoot,
-    '.specify',
-    'sprints',
-    `sprint-${sprintNumber}`,
-    'attestations',
-    taskId
-  );
-  let ackPath = join(contextDir, 'context_ack.json');
-  let manifestPath = join(contextDir, 'context_pack.manifest.json');
+  const contextDir = join(repoRoot, '.specify', 'sprints', `sprint-${sprintNumber}`, 'attestations', taskId);
+  const ackPath = join(contextDir, 'context_ack.json');
+  const manifestPath = join(contextDir, 'context_pack.manifest.json');
 
-  // Check if ack file exists
-  if (!existsSync(ackPath)) {
-    // Check for common misname: TASK-ID-context_ack.json (prefixed convention)
-    const prefixedPath = join(contextDir, `${taskId}-context_ack.json`);
-    if (existsSync(prefixedPath)) {
-      return {
-        valid: false,
-        severity: 'FAIL',
-        errors: [
-          `context_ack.json not found at expected path: ${ackPath}`,
-          `Found wrong filename: ${taskId}-context_ack.json — rename to plain context_ack.json (no task ID prefix)`,
-        ],
-        warnings: [],
-      };
-    }
-
-    // Sprint path fallback: scan other sprint dirs for the same task's context_ack
-    const sprintsDir = join(repoRoot, '.specify', 'sprints');
-    let foundAlternative = false;
-    if (existsSync(sprintsDir)) {
-      const sprintDirs = readdirSync(sprintsDir)
-        .filter((d) => /^sprint-\d+$/.test(d))
-        .sort((a, b) => {
-          const numA = Number.parseInt(a.replaceAll('sprint-', ''), 10);
-          const numB = Number.parseInt(b.replaceAll('sprint-', ''), 10);
-          return numB - numA; // newest first
-        });
-
-      for (const dir of sprintDirs) {
-        const altDir = join(sprintsDir, dir, 'attestations', taskId);
-        const altAck = join(altDir, 'context_ack.json');
-        if (existsSync(altAck)) {
-          // Found at alternative sprint path — use it but warn
-          ackPath = altAck;
-          manifestPath = join(altDir, 'context_pack.manifest.json');
-          foundAlternative = true;
-          warnings.push(
-            `Sprint path mismatch: expected sprint-${sprintNumber}, found context_ack.json at ${dir}. Update CSV "Artifacts To Track" to match.`
-          );
-          break;
-        }
-      }
-    }
-
-    if (!foundAlternative) {
-      return {
-        valid: false,
-        severity: isStrictMode() ? 'FAIL' : 'WARN',
-        errors: [`context_ack.json not found at: ${ackPath}`],
-        warnings: [],
-      };
-    }
-  }
+  // Check if ack file exists (returns early on missing)
+  const missingResult = checkAckFileMissing(ackPath, contextDir, taskId, sprintNumber, repoRoot);
+  if (missingResult) return missingResult;
 
   // Load and parse ack
-  let ack: ContextAck;
-  try {
-    const ackContent = readFileSync(ackPath, 'utf-8');
-    const parsed = JSON.parse(ackContent);
-
-    // Validate structure
-    const structureErrors = validateContextAckStructure(parsed);
-    if (structureErrors.length > 0) {
-      return {
-        valid: false,
-        severity: 'FAIL',
-        errors: structureErrors,
-        warnings: [],
-      };
-    }
-
-    ack = parsed as ContextAck;
-  } catch (error) {
-    return {
-      valid: false,
-      severity: 'FAIL',
-      errors: [
-        `Failed to parse context_ack.json: ${error instanceof Error ? error.message : String(error)}`,
-      ],
-      warnings: [],
-    };
-  }
+  const parseResult = parseAndValidateAckFile(ackPath);
+  if ('errors' in parseResult && !('ack' in parseResult)) return parseResult as ContextAckValidationResult;
+  const ack = (parseResult as { ack: ContextAck }).ack;
 
   // Validate task_id and run_id match
-  if (ack.task_id !== taskId) {
-    errors.push(`task_id mismatch: expected ${taskId}, got ${ack.task_id}`);
-  }
-  if (ack.run_id !== runId) {
-    errors.push(`run_id mismatch: expected ${runId}, got ${ack.run_id}`);
-  }
+  if (ack.task_id !== taskId) errors.push(`task_id mismatch: expected ${taskId}, got ${ack.task_id}`);
+  if (ack.run_id !== runId) errors.push(`run_id mismatch: expected ${runId}, got ${ack.run_id}`);
 
-  // Load manifest if exists
-  let manifest: ContextPackManifest | undefined;
-  if (existsSync(manifestPath)) {
-    try {
-      const manifestContent = readFileSync(manifestPath, 'utf-8');
-      manifest = JSON.parse(manifestContent) as ContextPackManifest;
+  // Load manifest and validate prerequisites
+  const manifest = loadAndValidateManifest(manifestPath, ack, filePrerequisites, errors, warnings);
 
-      // Skip hash comparison for backfilled manifests — hashes reflect current file state,
-      // not execution-time state, so they will naturally differ from context_ack.json
-      if (manifest.backfilled) {
-        warnings.push(
-          'Manifest was backfilled; hash cross-verification skipped (expected divergence)'
-        );
-      } else {
-        // Validate file prerequisites against manifest
-        const fileValidation = validateFilePrerequisites(ack, manifest, filePrerequisites);
-        errors.push(...fileValidation.errors);
-        warnings.push(...fileValidation.warnings);
-      }
-    } catch (error) {
-      warnings.push(
-        `Failed to parse manifest: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
-  } else {
-    warnings.push('context_pack.manifest.json not found; cannot verify file hashes');
-  }
-
-  // Determine final validity
   const valid = errors.length === 0;
-  const severity: Severity = valid ? (warnings.length > 0 ? 'WARN' : 'PASS') : 'FAIL';
+  let severity: Severity;
+  if (!valid) {
+    severity = 'FAIL';
+  } else if (warnings.length > 0) {
+    severity = 'WARN';
+  } else {
+    severity = 'PASS';
+  }
 
-  return {
-    valid,
-    severity,
-    errors,
-    warnings,
-    ack,
-    manifest,
-  };
+  return { valid, severity, errors, warnings, ack, manifest };
 }
 
 // ============================================================================

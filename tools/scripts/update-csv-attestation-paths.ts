@@ -59,9 +59,12 @@ function updateArtifactPaths(artifacts: string, taskId: string, sprintNumber: nu
 
   // Replace old PLAN paths with new sprint-based paths
   // Pattern: PLAN:.specify/planning/{TASK-ID}.md -> PLAN:.specify/sprints/sprint-{N}/planning/{TASK-ID}-plan.md
-  result = result.replaceAll(/PLAN:\.specify\/planning\/([^;,\s]+)\.md/g, (match, capturedTaskId) => {
-    return `PLAN:.specify/sprints/sprint-${sprintNumber}/planning/${capturedTaskId}-plan.md`;
-  });
+  result = result.replaceAll(
+    /PLAN:\.specify\/planning\/([^;,\s]+)\.md/g,
+    (match, capturedTaskId) => {
+      return `PLAN:.specify/sprints/sprint-${sprintNumber}/planning/${capturedTaskId}-plan.md`;
+    }
+  );
 
   return result;
 }

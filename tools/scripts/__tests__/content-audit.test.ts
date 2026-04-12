@@ -64,7 +64,9 @@ function makeField(value: string | null, source: string | null = 'page'): Metada
 function fullMetadata(overrides: Partial<RouteMetadata> = {}): RouteMetadata {
   return {
     title: makeField('Custom Title'),
-    description: makeField('A description that is between fifty and one hundred sixty characters long for SEO purposes here.'),
+    description: makeField(
+      'A description that is between fifty and one hundred sixty characters long for SEO purposes here.'
+    ),
     og_title: makeField('OG Title'),
     og_description: makeField('OG Description'),
     og_url: makeField('https://example.com'),
@@ -173,9 +175,7 @@ describe('resolveMetadataChain', () => {
   const emptyMap = new Map<string, ReturnType<typeof parseMetadataFromSource>>();
 
   it('TC-12: extracts title from export const metadata', () => {
-    (fs.readFileSync as Mock).mockReturnValue(
-      `export const metadata = { title: 'About Us' };`,
-    );
+    (fs.readFileSync as Mock).mockReturnValue(`export const metadata = { title: 'About Us' };`);
 
     const result = resolveMetadataChain('/app/about/page.tsx', '/app', emptyMap);
     expect(result.title.value).toBe('About Us');
@@ -184,7 +184,7 @@ describe('resolveMetadataChain', () => {
 
   it('TC-13: marks generateMetadata fields with layout/root fallback', () => {
     (fs.readFileSync as Mock).mockReturnValue(
-      `export async function generateMetadata() { return {}; }`,
+      `export async function generateMetadata() { return {}; }`
     );
 
     const result = resolveMetadataChain('/app/blog/page.tsx', '/app', emptyMap);
@@ -197,9 +197,17 @@ describe('resolveMetadataChain', () => {
 
     const layoutMap = new Map();
     layoutMap.set('/app/contacts', {
-      title: 'Contacts', description: null,
-      ogTitle: null, ogDescription: null, ogUrl: null, ogSiteName: null, ogImage: null,
-      twitterCard: null, twitterTitle: null, twitterDescription: null, isDynamic: false,
+      title: 'Contacts',
+      description: null,
+      ogTitle: null,
+      ogDescription: null,
+      ogUrl: null,
+      ogSiteName: null,
+      ogImage: null,
+      twitterCard: null,
+      twitterTitle: null,
+      twitterDescription: null,
+      isDynamic: false,
     });
 
     const result = resolveMetadataChain('/app/contacts/[id]/page.tsx', '/app', layoutMap);
@@ -211,7 +219,9 @@ describe('resolveMetadataChain', () => {
     (fs.readFileSync as Mock).mockReturnValue('// no metadata export');
 
     const result = resolveMetadataChain('/app/some/page.tsx', '/app', emptyMap);
-    expect(result.title.value).toBe('IntelliFlow CRM - AI-Powered Customer Relationship Management');
+    expect(result.title.value).toBe(
+      'IntelliFlow CRM - AI-Powered Customer Relationship Management'
+    );
     expect(result.title.source).toBe('root-layout');
   });
 
@@ -221,9 +231,17 @@ describe('resolveMetadataChain', () => {
     // Root layout map with null values
     const mapWithEmptyRoot = new Map();
     mapWithEmptyRoot.set('/app', {
-      title: null, description: null,
-      ogTitle: null, ogDescription: null, ogUrl: null, ogSiteName: null, ogImage: null,
-      twitterCard: null, twitterTitle: null, twitterDescription: null, isDynamic: false,
+      title: null,
+      description: null,
+      ogTitle: null,
+      ogDescription: null,
+      ogUrl: null,
+      ogSiteName: null,
+      ogImage: null,
+      twitterCard: null,
+      twitterTitle: null,
+      twitterDescription: null,
+      isDynamic: false,
     });
 
     const result = resolveMetadataChain('/app/page.tsx', '/app', mapWithEmptyRoot);
@@ -301,7 +319,7 @@ describe('crossReferenceGhostLinks', () => {
     });
     const result = crossReferenceGhostLinks('/app');
     expect(result).toHaveLength(27);
-    expect(result.find(g => g.ghost_link_id === 'G-01')).toBeUndefined();
+    expect(result.find((g) => g.ghost_link_id === 'G-01')).toBeUndefined();
   });
 
   it('TC-24: ghost link entries have correct G-NN format', () => {
@@ -340,7 +358,9 @@ describe('detectStaleContent', () => {
   });
 
   it('TC-28: returns none for clean source', () => {
-    const result = detectStaleContent('export default function Page() { return <div>Hello</div>; }');
+    const result = detectStaleContent(
+      'export default function Page() { return <div>Hello</div>; }'
+    );
     expect(result.classification).toBe('none');
     expect(result.patterns_found).toHaveLength(0);
   });
@@ -420,12 +440,20 @@ describe('buildSitemapSet', () => {
 describe('buildFindings', () => {
   const mockRoutes: RouteEntry[] = [
     {
-      route: '/press/[id]', file_path: 'apps/web/src/app/(public)/press/[id]/page.tsx',
-      access_tier: 'public', metadata: fullMetadata(), seo_score: 90, in_sitemap: false,
-      sitemap_last_modified_method: null, http_status: null, response_time_ms: null,
+      route: '/press/[id]',
+      file_path: 'apps/web/src/app/(public)/press/[id]/page.tsx',
+      access_tier: 'public',
+      metadata: fullMetadata(),
+      seo_score: 90,
+      in_sitemap: false,
+      sitemap_last_modified_method: null,
+      http_status: null,
+      response_time_ms: null,
       http_measurement_method: 'pending-runtime',
       stale_content: { classification: 'none', patterns_found: [], data_sources: [] },
-      ghost_links: [], broken_inpage_links: [], notes: '',
+      ghost_links: [],
+      broken_inpage_links: [],
+      notes: '',
     },
   ];
 
@@ -438,7 +466,7 @@ describe('buildFindings', () => {
     });
 
     const result = buildFindings(mockRoutes, [], '/repo');
-    const privacyFinding = result.critical.find(f => f.description.includes('/privacy'));
+    const privacyFinding = result.critical.find((f) => f.description.includes('/privacy'));
     expect(privacyFinding).toBeDefined();
     expect(privacyFinding!.severity).toBe('critical');
   });
@@ -452,8 +480,8 @@ describe('buildFindings', () => {
     });
 
     const result = buildFindings(mockRoutes, [], '/repo');
-    const pressFinding = result.high.find(f =>
-      f.description.includes('/press/[id]') || f.route === '/press/[id]',
+    const pressFinding = result.high.find(
+      (f) => f.description.includes('/press/[id]') || f.route === '/press/[id]'
     );
     expect(pressFinding).toBeDefined();
   });
@@ -465,8 +493,11 @@ describe('buildFindings', () => {
     });
 
     const result = buildFindings(mockRoutes, [], '/repo');
-    const lhFinding = result.high.find(f =>
-      f.description.includes('lighthouserc') || f.description.includes('Lighthouse') || f.description.includes('SEO'),
+    const lhFinding = result.high.find(
+      (f) =>
+        f.description.includes('lighthouserc') ||
+        f.description.includes('Lighthouse') ||
+        f.description.includes('SEO')
     );
     expect(lhFinding).toBeDefined();
   });
@@ -478,8 +509,8 @@ describe('buildFindings', () => {
     });
 
     const result = buildFindings(mockRoutes, [], '/repo');
-    const sitemapFinding = result.medium.find(f =>
-      f.description.includes('sitemap.ts') || f.description.includes('STATIC_LAST_MODIFIED'),
+    const sitemapFinding = result.medium.find(
+      (f) => f.description.includes('sitemap.ts') || f.description.includes('STATIC_LAST_MODIFIED')
     );
     expect(sitemapFinding).toBeDefined();
   });
@@ -527,7 +558,7 @@ describe('runAudit and main', () => {
     (fs.existsSync as Mock).mockReturnValue(false);
 
     const result = runAudit('/repo');
-    const routes = result.routes.map(r => r.route);
+    const routes = result.routes.map((r) => r.route);
     const sorted = [...routes].sort();
     expect(routes).toEqual(sorted);
   });

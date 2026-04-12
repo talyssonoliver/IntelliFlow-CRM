@@ -2,7 +2,8 @@
  * STOA (Specialised Task Ownership Agent) Framework Types
  *
  * Core type definitions for the STOA governance system.
- * Based on Framework.md v4.3 FINAL.
+ * Based on Framework.md v5.0 at .specify/memory/Framework.md
+ * Binary gate policy: PASS / FAIL / NEEDS_HUMAN (no WARN).
  *
  * @module tools/scripts/lib/stoa/types
  */

@@ -296,12 +296,10 @@ function generateMarkdownReport(report: SprintReport): string {
 `;
 
   for (const task of report.tasks) {
-    const icon =
-      task.verdict === 'PASS'
-        ? '✅'
-        : task.verdict === 'FAIL'
-            ? '❌'
-            : '💥';
+    let icon: string;
+    if (task.verdict === 'PASS') icon = '✅';
+    else if (task.verdict === 'FAIL') icon = '❌';
+    else icon = '💥';
     const desc =
       task.description.length > 50 ? task.description.slice(0, 47) + '...' : task.description;
     md += `| ${task.taskId} | ${icon} ${task.verdict} | ${task.duration}ms | ${desc} |\n`;

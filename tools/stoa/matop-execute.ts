@@ -224,7 +224,10 @@ async function applyMatopCsvPatch(
     [`${evidenceDir}/summary.json`]
   );
 
-  writeFileSync(join(evidenceDir, 'csv-patch-proposal.json'), JSON.stringify(csvPatchProposal, null, 2));
+  writeFileSync(
+    join(evidenceDir, 'csv-patch-proposal.json'),
+    JSON.stringify(csvPatchProposal, null, 2)
+  );
   log(`Proposed: ${task.status} → Completed`);
 
   let csvPatchApplied: ApplyPatchResult | undefined;
@@ -239,13 +242,26 @@ async function applyMatopCsvPatch(
       log(`  Applied at: ${csvPatchApplied.appliedAt}`);
     } else {
       log(`Failed to apply patch: ${csvPatchApplied.error}`);
-      appendToPatchHistory(repoRoot, { proposal: csvPatchProposal, appliedAt: null, appliedBy: null, rejected: false });
+      appendToPatchHistory(repoRoot, {
+        proposal: csvPatchProposal,
+        appliedAt: null,
+        appliedBy: null,
+        rejected: false,
+      });
     }
 
-    writeFileSync(join(evidenceDir, 'csv-patch-applied.json'), JSON.stringify(csvPatchApplied, null, 2));
+    writeFileSync(
+      join(evidenceDir, 'csv-patch-applied.json'),
+      JSON.stringify(csvPatchApplied, null, 2)
+    );
   } else {
     log(`Dry run: patch NOT applied`);
-    appendToPatchHistory(repoRoot, { proposal: csvPatchProposal, appliedAt: null, appliedBy: null, rejected: false });
+    appendToPatchHistory(repoRoot, {
+      proposal: csvPatchProposal,
+      appliedAt: null,
+      appliedBy: null,
+      rejected: false,
+    });
   }
 
   return { csvPatchProposal, csvPatchApplied };
@@ -301,7 +317,10 @@ function classifyOneTool(tool: ReturnType<typeof getToolById>): GateBucket {
   return 'execute';
 }
 
-function classifyGates(allGates: string[], matrix: ReturnType<typeof loadAuditMatrix>): GateClassification {
+function classifyGates(
+  allGates: string[],
+  matrix: ReturnType<typeof loadAuditMatrix>
+): GateClassification {
   const execute: string[] = [];
   const waiverRequired: string[] = [];
   const skipped: string[] = [];
@@ -488,7 +507,15 @@ async function executeMatop(
   logSection('Phase 7: STOA Verdicts');
 
   const stoaVerdicts = generateAllStoaVerdicts(
-    allStoas, taskId, execute, waiverRequired, skipped, gateResults, waivers, strictMode, evidenceDir
+    allStoas,
+    taskId,
+    execute,
+    waiverRequired,
+    skipped,
+    gateResults,
+    waivers,
+    strictMode,
+    evidenceDir
   );
 
   // =========================================================================
@@ -503,7 +530,14 @@ async function executeMatop(
   // Phase 9: CSV Patch Proposal & Auto-Apply
   // =========================================================================
   const { csvPatchProposal, csvPatchApplied } = await applyMatopCsvPatch(
-    finalVerdict, task, runId, taskId, allStoas, evidenceDir, repoRoot, dryRun
+    finalVerdict,
+    task,
+    runId,
+    taskId,
+    allStoas,
+    evidenceDir,
+    repoRoot,
+    dryRun
   );
 
   // =========================================================================
@@ -522,7 +556,13 @@ async function executeMatop(
 
   // Process remediation for any STOA that has non-PASS verdict
   const nonPassVerdicts = stoaVerdicts.filter((v) => v.verdict !== 'PASS');
-  const remediation = processRemediation(nonPassVerdicts, runId, repoRoot, evidenceDir, gateResults);
+  const remediation = processRemediation(
+    nonPassVerdicts,
+    runId,
+    repoRoot,
+    evidenceDir,
+    gateResults
+  );
 
   // =========================================================================
   // Write Summary
