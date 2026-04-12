@@ -162,8 +162,8 @@ apps/project-tracker/docs/metrics/backups/
 apps/project-tracker/docs/metrics/artifacts/
 apps/project-tracker/docs/metrics/_global/*.tmp
 
-# Sprint plan split files (derived from Sprint_plan.csv - regenerated locally)
-apps/project-tracker/docs/metrics/_global/Sprint_plan_[A-Z].csv
+# Sprint plan split files — tracked (agents use these for context; CI Metrics Tracked State gate requires no untracked files)
+# apps/project-tracker/docs/metrics/_global/Sprint_plan_[A-Z].csv  # un-ignored: required by CI gate
 
 # ============================================
 # Project tracker runtime metric cache - Added 2026-04-10
@@ -306,8 +306,9 @@ apps/api/.env
 # Runtime Artifacts - Added 2026-01-03
 # ============================================
 
-# Ignore artifacts/logs/ to reduce git status noise
-artifacts/logs/
+# artifacts/logs/ contains .gitkeep to satisfy baseline structure check (CI Gate 1)
+# artifacts/logs/
+!artifacts/logs/.gitkeep
 
 # ============================================
 # DEPRECATED Paths - Added 2026-01-25

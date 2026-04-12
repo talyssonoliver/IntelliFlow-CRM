@@ -3,7 +3,7 @@
 > **Location**: `docs/design/page-registry.md` **Purpose**: Central registry of
 > all UI pages with task IDs, KPIs, file paths, components, API routers, test
 > paths, and RACI assignments **Last Updated**: 2026-04-12 (as of Sprint 17)
-> **Total Pages**: 197
+> **Total Pages**: 198
 
 ---
 
@@ -137,6 +137,20 @@ Each route entry uses this standard table format:
 | **API Router** | N/A                                                         |
 | **E2E Test**   | None                                                        |
 | **Unit Tests** | `apps/web/src/app/(public)/privacy/__tests__/page.test.tsx` |
+| **KPI**        | Lighthouse >=90; Response <200ms; SEO >=90                  |
+| **Status**     | Implemented                                                 |
+| **RACI**       | R: Frontend / A: Legal Counsel / C: Compliance / I: QA      |
+
+### Terms of Service (`/terms`)
+
+| Field          | Value                                                       |
+| -------------- | ----------------------------------------------------------- |
+| **Task ID**    | PG-051                                                      |
+| **File Path**  | `apps/web/src/app/(public)/terms/page.tsx`                  |
+| **Layout**     | `apps/web/src/app/(public)/layout.tsx`                      |
+| **API Router** | N/A                                                         |
+| **E2E Test**   | None                                                        |
+| **Unit Tests** | `apps/web/src/app/(public)/terms/__tests__/page.test.tsx`   |
 | **KPI**        | Lighthouse >=90; Response <200ms; SEO >=90                  |
 | **Status**     | Implemented                                                 |
 | **RACI**       | R: Frontend / A: Legal Counsel / C: Compliance / I: QA      |

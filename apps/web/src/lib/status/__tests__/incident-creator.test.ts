@@ -62,6 +62,18 @@ describe('buildIncidentPayload', () => {
     expect(payload).not.toHaveProperty('stack');
     expect(JSON.stringify(payload)).not.toContain('at ');
   });
+
+  it('truncates long error.message to cap leakage', () => {
+    const long = 'x'.repeat(500);
+    const payload = buildIncidentPayload({ error: new Error(long) });
+    expect(payload.message.length).toBeLessThanOrEqual(301);
+    expect(payload.message.endsWith('…')).toBe(true);
+  });
+
+  it('preserves short error.message unchanged', () => {
+    const payload = buildIncidentPayload({ error: new Error('short msg') });
+    expect(payload.message).toBe('short msg');
+  });
 });
 
 describe('createIncident', () => {

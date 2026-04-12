@@ -6958,7 +6958,7 @@
       "Dependencies": "PG-050",
       "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:Terms approved;ENV:acceptance tracking;FILE:docs/architecture/hex-boundaries.md;FILE:apps/web/src/app/(legal)/privacy/page.tsx",
       "Definition of Done": "Response <200ms, Lighthouse ≥90, terms displayed; artifacts: page.tsx, terms-content.md, acceptance-tracker.ts",
-      "Status": "Planning",
+      "Status": "Plan Complete",
       "KPIs": "Terms published, acceptance tracked, updates notified",
       "Target Sprint": "17",
       "Artifacts To Track": "ARTIFACT:apps/web/src/app/(public)/terms/page.tsx;ARTIFACT:docs/shared/terms-content.md;ARTIFACT:apps/web/src/lib/legal/acceptance-tracker.ts;EVIDENCE:.specify/sprints/sprint-17/attestations/PG-051/context_ack.json",

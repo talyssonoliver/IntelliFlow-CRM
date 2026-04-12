@@ -1119,8 +1119,11 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       const timeCondition = windowStart
         ? Prisma.sql`AND "timestamp" >= ${windowStart} AND "timestamp" <= ${windowEnd}`
         : Prisma.sql`AND "timestamp" <= ${windowEnd}`;
+      // Cast "type" to text: each table uses its own Postgres enum type
+      // (LeadActivityType, ContactActivityType, etc.) and UNION ALL cannot
+      // combine different enum types without an explicit text cast.
       return Prisma.sql`
-        SELECT ${Prisma.raw(`'${source}'`)} AS source, "type", COUNT(*) AS count
+        SELECT ${Prisma.raw(`'${source}'`)} AS source, "type"::text AS type, COUNT(*) AS count
         FROM ${Prisma.raw(`"${table}"`)}
         WHERE "tenantId" = ${tenantId}
           ${timeCondition}

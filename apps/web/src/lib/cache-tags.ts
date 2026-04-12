@@ -13,12 +13,32 @@ export const CONTACTS_LIST = 'contacts:list';
 export const CONTACTS_STATS = 'contacts:stats';
 export const ACCOUNTS_LIST = 'accounts:list';
 export const ACCOUNTS_STATS = 'accounts:stats';
+export const TICKETS_LIST = 'tickets:list';
+export const TICKETS_STATS = 'tickets:stats';
+export const TASKS_LIST = 'tasks:list';
+export const TASKS_STATS = 'tasks:stats';
+export const DEALS_LIST = 'deals:list';
+export const DEALS_FORECAST = 'deals:forecast';
 
 // ── Per-user hot-path tags ───────────────────────────────────────
 /** Unread notification count — short TTL, per-user isolated */
 export const NOTIFICATIONS_UNREAD = 'notifications:unread';
 /** Enabled module list — long TTL, per-user/tenant isolated */
 export const MODULE_ACCESS = 'module:access';
+/** Unified activity feed — short TTL, per-user isolated */
+export const ACTIVITY_FEED = 'activity:feed';
+
+// ── Calendar tags ───────────────────────────────────────────────
+/** Appointment list + stats on /calendar — short TTL, per-user isolated */
+export const CALENDAR_EVENTS = 'calendar:events';
+
+// ── Analytics tags ───────────────────────────────────────────────
+/** Analytics overview + conversion funnel on /analytics — per-user isolated */
+export const ANALYTICS_OVERVIEW = 'analytics:overview';
+
+// ── Home page tags ──────────────────────────────────────────────
+/** AI insights panel on the authenticated home page */
+export const HOME_AI_INSIGHTS = 'home:ai-insights';
 
 // ── Composite tags ──────────────────────────────────────────────
 export const DASHBOARD = 'dashboard';

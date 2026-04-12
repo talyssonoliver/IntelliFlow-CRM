@@ -1,4 +1,4 @@
-# apps/api — tRPC API Server
+# apps/api ÔÇö tRPC API Server
 
 ## Structure
 
@@ -11,10 +11,10 @@ src/modules/<entity>/
 
 ## Key Patterns
 
-- **Router → Service → Adapter**: Routers call services, services use
+- **Router ÔåÆ Service ÔåÆ Adapter**: Routers call services, services use
   ports/adapters
-- End-to-end type safety via tRPC — frontend auto-gets typed client
-- Context recreated per request — don't store mutable state
+- End-to-end type safety via tRPC ÔÇö frontend auto-gets typed client
+- Context recreated per request ÔÇö don't store mutable state
 - All inputs validated with Zod schemas from `@intelliflow/validators`
 
 ## Container Wiring (CRITICAL)
@@ -23,14 +23,14 @@ src/modules/<entity>/
 Static checks (typecheck, mocked tests, lint, build) can all pass while a
 service is never actually instantiated.
 
-Root cause: IFC-086 attestation falsely claimed "service wired in container" — 4
+Root cause: IFC-086 attestation falsely claimed "service wired in container" ÔÇö 4
 broken services discovered (ChainVersion, Experiment, Feedback,
 ConversationSearch).
 
 When adding a new service:
 
 1. Create the class in appropriate package
-2. **Register it in `container.ts`** — this is where DI happens
+2. **Register it in `container.ts`** ÔÇö this is where DI happens
 3. Wire it in `context.ts` if it needs request context
 4. Verify with a runtime check, not just typecheck
 
@@ -43,7 +43,7 @@ If you get TS2305 "has no exported member" from `@intelliflow/adapters` or
   `intelliflow-application.d.ts` contained `declare module` stubs that OVERRODE
   actual package resolution. These stubs only listed ~9 exports each, masking
   all others.
-- **FIX**: Delete the stub `.d.ts` file — don't modify DTS generation or blame
+- **FIX**: Delete the stub `.d.ts` file ÔÇö don't modify DTS generation or blame
   TS version
 - **NOT a TS version bug**: Same issue on both TS 5.8.3 and 5.9.3, with tsup
   --dts, --experimental-dts, and tsc --emitDeclarationOnly

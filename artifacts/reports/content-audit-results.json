@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-12T09:50:41.668Z",
+  "generated_at": "2026-04-12T21:49:54.738Z",
   "tool_version": "1.0.0",
   "routes": [
     {
@@ -57,10 +57,8 @@
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
       "stale_content": {
-        "classification": "stale",
-        "patterns_found": [
-          "todo-marker"
-        ],
+        "classification": "none",
+        "patterns_found": [],
         "data_sources": []
       },
       "ghost_links": [],
@@ -80,6 +78,71 @@
           "value": "Recover from missing links with guided next steps and real IntelliFlow destinations.",
           "source": "page",
           "length": 84
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": true
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "static-by-design-dated",
+        "patterns_found": [
+          "percentage"
+        ],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/500",
+      "file_path": "apps/web/src/app/500/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Server Error | IntelliFlow CRM",
+          "source": "page"
+        },
+        "description": {
+          "value": "An internal error was reported. Recover with guided next steps while the incident is logged.",
+          "source": "page",
+          "length": 92
         },
         "og_title": {
           "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
@@ -6921,6 +6984,72 @@
       "notes": ""
     },
     {
+      "route": "/dpa",
+      "file_path": "apps/web/src/app/(public)/dpa/page.tsx",
+      "access_tier": "public",
+      "metadata": {
+        "title": {
+          "value": "Data Processing Addendum | IntelliFlow CRM",
+          "source": "page"
+        },
+        "description": {
+          "value": "Review the IntelliFlow CRM Data Processing Addendum governing our GDPR Article 28 data processor relationship with enterprise customers.",
+          "source": "page",
+          "length": 136
+        },
+        "og_title": {
+          "value": "Data Processing Addendum | IntelliFlow CRM",
+          "source": "page"
+        },
+        "og_description": {
+          "value": "Read the IntelliFlow CRM DPA covering processing subject matter, sub-processors, security measures, and controller obligations under GDPR Article 28.",
+          "source": "page"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com/dpa",
+          "source": "page"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "page"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary",
+          "source": "page"
+        },
+        "twitter_title": {
+          "value": "Data Processing Addendum | IntelliFlow CRM",
+          "source": "page"
+        },
+        "twitter_description": {
+          "value": "IntelliFlow CRM DPA — GDPR Article 28 data processor agreement for enterprise customers.",
+          "source": "page"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": 80,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "stale",
+        "patterns_found": [
+          "placeholder",
+          "todo-marker"
+        ],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/email",
       "file_path": "apps/web/src/app/email/page.tsx",
       "access_tier": "auth-gated",
@@ -11885,9 +12014,9 @@
         },
         "robots_noindex": false
       },
-      "seo_score": 80,
-      "in_sitemap": false,
-      "sitemap_last_modified_method": null,
+      "seo_score": 90,
+      "in_sitemap": true,
+      "sitemap_last_modified_method": "STATIC_LAST_MODIFIED",
       "http_status": null,
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
@@ -12476,12 +12605,12 @@
     }
   ],
   "summary": {
-    "total_routes": 196,
-    "public_routes": 30,
-    "auth_gated_routes": 152,
+    "total_routes": 198,
+    "public_routes": 31,
+    "auth_gated_routes": 153,
     "developer_routes": 14,
-    "routes_with_seo_score": 30,
-    "routes_pending_runtime_measurement": 196,
+    "routes_with_seo_score": 31,
+    "routes_pending_runtime_measurement": 198,
     "average_seo_score_public": 78,
     "legal_pages_missing": [],
     "ghost_link_count": 4

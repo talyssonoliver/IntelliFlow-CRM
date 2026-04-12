@@ -11,12 +11,6 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-vi.mock('@/components/status/server-incident-reporter', () => ({
-  ServerIncidentReporter: (props: Record<string, unknown>) => (
-    <span data-testid="server-incident-reporter" data-path={props.path} />
-  ),
-}));
-
 import ServerErrorPage, { metadata } from '../page';
 
 describe('ServerErrorPage', () => {
@@ -31,11 +25,9 @@ describe('ServerErrorPage', () => {
     expect(screen.getByRole('link', { name: /home/i })).toHaveAttribute('href', '/');
   });
 
-  it('mounts ServerIncidentReporter with path="/500"', () => {
+  it('does NOT mount ServerIncidentReporter on direct /500 navigation', () => {
     render(<ServerErrorPage />);
-    const reporter = screen.getByTestId('server-incident-reporter');
-    expect(reporter).toBeInTheDocument();
-    expect(reporter).toHaveAttribute('data-path', '/500');
+    expect(screen.queryByTestId('server-incident-reporter')).not.toBeInTheDocument();
   });
 });
 

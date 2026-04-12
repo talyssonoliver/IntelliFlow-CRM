@@ -1,4 +1,4 @@
-# packages/adapters — Infrastructure Adapters
+# packages/adapters ÔÇö Infrastructure Adapters
 
 ## Purpose
 
@@ -37,7 +37,7 @@ actually instantiated at runtime.
 
 ## Testing
 
-- Prisma mock types don't support `include`/`select` relations — cast mock data
+- Prisma mock types don't support `include`/`select` relations ÔÇö cast mock data
   with `as any`
 - Use `Record<string, any>` for mock repositories to avoid TS2348 "not callable"
   on vi.fn()

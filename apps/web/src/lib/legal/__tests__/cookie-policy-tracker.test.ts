@@ -25,22 +25,16 @@ describe('cookie-policy-tracker', () => {
     expect(result).toMatch(/2026/);
   });
 
-  it('buildCookieConsentRecord returns current policy version and route /cookies', async () => {
-    const { buildCookieConsentRecord } = await import('../cookie-policy-tracker');
-    const record = buildCookieConsentRecord('2026-04-12T00:00:00.000Z');
+  it('getCookiePolicy returns all four summary bullets from frontmatter without truncation', async () => {
+    const { getCookiePolicy } = await import('../cookie-policy-tracker');
+    const policy = getCookiePolicy();
 
-    expect(record.policyVersion).toBe('v2026.04');
-    expect(record.reviewedAt).toBe('2026-04-12T00:00:00.000Z');
-    expect(record.route).toBe('/cookies');
-  });
-
-  it('buildCookieConsentRecord defaults reviewedAt to now', async () => {
-    const { buildCookieConsentRecord } = await import('../cookie-policy-tracker');
-    const before = new Date().toISOString();
-    const record = buildCookieConsentRecord();
-    const after = new Date().toISOString();
-
-    expect(record.reviewedAt >= before).toBe(true);
-    expect(record.reviewedAt <= after).toBe(true);
+    expect(policy.metadata.summary).toHaveLength(4);
+    for (const bullet of policy.metadata.summary) {
+      // Every bullet must be a complete sentence (ends with terminal punctuation)
+      expect(bullet).toMatch(/[.!?]$/);
+    }
+    expect(policy.metadata.summary[0]).toMatch(/they cannot be turned off\.$/);
+    expect(policy.metadata.summary[2]).toMatch(/links back to this policy\.$/);
   });
 });

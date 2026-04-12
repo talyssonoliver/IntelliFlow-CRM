@@ -57,14 +57,21 @@ export interface ReactFlowComponentProps {
   onConnect?: OnConnect;
 }
 
+// Stable empty arrays — must be module-scoped so every render passes the
+// SAME reference to hooks below. A `= []` default param would allocate a
+// fresh array on every render, breaking the identity-compare sync effect
+// in useWorkflowCanvas and causing an infinite setState loop.
+const EMPTY_NODES: CanvasNode[] = [];
+const EMPTY_EDGES: CanvasEdge[] = [];
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
 export function ReactFlowComponent({
   workflowId,
-  initialNodes = [],
-  initialEdges = [],
+  initialNodes = EMPTY_NODES,
+  initialEdges = EMPTY_EDGES,
   nodes: externalNodes,
   edges: externalEdges,
   onNodeClick: externalOnNodeClick,
@@ -263,11 +270,11 @@ export function ReactFlowComponent({
 
   return (
     <DndContext onDragEnd={handleDragEnd}>
-      <div className="flex h-full w-full overflow-hidden">
+      <div className="flex h-full w-full overflow-hidden min-h-[600px]">
         <NodePalette />
 
         <ReactFlowProvider>
-          <div ref={canvasContainerRef} className="flex-1 relative h-full">
+          <div ref={canvasContainerRef} className="flex-1 relative h-full min-h-[600px]">
             {canvas.nodes.length === 0 && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
                 <p className="text-muted-foreground text-sm">
@@ -286,7 +293,8 @@ export function ReactFlowComponent({
               onNodeClick={handleNodeClick}
               onPaneClick={handlePaneClick}
               fitView
-              className="bg-muted/20"
+              className="bg-muted/20 h-full w-full"
+              style={{ minHeight: 600 }}
             >
               <Background />
               <Controls />

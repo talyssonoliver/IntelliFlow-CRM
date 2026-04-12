@@ -250,6 +250,11 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     retry: false,
     refetchOnWindowFocus: false,
     enabled: !isLoggedOutPage, // Don't fetch if we just logged out
+    // Once the session is resolved the result is stable for the browser session.
+    // Login/logout/token-refresh events explicitly invalidate this query key,
+    // so Infinity is safe and prevents redundant cold-start compilations on every
+    // page navigation when React Query's gcTime evicts and re-fetches the cache.
+    staleTime: Infinity,
   });
 
   // tRPC mutation for token refresh

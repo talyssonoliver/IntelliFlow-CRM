@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import { formatTermsDate, getTermsOfService } from '@/lib/legal/acceptance-tracker';
-import { TermsAcceptanceBanner } from '@/components/legal/terms-acceptance-banner';
 
 export const metadata: Metadata = {
   title: 'Terms of Service | IntelliFlow CRM',
@@ -180,7 +179,6 @@ export default function TermsPage() {
         </div>
       </section>
 
-      <TermsAcceptanceBanner currentVersion={terms.metadata.version} />
     </main>
   );
 }

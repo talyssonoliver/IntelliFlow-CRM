@@ -6,7 +6,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TRPCError } from '@trpc/server';
-import { authRouter } from '../auth.router';
+import { authRouter, clearStatusCache } from '../auth.router';
 import type { UserSession } from '../../../context';
 import { createTestContext, prismaMock } from '../../../test/setup';
 
@@ -283,6 +283,9 @@ describe('authRouter', () => {
 
   beforeEach(() => {
     setupDefaultMocks();
+    // Clear the getStatus in-process cache between tests to prevent token-keyed
+    // cache entries from one test polluting another within the same Vitest worker.
+    clearStatusCache();
   });
 
   // ============================================
@@ -777,15 +780,24 @@ describe('authRouter', () => {
 
   describe('getStatus', () => {
     it('should return authenticated status when session exists', async () => {
-      // Configure prismaMock to return user data for getStatus token verification
-      prismaMock.user.findUnique.mockResolvedValueOnce({
+      // Configure prismaMock to return user data for getStatus token verification.
+      // ensureAppUserSession calls findUnique (resolveDbUserWith) then update (sign-in
+      // tracking, fire-and-forget).  resolveAuthenticatedAppUser calls a second
+      // findUnique to fetch avatarUrl.  All three DB calls need mock coverage.
+      const userRow = {
         id: TEST_UUIDS.user,
         email: 'test@example.com',
         name: 'Test User',
         role: 'USER',
         tenantId: TEST_UUIDS.tenant,
         avatarUrl: null,
-      } as any); // test-only mock — partial user shape
+      };
+      // 1st findUnique: resolveDbUserWith (session fields only)
+      prismaMock.user.findUnique.mockResolvedValueOnce(userRow as any);
+      // 2nd findUnique: avatar fetch in resolveAuthenticatedAppUser
+      prismaMock.user.findUnique.mockResolvedValueOnce({ avatarUrl: null } as any);
+      // user.update: sign-in counter increment (fire-and-forget, must return a thenable)
+      prismaMock.user.update.mockResolvedValueOnce(userRow as any);
       // Create context with Authorization header
       const mockHeaders = new Map([
         ['Authorization', 'Bearer test-token-123'],

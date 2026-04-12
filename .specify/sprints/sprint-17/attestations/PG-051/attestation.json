@@ -1,0 +1,86 @@
+{
+  "task_id": "PG-051",
+  "verdict": "COMPLETE",
+  "dependencies_verified": [
+    "PG-050"
+  ],
+  "artifact_hashes": {
+    "apps/web/src/app/(public)/terms/page.tsx": "5a333dd27859a443c86201bfb672467449f0cfb05a80b95589e27506e4e7e5b6",
+    "apps/web/src/app/(public)/terms/__tests__/page.test.tsx": "39f462c4d008e0fc847a54a8661a1fb05aa813fa8e441da200ea0d8f2e680921",
+    "apps/web/src/lib/legal/acceptance-tracker.ts": "267626d6b86a2a7dcaa2903141fabf25f22167140f8173118ebf1b60616350da",
+    "apps/web/src/app/sitemap.ts": "e361d455be3b954760989fe232beef2d02bcbcbf9db6d1907e1b4e83656a8005",
+    "docs/design/page-registry.md": "f1ffd0dc47e3a8ebc897b682d2cfc828dab8dfe1182955c240e6eb12e3cdd261",
+    "docs/design/navigation-reachability-audit.md": "44794d996a721c8ac08425b76110fc268ac1ee6c099cf23a6a163cd1532d324e",
+    "artifacts/reports/content-audit-results.json": "54c8eaa61ad1a7f4156c74ff2aeef9c1dac28d80736b431cec84f757823accaa",
+    ".specify/sprints/sprint-17/attestations/PG-051/context_ack.json": "8983dc9cdd0024b25963fdefb4667d37613d6cf666c46549de6014cb56fb61ab"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-13T00:18:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/web exec vitest run src/app/(public)/terms/__tests__/page.test.tsx src/app/(public)/signup/__tests__/page.test.tsx src/components/shared/__tests__/registration-form.test.tsx src/lib/legal/__tests__/legal-content-parser.test.ts src/app/__tests__/sitemap-reconciliation.test.ts src/__tests__/content-audit-schema.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-13T00:19:30Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-13T00:20:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-13T00:22:00Z"
+    }
+  ],
+  "kpi_results": {
+    "scoped_coverage_statements": {
+      "target": 90,
+      "actual": 100,
+      "met": true,
+      "unit": "percent"
+    },
+    "scoped_coverage_branches": {
+      "target": 80,
+      "actual": 100,
+      "met": true,
+      "unit": "percent"
+    },
+    "scoped_coverage_functions": {
+      "target": 90,
+      "actual": 100,
+      "met": true,
+      "unit": "percent"
+    },
+    "scoped_coverage_lines": {
+      "target": 90,
+      "actual": 100,
+      "met": true,
+      "unit": "percent"
+    },
+    "route_reachability_surfaces": {
+      "target": 4,
+      "actual": 4,
+      "met": true,
+      "unit": "count"
+    },
+    "public_route_count": {
+      "target": 31,
+      "actual": 31,
+      "met": true,
+      "unit": "count"
+    }
+  },
+  "notes": "PG-051 Terms of Service public page at /terms, server-rendered from docs/shared/terms-content.md via getTermsOfService() + formatTermsDate() in apps/web/src/lib/legal/acceptance-tracker.ts. Scope corrections applied post-audit (2026-04-13): (1) removed out-of-scope TermsAcceptanceBanner and acceptance-tracker.client.ts — client-only localStorage was a misleading legal-compliance signal and was never in spec/plan; (2) removed dead buildTermsAcceptanceRecord helper; (3) amended spec to reflect git reality — legal-content-parser.ts and acceptance-tracker.ts were in fact introduced by PG-051, not PG-050 (separate audit of PG-050 for parallel false-reuse claims recommended); (4) ticked plan checkboxes for executed steps. Server-side acceptance persistence deferred to a follow-up task (DB audit record + tRPC procedure + tenant scoping). All 4 validations pass: TypeScript 0 errors, 89 tests across 6 suites passing (6 terms + 83 regression), lint 0 errors, build emits /terms. Scoped coverage: 100% across statements/branches/functions/lines. Runtime wiring preserved: page is the sole real production caller of getTermsOfService and formatTermsDate."
+}

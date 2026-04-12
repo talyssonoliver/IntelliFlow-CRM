@@ -2,14 +2,15 @@
   "task_id": "IFC-031",
   "sprint": 17,
   "verdict": "COMPLETE",
-  "timestamp": "2026-04-12T15:20:00Z",
+  "timestamp": "2026-04-12T21:58:00Z",
   "artifact_hashes": {
     "apps/web/src/components/workflows/__tests__/WorkflowBuilder.test.tsx": "a50740aaa2af5e09e274a99aacf16f21c5aa43dc9c4142d641f26a4b8f37e5e6",
     "apps/web/src/components/workflows/__tests__/WorkflowToolbar.test.tsx": "6f56002931b241cec65493da56cb0c2cee404bd3746ab88f693233d45666a9c1",
     "apps/web/src/components/workflows/__tests__/WorkflowNodeCard.test.tsx": "6ca3490d6cffca748e0d3a52ad018d6fea9c7ad3af1d726b5d9bf30bdd05486b",
     "apps/web/src/components/workflows/__tests__/ReactFlowComponent.test.tsx": "4e822da2c5c1e419475b4d3aad5672b1340fe48fe0a126e8615bc5456b67dbf0",
     "apps/web/src/hooks/__tests__/useWorkflowCanvas.test.ts": "46a086ed72597f29c892ce2d0edbfcaa4e99c761872ec1825fd699fc6a84a3a4",
-    "apps/web/src/hooks/__tests__/useWorkflowMutations.test.ts": "a1adfa5b6fedb8f71951cfa2b0d6b5505ac206bd046f42b4cd233016631fcf7e"
+    "apps/web/src/hooks/__tests__/useWorkflowMutations.test.ts": "a1adfa5b6fedb8f71951cfa2b0d6b5505ac206bd046f42b4cd233016631fcf7e",
+    "apps/web/package.json": "6d9511f44f90036c6fa8bdc135a0383681300fc24bc9f508fff9da3b53f18f76"
   },
   "dependencies_verified": [
     {
@@ -24,30 +25,31 @@
       "command": "pnpm --filter @intelliflow/web typecheck",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-04-12T15:00:00Z"
+      "timestamp": "2026-04-12T21:56:00Z"
     },
     {
       "name": "Tests",
       "command": "pnpm --dir apps/web exec vitest run src/components/workflows/__tests__ src/hooks/__tests__/useWorkflowCanvas.test.ts src/hooks/__tests__/useWorkflowMutations.test.ts src/lib/workflow-builder/__tests__",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-04-12T15:17:00Z"
+      "timestamp": "2026-04-12T21:56:45Z",
+      "stdout_hash": "11_files_142_tests_all_passed"
     },
     {
       "name": "Lint",
       "command": "pnpm --filter @intelliflow/web lint",
-      "exit_code": 1,
+      "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-04-12T15:01:00Z",
-      "stdout_hash": "0_errors_in_IFC031_files_4_preexisting_in_unrelated"
+      "timestamp": "2026-04-12T21:55:00Z",
+      "stdout_hash": "0_errors_54_warnings_preexisting"
     },
     {
       "name": "Build",
       "command": "pnpm --filter @intelliflow/web build",
-      "exit_code": 1,
-      "passed": false,
-      "timestamp": "2026-04-12T15:00:00Z",
-      "stdout_hash": "preexisting_privacy_page_frontmatter_error_not_IFC031"
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-12T21:53:00Z",
+      "stdout_hash": "compiled_successfully_in_66s_cases_case_workflows_route_static"
     }
   ],
   "evidence_summary": {
@@ -62,5 +64,5 @@
     },
     "coverage_note": "useWorkflowCanvas.ts excluded from scope — @xyflow/react module graph causes OOM (>4GB) in jsdom environment"
   },
-  "notes": "Build gate shows FAIL due to pre-existing privacy page frontmatter bug (/(public)/privacy/page.tsx) — completely unrelated to IFC-031. All IFC-031 files compile clean in typecheck. The @xyflow/react dependency was the only missing piece (GAP-1 from spec)."
+  "notes": "Re-validated 2026-04-12T21:58Z after `pnpm install --force` refreshed node_modules (stale @dnd-kit packages were the true build blocker, not the privacy page). All 4 gates now PASS. Build produced static route `/cases/case-workflows` (see build log). Earlier attestation marking Build=FAIL with pre-existing-privacy-page note was incorrect; root cause was broken pnpm virtual store for @dnd-kit/core|sortable|utilities."
 }

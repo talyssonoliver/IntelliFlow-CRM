@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { getAccessToken } from '@/lib/trpc-server';
+import { decodeJwtPayload } from '@/lib/auth/jwt';
 import { fetchWelcomeSummary } from '@/lib/cached-queries/home-queries';
+import { fetchAIInsights } from '@/lib/cached-queries/ai-insights-queries';
 import { HomePagePublicWithAuthFallback } from '@/components/home/HomePagePublicWithAuthFallback';
 import { AuthenticatedHomePage } from '@/components/home/AuthenticatedHomePage';
 
@@ -47,6 +49,9 @@ export default async function HomePage() {
     return <HomePagePublicWithAuthFallback />;
   }
 
+  // Decode userId from the JWT payload (outside 'use cache' boundary — safe here).
+  const userId = decodeJwtPayload(token)?.sub ?? null;
+
   // Prefetch welcome summary server-side — cached for 60s via 'use cache'.
   // Errors are non-fatal: AuthenticatedHomePage's client-side React Query
   // will fetch on its own if initialWelcomeData is null.
@@ -54,8 +59,19 @@ export default async function HomePage() {
   // (matches the wire format the client's tRPC React Query cache expects).
   let initialWelcomeData: unknown = null;
   try {
-    const raw = await fetchWelcomeSummary(token);
+    const raw = await fetchWelcomeSummary(token, userId);
     initialWelcomeData = JSON.parse(JSON.stringify(raw)); // NOSONAR typescript:S7784 — intentional JSON roundtrip for RSC→client boundary
+  } catch {
+    // Silently fall through — client-side React Query will fetch
+  }
+
+  // Prefetch AI insights server-side — cached for ~60s via 'use cache'.
+  // Primes the Next.js cache so the client-side React Query request for
+  // home.getAIInsights resolves from cache (< 1ms) instead of hitting the
+  // database (observed at 263ms). Errors are non-fatal: the client query
+  // will re-fetch independently if this warm-up fails.
+  try {
+    await fetchAIInsights(token, userId);
   } catch {
     // Silently fall through — client-side React Query will fetch
   }

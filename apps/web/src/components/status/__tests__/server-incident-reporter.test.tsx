@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import React from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import React, { StrictMode } from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from '@testing-library/react';
 
 vi.mock('@/lib/status/incident-creator', () => ({
@@ -62,5 +62,75 @@ describe('ServerIncidentReporter', () => {
       <ServerIncidentReporter error={new Error('invisible')} path="/test" />
     );
     expect(container.textContent).toBe('');
+  });
+
+  describe('StrictMode double-invocation', () => {
+    beforeEach(() => {
+      vi.mocked(createIncident).mockReset();
+      vi.mocked(createIncident).mockReturnValue({
+        event: 'incident_created',
+        errorId: 'mock-id',
+        digest: null,
+        message: 'mock',
+        severity: 'error',
+        path: '/strict',
+        userAgent: null,
+        timestamp: '2026-01-01T00:00:00Z',
+      });
+      vi.mocked(notifyTeam).mockReset();
+    });
+
+    it('fires createIncident only once under StrictMode', () => {
+      render(
+        <StrictMode>
+          <ServerIncidentReporter error={new Error('strict')} path="/strict" />
+        </StrictMode>
+      );
+      expect(createIncident).toHaveBeenCalledTimes(1);
+      expect(notifyTeam).toHaveBeenCalledTimes(1);
+    });
+
+    it('re-fires on reset-and-rethrow (new error identity)', async () => {
+      const { rerender } = render(
+        <ServerIncidentReporter error={new Error('first')} path="/boundary" />
+      );
+      expect(createIncident).toHaveBeenCalledTimes(1);
+
+      rerender(
+        <ServerIncidentReporter error={new Error('second')} path="/boundary" />
+      );
+      expect(createIncident).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not re-fire when the same error identity rerenders', () => {
+      const err = new Error('stable');
+      const { rerender } = render(
+        <ServerIncidentReporter error={err} path="/boundary" />
+      );
+      rerender(<ServerIncidentReporter error={err} path="/boundary" />);
+      expect(createIncident).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('dev-mode console visibility', () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it('logs to console.error when NODE_ENV !== production', () => {
+      vi.stubEnv('NODE_ENV', 'development');
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      render(<ServerIncidentReporter error={new Error('dev')} path="/dev" />);
+      expect(spy).toHaveBeenCalled();
+      spy.mockRestore();
+    });
+
+    it('does not log to console.error in production', () => {
+      vi.stubEnv('NODE_ENV', 'production');
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      render(<ServerIncidentReporter error={new Error('prod')} path="/prod" />);
+      expect(spy).not.toHaveBeenCalled();
+      spy.mockRestore();
+    });
   });
 });

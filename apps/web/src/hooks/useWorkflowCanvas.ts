@@ -43,18 +43,36 @@ export function useWorkflowCanvas(
   // Sync internal state when initial values change (e.g. after async query resolves).
   // useNodesState/useEdgesState only use their argument on first mount, so we
   // must push updated values via the setter when the hydrated data arrives.
+  //
+  // IMPORTANT: the guard must be CONTENT equality, not reference equality.
+  // Callers often pass freshly-allocated arrays (default param, useMemo
+  // output) even when nothing has actually changed — a reference check would
+  // trigger setNodes every render and infinite-loop React.
   const prevInitialNodesRef = useRef(initialNodes);
   const prevInitialEdgesRef = useRef(initialEdges);
 
   useEffect(() => {
-    if (initialNodes !== prevInitialNodesRef.current) {
+    const prev = prevInitialNodesRef.current;
+    const sameContent =
+      prev.length === initialNodes.length &&
+      prev.every((n, i) => n.id === initialNodes[i].id && n.type === initialNodes[i].type);
+    if (!sameContent) {
       prevInitialNodesRef.current = initialNodes;
       setNodes(initialNodes);
     }
   }, [initialNodes, setNodes]);
 
   useEffect(() => {
-    if (initialEdges !== prevInitialEdgesRef.current) {
+    const prev = prevInitialEdgesRef.current;
+    const sameContent =
+      prev.length === initialEdges.length &&
+      prev.every(
+        (e, i) =>
+          e.id === initialEdges[i].id &&
+          e.source === initialEdges[i].source &&
+          e.target === initialEdges[i].target,
+      );
+    if (!sameContent) {
       prevInitialEdgesRef.current = initialEdges;
       setEdges(initialEdges);
     }

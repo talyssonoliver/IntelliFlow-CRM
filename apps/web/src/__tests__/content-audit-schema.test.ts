@@ -194,10 +194,10 @@ describe('Content Audit Results Schema Validation', () => {
     }
   });
 
-  // TC-04: All 30 public routes have seo_score as integer 0-100 (AC-003; bumped by PG-051 /terms + PG-052 /cookies)
+  // TC-04: All public routes have seo_score as integer 0-100 (AC-003; updated as public-route count grows)
   it('TC-04: all public routes have integer seo_score 0-100', () => {
     const publicRoutes = auditData.routes.filter((r) => r.access_tier === 'public');
-    expect(publicRoutes.length).toBe(30);
+    expect(publicRoutes.length).toBe(31);
 
     for (const route of publicRoutes) {
       expect(typeof route.seo_score).toBe('number');
@@ -212,7 +212,7 @@ describe('Content Audit Results Schema Validation', () => {
     const nonPublicRoutes = auditData.routes.filter(
       (r) => r.access_tier === 'auth-gated' || r.access_tier === 'developer'
     );
-    expect(nonPublicRoutes.length).toBe(auditData.routes.length - 30);
+    expect(nonPublicRoutes.length).toBe(auditData.routes.length - 31);
 
     for (const route of nonPublicRoutes) {
       expect(route.seo_score).toBeNull();

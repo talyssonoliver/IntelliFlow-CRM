@@ -20,6 +20,8 @@ export type IncidentInput = {
   readonly errorId?: string;
 };
 
+const MESSAGE_MAX_LENGTH = 300;
+
 function generateId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
@@ -27,12 +29,24 @@ function generateId(): string {
   return Math.random().toString(36).slice(2);
 }
 
+// Cap message length before it leaves the process. React already masks
+// server-component errors in production ("An error occurred in the Server
+// Components render"), but dev/staging builds can leak stack-like content,
+// SQL snippets, or user identifiers from upstream throws into dataLayer and
+// the SRE webhook. The cap bounds that blast radius without hashing.
+function truncateMessage(message: string): string {
+  if (message.length <= MESSAGE_MAX_LENGTH) {
+    return message;
+  }
+  return `${message.slice(0, MESSAGE_MAX_LENGTH)}…`;
+}
+
 export function buildIncidentPayload(input: IncidentInput): IncidentPayload {
   return {
     event: 'incident_created',
     errorId: input.errorId ?? generateId(),
     digest: input.error.digest ?? null,
-    message: input.error.message,
+    message: truncateMessage(input.error.message ?? ''),
     severity: input.severity ?? 'error',
     path:
       input.path ??
