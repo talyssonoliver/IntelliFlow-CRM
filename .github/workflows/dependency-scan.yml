@@ -42,7 +42,6 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: '10.29.3'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -74,7 +73,6 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: '10.29.3'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -246,7 +244,6 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: '10.29.3'
 
       - name: Update dependencies
         run: |

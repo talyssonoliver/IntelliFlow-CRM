@@ -20,7 +20,7 @@ concurrency:
 
 env:
   NODE_VERSION: '20'
-  PNPM_VERSION: '10.29.3'
+  PNPM_VERSION: '10.33.0'
 
 jobs:
   prepare:
