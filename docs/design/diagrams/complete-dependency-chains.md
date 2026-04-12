@@ -75,9 +75,10 @@ When implementing new features or modifying existing ones:
 
 ### Public Legal Route Status
 
-| Route | Task | Status | Notes |
-| --- | --- | --- | --- |
+| Route      | Task     | Status         | Notes                                                                   |
+| ---------- | -------- | -------------- | ----------------------------------------------------------------------- |
 | `/privacy` | `PG-050` | ✅ Implemented | Public route backed by tracked policy content and legal metadata helper |
+| `/terms`   | `PG-051` | ✅ Implemented | Terms of service page; route count updated from 87 to 88                |
 
 ---
 
@@ -705,7 +706,7 @@ Dependency Chain:
     ┌──────────────────┐          ┌──────────────────┐          ┌──────────────────┐
     │    IFC-149       │          │    IFC-030       │          │    IFC-031       │
     │  Action Preview  │          │  Lead Routing    │          │  Workflow Builder│
-    │      ✅          │          │      ✅          │          │      ⬜          │
+    │      ✅          │          │      ✅          │          │      ✅          │
     └──────────────────┘          └────────┬─────────┘          └──────────────────┘
                                            │
                                            ▼
@@ -718,7 +719,7 @@ Dependency Chain:
 Dependency Chain:
   IFC-028 (Workflow) ✅ ──► IFC-029 (Auto-Response) ✅ ──┬──► IFC-149 (Preview UI) ✅
                                                          ├──► IFC-030 (Routing) ✅ ──► PG-132 (UI) ✅
-                                                         └──► IFC-031 (Builder) ⬜
+                                                         └──► IFC-031 (Builder) ✅
 ```
 
 ---
@@ -1415,11 +1416,11 @@ Dependency Chain:
               │    IFC-031       │              │    PG-147        │
               │  Workflow Builder│              │  Workflow List   │
               │  (Visual)        │              │  & Status UI     │
-              │      ⬜          │              │      ⬜ NEW      │
+              │      ✅          │              │      ⬜ NEW      │
               └──────────────────┘              └──────────────────┘
 
 Dependency Chain:
-  IFC-028 (Domain) ✅ ──┬──► IFC-141 (LangGraph) ⬜ ──► workflow.router ⬜ ──┬──► IFC-031 (Builder) ⬜
+  IFC-028 (Domain) ✅ ──┬──► IFC-141 (LangGraph) ⬜ ──► workflow.router ⬜ ──┬──► IFC-031 (Builder) ✅
                         ├──► workflow.ts (Val) ✅ ─────────────────────────┴──► PG-147 (List UI) ⬜
                         └──► IFC-017 (Database) ⬜ ─────────────────────────────────────────────────┘
 ```
@@ -2012,7 +2013,7 @@ Ticket:           IFC-188 ✅ ──► validators ✅ ──► adapter ✅ ─
 NBA:              IFC-095 ✅ ──► IFC-039 ⬜ ──► nba.ts ⬜ ──► intelligence.router ──► PG-145 ⬜
 AI Monitoring:    IFC-117 ✅ ──► AUTOMATION-002 ⬜ ──► TRACK-004 ⬜ ──► ai-monitoring.router ⬜ ──► PG-146 ⬜
 Domain Events:    IFC-150 ⬜ ──► IFC-151 ⬜ ──► OutboxRepository ⬜ ──► events-worker ⬜
-Workflow Engine:  IFC-028 ✅ ──► IFC-141 ⬜ ──► workflow.router ⬜ ──► IFC-031 ⬜ / PG-147 ⬜
+Workflow Engine:  IFC-028 ✅ ──► IFC-141 ⬜ ──► workflow.router ⬜ ──► IFC-031 ✅ / PG-147 ⬜
 Security/Secrets: EXC-SEC-001 ✅ ──► IFC-113 ⬜ ──► IFC-121 ⬜ ──► IFC-143 ⬜ ──► PG-120 ⬜
 Security Dash:    EXC-SEC-001 ✅ ──► TRACK-005 (Security Dashboard UI) ✅
 Release Gov:      IFC-130 ⬜ ──► IFC-132 ⬜ ──► IFC-133 ⬜ ──► IFC-134 ⬜ ──► IFC-112 ⬜
@@ -2055,8 +2056,8 @@ IFC-198 (Billing Domain Core) ──┐
                                 └──→ PG-026 (Checkout) ✅
 ```
 
-- **PG-172**: Billing Ghost Pages — Usage, Plans, Upgrade, Cancel, Settings.
-  5 new billing sub-pages with shared utilities (billing-shared.tsx).
+- **PG-172**: Billing Ghost Pages — Usage, Plans, Upgrade, Cancel, Settings. 5
+  new billing sub-pages with shared utilities (billing-shared.tsx).
 - Dependencies: PG-025 (Billing Portal), PG-030 (Subscriptions)
 - **PG-030**: Subscription management page with plan comparison,
   cancel/reactivation, proration estimates, reason selector
@@ -2111,8 +2112,9 @@ PG-177 Layer Stack:
 
 - **PG-177**: Three saved report pages (weekly/monthly/quarterly) under
   `/analytics/saved/*`. Uses existing tRPC analytics endpoints (getOverview,
-  getTimeSeriesData, getSalesMetrics, growthTrends, trafficSources, exportReport).
-  Shared `SavedReportView` component with period selector and CSV/PDF export.
+  getTimeSeriesData, getSalesMetrics, growthTrends, trafficSources,
+  exportReport). Shared `SavedReportView` component with period selector and
+  CSV/PDF export.
 - Dependencies: IFC-068 (analytics tRPC endpoints and sidebar entries)
 
 ## Project Tracker Internal Dependencies
@@ -2250,7 +2252,8 @@ Data path: CI artifacts → /api/quality-reports?action=detail&id=<type> → Rea
 
 ## Critical Blockers
 
-1. ~~**IFC-183 (Notifications Router)** - Blocking PG-116 and PG-130~~ ✅ RESOLVED
-   — Router complete. PG-130 (Inbox) done. PG-174 (Channels & Quiet Hours) in progress. PG-116 (Prefs) still pending.
+1. ~~**IFC-183 (Notifications Router)** - Blocking PG-116 and PG-130~~ ✅
+   RESOLVED — Router complete. PG-130 (Inbox) done. PG-174 (Channels & Quiet
+   Hours) in progress. PG-116 (Prefs) still pending.
 2. ~~**IFC-190 (Analytics Router)** - Blocking Analytics Dashboard~~ ✅ RESOLVED
    — Router complete, IFC-037 (Design) → IFC-038 (UI) next

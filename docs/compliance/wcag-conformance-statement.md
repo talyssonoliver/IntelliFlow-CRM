@@ -1,7 +1,7 @@
 # WCAG 2.1 Conformance Statement — IntelliFlow CRM
 
-**Product:** IntelliFlow CRM Web Application **Version:** 0.1.0 (Sprint 14)
-**Date:** 2026-02-24 **Review Period:** Quarterly review cadence (every 4
+**Product:** IntelliFlow CRM Web Application **Version:** 0.1.0 (Sprint 17)
+**Date:** 2026-04-10 **Review Period:** Quarterly review cadence (every 4
 sprints) per `docs/compliance/quarterly-a11y-review-template.md`; next review
 Sprint 20
 
@@ -19,14 +19,14 @@ partially supported on the `/deals` pipeline view.
 
 ## 2. Scope
 
-This statement covers the IntelliFlow CRM web application across all 87
+This statement covers the IntelliFlow CRM web application across all 89
 user-facing routes (excluding developer portal). Dynamic segment routes (e.g.,
 `/contacts/[id]`) inherit conformance status from their parent static route and
 are not listed separately.
 
-- **Public & marketing (12):** `/`, `/about`, `/blog`, `/careers`, `/contact`,
+- **Public & marketing (13):** `/`, `/about`, `/blog`, `/careers`, `/contact`,
   `/features`, `/partners`, `/press`, `/pricing`, `/security`, `/signup`,
-  `/status`
+  `/status`, `/terms`
 - **Auth flows (9):** `/auth/callback`, `/forgot-password`, `/login`, `/logout`,
   `/mfa/verify`, `/reset-password/callback`, `/signup/success`, `/sso`,
   `/verify-email/callback`
@@ -34,8 +34,8 @@ are not listed separately.
 - **CRM — Leads, Contacts & Accounts (5):** `/accounts`, `/contacts`,
   `/contacts/new`, `/leads`, `/leads/new`
 - **CRM — Deals (2):** `/deals`, `/deals/forecast`
-- **CRM — Cases & Documents (5):** `/cases`, `/cases/new`, `/cases/timeline`,
-  `/documents`, `/documents/new`
+- **CRM — Cases & Documents (6):** `/cases`, `/cases/case-workflows`,
+  `/cases/new`, `/cases/timeline`, `/documents`, `/documents/new`
 - **CRM — Calendar & Email (3):** `/calendar`, `/calendar/new`, `/email`
 - **CRM — Tasks & Tickets (6):** `/tasks`, `/tickets`, `/tickets/new`,
   `/tickets/sla-policies`, `/tickets/types`, `/tickets/automations`
@@ -73,8 +73,8 @@ are not listed separately.
 | Level A: Not Applicable          | 4                  |
 | Level AA: Supports               | 16                 |
 | Level AA: Not Applicable         | 4                  |
-| Routes fully conformant          | 86 of 87           |
-| Routes partially conformant      | 1 of 87 (`/deals`) |
+| Routes fully conformant          | 88 of 89           |
+| Routes partially conformant      | 1 of 89 (`/deals`) |
 
 ---
 
@@ -216,9 +216,10 @@ Users who encounter accessibility barriers can report issues via:
 
 ## Document Control
 
-| Version | Date       | Author                | Changes                                                                           |
-| ------- | ---------- | --------------------- | --------------------------------------------------------------------------------- |
-| 1.0.0   | 2026-02-24 | Engineering (DOC-008) | Initial conformance statement with screen reader testing plan                     |
-| 1.1.0   | 2026-03-01 | Engineering (DOC-011) | Expanded scope from 26 to 82 routes; added dynamic segment parent-inherits policy |
+| Version | Date       | Author                | Changes                                                                               |
+| ------- | ---------- | --------------------- | ------------------------------------------------------------------------------------- |
+| 1.0.0   | 2026-02-24 | Engineering (DOC-008) | Initial conformance statement with screen reader testing plan                         |
+| 1.1.0   | 2026-03-01 | Engineering (DOC-011) | Expanded scope from 26 to 82 routes; added dynamic segment parent-inherits policy     |
 | 1.2.0   | 2026-03-10 | Engineering (PG-173)  | Added 3 ticket config routes (sla-policies, types, automations) — scope now 85 routes |
-| 1.3.0   | 2026-03-11 | Engineering (PG-174)  | Added 2 notification config routes (channels, quiet-hours) — scope now 87 routes |
+| 1.3.0   | 2026-03-11 | Engineering (PG-174)  | Added 2 notification config routes (channels, quiet-hours) — scope now 87 routes      |
+| 1.4.0   | 2026-04-10 | Engineering (PG-051, IFC-031) | Added `/terms` (PG-051) and `/cases/case-workflows` (IFC-031) — scope now 89 routes |

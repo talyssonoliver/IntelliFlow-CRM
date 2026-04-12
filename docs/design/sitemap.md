@@ -1,7 +1,7 @@
 # IntelliFlow CRM - Sitemap
 
-> **Location**: `docs/design/sitemap.md` **Last Updated**: 2026-03-10 **Total
-> Pages**: 137 **Total Flows**: 42 (linked) **Layouts**: 37 **API Routers**: 25
+> **Location**: `docs/design/sitemap.md` **Last Updated**: 2026-04-11 **Total
+> Pages**: 145 **Total Flows**: 42 (linked) **Layouts**: 37 **API Routers**: 25
 > (232 procedures)
 
 ---
@@ -36,7 +36,7 @@
 ```
 intelliflow.com
 │
-├── PUBLIC PAGES (29 pages) ──────────────── Route Group: (public)
+├── PUBLIC PAGES (30 pages) ──────────────── Route Group: (public)
 │   │
 │   ├── / (Home)                          [PG-001] → Conditional render:
 │   │                                       • Unauth: PublicHomePage
@@ -52,6 +52,7 @@ intelliflow.com
 │   ├── /status                           [PG-014]
 │   ├── /404                              [PG-055] Direct missing-page route (noindex)
 │   ├── /privacy                          [PG-050] Privacy policy
+│   ├── /terms                            [PG-051] Terms of service
 │   │
 │   ├── /blog                             [PG-009]
 │   │   └── /blog/[slug]                  [PG-010] Dynamic blog post
@@ -510,7 +511,7 @@ All pages follow Next.js 16 App Router convention:
 apps/web/src/app/
 ├── layout.tsx                    # Root layout (Providers, Navigation)
 │
-├── (public)/                     # PUBLIC ROUTE GROUP (28 pages)
+├── (public)/                     # PUBLIC ROUTE GROUP (29 pages)
 │   ├── layout.tsx                # Public layout (minimal)
 │   ├── page.tsx                  # / (Home - conditional render)
 │   ├── login/page.tsx            # /login
@@ -540,6 +541,7 @@ apps/web/src/app/
 │   ├── status/page.tsx           # /status
 │   ├── 404/page.tsx              # /404
 │   ├── privacy/page.tsx          # /privacy
+│   ├── terms/page.tsx            # /terms
 │   ├── blog/
 │   │   ├── page.tsx              # /blog
 │   │   └── [slug]/page.tsx       # /blog/[slug]

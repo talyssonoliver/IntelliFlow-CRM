@@ -35,10 +35,10 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 | Category        | Count |
 | --------------- | ----- |
-| Total Pages     | 144   |
-| Public Pages    | 29    |
+| Total Pages     | 146   |
+| Public Pages    | 30    |
 | Developer Pages | 14    |
-| Protected Pages | 95    |
+| Protected Pages | 96    |
 | API Routes      | 19    |
 | Layouts         | 36    |
 
@@ -50,7 +50,7 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 ## Page Map by Category
 
-### 1. Public Pages (29 — No Authentication Required)
+### 1. Public Pages (30 — No Authentication Required)
 
 Located in `(public)` route group. Accessible without login.
 
@@ -80,6 +80,7 @@ Located in `(public)` route group. Accessible without login.
 | `/status`                  | Status                  | System status page                                                                                                                                   |
 | `/404`                     | 404 Not Found           | Direct system-page route for missing URLs; excluded from sitemap indexing                                                                            |
 | `/privacy`                 | Privacy Policy          | Public privacy policy and data handling commitments                                                                                                  |
+| `/terms`                   | Terms of Service        | Public terms of service page (PG-051)                                                                                                                |
 | `/blog`                    | Blog                    | Blog listing                                                                                                                                         |
 | `/blog/[slug]`             | Blog Post               | Individual blog article                                                                                                                              |
 | `/careers`                 | Careers                 | Job listings                                                                                                                                         |
@@ -166,13 +167,13 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ### 7. CRM Core — Deals (7 pages)
 
-| Route                  | Page              | Description                 |
-| ---------------------- | ----------------- | --------------------------- |
-| `/deals`               | Deals List        | Pipeline view and deal list |
-| `/deals/new`           | New Deal          | Deal create form with entity search |
-| `/deals/[id]`          | Deal Detail       | Deal overview with stages   |
-| `/deals/[id]/forecast` | Deal Forecast     | AI-powered deal probability |
-| `/deals/forecast`      | Forecast Overview | Sales forecasting dashboard |
+| Route                  | Page              | Description                                          |
+| ---------------------- | ----------------- | ---------------------------------------------------- |
+| `/deals`               | Deals List        | Pipeline view and deal list                          |
+| `/deals/new`           | New Deal          | Deal create form with entity search                  |
+| `/deals/[id]`          | Deal Detail       | Deal overview with stages                            |
+| `/deals/[id]/forecast` | Deal Forecast     | AI-powered deal probability                          |
+| `/deals/forecast`      | Forecast Overview | Sales forecasting dashboard                          |
 | `/deals/all/forecast`  | Legacy Forecast   | Redirects legacy forecast route to `/deals/forecast` |
 | `/deals/trash`         | Deals Trash       | Soft-deleted deals with restore and permanent delete |
 
@@ -208,14 +209,14 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ### 11. CRM Core — Tickets (6 pages)
 
-| Route                    | Page               | Description                              |
-| ------------------------ | ------------------ | ---------------------------------------- |
-| `/tickets`               | Tickets List       | Support tickets queue                    |
-| `/tickets/new`           | New Ticket         | Create ticket form                       |
-| `/tickets/[id]`          | Ticket Detail      | Ticket view with conversation            |
-| `/tickets/sla-policies`  | SLA Policies       | Manage SLA response/resolution targets   |
-| `/tickets/types`         | Ticket Types       | Configure ticket categories/types        |
-| `/tickets/automations`   | Automations        | Automation rules for routing and actions |
+| Route                   | Page          | Description                              |
+| ----------------------- | ------------- | ---------------------------------------- |
+| `/tickets`              | Tickets List  | Support tickets queue                    |
+| `/tickets/new`          | New Ticket    | Create ticket form                       |
+| `/tickets/[id]`         | Ticket Detail | Ticket view with conversation            |
+| `/tickets/sla-policies` | SLA Policies  | Manage SLA response/resolution targets   |
+| `/tickets/types`        | Ticket Types  | Configure ticket categories/types        |
+| `/tickets/automations`  | Automations   | Automation rules for routing and actions |
 
 ---
 
@@ -229,14 +230,15 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ---
 
-### 13. Cases (4 pages)
+### 13. Cases (5 pages)
 
-| Route             | Page          | Description                                     |
-| ----------------- | ------------- | ----------------------------------------------- |
-| `/cases`          | Cases List    | Legal/service case queue with stats and filters |
-| `/cases/new`      | New Case      | Case creation form                              |
-| `/cases/[id]`     | Case Detail   | Case detail with documents                      |
-| `/cases/timeline` | Case Timeline | Case history and deadline engine                |
+| Route                      | Page                 | Description                                     |
+| -------------------------- | -------------------- | ----------------------------------------------- |
+| `/cases`                   | Cases List           | Legal/service case queue with stats and filters |
+| `/cases/new`               | New Case             | Case creation form                              |
+| `/cases/[id]`              | Case Detail          | Case detail with documents                      |
+| `/cases/timeline`          | Case Timeline        | Case history and deadline engine                |
+| `/cases/case-workflows`    | Case Workflow Builder| Visual workflow builder for case automation (IFC-031) |
 
 ---
 
@@ -253,7 +255,7 @@ developer sidebar. These pages are accessible through the Settings sidebar
 | `/agent-approvals/drift`          | Drift Detection    | PG-146          |
 | `/agent-approvals/experiments`    | Experiments        | PG-149          |
 | `/agent-approvals/history`        | Review History     | PG-150          |
-| `/agent-approvals/insights`      | AI Insights Hub    | PG-160          |
+| `/agent-approvals/insights`       | AI Insights Hub    | PG-160          |
 | `/insights`                       | AI Insights        | PG-160          |
 | `/agent-approvals/latency`        | Latency Monitor    | PG-153          |
 | `/agent-approvals/lead-scoring`   | Lead Scoring       | PG-148          |
@@ -275,24 +277,24 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ### 15. Analytics & Reports (2 pages)
 
-| Route                        | Page                      | Description                                         |
-| ---------------------------- | ------------------------- | --------------------------------------------------- |
-| `/analytics`                 | Analytics Dashboard       | Charts, metrics, and KPIs                           |
-| `/analytics/feedback`        | Feedback Analytics        | NPS/CSAT/CES metrics, trend charts                  |
-| `/analytics/saved/weekly`    | Weekly Summary            | Last 7 days: revenue, leads, pipeline trends        |
-| `/analytics/saved/monthly`   | Monthly Revenue           | Last 30 days: revenue breakdown, lead sources       |
-| `/analytics/saved/quarterly` | Q4 Performance            | Quarterly performance summary with YoY comparison   |
+| Route                        | Page                | Description                                       |
+| ---------------------------- | ------------------- | ------------------------------------------------- |
+| `/analytics`                 | Analytics Dashboard | Charts, metrics, and KPIs                         |
+| `/analytics/feedback`        | Feedback Analytics  | NPS/CSAT/CES metrics, trend charts                |
+| `/analytics/saved/weekly`    | Weekly Summary      | Last 7 days: revenue, leads, pipeline trends      |
+| `/analytics/saved/monthly`   | Monthly Revenue     | Last 30 days: revenue breakdown, lead sources     |
+| `/analytics/saved/quarterly` | Q4 Performance      | Quarterly performance summary with YoY comparison |
 
 ---
 
 ### 16. Notifications (4 pages)
 
-| Route                        | Page                       | Description                                          |
-| ---------------------------- | -------------------------- | ---------------------------------------------------- |
-| `/notifications`             | Notifications              | All notifications list                               |
-| `/notifications/settings`    | Notification Settings      | Notification preferences                             |
-| `/notifications/channels`    | Notification Channels      | Enable/disable delivery channels (PG-174)            |
-| `/notifications/quiet-hours` | Notification Quiet Hours   | Weekly quiet-hours schedule and time-range (PG-174)  |
+| Route                        | Page                     | Description                                         |
+| ---------------------------- | ------------------------ | --------------------------------------------------- |
+| `/notifications`             | Notifications            | All notifications list                              |
+| `/notifications/settings`    | Notification Settings    | Notification preferences                            |
+| `/notifications/channels`    | Notification Channels    | Enable/disable delivery channels (PG-174)           |
+| `/notifications/quiet-hours` | Notification Quiet Hours | Weekly quiet-hours schedule and time-range (PG-174) |
 
 ---
 
@@ -306,71 +308,71 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ### 18. Settings (10 pages)
 
-| Route                     | Page                  | Description                     |
-| ------------------------- | --------------------- | ------------------------------- |
-| `/settings`               | Settings Overview     | Settings navigation             |
-| `/settings/account`       | Account Settings      | Personal account settings       |
-| `/settings/team`          | Team Settings         | Team members and roles          |
-| `/settings/ai`            | AI Chains             | AI configuration and chains     |
-| `/settings/integrations`  | Integrations          | Third-party integrations        |
-| `/settings/notifications` | Notification Settings | Alert preferences               |
-| `/settings/pipeline`      | Pipeline Settings     | Sales pipeline stages           |
-| `/settings/routing`       | Routing Settings      | Smart lead routing rules        |
-| `/settings/leads`         | Lead Settings         | Lead pipeline configuration - stages, scoring rules, custom fields, and automation toggles |
-| `/settings/security/mfa`  | MFA Settings          | MFA management dashboard        |
-| `/settings/security/mfa/setup` | MFA Setup Wizard | Two-factor authentication setup wizard |
+| Route                          | Page                  | Description                                                                                |
+| ------------------------------ | --------------------- | ------------------------------------------------------------------------------------------ |
+| `/settings`                    | Settings Overview     | Settings navigation                                                                        |
+| `/settings/account`            | Account Settings      | Personal account settings                                                                  |
+| `/settings/team`               | Team Settings         | Team members and roles                                                                     |
+| `/settings/ai`                 | AI Chains             | AI configuration and chains                                                                |
+| `/settings/integrations`       | Integrations          | Third-party integrations                                                                   |
+| `/settings/notifications`      | Notification Settings | Alert preferences                                                                          |
+| `/settings/pipeline`           | Pipeline Settings     | Sales pipeline stages                                                                      |
+| `/settings/routing`            | Routing Settings      | Smart lead routing rules                                                                   |
+| `/settings/leads`              | Lead Settings         | Lead pipeline configuration - stages, scoring rules, custom fields, and automation toggles |
+| `/settings/security/mfa`       | MFA Settings          | MFA management dashboard                                                                   |
+| `/settings/security/mfa/setup` | MFA Setup Wizard      | Two-factor authentication setup wizard                                                     |
 
 ---
 
 ### 19. Billing (13 pages)
 
-| Route                      | Page             | Description                      |
-| -------------------------- | ---------------- | -------------------------------- |
-| `/billing`                 | Billing Overview | Subscription summary             |
-| `/billing/checkout`        | Checkout         | Payment processing               |
-| `/billing/subscriptions`   | Subscriptions    | Manage subscription plans        |
-| `/billing/payment-methods` | Payment Methods  | Credit cards and payment options |
-| `/billing/invoices`        | Invoices         | Invoice history                  |
-| `/billing/invoices/[id]`   | Invoice Detail   | Individual invoice view          |
-| `/billing/receipts`        | Receipts         | Payment receipts                 |
-| `/billing/usage`           | Usage            | Usage metrics with progress bars |
-| `/billing/plans`           | Compare Plans    | Side-by-side plan comparison     |
-| `/billing/upgrade`         | Change Plan      | Proration preview and plan change|
-| `/billing/cancel`          | Cancel           | Multi-step cancellation flow     |
-| `/billing/settings`        | Billing Settings | Manage billing information       |
+| Route                      | Page             | Description                            |
+| -------------------------- | ---------------- | -------------------------------------- |
+| `/billing`                 | Billing Overview | Subscription summary                   |
+| `/billing/checkout`        | Checkout         | Payment processing                     |
+| `/billing/subscriptions`   | Subscriptions    | Manage subscription plans              |
+| `/billing/payment-methods` | Payment Methods  | Credit cards and payment options       |
+| `/billing/invoices`        | Invoices         | Invoice history                        |
+| `/billing/invoices/[id]`   | Invoice Detail   | Individual invoice view                |
+| `/billing/receipts`        | Receipts         | Payment receipts                       |
+| `/billing/usage`           | Usage            | Usage metrics with progress bars       |
+| `/billing/plans`           | Compare Plans    | Side-by-side plan comparison           |
+| `/billing/upgrade`         | Change Plan      | Proration preview and plan change      |
+| `/billing/cancel`          | Cancel           | Multi-step cancellation flow           |
+| `/billing/settings`        | Billing Settings | Manage billing information             |
 | `/upgrade`                 | Plan Upgrade     | Upgrade flow for module-gated features |
 
 ---
 
 ### 20. Governance (9 pages)
 
-| Route                                        | Page                | Description                              |
-| -------------------------------------------- | ------------------- | ---------------------------------------- |
-| `/governance`                                | Governance Overview | Compliance dashboard                     |
-| `/governance/adr`                            | ADR Registry        | Architecture Decision Records            |
-| `/governance/compliance`                     | Compliance          | Compliance standards tracking            |
-| `/governance/policies`                       | Policies            | Policy management                        |
-| `/governance/quality-reports`                | Quality Reports     | Quality assessment reports               |
-| `/governance/quality-reports/[reportId]`     | Report Detail       | Individual quality report                |
-| `/governance/quality-reports/lighthouse`     | Lighthouse Report   | Lighthouse scores by category            |
-| `/governance/quality-reports/coverage`       | Coverage Report     | Test coverage by metric                  |
-| `/governance/quality-reports/performance`    | Performance Report  | API response times and benchmarks        |
+| Route                                     | Page                | Description                       |
+| ----------------------------------------- | ------------------- | --------------------------------- |
+| `/governance`                             | Governance Overview | Compliance dashboard              |
+| `/governance/adr`                         | ADR Registry        | Architecture Decision Records     |
+| `/governance/compliance`                  | Compliance          | Compliance standards tracking     |
+| `/governance/policies`                    | Policies            | Policy management                 |
+| `/governance/quality-reports`             | Quality Reports     | Quality assessment reports        |
+| `/governance/quality-reports/[reportId]`  | Report Detail       | Individual quality report         |
+| `/governance/quality-reports/lighthouse`  | Lighthouse Report   | Lighthouse scores by category     |
+| `/governance/quality-reports/coverage`    | Coverage Report     | Test coverage by metric           |
+| `/governance/quality-reports/performance` | Performance Report  | API response times and benchmarks |
 
 ### 21. Support Portal (2 pages)
 
-| Route                  | Page                  | Description                                              |
-| ---------------------- | --------------------- | -------------------------------------------------------- |
-| `/support/tickets`      | Support Tickets Queue  | SLA-first agent ticket queue (excludes ARCHIVED, 3 bulk)      |
-| `/support/tickets/new`  | New Support Ticket     | Ticket creation form with file attachments (PG-047)           |
-| `/support/tickets/[id]` | Support Ticket Detail  | Ticket detail with thread, status updater, no delete (PG-048) |
+| Route                   | Page                  | Description                                                   |
+| ----------------------- | --------------------- | ------------------------------------------------------------- |
+| `/support/tickets`      | Support Tickets Queue | SLA-first agent ticket queue (excludes ARCHIVED, 3 bulk)      |
+| `/support/tickets/new`  | New Support Ticket    | Ticket creation form with file attachments (PG-047)           |
+| `/support/tickets/[id]` | Support Ticket Detail | Ticket detail with thread, status updater, no delete (PG-048) |
 
 ### 22. Support / Help Center (2 pages)
 
-| Route          | Page              | Description                                       |
-| -------------- | ----------------- | ------------------------------------------------- |
-| `/help-center` | Help Center Index | Searchable category grid for self-service support |
-| `/help-center/search` | Help Search | URL-driven search with scoring, filters, and category results |
-| `/help-center/[article]` | Help Article | Individual help article detail page (PG-045) |
+| Route                    | Page              | Description                                                   |
+| ------------------------ | ----------------- | ------------------------------------------------------------- |
+| `/help-center`           | Help Center Index | Searchable category grid for self-service support             |
+| `/help-center/search`    | Help Search       | URL-driven search with scoring, filters, and category results |
+| `/help-center/[article]` | Help Article      | Individual help article detail page (PG-045)                  |
 
 ---
 

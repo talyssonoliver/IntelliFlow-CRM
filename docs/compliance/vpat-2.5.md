@@ -2,9 +2,9 @@
 
 ## Revised Section 508 Edition
 
-**Product Name:** IntelliFlow CRM **Product Version:** 0.1.0 (Sprint 14)
-**Report Date:** 2026-02-24 **Contact:** accessibility@intelliflow.com
-**Evaluation Methods Used:** Static code review (87 routes), Lighthouse CI
+**Product Name:** IntelliFlow CRM **Product Version:** 0.1.0 (Sprint 17)
+**Report Date:** 2026-04-10 **Contact:** accessibility@intelliflow.com
+**Evaluation Methods Used:** Static code review (89 routes), Lighthouse CI
 runtime (26 URLs), axe-core automated testing (8 component tests in jsdom)
 
 ---
@@ -142,3 +142,4 @@ minimum every 6 months.
 | 1.1.0   | 2026-03-01 | Engineering (DOC-011) | Updated route count from 26 to 82 to reflect full application scope                                         |
 | 1.2.0   | 2026-03-10 | Engineering (PG-173)  | Updated route count from 82 to 85 (added /tickets/sla-policies, /tickets/types, /tickets/automations)       |
 | 1.3.0   | 2026-03-11 | Engineering (PG-174)  | Added 2 notification config routes (channels, quiet-hours) — scope now 87 routes                            |
+| 1.4.0   | 2026-04-10 | Engineering (PG-051, IFC-031) | Added `/terms` (PG-051) and `/cases/case-workflows` (IFC-031) — scope now 89 routes; `aria-label` on drag/drop palette items |
