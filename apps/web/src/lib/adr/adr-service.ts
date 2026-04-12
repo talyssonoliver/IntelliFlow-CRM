@@ -505,7 +505,7 @@ export function generateADRIndex(): string {
       '',
       `- **Status:** ${adr.status}`,
       `- **Date:** ${adr.date}`,
-      `- **Sprint:** ${adr.sprint}`,
+      `- **Sprint:** ${adr.sprint}`
     );
     if (adr.technicalStory) {
       lines.push(`- **Story:** ${adr.technicalStory}`);

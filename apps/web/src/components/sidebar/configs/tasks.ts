@@ -13,9 +13,7 @@ const SETTINGS_PATHS = TASK_SETTINGS_ITEMS.map(
 
 /** Check if the pathname is a task settings page */
 export function isTaskSettingsPage(pathname: string): boolean {
-  return SETTINGS_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(p + '/')
-  );
+  return SETTINGS_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
 }
 
 const VIEW_SECTIONS: SidebarConfig['sections'] = [
@@ -25,18 +23,41 @@ const VIEW_SECTIONS: SidebarConfig['sections'] = [
     items: [
       { id: 'all', label: 'All Tasks', icon: 'checklist', href: '/tasks' },
       { id: 'my', label: 'My Tasks', icon: 'person', href: '/tasks?view=my' },
-      { id: 'overdue', label: 'Overdue', icon: 'warning', color: 'text-destructive', href: '/tasks?view=overdue' },
+      {
+        id: 'overdue',
+        label: 'Overdue',
+        icon: 'warning',
+        color: 'text-destructive',
+        href: '/tasks?view=overdue',
+      },
       { id: 'today', label: 'Due Today', icon: 'today', href: '/tasks?view=today' },
       { id: 'upcoming', label: 'Upcoming', icon: 'event_upcoming', href: '/tasks?view=upcoming' },
-      { id: 'task-calendar', label: 'Task Calendar', icon: 'calendar_month', href: '/calendar?show=tasks' },
+      {
+        id: 'task-calendar',
+        label: 'Task Calendar',
+        icon: 'calendar_month',
+        href: '/calendar?show=tasks',
+      },
     ],
   },
   {
     id: 'priority',
     title: 'By Priority',
     items: [
-      { id: 'urgent', label: 'Urgent', icon: 'priority_high', color: 'text-destructive', href: '/tasks?priority=URGENT' },
-      { id: 'high', label: 'High Priority', icon: 'flag', color: 'text-warning', href: '/tasks?priority=HIGH' },
+      {
+        id: 'urgent',
+        label: 'Urgent',
+        icon: 'priority_high',
+        color: 'text-destructive',
+        href: '/tasks?priority=URGENT',
+      },
+      {
+        id: 'high',
+        label: 'High Priority',
+        icon: 'flag',
+        color: 'text-warning',
+        href: '/tasks?priority=HIGH',
+      },
     ],
   },
 ];
@@ -55,7 +76,7 @@ export function createTasksSidebarConfig(onSettingsClick: () => void): SidebarCo
 
 /** Settings mode — settings items inline at top, Task Views & Priority sections below */
 export function createTasksSettingsSidebarConfig(
-  beforeContent: SidebarConfig['beforeContent'],
+  beforeContent: SidebarConfig['beforeContent']
 ): SidebarConfig {
   return {
     moduleId: 'tasks',

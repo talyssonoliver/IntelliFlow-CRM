@@ -48,7 +48,7 @@ export function EmailComposeButton({ isExpanded }: Readonly<{ isExpanded: boolea
       aria-label="Compose new email"
     >
       <span className="material-symbols-outlined text-lg">edit</span>
-      Compose
+      {' '}Compose
     </Link>
   );
 }
@@ -121,12 +121,10 @@ export function EmailStorageIndicator({ isExpanded }: Readonly<{ isExpanded: boo
   const limitBytes = storageQuery.data?.limitBytes ?? 5 * 1024 * 1024 * 1024;
   const percentage = limitBytes > 0 ? Math.min((usedBytes / limitBytes) * 100, 100) : 0;
 
-  const barColor =
-    percentage >= 95
-      ? 'bg-destructive'
-      : percentage >= 80
-        ? 'bg-warning'
-        : 'bg-primary';
+  let barColor: string;
+  if (percentage >= 95) barColor = 'bg-destructive';
+  else if (percentage >= 80) barColor = 'bg-warning';
+  else barColor = 'bg-primary';
 
   return (
     <div className="px-1">

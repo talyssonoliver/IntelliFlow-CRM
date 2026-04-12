@@ -14,9 +14,7 @@ const SETTINGS_PATHS = TICKET_SETTINGS_ITEMS.map(
 
 /** Check if the pathname is a ticket settings page */
 export function isTicketSettingsPage(pathname: string): boolean {
-  return SETTINGS_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(p + '/')
-  );
+  return SETTINGS_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
 }
 
 const MANAGEMENT_SECTIONS: SidebarConfig['sections'] = [
@@ -72,7 +70,7 @@ export function createTicketsSidebarConfig(onSettingsClick: () => void): Sidebar
  * Settings mode — settings items inline at top, ticket management below.
  */
 export function createTicketsSettingsSidebarConfig(
-  beforeContent: SidebarConfig['beforeContent'],
+  beforeContent: SidebarConfig['beforeContent']
 ): SidebarConfig {
   return {
     moduleId: 'tickets',

@@ -423,7 +423,8 @@ export function AppDashboard({ appId }: Readonly<AppDashboardProps>) {
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
                           <span>Created: {formatDate(apiKey.createdAt, timezone)}</span>
                           <span data-testid={`last-used-${apiKey.id}`}>
-                            Last used: {apiKey.lastUsed ? formatDate(apiKey.lastUsed, timezone) : 'Never'}
+                            Last used:{' '}
+                            {apiKey.lastUsed ? formatDate(apiKey.lastUsed, timezone) : 'Never'}
                           </span>
                         </div>
                         <div className="flex gap-1">

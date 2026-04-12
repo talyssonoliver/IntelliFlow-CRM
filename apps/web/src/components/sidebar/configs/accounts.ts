@@ -3,9 +3,24 @@ import { MODULE_ICONS, VIEW_ICONS, SEGMENT_ICONS } from '../icon-reference';
 
 /** Settings items shown when on an account settings page */
 export const ACCOUNT_SETTINGS_ITEMS: SidebarItem[] = [
-  { id: 'account-settings', label: 'Account Settings', icon: 'tune', href: '/accounts/account-settings' },
-  { id: 'account-tiers', label: 'Account Tiers', icon: 'category', href: '/accounts/account-tiers' },
-  { id: 'territory-mapping', label: 'Territory Mapping', icon: 'map', href: '/accounts/territory-mapping' },
+  {
+    id: 'account-settings',
+    label: 'Account Settings',
+    icon: 'tune',
+    href: '/accounts/account-settings',
+  },
+  {
+    id: 'account-tiers',
+    label: 'Account Tiers',
+    icon: 'category',
+    href: '/accounts/account-tiers',
+  },
+  {
+    id: 'territory-mapping',
+    label: 'Territory Mapping',
+    icon: 'map',
+    href: '/accounts/territory-mapping',
+  },
 ];
 
 const SETTINGS_PATHS = ACCOUNT_SETTINGS_ITEMS.map(
@@ -14,9 +29,7 @@ const SETTINGS_PATHS = ACCOUNT_SETTINGS_ITEMS.map(
 
 /** Check if the pathname is an account settings page */
 export function isAccountSettingsPage(pathname: string): boolean {
-  return SETTINGS_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(p + '/')
-  );
+  return SETTINGS_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
 }
 
 const VIEW_SECTIONS: SidebarConfig['sections'] = [
@@ -26,17 +39,46 @@ const VIEW_SECTIONS: SidebarConfig['sections'] = [
     items: [
       { id: 'all', label: 'All Accounts', icon: VIEW_ICONS.all, href: '/accounts' },
       { id: 'my', label: 'My Accounts', icon: VIEW_ICONS.my, href: '/accounts?view=my' },
-      { id: 'recent', label: 'Recently Viewed', icon: VIEW_ICONS.recentViewed, href: '/accounts?view=recent' },
+      {
+        id: 'recent',
+        label: 'Recently Viewed',
+        icon: VIEW_ICONS.recentViewed,
+        href: '/accounts?view=recent',
+      },
     ],
   },
   {
     id: 'tiers',
     title: 'Account Tiers',
     items: [
-      { id: 'enterprise', label: 'Enterprise', icon: SEGMENT_ICONS.statusDot, color: 'text-purple-500', href: '/accounts?tier=enterprise' },
-      { id: 'mid-market', label: 'Mid-Market', icon: SEGMENT_ICONS.statusDot, color: 'text-blue-500', href: '/accounts?tier=mid-market' },
-      { id: 'smb', label: 'SMB', icon: SEGMENT_ICONS.statusDot, color: 'text-green-500', href: '/accounts?tier=smb' },
-      { id: 'startup', label: 'Startup', icon: SEGMENT_ICONS.statusDot, color: 'text-yellow-500', href: '/accounts?tier=startup' },
+      {
+        id: 'enterprise',
+        label: 'Enterprise',
+        icon: SEGMENT_ICONS.statusDot,
+        color: 'text-purple-500',
+        href: '/accounts?tier=enterprise',
+      },
+      {
+        id: 'mid-market',
+        label: 'Mid-Market',
+        icon: SEGMENT_ICONS.statusDot,
+        color: 'text-blue-500',
+        href: '/accounts?tier=mid-market',
+      },
+      {
+        id: 'smb',
+        label: 'SMB',
+        icon: SEGMENT_ICONS.statusDot,
+        color: 'text-green-500',
+        href: '/accounts?tier=smb',
+      },
+      {
+        id: 'startup',
+        label: 'Startup',
+        icon: SEGMENT_ICONS.statusDot,
+        color: 'text-yellow-500',
+        href: '/accounts?tier=startup',
+      },
     ],
   },
 ];
@@ -55,7 +97,7 @@ export function createAccountsSidebarConfig(onSettingsClick: () => void): Sideba
 
 /** Settings mode — settings items inline at top, Account Views & Tiers sections below */
 export function createAccountsSettingsSidebarConfig(
-  beforeContent: SidebarConfig['beforeContent'],
+  beforeContent: SidebarConfig['beforeContent']
 ): SidebarConfig {
   return {
     moduleId: 'accounts',

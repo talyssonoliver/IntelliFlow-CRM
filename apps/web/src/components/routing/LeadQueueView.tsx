@@ -178,7 +178,9 @@ export function LeadQueueView() {
                       </span>
                     </td>
                     <td className="py-2 text-muted-foreground">
-                      {lead.estimatedValue ? `$${lead.estimatedValue.toLocaleString('en-GB')}` : '—'}
+                      {lead.estimatedValue
+                        ? `$${lead.estimatedValue.toLocaleString('en-GB')}`
+                        : '—'}
                     </td>
                   </tr>
                 ))}

@@ -132,7 +132,7 @@ function OverviewTab() {
                 <p className="text-sm text-muted-foreground">
                   Programmatic access with{' '}
                   <code className="text-xs bg-muted px-1 py-0.5 rounded">ifc_live_*</code> and{' '}
-                  <code className="text-xs bg-muted px-1 py-0.5 rounded">ifc_test_*</code>{' '}prefixes.
+                  <code className="text-xs bg-muted px-1 py-0.5 rounded">ifc_test_*</code> prefixes.
                 </p>
               </div>
             </div>
@@ -150,7 +150,7 @@ function OverviewTab() {
             with application-level session management and rate limiting.
           </p>
           <SecurityWarning>
-            <strong>Token Storage:</strong>{' '}Store access tokens in httpOnly cookies. Never store
+            <strong>Token Storage:</strong> Store access tokens in httpOnly cookies. Never store
             refresh tokens in localStorage — use secure, same-site cookies instead.
           </SecurityWarning>
         </div>
@@ -195,8 +195,8 @@ function OAuthTab() {
         </p>
         <ol className="list-decimal list-inside space-y-2 text-muted-foreground mb-4">
           <li>
-            Generate a{' '}<code className="text-xs bg-muted px-1 py-0.5 rounded">code_verifier</code>{' '}
-            and{' '}<code className="text-xs bg-muted px-1 py-0.5 rounded">code_challenge</code>
+            Generate a <code className="text-xs bg-muted px-1 py-0.5 rounded">code_verifier</code>{' '}
+            and <code className="text-xs bg-muted px-1 py-0.5 rounded">code_challenge</code>
           </li>
           <li>Redirect user to the provider&apos;s authorization endpoint with the challenge</li>
           <li>Provider authenticates user and redirects back with an authorization code</li>
@@ -221,7 +221,7 @@ window.location.href = authUrl.toString();`}
 
         <div className="mt-4">
           <SecurityWarning>
-            <strong>State Parameter Warning:</strong>{' '}The PKCE state parameter is not validated
+            <strong>State Parameter Warning:</strong> The PKCE state parameter is not validated
             server-side. Your client application must validate the state parameter locally to
             prevent CSRF attacks. Always compare the returned state with the value you stored before
             initiating the OAuth flow.
@@ -231,7 +231,7 @@ window.location.href = authUrl.toString();`}
         <div className="mt-4">
           <SecurityWarning>
             <strong>Redirect URL Validation:</strong> The{' '}
-            <code className="text-xs bg-muted px-1 py-0.5 rounded">redirect_to</code>{' '}parameter must
+            <code className="text-xs bg-muted px-1 py-0.5 rounded">redirect_to</code> parameter must
             be validated against an allowlist of registered redirect URLs. Do not accept arbitrary
             redirect targets.
           </SecurityWarning>
@@ -285,7 +285,7 @@ Content-Type: application/json
         </h2>
         <p className="text-muted-foreground mb-3">
           Include the access token in the{' '}
-          <code className="text-xs bg-muted px-1 py-0.5 rounded">Authorization</code>{' '}header:
+          <code className="text-xs bg-muted px-1 py-0.5 rounded">Authorization</code> header:
         </p>
         <CodeBlock
           code={`Authorization: Bearer YOUR_ACCESS_TOKEN_HERE`}
@@ -340,7 +340,7 @@ Content-Type: application/json
         </div>
         <div className="mt-4">
           <SecurityWarning>
-            <strong>Email Enumeration Prevention:</strong>{' '}Login error messages are identical for
+            <strong>Email Enumeration Prevention:</strong> Login error messages are identical for
             invalid email and invalid password to prevent user enumeration attacks.
           </SecurityWarning>
         </div>
@@ -397,7 +397,7 @@ Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
           hex and can only be used once.
         </p>
         <SecurityWarning>
-          <strong>Store Securely:</strong>{' '}Backup codes are shown only once during setup. Store them
+          <strong>Store Securely:</strong> Backup codes are shown only once during setup. Store them
           in a password manager or secure offline location.
         </SecurityWarning>
       </section>
@@ -435,7 +435,7 @@ Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
       </section>
 
       <SecurityWarning>
-        <strong>In-Memory State:</strong>{' '}MFA challenges are stored in an in-memory challenge store.
+        <strong>In-Memory State:</strong> MFA challenges are stored in an in-memory challenge store.
         Challenges will be lost if the server restarts. Plan for re-authentication in production
         deployments.
       </SecurityWarning>
@@ -484,14 +484,14 @@ function SessionsKeysTab() {
 
         <div className="mt-4 space-y-3">
           <SecurityWarning>
-            <strong>In-Memory Sessions:</strong>{' '}Application-level sessions are stored in memory.
+            <strong>In-Memory Sessions:</strong> Application-level sessions are stored in memory.
             All sessions will be lost on server restart. Consider using a persistent session store
             in production.
           </SecurityWarning>
           <SecurityWarning>
-            <strong>Dual-Layer Sessions:</strong>{' '}Calling{' '}
-            <code className="text-xs bg-muted px-1 py-0.5 rounded">revokeSession</code>{' '}removes the
-            application-level session but does{' '}<strong>not</strong>{' '}invalidate the Supabase JWT. The
+            <strong>Dual-Layer Sessions:</strong> Calling{' '}
+            <code className="text-xs bg-muted px-1 py-0.5 rounded">revokeSession</code> removes the
+            application-level session but does <strong>not</strong> invalidate the Supabase JWT. The
             JWT remains valid until its natural expiry. For immediate invalidation, both layers must
             be addressed.
           </SecurityWarning>

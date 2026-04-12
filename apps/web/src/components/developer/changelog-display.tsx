@@ -136,7 +136,9 @@ function hasBreakingChanges(entry: Readonly<ChangelogEntry>): boolean {
   return entry.changes.some((c) => c.type === 'breaking');
 }
 
-export function ChangelogDisplay({ entries = CHANGELOG_ENTRIES }: Readonly<{ entries?: ChangelogEntry[] }>) {
+export function ChangelogDisplay({
+  entries = CHANGELOG_ENTRIES,
+}: Readonly<{ entries?: ChangelogEntry[] }>) {
   if (entries.length === 0) {
     return <EmptyState entity="insights" phase="passive" />;
   }
@@ -194,7 +196,9 @@ export function ChangelogDisplay({ entries = CHANGELOG_ENTRIES }: Readonly<{ ent
             <p className="text-sm text-muted-foreground mt-1 mb-3">{entry.title}</p>
             <ul className="flex flex-col gap-2">
               {entry.changes.map((change, ci) => (
-                <li key={ci} className="flex items-start gap-2"> {/* NOSONAR typescript:S6479 */}
+                <li key={ci} className="flex items-start gap-2">
+                  {' '}
+                  {/* NOSONAR typescript:S6479 */}
                   <Badge variant={BADGE_VARIANT_MAP[change.type]} className="shrink-0 mt-0.5">
                     {change.type}
                   </Badge>

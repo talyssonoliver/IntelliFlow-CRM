@@ -3,9 +3,19 @@ import { MODULE_ICONS, VIEW_ICONS, FEATURE_ICONS } from '../icon-reference';
 
 /** Settings items shown when on a notification settings page */
 export const NOTIFICATION_SETTINGS_ITEMS: SidebarItem[] = [
-  { id: 'notification-settings', label: 'Notification Settings', icon: 'tune', href: '/notifications/settings' },
+  {
+    id: 'notification-settings',
+    label: 'Notification Settings',
+    icon: 'tune',
+    href: '/notifications/settings',
+  },
   { id: 'channels', label: 'Channels', icon: 'devices', href: '/notifications/channels' },
-  { id: 'quiet-hours', label: 'Quiet Hours', icon: 'do_not_disturb_on', href: '/notifications/quiet-hours' },
+  {
+    id: 'quiet-hours',
+    label: 'Quiet Hours',
+    icon: 'do_not_disturb_on',
+    href: '/notifications/quiet-hours',
+  },
 ];
 
 const SETTINGS_PATHS = NOTIFICATION_SETTINGS_ITEMS.map(
@@ -14,9 +24,7 @@ const SETTINGS_PATHS = NOTIFICATION_SETTINGS_ITEMS.map(
 
 /** Check if the pathname is a notification settings page */
 export function isNotificationSettingsPage(pathname: string): boolean {
-  return SETTINGS_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(p + '/')
-  );
+  return SETTINGS_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
 }
 
 const CENTER_SECTIONS: SidebarConfig['sections'] = [
@@ -100,9 +108,7 @@ const CENTER_SECTIONS: SidebarConfig['sections'] = [
 /**
  * List mode — notification center views, Module Settings button.
  */
-export function createNotificationsSidebarConfig(
-  onSettingsClick?: () => void,
-): SidebarConfig {
+export function createNotificationsSidebarConfig(onSettingsClick?: () => void): SidebarConfig {
   return {
     moduleId: 'notifications',
     moduleTitle: 'Notifications',
@@ -117,7 +123,7 @@ export function createNotificationsSidebarConfig(
  * Settings mode — settings items inline at top, notification center views below.
  */
 export function createNotificationsSettingsSidebarConfig(
-  beforeContent: SidebarConfig['beforeContent'],
+  beforeContent: SidebarConfig['beforeContent']
 ): SidebarConfig {
   return {
     moduleId: 'notifications',

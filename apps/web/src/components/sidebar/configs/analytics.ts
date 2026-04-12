@@ -3,9 +3,24 @@ import { MODULE_ICONS, SEGMENT_ICONS, FEATURE_ICONS } from '../icon-reference';
 
 /** Settings items shown when on a report settings page */
 export const REPORT_SETTINGS_ITEMS: SidebarItem[] = [
-  { id: 'report-settings', label: 'Report Settings', icon: 'tune', href: '/analytics/report-settings' },
-  { id: 'report-templates', label: 'Report Templates', icon: 'dashboard_customize', href: '/analytics/report-templates' },
-  { id: 'scheduled-reports', label: 'Scheduled Reports', icon: 'schedule_send', href: '/analytics/scheduled-reports' },
+  {
+    id: 'report-settings',
+    label: 'Report Settings',
+    icon: 'tune',
+    href: '/analytics/report-settings',
+  },
+  {
+    id: 'report-templates',
+    label: 'Report Templates',
+    icon: 'dashboard_customize',
+    href: '/analytics/report-templates',
+  },
+  {
+    id: 'scheduled-reports',
+    label: 'Scheduled Reports',
+    icon: 'schedule_send',
+    href: '/analytics/scheduled-reports',
+  },
 ];
 
 const SETTINGS_PATHS = REPORT_SETTINGS_ITEMS.map(
@@ -14,9 +29,7 @@ const SETTINGS_PATHS = REPORT_SETTINGS_ITEMS.map(
 
 /** Check if the pathname is a report settings page */
 export function isReportSettingsPage(pathname: string): boolean {
-  return SETTINGS_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(p + '/')
-  );
+  return SETTINGS_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
 }
 
 const VIEW_SECTIONS: SidebarConfig['sections'] = [
@@ -83,9 +96,7 @@ const VIEW_SECTIONS: SidebarConfig['sections'] = [
 /**
  * List mode — views, saved reports, Module Settings button.
  */
-export function createAnalyticsSidebarConfig(
-  onSettingsClick?: () => void,
-): SidebarConfig {
+export function createAnalyticsSidebarConfig(onSettingsClick?: () => void): SidebarConfig {
   return {
     moduleId: 'analytics',
     moduleTitle: 'Analytics',
@@ -100,7 +111,7 @@ export function createAnalyticsSidebarConfig(
  * Settings mode — settings items inline at top, views/saved below.
  */
 export function createAnalyticsSettingsSidebarConfig(
-  beforeContent: SidebarConfig['beforeContent'],
+  beforeContent: SidebarConfig['beforeContent']
 ): SidebarConfig {
   return {
     moduleId: 'analytics',

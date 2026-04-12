@@ -243,7 +243,7 @@ function DatabaseTab() {
           <code className="bg-yellow-100 dark:bg-yellow-900/40 px-1 py-0.5 rounded">
             pnpm run db:reset
           </code>{' '}
-          will{' '}<strong>drop and recreate</strong>{' '}the entire database. Use with caution — all data
+          will <strong>drop and recreate</strong> the entire database. Use with caution — all data
           will be lost. Only use in local development environments.
         </p>
       </div>

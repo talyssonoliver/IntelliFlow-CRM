@@ -1,5 +1,9 @@
 import type { SidebarConfig, SidebarItem } from '../sidebar-types';
-import { EmailComposeButton, EmailSidebarExtras, EmailStorageIndicator } from './EmailSidebarContent';
+import {
+  EmailComposeButton,
+  EmailSidebarExtras,
+  EmailStorageIndicator,
+} from './EmailSidebarContent';
 
 /** Settings items shown when on an email settings page */
 export const EMAIL_SETTINGS_ITEMS: SidebarItem[] = [
@@ -14,9 +18,7 @@ const SETTINGS_PATHS = EMAIL_SETTINGS_ITEMS.map(
 
 /** Check if the pathname is an email settings page */
 export function isEmailSettingsPage(pathname: string): boolean {
-  return SETTINGS_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(p + '/')
-  );
+  return SETTINGS_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
 }
 
 const FOLDER_SECTIONS = (unreadCounts?: Record<string, number>): SidebarConfig['sections'] => [
@@ -39,7 +41,7 @@ const FOLDER_SECTIONS = (unreadCounts?: Record<string, number>): SidebarConfig['
  */
 export function createEmailSidebarConfig(
   unreadCounts?: Record<string, number>,
-  onSettingsClick?: () => void,
+  onSettingsClick?: () => void
 ): SidebarConfig {
   return {
     moduleId: 'email',
@@ -59,7 +61,7 @@ export function createEmailSidebarConfig(
  */
 export function createEmailSettingsSidebarConfig(
   beforeContent: SidebarConfig['beforeContent'],
-  unreadCounts?: Record<string, number>,
+  unreadCounts?: Record<string, number>
 ): SidebarConfig {
   return {
     moduleId: 'email',

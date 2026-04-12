@@ -120,7 +120,10 @@ export function AgentWorkload() {
 
               {/* Capacity Gauge */}
               <div>
-                <div className="flex justify-between text-xs text-muted-foreground mb-1" id={`capacity-label-${agent.id}`}>
+                <div
+                  className="flex justify-between text-xs text-muted-foreground mb-1"
+                  id={`capacity-label-${agent.id}`}
+                >
                   <span>Capacity</span>
                   <span>
                     {agent.currentCapacity}/{agent.maxCapacity}

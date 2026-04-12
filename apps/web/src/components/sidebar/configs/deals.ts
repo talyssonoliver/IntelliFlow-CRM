@@ -5,7 +5,12 @@ import { MODULE_ICONS, SEGMENT_ICONS, FEATURE_ICONS, ACTION_ICONS } from '../ico
 export const DEAL_SETTINGS_ITEMS: SidebarItem[] = [
   { id: 'deal-settings', label: 'Deal Settings', icon: 'tune', href: '/deals/deal-settings' },
   { id: 'deal-stages', label: 'Deal Stages', icon: 'view_kanban', href: '/deals/deal-stages' },
-  { id: 'deal-automation', label: 'Deal Automation', icon: 'smart_toy', href: '/deals/deal-automation' },
+  {
+    id: 'deal-automation',
+    label: 'Deal Automation',
+    icon: 'smart_toy',
+    href: '/deals/deal-automation',
+  },
 ];
 
 const SETTINGS_PATHS = DEAL_SETTINGS_ITEMS.map(
@@ -14,9 +19,7 @@ const SETTINGS_PATHS = DEAL_SETTINGS_ITEMS.map(
 
 /** Check if the pathname is a deal settings page */
 export function isDealSettingsPage(pathname: string): boolean {
-  return SETTINGS_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(p + '/')
-  );
+  return SETTINGS_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
 }
 
 const VIEW_SECTIONS: SidebarConfig['sections'] = [
@@ -106,9 +109,7 @@ const VIEW_SECTIONS: SidebarConfig['sections'] = [
 /**
  * List mode — views, folders, segments, trash, Module Settings button.
  */
-export function createDealsSidebarConfig(
-  onSettingsClick?: () => void,
-): SidebarConfig {
+export function createDealsSidebarConfig(onSettingsClick?: () => void): SidebarConfig {
   return {
     moduleId: 'deals',
     moduleTitle: 'Deals',
@@ -123,7 +124,7 @@ export function createDealsSidebarConfig(
  * Settings mode — settings items inline at top, views/folders/segments below.
  */
 export function createDealsSettingsSidebarConfig(
-  beforeContent: SidebarConfig['beforeContent'],
+  beforeContent: SidebarConfig['beforeContent']
 ): SidebarConfig {
   return {
     moduleId: 'deals',

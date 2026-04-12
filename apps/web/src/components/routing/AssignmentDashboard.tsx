@@ -106,49 +106,49 @@ export function AssignmentDashboard() {
         </CardHeader>
         <CardContent>
           {(() => {
-            if (loading) return (
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
-                ))}
-              </div>
-            );
-            if (!assignments || assignments.length === 0) return (
-              <EmptyState entity="leads" phase="passive" />
-            );
-            return (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left text-muted-foreground">
-                    <th className="pb-2 font-medium">Lead</th>
-                    <th className="pb-2 font-medium">Assigned To</th>
-                    <th className="pb-2 font-medium">Rule</th>
-                    <th className="pb-2 font-medium">Reason</th>
-                    <th className="pb-2 font-medium">Time</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(assignments as AssignmentItem[]).map((assignment) => (
-                    <tr key={assignment.id} className="border-b last:border-0">
-                      <td className="py-2">
-                        {(assignment.details?.leadId as string | undefined)?.slice(0, 8) ?? '—'}
-                      </td>
-                      <td className="py-2">{assignment.assignedTo?.name ?? '—'}</td>
-                      <td className="py-2">{assignment.rule?.name ?? '—'}</td>
-                      <td className="py-2">
-                        <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs">
-                          {assignment.reason}
-                        </span>
-                      </td>
-                      <td className="py-2 text-muted-foreground">
-                        {formatTimeAgo(new Date(assignment.createdAt))}
-                      </td>
-                    </tr>
+            if (loading)
+              return (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-12 w-full" />
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </div>
+              );
+            if (!assignments || assignments.length === 0)
+              return <EmptyState entity="leads" phase="passive" />;
+            return (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-muted-foreground">
+                      <th className="pb-2 font-medium">Lead</th>
+                      <th className="pb-2 font-medium">Assigned To</th>
+                      <th className="pb-2 font-medium">Rule</th>
+                      <th className="pb-2 font-medium">Reason</th>
+                      <th className="pb-2 font-medium">Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(assignments as AssignmentItem[]).map((assignment) => (
+                      <tr key={assignment.id} className="border-b last:border-0">
+                        <td className="py-2">
+                          {(assignment.details?.leadId as string | undefined)?.slice(0, 8) ?? '—'}
+                        </td>
+                        <td className="py-2">{assignment.assignedTo?.name ?? '—'}</td>
+                        <td className="py-2">{assignment.rule?.name ?? '—'}</td>
+                        <td className="py-2">
+                          <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs">
+                            {assignment.reason}
+                          </span>
+                        </td>
+                        <td className="py-2 text-muted-foreground">
+                          {formatTimeAgo(new Date(assignment.createdAt))}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             );
           })()}
         </CardContent>

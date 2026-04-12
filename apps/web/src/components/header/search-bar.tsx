@@ -20,7 +20,11 @@ const ENTITY_CONFIG: Record<string, { label: string; icon: string; color: string
   CONTACT: { label: 'Contacts', icon: 'contacts', color: 'text-emerald-600 dark:text-emerald-400' },
   ACCOUNT: { label: 'Accounts', icon: 'business', color: 'text-purple-600 dark:text-purple-400' },
   DEAL: { label: 'Deals', icon: 'handshake', color: 'text-amber-600 dark:text-amber-400' },
-  TICKET: { label: 'Tickets', icon: 'confirmation_number', color: 'text-red-600 dark:text-red-400' },
+  TICKET: {
+    label: 'Tickets',
+    icon: 'confirmation_number',
+    color: 'text-red-600 dark:text-red-400',
+  },
   TASK: { label: 'Tasks', icon: 'task_alt', color: 'text-indigo-600 dark:text-indigo-400' },
 };
 
@@ -129,7 +133,9 @@ export function SearchBar({ placeholder = 'Search...', className = '' }: Readonl
         placeholder={placeholder}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        onFocus={() => { if (query.trim().length > 0) setIsOpen(true); }}
+        onFocus={() => {
+          if (query.trim().length > 0) setIsOpen(true);
+        }}
         onKeyDown={handleKeyDown}
         className="w-full pl-10 pr-4 py-2 text-sm border border-input rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
       />
@@ -150,7 +156,7 @@ export function SearchBar({ placeholder = 'Search...', className = '' }: Readonl
               <span className="material-symbols-outlined text-sm animate-spin mr-1 align-middle">
                 progress_activity
               </span>
-              Searching...
+              {' '}Searching...
             </div>
           )}
 
@@ -164,12 +170,16 @@ export function SearchBar({ placeholder = 'Search...', className = '' }: Readonl
           {/* Grouped results */}
           {grouped.map(([entityType, hits]) => {
             const config = ENTITY_CONFIG[entityType] ?? {
-              label: entityType, icon: 'category', color: 'text-slate-600',
+              label: entityType,
+              icon: 'category',
+              color: 'text-slate-600',
             };
             return (
               <div key={entityType}>
                 <div className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider bg-muted/40 border-t border-border first:border-t-0">
-                  <span className={`material-symbols-outlined text-xs align-middle mr-1 ${config.color}`}>
+                  <span
+                    className={`material-symbols-outlined text-xs align-middle mr-1 ${config.color}`}
+                  >
                     {config.icon}
                   </span>
                   {config.label}
@@ -180,13 +190,20 @@ export function SearchBar({ placeholder = 'Search...', className = '' }: Readonl
                     onClick={() => navigateTo(hit.href)}
                     className="w-full text-left px-3 py-2 flex items-center gap-2.5 hover:bg-accent/50 transition-colors focus:outline-none focus:bg-accent/50"
                   >
-                    <span className={`material-symbols-outlined text-base ${config.color}`} aria-hidden="true">
+                    <span
+                      className={`material-symbols-outlined text-base ${config.color}`}
+                      aria-hidden="true"
+                    >
                       {config.icon}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium text-foreground truncate">{hit.title}</div>
+                      <div className="text-sm font-medium text-foreground truncate">
+                        {hit.title}
+                      </div>
                       {hit.subtitle && (
-                        <div className="text-[11px] text-muted-foreground truncate">{hit.subtitle}</div>
+                        <div className="text-[11px] text-muted-foreground truncate">
+                          {hit.subtitle}
+                        </div>
                       )}
                     </div>
                   </button>

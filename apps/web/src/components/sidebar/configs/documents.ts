@@ -3,9 +3,24 @@ import { MODULE_ICONS, VIEW_ICONS, SEGMENT_ICONS } from '../icon-reference';
 
 /** Settings items shown when on a document settings page */
 export const DOCUMENT_SETTINGS_ITEMS: SidebarItem[] = [
-  { id: 'document-settings', label: 'Document Settings', icon: 'tune', href: '/documents/document-settings' },
-  { id: 'document-types', label: 'Document Types', icon: 'category', href: '/documents/document-types' },
-  { id: 'storage-policies', label: 'Storage Policies', icon: 'cloud_sync', href: '/documents/storage-policies' },
+  {
+    id: 'document-settings',
+    label: 'Document Settings',
+    icon: 'tune',
+    href: '/documents/document-settings',
+  },
+  {
+    id: 'document-types',
+    label: 'Document Types',
+    icon: 'category',
+    href: '/documents/document-types',
+  },
+  {
+    id: 'storage-policies',
+    label: 'Storage Policies',
+    icon: 'cloud_sync',
+    href: '/documents/storage-policies',
+  },
 ];
 
 const SETTINGS_PATHS = DOCUMENT_SETTINGS_ITEMS.map(
@@ -14,9 +29,7 @@ const SETTINGS_PATHS = DOCUMENT_SETTINGS_ITEMS.map(
 
 /** Check if the pathname is a document settings page */
 export function isDocumentSettingsPage(pathname: string): boolean {
-  return SETTINGS_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(p + '/')
-  );
+  return SETTINGS_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
 }
 
 const VIEW_SECTIONS: SidebarConfig['sections'] = [
@@ -72,9 +85,7 @@ const VIEW_SECTIONS: SidebarConfig['sections'] = [
 /**
  * List mode — views, segments, Module Settings button.
  */
-export function createDocumentsSidebarConfig(
-  onSettingsClick?: () => void,
-): SidebarConfig {
+export function createDocumentsSidebarConfig(onSettingsClick?: () => void): SidebarConfig {
   return {
     moduleId: 'documents',
     moduleTitle: 'Documents',
@@ -89,7 +100,7 @@ export function createDocumentsSidebarConfig(
  * Settings mode — settings items inline at top, views/segments below.
  */
 export function createDocumentsSettingsSidebarConfig(
-  beforeContent: SidebarConfig['beforeContent'],
+  beforeContent: SidebarConfig['beforeContent']
 ): SidebarConfig {
   return {
     moduleId: 'documents',

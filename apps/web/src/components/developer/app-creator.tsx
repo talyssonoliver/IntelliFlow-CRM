@@ -2,7 +2,16 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, Button, Input, Textarea, Label, Separator } from '@intelliflow/ui';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  Button,
+  Input,
+  Textarea,
+  Label,
+  Separator,
+} from '@intelliflow/ui';
 import type { ApiKeyScope } from '@/lib/developer/api-key-generator';
 import type { DeveloperApp } from '@/lib/developer/demo-data';
 import {
@@ -75,11 +84,7 @@ function CopyButton({ text, label }: Readonly<{ text: string; label: string }>) 
           {icon}
         </span>
       </button>
-      {copyFailed && (
-        <output className="text-xs text-destructive">
-          Copy failed
-        </output>
-      )}
+      {copyFailed && <output className="text-xs text-destructive">Copy failed</output>}
     </span>
   );
 }

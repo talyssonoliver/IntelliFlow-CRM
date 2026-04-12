@@ -96,58 +96,58 @@ export function CalendarTogglesSection({ isExpanded }: Readonly<CalendarTogglesS
       <fieldset className="contents">
         <legend className="sr-only">My Calendars</legend>
         <div className="flex flex-col gap-0.5">
-        {calendars.map((cal) => (
-          <div
-            key={cal.id}
-            className={cn(
-              'flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm transition-colors group',
-              'text-muted-foreground hover:text-foreground hover:bg-accent',
-              !isExpanded && 'justify-center'
-            )}
-          >
-            <button
-              onClick={() => toggle(cal.id)}
-              className="flex items-center gap-3 flex-1 min-w-0"
-              aria-pressed={cal.checked}
-              aria-label={cal.label}
-            >
-              {isExpanded ? (
-                <>
-                  <span
-                    className="material-symbols-outlined text-lg flex-shrink-0"
-                    style={{ color: cal.color }}
-                    aria-hidden="true"
-                  >
-                    {cal.checked ? 'check_box' : 'check_box_outline_blank'}
-                  </span>
-                  <span className="flex-1 text-left truncate">{cal.label}</span>
-                </>
-              ) : (
-                <span
-                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                  style={{
-                    backgroundColor: cal.checked ? cal.color : 'transparent',
-                    border: cal.checked ? 'none' : `2px solid ${cal.color}`,
-                  }}
-                  aria-hidden="true"
-                />
+          {calendars.map((cal) => (
+            <div
+              key={cal.id}
+              className={cn(
+                'flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm transition-colors group',
+                'text-muted-foreground hover:text-foreground hover:bg-accent',
+                !isExpanded && 'justify-center'
               )}
-            </button>
-            {/* Remove button for custom calendars (only when expanded) */}
-            {isExpanded && !cal.isDefault && (
+            >
               <button
-                onClick={() => {
-                  removeCalendar(cal.id);
-                }}
-                className="p-0.5 rounded-sm text-muted-foreground/0 group-hover:text-muted-foreground hover:!text-destructive transition-colors"
-                aria-label={`Remove ${cal.label}`}
-                title={`Remove ${cal.label}`}
+                onClick={() => toggle(cal.id)}
+                className="flex items-center gap-3 flex-1 min-w-0"
+                aria-pressed={cal.checked}
+                aria-label={cal.label}
               >
-                <span className="material-symbols-outlined text-base">close</span>
+                {isExpanded ? (
+                  <>
+                    <span
+                      className="material-symbols-outlined text-lg flex-shrink-0"
+                      style={{ color: cal.color }}
+                      aria-hidden="true"
+                    >
+                      {cal.checked ? 'check_box' : 'check_box_outline_blank'}
+                    </span>
+                    <span className="flex-1 text-left truncate">{cal.label}</span>
+                  </>
+                ) : (
+                  <span
+                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                    style={{
+                      backgroundColor: cal.checked ? cal.color : 'transparent',
+                      border: cal.checked ? 'none' : `2px solid ${cal.color}`,
+                    }}
+                    aria-hidden="true"
+                  />
+                )}
               </button>
-            )}
-          </div>
-        ))}
+              {/* Remove button for custom calendars (only when expanded) */}
+              {isExpanded && !cal.isDefault && (
+                <button
+                  onClick={() => {
+                    removeCalendar(cal.id);
+                  }}
+                  className="p-0.5 rounded-sm text-muted-foreground/0 group-hover:text-muted-foreground hover:!text-destructive transition-colors"
+                  aria-label={`Remove ${cal.label}`}
+                  title={`Remove ${cal.label}`}
+                >
+                  <span className="material-symbols-outlined text-base">close</span>
+                </button>
+              )}
+            </div>
+          ))}
         </div>
       </fieldset>
     </div>

@@ -17,6 +17,17 @@ import { useAuth } from '@/lib/auth';
 
 type ModuleId = keyof typeof MODULE_COLORS;
 
+/** Check whether all item query params are present and matching in the current URL. */
+function itemParamsMatchCurrent(
+  itemParams: URLSearchParams,
+  searchParams: ReturnType<typeof useSearchParams>
+): boolean {
+  for (const [key, value] of itemParams.entries()) {
+    if (searchParams.get(key) !== value) return false;
+  }
+  return true;
+}
+
 interface AppSidebarProps {
   config: SidebarConfig;
   className?: string;
@@ -24,6 +35,39 @@ interface AppSidebarProps {
   announcement?: SidebarAnnouncement;
   /** Callback when announcement is dismissed */
   onDismissAnnouncement?: (id: string) => void;
+}
+
+interface SidebarSettingsFooterProps {
+  config: SidebarConfig;
+  isExpanded: boolean;
+  hasFooterContent: boolean;
+}
+
+function SidebarSettingsFooter({ config, isExpanded, hasFooterContent }: Readonly<SidebarSettingsFooterProps>) {
+  if (config.showSettings === false) return null;
+  if (!config.settingsHref && !config.onSettingsClick) return null;
+
+  const itemClass = cn(
+    'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors group',
+    'text-muted-foreground hover:text-foreground hover:bg-accent',
+    !isExpanded && 'justify-center'
+  );
+
+  return (
+    <div className={cn('border-t border-border p-2', !hasFooterContent && 'mt-auto')}>
+      {config.onSettingsClick ? (
+        <button type="button" onClick={config.onSettingsClick} className={cn(itemClass, 'w-full')}>
+          <span className="material-symbols-outlined text-xl transition-colors group-hover:text-primary">settings</span>
+          {isExpanded && <span className="font-medium">Module Settings</span>}
+        </button>
+      ) : (
+        <Link href={config.settingsHref!} className={itemClass}>
+          <span className="material-symbols-outlined text-xl transition-colors group-hover:text-primary">settings</span>
+          {isExpanded && <span className="font-medium">Module Settings</span>}
+        </Link>
+      )}
+    </div>
+  );
 }
 
 /**
@@ -78,14 +122,9 @@ export function AppSidebar({
         return false;
       }
 
-      // For items with query params, check if they match
+      // For items with query params, check if they all match current URL
       if (itemParams.toString()) {
-        for (const [key, value] of itemParams.entries()) {
-          if (searchParams.get(key) !== value) {
-            return false;
-          }
-        }
-        return true;
+        return itemParamsMatchCurrent(itemParams, searchParams);
       }
 
       // For items without params, require exact pathname match
@@ -96,6 +135,7 @@ export function AppSidebar({
   );
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- onMouseEnter/Leave control sidebar hover-expand behavior; this is a valid UX pattern for nav elements
     <nav
       className={cn(
         'fixed left-0 top-16 bottom-0 z-30 flex flex-col bg-card border-r border-border',
@@ -203,40 +243,7 @@ export function AppSidebar({
       )}
 
       {/* Settings Footer */}
-      {config.showSettings !== false && (config.settingsHref || config.onSettingsClick) && (
-        <div className={cn('border-t border-border p-2', !config.footerContent && 'mt-auto')}>
-          {config.onSettingsClick ? (
-            <button
-              type="button"
-              onClick={config.onSettingsClick}
-              className={cn(
-                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors group w-full',
-                'text-muted-foreground hover:text-foreground hover:bg-accent',
-                !isExpanded && 'justify-center'
-              )}
-            >
-              <span className="material-symbols-outlined text-xl transition-colors group-hover:text-primary">
-                settings
-              </span>
-              {isExpanded && <span className="font-medium">Module Settings</span>}
-            </button>
-          ) : (
-            <Link
-              href={config.settingsHref!}
-              className={cn(
-                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors group',
-                'text-muted-foreground hover:text-foreground hover:bg-accent',
-                !isExpanded && 'justify-center'
-              )}
-            >
-              <span className="material-symbols-outlined text-xl transition-colors group-hover:text-primary">
-                settings
-              </span>
-              {isExpanded && <span className="font-medium">Module Settings</span>}
-            </Link>
-          )}
-        </div>
-      )}
+      <SidebarSettingsFooter config={config} isExpanded={isExpanded} hasFooterContent={!!config.footerContent} />
     </nav>
   );
 }
@@ -490,7 +497,11 @@ interface MobileSidebarProps {
   onDismissAnnouncement?: (id: string) => void;
 }
 
-export function MobileSidebar({ config, announcement, onDismissAnnouncement }: Readonly<MobileSidebarProps>) {
+export function MobileSidebar({
+  config,
+  announcement,
+  onDismissAnnouncement,
+}: Readonly<MobileSidebarProps>) {
   const { isMobileOpen, closeMobile } = useSidebar();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -726,7 +737,10 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: R
             {config.onSettingsClick ? (
               <button
                 type="button"
-                onClick={() => { config.onSettingsClick!(); handleItemClick(); }}
+                onClick={() => {
+                  config.onSettingsClick!();
+                  handleItemClick();
+                }}
                 className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors text-muted-foreground hover:text-foreground hover:bg-accent w-full"
               >
                 <span className="material-symbols-outlined text-xl">settings</span>
@@ -757,7 +771,12 @@ interface MobileSidebarItemProps {
   onClick: () => void;
 }
 
-function MobileSidebarItem({ item, isActive, moduleColor, onClick }: Readonly<MobileSidebarItemProps>) {
+function MobileSidebarItem({
+  item,
+  isActive,
+  moduleColor,
+  onClick,
+}: Readonly<MobileSidebarItemProps>) {
   const isSegment = Boolean(item.color);
 
   return (

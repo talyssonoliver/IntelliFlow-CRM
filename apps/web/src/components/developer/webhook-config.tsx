@@ -12,7 +12,12 @@ export interface WebhookConfigProps {
 const inputId = 'webhook-url-input';
 const errorId = 'webhook-url-error';
 
-export function WebhookConfig({ value, onChange, environment, error }: Readonly<WebhookConfigProps>) {
+export function WebhookConfig({
+  value,
+  onChange,
+  environment,
+  error,
+}: Readonly<WebhookConfigProps>) {
   return (
     <div data-testid="webhook-config" className="space-y-2">
       <Label htmlFor={inputId}>Webhook URL</Label>

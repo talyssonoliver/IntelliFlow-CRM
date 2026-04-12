@@ -104,7 +104,9 @@ export function AppMetrics({ app }: Readonly<AppMetricsProps>) {
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
               Total API Calls
             </p>
-            <p className="text-2xl font-bold mt-1">{usage.totalCallsThisMonth.toLocaleString('en-GB')}</p>
+            <p className="text-2xl font-bold mt-1">
+              {usage.totalCallsThisMonth.toLocaleString('en-GB')}
+            </p>
             {monthChange !== 0 && (
               <p className={`text-xs mt-1 ${monthChange > 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {monthChange > 0 ? '+' : ''}
@@ -146,10 +148,7 @@ export function AppMetrics({ app }: Readonly<AppMetricsProps>) {
             <h2 className="text-lg font-semibold">Daily API Calls</h2>
           </CardHeader>
           <CardContent>
-            <div
-              className="flex items-end gap-0.5 h-32"
-              aria-label="Daily API calls chart"
-            >
+            <div className="flex items-end gap-0.5 h-32" aria-label="Daily API calls chart">
               {usage.dailyBreakdown.map((day) => {
                 const pct = Math.max((day.calls / maxCalls) * 100, 2);
                 return (
@@ -230,7 +229,14 @@ export function AppMetrics({ app }: Readonly<AppMetricsProps>) {
                       ).toLocaleString('en-GB')}
                     </td>
                     <td className="py-2 px-3 text-muted-foreground">
-                      {key.lastUsed ? new Date(key.lastUsed).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone }) : 'Never'}
+                      {key.lastUsed
+                        ? new Date(key.lastUsed).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            timeZone: timezone,
+                          })
+                        : 'Never'}
                     </td>
                   </tr>
                 ))}

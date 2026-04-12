@@ -4,7 +4,12 @@ import type { SidebarConfig, SidebarItem } from '../sidebar-types';
 export const CASE_SETTINGS_ITEMS: SidebarItem[] = [
   { id: 'case-settings', label: 'Case Settings', icon: 'tune', href: '/cases/case-settings' },
   { id: 'case-types', label: 'Case Types', icon: 'category', href: '/cases/case-types' },
-  { id: 'case-workflows', label: 'Case Workflows', icon: 'account_tree', href: '/cases/case-workflows' },
+  {
+    id: 'case-workflows',
+    label: 'Case Workflows',
+    icon: 'account_tree',
+    href: '/cases/case-workflows',
+  },
 ];
 
 const SETTINGS_PATHS = CASE_SETTINGS_ITEMS.map(
@@ -13,9 +18,7 @@ const SETTINGS_PATHS = CASE_SETTINGS_ITEMS.map(
 
 /** Check if the pathname is a case settings page */
 export function isCaseSettingsPage(pathname: string): boolean {
-  return SETTINGS_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(p + '/')
-  );
+  return SETTINGS_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
 }
 
 const VIEW_SECTIONS: SidebarConfig['sections'] = [
@@ -61,9 +64,7 @@ const VIEW_SECTIONS: SidebarConfig['sections'] = [
 /**
  * List mode — views, priority segments, Module Settings button.
  */
-export function createCasesSidebarConfig(
-  onSettingsClick?: () => void,
-): SidebarConfig {
+export function createCasesSidebarConfig(onSettingsClick?: () => void): SidebarConfig {
   return {
     moduleId: 'cases',
     moduleTitle: 'Cases',
@@ -78,7 +79,7 @@ export function createCasesSidebarConfig(
  * Settings mode — settings items inline at top, views/priority below.
  */
 export function createCasesSettingsSidebarConfig(
-  beforeContent: SidebarConfig['beforeContent'],
+  beforeContent: SidebarConfig['beforeContent']
 ): SidebarConfig {
   return {
     moduleId: 'cases',

@@ -287,7 +287,12 @@ export function AppEditor({ appId }: Readonly<AppEditorProps>) {
             <div>
               <Label className="text-muted-foreground text-xs">Created</Label>
               <p data-testid="created-at" className="text-sm mt-1">
-                {new Date(app.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone })}
+                {new Date(app.createdAt).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                  timeZone: timezone,
+                })}
               </p>
             </div>
             <div>

@@ -254,28 +254,32 @@ export function WebhookTester() {
             Response
           </h2>
           {(() => {
-            if (error) return (
-              <div className="border border-destructive/50 rounded-lg p-4 bg-destructive/5">
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge variant="destructive">Error</Badge>
+            if (error)
+              return (
+                <div className="border border-destructive/50 rounded-lg p-4 bg-destructive/5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge variant="destructive">Error</Badge>
+                  </div>
+                  <p className="text-sm text-destructive">{error}</p>
                 </div>
-                <p className="text-sm text-destructive">{error}</p>
-              </div>
-            );
-            if (result) return (
-              <div className="border rounded-lg p-4">
-                <div className="flex items-center gap-4 mb-4">
-                  <Badge variant={getStatusVariant(result.status)}>{result.status}</Badge>
-                  <span className="text-sm text-muted-foreground">{result.latencyMs}ms</span>
+              );
+            if (result)
+              return (
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center gap-4 mb-4">
+                    <Badge variant={getStatusVariant(result.status)}>{result.status}</Badge>
+                    <span className="text-sm text-muted-foreground">{result.latencyMs}ms</span>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground mb-1 font-medium">
+                      Response Body
+                    </div>
+                    <pre className="font-mono bg-muted rounded-lg p-4 text-sm overflow-x-auto">
+                      <code>{formatBody(result.body)}</code>
+                    </pre>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-xs text-muted-foreground mb-1 font-medium">Response Body</div>
-                  <pre className="font-mono bg-muted rounded-lg p-4 text-sm overflow-x-auto">
-                    <code>{formatBody(result.body)}</code>
-                  </pre>
-                </div>
-              </div>
-            );
+              );
             return null;
           })()}
         </section>
