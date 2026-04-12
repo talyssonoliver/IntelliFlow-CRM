@@ -372,8 +372,7 @@ async function scheduleRetry<T>(
   context: RetryContext,
   options: RetryOptions<T>
 ): Promise<void> {
-  const rateLimitDelay =
-    lastError instanceof RateLimitError ? lastError.retryAfterMs : undefined;
+  const rateLimitDelay = lastError instanceof RateLimitError ? lastError.retryAfterMs : undefined;
   const delayMs = calculateBackoff(attempt, parsedConfig, rateLimitDelay);
 
   options.onEvent?.({

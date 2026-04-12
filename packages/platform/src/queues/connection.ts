@@ -135,7 +135,8 @@ export async function checkConnectionHealth(
  * Simple connection registry for managing multiple Redis connections
  */
 class ConnectionRegistry {
-  private readonly connections: Map<string, { config: RedisConnectionConfig; createdAt: Date }> = new Map();
+  private readonly connections: Map<string, { config: RedisConnectionConfig; createdAt: Date }> =
+    new Map();
 
   /**
    * Register a connection configuration

@@ -171,7 +171,10 @@ export function sanitizeContent(content: string): string {
     if (pattern.test(sanitized)) {
       const replacePattern = pattern.global
         ? pattern
-        : new RegExp(pattern.source, pattern.flags.includes('g') ? pattern.flags : `${pattern.flags}g`);
+        : new RegExp(
+            pattern.source,
+            pattern.flags.includes('g') ? pattern.flags : `${pattern.flags}g`
+          );
       // Replace the suspicious pattern with the sentinel token
       sanitized = sanitized.replaceAll(replacePattern, FILTERED_PLACEHOLDER);
     }
